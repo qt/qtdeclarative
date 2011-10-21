@@ -41,6 +41,7 @@
 
 #include "qv8engine_p.h"
 
+#include "qv8gccallback_p.h"
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8gccallback_p.h"
@@ -135,6 +136,8 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
 
+    QV8GCCallback::registerGcPrologueCallback();
+
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
     m_getOwnPropertyNames = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(v));
@@ -143,6 +146,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
 
 QV8Engine::~QV8Engine()
 {
+    Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8Engine::~QV8Engine()", "called after v8::Isolate has exited");
     for (int ii = 0; ii < m_extensionData.count(); ++ii) 
         delete m_extensionData[ii];
     m_extensionData.clear();
@@ -199,6 +203,11 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
         QV8ObjectResource *r = (QV8ObjectResource *)value->ToObject()->GetExternalResource();
         if (r) {
             switch (r->resourceType()) {
+            case QV8ObjectResource::Context2DStyleType:
+            case QV8ObjectResource::Context2DPixelArrayType:
+            case QV8ObjectResource::SignalHandlerType:
+            case QV8ObjectResource::IncubatorType:
+            case QV8ObjectResource::VisualDataItemType:
             case QV8ObjectResource::ContextType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
@@ -460,13 +469,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
         int length = properties->Length();
         if (length == 0)
             return QVariant();
-
-        QVariantMap map; 
-        for (int ii = 0; ii < length; ++ii) {
-            v8::Handle<v8::Value> property = properties->Get(ii);
-            map.insert(toString(property), toVariant(object->Get(property), -1));
-        }
-        return map;
+        return variantMapFromJS(object);
     }
 
     return QVariant();
@@ -502,6 +505,8 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
             qt->Set(v8::String::New(enumerator.key(jj)), v8::Integer::New(enumerator.value(jj)));
         }
     }
+    qt->Set(v8::String::New("Asynchronous"), v8::Integer::New(0));
+    qt->Set(v8::String::New("Synchronous"), v8::Integer::New(1));
 
     qt->Set(v8::String::New("include"), V8FUNCTION(QV8Include::include, this));
     qt->Set(v8::String::New("isQtObject"), V8FUNCTION(isQtObject, this));
@@ -546,9 +551,21 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     global->Set(v8::String::New("Qt"), qt);
     global->Set(v8::String::New("gc"), V8FUNCTION(QDeclarativeBuiltinFunctions::gc, this));
 
-    v8::Local<v8::Object> string = v8::Local<v8::Object>::Cast(global->Get(v8::String::New("String")));
-    v8::Local<v8::Object> stringPrototype = v8::Local<v8::Object>::Cast(string->Get(v8::String::New("prototype")));
-    stringPrototype->Set(v8::String::New("arg"), V8FUNCTION(stringArg, this));
+    {
+#define STRING_ARG "(function(stringArg) { "\
+                   "    String.prototype.arg = (function() {"\
+                   "        return stringArg.apply(this, arguments);"\
+                   "    })"\
+                   "})"
+
+        v8::Local<v8::Script> registerArg = v8::Script::New(v8::String::New(STRING_ARG), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
+        v8::Local<v8::Value> result = registerArg->Run();
+        Q_ASSERT(result->IsFunction());
+        v8::Local<v8::Function> registerArgFunc = v8::Local<v8::Function>::Cast(result);
+        v8::Handle<v8::Value> args = V8FUNCTION(stringArg, this);
+        registerArgFunc->Call(v8::Local<v8::Object>::Cast(registerArgFunc), 1, &args);
+#undef STRING_ARG
+    }
 
     qt_add_domexceptions(this);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
@@ -1372,6 +1389,26 @@ void QV8GCCallback::registerGcPrologueCallback()
     }
 }
 
+void QV8GCCallback::ThreadData::releaseStrongReferencer()
+{
+    // NOTE: must be called with a valid current isolate
+    if (!referencer.strongReferencer.IsEmpty()) {
+        qPersistentDispose(referencer.strongReferencer);
+    }
+}
+
+void QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()
+{
+    // Note that only worker-thread implementations with their
+    // own QV8Engine should explicitly release the Referencer
+    // by calling this functions.
+    Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()", "called after v8::Isolate has exited");
+    if (threadData.hasLocalData()) {
+        QV8GCCallback::ThreadData *td = threadData.localData();
+        td->releaseStrongReferencer();
+    }
+}
+
 QV8GCCallback::Node::Node(PrologueCallback callback)
     : prologueCallback(callback)
 {
@@ -1380,6 +1417,16 @@ QV8GCCallback::Node::Node(PrologueCallback callback)
 QV8GCCallback::Node::~Node()
 {
     node.remove();
+}
+
+QV8GCCallback::Referencer::~Referencer()
+{
+    if (!strongReferencer.IsEmpty()) {
+        Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::Referencer::~Referencer()", "called after v8::Isolate has exited");
+        // automatically release the strongReferencer if it hasn't
+        // been explicitly released already.
+        qPersistentDispose(strongReferencer);
+    }
 }
 
 QV8GCCallback::Referencer::Referencer()

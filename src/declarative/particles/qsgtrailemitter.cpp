@@ -91,13 +91,26 @@ QSGTrailEmitter::QSGTrailEmitter(QSGItem *parent) :
     \qmlproperty Shape QtQuick.Particles2::TrailEmitter::emitShape
 
     As the area of a TrailEmitter is the area it follows, a separate shape can be provided
-    to be the shape it emits out of.
+    to be the shape it emits out of. This shape has width and height specified by emitWidth
+    and emitHeight, and is centered on the followed particle's position.
+
+    The default shape is a filled Rectangle.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitWidth
+
+    The width in pixels the emitShape is scaled to. If set to TrailEmitter.ParticleSize,
+    the width will be the current size of the particle being followed.
+
+    Default is 0.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitHeight
+
+    The height in pixels the emitShape is scaled to. If set to TrailEmitter.ParticleSize,
+    the height will be the current size of the particle being followed.
+
+    Default is 0.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitRatePerParticle
@@ -120,7 +133,7 @@ bool QSGTrailEmitter::isEmitFollowConnected()
 void QSGTrailEmitter::recalcParticlesPerSecond(){
     if (!m_system)
         return;
-    m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size();
+    m_followCount = m_system->groupData[m_system->groupIds[m_follow]]->size();
     if (!m_followCount){
         setParticlesPerSecond(1);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
     }else{
@@ -141,7 +154,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
         return;
     if (!m_enabled && !m_pulseLeft && m_burstQueue.isEmpty())
         return;
-    if (m_followCount != m_system->m_groupData[m_system->m_groupIds[m_follow]]->size()){
+    if (m_followCount != m_system->groupData[m_system->groupIds[m_follow]]->size()){
         qreal oldPPS = m_particlesPerSecond;
         recalcParticlesPerSecond();
         if (m_particlesPerSecond != oldPPS)
@@ -160,14 +173,15 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
     qreal time = timeStamp / 1000.;
     qreal particleRatio = 1. / m_particlesPerParticlePerSecond;
     qreal pt;
+    qreal maxLife = (m_particleDuration + m_particleDurationVariation)/1000.0;
 
     //Have to map it into this system, because particlesystem automaps it back
     QPointF offset = m_system->mapFromItem(this, QPointF(0, 0));
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
 
-    int gId = m_system->m_groupIds[m_follow];
-    int gId2 = m_system->m_groupIds[m_group];
-    foreach (QSGParticleData *d, m_system->m_groupData[gId]->data){
+    int gId = m_system->groupIds[m_follow];
+    int gId2 = m_system->groupIds[m_group];
+    foreach (QSGParticleData *d, m_system->groupData[gId]->data){
         if (!d || !d->stillAlive()){
             m_lastEmission[d->index] = time; //Should only start emitting when it returns to life
             continue;
@@ -175,6 +189,8 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
         pt = m_lastEmission[d->index];
         if (pt < d->t)
             pt = d->t;
+        if (pt + maxLife < time)//We missed so much, that we should skip emiting particles that are dead by now
+            pt = time - maxLife;
 
         if ((width() || height()) && !effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),QPointF(d->curX(), d->curY()))){
             m_lastEmission[d->index] = time;//jump over this time period without emitting, because it's outside
@@ -199,17 +215,12 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
                 // Note that burst location doesn't get used for follow emitter
                 qreal followT =  pt - d->t;
                 qreal followT2 = followT * followT * 0.5;
-                //qreal sizeOffset = d->size/2;//TODO: Current size? As an option
-                //TODO: Set variations
+                qreal eW = m_emitterXVariation < 0 ? d->curSize() : m_emitterXVariation;
+                qreal eH = m_emitterYVariation < 0 ? d->curSize() : m_emitterYVariation;
                 //Subtract offset, because PS expects this in emitter coordinates
-                QRectF boundsRect(d->x - offset.x() + d->vx * followT + d->ax * followT2 - m_emitterXVariation/2,
-                                  d->y - offset.y() + d->vy * followT + d->ay * followT2 - m_emitterYVariation/2,
-                                  m_emitterXVariation,
-                                  m_emitterYVariation);
-    //            QRectF boundsRect(d->x + d->vx * followT + d->ax * followT2 + offset.x() - sizeOffset,
-    //                              d->y + d->vy * followT + d->ay * followT2 + offset.y() - sizeOffset,
-    //                              sizeOffset*2,
-    //                              sizeOffset*2);
+                QRectF boundsRect(d->x - offset.x() + d->vx * followT + d->ax * followT2 - eW/2,
+                                  d->y - offset.y() + d->vy * followT + d->ay * followT2 - eH/2,
+                                  eW, eH);
 
                 QSGParticleExtruder* effectiveEmissionExtruder = m_emissionExtruder ? m_emissionExtruder : m_defaultEmissionExtruder;
                 const QPointF &newPos = effectiveEmissionExtruder->extrude(boundsRect);

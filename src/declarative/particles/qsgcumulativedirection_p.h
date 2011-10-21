@@ -61,4 +61,9 @@ public:
 private:
     QList<QSGDirection*> m_directions;
 };
+
+QT_END_NAMESPACE
+
+QT_END_HEADER
+
 #endif // QSGCUMULATIVEDIRECTION_P_H

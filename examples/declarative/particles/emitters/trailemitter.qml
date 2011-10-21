@@ -117,8 +117,9 @@ Rectangle {
 
         emitRatePerParticle: 120
         lifeSpan: 180
-        emitWidth: 8
-        emitHeight: 8
+        emitWidth: TrailEmitter.ParticleSize
+        emitHeight: TrailEmitter.ParticleSize
+        emitShape: EllipseShape{}
 
         size: 16
         sizeVariation: 4
@@ -134,8 +135,9 @@ Rectangle {
 
         emitRatePerParticle: 128
         lifeSpan: 2400
-        emitWidth: 16
-        emitHeight: 16
+        emitWidth: TrailEmitter.ParticleSize
+        emitHeight: TrailEmitter.ParticleSize
+        emitShape: EllipseShape{}
 
         speed: PointDirection {yVariation: 16; xVariation: 16}
         acceleration: PointDirection {y: -16}
@@ -159,7 +161,7 @@ Rectangle {
         speed: PointDirection {y:-17*4*2; xVariation: 6*6}
         acceleration: PointDirection {y: 17*2; xVariation: 6*6}
 
-        size: 12
+        size: 8
         sizeVariation: 4
     }
 

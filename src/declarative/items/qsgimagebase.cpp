@@ -208,6 +208,7 @@ void QSGImageBase::load()
         if (d->cache)
             options |= QDeclarativePixmap::Cache;
         d->pix.clear(this);
+        pixmapChange();
         d->pix.load(qmlEngine(this), d->url, d->explicitSourceSize ? sourceSize() : QSize(), options);
 
         if (d->pix.isLoading()) {

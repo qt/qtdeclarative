@@ -1,7 +1,7 @@
 import QtQuick 2.0
 
 GridView {
-    width: 400
+    width: 405
     height: 200
     cellWidth: width/9
     cellHeight: height/2

@@ -1,17 +1,11 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_qdeclarativeimage
-QT += declarative
+QT += declarative testlib
 macx:CONFIG -= app_bundle
 CONFIG += release
 
 SOURCES += tst_qdeclarativeimage.cpp
 
-symbian {
-    importFiles.files = image.png
-    importFiles.path = 
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
 

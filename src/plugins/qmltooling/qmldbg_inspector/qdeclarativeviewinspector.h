@@ -68,7 +68,8 @@ public:
     void reloadView();
     void reparentQmlObject(QObject *object, QObject *newParent);
     void changeTool(InspectorProtocol::Tool tool);
-    QWidget *viewWidget() const { return declarativeView(); }
+    Qt::WindowFlags windowFlags() const;
+    void setWindowFlags(Qt::WindowFlags flags);
     QDeclarativeEngine *declarativeEngine() const;
 
     void setSelectedItems(QList<QGraphicsItem *> items);

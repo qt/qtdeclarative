@@ -49,12 +49,6 @@
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 #include <QtQuick1/private/qdeclarativegridview_p.h>
 #include <QtQuick1/private/qdeclarativetext_p.h>
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_QDeclarative1GridView : public QObject
 {
@@ -448,12 +442,12 @@ void tst_QDeclarative1GridView::removed()
     model.removeItem(1);
 
     // Confirm items positioned correctly
-    for (int i = 6; i < 18; ++i) {
+    for (int i = 3; i < 15; ++i) {
         QDeclarativeItem *item = findItem<QDeclarativeItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), 60+(i/3)*60.0);
     }
 
     // Remove currentIndex
@@ -474,7 +468,7 @@ void tst_QDeclarative1GridView::removed()
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
         QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_VERIFY(item->y() == 60+(i/3)*60);
     }
 
     // remove item outside current view.

@@ -45,12 +45,6 @@
 #include <private/qsgimage_p.h>
 #include <QImageReader>
 #include <QWaitCondition>
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 Q_DECLARE_METATYPE(QDeclarativeImageProvider*);
 
@@ -413,13 +407,13 @@ void tst_qdeclarativeimageprovider::threadTest()
     QList<QSGImage *> images = obj->findChildren<QSGImage *>();
     QCOMPARE(images.count(), 4);
     QTest::qWait(100);
-    foreach(QSGImage *img, images) {
+    foreach (QSGImage *img, images) {
         QCOMPARE(img->status(), QSGImage::Loading);
     }
     provider->ok = true;
     provider->cond.wakeAll();
     QTest::qWait(250);
-    foreach(QSGImage *img, images) {
+    foreach (QSGImage *img, images) {
         QTRY_VERIFY(img->status() == QSGImage::Ready);
     }
 }

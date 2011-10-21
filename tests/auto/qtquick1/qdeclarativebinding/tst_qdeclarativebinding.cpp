@@ -43,15 +43,8 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick1/private/qdeclarativebind_p.h>
 #include <QtQuick1/private/qdeclarativerectangle_p.h>
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_qdeclarativebinding : public QObject
-
 {
     Q_OBJECT
 public:

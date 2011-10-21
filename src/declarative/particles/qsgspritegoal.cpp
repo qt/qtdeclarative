@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qsgspritegoal_p.h"
-#include "private/qsgspriteengine_p.h"
-#include "private/qsgsprite_p.h"
+#include <private/qsgspriteengine_p.h>
+#include <private/qsgsprite_p.h>
 #include "qsgimageparticle_p.h"
 #include <QDebug>
 
@@ -51,28 +51,48 @@ QT_BEGIN_NAMESPACE
     \qmlclass SpriteGoal QSGSpriteGoalAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The SpriteGoal Affector allows you to change the state of a sprite or group of a particle.
+    \brief The SpriteGoal Affector allows you to change the state of a sprite particle.
 
 */
 /*!
     \qmlproperty string QtQuick.Particles2::SpriteGoal::goalState
+
+    The name of the Sprite which the affected particles should move to.
+
+    Sprite states have defined durations and transitions between them, setting goalState
+    will cause it to disregard any path weightings (including 0) and head down the path
+    which will reach the goalState quickest. It will pass through intermediate states
+    on that path.
 */
 /*!
     \qmlproperty bool QtQuick.Particles2::SpriteGoal::jump
+
+    If true, affected sprites will jump directly to the goal state instead of taking the
+    the shortest valid path to get there. They will also not finish their current state,
+    but immediately move to the beginning of the goal state.
+
+    Default is false.
 */
 /*!
     \qmlproperty bool QtQuick.Particles2::SpriteGoal::systemStates
+
+    deprecated, use GroupGoal instead
 */
 
 QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
-    QSGParticleAffector(parent), m_goalIdx(-1), m_jump(false), m_systemStates(false), m_lastEngine(0), m_notUsingEngine(false)
+    QSGParticleAffector(parent),
+    m_goalIdx(-1),
+    m_lastEngine(0),
+    m_jump(false),
+    m_systemStates(false),
+    m_notUsingEngine(false)
 {
 }
 
 void QSGSpriteGoalAffector::updateStateIndex(QSGStochasticEngine* e)
 {
     if (m_systemStates){
-        m_goalIdx = m_system->m_groupIds[m_goalState];
+        m_goalIdx = m_system->groupIds[m_goalState];
     }else{
         m_lastEngine = e;
         for (int i=0; i<e->stateCount(); i++){
@@ -103,11 +123,11 @@ bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
     QSGStochasticEngine *engine = 0;
     if (!m_systemStates){
         //TODO: Affect all engines
-        foreach (QSGParticlePainter *p, m_system->m_groupData[d->group]->painters)
+        foreach (QSGParticlePainter *p, m_system->groupData[d->group]->painters)
             if (qobject_cast<QSGImageParticle*>(p))
                 engine = qobject_cast<QSGImageParticle*>(p)->spriteEngine();
     }else{
-        engine = m_system->m_stateEngine;
+        engine = m_system->stateEngine;
         if (!engine)
             m_notUsingEngine = true;
     }
@@ -124,7 +144,6 @@ bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
         m_system->moveGroups(d, m_goalIdx);
     }else if (engine->curState(index) != m_goalIdx){
         engine->setGoal(m_goalIdx, index, m_jump);
-        emit affected(QPointF(d->curX(), d->curY()));//###Expensive if unconnected? Move to Affector?
         return true; //Doesn't affect particle data, but necessary for onceOff
     }
     return false;

@@ -42,7 +42,7 @@
 #include "QtQuick1/private/qdeclarativeopenmetaobject_p.h"
 #include "QtDeclarative/private/qdeclarativepropertycache_p.h"
 #include "QtDeclarative/private/qdeclarativedata_p.h"
-#include <QtDeclarative/private/qmetaobjectbuilder_p.h>
+#include <private/qmetaobjectbuilder_p.h>
 #include <qdebug.h>
 
 QT_BEGIN_NAMESPACE

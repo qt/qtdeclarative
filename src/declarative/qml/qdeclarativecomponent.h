@@ -55,12 +55,15 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QDeclarativeCompiledData;
 class QByteArray;
-class QDeclarativeComponentPrivate;
 class QDeclarativeEngine;
-class QDeclarativeComponentAttached;
+class QDeclarativeComponent;
+class QDeclarativeIncubator;
 class QDeclarativeV8Function;
+class QDeclarativeCompiledData;
+class QDeclarativeComponentPrivate;
+class QDeclarativeComponentAttached;
+
 class Q_DECLARATIVE_EXPORT QDeclarativeComponent : public QObject
 {
     Q_OBJECT
@@ -97,6 +100,9 @@ public:
     virtual QObject *beginCreate(QDeclarativeContext *);
     virtual void completeCreate();
 
+    void create(QDeclarativeIncubator &, QDeclarativeContext *context = 0,
+                QDeclarativeContext *forContext = 0);
+
     QDeclarativeContext *creationContext() const;
 
     static QDeclarativeComponentAttached *qmlAttachedProperties(QObject *);
@@ -112,6 +118,7 @@ Q_SIGNALS:
 protected:
     QDeclarativeComponent(QDeclarativeComponentPrivate &dd, QObject* parent);
     Q_INVOKABLE void createObject(QDeclarativeV8Function *);
+    Q_INVOKABLE void incubateObject(QDeclarativeV8Function *);
 
 private:
     QDeclarativeComponent(QDeclarativeEngine *, QDeclarativeCompiledData *, int, QObject *parent);

@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativedebugservice_p.h"
-#include "private/qdeclarativedebugservice_p_p.h"
-#include "private/qdeclarativedebugserver_p.h"
+#include "qdeclarativedebugservice_p.h"
+#include "qdeclarativedebugservice_p_p.h"
+#include "qdeclarativedebugserver_p.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QStringList>

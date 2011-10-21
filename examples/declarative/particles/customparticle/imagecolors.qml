@@ -62,7 +62,7 @@ Rectangle {
             }
             Image {
                 id: picture
-                source: "../images/smile.png"
+                source: "../images/starfish_3.png"
             }
             ShaderEffectSource {
                 id: particleSource
@@ -71,7 +71,7 @@ Rectangle {
             }
             Image {
                 id: particle
-                source: "../images/particle.png"
+                source: "../images/particle4.png"
             }
             vertexShader:"
                 uniform highp float maxWidth;
@@ -104,15 +104,15 @@ Rectangle {
             id: emitter
             system: sys
             enabled: false
-            lifeSpan: 4000
-            maximumEmitted: 1200
+            lifeSpan: 8000
+            maximumEmitted: 4000
             anchors.fill: parent
-            size: 32
-            speed: PointDirection { xVariation: 12; yVariation: 12 }
+            size: 16
+            acceleration: PointDirection { xVariation: 12; yVariation: 12 }
         }
         MouseArea {
             anchors.fill: parent
-            onClicked: emitter.burst(1200);
+            onClicked: emitter.burst(4000);
         }
     }
 }

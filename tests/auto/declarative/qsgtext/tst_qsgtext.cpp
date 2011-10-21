@@ -53,19 +53,12 @@
 #include <private/qapplication_p.h>
 #include <limits.h>
 #include <QtGui/QMouseEvent>
-#include "../../../shared/util.h"
+#include "../shared/util.h"
 #include "testhttpserver.h"
-#include <QtOpenGL/QGLShaderProgram>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 class tst_qsgtext : public QObject
-
 {
     Q_OBJECT
 public:
@@ -89,7 +82,7 @@ private slots:
     void lineCount();
     void lineHeight();
 
-    // ### these tests may be trivial    
+    // ### these tests may be trivial
     void horizontalAlignment();
     void horizontalAlignment_RightToLeft();
     void verticalAlignment();
@@ -109,9 +102,10 @@ private slots:
 
     void clickLink();
 
-
     void implicitSize_data();
     void implicitSize();
+
+    void lineLaidOut();
 
 
 private:
@@ -315,20 +309,20 @@ void tst_qsgtext::width()
     {
         QVERIFY(Qt::mightBeRichText(richText.at(i))); // self-test
 
-        QTextDocument document;
-        document.setHtml(richText.at(i));
-        document.setDocumentMargin(0);
-
-        int documentWidth = document.idealWidth();
-
-        QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\" }";
+        QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\"; textFormat: Text.RichText }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGText *textObject = qobject_cast<QSGText*>(textComponent.create());
-
         QVERIFY(textObject != 0);
-        QCOMPARE(textObject->width(), qreal(documentWidth));
-        QVERIFY(textObject->textFormat() == QSGText::AutoText); // setting text doesn't change format
+
+        QSGTextPrivate *textPrivate = QSGTextPrivate::get(textObject);
+        QVERIFY(textPrivate != 0);
+
+        QTextDocument *doc = textPrivate->textDocument();
+        QVERIFY(doc != 0);
+
+        QCOMPARE(int(textObject->width()), int(doc->idealWidth()));
+        QVERIFY(textObject->textFormat() == QSGText::RichText);
 
         delete textObject;
     }
@@ -465,6 +459,24 @@ void tst_qsgtext::textFormat()
         QVERIFY(textObject != 0);
         QVERIFY(textObject->textFormat() == QSGText::RichText);
 
+        QSGTextPrivate *textPrivate = QSGTextPrivate::get(textObject);
+        QVERIFY(textPrivate != 0);
+        QVERIFY(textPrivate->richText == true);
+
+        delete textObject;
+    }
+    {
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData("import QtQuick 2.0\nText { text: \"<b>Hello</b>\" }", QUrl::fromLocalFile(""));
+        QSGText *textObject = qobject_cast<QSGText*>(textComponent.create());
+
+        QVERIFY(textObject != 0);
+        QVERIFY(textObject->textFormat() == QSGText::AutoText);
+
+        QSGTextPrivate *textPrivate = QSGTextPrivate::get(textObject);
+        QVERIFY(textPrivate != 0);
+        QVERIFY(textPrivate->styledText == true);
+
         delete textObject;
     }
     {
@@ -486,24 +498,23 @@ void tst_qsgtext::alignments_data()
     QTest::addColumn<int>("vAlign");
     QTest::addColumn<QString>("expectfile");
 
-    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << SRCDIR "/data/alignments_lt.png";
-    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << SRCDIR "/data/alignments_rt.png";
-    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << SRCDIR "/data/alignments_ct.png";
+    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << TESTDATA("alignments_lt.png");
+    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << TESTDATA("alignments_rt.png");
+    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << TESTDATA("alignments_ct.png");
 
-    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << SRCDIR "/data/alignments_lb.png";
-    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << SRCDIR "/data/alignments_rb.png";
-    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << SRCDIR "/data/alignments_cb.png";
+    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << TESTDATA("alignments_lb.png");
+    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << TESTDATA("alignments_rb.png");
+    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << TESTDATA("alignments_cb.png");
 
-    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << SRCDIR "/data/alignments_lc.png";
-    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << SRCDIR "/data/alignments_rc.png";
-    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << SRCDIR "/data/alignments_cc.png";
+    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << TESTDATA("alignments_lc.png");
+    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << TESTDATA("alignments_rc.png");
+    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << TESTDATA("alignments_cc.png");
 }
 
 
 void tst_qsgtext::alignments()
 {
-
-    QSKIP("Text alignment pixmap comparison tests will not work with scenegraph", SkipAll);
+    QSKIP("Text alignment pixmap comparison tests will not work with scenegraph");
 #if (0)// No widgets in scenegraph
     QFETCH(int, hAlign);
     QFETCH(int, vAlign);
@@ -516,7 +527,7 @@ void tst_qsgtext::alignments()
     QApplication::setFont(fn);
 #endif
 
-    QSGView *canvas = createView(SRCDIR "/data/alignments.qml");
+    QSGView *canvas = createView(TESTDATA("alignments.qml"));
 
     canvas->show();
     canvas->requestActivateWindow();
@@ -585,7 +596,7 @@ void tst_qsgtext::horizontalAlignment()
 
 void tst_qsgtext::horizontalAlignment_RightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontalAlignment_RightToLeft.qml");
+    QSGView *canvas = createView(TESTDATA("horizontalAlignment_RightToLeft.qml"));
     QSGText *text = canvas->rootObject()->findChild<QSGText*>("text");
     QVERIFY(text != 0);
     canvas->show();
@@ -768,7 +779,7 @@ void tst_qsgtext::font()
         delete textObject;
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nText { font.bold: true; text: \"Hello World\" }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -780,7 +791,7 @@ void tst_qsgtext::font()
         delete textObject;
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nText { font.italic: true; text: \"Hello World\" }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -792,7 +803,7 @@ void tst_qsgtext::font()
         delete textObject;
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nText { font.family: \"Helvetica\"; text: \"Hello World\" }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -805,7 +816,7 @@ void tst_qsgtext::font()
         delete textObject;
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nText { font.family: \"\"; text: \"Hello World\" }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -821,7 +832,7 @@ void tst_qsgtext::style()
 {
     //test style
     for (int i = 0; i < styles.size(); i++)
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nText { style: \"" + styleStrings.at(i) + "\"; styleColor: \"white\"; text: \"Hello World\" }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -851,7 +862,7 @@ void tst_qsgtext::color()
 {
     //test style
     for (int i = 0; i < colorStrings.size(); i++)
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nText { color: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -864,7 +875,7 @@ void tst_qsgtext::color()
     }
 
     for (int i = 0; i < colorStrings.size(); i++)
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nText { styleColor: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -876,9 +887,9 @@ void tst_qsgtext::color()
 
         delete textObject;
     }
-    
+
     for (int i = 0; i < colorStrings.size(); i++)
-    { 
+    {
         for (int j = 0; j < colorStrings.size(); j++)
         {
             QString componentStr = "import QtQuick 2.0\nText { color: \"" + colorStrings.at(i) + "\"; styleColor: \"" + colorStrings.at(j) + "\"; text: \"Hello World\" }";
@@ -1255,12 +1266,12 @@ void tst_qsgtext::embeddedImages_data()
 {
     QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<QString>("error");
-    QTest::newRow("local") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesLocal.qml") << "";
-    QTest::newRow("local-error") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesLocalError.qml")
-        << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + QUrl::fromLocalFile(SRCDIR "/data/http/notexists.png").toString();
-    QTest::newRow("remote") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesRemote.qml") << "";
-    QTest::newRow("remote-error") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesRemoteError.qml")
-        << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading http://127.0.0.1:14453/notexists.png - server replied: Not found";
+    QTest::newRow("local") << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocal.qml")) << "";
+    QTest::newRow("local-error") << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocalError.qml"))
+        << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocalError.qml")).toString()+":3:1: QML Text: Cannot open: " + QUrl::fromLocalFile(TESTDATA("http/notexists.png")).toString();
+    QTest::newRow("remote") << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemote.qml")) << "";
+    QTest::newRow("remote-error") << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemoteError.qml"))
+        << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemoteError.qml")).toString()+":3:1: QML Text: Error downloading http://127.0.0.1:14453/notexists.png - server replied: Not found";
 }
 
 void tst_qsgtext::embeddedImages()
@@ -1271,11 +1282,11 @@ void tst_qsgtext::embeddedImages()
     QFETCH(QString, error);
 
     TestHTTPServer server(14453);
-    server.serveDirectory(SRCDIR "/data/http");
+    server.serveDirectory(TESTDATA("http"));
 
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
-    
+
     QDeclarativeComponent textComponent(&engine, qmlfile);
     QSGText *textObject = qobject_cast<QSGText*>(textComponent.create());
 
@@ -1283,7 +1294,7 @@ void tst_qsgtext::embeddedImages()
 
     QTRY_COMPARE(textObject->resourcesLoading(), 0);
 
-    QPixmap pm(SRCDIR "/data/http/exists.png");
+    QPixmap pm(TESTDATA("http/exists.png"));
     if (error.isEmpty()) {
         QCOMPARE(textObject->width(), double(pm.width()));
         QCOMPARE(textObject->height(), double(pm.height()));
@@ -1298,7 +1309,7 @@ void tst_qsgtext::embeddedImages()
 
 void tst_qsgtext::lineCount()
 {
-    QSGView *canvas = createView(SRCDIR "/data/lineCount.qml");
+    QSGView *canvas = createView(TESTDATA("lineCount.qml"));
 
     QSGText *myText = canvas->rootObject()->findChild<QSGText*>("myText");
     QVERIFY(myText != 0);
@@ -1327,7 +1338,7 @@ void tst_qsgtext::lineCount()
 
 void tst_qsgtext::lineHeight()
 {
-    QSGView *canvas = createView(SRCDIR "/data/lineHeight.qml");
+    QSGView *canvas = createView(TESTDATA("lineHeight.qml"));
 
     QSGText *myText = canvas->rootObject()->findChild<QSGText*>("myText");
     QVERIFY(myText != 0);
@@ -1390,6 +1401,32 @@ void tst_qsgtext::implicitSize()
     delete textObject;
 }
 
+void tst_qsgtext::lineLaidOut()
+{
+    QSGView *canvas = createView(TESTDATA("lineLayout.qml"));
+
+    QSGText *myText = canvas->rootObject()->findChild<QSGText*>("myText");
+    QVERIFY(myText != 0);
+
+    QSGTextPrivate *textPrivate = QSGTextPrivate::get(myText);
+    QVERIFY(textPrivate != 0);
+
+    QTextDocument *doc = textPrivate->textDocument();
+    QVERIFY(doc == 0);
+
+    QVERIFY(myText->lineCount() == textPrivate->linesRects.count());
+
+    for (int i = 0; i < textPrivate->linesRects.count(); ++i) {
+        QRectF r = textPrivate->linesRects.at(i);
+        QVERIFY(r.width() == i * 15);
+        if (i >= 30)
+            QVERIFY(r.x() == r.width() + 30);
+        if (i >= 60) {
+            QVERIFY(r.x() == r.width() * 2 + 60);
+            QVERIFY(r.height() == 20);
+        }
+    }
+}
 
 QTEST_MAIN(tst_qsgtext)
 

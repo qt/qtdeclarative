@@ -140,7 +140,7 @@ void QSGTurbulenceAffector::initializeGrid()
     if (!m_noiseSource.isEmpty())
         image = QImage(m_noiseSource.toLocalFile()).scaled(QSize(m_gridSize, m_gridSize));
     if (image.isNull())
-        image = QImage(":defaultshaders/noise.png").scaled(QSize(m_gridSize, m_gridSize));
+        image = QImage(QStringLiteral(":particleresources/noise.png")).scaled(QSize(m_gridSize, m_gridSize));
 
     for (int i=0; i<m_gridSize; i++)
         for (int j=0; j<m_gridSize; j++)
@@ -185,8 +185,8 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
     updateOffsets();//### Needed if an ancestor is transformed.
 
     QRect boundsRect(0,0,m_gridSize,m_gridSize);
-    foreach (QSGParticleGroupData *gd, m_system->m_groupData){
-        if (!activeGroup(m_system->m_groupData.key(gd)))
+    foreach (QSGParticleGroupData *gd, m_system->groupData){
+        if (!activeGroup(m_system->groupData.key(gd)))
             continue;
         foreach (QSGParticleData *d, gd->data){
             if (!shouldAffect(d))

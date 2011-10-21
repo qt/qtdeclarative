@@ -68,6 +68,9 @@ private:
 tst_examples::tst_examples()
 {
     // Add directories you want excluded here
+#ifdef Q_WS_QPA
+    excludedDirs << "examples/declarative/text/fonts"; // QTBUG-21415
+#endif
 
     // Not run in QSGView
     excludedDirs << "examples/declarative/qtquick1";

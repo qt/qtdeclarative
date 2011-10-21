@@ -45,27 +45,37 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qsgitem.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 #include <qcolor.h>
+#include "../shared/util.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+class MyIC : public QObject, public QDeclarativeIncubationController
+{
+    Q_OBJECT
+public:
+    MyIC() { startTimer(5); }
+protected:
+    virtual void timerEvent(QTimerEvent*) {
+        incubateFor(5);
+    }
+};
 
 class tst_qdeclarativecomponent : public QObject
 {
     Q_OBJECT
 public:
-    tst_qdeclarativecomponent() { }
+    tst_qdeclarativecomponent() { engine.setIncubationController(&ic); }
 
 private slots:
     void null();
     void loadEmptyUrl();
     void qmlCreateObject();
     void qmlCreateObjectWithProperties();
+    void qmlIncubateObject();
 
 private:
     QDeclarativeEngine engine;
+    MyIC ic;
 };
 
 void tst_qdeclarativecomponent::null()
@@ -96,10 +106,23 @@ void tst_qdeclarativecomponent::loadEmptyUrl()
     QCOMPARE(error.description(), QLatin1String("Invalid empty URL"));
 }
 
+void tst_qdeclarativecomponent::qmlIncubateObject()
+{
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("incubateObject.qml")));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("test1").toBool(), true);
+    QCOMPARE(object->property("test2").toBool(), false);
+
+    QTRY_VERIFY(object->property("test2").toBool() == true);
+
+    delete object;
+}
+
 void tst_qdeclarativecomponent::qmlCreateObject()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/createObject.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("createObject.qml")));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -116,7 +139,7 @@ void tst_qdeclarativecomponent::qmlCreateObject()
 void tst_qdeclarativecomponent::qmlCreateObjectWithProperties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/createObjectWithScript.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("createObjectWithScript.qml")));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QObject *object = component.create();
     QVERIFY(object != 0);

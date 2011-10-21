@@ -56,6 +56,7 @@ class QSGItem;
 class QSGEngine;
 class QSGCanvasPrivate;
 class QOpenGLFramebufferObject;
+class QDeclarativeIncubationController;
 
 class Q_DECLARATIVE_EXPORT QSGCanvas : public QWindow
 {
@@ -84,6 +85,8 @@ public:
 
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
     QOpenGLFramebufferObject *renderTarget() const;
+
+    QDeclarativeIncubationController *incubationController() const;
 
 Q_SIGNALS:
     void frameSwapped();

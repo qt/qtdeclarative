@@ -1,16 +1,11 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui
+CONFIG += testcase
+TARGET = tst_qsgtextinput
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qsgtextinput.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
-QT += core-private gui-private v8-private declarative-private
-QT += opengl-private
+QT += core-private gui-private v8-private declarative-private opengl-private testlib

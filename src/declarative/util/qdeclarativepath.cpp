@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativepath_p.h"
-#include "private/qdeclarativepath_p_p.h"
-#include "private/qdeclarativesvgparser_p.h"
+#include "qdeclarativepath_p.h"
+#include "qdeclarativepath_p_p.h"
+#include "qdeclarativesvgparser_p.h"
 
 #include <QSet>
 #include <QTime>
@@ -608,7 +608,8 @@ QPointF QDeclarativePath::backwardsPointAt(const QPainterPath &path, const qreal
                 Q_ASSERT(!(currElement < firstElement));
                 currBez = nextBezier(path, &currElement, &bezLength, true /*reverse*/);
                 currLength = prevLength;
-                epc = (currLength - bezLength) / pathLength;
+                prevLength = currLength - bezLength;
+                epc = prevLength / pathLength;
             }
             prevBez.element = currElement;
             prevBez.bezLength = bezLength;

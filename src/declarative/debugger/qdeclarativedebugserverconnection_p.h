@@ -42,7 +42,7 @@
 #ifndef QDECLARATIVEDEBUGSERVERCONNECTION_H
 #define QDECLARATIVEDEBUGSERVERCONNECTION_H
 
-#include <QtDeclarative/private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativeglobal_p.h>
 
 //
 //  W A R N I N G

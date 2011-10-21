@@ -80,7 +80,8 @@ public:
     virtual QRectF textureSubRect() const;
 
     virtual bool isAtlasTexture() const;
-    virtual void removeFromAtlas();
+
+    virtual QSGTexture *removedFromAtlas() const;
 
     virtual void bind() = 0;
     void updateBindOptions(bool force = false);

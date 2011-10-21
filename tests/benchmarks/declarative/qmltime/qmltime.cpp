@@ -247,11 +247,7 @@ int main(int argc, char ** argv)
     }
 
     if (filename.isEmpty())
-#ifdef Q_OS_SYMBIAN
-        filename = QLatin1String("./tests/item_creation/data.qml");
-#else
         usage(argv[0]);
-#endif
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, filename);
@@ -272,19 +268,12 @@ int main(int argc, char ** argv)
         return -1;
     }
 
-#ifdef Q_OS_SYMBIAN
-    willParent = true;
-#endif
     timer->setWillParent(willParent);
 
     if (!timer->component()) {
         qWarning() << "The timer has no component";
         return -1;
     }
-
-#ifdef Q_OS_SYMBIAN
-    iterations = 1024;
-#endif
 
     timer->run(iterations);
 

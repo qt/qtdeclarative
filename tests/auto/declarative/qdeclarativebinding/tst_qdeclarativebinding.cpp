@@ -43,15 +43,9 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativebind_p.h>
 #include <private/qsgrectangle_p.h>
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include "../shared/util.h"
 
 class tst_qdeclarativebinding : public QObject
-
 {
     Q_OBJECT
 public:
@@ -75,7 +69,7 @@ tst_qdeclarativebinding::tst_qdeclarativebinding()
 void tst_qdeclarativebinding::binding()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-binding.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-binding.qml")));
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -103,7 +97,7 @@ void tst_qdeclarativebinding::binding()
 void tst_qdeclarativebinding::whenAfterValue()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-binding2.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-binding2.qml")));
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
 
     QVERIFY(rect != 0);
@@ -119,7 +113,7 @@ void tst_qdeclarativebinding::whenAfterValue()
 void tst_qdeclarativebinding::restoreBinding()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/restoreBinding.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("restoreBinding.qml")));
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -149,7 +143,7 @@ void tst_qdeclarativebinding::restoreBinding()
 void tst_qdeclarativebinding::restoreBindingWithLoop()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/restoreBindingWithLoop.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("restoreBindingWithLoop.qml")));
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -184,7 +178,7 @@ void tst_qdeclarativebinding::restoreBindingWithLoop()
 void tst_qdeclarativebinding::deletedObject()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/deletedObject.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("deletedObject.qml")));
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect != 0);
 

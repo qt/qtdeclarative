@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qfileinfo.h>
@@ -51,16 +52,34 @@
 #include <private/qdeclarativeglobal_p.h>
 
 #include "testtypes.h"
-
-#include "../../../shared/util.h"
 #include "testhttpserver.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
+
+/*
+    Returns the path to some testdata file or directory.
+*/
+QString testdata(QString const& name = QString())
+{
+    /*
+        Try to find it relative to the binary.
+        Note we are looking for a _directory_ which exists, but the _file_ itself need not exist,
+        to support the case of finding a path to a testdata file which doesn't exist yet (i.e.
+        a file we are about to create).
+    */
+    QFileInfo relative = QDir(QCoreApplication::applicationDirPath()).filePath(QLatin1String("data/") + name);
+    if (relative.dir().exists()) {
+        return relative.absoluteFilePath();
+    }
+
+    qWarning("requested testdata %s could not be found (looked at %s)",
+        qPrintable(name),
+        qPrintable(relative.filePath())
+    );
+
+    // Chances are the calling test will now fail.
+    return QString();
+}
 
 
 /*
@@ -75,8 +94,7 @@ class tst_qdeclarativelanguage : public QObject
 public:
     tst_qdeclarativelanguage() {
         QDeclarativeMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
-        QFileInfo fileInfo(__FILE__);
-        engine.addImportPath(fileInfo.absoluteDir().filePath(QLatin1String("data/lib")));
+        engine.addImportPath(testdata("lib"));
     }
 
 private slots:
@@ -101,6 +119,7 @@ private slots:
     void assignTypeExtremes();
     void assignCompositeToType();
     void assignLiteralToVariant();
+    void assignLiteralToVar();
     void customParserTypes();
     void rootAsQmlComponent();
     void inlineQmlComponents();
@@ -178,7 +197,7 @@ private:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        QFile file(QLatin1String(SRCDIR) + QLatin1String("/data/") + QLatin1String(errorfile)); \
+        QFile file(testdata(QLatin1String(errorfile))); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \
@@ -209,8 +228,7 @@ private:
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath(QLatin1String("data/") + filename));
+    return QUrl::fromLocalFile(testdata(filename));
 }
 
 inline QUrl TEST_FILE(const char *filename)
@@ -625,6 +643,57 @@ void tst_qdeclarativelanguage::assignLiteralToVariant()
     QVERIFY(object->property("test10") == QVariant(bool(true)));
     QVERIFY(object->property("test11") == QVariant(bool(false)));
     QVERIFY(object->property("test12") == QVariant(QVector4D(100, 100, 100, 100)));
+
+    delete object;
+}
+
+// Test that literals are stored correctly in "var" properties
+// Note that behaviour differs from "variant" properties in that
+// no conversion from "special strings" to QVariants is performed.
+void tst_qdeclarativelanguage::assignLiteralToVar()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("assignLiteralToVar.qml"));
+    VERIFY_ERRORS(0);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test1").userType(), (int)QMetaType::Int);
+    QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
+    QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test5").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test6").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test7").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test8").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("test12").userType(), (int)QVariant::Color);
+    QCOMPARE(object->property("test13").userType(), (int)QVariant::RectF);
+    QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
+    QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
+    QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
+    QCOMPARE(object->property("variantTest1Bound").userType(), (int)QMetaType::Int);
+    QCOMPARE(object->property("test1Bound").userType(), (int)QMetaType::Int);
+
+    QCOMPARE(object->property("test1"), QVariant(5));
+    QCOMPARE(object->property("test2"), QVariant((double)1.7));
+    QCOMPARE(object->property("test3"), QVariant(QString(QLatin1String("Hello world!"))));
+    QCOMPARE(object->property("test4"), QVariant(QString(QLatin1String("#FF008800"))));
+    QCOMPARE(object->property("test5"), QVariant(QString(QLatin1String("10,10,10x10"))));
+    QCOMPARE(object->property("test6"), QVariant(QString(QLatin1String("10,10"))));
+    QCOMPARE(object->property("test7"), QVariant(QString(QLatin1String("10x10"))));
+    QCOMPARE(object->property("test8"), QVariant(QString(QLatin1String("100,100,100"))));
+    QCOMPARE(object->property("test9"), QVariant(QString(QLatin1String("#FF008800"))));
+    QCOMPARE(object->property("test10"), QVariant(bool(true)));
+    QCOMPARE(object->property("test11"), QVariant(bool(false)));
+    QCOMPARE(object->property("test12"), QVariant(QColor::fromRgbF(0.2, 0.3, 0.4, 0.5)));
+    QCOMPARE(object->property("test13"), QVariant(QRectF(10, 10, 10, 10)));
+    QCOMPARE(object->property("test14"), QVariant(QPointF(10, 10)));
+    QCOMPARE(object->property("test15"), QVariant(QSizeF(10, 10)));
+    QCOMPARE(object->property("test16"), QVariant(QVector3D(100, 100, 100)));
+    QCOMPARE(object->property("variantTest1Bound"), QVariant(9));
+    QCOMPARE(object->property("test1Bound"), QVariant(11));
 
     delete object;
 }
@@ -1642,7 +1711,7 @@ void tst_qdeclarativelanguage::basicRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server(14447);
-    server.serveDirectory(SRCDIR);
+    server.serveDirectory(testdata());
 
     QDeclarativeComponent component(&engine, url);
 
@@ -1686,7 +1755,7 @@ void tst_qdeclarativelanguage::importsRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server(14447);
-    server.serveDirectory(SRCDIR);
+    server.serveDirectory(testdata());
 
     testType(qml,type,error);
 }
@@ -1847,7 +1916,7 @@ void tst_qdeclarativelanguage::importIncorrectCase()
     QCOMPARE(errors.count(), 1);
 
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
-    QString expectedError = QLatin1String("cannot load module \"com.Nokia.installedtest\": File name case mismatch for \"") + QFileInfo(__FILE__).absoluteDir().filePath("data/lib/com/Nokia/installedtest/qmldir") + QLatin1String("\"");
+    QString expectedError = QLatin1String("cannot load module \"com.Nokia.installedtest\": File name case mismatch for \"") + testdata("lib/com/Nokia/installedtest/qmldir") + QLatin1String("\"");
 #else
     QString expectedError = QLatin1String("module \"com.Nokia.installedtest\" is not installed");
 #endif
@@ -2077,10 +2146,10 @@ void tst_qdeclarativelanguage::registrationOrder()
 void tst_qdeclarativelanguage::remoteLoadCrash()
 {
     TestHTTPServer server(14448);
-    server.serveDirectory(SRCDIR);
+    server.serveDirectory(testdata());
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0; Text {}", QUrl("http://127.0.0.1:14448/data/remoteLoadCrash.qml"));
+    component.setData("import QtQuick 1.0; Text {}", QUrl("http://127.0.0.1:14448/remoteLoadCrash.qml"));
     while (component.isLoading()) 
         QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
 

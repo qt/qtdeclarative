@@ -1,15 +1,8 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = qmltime
-QT += declarative
+QT += declarative widgets testlib
 macx:CONFIG -= app_bundle
 
 SOURCES += qmltime.cpp 
-
-symbian {
-    TARGET.CAPABILITY = "All -TCB"
-    example.files = example.qml tests
-    example.path = .
-    DEPLOYMENT += example
-}
 

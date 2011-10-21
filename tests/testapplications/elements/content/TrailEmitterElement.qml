@@ -1,0 +1,165 @@
+/****************************************************************************
+**
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the test suite of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** GNU Lesser General Public License Usage
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights. These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+import QtQuick 2.0
+import QtQuick.Particles 2.0
+
+Item {
+    id: trailemitterelementtest
+    anchors.fill: parent
+    property string testtext: ""
+
+    ParticleSystem {
+        id: particlesystem
+        anchors.fill: parent
+        Image {
+            id: backgroundpic
+            anchors.fill: parent
+            source: "pics/logo.png"
+            opacity: 0
+            Behavior on opacity { NumberAnimation { duration: 1000 } }
+        }
+        ImageParticle {
+            id: omissile
+            source: "pics/star.png"
+            color: "orange"
+            entryEffect: ImageParticle.None
+            groups: ["orangemissile"]
+        }
+        ImageParticle {
+            id: gmissile
+            source: "pics/star.png"
+            color: "green"
+            entryEffect: ImageParticle.None
+            groups: ["greenmissile"]
+        }
+        ImageParticle {
+            id: sparks
+            source: "pics/star.png"
+            color: "red"
+            colorVariation: .5
+            entryEffect: ImageParticle.None
+            groups: ["sparks"]
+        }
+        Emitter {
+            id: emitter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 5
+            anchors.horizontalCenter: parent.horizontalCenter
+            emitRate: 1
+            lifeSpan: 3000
+            size: 20
+            speed: AngleDirection { angle: 270; angleVariation: 25; magnitude: 150 }
+            group: "orangemissile"
+        }
+        Emitter {
+            id: emitter2
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 5
+            anchors.horizontalCenter: parent.horizontalCenter
+            emitRate: 1
+            lifeSpan: 3000
+            size: 20
+            speed: AngleDirection { angle: 270; angleVariation: 25; magnitude: 150 }
+            group: "greenmissile"
+        }
+        Gravity {
+            anchors.fill: parent
+            angle: 90
+            acceleration: 30
+        }
+        TrailEmitter {
+            id: trailemitterelement
+            follow: "orangemissile"
+            group:"sparks"
+            anchors.fill: parent
+            emitRatePerParticle: 50
+            lifeSpan: 1000
+            speedFromMovement: .2
+            speed: AngleDirection { angle: 0; angleVariation: 360; magnitude: 5 }
+            maximumEmitted: 500
+            shape: basicshape
+        }
+
+        RectangleShape { id: basicshape }
+
+        MaskShape {
+            id: maskshape
+            source: "pics/logo-hollowed.png"
+        }
+
+    }
+
+    SystemTestHelp { id: helpbubble; visible: statenum != 0
+        anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; topMargin: 50 }
+    }
+    BugPanel { id: bugpanel }
+
+    states: [
+        State { name: "start"; when: statenum == 1
+            PropertyChanges { target: trailemitterelementtest
+                testtext: "This is a TrailEmitter, with particles following the orange particles.\n"+
+                "The green particles should not be followed by other particles.\n"+
+                "Next, let's change the sparks to follow the green particles." }
+        },
+        State { name: "followgreen"; when: statenum == 2
+            PropertyChanges { target: trailemitterelement; follow: "greenmissile" }
+            PropertyChanges { target: trailemitterelementtest
+                testtext: "The particles should be following the green particles.\n"+
+                "Next, let's add a shape to emit within." }
+        },
+        State { name: "onlyinshape"; when: statenum == 3
+            PropertyChanges { target: trailemitterelement; follow: "greenmissile"; shape: maskshape }
+            PropertyChanges { target: backgroundpic; opacity: .5 }
+            PropertyChanges { target: trailemitterelementtest
+            testtext: "The particles should now be only emitted when they pass through the 'Qt' text.\n"+
+                "Next, let's create small Qt missiles." }
+        },
+        State { name: "emittingashape"; when: statenum == 4
+            PropertyChanges { target: trailemitterelement; follow: "greenmissile"; shape: basicshape
+                emitHeight: 60; emitWidth: 60; emitRatePerParticle: 1500; emitShape: maskshape; maximumEmitted: 1500; lifeSpan: 50
+            }
+            PropertyChanges { target: trailemitterelementtest
+                testtext: "The particles should now be Qt text shaped particles.\n"+
+                "Advance to restart the test." }
+        }
+    ]
+}

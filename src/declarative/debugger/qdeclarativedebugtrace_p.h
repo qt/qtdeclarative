@@ -55,6 +55,8 @@
 
 #include <private/qdeclarativedebugservice_p.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qvector.h>
 
 QT_BEGIN_HEADER
 
@@ -69,11 +71,17 @@ struct QDeclarativeDebugData
     //###
     QString detailData; //used by RangeData and RangeLocation
     int line;           //used by RangeLocation
+    int framerate;      //used by animation events
+    int animationcount; //used by animation events
 
     QByteArray toByteArray() const;
 };
 
+Q_DECLARE_TYPEINFO(QDeclarativeDebugData, Q_MOVABLE_TYPE);
+
 class QUrl;
+class QDeclarativeEngine;
+
 class Q_DECLARATIVE_EXPORT QDeclarativeDebugTrace : public QDeclarativeDebugService
 {
 public:
@@ -92,6 +100,8 @@ public:
         FramePaint,
         Mouse,
         Key,
+        AnimationFrame,
+        EndTrace,
 
         MaximumEventType
     };
@@ -106,6 +116,9 @@ public:
         MaximumRangeType
     };
 
+    static void addEngine(QDeclarativeEngine *engine);
+    static void removeEngine(QDeclarativeEngine *engine);
+
     static void addEvent(EventType);
 
     static void startRange(RangeType);
@@ -114,8 +127,10 @@ public:
     static void rangeLocation(RangeType, const QString &, int);
     static void rangeLocation(RangeType, const QUrl &, int);
     static void endRange(RangeType);
+    static void animationFrame(qint64);
 
     QDeclarativeDebugTrace();
+    ~QDeclarativeDebugTrace();
 protected:
     virtual void messageReceived(const QByteArray &);
 private:
@@ -126,13 +141,15 @@ private:
     void rangeLocationImpl(RangeType, const QString &, int);
     void rangeLocationImpl(RangeType, const QUrl &, int);
     void endRangeImpl(RangeType);
+    void animationFrameImpl(qint64);
     void processMessage(const QDeclarativeDebugData &);
     void sendMessages();
     QElapsedTimer m_timer;
     bool m_enabled;
     bool m_deferredSend;
     bool m_messageReceived;
-    QList<QDeclarativeDebugData> m_data;
+    QVector<QDeclarativeDebugData> m_data;
+    QMutex m_mutex;
 };
 
 QT_END_NAMESPACE

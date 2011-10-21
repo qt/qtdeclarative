@@ -1,14 +1,11 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui
+CONFIG += testcase
+TARGET = tst_qsgview
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qsgview.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
-QT += core-private gui-private declarative-private
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
+
+QT += core-private gui-private declarative-private testlib

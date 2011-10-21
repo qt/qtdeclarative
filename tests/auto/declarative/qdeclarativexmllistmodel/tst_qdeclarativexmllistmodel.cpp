@@ -52,17 +52,11 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qtemporaryfile.h>
+#include "../shared/util.h"
 
-#ifdef QTEST_XMLPATTERNS
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativexmllistmodel_p.h>
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 typedef QPair<int, int> QDeclarativeXmlListRange;
 typedef QList<QVariantList> QDeclarativeXmlModelData;
@@ -193,7 +187,7 @@ QNetworkAccessManager *CustomNetworkAccessManagerFactory::create(QObject *parent
 
 void tst_qdeclarativexmllistmodel::buildModel()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
@@ -216,7 +210,7 @@ void tst_qdeclarativexmllistmodel::testTypes()
     QFETCH(QString, roleName);
     QFETCH(QVariant, expectedValue);
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/testtypes.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("testtypes.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     model->setXml(xml.toUtf8());
@@ -276,7 +270,7 @@ void tst_qdeclarativexmllistmodel::testTypes_data()
 
 void tst_qdeclarativexmllistmodel::cdata()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/recipes.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("recipes.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 5);
@@ -292,7 +286,7 @@ void tst_qdeclarativexmllistmodel::cdata()
 
 void tst_qdeclarativexmllistmodel::attributes()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/recipes.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("recipes.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 5);
@@ -307,7 +301,7 @@ void tst_qdeclarativexmllistmodel::attributes()
 
 void tst_qdeclarativexmllistmodel::roles()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
@@ -324,9 +318,9 @@ void tst_qdeclarativexmllistmodel::roles()
 
 void tst_qdeclarativexmllistmodel::roleErrors()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/roleErrors.qml"));
-    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(SRCDIR "/data/roleErrors.qml").toString() + ":6:5: QML XmlRole: An XmlRole query must not start with '/'").toUtf8().constData());
-    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(SRCDIR "/data/roleErrors.qml").toString() + ":9:5: QML XmlRole: invalid query: \"age/\"").toUtf8().constData());
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleErrors.qml")));
+    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("roleErrors.qml")).toString() + ":6:5: QML XmlRole: An XmlRole query must not start with '/'").toUtf8().constData());
+    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("roleErrors.qml")).toString() + ":9:5: QML XmlRole: invalid query: \"age/\"").toUtf8().constData());
 
     //### make sure we receive all expected warning messages.
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
@@ -351,8 +345,8 @@ void tst_qdeclarativexmllistmodel::roleErrors()
 
 void tst_qdeclarativexmllistmodel::uniqueRoleNames()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/unique.qml"));
-    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(SRCDIR "/data/unique.qml").toString() + ":7:5: QML XmlRole: \"name\" duplicates a previous role name and will be disabled.").toUtf8().constData());
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("unique.qml")));
+    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("unique.qml")).toString() + ":7:5: QML XmlRole: \"name\" duplicates a previous role name and will be disabled.").toUtf8().constData());
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
@@ -369,7 +363,7 @@ void tst_qdeclarativexmllistmodel::xml()
     QFETCH(QString, xml);
     QFETCH(int, count);
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QSignalSpy spy(model, SIGNAL(statusChanged(QDeclarativeXmlListModel::Status)));
 
@@ -418,7 +412,7 @@ void tst_qdeclarativexmllistmodel::headers()
     CustomNetworkAccessManagerFactory factory;
     qmlEng.setNetworkAccessManagerFactory(&factory);
 
-    QDeclarativeComponent component(&qmlEng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&qmlEng, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->status(), QDeclarativeXmlListModel::Ready);
@@ -441,7 +435,7 @@ void tst_qdeclarativexmllistmodel::source()
     QFETCH(int, count);
     QFETCH(QDeclarativeXmlListModel::Status, status);
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QSignalSpy spy(model, SIGNAL(statusChanged(QDeclarativeXmlListModel::Status)));
 
@@ -493,7 +487,7 @@ void tst_qdeclarativexmllistmodel::source_data()
     QTest::addColumn<int>("count");
     QTest::addColumn<QDeclarativeXmlListModel::Status>("status");
 
-    QTest::newRow("valid") << QUrl::fromLocalFile(SRCDIR "/data/model2.xml") << 2 << QDeclarativeXmlListModel::Ready;
+    QTest::newRow("valid") << QUrl::fromLocalFile(TESTDATA("model2.xml")) << 2 << QDeclarativeXmlListModel::Ready;
     QTest::newRow("invalid") << QUrl("http://blah.blah/blah.xml") << 0 << QDeclarativeXmlListModel::Error;
 
     // empty file
@@ -505,7 +499,7 @@ void tst_qdeclarativexmllistmodel::source_data()
 
 void tst_qdeclarativexmllistmodel::data()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());    
     QVERIFY(model != 0);
 
@@ -525,7 +519,7 @@ void tst_qdeclarativexmllistmodel::data()
 
 void tst_qdeclarativexmllistmodel::get()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/get.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("get.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
 
     QVERIFY(model != 0);
@@ -546,7 +540,7 @@ void tst_qdeclarativexmllistmodel::reload()
     // If no keys are used, the model should be rebuilt from scratch when
     // reload() is called.
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
@@ -587,7 +581,7 @@ void tst_qdeclarativexmllistmodel::useKeys()
     QFETCH(QList<QDeclarativeXmlListRange>, insertRanges);
     QFETCH(QList<QDeclarativeXmlListRange>, removeRanges);
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/roleKeys.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
 
@@ -738,7 +732,7 @@ void tst_qdeclarativexmllistmodel::noKeysValueChanges()
     // If a 'sport' value is changed, the model should not be reloaded,
     // since 'sport' is not marked as a key.
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/roleKeys.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     
@@ -776,7 +770,7 @@ void tst_qdeclarativexmllistmodel::keysChanged()
     // delete all its data and build a clean model (i.e. same behaviour as
     // if no keys are set).
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/roleKeys.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
 
@@ -812,7 +806,7 @@ void tst_qdeclarativexmllistmodel::threading()
 {
     QFETCH(int, xmlDataCount);
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/roleKeys.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
 
     QDeclarativeXmlListModel *m1 = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(m1 != 0); 
@@ -885,7 +879,7 @@ void tst_qdeclarativexmllistmodel::threading_data()
 
 void tst_qdeclarativexmllistmodel::propertyChanges()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/propertychanges.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
@@ -956,7 +950,7 @@ void tst_qdeclarativexmllistmodel::propertyChanges()
 void tst_qdeclarativexmllistmodel::roleCrash()
 {
     // don't crash
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/roleCrash.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleCrash.qml")));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
     QVERIFY(model != 0);
     delete model;
@@ -965,7 +959,3 @@ void tst_qdeclarativexmllistmodel::roleCrash()
 QTEST_MAIN(tst_qdeclarativexmllistmodel)
 
 #include "tst_qdeclarativexmllistmodel.moc"
-
-#else
-QTEST_NOOP_MAIN
-#endif

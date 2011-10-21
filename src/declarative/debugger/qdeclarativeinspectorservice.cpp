@@ -39,8 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeinspectorservice_p.h"
-#include "private/qdeclarativeinspectorinterface_p.h"
+#include "qdeclarativeinspectorservice_p.h"
+#include "qdeclarativeinspectorinterface_p.h"
+#include "qdeclarativedebugserver_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
@@ -65,11 +66,13 @@ QDeclarativeInspectorService *QDeclarativeInspectorService::instance()
 void QDeclarativeInspectorService::addView(QObject *view)
 {
     m_views.append(view);
+    updateStatus();
 }
 
 void QDeclarativeInspectorService::removeView(QObject *view)
 {
     m_views.removeAll(view);
+    updateStatus();
 }
 
 void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
@@ -80,17 +83,26 @@ void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
     QDeclarativeDebugService::sendMessage(message);
 }
 
-void QDeclarativeInspectorService::statusChanged(Status status)
+void QDeclarativeInspectorService::statusChanged(Status /*status*/)
 {
-    if (m_views.isEmpty())
-        return;
+    updateStatus();
+}
 
-    if (status == Enabled) {
+void QDeclarativeInspectorService::updateStatus()
+{
+    if (m_views.isEmpty()) {
+        if (m_inspectorPlugin)
+            m_inspectorPlugin->deactivate();
+        return;
+    }
+
+    if (status() == Enabled) {
         if (!m_inspectorPlugin)
             m_inspectorPlugin = loadInspectorPlugin();
 
         if (!m_inspectorPlugin) {
             qWarning() << "Error while loading inspector plugin";
+            QDeclarativeDebugServer::instance()->removeService(this);
             return;
         }
 

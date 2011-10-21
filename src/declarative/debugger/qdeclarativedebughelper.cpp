@@ -39,7 +39,11 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativedebughelper_p.h"
+#include "qdeclarativedebughelper_p.h"
+
+#include <QtDeclarative/QJSEngine>
+
+#include <private/qdeclarativeengine_p.h>
 #include "private/qabstractanimation2_p.h"
 #include <private/qdeclarativeengine_p.h>
 #include <QtDeclarative/QJSEngine>

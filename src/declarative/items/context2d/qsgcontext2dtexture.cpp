@@ -42,8 +42,8 @@
 #include "qsgcontext2dtexture_p.h"
 #include "qsgcontext2dtile_p.h"
 #include "qsgcanvasitem_p.h"
-#include "qsgitem_p.h"
-#include "private/qsgtexture_p.h"
+#include <private/qsgitem_p.h>
+#include <private/qsgtexture_p.h>
 #include "qsgcontext2dcommandbuffer_p.h"
 #include <QOpenGLPaintDevice>
 
@@ -142,12 +142,7 @@ void QSGContext2DTexture::setItem(QSGCanvasItem* item)
         m_context = item->context();
         m_state = m_context->state;
         unlock();
-        connect(this, SIGNAL(textureChanged()), m_item, SIGNAL(painted()), Qt::QueuedConnection);
-        canvasChanged(item->canvasSize().toSize()
-                    , item->tileSize()
-                    , item->canvasWindow().toAlignedRect()
-                    , item->canvasWindow().toAlignedRect()
-                    , item->smooth());
+        connect(this, SIGNAL(textureChanged()), m_item, SIGNAL(painted()));
     }
 }
 
@@ -155,17 +150,23 @@ bool QSGContext2DTexture::setCanvasWindow(const QRect& r)
 {
     if (m_canvasWindow != r) {
         m_canvasWindow = r;
+        return true;
     }
+    return false;
 }
 
 bool QSGContext2DTexture::setDirtyRect(const QRect &r)
 {
     bool doDirty = false;
-    foreach (QSGContext2DTile* t, m_tiles) {
-        bool dirty = t->rect().intersected(r).isValid();
-        t->markDirty(dirty);
-        if (dirty)
-            doDirty = true;
+    if (m_tiledCanvas) {
+        foreach (QSGContext2DTile* t, m_tiles) {
+            bool dirty = t->rect().intersected(r).isValid();
+            t->markDirty(dirty);
+            if (dirty)
+                doDirty = true;
+        }
+    } else {
+        doDirty = m_canvasWindow.intersected(r).isValid();
     }
     return doDirty;
 }
@@ -181,26 +182,27 @@ void QSGContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize& ti
     if (ts.height() > canvasSize.height())
         ts.setHeight(canvasSize.height());
 
-    bool canvasChanged = setCanvasSize(canvasSize);
-    bool tileChanged = setTileSize(ts);
+    setCanvasSize(canvasSize);
+    setTileSize(ts);
 
-    bool doDirty = false;
     if (canvasSize == canvasWindow.size()) {
         m_tiledCanvas = false;
         m_dirtyCanvas = false;
     } else {
         m_tiledCanvas = true;
-        if (dirtyRect.isValid())
-            doDirty = setDirtyRect(dirtyRect);
     }
 
-    bool windowChanged = setCanvasWindow(canvasWindow);
+    bool doDirty = false;
+    if (dirtyRect.isValid())
+        doDirty = setDirtyRect(dirtyRect);
 
+    bool windowChanged = setCanvasWindow(canvasWindow);
     if (windowChanged || doDirty) {
         if (m_threadRendering)
             QMetaObject::invokeMethod(this, "paint", Qt::QueuedConnection);
-        else if (supportDirectRendering())
-            QMetaObject::invokeMethod(this, "paint", Qt::DirectConnection);
+        else if (supportDirectRendering()) {
+           QMetaObject::invokeMethod(this, "paint", Qt::DirectConnection);
+        }
     }
 
     setSmooth(smooth);
@@ -310,7 +312,7 @@ void QSGContext2DTexture::paint()
                         return;
                     } else if (dirtyTile) {
                         m_state = ccb->replay(tile->createPainter(smooth), oldState);
-
+                        tile->drawFinished();
                         lock();
                         tile->markDirty(false);
                         unlock();
@@ -403,9 +405,17 @@ void QSGContext2DTexture::clearTiles()
 QSGContext2DFBOTexture::QSGContext2DFBOTexture()
     : QSGContext2DTexture()
     , m_fbo(0)
+    , m_multisampledFbo(0)
     , m_paint_device(0)
 {
     m_threadRendering = false;
+}
+
+QSGContext2DFBOTexture::~QSGContext2DFBOTexture()
+{
+    delete m_fbo;
+    delete m_multisampledFbo;
+    delete m_paint_device;
 }
 
 bool QSGContext2DFBOTexture::setCanvasSize(const QSize &size)
@@ -460,9 +470,9 @@ void QSGContext2DFBOTexture::bind()
 QRectF QSGContext2DFBOTexture::textureSubRect() const
 {
     return QRectF(0
-                , 1
+                , 0
                 , qreal(m_canvasWindow.width()) / m_fboSize.width()
-                , qreal(-m_canvasWindow.height()) / m_fboSize.height());
+                , qreal(m_canvasWindow.height()) / m_fboSize.height());
 }
 
 
@@ -500,6 +510,21 @@ void QSGContext2DFBOTexture::grabImage()
     if (m_fbo) {
         m_grabedImage = m_fbo->toImage();
     }
+}
+
+bool QSGContext2DFBOTexture::doMultisampling() const
+{
+    static bool extensionsChecked = false;
+    static bool multisamplingSupported = false;
+
+    if (!extensionsChecked) {
+        QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
+        multisamplingSupported = extensions.contains("GL_EXT_framebuffer_multisample")
+                && extensions.contains("GL_EXT_framebuffer_blit");
+        extensionsChecked = true;
+    }
+
+    return multisamplingSupported  && m_smooth;
 }
 
 QImage QSGContext2DFBOTexture::toImage(const QRectF& region)
@@ -548,35 +573,65 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
 
     if (m_canvasWindow.size().isEmpty() && !m_threadRendering) {
         delete m_fbo;
+        delete m_multisampledFbo;
         m_fbo = 0;
+        m_multisampledFbo = 0;
+        return 0;
     } else if (!m_fbo || m_fbo->size() != m_fboSize) {
-        QOpenGLFramebufferObjectFormat format;
-        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-        format.setInternalTextureFormat(GL_RGBA);
-        format.setMipmap(false);
-        format.setTextureTarget(GL_TEXTURE_2D);
         delete m_fbo;
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(false);
+        delete m_multisampledFbo;
+        if (doMultisampling()) {
+            {
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+                format.setSamples(8);
+                m_multisampledFbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            }
+            {
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
+                m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            }
+        } else {
+            QOpenGLFramebufferObjectFormat format;
+            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 
-        m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
-        glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
-        updateBindOptions(false);
+            m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
+        }
     }
 
-    m_fbo->bind();
+    if (doMultisampling())
+        m_multisampledFbo->bind();
+    else
+        m_fbo->bind();
 
-    if (!m_paint_device)
-        m_paint_device = new QOpenGLPaintDevice(m_fbo->size());
+
+    if (!m_paint_device) {
+        QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(m_fbo->size());
+        gl_device->setPaintFlipped(true);
+        m_paint_device = gl_device;
+    }
 
     return m_paint_device;
 }
 
+void QSGContext2DFBOTexture::endPainting()
+{
+    QSGContext2DTexture::endPainting();
+    if (m_multisampledFbo) {
+        QOpenGLFramebufferObject::blitFramebuffer(m_fbo, m_multisampledFbo);
+        m_multisampledFbo->release();
+    } else if (m_fbo)
+        m_fbo->release();
+}
 void qt_quit_context2d_render_thread()
 {
     QThread* thread = globalCanvasThreadRenderInstance();
-    thread->quit();
-    thread->wait();
+
+    if (thread->isRunning()) {
+        thread->exit(0);
+        thread->wait(1000);
+    }
 }
 
 QSGContext2DImageTexture::QSGContext2DImageTexture(bool threadRendering)
@@ -601,7 +656,7 @@ QSGContext2DImageTexture::QSGContext2DImageTexture(bool threadRendering)
 
 QSGContext2DImageTexture::~QSGContext2DImageTexture()
 {
-    m_texture->deleteLater();
+    delete m_texture;
 }
 
 int QSGContext2DImageTexture::textureId() const
@@ -696,7 +751,7 @@ QPaintDevice* QSGContext2DImageTexture::beginPainting()
     lock();
     if (m_image.size() != m_canvasWindow.size()) {
         m_image = QImage(m_canvasWindow.size(), QImage::Format_ARGB32_Premultiplied);
-        m_image.fill(Qt::transparent);
+        m_image.fill(0x00000000);
     }
     unlock();
     return &m_image;

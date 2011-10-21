@@ -49,8 +49,8 @@
 #include <private/qsgtextureprovider_p.h>
 #include "qsgcanvas.h"
 
-#include <qsgimage_p.h>
-#include <qsgshadereffectsource_p.h>
+#include "qsgimage_p.h"
+#include "qsgshadereffectsource_p.h"
 
 #include <QtCore/qsignalmapper.h>
 #include <QtGui/qopenglframebufferobject.h>
@@ -621,7 +621,7 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         QVector<QPair<QByteArray, QSGTextureProvider *> > textures;
         const QVector<QPair<QByteArray, QSGTextureProvider *> > &oldTextures = material->textureProviders();
 
-        for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin(); 
+        for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin();
              it != m_source.uniformNames.end(); ++it) {
             values.append(qMakePair(*it, property(*it)));
         }

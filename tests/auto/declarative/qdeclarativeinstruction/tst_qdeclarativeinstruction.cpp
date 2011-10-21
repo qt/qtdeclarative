@@ -42,11 +42,6 @@
 #include <qtest.h>
 #include <private/qdeclarativecompiler_p.h>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_qdeclarativeinstruction : public QObject
 {
     Q_OBJECT
@@ -75,7 +70,9 @@ static void msgHandler(QtMsgType, const char *msg)
 
 void tst_qdeclarativeinstruction::dump()
 {
-    QDeclarativeCompiledData *data = new QDeclarativeCompiledData(0);
+    QDeclarativeEngine engine;
+    QDeclarativeCompiledData *data = new QDeclarativeCompiledData(&engine);
+
     {
         QDeclarativeCompiledData::Instruction::Init i;
         i.bindingsSize = 0;
@@ -90,10 +87,9 @@ void tst_qdeclarativeinstruction::dump()
         ref.className = "Test";
         data->types << ref;
 
-        QDeclarativeCompiledData::Instruction::CreateObject i;
+        QDeclarativeCompiledData::Instruction::CreateCppObject i;
         i.type = 0;
         i.data = -1;
-        i.bindingBits = -1;
         i.column = 10;
         data->addInstruction(i);
     }
@@ -309,10 +305,10 @@ void tst_qdeclarativeinstruction::dump()
     }
 
     {
-        data->datas << "mySignal";
+        data->primitives << "mySignal";
 
         QDeclarativeCompiledData::Instruction::AssignSignalObject i;
-        i.signal = 0;
+        i.signal = data->primitives.count() - 1;
         data->addInstruction(i);
     }
 
@@ -326,7 +322,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeCompiledData::Instruction::StoreBinding i;
-        i.property = 26;
+        i.property.coreIndex = 26;
         i.value = 3;
         i.context = 2;
         i.owner = 0;
@@ -344,7 +340,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeCompiledData::Instruction::StoreValueSource i;
-        i.property = 29;
+        i.property.coreIndex = 29;
         i.owner = 1;
         i.castValue = 4;
         data->addInstruction(i);
@@ -352,7 +348,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeCompiledData::Instruction::StoreValueInterceptor i;
-        i.property = 30;
+        i.property.coreIndex = 30;
         i.owner = 2;
         i.castValue = -4;
         data->addInstruction(i);
@@ -459,7 +455,7 @@ void tst_qdeclarativeinstruction::dump()
         << "Index\tOperation\t\tData1\tData2\tData3\tComments"
         << "-------------------------------------------------------------------------------"
         << "0\t\tINIT\t\t\t0\t3\t-1\t-1"
-        << "1\t\tCREATE\t\t\t0\t-1\t\t\"Test\""
+        << "1\t\tCREATECPP\t\t\t0\t\t\t\"Test\""
         << "2\t\tSETID\t\t\t0\t\t\t\"testId\""
         << "3\t\tSET_DEFAULT"
         << "4\t\tCREATE_COMPONENT\t3"
@@ -487,7 +483,7 @@ void tst_qdeclarativeinstruction::dump()
         << "26\t\tSTORE_INTERFACE\t\t23"
         << "27\t\tSTORE_SIGNAL\t\t2\t3\t\t\"console.log(1921)\""
         << "28\t\tSTORE_SCRIPT_STRING\t24\t3\t1\t4"
-        << "29\t\tASSIGN_SIGNAL_OBJECT\t0\t\t\t\"mySignal\""
+        << "29\t\tASSIGN_SIGNAL_OBJECT\t4\t\t\t\"mySignal\""
         << "30\t\tASSIGN_CUSTOMTYPE\t25\t6\t9"
         << "31\t\tSTORE_BINDING\t26\t3\t2"
         << "32\t\tSTORE_COMPILED_BINDING\t27\t2\t4"
@@ -513,6 +509,7 @@ void tst_qdeclarativeinstruction::dump()
 
     messages = QStringList();
     QtMsgHandler old = qInstallMsgHandler(msgHandler);
+
     data->dumpInstructions();
     qInstallMsgHandler(old);
 

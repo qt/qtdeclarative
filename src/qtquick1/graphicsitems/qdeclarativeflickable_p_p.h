@@ -94,7 +94,7 @@ public:
     struct AxisData {
         AxisData(QDeclarative1FlickablePrivate *fp, void (QDeclarative1FlickablePrivate::*func)(qreal))
             : move(fp, func), viewSize(-1), smoothVelocity(fp), atEnd(false), atBeginning(true)
-            , fixingUp(false), inOvershoot(false)
+            , fixingUp(false), inOvershoot(false), moving(false), flicking(false)
         {}
 
         void reset() {
@@ -121,6 +121,8 @@ public:
         bool atBeginning : 1;
         bool fixingUp : 1;
         bool inOvershoot : 1;
+        bool moving : 1;
+        bool flicking : 1;
     };
 
     void flickX(qreal velocity);
@@ -152,12 +154,8 @@ public:
     AxisData vData;
 
     QDeclarative1TimeLine timeline;
-    bool flickingHorizontally : 1;
-    bool flickingVertically : 1;
     bool hMoved : 1;
     bool vMoved : 1;
-    bool movingHorizontally : 1;
-    bool movingVertically : 1;
     bool stealMouse : 1;
     bool pressed : 1;
     bool interactive : 1;

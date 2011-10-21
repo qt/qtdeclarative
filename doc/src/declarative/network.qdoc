@@ -42,7 +42,7 @@ Image {
 }
 \endqml
 
-Since a \e relative URL is the same
+Since a \i relative URL is the same
 as a relative file, development of QML on regular file systems remains simple:
 
 \qml

@@ -44,6 +44,11 @@
 #include <QtCore/qdatastream.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qtimer.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qcoreapplication.h>
+
+// this contains QUnifiedTimer
+#include <private/qabstractanimation_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +67,9 @@ QByteArray QDeclarativeDebugData::toByteArray() const
         ds << detailData;
     if (messageType == (int)QDeclarativeDebugTrace::RangeLocation)
         ds << detailData << line;
+    if (messageType == (int)QDeclarativeDebugTrace::Event &&
+            detailType == (int)QDeclarativeDebugTrace::AnimationFrame)
+        ds << framerate << animationcount;
     return data;
 }
 
@@ -74,7 +82,26 @@ QDeclarativeDebugTrace::QDeclarativeDebugTrace()
         // wait for first message indicating whether to trace or not
         while (!m_messageReceived)
             waitForMessage();
+
+        QUnifiedTimer::instance()->registerProfilerCallback( &animationFrame );
     }
+}
+
+QDeclarativeDebugTrace::~QDeclarativeDebugTrace()
+{
+    // unregister the callback
+    QUnifiedTimer::instance()->registerProfilerCallback( 0 );
+}
+
+void QDeclarativeDebugTrace::addEngine(QDeclarativeEngine * /*engine*/)
+{
+    // just make sure that the service is properly registered
+    traceInstance();
+}
+
+void QDeclarativeDebugTrace::removeEngine(QDeclarativeEngine */*engine*/)
+{
+
 }
 
 void QDeclarativeDebugTrace::addEvent(EventType t)
@@ -119,12 +146,18 @@ void QDeclarativeDebugTrace::endRange(RangeType t)
         traceInstance()->endRangeImpl(t);
 }
 
+void QDeclarativeDebugTrace::animationFrame(qint64 delta)
+{
+    Q_ASSERT(QDeclarativeDebugService::isDebuggingEnabled());
+    traceInstance()->animationFrameImpl(delta);
+}
+
 void QDeclarativeDebugTrace::addEventImpl(EventType event)
 {
     if (status() != Enabled || !m_enabled)
         return;
 
-    QDeclarativeDebugData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event, QString(), -1};
+    QDeclarativeDebugData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event, QString(), -1, 0, 0};
     processMessage(ed);
 }
 
@@ -133,7 +166,7 @@ void QDeclarativeDebugTrace::startRangeImpl(RangeType range)
     if (status() != Enabled || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range, QString(), -1};
+    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range, QString(), -1, 0, 0};
     processMessage(rd);
 }
 
@@ -142,7 +175,7 @@ void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QString &rData
     if (status() != Enabled || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData, -1};
+    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData, -1, 0, 0};
     processMessage(rd);
 }
 
@@ -151,7 +184,7 @@ void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QUrl &rData)
     if (status() != Enabled || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(QUrl::FormattingOption(0x100)), -1};
+    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(QUrl::FormattingOption(0x100)), -1, 0, 0};
     processMessage(rd);
 }
 
@@ -160,7 +193,7 @@ void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QString &f
     if (status() != Enabled || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName, line};
+    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName, line, 0, 0};
     processMessage(rd);
 }
 
@@ -169,7 +202,7 @@ void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QUrl &file
     if (status() != Enabled || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(QUrl::FormattingOption(0x100)), line};
+    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(QUrl::FormattingOption(0x100)), line, 0, 0};
     processMessage(rd);
 }
 
@@ -178,8 +211,23 @@ void QDeclarativeDebugTrace::endRangeImpl(RangeType range)
     if (status() != Enabled || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range, QString(), -1};
+    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range, QString(), -1, 0, 0};
     processMessage(rd);
+}
+
+void QDeclarativeDebugTrace::animationFrameImpl(qint64 delta)
+{
+    if (status() != Enabled || !m_enabled)
+        return;
+
+    int animCount = QUnifiedTimer::instance()->runningAnimationCount();
+
+    if (animCount > 0 && delta > 0) {
+        // trim fps to integer
+        int fps = 1000 / delta;
+        QDeclarativeDebugData ed = {m_timer.nsecsElapsed(), (int)Event, (int)AnimationFrame, QString(), -1, fps, animCount};
+        processMessage(ed);
+    }
 }
 
 /*
@@ -188,7 +236,9 @@ void QDeclarativeDebugTrace::endRangeImpl(RangeType range)
 */
 void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message)
 {
-    if (m_deferredSend)
+    QMutexLocker locker(&m_mutex);
+    if (m_deferredSend
+            || (QThread::currentThread() != QCoreApplication::instance()->thread()))
         m_data.append(message);
     else
         sendMessage(message.toByteArray());
@@ -200,6 +250,7 @@ void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message
 void QDeclarativeDebugTrace::sendMessages()
 {
     if (m_deferredSend) {
+        QMutexLocker locker(&m_mutex);
         //### this is a suboptimal way to send batched messages
         for (int i = 0; i < m_data.count(); ++i)
             sendMessage(m_data.at(i).toByteArray());
@@ -222,8 +273,12 @@ void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
 
     m_messageReceived = true;
 
-    if (!m_enabled)
+    if (!m_enabled) {
+        m_enabled = true;
+        addEvent(EndTrace);
+        m_enabled = false;
         sendMessages();
+    }
 }
 
 QT_END_NAMESPACE

@@ -47,12 +47,6 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include <QtWidgets/qgraphicswidget.h>
 #include <math.h>
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_qdeclarativeflickable : public QObject
 {
@@ -519,7 +513,7 @@ void tst_qdeclarativeflickable::disabled()
 void tst_qdeclarativeflickable::flickVelocity()
 {
 #ifdef Q_WS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems", SkipAll);
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
 #endif
 
     QDeclarativeView *canvas = new QDeclarativeView;

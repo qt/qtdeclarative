@@ -50,7 +50,10 @@
 #include <private/qlinecontrol_p.h>
 
 #include <QtDeclarative/qdeclarative.h>
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qpointer.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 
 
 //
@@ -85,8 +88,6 @@ public:
                  , oldValidity(false)
                  , focused(false)
                  , focusOnPress(true)
-                 , showInputPanelOnFocus(true)
-                 , clickCausedFocus(false)
                  , cursorVisible(false)
                  , autoScroll(true)
                  , selectByMouse(false)
@@ -95,11 +96,6 @@ public:
                  , selectPressed(false)
                  , textLayoutDirty(true)
     {
-#ifdef Q_OS_SYMBIAN
-        if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
-            showInputPanelOnFocus = false;
-        }
-#endif
     }
 
     ~QSGTextInputPrivate()
@@ -142,6 +138,8 @@ public:
     QPointer<QSGItem> cursorItem;
     QPointF pressPos;
     QSGTextNode *textNode;
+    QElapsedTimer tripleClickTimer;
+    QPoint tripleClickStartPoint;
 
     int lastSelectionStart;
     int lastSelectionEnd;
@@ -153,8 +151,6 @@ public:
     bool oldValidity:1;
     bool focused:1;
     bool focusOnPress:1;
-    bool showInputPanelOnFocus:1;
-    bool clickCausedFocus:1;
     bool cursorVisible:1;
     bool autoScroll:1;
     bool selectByMouse:1;
@@ -165,6 +161,9 @@ public:
 
     static inline QSGTextInputPrivate *get(QSGTextInput *t) {
         return t->d_func();
+    }
+    bool hasPendingTripleClick() const {
+        return !tripleClickTimer.hasExpired(qApp->styleHints()->mouseDoubleClickInterval());
     }
 };
 

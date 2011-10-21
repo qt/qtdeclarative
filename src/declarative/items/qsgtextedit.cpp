@@ -63,6 +63,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
+DEFINE_BOOL_CONFIG_OPTION(qmlEnableImageCache, QML_ENABLE_TEXT_IMAGE_CACHE)
 
 /*!
     \qmlclass TextEdit QSGTextEdit
@@ -230,8 +231,8 @@ QString QSGTextEdit::text() const
     \list
     \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
     \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \o Font.AllLowercase	 - This alters the text to be rendered in all lowercase type.
-    \o Font.SmallCaps -	This alters the text to be rendered in small-caps type.
+    \o Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \o Font.SmallCaps - This alters the text to be rendered in small-caps type.
     \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
     \endlist
 
@@ -260,7 +261,7 @@ void QSGTextEdit::setText(const QString &text)
 #else
         d->control->setPlainText(text);
 #endif
-        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
+        d->useImageFallback = qmlEnableImageCache();
     } else {
         d->control->setPlainText(text);
     }
@@ -330,7 +331,7 @@ void QSGTextEdit::setTextFormat(TextFormat format)
         d->control->setPlainText(d->text);
 #endif
         updateSize();
-        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
+        d->useImageFallback = qmlEnableImageCache();
     }
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
@@ -360,7 +361,7 @@ void QSGTextEdit::setFont(const QFont &font)
 
     if (oldFont != d->font) {
         d->document->setDefaultFont(d->font);
-        if(d->cursor){
+        if (d->cursor) {
             d->cursor->setHeight(QFontMetrics(d->font).height());
             moveCursorDelegate();
         }
@@ -865,8 +866,8 @@ QDeclarativeComponent* QSGTextEdit::cursorDelegate() const
 void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
 {
     Q_D(QSGTextEdit);
-    if(d->cursorComponent){
-        if(d->cursor){
+    if (d->cursorComponent) {
+        if (d->cursor) {
             d->control->setCursorWidth(-1);
             updateCursor();
             delete d->cursor;
@@ -874,10 +875,10 @@ void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
         }
     }
     d->cursorComponent = c;
-    if(c && c->isReady()){
+    if (c && c->isReady()) {
         loadCursorDelegate();
-    }else{
-        if(c)
+    } else {
+        if (c)
             connect(c, SIGNAL(statusChanged()),
                     this, SLOT(loadCursorDelegate()));
     }
@@ -888,10 +889,12 @@ void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
 void QSGTextEdit::loadCursorDelegate()
 {
     Q_D(QSGTextEdit);
-    if(d->cursorComponent->isLoading())
+    if (d->cursorComponent->isLoading())
         return;
-    d->cursor = qobject_cast<QSGItem*>(d->cursorComponent->create(qmlContext(this)));
-    if(d->cursor){
+    QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
+    QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
+    d->cursor = qobject_cast<QSGItem*>(object);
+    if (d->cursor) {
         d->control->setCursorWidth(0);
         updateCursor();
         QDeclarative_setParent_noEvent(d->cursor, this);
@@ -899,6 +902,7 @@ void QSGTextEdit::loadCursorDelegate()
         d->cursor->setHeight(QFontMetrics(d->font).height());
         moveCursorDelegate();
     }else{
+        delete object;
         qmlInfo(this) << "Error loading cursor delegate.";
     }
 }
@@ -1035,9 +1039,8 @@ void QSGTextEdit::componentComplete()
     Q_D(QSGTextEdit);
     QSGImplicitSizeItem::componentComplete();
 
-    if (d->richText) {
-        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
-    }
+    if (d->richText)
+        d->useImageFallback = qmlEnableImageCache();
 
     if (d->dirty) {
         d->determineHorizontalAlignment();
@@ -1332,16 +1335,9 @@ void QSGTextEdit::mousePressEvent(QMouseEvent *event)
     if (d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
-        if (d->showInputPanelOnFocus) {
-            if (hasActiveFocus() && hadActiveFocus && !isReadOnly()) {
-                // re-open input panel on press if already focused
-                openSoftwareInputPanel();
-            }
-        } else { // show input panel on click
-            if (hasActiveFocus() && !hadActiveFocus) {
-                d->clickCausedFocus = true;
-            }
-        }
+        // re-open input panel on press if already focused
+        if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
+            openSoftwareInputPanel();
     }
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
@@ -1356,16 +1352,6 @@ void QSGTextEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
-    if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
-            // ### refactor: port properly
-            qDebug("QSGTextEdit: virtual keyboard handling not implemented");
-//            if (canvas() && canvas() == qApp->focusWidget()) {
-//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
-//            }
-        }
-    }
-    d->clickCausedFocus = false;
 
     if (!event->isAccepted())
         QSGImplicitSizeItem::mouseReleaseEvent(event);
@@ -1446,7 +1432,7 @@ void QSGTextEdit::updateImageCache(const QRectF &)
     Q_D(QSGTextEdit);
 
     // Do we really need the image cache?
-    if (!d->richText || !d->isComplexRichText) {
+    if (!d->richText || !d->useImageFallback) {
         if (!d->pixmapCache.isNull())
             d->pixmapCache = QPixmap();
         return;
@@ -1478,7 +1464,7 @@ QSGNode *QSGTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *upd
     Q_D(QSGTextEdit);
 
     QSGNode *currentNode = oldNode;
-    if (d->richText && d->isComplexRichText) {
+    if (d->richText && d->useImageFallback) {
         QSGImageNode *node = 0;
         if (oldNode == 0 || d->nodeType != QSGTextEditPrivate::NodeIsTexture) {
             delete oldNode;
@@ -1530,7 +1516,8 @@ QSGNode *QSGTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *upd
         QColor selectedTextColor = d->control->palette().color(QPalette::HighlightedText);
         node->addTextDocument(bounds.topLeft(), d->document, d->color, QSGText::Normal, QColor(),
                               selectionColor, selectedTextColor, selectionStart(),
-                              selectionEnd() - 1);
+                              selectionEnd() - 1);  // selectionEnd() returns first char after
+                                                    // selection
 
 #if defined(Q_WS_MAC)
         // We also need to make sure the document layout is redone when
@@ -1678,7 +1665,7 @@ void QSGTextEdit::moveCursorDelegate()
     d->determineHorizontalAlignment();
     updateMicroFocus();
     emit cursorRectangleChanged();
-    if(!d->cursor)
+    if (!d->cursor)
         return;
     QRectF cursorRect = cursorRectangle();
     d->cursor->setX(cursorRect.x());
@@ -1696,20 +1683,20 @@ void QSGTextEditPrivate::updateSelection()
     cursor.setPosition(lastSelectionEnd, QTextCursor::KeepAnchor);
     cursor.endEditBlock();
     control->setTextCursor(cursor);
-    if(startChange)
+    if (startChange)
         q->selectionStartChanged();
-    if(endChange)
+    if (endChange)
         q->selectionEndChanged();
 }
 
 void QSGTextEdit::updateSelectionMarkers()
 {
     Q_D(QSGTextEdit);
-    if(d->lastSelectionStart != d->control->textCursor().selectionStart()){
+    if (d->lastSelectionStart != d->control->textCursor().selectionStart()) {
         d->lastSelectionStart = d->control->textCursor().selectionStart();
         emit selectionStartChanged();
     }
-    if(d->lastSelectionEnd != d->control->textCursor().selectionEnd()){
+    if (d->lastSelectionEnd != d->control->textCursor().selectionEnd()) {
         d->lastSelectionEnd = d->control->textCursor().selectionEnd();
         emit selectionEndChanged();
     }
@@ -1720,9 +1707,9 @@ QRectF QSGTextEdit::boundingRect() const
     Q_D(const QSGTextEdit);
     QRectF r = QSGImplicitSizeItem::boundingRect();
     int cursorWidth = 1;
-    if(d->cursor)
+    if (d->cursor)
         cursorWidth = d->cursor->width();
-    if(!d->document->isEmpty())
+    if (!d->document->isEmpty())
         cursorWidth += 3;// ### Need a better way of accounting for space between char and cursor
 
     // Could include font max left/right bearings to either side of rectangle.
@@ -1964,19 +1951,16 @@ void QSGTextEdit::openSoftwareInputPanel()
     \endcode
 */
 void QSGTextEdit::closeSoftwareInputPanel()
-{  
+{
     if (qGuiApp)
-        qGuiApp->inputPanel()->show();
+        qGuiApp->inputPanel()->hide();
 }
 
 void QSGTextEdit::focusInEvent(QFocusEvent *event)
 {
     Q_D(const QSGTextEdit);
-    if (d->showInputPanelOnFocus) {
-        if (d->focusOnPress && !isReadOnly()) {
-            openSoftwareInputPanel();
-        }
-    }
+    if (d->focusOnPress && !isReadOnly())
+        openSoftwareInputPanel();
     QSGImplicitSizeItem::focusInEvent(event);
 }
 
@@ -1985,7 +1969,7 @@ void QSGTextEdit::q_canPasteChanged()
     Q_D(QSGTextEdit);
     bool old = d->canPaste;
     d->canPaste = d->control->canPaste();
-    if(old!=d->canPaste)
+    if (old!=d->canPaste)
         emit canPasteChanged();
 }
 

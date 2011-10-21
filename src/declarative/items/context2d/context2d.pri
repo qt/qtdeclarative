@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 SOURCES += \
     $$PWD/qsgcanvasitem.cpp \
     $$PWD/qsgcontext2d.cpp \

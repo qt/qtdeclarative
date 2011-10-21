@@ -39,17 +39,17 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativebehavior_p.h"
-
 #include "private/qdeclarativeanimation_p.h"
 #include "private/qabstractanimation2_p.h"
 #include "private/qdeclarativetransition_p.h"
+#include "qdeclarativebehavior_p.h"
 
+#include "qdeclarativeanimation_p.h"
 #include <qdeclarativecontext.h>
 #include <qdeclarativeinfo.h>
-#include <qdeclarativeproperty_p.h>
-#include <qdeclarativeguard_p.h>
-#include <qdeclarativeengine_p.h>
+#include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativeguard_p.h>
+#include <private/qdeclarativeengine_p.h>
 
 #include <private/qobject_p.h>
 
@@ -173,8 +173,10 @@ void QDeclarativeBehavior::setEnabled(bool enabled)
 void QDeclarativeBehavior::write(const QVariant &value)
 {
     Q_D(QDeclarativeBehavior);
-    qmlExecuteDeferred(this);
-    if (!d->animation || !d->enabled || !d->finalized) {
+    bool bypass = !d->enabled || !d->finalized;
+    if (!bypass)
+        qmlExecuteDeferred(this);
+    if (!d->animation || bypass) {
         QDeclarativePropertyPrivate::write(d->property, value, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
         d->targetValue = value;
         return;
@@ -220,7 +222,7 @@ void QDeclarativeBehavior::setTarget(const QDeclarativeProperty &property)
         d->animation->setDefaultTarget(property);
 
     QDeclarativeEnginePrivate *engPriv = QDeclarativeEnginePrivate::get(qmlEngine(this));
-    engPriv->registerFinalizedParserStatusObject(this, this->metaObject()->indexOfSlot("componentFinalized()"));
+    engPriv->registerFinalizeCallback(this, this->metaObject()->indexOfSlot("componentFinalized()"));
 }
 
 void QDeclarativeBehavior::componentFinalized()

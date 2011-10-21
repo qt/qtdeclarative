@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativefontloader_p.h"
+#include "qdeclarativefontloader_p.h"
 
 #include <qdeclarativecontext.h>
 #include <qdeclarativeengine.h>

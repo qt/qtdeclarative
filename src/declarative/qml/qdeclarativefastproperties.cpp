@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativefastproperties_p.h"
+#include "qdeclarativefastproperties_p.h"
 
-#include <private/qdeclarativedata_p.h>
-#include <private/qdeclarativenotifier_p.h>
+#include "qdeclarativedata_p.h"
+#include "qdeclarativenotifier_p.h"
 
 QT_BEGIN_NAMESPACE
 

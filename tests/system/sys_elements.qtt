@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of QtUiTest.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,373 +40,82 @@
 ****************************************************************************/
 
 //TESTED_COMPONENT=qtdeclarative
-var adv = "Press the Advance button";
+
 testcase = {
 
-    rectangle: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: Rectangle";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the rectangle element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-    | Select the Rectangle list item | Verify that the Rectangle displayed in the center is small, blue, with a thin red angular border |
-    | '+adv+' | The rectangle should now be twice the size as the previous step |
-    | '+adv+' | The rectangle should now have rounded corners |
-    | '+adv+' | The rectangle color should have shifted to green |
-    | '+adv+' | The rectangle border should have increased significantly |
-    | '+adv+' | The rectangle border should have now be small, blue, with a thin red angular border |'));
+    pre_existing_elements_data: {
+        // ElementName: [preconditions,[groups]]
+        Rectangle: ["",["QtQuick1.0","BAT"]],
+        Image: ["",["QtQuick1.0","BAT"]],
+        AnimatedImage: ["",["QtQuick1.0","BAT"]],
+        BorderImage: ["",["QtQuick1.0","BAT"]],
+        SystemPalette: ["",["QtQuick1.0","BAT"]],
+        Text: ["",["QtQuick1.0","BAT"]],
+        TextInput: ["",["QtQuick1.0","BAT"]],
+        TextEdit: ["",["QtQuick1.0","BAT"]],
+        FontLoader: ["",["QtQuick1.0","BAT"]],
+        Flipable: ["",["QtQuick1.0","BAT"]],
+        Flickable: ["",["QtQuick1.0","BAT"]],
+        IntValidator: ["",["QtQuick1.0","BAT"]],
+        DoubleValidator: ["",["QtQuick1.0","BAT"]],
+        RegExpValidator: ["",["QtQuick1.0","BAT"]],
+        Column: ["",["QtQuick1.0","BAT"]],
+        Row: ["",["QtQuick1.0","BAT"]],
+        Flow: ["",["QtQuick1.0","BAT"]],
+        Grid: ["",["QtQuick1.0","BAT"]],
+        Repeater: ["",["QtQuick1.0","BAT"]],
+        ListView: ["",["QtQuick1.0","BAT"]],
+        Keys: ["",["QtQuick1.0","BAT"]],
+        MouseArea: ["",["QtQuick1.0","BAT"]],
+        SequentialAnimation: ["",["QtQuick1.0","BAT"]],
+        ParallelAnimation: ["",["QtQuick1.0","BAT"]],
+        XmlListModel: ["",["QtQuick1.0","BAT"]],
+        Scale: ["",["QtQuick1.0","BAT"]]
     },
 
-    image: function()
-    {
+    pre_existing_elements: function(prec,groups) {
         // Test Meta-data
-        testApplication = "Elements: Image";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Image element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
+        testTitle = currentDataTag()+ " Element";
+        testBinary = "qmlscene tests/testapplications/elements/elements.qml";
+        testGoal = "Verify the "+currentDataTag()+" element is shown correctly";
+        testPreconditions = prec;
+        testGroups = groups;
 
         // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
+        prompt(twiki('---+++ ' + testTitle + '<br><br>
         *Goal:* ' + testGoal + '<br>
         *Pre-Requisites:* ' + testPreconditions + '<br>
         *Tested Binary:* ' + testBinary + '<br>
-     | Select the Image list item | Verify it shows the Nokia logo, large and still slightly stretched |
-     | '+adv+' | Verify it shows the Nokia logo normally, longer horizontally |
-     | '+adv+' | Verify it shows the Nokia logo with the sides cut |
-     | '+adv+' | Verify it shows the Nokia logo repeated both horizontally and vertically |
-     | '+adv+' | Verify it shows the Nokia logo repeated vertically only |
-     | '+adv+' | Verify it shows the Nokia logo repeated horizontally only |'));
+    | Select the '+currentDataTag()+' list item | Verify that the '+currentDataTag()+' application is displayed |
+    | Follow the instructions in the in-app test | Verify all steps are completed successfully |'));
     },
 
-    animatedimage: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: AnimatedImage";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the AnimatedImage element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the AnimatedImage list item | Verify it shows a small animated icon, but slightly stretched. |
-     | '+adv+' | Verify it shows the animated icon, large and still slightly stretched |
-     | '+adv+' | Verify it shows the animated icon normally, square |
-     | '+adv+' | Verify it shows the animated icon with the sides cut |
-     | '+adv+' | Verify it shows the animated icon repeated both horizontally and vertically |
-     | '+adv+' | Verify it shows the animated icon repeated vertically only |
-     | '+adv+' | Verify it shows the animated icon repeated horizontally only |'));
+    new_elements_data: {
+        // ElementName: [preconditions,[groups]]
+        ParticleSystem: ["",["QtQuick2.0","BAT"]],
+        ImageParticle: ["",["QtQuick2.0","BAT"]],
+        Emitter: ["",["QtQuick2.0","BAT"]],
+        Affector: ["",["QtQuick2.0","BAT"]],
+        Shape: ["",["QtQuick2.0","BAT"]],
+        TrailEmitter: ["",["QtQuick2.0","BAT"]],
+        Direction: ["",["QtQuick2.0","BAT"]]
     },
 
-    borderimage: function()
-    {
+    new_elements: function(prec,groups) {
         // Test Meta-data
-        testApplication = "Elements: BorderImage";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the BorderImage element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
+        testTitle = currentDataTag()+ " Element";
+        testBinary = "qmlscene tests/testapplications/elements/elements.qml";
+        testGoal = "Verify the "+currentDataTag()+" element is shown correctly";
+        testPreconditions = prec;
+        testGroups = groups;
 
         // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
+        prompt(twiki('---+++ ' + testTitle + '<br><br>
         *Goal:* ' + testGoal + '<br>
         *Pre-Requisites:* ' + testPreconditions + '<br>
         *Tested Binary:* ' + testBinary + '<br>
-     | Select the BorderImage list item | Verify it shows a small framed image |
-     | '+adv+' | Verify it shows the frame, large and each side stretched |
-     | '+adv+' | Verify it shows the frame with slightly off centere sides |
-     | '+adv+' | Verify it shows the frame with uniformly repeated sides |'));
-    },
-
-    systempalette: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: SystemPalette";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the SystemPalette element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the SystemPalette list item | Verify it shows a mockup of an application |
-     | '+adv+' | Verify it shows the colors similar to the system it is running on |
-     | '+adv+' | Verify it shows the new coloring |'));
-    },
-
-    text: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: Text";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Text element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the Text list item | Verify it shows a Hello message |
-     | '+adv+' | Verify it shows the text increased to twice the previous size, and wrapped to two lines |
-     | '+adv+' | Verify it shows the text smoothly changed color to blue over a second |
-     | '+adv+' | Verify it shows the text as blue, bolded and in italic |
-     | '+adv+' | Verify it shows the text as alternating between green and black |'));
-    },
-
-    textinput: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: TextInput";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the TextInput element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the TextInput list item | Verify it shows two fields, the green one displaying a Hello message |
-     | '+adv+' | Verify it selects the last word - TextInput - of the green field |
-     | '+adv+' | Verify it animates a copy of the selected text to the gray field |
-     | '+adv+' | Verify it shows the text as asterisks |'));
-    },
-
-    textedit: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: TextEdit";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the TextEdit element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the TextEdit list item | Verify it shows two large fields |
-     | '+adv+' | Verify it selects the last word - TextEdit - of the green field |
-     | '+adv+' | Verify it animates a copy of the selected text to the gray field |
-     | '+adv+' | Verify it shows more text, with the end disappearing past the right side of the green field |
-     | '+adv+' | Verify it shows the full text, properly wrapped within the green field |'));
-    },
-
-    fontloader: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: FontLoader";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the FontLoader element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the FontLoader list item | Verify it shows a box with a named font in the center |
-     | '+adv+' | Verify the font has changed along with the named font text |
-     | '+adv+' | Verify the font is changing every half second, for at least a few different fonts, without error |
-     | '+adv+' | Verify the font has changed to a Neon Lights font |
-     | '+adv+' | Verify the font has reverted to a named system font |'));
-    },
-
-    flipable: function() {
-        // Test Meta-data
-        testApplication = "Elements: Flipable";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Flipable element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the Flipable list item | Verify it shows a large green rectangle |
-     | '+adv+' | Verify it slowly spins horizontally to show a red rectangle on the back |
-     | '+adv+' | Verify it again slowly spins horizontally to show a green rectangle on the front |
-     | '+adv+' | Verify it again slowly spins vertically to show a red rectangle on the back |
-     | '+adv+' | Verify it again slowly spins horizontally to show a green rectangle on the front |'));
-    },
-
-    intvalidator: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: IntValidator";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the IntValidator element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the IntValidator list item | Verify it shows a green field with the number 0. The upper and lower bounds are 30 and -50 |
-     | '+adv+' | Verify the number is now -80, and the field is now red |
-     | '+adv+' | Verify the number is now -50, and the field is now green |
-     | '+adv+' | Verify the number is now 35, and the field is now red |
-     | '+adv+' | Verify the top value has changed to 35, and the field is now green |
-     | '+adv+' | Verify the bottom has changed to 36, and the field is now red |'));
-    },
-
-    doublevalidator: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: DoubleValidator";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the DoubleValidator element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the DoubleValidator list item | Verify it shows a green field with the number 0. The upper and lower bounds are 30.06  and 30.02 |
-     | '+adv+' | Verify the number is now 30.01, and the field is now red |
-     | '+adv+' | Verify the number is now 30.02, and the field is now green |
-     | '+adv+' | Verify the number is now 30.08, and the field is now red |
-     | '+adv+' | Verify the top value has changed to 30.09, and the field is now green |
-     | '+adv+' | Verify the bottom has changed to 40.05, and the field is now red |'));
-    },
-
-    regexpvalidator: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: RegExpValidator";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the RegExpValidator element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the RegExpValidator list item | Verify it shows a green field with the text abc |
-     | '+adv+' | Verify the text is now 123, and the field is now red |
-     | '+adv+' | Verify the number is now aa, and the field is still red |
-     | '+adv+' | Verify the number is now abcd, and the field is still red |
-     | '+adv+' | Verify the regex value has changed to allow four characters, and the field is now green |'));
-    },
-
-    column: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: Column";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Column element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the Column list item | Verify it shows three rectangles - green, red and black |
-     | '+adv+' | Verify the blue rectangle slid in to place between the red and black rectangles |'));
-    },
-
-    row: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: Row";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Row element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the Row list item | Verify it shows three rectangles - green, red and black |
-     | '+adv+' | Verify the blue rectangle slid in to place between the red and black rectangles |'));
-    },
-
-    flow: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: Flow";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Flow element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the Flow list item | Verify it shows three rectangles - green (1), red (2, to the right of 1) and black (4, below 1) |
-     | '+adv+' | Verify the blue rectangle appears where the black was, the black sliding to the right |
-     | '+adv+' | Verify the direction of the numbers is now in two columns |
-     | '+adv+' | Verify the direction of the numbers has now reversed, still in columns, but progressing from the right to left |'));
-    },
-
-    grid: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: Grid";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Grid element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the Grid list item | Verify it shows four rectangles - green, a red to the right and a black below |
-     | '+adv+' | Verify the blue rectangle slid in to place previously held by the black rectangle |'));
-    },
-
-    repeater: function()
-    {
-        // Test Meta-data
-        testApplication = "Elements: Repeater";
-        testBinary = "tests/testapplications/elements/elements";
-        testGoal = "Verify the Repeater element is shown correctly";
-        testPreconditions = "";
-        testGroups = "BAT";
-
-        // Test Steps
-        prompt(twiki('---+++ ' + testApplication + '<br><br>
-        *Goal:* ' + testGoal + '<br>
-        *Pre-Requisites:* ' + testPreconditions + '<br>
-        *Tested Binary:* ' + testBinary + '<br>
-     | Select the Repeater list item | Verify it shows five blue rectangles with text and a green rectangle at the bottom |
-     | '+adv+' | Verify the third blue rectangle is now gone and the others bounced up to fill the gap |'));
+    | Select the '+currentDataTag()+' list item | Verify that the '+currentDataTag()+' application is displayed |
+    | Follow the instructions in the in-app test | Verify all steps are completed successfully |'));
     }
 }
 

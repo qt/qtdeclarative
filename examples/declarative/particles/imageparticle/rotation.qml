@@ -49,20 +49,23 @@ Rectangle {
     ImageParticle {
         id: up
         system: sys
-        source: "../images/smile.png"
+        source: "../images/starfish_2.png"
     }
 
     Emitter {
         anchors.centerIn: parent
         system: sys
-        emitRate: 1000
-        size: 20
+        emitRate: 10
+        size: 200
         lifeSpan: 10000
         speed: AngleDirection {angleVariation: 360; magnitudeVariation: 100;}
     }
 
     MouseArea {
         anchors.fill: parent
-        onClicked: up.autoRotation = !up.autoRotation
+        onClicked: {
+            up.autoRotation = !up.autoRotation
+            up.rotation = up.autoRotation ? -90 : 0
+        }
     }
 }

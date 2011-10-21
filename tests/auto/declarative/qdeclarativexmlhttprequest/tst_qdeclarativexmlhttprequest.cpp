@@ -45,14 +45,9 @@
 #include <QDebug>
 #include <QNetworkCookieJar>
 #include "testhttpserver.h"
-#include "../../../shared/util.h"
+#include "../shared/util.h"
 
 #define SERVER_PORT 14445
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_qdeclarativexmlhttprequest : public QObject
 {
@@ -127,7 +122,7 @@ private:
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 // Test that the dom exception codes are correct
@@ -1023,7 +1018,7 @@ void tst_qdeclarativexmlhttprequest::redirects()
         TestHTTPServer server(SERVER_PORT);
         QVERIFY(server.isValid());
         server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirecttarget.html");
-        server.serveDirectory(SRCDIR "/data");
+        server.serveDirectory(TESTDATA(""));
 
         QDeclarativeComponent component(&engine, TEST_FILE("redirects.qml"));
         QObject *object = component.beginCreate(engine.rootContext());
@@ -1042,7 +1037,7 @@ void tst_qdeclarativexmlhttprequest::redirects()
         TestHTTPServer server(SERVER_PORT);
         QVERIFY(server.isValid());
         server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirectmissing.html");
-        server.serveDirectory(SRCDIR "/data");
+        server.serveDirectory(TESTDATA(""));
 
         QDeclarativeComponent component(&engine, TEST_FILE("redirectError.qml"));
         QObject *object = component.beginCreate(engine.rootContext());
@@ -1061,7 +1056,7 @@ void tst_qdeclarativexmlhttprequest::redirects()
         TestHTTPServer server(SERVER_PORT);
         QVERIFY(server.isValid());
         server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirect.html");
-        server.serveDirectory(SRCDIR "/data");
+        server.serveDirectory(TESTDATA(""));
 
         QDeclarativeComponent component(&engine, TEST_FILE("redirectRecur.qml"));
         QObject *object = component.beginCreate(engine.rootContext());

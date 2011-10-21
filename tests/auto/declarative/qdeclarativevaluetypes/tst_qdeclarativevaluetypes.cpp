@@ -44,12 +44,8 @@
 #include <QDeclarativeComponent>
 #include <QDebug>
 #include <private/qdeclarativevaluetype_p.h>
+#include "../shared/util.h"
 #include "testtypes.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 QT_BEGIN_NAMESPACE
 extern int qt_defaultDpi();
@@ -109,7 +105,7 @@ void tst_qdeclarativevaluetypes::initTestCase()
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 void tst_qdeclarativevaluetypes::point()

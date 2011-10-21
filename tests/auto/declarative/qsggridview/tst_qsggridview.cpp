@@ -51,13 +51,8 @@
 #include <QtDeclarative/private/qsggridview_p.h>
 #include <QtDeclarative/private/qsgtext_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
-#include "../../../shared/util.h"
-#include <QtOpenGL/QGLShaderProgram>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include "../shared/util.h"
+#include <QtGui/qguiapplication.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QSGGridView::Flow)
@@ -74,6 +69,8 @@ private slots:
     void items();
     void changed();
     void inserted();
+    void inserted_more();
+    void inserted_more_data();
     void removed();
     void clear();
     void moved();
@@ -102,6 +99,7 @@ private slots:
     void footer_data();
     void header();
     void header_data();
+    void resizeViewAndRepaint();
     void indexAt();
     void onAdd();
     void onAdd_data();
@@ -110,9 +108,14 @@ private slots:
     void testQtQuick11Attributes();
     void testQtQuick11Attributes_data();
     void columnCount();
+    void margins();
+    void creationContext();
+    void snapToRow_data();
+    void snapToRow();
 
 private:
     QSGView *createView();
+    void flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration);
     template<typename T>
     T *findItem(QSGItem *parent, const QString &id, int index=-1);
     template<typename T>
@@ -269,7 +272,7 @@ void tst_QSGGridView::items()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -319,7 +322,7 @@ void tst_QSGGridView::changed()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGFlickable *gridview = findItem<QSGFlickable>(canvas->rootObject(), "grid");
@@ -354,7 +357,7 @@ void tst_QSGGridView::inserted()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -419,6 +422,178 @@ void tst_QSGGridView::inserted()
     delete canvas;
 }
 
+void tst_QSGGridView::inserted_more()
+{
+    QFETCH(qreal, contentY);
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(qreal, itemsOffsetAfterMove);
+
+    QSGText *name;
+    QSGText *number;
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(false));
+    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    qApp->processEvents();
+
+    QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QSGItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    gridview->setContentY(contentY);
+
+    QList<QPair<QString, QString> > newData;
+    for (int i=0; i<insertCount; i++)
+        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+    model.insertItems(insertIndex, newData);
+    QTRY_COMPARE(gridview->property("count").toInt(), model.count());
+
+    // check visibleItems.first() is in correct position
+    QSGItem *item0 = findItem<QSGItem>(contentItem, "wrapper", 0);
+    QVERIFY(item0);
+    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+
+    QList<QSGItem*> items = findItems<QSGItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0 + itemsOffsetAfterMove);
+
+        name = findItem<QSGText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QCOMPARE(name->text(), model.name(i));
+        number = findItem<QSGText>(contentItem, "textNumber", i);
+        QVERIFY(number != 0);
+        QCOMPARE(number->text(), model.number(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QSGGridView::inserted_more_data()
+{
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+
+    QTest::newRow("add 1, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 1
+            << 0.0;   // insert 1 above first visible, grid is rearranged; first visible moves forward within its row
+                      // new 1st visible item is at 0
+
+    QTest::newRow("add 2, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 2
+            << 0.0;   // insert 2 above first visible, grid is rearranged; first visible moves forward within its row
+
+    QTest::newRow("add 3, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 3
+            << -60.0;   // insert 3 (1 row) above first visible in negative pos, first visible does not move
+
+    QTest::newRow("add 5, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 5
+            << -60.0;   // insert 1 row + 2 items above first visible, 1 row added at negative pos,
+                        // grid is rearranged and first visible moves forward within its row
+
+    QTest::newRow("add 6, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 6
+            << -60.0 * 2;   // insert 2 rows above first visible in negative pos, first visible does not move
+
+
+
+   QTest::newRow("add 1, at start of visible, content at start")
+            << 0.0
+            << 0 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at start of visible, content at start")
+            << 0.0
+            << 0 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at start of visible, content not at start")
+            << 120.0     // show 6-23
+            << 6 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at start of visible, content not at start")
+            << 120.0     // show 6-23
+            << 6 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 17 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 17 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content not at start")
+            << 120.0     // show 6-23
+            << 23 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at end of visible, content not at start")
+            << 120.0     // show 6-23
+            << 23 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 20 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 20 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content not at start")
+            << 120.0     // show 6-23
+            << 24 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, after visible, content not at start")
+            << 120.0     // show 6-23
+            << 24 << 3
+            << 0.0;
+}
+
 void tst_QSGGridView::removed()
 {
     QSGView *canvas = createView();
@@ -433,7 +608,7 @@ void tst_QSGGridView::removed()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -578,7 +753,7 @@ void tst_QSGGridView::clear()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -625,7 +800,7 @@ void tst_QSGGridView::moved()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -741,7 +916,12 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, within visible items")
             << 0.0
             << 0 << 5 << 3
-            << 60.0;    // moved 3 items (i.e. 1 row) down
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, before visible items")
+            << 120.0     // show 6-23
+            << 3 << 4 << 3      // 3, 4, 5 move to after 6
+            << 60.0;      // row of 3,4,5 has moved down
 
     QTest::newRow("move multiple forwards, from non-visible -> visible")
             << 120.0     // show 6-23
@@ -761,7 +941,7 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 3
-            << 60.0;
+            << 0.0;
 
 
     QTest::newRow("move multiple backwards, within visible items")
@@ -822,7 +1002,7 @@ void tst_QSGGridView::multipleChanges()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -1039,7 +1219,7 @@ void tst_QSGGridView::swapWithFirstItem()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -1066,7 +1246,7 @@ void tst_QSGGridView::currentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QString filename(SRCDIR "/data/gridview-initCurrent.qml");
+    QString filename(TESTDATA("gridview-initCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -1152,12 +1332,8 @@ void tst_QSGGridView::currentIndex()
 
     // Test keys
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-    QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
-    qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
 
     gridview->setCurrentIndex(0);
 
@@ -1189,11 +1365,8 @@ void tst_QSGGridView::currentIndex()
     gridview->setFlow(QSGGridView::TopToBottom);
 
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-    QTRY_VERIFY((canvas->windowState() == Qt::WindowActive));
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(qGuiApp->focusWindow() == canvas);
     qApp->processEvents();
 
     QTest::keyClick(canvas, Qt::Key_Right);
@@ -1213,6 +1386,7 @@ void tst_QSGGridView::currentIndex()
         QTest::simulateEvent(canvas, true, Qt::Key_Right, Qt::NoModifier, "", true);
         QTRY_COMPARE(gridview->currentIndex(), i*5 + 5);
     }
+
     QTest::keyRelease(canvas, Qt::Key_Right);
     QTRY_COMPARE(gridview->currentIndex(), 55);
     QTRY_COMPARE(gridview->contentX(), 720.0);
@@ -1256,11 +1430,8 @@ void tst_QSGGridView::currentIndex()
     gridview->setLayoutDirection(Qt::RightToLeft);
 
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-    QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
     qApp->processEvents();
 
     gridview->setCurrentIndex(35);
@@ -1316,7 +1487,7 @@ void tst_QSGGridView::noCurrentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QString filename(SRCDIR "/data/gridview-noCurrent.qml");
+    QString filename(TESTDATA("gridview-noCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -1354,7 +1525,7 @@ void tst_QSGGridView::changeFlow()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -1441,7 +1612,7 @@ void tst_QSGGridView::changeFlow()
 void tst_QSGGridView::defaultValues()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/gridview3.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("gridview3.qml")));
     QSGGridView *obj = qobject_cast<QSGGridView*>(c.create());
 
     QTRY_VERIFY(obj != 0);
@@ -1464,7 +1635,7 @@ void tst_QSGGridView::defaultValues()
 void tst_QSGGridView::properties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/gridview2.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("gridview2.qml")));
     QSGGridView *obj = qobject_cast<QSGGridView*>(c.create());
 
     QTRY_VERIFY(obj != 0);
@@ -1488,7 +1659,7 @@ void tst_QSGGridView::propertyChanges()
 {
     QSGView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychangestest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
 
     QSGGridView *gridView = canvas->rootObject()->findChild<QSGGridView*>("gridView");
     QTRY_VERIFY(gridView);
@@ -1561,7 +1732,7 @@ void tst_QSGGridView::componentChanges()
 {
     QSGView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychangestest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
 
     QSGGridView *gridView = canvas->rootObject()->findChild<QSGGridView*>("gridView");
     QTRY_VERIFY(gridView);
@@ -1609,7 +1780,7 @@ void tst_QSGGridView::modelChanges()
 {
     QSGView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychangestest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
 
     QSGGridView *gridView = canvas->rootObject()->findChild<QSGGridView*>("gridView");
     QTRY_VERIFY(gridView);
@@ -1644,7 +1815,7 @@ void tst_QSGGridView::positionViewAtIndex()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -1845,7 +2016,7 @@ void tst_QSGGridView::snapping()
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -1876,12 +2047,12 @@ void tst_QSGGridView::snapping()
 void tst_QSGGridView::mirroring()
 {
     QSGView *canvasA = createView();
-    canvasA->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirroring.qml"));
+    canvasA->setSource(QUrl::fromLocalFile(TESTDATA("mirroring.qml")));
     QSGGridView *gridviewA = findItem<QSGGridView>(canvasA->rootObject(), "view");
     QTRY_VERIFY(gridviewA != 0);
 
     QSGView *canvasB = createView();
-    canvasB->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirroring.qml"));
+    canvasB->setSource(QUrl::fromLocalFile(TESTDATA("mirroring.qml")));
     QSGGridView *gridviewB = findItem<QSGGridView>(canvasB->rootObject(), "view");
     QTRY_VERIFY(gridviewA != 0);
     qApp->processEvents();
@@ -1894,14 +2065,14 @@ void tst_QSGGridView::mirroring()
     QCOMPARE(gridviewA->layoutDirection(), gridviewA->effectiveLayoutDirection());
 
     // LTR != RTL
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(gridviewA, objectName)->x() != findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::LeftToRight);
     gridviewB->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == LTR
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(gridviewA, objectName)->x(), findItem<QSGItem>(gridviewB, objectName)->x());
 
     QVERIFY(gridviewB->layoutDirection() == gridviewB->effectiveLayoutDirection());
@@ -1909,25 +2080,25 @@ void tst_QSGGridView::mirroring()
     QVERIFY(gridviewB->layoutDirection() != gridviewB->effectiveLayoutDirection());
 
     // LTR != LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(gridviewA, objectName)->x() != findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL == LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(gridviewA, objectName)->x(), findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewB->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL != RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(gridviewA, objectName)->x() != findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(gridviewA, objectName)->x(), findItem<QSGItem>(gridviewB, objectName)->x());
 
     delete canvasA;
@@ -1947,7 +2118,7 @@ void tst_QSGGridView::positionViewAtIndex_rightToLeft()
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -2077,7 +2248,7 @@ void tst_QSGGridView::resetModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/displaygrid.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaygrid.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -2122,7 +2293,7 @@ void tst_QSGGridView::enforceRange()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview-enforcerange.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview-enforcerange.qml")));
     qApp->processEvents();
     QVERIFY(canvas->rootObject() != 0);
 
@@ -2178,7 +2349,7 @@ void tst_QSGGridView::enforceRange_rightToLeft()
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview-enforcerange.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview-enforcerange.qml")));
     qApp->processEvents();
     QVERIFY(canvas->rootObject() != 0);
 
@@ -2227,7 +2398,7 @@ void tst_QSGGridView::QTBUG_8456()
 {
     QSGView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/setindex.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("setindex.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -2242,7 +2413,7 @@ void tst_QSGGridView::manualHighlight()
 {
     QSGView *canvas = createView();
 
-    QString filename(SRCDIR "/data/manual-highlight.qml");
+    QString filename(TESTDATA("manual-highlight.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -2306,7 +2477,7 @@ void tst_QSGGridView::footer()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/footer.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("footer.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -2465,7 +2636,7 @@ void tst_QSGGridView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 240);
     canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -2529,7 +2700,7 @@ void tst_QSGGridView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 240);
     canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
 
     gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -2597,6 +2768,39 @@ void tst_QSGGridView::header_data()
         << QPointF(-(240 - 40), 0);
 }
 
+void tst_QSGGridView::resizeViewAndRepaint()
+{
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("initialHeight", 100);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizeview.qml")));
+    qApp->processEvents();
+
+    QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QSGItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // item at index 10 should not be currently visible
+    QVERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    gridview->setHeight(320);
+    QTRY_VERIFY(findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    gridview->setHeight(100);
+    QTRY_VERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    delete canvas;
+}
+
 void tst_QSGGridView::indexAt()
 {
     QSGView *canvas = createView();
@@ -2615,7 +2819,7 @@ void tst_QSGGridView::indexAt()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
@@ -2654,7 +2858,7 @@ void tst_QSGGridView::onAdd()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateWidth", delegateWidth);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/attachedSignals.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
 
     QObject *object = canvas->rootObject();
     object->setProperty("width", canvas->width());
@@ -2712,7 +2916,7 @@ void tst_QSGGridView::onRemove()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateWidth", delegateWidth);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/attachedSignals.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
     QObject *object = canvas->rootObject();
 
     model.removeItems(indexToRemove, removeCount);
@@ -2787,14 +2991,14 @@ void tst_QSGGridView::testQtQuick11Attributes_data()
 void tst_QSGGridView::columnCount()
 {
     QSGView canvas;
-    canvas.setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview4.qml"));
+    canvas.setSource(QUrl::fromLocalFile(TESTDATA("gridview4.qml")));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
 
     QSGGridView *view = qobject_cast<QSGGridView*>(canvas.rootObject());
 
-    QCOMPARE(view->cellWidth(), qreal(400)/qreal(9));
+    QCOMPARE(view->cellWidth(), qreal(405)/qreal(9));
     QCOMPARE(view->cellHeight(), qreal(100));
 
     QList<QSGItem*> items = findItems<QSGItem>(view, "delegate");
@@ -2803,12 +3007,275 @@ void tst_QSGGridView::columnCount()
     QCOMPARE(items.at(9)->y(), qreal(100));
 }
 
+void tst_QSGGridView::margins()
+{
+    {
+        QSGView *canvas = createView();
+        canvas->show();
+
+        TestModel model;
+        for (int i = 0; i < 40; i++)
+            model.addItem("Item" + QString::number(i), "");
+
+        QDeclarativeContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+        ctxt->setContextProperty("testRightToLeft", QVariant(false));
+
+        canvas->setSource(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+        qApp->processEvents();
+
+        QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+        QTRY_VERIFY(gridview != 0);
+
+        QSGItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QCOMPARE(gridview->contentX(), -30.);
+        QCOMPARE(gridview->xOrigin(), 0.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        qreal pos = gridview->contentX();
+        gridview->setContentX(pos + 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos + 50);
+
+        // remove item before visible and check that left margin is maintained
+        // and xOrigin is updated
+        gridview->setContentX(200);
+        model.removeItems(0, 4);
+        QTest::qWait(100);
+        gridview->setContentX(-50);
+        gridview->returnToBounds();
+        QCOMPARE(gridview->xOrigin(), 100.);
+        QTRY_COMPARE(gridview->contentX(), 70.);
+
+        // reduce left margin
+        gridview->setLeftMargin(20);
+        QCOMPARE(gridview->xOrigin(), 100.);
+        QTRY_COMPARE(gridview->contentX(), 80.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        QCOMPARE(gridview->xOrigin(), 0.); // positionViewAtEnd() resets origin
+        pos = gridview->contentX();
+        gridview->setContentX(pos + 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos + 50);
+
+        // reduce right margin
+        pos = gridview->contentX();
+        gridview->setRightMargin(40);
+        QCOMPARE(gridview->xOrigin(), 0.);
+        QTRY_COMPARE(gridview->contentX(), pos-10);
+
+        delete canvas;
+    }
+    {
+        //RTL
+        QSGView *canvas = createView();
+        canvas->show();
+
+        TestModel model;
+        for (int i = 0; i < 40; i++)
+            model.addItem("Item" + QString::number(i), "");
+
+        QDeclarativeContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+        ctxt->setContextProperty("testRightToLeft", QVariant(true));
+
+        canvas->setSource(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+        qApp->processEvents();
+
+        QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+        QTRY_VERIFY(gridview != 0);
+
+        QSGItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QCOMPARE(gridview->contentX(), -240+30.);
+        QCOMPARE(gridview->xOrigin(), 0.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        qreal pos = gridview->contentX();
+        gridview->setContentX(pos - 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos - 50);
+
+        // remove item before visible and check that left margin is maintained
+        // and xOrigin is updated
+        gridview->setContentX(-400);
+        model.removeItems(0, 4);
+        QTest::qWait(100);
+        gridview->setContentX(-240+50);
+        gridview->returnToBounds();
+        QCOMPARE(gridview->xOrigin(), -100.);
+        QTRY_COMPARE(gridview->contentX(), -240-70.);
+
+        // reduce left margin (i.e. right side due to RTL)
+        pos = gridview->contentX();
+        gridview->setLeftMargin(20);
+        QCOMPARE(gridview->xOrigin(), -100.);
+        QTRY_COMPARE(gridview->contentX(), -240-80.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        QCOMPARE(gridview->xOrigin(), 0.); // positionViewAtEnd() resets origin
+        pos = gridview->contentX();
+        gridview->setContentX(pos - 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos - 50);
+
+        // reduce right margin (i.e. left side due to RTL)
+        pos = gridview->contentX();
+        gridview->setRightMargin(40);
+        QCOMPARE(gridview->xOrigin(), 0.);
+        QTRY_COMPARE(gridview->contentX(), pos+10);
+
+        delete canvas;
+    }
+}
+
+void tst_QSGGridView::creationContext()
+{
+    QSGView canvas;
+    canvas.setGeometry(0,0,240,320);
+    canvas.setSource(QUrl::fromLocalFile(TESTDATA("creationContext.qml")));
+    qApp->processEvents();
+
+    QSGItem *rootItem = qobject_cast<QSGItem *>(canvas.rootObject());
+    QVERIFY(rootItem);
+    QVERIFY(rootItem->property("count").toInt() > 0);
+
+    QSGItem *item;
+    QVERIFY(item = rootItem->findChild<QSGItem *>("listItem"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("header"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("footer"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+}
+
+void tst_QSGGridView::snapToRow_data()
+{
+    QTest::addColumn<QSGGridView::Flow>("flow");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<int>("highlightRangeMode");
+    QTest::addColumn<QPoint>("flickStart");
+    QTest::addColumn<QPoint>("flickEnd");
+    QTest::addColumn<qreal>("snapAlignment");
+    QTest::addColumn<qreal>("endExtent");
+    QTest::addColumn<qreal>("startExtent");
+
+    QTest::newRow("vertical, left to right") << QSGGridView::LeftToRight << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, left to right") << QSGGridView::TopToBottom << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, right to left") << QSGGridView::TopToBottom << Qt::RightToLeft << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+
+    QTest::newRow("vertical, left to right, enforce range") << QSGGridView::LeftToRight << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, left to right, enforce range") << QSGGridView::TopToBottom << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, right to left, enforce range") << QSGGridView::TopToBottom << Qt::RightToLeft << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+}
+
+void tst_QSGGridView::snapToRow()
+{
+    QFETCH(QSGGridView::Flow, flow);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(int, highlightRangeMode);
+    QFETCH(QPoint, flickStart);
+    QFETCH(QPoint, flickEnd);
+    QFETCH(qreal, snapAlignment);
+    QFETCH(qreal, endExtent);
+    QFETCH(qreal, startExtent);
+
+    QSGView *canvas = createView();
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapToRow.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+
+    gridview->setFlow(flow);
+    gridview->setLayoutDirection(layoutDirection);
+    gridview->setHighlightRangeMode(QSGItemView::HighlightRangeMode(highlightRangeMode));
+
+    QSGItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // confirm that a flick hits an item boundary
+    flick(canvas, flickStart, flickEnd, 180);
+    QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    if (flow == QSGGridView::LeftToRight)
+        QCOMPARE(qreal(fmod(gridview->contentY(),80.0)), snapAlignment);
+    else
+        QCOMPARE(qreal(fmod(gridview->contentX(),80.0)), snapAlignment);
+
+    // flick to end
+    do {
+        flick(canvas, flickStart, flickEnd, 180);
+        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    } while (flow == QSGGridView::LeftToRight
+           ? !gridview->isAtYEnd()
+           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
+
+    if (flow == QSGGridView::LeftToRight)
+        QCOMPARE(gridview->contentY(), endExtent);
+    else
+        QCOMPARE(gridview->contentX(), endExtent);
+
+    // flick to start
+    do {
+        flick(canvas, flickEnd, flickStart, 180);
+        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    } while (flow == QSGGridView::LeftToRight
+           ? !gridview->isAtYBeginning()
+           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
+
+    if (flow == QSGGridView::LeftToRight)
+        QCOMPARE(gridview->contentY(), startExtent);
+    else
+        QCOMPARE(gridview->contentX(), startExtent);
+
+    delete canvas;
+}
+
+
 QSGView *tst_QSGGridView::createView()
 {
     QSGView *canvas = new QSGView(0);
     canvas->setGeometry(0,0,240,320);
 
     return canvas;
+}
+
+void tst_QSGGridView::flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration)
+{
+    const int pointCount = 5;
+    QPoint diff = to - from;
+
+    // send press, five equally spaced moves, and release.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
+
+    for (int i = 0; i < pointCount; ++i) {
+        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QApplication::sendEvent(canvas, &mv);
+        QTest::qWait(duration/pointCount);
+        QCoreApplication::processEvents();
+    }
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
 }
 
 /*
@@ -2822,7 +3289,7 @@ T *tst_QSGGridView::findItem(QSGItem *parent, const QString &objectName, int ind
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -2853,7 +3320,7 @@ QList<T*> tst_QSGGridView::findItems(QSGItem *parent, const QString &objectName)
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -2871,7 +3338,7 @@ void tst_QSGGridView::dumpTree(QSGItem *parent, int depth)
     static QString padding("                       ");
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         QDeclarativeContext *context = QDeclarativeEngine::contextForObject(item);
         qDebug() << padding.left(depth*2) << item << (context ? context->contextProperty("index").toInt() : -1);

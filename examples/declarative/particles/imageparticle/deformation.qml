@@ -50,7 +50,7 @@ Rectangle {
     ImageParticle {
         system: sys
         groups: ["goingLeft", "goingRight"]
-        source: "../images/singlesmile.png"
+        source: "../images/starfish_4.png"
         rotation: 90
         rotationSpeed: 90
         autoRotation: true
@@ -58,7 +58,8 @@ Rectangle {
     ImageParticle {
         system: sys
         groups: ["goingDown"]
-        source: "../images/squarefacespriteXX.png"
+        source: "../images/starfish_0.png"
+        rotation: 180
         yVector: PointDirection { y: 0.5; yVariation: 0.25; xVariation: 0.25; }
     }
 
@@ -90,8 +91,8 @@ Rectangle {
         group: "goingRight"
         speed: PointDirection { x: 100 }
         lifeSpan: 4000
-        emitRate: 2
-        size: 32
+        emitRate: 1
+        size: 128
     }
     Emitter {
         id: emitB
@@ -102,8 +103,8 @@ Rectangle {
         group: "goingLeft"
         speed: PointDirection { x: -100 }
         lifeSpan: 4000
-        emitRate: 2
-        size: 32
+        emitRate: 1
+        size: 128
     }
     Emitter {
         id: emitC
@@ -114,7 +115,7 @@ Rectangle {
         group: "goingDown"
         speed: PointDirection { x: 100 }
         lifeSpan: 4000
-        emitRate: 2
-        size: 32
+        emitRate: 1
+        size: 128
     }
 }

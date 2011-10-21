@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 HEADERS += \
     $$PWD/qsgevents_p_p.h \
     $$PWD/qsgitemchangelistener_p.h \
@@ -64,8 +62,8 @@ HEADERS += \
     $$PWD/qsgspriteengine_p.h \
     $$PWD/qsgsprite_p.h \
     $$PWD/qsgspriteimage_p.h \
-    $$PWD/qsgevent.h \
-    $$PWD/qsgdragtarget_p.h \
+    $$PWD/qsgdrag_p.h \
+    $$PWD/qsgdroparea_p.h \
     $$PWD/qsgitemview_p.h \
     $$PWD/qsgitemview_p_p.h
 
@@ -110,7 +108,8 @@ SOURCES += \
     $$PWD/qsgspriteengine.cpp \
     $$PWD/qsgsprite.cpp \
     $$PWD/qsgspriteimage.cpp \
-    $$PWD/qsgdragtarget.cpp \
+    $$PWD/qsgdrag.cpp \
+    $$PWD/qsgdroparea.cpp \
     $$PWD/qsgitemview.cpp
 
 SOURCES += \

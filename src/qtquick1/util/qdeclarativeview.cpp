@@ -304,7 +304,8 @@ void QDeclarativeViewPrivate::init()
     q->viewport()->setAttribute(Qt::WA_NoSystemBackground);
 #endif
 
-    QDeclarativeInspectorService::instance()->addView(q);
+    if (QDeclarativeDebugService::isDebuggingEnabled())
+        QDeclarativeInspectorService::instance()->addView(q);
 }
 
 /*!
@@ -312,7 +313,8 @@ void QDeclarativeViewPrivate::init()
  */
 QDeclarativeView::~QDeclarativeView()
 {
-    QDeclarativeInspectorService::instance()->removeView(this);
+    if (QDeclarativeDebugService::isDebuggingEnabled())
+        QDeclarativeInspectorService::instance()->removeView(this);
 }
 
 /*! \property QDeclarativeView::source

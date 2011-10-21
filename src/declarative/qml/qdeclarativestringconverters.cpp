@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativestringconverters_p.h"
+#include "qdeclarativestringconverters_p.h"
 
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector3d.h>

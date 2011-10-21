@@ -45,7 +45,7 @@
 #include "qsgnodeupdater_p.h"
 #include "qsggeometry_p.h"
 
-#include "private/qsgadaptationlayer_p.h"
+#include <private/qsgadaptationlayer_p.h>
 
 #include <QOpenGLShaderProgram>
 #include <qopenglframebufferobject.h>
@@ -486,7 +486,6 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
                 glClearStencil(0);
                 glClear(GL_STENCIL_BUFFER_BIT);
                 glEnable(GL_STENCIL_TEST);
-                glDisable(GL_DEPTH_TEST);
                 glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                 glDepthMask(GL_FALSE);
 
@@ -519,12 +518,10 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
 
     if (stencilEnabled) {
         m_clip_program.disableAttributeArray(0);
-        glEnable(GL_DEPTH_TEST);
         glStencilFunc(GL_EQUAL, clipDepth, 0xff); // stencil test, ref, test mask
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // stencil fail, z fail, z pass
         glStencilMask(0); // write mask
         bindable()->reactivate();
-        //glDepthMask(GL_TRUE); // must be reset correctly by caller.
     } else {
         glDisable(GL_STENCIL_TEST);
     }

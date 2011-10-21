@@ -296,7 +296,8 @@ void QSGRotation::setAxis(Qt::Axis axis)
     }
 }
 
-struct QGraphicsRotation {
+class QGraphicsRotation {
+public:
     static inline void projectedRotate(QMatrix4x4 *matrix, qreal angle, qreal x, qreal y, qreal z)
     {
         matrix->projectedRotate(angle, x, y, z);

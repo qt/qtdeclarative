@@ -98,11 +98,11 @@ public:
         Component()
             : majorVersion(0), minorVersion(0), internal(false) {}
 
-        Component(const QByteArray &typeName, const QString &fileName, int majorVersion, int minorVersion)
+        Component(const QString &typeName, const QString &fileName, int majorVersion, int minorVersion)
             : typeName(typeName), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion),
             internal(false) {}
 
-        QByteArray typeName;
+        QString typeName;
         QString fileName;
         int majorVersion;
         int minorVersion;

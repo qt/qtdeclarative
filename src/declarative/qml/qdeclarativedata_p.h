@@ -68,6 +68,7 @@ class QDeclarativePropertyCache;
 class QDeclarativeContextData;
 class QDeclarativeNotifier;
 class QDeclarativeDataExtended;
+class QDeclarativeNotifierEndpoint;
 // This class is structured in such a way, that simply zero'ing it is the
 // default state for elemental object allocations.  This is crucial in the
 // workings of the QDeclarativeInstruction::CreateSimpleObject instruction.
@@ -77,22 +78,24 @@ class Q_DECLARATIVE_EXPORT QDeclarativeData : public QAbstractDeclarativeData
 public:
     QDeclarativeData()
         : ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false), 
-          hasTaintedV8Object(false), context(0), outerContext(0), bindings(0), nextContextObject(0), 
-          prevContextObject(0), bindingBitsSize(0), bindingBits(0), lineNumber(0), columnNumber(0), 
-          deferredComponent(0), deferredIdx(0), v8objectid(0), propertyCache(0), guards(0), 
-          extendedData(0) {
+          hasTaintedV8Object(false), notifyList(0), context(0), outerContext(0), bindings(0), 
+          nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0), 
+          lineNumber(0), columnNumber(0), deferredComponent(0), deferredIdx(0), v8objectid(0), 
+          propertyCache(0), guards(0), extendedData(0) {
           init(); 
-      }
+    }
 
     static inline void init() {
         QAbstractDeclarativeData::destroyed = destroyed;
         QAbstractDeclarativeData::parentChanged = parentChanged;
         QAbstractDeclarativeData::objectNameChanged = objectNameChanged;
+        QAbstractDeclarativeData::signalEmitted = signalEmitted;
     }
 
     static void destroyed(QAbstractDeclarativeData *, QObject *);
     static void parentChanged(QAbstractDeclarativeData *, QObject *, QObject *);
     static void objectNameChanged(QAbstractDeclarativeData *, QObject *);
+    static void signalEmitted(QAbstractDeclarativeData *, QObject *, int, void **);
 
     void destroyed(QObject *);
     void parentChanged(QObject *, QObject *);
@@ -108,6 +111,23 @@ public:
     quint32 explicitIndestructibleSet:1;
     quint32 hasTaintedV8Object:1;
     quint32 dummy:27;
+
+    struct NotifyList {
+        quint64 connectionMask;
+
+        quint16 maximumTodoIndex;
+        quint16 notifiesSize;
+
+        QDeclarativeNotifierEndpoint *todo;
+        QDeclarativeNotifierEndpoint**notifies;
+        void layout();
+    private:
+        void layout(QDeclarativeNotifierEndpoint*);
+    };
+    NotifyList *notifyList;
+    
+    inline QDeclarativeNotifierEndpoint *notify(int index);
+    void addNotify(int index, QDeclarativeNotifierEndpoint *);
 
     // The context that created the C++ object
     QDeclarativeContextData *context; 
@@ -162,6 +182,25 @@ private:
     // For objectNameNotifier and attachedProperties
     mutable QDeclarativeDataExtended *extendedData;
 };
+
+QDeclarativeNotifierEndpoint *QDeclarativeData::notify(int index)
+{
+    Q_ASSERT(index <= 0xFFFF);
+
+    if (!notifyList || !(notifyList->connectionMask & (1 << (quint64(index) % 64)))) {
+        return 0;
+    } else if (index < notifyList->notifiesSize) {
+        return notifyList->notifies[index];
+    } else if (index <= notifyList->maximumTodoIndex) {
+        notifyList->layout();
+    }
+
+    if (index < notifyList->notifiesSize) {
+        return notifyList->notifies[index];
+    } else {
+        return 0;
+    }
+}
 
 QT_END_NAMESPACE
 

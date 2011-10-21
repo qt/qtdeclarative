@@ -52,13 +52,21 @@ QT_MODULE(Declarative)
 
 class QDeclarativeEngine;
 
-struct Q_DECLARATIVE_EXPORT QDeclarativeExtensionInterface
+class Q_DECLARATIVE_EXPORT QDeclarativeTypesExtensionInterface
 {
-    virtual ~QDeclarativeExtensionInterface() {}
+public:
+    virtual ~QDeclarativeTypesExtensionInterface() {}
     virtual void registerTypes(const char *uri) = 0;
+};
+
+class Q_DECLARATIVE_EXPORT QDeclarativeExtensionInterface : public QDeclarativeTypesExtensionInterface
+{
+public:
+    virtual ~QDeclarativeExtensionInterface() {}
     virtual void initializeEngine(QDeclarativeEngine *engine, const char *uri) = 0;
 };
 
+Q_DECLARE_INTERFACE(QDeclarativeTypesExtensionInterface, "com.trolltech.Qt.QDeclarativeTypesExtensionInterface/1.0")
 Q_DECLARE_INTERFACE(QDeclarativeExtensionInterface, "com.trolltech.Qt.QDeclarativeExtensionInterface/1.0")
 
 QT_END_NAMESPACE

@@ -43,14 +43,14 @@ QML documents are always encoded in UTF-8 format.
 A QML document always begins with one or more import statements.  To prevent elements
 introduced in later versions from affecting existing QML programs, the element types
 available within a document are controlled by the imported QML \l {Modules}.  That is,
-QML is a \e versioned language.
+QML is a \i versioned language.
 
-Syntactically a QML document is self contained; QML does \e not have a preprocessor that
+Syntactically a QML document is self contained; QML does \i not have a preprocessor that
 modifies the document prior to presentation to the QML runtime. \c import statements
 do not "include" code in the document, but instead instruct the QML runtime on how to
 resolve type references found in the document.  Any type reference present in a QML
 document - such as \c Rectangle and \c ListView - including those made within an
-\l {Inline JavaScript}{JavaScript block} or \l {Property Binding}s, are \e resolved based exclusively on the
+\l {Inline JavaScript}{JavaScript block} or \l {Property Binding}s, are \i resolved based exclusively on the
 import statements.  QML does not import any modules by default, so at least one \c import
 statement must be present or no elements will be available!
 
@@ -64,7 +64,7 @@ resolved according to the document scope.
 A QML document defines a single, top-level \l {QDeclarativeComponent}{QML component}.  A QML component
 is a template that is interpreted by the QML runtime to create an object with some predefined
 behaviour.  As it is a template, a single QML component can be "run" multiple times to
-produce several objects, each of which are said to be \e instances of the component.
+produce several objects, each of which are said to be \i instances of the component.
 
 Once created, instances are not dependent on the component that created them, so they can
 operate on independent data.  Here is an example of a simple "Button" component (defined
@@ -111,7 +111,7 @@ to other QML components and applications in the same directory.
 
 In addition to the top-level component that all QML documents define, and any reusable
 components placed in separate files, documents may also
-include \e inline components.  Inline components are declared using the
+include \i inline components.  Inline components are declared using the
 \l Component element, as can be seen in the first example above.  Inline components share
 all the characteristics of regular top-level components and use the same \c import list as their
 containing QML document.  Components are one of the most basic building blocks in QML, and are

@@ -63,6 +63,14 @@ class Q_AUTOTEST_EXPORT QSGFlickable : public QSGItem
     Q_PROPERTY(qreal contentY READ contentY WRITE setContentY NOTIFY contentYChanged)
     Q_PROPERTY(QSGItem *contentItem READ contentItem CONSTANT)
 
+    Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin NOTIFY topMarginChanged)
+    Q_PROPERTY(qreal bottomMargin READ bottomMargin WRITE setBottomMargin NOTIFY bottomMarginChanged)
+    Q_PROPERTY(qreal yOrigin READ yOrigin NOTIFY yOriginChanged)
+
+    Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin NOTIFY leftMarginChanged)
+    Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin NOTIFY rightMarginChanged)
+    Q_PROPERTY(qreal xOrigin READ xOrigin NOTIFY xOriginChanged)
+
     Q_PROPERTY(qreal horizontalVelocity READ horizontalVelocity NOTIFY horizontalVelocityChanged)
     Q_PROPERTY(qreal verticalVelocity READ verticalVelocity NOTIFY verticalVelocityChanged)
 
@@ -122,6 +130,21 @@ public:
     qreal contentY() const;
     virtual void setContentY(qreal pos);
 
+    qreal topMargin() const;
+    void setTopMargin(qreal m);
+
+    qreal bottomMargin() const;
+    void setBottomMargin(qreal m);
+
+    qreal leftMargin() const;
+    void setLeftMargin(qreal m);
+
+    qreal rightMargin() const;
+    void setRightMargin(qreal m);
+
+    virtual qreal yOrigin() const;
+    virtual qreal xOrigin() const;
+
     bool isMoving() const;
     bool isMovingHorizontally() const;
     bool isMovingVertically() const;
@@ -169,6 +192,12 @@ Q_SIGNALS:
     void contentHeightChanged();
     void contentXChanged();
     void contentYChanged();
+    void topMarginChanged();
+    void bottomMarginChanged();
+    void leftMarginChanged();
+    void rightMarginChanged();
+    void yOriginChanged();
+    void xOriginChanged();
     void movingChanged();
     void movingHorizontallyChanged();
     void movingVerticallyChanged();
@@ -219,6 +248,7 @@ protected:
     virtual qreal maxYExtent() const;
     qreal vWidth() const;
     qreal vHeight() const;
+    virtual void componentComplete();
     virtual void viewportMoved();
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);

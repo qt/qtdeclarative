@@ -1,20 +1,10 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_script
-QT += declarative
+QT += declarative testlib
 macx:CONFIG -= app_bundle
 CONFIG += release
 
 SOURCES += tst_script.cpp
 
-symbian {
-    importFiles.files = data
-    importFiles.path =
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
-
-
-
-
+DEFINES += SRCDIR=\\\"$$PWD\\\"

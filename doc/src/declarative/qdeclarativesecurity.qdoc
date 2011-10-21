@@ -66,7 +66,7 @@ A non-exhaustive list of the ways you could shoot yourself in the foot is:
 \endlist
 
 However, the above does not mean that you have no use for the network transparency of QML.
-There are many good and useful things you \e can do:
+There are many good and useful things you \i can do:
 
 \list
     \i Create \l Image elements with source URLs of any online images. GOOD
@@ -74,7 +74,7 @@ There are many good and useful things you \e can do:
     \i Use \l{XMLHttpRequest}{XMLHttpRequest} to interact with online services. GOOD
 \endlist
 
-The only reason this page is necessary at all is that JavaScript, when run in a \e{web browser},
+The only reason this page is necessary at all is that JavaScript, when run in a \i{web browser},
 has quite many restrictions. With QML, you should neither rely on similar restrictions, nor
 worry about working around them.
 */

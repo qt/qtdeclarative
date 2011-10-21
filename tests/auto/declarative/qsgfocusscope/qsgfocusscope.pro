@@ -1,16 +1,10 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qsgfocusscope
 SOURCES += tst_qsgfocusscope.cpp
 macx:CONFIG -= app_bundle
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
-QT += core-private gui-private declarative-private
-
-qpa:contains(QT_CONFIG,xcb):CONFIG+=insignificant_test  # QTBUG-21054, unstable
+QT += core-private gui-private declarative-private testlib

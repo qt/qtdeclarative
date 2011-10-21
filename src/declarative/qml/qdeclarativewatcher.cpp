@@ -39,15 +39,15 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativewatcher_p.h"
+#include "qdeclarativewatcher_p.h"
 
 #include "qdeclarativeexpression.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarative.h"
 
-#include <qdeclarativedebugservice_p.h>
-#include "private/qdeclarativeproperty_p.h"
-#include "private/qdeclarativevaluetype_p.h"
+#include <private/qdeclarativedebugservice_p.h>
+#include "qdeclarativeproperty_p.h"
+#include "qdeclarativevaluetype_p.h"
 
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qdebug.h>

@@ -1,7 +1,7 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_holistic
-QT += declarative network
+QT += declarative network testlib
 macx:CONFIG -= app_bundle
 
 CONFIG += release
@@ -10,10 +10,4 @@ SOURCES += tst_holistic.cpp \
            testtypes.cpp
 HEADERS += testtypes.h
 
-symbian {
-  data.files += data
-  data.path = .
-  DEPLOYMENT += data
-} else {
-  DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"

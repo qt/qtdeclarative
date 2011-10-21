@@ -60,6 +60,9 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheM
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
     setPreferredAntialiasingMode(cacheManager->defaultAntialiasingMode());
+#ifdef QML_RUNTIME_TESTING
+    description = QLatin1String("glyphs");
+#endif
 }
 
 QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()

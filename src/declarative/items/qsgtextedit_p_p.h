@@ -72,19 +72,13 @@ public:
     QSGTextEditPrivate()
       : color("black"), hAlign(QSGTextEdit::AlignLeft), vAlign(QSGTextEdit::AlignTop),
       documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
-      showInputPanelOnFocus(true), clickCausedFocus(false), persistentSelection(true),
-      requireImplicitWidth(false), selectByMouse(false), canPaste(false),
-      hAlignImplicit(true), rightToLeftText(false), isComplexRichText(false),
+      persistentSelection(true), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
+      hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QSGTextEdit::AutoText), document(0), wrapMode(QSGTextEdit::NoWrap),
       mouseSelectionMode(QSGTextEdit::SelectCharacters),
       lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0)
     {
-#ifdef Q_OS_SYMBIAN
-        if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
-            showInputPanelOnFocus = false;
-        }
-#endif
     }
 
     void init();
@@ -113,15 +107,13 @@ public:
     bool richText : 1;
     bool cursorVisible : 1;
     bool focusOnPress : 1;
-    bool showInputPanelOnFocus : 1;
-    bool clickCausedFocus : 1;
     bool persistentSelection : 1;
     bool requireImplicitWidth:1;
     bool selectByMouse:1;
     bool canPaste:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
-    bool isComplexRichText:1;
+    bool useImageFallback:1;
 
     qreal textMargin;
     int lastSelectionStart;

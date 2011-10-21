@@ -25,8 +25,4 @@ Item {
         first = cro;
         second = cro;
     }
-
-    function performGc() {
-        gc();
-    }
 }

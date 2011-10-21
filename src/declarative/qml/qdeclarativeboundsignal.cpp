@@ -39,18 +39,18 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeboundsignal_p.h"
+#include "qdeclarativeboundsignal_p.h"
 
-#include "private/qmetaobjectbuilder_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativeexpression_p.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativemetatype_p.h"
+#include <private/qmetaobjectbuilder_p.h>
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativeexpression_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativemetatype_p.h"
 #include "qdeclarative.h"
 #include "qdeclarativecontext.h"
-#include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativedebugtrace_p.h"
-#include "private/qv8debugservice_p.h"
+#include "qdeclarativeglobal_p.h"
+#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qv8debugservice_p.h>
 
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
@@ -174,7 +174,7 @@ int QDeclarativeBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
             QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::HandlingSignal);
             QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::HandlingSignal, QLatin1String(m_signal.signature()) % QLatin1String(": ") % m_expression->expression());
             QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::HandlingSignal, m_expression->sourceFile(), m_expression->lineNumber());
-            QV8DebugService::instance()->signalEmitted(m_signal.signature());
+            QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.signature()));
         }
         m_isEvaluating = true;
         if (!m_paramsValid) {

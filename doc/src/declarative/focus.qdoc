@@ -38,7 +38,7 @@
 When a key is pressed or released, a key event is generated and delivered to the
 focused QML \l Item. To facilitate the construction of reusable components
 and to address some of the cases unique to fluid user interfaces, the QML items add aged
-\e scope based extension to Qt's traditional keyboard focus model.
+\i scope based extension to Qt's traditional keyboard focus model.
 
 \tableofcontents
 
@@ -50,7 +50,7 @@ When the user presses or releases a key, the following occurs:
 \o If the Qt widget containing the \l QDeclarativeView has focus, the key event
 is delivered to it. Otherwise, regular Qt key handling continues.
 \o The key event is delivered by the scene to the QML \l Item with
-\e {active focus}. If no Item has active focus, the key event is
+\i {active focus}. If no Item has active focus, the key event is
 \l {QEvent::ignore()}{ignored} and regular Qt key handling continues.
 \o If the QML Item with active focus accepts the key event, propagation
 stops. Otherwise the event is "bubbled up", by recursively passing it to each
@@ -123,7 +123,7 @@ the focus, but it cannot control the focus when it is imported or reused.
 Likewise, the \c window component does not have the ability to know if its
 imported components are requesting the focus.
 
-To solve this problem, the QML introduces a concept known as a \e {focus scope}.
+To solve this problem, the QML introduces a concept known as a \i {focus scope}.
 For existing Qt users, a focus scope is like an automatic focus proxy.
 A focus scope is created by declaring the \l FocusScope element.
 
@@ -135,7 +135,7 @@ visual result shown.
 \image declarative-qmlfocus3.png
 
 
-Conceptually \e {focus scopes} are quite simple.
+Conceptually \i {focus scopes} are quite simple.
 \list
 \o Within each focus scope one element may have \c {Item::focus} set to
 \c true. If more than one \l Item has the \c focus property set, the

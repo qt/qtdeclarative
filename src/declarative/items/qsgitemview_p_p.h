@@ -101,6 +101,14 @@ class QSGItemViewPrivate : public QSGFlickablePrivate
 public:
     QSGItemViewPrivate();
 
+    struct InsertionsResult {
+        QList<FxViewItem *> addedItems;
+        QList<FxViewItem *> movedBackwards;
+        qreal sizeAddedBeforeVisible;
+
+        InsertionsResult() : sizeAddedBeforeVisible(0) {}
+    };
+
     enum BufferMode { NoBuffer = 0x00, BufferBefore = 0x01, BufferAfter = 0x02 };
     enum MovementReason { Other, SetIndex, Mouse };
 
@@ -141,6 +149,13 @@ public:
     bool applyModelChanges();
 
     void checkVisible() const;
+
+    void markExtentsDirty() {
+        if (layoutOrientation() == Qt::Vertical)
+            vData.markExtentsDirty();
+        else
+            hData.markExtentsDirty();
+    }
 
     QDeclarativeGuard<QSGVisualModel> model;
     QVariant modelVariant;
@@ -188,8 +203,6 @@ public:
     bool autoHighlight : 1;
     bool highlightRangeStartValid : 1;
     bool highlightRangeEndValid : 1;
-    mutable bool minExtentDirty : 1;
-    mutable bool maxExtentDirty : 1;
 
 protected:
     virtual Qt::Orientation layoutOrientation() const = 0;
@@ -222,11 +235,11 @@ protected:
     virtual void repositionPackageItemAt(QSGItem *item, int index) = 0;
     virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem) = 0;
     virtual void resetFirstItemPosition() = 0;
-    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &, const QList<FxViewItem *> &) = 0;
+    virtual void moveItemBy(FxViewItem *item, qreal forwards, qreal backwards) = 0;
 
     virtual void layoutVisibleItems() = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *> *, FxViewItem *) = 0;
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *, InsertionsResult *) = 0;
 
     virtual void initializeViewItem(FxViewItem *) {}
     virtual void initializeCurrentItem() {}

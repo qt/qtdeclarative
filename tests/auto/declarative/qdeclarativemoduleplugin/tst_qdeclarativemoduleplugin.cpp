@@ -45,7 +45,7 @@
 #include <QDebug>
 
 #include "../shared/testhttpserver.h"
-#include "../../../shared/util.h"
+#include "../shared/util.h"
 
 #define SERVER_ADDR "http://127.0.0.1:14450"
 #define SERVER_PORT 14450
@@ -74,11 +74,6 @@ private slots:
     void implicitQmldir_data();
 };
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 #define VERIFY_ERRORS(errorfile) \
     if (!errorfile) { \
         if (qgetenv("DEBUG") != "" && !component.errors().isEmpty()) \
@@ -86,7 +81,7 @@ private slots:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        QString verify_errors_file_name = QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("data") + QDir::separator() + QLatin1String(errorfile); \
+        QString verify_errors_file_name = TESTDATA(errorfile); \
         QFile file(verify_errors_file_name); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
@@ -106,7 +101,7 @@ private slots:
             qWarning() << "Expected:" << expected << "Actual:" << actual; \
         } \
         if (qgetenv("QDECLARATIVELANGUAGE_UPDATEERRORS") != "" && expected != actual) {\
-            QFile file(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("data") + QDir::separator() + QLatin1String(errorfile)); \
+            QFile file(TESTDATA(errorfile)); \
             QVERIFY(file.open(QIODevice::WriteOnly)); \
             for (int ii = 0; ii < actual.count(); ++ii) { \
                 file.write(actual.at(ii)); file.write("\n"); \
@@ -119,17 +114,38 @@ private slots:
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath(filename));
+    return QUrl::fromLocalFile(TESTDATA(filename));
+}
+
+QString IMPORTSDIR()
+{
+    // Try to find it relative to the binary.
+    QDir appDir(QCoreApplication::applicationDirPath() + QDir::separator() +  QLatin1String("imports"));
+    if (appDir.exists()) {
+        return appDir.absolutePath();
+    }
+
+    // Else try to find it in the source tree
+   QDir sourceDir(QFileInfo(__FILE__).absoluteDir().filePath(QLatin1String("imports")));
+    if (sourceDir.exists()) {
+        return sourceDir.absolutePath();
+    }
+
+    qWarning("requested importsPath could not be found (looked at: %s, %s)",
+             qPrintable(appDir.path()),
+             qPrintable(sourceDir.path())
+             );
+
+    return QString();
 }
 
 void tst_qdeclarativemoduleplugin::importsPlugin()
 {
     QDeclarativeEngine engine;
-    engine.addImportPath(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports"));
+    engine.addImportPath(IMPORTSDIR());
     QTest::ignoreMessage(QtWarningMsg, "plugin created");
     QTest::ignoreMessage(QtWarningMsg, "import worked");
-    QDeclarativeComponent component(&engine, TEST_FILE("data/works.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("works.qml"));
     foreach (QDeclarativeError err, component.errors())
     	qWarning() << err;
     VERIFY_ERRORS(0);
@@ -142,10 +158,10 @@ void tst_qdeclarativemoduleplugin::importsPlugin()
 void tst_qdeclarativemoduleplugin::importsPlugin2()
 {
     QDeclarativeEngine engine;
-    engine.addImportPath(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports"));
+    engine.addImportPath(IMPORTSDIR());
     QTest::ignoreMessage(QtWarningMsg, "plugin2 created");
     QTest::ignoreMessage(QtWarningMsg, "import2 worked");
-    QDeclarativeComponent component(&engine, TEST_FILE("data/works2.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("works2.qml"));
     foreach (QDeclarativeError err, component.errors())
         qWarning() << err;
     VERIFY_ERRORS(0);
@@ -158,10 +174,10 @@ void tst_qdeclarativemoduleplugin::importsPlugin2()
 void tst_qdeclarativemoduleplugin::importsPlugin21()
 {
     QDeclarativeEngine engine;
-    engine.addImportPath(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports"));
+    engine.addImportPath(IMPORTSDIR());
     QTest::ignoreMessage(QtWarningMsg, "plugin2.1 created");
     QTest::ignoreMessage(QtWarningMsg, "import2.1 worked");
-    QDeclarativeComponent component(&engine, TEST_FILE("data/works21.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("works21.qml"));
     foreach (QDeclarativeError err, component.errors())
         qWarning() << err;
     VERIFY_ERRORS(0);
@@ -174,9 +190,9 @@ void tst_qdeclarativemoduleplugin::importsPlugin21()
 void tst_qdeclarativemoduleplugin::incorrectPluginCase()
 {
     QDeclarativeEngine engine;
-    engine.addImportPath(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports"));
+    engine.addImportPath(IMPORTSDIR());
 
-    QDeclarativeComponent component(&engine, TEST_FILE("data/incorrectCase.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("incorrectCase.qml"));
 
     QList<QDeclarativeError> errors = component.errors();
     QCOMPARE(errors.count(), 1);
@@ -187,7 +203,7 @@ void tst_qdeclarativemoduleplugin::incorrectPluginCase()
 #elif defined(Q_OS_WIN32)
     QString libname = "PluGin.dll";
 #endif
-    QString expectedError = QLatin1String("plugin cannot be loaded for module \"com.nokia.WrongCase\": File name case mismatch for \"") + QFileInfo(__FILE__).absoluteDir().filePath("imports/com/nokia/WrongCase/" + libname) + QLatin1String("\"");
+    QString expectedError = QLatin1String("plugin cannot be loaded for module \"com.nokia.WrongCase\": File name case mismatch for \"") + QDir(IMPORTSDIR()).filePath("com/nokia/WrongCase/" + libname) + QLatin1String("\"");
 #else
     QString expectedError = QLatin1String("module \"com.nokia.WrongCase\" plugin \"PluGin\" not found");
 #endif
@@ -197,7 +213,7 @@ void tst_qdeclarativemoduleplugin::incorrectPluginCase()
 
 void tst_qdeclarativemoduleplugin::importPluginWithQmlFile()
 {
-    QString path = QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports");
+    QString path = IMPORTSDIR();
 
     // QTBUG-16885: adding an import path with a lower-case "c:" causes assert failure
     // (this only happens if the plugin includes pure QML files)
@@ -209,7 +225,7 @@ void tst_qdeclarativemoduleplugin::importPluginWithQmlFile()
     QDeclarativeEngine engine;
     engine.addImportPath(path);
 
-    QDeclarativeComponent component(&engine, TEST_FILE("data/pluginWithQmlFile.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("pluginWithQmlFile.qml"));
     foreach (QDeclarativeError err, component.errors())
         qWarning() << err;
     VERIFY_ERRORS(0);
@@ -222,7 +238,7 @@ void tst_qdeclarativemoduleplugin::remoteImportWithQuotedUrl()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/imports");
+    server.serveDirectory(IMPORTSDIR());
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
@@ -243,10 +259,10 @@ void tst_qdeclarativemoduleplugin::remoteImportWithUnquotedUri()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/imports");
+    server.serveDirectory(IMPORTSDIR());
 
     QDeclarativeEngine engine;
-    engine.addImportPath(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports"));
+    engine.addImportPath(IMPORTSDIR());
     QDeclarativeComponent component(&engine);
     component.setData("import com.nokia.PureQmlModule 1.0 \nComponentA { width: 300; ComponentB{} }", QUrl());
 
@@ -266,10 +282,10 @@ void tst_qdeclarativemoduleplugin::remoteImportWithUnquotedUri()
 void tst_qdeclarativemoduleplugin::importsMixedQmlCppPlugin()
 {
     QDeclarativeEngine engine;
-    engine.addImportPath(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports"));
+    engine.addImportPath(IMPORTSDIR());
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("data/importsMixedQmlCppPlugin.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("importsMixedQmlCppPlugin.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -278,7 +294,7 @@ void tst_qdeclarativemoduleplugin::importsMixedQmlCppPlugin()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("data/importsMixedQmlCppPlugin.2.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("importsMixedQmlCppPlugin.2.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -295,8 +311,8 @@ void tst_qdeclarativemoduleplugin::versionNotInstalled_data()
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("errorFile");
 
-    QTest::newRow("versionNotInstalled") << "data/versionNotInstalled.qml" << "versionNotInstalled.errors.txt";
-    QTest::newRow("versionNotInstalled") << "data/versionNotInstalled.2.qml" << "versionNotInstalled.2.errors.txt";
+    QTest::newRow("versionNotInstalled") << "versionNotInstalled.qml" << "versionNotInstalled.errors.txt";
+    QTest::newRow("versionNotInstalled") << "versionNotInstalled.2.qml" << "versionNotInstalled.2.errors.txt";
 }
 
 void tst_qdeclarativemoduleplugin::versionNotInstalled()
@@ -305,7 +321,7 @@ void tst_qdeclarativemoduleplugin::versionNotInstalled()
     QFETCH(QString, errorFile);
 
     QDeclarativeEngine engine;
-    engine.addImportPath(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("imports"));
+    engine.addImportPath(IMPORTSDIR());
 
     QDeclarativeComponent component(&engine, TEST_FILE(file));
     VERIFY_ERRORS(errorFile.toLatin1().constData());
@@ -331,8 +347,8 @@ void tst_qdeclarativemoduleplugin::implicitQmldir()
     QFETCH(QString, file);
     QFETCH(QString, errorFile);
 
-    QString importPath = QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("data") + QDir::separator() + directory;
-    QString fileName = QLatin1String("data") + QDir::separator() + directory + QDir::separator() + file;
+    QString importPath = TESTDATA(directory);
+    QString fileName = directory + QDir::separator() + file;
     QString errorFileName = directory + QDir::separator() + errorFile;
     QUrl testFileUrl = TEST_FILE(fileName);
 

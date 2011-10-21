@@ -39,18 +39,15 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativebinding_p.h"
-#include "private/qdeclarativebinding_p_p.h"
+#include "qdeclarativebinding_p.h"
+#include "qdeclarativebinding_p_p.h"
 
 #include "qdeclarative.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarativeinfo.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativecompiler_p.h"
-#include "private/qdeclarativedata_p.h"
-#include "private/qdeclarativestringconverters_p.h"
-#include "private/qdeclarativestate_p_p.h"
-#include "private/qdeclarativedebugtrace_p.h"
+#include "qdeclarativecompiler_p.h"
+#include "qdeclarativedata_p.h"
+#include <private/qdeclarativedebugtrace_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -412,7 +409,7 @@ void QDeclarativeBindingPrivate::printBindingLoopError(QDeclarativeProperty &pro
     qmlInfo(prop.object()) << QDeclarativeBinding::tr("Binding loop detected for property \"%1\"").arg(prop.name());
 }
 
-void QDeclarativeBindingPrivate::emitValueChanged()
+void QDeclarativeBindingPrivate::expressionChanged()
 {
     Q_Q(QDeclarativeBinding);
     q->update();

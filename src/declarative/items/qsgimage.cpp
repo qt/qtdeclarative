@@ -63,6 +63,10 @@ public:
     }
 
     QSGTexture *texture() const {
+
+        if (m_texture->isAtlasTexture())
+            const_cast<QSGImageTextureProvider *>(this)->m_texture = m_texture->removedFromAtlas();
+
         if (m_texture) {
             m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
             m_texture->setMipmapFiltering(QSGTexture::Nearest);
@@ -485,7 +489,7 @@ void QSGImage::updatePaintedGeometry()
         if (widthScale <= heightScale) {
             d->paintedWidth = w;
             d->paintedHeight = widthScale * qreal(d->pix.height());
-        } else if(heightScale < widthScale) {
+        } else if (heightScale < widthScale) {
             d->paintedWidth = heightScale * qreal(d->pix.width());
             d->paintedHeight = h;
         }
@@ -506,7 +510,7 @@ void QSGImage::updatePaintedGeometry()
         qreal heightScale = height() / qreal(d->pix.height());
         if (widthScale < heightScale) {
             widthScale = heightScale;
-        } else if(heightScale < widthScale) {
+        } else if (heightScale < widthScale) {
             heightScale = widthScale;
         }
 
@@ -570,7 +574,7 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     }
 
     QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
-    if (!node) { 
+    if (!node) {
         d->pixmapChanged = true;
         node = d->sceneGraphContext()->createImageNode();
         node->setTexture(texture);
@@ -704,6 +708,10 @@ void QSGImage::pixmapChange()
         QSGImageBase::pixmapChange();
     updatePaintedGeometry();
     d->pixmapChanged = true;
+
+    // Make sure we update the texture provider when the image has changed.
+    if (d->provider)
+        update();
 }
 
 QSGImage::VAlignment QSGImage::verticalAlignment() const

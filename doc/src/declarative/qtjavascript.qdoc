@@ -63,7 +63,7 @@
 
   Custom properties can be made available to scripts by registering
   them with the script engine. This is most easily done by setting
-  properties of the script engine's \e{Global Object}:
+  properties of the script engine's \i{Global Object}:
 
   \snippet doc/src/snippets/qtjavascript/registeringvalues/main.cpp 0
 

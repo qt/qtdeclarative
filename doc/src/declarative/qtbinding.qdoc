@@ -626,7 +626,7 @@ To use the resource system in a mixed QML/C++ application:
 Once this is done, all files specified by relative paths in QML will be loaded from
 the resource system instead. Use of the resource system is completely transparent to
 the QML layer; this means all QML code should refer to resource files using relative
-paths and should \e not use the \c qrc scheme. This scheme should only be used from
+paths and should \i not use the \c qrc scheme. This scheme should only be used from
 C++ code for referring to resource files.
 
 Here is a application packaged using the \l {The Qt Resource System}{Qt resource system}.

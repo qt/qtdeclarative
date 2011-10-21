@@ -53,15 +53,15 @@
 // We mean it.
 //
 
-#include "private/qdeclarativesmoothedanimation_p.h"
-#include "private/qdeclarativeanimation_p.h"
+#include "qdeclarativesmoothedanimation_p.h"
+#include "qdeclarativeanimation_p.h"
 
-#include "private/qdeclarativeanimation_p_p.h"
+#include "qdeclarativeanimation_p_p.h"
 
 #include "private/qparallelanimationgroup2_p.h"
 
 #include <private/qobject_p.h>
-#include <QTimer>
+#include <QBasicTimer>
 
 QT_BEGIN_NAMESPACE
 class QSmoothedAnimation;
@@ -129,8 +129,7 @@ private:
 
     bool recalc();
     void delayedStop();
-
-    QSmoothedAnimationTimer* delayedStopTimer;
+    QSmoothedAnimationTimer *delayedStopTimer;
 };
 
 class QDeclarativeSmoothedAnimationPrivate : public QDeclarativePropertyAnimationPrivate

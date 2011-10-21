@@ -227,13 +227,13 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
   , m_particleEndSize(-1)
   , m_particleSizeVariation(0)
   , m_startTime(0)
+  , m_overwrite(true)
   , m_pulseLeft(0)
   , m_maxParticleCount(-1)
   , m_speed_from_movement(0)
   , m_reset_last(true)
   , m_last_timestamp(-1)
   , m_last_emission(0)
-  , m_overwrite(true)
 
 {
     //TODO: Reset speed/acc back to null vector? Or allow null pointer?
@@ -375,6 +375,9 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     qreal time = timeStamp / 1000.;
     qreal particleRatio = 1. / m_particlesPerSecond;
     qreal pt = m_last_emission;
+    qreal maxLife = (m_particleDuration + m_particleDurationVariation)/1000.0;
+    if (pt + maxLife < time)//We missed so much, that we should skip emiting particles that are dead by now
+        pt = time - maxLife;
 
     qreal opt = pt; // original particle time
     qreal dt = time - m_last_timestamp; // timestamp delta...
@@ -402,7 +405,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
 
     while ((pt < time && m_emitCap) || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
-        QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_group], !m_overwrite);
+        QSGParticleData* datum = m_system->newDatum(m_system->groupIds[m_group], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
             datum->e = this;//###useful?
             qreal t = 1 - (pt - opt) / dt;

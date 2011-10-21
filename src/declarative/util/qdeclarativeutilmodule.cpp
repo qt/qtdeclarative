@@ -39,39 +39,34 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeutilmodule_p.h"
-#include "private/qdeclarativeanimation_p.h"
-#include "private/qdeclarativeanimation_p_p.h"
-#include "private/qdeclarativebehavior_p.h"
-#include "private/qdeclarativebind_p.h"
-#include "private/qdeclarativeconnections_p.h"
-#include "private/qdeclarativesmoothedanimation_p.h"
-#include "private/qdeclarativefontloader_p.h"
-#include "private/qdeclarativelistaccessor_p.h"
-#include "private/qdeclarativelistmodel_p.h"
-#include "private/qdeclarativenullablevalue_p_p.h"
-#include "private/qdeclarativeopenmetaobject_p.h"
-#include "private/qdeclarativepackage_p.h"
-#include "private/qdeclarativepixmapcache_p.h"
-#include "private/qdeclarativepropertychanges_p.h"
-#include "qdeclarativepropertymap.h"
-#include "private/qdeclarativespringanimation_p.h"
-#include "private/qdeclarativestategroup_p.h"
-#include "private/qdeclarativestateoperations_p.h"
-#include "private/qdeclarativestate_p.h"
-#include "private/qdeclarativestate_p_p.h"
-#include "private/qdeclarativestyledtext_p.h"
-#include "private/qdeclarativesystempalette_p.h"
-#include "private/qdeclarativetimeline_p_p.h"
-#include "private/qdeclarativetimer_p.h"
-#include "private/qdeclarativetransitionmanager_p_p.h"
-#include "private/qdeclarativetransition_p.h"
-#include "private/qdeclarativeapplication_p.h"
-#include "qdeclarativeinfo.h"
-#include "private/qdeclarativetypenotavailable_p.h"
+#include "qdeclarativeutilmodule_p.h"
+#include "qdeclarativeanimation_p.h"
+#include "qdeclarativeanimation_p_p.h"
+#include "qdeclarativebehavior_p.h"
+#include "qdeclarativebind_p.h"
+#include "qdeclarativeconnections_p.h"
+#include "qdeclarativesmoothedanimation_p.h"
+#include "qdeclarativefontloader_p.h"
+#include "qdeclarativelistaccessor_p.h"
+#include "qdeclarativelistmodel_p.h"
+#include "qdeclarativepackage_p.h"
+#include "qdeclarativepropertychanges_p.h"
+#include "qdeclarativespringanimation_p.h"
+#include "qdeclarativestategroup_p.h"
+#include "qdeclarativestateoperations_p.h"
+#include "qdeclarativestate_p.h"
+#include "qdeclarativestate_p_p.h"
+#include "qdeclarativesystempalette_p.h"
+#include "qdeclarativetimer_p.h"
+#include "qdeclarativetransition_p.h"
+#include "qdeclarativeapplication_p.h"
+#include <qdeclarativeinfo.h>
+#include <private/qdeclarativetypenotavailable_p.h>
 #ifndef QT_NO_XMLPATTERNS
-#include "private/qdeclarativexmllistmodel_p.h"
+#include "qdeclarativexmllistmodel_p.h"
 #endif
+#include <QtCore/qcoreapplication.h>
+#include <QtGui/QInputPanel>
 
 void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
@@ -82,7 +77,7 @@ void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor
 void QDeclarativeUtilModule::defineModule()
 {
     qmlRegisterUncreatableType<QDeclarativeApplication>("QtQuick",2,0,"Application", QDeclarativeApplication::tr("Application is an abstract class"));
-
+    qmlRegisterUncreatableType<QInputPanel>("QtQuick",2,0,"InputPanel", QInputPanel::tr("InputPanel is an abstract class"));
     qmlRegisterUncreatableType<QDeclarativeAbstractAnimation>("QtQuick",2,0,"Animation",QDeclarativeAbstractAnimation::tr("Animation is an abstract class"));
 
     qmlRegisterType<QDeclarativeBehavior>("QtQuick",2,0,"Behavior");

@@ -49,11 +49,6 @@
 #include <QFile>
 #include <QDebug>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 // Conceptually, there are several different "holistic" areas to benchmark:
 // 1) Loading
 //     - read file from disk

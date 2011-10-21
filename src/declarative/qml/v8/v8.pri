@@ -1,11 +1,11 @@
 INCLUDEPATH += $$PWD/../../../3rdparty/javascriptcore
-INCLUDEPATH += $$PWD
 
 include(script.pri)
 
 HEADERS += \
     $$PWD/qv8_p.h \
     $$PWD/qv8debug_p.h \
+    $$PWD/qv8profiler_p.h \
     $$PWD/qv8stringwrapper_p.h \
     $$PWD/qv8engine_p.h \
     $$PWD/qv8gccallback_p.h \

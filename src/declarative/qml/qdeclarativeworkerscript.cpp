@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeworkerscript_p.h"
-#include "private/qdeclarativelistmodel_p.h"
-#include "private/qdeclarativelistmodelworkeragent_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativeexpression_p.h"
+#include "qdeclarativeworkerscript_p.h"
+#include <private/qdeclarativelistmodel_p.h>
+#include <private/qdeclarativelistmodelworkeragent_p.h>
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativeexpression_p.h"
 
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qcoreapplication.h>
@@ -59,6 +59,7 @@
 
 #include <private/qv8engine_p.h>
 #include <private/qv8worker_p.h>
+#include <private/qv8gccallback_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -542,7 +543,7 @@ void QDeclarativeWorkerScriptEngine::run()
     d->workers.clear();
 
     delete d->workerEngine; d->workerEngine = 0;
-
+    QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData();
     isolate->Exit();
     isolate->Dispose();
 }

@@ -1,4 +1,3 @@
-INCLUDEPATH += $$PWD
 SOURCES += \
     $$PWD/qdeclarativeinstruction.cpp \
     $$PWD/qdeclarativevmemetaobject.cpp \
@@ -7,6 +6,7 @@ SOURCES += \
     $$PWD/qdeclarativebinding.cpp \
     $$PWD/qdeclarativeproperty.cpp \
     $$PWD/qdeclarativecomponent.cpp \
+    $$PWD/qdeclarativeincubator.cpp \
     $$PWD/qdeclarativecontext.cpp \
     $$PWD/qdeclarativecustomparser.cpp \
     $$PWD/qdeclarativepropertyvaluesource.cpp \
@@ -54,6 +54,8 @@ HEADERS += \
     $$PWD/qdeclarativeproperty.h \
     $$PWD/qdeclarativecomponent.h \
     $$PWD/qdeclarativecomponent_p.h \
+    $$PWD/qdeclarativeincubator.h \
+    $$PWD/qdeclarativeincubator_p.h \
     $$PWD/qdeclarativecustomparser_p.h \
     $$PWD/qdeclarativecustomparser_p_p.h \
     $$PWD/qdeclarativepropertyvaluesource.h \

@@ -67,11 +67,10 @@ Rectangle {
                 colorVariation: 0.1
                 color: "#2060160f"
             }
-            SpriteGoal {
+            GroupGoal {
                 whenCollidingWith: ["lit"]
                 goalState: "lighting"
                 jump: true
-                systemStates: true
             }
         }
         ParticleGroup {
@@ -163,11 +162,10 @@ Rectangle {
             sizeVariation: 2
             endSize: 0
             speed: PointDirection { y:-100; yVariation: 4; xVariation: 4 }
-            SpriteGoal {
+            GroupGoal {
                 groups: ["unlit"]
                 goalState: "lit"
                 jump: true
-                systemStates: true
                 system: particles
                 x: -15
                 y: -55
@@ -177,11 +175,10 @@ Rectangle {
             }
         }
         //Click to enflame
-        SpriteGoal {//TODO: Aux emiiters in the state definition (which allows the occasional ball to spontaneously combust)
+        GroupGoal {
             groups: ["unlit"]
             goalState: "lighting"
             jump: true
-            systemStates: true
             enabled: ma.pressed
             width: 18
             height: 18

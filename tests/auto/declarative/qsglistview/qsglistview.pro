@@ -1,18 +1,13 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qsglistview
 macx:CONFIG -= app_bundle
 
 HEADERS += incrementalmodel.h
 SOURCES += tst_qsglistview.cpp incrementalmodel.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
-CONFIG += parallel_test
-QT += core-private gui-private declarative-private widgets widgets-private v8-private
-QT += opengl-private
+CONFIG += insignificant_test parallel_test
+QT += core-private gui-private declarative-private widgets widgets-private v8-private opengl-private testlib

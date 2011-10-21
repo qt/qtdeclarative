@@ -42,6 +42,7 @@
 #ifndef SPRITEGOALAFFECTOR_H
 #define SPRITEGOALAFFECTOR_H
 #include "qsgparticleaffector_p.h"
+#include <QtDeclarative/qdeclarativeinfo.h>
 
 QT_BEGIN_HEADER
 
@@ -82,7 +83,6 @@ signals:
 
     void jumpChanged(bool arg);
 
-    void affected(const QPointF &pos);
     void systemStatesChanged(bool arg);
 
 public slots:
@@ -100,6 +100,8 @@ void setJump(bool arg)
 void setSystemStates(bool arg)
 {
     if (m_systemStates != arg) {
+        //TODO: GroupGoal was added (and this deprecated) Oct 4 - remove it in a few weeks.
+        qmlInfo(this) << "systemStates is deprecated and will be removed soon. Use GroupGoal instead.";
         m_systemStates = arg;
         emit systemStatesChanged(arg);
     }

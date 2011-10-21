@@ -62,9 +62,14 @@ DEFINE_BOOL_CONFIG_OPTION(frameRateDebug, QML_SHOW_FRAMERATE)
 
 void QSGViewPrivate::init()
 {
+    Q_Q(QSGView);
+
     QDeclarativeEnginePrivate::get(&engine)->sgContext = QSGCanvasPrivate::context;
 
-    QDeclarativeInspectorService::instance()->addView(q_func());
+    engine.setIncubationController(q->incubationController());
+
+    if (QDeclarativeDebugService::isDebuggingEnabled())
+        QDeclarativeInspectorService::instance()->addView(q);
 }
 
 QSGViewPrivate::QSGViewPrivate()
@@ -74,7 +79,8 @@ QSGViewPrivate::QSGViewPrivate()
 
 QSGViewPrivate::~QSGViewPrivate()
 {
-    QDeclarativeInspectorService::instance()->removeView(q_func());
+    if (QDeclarativeDebugService::isDebuggingEnabled())
+        QDeclarativeInspectorService::instance()->removeView(q_func());
 
     delete root;
 }
@@ -264,7 +270,7 @@ void QSGView::continueExecute()
 
     QObject *obj = d->component->create();
 
-    if(d->component->isError()) {
+    if (d->component->isError()) {
         QList<QDeclarativeError> errorList = d->component->errors();
         foreach (const QDeclarativeError &error, errorList) {
             qWarning() << error;

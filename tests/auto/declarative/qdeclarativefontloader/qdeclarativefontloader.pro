@@ -1,18 +1,14 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui network
+CONFIG += testcase
+TARGET = tst_qdeclarativefontloader
 macx:CONFIG -= app_bundle
 
 HEADERS += ../../declarative/shared/testhttpserver.h
 SOURCES += tst_qdeclarativefontloader.cpp ../../declarative/shared/testhttpserver.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private network testlib

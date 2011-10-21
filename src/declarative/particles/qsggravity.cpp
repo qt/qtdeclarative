@@ -50,7 +50,8 @@ const qreal CONV = 0.017453292520444443;
     \brief The Gravity element allows you to set a constant accleration in an angle
 
     This element will set the acceleration of all affected particles to a vector of
-    the specified magnitude in the specified angle.
+    the specified magnitude in the specified angle. If the angle or acceleration is
+    not varying, it is more efficient to set the specified acceleration on the Emitter.
 
     This element models the gravity of a massive object whose center of
     gravity is far away (and thus the gravitational pull is effectively constant
@@ -77,6 +78,8 @@ QSGGravityAffector::QSGGravityAffector(QSGItem *parent) :
     connect(this, SIGNAL(angleChanged(qreal)),
             this, SLOT(recalc()));
     recalc();
+    qWarning() << "Gravity has been deprecated. Use Move instead."
+               << "The difference is that you can specify the acceleration with a StochasticDirection instead of just an angle/magnitude pair";
 }
 
 void QSGGravityAffector::recalc()

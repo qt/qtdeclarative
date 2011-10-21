@@ -38,7 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
+#include <QtTest/QtTest>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
@@ -49,14 +49,11 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qnumeric.h>
 #include <private/qdeclarativeengine_p.h>
+#include <private/qv8gccallback_p.h>
+#include <private/qdeclarativevmemetaobject_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include "../shared/util.h"
 
 /*
 This test covers evaluation of ECMAScript expressions and bindings from within
@@ -66,8 +63,7 @@ Static QML language issues are covered in qmllanguage
 */
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath("data/" + filename));
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 inline QUrl TEST_FILE(const char *filename)
@@ -152,17 +148,32 @@ private slots:
     void signalWithJSValueInVariant_twoEngines();
     void moduleApi_data();
     void moduleApi();
+    void importScripts_data();
     void importScripts();
     void scarceResources();
     void propertyChangeSlots();
+    void propertyVar_data();
+    void propertyVar();
+    void propertyVarCpp();
+    void propertyVarOwnership();
+    void propertyVarImplicitOwnership();
+    void propertyVarReparent();
+    void propertyVarReparentNullContext();
+    void propertyVarCircular();
+    void propertyVarCircular2();
+    void propertyVarInheritance();
+    void propertyVarInheritance2();
     void elementAssign();
     void objectPassThroughSignals();
+    void objectConversion();
     void booleanConversion();
     void handleReferenceManagement();
+    void stringArg();
 
     void bug1();
     void bug2();
     void dynamicCreationCrash();
+    void dynamicCreationOwnership();
     void regExpBug();
     void nullObjectBinding();
     void deletedEngine();
@@ -195,6 +206,7 @@ private slots:
     void dynamicString();
     void include();
     void signalHandlers();
+    void doubleEvaluate();
 
     void callQtInvokables();
     void invokableObjectArg();
@@ -206,6 +218,7 @@ private slots:
     void automaticSemicolon();
 
 private:
+    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     QDeclarativeEngine engine;
 };
 
@@ -391,7 +404,7 @@ void tst_qdeclarativeecmascript::methods()
 void tst_qdeclarativeecmascript::bindingLoop()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("bindingLoop.qml"));
-    QString warning = component.url().toString() + ":9:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
+    QString warning = component.url().toString() + ":5:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -630,7 +643,7 @@ void tst_qdeclarativeecmascript::deferredPropertiesErrors()
     QVERIFY(object->objectProperty() == 0);
     QVERIFY(object->objectProperty2() == 0);
 
-    QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QObject* objectProperty";
+    QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QObject*";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     qmlExecuteDeferred(object);
@@ -741,8 +754,8 @@ void tst_qdeclarativeecmascript::enums()
     {
     QDeclarativeComponent component(&engine, TEST_FILE("enums.2.qml"));
 
-    QString warning1 = component.url().toString() + ":5: Unable to assign [undefined] to int a";
-    QString warning2 = component.url().toString() + ":6: Unable to assign [undefined] to int b";
+    QString warning1 = component.url().toString() + ":5: Unable to assign [undefined] to int";
+    QString warning2 = component.url().toString() + ":6: Unable to assign [undefined] to int";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -880,7 +893,7 @@ void tst_qdeclarativeecmascript::nonExistentAttachedObject()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("nonExistentAttachedObject.qml"));
 
-    QString warning = component.url().toString() + ":4: Unable to assign [undefined] to QString stringProperty";
+    QString warning = component.url().toString() + ":4: Unable to assign [undefined] to QString";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QObject *object = component.create();
@@ -1336,7 +1349,7 @@ void tst_qdeclarativeecmascript::scriptErrors()
     QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
     QString warning4 = url + ":10: ReferenceError: Can't find variable: a";
     QString warning5 = url + ":8: ReferenceError: Can't find variable: a";
-    QString warning6 = url + ":7: Unable to assign [undefined] to int x";
+    QString warning6 = url + ":7: Unable to assign [undefined] to int";
     QString warning7 = url + ":12: Error: Cannot assign to read-only property \"trueProperty\"";
     QString warning8 = url + ":13: Error: Cannot assign to non-existent property \"fakeProperty\"";
 
@@ -1661,6 +1674,40 @@ void tst_qdeclarativeecmascript::dynamicCreationCrash()
     QVERIFY(created == 0);
 
     delete object;
+}
+
+// ownership transferred to JS, ensure that GC runs the dtor
+void tst_qdeclarativeecmascript::dynamicCreationOwnership()
+{
+    int dtorCount = 0;
+    int expectedDtorCount = 1; // start at 1 since we expect mdcdo to dtor too.
+
+    // allow the engine to go out of scope too.
+    {
+        QDeclarativeEngine dcoEngine;
+        QDeclarativeComponent component(&dcoEngine, TEST_FILE("dynamicCreationOwnership.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        MyDynamicCreationDestructionObject *mdcdo = object->findChild<MyDynamicCreationDestructionObject*>("mdcdo");
+        QVERIFY(mdcdo != 0);
+        mdcdo->setDtorCount(&dtorCount);
+
+        for (int i = 1; i < 105; ++i, ++expectedDtorCount) {
+            QMetaObject::invokeMethod(object, "dynamicallyCreateJsOwnedObject");
+            if (i % 90 == 0) {
+                // we do this once manually, but it should be done automatically
+                // when the engine goes out of scope (since it should gc in dtor)
+                QMetaObject::invokeMethod(object, "performGc");
+            }
+            if (i % 10 == 0) {
+                QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+            }
+        }
+
+        delete object;
+    }
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QCOMPARE(dtorCount, expectedDtorCount);
 }
 
 //QTBUG-9367
@@ -2982,78 +3029,125 @@ void tst_qdeclarativeecmascript::moduleApi()
     }
 }
 
+void tst_qdeclarativeecmascript::importScripts_data()
+{
+    QTest::addColumn<QUrl>("testfile");
+    QTest::addColumn<QString>("errorMessage");
+    QTest::addColumn<QStringList>("warningMessages");
+    QTest::addColumn<QStringList>("propertyNames");
+    QTest::addColumn<QVariantList>("propertyValues");
+
+    QTest::newRow("basic functionality")
+            << TEST_FILE("jsimport/testImport.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("importedScriptStringValue")
+                              << QLatin1String("importedScriptFunctionValue")
+                              << QLatin1String("importedModuleAttachedPropertyValue")
+                              << QLatin1String("importedModuleEnumValue"))
+            << (QVariantList() << QVariant(QLatin1String("Hello, World!"))
+                               << QVariant(20)
+                               << QVariant(19)
+                               << QVariant(2));
+
+    QTest::newRow("import scoping")
+            << TEST_FILE("jsimport/testImportScoping.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("componentError"))
+            << (QVariantList() << QVariant(5));
+
+    QTest::newRow("parent scope shouldn't be inherited by import with imports")
+            << TEST_FILE("jsimportfail/failOne.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failOne.qml").toLocalFile() + QLatin1String(":6: TypeError: Cannot call method 'greetingString' of undefined")))
+            << (QStringList() << QLatin1String("importScriptFunctionValue"))
+            << (QVariantList() << QVariant(QString()));
+
+    QTest::newRow("javascript imports in an import should be private to the import scope")
+            << TEST_FILE("jsimportfail/failTwo.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failTwo.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: ImportOneJs")))
+            << (QStringList() << QLatin1String("importScriptFunctionValue"))
+            << (QVariantList() << QVariant(QString()));
+
+    QTest::newRow("module imports in an import should be private to the import scope")
+            << TEST_FILE("jsimportfail/failThree.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failThree.qml").toLocalFile() + QLatin1String(":7: TypeError: Cannot read property 'JsQtTest' of undefined")))
+            << (QStringList() << QLatin1String("importedModuleAttachedPropertyValue"))
+            << (QVariantList() << QVariant(false));
+
+    QTest::newRow("typenames in an import should be private to the import scope")
+            << TEST_FILE("jsimportfail/failFour.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failFour.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: JsQtTest")))
+            << (QStringList() << QLatin1String("importedModuleEnumValue"))
+            << (QVariantList() << QVariant(0));
+
+    QTest::newRow("import with imports has it's own activation scope")
+            << TEST_FILE("jsimportfail/failFive.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Can't find variable: Component"))
+                              << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: Component")))
+            << (QStringList() << QLatin1String("componentError"))
+            << (QVariantList() << QVariant(0));
+
+    QTest::newRow("import pragma library script")
+            << TEST_FILE("jsimport/testImportPragmaLibrary.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(31));
+
+    QTest::newRow("pragma library imports shouldn't inherit parent imports or scope")
+            << TEST_FILE("jsimportfail/testImportPragmaLibrary.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(0));
+
+    QTest::newRow("import pragma library script which has an import")
+            << TEST_FILE("jsimport/testImportPragmaLibraryWithImports.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(55));
+
+    QTest::newRow("import pragma library script which has a pragma library import")
+            << TEST_FILE("jsimport/testImportPragmaLibraryWithPragmaLibraryImports.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(18));
+}
+
 void tst_qdeclarativeecmascript::importScripts()
 {
-    QObject *object = 0;
+    QFETCH(QUrl, testfile);
+    QFETCH(QString, errorMessage);
+    QFETCH(QStringList, warningMessages);
+    QFETCH(QStringList, propertyNames);
+    QFETCH(QVariantList, propertyValues);
 
-    // first, ensure that the required behaviour works.
-    QDeclarativeComponent component(&engine, TEST_FILE("jsimport/testImport.qml"));
-    object = component.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("importedScriptStringValue"), QVariant(QString(QLatin1String("Hello, World!"))));
-    QCOMPARE(object->property("importedScriptFunctionValue"), QVariant(20));
-    QCOMPARE(object->property("importedModuleAttachedPropertyValue"), QVariant(19));
-    QCOMPARE(object->property("importedModuleEnumValue"), QVariant(2));
-    delete object;
+    QDeclarativeComponent component(&engine, testfile);
 
-    QDeclarativeComponent componentTwo(&engine, TEST_FILE("jsimport/testImportScoping.qml"));
-    object = componentTwo.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("componentError"), QVariant(5));
-    delete object;
+    if (!errorMessage.isEmpty())
+        QTest::ignoreMessage(QtWarningMsg, errorMessage.toAscii().constData());
 
-    // then, ensure that unintended behaviour does not work.
-    QDeclarativeComponent failOneComponent(&engine, TEST_FILE("jsimportfail/failOne.qml"));
-    QString expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failOne.qml").toLocalFile() + QLatin1String(":6: TypeError: Cannot call method 'greetingString' of undefined");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failOneComponent.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("importScriptFunctionValue").toString().isEmpty());
-    delete object;
-    QDeclarativeComponent failTwoComponent(&engine, TEST_FILE("jsimportfail/failTwo.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failTwo.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: ImportOneJs");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failTwoComponent.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("importScriptFunctionValue").toString().isEmpty());
-    delete object;
-    QDeclarativeComponent failThreeComponent(&engine, TEST_FILE("jsimportfail/failThree.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failThree.qml").toLocalFile() + QLatin1String(":7: TypeError: Cannot read property 'JsQtTest' of undefined");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failThreeComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("importedModuleAttachedPropertyValue"), QVariant(false));
-    delete object;
-    QDeclarativeComponent failFourComponent(&engine, TEST_FILE("jsimportfail/failFour.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failFour.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: JsQtTest");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failFourComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("importedModuleEnumValue"), QVariant(0));
-    delete object;
-    QDeclarativeComponent failFiveComponent(&engine, TEST_FILE("jsimportfail/failFive.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Can't find variable: Component");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: Component");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failFiveComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("componentError"), QVariant(0));
-    delete object;
+    if (warningMessages.size())
+        foreach (const QString &warning, warningMessages)
+            QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
 
-    // also, test that importing scripts with .pragma library works as required
-    QDeclarativeComponent pragmaLibraryComponent(&engine, TEST_FILE("jsimport/testImportPragmaLibrary.qml"));
-    object = pragmaLibraryComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("testValue"), QVariant(31));
-    delete object;
-
-    // and that .pragma library scripts don't inherit imports from any .qml file
-    QDeclarativeComponent pragmaLibraryComponentTwo(&engine, TEST_FILE("jsimportfail/testImportPragmaLibrary.qml"));
-    object = pragmaLibraryComponentTwo.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("testValue"), QVariant(0));
-    delete object;
+    QObject *object = component.create();
+    if (!errorMessage.isEmpty()) {
+        QVERIFY(object == 0);
+    } else {
+        QVERIFY(object != 0);
+        for (int i = 0; i < propertyNames.size(); ++i)
+            QCOMPARE(object->property(propertyNames.at(i).toAscii().constData()), propertyValues.at(i));
+        delete object;
+    }
 }
 
 void tst_qdeclarativeecmascript::scarceResources()
@@ -3257,6 +3351,370 @@ void tst_qdeclarativeecmascript::propertyChangeSlots()
     delete object;
 }
 
+void tst_qdeclarativeecmascript::propertyVar_data()
+{
+    QTest::addColumn<QUrl>("qmlFile");
+
+    // valid
+    QTest::newRow("non-bindable object subproperty changed") << TEST_FILE("propertyVar.1.qml");
+    QTest::newRow("non-bindable object changed") << TEST_FILE("propertyVar.2.qml");
+    QTest::newRow("primitive changed") << TEST_FILE("propertyVar.3.qml");
+    QTest::newRow("javascript array modification") << TEST_FILE("propertyVar.4.qml");
+    QTest::newRow("javascript map modification") << TEST_FILE("propertyVar.5.qml");
+    QTest::newRow("javascript array assignment") << TEST_FILE("propertyVar.6.qml");
+    QTest::newRow("javascript map assignment") << TEST_FILE("propertyVar.7.qml");
+    QTest::newRow("literal property assignment") << TEST_FILE("propertyVar.8.qml");
+    QTest::newRow("qobject property assignment") << TEST_FILE("propertyVar.9.qml");
+}
+
+void tst_qdeclarativeecmascript::propertyVar()
+{
+    QFETCH(QUrl, qmlFile);
+
+    QDeclarativeComponent component(&engine, qmlFile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
+}
+
+// Tests that we can write QVariant values to var properties from C++
+void tst_qdeclarativeecmascript::propertyVarCpp()
+{
+    QObject *object = 0;
+
+    // ensure that writing to and reading from a var property from cpp works as required.
+    // Literal values stored in var properties can be read and written as QVariants
+    // of a specific type, whereas object values are read as QVariantMaps.
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVarCpp.qml"));
+    object = component.create();
+    QVERIFY(object != 0);
+    // assign int to property var that currently has int assigned
+    QVERIFY(object->setProperty("varProperty", QVariant::fromValue(10)));
+    QCOMPARE(object->property("varBound"), QVariant(15));
+    QCOMPARE(object->property("intBound"), QVariant(15));
+    QCOMPARE(object->property("varProperty").userType(), (int)QVariant::Int);
+    QCOMPARE(object->property("varBound").userType(), (int)QVariant::Int);
+    // assign string to property var that current has bool assigned
+    QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::Bool);
+    QVERIFY(object->setProperty("varProperty2", QVariant(QLatin1String("randomString"))));
+    QCOMPARE(object->property("varProperty2"), QVariant(QLatin1String("randomString")));
+    QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::String);
+    // now enforce behaviour when accessing JavaScript objects from cpp.
+    QCOMPARE(object->property("jsobject").userType(), (int)QVariant::Map);
+    delete object;
+}
+
+static void gc(QDeclarativeEngine &engine)
+{
+    engine.collectGarbage();
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+}
+
+void tst_qdeclarativeecmascript::propertyVarOwnership()
+{
+    // Referenced JS objects are not collected
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVarOwnership.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("test").toBool(), false);
+    QMetaObject::invokeMethod(object, "runTest");
+    QCOMPARE(object->property("test").toBool(), true);
+    delete object;
+    }
+    // Referenced JS objects are not collected
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVarOwnership.2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("test").toBool(), false);
+    QMetaObject::invokeMethod(object, "runTest");
+    QCOMPARE(object->property("test").toBool(), true);
+    delete object;
+    }
+    // Qt objects are not collected until they've been dereferenced
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVarOwnership.3.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test2").toBool(), false);
+    QCOMPARE(object->property("test2").toBool(), false);
+
+    QMetaObject::invokeMethod(object, "runTest");
+    QCOMPARE(object->property("test1").toBool(), true);
+
+    QPointer<QObject> referencedObject = object->property("object").value<QObject*>();
+    QVERIFY(!referencedObject.isNull());
+    gc(engine);
+    QVERIFY(!referencedObject.isNull());
+
+    QMetaObject::invokeMethod(object, "runTest2");
+    QCOMPARE(object->property("test2").toBool(), true);
+    gc(engine);
+    QVERIFY(referencedObject.isNull());
+
+    delete object;
+    }
+    // Self reference does not prevent Qt object collection
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVarOwnership.4.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
+    QPointer<QObject> referencedObject = object->property("object").value<QObject*>();
+    QVERIFY(!referencedObject.isNull());
+    gc(engine);
+    QVERIFY(!referencedObject.isNull());
+
+    QMetaObject::invokeMethod(object, "runTest");
+    gc(engine);
+    QVERIFY(referencedObject.isNull());
+
+    delete object;
+    }
+}
+
+void tst_qdeclarativeecmascript::propertyVarImplicitOwnership()
+{
+    // The childObject has a reference to a different QObject.  We want to ensure
+    // that the different item will not be cleaned up until required.  IE, the childObject
+    // has implicit ownership of the constructed QObject.
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVarImplicitOwnership.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "assignCircular");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QObject *rootObject = object->property("vp").value<QObject*>();
+    QVERIFY(rootObject != 0);
+    QObject *childObject = rootObject->findChild<QObject*>("text");
+    QVERIFY(childObject != 0);
+    QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
+    QCOMPARE(childObject->property("textCanary").toInt(), 10);
+    QMetaObject::invokeMethod(childObject, "constructQObject");    // creates a reference to a constructed QObject.
+    QWeakPointer<QObject> qobjectGuard(childObject->property("vp").value<QObject*>()); // get the pointer prior to processing deleteLater events.
+    QVERIFY(!qobjectGuard.isNull());
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QVERIFY(!qobjectGuard.isNull());
+    QMetaObject::invokeMethod(object, "deassignCircular");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QVERIFY(qobjectGuard.isNull());                                // should have been collected now.
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::propertyVarReparent()
+{
+    // ensure that nothing breaks if we re-parent objects
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVar.reparent.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "assignVarProp");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QObject *rect = object->property("vp").value<QObject*>();
+    QObject *text = rect->findChild<QObject*>("textOne");
+    QObject *text2 = rect->findChild<QObject*>("textTwo");
+    QWeakPointer<QObject> rectGuard(rect);
+    QWeakPointer<QObject> textGuard(text);
+    QWeakPointer<QObject> text2Guard(text2);
+    QVERIFY(!rectGuard.isNull());
+    QVERIFY(!textGuard.isNull());
+    QVERIFY(!text2Guard.isNull());
+    QCOMPARE(text->property("textCanary").toInt(), 11);
+    QCOMPARE(text2->property("textCanary").toInt(), 12);
+    // now construct an image which we will reparent.
+    QMetaObject::invokeMethod(text2, "constructQObject");
+    QObject *image = text2->property("vp").value<QObject*>();
+    QWeakPointer<QObject> imageGuard(image);
+    QVERIFY(!imageGuard.isNull());
+    QCOMPARE(image->property("imageCanary").toInt(), 13);
+    // now reparent the "Image" object (currently, it has JS ownership)
+    image->setParent(text);                                        // shouldn't be collected after deassignVp now, since has a parent.
+    QMetaObject::invokeMethod(text2, "deassignVp");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCOMPARE(text->property("textCanary").toInt(), 11);
+    QCOMPARE(text2->property("textCanary").toInt(), 22);
+    QVERIFY(!imageGuard.isNull());                                 // should still be alive.
+    QCOMPARE(image->property("imageCanary").toInt(), 13);          // still able to access var properties
+    QMetaObject::invokeMethod(object, "deassignVarProp");          // now deassign the root-object's vp, causing gc of rect+text+text2
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QVERIFY(imageGuard.isNull());                                  // should now have been deleted, due to parent being deleted.
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::propertyVarReparentNullContext()
+{
+    // sometimes reparenting can cause problems
+    // (eg, if the ctxt is collected, varproperties are no longer available)
+    // this test ensures that no crash occurs in that situation.
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVar.reparent.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "assignVarProp");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QObject *rect = object->property("vp").value<QObject*>();
+    QObject *text = rect->findChild<QObject*>("textOne");
+    QObject *text2 = rect->findChild<QObject*>("textTwo");
+    QWeakPointer<QObject> rectGuard(rect);
+    QWeakPointer<QObject> textGuard(text);
+    QWeakPointer<QObject> text2Guard(text2);
+    QVERIFY(!rectGuard.isNull());
+    QVERIFY(!textGuard.isNull());
+    QVERIFY(!text2Guard.isNull());
+    QCOMPARE(text->property("textCanary").toInt(), 11);
+    QCOMPARE(text2->property("textCanary").toInt(), 12);
+    // now construct an image which we will reparent.
+    QMetaObject::invokeMethod(text2, "constructQObject");
+    QObject *image = text2->property("vp").value<QObject*>();
+    QWeakPointer<QObject> imageGuard(image);
+    QVERIFY(!imageGuard.isNull());
+    QCOMPARE(image->property("imageCanary").toInt(), 13);
+    // now reparent the "Image" object (currently, it has JS ownership)
+    image->setParent(object);                                      // reparented to base object.  after deassignVarProp, the ctxt will be invalid.
+    QMetaObject::invokeMethod(object, "deassignVarProp");          // now deassign the root-object's vp, causing gc of rect+text+text2
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QVERIFY(!imageGuard.isNull());                                 // should still be alive.
+    QVERIFY(!image->property("imageCanary").isValid());            // but varProperties won't be available (null context).
+    delete object;
+    QVERIFY(imageGuard.isNull());                                  // should now be dead.
+}
+
+void tst_qdeclarativeecmascript::propertyVarCircular()
+{
+    // enforce behaviour regarding circular references - ensure qdvmemo deletion.
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVar.circular.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "assignCircular");           // cause assignment and gc
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCOMPARE(object->property("canaryInt"), QVariant(5));
+    QVariant canaryResourceVariant = object->property("canaryResource");
+    QVERIFY(canaryResourceVariant.isValid());
+    QPixmap canaryResourcePixmap = canaryResourceVariant.value<QPixmap>();
+    canaryResourceVariant = QVariant();                            // invalidate it to remove one copy of the pixmap from memory.
+    QMetaObject::invokeMethod(object, "deassignCanaryResource");   // remove one copy of the pixmap from memory
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QVERIFY(!canaryResourcePixmap.isDetached());                   // two copies extant - this and the propertyVar.vp.vp.vp.vp.memoryHog.
+    QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCOMPARE(object->property("canaryInt"), QVariant(2));
+    QCOMPARE(object->property("canaryResource"), QVariant(1));
+    QVERIFY(canaryResourcePixmap.isDetached());                    // now detached, since orig copy was member of qdvmemo which was deleted.
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::propertyVarCircular2()
+{
+    // track deletion of JS-owned parent item with Cpp-owned child
+    // where the child has a var property referencing its parent.
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVar.circular.2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "assignCircular");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QObject *rootObject = object->property("vp").value<QObject*>();
+    QVERIFY(rootObject != 0);
+    QObject *childObject = rootObject->findChild<QObject*>("text");
+    QVERIFY(childObject != 0);
+    QWeakPointer<QObject> rootObjectTracker(rootObject);
+    QVERIFY(!rootObjectTracker.isNull());
+    QWeakPointer<QObject> childObjectTracker(childObject);
+    QVERIFY(!childObjectTracker.isNull());
+    gc(engine);
+    QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
+    QCOMPARE(childObject->property("textCanary").toInt(), 10);
+    QMetaObject::invokeMethod(object, "deassignCircular");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QVERIFY(rootObjectTracker.isNull());                           // should have been collected
+    QVERIFY(childObjectTracker.isNull());                          // should have been collected
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter)
+{
+    *(int*)(parameter) += 1;
+    qPersistentDispose(object);
+}
+
+void tst_qdeclarativeecmascript::propertyVarInheritance()
+{
+    int propertyVarWeakRefCallbackCount = 0;
+
+    // enforce behaviour regarding element inheritance - ensure handle disposal.
+    // The particular component under test here has a chain of references.
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVar.inherit.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "assignCircular");           // cause assignment and gc
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    // we want to be able to track when the varProperties array of the last metaobject is disposed
+    QObject *cco5 = object->property("varProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
+    QObject *ico5 = object->property("varProperty").value<QObject*>()->property("inheritanceVarProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
+    QDeclarativeVMEMetaObject *icovmemo = ((QDeclarativeVMEMetaObject *)(ico5->metaObject()));
+    QDeclarativeVMEMetaObject *ccovmemo = ((QDeclarativeVMEMetaObject *)(cco5->metaObject()));
+    v8::Persistent<v8::Value> icoCanaryHandle;
+    v8::Persistent<v8::Value> ccoCanaryHandle;
+    {
+        v8::HandleScope hs;
+        // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
+        // public function which can return us a handle to something in the varProperties array.
+        icoCanaryHandle = qPersistentNew(icovmemo->vmeProperty(41));
+        ccoCanaryHandle = qPersistentNew(ccovmemo->vmeProperty(41));
+        // we make them weak and invoke the gc, but we should not hit the weak-callback yet
+        // as the varproperties array of each vmemo still references the resource.
+        icoCanaryHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
+        ccoCanaryHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
+        gc(engine);
+        QVERIFY(propertyVarWeakRefCallbackCount == 0);
+    }
+    // now we deassign the var prop, which should trigger collection of item subtrees.
+    QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    // ensure that there are only weak handles to the underlying varProperties array remaining.
+    gc(engine);
+    QCOMPARE(propertyVarWeakRefCallbackCount, 2);                  // should have been called for both, since all refs should be weak.
+    delete object;
+    // since there are no parent vmemo's to keep implicit references alive, and the only handles
+    // to what remains are weak, all varProperties arrays must have been collected.
+}
+
+void tst_qdeclarativeecmascript::propertyVarInheritance2()
+{
+    int propertyVarWeakRefCallbackCount = 0;
+
+    // The particular component under test here does NOT have a chain of references; the
+    // only link between rootObject and childObject is that rootObject is the parent of childObject.
+    QDeclarativeComponent component(&engine, TEST_FILE("propertyVar.circular.2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "assignCircular");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QObject *rootObject = object->property("vp").value<QObject*>();
+    QVERIFY(rootObject != 0);
+    QObject *childObject = rootObject->findChild<QObject*>("text");
+    QVERIFY(childObject != 0);
+    QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
+    QCOMPARE(childObject->property("textCanary").toInt(), 10);
+    v8::Persistent<v8::Value> childObjectVarArrayValueHandle;
+    {
+        v8::HandleScope hs;
+        propertyVarWeakRefCallbackCount = 0;                           // reset callback count.
+        childObjectVarArrayValueHandle = qPersistentNew(((QDeclarativeVMEMetaObject *)(childObject->metaObject()))->vmeProperty(58));
+        childObjectVarArrayValueHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
+        gc(engine);
+        QVERIFY(propertyVarWeakRefCallbackCount == 0);                 // should not have been collected yet.
+        QCOMPARE(childObject->property("textCanary").toInt(), 10);
+    }
+    QMetaObject::invokeMethod(object, "deassignCircular");
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QVERIFY(propertyVarWeakRefCallbackCount == 1);                 // should have been collected now.
+    delete object;
+}
+
 // Ensure that QObject type conversion works on binding assignment
 void tst_qdeclarativeecmascript::elementAssign()
 {
@@ -3282,6 +3740,21 @@ void tst_qdeclarativeecmascript::objectPassThroughSignals()
 
     delete object;
 }
+
+// QTBUG-21626
+void tst_qdeclarativeecmascript::objectConversion()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("objectConversion.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QVariant retn;
+    QMetaObject::invokeMethod(object, "circularObject", Q_RETURN_ARG(QVariant, retn));
+    QCOMPARE(retn.value<QVariantMap>().value("test"), QVariant(100));
+
+    delete object;
+}
+
 
 // QTBUG-20242
 void tst_qdeclarativeecmascript::booleanConversion()
@@ -3317,8 +3790,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         CircularReferenceObject *cro = object->findChild<CircularReferenceObject*>("cro");
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "createReference");
-        QMetaObject::invokeMethod(object, "performGc");
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        gc(engine);
         QCOMPARE(dtorCount, 0); // second has JS ownership, kept alive by first's reference
         delete object;
         hrmEngine.collectGarbage();
@@ -3336,8 +3808,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         CircularReferenceObject *cro = object->findChild<CircularReferenceObject*>("cro");
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "circularReference");
-        QMetaObject::invokeMethod(object, "performGc");
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        gc(engine);
         QCOMPARE(dtorCount, 2); // both should be cleaned up, since circular references shouldn't keep alive.
         delete object;
         hrmEngine.collectGarbage();
@@ -3364,8 +3835,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         // now we have to reparent second and make second owned by JS.
         second->setParent(0);
         QDeclarativeEngine::setObjectOwnership(second, QDeclarativeEngine::JavaScriptOwnership);
-        QMetaObject::invokeMethod(object, "performGc");
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        gc(engine);
         QCOMPARE(dtorCount, 0); // due to reference from first to second, second shouldn't be collected.
         delete object;
         hrmEngine.collectGarbage();
@@ -3395,8 +3865,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         second->setParent(0);
         QDeclarativeEngine::setObjectOwnership(first, QDeclarativeEngine::JavaScriptOwnership);
         QDeclarativeEngine::setObjectOwnership(second, QDeclarativeEngine::JavaScriptOwnership);
-        QMetaObject::invokeMethod(object, "performGc");
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        gc(engine);
         QCOMPARE(dtorCount, 2); // despite circular references, both will be collected.
         delete object;
         hrmEngine.collectGarbage();
@@ -3435,8 +3904,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         // now we have to reparent second2 and make second2 owned by JS.
         second2->setParent(0);
         QDeclarativeEngine::setObjectOwnership(second2, QDeclarativeEngine::JavaScriptOwnership);
-        QMetaObject::invokeMethod(object1, "performGc");
-        QMetaObject::invokeMethod(object2, "performGc");
+        gc(engine);
         QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
         QCOMPARE(dtorCount, 0); // due to reference from first1 to second2, second2 shouldn't be collected.
         delete object1;
@@ -3487,8 +3955,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QDeclarativeEngine::setObjectOwnership(second1, QDeclarativeEngine::JavaScriptOwnership);
         QDeclarativeEngine::setObjectOwnership(first2, QDeclarativeEngine::JavaScriptOwnership);
         QDeclarativeEngine::setObjectOwnership(second2, QDeclarativeEngine::JavaScriptOwnership);
-        QMetaObject::invokeMethod(object1, "performGc");
-        QMetaObject::invokeMethod(object2, "performGc");
+        gc(engine);
         QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
         QCOMPARE(dtorCount, 4); // circular references shouldn't keep them alive.
         delete object1;
@@ -3537,13 +4004,10 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QDeclarativeEngine::setObjectOwnership(second1, QDeclarativeEngine::JavaScriptOwnership);
         QDeclarativeEngine::setObjectOwnership(first2, QDeclarativeEngine::JavaScriptOwnership);
         QDeclarativeEngine::setObjectOwnership(second2, QDeclarativeEngine::JavaScriptOwnership);
-        QMetaObject::invokeMethod(object1, "performGc");
-        QMetaObject::invokeMethod(object2, "performGc");
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        gc(engine);
         QCOMPARE(dtorCount, 0);
         delete hrmEngine2;
-        QMetaObject::invokeMethod(object1, "performGc");
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        gc(engine);
         QCOMPARE(dtorCount, 0);
         delete object1;
         delete object2;
@@ -3552,6 +4016,22 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QCOMPARE(dtorCount, 6);
         delete hrmEngine1;
     }
+}
+
+void tst_qdeclarativeecmascript::stringArg()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("stringArg.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "success");
+    QVERIFY(object->property("returnValue").toBool());
+
+    QString w1 = TEST_FILE("stringArg.qml").toString() + QLatin1String(":45: Error: String.arg(): Invalid arguments");
+    QTest::ignoreMessage(QtWarningMsg, w1.toAscii().constData());
+    QMetaObject::invokeMethod(object, "failure");
+    QVERIFY(object->property("returnValue").toBool());
+
+    delete object;
 }
 
 // Test that assigning a null object works 
@@ -3900,7 +4380,7 @@ void tst_qdeclarativeecmascript::include()
     {
     TestHTTPServer server(8111);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeComponent component(&engine, TEST_FILE("include_remote.qml"));
     QObject *o = component.create();
@@ -3928,7 +4408,7 @@ void tst_qdeclarativeecmascript::include()
     {
     TestHTTPServer server(8111);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeComponent component(&engine, TEST_FILE("include_remote_missing.qml"));
     QObject *o = component.create();
@@ -4281,6 +4761,23 @@ void tst_qdeclarativeecmascript::automaticSemicolon()
     QDeclarativeComponent component(&engine, TEST_FILE("automaticSemicolon.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
+}
+
+// Makes sure that a binding isn't double re-evaluated when it depends on the same variable twice
+void tst_qdeclarativeecmascript::doubleEvaluate()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("doubleEvaluate.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    WriteCounter *wc = qobject_cast<WriteCounter *>(object);
+    QVERIFY(wc != 0);
+    QCOMPARE(wc->count(), 1);
+
+    wc->setProperty("x", 9);
+
+    QCOMPARE(wc->count(), 2);
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qdeclarativeecmascript)

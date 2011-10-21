@@ -90,7 +90,8 @@ private:
     QKeyEvent event;
 };
 
-class QSGMouseEvent : public QObject
+// used in QtLocation
+class Q_DECLARATIVE_EXPORT QSGMouseEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int x READ x)

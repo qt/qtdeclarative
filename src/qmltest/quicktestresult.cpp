@@ -404,14 +404,7 @@ bool QuickTestResult::compare
     }
 }
 
-void QuickTestResult::skipSingle
-    (const QString &message, const QString &file, int line)
-{
-    QTestResult::addSkip(message.toLatin1().constData(),
-                         qtest_fixFile(file).toLatin1().constData(), line);
-}
-
-void QuickTestResult::skipAll
+void QuickTestResult::skip
     (const QString &message, const QString &file, int line)
 {
     QTestResult::addSkip(message.toLatin1().constData(),
@@ -439,7 +432,7 @@ bool QuickTestResult::expectFailContinue
 
 void QuickTestResult::warn(const QString &message)
 {
-    QTestLog::warn(message.toLatin1().constData());
+    QTestLog::warn(message.toLatin1().constData(), 0, 0);
 }
 
 void QuickTestResult::ignoreWarning(const QString &message)

@@ -1,4 +1,3 @@
-INCLUDEPATH += $$PWD/coreapi $$PWD/convenience $$PWD/3d
 !contains(QT_CONFIG, egl):DEFINES += QT_NO_EGL
 
 # Core API

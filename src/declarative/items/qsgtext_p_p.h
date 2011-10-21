@@ -80,6 +80,7 @@ public:
     bool setHAlign(QSGText::HAlignment, bool forceAlign = false);
     void mirrorChange();
     QTextDocument *textDocument();
+    bool isLineLaidOutConnected();
 
     QString text;
     QFont font;
@@ -110,6 +111,7 @@ public:
     bool imageCacheDirty:1;
     bool updateOnComponentComplete:1;
     bool richText:1;
+    bool styledText:1;
     bool singleline:1;
     bool cacheAllTextAsImage:1;
     bool internalWidthUpdate:1;
@@ -120,6 +122,7 @@ public:
     bool layoutTextElided:1;
     bool richTextAsImage:1;
     bool textureImageCacheDirty:1;
+    bool textHasChanged:1;
 
     QRect layedOutTextRect;
     QSize paintedSize;
@@ -131,9 +134,14 @@ public:
     QSGTextDocumentWithImageResources *doc;
 
     QRect setupTextLayout();
+    void setupCustomLineGeometry(QTextLine &line, qreal &height, qreal elideWidth);
     QPixmap textLayoutImage(bool drawStyle);
     void drawTextLayout(QPainter *p, const QPointF &pos, bool drawStyle);
+    bool isLinkActivatedConnected();
+    QString anchorAt(const QPointF &pos);
     QTextLayout layout;
+    QList<QRectF> linesRects;
+    QSGTextLine *textLine;
 
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource);
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource, int yOffset);
@@ -151,6 +159,7 @@ public:
 
 #if defined(Q_OS_MAC)
     QThread *layoutThread;
+    QThread *paintingThread;
 #endif
 };
 

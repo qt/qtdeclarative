@@ -193,11 +193,33 @@ QSGTexture::~QSGTexture()
 
     Binding a texture may also include uploading the texture data from
     a previously set QImage.
+
+    \warning This function can only be called from the rendering thread.
  */
 
-void QSGTexture::removeFromAtlas()
+/*!
+    This function returns a copy of the current texture which is removed
+    from its atlas.
+
+    The current texture remains unchanged, so texture coordinates do not
+    need to be updated.
+
+    Removing a texture from an atlas is primarily useful when passing
+    it to a shader that operates on the texture coordinates 0-1 instead
+    of the texture subrect inside the atlas.
+
+    If the texture is not part of a texture atlas, this function returns 0.
+
+    Implementations of this function are recommended to return the same instance
+    for multiple calls to limit memory usage.
+
+    \warning This function can only be called from the rendering thread.
+ */
+
+QSGTexture *QSGTexture::removedFromAtlas() const
 {
-    // default textures are not in atlasses, so do nothing...
+    Q_ASSERT_X(!isAtlasTexture(), "QSGTexture::removedFromAtlas()", "Called on a non-atlas texture");
+    return 0;
 }
 
 /*!
@@ -209,6 +231,19 @@ bool QSGTexture::isAtlasTexture() const
 {
     return false;
 }
+
+/*!
+    \fn int QSGTexture::textureId() const
+
+    Returns the OpenGL texture id for this texture.
+
+    The default value is 0, indicating that it is an invalid texture id.
+
+    The function should at all times return the correct texture id.
+
+    \warning This function can only be called from the rendering thread.
+ */
+
 
 
 /*!
@@ -395,6 +430,22 @@ void QSGPlainTexture::setImage(const QImage &image)
     m_dirty_bind_options = true;
  }
 
+int QSGPlainTexture::textureId() const
+{
+    if (m_dirty_texture) {
+        if (m_image.isNull()) {
+            // The actual texture and id will be updated/deleted in a later bind()
+            // or ~QSGPlainTexture so just keep it minimal here.
+            return 0;
+        } else {
+            // Generate a texture id for use later and return it.
+            glGenTextures(1, &const_cast<QSGPlainTexture *>(this)->m_texture_id);
+            return m_texture_id;
+        }
+    }
+    return m_texture_id;
+}
+
 void QSGPlainTexture::setTextureId(int id)
 {
     if (m_texture_id && m_owns_texture)
@@ -430,10 +481,10 @@ void QSGPlainTexture::bind()
 
     m_dirty_texture = false;
 
-    if (m_texture_id && m_owns_texture)
-        glDeleteTextures(1, &m_texture_id);
 
     if (m_image.isNull()) {
+        if (m_texture_id && m_owns_texture)
+            glDeleteTextures(1, &m_texture_id);
         m_texture_id = 0;
         m_texture_size = QSize();
         m_has_mipmaps = false;
@@ -441,7 +492,8 @@ void QSGPlainTexture::bind()
         return;
     }
 
-    glGenTextures(1, &m_texture_id);
+    if (m_texture_id == 0)
+        glGenTextures(1, &m_texture_id);
     glBindTexture(GL_TEXTURE_2D, m_texture_id);
 
     // ### TODO: check for out-of-memory situations...

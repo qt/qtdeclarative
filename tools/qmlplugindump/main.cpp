@@ -42,6 +42,8 @@
 #include <QtDeclarative/QtDeclarative>
 #include <QtDeclarative/private/qdeclarativemetatype_p.h>
 #include <QtDeclarative/private/qdeclarativeopenmetaobject_p.h>
+#include <QtDeclarative/private/qsgevents_p_p.h>
+#include <QtDeclarative/private/qsgpincharea_p.h>
 
 #include <QtWidgets/QApplication>
 
@@ -204,8 +206,8 @@ QSet<const QMetaObject *> collectReachableMetaObjects(const QList<QDeclarativeTy
         if (ty->typeName() == "QDeclarativeComponent")
             continue;
 
-        QByteArray tyName = ty->qmlTypeName();
-        tyName = tyName.mid(tyName.lastIndexOf('/') + 1);
+        QString tyName = ty->qmlTypeName();
+        tyName = tyName.mid(tyName.lastIndexOf(QLatin1Char('/')) + 1);
         if (tyName.isEmpty())
             continue;
 
@@ -303,11 +305,15 @@ public:
         for (int index = meta->enumeratorOffset(); index < meta->enumeratorCount(); ++index)
             dump(meta->enumerator(index));
 
-        for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index)
-            dump(meta->property(index));
+        QSet<QString> implicitSignals;
+        for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
+            const QMetaProperty &property = meta->property(index);
+            dump(property);
+            implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
+        }
 
         for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
-            dump(meta->method(index));
+            dump(meta->method(index), implicitSignals);
 
         qml->writeEndObject();
     }
@@ -375,7 +381,7 @@ private:
         qml->writeEndObject();
     }
 
-    void dump(const QMetaMethod &meth)
+    void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals)
     {
         if (meth.methodType() == QMetaMethod::Signal) {
             if (meth.access() != QMetaMethod::Protected)
@@ -390,6 +396,16 @@ private:
             return; // invalid signature
         }
         name = name.left(lparenIndex);
+        const QString typeName = convertToId(meth.typeName());
+
+        if (implicitSignals.contains(name)
+                && !meth.revision()
+                && meth.methodType() == QMetaMethod::Signal
+                && meth.parameterNames().isEmpty()
+                && typeName.isEmpty()) {
+            // don't mention implicit signals
+            return;
+        }
 
         if (meth.methodType() == QMetaMethod::Signal)
             qml->writeStartObject(QLatin1String("Signal"));
@@ -403,7 +419,6 @@ private:
             qml->writeScriptBinding(QLatin1String("revision"), QString::number(revision));
 #endif
 
-        const QString typeName = convertToId(meth.typeName());
         if (! typeName.isEmpty())
             qml->writeScriptBinding(QLatin1String("type"), enquote(typeName));
 
@@ -570,6 +585,10 @@ int main(int argc, char *argv[])
     QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects();
     QList<QDeclarativeType *> defaultTypes = QDeclarativeMetaType::qmlTypes();
 
+    // add some otherwise unreachable QMetaObjects
+    defaultReachable.insert(&QSGMouseEvent::staticMetaObject);
+    // QSGKeyEvent, QSGPinchEvent, QSGDropEvent are not exported
+
     // this will hold the meta objects we want to dump information of
     QSet<const QMetaObject *> metas;
 
@@ -583,8 +602,8 @@ int main(int argc, char *argv[])
             qWarning() << "Could not find QtObject type";
             importCode = QByteArray("import QtQuick 2.0\n");
         } else {
-            QByteArray module = qtObjectType->qmlTypeName();
-            module = module.mid(0, module.lastIndexOf('/'));
+            QString module = qtObjectType->qmlTypeName();
+            module = module.mid(0, module.lastIndexOf(QLatin1Char('/')));
             importCode = QString("import %1 %2.%3\n").arg(module,
                                                           QString::number(qtObjectType->majorVersion()),
                                                           QString::number(qtObjectType->minorVersion())).toUtf8();

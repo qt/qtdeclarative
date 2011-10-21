@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 */
 QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
     QSGItem(parent),
-    m_system(0), m_count(0), m_sentinel(new QSGParticleData(0))
+    m_system(0), m_count(0), m_pleaseReset(true), m_sentinel(new QSGParticleData(0))
 {
 }
 
@@ -73,8 +73,6 @@ void QSGParticlePainter::componentComplete()
 {
     if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
-    if (!m_system)
-        qWarning() << "ParticlePainter created without a particle system specified";//TODO: useful QML warnings, like line number?
     QSGItem::componentComplete();
 }
 
@@ -134,8 +132,8 @@ void QSGParticlePainter::calcSystemOffset(bool resetPending)
     if (lastOffset != m_systemOffset && !resetPending){
         //Reload all particles//TODO: Necessary?
         foreach (const QString &g, m_groups){
-            int gId = m_system->m_groupIds[g];
-            foreach (QSGParticleData* d, m_system->m_groupData[gId]->data)
+            int gId = m_system->groupIds[g];
+            foreach (QSGParticleData* d, m_system->groupData[gId]->data)
                 reload(d);
         }
     }

@@ -42,7 +42,7 @@
 #ifndef QDECLARATIVEPROPERTYCHANGES_H
 #define QDECLARATIVEPROPERTYCHANGES_H
 
-#include "private/qdeclarativestateoperations_p.h"
+#include "qdeclarativestateoperations_p.h"
 #include <private/qdeclarativecustomparser_p.h>
 
 QT_BEGIN_HEADER
@@ -96,7 +96,7 @@ public:
     QDeclarativePropertyChangesParser()
     : QDeclarativeCustomParser(AcceptsAttachedProperties) {}
 
-    void compileList(QList<QPair<QByteArray, QVariant> > &list, const QByteArray &pre, const QDeclarativeCustomParserProperty &prop);
+    void compileList(QList<QPair<QString, QVariant> > &list, const QString &pre, const QDeclarativeCustomParserProperty &prop);
 
     virtual QByteArray compile(const QList<QDeclarativeCustomParserProperty> &);
     virtual void setCustomData(QObject *, const QByteArray &);

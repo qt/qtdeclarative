@@ -37,7 +37,7 @@ runtime to load QML documents and also includes additional features useful for
 the development of QML-based applications.
 
 The QML Viewer is a tool for testing and developing QML applications. It is
-\e not intended for use in a production environment and should not be used for the
+\i not intended for use in a production environment and should not be used for the
 deployment of QML applications. In those cases, the QML runtime should be invoked
 from a Qt application instead; see \l {Qt Declarative UI Runtime} for more
 information.
@@ -203,7 +203,7 @@ through the \c active property of the \l {QML:Qt::application}{Qt.application} o
 N900 platform and most S60 5.0-based or newer Symbian devices, this property
 automatically updates to reflect the device's actual orientation; on other platforms,
 this indicates the orientation currently selected in the QML Viewer's
-\e {Settings -> Properties} menu. The \c orientation value can be one of the following:
+\i {Settings -> Properties} menu. The \c orientation value can be one of the following:
 
 \list
 \o \c Orientation.Portrait

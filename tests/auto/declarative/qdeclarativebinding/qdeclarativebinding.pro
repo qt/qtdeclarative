@@ -1,17 +1,13 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui
+CONFIG += testcase
+TARGET = tst_qdeclarativebinding
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativebinding.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private testlib

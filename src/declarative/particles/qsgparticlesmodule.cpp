@@ -68,6 +68,8 @@
 #include "qsgcustomaffector_p.h"
 #include "qsgrectangleextruder_p.h"
 #include "qsgparticlegroup_p.h"
+#include "qsggroupgoal_p.h"
+#include "qsgmove_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -102,14 +104,20 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGGravityAffector>(uri, 2, 0, "Gravity");
     qmlRegisterType<QSGAgeAffector>(uri, 2, 0, "Age");
     qmlRegisterType<QSGSpriteGoalAffector>(uri, 2, 0, "SpriteGoal");
+    qmlRegisterType<QSGGroupGoalAffector>(uri, 2, 0, "GroupGoal");
     qmlRegisterType<QSGTurbulenceAffector>(uri, 2, 0 , "Turbulence");
     qmlRegisterType<QSGTargetAffector>(uri, 2, 0 , "Target");
+    qmlRegisterType<QSGMoveAffector>(uri, 2, 0, "Move");
 
     //Exposed just for completeness
-    qmlRegisterUncreatableType<QSGParticleAffector>(uri, 2, 0, "ParticleAffector", "Abstract type. Use one of the inheriting types instead.");
-    qmlRegisterUncreatableType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter", "Abstract type. Use one of the inheriting types instead.");
-    qmlRegisterUncreatableType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder", "Abstract type. Use one of the inheriting types instead.");
-    qmlRegisterUncreatableType<QSGDirection>(uri, 2, 0, "NullVector", "Abstract type. Use one of the inheriting types instead.");
+    qmlRegisterUncreatableType<QSGParticleAffector>(uri, 2, 0, "ParticleAffector",
+                                                    QStringLiteral("Abstract type. Use one of the inheriting types instead."));
+    qmlRegisterUncreatableType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter",
+                                                   QStringLiteral("Abstract type. Use one of the inheriting types instead."));
+    qmlRegisterUncreatableType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder",
+                                                    QStringLiteral("Abstract type. Use one of the inheriting types instead."));
+    qmlRegisterUncreatableType<QSGDirection>(uri, 2, 0, "NullVector",
+                                             QStringLiteral("Abstract type. Use one of the inheriting types instead."));
 }
 
 QT_END_NAMESPACE

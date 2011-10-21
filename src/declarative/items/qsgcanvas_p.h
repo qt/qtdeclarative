@@ -55,10 +55,10 @@
 
 #include "qsgitem.h"
 #include "qsgcanvas.h"
-#include "qsgevent.h"
 #include <private/qdeclarativeguard_p.h>
 
 #include <private/qsgcontext_p.h>
+#include <private/qsgdrag_p.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
@@ -84,6 +84,7 @@ class QSGCanvasPrivate;
 
 class QTouchEvent;
 class QSGCanvasRenderLoop;
+class QSGCanvasIncubationController;
 
 class QSGCanvasPrivate : public QWindowPrivate
 {
@@ -101,6 +102,7 @@ public:
 
     QSGItem *activeFocusItem;
     QSGItem *mouseGrabberItem;
+    QSGDragGrabber dragGrabber;
 
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
@@ -117,8 +119,8 @@ public:
     bool sendHoverEvent(QEvent::Type, QSGItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, bool accepted);
     bool clearHover();
-    void deliverDragEvent(QSGDragEvent *);
-    bool deliverDragEvent(QSGItem *item, QSGDragEvent *);
+    void deliverDragEvent(QSGDragGrabber *, QEvent *);
+    bool deliverDragEvent(QSGDragGrabber *, QSGItem *, QDragMoveEvent *);
 
     QList<QSGItem*> hoverItems;
     enum FocusOption {
@@ -167,6 +169,8 @@ public:
     QOpenGLFramebufferObject *renderTarget;
 
     QHash<int, QSGItem *> itemForTouchPointId;
+
+    mutable QSGCanvasIncubationController *incubationController;
 };
 
 class QSGCanvasRenderLoop
@@ -196,6 +200,7 @@ public:
     virtual void animationStarted() = 0;
     virtual void animationStopped() = 0;
     virtual void moveContextToThread(QSGContext *) { }
+    virtual bool *allowMainThreadProcessing() { return 0; }
 
 protected:
     void initializeSceneGraph() { d->initializeSceneGraph(); }
@@ -226,6 +231,7 @@ class QSGCanvasRenderThread : public QThread, public QSGCanvasRenderLoop
 public:
     QSGCanvasRenderThread()
         : mutex(QMutex::NonRecursive)
+        , allowMainThreadProcessingFlag(true)
         , animationRunning(false)
         , isGuiBlocked(0)
         , isPaintCompleted(false)
@@ -258,6 +264,7 @@ public:
     void setWindowSize(const QSize &size) { windowSize = size; }
     void maybeUpdate();
     void moveContextToThread(QSGContext *c) { c->moveToThread(this); }
+    bool *allowMainThreadProcessing() { return &allowMainThreadProcessingFlag; }
 
     bool event(QEvent *);
 
@@ -270,6 +277,8 @@ public slots:
 public:
     QMutex mutex;
     QWaitCondition condition;
+
+    bool allowMainThreadProcessingFlag;
 
     QSize windowSize;
     QSize renderedSize;
@@ -291,7 +300,6 @@ public:
 
     void run();
 };
-
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGCanvasPrivate::FocusOptions)
 

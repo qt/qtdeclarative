@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "private/qdeclarativedebugservice_p.h"
+#include "qdeclarativedebugservice_p.h"
 #include <private/qdeclarativeglobal_p.h>
 
 #include <QtCore/QList>
@@ -88,6 +88,7 @@ protected:
     virtual void messageReceived(const QByteArray &);
 
 private:
+    void updateStatus();
     static QDeclarativeInspectorInterface *loadInspectorPlugin();
 
     QList<QObject*> m_views;

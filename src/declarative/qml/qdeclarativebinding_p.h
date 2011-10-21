@@ -57,7 +57,7 @@
 #include "qdeclarativepropertyvaluesource.h"
 #include "qdeclarativeexpression.h"
 #include "qdeclarativeproperty.h"
-#include "private/qdeclarativeproperty_p.h"
+#include "qdeclarativeproperty_p.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QMetaProperty>
@@ -178,7 +178,7 @@ public Q_SLOTS:
 
 protected:
     ~QDeclarativeBinding();
-    void emitValueChanged();
+    void expressionChanged();
 
 private:
     Q_DECLARE_PRIVATE(QDeclarativeBinding)

@@ -63,9 +63,12 @@ class QDeclarativeEngine;
 class Q_DECLARATIVE_EXPORT QDeclarativeCleanup
 {
 public:
+    QDeclarativeCleanup();
     QDeclarativeCleanup(QDeclarativeEngine *);
     virtual ~QDeclarativeCleanup();
 
+    bool hasEngine() const { return prev != 0; }
+    void addToEngine(QDeclarativeEngine *);
 protected:
     virtual void clear() = 0;
 
@@ -73,6 +76,9 @@ private:
     friend class QDeclarativeEnginePrivate;
     QDeclarativeCleanup **prev;
     QDeclarativeCleanup  *next;
+
+    // Only used for asserts
+    QDeclarativeEngine *engine;
 };
 
 QT_END_NAMESPACE

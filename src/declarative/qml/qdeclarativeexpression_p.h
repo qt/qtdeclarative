@@ -147,10 +147,11 @@ public:
 
     void setNotifyOnValueChanged(bool v);
     void resetNotifyOnValueChanged();
-    void setNotifyObject(QObject *, int );
 
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
+
+    virtual void expressionChanged() {}
 
 protected:
     inline virtual QString expressionIdentifier();
@@ -162,8 +163,6 @@ private:
     quint32 m_dummy:29;
 
     QObject *m_scopeObject;
-    QObject *m_notifyObject;
-    int m_notifyIndex;
 
     class GuardList {
     public:
@@ -172,11 +171,18 @@ private:
         void inline clear();
 
         typedef QPODVector<QDeclarativeEnginePrivate::CapturedProperty> CapturedProperties;
-        void updateGuards(QObject *guardObject, int guardObjectNotifyIndex,
-                          QDeclarativeJavaScriptExpression *, const CapturedProperties &properties);
+        void updateGuards(QDeclarativeJavaScriptExpression *, const CapturedProperties &properties);
 
     private:
-        QDeclarativeNotifierEndpoint *endpoints;
+        struct Endpoint : public QDeclarativeNotifierEndpoint {
+            Endpoint() : expression(0) { callback = &endpointCallback; }
+            static void endpointCallback(QDeclarativeNotifierEndpoint *e) { 
+                static_cast<Endpoint *>(e)->expression->expressionChanged(); 
+            }
+            QDeclarativeJavaScriptExpression *expression;
+        };
+
+        Endpoint *endpoints;
         int length;
     };
     GuardList guardList;
@@ -203,7 +209,7 @@ public:
     static inline QDeclarativeExpression *get(QDeclarativeExpressionPrivate *expr);
 
     void _q_notify();
-    virtual void emitValueChanged();
+    virtual void expressionChanged();
 
     static void exceptionToError(v8::Handle<v8::Message>, QDeclarativeError &);
     static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
@@ -222,7 +228,7 @@ public:
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     int line;
-    QByteArray name; //function name, hint for the debugger
+    QString name; //function name, hint for the debugger
 
     QDeclarativeRefCount *dataRef;
 };

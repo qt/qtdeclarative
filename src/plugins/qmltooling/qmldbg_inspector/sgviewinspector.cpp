@@ -45,12 +45,10 @@
 #include "sghighlight.h"
 #include "sgselectiontool.h"
 
-#include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
 #include <QtDeclarative/private/qsgitem_p.h>
 
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
-#include <QtGui/QMouseEvent>
 
 #include <cfloat>
 
@@ -126,8 +124,9 @@ SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
     // Try to make sure the overlay is always on top
     m_overlay->setZ(FLT_MAX);
 
+    // TODO
     // Make sure mouse hover events are received
-    m_view->setMouseTracking(true);
+//    m_view->setMouseTracking(true);
 
     if (QSGItem *root = view->rootItem())
         m_overlay->setParentItem(root);
@@ -186,14 +185,31 @@ void SGViewInspector::changeTool(InspectorProtocol::Tool tool)
     }
 }
 
+QWindow *getMasterWindow(QWindow *w)
+{
+    QWindow *p = w->parent();
+    while (p) {
+        w = p;
+        p = p->parent();
+    }
+    return w;
+}
+
+Qt::WindowFlags SGViewInspector::windowFlags() const
+{
+    return getMasterWindow(m_view)->windowFlags();
+}
+
+void SGViewInspector::setWindowFlags(Qt::WindowFlags flags)
+{
+    QWindow *w = getMasterWindow(m_view);
+    w->setWindowFlags(flags);
+    w->show();
+}
+
 QDeclarativeEngine *SGViewInspector::declarativeEngine() const
 {
     return m_view->engine();
-}
-
-QWidget *SGViewInspector::viewWidget() const
-{
-    return m_view;
 }
 
 QSGItem *SGViewInspector::topVisibleItemAt(const QPointF &pos) const
@@ -281,10 +297,11 @@ bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)
 
 bool SGViewInspector::mouseMoveEvent(QMouseEvent *event)
 {
-    if (QSGItem *item = topVisibleItemAt(event->pos()))
-        m_view->setToolTip(titleForItem(item));
-    else
-        m_view->setToolTip(QString());
+    // TODO
+//    if (QSGItem *item = topVisibleItemAt(event->pos()))
+//        m_view->setToolTip(titleForItem(item));
+//    else
+//        m_view->setToolTip(QString());
 
     return AbstractViewInspector::mouseMoveEvent(event);
 }

@@ -39,12 +39,11 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativesqldatabase_p.h"
+#include "qdeclarativesqldatabase_p.h"
 
 #include "qdeclarativeengine.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativerefcount_p.h"
-#include "private/qdeclarativeengine_p.h"
+#include "qdeclarativeengine_p.h"
+#include <private/qdeclarativerefcount_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtSql/qsqldatabase.h>
@@ -197,6 +196,7 @@ QDeclarativeSqlDatabaseData::~QDeclarativeSqlDatabaseData()
 {
     qPersistentDispose(constructor);
     qPersistentDispose(queryConstructor);
+    qPersistentDispose(rowsConstructor);
 }
 
 static QString qmlsqldatabase_databasesPath(QV8Engine *engine)

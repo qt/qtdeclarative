@@ -81,8 +81,8 @@ void QSGCustomAffector::affectSystem(qreal dt)
     updateOffsets();
 
     QList<QSGParticleData*> toAffect;
-    foreach (QSGParticleGroupData* gd, m_system->m_groupData)
-        if (activeGroup(m_system->m_groupData.key(gd)))
+    foreach (QSGParticleGroupData* gd, m_system->groupData)
+        if (activeGroup(m_system->groupData.key(gd)))
             foreach (QSGParticleData* d, gd->data)
                 if (shouldAffect(d))
                     toAffect << d;

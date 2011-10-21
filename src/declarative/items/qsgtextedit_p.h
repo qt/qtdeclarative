@@ -274,7 +274,7 @@ private:
     void updateImageCache(const QRectF &rect = QRectF());
 
 protected:
-    virtual void geometryChanged(const QRectF &newGeometry, 
+    virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
 
     bool event(QEvent *);

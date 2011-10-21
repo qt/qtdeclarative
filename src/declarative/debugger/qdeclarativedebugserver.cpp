@@ -39,17 +39,17 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativedebugserver_p.h"
-#include "private/qdeclarativedebugservice_p.h"
-#include "private/qdeclarativedebugservice_p_p.h"
-#include "private/qdeclarativeengine_p.h"
+#include "qdeclarativedebugserver_p.h"
+#include "qdeclarativedebugservice_p.h"
+#include "qdeclarativedebugservice_p_p.h"
+#include <private/qdeclarativeengine_p.h>
 
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 #include <QtCore/QStringList>
 
 #include <private/qobject_p.h>
-#include <private/qguiapplication_p.h>
+#include <private/qcoreapplication_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -169,7 +169,7 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
     if (!commandLineTested) {
         commandLineTested = true;
 
-        QGuiApplicationPrivate *appD = static_cast<QGuiApplicationPrivate*>(QObjectPrivate::get(qApp));
+        QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
 #ifndef QDECLARATIVE_NO_DEBUG_PROTOCOL
         // ### remove port definition when protocol is changed
         int port = 0;

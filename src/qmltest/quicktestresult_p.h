@@ -129,8 +129,7 @@ public Q_SLOTS:
     bool compare(bool success, const QString &message,
                  const QString &val1, const QString &val2,
                  const QString &file, int line);
-    void skipSingle(const QString &message, const QString &file, int line);
-    void skipAll(const QString &message, const QString &file, int line);
+    void skip(const QString &message, const QString &file, int line);
     bool expectFail(const QString &tag, const QString &comment,
                     const QString &file, int line);
     bool expectFailContinue(const QString &tag, const QString &comment,

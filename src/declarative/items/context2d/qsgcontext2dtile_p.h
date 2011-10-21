@@ -67,11 +67,10 @@ public:
 
     virtual void setRect(const QRect& r) = 0;
     virtual QPainter* createPainter(bool smooth = false);
-
+    virtual void drawFinished() {}
 
 protected:
     virtual void aboutToDraw() {}
-
     uint m_dirty : 1;
     QRect m_rect;
     QPaintDevice* m_device;
@@ -86,10 +85,10 @@ public:
     ~QSGContext2DFBOTile();
     virtual void setRect(const QRect& r);
     QOpenGLFramebufferObject* fbo() const {return m_fbo;}
+    void drawFinished();
 
 protected:
     void aboutToDraw();
-
 private:
 
 
