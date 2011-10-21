@@ -226,12 +226,13 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
             d->commence();
         emit started();
     } else {
-        //TODO can animationInstance be 0 here?
-        if (d->alwaysRunToEnd) {
-            if (d->loopCount != 1)
-                d->animationInstance->setLoopCount(d->animationInstance->currentLoop()+1);    //finish the current loop
-        } else {
-            d->animationInstance->stop();
+        if (d->animationInstance) {
+            if (d->alwaysRunToEnd) {
+                if (d->loopCount != 1)
+                    d->animationInstance->setLoopCount(d->animationInstance->currentLoop()+1);    //finish the current loop
+            } else {
+                d->animationInstance->stop();
+            }
         }
         emit completed();
     }
