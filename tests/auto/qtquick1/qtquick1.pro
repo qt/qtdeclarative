@@ -45,7 +45,6 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativexmllistmodel \
            examples
 
+    # This test needs the xmlpatterns module
+    !contains(QT_CONFIG,xmlpatterns): SUBDIRS -= qdeclarativexmllistmodel
 }
-
-# Tests which should run in Pulse
-PULSE_TESTS = $$SUBDIRS

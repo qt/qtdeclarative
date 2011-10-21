@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QSGRectangleExtruder::QSGRectangleExtruder(QObject *parent) :
-    QObject(parent), m_fill(true)
+    QSGParticleExtruder(parent), m_fill(true)
 {
 }
 

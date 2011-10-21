@@ -41,7 +41,7 @@
 
 #include "qv8variantwrapper_p.h"
 #include "qv8engine_p.h"
-#include "qdeclarativeengine_p.h"
+#include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -167,14 +167,14 @@ QVariant &QV8VariantWrapper::variantValue(v8::Handle<v8::Value> value)
 }
 
 v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Local<v8::String> /* property */,
-                                                const v8::AccessorInfo &info)
+                                                const v8::AccessorInfo & /* info */)
 {
     return v8::Handle<v8::Value>();
 }
 
 v8::Handle<v8::Value> QV8VariantWrapper::Setter(v8::Local<v8::String> /* property */,
                                                 v8::Local<v8::Value> value,
-                                                const v8::AccessorInfo &info)
+                                                const v8::AccessorInfo & /* info */)
 {
     return value;
 }

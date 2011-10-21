@@ -164,6 +164,7 @@ void registerTypes()
     qmlRegisterType<MyRevisionedClass,1>("Qt.test",1,1,"MyRevisionedClass");
 
     // test scarce resource property binding post-evaluation optimisation
+    // and for testing memory usage in property var circular reference test
     qmlRegisterType<ScarceResourceObject>("Qt.test", 1,0, "MyScarceResourceObject");
 
     // Register the uncreatable base class
@@ -192,6 +193,9 @@ void registerTypes()
 
     qmlRegisterType<CircularReferenceObject>("Qt.test", 1, 0, "CircularReferenceObject");
     qmlRegisterType<CircularReferenceHandle>("Qt.test", 1, 0, "CircularReferenceHandle");
+
+    qmlRegisterType<MyDynamicCreationDestructionObject>("Qt.test", 1, 0, "MyDynamicCreationDestructionObject");
+    qmlRegisterType<WriteCounter>("Qt.test", 1, 0, "WriteCounter");
 }
 
 #include "testtypes.moc"

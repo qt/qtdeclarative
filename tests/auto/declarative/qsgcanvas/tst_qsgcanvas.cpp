@@ -45,7 +45,6 @@
 #include <QtDeclarative/QSGItem>
 #include <QtDeclarative/QSGCanvas>
 #include <QtDeclarative/private/qsgrectangle_p.h>
-#include "../../../shared/util.h"
 #include <QtGui/QWindowSystemInterface>
 
 struct TouchEventData {
@@ -121,9 +120,11 @@ class TestTouchItem : public QSGRectangle
     Q_OBJECT
 public:
     TestTouchItem(QSGItem *parent = 0)
-        : QSGRectangle(parent), acceptEvents(true)
+        : QSGRectangle(parent), acceptEvents(true), mousePressId(0)
     {
         border()->setWidth(1);
+        setAcceptedMouseButtons(Qt::LeftButton);
+        setFiltersChildMouseEvents(true);
     }
 
     void reset() {
@@ -136,6 +137,7 @@ public:
 
     bool acceptEvents;
     TouchEventData lastEvent;
+    int mousePressId;
 
 protected:
     virtual void touchEvent(QTouchEvent *event) {
@@ -146,8 +148,20 @@ protected:
         lastEvent = makeTouchData(event->type(), event->widget(), event->touchPointStates(), event->touchPoints());
         event->accept();
     }
+
+    virtual void mousePressEvent(QMouseEvent *event) {
+        mousePressId = ++mousePressNum;
+    }
+
+    bool childMouseEventFilter(QSGItem *, QEvent *) {
+        mousePressId = ++mousePressNum;
+        return false;
+    }
+
+    static int mousePressNum;
 };
 
+int TestTouchItem::mousePressNum = 0;
 
 class ConstantUpdateItem : public QSGItem
 {
@@ -181,6 +195,7 @@ private slots:
     void touchEvent_propagation_data();
 
     void clearCanvas();
+    void mouseFiltering();
 };
 
 tst_qsgcanvas::tst_qsgcanvas()
@@ -464,6 +479,41 @@ void tst_qsgcanvas::clearCanvas()
     delete item;
 }
 
+void tst_qsgcanvas::mouseFiltering()
+{
+    QSGCanvas *canvas = new QSGCanvas;
+    canvas->resize(250, 250);
+    canvas->move(100, 100);
+    canvas->show();
+
+    TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
+    bottomItem->setObjectName("Bottom Item");
+    bottomItem->setSize(QSizeF(150, 150));
+
+    TestTouchItem *middleItem = new TestTouchItem(bottomItem);
+    middleItem->setObjectName("Middle Item");
+    middleItem->setPos(QPointF(50, 50));
+    middleItem->setSize(QSizeF(150, 150));
+
+    TestTouchItem *topItem = new TestTouchItem(middleItem);
+    topItem->setObjectName("Top Item");
+    topItem->setPos(QPointF(50, 50));
+    topItem->setSize(QSizeF(150, 150));
+
+    QPoint pos(100, 100);
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, pos);
+    QTest::qWait(50);
+
+    // Mouse filtering propagates down the stack, so the
+    // correct order is
+    // 1. middleItem filters event
+    // 2. bottomItem filters event
+    // 3. topItem receives event
+    QCOMPARE(middleItem->mousePressId, 1);
+    QCOMPARE(bottomItem->mousePressId, 2);
+    QCOMPARE(topItem->mousePressId, 3);
+}
 
 
 QTEST_MAIN(tst_qsgcanvas)

@@ -51,15 +51,15 @@ public:
     QGlobalStaticDeleter(QGlobalStatic<QJSValuePrivate> &_globalStatic)
         : globalStatic(_globalStatic)
     {
-        globalStatic.pointer->ref.ref();
+        globalStatic.pointer.load()->ref.ref();
     }
 
     inline ~QGlobalStaticDeleter()
     {
-        if (!globalStatic.pointer->ref.deref()) { // Logic copy & paste from SharedDataPointer
-            delete globalStatic.pointer;
+        if (!globalStatic.pointer.load()->ref.deref()) { // Logic copy & paste from SharedDataPointer
+            delete globalStatic.pointer.load();
         }
-        globalStatic.pointer = 0;
+        globalStatic.pointer.store(0);
         globalStatic.destroyed = true;
     }
 };

@@ -40,9 +40,11 @@
 ****************************************************************************/
 #ifndef QSGPARTICLEGROUP
 #define QSGPARTICLEGROUP
-#include "qsgspriteengine_p.h"
+#include <private/qsgspriteengine_p.h>
 #include "qsgparticlesystem_p.h"
 #include "qdeclarativeparserstatus.h"
+
+QT_BEGIN_NAMESPACE
 
 class QSGParticleGroup : public QSGStochasticState, public QDeclarativeParserStatus
 {
@@ -55,6 +57,7 @@ class QSGParticleGroup : public QSGStochasticState, public QDeclarativeParserSta
     //Intercept children requests and assign to the group & system
     Q_PROPERTY(QDeclarativeListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
     Q_CLASSINFO("DefaultProperty", "particleChildren")
+    Q_INTERFACES(QDeclarativeParserStatus)
 
 public:
     explicit QSGParticleGroup(QObject* parent = 0);
@@ -103,5 +106,7 @@ private:
     QSGParticleSystem* m_system;
     QList<QObject*> m_delayedRedirects;
 };
+
+QT_END_NAMESPACE
 
 #endif

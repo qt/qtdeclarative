@@ -39,16 +39,16 @@
 **
 ****************************************************************************/
 
-#include "private/qsgadaptationlayer_p.h"
+#include <private/qsgadaptationlayer_p.h>
 #include "qsgcanvasitem_p.h"
-#include "qsgitem_p.h"
+#include <private/qsgitem_p.h>
 #include "qsgcontext2d_p.h"
 #include "qsgcontext2dnode_p.h"
 #include "qsgcontext2dtexture_p.h"
-#include "qdeclarativepixmapcache_p.h"
+#include <private/qdeclarativepixmapcache_p.h>
 
 #include <qdeclarativeinfo.h>
-#include "qdeclarativeengine_p.h"
+#include <private/qdeclarativeengine_p.h>
 #include <QtCore/QBuffer>
 
 QT_BEGIN_NAMESPACE
@@ -85,7 +85,7 @@ QSGCanvasItemPrivate::QSGCanvasItemPrivate()
     , hasTileSize(false)
     , hasCanvasWindow(false)
     , componentCompleted(false)
-    , renderTarget(QSGCanvasItem::Image)
+    , renderTarget(QSGCanvasItem::FramebufferObject)
 {
 }
 
@@ -184,10 +184,6 @@ QSGCanvasItem::QSGCanvasItem(QSGItem *parent)
 QSGCanvasItem::~QSGCanvasItem()
 {
     Q_D(QSGCanvasItem);
-    if (d->texture) {
-        d->texture->setItem(0);
-        d->texture->deleteLater();
-    }
     delete d->context;
 }
 
@@ -216,6 +212,7 @@ void QSGCanvasItem::setCanvasSize(const QSizeF & size)
         d->canvasSize = size;
         emit canvasSizeChanged();
         polish();
+        update();
     }
 }
 
@@ -249,6 +246,7 @@ void QSGCanvasItem::setTileSize(const QSize & size)
 
         emit tileSizeChanged();
         polish();
+        update();
     }
 }
 
@@ -279,6 +277,7 @@ void QSGCanvasItem::setCanvasWindow(const QRectF& rect)
         d->hasCanvasWindow = true;
         emit canvasWindowChanged();
         polish();
+        update();
     }
 }
 
@@ -378,6 +377,7 @@ void QSGCanvasItem::setRenderInThread(bool renderInThread)
             disconnect(this, SIGNAL(painted()), this, SLOT(update()));
         emit renderInThreadChanged();
         polish();
+        update();
     }
 }
 
@@ -406,26 +406,28 @@ void QSGCanvasItem::geometryChanged(const QRectF &newGeometry,
     }
 
     polish();
+    update();
 }
 
 void QSGCanvasItem::componentComplete()
 {
     Q_D(QSGCanvasItem);
-
-    createContext();
-    createTexture();
-
-    markDirty(d->canvasWindow);
     QSGItem::componentComplete();
 
+    if (!d->context)
+        createContext();
+    createTexture();
+
     d->baseUrl = qmlEngine(this)->contextForObject(this)->baseUrl();
+    requestPaint();
+    updatePolish(); //force update the canvas sizes to texture for the first time
+    update();
     d->componentCompleted = true;
 }
 
 void QSGCanvasItem::updatePolish()
 {
     Q_D(QSGCanvasItem);
-
     QSGItem::updatePolish();
     if (d->texture) {
         if (!d->renderInThread && d->dirtyRect.isValid())
@@ -448,6 +450,7 @@ QSGNode *QSGCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         node = new QSGContext2DNode(this);
 
     node->setTexture(d->texture);
+    node->setSize(d->canvasWindow.size());
     node->update();
     return node;
 }
@@ -496,7 +499,7 @@ void QSGCanvasItem::createContext()
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Canvas::getContext(string contextId)
+  \qmlmethod object QtQuick2::Canvas::getContext(string contextId)
 
   Currently, the canvas item only support the 2D context. If the \a contextId
   parameter isn't provided or is "2d", then the QtQuick2::Context2D object is
@@ -505,11 +508,13 @@ void QSGCanvasItem::createContext()
 QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
 {
     Q_D(QSGCanvasItem);
-    Q_UNUSED(contextId);
 
-    if (d->context)
-       return QDeclarativeV8Handle::fromHandle(d->context->v8value());
-    return QDeclarativeV8Handle::fromHandle(v8::Undefined());
+    if (contextId.toLower() != QLatin1String("2d"))
+        return QDeclarativeV8Handle::fromHandle(v8::Undefined());
+
+    if (!d->context)
+        createContext();
+    return QDeclarativeV8Handle::fromHandle(d->context->v8value());
 }
 
 /*!
@@ -526,7 +531,9 @@ void QSGCanvasItem::markDirty(const QRectF& region)
 {
     Q_D(QSGCanvasItem);
     d->dirtyRect |= region;
-    polish();
+    if (d->componentCompleted)
+        polish();
+    update();
 }
 
 
@@ -544,7 +551,9 @@ void QSGCanvasItem::markDirty(const QRectF& region)
   */
 bool QSGCanvasItem::save(const QString &filename) const
 {
-    return toImage().save(filename);
+    Q_D(const QSGCanvasItem);
+    QUrl url = d->baseUrl.resolved(QUrl::fromLocalFile(filename));
+    return toImage().save(url.toLocalFile());
 }
 
 QImage QSGCanvasItem::loadedImage(const QUrl& url)
@@ -675,24 +684,23 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
         QByteArray ba;
         QBuffer buffer(&ba);
         buffer.open(QIODevice::WriteOnly);
-        QString mime = mimeType;
+        QString mime = mimeType.toLower();
         QString type;
-        if (mimeType == QLatin1Literal("image/bmp"))
-            type = QLatin1Literal("BMP");
-        else if (mimeType == QLatin1Literal("image/jpeg"))
-            type = QLatin1Literal("JPEG");
-        else if (mimeType == QLatin1Literal("image/x-portable-pixmap"))
-            type = QLatin1Literal("PPM");
-        else if (mimeType == QLatin1Literal("image/tiff"))
-            type = QLatin1Literal("TIFF");
-        else if (mimeType == QLatin1Literal("image/xbm"))
-            type = QLatin1Literal("XBM");
-        else if (mimeType == QLatin1Literal("image/xpm"))
-            type = QLatin1Literal("XPM");
-        else {
+        if (mime == QLatin1Literal("image/png")) {
             type = QLatin1Literal("PNG");
-            mime = QLatin1Literal("image/png");
-        }
+        } else if (mime == QLatin1Literal("image/bmp"))
+            type = QLatin1Literal("BMP");
+        else if (mime == QLatin1Literal("image/jpeg"))
+            type = QLatin1Literal("JPEG");
+        else if (mime == QLatin1Literal("image/x-portable-pixmap"))
+            type = QLatin1Literal("PPM");
+        else if (mime == QLatin1Literal("image/tiff"))
+            type = QLatin1Literal("TIFF");
+        else if (mime == QLatin1Literal("image/xpm"))
+            type = QLatin1Literal("XPM");
+        else
+            return QLatin1Literal("data:,");
+
         image.save(&buffer, type.toAscii());
         buffer.close();
         QString dataUrl = QLatin1Literal("data:%1;base64,%2");

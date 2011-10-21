@@ -55,14 +55,8 @@
 #include <QStringListModel>
 #include <QStandardItemModel>
 #include <QFile>
-#include <QtOpenGL/QGLShaderProgram>
 
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include "../shared/util.h"
 
 static void initStandardTreeModel(QStandardItemModel *model)
 {
@@ -116,6 +110,7 @@ private slots:
     void treeModel();
     void changePreferredHighlight();
     void missingPercent();
+    void creationContext();
 
 private:
     QSGView *createView();
@@ -232,7 +227,7 @@ tst_QSGPathView::tst_QSGPathView()
 void tst_QSGPathView::initValues()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathview1.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathview1.qml")));
     QSGPathView *obj = qobject_cast<QSGPathView*>(c.create());
 
     QVERIFY(obj != 0);
@@ -260,7 +255,7 @@ void tst_QSGPathView::items()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pathview0.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
     qApp->processEvents();
 
     QSGPathView *pathview = findItem<QSGPathView>(canvas->rootObject(), "view");
@@ -295,7 +290,7 @@ void tst_QSGPathView::items()
 void tst_QSGPathView::pathview2()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathview2.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathview2.qml")));
     QSGPathView *obj = qobject_cast<QSGPathView*>(c.create());
 
     QVERIFY(obj != 0);
@@ -313,7 +308,7 @@ void tst_QSGPathView::pathview2()
 void tst_QSGPathView::pathview3()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathview3.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathview3.qml")));
     QSGPathView *obj = qobject_cast<QSGPathView*>(c.create());
 
     QVERIFY(obj != 0);
@@ -331,7 +326,7 @@ void tst_QSGPathView::pathview3()
 void tst_QSGPathView::path()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathtest.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathtest.qml")));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
 
     QVERIFY(obj != 0);
@@ -399,7 +394,7 @@ void tst_QSGPathView::dataModel()
 
     ctxt->setContextProperty("testData", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/datamodel.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("datamodel.qml")));
     qApp->processEvents();
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
@@ -501,7 +496,7 @@ void tst_QSGPathView::pathMoved()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pathview0.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
     qApp->processEvents();
 
     QSGPathView *pathview = findItem<QSGPathView>(canvas->rootObject(), "view");
@@ -518,7 +513,7 @@ void tst_QSGPathView::pathMoved()
     QCOMPARE(firstItem->pos() + offset, start);
     pathview->setOffset(1.0);
 
-    for(int i=0; i<model.count(); i++){
+    for (int i=0; i<model.count(); i++) {
         QSGRectangle *curItem = findItem<QSGRectangle>(pathview, "wrapper", i);
         QPointF itemPos(path->pointAt(0.25 + i*0.25));
         QCOMPARE(curItem->pos() + offset, QPointF(qRound(itemPos.x()), qRound(itemPos.y())));
@@ -558,7 +553,7 @@ void tst_QSGPathView::setCurrentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pathview0.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
     qApp->processEvents();
 
     QSGPathView *pathview = findItem<QSGPathView>(canvas->rootObject(), "view");
@@ -672,7 +667,7 @@ void tst_QSGPathView::resetModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/displaypath.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaypath.qml")));
     qApp->processEvents();
 
     QSGPathView *pathview = findItem<QSGPathView>(canvas->rootObject(), "view");
@@ -705,7 +700,7 @@ void tst_QSGPathView::propertyChanges()
 {
     QSGView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychanges.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
 
     QSGPathView *pathView = canvas->rootObject()->findChild<QSGPathView*>("pathView");
     QVERIFY(pathView);
@@ -740,7 +735,7 @@ void tst_QSGPathView::pathChanges()
 {
     QSGView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychanges.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
 
     QSGPathView *pathView = canvas->rootObject()->findChild<QSGPathView*>("pathView");
     QVERIFY(pathView);
@@ -802,7 +797,7 @@ void tst_QSGPathView::componentChanges()
 {
     QSGView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychanges.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
 
     QSGPathView *pathView = canvas->rootObject()->findChild<QSGPathView*>("pathView");
     QVERIFY(pathView);
@@ -825,7 +820,7 @@ void tst_QSGPathView::modelChanges()
 {
     QSGView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychanges.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
 
     QSGPathView *pathView = canvas->rootObject()->findChild<QSGPathView*>("pathView");
     QVERIFY(pathView);
@@ -852,7 +847,7 @@ void tst_QSGPathView::pathUpdateOnStartChanged()
 {
     QSGView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pathUpdateOnStartChanged.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathUpdateOnStartChanged.qml")));
 
     QSGPathView *pathView = canvas->rootObject()->findChild<QSGPathView*>("pathView");
     QVERIFY(pathView);
@@ -874,7 +869,7 @@ void tst_QSGPathView::package()
 {
     QSGView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pathview_package.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview_package.qml")));
 
     QSGPathView *pathView = canvas->rootObject()->findChild<QSGPathView*>("photoPathView");
     QVERIFY(pathView);
@@ -896,7 +891,7 @@ void tst_QSGPathView::emptyModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("emptyModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/emptymodel.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("emptymodel.qml")));
     qApp->processEvents();
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
@@ -912,7 +907,7 @@ void tst_QSGPathView::closed()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/openPath.qml"));
+        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("openPath.qml")));
         QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
         QVERIFY(obj);
         QCOMPARE(obj->isClosed(), false);
@@ -920,7 +915,7 @@ void tst_QSGPathView::closed()
     }
 
     {
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/closedPath.qml"));
+        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("closedPath.qml")));
         QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
         QVERIFY(obj);
         QCOMPARE(obj->isClosed(), true);
@@ -933,7 +928,7 @@ void tst_QSGPathView::pathUpdate()
 {
     QSGView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pathUpdate.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathUpdate.qml")));
 
     QSGPathView *pathView = canvas->rootObject()->findChild<QSGPathView*>("pathView");
     QVERIFY(pathView);
@@ -948,7 +943,7 @@ void tst_QSGPathView::pathUpdate()
 void tst_QSGPathView::visualDataModel()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/vdm.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("vdm.qml")));
 
     QSGPathView *obj = qobject_cast<QSGPathView*>(c.create());
     QVERIFY(obj != 0);
@@ -961,7 +956,7 @@ void tst_QSGPathView::visualDataModel()
 void tst_QSGPathView::undefinedPath()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/undefinedpath.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("undefinedpath.qml")));
 
     QSGPathView *obj = qobject_cast<QSGPathView*>(c.create());
     QVERIFY(obj != 0);
@@ -974,11 +969,11 @@ void tst_QSGPathView::undefinedPath()
 void tst_QSGPathView::mouseDrag()
 {
     QSGView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/dragpath.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragpath.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(canvas->windowState(), Qt::WindowActive);
+    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
@@ -986,6 +981,7 @@ void tst_QSGPathView::mouseDrag()
     int current = pathview->currentIndex();
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10,100));
+    QTest::qWait(100);
 
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(30,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
@@ -1012,7 +1008,7 @@ void tst_QSGPathView::treeModel()
     initStandardTreeModel(&model);
     canvas->engine()->rootContext()->setContextProperty("myModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/treemodel.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("treemodel.qml")));
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
@@ -1035,11 +1031,11 @@ void tst_QSGPathView::changePreferredHighlight()
 {
     QSGView *canvas = createView();
     canvas->setGeometry(0,0,400,200);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/dragpath.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragpath.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(canvas->windowState(), Qt::WindowActive);
+    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
@@ -1070,6 +1066,21 @@ void tst_QSGPathView::changePreferredHighlight()
     delete canvas;
 }
 
+void tst_QSGPathView::creationContext()
+{
+    QSGView canvas;
+    canvas.setGeometry(0,0,240,320);
+    canvas.setSource(QUrl::fromLocalFile(TESTDATA("creationContext.qml")));
+
+    QSGItem *rootItem = qobject_cast<QSGItem *>(canvas.rootObject());
+    QVERIFY(rootItem);
+    QVERIFY(rootItem->property("count").toInt() > 0);
+
+    QSGItem *item;
+    QVERIFY(item = findItem<QSGItem>(rootItem, "listItem", 0));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+}
+
 QSGView *tst_QSGPathView::createView()
 {
     QSGView *canvas = new QSGView(0);
@@ -1089,7 +1100,7 @@ T *tst_QSGPathView::findItem(QSGItem *parent, const QString &objectName, int ind
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -1117,7 +1128,7 @@ QList<T*> tst_QSGPathView::findItems(QSGItem *parent, const QString &objectName)
     //qDebug() << parent->QSGItem::children().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
@@ -1131,7 +1142,7 @@ QList<T*> tst_QSGPathView::findItems(QSGItem *parent, const QString &objectName)
 void tst_QSGPathView::missingPercent()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/missingPercent.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("missingPercent.qml")));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj);
     QCOMPARE(obj->attributeAt("_qfx_percent", 1.0), qreal(1.0));

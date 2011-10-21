@@ -191,7 +191,7 @@ void QDeclarative1AbstractAnimation::setRunning(bool r)
         else if (!d->registered) {
             d->registered = true;
             QDeclarativeEnginePrivate *engPriv = QDeclarativeEnginePrivate::get(qmlEngine(this));
-            engPriv->registerFinalizedParserStatusObject(this, this->metaObject()->indexOfSlot("componentFinalized()"));
+            engPriv->registerFinalizeCallback(this, this->metaObject()->indexOfSlot("componentFinalized()"));
         }
         return;
     }

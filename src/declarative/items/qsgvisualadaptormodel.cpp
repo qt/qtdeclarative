@@ -64,9 +64,9 @@
 #include <QtCore/qhash.h>
 #include <QtCore/qlist.h>
 
-QT_BEGIN_NAMESPACE
-
 Q_DECLARE_METATYPE(QModelIndex)
+
+QT_BEGIN_NAMESPACE
 
 class VDMDelegateDataType : public QDeclarativeRefCount
 {

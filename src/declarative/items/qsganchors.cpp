@@ -76,7 +76,7 @@ static qreal vcenter(QSGItem *item)
 static qreal position(QSGItem *item, QSGAnchorLine::AnchorLine anchorLine)
 {
     qreal ret = 0.0;
-    switch(anchorLine) {
+    switch (anchorLine) {
     case QSGAnchorLine::Left:
         ret = item->x();
         break;
@@ -109,7 +109,7 @@ static qreal position(QSGItem *item, QSGAnchorLine::AnchorLine anchorLine)
 static qreal adjustedPosition(QSGItem *item, QSGAnchorLine::AnchorLine anchorLine)
 {
     qreal ret = 0.0;
-    switch(anchorLine) {
+    switch (anchorLine) {
     case QSGAnchorLine::Left:
         ret = 0.0;
         break;
@@ -253,7 +253,7 @@ void QSGAnchorsPrivate::addDepend(QSGItem *item)
 {
     if (!item)
         return;
-    
+
     QSGItemPrivate *p = QSGItemPrivate::get(item);
     p->addItemChangeListener(this, QSGItemPrivate::Geometry);
 }
@@ -887,7 +887,7 @@ void QSGAnchors::setLeftMargin(qreal offset)
     if (d->leftMargin == offset)
         return;
     d->leftMargin = offset;
-    if(d->fill)
+    if (d->fill)
         d->fillChanged();
     else
         d->updateHorizontalAnchors();
@@ -906,7 +906,7 @@ void QSGAnchors::setRightMargin(qreal offset)
     if (d->rightMargin == offset)
         return;
     d->rightMargin = offset;
-    if(d->fill)
+    if (d->fill)
         d->fillChanged();
     else
         d->updateHorizontalAnchors();
@@ -925,13 +925,13 @@ void QSGAnchors::setMargins(qreal offset)
     if (d->margins == offset)
         return;
     //###Is it significantly faster to set them directly so we can call fillChanged only once?
-    if(!d->rightMargin || d->rightMargin == d->margins)
+    if (!d->rightMargin || d->rightMargin == d->margins)
         setRightMargin(offset);
-    if(!d->leftMargin || d->leftMargin == d->margins)
+    if (!d->leftMargin || d->leftMargin == d->margins)
         setLeftMargin(offset);
-    if(!d->topMargin || d->topMargin == d->margins)
+    if (!d->topMargin || d->topMargin == d->margins)
         setTopMargin(offset);
-    if(!d->bottomMargin || d->bottomMargin == d->margins)
+    if (!d->bottomMargin || d->bottomMargin == d->margins)
         setBottomMargin(offset);
     d->margins = offset;
     emit marginsChanged();
@@ -950,7 +950,7 @@ void QSGAnchors::setHorizontalCenterOffset(qreal offset)
     if (d->hCenterOffset == offset)
         return;
     d->hCenterOffset = offset;
-    if(d->centerIn)
+    if (d->centerIn)
         d->centerInChanged();
     else
         d->updateHorizontalAnchors();
@@ -969,7 +969,7 @@ void QSGAnchors::setTopMargin(qreal offset)
     if (d->topMargin == offset)
         return;
     d->topMargin = offset;
-    if(d->fill)
+    if (d->fill)
         d->fillChanged();
     else
         d->updateVerticalAnchors();
@@ -988,7 +988,7 @@ void QSGAnchors::setBottomMargin(qreal offset)
     if (d->bottomMargin == offset)
         return;
     d->bottomMargin = offset;
-    if(d->fill)
+    if (d->fill)
         d->fillChanged();
     else
         d->updateVerticalAnchors();
@@ -1007,7 +1007,7 @@ void QSGAnchors::setVerticalCenterOffset(qreal offset)
     if (d->vCenterOffset == offset)
         return;
     d->vCenterOffset = offset;
-    if(d->centerIn)
+    if (d->centerIn)
         d->centerInChanged();
     else
         d->updateVerticalAnchors();

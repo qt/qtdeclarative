@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeintegercache_p.h"
+#include "qdeclarativeintegercache_p.h"
 
 QT_BEGIN_NAMESPACE
 

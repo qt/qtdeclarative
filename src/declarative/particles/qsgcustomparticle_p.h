@@ -42,7 +42,7 @@
 #ifndef CUSTOM_PARTICLE_H
 #define CUSTOM_PARTICLE_H
 #include "qsgparticlepainter_p.h"
-#include <QtDeclarative/private/qsgshadereffectnode_p.h>
+#include <private/qsgshadereffectnode_p.h>
 #include <QSignalMapper>
 
 QT_BEGIN_HEADER
@@ -98,8 +98,6 @@ protected:
 private:
     void buildData();
 
-
-    bool m_pleaseReset;
     bool m_dirtyData;
     QSGShaderEffectProgram m_source;
     struct SourceData

@@ -103,10 +103,6 @@ public:
     };
 
     QDeclarativeChangeSet();
-    QDeclarativeChangeSet(
-            const QVector<Remove> &removals,
-            const QVector<Insert> &insertions,
-            const QVector<Change> &changes = QVector<Change>());
     QDeclarativeChangeSet(const QDeclarativeChangeSet &changeSet);
     ~QDeclarativeChangeSet();
 
@@ -138,7 +134,11 @@ public:
         m_inserts.clear();
         m_changes.clear();
         m_moveCounter = 0;
+        m_difference = 0;
     }
+
+    int moveCounter() const { return m_moveCounter; }
+    int difference() const { return m_difference; }
 
 private:
     void applyRemovals(QVector<Remove> &removals, QVector<Insert> &insertions);
@@ -149,6 +149,7 @@ private:
     QVector<Insert> m_inserts;
     QVector<Change> m_changes;
     int m_moveCounter;
+    int m_difference;
 };
 
 inline uint qHash(const QDeclarativeChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }

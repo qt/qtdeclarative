@@ -42,6 +42,7 @@
 #include "qdeclarativeapplication_p.h"
 #include <private/qobject_p.h>
 #include <QtGui/QGuiApplication>
+#include <QtGui/QInputPanel>
 
 QT_BEGIN_NAMESPACE
 
@@ -80,6 +81,11 @@ Qt::LayoutDirection QDeclarativeApplication::layoutDirection() const
 {
     Q_D(const QDeclarativeApplication);
     return d->layoutDirection;
+}
+
+QObject *QDeclarativeApplication::inputPanel() const
+{
+    return qApp ? qApp->inputPanel() : 0;
 }
 
 bool QDeclarativeApplication::eventFilter(QObject *obj, QEvent *event)

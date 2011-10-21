@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativedirparser_p.h"
+#include "qdeclarativedirparser_p.h"
 #include "qdeclarativeerror.h"
-#include <private/qdeclarativeglobal_p.h>
+#include "qdeclarativeglobal_p.h"
 
 #include <QtCore/QTextStream>
 #include <QtCore/QFile>
@@ -186,7 +186,7 @@ bool QDeclarativeDirParser::parse()
                             QString::fromUtf8("internal types require 2 arguments, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
-            Component entry(sections[1].toUtf8(), sections[2], -1, -1);
+            Component entry(sections[1], sections[2], -1, -1);
             entry.internal = true;
             _components.append(entry);
         } else if (sections[0] == QLatin1String("typeinfo")) {
@@ -202,7 +202,7 @@ bool QDeclarativeDirParser::parse()
 
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
-            const Component entry(sections[0].toUtf8(), sections[1], -1, -1);
+            const Component entry(sections[0], sections[1], -1, -1);
             _components.append(entry);
         } else if (sectionCount == 3) {
             const QString &version = sections[1];
@@ -220,7 +220,7 @@ bool QDeclarativeDirParser::parse()
                     const int minorVersion = version.mid(dotIndex + 1).toInt(&validVersionNumber);
 
                     if (validVersionNumber) {
-                        const Component entry(sections[0].toUtf8(), sections[2], majorVersion, minorVersion);
+                        const Component entry(sections[0], sections[2], majorVersion, minorVersion);
 
                         _components.append(entry);
                     }

@@ -128,7 +128,7 @@ Item {
         alertItem = alertDelegate.createObject(root);
         alertItem.x = root.width/2 - alertItem.width/2
         alertItem.y = root.height/2 - alertItem.height/2
-        spawnFireworks.pulse(0.2);
+        spawnFireworks.pulse(200);
         stopAlert.start();
     }
     focus: true
@@ -225,7 +225,6 @@ Item {
                 fillMode: Image.PreserveAspectFit; 
                 width: parent.width-4; height: parent.height-4
                 onStatusChanged: if (img.status == Image.Ready) {
-                    container.opacity = 0;
                     loading.opacity = 0;
                     mp.take(container);
                 }

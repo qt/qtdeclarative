@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include <QtDeclarative/private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativeglobal_p.h>
 
 QT_BEGIN_HEADER
 

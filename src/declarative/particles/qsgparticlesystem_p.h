@@ -48,8 +48,8 @@
 #include <QHash>
 #include <QPointer>
 #include <QSignalMapper>
-#include <QtDeclarative/private/qsgsprite_p.h>
 #include "private/qabstractanimation2_p.h"
+#include <private/qsgsprite_p.h>
 #include <QtDeclarative/qdeclarative.h>
 #include <private/qv8engine_p.h> //For QDeclarativeV8Handle
 
@@ -103,7 +103,7 @@ private:
     QHash<int,int> m_lookups;
 };
 
-class QSGParticleGroupData{
+class Q_AUTOTEST_EXPORT QSGParticleGroupData {
 public:
     QSGParticleGroupData(int id, QSGParticleSystem* sys);
     ~QSGParticleGroupData();
@@ -143,7 +143,7 @@ struct Color4ub {
     uchar a;
 };
 
-class QSGParticleData{
+class Q_AUTOTEST_EXPORT QSGParticleData {
 public:
     //TODO: QObject like memory management (without the cost, just attached to system)
     QSGParticleData(QSGParticleSystem* sys);
@@ -203,6 +203,10 @@ public:
     float frameDuration;
     float frameCount;
     float animT;
+    float animX;
+    float animY;
+    float animWidth;
+    float animHeight;
     float r;
     QSGItem* delegate;
     int modelIndex;
@@ -225,7 +229,7 @@ private:
     QSGV8ParticleData* v8Datum;
 };
 
-class QSGParticleSystem : public QSGItem
+class Q_AUTOTEST_EXPORT QSGParticleSystem : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
@@ -236,13 +240,12 @@ public:
     explicit QSGParticleSystem(QSGItem *parent = 0);
     ~QSGParticleSystem();
 
-    //TODO: Hook up running and temporal manipulators to the animation
     bool isRunning() const
     {
         return m_running;
     }
 
-    int count(){ return m_particle_count; }
+    int count(){ return particleCount; }
 
     static const int maxLife = 600000;
 
@@ -274,13 +277,13 @@ protected:
 private slots:
     void emittersChanged();
     void loadPainter(QObject* p);
-    void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
+    void createEngine(); //Not invoked by sprite engine, unlike Sprite uses
     void particleStateChange(int idx);
 
-public://###but only really for related class usage. Perhaps we should all be friends?
+public:
     //These can be called multiple times per frame, performance critical
     void emitParticle(QSGParticleData* p);
-    QSGParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);//TODO: implement respectLimits in emitters (which means interacting with maxCount?)
+    QSGParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);
     void finishNewDatum(QSGParticleData*);
     void moveGroups(QSGParticleData *d, int newGIdx);
     int nextSystemIndex();
@@ -288,21 +291,27 @@ public://###but only really for related class usage. Perhaps we should all be fr
     //This one only once per painter per frame
     int systemSync(QSGParticlePainter* p);
 
-    QSet<QSGParticleData*> m_needsReset;
-    QVector<QSGParticleData*> m_bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
-    QHash<QString, int> m_groupIds;
-    QHash<int, QSGParticleGroupData*> m_groupData;
-    QSGStochasticEngine* m_stateEngine;
+    //Data members here for ease of related class and auto-test usage. Not "public" API. TODO: d_ptrize
+    QSet<QSGParticleData*> needsReset;
+    QVector<QSGParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
+    QHash<QString, int> groupIds;
+    QHash<int, QSGParticleGroupData*> groupData;
+    QSGStochasticEngine* stateEngine;
 
-    int m_timeInt;
-    bool m_initialized;
+    //Also only here for auto-test usage
+    void updateCurrentTime( int currentTime );
+    QSGParticleSystemAnimation* m_animation;
+    bool m_running;
+
+    int timeInt;
+    bool initialized;
+    int particleCount;
 
     void registerParticlePainter(QSGParticlePainter* p);
     void registerParticleEmitter(QSGParticleEmitter* e);
     void registerParticleAffector(QSGParticleAffector* a);
     void registerParticleGroup(QSGParticleGroup* g);
 
-    int m_particle_count;
     static void statePropertyRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);
     static void stateRedirect(QSGParticleGroup* group, QSGParticleSystem* sys, QObject *value);
     bool isPaused() const
@@ -318,7 +327,6 @@ public://###but only really for related class usage. Perhaps we should all be fr
 private:
     void initializeSystem();
     void initGroups();
-    bool m_running;
     QList<QPointer<QSGParticleEmitter> > m_emitters;
     QList<QPointer<QSGParticleAffector> > m_affectors;
     QList<QPointer<QSGParticlePainter> > m_painters;
@@ -331,9 +339,6 @@ private:
 
     QSignalMapper m_painterMapper;
     QSignalMapper m_emitterMapper;
-    friend class QSGParticleSystemAnimation;
-    void updateCurrentTime( int currentTime );
-    QSGParticleSystemAnimation* m_animation;
     bool m_paused;
     bool m_debugMode;
     bool m_allDead;
@@ -374,5 +379,4 @@ QT_END_NAMESPACE
 QT_END_HEADER
 
 #endif // PARTICLESYSTEM_H
-
 

@@ -26,51 +26,8 @@
 ****************************************************************************/
 
 /*!
-\title What's New in Qt Quick
-\page qtquick-whatsnew.html
-
-\section1 Qt 5.0.0 includes QtQuick 2.0
-
-QtQuick 2.0 is a major update.
-
-MouseArea now propagates clicked, doubleClicked and pressAndHold differently to pressed. 
-These will now be propagated to the highest-stacking-order enabled MouseArea which has a handler for them.
-You can still ignore these events in the handler to let them pass through.
-
-The Binding element can now be used as a value source, and will also restore any previously
-set binding when its \e when clause becomes false.
-
-QDeclarativeExpression can now be directly (and more efficiently) constructed from a
-QDeclarativeScriptString.
-
-Flickable: added dragging, draggingHorizontally and draggingVerically properties.
-
-Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
-fillMode (Image.Pad) that does not transform the image.
-
-The Loader element now only emits the \c sourceChanged signal when the source is changed and the
-\c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one
-of the properties was changed.
-
-\section2 QtQuick 1 is now a separate library and module
-
-Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem
-requires adding the "qtquick1" module to the .pro file, e.g. QT += declarative qtquick1
-
-QDeclarativeView and QDeclarativeItem headers are now in the QtQuick 1 module, i.e.
-#include <QtQuick1/QDeclarativeView>
-#include <QtQuick1/QDeclarativeItem>
-
-"import QtQuick 1.0" loads the module dynamically.  To deploy QtQuick 1 applications
-the library (lib/libQtQuick1*) and plugin (imports/QtQuick/) must be installed.
-
-
-\section2 PathView
-
-Added the following properties:
-\list
-\o \l {PathView::}{currentItem}
-\endlist
+\title What's New in Qt Quick 1
+\page qtquick1-whatsnew.html
 
 \section1 Qt 4.7.4 includes QtQuick 1.1
 

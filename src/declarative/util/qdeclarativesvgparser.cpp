@@ -142,25 +142,6 @@ static qreal toDouble(const QChar *&str)
     return val;
 
 }
-static qreal toDouble(const QString &str, bool *ok = NULL)
-{
-    const QChar *c = str.constData();
-    qreal res = toDouble(c);
-    if (ok) {
-        *ok = ((*c) == QLatin1Char('\0'));
-    }
-    return res;
-}
-
-static qreal toDouble(const QStringRef &str, bool *ok = NULL)
-{
-    const QChar *c = str.constData();
-    qreal res = toDouble(c);
-    if (ok) {
-        *ok = (c == (str.constData() + str.length()));
-    }
-    return res;
-}
 static inline void parseNumbersArray(const QChar *&str, QVarLengthArray<qreal, 8> &points)
 {
     while (str->isSpace())

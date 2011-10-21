@@ -51,11 +51,6 @@
 #include <QtQuick1/private/qdeclarativetextinput_p.h>
 #include <private/qobject_p.h>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_creation : public QObject
 {
     Q_OBJECT
@@ -353,7 +348,7 @@ void tst_creation::elements()
     QFETCH(QString, type);
     QDeclarativeType *t = QDeclarativeMetaType::qmlType(type, 2, 0);
     if (!t || !t->isCreatable())
-        QSKIP("Non-creatable type", SkipSingle);
+        QSKIP("Non-creatable type");
 
     QBENCHMARK {
         QObject *obj = t->create();

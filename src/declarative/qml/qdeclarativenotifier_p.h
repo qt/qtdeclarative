@@ -42,7 +42,8 @@
 #ifndef QDECLARATIVENOTIFIER_P_H
 #define QDECLARATIVENOTIFIER_P_H
 
-#include "private/qdeclarativeguard_p.h"
+#include "qdeclarativedata_p.h"
+#include "qdeclarativeguard_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -55,6 +56,7 @@ public:
     inline void notify();
 
 private:
+    friend class QDeclarativeData;
     friend class QDeclarativeNotifierEndpoint;
 
     static void emitNotify(QDeclarativeNotifierEndpoint *);
@@ -65,11 +67,10 @@ class QDeclarativeNotifierEndpoint
 {
 public:
     inline QDeclarativeNotifierEndpoint();
-    inline QDeclarativeNotifierEndpoint(QObject *t, int m);
     inline ~QDeclarativeNotifierEndpoint();
 
-    QObject *target;
-    int targetMethod;
+    typedef void (*Callback)(QDeclarativeNotifierEndpoint *);
+    Callback callback;
 
     inline bool isConnected();
     inline bool isConnected(QObject *source, int sourceSignal);
@@ -79,41 +80,24 @@ public:
     inline void connect(QDeclarativeNotifier *);
     inline void disconnect();
 
+    inline bool isNotifying() const;
+    inline void cancelNotify();
+
     void copyAndClear(QDeclarativeNotifierEndpoint &other);
 
 private:
+    friend class QDeclarativeData;
     friend class QDeclarativeNotifier;
 
-    struct Signal {
-        QDeclarativeGuard<QObject> source;
-        int sourceSignal;
-    };
-
-    struct Notifier {
-        QDeclarativeNotifier *notifier;
-        QDeclarativeNotifierEndpoint **disconnected;
-
-        QDeclarativeNotifierEndpoint  *next;
-        QDeclarativeNotifierEndpoint **prev;
-    };
-
-    enum { InvalidType, SignalType, NotifierType } type;
     union {
-        struct {
-            Signal *signal;
-            union {
-                char signalData[sizeof(Signal)];
-                qint64 q_for_alignment_1;
-                double q_for_alignment_2;
-            };
-        };
-        Notifier notifier;
+        QDeclarativeNotifier *notifier;
+        QObject *source;
     };
-
-    inline Notifier *toNotifier();
-    inline Notifier *asNotifier();
-    inline Signal *toSignal();
-    inline Signal *asSignal();
+    unsigned int notifying : 1;
+    signed int sourceSignal : 31;
+    QDeclarativeNotifierEndpoint **disconnected;
+    QDeclarativeNotifierEndpoint  *next;
+    QDeclarativeNotifierEndpoint **prev;
 };
 
 QDeclarativeNotifier::QDeclarativeNotifier()
@@ -125,12 +109,13 @@ QDeclarativeNotifier::~QDeclarativeNotifier()
 {    
     QDeclarativeNotifierEndpoint *endpoint = endpoints;
     while (endpoint) {
-        QDeclarativeNotifierEndpoint::Notifier *n = endpoint->asNotifier();
+        QDeclarativeNotifierEndpoint *n = endpoint;
         endpoint = n->next;
 
         n->next = 0;
         n->prev = 0;
         n->notifier = 0;
+        n->sourceSignal = -1;
         if (n->disconnected) *n->disconnected = 0;
         n->disconnected = 0;
     }
@@ -143,123 +128,76 @@ void QDeclarativeNotifier::notify()
 }
 
 QDeclarativeNotifierEndpoint::QDeclarativeNotifierEndpoint()
-: target(0), targetMethod(0), type(InvalidType) 
-{
-}
-
-QDeclarativeNotifierEndpoint::QDeclarativeNotifierEndpoint(QObject *t, int m)
-: target(t), targetMethod(m), type(InvalidType) 
+: callback(0), notifier(0), notifying(0), sourceSignal(-1), disconnected(0), next(0), prev(0)
 {
 }
 
 QDeclarativeNotifierEndpoint::~QDeclarativeNotifierEndpoint()
 {
     disconnect();
-    if (SignalType == type) {
-        Signal *s = asSignal();
-        s->~Signal();
-    }
 }
 
 bool QDeclarativeNotifierEndpoint::isConnected()
 {
-    if (SignalType == type) {
-        return asSignal()->source;
-    } else if (NotifierType == type) {
-        return asNotifier()->notifier;
-    } else {
-        return false;
-    }
+    return prev != 0;
 }
 
 bool QDeclarativeNotifierEndpoint::isConnected(QObject *source, int sourceSignal)
 {
-    return SignalType == type && asSignal()->source == source && asSignal()->sourceSignal == sourceSignal;
+    return this->sourceSignal != -1 && this->source == source && this->sourceSignal == sourceSignal;
 }
 
 bool QDeclarativeNotifierEndpoint::isConnected(QDeclarativeNotifier *notifier)
 {
-    return NotifierType == type && asNotifier()->notifier == notifier;
+    return sourceSignal == -1 && this->notifier == notifier;
 }
 
 void QDeclarativeNotifierEndpoint::connect(QDeclarativeNotifier *notifier)
 {
-    Notifier *n = toNotifier();
-    
-    if (n->notifier == notifier)
-        return;
-
     disconnect();
 
-    n->next = notifier->endpoints;
-    if (n->next) { n->next->asNotifier()->prev = &n->next; }
+    next = notifier->endpoints;
+    if (next) { next->prev = &next; }
     notifier->endpoints = this;
-    n->prev = &notifier->endpoints;
-    n->notifier = notifier;
+    prev = &notifier->endpoints;
+    this->notifier = notifier;
 }
 
 void QDeclarativeNotifierEndpoint::disconnect()
 {
-    if (type == SignalType) {
-        Signal *s = asSignal();
-        if (s->source) {
-            QMetaObject::disconnectOne(s->source, s->sourceSignal, target, targetMethod);
-            s->source = 0;
-        }
-    } else if (type == NotifierType) {
-        Notifier *n = asNotifier();
-
-        if (n->next) n->next->asNotifier()->prev = n->prev;
-        if (n->prev) *n->prev = n->next;
-        if (n->disconnected) *n->disconnected = 0;
-        n->next = 0;
-        n->prev = 0;
-        n->disconnected = 0;
-        n->notifier = 0;
-    }
+    if (next) next->prev = prev;
+    if (prev) *prev = next;
+    if (disconnected) *disconnected = 0;
+    next = 0;
+    prev = 0;
+    disconnected = 0;
+    notifier = 0;
+    notifying = 0;
+    sourceSignal = -1;
 }
 
-QDeclarativeNotifierEndpoint::Notifier *QDeclarativeNotifierEndpoint::toNotifier()
+/*!
+Returns true if a notify is in progress.  This means that the signal or QDeclarativeNotifier
+that this endpoing is connected to has been triggered, but this endpoint's callback has not
+yet been called.
+
+An in progress notify can be cancelled by calling cancelNotify.
+*/
+bool QDeclarativeNotifierEndpoint::isNotifying() const
 {
-    if (NotifierType == type) 
-        return asNotifier();
-
-    if (SignalType == type) {
-        disconnect();
-        Signal *s = asSignal();
-        s->~Signal();
-    }
-
-    type = NotifierType;
-    Notifier *n = asNotifier();
-    n->next = 0;
-    n->prev = 0;
-    n->disconnected = 0;
-    n->notifier = 0;
-    return n;
+    return notifying == 1;
 }
 
-QDeclarativeNotifierEndpoint::Notifier *QDeclarativeNotifierEndpoint::asNotifier() 
-{ 
-    Q_ASSERT(type == NotifierType);
-    return &notifier;
-}
-
-QDeclarativeNotifierEndpoint::Signal *QDeclarativeNotifierEndpoint::toSignal()
+/*!
+Cancel any notifies that are in progress.
+*/
+void QDeclarativeNotifierEndpoint::cancelNotify() 
 {
-    if (SignalType == type) 
-        return asSignal();
-
-    disconnect();
-    signal = new (&signalData) Signal;
-    type = SignalType;
-    return signal;
-}
-
-QDeclarativeNotifierEndpoint::Signal *QDeclarativeNotifierEndpoint::asSignal() 
-{ 
-    Q_ASSERT(type == SignalType);
-    return signal;
+    notifying = 0;
+    if (disconnected) {
+        *disconnected = 0;
+        disconnected = 0;
+    }
 }
 
 QT_END_NAMESPACE

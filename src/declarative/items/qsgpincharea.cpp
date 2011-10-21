@@ -516,7 +516,7 @@ bool QSGPinchArea::sendMouseEvent(QMouseEvent *event)
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 
-        switch(mouseEvent.type()) {
+        switch (mouseEvent.type()) {
         case QEvent::MouseMove:
             mouseMoveEvent(&mouseEvent);
             break;

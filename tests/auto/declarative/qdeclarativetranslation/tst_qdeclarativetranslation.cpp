@@ -43,11 +43,7 @@
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
 #include <QTranslator>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include "../shared/util.h"
 
 class tst_qdeclarativetranslation : public QObject
 {
@@ -63,13 +59,13 @@ private slots:
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 void tst_qdeclarativetranslation::translation()
 {
     QTranslator translator;
-    translator.load(QLatin1String("qml_fr"), QLatin1String(SRCDIR) + QLatin1String("/data"));
+    translator.load(QLatin1String("qml_fr"), TESTDATA(""));
     QCoreApplication::installTranslator(&translator);
 
     QDeclarativeEngine engine;
@@ -93,7 +89,7 @@ void tst_qdeclarativetranslation::translation()
 void tst_qdeclarativetranslation::idTranslation()
 {
     QTranslator translator;
-    translator.load(QLatin1String("qmlid_fr"), QLatin1String(SRCDIR) + QLatin1String("/data"));
+    translator.load(QLatin1String("qmlid_fr"),TESTDATA(""));
     QCoreApplication::installTranslator(&translator);
 
     QDeclarativeEngine engine;

@@ -1,5 +1,6 @@
-load(qttest_p4)
+CONFIG += testcase
+TARGET = tst_headersclean
 SOURCES  += tst_headersclean.cpp
-QT = core
+QT = core testlib
 
 contains(QT_CONFIG,declarative): QT += declarative declarative-private

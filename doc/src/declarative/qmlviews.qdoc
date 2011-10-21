@@ -66,7 +66,7 @@ For more information, consult the \l {QML Data Models} article.
 \keyword qml-view-delegate
 \section1 View Delegates
 
-Views need a \e delegate to visually represent an item in a list. A view will
+Views need a \i delegate to visually represent an item in a list. A view will
 visualize each item list according to the template defined by the delegate.
 Items in a model are accessible through the \c index property as well as the
 item's properties.
@@ -75,7 +75,7 @@ item's properties.
 
 \section1 Decorating Views
 
-Views allow visual customization through \e decoration properties such as the \c header, \c footer, and \c section properties. By binding an object, usually
+Views allow visual customization through \i decoration properties such as the \c header, \c footer, and \c section properties. By binding an object, usually
 another visual object, to these properties, the views are decoratable. A footer
 may include a \l Rectangle element showcasing borders or a header that displays
 a logo on top of the list.
@@ -107,7 +107,7 @@ specified.
 
 \section1 ListView Sections
 
-\l {ListView} contents may be grouped into \e sections, where related list items
+\l {ListView} contents may be grouped into \i sections, where related list items
 are labeled according to their sections. Further, the sections may be decorated
 with \l{qml-view-delegate}{delegates}.
 

@@ -55,19 +55,19 @@
 
 #include "qdeclarativecontext.h"
 
-#include "private/qdeclarativedata_p.h"
-#include "private/qdeclarativeintegercache_p.h"
-#include "private/qdeclarativetypenamecache_p.h"
-#include "private/qdeclarativenotifier_p.h"
+#include "qdeclarativedata_p.h"
+#include "qdeclarativeintegercache_p.h"
+#include "qdeclarativetypenamecache_p.h"
+#include "qdeclarativenotifier_p.h"
 #include "qdeclarativelist.h"
-#include "private/qdeclarativescript_p.h"
+#include "qdeclarativescript_p.h"
 
 #include <QtCore/qhash.h>
 #include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qset.h>
 
 #include <private/qobject_p.h>
-#include "private/qdeclarativeguard_p.h"
+#include "qdeclarativeguard_p.h"
 
 #include <private/qv8_p.h>
 
@@ -80,7 +80,7 @@ class QDeclarativeEngine;
 class QDeclarativeExpression;
 class QDeclarativeExpressionPrivate;
 class QDeclarativeAbstractExpression;
-class QDeclarativeV4Bindings;
+class QV4Bindings;
 class QDeclarativeContextData;
 
 class QDeclarativeContextPrivate : public QObjectPrivate
@@ -108,6 +108,7 @@ public:
     static QObject *context_at(QDeclarativeListProperty<QObject> *, int);
 };
 
+class QDeclarativeVME;
 class QDeclarativeComponentAttached;
 class QDeclarativeGuardedContextData;
 class Q_DECLARATIVE_EXPORT QDeclarativeContextData
@@ -144,6 +145,10 @@ public:
     quint32 isPragmaLibraryContext:1;
     quint32 dummy:28;
     QDeclarativeContext *publicContext;
+
+    // VME that is constructing this context if any
+    // XXX remove if possible
+    QDeclarativeVME *activeVME;
 
     // Property name cache
     QDeclarativeIntegerCache *propertyNames;
@@ -201,7 +206,7 @@ public:
     QDeclarativeComponentAttached *componentAttached;
 
     // Optimized binding objects.  Needed for deferred properties.
-    QDeclarativeV4Bindings *v4bindings;
+    QV4Bindings *v4bindings;
     QV8Bindings *v8bindings;
 
     // Return the outermost id for obj, if any.

@@ -55,10 +55,11 @@
 
 #include "qdeclarativecomponent.h"
 
-#include "private/qv8_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativetypeloader_p.h"
-#include "private/qbitfield_p.h"
+#include <private/qv8_p.h>
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativetypeloader_p.h"
+#include <private/qbitfield_p.h>
+#include "qdeclarativevme_p.h"
 #include "qdeclarativeerror.h"
 #include "qdeclarative.h"
 
@@ -84,10 +85,9 @@ class Q_AUTOTEST_EXPORT QDeclarativeComponentPrivate : public QObjectPrivate, pu
 public:
     QDeclarativeComponentPrivate() : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0) {}
 
-    QObject *beginCreate(QDeclarativeContextData *, const QBitField &);
+    QObject *beginCreate(QDeclarativeContextData *);
     void completeCreate();
-    QObject *createObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *parentObject);
-    QObject *completeCreateObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate);
+    void initializeObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate);
 
     QDeclarativeTypeData *typeData;
     virtual void typeDataReady(QDeclarativeTypeData *);
@@ -102,24 +102,17 @@ public:
     QDeclarativeCompiledData *cc;
 
     struct ConstructionState {
-        ConstructionState() : componentAttached(0), completePending(false) {}
-        QList<QDeclarativeEnginePrivate::SimpleList<QDeclarativeAbstractBinding> > bindValues;
-        QList<QDeclarativeEnginePrivate::SimpleList<QDeclarativeParserStatus> > parserStatus;
-        QList<QPair<QDeclarativeGuard<QObject>, int> > finalizedParserStatus;
-        QDeclarativeComponentAttached *componentAttached;
+        ConstructionState() : completePending(false) {}
+
+        QDeclarativeVME vme;
         QList<QDeclarativeError> errors;
         bool completePending;
     };
     ConstructionState state;
 
-    static QObject *begin(QDeclarativeContextData *parentContext, QDeclarativeContextData *componentCreationContext,
-                          QDeclarativeCompiledData *component, int start, 
-                          ConstructionState *state, QList<QDeclarativeError> *errors, 
-                          const QBitField &bindings = QBitField());
     static void beginDeferred(QDeclarativeEnginePrivate *enginePriv, QObject *object, 
                               ConstructionState *state);
     static void complete(QDeclarativeEnginePrivate *enginePriv, ConstructionState *state);
-
 
     QDeclarativeEngine *engine;
     QDeclarativeGuardedContextData creationContext;
@@ -155,8 +148,8 @@ Q_SIGNALS:
     void destruction();
 
 private:
+    friend class QDeclarativeVME;
     friend class QDeclarativeContextData;
-    friend class QDeclarativeComponentPrivate;
 };
 
 QT_END_NAMESPACE

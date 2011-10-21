@@ -64,7 +64,7 @@ Rectangle {
             lifeSpan: 720
             size: 10
             shape: MaskShape {
-                source: "../images/smileMask.png"
+                source: "../images/starfish_mask.png"
             }
         }
 

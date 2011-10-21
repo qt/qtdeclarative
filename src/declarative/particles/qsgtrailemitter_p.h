@@ -57,13 +57,15 @@ class QSGTrailEmitter : public QSGParticleEmitter
     Q_PROPERTY(QString follow READ follow WRITE setFollow NOTIFY followChanged)
     Q_PROPERTY(int emitRatePerParticle READ particlesPerParticlePerSecond WRITE setParticlesPerParticlePerSecond NOTIFY particlesPerParticlePerSecondChanged)
 
-    //TODO: Document that TrailEmitter's box is where it follows. It emits in a rect centered on the followed particle
-    //TODO: A set of properties that can involve the particle size of the followed
     Q_PROPERTY(QSGParticleExtruder* emitShape READ emissonShape WRITE setEmissionShape NOTIFY emissionShapeChanged)
     Q_PROPERTY(qreal emitHeight READ emitterYVariation WRITE setEmitterYVariation NOTIFY emitterYVariationChanged)
     Q_PROPERTY(qreal emitWidth READ emitterXVariation WRITE setEmitterXVariation NOTIFY emitterXVariationChanged)
 
+    Q_ENUMS(EmitSize)
 public:
+    enum EmitSize {
+        ParticleSize = -2//Anything less than 0 will do
+    };
     explicit QSGTrailEmitter(QSGItem *parent = 0);
     virtual void emitWindow(int timeStamp);
     virtual void reset();

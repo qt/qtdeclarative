@@ -424,31 +424,34 @@ int main(int argc, char ** argv)
 
     QStringList imports;
     for (int i = 1; i < argc; ++i) {
-        if (*argv[i] != '-' && QFileInfo(argv[i]).exists())
+        if (*argv[i] != '-' && QFileInfo(QFile::decodeName(argv[i])).exists()) {
             options.file = QUrl::fromLocalFile(argv[i]);
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--original-qml"))
-            options.originalQml = true;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--original-qml-raster"))
-            options.originalQmlRaster = true;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--maximized"))
-            options.maximized = true;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--fullscreen"))
-            options.fullscreen = true;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--sg-on-gv"))
-            options.scenegraphOnGraphicsview = true;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--clip"))
-            options.clip = true;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--no-version-detection"))
-            options.versionDetection = false;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("-i") && i + 1 < argc)
-            imports.append(QString::fromLatin1(argv[++i]));
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--no-vsync-animations"))
-            options.vsync = false;
-        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--help")
-                 || QString::fromLatin1(argv[i]).toLower() == QLatin1String("-help")
-                 || QString::fromLatin1(argv[i]).toLower() == QLatin1String("--h")
-                 || QString::fromLatin1(argv[i]).toLower() == QLatin1String("-h"))
-            usage();
+        } else {
+            const QString lowerArgument = QString::fromLatin1(argv[i]).toLower();
+            if (lowerArgument == QLatin1String("--original-qml"))
+                options.originalQml = true;
+            else if (lowerArgument == QLatin1String("--original-qml-raster"))
+                options.originalQmlRaster = true;
+            else if (lowerArgument == QLatin1String("--maximized"))
+                options.maximized = true;
+            else if (lowerArgument == QLatin1String("--fullscreen"))
+                options.fullscreen = true;
+            else if (lowerArgument == QLatin1String("--sg-on-gv"))
+                options.scenegraphOnGraphicsview = true;
+            else if (lowerArgument == QLatin1String("--clip"))
+                options.clip = true;
+            else if (lowerArgument == QLatin1String("--no-version-detection"))
+                options.versionDetection = false;
+            else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
+                imports.append(QString::fromLatin1(argv[++i]));
+            else if (lowerArgument == QLatin1String("--no-vsync-animations"))
+                options.vsync = false;
+            else if (lowerArgument == QLatin1String("--help")
+                     || lowerArgument == QLatin1String("-help")
+                     || lowerArgument == QLatin1String("--h")
+                     || lowerArgument == QLatin1String("-h"))
+                usage();
+        }
     }
 
     QApplication::setGraphicsSystem("raster");
@@ -502,6 +505,7 @@ int main(int argc, char ** argv)
 
         QObject::connect(engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
 
+        window->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
         if (options.fullscreen)
             window->showFullScreen();
         else if (options.maximized)

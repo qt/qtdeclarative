@@ -44,15 +44,10 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/private/qdeclarativefontloader_p.h>
-#include "../../../shared/util.h"
+#include "../shared/util.h"
 #include "../../declarative/shared/testhttpserver.h"
 
 #define SERVER_PORT 14448
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_qdeclarativefontloader : public QObject
 {
@@ -79,7 +74,7 @@ private:
 tst_qdeclarativefontloader::tst_qdeclarativefontloader() :
     server(SERVER_PORT)
 {
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 }
 
 void tst_qdeclarativefontloader::init()
@@ -117,7 +112,7 @@ void tst_qdeclarativefontloader::namedFont()
 
 void tst_qdeclarativefontloader::localFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" SRCDIR  "/data/tarzeau_ocr_a.ttf\" }";
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + TESTDATA("tarzeau_ocr_a.ttf") + "\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QDeclarativeFontLoader *fontObject = qobject_cast<QDeclarativeFontLoader*>(component.create());
@@ -130,8 +125,8 @@ void tst_qdeclarativefontloader::localFont()
 
 void tst_qdeclarativefontloader::failLocalFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + QUrl::fromLocalFile(SRCDIR "/data/dummy.ttf").toString() + "\" }";
-    QTest::ignoreMessage(QtWarningMsg, QString("file::2:1: QML FontLoader: Cannot load font: \"" + QUrl::fromLocalFile(SRCDIR "/data/dummy.ttf").toString() + "\"").toUtf8().constData());
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + QUrl::fromLocalFile(TESTDATA("dummy.ttf")).toString() + "\" }";
+    QTest::ignoreMessage(QtWarningMsg, QString("file::2:1: QML FontLoader: Cannot load font: \"" + QUrl::fromLocalFile(TESTDATA("dummy.ttf")).toString() + "\"").toUtf8().constData());
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QDeclarativeFontLoader *fontObject = qobject_cast<QDeclarativeFontLoader*>(component.create());
@@ -190,7 +185,7 @@ void tst_qdeclarativefontloader::changeFont()
 {
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: font }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("font", QUrl::fromLocalFile(SRCDIR "/data/tarzeau_ocr_a.ttf"));
+    ctxt->setContextProperty("font", QUrl::fromLocalFile(TESTDATA("tarzeau_ocr_a.ttf")));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QDeclarativeFontLoader *fontObject = qobject_cast<QDeclarativeFontLoader*>(component.create());
@@ -212,7 +207,7 @@ void tst_qdeclarativefontloader::changeFont()
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
 
-    ctxt->setContextProperty("font", QUrl::fromLocalFile(SRCDIR "/data/tarzeau_ocr_a.ttf"));
+    ctxt->setContextProperty("font", QUrl::fromLocalFile(TESTDATA("tarzeau_ocr_a.ttf")));
     QTRY_VERIFY(fontObject->status() == QDeclarativeFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 2);
     QCOMPARE(statusSpy.count(), 2);

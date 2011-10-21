@@ -148,6 +148,28 @@ int QSGSpriteEngine::spriteDuration(int sprite)
         return rowDuration;
 }
 
+int QSGSpriteEngine::spriteY(int sprite)
+{
+    int state = m_things[sprite];
+    if (!m_sprites[state]->m_generatedCount)
+        return m_sprites[state]->m_rowY;
+    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    return m_sprites[state]->m_rowY + m_sprites[state]->m_frameHeight * extra;
+}
+
+int QSGSpriteEngine::spriteWidth(int sprite)
+{
+    int state = m_things[sprite];
+    return m_sprites[state]->m_frameWidth;
+}
+
+int QSGSpriteEngine::spriteHeight(int sprite)
+{
+    int state = m_things[sprite];
+    return m_sprites[state]->m_frameHeight;
+}
+
 int QSGSpriteEngine::spriteCount()//TODO: Actually image state count, need to rename these things to make sense together
 {
     return m_imageStateCount;
@@ -175,12 +197,12 @@ void QSGStochasticEngine::setGoal(int state, int sprite, bool jump)
 
 QImage QSGSpriteEngine::assembledImage()
 {
-    int frameHeight = 0;
-    int frameWidth = 0;
+    int h = 0;
+    int w = 0;
     m_maxFrames = 0;
     m_imageStateCount = 0;
+    int maxSize = 0;
 
-    int maxSize;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
     foreach (QSGStochasticState* s, m_states){
         QSGSprite* sprite = qobject_cast<QSGSprite*>(s);
@@ -201,60 +223,48 @@ QImage QSGSpriteEngine::assembledImage()
         }
 
         //Check that the frame sizes are the same within one engine
-        int imgWidth = state->frameWidth();
-        if (!imgWidth)
-            imgWidth = img.width() / state->frames();
-        if (frameWidth){
-            if (imgWidth != frameWidth){
-                qWarning() << "SpriteEngine: Irregular frame width..." << state->source().toLocalFile();
-                return QImage();
-            }
-        }else{
-            frameWidth = imgWidth;
-        }
+        if (!state->m_frameWidth)
+            state->m_frameWidth = img.width() / state->frames();
 
-        int imgHeight = state->frameHeight();
-        if (!imgHeight)
-            imgHeight = img.height();
-        if (frameHeight){
-            if (imgHeight!=frameHeight){
-                qWarning() << "SpriteEngine: Irregular frame height..." << state->source().toLocalFile();
-                return QImage();
-            }
-        }else{
-            frameHeight = imgHeight;
-        }
+        if (!state->m_frameHeight)
+            state->m_frameHeight = img.height();
 
-        if (state->frames() * frameWidth > maxSize){
+        if (state->frames() * state->frameWidth() > maxSize){
             struct helper{
                 static int divRoundUp(int a, int b){return (a+b-1)/b;}
             };
-            int rowsNeeded = helper::divRoundUp(state->frames(), helper::divRoundUp(maxSize, frameWidth));
-            if (rowsNeeded * frameHeight > maxSize){
+            int rowsNeeded = helper::divRoundUp(state->frames(), helper::divRoundUp(maxSize, state->frameWidth()));
+            if (rowsNeeded * state->frameHeight() > maxSize){
                 qWarning() << "SpriteEngine: Animation too large to fit in one texture..." << state->source().toLocalFile();
                 qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
             }
             state->m_generatedCount = rowsNeeded;
+            h += state->frameHeight() * rowsNeeded;
+            w = qMax(w, helper::divRoundUp(maxSize, state->frameWidth()));
             m_imageStateCount += rowsNeeded;
         }else{
+            h += state->frameHeight();
+            w = qMax(w, state->frameWidth() * state->frames());
             m_imageStateCount++;
         }
     }
 
     //maxFrames is max number in a line of the texture
-    if (m_maxFrames * frameWidth > maxSize)
-        m_maxFrames = maxSize/frameWidth;
-    QImage image(frameWidth * m_maxFrames, frameHeight * m_imageStateCount, QImage::Format_ARGB32);
+    QImage image(w, h, QImage::Format_ARGB32);
     image.fill(0);
     QPainter p(&image);
     int y = 0;
     foreach (QSGSprite* state, m_sprites){
         QImage img(state->source().toLocalFile());
+        int frameWidth = state->m_frameWidth;
+        int frameHeight = state->m_frameHeight;
         if (img.height() == frameHeight && img.width() <  maxSize){//Simple case
             p.drawImage(0,y,img);
+            state->m_rowY = y;
             y += frameHeight;
-        }else{
+        }else{//Chopping up image case
             state->m_framesPerRow = image.width()/frameWidth;
+            state->m_rowY = y;
             int x = 0;
             int curX = 0;
             int curY = 0;
@@ -435,7 +445,7 @@ int QSGStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
                 return *(options.begin());
             int option = -1;
             qreal r =(qreal) qrand() / (qreal) RAND_MAX;
-            qreal total;
+            qreal total = 0;
             for (QSet<int>::const_iterator iter=options.constBegin();
                 iter!=options.constEnd(); iter++)
                 total += curState->m_to.value(m_states[(*iter)]->name()).toReal();

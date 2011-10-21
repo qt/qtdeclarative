@@ -419,7 +419,7 @@ QImage QSGShaderEffectTexture::toImage() const
        The complex element can be rendered once into the texture, which can
        then be animated freely without the need to render the complex element
        again every frame.
-    \o an opacity layer. 
+    \o an opacity layer.
        ShaderEffectSource allows you to apply an opacity to elements as a group
        rather than each element individually.
     \endlist

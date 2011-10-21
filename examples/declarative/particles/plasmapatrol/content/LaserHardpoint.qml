@@ -81,7 +81,7 @@ Item {
             offset = Math.random() * 100;
         }
         target = container.mapFromItem(targetArg, offset + targetArg.width/2, offset + targetArg.height/2);
-        emitter.pulse(0.10);
+        emitter.pulse(100);
  //       console.log("Fire box: " +  Math.min(container.width/2, target.x) + "," + Math.min(container.height/2, target.y) + " " + (Math.max(container.width/2, target.x) - Math.min(container.width/2, target.x)) + "," + (Math.max(container.height/2, target.y) - Math.min(container.height/2, target.y)));
     }
     Emitter {

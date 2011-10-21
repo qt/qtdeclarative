@@ -50,13 +50,7 @@
 #include <QtQuick1/private/qdeclarativetext_p.h>
 #include <QtQuick1/private/qdeclarativevisualitemmodel_p.h>
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
-#include "../../../shared/util.h"
 #include "incrementalmodel.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_QDeclarative1ListView : public QObject
 {

@@ -1,0 +1,84 @@
+# Name of the project.
+project = Qt Quick
+description = Qt Quick Documentation
+
+# Directories in which to search for files to document and images.
+# By default set to the root directory of the project for sources
+# and headers and qdoc will therefore generate output for each file.
+# Images should be placed in <rootdir>/dic/images and examples in
+# <rootdir>/examples.
+# Paths are relative to the  location of this file.
+
+exampledirs += ../src/examples \
+               ../.. \
+               ../../examples
+
+headerdirs += ../src \
+              ../../src
+
+imagedirs += ../src/images \
+
+sourcedirs += ../src \
+              ../../src
+
+excludedirs += ../src/qtquick1 \
+               ../../src/qtquick1
+
+#indexes = $QT5DOC/doc/html/qt.index
+
+# The following parameters are for creating a qhp file, the qhelpgenerator
+# program can convert the qhp file into a qch file which can be opened in
+# Qt Assistant and/or Qt Creator.
+
+# Defines the name of the project. You cannot use operators (+, =, -) in
+# the name. Properties for this project are set using a qhp.<projectname>.property
+# format.
+qhp.projects = qtquick
+
+# Sets the name of the output qhp file.
+qhp.qtquick.file = qtquick.qhp
+
+# Namespace for the output file. This namespace is used to distinguish between
+# different documentation files in Creator/Assistant. Normal format for MP
+# projects should be: com.nokia.mp.<projectname>.version with version being
+# a number containing a major, minor and revision element. E.g. version 1.0
+# becomes 100.
+qhp.qtquick.namespace = qtquick.200
+
+# Title for the package, will be the main title for the package in
+# Assistant/Creator.
+qhp.qtquick.indexTitle = Qt Quick Documentation
+
+# Extra files to add to the output which are not linked to from anywhere
+# using a qdoc \l command.
+qhp.qtquick.extraFiles = style/qtquick.css \
+                                     index.html
+
+# Only update the name of the project for the next variables.
+qhp.qtquick.virtualFolder  = qdoc
+qhp.qtquick.subprojects = classes
+qhp.qtquick.subprojects.classes.title = Classes
+qhp.qtquick.subprojects.classes.selectors = class fake:headerfile
+qhp.qtquick.subprojects.classes.sortPages = true
+
+
+
+# Do NOT change the variables after this line unless you know what you are doing.
+
+outputdir = ../html
+outputformats = HTML
+
+examples.fileextensions = "*.cpp *.h *.js *.svg *.xml *.ui *.qml"
+examples.imageextensions = "*.png *.jpeg *.jpg *.gif *.mng"
+headers.fileextensions = "*.h *.ch *.h++ *.hh *.hpp *.hxx"
+sources.fileextensions = "*.cpp *.qdoc *.mm *.qml"
+
+HTML.nobreadcrumbs = "true"
+
+HTML.templatedir = .
+HTML.stylesheets = style/qtquick.css
+
+HTML.headerstyles = "  <link rel=\"stylesheet\" type=\"text/css\" href=\"style/qtquick.css\" />\n"
+HTML.endheader = "</head>\n<body>\n"
+
+HTML.footer = "<div class=\"footer\">Copyright (c) 2011 Nokia Corporation and/or its subsidiaries. All rights reserved.</div>\n"

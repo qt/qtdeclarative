@@ -51,8 +51,13 @@
 #include <QtCore/qmath.h>
 #include <QtCore/qcoreapplication.h>
 #include <math.h>
+#include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
+
+#ifndef QML_FLICK_SNAPONETHRESHOLD
+#define QML_FLICK_SNAPONETHRESHOLD 30
+#endif
 
 //----------------------------------------------------------------------------
 
@@ -168,7 +173,7 @@ public:
     virtual void repositionPackageItemAt(QSGItem *item, int index);
     virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
     virtual void resetFirstItemPosition();
-    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &items, const QList<FxViewItem *> &movedBackwards);
+    virtual void moveItemBy(FxViewItem *item, qreal forwards, qreal backwards);
 
     virtual void createHighlight();
     virtual void updateHighlight();
@@ -176,7 +181,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems();
-    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *>*, FxViewItem *);
+    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *, InsertionsResult *);
 
     virtual qreal headerSize() const;
     virtual qreal footerSize() const;
@@ -334,9 +339,15 @@ qreal QSGGridViewPrivate::snapPosAt(qreal pos) const
     Q_Q(const QSGGridView);
     qreal snapPos = 0;
     if (!visibleItems.isEmpty()) {
+        qreal highlightStart = highlightRangeStart;
+        if (isRightToLeftTopToBottom())
+            highlightStart = highlightRangeEndValid ? -size() + highlightRangeEnd : -size();
+
+        pos += highlightStart;
         pos += rowSize()/2;
         snapPos = static_cast<FxGridItemSG*>(visibleItems.first())->rowPos() - visibleIndex / columns * rowSize();
         snapPos = pos - fmodf(pos - snapPos, qreal(rowSize()));
+        snapPos -= highlightStart;
         qreal maxExtent;
         qreal minExtent;
         if (isRightToLeftTopToBottom()) {
@@ -571,6 +582,8 @@ void QSGGridViewPrivate::repositionPackageItemAt(QSGItem *item, int index)
 
 void QSGGridViewPrivate::resetItemPosition(FxViewItem *item, FxViewItem *toItem)
 {
+    if (item == toItem)
+        return;
     FxGridItemSG *toGridItem = static_cast<FxGridItemSG*>(toItem);
     static_cast<FxGridItemSG*>(item)->setPosition(toGridItem->colPos(), toGridItem->rowPos());
 }
@@ -581,9 +594,10 @@ void QSGGridViewPrivate::resetFirstItemPosition()
     item->setPosition(0, 0);
 }
 
-void QSGGridViewPrivate::moveItemBy(FxViewItem *item, const QList<FxViewItem *> &forwards, const QList<FxViewItem *> &backwards)
+void QSGGridViewPrivate::moveItemBy(FxViewItem *item, qreal forwards, qreal backwards)
 {
-    int moveCount = forwards.count() - backwards.count();
+    int moveCount = (forwards / rowSize()) - (backwards / rowSize());
+
     FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
     gridItem->setPosition(gridItem->colPos(), gridItem->rowPos() + ((moveCount / columns) * rowSize()));
 }
@@ -779,6 +793,7 @@ void QSGGridViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeo
     if (item == q) {
         if (newGeometry.height() != oldGeometry.height() || newGeometry.width() != oldGeometry.width()) {
             updateViewport();
+            forceLayout = true;
             q->polish();
         }
     }
@@ -801,61 +816,55 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
 
-    qreal highlightStart;
-    qreal highlightEnd;
-    qreal viewPos;
-    if (isRightToLeftTopToBottom()) {
-        // Handle Right-To-Left exceptions
-        viewPos = -position()-size();
-        highlightStart = highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
-        highlightEnd = highlightRangeEndValid ? size()-highlightRangeStart : highlightRangeEnd;
-    } else {
-        viewPos = position();
-        highlightStart = highlightRangeStart;
-        highlightEnd = highlightRangeEnd;
-    }
+    qreal viewPos = isRightToLeftTopToBottom() ? -position()-size() : position();
 
+    bool strictHighlightRange = haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange;
     if (snapMode != QSGGridView::NoSnap) {
         qreal tempPosition = isRightToLeftTopToBottom() ? -position()-size() : position();
-        FxViewItem *topItem = snapItemAt(tempPosition+highlightStart);
-        FxViewItem *bottomItem = snapItemAt(tempPosition+highlightEnd);
+        if (snapMode == QSGGridView::SnapOneRow && moveReason == Mouse) {
+            // if we've been dragged < rowSize()/2 then bias towards the next row
+            qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+            qreal bias = 0;
+            if (data.velocity > 0 && dist > QML_FLICK_SNAPONETHRESHOLD && dist < rowSize()/2)
+                bias = rowSize()/2;
+            else if (data.velocity < 0 && dist < -QML_FLICK_SNAPONETHRESHOLD && dist > -rowSize()/2)
+                bias = -rowSize()/2;
+            if (isRightToLeftTopToBottom())
+                bias = -bias;
+            tempPosition -= bias;
+        }
+        FxViewItem *topItem = snapItemAt(tempPosition+highlightRangeStart);
+        if (!topItem && strictHighlightRange && currentItem) {
+            // StrictlyEnforceRange always keeps an item in range
+            updateHighlight();
+            topItem = currentItem;
+        }
+        FxViewItem *bottomItem = snapItemAt(tempPosition+highlightRangeEnd);
+        if (!bottomItem && strictHighlightRange && currentItem) {
+            // StrictlyEnforceRange always keeps an item in range
+            updateHighlight();
+            bottomItem = currentItem;
+        }
         qreal pos;
-        if (topItem && bottomItem && haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange) {
-            qreal topPos = qMin(topItem->position() - highlightStart, -maxExtent);
-            qreal bottomPos = qMax(bottomItem->position() - highlightEnd, -minExtent);
-            pos = qAbs(data.move + topPos) < qAbs(data.move + bottomPos) ? topPos : bottomPos;
-        } else if (topItem) {
-            qreal headerPos = 0;
-            if (header)
-                headerPos = isRightToLeftTopToBottom() ? static_cast<FxGridItemSG*>(header)->rowPos() + cellWidth - headerSize() : static_cast<FxGridItemSG*>(header)->rowPos();
-            if (topItem->index == 0 && header && tempPosition+highlightStart < headerPos+headerSize()/2) {
-                pos = isRightToLeftTopToBottom() ? - headerPos + highlightStart - size() : headerPos - highlightStart;
+        bool isInBounds = -position() > maxExtent && -position() <= minExtent;
+        if (topItem && (isInBounds || strictHighlightRange)) {
+            qreal headerPos = header ? static_cast<FxGridItemSG*>(header)->rowPos() : 0;
+            if (topItem->index == 0 && header && tempPosition+highlightRangeStart < headerPos+headerSize()/2 && !strictHighlightRange) {
+                pos = isRightToLeftTopToBottom() ? - headerPos + highlightRangeStart - size() : headerPos - highlightRangeStart;
             } else {
                 if (isRightToLeftTopToBottom())
-                    pos = qMax(qMin(-topItem->position() + highlightStart - size(), -maxExtent), -minExtent);
+                    pos = qMax(qMin(-topItem->position() + highlightRangeStart - size(), -maxExtent), -minExtent);
                 else
-                    pos = qMax(qMin(topItem->position() - highlightStart, -maxExtent), -minExtent);
+                    pos = qMax(qMin(topItem->position() - highlightRangeStart, -maxExtent), -minExtent);
             }
-        } else if (bottomItem) {
+        } else if (bottomItem && isInBounds) {
             if (isRightToLeftTopToBottom())
-                pos = qMax(qMin(-bottomItem->position() + highlightStart - size(), -maxExtent), -minExtent);
+                pos = qMax(qMin(-bottomItem->position() + highlightRangeEnd - size(), -maxExtent), -minExtent);
             else
-                pos = qMax(qMin(bottomItem->position() - highlightStart, -maxExtent), -minExtent);
+                pos = qMax(qMin(bottomItem->position() - highlightRangeEnd, -maxExtent), -minExtent);
         } else {
             QSGItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
-        }
-        if (currentItem && haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange) {
-            updateHighlight();
-            qreal currPos = static_cast<FxGridItemSG*>(currentItem)->rowPos();
-            if (isRightToLeftTopToBottom())
-                pos = -pos-size(); // Transform Pos if required
-            if (pos < currPos + rowSize() - highlightEnd)
-                pos = currPos + rowSize() - highlightEnd;
-            if (pos > currPos - highlightStart)
-                pos = currPos - highlightStart;
-            if (isRightToLeftTopToBottom())
-                pos = -pos-size(); // Untransform
         }
 
         qreal dist = qAbs(data.move + pos);
@@ -873,10 +882,10 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
         if (currentItem) {
             updateHighlight();
             qreal pos = static_cast<FxGridItemSG*>(currentItem)->rowPos();
-            if (viewPos < pos + rowSize() - highlightEnd)
-                viewPos = pos + rowSize() - highlightEnd;
-            if (viewPos > pos - highlightStart)
-                viewPos = pos - highlightStart;
+            if (viewPos < pos + rowSize() - highlightRangeEnd)
+                viewPos = pos + rowSize() - highlightRangeEnd;
+            if (viewPos > pos - highlightRangeStart)
+                viewPos = pos - highlightRangeStart;
             if (isRightToLeftTopToBottom())
                 viewPos = -viewPos-size();
             timeline.reset(data.move);
@@ -914,8 +923,14 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
     if (velocity > 0) {
         if (data.move.value() < minExtent) {
             if (snapMode == QSGGridView::SnapOneRow) {
-                if (FxViewItem *item = firstVisibleItem())
-                    maxDistance = qAbs(item->position() + dataValue);
+                // if we've been dragged < averageSize/2 then bias towards the next item
+                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal bias = dist < rowSize()/2 ? rowSize()/2 : 0;
+                if (isRightToLeftTopToBottom())
+                    bias = -bias;
+                data.flickTarget = -snapPosAt(-dataValue - bias);
+                maxDistance = qAbs(data.flickTarget - data.move.value());
+                velocity = maxVelocity;
             } else {
                 maxDistance = qAbs(minExtent - data.move.value());
             }
@@ -925,8 +940,14 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
     } else {
         if (data.move.value() > maxExtent) {
             if (snapMode == QSGGridView::SnapOneRow) {
-                qreal pos = snapPosAt(-dataValue) + (isRightToLeftTopToBottom() ? 0 : rowSize());
-                maxDistance = qAbs(pos + dataValue);
+                // if we've been dragged < averageSize/2 then bias towards the next item
+                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal bias = -dist < rowSize()/2 ? rowSize()/2 : 0;
+                if (isRightToLeftTopToBottom())
+                    bias = -bias;
+                data.flickTarget = -snapPosAt(-dataValue + bias);
+                maxDistance = qAbs(data.flickTarget - data.move.value());
+                velocity = -maxVelocity;
             } else {
                 maxDistance = qAbs(maxExtent - data.move.value());
             }
@@ -935,7 +956,6 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             data.flickTarget = maxExtent;
     }
     bool overShoot = boundsBehavior == QSGFlickable::DragAndOvershootBounds;
-    qreal highlightStart = isRightToLeftTopToBottom() && highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
     if (maxDistance > 0 || overShoot) {
         // This mode requires the grid to stop exactly on a row boundary.
         qreal v = velocity;
@@ -954,9 +974,20 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             dist = qMin(dist, maxDistance);
             if (v > 0)
                 dist = -dist;
-            qreal distTemp = isRightToLeftTopToBottom() ? -dist : dist;
-            data.flickTarget = -snapPosAt(-(dataValue - highlightStart) + distTemp) + highlightStart;
+            if (snapMode != QSGGridView::SnapOneRow) {
+                qreal distTemp = isRightToLeftTopToBottom() ? -dist : dist;
+                data.flickTarget = -snapPosAt(-dataValue + distTemp);
+            }
             data.flickTarget = isRightToLeftTopToBottom() ? -data.flickTarget+size() : data.flickTarget;
+            if (overShoot) {
+                if (data.flickTarget >= minExtent) {
+                    overshootDist = overShootDistance(vSize);
+                    data.flickTarget += overshootDist;
+                } else if (data.flickTarget <= maxExtent) {
+                    overshootDist = overShootDistance(vSize);
+                    data.flickTarget -= overshootDist;
+                }
+            }
             qreal adjDist = -data.flickTarget + data.move.value();
             if (qAbs(adjDist) > qAbs(dist)) {
                 // Prevent painfully slow flicking - adjust velocity to suit flickDeceleration
@@ -977,14 +1008,14 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
         timeline.reset(data.move);
         timeline.accel(data.move, v, accel, maxDistance + overshootDist);
         timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
-        if (!flickingHorizontally && q->xflick()) {
-            flickingHorizontally = true;
+        if (!hData.flicking && q->xflick()) {
+            hData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingHorizontallyChanged();
             emit q->flickStarted();
         }
-        if (!flickingVertically && q->yflick()) {
-            flickingVertically = true;
+        if (!vData.flicking && q->yflick()) {
+            vData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingVerticallyChanged();
             emit q->flickStarted();
@@ -1482,7 +1513,7 @@ void QSGGridView::viewportMoved()
     d->inViewportMoved = true;
 
     d->lazyRelease = true;
-    if (d->flickingHorizontally || d->flickingVertically) {
+    if (d->hData.flicking || d->vData.flicking) {
         if (yflick()) {
             if (d->vData.velocity > 0)
                 d->bufferMode = QSGGridViewPrivate::BufferBefore;
@@ -1498,28 +1529,17 @@ void QSGGridView::viewportMoved()
         }
     }
     d->refill();
-    if (d->flickingHorizontally || d->flickingVertically || d->movingHorizontally || d->movingVertically)
+    if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QSGGridViewPrivate::Mouse;
     if (d->moveReason != QSGGridViewPrivate::SetIndex) {
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange && d->highlight) {
             // reposition highlight
             qreal pos = d->highlight->position();
-            qreal viewPos;
-            qreal highlightStart;
-            qreal highlightEnd;
-            if (d->isRightToLeftTopToBottom()) {
-                viewPos = -d->position()-d->size();
-                highlightStart = d->highlightRangeStartValid ? d->size()-d->highlightRangeEnd : d->highlightRangeStart;
-                highlightEnd = d->highlightRangeEndValid ? d->size()-d->highlightRangeStart : d->highlightRangeEnd;
-            } else {
-                viewPos = d->position();
-                highlightStart = d->highlightRangeStart;
-                highlightEnd = d->highlightRangeEnd;
-            }
-            if (pos > viewPos + highlightEnd - d->highlight->size())
-                pos = viewPos + highlightEnd - d->highlight->size();
-            if (pos < viewPos + highlightStart)
-                pos = viewPos + highlightStart;
+            qreal viewPos = d->isRightToLeftTopToBottom() ? -d->position()-d->size() : d->position();
+            if (pos > viewPos + d->highlightRangeEnd - d->highlight->size())
+                pos = viewPos + d->highlightRangeEnd - d->highlight->size();
+            if (pos < viewPos + d->highlightRangeStart)
+                pos = viewPos + d->highlightRangeStart;
 
             if (pos != d->highlight->position()) {
                 d->highlightXAnimator->stop();
@@ -1719,7 +1739,7 @@ void QSGGridView::moveCurrentIndexRight()
     }
 }
 
-bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, QList<FxViewItem *> *movedBackwards, QList<FxViewItem *> *addedItems, FxViewItem *firstVisible)
+bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, FxViewItem *firstVisible, InsertionsResult *insertResult)
 {
     Q_Q(QSGGridView);
 
@@ -1734,7 +1754,7 @@ bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
             --i;
         if (visibleItems.at(i)->index + 1 == modelIndex) {
             // Special case of appending an item to the model.
-            index = visibleIndex + visibleItems.count();
+            index = visibleItems.count();
         } else {
             if (modelIndex <= visibleIndex) {
                 // Insert before visible items
@@ -1749,19 +1769,10 @@ bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
         }
     }
 
-    int insertCount = count;
-    if (index < visibleIndex && visibleItems.count()) {
-        insertCount -= visibleIndex - index;
-        index = visibleIndex;
-        modelIndex = visibleIndex;
-    }
-
     qreal tempPos = isRightToLeftTopToBottom() ? -position()-size()+q->width()+1 : position();
-    int to = buffer+tempPos+size()-1;
     int colPos = 0;
     int rowPos = 0;
     if (visibleItems.count()) {
-        index -= visibleIndex;
         if (index < visibleItems.count()) {
             FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.at(index));
             colPos = gridItem->colPos();
@@ -1785,30 +1796,69 @@ bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
             item->index += count;
     }
 
-    int i = 0;
-    bool prevAddedCount = addedItems->count();
-    while (i < insertCount && rowPos <= to + rowSize()*(columns - (colPos/colSize()))/qreal(columns)) {
-        FxViewItem *item = 0;
-        if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
-            if (item->index > modelIndex + i)
-                movedBackwards->append(item);
-            item->index = modelIndex + i;
+    int prevAddedCount = insertResult->addedItems.count();
+    if (firstVisible && rowPos < firstVisible->position()) {
+        // Insert items before the visible item.
+        int insertionIdx = index;
+        int i = count - 1;
+        int from = tempPos - buffer;
+
+        while (i >= 0) {
+            if (rowPos > from) {
+                insertResult->sizeAddedBeforeVisible += rowSize();
+            } else {
+                FxViewItem *item = 0;
+                if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+                    if (item->index > modelIndex + i)
+                        insertResult->movedBackwards.append(item);
+                    item->index = modelIndex + i;
+                }
+                if (!item)
+                    item = createItem(modelIndex + i);
+
+                visibleItems.insert(insertionIdx, item);
+                if (!change.isMove()) {
+                    insertResult->addedItems.append(item);
+                    insertResult->sizeAddedBeforeVisible += rowSize();
+                }
+            }
+            colPos -= colSize();
+            if (colPos < 0) {
+                colPos = colSize() * (columns - 1);
+                rowPos -= rowSize();
+            }
+            index++;
+            i--;
         }
-        if (!item)
-            item = createItem(modelIndex + i);
-        visibleItems.insert(index, item);
-        if (!change.isMove())
-            addedItems->append(item);
-        colPos += colSize();
-        if (colPos > colSize() * (columns-1)) {
-            colPos = 0;
-            rowPos += rowSize();
+    } else {
+        int i = 0;
+        int to = buffer+tempPos+size()-1;
+        while (i < count && rowPos <= to + rowSize()*(columns - (colPos/colSize()))/qreal(columns)) {
+            FxViewItem *item = 0;
+            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+                if (item->index > modelIndex + i)
+                    insertResult->movedBackwards.append(item);
+                item->index = modelIndex + i;
+            }
+            if (!item)
+                item = createItem(modelIndex + i);
+
+            visibleItems.insert(index, item);
+            if (!change.isMove())
+                insertResult->addedItems.append(item);
+            colPos += colSize();
+            if (colPos > colSize() * (columns-1)) {
+                colPos = 0;
+                rowPos += rowSize();
+            }
+            ++index;
+            ++i;
         }
-        ++index;
-        ++i;
     }
 
-    return addedItems->count() > prevAddedCount;
+    updateVisibleIndex();
+
+    return insertResult->addedItems.count() > prevAddedCount;
 }
 
 /*!

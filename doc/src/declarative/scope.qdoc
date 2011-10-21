@@ -126,7 +126,7 @@ require the use of the JavaScript \c this property.
 
 Care must be used when accessing \l {Attached Properties} from bindings due
 to their interaction with the scope object.  Conceptually attached properties
-exist on \e all objects, even if they only have an effect on a subset of those.
+exist on \i all objects, even if they only have an effect on a subset of those.
 Consequently unqualified attached property reads will always resolve to an
 attached property on the scope object, which is not always what the programmer
 intended.

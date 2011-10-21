@@ -53,9 +53,7 @@
 // We mean it.
 //
 
-#include <QtCore/QPointer>
-
-#include "private/qdeclarativedebugservice_p.h"
+#include "qdeclarativedebugservice_p.h"
 
 QT_BEGIN_HEADER
 
@@ -64,7 +62,6 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarativeEngine;
-class QJSEngine;
 class QV8DebugServicePrivate;
 
 class QV8DebugService : public QDeclarativeDebugService
@@ -79,19 +76,15 @@ public:
     void addEngine(QDeclarativeEngine *);
     void removeEngine(QDeclarativeEngine *);
 
-    void debugMessageHandler(QByteArray message);
+    void debugMessageHandler(const QString &message);
     void executionStopped();
 
-    void appendSourcePath(QByteArray message);
+    void appendSourcePath(const QString &message);
 
-    void signalEmitted(const char *signal);
+    void signalEmitted(const QString &signal);
 
 protected:
     void messageReceived(const QByteArray &);
-
-private:
-    void sendDebugMessage(const QByteArray &msg);
-    QByteArray packMessage(QByteArray &message);
 
 private:
     Q_DISABLE_COPY(QV8DebugService)

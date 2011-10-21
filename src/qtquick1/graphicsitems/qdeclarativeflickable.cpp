@@ -170,9 +170,7 @@ QDeclarative1FlickablePrivate::QDeclarative1FlickablePrivate()
   : contentItem(new QDeclarativeItem)
     , hData(this, &QDeclarative1FlickablePrivate::setRoundedViewportX)
     , vData(this, &QDeclarative1FlickablePrivate::setRoundedViewportY)
-    , flickingHorizontally(false), flickingVertically(false)
     , hMoved(false), vMoved(false)
-    , movingHorizontally(false), movingVertically(false)
     , stealMouse(false), pressed(false), interactive(true), calcVelocity(false)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
     , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY), reportedVelocitySmoothing(100)
@@ -296,18 +294,18 @@ void QDeclarative1FlickablePrivate::flick(AxisData &data, qreal minExtent, qreal
         else
             timeline.accel(data.move, v, deceleration, maxDistance);
         timeline.callback(QDeclarative1TimeLineCallback(&data.move, fixupCallback, this));
-        if (!flickingHorizontally && q->xflick()) {
-            flickingHorizontally = true;
+        if (!hData.flicking && q->xflick()) {
+            hData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingHorizontallyChanged();
-            if (!flickingVertically)
+            if (!vData.flicking)
                 emit q->flickStarted();
         }
-        if (!flickingVertically && q->yflick()) {
-            flickingVertically = true;
+        if (!vData.flicking && q->yflick()) {
+            vData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingVerticallyChanged();
-            if (!flickingHorizontally)
+            if (!hData.flicking)
                 emit q->flickStarted();
         }
     } else {
@@ -617,11 +615,11 @@ void QDeclarative1Flickable::setInteractive(bool interactive)
     Q_D(QDeclarative1Flickable);
     if (interactive != d->interactive) {
         d->interactive = interactive;
-        if (!interactive && (d->flickingHorizontally || d->flickingVertically)) {
+        if (!interactive && (d->hData.flicking || d->vData.flicking)) {
             d->timeline.clear();
             d->vTime = d->timeline.time();
-            d->flickingHorizontally = false;
-            d->flickingVertically = false;
+            d->hData.flicking = false;
+            d->vData.flicking = false;
             emit flickingChanged();
             emit flickingHorizontallyChanged();
             emit flickingVerticallyChanged();
@@ -774,8 +772,8 @@ void QDeclarative1FlickablePrivate::handleMousePressEvent(QGraphicsSceneMouseEve
     pressPos = event->pos();
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
-    flickingHorizontally = false;
-    flickingVertically = false;
+    hData.flicking = false;
+    vData.flicking = false;
     QDeclarativeItemPrivate::start(pressTime);
     QDeclarativeItemPrivate::start(velocityTime);
 }
@@ -900,17 +898,14 @@ void QDeclarative1FlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseE
         return;
 
     // if we drag then pause before release we should not cause a flick.
-    if (QDeclarativeItemPrivate::elapsed(lastPosTime) < 100) {
-        vData.updateVelocity();
-        hData.updateVelocity();
-    } else {
-        hData.velocity = 0.0;
-        vData.velocity = 0.0;
-    }
+    qint64 elapsed = QDeclarativeItemPrivate::elapsed(lastPosTime);
+     
+    vData.updateVelocity();
+    hData.updateVelocity();
 
     vTime = timeline.time();
 
-    qreal velocity = vData.velocity;
+    qreal velocity = elapsed < 100 ? vData.velocity : 0;
     if (vData.atBeginning || vData.atEnd)
         velocity /= 2;
     if (q->yflick() && qAbs(velocity) > MinimumFlickVelocity && qAbs(event->pos().y() - pressPos.y()) > FlickThreshold) {
@@ -921,7 +916,7 @@ void QDeclarative1FlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseE
         fixupY();
     }
 
-    velocity = hData.velocity;
+    velocity = elapsed < 100 ? hData.velocity : 0;
     if (hData.atBeginning || hData.atEnd)
         velocity /= 2;
     if (q->xflick() && qAbs(velocity) > MinimumFlickVelocity && qAbs(event->pos().x() - pressPos.x()) > FlickThreshold) {
@@ -987,9 +982,9 @@ void QDeclarative1Flickable::wheelEvent(QGraphicsSceneWheelEvent *event)
             valid = true;
         }
         if (valid) {
-            d->flickingVertically = false;
+            d->vData.flicking = false;
             d->flickY(d->vData.velocity);
-            if (d->flickingVertically) {
+            if (d->vData.flicking) {
                 d->vMoved = true;
                 movementStarting();
             }
@@ -1005,9 +1000,9 @@ void QDeclarative1Flickable::wheelEvent(QGraphicsSceneWheelEvent *event)
             valid = true;
         }
         if (valid) {
-            d->flickingHorizontally = false;
+            d->hData.flicking = false;
             d->flickX(d->hData.velocity);
-            if (d->flickingHorizontally) {
+            if (d->hData.flicking) {
                 d->hMoved = true;
                 movementStarting();
             }
@@ -1156,7 +1151,7 @@ void QDeclarative1Flickable::viewportMoved()
         }
     }
 
-    if (!d->vData.inOvershoot && !d->vData.fixingUp && d->flickingVertically
+    if (!d->vData.inOvershoot && !d->vData.fixingUp && d->vData.flicking
             && (d->vData.move.value() > minYExtent() || d->vData.move.value() < maxYExtent())
             && qAbs(d->vData.smoothVelocity.value()) > 100) {
         // Increase deceleration if we've passed a bound
@@ -1166,7 +1161,7 @@ void QDeclarative1Flickable::viewportMoved()
         d->timeline.accel(d->vData.move, -d->vData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
         d->timeline.callback(QDeclarative1TimeLineCallback(&d->vData.move, d->fixupY_callback, d));
     }
-    if (!d->hData.inOvershoot && !d->hData.fixingUp && d->flickingHorizontally
+    if (!d->hData.inOvershoot && !d->hData.fixingUp && d->hData.flicking
             && (d->hData.move.value() > minXExtent() || d->hData.move.value() < maxXExtent())
             && qAbs(d->hData.smoothVelocity.value()) > 100) {
         // Increase deceleration if we've passed a bound
@@ -1198,7 +1193,7 @@ void QDeclarative1Flickable::geometryChanged(const QRectF &newGeometry,
             emit contentWidthChanged();
         }
         // Make sure that we're entirely in view.
-        if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+        if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QDeclarative1FlickablePrivate::Immediate;
             d->fixupX();
         }
@@ -1211,7 +1206,7 @@ void QDeclarative1Flickable::geometryChanged(const QRectF &newGeometry,
             emit contentHeightChanged();
         }
         // Make sure that we're entirely in view.
-        if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+        if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QDeclarative1FlickablePrivate::Immediate;
             d->fixupY();
         }
@@ -1366,7 +1361,7 @@ void QDeclarative1Flickable::setContentWidth(qreal w)
     else
         d->contentItem->setWidth(w);
     // Make sure that we're entirely in view.
-    if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+    if (!d->pressed && !d->hData.moving && !d->vData.moving) {
         d->fixupMode = QDeclarative1FlickablePrivate::Immediate;
         d->fixupX();
     } else if (!d->pressed && d->hData.fixingUp) {
@@ -1394,7 +1389,7 @@ void QDeclarative1Flickable::setContentHeight(qreal h)
     else
         d->contentItem->setHeight(h);
     // Make sure that we're entirely in view.
-    if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+    if (!d->pressed && !d->hData.moving && !d->vData.moving) {
         d->fixupMode = QDeclarative1FlickablePrivate::Immediate;
         d->fixupY();
     } else if (!d->pressed && d->vData.fixingUp) {
@@ -1651,7 +1646,7 @@ void QDeclarative1Flickable::setFlickDeceleration(qreal deceleration)
 bool QDeclarative1Flickable::isFlicking() const
 {
     Q_D(const QDeclarative1Flickable);
-    return d->flickingHorizontally ||  d->flickingVertically;
+    return d->hData.flicking ||  d->vData.flicking;
 }
 
 /*!
@@ -1665,13 +1660,13 @@ bool QDeclarative1Flickable::isFlicking() const
 bool QDeclarative1Flickable::isFlickingHorizontally() const
 {
     Q_D(const QDeclarative1Flickable);
-    return d->flickingHorizontally;
+    return d->hData.flicking;
 }
 
 bool QDeclarative1Flickable::isFlickingVertically() const
 {
     Q_D(const QDeclarative1Flickable);
-    return d->flickingVertically;
+    return d->vData.flicking;
 }
 
 /*!
@@ -1707,7 +1702,7 @@ void QDeclarative1Flickable::setPressDelay(int delay)
 bool QDeclarative1Flickable::isMoving() const
 {
     Q_D(const QDeclarative1Flickable);
-    return d->movingHorizontally || d->movingVertically;
+    return d->hData.moving || d->vData.moving;
 }
 
 /*!
@@ -1722,30 +1717,30 @@ bool QDeclarative1Flickable::isMoving() const
 bool QDeclarative1Flickable::isMovingHorizontally() const
 {
     Q_D(const QDeclarative1Flickable);
-    return d->movingHorizontally;
+    return d->hData.moving;
 }
 
 bool QDeclarative1Flickable::isMovingVertically() const
 {
     Q_D(const QDeclarative1Flickable);
-    return d->movingVertically;
+    return d->vData.moving;
 }
 
 void QDeclarative1Flickable::movementStarting()
 {
     Q_D(QDeclarative1Flickable);
-    if (d->hMoved && !d->movingHorizontally) {
-        d->movingHorizontally = true;
+    if (d->hMoved && !d->hData.moving) {
+        d->hData.moving = true;
         emit movingChanged();
         emit movingHorizontallyChanged();
-        if (!d->movingVertically)
+        if (!d->vData.moving)
             emit movementStarted();
     }
-    else if (d->vMoved && !d->movingVertically) {
-        d->movingVertically = true;
+    else if (d->vMoved && !d->vData.moving) {
+        d->vData.moving = true;
         emit movingChanged();
         emit movingVerticallyChanged();
-        if (!d->movingHorizontally)
+        if (!d->hData.moving)
             emit movementStarted();
     }
 }
@@ -1762,20 +1757,20 @@ void QDeclarative1Flickable::movementEnding()
 void QDeclarative1Flickable::movementXEnding()
 {
     Q_D(QDeclarative1Flickable);
-    if (d->flickingHorizontally) {
-        d->flickingHorizontally = false;
+    if (d->hData.flicking) {
+        d->hData.flicking = false;
         emit flickingChanged();
         emit flickingHorizontallyChanged();
-        if (!d->flickingVertically)
+        if (!d->vData.flicking)
            emit flickEnded();
     }
     if (!d->pressed && !d->stealMouse) {
-        if (d->movingHorizontally) {
-            d->movingHorizontally = false;
+        if (d->hData.moving) {
+            d->hData.moving = false;
             d->hMoved = false;
             emit movingChanged();
             emit movingHorizontallyChanged();
-            if (!d->movingVertically)
+            if (!d->vData.moving)
                 emit movementEnded();
         }
     }
@@ -1785,20 +1780,20 @@ void QDeclarative1Flickable::movementXEnding()
 void QDeclarative1Flickable::movementYEnding()
 {
     Q_D(QDeclarative1Flickable);
-    if (d->flickingVertically) {
-        d->flickingVertically = false;
+    if (d->vData.flicking) {
+        d->vData.flicking = false;
         emit flickingChanged();
         emit flickingVerticallyChanged();
-        if (!d->flickingHorizontally)
+        if (!d->hData.flicking)
            emit flickEnded();
     }
     if (!d->pressed && !d->stealMouse) {
-        if (d->movingVertically) {
-            d->movingVertically = false;
+        if (d->vData.moving) {
+            d->vData.moving = false;
             d->vMoved = false;
             emit movingChanged();
             emit movingVerticallyChanged();
-            if (!d->movingHorizontally)
+            if (!d->hData.moving)
                 emit movementEnded();
         }
     }

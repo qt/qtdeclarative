@@ -112,23 +112,23 @@ static bool nodeLessThanWithRenderOrder(QSGGeometryNode *a, QSGGeometryNode *b)
 }
 
 
-IndexGeometryNodePair::IndexGeometryNodePair(int i, QSGGeometryNode *node)
+QSGDefaultRenderer::IndexGeometryNodePair::IndexGeometryNodePair(int i, QSGGeometryNode *node)
     : QPair<int, QSGGeometryNode *>(i, node)
 {
 }
 
-bool IndexGeometryNodePair::operator < (const IndexGeometryNodePair &other) const
+bool QSGDefaultRenderer::IndexGeometryNodePair::operator < (const QSGDefaultRenderer::IndexGeometryNodePair &other) const
 {
     return nodeLessThan(second, other.second);
 }
 
 
-IndexGeometryNodePairHeap::IndexGeometryNodePairHeap()
+QSGDefaultRenderer::IndexGeometryNodePairHeap::IndexGeometryNodePairHeap()
     : v(64)
 {
 }
 
-void IndexGeometryNodePairHeap::insert(const IndexGeometryNodePair &x)
+void QSGDefaultRenderer::IndexGeometryNodePairHeap::insert(const QSGDefaultRenderer::IndexGeometryNodePair &x)
 {
     int i = v.size();
     v.add(x);
@@ -138,7 +138,7 @@ void IndexGeometryNodePairHeap::insert(const IndexGeometryNodePair &x)
     }
 }
 
-IndexGeometryNodePair IndexGeometryNodePairHeap::pop()
+QSGDefaultRenderer::IndexGeometryNodePair QSGDefaultRenderer::IndexGeometryNodePairHeap::pop()
 {
     IndexGeometryNodePair x = top();
     if (v.size() > 1)
@@ -377,7 +377,7 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
 #ifdef FORCE_NO_REORDER
     static bool reorder = false;
 #else
-    static bool reorder = !qApp->arguments().contains(QLatin1String("--no-reorder"));
+    static bool reorder = qApp->arguments().contains(QLatin1String("--reorder"));
 #endif
 
     if (reorder && node->firstChild() != node->lastChild() && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
@@ -468,7 +468,10 @@ void QSGDefaultRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
         bool changeClip = geomNode->clipList() != m_currentClip;
         QSGRenderer::ClipType clipType = QSGRenderer::NoClip;
         if (changeClip) {
+            // The clip function relies on there not being any depth testing..
+            glDisable(GL_DEPTH_TEST);
             clipType = updateStencilClip(geomNode->clipList());
+            glEnable(GL_DEPTH_TEST);
             m_currentClip = geomNode->clipList();
 #ifdef FORCE_NO_REORDER
             glDepthMask(false);

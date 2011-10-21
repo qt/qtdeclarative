@@ -225,6 +225,8 @@ int QSGDistanceFieldTextMaterial::compare(const QSGMaterial *o) const
 {
     Q_ASSERT(o && type() == o->type());
     const QSGDistanceFieldTextMaterial *other = static_cast<const QSGDistanceFieldTextMaterial *>(o);
+    if (m_glyph_cache != other->m_glyph_cache)
+        return m_glyph_cache - other->m_glyph_cache;
     if (m_glyph_cache->fontScale() != other->m_glyph_cache->fontScale()) {
         qreal s1 = m_glyph_cache->fontScale();
         qreal s2 = other->m_glyph_cache->fontScale();

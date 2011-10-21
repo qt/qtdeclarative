@@ -145,7 +145,7 @@ private:
 
     bool definesEmptyList(const QString &);
 
-    QByteArray listElementTypeName;
+    QString listElementTypeName;
 };
 
 

@@ -77,8 +77,7 @@ public:
     bool ownsTexture() const { return m_owns_texture; }
 
     void setTextureId(int id);
-    int textureId() const { return m_texture_id; }
-
+    int textureId() const;
     void setTextureSize(const QSize &size) { m_texture_size = size; }
     QSize textureSize() const { return m_texture_size; }
 
@@ -92,6 +91,12 @@ public:
     const QImage &image() { return m_image; }
 
     virtual void bind();
+
+    static QSGPlainTexture *fromImage(const QImage &image) {
+        QSGPlainTexture *t = new QSGPlainTexture();
+        t->setImage(image);
+        return t;
+    }
 
 protected:
     QImage m_image;

@@ -82,12 +82,8 @@ TestCase {
             }
         }
 
-        function skipSingle(msg, file, line) {
-            failmsg = "skipSingle:" + msg
-        }
-
-        function skipAll(msg, file, line) {
-            failmsg = "skipAll:" + msg
+        function skip(msg, file, line) {
+            failmsg = "skip:" + msg
         }
     }
 
@@ -271,7 +267,7 @@ TestCase {
             testCase.skip("foo")
         } catch (e) {
             compare(e.message, "QtQuickTest::skip")
-            compare(functions.failmsg, "skipSingle:foo")
+            compare(functions.failmsg, "skip:foo")
             caught = true
         }
         verify(caught)
@@ -281,27 +277,7 @@ TestCase {
             testCase.skip()
         } catch (e) {
             compare(e.message, "QtQuickTest::skip")
-            compare(functions.failmsg, "skipSingle:")
-            caught = true
-        }
-        verify(caught)
-
-        caught = false
-        try {
-            testCase.skipAll("foo")
-        } catch (e) {
-            compare(e.message, "QtQuickTest::skip")
-            compare(functions.failmsg, "skipAll:foo")
-            caught = true
-        }
-        verify(caught)
-
-        caught = false
-        try {
-            testCase.skipAll()
-        } catch (e) {
-            compare(e.message, "QtQuickTest::skip")
-            compare(functions.failmsg, "skipAll:")
+            compare(functions.failmsg, "skip:")
             caught = true
         }
         verify(caught)

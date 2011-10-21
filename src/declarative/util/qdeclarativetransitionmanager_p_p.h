@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "private/qdeclarativestateoperations_p.h"
+#include "qdeclarativestateoperations_p.h"
 
 QT_BEGIN_NAMESPACE
 

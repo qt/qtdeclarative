@@ -56,7 +56,6 @@ QT_BEGIN_NAMESPACE
     Note that Attractor has the standard Item x,y,width and height properties.
     Like other affectors, these represent the affected area. They
     do not represent the 0x0 point which is the target of the attraction.
-
 */
 
 
@@ -69,8 +68,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real QtQuick.Particles2::PointAttractor::pointY
 
-    The x coordinate of the attracting point. This is relative
-    to the x coordinate of the Attractor.
+    The y coordinate of the attracting point. This is relative
+    to the y coordinate of the Attractor.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::PointAttractor::strength
@@ -116,8 +115,8 @@ bool QSGAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     if (m_strength == 0.0)
         return false;
-    qreal dx = m_x - d->curX();
-    qreal dy = m_y - d->curY();
+    qreal dx = m_x+m_offset.x() - d->curX();
+    qreal dy = m_y+m_offset.y() - d->curY();
     qreal r = sqrt((dx*dx) + (dy*dy));
     qreal theta = atan2(dy,dx);
     qreal ds = 0;

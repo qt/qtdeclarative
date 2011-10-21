@@ -134,6 +134,7 @@ private:
                           const QString &baseName);
 
 
+    // XXX thread
     QStringList filePluginPath;
     QStringList fileImportPath;
 

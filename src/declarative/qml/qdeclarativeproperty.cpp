@@ -40,21 +40,21 @@
 ****************************************************************************/
 
 #include "qdeclarativeproperty.h"
-#include "private/qdeclarativeproperty_p.h"
+#include "qdeclarativeproperty_p.h"
 
 #include "qdeclarative.h"
-#include "private/qdeclarativebinding_p.h"
+#include "qdeclarativebinding_p.h"
 #include "qdeclarativecontext.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativeboundsignal_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativeboundsignal_p.h"
 #include "qdeclarativeengine.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativedata_p.h"
-#include "private/qdeclarativestringconverters_p.h"
-#include "private/qdeclarativelist_p.h"
-#include "private/qdeclarativecompiler_p.h"
-#include "private/qdeclarativevmemetaobject_p.h"
-#include "private/qdeclarativeexpression_p.h"
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativedata_p.h"
+#include "qdeclarativestringconverters_p.h"
+#include "qdeclarativelist_p.h"
+#include "qdeclarativecompiler_p.h"
+#include "qdeclarativevmemetaobject_p.h"
+#include "qdeclarativeexpression_p.h"
 
 #include <QStringList>
 #include <QtCore/qdebug.h>
@@ -285,11 +285,18 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
 
             QMetaProperty vtProp = typeObject->metaObject()->property(idx);
 
+            typedef QDeclarativePropertyCache::Data PCD;
+
+            Q_ASSERT(PCD::flagsForProperty(vtProp) <= PCD::ValueTypeFlagMask);
+            Q_ASSERT(vtProp.userType() <= 0xFF);
+            Q_ASSERT(idx <= 0xFF);
+
             object = currentObject;
             core = *property;
-            valueType.flags = QDeclarativePropertyCache::Data::flagsForProperty(vtProp);
-            valueType.valueTypeCoreIdx = idx;
-            valueType.valueTypePropType = vtProp.userType();
+            core.setFlags(core.getFlags() | PCD::IsValueTypeVirtual);
+            core.valueTypeFlags = PCD::flagsForProperty(vtProp);
+            core.valueTypePropType = vtProp.userType();
+            core.valueTypeCoreIndex = idx;
 
             return; 
         } else {
@@ -413,7 +420,7 @@ const char *QDeclarativeProperty::propertyTypeName() const
         else valueType = QDeclarativeValueTypeFactory::valueType(d->core.propType);
         Q_ASSERT(valueType);
 
-        const char *rv = valueType->metaObject()->property(d->valueType.valueTypeCoreIdx).typeName();
+        const char *rv = valueType->metaObject()->property(d->core.valueTypeCoreIndex).typeName();
 
         if (!ep) delete valueType;
 
@@ -437,8 +444,10 @@ bool QDeclarativeProperty::operator==(const QDeclarativeProperty &other) const
     // from the other members
     return d->object == other.d->object &&
            d->core.coreIndex == other.d->core.coreIndex &&
-           d->valueType.valueTypeCoreIdx == other.d->valueType.valueTypeCoreIdx &&
-           d->valueType.valueTypePropType == other.d->valueType.valueTypePropType;
+           d->core.isValueTypeVirtual() == other.d->core.isValueTypeVirtual() &&
+           (!d->core.isValueTypeVirtual() ||
+            (d->core.valueTypeCoreIndex == other.d->core.valueTypeCoreIndex &&
+             d->core.valueTypePropType == other.d->core.valueTypePropType));
 }
 
 /*!
@@ -452,14 +461,14 @@ int QDeclarativeProperty::propertyType() const
 
 bool QDeclarativePropertyPrivate::isValueType() const
 {
-    return valueType.valueTypeCoreIdx != -1;
+    return core.isValueTypeVirtual();
 }
 
 int QDeclarativePropertyPrivate::propertyType() const
 {
     uint type = this->type();
     if (isValueType()) {
-        return valueType.valueTypePropType;
+        return core.valueTypePropType;
     } else if (type & QDeclarativeProperty::Property) {
         if (core.propType == (int)QVariant::LastType)
             return qMetaTypeId<QVariant>();
@@ -601,7 +610,8 @@ QString QDeclarativeProperty::name() const
             else valueType = QDeclarativeValueTypeFactory::valueType(d->core.propType);
             Q_ASSERT(valueType);
 
-            rv += QString::fromUtf8(valueType->metaObject()->property(d->valueType.valueTypeCoreIdx).name());
+            const char *vtName = valueType->metaObject()->property(d->core.valueTypeCoreIndex).name();
+            rv += QString::fromUtf8(vtName);
 
             if (!ep) delete valueType;
 
@@ -657,7 +667,8 @@ QDeclarativePropertyPrivate::binding(const QDeclarativeProperty &that)
     if (!that.d || !that.isProperty() || !that.d->object)
         return 0;
 
-    return binding(that.d->object, that.d->core.coreIndex, that.d->valueType.valueTypeCoreIdx);
+    return binding(that.d->object, that.d->core.coreIndex, 
+                   that.d->core.getValueTypeCoreIndex());
 }
 
 /*!
@@ -685,7 +696,8 @@ QDeclarativePropertyPrivate::setBinding(const QDeclarativeProperty &that,
     }
 
     return that.d->setBinding(that.d->object, that.d->core.coreIndex, 
-                              that.d->valueType.valueTypeCoreIdx, newBinding, flags);
+                              that.d->core.getValueTypeCoreIndex(),
+                              newBinding, flags);
 }
 
 QDeclarativeAbstractBinding *
@@ -1003,8 +1015,7 @@ QVariant QDeclarativePropertyPrivate::readValueProperty()
 
         valueType->read(object, core.coreIndex);
 
-        QVariant rv =
-            valueType->metaObject()->property(this->valueType.valueTypeCoreIdx).read(valueType);
+        QVariant rv = valueType->metaObject()->property(core.valueTypeCoreIndex).read(valueType);
 
         if (!ep) delete valueType;
         return rv;
@@ -1070,16 +1081,25 @@ bool QDeclarativePropertyPrivate::writeEnumProperty(const QMetaProperty &prop, i
 
 bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, WriteFlags flags)
 {
+    return writeValueProperty(object, engine, core, value, effectiveContext(), flags);
+}
+
+bool 
+QDeclarativePropertyPrivate::writeValueProperty(QObject *object, QDeclarativeEngine *engine,
+                                                const QDeclarativePropertyCache::Data &core, 
+                                                const QVariant &value, 
+                                                QDeclarativeContextData *context, WriteFlags flags)
+{
     // Remove any existing bindings on this property
-    if (!(flags & DontRemoveBinding) &&
-        (type() & QDeclarativeProperty::Property) && object) {
+    if (!(flags & DontRemoveBinding) && object) {
         QDeclarativeAbstractBinding *binding = setBinding(object, core.coreIndex,
-                                                          valueType.valueTypeCoreIdx, 0, flags);
+                                                          core.getValueTypeCoreIndex(), 
+                                                          0, flags);
         if (binding) binding->destroy();
     }
 
     bool rv = false;
-    if (isValueType()) {
+    if (core.isValueTypeVirtual()) {
         QDeclarativeEnginePrivate *ep = engine?QDeclarativeEnginePrivate::get(engine):0;
 
         QDeclarativeValueType *writeBack = 0;
@@ -1092,24 +1112,26 @@ bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, Writ
         writeBack->read(object, core.coreIndex);
 
         QDeclarativePropertyCache::Data data = core;
-        data.setFlags(valueType.flags);
-        data.coreIndex = valueType.valueTypeCoreIdx;
-        data.propType = valueType.valueTypePropType;
-        rv = write(writeBack, data, value, effectiveContext(), flags);
+        data.setFlags(QDeclarativePropertyCache::Data::Flag(core.valueTypeFlags));
+        data.coreIndex = core.valueTypeCoreIndex;
+        data.propType = core.valueTypePropType;
+
+        rv = write(writeBack, data, value, context, flags);
 
         writeBack->write(object, core.coreIndex, flags);
         if (!ep) delete writeBack;
 
     } else {
 
-        rv = write(object, core, value, effectiveContext(), flags);
+        rv = write(object, core, value, context, flags);
 
     }
 
     return rv;
 }
 
-bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePropertyCache::Data &property, 
+bool QDeclarativePropertyPrivate::write(QObject *object, 
+                                        const QDeclarativePropertyCache::Data &property, 
                                         const QVariant &value, QDeclarativeContextData *context, 
                                         WriteFlags flags)
 {
@@ -1272,33 +1294,31 @@ bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePrope
 }
 
 // Returns true if successful, false if an error description was set on expression
-bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that, 
+bool QDeclarativePropertyPrivate::writeBinding(QObject *object, 
+                                               const QDeclarativePropertyCache::Data &core,
                                                QDeclarativeJavaScriptExpression *expression, 
                                                v8::Handle<v8::Value> result, bool isUndefined,
                                                WriteFlags flags)
 {
-    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(expression->context()->engine);
+    Q_ASSERT(object);
+    Q_ASSERT(core.coreIndex != -1);
 
-    QDeclarativePropertyPrivate *pp = that.d;
-
-    if (!pp)
-        return true;
-    
-    QObject *object = that.object();
-    int type = that.propertyType();
+    QDeclarativeContextData *context = expression->context();
+    QDeclarativeEngine *engine = context->engine;
+    QV8Engine *v8engine = QDeclarativeEnginePrivate::getV8Engine(engine);
 
 #define QUICK_STORE(cpptype, conversion) \
         { \
             cpptype o = (conversion); \
             int status = -1; \
             void *argv[] = { &o, 0, &status, &flags }; \
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, pp->core.coreIndex, argv); \
+            QMetaObject::metacall(object, QMetaObject::WriteProperty, core.coreIndex, argv); \
             return true; \
         } \
 
 
-    if (object && pp->valueType.valueTypeCoreIdx == -1) {
-        switch (type) {
+    if (!isUndefined && !core.isValueTypeVirtual()) {
+        switch (core.propType) {
         case QMetaType::Int:
             if (result->IsInt32()) 
                 QUICK_STORE(int, result->Int32Value())
@@ -1315,43 +1335,49 @@ bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that,
             break;
         case QMetaType::QString:
             if (result->IsString())
-                QUICK_STORE(QString, engine->toString(result))
+                QUICK_STORE(QString, v8engine->toString(result))
             break;
         default:
             break;
         }
     }
-
 #undef QUICK_STORE
+
+    int type = core.isValueTypeVirtual()?core.valueTypePropType:core.propType;
 
     QDeclarativeDeleteWatcher watcher(expression);
 
     QVariant value;
+    bool isVmeProperty = core.isVMEProperty();
 
     if (isUndefined) {
-    } else if (that.propertyTypeCategory() == QDeclarativeProperty::List) {
-        value = engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
-    } else if (result->IsNull() && that.propertyTypeCategory() == QDeclarativeProperty::Object) {
+    } else if (core.isQList()) {
+        value = v8engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
+    } else if (result->IsNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)0);
-    } else {
-        value = engine->toVariant(result, type);
+    } else if (!isVmeProperty) {
+        value = v8engine->toVariant(result, type);
     }
 
     if (expression->error.isValid()) {
         return false;
-    } else if (isUndefined && that.isResettable()) {
-        that.reset();
+    } else if (isUndefined && core.isResettable()) {
+        void *args[] = { 0 };
+        QMetaObject::metacall(object, QMetaObject::ResetProperty, core.coreIndex, args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
-        QDeclarativePropertyPrivate::write(that, QVariant(), flags);
+        writeValueProperty(object, engine, core, QVariant(), context, flags);
     } else if (isUndefined) {
         expression->error.setDescription(QLatin1String("Unable to assign [undefined] to ") +
-                                         QLatin1String(QMetaType::typeName(type)) +
-                                         QLatin1String(" ") + that.name());
+                                         QLatin1String(QMetaType::typeName(type))); 
         return false;
     } else if (result->IsFunction()) {
         expression->error.setDescription(QLatin1String("Unable to assign a function to a property."));
         return false;
-    } else if (object && !QDeclarativePropertyPrivate::write(that, value, flags)) {
+    } else if (isVmeProperty) {
+        typedef QDeclarativeVMEMetaObject VMEMO;
+        VMEMO *vmemo = static_cast<VMEMO *>(const_cast<QMetaObject *>(object->metaObject()));
+        vmemo->setVMEProperty(core.coreIndex, result);
+    } else if (!writeValueProperty(object, engine, core, value, context, flags)) {
 
         if (watcher.wasDeleted()) 
             return true;
@@ -1368,6 +1394,23 @@ bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that,
     }
 
     return true;
+}
+
+bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that, 
+                                               QDeclarativeJavaScriptExpression *expression, 
+                                               v8::Handle<v8::Value> result, bool isUndefined,
+                                               WriteFlags flags)
+{
+    QDeclarativePropertyPrivate *pp = that.d;
+
+    if (!pp)
+        return true;
+
+    QObject *object = that.object();
+    if (!object)
+        return true;
+
+    return writeBinding(object, pp->core, expression, result, isUndefined, flags);
 }
 
 const QMetaObject *QDeclarativePropertyPrivate::rawMetaObjectForType(QDeclarativeEnginePrivate *engine, int userType)
@@ -1546,7 +1589,7 @@ int QDeclarativeProperty::index() const
 
 int QDeclarativePropertyPrivate::valueTypeCoreIndex(const QDeclarativeProperty &that)
 {
-    return that.d ? that.d->valueType.valueTypeCoreIdx : -1;
+    return that.d ? that.d->core.getValueTypeCoreIndex() : -1;
 }
 
 /*!
@@ -1557,73 +1600,38 @@ int QDeclarativePropertyPrivate::bindingIndex(const QDeclarativeProperty &that)
 {
     if (!that.d)
         return -1;
-    int rv = that.d->core.coreIndex;
-    if (rv != -1 && that.d->valueType.valueTypeCoreIdx != -1)
-        rv = rv | (that.d->valueType.valueTypeCoreIdx << 24);
+    return bindingIndex(that.d->core);
+}
+
+int QDeclarativePropertyPrivate::bindingIndex(const QDeclarativePropertyCache::Data &that)
+{
+    int rv = that.coreIndex;
+    if (rv != -1 && that.isValueTypeVirtual())
+        rv = rv | (that.valueTypeCoreIndex << 24);
     return rv;
 }
 
-struct SerializedData {
-    bool isValueType;
-    QDeclarativePropertyCache::Data core;
-};
-
-struct ValueTypeSerializedData : public SerializedData {
-    QDeclarativePropertyCache::ValueTypeData valueType;
-};
-
-QByteArray QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObject, int index, 
-                                                      const QMetaObject *subObject, int subIndex,
-                                                      QDeclarativeEngine *)
+QDeclarativePropertyCache::Data
+QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObject, int index, 
+                                           const QMetaObject *subObject, int subIndex,
+                                           QDeclarativeEngine *)
 {
     QMetaProperty prop = metaObject->property(index);
     QMetaProperty subProp = subObject->property(subIndex);
 
-    ValueTypeSerializedData sd;
-    memset(&sd, 0, sizeof(sd));
-    sd.isValueType = true;
-    sd.core.load(metaObject->property(index));
-    sd.valueType.flags = QDeclarativePropertyCache::Data::flagsForProperty(subProp);
-    sd.valueType.valueTypeCoreIdx = subIndex;
-    sd.valueType.valueTypePropType = subProp.userType();
+    QDeclarativePropertyCache::Data core;
+    core.load(metaObject->property(index));
+    core.setFlags(core.getFlags() | QDeclarativePropertyCache::Data::IsValueTypeVirtual);
+    core.valueTypeFlags = QDeclarativePropertyCache::Data::flagsForProperty(subProp);
+    core.valueTypeCoreIndex = subIndex;
+    core.valueTypePropType = subProp.userType();
 
-    QByteArray rv((const char *)&sd, sizeof(sd));
-
-    return rv;
-}
-
-QByteArray QDeclarativePropertyPrivate::saveProperty(const QMetaObject *metaObject, int index, 
-                                                     QDeclarativeEngine *engine)
-{
-    SerializedData sd;
-    memset(&sd, 0, sizeof(sd));
-    sd.isValueType = false;
-    sd.core.load(metaObject->property(index), engine);
-
-    QByteArray rv((const char *)&sd, sizeof(sd));
-    return rv;
-}
-
-QDeclarativeProperty 
-QDeclarativePropertyPrivate::restore(const QByteArray &data, QObject *object, QDeclarativeContextData *ctxt)
-{
-    QDeclarativeProperty prop;
-
-    if (data.isEmpty())
-        return prop;
-
-    const SerializedData *sd = (const SerializedData *)data.constData();
-    if (sd->isValueType) {
-        const ValueTypeSerializedData *vt = (const ValueTypeSerializedData *)sd;
-        return restore(vt->core, vt->valueType, object, ctxt);
-    } else {
-        QDeclarativePropertyCache::ValueTypeData data;
-        return restore(sd->core, data, object, ctxt);
-    }
+    return core;
 }
 
 QDeclarativeProperty
-QDeclarativePropertyPrivate::restore(const QDeclarativePropertyCache::Data &data, const QDeclarativePropertyCache::ValueTypeData &valueType, QObject *object, QDeclarativeContextData *ctxt)
+QDeclarativePropertyPrivate::restore(const QDeclarativePropertyCache::Data &data, 
+                                     QObject *object, QDeclarativeContextData *ctxt)
 {
     QDeclarativeProperty prop;
 
@@ -1633,7 +1641,6 @@ QDeclarativePropertyPrivate::restore(const QDeclarativePropertyCache::Data &data
     prop.d->engine = ctxt?ctxt->engine:0;
 
     prop.d->core = data;
-    prop.d->valueType = valueType;
 
     return prop;
 }
@@ -1761,6 +1768,11 @@ bool QDeclarativePropertyPrivate::connect(const QObject *sender, int signal_inde
     flush_vme_signal(receiver, method_index);
 
     return QMetaObject::connect(sender, signal_index, receiver, method_index, type, types);
+}
+
+void QDeclarativePropertyPrivate::flushSignal(const QObject *sender, int signal_index)
+{
+    flush_vme_signal(sender, signal_index);
 }
 
 /*!

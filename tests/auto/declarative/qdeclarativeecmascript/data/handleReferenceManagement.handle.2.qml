@@ -19,8 +19,4 @@ Item {
         // note: must manually reparent in unit test
         // after setting the handle references.
     }
-
-    function performGc() {
-        gc();
-    }
 }

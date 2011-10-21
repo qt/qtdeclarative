@@ -39,15 +39,15 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativestategroup_p.h"
+#include "qdeclarativestategroup_p.h"
 
-#include "private/qdeclarativetransition_p.h"
-#include "private/qdeclarativestate_p_p.h"
+#include "qdeclarativetransition_p.h"
 
-#include <qdeclarativebinding_p.h>
-#include <qdeclarativeglobal_p.h>
+#include <private/qdeclarativebinding_p.h>
+#include <private/qdeclarativeglobal_p.h>
 
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
 
 #include <private/qobject_p.h>
@@ -444,7 +444,7 @@ void QDeclarativeStateGroupPrivate::setCurrentStateInternal(const QString &state
 
     applyingState = true;
 
-    QDeclarativeTransition *transition = (ignoreTrans || ignoreTrans) ? 0 : findTransition(currentState, state);
+    QDeclarativeTransition *transition = ignoreTrans ? 0 : findTransition(currentState, state);
     if (stateChangeDebug()) {
         qWarning() << this << "Changing state.  From" << currentState << ". To" << state;
         if (transition)

@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeinstruction_p.h"
+#include "qdeclarativeinstruction_p.h"
 
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativecompiler_p.h"
 
 #include <QtCore/qdebug.h>
 
@@ -57,11 +57,20 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
     case QDeclarativeInstruction::Init:
         qWarning().nospace() << idx << "\t\t" << "INIT\t\t\t" << instr->init.bindingsSize << "\t" << instr->init.parserStatusSize << "\t" << instr->init.contextCache << "\t" << instr->init.compiledBinding;
         break;
+    case QDeclarativeInstruction::DeferInit:
+        qWarning().nospace() << idx << "\t\t" << "DEFER_INIT\t\t" << instr->deferInit.bindingsSize << "\t" << instr->deferInit.parserStatusSize;
+        break;
     case QDeclarativeInstruction::Done:
         qWarning().nospace() << idx << "\t\t" << "DONE";
         break;
-    case QDeclarativeInstruction::CreateObject:
-        qWarning().nospace() << idx << "\t\t" << "CREATE\t\t\t" << instr->create.type << "\t" << instr->create.bindingBits << "\t\t" << types.at(instr->create.type).className;
+    case QDeclarativeInstruction::CreateCppObject:
+        qWarning().nospace() << idx << "\t\t" << "CREATECPP\t\t\t" << instr->create.type << "\t\t\t" << types.at(instr->create.type).className;
+        break;
+    case QDeclarativeInstruction::CreateQMLObject:
+        qWarning().nospace() << idx << "\t\t" << "CREATEQML\t\t\t" << instr->createQml.type << "\t" << instr->createQml.bindingBits << "\t\t" << types.at(instr->createQml.type).className;
+        break;
+    case QDeclarativeInstruction::CompleteQMLObject:
+        qWarning().nospace() << idx << "\t\t" << "COMPLETEQML";
         break;
     case QDeclarativeInstruction::CreateSimpleObject:
         qWarning().nospace() << idx << "\t\t" << "CREATE_SIMPLE\t\t" << instr->createSimple.typeSize;
@@ -166,7 +175,7 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "STORE_SCRIPT_STRING\t" << instr->storeScriptString.propertyIndex << "\t" << instr->storeScriptString.value << "\t" << instr->storeScriptString.scope << "\t" << instr->storeScriptString.bindingId;
         break;
     case QDeclarativeInstruction::AssignSignalObject:
-        qWarning().nospace() << idx << "\t\t" << "ASSIGN_SIGNAL_OBJECT\t" << instr->assignSignalObject.signal << "\t\t\t" << datas.at(instr->assignSignalObject.signal);
+        qWarning().nospace() << idx << "\t\t" << "ASSIGN_SIGNAL_OBJECT\t" << instr->assignSignalObject.signal << "\t\t\t" << primitives.at(instr->assignSignalObject.signal);
         break;
     case QDeclarativeInstruction::AssignCustomType:
         qWarning().nospace() << idx << "\t\t" << "ASSIGN_CUSTOMTYPE\t" << instr->assignCustomType.propertyIndex << "\t" << instr->assignCustomType.primitive << "\t" << instr->assignCustomType.type;
@@ -175,22 +184,22 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "INIT_V8_BINDING\t" << instr->initV8Bindings.program << "\t" << instr->initV8Bindings.programIndex << "\t" << instr->initV8Bindings.line;
         break;
     case QDeclarativeInstruction::StoreBinding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
     case QDeclarativeInstruction::StoreBindingOnAlias:
-        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING_ALIAS\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING_ALIAS\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
     case QDeclarativeInstruction::StoreV4Binding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_COMPILED_BINDING\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_COMPILED_BINDING\t" << instr->assignV4Binding.property << "\t" << instr->assignV4Binding.value << "\t" << instr->assignV4Binding.context;
         break;
     case QDeclarativeInstruction::StoreV8Binding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_V8_BINDING\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_V8_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
     case QDeclarativeInstruction::StoreValueSource:
-        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_SOURCE\t" << instr->assignValueSource.property << "\t" << instr->assignValueSource.castValue;
+        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_SOURCE\t" << instr->assignValueSource.property.coreIndex << "\t" << instr->assignValueSource.castValue;
         break;
     case QDeclarativeInstruction::StoreValueInterceptor:
-        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_INTERCEPTOR\t" << instr->assignValueInterceptor.property << "\t" << instr->assignValueInterceptor.castValue;
+        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_INTERCEPTOR\t" << instr->assignValueInterceptor.property.coreIndex << "\t" << instr->assignValueInterceptor.castValue;
         break;
     case QDeclarativeInstruction::BeginObject:
         qWarning().nospace() << idx << "\t\t" << "BEGIN\t\t\t" << instr->begin.castValue;

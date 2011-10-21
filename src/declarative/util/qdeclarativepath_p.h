@@ -44,7 +44,7 @@
 
 #include <qdeclarative.h>
 
-#include "private/qdeclarativenullablevalue_p_p.h"
+#include <private/qdeclarativenullablevalue_p_p.h>
 #include <private/qbezier_p.h>
 
 #include <QtCore/QObject>

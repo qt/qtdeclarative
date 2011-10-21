@@ -1,19 +1,12 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui qtquick1
+CONFIG += testcase
+TARGET = tst_qdeclarativeviewer
 macx:CONFIG -= app_bundle
 
 include(../../../../tools/qmlviewer/qml.pri)
 
 SOURCES += tst_qdeclarativeviewer.cpp
 
-symbian: {
-    include(../symbianlibs.pri)
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test insignificant_test
-QT += core-private gui-private widgets-private declarative-private qtquick1-private widgets-private v8-private
+QT += core-private gui-private widgets-private declarative-private qtquick1-private v8-private testlib

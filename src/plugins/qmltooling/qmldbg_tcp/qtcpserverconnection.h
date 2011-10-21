@@ -75,6 +75,7 @@ public:
 private Q_SLOTS:
     void readyRead();
     void newConnection();
+    void invalidPacket();
 
 private:
     QTcpServerConnectionPrivate *d_ptr;

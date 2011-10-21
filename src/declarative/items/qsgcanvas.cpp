@@ -45,8 +45,6 @@
 #include "qsgitem.h"
 #include "qsgitem_p.h"
 
-#include "qsgevent.h"
-
 #include <private/qsgrenderer_p.h>
 #include <private/qsgflashnode_p.h>
 
@@ -60,10 +58,20 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
 #include <QtCore/qvarlengtharray.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 
 #include <private/qdeclarativedebugtrace_p.h>
 
 QT_BEGIN_NAMESPACE
+
+#define QSG_CANVAS_TIMING
+#ifdef QSG_CANVAS_TIMING
+static bool qsg_canvas_timing = !qgetenv("QML_CANVAS_TIMING").isEmpty();
+static QTime threadTimer;
+static int syncTime;
+static int renderTime;
+static int swapTime;
+#endif
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP)
@@ -77,6 +85,45 @@ void QSGCanvasPrivate::updateFocusItemTransform()
     if (focus && qApp->inputPanel()->inputItem() == focus)
         qApp->inputPanel()->setInputItemTransform(QSGItemPrivate::get(focus)->itemToCanvasTransform());
 }
+
+class QSGCanvasIncubationController : public QObject, public QDeclarativeIncubationController
+{
+public:
+    QSGCanvasIncubationController(QSGCanvasPrivate *canvas) 
+    : m_canvas(canvas), m_eventSent(false) {}
+
+protected:
+    virtual bool event(QEvent *e)
+    {
+        if (e->type() == QEvent::User) {
+            Q_ASSERT(m_eventSent);
+
+            bool *amtp = m_canvas->thread->allowMainThreadProcessing();
+            while (incubatingObjectCount()) {
+                if (amtp)
+                    incubateWhile(amtp);
+                else
+                    incubateFor(5);
+                QCoreApplication::processEvents();
+            }
+
+            m_eventSent = false;
+        }
+        return QObject::event(e);
+    }
+
+    virtual void incubatingObjectCountChanged(int count)
+    {
+        if (count && !m_eventSent) {
+            m_eventSent = true;
+            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+        }
+    }
+
+private:
+    QSGCanvasPrivate *m_canvas;
+    bool m_eventSent;
+};
 
 class QSGCanvasPlainRenderLoop : public QObject, public QSGCanvasRenderLoop
 {
@@ -416,6 +463,7 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , thread(0)
     , animationDriver(0)
     , renderTarget(0)
+    , incubationController(0)
 {
 }
 
@@ -459,6 +507,7 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     thread->moveContextToThread(context);
 
     q->setSurfaceType(QWindow::OpenGLSurface);
+    q->setFormat(context->defaultSurfaceFormat());
 }
 
 void QSGCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
@@ -721,7 +770,10 @@ void QSGCanvasPrivate::notifyFocusChangesRecur(QSGItem **items, int remaining)
 
 void QSGCanvasPrivate::updateInputMethodData()
 {
-    qApp->inputPanel()->setInputItem(activeFocusItem);
+    QSGItem *inputItem = 0;
+    if (activeFocusItem && activeFocusItem->flags() & QSGItem::ItemAcceptsInputMethod)
+        inputItem = activeFocusItem;
+    qApp->inputPanel()->setInputItem(inputItem);
 }
 
 QVariant QSGCanvas::inputMethodQuery(Qt::InputMethodQuery query) const
@@ -788,6 +840,8 @@ QSGCanvas::~QSGCanvas()
     QSGItemPrivate *rootItemPrivate = QSGItemPrivate::get(d->rootItem);
     rootItemPrivate->removeFromDirtyList();
 
+    delete d->incubationController; d->incubationController = 0;
+
     delete d->rootItem; d->rootItem = 0;
     d->cleanupNodes();
 }
@@ -850,11 +904,11 @@ bool QSGCanvas::event(QEvent *e)
         d->clearHover();
         d->lastMousePosition = QPoint();
         break;
-    case QSGEvent::SGDragEnter:
-    case QSGEvent::SGDragExit:
-    case QSGEvent::SGDragMove:
-    case QSGEvent::SGDragDrop:
-        d->deliverDragEvent(static_cast<QSGDragEvent *>(e));
+    case QEvent::DragEnter:
+    case QEvent::DragLeave:
+    case QEvent::DragMove:
+    case QEvent::Drop:
+        d->deliverDragEvent(&d->dragGrabber, e);
         break;
     case QEvent::WindowDeactivate:
         rootItem()->windowDeactivateEvent();
@@ -938,10 +992,9 @@ bool QSGCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
 
     lastMousePosition = event->windowPos();
 
-    if (!mouseGrabberItem && 
+    if (!mouseGrabberItem &&
          event->type() == QEvent::MouseButtonPress &&
          (event->button() & event->buttons()) == event->buttons()) {
-        
         return deliverInitialMousePressEvent(rootItem, event);
     }
 
@@ -1295,6 +1348,7 @@ bool QSGCanvasPrivate::deliverTouchPoints(QSGItem *item, QTouchEvent *event, con
             touchEvent.setModifiers(event->modifiers());
             touchEvent.setTouchPointStates(eventStates);
             touchEvent.setTouchPoints(eventPoints);
+            touchEvent.setTimestamp(event->timestamp());
 
             touchEvent.accept();
             q->sendEvent(item, &touchEvent);
@@ -1315,76 +1369,124 @@ bool QSGCanvasPrivate::deliverTouchPoints(QSGItem *item, QTouchEvent *event, con
     return false;
 }
 
-void QSGCanvasPrivate::deliverDragEvent(QSGDragEvent *event)
+void QSGCanvasPrivate::deliverDragEvent(QSGDragGrabber *grabber, QEvent *event)
 {
     Q_Q(QSGCanvas);
-    if (event->type() == QSGEvent::SGDragExit || event->type() == QSGEvent::SGDragDrop) {
-        if (QSGItem *grabItem = event->grabItem()) {
-            event->setPosition(grabItem->mapFromScene(event->scenePosition()));
-            q->sendEvent(grabItem, event);
+    grabber->resetTarget();
+    QSGDragGrabber::iterator grabItem = grabber->begin();
+    if (grabItem != grabber->end()) {
+        Q_ASSERT(event->type() != QEvent::DragEnter);
+        if (event->type() == QEvent::Drop) {
+            QDropEvent *e = static_cast<QDropEvent *>(event);
+            for (e->setAccepted(false); !e->isAccepted() && grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
+                QPointF p = (**grabItem)->mapFromScene(e->pos());
+                QDropEvent translatedEvent(
+                        p.toPoint(),
+                        e->possibleActions(),
+                        e->mimeData(),
+                        e->mouseButtons(),
+                        e->keyboardModifiers());
+                QSGDropEventEx::copyActions(&translatedEvent, *e);
+                q->sendEvent(**grabItem, &translatedEvent);
+                e->setAccepted(translatedEvent.isAccepted());
+                e->setDropAction(translatedEvent.dropAction());
+                grabber->setTarget(**grabItem);
+            }
         }
-    } else if (!deliverDragEvent(rootItem, event)) {
-        if (QSGItem *grabItem = event->grabItem()) {
-            QSGDragEvent exitEvent(QSGEvent::SGDragExit, *event);
-            exitEvent.setPosition(grabItem->mapFromScene(event->scenePosition()));
-            q->sendEvent(grabItem, &exitEvent);
-            event->setDropItem(0);
-            event->setGrabItem(0);
+        if (event->type() != QEvent::DragMove) {    // Either an accepted drop or a leave.
+            QDragLeaveEvent leaveEvent;
+            for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
+                q->sendEvent(**grabItem, &leaveEvent);
+            return;
+        } else for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
+            QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
+            if (deliverDragEvent(grabber, **grabItem, moveEvent)) {
+                moveEvent->setAccepted(true);
+                for (++grabItem; grabItem != grabber->end();) {
+                    QPointF p = (**grabItem)->mapFromScene(moveEvent->pos());
+                    if (QRectF(0, 0, (**grabItem)->width(), (**grabItem)->height()).contains(p)) {
+                        QDragMoveEvent translatedEvent(
+                                p.toPoint(),
+                                moveEvent->possibleActions(),
+                                moveEvent->mimeData(),
+                                moveEvent->mouseButtons(),
+                                moveEvent->keyboardModifiers());
+                        QSGDropEventEx::copyActions(&translatedEvent, *moveEvent);
+                        q->sendEvent(**grabItem, &translatedEvent);
+                        ++grabItem;
+                    } else {
+                        QDragLeaveEvent leaveEvent;
+                        q->sendEvent(**grabItem, &leaveEvent);
+                        grabItem = grabber->release(grabItem);
+                    }
+                }
+                return;
+            } else {
+                QDragLeaveEvent leaveEvent;
+                q->sendEvent(**grabItem, &leaveEvent);
+            }
         }
-        event->setAccepted(false);
+    }
+    if (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove) {
+        QDragMoveEvent *e = static_cast<QDragMoveEvent *>(event);
+        QDragEnterEvent enterEvent(
+                e->pos(),
+                e->possibleActions(),
+                e->mimeData(),
+                e->mouseButtons(),
+                e->keyboardModifiers());
+        QSGDropEventEx::copyActions(&enterEvent, *e);
+        event->setAccepted(deliverDragEvent(grabber, rootItem, &enterEvent));
     }
 }
 
-bool QSGCanvasPrivate::deliverDragEvent(QSGItem *item, QSGDragEvent *event)
+bool QSGCanvasPrivate::deliverDragEvent(QSGDragGrabber *grabber, QSGItem *item, QDragMoveEvent *event)
 {
     Q_Q(QSGCanvas);
+    bool accepted = false;
     QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
-    if (itemPrivate->opacity == 0.0)
+    if (itemPrivate->opacity == 0.0 || !item->isVisible() || !item->isEnabled())
         return false;
 
-    if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->scenePosition());
-        if (!QRectF(0, 0, item->width(), item->height()).contains(p))
-            return false;
-    }
-
-    QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QSGItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled())
-            continue;
-        if (deliverDragEvent(child, event))
-            return true;
-    }
-
-    QPointF p = item->mapFromScene(event->scenePosition());
+    QPointF p = item->mapFromScene(event->pos());
     if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-        event->setPosition(p);
-
-        if (event->type() == QSGEvent::SGDragMove && item != event->grabItem()) {
-            QSGDragEvent enterEvent(QSGEvent::SGDragEnter, *event);
-            q->sendEvent(item, &enterEvent);
-            if (enterEvent.isAccepted()) {
-                if (QSGItem *grabItem = event->grabItem()) {
-                    QSGDragEvent exitEvent(QSGEvent::SGDragExit, *event);
-                    q->sendEvent(grabItem, &exitEvent);
+        if (event->type() == QEvent::DragMove || itemPrivate->flags & QSGItem::ItemAcceptsDrops) {
+            QDragMoveEvent translatedEvent(
+                    p.toPoint(),
+                    event->possibleActions(),
+                    event->mimeData(),
+                    event->mouseButtons(),
+                    event->keyboardModifiers(),
+                    event->type());
+            QSGDropEventEx::copyActions(&translatedEvent, *event);
+            q->sendEvent(item, &translatedEvent);
+            if (event->type() == QEvent::DragEnter) {
+                if (translatedEvent.isAccepted()) {
+                    grabber->grab(item);
+                    accepted = true;
                 }
-                event->setDropItem(enterEvent.dropItem());
-                event->setGrabItem(item);
             } else {
-                return false;
+                accepted = true;
             }
         }
-
-        q->sendEvent(item, event);
-        if (event->isAccepted()) {
-            event->setGrabItem(item);
-            return true;
-        }
-        event->setAccepted(true);
+    } else if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
+        return false;
     }
 
-    return false;
+    QDragEnterEvent enterEvent(
+            event->pos(),
+            event->possibleActions(),
+            event->mimeData(),
+            event->mouseButtons(),
+            event->keyboardModifiers());
+    QSGDropEventEx::copyActions(&enterEvent, *event);
+    QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent))
+            return true;
+    }
+
+    return accepted;
 }
 
 bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QMouseEvent *event)
@@ -1392,13 +1494,13 @@ bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QM
     if (!target)
         return false;
 
-    if (sendFilteredMouseEvent(target->parentItem(), item, event))
-        return true;
-
     QSGItemPrivate *targetPrivate = QSGItemPrivate::get(target);
     if (targetPrivate->filtersChildMouseEvents)
         if (target->childMouseEventFilter(item, event))
             return true;
+
+    if (sendFilteredMouseEvent(target->parentItem(), item, event))
+        return true;
 
     return false;
 }
@@ -1440,7 +1542,7 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
-        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events? 
+        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
         {
             QMouseEvent *se = static_cast<QMouseEvent *>(e);
             if (!d->sendFilteredMouseEvent(item->parentItem(), item, se)) {
@@ -1462,11 +1564,11 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::TouchEnd:
         QSGItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
         break;
-    case QSGEvent::SGDragEnter:
-    case QSGEvent::SGDragExit:
-    case QSGEvent::SGDragMove:
-    case QSGEvent::SGDragDrop:
-        QSGItemPrivate::get(item)->deliverDragEvent(static_cast<QSGDragEvent *>(e));
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+    case QEvent::DragLeave:
+    case QEvent::Drop:
+        QSGItemPrivate::get(item)->deliverDragEvent(e);
         break;
     default:
         break;
@@ -1826,15 +1928,29 @@ QImage QSGCanvas::grabFrameBuffer()
     return d->thread ? d->thread->grab() : QImage();
 }
 
+/*!
+    Returns an incubation controller that splices incubation between frames
+    for this canvas.  QSGView automatically installs this controller for you.
+
+    The controller is owned by the canvas and will be destroyed when the canvas
+    is deleted.
+*/
+QDeclarativeIncubationController *QSGCanvas::incubationController() const
+{
+    Q_D(const QSGCanvas);
+
+    if (!d->incubationController)
+        d->incubationController = new QSGCanvasIncubationController(const_cast<QSGCanvasPrivate *>(d));
+    return d->incubationController;
+}
 
 
 void QSGCanvasRenderLoop::createGLContext()
 {
     gl = new QOpenGLContext();
-    gl->setFormat(renderer->format());
+    gl->setFormat(renderer->requestedFormat());
     gl->create();
 }
-
 
 void QSGCanvasRenderThread::run()
 {
@@ -1874,6 +1990,7 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
             printf("                RenderThread: aquired sync lock...\n");
 #endif
+            allowMainThreadProcessingFlag = false;
             QCoreApplication::postEvent(this, new QEvent(QEvent::User));
 #ifdef THREAD_DEBUG
             printf("                RenderThread: going to sleep...\n");
@@ -1886,24 +2003,35 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
         printf("                RenderThread: Doing locked sync\n");
 #endif
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing)
+            threadTimer.start();
+#endif
         inSync = true;
         syncSceneGraph();
         inSync = false;
 
         // Wake GUI after sync to let it continue animating and event processing.
+        allowMainThreadProcessingFlag = true;
         wake();
         unlock();
 #ifdef THREAD_DEBUG
         printf("                RenderThread: sync done\n");
 #endif
-
-
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing)
+            syncTime = threadTimer.elapsed();
+#endif
 
 #ifdef THREAD_DEBUG
         printf("                RenderThread: rendering... %d x %d\n", windowSize.width(), windowSize.height());
 #endif
 
         renderSceneGraph(windowSize);
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing)
+            renderTime = threadTimer.elapsed() - syncTime;
+#endif
 
         // The content of the target buffer is undefined after swap() so grab needs
         // to happen before swap();
@@ -1922,6 +2050,14 @@ void QSGCanvasRenderThread::run()
         swapBuffers();
 #ifdef THREAD_DEBUG
         printf("                RenderThread: swap complete...\n");
+#endif
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing) {
+            swapTime = threadTimer.elapsed() - renderTime;
+            qDebug() << "- Breakdown of frame time: sync:" << syncTime
+                     << "ms render:" << renderTime << "ms swap:" << swapTime
+                     << "ms total:" << swapTime + renderTime << "ms";
+        }
 #endif
 
         lock();

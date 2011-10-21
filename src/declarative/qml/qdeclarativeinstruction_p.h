@@ -54,13 +54,17 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <private/qdeclarativepropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_QML_INSTR(F) \
     F(Init, init) \
+    F(DeferInit, deferInit) \
     F(Done, common) \
-    F(CreateObject, create) \
+    F(CreateCppObject, create) \
+    F(CreateQMLObject, createQml) \
+    F(CompleteQMLObject, completeQml) \
     F(CreateSimpleObject, createSimple) \
     F(SetId, setId) \
     F(SetDefault, common) \
@@ -70,6 +74,10 @@ QT_BEGIN_NAMESPACE
     F(StoreVariantInteger, storeInteger) \
     F(StoreVariantDouble, storeDouble) \
     F(StoreVariantBool, storeBool) \
+    F(StoreVar, storeString) \
+    F(StoreVarInteger, storeInteger) \
+    F(StoreVarDouble, storeDouble) \
+    F(StoreVarBool, storeBool) \
     F(StoreString, storeString) \
     F(StoreByteArray, storeByteArray) \
     F(StoreUrl, storeUrl) \
@@ -99,13 +107,14 @@ QT_BEGIN_NAMESPACE
     F(InitV8Bindings, initV8Bindings) \
     F(StoreBinding, assignBinding) \
     F(StoreBindingOnAlias, assignBinding) \
-    F(StoreV4Binding, assignBinding) \
     F(StoreV8Binding, assignBinding) \
+    F(StoreV4Binding, assignV4Binding) \
     F(StoreValueSource, assignValueSource) \
     F(StoreValueInterceptor, assignValueInterceptor) \
     F(StoreObjectQList, common) \
     F(AssignObjectList, assignObjectList) \
     F(StoreVariantObject, storeObject) \
+    F(StoreVarObject, storeObject) \
     F(StoreInterface, storeObject) \
     F(FetchAttached, fetchAttached) \
     F(FetchQList, fetchQmlList) \
@@ -151,14 +160,35 @@ union QDeclarativeInstruction
         int parserStatusSize;
         int contextCache;
         int compiledBinding;
+        int objectStackSize;
+        int listStackSize;
+    };
+    struct instr_deferInit {
+        QML_INSTR_HEADER
+        int bindingsSize;
+        int parserStatusSize;
+        int objectStackSize;
+        int listStackSize;
+    };
+    struct instr_createQml {
+        QML_INSTR_HEADER
+        int type;
+        int bindingBits;
+        bool isRoot;
+    };
+    struct instr_completeQml {
+        QML_INSTR_HEADER
+        ushort column;
+        ushort line; 
+        bool isRoot;
     };
     struct instr_create {
         QML_INSTR_HEADER
         int type;
         int data;
-        int bindingBits;
         ushort column;
         ushort line; 
+        bool isRoot;
     };
     struct instr_createSimple {
         QML_INSTR_HEADER
@@ -181,13 +211,13 @@ union QDeclarativeInstruction
     };
     struct instr_assignValueSource {
         QML_INSTR_HEADER
-        int property;
+        QDeclarativePropertyCache::RawData property;
         int owner;
         int castValue;
     };
     struct instr_assignValueInterceptor {
         QML_INSTR_HEADER
-        int property;
+        QDeclarativePropertyCache::RawData property;
         int owner;
         int castValue;
     };
@@ -197,12 +227,22 @@ union QDeclarativeInstruction
         ushort programIndex;
         ushort line;
     };
-    struct instr_assignBinding {
+    struct instr_assignV4Binding {
         QML_INSTR_HEADER
         unsigned int property;
         int value;
         short context;
         short owner;
+        bool isRoot;
+        ushort line;
+    };
+    struct instr_assignBinding {
+        QML_INSTR_HEADER
+        QDeclarativePropertyCache::RawData property;
+        int value;
+        short context;
+        short owner;
+        bool isRoot;
         ushort line;
     };
     struct instr_fetch {
@@ -357,6 +397,7 @@ union QDeclarativeInstruction
         int metaObject;
         ushort column;
         ushort line;
+        bool isRoot;
     };
     struct instr_fetchAttached {
         QML_INSTR_HEADER
@@ -425,13 +466,17 @@ union QDeclarativeInstruction
 
     instr_common common;
     instr_init init;
+    instr_deferInit deferInit;
     instr_create create;
+    instr_createQml createQml;
+    instr_completeQml completeQml;
     instr_createSimple createSimple;
     instr_storeMeta storeMeta;
     instr_setId setId;
     instr_assignValueSource assignValueSource;
     instr_assignValueInterceptor assignValueInterceptor;
     instr_initV8Bindings initV8Bindings;
+    instr_assignV4Binding assignV4Binding;
     instr_assignBinding assignBinding;
     instr_fetch fetch;
     instr_fetchValue fetchValue;

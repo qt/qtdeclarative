@@ -44,14 +44,14 @@
 \o \l AnchorChanges
 \endlist
 
-Many user interface designs are \e state driven; interfaces have configurations
+Many user interface designs are \i state driven; interfaces have configurations
 that differ depending on the current state. For example, a traffic signal will
 configure its flags or lights depending on its state. While in the signal's
 \c stop state, a red light will turn on while the yellow and the green lights
 will turn off. In the \c caution state, the yellow light is on while the other
 lights are turned off.
 
-In QML, \e states are a set of property configurations defined in a \l State
+In QML, \i states are a set of property configurations defined in a \l State
 element. Different configurations could, for example:
 
 \list
@@ -104,7 +104,7 @@ It can also:
 
 \section1 The Default State
 
-Every \l Item based component has a \c state property and a \e{default state}.
+Every \l Item based component has a \c state property and a \i{default state}.
 The default state is the empty string (\c{""}) and contains all of an item's
 initial property values. The default state is useful for managing property
 values before state changes. Setting the \c state property to an empty string

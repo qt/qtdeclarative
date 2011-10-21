@@ -40,7 +40,6 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
-#include "../../../shared/util.h"
 #include "../../declarative/shared/testhttpserver.h"
 #include <math.h>
 #include <QFile>
@@ -60,11 +59,6 @@
 #include <QMimeData>
 #include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 #include <private/qtextcontrol_p.h>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 Q_DECLARE_METATYPE(QDeclarative1TextEdit::SelectionMode)
 
@@ -1923,7 +1917,7 @@ void tst_qdeclarativetextedit::copyAndPaste() {
         if (status == noErr)
             CFRelease(pasteboard);
         else
-            QSKIP("This machine doesn't support the clipboard", SkipAll);
+            QSKIP("This machine doesn't support the clipboard");
     }
 #endif
 
@@ -2449,7 +2443,7 @@ void tst_qdeclarativetextedit::preeditMicroFocus()
     ic.sendPreeditText(preeditText, 0);
     currentRect = edit.inputMethodQuery(Qt::ImMicroFocus).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, false); // The cursor position hasn't changed.
 #endif
     QCOMPARE(cursorRectangleSpy.count(), 0);
@@ -2461,7 +2455,7 @@ void tst_qdeclarativetextedit::preeditMicroFocus()
         ic.sendPreeditText(preeditText, i);
         currentRect = edit.inputMethodQuery(Qt::ImMicroFocus).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
         QCOMPARE(ic.updateReceived, true);
 #endif
         QVERIFY(cursorRectangleSpy.count() > 0);
@@ -2476,7 +2470,7 @@ void tst_qdeclarativetextedit::preeditMicroFocus()
     ic.sendEvent(QInputMethodEvent(preeditText, QList<QInputMethodEvent::Attribute>()));
     currentRect = edit.inputMethodQuery(Qt::ImMicroFocus).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, true);
 #endif
     QVERIFY(cursorRectangleSpy.count() > 0);

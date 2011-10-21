@@ -42,24 +42,117 @@
 #include "qdeclarativetypeloader_p.h"
 
 #include <private/qdeclarativeengine_p.h>
+#include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativethread_p.h>
 #include <private/qdeclarativecompiler_p.h>
 #include <private/qdeclarativecomponent_p.h>
-#include <private/qdeclarativeglobal_p.h>
 #include <private/qdeclarativedebugtrace_p.h>
 
-#include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtCore/qdebug.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qthread.h>
 #include <QtCore/qdiriterator.h>
+#include <QtCore/qwaitcondition.h>
+#include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtDeclarative/qdeclarativeextensioninterface.h>
 
 #if defined (Q_OS_UNIX)
 #include <sys/types.h>
 #include <dirent.h>
 #endif
 
+// #define DATABLOB_DEBUG
+
+#ifdef DATABLOB_DEBUG
+
+#define ASSERT_MAINTHREAD() do { if(m_thread->isThisThread()) qFatal("QDeclarativeDataLoader: Caller not in main thread"); } while(false)
+#define ASSERT_LOADTHREAD() do { if(!m_thread->isThisThread()) qFatal("QDeclarativeDataLoader: Caller not in load thread"); } while(false)
+#define ASSERT_CALLBACK() do { if(!m_manager || !m_manager->m_thread->isThisThread()) qFatal("QDeclarativeDataBlob: An API call was made outside a callback"); } while(false)
+
+#else
+
+#define ASSERT_MAINTHREAD() 
+#define ASSERT_LOADTHREAD()
+#define ASSERT_CALLBACK()
+
+#endif
+
 QT_BEGIN_NAMESPACE
 
+// This is a lame object that we need to ensure that slots connected to
+// QNetworkReply get called in the correct thread (the loader thread).  
+// As QDeclarativeDataLoader lives in the main thread, and we can't use
+// Qt::DirectConnection connections from a QNetworkReply (because then 
+// sender() wont work), we need to insert this object in the middle.
+class QDeclarativeDataLoaderNetworkReplyProxy : public QObject
+{
+    Q_OBJECT
+public:
+    QDeclarativeDataLoaderNetworkReplyProxy(QDeclarativeDataLoader *l);
+
+public slots:
+    void finished();
+    void downloadProgress(qint64, qint64);
+
+private:
+    QDeclarativeDataLoader *l;
+};
+
+class QDeclarativeDataLoaderThread : public QDeclarativeThread
+{
+    typedef QDeclarativeDataLoaderThread This;
+
+public:
+    QDeclarativeDataLoaderThread(QDeclarativeDataLoader *loader);
+    QNetworkAccessManager *networkAccessManager() const;
+    QDeclarativeDataLoaderNetworkReplyProxy *networkReplyProxy() const;
+
+    void load(QDeclarativeDataBlob *b);
+    void loadAsync(QDeclarativeDataBlob *b);
+    void loadWithStaticData(QDeclarativeDataBlob *b, const QByteArray &);
+    void loadWithStaticDataAsync(QDeclarativeDataBlob *b, const QByteArray &);
+    void callCompleted(QDeclarativeDataBlob *b);
+    void callDownloadProgressChanged(QDeclarativeDataBlob *b, qreal p);
+    void initializeEngine(QDeclarativeExtensionInterface *, const char *);
+
+protected:
+    virtual void shutdownThread();
+
+private:
+    void loadThread(QDeclarativeDataBlob *b);
+    void loadWithStaticDataThread(QDeclarativeDataBlob *b, const QByteArray &);
+    void callCompletedMain(QDeclarativeDataBlob *b);
+    void callDownloadProgressChangedMain(QDeclarativeDataBlob *b, qreal p);
+    void initializeEngineMain(QDeclarativeExtensionInterface *iface, const char *uri);
+
+    QDeclarativeDataLoader *m_loader;
+    mutable QNetworkAccessManager *m_networkAccessManager;
+    mutable QDeclarativeDataLoaderNetworkReplyProxy *m_networkReplyProxy;
+};
+
+
+QDeclarativeDataLoaderNetworkReplyProxy::QDeclarativeDataLoaderNetworkReplyProxy(QDeclarativeDataLoader *l) 
+: l(l) 
+{
+}
+
+void QDeclarativeDataLoaderNetworkReplyProxy::finished()
+{
+    Q_ASSERT(sender());
+    Q_ASSERT(qobject_cast<QNetworkReply *>(sender()));
+    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
+    l->networkReplyFinished(reply);
+}
+
+void QDeclarativeDataLoaderNetworkReplyProxy::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+{
+    Q_ASSERT(sender());
+    Q_ASSERT(qobject_cast<QNetworkReply *>(sender()));
+    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
+    l->networkReplyProgress(reply, bytesReceived, bytesTotal);
+}
 
 /*
 Returns the set of QML files in path (qmldir, *.qml, *.js).  The caller
@@ -182,8 +275,8 @@ This enum describes the type of the data blob.
 Create a new QDeclarativeDataBlob for \a url and of the provided \a type.
 */
 QDeclarativeDataBlob::QDeclarativeDataBlob(const QUrl &url, Type type)
-: m_type(type), m_status(Null), m_progress(0), m_url(url), m_finalUrl(url), m_manager(0),
-  m_redirectCount(0), m_inCallback(false), m_isDone(false)
+: m_type(type), m_url(url), m_finalUrl(url), m_manager(0), m_redirectCount(0), 
+  m_inCallback(false), m_isDone(false)
 {
 }
 
@@ -208,7 +301,7 @@ Returns the blob's status.
 */
 QDeclarativeDataBlob::Status QDeclarativeDataBlob::status() const
 {
-    return m_status;
+    return m_data.status();
 }
 
 /*!
@@ -216,7 +309,7 @@ Returns true if the status is Null.
 */
 bool QDeclarativeDataBlob::isNull() const
 {
-    return m_status == Null;
+    return status() == Null;
 }
 
 /*!
@@ -224,7 +317,7 @@ Returns true if the status is Loading.
 */
 bool QDeclarativeDataBlob::isLoading() const
 {
-    return m_status == Loading;
+    return status() == Loading;
 }
 
 /*!
@@ -232,7 +325,7 @@ Returns true if the status is WaitingForDependencies.
 */
 bool QDeclarativeDataBlob::isWaiting() const
 {
-    return m_status == WaitingForDependencies;
+    return status() == WaitingForDependencies;
 }
 
 /*!
@@ -240,7 +333,7 @@ Returns true if the status is Complete.
 */
 bool QDeclarativeDataBlob::isComplete() const
 {
-    return m_status == Complete;
+    return status() == Complete;
 }
 
 /*!
@@ -248,7 +341,7 @@ Returns true if the status is Error.
 */
 bool QDeclarativeDataBlob::isError() const
 {
-    return m_status == Error;
+    return status() == Error;
 }
 
 /*!
@@ -256,7 +349,8 @@ Returns true if the status is Complete or Error.
 */
 bool QDeclarativeDataBlob::isCompleteOrError() const
 {
-    return isComplete() || isError();
+    Status s = status();
+    return s == Error || s == Complete;
 }
 
 /*!
@@ -264,7 +358,9 @@ Returns the data download progress from 0 to 1.
 */
 qreal QDeclarativeDataBlob::progress() const
 {
-    return m_progress;
+    quint8 p = m_data.progress();
+    if (p == 0xFF) return 1.;
+    else return qreal(p) / qreal(0xFF);
 }
 
 /*!
@@ -282,17 +378,23 @@ QUrl QDeclarativeDataBlob::url() const
 Returns the final url of the data.  Initially this is the same as
 url(), but if a network redirect happens while fetching the data, this url
 is updated to reflect the new location.
+
+May only be called from the load thread, or after the blob isCompleteOrError().
 */
 QUrl QDeclarativeDataBlob::finalUrl() const
 {
+    Q_ASSERT(isCompleteOrError() || (m_manager && m_manager->m_thread->isThisThread()));
     return m_finalUrl;
 }
 
 /*!
 Return the errors on this blob.
+
+May only be called from the load thread, or after the blob isCompleteOrError().
 */
 QList<QDeclarativeError> QDeclarativeDataBlob::errors() const
 {
+    Q_ASSERT(isCompleteOrError() || (m_manager && m_manager->m_thread->isThisThread()));
     return m_errors;
 }
 
@@ -300,11 +402,14 @@ QList<QDeclarativeError> QDeclarativeDataBlob::errors() const
 Mark this blob as having \a errors.
 
 All outstanding dependencies will be cancelled.  Requests to add new dependencies 
-will be ignored.  Entry into the Error state is irreversable, although you can change the 
-specific errors by additional calls to setError.
+will be ignored.  Entry into the Error state is irreversable.
+
+The setError() method may only be called from within a QDeclarativeDataBlob callback.
 */
 void QDeclarativeDataBlob::setError(const QDeclarativeError &errors)
 {
+    ASSERT_CALLBACK();
+
     QList<QDeclarativeError> l;
     l << errors;
     setError(l);
@@ -315,8 +420,13 @@ void QDeclarativeDataBlob::setError(const QDeclarativeError &errors)
 */
 void QDeclarativeDataBlob::setError(const QList<QDeclarativeError> &errors)
 {
-    m_status = Error;
-    m_errors = errors;
+    ASSERT_CALLBACK();
+
+    Q_ASSERT(status() != Error);
+    Q_ASSERT(m_errors.isEmpty());
+
+    m_errors = errors; // Must be set before the m_data fence
+    m_data.setStatus(Error);
 
     cancelAllWaitingFor();
 
@@ -327,19 +437,25 @@ void QDeclarativeDataBlob::setError(const QList<QDeclarativeError> &errors)
 /*! 
 Wait for \a blob to become complete or to error.  If \a blob is already 
 complete or in error, or this blob is already complete, this has no effect.
+
+The setError() method may only be called from within a QDeclarativeDataBlob callback.
 */
 void QDeclarativeDataBlob::addDependency(QDeclarativeDataBlob *blob)
 {
+    ASSERT_CALLBACK();
+
     Q_ASSERT(status() != Null);
 
     if (!blob ||
         blob->status() == Error || blob->status() == Complete ||
-        status() == Error || status() == Complete ||
+        status() == Error || status() == Complete || m_isDone || 
         m_waitingFor.contains(blob))
         return;
 
     blob->addref();
-    m_status = WaitingForDependencies;
+
+    m_data.setStatus(WaitingForDependencies);
+
     m_waitingFor.append(blob);
     blob->m_waitingOnMe.append(this);
 }
@@ -360,6 +476,9 @@ You can set an error in this method, but you cannot add new dependencies.  Imple
 should use this callback to finalize processing of data.
 
 The default implementation does nothing.
+
+XXX Rename processData() or some such to avoid confusion between done() (processing thread)
+and completed() (main thread)
 */
 void QDeclarativeDataBlob::done()
 {
@@ -451,22 +570,63 @@ void QDeclarativeDataBlob::allDependenciesDone()
 /*!
 Called when the download progress of this blob changes.  \a progress goes
 from 0 to 1.
+
+This callback is only invoked if an asynchronous load for this blob is 
+made.  An asynchronous load is one in which the Asynchronous mode is
+specified explicitly, or one that is implicitly delayed due to a network 
+operation.
+
+The default implementation does nothing.
 */
 void QDeclarativeDataBlob::downloadProgressChanged(qreal progress)
 {
     Q_UNUSED(progress);
 }
 
+/*!
+Invoked on the main thread sometime after done() was called on the load thread.
+
+You cannot modify the blobs state at all in this callback and cannot depend on the
+order or timeliness of these callbacks.  Implementors should use this callback to notify 
+dependencies on the main thread that the blob is done and not a lot else.
+
+This callback is only invoked if an asynchronous load for this blob is 
+made.  An asynchronous load is one in which the Asynchronous mode is
+specified explicitly, or one that is implicitly delayed due to a network 
+operation.
+
+The default implementation does nothing.
+*/
+void QDeclarativeDataBlob::completed()
+{
+}
+
+
 void QDeclarativeDataBlob::tryDone()
 {
     if (status() != Loading && m_waitingFor.isEmpty() && !m_isDone) {
-        if (status() != Error)
-            m_status = Complete;
-
         m_isDone = true;
         addref();
+
+#ifdef DATABLOB_DEBUG
+        qWarning("QDeclarativeDataBlob::done() %s", qPrintable(url().toString()));
+#endif
         done();
+
+        if (status() != Error)
+            m_data.setStatus(Complete);
+
         notifyAllWaitingOnMe();
+
+        // Locking is not required here, as anyone expecting callbacks must
+        // already be protected against the blob being completed (as set above);
+        if (m_data.isAsync()) {
+#ifdef DATABLOB_DEBUG
+            qWarning("QDeclarativeDataBlob: Dispatching completed");
+#endif
+            m_manager->m_thread->callCompleted(this);
+        }
+
         release();
     }
 }
@@ -519,6 +679,170 @@ void QDeclarativeDataBlob::notifyComplete(QDeclarativeDataBlob *blob)
     tryDone();
 }
 
+#define TD_STATUS_MASK 0x0000FFFF
+#define TD_STATUS_SHIFT 0
+#define TD_PROGRESS_MASK 0x00FF0000
+#define TD_PROGRESS_SHIFT 16
+#define TD_ASYNC_MASK 0x80000000
+
+QDeclarativeDataBlob::ThreadData::ThreadData()
+: _p(0)
+{
+}
+
+QDeclarativeDataBlob::Status QDeclarativeDataBlob::ThreadData::status() const
+{
+    return QDeclarativeDataBlob::Status((_p.load() & TD_STATUS_MASK) >> TD_STATUS_SHIFT);
+}
+
+void QDeclarativeDataBlob::ThreadData::setStatus(QDeclarativeDataBlob::Status status)
+{
+    while (true) {
+        int d = _p.load();
+        int nd = (d & ~TD_STATUS_MASK) | ((status << TD_STATUS_SHIFT) & TD_STATUS_MASK);
+        if (d == nd || _p.testAndSetOrdered(d, nd)) return;
+    }
+}
+
+bool QDeclarativeDataBlob::ThreadData::isAsync() const
+{
+    return _p.load() & TD_ASYNC_MASK;
+}
+
+void QDeclarativeDataBlob::ThreadData::setIsAsync(bool v)
+{
+    while (true) {
+        int d = _p.load();
+        int nd = (d & ~TD_ASYNC_MASK) | (v?TD_ASYNC_MASK:0);
+        if (d == nd || _p.testAndSetOrdered(d, nd)) return;
+    }
+}
+
+quint8 QDeclarativeDataBlob::ThreadData::progress() const
+{
+    return quint8((_p.load() & TD_PROGRESS_MASK) >> TD_PROGRESS_SHIFT);
+}
+
+void QDeclarativeDataBlob::ThreadData::setProgress(quint8 v)
+{
+    while (true) {
+        int d = _p.load();
+        int nd = (d & ~TD_PROGRESS_MASK) | ((v << TD_PROGRESS_SHIFT) & TD_PROGRESS_MASK);
+        if (d == nd || _p.testAndSetOrdered(d, nd)) return;
+    }
+}
+
+QDeclarativeDataLoaderThread::QDeclarativeDataLoaderThread(QDeclarativeDataLoader *loader)
+: m_loader(loader), m_networkAccessManager(0), m_networkReplyProxy(0)
+{
+}
+
+QNetworkAccessManager *QDeclarativeDataLoaderThread::networkAccessManager() const
+{
+    Q_ASSERT(isThisThread());
+    if (!m_networkAccessManager) {
+        m_networkAccessManager = QDeclarativeEnginePrivate::get(m_loader->engine())->createNetworkAccessManager(0);
+        m_networkReplyProxy = new QDeclarativeDataLoaderNetworkReplyProxy(m_loader);
+    }
+
+    return m_networkAccessManager;
+}
+
+QDeclarativeDataLoaderNetworkReplyProxy *QDeclarativeDataLoaderThread::networkReplyProxy() const
+{
+    Q_ASSERT(isThisThread());
+    Q_ASSERT(m_networkReplyProxy); // Must call networkAccessManager() first
+    return m_networkReplyProxy;
+}
+
+void QDeclarativeDataLoaderThread::load(QDeclarativeDataBlob *b) 
+{ 
+    b->addref();
+    callMethodInThread(&This::loadThread, b); 
+}
+
+void QDeclarativeDataLoaderThread::loadAsync(QDeclarativeDataBlob *b)
+{
+    b->addref();
+    postMethodToThread(&This::loadThread, b);
+}
+
+void QDeclarativeDataLoaderThread::loadWithStaticData(QDeclarativeDataBlob *b, const QByteArray &d)
+{
+    b->addref();
+    callMethodInThread(&This::loadWithStaticDataThread, b, d);
+}
+
+void QDeclarativeDataLoaderThread::loadWithStaticDataAsync(QDeclarativeDataBlob *b, const QByteArray &d)
+{
+    b->addref();
+    postMethodToThread(&This::loadWithStaticDataThread, b, d);
+}
+
+void QDeclarativeDataLoaderThread::callCompleted(QDeclarativeDataBlob *b) 
+{ 
+    b->addref(); 
+    postMethodToMain(&This::callCompletedMain, b); 
+}
+
+void QDeclarativeDataLoaderThread::callDownloadProgressChanged(QDeclarativeDataBlob *b, qreal p) 
+{ 
+    b->addref(); 
+    postMethodToMain(&This::callDownloadProgressChangedMain, b, p); 
+}
+
+void QDeclarativeDataLoaderThread::initializeEngine(QDeclarativeExtensionInterface *iface, 
+                                                    const char *uri)
+{
+    callMethodInMain(&This::initializeEngineMain, iface, uri);
+}
+
+void QDeclarativeDataLoaderThread::shutdownThread()
+{
+    delete m_networkAccessManager;
+    m_networkAccessManager = 0;
+    delete m_networkReplyProxy;
+    m_networkReplyProxy = 0;
+}
+
+void QDeclarativeDataLoaderThread::loadThread(QDeclarativeDataBlob *b) 
+{ 
+    m_loader->loadThread(b); 
+    b->release();
+}
+
+void QDeclarativeDataLoaderThread::loadWithStaticDataThread(QDeclarativeDataBlob *b, const QByteArray &d)
+{
+    m_loader->loadWithStaticDataThread(b, d);
+    b->release();
+}
+
+void QDeclarativeDataLoaderThread::callCompletedMain(QDeclarativeDataBlob *b) 
+{ 
+#ifdef DATABLOB_DEBUG
+    qWarning("QDeclarativeDataLoaderThread: %s completed() callback", qPrintable(b->url().toString())); 
+#endif
+    b->completed(); 
+    b->release(); 
+}
+
+void QDeclarativeDataLoaderThread::callDownloadProgressChangedMain(QDeclarativeDataBlob *b, qreal p) 
+{ 
+#ifdef DATABLOB_DEBUG
+    qWarning("QDeclarativeDataLoaderThread: %s downloadProgressChanged(%f) callback", 
+             qPrintable(b->url().toString()), p); 
+#endif
+    b->downloadProgressChanged(p); 
+    b->release(); 
+}
+
+void QDeclarativeDataLoaderThread::initializeEngineMain(QDeclarativeExtensionInterface *iface, 
+                                                        const char *uri)
+{
+    Q_ASSERT(m_loader->engine()->thread() == QThread::currentThread());
+    iface->initializeEngine(m_loader->engine(), uri);
+}
+
 /*!
 \class QDeclarativeDataLoader
 \brief The QDeclarativeDataLoader class abstracts loading files and their dependencies over the network.
@@ -553,7 +877,7 @@ Thus QDeclarativeDataBlob::done() will always eventually be called, even if the 
 Create a new QDeclarativeDataLoader for \a engine.
 */
 QDeclarativeDataLoader::QDeclarativeDataLoader(QDeclarativeEngine *engine)
-: m_engine(engine)
+: m_engine(engine), m_thread(new QDeclarativeDataLoaderThread(this))
 {
 }
 
@@ -562,17 +886,105 @@ QDeclarativeDataLoader::~QDeclarativeDataLoader()
 {
     for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter) 
         (*iter)->release();
+
+    m_thread->shutdown();
+    delete m_thread;
+}
+
+void QDeclarativeDataLoader::lock()
+{
+    m_thread->lock();
+}
+
+void QDeclarativeDataLoader::unlock()
+{
+    m_thread->unlock();
 }
 
 /*!
 Load the provided \a blob from the network or filesystem.
+
+The loader must be locked.
 */
-void QDeclarativeDataLoader::load(QDeclarativeDataBlob *blob)
+void QDeclarativeDataLoader::load(QDeclarativeDataBlob *blob, Mode mode)
 {
+#ifdef DATABLOB_DEBUG
+    qWarning("QDeclarativeDataLoader::load(%s): %s thread", qPrintable(blob->m_url.toString()), 
+             m_thread->isThisThread()?"Compile":"Engine");
+#endif
+
     Q_ASSERT(blob->status() == QDeclarativeDataBlob::Null);
     Q_ASSERT(blob->m_manager == 0);
 
-    blob->m_status = QDeclarativeDataBlob::Loading;
+    blob->m_data.setStatus(QDeclarativeDataBlob::Loading);
+    blob->m_manager = this;
+
+    if (m_thread->isThisThread()) {
+        unlock();
+        loadThread(blob);
+        lock();
+    } else if (mode == PreferSynchronous) {
+        unlock();
+        m_thread->load(blob);
+        lock();
+        if (!blob->isCompleteOrError())
+            blob->m_data.setIsAsync(true);
+    } else {
+        Q_ASSERT(mode == Asynchronous);
+        blob->m_data.setIsAsync(true);
+        unlock();
+        m_thread->loadAsync(blob);
+        lock();
+    }
+}
+
+/*!
+Load the provided \a blob with \a data.  The blob's URL is not used by the data loader in this case.
+
+The loader must be locked.
+*/
+void QDeclarativeDataLoader::loadWithStaticData(QDeclarativeDataBlob *blob, const QByteArray &data, Mode mode)
+{
+#ifdef DATABLOB_DEBUG
+    qWarning("QDeclarativeDataLoader::loadWithStaticData(%s, data): %s thread", qPrintable(blob->m_url.toString()), 
+             m_thread->isThisThread()?"Compile":"Engine");
+#endif
+
+    Q_ASSERT(blob->status() == QDeclarativeDataBlob::Null);
+    Q_ASSERT(blob->m_manager == 0);
+    
+    blob->m_data.setStatus(QDeclarativeDataBlob::Loading);
+    blob->m_manager = this;
+
+    if (m_thread->isThisThread()) {
+        unlock();
+        loadWithStaticDataThread(blob, data);
+        lock();
+    } else if (mode == PreferSynchronous) {
+        unlock();
+        m_thread->loadWithStaticData(blob, data);
+        lock();
+        if (!blob->isCompleteOrError())
+            blob->m_data.setIsAsync(true);
+    } else {
+        Q_ASSERT(mode == Asynchronous);
+        blob->m_data.setIsAsync(true);
+        unlock();
+        m_thread->loadWithStaticDataAsync(blob, data);
+        lock();
+    }
+}
+
+void QDeclarativeDataLoader::loadWithStaticDataThread(QDeclarativeDataBlob *blob, const QByteArray &data)
+{
+    ASSERT_LOADTHREAD();
+
+    setData(blob, data);
+}
+
+void QDeclarativeDataLoader::loadThread(QDeclarativeDataBlob *blob)
+{
+    ASSERT_LOADTHREAD();
 
     if (blob->m_url.isEmpty()) {
         QDeclarativeError error;
@@ -595,8 +1007,9 @@ void QDeclarativeDataLoader::load(QDeclarativeDataBlob *blob)
         if (file.open(QFile::ReadOnly)) {
             QByteArray data = file.readAll();
 
-            blob->m_progress = 1.;
-            blob->downloadProgressChanged(1.);
+            blob->m_data.setProgress(0xFF);
+            if (blob->m_data.isAsync())
+                m_thread->callDownloadProgressChanged(blob, 1.);
 
             setData(blob, data);
         } else {
@@ -605,12 +1018,12 @@ void QDeclarativeDataLoader::load(QDeclarativeDataBlob *blob)
 
     } else {
 
-        blob->m_manager = this;
-        QNetworkReply *reply = m_engine->networkAccessManager()->get(QNetworkRequest(blob->m_url));
+        QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(blob->m_url));
+        QObject *nrp = m_thread->networkReplyProxy();
         QObject::connect(reply, SIGNAL(downloadProgress(qint64,qint64)), 
-                         this, SLOT(networkReplyProgress(qint64,qint64)));
+                         nrp, SLOT(downloadProgress(qint64,qint64)));
         QObject::connect(reply, SIGNAL(finished()), 
-                         this, SLOT(networkReplyFinished()));
+                         nrp, SLOT(finished()));
         m_networkReplies.insert(reply, blob);
 
         blob->addref();
@@ -619,9 +1032,10 @@ void QDeclarativeDataLoader::load(QDeclarativeDataBlob *blob)
 
 #define DATALOADER_MAXIMUM_REDIRECT_RECURSION 16
 
-void QDeclarativeDataLoader::networkReplyFinished()
+void QDeclarativeDataLoader::networkReplyFinished(QNetworkReply *reply)
 {
-    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
+    Q_ASSERT(m_thread->isThisThread());
+
     reply->deleteLater();
 
     QDeclarativeDataBlob *blob = m_networkReplies.take(reply);
@@ -636,8 +1050,9 @@ void QDeclarativeDataLoader::networkReplyFinished()
             QUrl url = reply->url().resolved(redirect.toUrl());
             blob->m_finalUrl = url;
 
-            QNetworkReply *reply = m_engine->networkAccessManager()->get(QNetworkRequest(url));
-            QObject::connect(reply, SIGNAL(finished()), this, SLOT(networkReplyFinished()));
+            QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(url));
+            QObject *nrp = m_thread->networkReplyProxy();
+            QObject::connect(reply, SIGNAL(finished()), nrp, SLOT(finished()));
             m_networkReplies.insert(reply, blob);
             return;
         }
@@ -653,30 +1068,21 @@ void QDeclarativeDataLoader::networkReplyFinished()
     blob->release();
 }
 
-void QDeclarativeDataLoader::networkReplyProgress(qint64 bytesReceived, qint64 bytesTotal)
+void QDeclarativeDataLoader::networkReplyProgress(QNetworkReply *reply,
+                                                  qint64 bytesReceived, qint64 bytesTotal)
 {
-    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
+    Q_ASSERT(m_thread->isThisThread());
+
     QDeclarativeDataBlob *blob = m_networkReplies.value(reply);
 
     Q_ASSERT(blob);
 
     if (bytesTotal != 0) {
-        blob->m_progress = bytesReceived / bytesTotal;
-        blob->downloadProgressChanged(blob->m_progress);
+        quint8 progress = 0xFF * (qreal(bytesReceived) / qreal(bytesTotal));
+        blob->m_data.setProgress(progress);
+        if (blob->m_data.isAsync())
+            m_thread->callDownloadProgressChanged(blob, blob->m_data.progress());
     }
-}
-
-/*!
-Load the provided \a blob with \a data.  The blob's URL is not used by the data loader in this case.
-*/
-void QDeclarativeDataLoader::loadWithStaticData(QDeclarativeDataBlob *blob, const QByteArray &data)
-{
-    Q_ASSERT(blob->status() == QDeclarativeDataBlob::Null);
-    Q_ASSERT(blob->m_manager == 0);
-    
-    blob->m_status = QDeclarativeDataBlob::Loading;
-
-    setData(blob, data);
 }
 
 /*!
@@ -687,6 +1093,24 @@ QDeclarativeEngine *QDeclarativeDataLoader::engine() const
     return m_engine;
 }
 
+/*!
+Call the initializeEngine() method on \a iface.  Used by QDeclarativeImportDatabase to ensure it
+gets called in the correct thread.
+*/
+void QDeclarativeDataLoader::initializeEngine(QDeclarativeExtensionInterface *iface, 
+                                              const char *uri)
+{
+    Q_ASSERT(m_thread->isThisThread() || engine()->thread() == QThread::currentThread());
+
+    if (m_thread->isThisThread()) {
+        m_thread->initializeEngine(iface, uri);
+    } else {
+        Q_ASSERT(engine()->thread() == QThread::currentThread());
+        iface->initializeEngine(engine(), uri);
+    }
+}
+
+
 void QDeclarativeDataLoader::setData(QDeclarativeDataBlob *blob, const QByteArray &data)
 {
     blob->m_inCallback = true;
@@ -696,8 +1120,8 @@ void QDeclarativeDataLoader::setData(QDeclarativeDataBlob *blob, const QByteArra
     if (!blob->isError() && !blob->isWaiting())
         blob->allDependenciesDone();
 
-    if (blob->status() != QDeclarativeDataBlob::Error)
-        blob->m_status = QDeclarativeDataBlob::WaitingForDependencies;
+    if (blob->status() != QDeclarativeDataBlob::Error) 
+        blob->m_data.setStatus(QDeclarativeDataBlob::WaitingForDependencies);
 
     blob->m_inCallback = false;
 
@@ -741,6 +1165,8 @@ QDeclarativeTypeData *QDeclarativeTypeLoader::get(const QUrl &url)
             (QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url).isEmpty() || 
              !QDir::isRelativePath(QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url))));
 
+    lock();
+    
     QDeclarativeTypeData *typeData = m_typeCache.value(url);
 
     if (!typeData) {
@@ -750,6 +1176,9 @@ QDeclarativeTypeData *QDeclarativeTypeLoader::get(const QUrl &url)
     }
 
     typeData->addref();
+
+    unlock();
+
     return typeData;
 }
 
@@ -761,8 +1190,13 @@ The specified \a options control how the loader handles type data.
 */
 QDeclarativeTypeData *QDeclarativeTypeLoader::get(const QByteArray &data, const QUrl &url, Options options)
 {
+    lock();
+
     QDeclarativeTypeData *typeData = new QDeclarativeTypeData(url, options, this);
     QDeclarativeDataLoader::loadWithStaticData(typeData, data);
+
+    unlock();
+
     return typeData;
 }
 
@@ -775,6 +1209,8 @@ QDeclarativeScriptBlob *QDeclarativeTypeLoader::getScript(const QUrl &url)
             (QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url).isEmpty() || 
              !QDir::isRelativePath(QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url))));
 
+    lock();
+
     QDeclarativeScriptBlob *scriptBlob = m_scriptCache.value(url);
 
     if (!scriptBlob) {
@@ -782,6 +1218,10 @@ QDeclarativeScriptBlob *QDeclarativeTypeLoader::getScript(const QUrl &url)
         m_scriptCache.insert(url, scriptBlob);
         QDeclarativeDataLoader::load(scriptBlob);
     }
+
+    scriptBlob->addref();
+
+    unlock();
 
     return scriptBlob;
 }
@@ -795,6 +1235,8 @@ QDeclarativeQmldirData *QDeclarativeTypeLoader::getQmldir(const QUrl &url)
             (QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url).isEmpty() || 
              !QDir::isRelativePath(QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url))));
 
+    lock();
+
     QDeclarativeQmldirData *qmldirData = m_qmldirCache.value(url);
 
     if (!qmldirData) {
@@ -804,6 +1246,9 @@ QDeclarativeQmldirData *QDeclarativeTypeLoader::getQmldir(const QUrl &url)
     }
 
     qmldirData->addref();
+
+    unlock();
+
     return qmldirData;
 }
 
@@ -914,6 +1359,7 @@ const QDeclarativeDirParser *QDeclarativeTypeLoader::qmlDirParser(const QString 
     return qmldirParser;
 }
 
+
 /*!
 Clears cached information about loaded files, including any type data, scripts
 and qmldir information.
@@ -1004,8 +1450,6 @@ void QDeclarativeTypeData::unregisterCallback(TypeDataCallback *callback)
 
 void QDeclarativeTypeData::done()
 {
-    addref();
-
     // Check all script dependencies for errors
     for (int ii = 0; !isError() && ii < m_scripts.count(); ++ii) {
         const ScriptReference &script = m_scripts.at(ii);
@@ -1046,14 +1490,15 @@ void QDeclarativeTypeData::done()
 
     if (!(m_options & QDeclarativeTypeLoader::PreserveParser))
         scriptParser.clear();
+}
 
+void QDeclarativeTypeData::completed()
+{
     // Notify callbacks
     while (!m_callbacks.isEmpty()) {
         TypeDataCallback *callback = m_callbacks.takeFirst();
         callback->typeDataReady(this);
     }
-
-    release();
 }
 
 void QDeclarativeTypeData::dataReceived(const QByteArray &data)
@@ -1082,7 +1527,6 @@ void QDeclarativeTypeData::dataReceived(const QByteArray &data)
             ref.location = import.location.start;
             ref.qualifier = import.qualifier;
             ref.script = blob;
-            blob->addref();
             m_scripts << ref;
 
         }
@@ -1270,15 +1714,13 @@ QDeclarativeQmldirData *QDeclarativeTypeData::qmldirForUrl(const QUrl &url)
     return 0;
 }
 
-QDeclarativeScriptData::QDeclarativeScriptData(QDeclarativeEngine *engine)
-: QDeclarativeCleanup(engine), importCache(0), pragmas(QDeclarativeScript::Object::ScriptBlock::None),
-  m_loaded(false)
+QDeclarativeScriptData::QDeclarativeScriptData()
+: importCache(0), pragmas(QDeclarativeScript::Object::ScriptBlock::None), m_loaded(false) 
 {
 }
 
 QDeclarativeScriptData::~QDeclarativeScriptData()
 {
-    clear();
 }
 
 void QDeclarativeScriptData::clear()
@@ -1294,6 +1736,9 @@ void QDeclarativeScriptData::clear()
 
     qPersistentDispose(m_program);
     qPersistentDispose(m_value);
+
+    // An addref() was made when the QDeclarativeCleanup was added to the engine.
+    release();
 }
 
 QDeclarativeScriptBlob::QDeclarativeScriptBlob(const QUrl &url, QDeclarativeTypeLoader *loader)
@@ -1361,7 +1806,6 @@ void QDeclarativeScriptBlob::dataReceived(const QByteArray &data)
             ref.location = import.location.start;
             ref.qualifier = import.qualifier;
             ref.script = blob;
-            blob->addref();
             m_scripts << ref;
         } else {
             Q_ASSERT(import.type == QDeclarativeScript::Import::Library);
@@ -1408,9 +1852,9 @@ void QDeclarativeScriptBlob::done()
         return;
 
     QDeclarativeEngine *engine = typeLoader()->engine();
-    m_scriptData = new QDeclarativeScriptData(engine);
+    m_scriptData = new QDeclarativeScriptData();
     m_scriptData->url = finalUrl();
-    m_scriptData->importCache = new QDeclarativeTypeNameCache(engine);
+    m_scriptData->importCache = new QDeclarativeTypeNameCache();
 
     for (int ii = 0; !isError() && ii < m_scripts.count(); ++ii) {
         const ScriptReference &script = m_scripts.at(ii);
@@ -1422,13 +1866,7 @@ void QDeclarativeScriptBlob::done()
     m_imports.populateCache(m_scriptData->importCache, engine);
 
     m_scriptData->pragmas = m_pragmas;
-
-    // XXX TODO: Handle errors that occur duing the script compile
-    QV8Engine *v8engine = QDeclarativeEnginePrivate::get(engine)->v8engine();
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(v8engine->context());
-    v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_source, finalUrl().toString(), 1);
-    m_scriptData->m_program = qPersistentNew<v8::Script>(program);
+    m_scriptData->m_programSource = m_source;
 }
 
 QDeclarativeQmldirData::QDeclarativeQmldirData(const QUrl &url)
@@ -1451,3 +1889,4 @@ void QDeclarativeQmldirData::dataReceived(const QByteArray &data)
 
 QT_END_NAMESPACE
 
+#include "qdeclarativetypeloader.moc"

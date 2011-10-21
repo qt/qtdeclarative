@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtDeclarative/qdeclarativeprivate.h>
-#include "private/qdeclarativemetatype_p.h"
+#include "qdeclarativemetatype_p.h"
 
 #include <private/qdeclarativeproxymetaobject_p.h>
 #include <private/qdeclarativecustomparser_p.h>
@@ -63,7 +63,6 @@
 #include <qstringlist.h>
 #include <qvector.h>
 #include <qlocale.h>
-#include <QtCore/qcryptographichash.h>
 #include <QtDeclarative/qjsvalue.h>
 
 #include <ctype.h>
@@ -180,7 +179,7 @@ public:
     bool m_isInterface : 1;
     const char *m_iid;
     QString m_module;
-    QByteArray m_name;
+    QString m_name;
     QString m_elementName;
     int m_version_maj;
     int m_version_min;
@@ -242,9 +241,9 @@ QDeclarativeType::QDeclarativeType(int index, const QDeclarativePrivate::Registe
 QDeclarativeType::QDeclarativeType(int index, const QDeclarativePrivate::RegisterType &type)
 : d(new QDeclarativeTypePrivate)
 {
-    QByteArray name = type.uri;
-    if (type.uri) name += '/';
-    name += type.elementName;
+    QString name = QString::fromUtf8(type.uri);
+    if (type.uri) name += QLatin1Char('/');
+    name += QString::fromUtf8(type.elementName);
 
     d->m_module = QString::fromUtf8(type.uri);
     d->m_name = name;
@@ -517,14 +516,14 @@ QByteArray QDeclarativeType::typeName() const
 const QString &QDeclarativeType::elementName() const
 {
     if (d->m_elementName.isEmpty()) {
-        QByteArray n = qmlTypeName();
-        int idx = n.lastIndexOf('/');
-        d->m_elementName = QString::fromUtf8(n.mid(idx + 1));
+        QString n = qmlTypeName();
+        int idx = n.lastIndexOf(QLatin1Char('/'));
+        d->m_elementName = n.mid(idx + 1);
     }
     return d->m_elementName;
 }
 
-const QByteArray &QDeclarativeType::qmlTypeName() const
+const QString &QDeclarativeType::qmlTypeName() const
 {
     return d->m_name;
 }
@@ -861,7 +860,7 @@ int registerInterface(const QDeclarativePrivate::RegisterInterface &interface)
     data->idToType.insert(type->qListTypeId(), type);
     // XXX No insertMulti, so no multi-version interfaces?
     if (!type->qmlTypeName().isEmpty())
-        data->nameToType.insert(QString::fromUtf8(type->qmlTypeName()), type);
+        data->nameToType.insert(type->qmlTypeName(), type);
 
     if (data->interfaces.size() <= interface.typeId)
         data->interfaces.resize(interface.typeId + 16);
@@ -895,7 +894,7 @@ int registerType(const QDeclarativePrivate::RegisterType &type)
     if (dtype->qListTypeId()) data->idToType.insert(dtype->qListTypeId(), dtype);
 
     if (!dtype->qmlTypeName().isEmpty())
-        data->nameToType.insertMulti(QString::fromUtf8(dtype->qmlTypeName()), dtype);
+        data->nameToType.insertMulti(dtype->qmlTypeName(), dtype);
 
     data->metaObjectToType.insertMulti(dtype->baseMetaObject(), dtype);
 

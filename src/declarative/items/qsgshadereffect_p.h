@@ -89,7 +89,7 @@ public:
 
     QByteArray fragmentShader() const { return m_source.fragmentCode; }
     void setFragmentShader(const QByteArray &code);
-    
+
     QByteArray vertexShader() const { return m_source.vertexCode; }
     void setVertexShader(const QByteArray &code);
 

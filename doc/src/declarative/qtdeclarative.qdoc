@@ -95,7 +95,7 @@
   int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
   \endcode
 
-  The former is the standard form which registers the type \e T as a new type.
+  The former is the standard form which registers the type \i T as a new type.
   The latter allows a particular revision of a class to be registered in
   a specified version (see \l {QML Type Versioning}).
 

@@ -35,7 +35,7 @@
 
 \section1 Properties
 
-QML components have \e properties that can be read and modified by other objects.
+QML components have \i properties that can be read and modified by other objects.
 In QML, properties serve many purposes but their main function is to bind to
 values. Values may be a \l{QML Basic Types}{basic type}, or other QML elements.
 
@@ -104,7 +104,7 @@ although it is possible to use the \l {Using the Binding Element}{Binding} eleme
 
 \section1 Types of Properties
 
-Properties may bind to different types, but they are are \e type-safe. That is,
+Properties may bind to different types, but they are are \i type-safe. That is,
 properties only allow you to assign a value that matches the property type. For
 example, if a property is a real, and if you try to assign a string to it you
 will get an error.
@@ -163,21 +163,21 @@ For more information about the \c children property, please read the
 \keyword attached-properties
 \section2 Attached Properties
 
-Certain objects provide additional properties by \e attaching properties to other
-objects. For example, the \l Keys element have properties that can \e attach to other QML
+Certain objects provide additional properties by \i attaching properties to other
+objects. For example, the \l Keys element have properties that can \i attach to other QML
 objects to provide keyboard handling.
 
 \snippet doc/src/snippets/declarative/properties.qml list attached property
 The element \l ListView provides the delegate, \c listdelegate, the property
 \c isCurrentItem as an attached property. The \c ListView.isCurrentItem
-\e{attached property} provides highlight information to the delegate.
+\i{attached property} provides highlight information to the delegate.
 Effectively, the \l ListView element attaches the \c ListView.isCurrentItem
 property to each delegate it creates.
 
 \keyword attached-signalhandlers
 \section2 Attached Signal Handlers
 
-\e {Attached signal handlers} are similar
+\i {Attached signal handlers} are similar
 to \l{Attached Properties}{attached properties} in that they attach to objects
 to provide additional functionality to objects. Two prominent elements,
 \l Component and \l Keys element provide
@@ -210,8 +210,8 @@ for more details about list properties and their available operations.
 \keyword qml-grouped-properties
 \section2 Grouped Properties
 
-In some cases properties form a logical group and use either the \e dot notation
-or \e group notation.
+In some cases properties form a logical group and use either the \i dot notation
+or \i group notation.
 
 Grouped properties may be written both ways:
 \snippet doc/src/snippets/declarative/properties.qml grouped properties
@@ -222,8 +222,8 @@ In the element documentation grouped properties are shown using the dot notation
 
 Unlike a property definition, which allocates a new, unique storage space for
 the property, a property alias connects the newly declared property, called the
-\e{aliasing property} as a direct reference to an existing property, the
-\e{aliased property}. Read or write operations on the aliasing property results
+\i{aliasing property} as a direct reference to an existing property, the
+\i{aliased property}. Read or write operations on the aliasing property results
 in a read or write operations on the aliased property, respectively.
 
 A property alias declaration is similar to an ordinary property definition:
@@ -285,8 +285,8 @@ aliases to reassign children to the \l ListView, creating a tab effect.
 \section2 Default Properties
 
 When imported, QML components will bind declared children to their designated
-\e{default properties}. The optional \c default attribute specifies a property
-as the \e {default property}. For example, the State element's default property
+\i{default properties}. The optional \c default attribute specifies a property
+as the \i {default property}. For example, the State element's default property
 is its \l{State::changes}{changes} property. \l PropertyChanges elements
 may simply be placed as the \c{State}'s children and they will be bound to the
 \c changes property.

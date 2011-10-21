@@ -42,7 +42,7 @@
 #ifndef QSGCONTEXT2DTEXTURE_P_H
 #define QSGCONTEXT2DTEXTURE_P_H
 
-#include "qsgtexture.h"
+#include <qsgtexture.h>
 #include "qsgcanvasitem_p.h"
 #include "qsgcontext2d_p.h"
 
@@ -100,7 +100,7 @@ public Q_SLOTS:
 
 protected:
     void paintWithoutTiles();
-    virtual QPaintDevice* beginPainting() {m_painting = true;}
+    virtual QPaintDevice* beginPainting() {m_painting = true; return 0; }
     virtual void endPainting() {m_painting = false;}
     virtual QSGContext2DTile* createTile() const = 0;
     virtual void compositeTile(QSGContext2DTile* tile) = 0;
@@ -133,11 +133,13 @@ class QSGContext2DFBOTexture : public QSGContext2DTexture
 
 public:
     QSGContext2DFBOTexture();
+    ~QSGContext2DFBOTexture();
     virtual int textureId() const;
     virtual bool updateTexture();
     virtual QSGContext2DTile* createTile() const;
     virtual QImage toImage(const QRectF& region = QRectF());
     virtual QPaintDevice* beginPainting();
+    virtual void endPainting();
     QRectF textureSubRect() const;
     virtual bool supportThreadRendering() const {return false;}
     virtual bool supportDirectRendering() const {return false;}
@@ -151,8 +153,10 @@ private Q_SLOTS:
     void grabImage();
 
 private:
+    bool doMultisampling() const;
     QImage m_grabedImage;
     QOpenGLFramebufferObject *m_fbo;
+    QOpenGLFramebufferObject *m_multisampledFbo;
     QMutex m_mutex;
     QWaitCondition m_condition;
     QSize m_fboSize;

@@ -87,7 +87,9 @@ public:
 
     void clearComponentCache();
 
-    virtual QWidget *viewWidget() const = 0;
+    virtual Qt::WindowFlags windowFlags() const = 0;
+    virtual void setWindowFlags(Qt::WindowFlags flags) = 0;
+
     virtual QDeclarativeEngine *declarativeEngine() const = 0;
 
 
@@ -157,10 +159,6 @@ private:
     void animationSpeedChangeRequested(qreal factor);
     void animationPausedChangeRequested(bool paused);
 
-    void setToolBoxVisible(bool visible);
-    void createToolBox();
-
-    ToolBox *m_toolBox;
     AbstractTool *m_currentTool;
 
     bool m_showAppOnTop;

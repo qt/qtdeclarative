@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 inline qreal qmlMod(qreal x, qreal y)
 {
 #ifdef QT_USE_MATH_H_FLOATS
-    if(sizeof(qreal) == sizeof(float))
+    if (sizeof(qreal) == sizeof(float))
         return fmodf(float(x), float(y));
     else
 #endif
@@ -101,16 +101,9 @@ void QSGPathViewPrivate::init()
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QSGItem::ItemIsFocusScope);
     q->setFiltersChildMouseEvents(true);
-    q->connect(&tl, SIGNAL(updated()), q, SLOT(ticked()));
+    FAST_CONNECT(&tl, SIGNAL(updated()), q, SLOT(ticked()))
     lastPosTime.invalidate();
-    static int timelineCompletedIdx = -1;
-    static int movementEndingIdx = -1;
-    if (timelineCompletedIdx == -1) {
-        timelineCompletedIdx = QDeclarativeTimeLine::staticMetaObject.indexOfSignal("completed()");
-        movementEndingIdx = QSGPathView::staticMetaObject.indexOfSlot("movementEnding()");
-    }
-    QMetaObject::connect(&tl, timelineCompletedIdx,
-                         q, movementEndingIdx, Qt::DirectConnection);
+    FAST_CONNECT(&tl, SIGNAL(completed()), q, SLOT(movementEnding()))
 }
 
 QSGItem *QSGPathViewPrivate::getItem(int modelIndex, bool onPath)
@@ -122,7 +115,7 @@ QSGItem *QSGPathViewPrivate::getItem(int modelIndex, bool onPath)
         if (!attType) {
             // pre-create one metatype to share with all attached objects
             attType = new QDeclarativeOpenMetaObjectType(&QSGPathViewAttached::staticMetaObject, qmlEngine(q));
-            foreach(const QString &attr, path->attributes())
+            foreach (const QString &attr, path->attributes())
                 attType->createProperty(attr.toUtf8());
         }
         qPathViewAttachedType = attType;
@@ -218,7 +211,9 @@ void QSGPathViewPrivate::createHighlight()
 
     QSGItem *item = 0;
     if (highlightComponent) {
-        QDeclarativeContext *highlightContext = new QDeclarativeContext(qmlContext(q));
+        QDeclarativeContext *creationContext = highlightComponent->creationContext();
+        QDeclarativeContext *highlightContext = new QDeclarativeContext(
+                creationContext ? creationContext : qmlContext(q));
         QObject *nobj = highlightComponent->create(highlightContext);
         if (nobj) {
             QDeclarative_setParent_noEvent(highlightContext, nobj);
@@ -327,7 +322,7 @@ void QSGPathViewPrivate::updateItem(QSGItem *item, qreal percent)
         if (qFuzzyCompare(att->m_percent, percent))
             return;
         att->m_percent = percent;
-        foreach(const QString &attr, path->attributes())
+        foreach (const QString &attr, path->attributes())
             att->setValue(attr.toUtf8(), path->attributeAt(attr, percent));
     }
     QPointF pf = path->pointAt(percent);
@@ -517,6 +512,8 @@ void QSGPathView::setModel(const QVariant &model)
         if (!d->ownModel) {
             d->model = new QSGVisualDataModel(qmlContext(this));
             d->ownModel = true;
+            if (isComponentComplete())
+                static_cast<QSGVisualDataModel *>(d->model.data())->componentComplete();
         }
         if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(d->model))
             dataModel->setModel(model);
@@ -1265,7 +1262,7 @@ bool QSGPathView::sendMouseEvent(QMouseEvent *event)
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 
-        switch(mouseEvent.type()) {
+        switch (mouseEvent.type()) {
         case QEvent::MouseMove:
             d->handleMouseMoveEvent(&mouseEvent);
             break;
@@ -1332,7 +1329,11 @@ void QSGPathView::updatePolish()
 void QSGPathView::componentComplete()
 {
     Q_D(QSGPathView);
+    if (d->model && d->ownModel)
+        static_cast<QSGVisualDataModel *>(d->model.data())->componentComplete();
+
     QSGItem::componentComplete();
+
     d->createHighlight();
     // It is possible that a refill has already happended to to Path
     // bindings being handled in the componentComplete().  If so
@@ -1342,6 +1343,9 @@ void QSGPathView::componentComplete()
         d->regenerate();
     }
     d->updateHighlight();
+
+    if (d->modelCount)
+        emit countChanged();
 }
 
 void QSGPathView::refill()
@@ -1577,7 +1581,7 @@ void QSGPathView::createdItem(int index, QSGItem *item)
         if (!d->attType) {
             // pre-create one metatype to share with all attached objects
             d->attType = new QDeclarativeOpenMetaObjectType(&QSGPathViewAttached::staticMetaObject, qmlEngine(this));
-            foreach(const QString &attr, d->path->attributes())
+            foreach (const QString &attr, d->path->attributes())
                 d->attType->createProperty(attr.toUtf8());
         }
         qPathViewAttachedType = d->attType;

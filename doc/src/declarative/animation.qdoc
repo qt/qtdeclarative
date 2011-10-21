@@ -80,7 +80,7 @@ directly. This may be done in signal handlers or attached properties.
 
 \snippet doc/src/snippets/declarative/animation.qml direct property change
 
-However, to create more control, \e {property animations} apply smooth movements
+However, to create more control, \i {property animations} apply smooth movements
 by interpolating values between property value changes. Property animations
 provide timing controls and allows different interpolations through
 \l{qml-easing-animation}{easing curves}.
@@ -125,7 +125,7 @@ that the transition applies to any state change.
 
 \section2 Default Animation as Behaviors
 
-Default property animations are set using \e {behavior animations}. Animations
+Default property animations are set using \i {behavior animations}. Animations
 declared in \l {Behavior} elements apply to the property and animates any
 property value changes. However, Behavior elements have an
 \c enabled property to purposely enable or disable the behavior animations.
@@ -146,7 +146,7 @@ demonstration of behavioral animations.
 
 \section1 Playing Animations in Parallel or in Sequence
 
-Animations can run \e {in parallel} or \e {in sequence}. Parallel animations
+Animations can run \i {in parallel} or \i {in sequence}. Parallel animations
 will play a group of animations at the same time while sequential animations
 play a group of animations in order: one after the other. Grouping animations in
 \l{SequentialAnimation} and \l{ParallelAnimation} will play the animations in
@@ -207,7 +207,7 @@ In addition, QML provides several other elements useful for animation:
 \o PauseAnimation: enables pauses during animations
 \o ScriptAction: allows JavaScript to be executed during an animation, and can
 be used together with StateChangeScript to reused existing scripts
-\o PropertyAction: changes a property \e immediately during an animation,
+\o PropertyAction: changes a property \i immediately during an animation,
 without animating the property change
 \endlist
 

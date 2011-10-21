@@ -49,7 +49,7 @@
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qevent.h>
 #include <QTextBoundaryFinder>
-#include <qsgtextnode_p.h>
+#include "qsgtextnode_p.h"
 #include <qsgsimplerectnode.h>
 
 #include <QtGui/qstylehints.h>
@@ -103,7 +103,7 @@ QString QSGTextInput::text() const
 void QSGTextInput::setText(const QString &s)
 {
     Q_D(QSGTextInput);
-    if(s == text())
+    if (s == text())
         return;
     d->control->setText(s);
 }
@@ -203,8 +203,8 @@ void QSGTextInput::setText(const QString &s)
     \list
     \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
     \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \o Font.AllLowercase	 - This alters the text to be rendered in all lowercase type.
-    \o Font.SmallCaps -	This alters the text to be rendered in small-caps type.
+    \o Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \o Font.SmallCaps - This alters the text to be rendered in small-caps type.
     \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
     \endlist
 
@@ -237,7 +237,7 @@ void QSGTextInput::setFont(const QFont &font)
         d->control->setFont(d->font);
         updateSize();
         updateCursorRectangle();
-        if(d->cursorItem){
+        if (d->cursorItem) {
             d->cursorItem->setHeight(QFontMetrics(d->font).height());
         }
     }
@@ -795,7 +795,7 @@ void QSGTextInput::setValidator(QValidator* v)
         return;
 
     d->control->setValidator(v);
-    if(!d->control->hasAcceptableInput()){
+    if (!d->control->hasAcceptableInput()) {
         d->oldValidity = false;
         emit acceptableInputChanged();
     }
@@ -935,10 +935,10 @@ void QSGTextInput::setCursorDelegate(QDeclarativeComponent* c)
         return;
 
     d->cursorComponent = c;
-    if(!c){
+    if (!c) {
         //note that the components are owned by something else
         delete d->cursorItem;
-    }else{
+    } else {
         d->startCreatingCursor();
     }
 
@@ -948,12 +948,12 @@ void QSGTextInput::setCursorDelegate(QDeclarativeComponent* c)
 void QSGTextInputPrivate::startCreatingCursor()
 {
     Q_Q(QSGTextInput);
-    if(cursorComponent->isReady()){
+    if (cursorComponent->isReady()) {
         q->createCursor();
-    }else if(cursorComponent->isLoading()){
+    } else if (cursorComponent->isLoading()) {
         q->connect(cursorComponent, SIGNAL(statusChanged(int)),
                 q, SLOT(createCursor()));
-    }else {//isError
+    } else { // isError
         qmlInfo(q, cursorComponent->errors()) << QSGTextInput::tr("Could not load cursor delegate");
     }
 }
@@ -961,18 +961,21 @@ void QSGTextInputPrivate::startCreatingCursor()
 void QSGTextInput::createCursor()
 {
     Q_D(QSGTextInput);
-    if(d->cursorComponent->isError()){
+    if (d->cursorComponent->isError()) {
         qmlInfo(this, d->cursorComponent->errors()) << tr("Could not load cursor delegate");
         return;
     }
 
-    if(!d->cursorComponent->isReady())
+    if (!d->cursorComponent->isReady())
         return;
 
-    if(d->cursorItem)
+    if (d->cursorItem)
         delete d->cursorItem;
-    d->cursorItem = qobject_cast<QSGItem*>(d->cursorComponent->create());
-    if(!d->cursorItem){
+    QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
+    QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
+    d->cursorItem = qobject_cast<QSGItem*>(object);
+    if (!d->cursorItem) {
+        delete object;
         qmlInfo(this, d->cursorComponent->errors()) << tr("Could not instantiate cursor delegate");
         return;
     }
@@ -1088,6 +1091,10 @@ void QSGTextInput::mouseDoubleClickEvent(QMouseEvent *event)
         int cursor = d->xToPos(event->localPos().x());
         d->control->selectWordAtPos(cursor);
         event->setAccepted(true);
+        if (!d->hasPendingTripleClick()) {
+            d->tripleClickStartPoint = event->localPos().toPoint();
+            d->tripleClickTimer.start();
+        }
     } else {
         QSGImplicitSizeItem::mouseDoubleClickEvent(event);
     }
@@ -1098,24 +1105,24 @@ void QSGTextInput::mousePressEvent(QMouseEvent *event)
     Q_D(QSGTextInput);
     if (d->sendMouseEventToInputContext(event))
         return;
-    if(d->focusOnPress){
+    if (d->focusOnPress) {
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
-        if (d->showInputPanelOnFocus) {
-            if (hasActiveFocus() && hadActiveFocus && !isReadOnly()) {
-                // re-open input panel on press if already focused
-                openSoftwareInputPanel();
-            }
-        } else { // show input panel on click
-            if (hasActiveFocus() && !hadActiveFocus) {
-                d->clickCausedFocus = true;
-            }
-        }
+        // re-open input panel on press if already focused
+        if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
+            openSoftwareInputPanel();
     }
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
         d->pressPos = event->localPos();
+        QPoint distanceVector = d->pressPos.toPoint() - d->tripleClickStartPoint;
+        if (d->hasPendingTripleClick()
+            && distanceVector.manhattanLength() < qApp->styleHints()->startDragDistance()) {
+            event->setAccepted(true);
+            selectAll();
+            return;
+        }
     }
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
     int cursor = d->xToPos(event->localPos().x());
@@ -1147,16 +1154,6 @@ void QSGTextInput::mouseReleaseEvent(QMouseEvent *event)
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
-    if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
-            if (canvas() && canvas() == QGuiApplication::activeWindow()) {
-                // ### refactor: implement virtual keyboard properly..
-                qDebug("QSGTextInput: virtual keyboard no implemented...");
-//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
-            }
-        }
-    }
-    d->clickCausedFocus = false;
     d->control->processEvent(event);
     if (!event->isAccepted())
         QSGImplicitSizeItem::mouseReleaseEvent(event);
@@ -1200,7 +1197,7 @@ bool QSGTextInput::event(QEvent* ev)
     Q_D(QSGTextInput);
     //Anything we don't deal with ourselves, pass to the control
     bool handled = false;
-    switch(ev->type()){
+    switch (ev->type()) {
         case QEvent::KeyPress:
         case QEvent::KeyRelease://###Should the control be doing anything with release?
         case QEvent::InputMethod:
@@ -1212,7 +1209,7 @@ bool QSGTextInput::event(QEvent* ev)
         default:
             handled = d->control->processEvent(ev);
     }
-    if(!handled)
+    if (!handled)
         handled = QSGImplicitSizeItem::event(ev);
     return handled;
 }
@@ -1350,7 +1347,7 @@ QSGNode *QSGTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *da
 QVariant QSGTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     Q_D(const QSGTextInput);
-    switch(property) {
+    switch (property) {
     case Qt::ImEnabled:
         return QVariant((bool)(flags() & ItemAcceptsInputMethod));
     case Qt::ImHints:
@@ -1362,10 +1359,12 @@ QVariant QSGTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
     case Qt::ImCursorPosition:
         return QVariant(d->control->cursor());
     case Qt::ImSurroundingText:
-        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit && !d->control->passwordEchoEditing())
+        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit
+            && !d->control->passwordEchoEditing()) {
             return QVariant(displayText());
-        else
+        } else {
             return QVariant(text());
+        }
     case Qt::ImCurrentSelection:
         return QVariant(selectedText());
     case Qt::ImMaximumTextLength:
@@ -1502,7 +1501,7 @@ QString QSGTextInput::passwordCharacter() const
 void QSGTextInput::setPasswordCharacter(const QString &str)
 {
     Q_D(QSGTextInput);
-    if(str.length() < 1)
+    if (str.length() < 1)
         return;
     d->control->setPasswordCharacter(str.constData()[0]);
     EchoMode echoMode_ = echoMode();
@@ -1786,11 +1785,8 @@ void QSGTextInput::closeSoftwareInputPanel()
 void QSGTextInput::focusInEvent(QFocusEvent *event)
 {
     Q_D(const QSGTextInput);
-    if (d->showInputPanelOnFocus) {
-        if (d->focusOnPress && !isReadOnly()) {
-            openSoftwareInputPanel();
-        }
-    }
+    if (d->focusOnPress && !isReadOnly())
+        openSoftwareInputPanel();
     QSGImplicitSizeItem::focusInEvent(event);
 }
 
@@ -1801,7 +1797,7 @@ void QSGTextInput::itemChange(ItemChange change, const ItemChangeData &value)
         bool hasFocus = value.boolValue;
         d->focused = hasFocus;
         setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
-        if(echoMode() == QSGTextInput::PasswordEchoOnEdit && !hasFocus)
+        if (echoMode() == QSGTextInput::PasswordEchoOnEdit && !hasFocus)
             d->control->updatePasswordEchoEditing(false);//QLineControl sets it on key events, but doesn't deal with focus events
         if (!hasFocus)
             d->control->deselect();
@@ -1862,6 +1858,7 @@ void QSGTextInputPrivate::init()
     q->connect(control, SIGNAL(displayTextChanged(QString)),
                q, SLOT(updateRect()));
     q->updateSize();
+    imHints &= ~Qt::ImhMultiLine;
     oldValidity = control->hasAcceptableInput();
     lastSelectionStart = 0;
     lastSelectionEnd = 0;
@@ -1887,12 +1884,12 @@ void QSGTextInput::cursorPosChanged()
     d->control->resetCursorBlinkTimer();
 #endif
 
-    if(!d->control->hasSelectedText()){
-        if(d->lastSelectionStart != d->control->cursor()){
+    if (!d->control->hasSelectedText()) {
+        if (d->lastSelectionStart != d->control->cursor()) {
             d->lastSelectionStart = d->control->cursor();
             emit selectionStartChanged();
         }
-        if(d->lastSelectionEnd != d->control->cursor()){
+        if (d->lastSelectionEnd != d->control->cursor()) {
             d->lastSelectionEnd = d->control->cursor();
             emit selectionEndChanged();
         }
@@ -1917,15 +1914,15 @@ void QSGTextInput::selectionChanged()
     updateRect();//TODO: Only update rect in selection
     emit selectedTextChanged();
 
-    if(d->lastSelectionStart != d->control->selectionStart()){
+    if (d->lastSelectionStart != d->control->selectionStart()) {
         d->lastSelectionStart = d->control->selectionStart();
-        if(d->lastSelectionStart == -1)
+        if (d->lastSelectionStart == -1)
             d->lastSelectionStart = d->control->cursor();
         emit selectionStartChanged();
     }
-    if(d->lastSelectionEnd != d->control->selectionEnd()){
+    if (d->lastSelectionEnd != d->control->selectionEnd()) {
         d->lastSelectionEnd = d->control->selectionEnd();
-        if(d->lastSelectionEnd == -1)
+        if (d->lastSelectionEnd == -1)
             d->lastSelectionEnd = d->control->cursor();
         emit selectionEndChanged();
     }
@@ -1940,7 +1937,7 @@ void QSGTextInput::q_textChanged()
     d->determineHorizontalAlignment();
     d->updateHorizontalScroll();
     updateMicroFocus();
-    if(hasAcceptableInput() != d->oldValidity){
+    if (hasAcceptableInput() != d->oldValidity) {
         d->oldValidity = hasAcceptableInput();
         emit acceptableInputChanged();
     }
@@ -1991,7 +1988,7 @@ void QSGTextInput::updateSize(bool needsRedraw)
     int h = height();
     setImplicitHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
     setImplicitWidth(d->calculateTextWidth());
-    if(w==width() && h==height() && needsRedraw)
+    if (w==width() && h==height() && needsRedraw)
         update();
 }
 
@@ -2002,7 +1999,7 @@ void QSGTextInput::q_canPasteChanged()
 #ifndef QT_NO_CLIPBOARD
     d->canPaste = !d->control->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
 #endif
-    if(d->canPaste != old)
+    if (d->canPaste != old)
         emit canPasteChanged();
 }
 

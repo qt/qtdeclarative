@@ -67,10 +67,11 @@ private:
 public:
     static void garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags);
     static void registerGcPrologueCallback();
+    static void releaseWorkerThreadGcPrologueCallbackData();
 
     class Referencer {
     public:
-        ~Referencer() {}
+        ~Referencer();
         void addRelationship(QObject *object, v8::Persistent<v8::Value> handle);
         void addRelationship(QObject *object, QObject *other);
     private:
@@ -100,6 +101,7 @@ private:
         Referencer referencer;
         bool gcPrologueCallbackRegistered;
         QIntrusiveList<Node, &Node::node> gcCallbackNodes;
+        void releaseStrongReferencer();
     };
 
     static void initializeThreadData();

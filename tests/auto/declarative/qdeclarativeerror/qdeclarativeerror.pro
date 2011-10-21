@@ -1,12 +1,12 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qdeclarativeerror
 SOURCES += tst_qdeclarativeerror.cpp
 macx:CONFIG -= app_bundle
 
-!symbian: {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
-
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
+
+QT += core-private gui-private declarative-private testlib

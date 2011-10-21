@@ -39,17 +39,17 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativexmlhttprequest_p.h"
+#include "qdeclarativexmlhttprequest_p.h"
 
 #include <private/qv8engine_p.h>
 
 #include "qdeclarativeengine.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativerefcount_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativeexpression_p.h"
+#include "qdeclarativeengine_p.h"
+#include <private/qdeclarativerefcount_p.h>
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativeexpression_p.h"
 #include "qdeclarativeglobal_p.h"
-#include "qv8domerrors_p.h"
+#include <private/qv8domerrors_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtDeclarative/qjsvalue.h>

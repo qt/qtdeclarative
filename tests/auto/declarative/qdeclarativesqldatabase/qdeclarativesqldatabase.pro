@@ -1,18 +1,13 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
-QT += sql
+CONFIG += testcase
+TARGET = tst_qdeclarativesqldatabase
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativesqldatabase.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
-
 CONFIG += parallel_test
 
-QT += core-private gui-private v8-private declarative-private
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
+
+QT += core-private gui-private v8-private declarative-private sql testlib

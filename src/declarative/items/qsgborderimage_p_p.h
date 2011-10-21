@@ -83,13 +83,7 @@ public:
         Q_Q(QSGBorderImage);
         if (!border) {
             border = new QSGScaleGrid(q);
-            static int borderChangedSignalIdx = -1;
-            static int doUpdateSlotIdx = -1;
-            if (borderChangedSignalIdx < 0)
-                borderChangedSignalIdx = QSGScaleGrid::staticMetaObject.indexOfSignal("borderChanged()");
-            if (doUpdateSlotIdx < 0)
-                doUpdateSlotIdx = QSGBorderImage::staticMetaObject.indexOfSlot("doUpdate()");
-            QMetaObject::connect(border, borderChangedSignalIdx, q, doUpdateSlotIdx);
+            FAST_CONNECT(border, SIGNAL(borderChanged()), q, SLOT(doUpdate()))
         }
         return border;
     }

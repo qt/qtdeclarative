@@ -34,10 +34,10 @@
 
 \title Importing Reusable Components
 
-A \e component is an instantiable QML definition, typically contained in a
-\c .qml file. For instance, a Button \e component may be defined in
+A \i component is an instantiable QML definition, typically contained in a
+\c .qml file. For instance, a Button \i component may be defined in
 \c Button.qml. The QML runtime may instantiate this Button component to create
-Button \e objects. Alternatively, a component may be defined inside a
+Button \i objects. Alternatively, a component may be defined inside a
 \l Component element.
 
 Moreover, the Button definition may also contain other components. A Button
@@ -111,7 +111,7 @@ signal handler executes when the component finishes destruction.
 \keyword qml-top-level
 \section1 Top-Level Component
 
-Choosing the \e{top-level} or the \e{root} object of components is an important
+Choosing the \i{top-level} or the \i{root} object of components is an important
 design aspect because the top-level object dictates which properties are
 accessible outside the component. Some elements are not visual elements and
 will not have visual properties exposed outside the component. Likewise, some

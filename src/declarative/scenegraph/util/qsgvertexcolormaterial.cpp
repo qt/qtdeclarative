@@ -110,8 +110,10 @@ const char *QSGVertexColorMaterialShader::fragmentShader() const {
 
 /*!
     \class QSGVertexColorMaterial
-    \brief The QSGVertexColorMaterial provides a convenient way of rendering per-vertex
+    \brief The QSGVertexColorMaterial class provides a convenient way of rendering per-vertex
     colored geometry in the scene graph.
+
+    \inmodule QtDeclarative
 
     The vertex color material will give each vertex in a geometry a color. Pixels between
     vertices will be linearly interpolated. The colors can contain transparency.
@@ -123,7 +125,7 @@ const char *QSGVertexColorMaterialShader::fragmentShader() const {
     QSGGeometry::defaultAttributes_ColoredPoint2D() constructs an attribute set
     compatible with this material.
 
-    The vertex color material respets both current opacity and current matrix when
+    The vertex color material respects both current opacity and current matrix when
     updating it's rendering state.
  */
 
@@ -143,7 +145,7 @@ QSGVertexColorMaterial::QSGVertexColorMaterial()
     \internal
  */
 
-int QSGVertexColorMaterial::compare(const QSGMaterial *other) const
+int QSGVertexColorMaterial::compare(const QSGMaterial * /* other */) const
 {
     return 0;
 }

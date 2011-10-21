@@ -54,6 +54,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qatomic.h>
 
 QT_BEGIN_HEADER
 
@@ -61,16 +62,19 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class Q_DECLARATIVE_EXPORT QDeclarativeRefCount
+class QDeclarativeRefCount
 {
 public:
-    QDeclarativeRefCount();
-    virtual ~QDeclarativeRefCount();
-    void addref();
-    void release();
+    inline QDeclarativeRefCount();
+    inline virtual ~QDeclarativeRefCount();
+    inline void addref();
+    inline void release();
+
+protected:
+    inline virtual void destroy();
 
 private:
-    int refCount;
+    QAtomicInt refCount;
 };
 
 template<class T>
@@ -92,9 +96,39 @@ public:
     inline operator T*() const { return o; }
     inline T* data() const { return o; }
 
+    inline QDeclarativeRefPointer<T> &take(T *);
+
 private:
     T *o;
 };
+
+QDeclarativeRefCount::QDeclarativeRefCount() 
+: refCount(1) 
+{
+}
+
+QDeclarativeRefCount::~QDeclarativeRefCount() 
+{
+    Q_ASSERT(refCount.load() == 0);
+}
+
+void QDeclarativeRefCount::addref() 
+{ 
+    Q_ASSERT(refCount.load() > 0);
+    refCount.ref(); 
+}
+
+void QDeclarativeRefCount::release() 
+{ 
+    Q_ASSERT(refCount.load() > 0);
+    if (!refCount.deref()) 
+        destroy(); 
+}
+
+void QDeclarativeRefCount::destroy() 
+{ 
+    delete this; 
+}
 
 template<class T>
 QDeclarativeRefPointer<T>::QDeclarativeRefPointer()
@@ -135,6 +169,18 @@ template<class T>
 QDeclarativeRefPointer<T> &QDeclarativeRefPointer<T>::operator=(T *other)
 {
     if (other) other->addref();
+    if (o) o->release();
+    o = other;
+    return *this;
+}
+
+/*!
+Takes ownership of \a other.  take() does *not* add a reference, as it assumes ownership
+of the callers reference of other.
+*/
+template<class T>
+QDeclarativeRefPointer<T> &QDeclarativeRefPointer<T>::take(T *other)
+{
     if (o) o->release();
     o = other;
     return *this;

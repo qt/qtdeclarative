@@ -66,6 +66,7 @@ class QScriptContext;
 class QDeclarativeImageProvider;
 class QNetworkAccessManager;
 class QDeclarativeNetworkAccessManagerFactory;
+class QDeclarativeIncubationController;
 class Q_DECLARATIVE_EXPORT QDeclarativeEngine : public QJSEngine
 {
     Q_PROPERTY(QString offlineStoragePath READ offlineStoragePath WRITE setOfflineStoragePath)
@@ -98,6 +99,9 @@ public:
     QDeclarativeImageProvider *imageProvider(const QString &id) const;
     void removeImageProvider(const QString &id);
 
+    void setIncubationController(QDeclarativeIncubationController *);
+    QDeclarativeIncubationController *incubationController() const;
+
     void setOfflineStoragePath(const QString& dir);
     QString offlineStoragePath() const;
 
@@ -115,6 +119,9 @@ public:
     enum ObjectOwnership { CppOwnership, JavaScriptOwnership };
     static void setObjectOwnership(QObject *, ObjectOwnership);
     static ObjectOwnership objectOwnership(QObject *);
+
+protected:
+    virtual bool event(QEvent *);
 
 Q_SIGNALS:
     void quit();

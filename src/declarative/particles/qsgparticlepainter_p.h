@@ -119,7 +119,7 @@ protected:
     QSGParticleSystem* m_system;
     friend class QSGParticleSystem;
     int m_count;
-    bool m_pleaseReset;
+    bool m_pleaseReset;//Used by subclasses, but it's a nice optimization to know when stuff isn't going to matter.
     QStringList m_groups;
     QPointF m_systemOffset;
 

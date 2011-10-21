@@ -1,6 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
-QT += network
+CONFIG += testcase
+TARGET = tst_qdeclarativelanguage
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativelanguage.cpp \
@@ -11,13 +10,9 @@ INCLUDEPATH += ../shared/
 HEADERS += ../shared/testhttpserver.h
 SOURCES += ../shared/testhttpserver.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+importFiles.files = data
+importFiles.path = .
+DEPLOYMENT += importFiles
 
 CONFIG += parallel_test
-QT += core-private gui-private v8-private declarative-private
+QT += core-private gui-private v8-private declarative-private network testlib

@@ -42,7 +42,7 @@
 #ifndef QDECLARATIVESTATEOPERATIONS_H
 #define QDECLARATIVESTATEOPERATIONS_H
 
-#include "private/qdeclarativestate_p.h"
+#include "qdeclarativestate_p.h"
 #include <qdeclarativescriptstring.h>
 
 QT_BEGIN_HEADER

@@ -1,5 +1,6 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qmlmin
+QT += declarative testlib
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qmlmin.cpp

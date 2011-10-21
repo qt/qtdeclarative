@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativejsengine_p.h"
-#include "qdeclarativejslexer_p.h"
-#include "qdeclarativejsparser_p.h"
+#include <private/qdeclarativejsengine_p.h>
+#include <private/qdeclarativejslexer_p.h>
+#include <private/qdeclarativejsparser_p.h>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtCore/QFile>
@@ -49,6 +49,8 @@
 #include <QtCore/QDir>
 #include <iostream>
 #include <cstdlib>
+
+QT_BEGIN_NAMESPACE
 
 //
 // QML/JS minifier
@@ -139,6 +141,7 @@ protected:
                 else if (ch == QLatin1Char('\r')) quotedString += QLatin1String("\\r");
                 else if (ch == QLatin1Char('\t')) quotedString += QLatin1String("\\t");
                 else if (ch == QLatin1Char('\v')) quotedString += QLatin1String("\\v");
+                else if (ch == QLatin1Char('\0')) quotedString += QLatin1String("\\0");
                 else quotedString += ch;
             }
         }
@@ -483,7 +486,7 @@ static void usage(bool showHelp = false)
     }
 }
 
-int main(int argc, char *argv[])
+int runQmlmin(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
@@ -588,4 +591,11 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+QT_END_NAMESPACE
+
+int main(int argc, char **argv)
+{
+    return QT_PREPEND_NAMESPACE(runQmlmin(argc, argv));
 }

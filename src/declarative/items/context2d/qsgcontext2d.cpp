@@ -42,23 +42,26 @@
 #include "qsgcontext2d_p.h"
 #include "qsgcontext2dcommandbuffer_p.h"
 #include "qsgcanvasitem_p.h"
-#include "qsgitem_p.h"
-#include "qsgshadereffectsource_p.h"
+#include <private/qsgitem_p.h>
+#include <private/qsgshadereffectsource_p.h>
 #include <QtGui/qopenglframebufferobject.h>
 
 #include <QtCore/qdebug.h>
-#include "private/qsgcontext_p.h"
-#include "private/qdeclarativesvgparser_p.h"
-#include "private/qdeclarativepath_p.h"
+#include <private/qsgcontext_p.h>
+#include <private/qdeclarativesvgparser_p.h>
+#include <private/qdeclarativepath_p.h>
 
-#include "private/qsgimage_p_p.h"
+#include <private/qsgimage_p_p.h>
 
 #include <QtGui/qguiapplication.h>
 #include <qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
-#include "qv8engine_p.h"
+#include <private/qv8engine_p.h>
 
-#include "qdeclarativeengine.h"
+#include <qdeclarativeengine.h>
+#include <private/qv8domerrors_p.h>
+#include <QtCore/qnumeric.h>
+
 QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Context2D QSGContext2D
@@ -95,205 +98,82 @@ QT_BEGIN_NAMESPACE
 static const double Q_PI   = 3.14159265358979323846;   // pi
 
 #define DEGREES(t) ((t) * 180.0 / Q_PI)
-#define qClamp(val, min, max) qMin(qMax(val, min), max)
 
 #define CHECK_CONTEXT(r)     if (!r || !r->context || !r->context->buffer()) \
                                 V8THROW_ERROR("Not a Context2D object");
 
 #define CHECK_CONTEXT_SETTER(r)     if (!r || !r->context || !r->context->buffer()) \
                                        V8THROW_ERROR_SETTER("Not a Context2D object");
-
-static inline int extractInt(const char **name)
+#define qClamp(val, min, max) qMin(qMax(val, min), max)
+#define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
+QColor qt_color_from_string(v8::Local<v8::Value> name)
 {
-    int result = 0;
-    bool negative = false;
+    v8::String::AsciiValue str(name);
 
-    //eat leading whitespace
-    while (isspace(*name[0]))
-        ++*name;
+    char *p = *str;
+    int len = str.length();
+    //rgb/hsl color string has at least 7 characters
+    if (!p || len > 255 || len <= 7)
+        return QColor(p);
+    else {
+        bool isRgb(false), isHsl(false), hasAlpha(false);
 
-    if (*name[0] == '-') {
-        ++*name;
-        negative = true;
-    } /*else if (name[0] == '+')
-        ++name;     //ignore*/
+        while (isspace(*p)) p++;
+        if (strncmp(p, "rgb", 3) == 0)
+            isRgb = true;
+        else if (strncmp(p, "hsl", 3) == 0)
+            isHsl = true;
+        else
+            return QColor(p);
 
-    //construct number
-    while (isdigit(*name[0])) {
-        result = result * 10 + (*name[0] - '0');
-        ++*name;
+        p+=3; //skip "rgb" or "hsl"
+        hasAlpha = (*p == 'a') ? true : false;
+
+        ++p; //skip "("
+
+        if (hasAlpha) ++p; //skip "a"
+
+        int rh, gs, bl, alpha = 255;
+
+        //red
+        while (isspace(*p)) p++;
+        rh = strtol(p, &p, 10);
+        if (*p == '%') {
+            rh = qRound(rh/100.0 * 255);
+            ++p;
+        }
+        if (*p++ != ',') return QColor();
+
+        //green
+        while (isspace(*p)) p++;
+        gs = strtol(p, &p, 10);
+        if (*p == '%') {
+            gs = qRound(gs/100.0 * 255);
+            ++p;
+        }
+        if (*p++ != ',') return QColor();
+
+        //blue
+        while (isspace(*p)) p++;
+        bl = strtol(p, &p, 10);
+        if (*p == '%') {
+            bl = qRound(bl/100.0 * 255);
+            ++p;
+        }
+
+        if (hasAlpha) {
+            if (*p++!= ',') return QColor();
+            while (isspace(*p)) p++;
+            alpha = qRound(strtod(p, &p) * 255);
+        }
+
+        if (*p != ')') return QColor();
+        if (isRgb)
+            return QColor::fromRgba(qRgba(qClamp(rh, 0, 255), qClamp(gs, 0, 255), qClamp(bl, 0, 255), qClamp(alpha, 0, 255)));
+        else
+            return QColor::fromHsl(qClamp(rh, 0, 255), qClamp(gs, 0, 255), qClamp(bl, 0, 255), qClamp(alpha, 0, 255));
     }
-    if (negative)
-        result = -result;
-
-    //handle optional percentage
-    if (*name[0] == '%')
-        result *= qreal(255)/100;  //### floor or round?
-
-    //eat trailing whitespace
-    while (isspace(*name[0]))
-        ++*name;
-
-    return result;
-}
-
-static bool qt_get_rgb(const QString &string, QRgb *rgb)
-{
-    const char *name = string.toLatin1().constData();
-    int len = qstrlen(name);
-
-    if (len < 5)
-        return false;
-
-    bool handleAlpha = false;
-
-    if (name[0] != 'r')
-        return false;
-    if (name[1] != 'g')
-        return false;
-    if (name[2] != 'b')
-        return false;
-    if (name[3] == 'a') {
-        handleAlpha = true;
-        if(name[3] != '(')
-            return false;
-    } else if (name[3] != '(')
-        return false;
-
-    name += 4;
-
-    int r, g, b, a = 1;
-    int result;
-
-    //red
-    result = extractInt(&name);
-    if (name[0] == ',') {
-        r = result;
-        ++name;
-    } else
-        return false;
-
-    //green
-    result = extractInt(&name);
-    if (name[0] == ',') {
-        g = result;
-        ++name;
-    } else
-        return false;
-
-    char nextChar = handleAlpha ? ',' : ')';
-
-    //blue
-    result = extractInt(&name);
-    if (name[0] == nextChar) {
-        b = result;
-        ++name;
-    } else
-        return false;
-
-    //alpha
-    if (handleAlpha) {
-        result = extractInt(&name);
-        if (name[0] == ')') {
-            a = result * 255;   //map 0-1 to 0-255
-            ++name;
-        } else
-            return false;
-    }
-
-    if (name[0] != '\0')
-        return false;
-
-    *rgb = qRgba(qClamp(r,0,255), qClamp(g,0,255), qClamp(b,0,255), qClamp(a,0,255));
-    return true;
-}
-
-//### unify with qt_get_rgb?
-static bool qt_get_hsl(const QString &string, QColor *color)
-{
-    const char *name = string.toLatin1().constData();
-    int len = qstrlen(name);
-
-    if (len < 5)
-        return false;
-
-    bool handleAlpha = false;
-
-    if (name[0] != 'h')
-        return false;
-    if (name[1] != 's')
-        return false;
-    if (name[2] != 'l')
-        return false;
-    if (name[3] == 'a') {
-        handleAlpha = true;
-        if(name[3] != '(')
-            return false;
-    } else if (name[3] != '(')
-        return false;
-
-    name += 4;
-
-    int h, s, l, a = 1;
-    int result;
-
-    //hue
-    result = extractInt(&name);
-    if (name[0] == ',') {
-        h = result;
-        ++name;
-    } else
-        return false;
-
-    //saturation
-    result = extractInt(&name);
-    if (name[0] == ',') {
-        s = result;
-        ++name;
-    } else
-        return false;
-
-    char nextChar = handleAlpha ? ',' : ')';
-
-    //lightness
-    result = extractInt(&name);
-    if (name[0] == nextChar) {
-        l = result;
-        ++name;
-    } else
-        return false;
-
-    //alpha
-    if (handleAlpha) {
-        result = extractInt(&name);
-        if (name[0] == ')') {
-            a = result * 255;   //map 0-1 to 0-255
-            ++name;
-        } else
-            return false;
-    }
-
-    if (name[0] != '\0')
-        return false;
-
-    *color = QColor::fromHsl(qClamp(h,0,255), qClamp(s,0,255), qClamp(l,0,255), qClamp(a,0,255));
-    return true;
-}
-
-//### optimize further
-QColor qt_color_from_string(const QString &name)
-{
-    if (name.startsWith(QLatin1String("rgb"))) {
-        QRgb rgb;
-        if (qt_get_rgb(name, &rgb))
-            return QColor(rgb);
-    } else if (name.startsWith(QLatin1String("hsl"))) {
-        QColor color;
-        if (qt_get_hsl(name, &color))
-            return color;
-    }
-
-    return QColor(name);
+    return QColor();
 }
 
 QFont qt_font_from_string(const QString& fontString) {
@@ -332,9 +212,8 @@ public:
     v8::Persistent<v8::Function> constructorPixelArray;
     v8::Persistent<v8::Function> constructorImageData;
 };
-V8_DEFINE_EXTENSION(QSGContext2DEngineData, engineData);
 
-
+V8_DEFINE_EXTENSION(QSGContext2DEngineData, engineData)
 
 class QV8Context2DResource : public QV8ObjectResource
 {
@@ -348,8 +227,14 @@ class QV8Context2DStyleResource : public QV8ObjectResource
 {
     V8_RESOURCE_TYPE(Context2DStyleType)
 public:
-    QV8Context2DStyleResource(QV8Engine *e) : QV8ObjectResource(e) {}
+    QV8Context2DStyleResource(QV8Engine *e)
+      : QV8ObjectResource(e)
+      , patternRepeatX(false)
+      , patternRepeatY(false)
+    {}
     QBrush brush;
+    bool patternRepeatX:1;
+    bool patternRepeatY:1;
 };
 
 class QV8Context2DPixelArrayResource : public QV8ObjectResource
@@ -528,10 +413,10 @@ static v8::Local<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* e
     QV8Context2DPixelArrayResource *r = new QV8Context2DPixelArrayResource(engine);
     if (image.isNull()) {
         r->image = QImage(w, h, QImage::Format_ARGB32);
-        r->image.fill(Qt::transparent);
+        r->image.fill(0x00000000);
     } else {
         Q_ASSERT(image.width() == w && image.height() == h);
-        r->image = image;
+        r->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
     v8::Local<v8::Object> pixelData = ed->constructorPixelArray->NewInstance();
     pixelData->SetExternalResource(r);
@@ -560,7 +445,7 @@ static v8::Handle<v8::Value> ctx2d_canvas(v8::Local<v8::String>, const v8::Acces
 }
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::restore()
+    \qmlmethod object QtQuick2::Context2D::restore()
     Pops the top state on the stack, restoring the context to that state.
 
     \sa QtQuick2::Context2D::save()
@@ -575,7 +460,7 @@ static v8::Handle<v8::Value> ctx2d_restore(const v8::Arguments &args)
 }
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::reset()
+    \qmlmethod object QtQuick2::Context2D::reset()
     Resets the context state and properties to the default values.
 */
 static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
@@ -584,11 +469,14 @@ static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
     r->context->reset();
+    r->context->m_path = QPainterPath();
+    r->context->m_path.setFillRule(Qt::WindingFill);
+
     return args.This();
 }
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::save()
+    \qmlmethod object QtQuick2::Context2D::save()
     Pushes the current state onto the state stack.
 
     Before changing any state attributes, you should save the current state
@@ -629,7 +517,7 @@ static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
 
 // transformations
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::rotate(real angle)
+    \qmlmethod object QtQuick2::Context2D::rotate(real angle)
     Rotate the canvas around the current origin by \c angle in radians and clockwise direction.
     \code
     ctx.rotate(Math.PI/2);
@@ -648,9 +536,11 @@ static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     if (args.Length() == 1)  {
         qreal angle = args[0]->NumberValue();
+        if (!qIsFinite(angle))
+            return args.This();
+
         r->context->state.matrix.rotate(DEGREES(angle));
         r->context->buffer()->updateMatrix(r->context->state.matrix);
     }
@@ -659,7 +549,7 @@ static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
 }
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::scale(real x, real y)
+    \qmlmethod object QtQuick2::Context2D::scale(real x, real y)
     Increases or decreases the size of each unit in the canvas grid by multiplying the scale factors
     to the current tranform matrix.
     Where \c x is the scale factor in the horizontal direction and \c y is the scale factor in the
@@ -682,6 +572,9 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
         qreal x, y;
         x = args[0]->NumberValue();
         y = args[1]->NumberValue();
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+
         r->context->state.matrix.scale(x, y);
         r->context->buffer()->updateMatrix(r->context->state.matrix);
     }
@@ -690,7 +583,7 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
 }
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::setTransform(real a, real b, real c, real d, real e, real f)
+    \qmlmethod object QtQuick2::Context2D::setTransform(real a, real b, real c, real d, real e, real f)
     Changes the transformation matrix to the matrix given by the arguments as described below.
 
     Modifying the transformation matrix directly enables you to perform scaling,
@@ -729,12 +622,22 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 
 
     if (args.Length() == 6) {
-        r->context->state.matrix = QTransform(args[0]->NumberValue(),
-                                              args[1]->NumberValue(),
-                                              args[2]->NumberValue(),
-                                              args[3]->NumberValue(),
-                                              args[4]->NumberValue(),
-                                              args[5]->NumberValue());
+        qreal a = args[0]->NumberValue();
+        qreal b = args[1]->NumberValue();
+        qreal c = args[2]->NumberValue();
+        qreal d = args[3]->NumberValue();
+        qreal e = args[4]->NumberValue();
+        qreal f = args[5]->NumberValue();
+
+        if (!qIsFinite(a)
+         || !qIsFinite(b)
+         || !qIsFinite(c)
+         || !qIsFinite(d)
+         || !qIsFinite(e)
+         || !qIsFinite(f))
+            return args.This();
+
+        r->context->state.matrix = QTransform(a, b, c, d, e, f);
         r->context->buffer()->updateMatrix(r->context->state.matrix);
     }
 
@@ -742,7 +645,7 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 }
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::transform(real a, real b, real c, real d, real e, real f)
+    \qmlmethod object QtQuick2::Context2D::transform(real a, real b, real c, real d, real e, real f)
     This method is very similar to \a QtQuick2::Context2D::setTransform(), but instead of replacing the old
     tranform matrix, this method applies the given tranform matrix to the current matrix by mulitplying to it.
 
@@ -758,12 +661,22 @@ static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
 
 
     if (args.Length() == 6) {
-        r->context->state.matrix *= QTransform(args[0]->NumberValue(),
-                                               args[1]->NumberValue(),
-                                               args[2]->NumberValue(),
-                                               args[3]->NumberValue(),
-                                               args[4]->NumberValue(),
-                                               args[5]->NumberValue());
+        qreal a = args[0]->NumberValue();
+        qreal b = args[1]->NumberValue();
+        qreal c = args[2]->NumberValue();
+        qreal d = args[3]->NumberValue();
+        qreal e = args[4]->NumberValue();
+        qreal f = args[5]->NumberValue();
+
+        if (!qIsFinite(a)
+         || !qIsFinite(b)
+         || !qIsFinite(c)
+         || !qIsFinite(d)
+         || !qIsFinite(e)
+         || !qIsFinite(f))
+            return args.This();
+
+        r->context->state.matrix *= QTransform(a, b, c, d, e, f);
         r->context->buffer()->updateMatrix(r->context->state.matrix);
     }
 
@@ -771,7 +684,7 @@ static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
 }
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::translate(real x, real y)
+    \qmlmethod object QtQuick2::Context2D::translate(real x, real y)
     Translates the origin of the canvas to point (\c x, \c y).
 
     \c x is the horizontal distance that the origin is translated, in coordinate space units,
@@ -786,8 +699,13 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 
 
     if (args.Length() == 2) {
-        r->context->state.matrix.translate(args[0]->NumberValue(),
-                                           args[1]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+
+        r->context->state.matrix.translate(x, y);
         r->context->buffer()->updateMatrix(r->context->state.matrix);
     }
 
@@ -796,7 +714,7 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::resetTransform()
+    \qmlmethod object QtQuick2::Context2D::resetTransform()
     Reset the transformation matrix to default value.
 
     \sa QtQuick2::Context2D::transform(), QtQuick2::Context2D::setTransform(), QtQuick2::Context2D::reset()
@@ -814,7 +732,7 @@ static v8::Handle<v8::Value> ctx2d_resetTransform(const v8::Arguments &args)
 
 
 /*!
-    \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::shear(real sh, real sv )
+    \qmlmethod object QtQuick2::Context2D::shear(real sh, real sv )
     Shear the transformation matrix with \a sh in horizontal direction and \a sv in vertical direction.
 */
 static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
@@ -822,10 +740,16 @@ static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    r->context->state.matrix.shear(args[0]->NumberValue(),
-                                   args[1]->NumberValue());
-    r->context->buffer()->updateMatrix(r->context->state.matrix);
+    if (args.Length() == 2) {
+        qreal sh = args[0]->NumberValue();
+        qreal sv = args[1]->NumberValue();
 
+        if (!qIsFinite(sh) || !qIsFinite(sv))
+            return args.This();
+
+        r->context->state.matrix.shear(sh, sv);
+        r->context->buffer()->updateMatrix(r->context->state.matrix);
+    }
     return args.This();
 }
 // compositing
@@ -850,6 +774,9 @@ static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> va
     CHECK_CONTEXT_SETTER(r)
 
     qreal globalAlpha = value->NumberValue();
+
+    if (!qIsFinite(globalAlpha))
+        return;
 
     if (globalAlpha >= 0.0 && globalAlpha <= 1.0 && r->context->state.globalAlpha != globalAlpha) {
         r->context->state.globalAlpha = globalAlpha;
@@ -902,7 +829,11 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
 
-    QPainter::CompositionMode cm = qt_composite_mode_from_string(engine->toString(value));
+    QString mode = engine->toString(value);
+    QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
+    if (cm == QPainter::CompositionMode_SourceOver && mode != QStringLiteral("source-over"))
+        return;
+
     if (cm != r->context->state.globalCompositeOperation) {
         r->context->state.globalCompositeOperation = cm;
         r->context->buffer()->setGlobalCompositeOperation(cm);
@@ -937,6 +868,19 @@ static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Local<v8::String>, const v8::Ac
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
 
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    QColor color = r->context->state.fillStyle.color();
+    if (color.isValid()) {
+        if (color.alpha() == 255)
+            return engine->toString(color.name());
+        QString alphaString = QString::number(color.alphaF(), 'f');
+        while (alphaString.endsWith(QLatin1Char('0')))
+            alphaString.chop(1);
+        if (alphaString.endsWith(QLatin1Char('.')))
+            alphaString += QLatin1Char('0');
+        return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
+    }
     return r->context->m_fillStyle;
 }
 
@@ -947,24 +891,28 @@ static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-   r->context->m_fillStyle = value;
    if (value->IsObject()) {
        QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
        if (color.isValid()) {
            r->context->state.fillStyle = color;
            r->context->buffer()->setFillStyle(color);
+           r->context->m_fillStyle = value;
        } else {
            QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(value->ToObject());
            if (style && style->brush != r->context->state.fillStyle) {
                r->context->state.fillStyle = style->brush;
-               r->context->buffer()->setFillStyle(style->brush);
+               r->context->buffer()->setFillStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
+               r->context->m_fillStyle = value;
+               r->context->state.fillPatternRepeatX = style->patternRepeatX;
+               r->context->state.fillPatternRepeatY = style->patternRepeatY;
            }
        }
    } else if (value->IsString()) {
-       QColor color = qt_color_from_string(engine->toString(value));
+       QColor color = qt_color_from_string(value);
        if (color.isValid() && r->context->state.fillStyle != QBrush(color)) {
             r->context->state.fillStyle = QBrush(color);
             r->context->buffer()->setFillStyle(r->context->state.fillStyle);
+            r->context->m_fillStyle = value;
        }
    }
 }
@@ -996,10 +944,10 @@ static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    if ((value->IsString() && engine->toString(value) == "WindingFill")
+    if ((value->IsString() && engine->toString(value) == QStringLiteral("WindingFill"))
       ||(value->IsNumber() && value->NumberValue() == Qt::WindingFill)) {
         r->context->state.fillRule = Qt::WindingFill;
-    } else if ((value->IsString() && engine->toString(value) == "OddEvenFill")
+    } else if ((value->IsString() && engine->toString(value) == QStringLiteral("OddEvenFill"))
                ||(value->IsNumber() && value->NumberValue() == Qt::OddEvenFill)) {
         r->context->state.fillRule = Qt::OddEvenFill;
     } else {
@@ -1025,7 +973,19 @@ v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Local<v8::String>, const v8::Accesso
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
 
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
+    QColor color = r->context->state.strokeStyle.color();
+    if (color.isValid()) {
+        if (color.alpha() == 255)
+            return engine->toString(color.name());
+        QString alphaString = QString::number(color.alphaF(), 'f');
+        while (alphaString.endsWith(QLatin1Char('0')))
+            alphaString.chop(1);
+        if (alphaString.endsWith(QLatin1Char('.')))
+            alphaString += QLatin1Char('0');
+        return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
+    }
     return r->context->m_strokeStyle;
 }
 
@@ -1036,30 +996,35 @@ static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> va
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    r->context->m_strokeStyle = value;
     if (value->IsObject()) {
         QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
             r->context->state.fillStyle = color;
             r->context->buffer()->setStrokeStyle(color);
+            r->context->m_strokeStyle = value;
         } else {
             QV8Context2DStyleResource *style = v8_resource_cast<QV8Context2DStyleResource>(value->ToObject());
             if (style && style->brush != r->context->state.strokeStyle) {
                 r->context->state.strokeStyle = style->brush;
-                r->context->buffer()->setStrokeStyle(style->brush);
+                r->context->buffer()->setStrokeStyle(style->brush, style->patternRepeatX, style->patternRepeatY);
+                r->context->m_strokeStyle = value;
+                r->context->state.strokePatternRepeatX = style->patternRepeatX;
+                r->context->state.strokePatternRepeatY = style->patternRepeatY;
+
             }
         }
     } else if (value->IsString()) {
-        QColor color = qt_color_from_string(engine->toString(value));
+        QColor color = qt_color_from_string(value);
         if (color.isValid() && r->context->state.strokeStyle != QBrush(color)) {
              r->context->state.strokeStyle = QBrush(color);
              r->context->buffer()->setStrokeStyle(r->context->state.strokeStyle);
+             r->context->m_strokeStyle = value;
         }
     }
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::createLinearGradient(real x0, real y0, real x1, real y1)
+  \qmlmethod object QtQuick2::Context2D::createLinearGradient(real x0, real y0, real x1, real y1)
    Returns a CanvasGradient object that represents a linear gradient that transitions the color along a line between
    the start point (\a x0, \a y0) and the end point (\a x1, \a y1).
 
@@ -1069,6 +1034,7 @@ static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> va
 
     \sa QtQuick2::Context2D::CanvasGradient::addColorStop
     \sa QtQuick2::Context2D::createRadialGradient
+    \sa QtQuick2::Context2D::ctx2d_createConicalGradient
     \sa QtQuick2::Context2D::createPattern
     \sa QtQuick2::Context2D::fillStyle
     \sa QtQuick2::Context2D::strokeStyle
@@ -1083,14 +1049,21 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
     QV8Engine *engine = V8ENGINE();
 
     if (args.Length() == 4) {
-        //TODO:infinite or NaN, the method must raise a NOT_SUPPORTED_ERR
         QSGContext2DEngineData *ed = engineData(engine);
         v8::Local<v8::Object> gradient = ed->constructorGradient->NewInstance();
         QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
-        r->brush = QLinearGradient(args[0]->NumberValue(),
-                                   args[1]->NumberValue(),
-                                   args[2]->NumberValue(),
-                                   args[3]->NumberValue());
+        qreal x0 = args[0]->NumberValue();
+        qreal y0 = args[1]->NumberValue();
+        qreal x1 = args[2]->NumberValue();
+        qreal y1 = args[3]->NumberValue();
+
+        if (!qIsFinite(x0)
+         || !qIsFinite(y0)
+         || !qIsFinite(x1)
+         || !qIsFinite(y1))
+            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createLinearGradient(): Incorrect arguments")
+
+        r->brush = QLinearGradient(x0, y0, x1, y1);
         gradient->SetExternalResource(r);
         return gradient;
     }
@@ -1099,12 +1072,13 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::createRadialGradient(real x0, real y0, real r0, real x1, real y1, real r1)
+  \qmlmethod object QtQuick2::Context2D::createRadialGradient(real x0, real y0, real r0, real x1, real y1, real r1)
    Returns a CanvasGradient object that represents a radial gradient that paints along the cone given by the start circle with
    origin (x0, y0) and radius r0, and the end circle with origin (x1, y1) and radius r1.
 
     \sa QtQuick2::Context2D::CanvasGradient::addColorStop
     \sa QtQuick2::Context2D::createLinearGradient
+    \sa QtQuick2::Context2D::ctx2d_createConicalGradient
     \sa QtQuick2::Context2D::createPattern
     \sa QtQuick2::Context2D::fillStyle
     \sa QtQuick2::Context2D::strokeStyle
@@ -1129,9 +1103,63 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
         qreal x1 = args[3]->NumberValue();
         qreal y1 = args[4]->NumberValue();
         qreal r1 = args[5]->NumberValue();
-        //TODO:infinite or NaN, a NOT_SUPPORTED_ERR exception must be raised.
-        //If either of r0 or r1 are negative, an INDEX_SIZE_ERR exception must be raised.
+
+        if (!qIsFinite(x0)
+         || !qIsFinite(y0)
+         || !qIsFinite(x1)
+         || !qIsFinite(r0)
+         || !qIsFinite(r1)
+         || !qIsFinite(y1))
+            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createRadialGradient(): Incorrect arguments")
+
+        if (r0 < 0 || r1 < 0)
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createRadialGradient(): Incorrect arguments")
+
+
         r->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
+        gradient->SetExternalResource(r);
+        return gradient;
+    }
+
+    return args.This();
+}
+
+/*!
+  \qmlmethod object QtQuick2::Context2D::createConicalGradient(real x, real y, real angle)
+   Returns a CanvasGradient object that represents a conical gradient that interpolate colors counter-clockwise around a center point (\c x, \c y)
+   with start angle \c angle in units of radians.
+
+    \sa QtQuick2::Context2D::CanvasGradient::addColorStop
+    \sa QtQuick2::Context2D::createLinearGradient
+    \sa QtQuick2::Context2D::ctx2d_createRadialGradient
+    \sa QtQuick2::Context2D::createPattern
+    \sa QtQuick2::Context2D::fillStyle
+    \sa QtQuick2::Context2D::strokeStyle
+  */
+
+static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &args)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    CHECK_CONTEXT(r)
+
+
+    QV8Engine *engine = V8ENGINE();
+
+    if (args.Length() == 6) {
+        QSGContext2DEngineData *ed = engineData(engine);
+        v8::Local<v8::Object> gradient = ed->constructorGradient->NewInstance();
+        QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
+
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal angle = DEGREES(args[2]->NumberValue());
+        if (!qIsFinite(x) || !qIsFinite(y))
+            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
+
+        if (!qIsFinite(angle))
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createConicalGradient(): Incorrect arguments");
+
+        r->brush = QConicalGradient(x, y, angle);
         gradient->SetExternalResource(r);
         return gradient;
     }
@@ -1189,43 +1217,57 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 
     QV8Engine *engine = V8ENGINE();
 
-    //FIXME::
+    if (args.Length() == 2) {
+        QSGContext2DEngineData *ed = engineData(engine);
+        QV8Context2DStyleResource *styleResouce = new QV8Context2DStyleResource(engine);
 
-//    if (args.Length() == 2) {
-//        QSGContext2DEngineData *ed = engineData(engine);
-//        v8::Local<v8::Object> pattern = ed->constructorPattern->NewInstance();
-//        QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
+        QColor color = engine->toVariant(args[0], qMetaTypeId<QColor>()).value<QColor>();
+        if (color.isValid()) {
+            int patternMode = args[1]->IntegerValue();
+            Qt::BrushStyle style = Qt::SolidPattern;
+            if (patternMode >= 0 && patternMode < Qt::LinearGradientPattern) {
+                style = static_cast<Qt::BrushStyle>(patternMode);
+            }
+            styleResouce->brush = QBrush(color, style);
+        } else {
+            QImage patternTexture;
 
-//        QImage img;
+            if (args[0]->IsObject()) {
+                QV8Context2DPixelArrayResource *pixelData = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->Get(v8::String::New("data"))->ToObject());
+                if (pixelData) {
+                    patternTexture = pixelData->image;
+                }
+            } else {
+                patternTexture = r->context->createImage(QUrl(engine->toString(args[0]->ToString())));
+            }
 
-//        QSGItem* item = qobject_cast<QSGItem*>(engine->toQObject(args[0]));
-//        if (item) {
-//            img = qt_item_to_image(item);
-//            if (img.isNull()) {
-//                //exception: INVALID_STATE_ERR
-//            }
-//        } /*else {
-//            //exception: TYPE_MISMATCH_ERR
-//        }*/
+            if (!patternTexture.isNull()) {
+                styleResouce->brush.setTextureImage(patternTexture);
 
-//        QString repetition = engine->toString(args[1]);
+                QString repetition = engine->toString(args[1]);
+                if (repetition == QStringLiteral("repeat") || repetition.isEmpty()) {
+                    styleResouce->patternRepeatX = true;
+                    styleResouce->patternRepeatY = true;
+                } else if (repetition == QStringLiteral("repeat-x")) {
+                    styleResouce->patternRepeatX = true;
+                } else if (repetition == QStringLiteral("repeat-y")) {
+                    styleResouce->patternRepeatY = true;
+                } else if (repetition == QStringLiteral("no-repeat")) {
+                    styleResouce->patternRepeatY = false;
+                    styleResouce->patternRepeatY = false;
+                } else {
+                    //TODO: exception: SYNTAX_ERR
+                }
 
-//        if (repetition == "repeat" || repetition.isEmpty()) {
-//            //TODO
-//        } else if (repetition == "repeat-x") {
-//            //TODO
-//        } else if (repetition == "repeat-y") {
-//            //TODO
-//        } else if (repetition == "no-repeat") {
-//            //TODO
-//        } else {
-//            //TODO: exception: SYNTAX_ERR
-//        }
-//        r->brush = img;
-//        pattern->SetExternalResource(r);
- //       return pattern;
-//    }
-    return v8::Null();
+            }
+        }
+
+        v8::Local<v8::Object> pattern = ed->constructorPattern->NewInstance();
+        pattern->SetExternalResource(styleResouce);
+        return pattern;
+
+    }
+    return v8::Undefined();
 }
 
 // line styles
@@ -1275,6 +1317,8 @@ static void ctx2d_lineCap_set(v8::Local<v8::String>, v8::Local<v8::Value> value,
         cap = Qt::FlatCap;
     else if (lineCap == QLatin1String("square"))
         cap = Qt::SquareCap;
+    else
+        return;
 
     if (cap != r->context->state.lineCap) {
         r->context->state.lineCap = cap;
@@ -1331,6 +1375,8 @@ static void ctx2d_lineJoin_set(v8::Local<v8::String>, v8::Local<v8::Value> value
         join = Qt::BevelJoin;
     else if (lineJoin == QLatin1String("miter"))
         join = Qt::MiterJoin;
+    else
+        return;
 
     if (join != r->context->state.lineJoin) {
         r->context->state.lineJoin = join;
@@ -1358,7 +1404,7 @@ static void ctx2d_lineWidth_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
 
     qreal w = value->NumberValue();
 
-    if (w > 0 && w != r->context->state.lineWidth) {
+    if (w > 0 && qIsFinite(w) && w != r->context->state.lineWidth) {
         r->context->state.lineWidth = w;
         r->context->buffer()->setLineWidth(w);
     }
@@ -1385,7 +1431,7 @@ static void ctx2d_miterLimit_set(v8::Local<v8::String>, v8::Local<v8::Value> val
 
     qreal ml = value->NumberValue();
 
-    if (ml > 0 && ml != r->context->state.miterLimit) {
+    if (ml > 0 && qIsFinite(ml) && ml != r->context->state.miterLimit) {
         r->context->state.miterLimit = ml;
         r->context->buffer()->setMiterLimit(ml);
     }
@@ -1411,7 +1457,7 @@ static void ctx2d_shadowBlur_set(v8::Local<v8::String>, v8::Local<v8::Value> val
     CHECK_CONTEXT_SETTER(r)
     qreal blur = value->NumberValue();
 
-    if (blur > 0 && blur != r->context->state.shadowBlur) {
+    if (blur > 0 && qIsFinite(blur) && blur != r->context->state.shadowBlur) {
         r->context->state.shadowBlur = blur;
         r->context->buffer()->setShadowBlur(blur);
     }
@@ -1437,9 +1483,7 @@ static void ctx2d_shadowColor_set(v8::Local<v8::String>, v8::Local<v8::Value> va
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-
-    QColor color = qt_color_from_string(engine->toString(value));
+    QColor color = qt_color_from_string(value);
 
     if (color.isValid() && color != r->context->state.shadowColor) {
         r->context->state.shadowColor = color;
@@ -1468,9 +1512,8 @@ static void ctx2d_shadowOffsetX_set(v8::Local<v8::String>, v8::Local<v8::Value> 
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    //TODO: check value:infinite or NaN
     qreal offsetX = value->NumberValue();
-    if (offsetX != r->context->state.shadowOffsetX) {
+    if (qIsFinite(offsetX) && offsetX != r->context->state.shadowOffsetX) {
         r->context->state.shadowOffsetX = offsetX;
         r->context->buffer()->setShadowOffsetX(offsetX);
     }
@@ -1494,9 +1537,9 @@ static void ctx2d_shadowOffsetY_set(v8::Local<v8::String>, v8::Local<v8::Value> 
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
-    //TODO: check value:infinite or NaN
+
     qreal offsetY = value->NumberValue();
-    if (offsetY != r->context->state.shadowOffsetY) {
+    if (qIsFinite(offsetY) && offsetY != r->context->state.shadowOffsetY) {
         r->context->state.shadowOffsetY = offsetY;
         r->context->buffer()->setShadowOffsetY(offsetY);
     }
@@ -1529,7 +1572,7 @@ static void ctx2d_path_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
 
 //rects
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::clearRect(real x, real y, real w, real h)
+  \qmlmethod object QtQuick2::Context2D::clearRect(real x, real y, real w, real h)
   Clears all pixels on the canvas in the given rectangle to transparent black.
   */
 static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
@@ -1539,16 +1582,21 @@ static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
 
 
     if (args.Length() == 4) {
-        r->context->buffer()->clearRect(args[0]->NumberValue(),
-                                        args[1]->NumberValue(),
-                                        args[2]->NumberValue(),
-                                        args[3]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal w = args[2]->NumberValue();
+        qreal h = args[3]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+            return args.This();
+
+        r->context->buffer()->clearRect(x, y, w, h);
     }
 
     return args.This();
 }
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::fillRect(real x, real y, real w, real h)
+  \qmlmethod object QtQuick2::Context2D::fillRect(real x, real y, real w, real h)
    Paint the specified rectangular area using the fillStyle.
 
    \sa QtQuick2::Context2D::fillStyle
@@ -1558,19 +1606,23 @@ static v8::Handle<v8::Value> ctx2d_fillRect(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     if (args.Length() == 4) {
-        r->context->buffer()->fillRect(args[0]->NumberValue(),
-                             args[1]->NumberValue(),
-                             args[2]->NumberValue(),
-                             args[3]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal w = args[2]->NumberValue();
+        qreal h = args[3]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+            return args.This();
+
+        r->context->buffer()->fillRect(x, y, w, h);
     }
 
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::fillRect(real x, real y, real w, real h)
+  \qmlmethod object QtQuick2::Context2D::fillRect(real x, real y, real w, real h)
    Stroke the specified rectangle's path using the strokeStyle, lineWidth, lineJoin,
    and (if appropriate) miterLimit attributes.
 
@@ -1586,18 +1638,23 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
 
 
     if (args.Length() == 4) {
-        r->context->buffer()->strokeRect(args[0]->NumberValue(),
-                                         args[1]->NumberValue(),
-                                         args[2]->NumberValue(),
-                                         args[3]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal w = args[2]->NumberValue();
+        qreal h = args[3]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+            return args.This();
+
+        r->context->buffer()->strokeRect(x, y, w, h);
     }
-    
+
     return args.This();
 }
 
 // Complex shapes (paths) API
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::arc(real x, real y, real radius, real startAngle, real endAngle, bool anticlockwise)
+  \qmlmethod object QtQuick2::Context2D::arc(real x, real y, real radius, real startAngle, real endAngle, bool anticlockwise)
   Adds an arc to the current subpath that lies on the circumference of the circle whose center is at the point (\c x,\cy) and whose radius is \c radius.
   \image qml-item-canvas-arcTo2.png
   \sa  QtQuick2::Context2D::arcTo
@@ -1615,7 +1672,17 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
             antiClockwise = args[5]->BooleanValue();
 
         qreal radius = args[2]->NumberValue();
-        //Throws an INDEX_SIZE_ERR exception if the given radius is negative.
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal sa = args[3]->NumberValue();
+        qreal ea = args[4]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(sa) || !qIsFinite(ea))
+            return args.This();
+
+        if (radius < 0)
+           V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
+
         r->context->arc(args[0]->NumberValue(),
                         args[1]->NumberValue(),
                         radius,
@@ -1628,7 +1695,7 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::arcTo(real x1, real y1, real x2, real y2, real radius)
+  \qmlmethod object QtQuick2::Context2D::arcTo(real x1, real y1, real x2, real y2, real radius)
 
    Adds an arc with the given control points and radius to the current subpath, connected to the previous point by a straight line.
    To draw an arc, you begin with the same steps your followed to create a line:
@@ -1653,7 +1720,19 @@ static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
+
     if (args.Length() == 5) {
+        qreal x1 = args[0]->NumberValue();
+        qreal y1 = args[1]->NumberValue();
+        qreal x2 = args[2]->NumberValue();
+        qreal y2 = args[3]->NumberValue();
+
+        if (!qIsFinite(x1) || !qIsFinite(y1) || !qIsFinite(x2) || !qIsFinite(y2))
+            return args.This();
+
+        qreal radius = args[4]->NumberValue();
+        if (radius < 0)
+           V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
         r->context->arcTo(args[0]->NumberValue(),
                           args[1]->NumberValue(),
                           args[2]->NumberValue(),
@@ -1665,7 +1744,7 @@ static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::beginPath()
+  \qmlmethod object QtQuick2::Context2D::beginPath()
 
    Resets the current path to a new path.
   */
@@ -1681,7 +1760,7 @@ static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::bezierCurveTo(real cp1x, real cp1y, real cp2x, real cp2y, real x, real y)
+  \qmlmethod object QtQuick2::Context2D::bezierCurveTo(real cp1x, real cp1y, real cp2x, real cp2y, real x, real y)
 
   Adds a cubic Bezier curve between the current position and the given endPoint using the control points specified by (\c cp1x, cp1y),
   and (\c cp2x, \c cp2y).
@@ -1706,19 +1785,24 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
 
 
     if (args.Length() == 6) {
-        r->context->bezierCurveTo(args[0]->NumberValue(),
-                                  args[1]->NumberValue(),
-                                  args[2]->NumberValue(),
-                                  args[3]->NumberValue(),
-                                  args[4]->NumberValue(),
-                                  args[5]->NumberValue());
+        qreal cp1x = args[0]->NumberValue();
+        qreal cp1y = args[1]->NumberValue();
+        qreal cp2x = args[2]->NumberValue();
+        qreal cp2y = args[3]->NumberValue();
+        qreal x = args[4]->NumberValue();
+        qreal y = args[5]->NumberValue();
+
+        if (!qIsFinite(cp1x) || !qIsFinite(cp1y) || !qIsFinite(cp2x) || !qIsFinite(cp2y) || !qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+
+        r->context->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
     }
 
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::clip()
+  \qmlmethod object QtQuick2::Context2D::clip()
 
    Creates the clipping region from the current path.
    Any parts of the shape outside the clipping path are not displayed.
@@ -1746,14 +1830,19 @@ static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    r->context->state.clipPath = r->context->m_path;
+    QPainterPath clipPath = r->context->m_path;
+    clipPath.closeSubpath();
+    if (!r->context->state.clipPath.isEmpty())
+        r->context->state.clipPath = clipPath.intersected(r->context->state.clipPath);
+    else
+        r->context->state.clipPath = clipPath;
     r->context->buffer()->clip(r->context->state.clipPath);
-    
+
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::closePath()
+  \qmlmethod object QtQuick2::Context2D::closePath()
    Closes the current subpath by drawing a line to the beginning of the subpath, automatically starting a new path.
    The current point of the new path is the previous subpath's first point.
 
@@ -1771,7 +1860,7 @@ static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::fill()
+  \qmlmethod object QtQuick2::Context2D::fill()
 
    Fills the subpaths with the current fill style.
 
@@ -1790,7 +1879,7 @@ static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::lineTo(real x, real y)
+  \qmlmethod object QtQuick2::Context2D::lineTo(real x, real y)
 
    Draws a line from the current position to the point (x, y).
  */
@@ -1801,15 +1890,20 @@ static v8::Handle<v8::Value> ctx2d_lineTo(const v8::Arguments &args)
 
 
     if (args.Length() == 2) {
-        r->context->lineTo(args[0]->NumberValue(),
-                           args[1]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+
+        r->context->lineTo(x, y);
     }
 
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::moveTo(real x, real y)
+  \qmlmethod object QtQuick2::Context2D::moveTo(real x, real y)
 
    Creates a new subpath with the given point.
  */
@@ -1818,17 +1912,19 @@ static v8::Handle<v8::Value> ctx2d_moveTo(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     if (args.Length() == 2) {
-        r->context->moveTo(args[0]->NumberValue(),
-                           args[1]->NumberValue());
-    }
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
 
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+        r->context->moveTo(x, y);
+    }
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::quadraticCurveTo(real cpx, real cpy, real x, real y)
+  \qmlmethod object QtQuick2::Context2D::quadraticCurveTo(real cpx, real cpy, real x, real y)
 
    Adds a quadratic Bezier curve between the current point and the endpoint (\c x, \c y) with the control point specified by (\c cpx, \c cpy).
 
@@ -1839,19 +1935,23 @@ static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     if (args.Length() == 4) {
-        r->context->quadraticCurveTo(args[0]->NumberValue(),
-                                     args[1]->NumberValue(),
-                                     args[2]->NumberValue(),
-                                     args[3]->NumberValue());
+        qreal cpx = args[0]->NumberValue();
+        qreal cpy = args[1]->NumberValue();
+        qreal x = args[2]->NumberValue();
+        qreal y = args[3]->NumberValue();
+
+        if (!qIsFinite(cpx) || !qIsFinite(cpy) || !qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+
+        r->context->quadraticCurveTo(cpx, cpy, x, y);
     }
 
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::rect(real x, real y, real w, real h)
+  \qmlmethod object QtQuick2::Context2D::rect(real x, real y, real w, real h)
 
    Adds a rectangle at position (\c x, \c y), with the given width \c w and height \c h, as a closed subpath.
  */
@@ -1862,17 +1962,22 @@ static v8::Handle<v8::Value> ctx2d_rect(const v8::Arguments &args)
 
 
     if (args.Length() == 4) {
-        r->context->rect(args[0]->NumberValue(),
-                         args[1]->NumberValue(),
-                         args[2]->NumberValue(),
-                         args[3]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal w = args[2]->NumberValue();
+        qreal h = args[3]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+            return args.This();
+
+        r->context->rect(x, y, w, h);
     }
 
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::roundedRect(real x, real y, real w, real h,  real xRadius, real yRadius)
+  \qmlmethod object QtQuick2::Context2D::roundedRect(real x, real y, real w, real h,  real xRadius, real yRadius)
 
    Adds the given rectangle rect with rounded corners to the path. The \c xRadius and \c yRadius arguments specify the radius of the
    ellipses defining the corners of the rounded rectangle.
@@ -1882,21 +1987,28 @@ static v8::Handle<v8::Value> ctx2d_roundedRect(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     if (args.Length() == 6) {
-        r->context->roundedRect(args[0]->NumberValue(),
-                                args[1]->NumberValue(),
-                                args[2]->NumberValue(),
-                                args[3]->NumberValue(),
-                                args[4]->NumberValue(),
-                                args[5]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal w = args[2]->NumberValue();
+        qreal h = args[3]->NumberValue();
+        qreal xr = args[4]->NumberValue();
+        qreal yr = args[5]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+            return args.This();
+
+        if (!qIsFinite(xr) || !qIsFinite(yr))
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "roundedRect(): Invalid arguments");
+
+        r->context->roundedRect(x, y, w, h, xr, yr);
     }
 
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::ellipse(real x, real y, real w, real h)
+  \qmlmethod object QtQuick2::Context2D::ellipse(real x, real y, real w, real h)
 
   Creates an ellipse within the bounding rectangle defined by its top-left corner at (\a x, \ y), width \a w and height \a h,
   and adds it to the path as a closed subpath.
@@ -1910,17 +2022,23 @@ static v8::Handle<v8::Value> ctx2d_ellipse(const v8::Arguments &args)
 
 
     if (args.Length() == 4) {
-        r->context->ellipse(args[0]->NumberValue(),
-                            args[1]->NumberValue(),
-                            args[2]->NumberValue(),
-                            args[3]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        qreal w = args[2]->NumberValue();
+        qreal h = args[3]->NumberValue();
+
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+            return args.This();
+
+
+        r->context->ellipse(x, y, w, h);
     }
 
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::text(string text, real x, real y)
+  \qmlmethod object QtQuick2::Context2D::text(string text, real x, real y)
 
   Adds the given \c text to the path as a set of closed subpaths created from the current context font supplied.
   The subpaths are positioned so that the left end of the text's baseline lies at the point specified by (\c x, \c y).
@@ -1932,16 +2050,18 @@ static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
 
     QV8Engine *engine = V8ENGINE();
     if (args.Length() == 3) {
-        r->context->text(engine->toString(args[0]),
-                         args[1]->NumberValue(),
-                         args[2]->NumberValue());
-    }
+        qreal x = args[1]->NumberValue();
+        qreal y = args[2]->NumberValue();
 
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+        r->context->text(engine->toString(args[0]), x, y);
+    }
     return args.This();
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::stroke()
+  \qmlmethod object QtQuick2::Context2D::stroke()
 
    Strokes the subpaths with the current stroke style.
 
@@ -1961,7 +2081,7 @@ static v8::Handle<v8::Value> ctx2d_stroke(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::isPointInPath(real x, real y)
+  \qmlmethod object QtQuick2::Context2D::isPointInPath(real x, real y)
 
    Returns true if the given point is in the current path.
 
@@ -1972,32 +2092,32 @@ static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     bool pointInPath = false;
     if (args.Length() == 2) {
-        pointInPath = r->context->isPointInPath(args[0]->NumberValue(),
-                                                args[1]->NumberValue());
+        qreal x = args[0]->NumberValue();
+        qreal y = args[1]->NumberValue();
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return v8::Boolean::New(false);
+        pointInPath = r->context->isPointInPath(x, y);
     }
-
     return v8::Boolean::New(pointInPath);
 }
 
 static v8::Handle<v8::Value> ctx2d_drawFocusRing(const v8::Arguments &args)
 {
-    V8THROW_ERROR("Context2D::drawFocusRing is not supported")
+    V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::drawFocusRing is not supported");
     return args.This();
 }
 
 static v8::Handle<v8::Value> ctx2d_setCaretSelectionRect(const v8::Arguments &args)
 {
-    V8THROW_ERROR("Context2D::setCaretSelectionRect is not supported")
+    V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::setCaretSelectionRect is not supported");
     return args.This();
 }
 
 static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
 {
-    V8THROW_ERROR("Context2D::caretBlinkRate is not supported")
-
+    V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
     return args.This();
 }
 // text
@@ -2015,7 +2135,7 @@ v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    return engine->toString(r->context->m_fontString);
+    return engine->toString(r->context->state.font.toString());
 }
 
 static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
@@ -2025,9 +2145,8 @@ static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
     QString fs = engine->toString(value);
-    if (fs != r->context->m_fontString) {
-        r->context->m_fontString = fs;
-        QFont font = qt_font_from_string(fs);
+    QFont font = qt_font_from_string(fs);
+    if (font != r->context->state.font) {
         r->context->state.font = font;
     }
 }
@@ -2087,6 +2206,8 @@ static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
         ta = QSGContext2D::Right;
     else if (textAlign == QLatin1String("center"))
         ta = QSGContext2D::Center;
+    else
+        return;
 
     if (ta != r->context->state.textAlign) {
         r->context->state.textAlign = ta;
@@ -2149,6 +2270,8 @@ static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> v
         tb = QSGContext2D::Bottom;
     else if (textBaseline == QLatin1String("middle"))
         tb = QSGContext2D::Middle;
+    else
+        return;
 
     if (tb != r->context->state.textBaseline) {
         r->context->state.textBaseline = tb;
@@ -2156,7 +2279,7 @@ static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> v
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::fillText(text, x, y)
+  \qmlmethod object QtQuick2::Context2D::fillText(text, x, y)
   Fills the given text at the given position.
   \sa QtQuick2::Context2D::font
   \sa QtQuick2::Context2D::textAlign
@@ -2168,20 +2291,19 @@ static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     QV8Engine *engine = V8ENGINE();
-
     if (args.Length() == 3) {
-        QPainterPath textPath = r->context->createTextGlyphs(args[1]->NumberValue(),
-                                                             args[2]->NumberValue(),
-                                                             engine->toString(args[0]));
+        qreal x = args[1]->NumberValue();
+        qreal y = args[2]->NumberValue();
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+        QPainterPath textPath = r->context->createTextGlyphs(x, y, engine->toString(args[0]));
         r->context->buffer()->fill(textPath);
     }
-
     return args.This();
 }
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::strokeText(text, x, y)
+  \qmlmethod object QtQuick2::Context2D::strokeText(text, x, y)
   Strokes the given text at the given position.
   \sa QtQuick2::Context2D::font
   \sa QtQuick2::Context2D::textAlign
@@ -2193,16 +2315,15 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     QV8Engine *engine = V8ENGINE();
-
     if (args.Length() == 3) {
-        QPainterPath textPath = r->context->createTextGlyphs(args[1]->NumberValue(),
-                                                             args[2]->NumberValue(),
-                                                             engine->toString(args[0]));
+        qreal x = args[1]->NumberValue();
+        qreal y = args[2]->NumberValue();
+        if (!qIsFinite(x) || !qIsFinite(y))
+            return args.This();
+        QPainterPath textPath = r->context->createTextGlyphs(x, y, engine->toString(args[0]));
         r->context->buffer()->stroke(textPath);
     }
-
     return args.This();
 }
 /*!
@@ -2232,7 +2353,6 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     QV8Engine *engine = V8ENGINE();
 
     if (args.Length() == 1) {
@@ -2242,7 +2362,6 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
         tm->Set(v8::String::New("width"), v8::Number::New(width));
         return tm;
     }
-
     return v8::Undefined();
 }
 
@@ -2292,7 +2411,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
 
 
   Note:
-  The \a image type can be an Image item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  The \a image type can be an Image or Canvas item, an image url or a \a {QtQuick2::CanvasImageData} object.
   When given as Image item, if the image isn't fully loaded, this method draws nothing.
   When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
   This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
@@ -2310,48 +2429,50 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     QV8Engine *engine = V8ENGINE();
-
-    //TODO: handle exceptions
-
     qreal sx, sy, sw, sh, dx, dy, dw, dh;
 
-    if (args.Length() != 3 && args.Length() != 5 && args.Length() != 9) {
-        //parameter error
+    if (!args.Length())
         return args.This();
-    }
-
 
     QImage image;
     if (args[0]->IsString()) {
-        image = r->context->createImage(QUrl(engine->toString(args[0]->ToString())));
+        QUrl url(engine->toString(args[0]->ToString()));
+        if (!url.isValid())
+            V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+
+        image = r->context->createImage(url);
     } else if (args[0]->IsObject()) {
-        QSGImage* imageItem = qobject_cast<QSGImage*>(engine->toQObject(args[0]->ToObject()));
-        QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
-        if (r) {
-            image = r->image;
+        QSGImage *imageItem = qobject_cast<QSGImage*>(engine->toQObject(args[0]->ToObject()));
+        QSGCanvasItem *canvas = qobject_cast<QSGCanvasItem*>(engine->toQObject(args[0]->ToObject()));
+
+        QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
+        if (pix) {
+            image = pix->image;
         } else if (imageItem) {
             image = imageItem->pixmap().toImage();
+        } else if (canvas) {
+            image = canvas->toImage();
         } else {
-            //wrong image type
-            return args.This();
+            V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
+    } else {
+        V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
     }
     if (args.Length() == 3) {
         dx = args[1]->NumberValue();
         dy = args[2]->NumberValue();
         sx = 0;
         sy = 0;
-        sw = image.isNull()? -1 : image.width();
-        sh = image.isNull()? -1 : image.height();
+        sw = image.width();
+        sh = image.height();
         dw = sw;
         dh = sh;
     } else if (args.Length() == 5) {
         sx = 0;
         sy = 0;
-        sw = image.isNull()? -1 : image.width();
-        sh = image.isNull()? -1 : image.height();
+        sw = image.width();
+        sh = image.height();
         dx = args[1]->NumberValue();
         dy = args[2]->NumberValue();
         dw = args[3]->NumberValue();
@@ -2366,11 +2487,28 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
         dw = args[7]->NumberValue();
         dh = args[8]->NumberValue();
     } else {
-        //error
         return args.This();
     }
 
-    r->context->buffer()->drawImage(image,sx, sy, sw, sh, dx, dy, dw, dh);
+    if (!qIsFinite(sx)
+     || !qIsFinite(sy)
+     || !qIsFinite(sw)
+     || !qIsFinite(sh)
+     || !qIsFinite(dx)
+     || !qIsFinite(dy)
+     || !qIsFinite(dw)
+     || !qIsFinite(dh))
+        return args.This();
+
+    if (!image.isNull()) {
+        if (sx < 0 || sy < 0 || sw == 0 || sh == 0
+         || sx + sw > image.width() || sy + sh > image.height()
+         || sx + sw < 0 || sy + sh < 0) {
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "drawImage(), index size error");
+        }
+
+        r->context->buffer()->drawImage(image,sx, sy, sw, sh, dx, dy, dw, dh);
+    }
 
     return args.This();
 }
@@ -2488,10 +2626,10 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
 
     if (args.Length() >= 1) {
         int filterFlag = args[0]->IntegerValue();
-        switch(filterFlag) {
+        switch (filterFlag) {
         case QSGCanvasItem::Mono :
         {
-            r->image = r->image.convertToFormat(QImage::Format_Mono).convertToFormat(QImage::Format_ARGB32);
+            r->image = r->image.convertToFormat(QImage::Format_Mono).convertToFormat(QImage::Format_ARGB32_Premultiplied);
         }
             break;
         case QSGCanvasItem::GrayScale :
@@ -2611,11 +2749,10 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed(uint32_t index, const v8::Accesso
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This());
 
-    if (r && index && index < r->image.width() * r->image.height() * 4) {
-        const int w = r->image.width();
-        const int h = r->image.height();
-        const int row = (index / 4) / w;
-        const int col = (index / 4) % w;
+    if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4)) {
+        const quint32 w = r->image.width();
+        const quint32 row = (index / 4) / w;
+        const quint32 col = (index / 4) % w;
         const QRgb* pixel = reinterpret_cast<const QRgb*>(r->image.constScanLine(row));
         pixel += col;
         switch (index % 4) {
@@ -2637,11 +2774,10 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Local<v8:
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(info.This());
 
     const int v = value->Uint32Value();
-    if (r && index > 0 && index < r->image.width() * r->image.height() * 4 && v > 0 && v <= 255) {
-        const int w = r->image.width();
-        const int h = r->image.height();
-        const int row = (index / 4) / w;
-        const int col = (index / 4) % w;
+    if (r && index < static_cast<quint32>(r->image.width() * r->image.height() * 4) && v > 0 && v <= 255) {
+        const quint32 w = r->image.width();
+        const quint32 row = (index / 4) / w;
+        const quint32 col = (index / 4) % w;
 
         QRgb* pixel = reinterpret_cast<QRgb*>(r->image.scanLine(row));
         pixel += col;
@@ -2683,7 +2819,6 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
     QV8Engine *engine = V8ENGINE();
 
     if (args.Length() == 1) {
@@ -2702,8 +2837,14 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
     } else if (args.Length() == 2) {
         qreal w = args[0]->NumberValue();
         qreal h = args[1]->NumberValue();
+
+        if (!qIsFinite(w) || !qIsFinite(h))
+            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createImageData(): invalid arguments");
+
         if (w > 0 && h > 0)
             return qt_create_image_data(w, h, engine, QImage());
+        else
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createImageData(): invalid arguments");
     }
     return v8::Undefined();
 }
@@ -2723,9 +2864,13 @@ static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
         qreal y = args[1]->NumberValue();
         qreal w = args[2]->NumberValue();
         qreal h = args[3]->NumberValue();
+        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(w))
+            V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "getImageData(): Invalid arguments");
+
+        if (w <= 0 || h <= 0)
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "getImageData(): Invalid arguments");
+
         QImage image = r->context->canvas()->toImage(QRectF(x, y, w, h));
-        if (image.format() != QImage::Format_ARGB32)
-            image = image.convertToFormat(QImage::Format_ARGB32);
         v8::Local<v8::Object> imageData = qt_create_image_data(w, h, engine, image);
 
         return imageData;
@@ -2734,7 +2879,7 @@ static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D putImageData(QtQuick2::CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
+  \qmlmethod object QtQuick2::Context2D::putImageData(QtQuick2::CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
   Paints the data from the given ImageData object onto the canvas. If a dirty rectangle (\a dirtyX, \a dirtyY, \a dirtyWidth, \a dirtyHeight) is provided, only the pixels from that rectangle are painted.
   */
 static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
@@ -2745,11 +2890,14 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
         return v8::Undefined();
 
     if (args[0]->IsNull() || !args[0]->IsObject()) {
-        V8THROW_ERROR("Context2D::putImageData, the image data type mismatch");
+        V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "Context2D::putImageData, the image data type mismatch");
     }
     qreal dx = args[1]->NumberValue();
     qreal dy = args[2]->NumberValue();
     qreal w, h, dirtyX, dirtyY, dirtyWidth, dirtyHeight;
+
+    if (!qIsFinite(dx) || !qIsFinite(dy))
+        V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
     v8::Local<v8::Object> imageData = args[0]->ToObject();
     QV8Context2DPixelArrayResource *pixelArray = v8_resource_cast<QV8Context2DPixelArrayResource>(imageData->Get(v8::String::New("data"))->ToObject());
@@ -2762,6 +2910,11 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
             dirtyY = args[4]->NumberValue();
             dirtyWidth = args[5]->NumberValue();
             dirtyHeight = args[6]->NumberValue();
+
+            if (!qIsFinite(dirtyX) || !qIsFinite(dirtyY) || !qIsFinite(dirtyWidth) || !qIsFinite(dirtyHeight))
+                V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
+
+
             if (dirtyWidth < 0) {
                 dirtyX = dirtyX+dirtyWidth;
                 dirtyWidth = -dirtyWidth;
@@ -2843,18 +2996,16 @@ static v8::Handle<v8::Value> ctx2d_gradient_addColorStop(const v8::Arguments &ar
         if (args[1]->IsObject()) {
             color = engine->toVariant(args[1], qMetaTypeId<QColor>()).value<QColor>();
         } else {
-            color = qt_color_from_string(engine->toString(args[1]));
+            color = qt_color_from_string(args[1]);
         }
-        if (pos < 0.0 || pos > 1.0) {
-            //Throws an INDEX_SIZE_ERR exception
-            V8THROW_ERROR("CanvasGradient: parameter offset out of range");
+        if (pos < 0.0 || pos > 1.0 || !qIsFinite(pos)) {
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "CanvasGradient: parameter offset out of range");
         }
 
         if (color.isValid()) {
             gradient.setColorAt(pos, color);
         } else {
-            //Throws a SYNTAX_ERR exception
-            V8THROW_ERROR("CanvasGradient: parameter color is not a valid color string");
+            V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "CanvasGradient: parameter color is not a valid color string");
         }
         style->brush = gradient;
     }
@@ -3082,14 +3233,14 @@ int baseLineOffset(QSGContext2D::TextBaseLineType value, const QFontMetrics &met
 {
     int offset = 0;
     switch (value) {
-    case QSGContext2D::QSGContext2D::Top:
+    case QSGContext2D::Top:
         break;
-    case QSGContext2D::QSGContext2D::Alphabetic:
-    case QSGContext2D::QSGContext2D::Middle:
-    case QSGContext2D::QSGContext2D::Hanging:
+    case QSGContext2D::Alphabetic:
+    case QSGContext2D::Middle:
+    case QSGContext2D::Hanging:
         offset = metrics.ascent();
         break;
-    case QSGContext2D::QSGContext2D::Bottom:
+    case QSGContext2D::Bottom:
         offset = metrics.height();
        break;
     }
@@ -3104,12 +3255,12 @@ static int textAlignOffset(QSGContext2D::TextAlignType value, const QFontMetrics
     else if (value == QSGContext2D::End)
         value = QGuiApplication::layoutDirection() == Qt::LeftToRight ? QSGContext2D::Right: QSGContext2D::Left;
     switch (value) {
-    case QSGContext2D::QSGContext2D::Center:
+    case QSGContext2D::Center:
         offset = metrics.width(text)/2;
         break;
-    case QSGContext2D::QSGContext2D::Right:
+    case QSGContext2D::Right:
         offset = metrics.width(text);
-    case QSGContext2D::QSGContext2D::Left:
+    case QSGContext2D::Left:
     default:
         break;
     }
@@ -3183,6 +3334,7 @@ QSGContext2DEngineData::QSGContext2DEngineData(QV8Engine *engine)
     ft->InstanceTemplate()->SetAccessor(v8::String::New("strokeStyle"), ctx2d_strokeStyle, ctx2d_strokeStyle_set, v8::External::Wrap(engine));
     ft->PrototypeTemplate()->Set(v8::String::New("createLinearGradient"), V8FUNCTION(ctx2d_createLinearGradient, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("createRadialGradient"), V8FUNCTION(ctx2d_createRadialGradient, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("createConicalGradient"), V8FUNCTION(ctx2d_createConicalGradient, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("createPattern"), V8FUNCTION(ctx2d_createPattern, engine));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("lineCap"), ctx2d_lineCap, ctx2d_lineCap_set, v8::External::Wrap(engine));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("lineJoin"), ctx2d_lineJoin, ctx2d_lineJoin_set, v8::External::Wrap(engine));
@@ -3296,8 +3448,9 @@ void QSGContext2D::popState()
     if (newState.miterLimit != state.miterLimit)
         buffer()->setMiterLimit(newState.miterLimit);
 
-    if (newState.clipPath != state.clipPath)
+    if (newState.clipPath != state.clipPath) {
         buffer()->clip(newState.clipPath);
+    }
 
     if (newState.shadowBlur != state.shadowBlur)
         buffer()->setShadowBlur(newState.shadowBlur);
@@ -3310,7 +3463,6 @@ void QSGContext2D::popState()
 
     if (newState.shadowOffsetY != state.shadowOffsetY)
         buffer()->setShadowOffsetY(newState.shadowOffsetY);
-
     state = newState;
 }
 void QSGContext2D::pushState()
@@ -3324,12 +3476,19 @@ void QSGContext2D::reset()
     newState.matrix = QTransform();
 
     QPainterPath defaultClipPath;
-    defaultClipPath.addRect(0, 0, m_canvas->canvasSize().width(), m_canvas->canvasSize().height());
+
+    QRect r(0, 0, m_canvas->canvasSize().width(), m_canvas->canvasSize().height());
+    r = r.united(m_canvas->canvasWindow().toRect());
+    defaultClipPath.addRect(r);
     newState.clipPath = defaultClipPath;
     newState.clipPath.setFillRule(Qt::WindingFill);
 
-    newState.strokeStyle = Qt::black;
-    newState.fillStyle = Qt::black;
+    newState.strokeStyle = QColor("#000000");
+    newState.fillStyle = QColor("#000000");
+    newState.fillPatternRepeatX = false;
+    newState.fillPatternRepeatY = false;
+    newState.strokePatternRepeatX = false;
+    newState.strokePatternRepeatY = false;
     newState.fillRule = Qt::WindingFill;
     newState.globalAlpha = 1.0;
     newState.lineWidth = 1;
@@ -3345,10 +3504,10 @@ void QSGContext2D::reset()
     newState.textAlign = QSGContext2D::Start;
     newState.textBaseline = QSGContext2D::Alphabetic;
 
-    m_fontString = "";
     m_stateStack.clear();
     m_stateStack.push(newState);
     popState();
+    m_buffer->clearRect(0, 0, m_canvas->width(), m_canvas->height());
 }
 
 void QSGContext2D::setV8Engine(QV8Engine *engine)

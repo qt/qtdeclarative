@@ -1,6 +1,3 @@
-
-INCLUDEPATH += $$PWD
-
 SOURCES += \
     $$PWD/qjsengine.cpp \
     $$PWD/qjsvalue.cpp \

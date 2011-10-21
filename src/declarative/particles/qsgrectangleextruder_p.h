@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGRectangleExtruder : public QObject
+class QSGRectangleExtruder : public QSGParticleExtruder
 {
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)

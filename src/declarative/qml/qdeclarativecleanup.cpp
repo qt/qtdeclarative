@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativecleanup_p.h"
+#include "qdeclarativecleanup_p.h"
 
-#include "private/qdeclarativeengine_p.h"
+#include "qdeclarativeengine_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -50,21 +50,42 @@ QT_BEGIN_NAMESPACE
 \class QDeclarativeCleanup
 \brief The QDeclarativeCleanup provides a callback when a QDeclarativeEngine is deleted. 
 
-Any object that needs cleanup to occur before the QDeclarativeEngine's QScriptEngine is
+Any object that needs cleanup to occur before the QDeclarativeEngine's V8 engine is
 destroyed should inherit from QDeclarativeCleanup.  The clear() virtual method will be
-called by QDeclarativeEngine just before it deletes the QScriptEngine.
+called by QDeclarativeEngine just before it destroys the context.
 */
 
-/*!
-\internal
 
+/*
+Create a QDeclarativeCleanup that is not associated with any engine.
+*/
+QDeclarativeCleanup::QDeclarativeCleanup()
+: prev(0), next(0), engine(0)
+{
+}
+
+/*!
 Create a QDeclarativeCleanup for \a engine
 */
 QDeclarativeCleanup::QDeclarativeCleanup(QDeclarativeEngine *engine)
-: prev(0), next(0)
+: prev(0), next(0), engine(0)
 {
     if (!engine)
         return;
+
+    addToEngine(engine);
+}
+
+/*!
+Adds this object to \a engine's cleanup list.  hasEngine() must be false
+before calling this method.
+*/
+void QDeclarativeCleanup::addToEngine(QDeclarativeEngine *engine)
+{
+    Q_ASSERT(engine);
+    Q_ASSERT(QDeclarativeEnginePrivate::isEngineThread(engine));
+
+    this->engine = engine;
 
     QDeclarativeEnginePrivate *p = QDeclarativeEnginePrivate::get(engine);
 
@@ -75,13 +96,23 @@ QDeclarativeCleanup::QDeclarativeCleanup(QDeclarativeEngine *engine)
 }
 
 /*!
+\fn bool QDeclarativeCleanup::hasEngine() const
+
+Returns true if this QDeclarativeCleanup is associated with an engine, otherwise false.
+*/
+
+/*!
 \internal
 */
 QDeclarativeCleanup::~QDeclarativeCleanup()
 {
+    Q_ASSERT(!prev || engine);
+    Q_ASSERT(!prev || QDeclarativeEnginePrivate::isEngineThread(engine));
+
     if (prev) *prev = next;
     if (next) next->prev = prev;
     prev = 0; 
     next = 0;
 }
+
 QT_END_NAMESPACE

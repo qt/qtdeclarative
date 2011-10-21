@@ -154,6 +154,7 @@ public:
 
     virtual void setContentX(qreal pos);
     virtual void setContentY(qreal pos);
+    virtual qreal xOrigin() const;
 
 signals:
     void modelChanged();

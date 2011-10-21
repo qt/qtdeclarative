@@ -1,11 +1,11 @@
 TEMPLATE = subdirs
 
 METATYPETESTS += \
-#   qdeclarativemetatype \
+    qdeclarativemetatype \
     qmetaobjectbuilder
 
 PUBLICTESTS += \
-#   examples \
+    examples \
     geometry \
     nodes \
     parserstress \
@@ -14,6 +14,7 @@ PUBLICTESTS += \
     qdeclarativeengine \
     qdeclarativeerror \
     qdeclarativefolderlistmodel \
+    qdeclarativeincubator \
     qdeclarativeinfo \
     qdeclarativelistreference \
     qdeclarativemoduleplugin \
@@ -24,26 +25,27 @@ PUBLICTESTS += \
     qjsvalue \
     qjsvalueiterator \
     qjsengine \
-    qmlmin
+    qmlmin \
+    qmlplugindump
 
 PRIVATETESTS += \
     qdeclarativeanimations \
     qdeclarativeapplication \
     qdeclarativebehaviors \
     qdeclarativebinding \
+    qdeclarativechangeset \
     qdeclarativeconnection \
-    qdeclarativeenginedebug \
-    qdeclarativedebugclient \
-    qdeclarativedebugservice \
-#   qdeclarativedebugjs \
     qdeclarativeecmascript \
+    qdeclarativeexpression \
+    qdeclarativefontloader \
     qdeclarativeimageprovider \
     qdeclarativeinstruction \
     qdeclarativelanguage \
+    qdeclarativelistcompositor \
     qdeclarativelistmodel \
+    qdeclarativepath \
     qdeclarativeproperty \
     qdeclarativepropertymap \
-#   qdeclarativescriptdebugging \
     qdeclarativesmoothedanimation \
     qdeclarativespringanimation \
     qdeclarativestyledtext \
@@ -54,19 +56,24 @@ PRIVATETESTS += \
     qdeclarativevaluetypes \
     qdeclarativeworkerscript \
     qdeclarativexmllistmodel \
-    qpacketprotocol \
-    qdeclarativev4
+    v4
+
+# This test requires the xmlpatterns module
+!contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qdeclarativexmllistmodel
 
 SGTESTS =  \
     qsganimatedimage \
     qsgborderimage \
     qsgcanvas \
+    qsgdrag \
+    qsgdroparea \
     qsgflickable \
     qsgflipable \
     qsgfocusscope \
     qsggridview \
     qsgimage \
     qsgitem \
+    qsgitem2 \
     qsglistview \
     qsgloader \
     qsgmousearea \
@@ -75,22 +82,18 @@ SGTESTS =  \
     qsgpositioners \
     qsgrepeater \
     qsgtext \
-#   qsgtextedit \
-#   qsgtextinput \
+    qsgtextedit \
+    qsgtextinput \
     qsgvisualdatamodel \
+    qsgview \
+    qsgcanvasitem \
 
 
 SUBDIRS += $$PUBLICTESTS
-
-!symbian: {
-    SUBDIRS += $$METATYPETESTS
-}
+SUBDIRS += $$METATYPETESTS
+SUBDIRS += debugger
 
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS
     SUBDIRS += $$SGTESTS
 }
-
-# Tests which should run in Pulse
-PULSE_TESTS = $$SUBDIRS
-

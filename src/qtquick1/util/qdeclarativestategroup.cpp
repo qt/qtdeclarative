@@ -445,7 +445,7 @@ void QDeclarative1StateGroupPrivate::setCurrentStateInternal(const QString &stat
 
     applyingState = true;
 
-    QDeclarative1Transition *transition = (ignoreTrans || ignoreTrans) ? 0 : findTransition(currentState, state);
+    QDeclarative1Transition *transition = ignoreTrans ? 0 : findTransition(currentState, state);
     if (stateChangeDebug()) {
         qWarning() << this << "Changing state.  From" << currentState << ". To" << state;
         if (transition)

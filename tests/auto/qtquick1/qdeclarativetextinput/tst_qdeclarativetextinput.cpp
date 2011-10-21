@@ -40,7 +40,6 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
-#include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QFile>
 #include <QtQuick1/qdeclarativeview.h>
@@ -53,11 +52,6 @@
 #include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 
 #include "qplatformdefs.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 Q_DECLARE_METATYPE(QDeclarative1TextInput::SelectionMode)
 
@@ -1671,7 +1665,7 @@ void tst_qdeclarativetextinput::copyAndPaste() {
         if (status == noErr)
             CFRelease(pasteboard);
         else
-            QSKIP("This machine doesn't support the clipboard", SkipAll);
+            QSKIP("This machine doesn't support the clipboard");
     }
 #endif
 
@@ -2628,7 +2622,7 @@ void tst_qdeclarativetextinput::preeditMicroFocus()
     ic.sendPreeditText(preeditText, 0);
     currentRect = input.inputMethodQuery(Qt::ImMicroFocus).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, true);
 #endif
 
@@ -2639,7 +2633,7 @@ void tst_qdeclarativetextinput::preeditMicroFocus()
         ic.sendPreeditText(preeditText, i);
         currentRect = input.inputMethodQuery(Qt::ImMicroFocus).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
         QCOMPARE(ic.updateReceived, true);
 #endif
         previousRect = currentRect;
@@ -2652,7 +2646,7 @@ void tst_qdeclarativetextinput::preeditMicroFocus()
     ic.sendEvent(QInputMethodEvent(preeditText, QList<QInputMethodEvent::Attribute>()));
     currentRect = input.inputMethodQuery(Qt::ImMicroFocus).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, true);
 #endif
 }

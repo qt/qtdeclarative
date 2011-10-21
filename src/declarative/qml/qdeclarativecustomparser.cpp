@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativecustomparser_p.h"
-#include "private/qdeclarativecustomparser_p_p.h"
+#include "qdeclarativecustomparser_p.h"
+#include "qdeclarativecustomparser_p_p.h"
 
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativecompiler_p.h"
 
 #include <QtCore/qdebug.h>
 
@@ -114,7 +114,7 @@ QDeclarativeCustomParserProperty
 QDeclarativeCustomParserNodePrivate::fromProperty(QDeclarativeScript::Property *p)
 {
     QDeclarativeCustomParserProperty prop;
-    prop.d->name = p->name().toUtf8();
+    prop.d->name = p->name().toString();
     prop.d->isList = p->values.isMany();
     prop.d->location = p->location.start;
 
@@ -164,7 +164,7 @@ QDeclarativeCustomParserNode::~QDeclarativeCustomParserNode()
     delete d; d = 0;
 }
 
-QByteArray QDeclarativeCustomParserNode::name() const
+QString QDeclarativeCustomParserNode::name() const
 {
     return d->name;
 }
@@ -204,7 +204,7 @@ QDeclarativeCustomParserProperty::~QDeclarativeCustomParserProperty()
     delete d; d = 0;
 }
 
-QByteArray QDeclarativeCustomParserProperty::name() const
+QString QDeclarativeCustomParserProperty::name() const
 {
     return d->name;
 }
@@ -292,7 +292,7 @@ int QDeclarativeCustomParser::evaluateEnum(const QByteArray& script) const
     Resolves \a name to a type, or 0 if it is not a type. This can be used
     to type-check object nodes.
 */
-const QMetaObject *QDeclarativeCustomParser::resolveType(const QByteArray& name) const
+const QMetaObject *QDeclarativeCustomParser::resolveType(const QString& name) const
 {
     return compiler->resolveType(name);
 }
@@ -302,7 +302,7 @@ const QMetaObject *QDeclarativeCustomParser::resolveType(const QByteArray& name)
     used to construct the binding later. \a name
     is used as the name of the rewritten function.
 */
-QDeclarativeBinding::Identifier QDeclarativeCustomParser::rewriteBinding(const QString& expression, const QByteArray& name)
+QDeclarativeBinding::Identifier QDeclarativeCustomParser::rewriteBinding(const QString& expression, const QString& name)
 {
     return compiler->rewriteBinding(expression, name);
 }

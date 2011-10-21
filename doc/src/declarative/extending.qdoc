@@ -98,11 +98,11 @@ document, which includes the following:
 \endlist
 
 When a property of a supported type is added to a C++ class, in a QML
-element based on the C++ class, a \e{value-changed} signal handler
+element based on the C++ class, a \i{value-changed} signal handler
 will be available. See \l{Signal Support} below.
 
 QML is typesafe.  Attempting to assign an invalid value to a property
-will generate an error.  For example, assuming the \e{name} property
+will generate an error.  For example, assuming the \i{name} property
 of the \c Person element had a type of QString, this would cause an
 error:
 
@@ -150,9 +150,9 @@ only available from a particular version of QCppItem onwards. This permits new p
 and features to be added to existing elements without breaking existing programs. 
 
 QML enables this by allowing the properties, methods and signals of a class to be tagged with
-a particular \e revision, so that they are only accessible if the relevant module version
+a particular \i revision, so that they are only accessible if the relevant module version
 is imported.  In this case, the author can tag the \c root property as being added in
-\e {revision 1} of the class, and register that revision in version 1.1 of the module.
+\i {revision 1} of the class, and register that revision in version 1.1 of the module.
 
 The REVISION tag is used to mark the \c root property as added in revision 1 of the class.
 Methods such as Q_INVOKABLE's, signals and slots can also be tagged for a
@@ -285,7 +285,7 @@ code used to create the \c Boy and \c Girl types.
 The QML snippet shown above assigns a collection of objects to the
 \c BirthdayParty's default property.
 
-The \e {default property} is a syntactic convenience that allows a type designer to
+The \i {default property} is a syntactic convenience that allows a type designer to
 specify a single property as the type's default.  The default property is
 assigned to whenever no explicit property is specified.  As a convenience, it is
 behaviorally identical to assigning to the default property explicitly by name.
@@ -385,8 +385,8 @@ property accesses.  Consequently the attachment object may not be deleted until
 \a object is destroyed.
 \endquotation
 
-Conceptually, attached properties are a \e type exporting a set of additional
-properties that can be set on \e any other object instance.  Attached properties
+Conceptually, attached properties are a \i type exporting a set of additional
+properties that can be set on \i any other object instance.  Attached properties
 cannot be limited to only attaching to a sub-set of object instances, although
 their effect may be so limited.
 
@@ -492,9 +492,9 @@ If you want to use signals from items not created in QML, you can access their
 signals with the \l {Connections} element.
 
 Additionally, if a property is added to a C++ class, all QML elements
-based on that C++ class will have a \e{value-changed} signal handler
+based on that C++ class will have a \i{value-changed} signal handler
 for that property. The name of the signal handler is
-\e{on<Property-name>Changed}, with the first letter of the property
+\i{on<Property-name>Changed}, with the first letter of the property
 name being upper case.
 
 \note The QML signal handler will always be named

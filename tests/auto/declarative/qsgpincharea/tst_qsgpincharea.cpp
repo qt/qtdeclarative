@@ -45,12 +45,7 @@
 #include <private/qsgrectangle_p.h>
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qdeclarativecontext.h>
-#include <QtOpenGL/QGLShaderProgram>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include "../shared/util.h"
 
 class tst_QSGPinchArea: public QObject
 {
@@ -77,7 +72,7 @@ void tst_QSGPinchArea::cleanupTestCase()
 void tst_QSGPinchArea::pinchProperties()
 {
     QSGView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pinchproperties.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -203,7 +198,7 @@ QTouchEvent::TouchPoint makeTouchPoint(int id, QPoint p, QSGView *v, QSGItem *i)
 void tst_QSGPinchArea::scale()
 {
     QSGView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pinchproperties.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -256,7 +251,7 @@ void tst_QSGPinchArea::scale()
 void tst_QSGPinchArea::pan()
 {
     QSGView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pinchproperties.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -312,7 +307,7 @@ void tst_QSGPinchArea::pan()
 void tst_QSGPinchArea::retouch()
 {
     QSGView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pinchproperties.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);

@@ -79,7 +79,7 @@ static const char qt_particles_default_fragment_code[] =
         "varying highp vec2 qt_TexCoord0;                           \n"
         "uniform lowp float qt_Opacity;                             \n"
         "void main() {                                              \n"
-        "    gl_FragColor = texture2D(source, fTex) * qt_Opacity;   \n"
+        "    gl_FragColor = texture2D(source, qt_TexCoord0) * qt_Opacity;   \n"
         "}";
 
 static QSGGeometry::Attribute PlainParticle_Attributes[] = {
@@ -130,7 +130,6 @@ struct PlainVertices {
 
 QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
-    , m_pleaseReset(true)
     , m_dirtyData(true)
     , m_material(0)
     , m_rootNode(0)
@@ -430,9 +429,8 @@ QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         prepareNextFrame();
         if (m_rootNode) {
             update();
-            //### Should I be using dirty geometry too/instead?
             foreach (QSGGeometryNode* node, m_nodes)
-                node->markDirty(QSGNode::DirtyMaterial);//done in buildData?
+                node->markDirty(QSGNode::DirtyGeometry);//done in buildData?
         }
     }
 
@@ -479,13 +477,21 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
     s.vertexCode = qt_particles_template_vertex_code + s.vertexCode;
     m_material->setProgramSource(s);
     foreach (const QString &str, m_groups){
-        int gIdx = m_system->m_groupIds[str];
-        int count = m_system->m_groupData[gIdx]->size();
+        int gIdx = m_system->groupIds[str];
+        int count = m_system->groupData[gIdx]->size();
+
+        QSGShaderEffectNode* node = new QSGShaderEffectNode();
+        m_nodes.insert(gIdx, node);
+
+        node->setMaterial(m_material);
+        node->markDirty(QSGNode::DirtyMaterial);
+
         //Create Particle Geometry
         int vCount = count * 4;
         int iCount = count * 6;
         QSGGeometry *g = new QSGGeometry(PlainParticle_AttributeSet, vCount, iCount);
         g->setDrawingMode(GL_TRIANGLES);
+        node->setGeometry(g);
         PlainVertex *vertices = (PlainVertex *) g->vertexData();
         for (int p=0; p < count; ++p) {
             commit(gIdx, p);
@@ -513,14 +519,6 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
             indices[5] = o + 2;
             indices += 6;
         }
-
-        QSGShaderEffectNode* node = new QSGShaderEffectNode();
-
-        node->setGeometry(g);
-        node->setMaterial(m_material);
-        node->markDirty(QSGNode::DirtyMaterial);
-
-        m_nodes.insert(gIdx, node);
     }
     foreach (QSGShaderEffectNode* node, m_nodes){
         if (node == *(m_nodes.begin()))
@@ -568,7 +566,7 @@ void QSGCustomParticle::buildData()
 
 void QSGCustomParticle::initialize(int gIdx, int pIdx)
 {
-    QSGParticleData* datum = m_system->m_groupData[gIdx]->data[pIdx];
+    QSGParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
     datum->r = rand()/(qreal)RAND_MAX;
 }
 
@@ -577,7 +575,7 @@ void QSGCustomParticle::commit(int gIdx, int pIdx)
     if (m_nodes[gIdx] == 0)
         return;
 
-    QSGParticleData* datum = m_system->m_groupData[gIdx]->data[pIdx];
+    QSGParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
     PlainVertices *particles = (PlainVertices *) m_nodes[gIdx]->geometry()->vertexData();
     PlainVertex *vertices = (PlainVertex *)&particles[pIdx];
     for (int i=0; i<4; ++i) {

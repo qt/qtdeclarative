@@ -24,3 +24,5 @@ SUBDIRS += module_qtdeclarative_src \
            module_qtdeclarative_tools \
            module_qtdeclarative_examples \
            module_qtdeclarative_tests \
+
+include(doc/config/qtdeclarative_doc.pri)

@@ -56,10 +56,10 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
 
-QT_BEGIN_NAMESPACE
-
 Q_DECLARE_METATYPE(QJSValue);
 Q_DECLARE_METATYPE(QDeclarativeV8Handle);
+
+QT_BEGIN_NAMESPACE
 
 #if defined(__GNUC__)
 # if (__GNUC__ * 100 + __GNUC_MINOR__) >= 405
@@ -522,6 +522,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             ep->capturedProperties << CapturedProperty(object, result->coreIndex, result->notifyIndex);
     }
 
+    if (result->isVMEProperty())
+        return static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject*>(object->metaObject()))->vmeProperty(result->coreIndex);
+
     if (result->isDirect())  {
         return LoadPropertyDirect(engine, object, *result);
     } else {
@@ -546,10 +549,9 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativ
         int lineNumber = frame->GetLineNumber();
         QString url = engine->toString(frame->GetScriptName());
 
-        QDeclarativePropertyCache::ValueTypeData valueTypeData;
         newBinding = new QDeclarativeBinding(&function, object, context);
         newBinding->setSourceLocation(url, lineNumber);
-        newBinding->setTarget(QDeclarativePropertyPrivate::restore(*property, valueTypeData, object, context));
+        newBinding->setTarget(QDeclarativePropertyPrivate::restore(*property, object, context));
         newBinding->setEvaluateFlags(newBinding->evaluateFlags() | QDeclarativeBinding::RequiresThisObject);
     }
 
@@ -589,6 +591,8 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativ
         PROPERTY_STORE(double, double(value->ToNumber()->Value()));
     } else if (property->propType == QMetaType::QString && value->IsString()) {
         PROPERTY_STORE(QString, engine->toString(value->ToString()));
+    } else if (property->isVMEProperty()) {
+        static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(object->metaObject()))->setVMEProperty(property->coreIndex, value);
     } else {
         QVariant v;
         if (property->isQList()) 
@@ -861,6 +865,7 @@ static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *
 v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8Engine *engine)
 {
     Q_ASSERT(object);
+    Q_ASSERT(this->engine);
 
     Q_ASSERT(QDeclarativeData::get(object, false));
     Q_ASSERT(QDeclarativeData::get(object, false)->propertyCache == this);
@@ -938,6 +943,8 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
             ft->InstanceTemplate()->SetHasExternalResource(true);
             constructor = qPersistentNew<v8::Function>(ft->GetFunction());
         }
+
+        QDeclarativeCleanup::addToEngine(this->engine);
     }
 
     v8::Local<v8::Object> result = constructor->NewInstance();
@@ -2070,3 +2077,6 @@ v8::Handle<v8::Value> MetaCallArgument::toValue(QV8Engine *engine)
         return v8::Undefined();
     }
 }
+
+QT_END_NAMESPACE
+

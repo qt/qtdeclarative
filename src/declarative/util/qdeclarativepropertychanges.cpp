@@ -39,23 +39,22 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativepropertychanges_p.h"
+#include "qdeclarativepropertychanges_p.h"
 
-#include "private/qdeclarativeopenmetaobject_p.h"
-#include "private/qdeclarativerewrite_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativeopenmetaobject_p.h"
+#include <private/qdeclarativerewrite_p.h>
+#include <private/qdeclarativeengine_p.h>
 
 #include <qdeclarativeinfo.h>
-#include <qdeclarativecustomparser_p.h>
-#include <qdeclarativescript_p.h>
+#include <private/qdeclarativecustomparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <qdeclarativeexpression.h>
-#include <qdeclarativebinding_p.h>
+#include <private/qdeclarativebinding_p.h>
 #include <qdeclarativecontext.h>
-#include <qdeclarativeguard_p.h>
-#include <qdeclarativeproperty_p.h>
-#include <qdeclarativecontext_p.h>
-#include <qdeclarativestate_p_p.h>
+#include <private/qdeclarativeguard_p.h>
+#include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativecontext_p.h>
+#include <private/qdeclarativestate_p_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -240,11 +239,11 @@ public:
 };
 
 void
-QDeclarativePropertyChangesParser::compileList(QList<QPair<QByteArray, QVariant> > &list,
-                                     const QByteArray &pre,
+QDeclarativePropertyChangesParser::compileList(QList<QPair<QString, QVariant> > &list,
+                                     const QString &pre,
                                      const QDeclarativeCustomParserProperty &prop)
 {
-    QByteArray propName = pre + prop.name();
+    QString propName = pre + prop.name();
 
     QList<QVariant> values = prop.assignedValues();
     for (int ii = 0; ii < values.count(); ++ii) {
@@ -258,7 +257,7 @@ QDeclarativePropertyChangesParser::compileList(QList<QPair<QByteArray, QVariant>
 
             QDeclarativeCustomParserProperty prop =
                 qvariant_cast<QDeclarativeCustomParserProperty>(value);
-            QByteArray pre = propName + '.';
+            QString pre = propName + QLatin1Char('.');
             compileList(list, pre, prop);
 
         } else {
@@ -270,9 +269,9 @@ QDeclarativePropertyChangesParser::compileList(QList<QPair<QByteArray, QVariant>
 QByteArray
 QDeclarativePropertyChangesParser::compile(const QList<QDeclarativeCustomParserProperty> &props)
 {
-    QList<QPair<QByteArray, QVariant> > data;
+    QList<QPair<QString, QVariant> > data;
     for(int ii = 0; ii < props.count(); ++ii)
-        compileList(data, QByteArray(), props.at(ii));
+        compileList(data, QString(), props.at(ii));
 
     QByteArray rv;
     QDataStream ds(&rv, QIODevice::WriteOnly);
@@ -304,7 +303,7 @@ QDeclarativePropertyChangesParser::compile(const QList<QDeclarativeCustomParserP
             break;
         }
 
-        ds << QString::fromUtf8(data.at(ii).first) << isScript << var;
+        ds << data.at(ii).first << isScript << var;
         if (isScript)
             ds << id;
     }

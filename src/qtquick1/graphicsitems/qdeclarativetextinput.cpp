@@ -1392,7 +1392,8 @@ QVariant QDeclarative1TextInput::inputMethodQuery(Qt::InputMethodQuery property)
     case Qt::ImCursorPosition:
         return QVariant(d->control->cursor());
     case Qt::ImSurroundingText:
-        if (d->control->echoMode() == PasswordEchoOnEdit && !d->control->passwordEchoEditing())
+        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit
+            && !d->control->passwordEchoEditing())
             return QVariant(displayText());
         else
             return QVariant(text());

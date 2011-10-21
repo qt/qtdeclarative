@@ -165,7 +165,7 @@ QDeclarativeGestureAreaParser::compile(const QList<QDeclarativeCustomParserPrope
 
     for(int ii = 0; ii < props.count(); ++ii)
     {
-        QString propName = QString::fromUtf8(props.at(ii).name());
+        QString propName = props.at(ii).name();
         Qt::GestureType type;
 
         if (propName == QLatin1String("onTap")) {

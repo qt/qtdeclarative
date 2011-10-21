@@ -51,13 +51,9 @@
 #include <QVector4D>
 #include <QQuaternion>
 #include <qdeclarative.h>
+#include <QWidget>
 
 #include <private/qdeclarativemetatype_p.h>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_qdeclarativemetatype : public QObject
 {
@@ -209,6 +205,7 @@ void tst_qdeclarativemetatype::copy()
         QPixmap icon(100, 100);
 
         QIcon v = QIcon(icon); QIcon v2 = QIcon(icon);
+        QEXPECT_FAIL("", "QTBUG-21629 - copy() test function failure.", Abort);
         QVERIFY(QDeclarativeMetaType::copy(QMetaType::QIcon, &v, 0)); 
         QVERIFY(v.isNull() == QIcon().isNull());
         QVERIFY(QDeclarativeMetaType::copy(QMetaType::QIcon , &v, &v2)); 

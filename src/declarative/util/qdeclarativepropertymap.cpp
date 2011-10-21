@@ -42,7 +42,7 @@
 #include "qdeclarativepropertymap.h"
 
 #include <private/qmetaobjectbuilder_p.h>
-#include "private/qdeclarativeopenmetaobject_p.h"
+#include "qdeclarativeopenmetaobject_p.h"
 
 #include <QDebug>
 
@@ -108,7 +108,7 @@ void QDeclarativePropertyMapMetaObject::propertyCreated(int, QMetaPropertyBuilde
 
 int QDeclarativePropertyMapMetaObject::createProperty(const char *name, const char *value)
 {
-    if (!priv->validKeyName(name))
+    if (!priv->validKeyName(QString::fromUtf8(name)))
         return -1;
     return QDeclarativeOpenMetaObject::createProperty(name, value);
 }

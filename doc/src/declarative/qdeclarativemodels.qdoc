@@ -36,26 +36,26 @@
 
 QML items such as ListView, GridView and \l Repeater require Data Models
 that provide the data to be displayed.
-These items typically require a \e delegate component that
+These items typically require a \i delegate component that
 creates an instance for each item in the model.  Models may be static, or
 have items modified, inserted, removed or moved dynamically.
 
 Data is provided to the delegate via named data roles which the
-delegate may bind to. Here is a ListModel with two roles, \e type and \e age,
+delegate may bind to. Here is a ListModel with two roles, \i type and \i age,
 and a ListView with a delegate that binds to these roles to display their
 values:
 
 \snippet doc/src/snippets/declarative/qml-data-models/listmodel-listview.qml document
 
 If there is a naming clash between the model's properties and the delegate's
-properties, the roles can be accessed with the qualified \e model name instead.
-For example, if a \l Text element had \e type or \e age properties, the text in the
-above example would display those property values instead of the \e type and \e age values
+properties, the roles can be accessed with the qualified \i model name instead.
+For example, if a \l Text element had \i type or \i age properties, the text in the
+above example would display those property values instead of the \i type and \i age values
 from the model item. In this case, the properties could have been referenced as
 \c model.type and \c model.age instead to ensure the delegate displays the
 property values from the model item.
 
-A special \e index role containing the index of the item in the model
+A special \i index role containing the index of the item in the model
 is also available to the delegate.  Note this index is set to -1 if the item is removed from
 the model.  If you bind to the index role, be sure that the logic
 accounts for the possibility of index being -1, i.e. that the item
@@ -64,8 +64,8 @@ it is possible to delay delegate destruction in some views via a \c delayRemove
 attached property.)
 
 Models that do not have named roles (such as the QStringList model shown below)
-will have the data provided via the \e modelData role.  The \e modelData role is also provided for
-models that have only one role.  In this case the \e modelData role
+will have the data provided via the \i modelData role.  The \i modelData role is also provided for
+models that have only one role.  In this case the \i modelData role
 contains the same data as the named role.
 
 QML provides several types of data models among the built-in set of
@@ -88,7 +88,7 @@ available roles are specified by the \l ListElement properties.
 
 \snippet doc/src/snippets/declarative/qml-data-models/listelements.qml model
 
-The above model has two roles, \e name and \e cost.  These can be bound
+The above model has two roles, \i name and \i cost.  These can be bound
 to by a ListView delegate, for example:
 
 \snippet doc/src/snippets/declarative/qml-data-models/listelements.qml view
@@ -103,7 +103,7 @@ insertion are the only roles that will be shown in the view:
 \dots
 \snippet doc/src/snippets/declarative/qml-data-models/dynamic-listmodel.qml mouse area
 
-When the MouseArea is clicked, \c fruitModel will have two roles, \e cost and \e name.
+When the MouseArea is clicked, \c fruitModel will have two roles, \i cost and \i name.
 Even if subsequent roles are added, only the first two will be handled by views
 using the model. To reset the roles available in the model, call ListModel::clear().
 
@@ -113,7 +113,7 @@ using the model. To reset the roles available in the model, call ListModel::clea
 XmlListModel allows construction of a model from an XML data source. The roles
 are specified via the \l XmlRole element.
 
-The following model has three roles, \e title, \e link and \e description:
+The following model has three roles, \i title, \i link and \i description:
 \qml
 XmlListModel {
      id: feedModel
@@ -157,7 +157,7 @@ models.
 
 \section2 QStringList-based model
 
-A model may be a simple QStringList, which provides the contents of the list via the \e modelData role.
+A model may be a simple QStringList, which provides the contents of the list via the \i modelData role.
 
 Here is a ListView with a delegate that references its model item's
 value using the \c modelData role:
@@ -234,7 +234,7 @@ QAbstractItemModel::setRoleNames(). The default role names set by Qt are:
 \endtable
 
 Here is an application with a QAbstractListModel subclass named \c AnimalModel
-that has \e type and \e size roles. It calls QAbstractItemModel::setRoleNames() to set the
+that has \i type and \i size roles. It calls QAbstractItemModel::setRoleNames() to set the
 role names for accessing the properties via QML:
 
 \snippet examples/declarative/modelviews/abstractitemmodel/model.h 0
@@ -248,7 +248,7 @@ role names for accessing the properties via QML:
 \snippet examples/declarative/modelviews/abstractitemmodel/main.cpp 0
 \dots
 
-This model is displayed by a ListView delegate that accesses the \e type and \e size
+This model is displayed by a ListView delegate that accesses the \i type and \i size
 roles:
 
 \snippet examples/declarative/modelviews/abstractitemmodel/view.qml 0
@@ -268,7 +268,7 @@ the VisualDataModel element provides several properties and functions for use
 with models of type QAbstractItemModel:
 
 \list
-\o \e hasModelChildren role property to determine whether a node has child nodes.
+\o \i hasModelChildren role property to determine whether a node has child nodes.
 \o \l VisualDataModel::rootIndex allows the root node to be specifed
 \o \l VisualDataModel::modelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
 \o \l VisualDataModel::parentModelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
@@ -358,8 +358,8 @@ An object instance can be used to specify a model with a single object element. 
 properties of the object are provided as roles.
 
 The example below creates a list with one item, showing the color of the
-\e myText text.  Note the use of the fully qualified \e model.color property
-to avoid clashing with \e color property of the Text element in the delegate.
+\i myText text.  Note the use of the fully qualified \i model.color property
+to avoid clashing with \i color property of the Text element in the delegate.
 
 \qml
 Rectangle {
@@ -398,9 +398,9 @@ different for each view, and you would like these different settings to
 be properties of each of the views. Similarly, it might be of interest
 to access or show some properties of the model.
 
-In the following example, the delegate shows the property \e{language}
+In the following example, the delegate shows the property \i{language}
 of the model, and the color of one of the fields depends on the
-property \e{fruit_color} of the view.
+property \i{fruit_color} of the view.
 
 \snippet doc/src/snippets/declarative/models/views-models-delegates.qml rectangle
 
@@ -418,8 +418,8 @@ a function in the model, e.g.:
         ListView.view.model.setData(index, field, value)
 \endjs
 
-...assuming that \e{field} holds the name of the field which should be
-updated, and that \e{value} holds the new value.
+...assuming that \i{field} holds the name of the field which should be
+updated, and that \i{value} holds the new value.
 
 */
 

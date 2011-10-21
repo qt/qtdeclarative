@@ -39,12 +39,12 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativebind_p.h"
+#include "qdeclarativebind_p.h"
 
-#include "private/qdeclarativenullablevalue_p_p.h"
-#include "private/qdeclarativeproperty_p.h"
-#include "private/qdeclarativebinding_p.h"
-#include "private/qdeclarativeguard_p.h"
+#include <private/qdeclarativenullablevalue_p_p.h>
+#include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativebinding_p.h>
+#include <private/qdeclarativeguard_p.h>
 
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
@@ -53,8 +53,6 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
-#include <QtDeclarative/qjsvalue.h>
-#include <QtDeclarative/qjsengine.h>
 
 #include <private/qobject_p.h>
 

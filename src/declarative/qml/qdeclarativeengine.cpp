@@ -39,64 +39,52 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeengine_p.h"
+#include "qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
 
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativecompiler_p.h"
 #include "qdeclarative.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarativeexpression.h"
 #include "qdeclarativecomponent.h"
-#include "private/qdeclarativebinding_p_p.h"
-#include "private/qdeclarativevme_p.h"
-#include "private/qdeclarativeenginedebugservice_p.h"
-#include "private/qdeclarativestringconverters_p.h"
-#include "private/qdeclarativexmlhttprequest_p.h"
-#include "private/qdeclarativesqldatabase_p.h"
+#include "qdeclarativebinding_p_p.h"
+#include "qdeclarativevme_p.h"
+#include <private/qdeclarativeenginedebugservice_p.h>
+#include "qdeclarativestringconverters_p.h"
+#include "qdeclarativexmlhttprequest_p.h"
+#include "qdeclarativesqldatabase_p.h"
 #include "qdeclarativescriptstring.h"
-#include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativeworkerscript_p.h"
-#include "private/qdeclarativecomponent_p.h"
+#include "qdeclarativeglobal_p.h"
+#include "qdeclarativeworkerscript_p.h"
+#include "qdeclarativecomponent_p.h"
 #include "qdeclarativenetworkaccessmanagerfactory.h"
 #include "qdeclarativeimageprovider.h"
-#include "private/qdeclarativedirparser_p.h"
+#include "qdeclarativedirparser_p.h"
 #include "qdeclarativeextensioninterface.h"
-#include "private/qdeclarativelist_p.h"
-#include "private/qdeclarativetypenamecache_p.h"
-#include "private/qdeclarativenotifier_p.h"
-#include "private/qdeclarativedebugtrace_p.h"
-#include "private/qdeclarativeapplication_p.h"
-#include "private/qv8debugservice_p.h"
+#include "qdeclarativelist_p.h"
+#include "qdeclarativetypenamecache_p.h"
+#include "qdeclarativenotifier_p.h"
+#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeapplication_p.h>
+#include <private/qv8debugservice_p.h>
+#include "qdeclarativeincubator.h"
+#include <private/qv8profilerservice_p.h>
 
 #include <QtCore/qmetaobject.h>
-#include <QNetworkReply>
-#include <QNetworkRequest>
 #include <QNetworkAccessManager>
-#include <QTimer>
-#include <QList>
-#include <QPair>
 #include <QDebug>
 #include <QMetaObject>
-#include <QStack>
-#include <QMap>
-#include <QPluginLoader>
-#include <QtGui/qfontdatabase.h>
-#include <QtCore/qlibraryinfo.h>
-#include <QtCore/qthreadstorage.h>
-#include <QtCore/qthread.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
-#include <QtGui/qcolor.h>
-#include <QtCore/qcryptographichash.h>
+#include <QtNetwork/qnetworkconfigmanager.h>
 
 #include <private/qobject_p.h>
 
 #include <private/qdeclarativeutilmodule_p.h>
 #include <private/qsgitemsmodule_p.h>
 #include <private/qsgparticlesmodule_p.h>
-#include <qsgtexture.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
@@ -135,7 +123,7 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
   QObject. See the QObject documentation for further details.
 */
 /*!
-  \qmlproperty string QML:QtObject::objectName
+  \qmlproperty string QtObject::objectName
   This property holds the QObject::objectName for this specific object instance.
 
   This allows a C++ application to locate an item within a QML component
@@ -189,7 +177,7 @@ void QDeclarativeEnginePrivate::defineModule()
 }
 
 /*!
-\qmlclass QML:Qt QDeclarativeEnginePrivate
+\qmlclass Qt QDeclarativeEnginePrivate
   \ingroup qml-utility-elements
 \brief The QML global Qt object provides useful enums and functions from Qt.
 
@@ -224,11 +212,11 @@ data types. This is primarily useful when setting the properties of an item
 when the property has one of the following types:
 
 \list
-\o \c color - use \l{QML:Qt::rgba()}{Qt.rgba()}, \l{QML:Qt::hsla()}{Qt.hsla()}, \l{QML:Qt::darker()}{Qt.darker()}, \l{QML:Qt::lighter()}{Qt.lighter()} or \l{QML:Qt::tint()}{Qt.tint()}
-\o \c rect - use \l{QML:Qt::rect()}{Qt.rect()}
-\o \c point - use \l{QML:Qt::point()}{Qt.point()}
-\o \c size - use \l{QML:Qt::size()}{Qt.size()}
-\o \c vector3d - use \l{QML:Qt::vector3d()}{Qt.vector3d()}
+\o \c color - use \l{Qt::rgba()}{Qt.rgba()}, \l{Qt::hsla()}{Qt.hsla()}, \l{Qt::darker()}{Qt.darker()}, \l{Qt::lighter()}{Qt.lighter()} or \l{Qt::tint()}{Qt.tint()}
+\o \c rect - use \l{Qt::rect()}{Qt.rect()}
+\o \c point - use \l{Qt::point()}{Qt.point()}
+\o \c size - use \l{Qt::size()}{Qt.size()}
+\o \c vector3d - use \l{Qt::vector3d()}{Qt.vector3d()}
 \endlist
 
 There are also string based constructors for these types. See \l{qdeclarativebasictypes.html}{QML Basic Types} for more information.
@@ -238,12 +226,12 @@ There are also string based constructors for these types. See \l{qdeclarativebas
 The Qt object contains several functions for formatting QDateTime, QDate and QTime values.
 
 \list
-    \o \l{QML:Qt::formatDateTime}{string Qt.formatDateTime(datetime date, variant format)}
-    \o \l{QML:Qt::formatDate}{string Qt.formatDate(datetime date, variant format)}
-    \o \l{QML:Qt::formatTime}{string Qt.formatTime(datetime date, variant format)}
+    \o \l{Qt::formatDateTime}{string Qt.formatDateTime(datetime date, variant format)}
+    \o \l{Qt::formatDate}{string Qt.formatDate(datetime date, variant format)}
+    \o \l{Qt::formatTime}{string Qt.formatTime(datetime date, variant format)}
 \endlist
 
-The format specification is described at \l{QML:Qt::formatDateTime}{Qt.formatDateTime}.
+The format specification is described at \l{Qt::formatDateTime}{Qt.formatDateTime}.
 
 
 \section1 Dynamic Object Creation
@@ -252,14 +240,14 @@ items from files or strings. See \l{Dynamic Object Management in QML} for an ove
 of their use.
 
 \list
-    \o \l{QML:Qt::createComponent()}{object Qt.createComponent(url)}
-    \o \l{QML:Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, string filepath)}
+    \o \l{Qt::createComponent()}{object Qt.createComponent(url)}
+    \o \l{Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, string filepath)}
 \endlist
 */
 
 
 /*!
-    \qmlproperty object QML:Qt::application
+    \qmlproperty object Qt::application
     \since QtQuick 1.1
 
     The \c application object provides access to global application state
@@ -298,6 +286,13 @@ of their use.
     \o Qt.RightToLeft - Text and graphics elements should be positioned
                         from right to left.
     \endlist
+
+    \row
+    \o \c application.inputPanel
+    \o
+    This read-only property allows access to application's QInputPanel object
+    and all its properties and slots. See the QInputPanel documentation for
+    further details.
     \endtable
 
     The following example uses the \c application object to indicate
@@ -340,10 +335,10 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 : captureProperties(false), rootContext(0), isDebugging(false),
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
   cleanup(0), erroredBindings(0), inProgressCreations(0), 
-  workerScriptEngine(0), componentAttached(0), inBeginCreate(false), 
+  workerScriptEngine(0), activeVME(0),
   networkAccessManager(0), networkAccessManagerFactory(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
-  sgContext(0)
+  incubatorCount(0), incubationController(0), sgContext(0), mutex(QMutex::Recursive)
 {
     if (!qt_QmlQtModule_registered) {
         qt_QmlQtModule_registered = true;
@@ -358,8 +353,6 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
 {
     Q_ASSERT(inProgressCreations == 0);
-    Q_ASSERT(bindValues.isEmpty());
-    Q_ASSERT(parserStatus.isEmpty());
 
     while (cleanup) {
         QDeclarativeCleanup *c = cleanup;
@@ -369,6 +362,11 @@ QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
         c->prev = 0;
         c->clear();
     }
+
+    doDeleteInEngineThread();
+
+    if (incubationController) incubationController->d = 0;
+    incubationController = 0;
 
     delete rootContext;
     rootContext = 0;
@@ -383,21 +381,6 @@ QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
         delete (*iter)->qobjectApi;
         delete *iter;
     }
-}
-
-void QDeclarativeEnginePrivate::clear(SimpleList<QDeclarativeAbstractBinding> &bvs)
-{
-    bvs.clear();
-}
-
-void QDeclarativeEnginePrivate::clear(SimpleList<QDeclarativeParserStatus> &pss)
-{
-    for (int ii = 0; ii < pss.count; ++ii) {
-        QDeclarativeParserStatus *ps = pss.at(ii);
-        if(ps)
-            ps->d = 0;
-    }
-    pss.clear();
 }
 
 void QDeclarativePrivate::qdeclarativeelement_destructor(QObject *o)
@@ -427,9 +410,30 @@ void QDeclarativeData::objectNameChanged(QAbstractDeclarativeData *d, QObject *o
     static_cast<QDeclarativeData *>(d)->objectNameChanged(o);
 }
 
+void QDeclarativeData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int index, void **)
+{
+    QDeclarativeData *ddata = QDeclarativeData::get(object, false);
+    if (!ddata) return; // Probably being deleted
+
+    QDeclarativeNotifierEndpoint *ep = ddata->notify(index);
+    if (ep) QDeclarativeNotifier::emitNotify(ep);
+}
+
 void QDeclarativeEnginePrivate::init()
 {
     Q_Q(QDeclarativeEngine);
+
+    static bool firstTime = true;
+    if (firstTime) {
+        // This is a nasty hack as QNetworkAccessManager will issue a 
+        // BlockingQueuedConnection to the main thread if it is initialized for the
+        // first time on a non-main thread.  This can cause a lockup if the main thread
+        // is blocking on the thread that initialize the network access manager.
+        QNetworkConfigurationManager man;
+
+        firstTime = false;
+    }
+
     qRegisterMetaType<QVariant>("QVariant");
     qRegisterMetaType<QDeclarativeScriptString>("QDeclarativeScriptString");
     qRegisterMetaType<QJSValue>("QJSValue");
@@ -449,6 +453,8 @@ void QDeclarativeEnginePrivate::init()
         isDebugging = true;
         QDeclarativeEngineDebugService::instance()->addEngine(q);
         QV8DebugService::instance()->addEngine(q);
+        QV8ProfilerService::instance()->addEngine(q);
+        QDeclarativeDebugTrace::addEngine(q);
     }
 }
 
@@ -511,8 +517,12 @@ QDeclarativeEngine::QDeclarativeEngine(QObject *parent)
 QDeclarativeEngine::~QDeclarativeEngine()
 {
     Q_D(QDeclarativeEngine);
-    if (d->isDebugging)
+    if (d->isDebugging) {
         QDeclarativeEngineDebugService::instance()->remEngine(this);
+        QV8DebugService::instance()->removeEngine(this);
+        QV8ProfilerService::instance()->removeEngine(this);
+        QDeclarativeDebugTrace::removeEngine(this);
+    }
 
     // if we are the parent of any of the qobject module api instances,
     // we need to remove them from our internal list, in order to prevent
@@ -529,6 +539,9 @@ QDeclarativeEngine::~QDeclarativeEngine()
             d->moduleApiInstances.remove(key);
         }
     }
+
+    // ensure we clean up QObjects with JS ownership
+    d->v8engine()->gc();
 }
 
 /*! \fn void QDeclarativeEngine::quit()
@@ -595,6 +608,16 @@ QDeclarativeNetworkAccessManagerFactory *QDeclarativeEngine::networkAccessManage
 {
     Q_D(const QDeclarativeEngine);
     return d->networkAccessManagerFactory;
+}
+
+void QDeclarativeEnginePrivate::registerFinalizeCallback(QObject *obj, int index) 
+{
+    if (activeVME) {
+        activeVME->finalizeCallbacks.append(qMakePair(QDeclarativeGuard<QObject>(obj), index));
+    } else {
+        void *args[] = { 0 };
+        QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
+    }
 }
 
 QNetworkAccessManager *QDeclarativeEnginePrivate::createNetworkAccessManager(QObject *parent) const
@@ -912,6 +935,26 @@ QDeclarativeEngine::ObjectOwnership QDeclarativeEngine::objectOwnership(QObject 
         return ddata->indestructible?CppOwnership:JavaScriptOwnership;
 }
 
+bool QDeclarativeEngine::event(QEvent *e)
+{
+    Q_D(QDeclarativeEngine);
+    if (e->type() == QEvent::User) 
+        d->doDeleteInEngineThread();
+
+    return QJSEngine::event(e);
+}
+
+void QDeclarativeEnginePrivate::doDeleteInEngineThread()
+{
+    QFieldList<Deletable, &Deletable::next> list;
+    mutex.lock();
+    list.copyAndClear(toDeleteInEngineThread);
+    mutex.unlock();
+
+    while (Deletable *d = list.takeFirst())
+        delete d;
+}
+
 Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
 {
     QDeclarativeData *data = QDeclarativeData::get(object);
@@ -920,7 +963,7 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
         if (QDeclarativeDebugService::isDebuggingEnabled()) {
             QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Creating);
             QDeclarativeType *type = QDeclarativeMetaType::qmlType(object->metaObject());
-            QString typeName = type ? QLatin1String(type->qmlTypeName()) : QString::fromLatin1(object->metaObject()->className());
+            QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(object->metaObject()->className());
             QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, typeName);
             if (data->outerContext)
                 QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, data->outerContext->url, data->lineNumber);
@@ -1013,6 +1056,80 @@ QDeclarativeDataExtended::~QDeclarativeDataExtended()
 {
 }
 
+void QDeclarativeData::NotifyList::layout(QDeclarativeNotifierEndpoint *endpoint)
+{
+    if (endpoint->next)
+        layout(endpoint->next);
+
+    int index = endpoint->sourceSignal;
+    index = qMin(index, 0xFFFF - 1);
+
+    endpoint->next = notifies[index];
+    if (endpoint->next) endpoint->next->prev = &endpoint->next;
+    endpoint->prev = &notifies[index];
+    notifies[index] = endpoint;
+}
+
+void QDeclarativeData::NotifyList::layout()
+{
+    Q_ASSERT(maximumTodoIndex >= notifiesSize);
+
+    if (todo) {
+        QDeclarativeNotifierEndpoint **old = notifies;
+        const int reallocSize = (maximumTodoIndex + 1) * sizeof(QDeclarativeNotifierEndpoint*);
+        notifies = (QDeclarativeNotifierEndpoint**)realloc(notifies, reallocSize);
+        const int memsetSize = (maximumTodoIndex - notifiesSize + 1) * 
+                               sizeof(QDeclarativeNotifierEndpoint*);
+        memset(notifies + notifiesSize, 0, memsetSize);
+
+        if (notifies != old) {
+            for (int ii = 0; ii < notifiesSize; ++ii)
+                if (notifies[ii]) 
+                    notifies[ii]->prev = &notifies[ii];
+        }
+
+        notifiesSize = maximumTodoIndex + 1;
+
+        layout(todo);
+    }
+
+    maximumTodoIndex = 0;
+    todo = 0;
+}
+
+void QDeclarativeData::addNotify(int index, QDeclarativeNotifierEndpoint *endpoint)
+{
+    if (!notifyList) {
+        notifyList = (NotifyList *)malloc(sizeof(NotifyList));
+        notifyList->connectionMask = 0;
+        notifyList->maximumTodoIndex = 0;
+        notifyList->notifiesSize = 0;
+        notifyList->todo = 0;
+        notifyList->notifies = 0;
+    }
+
+    Q_ASSERT(!endpoint->isConnected());
+
+    index = qMin(index, 0xFFFF - 1);
+    notifyList->connectionMask |= (1 << (quint64(index) % 64));
+
+    if (index < notifyList->notifiesSize) {
+
+        endpoint->next = notifyList->notifies[index];
+        if (endpoint->next) endpoint->next->prev = &endpoint->next;
+        endpoint->prev = &notifyList->notifies[index];
+        notifyList->notifies[index] = endpoint;
+
+    } else {
+        notifyList->maximumTodoIndex = qMax(int(notifyList->maximumTodoIndex), index);
+
+        endpoint->next = notifyList->todo;
+        if (endpoint->next) endpoint->next->prev = &endpoint->next;
+        endpoint->prev = &notifyList->todo;
+        notifyList->todo = endpoint;
+    }
+}
+
 QDeclarativeNotifier *QDeclarativeData::objectNameNotifier() const
 {
     if (!extendedData) extendedData = new QDeclarativeDataExtended;
@@ -1057,6 +1174,17 @@ void QDeclarativeData::destroyed(QObject *object)
         QDeclarativeGuard<QObject> *guard = static_cast<QDeclarativeGuard<QObject> *>(guards);
         *guard = (QObject *)0;
         guard->objectDestroyed(object);
+    }
+
+    if (notifyList) {
+        while (notifyList->todo)
+            notifyList->todo->disconnect();
+        for (int ii = 0; ii < notifyList->notifiesSize; ++ii) {
+            while (QDeclarativeNotifierEndpoint *ep = notifyList->notifies[ii])
+                ep->disconnect();
+        }
+        free(notifyList->notifies);
+        free(notifyList);
     }
 
     if (extendedData)
@@ -1468,6 +1596,7 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
     int maxMinorVersion = 0;
 
     const QMetaObject *metaObject = type->metaObject();
+
     while (metaObject) {
         QDeclarativeType *t = QDeclarativeMetaType::qmlType(metaObject, type->module(),
                                                             type->majorVersion(), minorVersion);
@@ -1547,7 +1676,7 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
     if (overloadError) {
         if (hasCopied) raw->release();
 
-        error.setDescription(QLatin1String("Type ") + QString::fromUtf8(type->qmlTypeName()) + QLatin1String(" ") + QString::number(type->majorVersion()) + QLatin1String(".") + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
+        error.setDescription(QLatin1String("Type ") + type->qmlTypeName() + QLatin1String(" ") + QString::number(type->majorVersion()) + QLatin1String(".") + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
         return 0;
     }
 
@@ -1562,6 +1691,91 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
     return raw;
 }
 
+QDeclarativeMetaType::ModuleApiInstance *
+QDeclarativeEnginePrivate::moduleApiInstance(const QDeclarativeMetaType::ModuleApi &module)
+{
+    Locker locker(this);
+
+    QDeclarativeMetaType::ModuleApiInstance *a = moduleApiInstances.value(module);
+    if (!a) {
+        a = new QDeclarativeMetaType::ModuleApiInstance;
+        a->scriptCallback = module.script;
+        a->qobjectCallback = module.qobject;
+        moduleApiInstances.insert(module, a);
+    }
+
+    return a;
+}
+
+bool QDeclarativeEnginePrivate::isQObject(int t)
+{
+    Locker locker(this);
+    return m_compositeTypes.contains(t) || QDeclarativeMetaType::isQObject(t);
+}
+
+QObject *QDeclarativeEnginePrivate::toQObject(const QVariant &v, bool *ok) const
+{
+    Locker locker(this);
+    int t = v.userType();
+    if (t == QMetaType::QObjectStar || m_compositeTypes.contains(t)) {
+        if (ok) *ok = true;
+        return *(QObject **)(v.constData());
+    } else {
+        return QDeclarativeMetaType::toQObject(v, ok);
+    }
+}
+
+QDeclarativeMetaType::TypeCategory QDeclarativeEnginePrivate::typeCategory(int t) const
+{
+    Locker locker(this);
+    if (m_compositeTypes.contains(t))
+        return QDeclarativeMetaType::Object;
+    else if (m_qmlLists.contains(t))
+        return QDeclarativeMetaType::List;
+    else
+        return QDeclarativeMetaType::typeCategory(t);
+}
+
+bool QDeclarativeEnginePrivate::isList(int t) const
+{
+    Locker locker(this);
+    return m_qmlLists.contains(t) || QDeclarativeMetaType::isList(t);
+}
+
+int QDeclarativeEnginePrivate::listType(int t) const
+{
+    Locker locker(this);
+    QHash<int, int>::ConstIterator iter = m_qmlLists.find(t);
+    if (iter != m_qmlLists.end())
+        return *iter;
+    else
+        return QDeclarativeMetaType::listType(t);
+}
+
+const QMetaObject *QDeclarativeEnginePrivate::rawMetaObjectForType(int t) const
+{
+    Locker locker(this);
+    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
+    if (iter != m_compositeTypes.end()) {
+        return (*iter)->root;
+    } else {
+        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
+        return type?type->baseMetaObject():0;
+    }
+}
+
+const QMetaObject *QDeclarativeEnginePrivate::metaObjectForType(int t) const
+{
+    Locker locker(this);
+    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
+    if (iter != m_compositeTypes.end()) {
+        return (*iter)->root;
+    } else {
+        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
+        return type?type->metaObject():0;
+    }
+}
+
 void QDeclarativeEnginePrivate::registerCompositeType(QDeclarativeCompiledData *data)
 {
     QByteArray name = data->root->className();
@@ -1574,71 +1788,11 @@ void QDeclarativeEnginePrivate::registerCompositeType(QDeclarativeCompiledData *
     int lst_type = QMetaType::registerType(lst.constData(), voidptr_destructor,
                                            voidptr_constructor);
 
+    data->addref();
+
+    Locker locker(this);
     m_qmlLists.insert(lst_type, ptr_type);
     m_compositeTypes.insert(ptr_type, data);
-    data->addref();
-}
-
-bool QDeclarativeEnginePrivate::isList(int t) const
-{
-    return m_qmlLists.contains(t) || QDeclarativeMetaType::isList(t);
-}
-
-int QDeclarativeEnginePrivate::listType(int t) const
-{
-    QHash<int, int>::ConstIterator iter = m_qmlLists.find(t);
-    if (iter != m_qmlLists.end())
-        return *iter;
-    else
-        return QDeclarativeMetaType::listType(t);
-}
-
-bool QDeclarativeEnginePrivate::isQObject(int t)
-{
-    return m_compositeTypes.contains(t) || QDeclarativeMetaType::isQObject(t);
-}
-
-QObject *QDeclarativeEnginePrivate::toQObject(const QVariant &v, bool *ok) const
-{
-    int t = v.userType();
-    if (t == QMetaType::QObjectStar || m_compositeTypes.contains(t)) {
-        if (ok) *ok = true;
-        return *(QObject **)(v.constData());
-    } else {
-        return QDeclarativeMetaType::toQObject(v, ok);
-    }
-}
-
-QDeclarativeMetaType::TypeCategory QDeclarativeEnginePrivate::typeCategory(int t) const
-{
-    if (m_compositeTypes.contains(t))
-        return QDeclarativeMetaType::Object;
-    else if (m_qmlLists.contains(t))
-        return QDeclarativeMetaType::List;
-    else
-        return QDeclarativeMetaType::typeCategory(t);
-}
-
-const QMetaObject *QDeclarativeEnginePrivate::rawMetaObjectForType(int t) const
-{
-    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
-        return (*iter)->root;
-    } else {
-        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
-        return type?type->baseMetaObject():0;
-    }
-}
-
-const QMetaObject *QDeclarativeEnginePrivate::metaObjectForType(int t) const
-{
-    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
-        return (*iter)->root;
-    } else {
-        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
-        return type?type->metaObject():0;
-    }
 }
 
 bool QDeclarative_isFileCaseCorrect(const QString &fileName)

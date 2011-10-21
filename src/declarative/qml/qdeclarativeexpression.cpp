@@ -40,13 +40,13 @@
 ****************************************************************************/
 
 #include "qdeclarativeexpression.h"
-#include "private/qdeclarativeexpression_p.h"
+#include "qdeclarativeexpression_p.h"
 
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativerewrite_p.h"
-#include "private/qdeclarativescriptstring_p.h"
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativerewrite_p.h"
+#include "qdeclarativescriptstring_p.h"
+#include "qdeclarativecompiler_p.h"
 
 #include <QtCore/qdebug.h>
 
@@ -70,7 +70,7 @@ bool QDeclarativeDelayedError::addError(QDeclarativeEnginePrivate *e)
 
 QDeclarativeJavaScriptExpression::QDeclarativeJavaScriptExpression()
 : m_requiresThisObject(0), m_useSharedContext(0), m_notifyOnValueChanged(0), 
-  m_scopeObject(0), m_notifyObject(0), m_notifyIndex(-1)
+  m_scopeObject(0)
 {
 }
 
@@ -183,8 +183,6 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     \endcode
 */
 
-static int QDeclarativeExpression_notifyIdx = -1;
-
 /*!
     Create an invalid QDeclarativeExpression.
 
@@ -194,11 +192,6 @@ static int QDeclarativeExpression_notifyIdx = -1;
 QDeclarativeExpression::QDeclarativeExpression()
 : QObject(*new QDeclarativeExpressionPrivate, 0)
 {
-    Q_D(QDeclarativeExpression);
-
-    if (QDeclarativeExpression_notifyIdx == -1) 
-        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
-    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
 /*!  \internal */
@@ -210,10 +203,6 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt,
 {
     Q_D(QDeclarativeExpression);
     d->init(ctxt, expr, isRewritten, object, url, lineNumber);
-
-    if (QDeclarativeExpression_notifyIdx == -1) 
-        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
-    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
 /*!
@@ -264,10 +253,6 @@ QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &s
 
     if (defaultConstruction)
         d->init(QDeclarativeContextData::get(script.context()), script.script(), script.scopeObject());
-
-    if (QDeclarativeExpression_notifyIdx == -1)
-        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
-    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
 /*!
@@ -285,10 +270,6 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContext *ctxt,
 {
     Q_D(QDeclarativeExpression);
     d->init(QDeclarativeContextData::get(ctxt), expression, scope);
-
-    if (QDeclarativeExpression_notifyIdx == -1) 
-        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
-    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
 /*! 
@@ -300,10 +281,6 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QO
 {
     Q_D(QDeclarativeExpression);
     d->init(ctxt, expression, scope);
-
-    if (QDeclarativeExpression_notifyIdx == -1) 
-        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
-    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
 /*!  \internal */
@@ -313,10 +290,6 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QO
 {
     Q_D(QDeclarativeExpression);
     d->init(ctxt, expression, scope);
-
-    if (QDeclarativeExpression_notifyIdx == -1) 
-        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
-    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
 /*!  
@@ -335,11 +308,6 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QO
 
     Q_D(QDeclarativeExpression);
     d->init(ctxt, function, scope);
-
-    if (QDeclarativeExpression_notifyIdx == -1)
-        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
-
-    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
 /*!
@@ -436,23 +404,9 @@ void QDeclarativeJavaScriptExpression::resetNotifyOnValueChanged()
     guardList.clear();
 }
 
-void QDeclarativeJavaScriptExpression::setNotifyObject(QObject *object, int index)
-{
-    guardList.clear();
-
-    m_notifyObject = object;
-    m_notifyIndex = index;
-
-    if (!object || index == -1) {
-        m_notifyObject = 0;
-        m_notifyIndex = -1;
-    }
-}
-
 v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::Function> function, bool *isUndefined)
 {
     Q_ASSERT(context() && context()->engine);
-    Q_ASSERT(!notifyOnValueChanged() || (m_notifyObject && m_notifyIndex != -1));
 
     if (function.IsEmpty() || function->IsUndefined()) {
         if (isUndefined) *isUndefined = true;
@@ -518,7 +472,7 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
     }
 
     if (!watcher.wasDeleted() && notifyOnValueChanged()) {
-        guardList.updateGuards(m_notifyObject, m_notifyIndex, this, ep->capturedProperties);
+        guardList.updateGuards(this, ep->capturedProperties);
     }
 
     if (lastCapturedProperties.count())
@@ -531,20 +485,17 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
     return result;
 }
 
-void QDeclarativeJavaScriptExpression::GuardList::updateGuards(QObject *notifyObject, int notifyIndex,
-                                                               QDeclarativeJavaScriptExpression *expression,
-                                                               const CapturedProperties &properties)
+void 
+QDeclarativeJavaScriptExpression::GuardList::updateGuards(QDeclarativeJavaScriptExpression *expression,
+                                                          const CapturedProperties &properties)
 {
-    Q_ASSERT(notifyObject);
-    Q_ASSERT(notifyIndex != -1);
-
     if (properties.count() == 0) {
         clear();
         return;
     }
 
     if (properties.count() != length) {
-        QDeclarativeNotifierEndpoint *newGuardList = new QDeclarativeNotifierEndpoint[properties.count()];
+        Endpoint *newGuardList = new Endpoint[properties.count()];
 
         for (int ii = 0; ii < qMin(length, properties.count()); ++ii) 
            endpoints[ii].copyAndClear(newGuardList[ii]);
@@ -557,53 +508,25 @@ void QDeclarativeJavaScriptExpression::GuardList::updateGuards(QObject *notifyOb
     bool outputWarningHeader = false;
     bool noChanges = true;
     for (int ii = 0; ii < properties.count(); ++ii) {
-        QDeclarativeNotifierEndpoint &guard = endpoints[ii];
+        Endpoint &guard = endpoints[ii];
         const QDeclarativeEnginePrivate::CapturedProperty &property = properties.at(ii);
 
-        guard.target = notifyObject;
-        guard.targetMethod = notifyIndex;
+        guard.expression = expression;
 
         if (property.notifier != 0) {
 
-            if (!noChanges && guard.isConnected(property.notifier)) {
-                // Nothing to do
-
+            if (guard.isConnected(property.notifier)) {
+                 guard.cancelNotify();
             } else {
-                noChanges = false;
-
-                bool existing = false;
-                for (int jj = 0; !existing && jj < ii; ++jj) 
-                    if (endpoints[jj].isConnected(property.notifier)) 
-                        existing = true;
-
-                if (existing) {
-                    // duplicate
-                    guard.disconnect();
-                } else {
-                    guard.connect(property.notifier);
-                }
+                guard.connect(property.notifier);
             }
-
 
         } else if (property.notifyIndex != -1) {
 
-            if (!noChanges && guard.isConnected(property.object, property.notifyIndex)) {
-                // Nothing to do
-
-            } else {
-                noChanges = false;
-
-                bool existing = false;
-                for (int jj = 0; !existing && jj < ii; ++jj) 
-                    if (endpoints[jj].isConnected(property.object, property.notifyIndex)) 
-                        existing = true;
-
-                if (existing) {
-                    // duplicate
-                    guard.disconnect();
-                } else {
-                    guard.connect(property.object, property.notifyIndex);
-                }
+            if (guard.isConnected(property.object, property.notifyIndex)) {
+                guard.cancelNotify();
+            } else { 
+                guard.connect(property.object, property.notifyIndex);
             }
 
         } else {
@@ -802,12 +725,6 @@ QDeclarativeError QDeclarativeExpression::error() const
     return d->error;
 }
 
-/*! \internal */
-void QDeclarativeExpressionPrivate::_q_notify()
-{
-    emitValueChanged();
-}
-
 /*!
     \fn void QDeclarativeExpression::valueChanged()
 
@@ -816,7 +733,7 @@ void QDeclarativeExpressionPrivate::_q_notify()
     calling QDeclarativeExpression::evaluate()) before this signal will be emitted.
 */
 
-void QDeclarativeExpressionPrivate::emitValueChanged()
+void QDeclarativeExpressionPrivate::expressionChanged()
 {
     Q_Q(QDeclarativeExpression);
     emit q->valueChanged();

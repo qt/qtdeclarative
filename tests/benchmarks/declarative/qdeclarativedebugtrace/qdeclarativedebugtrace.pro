@@ -1,5 +1,5 @@
-load(qttest_p4)
-QT += declarative
+CONFIG += testcase
+QT += declarative testlib
 TEMPLATE = app
 TARGET = tst_qdeclarativedebugtrace
 macx:CONFIG -= app_bundle

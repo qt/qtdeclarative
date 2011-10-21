@@ -108,7 +108,11 @@ protected:
     virtual void objectDestroyed(T *) {}
 };
 
+QT_END_NAMESPACE
+
 Q_DECLARE_METATYPE(QDeclarativeGuard<QObject>)
+
+QT_BEGIN_NAMESPACE
 
 QDeclarativeGuardImpl::QDeclarativeGuardImpl()
 : o(0), next(0), prev(0)

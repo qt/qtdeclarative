@@ -61,6 +61,8 @@ class QFieldList
 public:
     inline QFieldList();
     inline N *first() const;
+    inline N *takeFirst();
+
     inline void append(N *);
     inline void prepend(N *);
 
@@ -72,6 +74,8 @@ public:
     inline void append(QFieldList<N, nextMember> &);
     inline void prepend(QFieldList<N, nextMember> &);
     inline void insertAfter(N *, QFieldList<N, nextMember> &);
+
+    inline void copyAndClear(QFieldList<N, nextMember> &);
 
     static inline N *next(N *v);
 
@@ -91,6 +95,21 @@ template<class N, N *N::*nextMember>
 N *QFieldList<N, nextMember>::first() const
 {
     return _first;
+}
+
+template<class N, N *N::*nextMember>
+N *QFieldList<N, nextMember>::takeFirst()
+{
+    N *value = _first;
+    if (value) {
+        _first = next(value);
+        if (_last == value) {
+            Q_ASSERT(_first == 0);
+            _last = 0;
+        }
+        --_count;
+    } 
+    return value;
 }
 
 template<class N, N *N::*nextMember>
@@ -205,6 +224,16 @@ void QFieldList<N, nextMember>::insertAfter(N *after, QFieldList<N, nextMember> 
         }
         o._first = o._last = 0; o._count = 0;
     }
+}
+
+template<class N, N *N::*nextMember>
+void QFieldList<N, nextMember>::copyAndClear(QFieldList<N, nextMember> &o)
+{
+    _first = o._first;
+    _last = o._last;
+    _count = o._count;
+    o._first = o._last = 0;
+    o._count = 0;
 }
 
 #endif // QFIELDLIST_P_H

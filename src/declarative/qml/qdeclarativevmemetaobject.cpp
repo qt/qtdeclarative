@@ -39,14 +39,14 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativevmemetaobject_p.h"
+#include "qdeclarativevmemetaobject_p.h"
 
 #include "qdeclarative.h"
-#include "private/qdeclarativerefcount_p.h"
+#include <private/qdeclarativerefcount_p.h>
 #include "qdeclarativeexpression.h"
-#include "private/qdeclarativeexpression_p.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativebinding_p.h"
+#include "qdeclarativeexpression_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativebinding_p.h"
 
 Q_DECLARE_METATYPE(QJSValue);
 
@@ -382,8 +382,9 @@ QDeclarativeVMEMetaObject::QDeclarativeVMEMetaObject(QObject *obj,
                                                      const QMetaObject *other, 
                                                      const QDeclarativeVMEMetaData *meta,
                                                      QDeclarativeCompiledData *cdata)
-: object(obj), compiledData(cdata), ctxt(QDeclarativeData::get(obj, true)->outerContext),
-  metaData(meta), data(0), v8methods(0), parent(0)
+: QV8GCCallback::Node(GcPrologueCallback), object(obj), compiledData(cdata),
+  ctxt(QDeclarativeData::get(obj, true)->outerContext), metaData(meta), data(0),
+  firstVarPropertyIndex(-1), varPropertiesInitialized(false), v8methods(0), parent(0)
 {
     compiledData->addref();
 
@@ -398,19 +399,23 @@ QDeclarativeVMEMetaObject::QDeclarativeVMEMetaObject(QObject *obj,
     propOffset = QAbstractDynamicMetaObject::propertyOffset();
     methodOffset = QAbstractDynamicMetaObject::methodOffset();
 
-    data = new QDeclarativeVMEVariant[metaData->propertyCount];
+    data = new QDeclarativeVMEVariant[metaData->propertyCount - metaData->varPropertyCount];
 
     aConnected.resize(metaData->aliasCount);
     int list_type = qMetaTypeId<QDeclarativeListProperty<QObject> >();
 
     // ### Optimize
-    for (int ii = 0; ii < metaData->propertyCount; ++ii) {
+    for (int ii = 0; ii < metaData->propertyCount - metaData->varPropertyCount; ++ii) {
         int t = (metaData->propertyData() + ii)->propertyType;
         if (t == list_type) {
             listProperties.append(List(methodOffset + ii));
             data[ii].setValue(listProperties.count() - 1);
         } 
     }
+
+    firstVarPropertyIndex = metaData->propertyCount - metaData->varPropertyCount;
+    if (metaData->varPropertyCount)
+        QV8GCCallback::addGcCallbackNode(this);
 }
 
 QDeclarativeVMEMetaObject::~QDeclarativeVMEMetaObject()
@@ -422,6 +427,9 @@ QDeclarativeVMEMetaObject::~QDeclarativeVMEMetaObject()
     for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii) {
         qPersistentDispose(v8methods[ii]);
     }
+
+    if (metaData->varPropertyCount)
+        qPersistentDispose(varProperties); // if not weak, will not have been cleaned up by the callback.
 }
 
 int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
@@ -468,10 +476,29 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                 if (t == -1) {
 
-                    if (c == QMetaObject::ReadProperty) {
-                        *reinterpret_cast<QVariant *>(a[0]) = readVarPropertyAsVariant(id);
-                    } else if (c == QMetaObject::WriteProperty) {
-                        writeVarProperty(id, *reinterpret_cast<QVariant *>(a[0]));
+                    if (id >= firstVarPropertyIndex) {
+                        // the context can be null if accessing var properties from cpp after re-parenting an item.
+                        QDeclarativeEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QDeclarativeEnginePrivate::get(ctxt->engine);
+                        QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
+                        if (v8e) {
+                            v8::HandleScope handleScope;
+                            v8::Context::Scope contextScope(v8e->context());
+                            if (c == QMetaObject::ReadProperty) {
+                                *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
+                            } else if (c == QMetaObject::WriteProperty) {
+                                writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
+                            }
+                        } else if (c == QMetaObject::ReadProperty) {
+                            // if the context was disposed, we just return an invalid variant from read.
+                            *reinterpret_cast<QVariant *>(a[0]) = QVariant();
+                        }
+                    } else {
+                        // don't need to set up v8 scope objects, since not accessing varProperties.
+                        if (c == QMetaObject::ReadProperty) {
+                            *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
+                        } else if (c == QMetaObject::WriteProperty) {
+                            writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
+                        }
                     }
 
                 } else {
@@ -716,54 +743,61 @@ v8::Handle<v8::Function> QDeclarativeVMEMetaObject::method(int index)
     return v8methods[index];
 }
 
-#if 0
-QScriptValue QDeclarativeVMEMetaObject::readVarProperty(int id)
+v8::Handle<v8::Value> QDeclarativeVMEMetaObject::readVarProperty(int id)
 {
-    if (data[id].dataType() == qMetaTypeId<QScriptValue>())
-        return data[id].asQJSValue();
-    else if (data[id].dataType() == QMetaType::QObjectStar) 
-        return QDeclarativeEnginePrivate::get(ctxt->engine)->objectClass->newQObject(data[id].asQObject());
-    else
-        return QDeclarativeEnginePrivate::get(ctxt->engine)->scriptValueFromVariant(data[id].asQVariant());
-}
-#endif
+    Q_ASSERT(id >= firstVarPropertyIndex);
 
-QVariant QDeclarativeVMEMetaObject::readVarPropertyAsVariant(int id)
-{
-#if 0
-    if (data[id].dataType() == qMetaTypeId<QScriptValue>())
-        return QDeclarativeEnginePrivate::get(ctxt->engine)->scriptValueToVariant(data[id].asQJSValue());
-    else 
-#endif
-    if (data[id].dataType() == QMetaType::QObjectStar) 
-        return QVariant::fromValue(data[id].asQObject());
-    else 
-        return data[id].asQVariant();
+    ensureVarPropertiesAllocated();
+    return varProperties->Get(id - firstVarPropertyIndex);
 }
 
-#if 0
-void QDeclarativeVMEMetaObject::writeVarProperty(int id, const QScriptValue &value)
+QVariant QDeclarativeVMEMetaObject::readPropertyAsVariant(int id)
 {
-    data[id].setValue(value);
+    if (id >= firstVarPropertyIndex) {
+        ensureVarPropertiesAllocated();
+        return QDeclarativeEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(varProperties->Get(id - firstVarPropertyIndex), -1);
+    } else {
+        if (data[id].dataType() == QMetaType::QObjectStar) {
+            return QVariant::fromValue(data[id].asQObject());
+        } else {
+            return data[id].asQVariant();
+        }
+    }
+}
+
+void QDeclarativeVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
+{
+    Q_ASSERT(id >= firstVarPropertyIndex);
+
+    ensureVarPropertiesAllocated();
+    varProperties->Set(id - firstVarPropertyIndex, value);
     activate(object, methodOffset + id, 0);
 }
-#endif
 
-void QDeclarativeVMEMetaObject::writeVarProperty(int id, const QVariant &value)
+void QDeclarativeVMEMetaObject::writeProperty(int id, const QVariant &value)
 {
-    bool needActivate = false;
-    if (value.userType() == QMetaType::QObjectStar) {
-        QObject *o = qvariant_cast<QObject *>(value);
-        needActivate = (data[id].dataType() != QMetaType::QObjectStar || data[id].asQObject() != o);
-        data[id].setValue(qvariant_cast<QObject *>(value));
+    if (id >= firstVarPropertyIndex) {
+        ensureVarPropertiesAllocated();
+        QVariant currentValue = readPropertyAsVariant(id);
+        varProperties->Set(id - firstVarPropertyIndex, QDeclarativeEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value));
+        if ((currentValue.userType() != value.userType() || currentValue != value))
+            activate(object, methodOffset + id, 0);
     } else {
-        needActivate = (data[id].dataType() != qMetaTypeId<QVariant>() || 
-                        data[id].asQVariant().userType() != value.userType() || 
-                        data[id].asQVariant() != value);
-        data[id].setValue(value);
+        bool needActivate = false;
+        if (value.userType() == QMetaType::QObjectStar) {
+            QObject *o = qvariant_cast<QObject *>(value);
+            needActivate = (data[id].dataType() != QMetaType::QObjectStar || data[id].asQObject() != o);
+            data[id].setValue(qvariant_cast<QObject *>(value));
+        } else {
+            needActivate = (data[id].dataType() != qMetaTypeId<QVariant>() ||
+                            data[id].asQVariant().userType() != value.userType() ||
+                            data[id].asQVariant() != value);
+            data[id].setValue(value);
+        }
+
+        if (needActivate)
+            activate(object, methodOffset + id, 0);
     }
-    if (needActivate)
-        activate(object, methodOffset + id, 0);
 }
 
 void QDeclarativeVMEMetaObject::listChanged(int id)
@@ -849,8 +883,7 @@ void QDeclarativeVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Funct
     v8methods[methodIndex] = value;
 }
 
-#if 0
-QScriptValue QDeclarativeVMEMetaObject::vmeProperty(int index)
+v8::Handle<v8::Value> QDeclarativeVMEMetaObject::vmeProperty(int index)
 {
     if (index < propOffset) {
         Q_ASSERT(parent);
@@ -859,7 +892,7 @@ QScriptValue QDeclarativeVMEMetaObject::vmeProperty(int index)
     return readVarProperty(index - propOffset);
 }
 
-void QDeclarativeVMEMetaObject::setVMEProperty(int index, const QScriptValue &v)
+void QDeclarativeVMEMetaObject::setVMEProperty(int index, v8::Handle<v8::Value> v)
 {
     if (index < propOffset) {
         Q_ASSERT(parent);
@@ -867,7 +900,46 @@ void QDeclarativeVMEMetaObject::setVMEProperty(int index, const QScriptValue &v)
     }
     return writeVarProperty(index - propOffset, v);
 }
-#endif
+
+void QDeclarativeVMEMetaObject::ensureVarPropertiesAllocated()
+{
+    if (!varPropertiesInitialized)
+        allocateVarPropertiesArray();
+}
+
+// see also: QV8GCCallback::garbageCollectorPrologueCallback()
+void QDeclarativeVMEMetaObject::allocateVarPropertiesArray()
+{
+    v8::HandleScope handleScope;
+    v8::Context::Scope cs(QDeclarativeEnginePrivate::get(ctxt->engine)->v8engine()->context());
+    varProperties = qPersistentNew(v8::Array::New(metaData->varPropertyCount));
+    varProperties.MakeWeak(static_cast<void*>(this), VarPropertiesWeakReferenceCallback);
+    varPropertiesInitialized = true;
+}
+
+/*
+   The "var" properties are stored in a v8::Array which will be strong persistent if the object has cpp-ownership
+   and the root QObject in the parent chain does not have JS-ownership.  In the weak persistent handle case,
+   this callback will dispose the handle when the v8object which owns the lifetime of the var properties array
+   is cleared as a result of all other handles to that v8object being released.
+   See QV8GCCallback::garbageCollectorPrologueCallback() for more information.
+ */
+void QDeclarativeVMEMetaObject::VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter)
+{
+    QDeclarativeVMEMetaObject *vmemo = static_cast<QDeclarativeVMEMetaObject*>(parameter);
+    Q_ASSERT(vmemo);
+    qPersistentDispose(object);
+    vmemo->varProperties.Clear();
+}
+
+void QDeclarativeVMEMetaObject::GcPrologueCallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *node)
+{
+    QDeclarativeVMEMetaObject *vmemo = static_cast<QDeclarativeVMEMetaObject*>(node);
+    Q_ASSERT(vmemo);
+    if (!vmemo->varPropertiesInitialized || vmemo->varProperties.IsEmpty())
+        return;
+    r->addRelationship(vmemo->object, vmemo->varProperties);
+}
 
 bool QDeclarativeVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const
 {

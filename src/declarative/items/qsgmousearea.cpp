@@ -42,8 +42,8 @@
 #include "qsgmousearea_p.h"
 #include "qsgmousearea_p_p.h"
 #include "qsgcanvas.h"
-#include "qsgevent.h"
 #include "qsgevents_p_p.h"
+#include "qsgdrag_p.h"
 
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 static const int PressAndHoldDelay = 800;
 
 QSGDrag::QSGDrag(QObject *parent)
-: QObject(parent), _target(0), _dropItem(0), _grabItem(0), _axis(XandYAxis), _xmin(-FLT_MAX),
+: QObject(parent), _target(0), _axis(XandYAxis), _xmin(-FLT_MAX),
 _xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false)
 {
 }
@@ -83,64 +83,6 @@ void QSGDrag::resetTarget()
         return;
     _target = 0;
     emit targetChanged();
-}
-
-/*!
-    \qmlproperty Item QtQuick2::MouseArea::drag.dropItem
-
-    This property holds the item an active drag will be dropped on if released
-    at the current position.
-*/
-
-QSGItem *QSGDrag::dropItem() const
-{
-    return _dropItem;
-}
-
-void QSGDrag::setDropItem(QSGItem *item)
-{
-    if (_dropItem != item) {
-        _dropItem = item;
-        emit dropItemChanged();
-    }
-}
-
-QSGItem *QSGDrag::grabItem() const
-{
-    return _grabItem;
-}
-
-void QSGDrag::setGrabItem(QSGItem *item)
-{
-    _grabItem = item;
-}
-
-/*!
-    \qmlproperty variant QtQuick2::MouseArea::drag.data
-
-    This property holds the data sent to recipients of drag events generated
-    by a MouseArea.
-*/
-
-QVariant QSGDrag::data() const
-{
-    return _data;
-}
-
-void QSGDrag::setData(const QVariant &data)
-{
-    if (_data != data) {
-        _data = data;
-        emit dataChanged();
-    }
-}
-
-void QSGDrag::resetData()
-{
-    if (!_data.isNull()) {
-        _data = QVariant();
-        emit dataChanged();
-    }
 }
 
 QSGDrag::Axis QSGDrag::axis() const
@@ -234,29 +176,14 @@ void QSGDrag::setFilterChildren(bool filter)
     emit filterChildrenChanged();
 }
 
-/*!
-    \qmlproperty stringlist QtQuick2::MouseArea::drag.keys
-
-    This property holds a list of keys drag recipients can use to identify the
-    source or data type of a drag event.
-*/
-
-QStringList QSGDrag::keys() const
+QSGDragAttached *QSGDrag::qmlAttachedProperties(QObject *obj)
 {
-    return _keys;
-}
-
-void QSGDrag::setKeys(const QStringList &keys)
-{
-    if (_keys != keys) {
-        _keys = keys;
-        emit keysChanged();
-    }
+    return new QSGDragAttached(obj);
 }
 
 QSGMouseAreaPrivate::QSGMouseAreaPrivate()
 : absorb(true), hovered(false), pressed(false), longPress(false),
-  moved(false), stealMouse(false), doubleClick(false), preventStealing(false), dragRejected(false),
+  moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
   drag(0)
 {
 }
@@ -336,7 +263,7 @@ bool QSGMouseAreaPrivate::propagateHelper(QSGMouseEvent *ev, QSGItem *item,const
 
     QSGMouseArea* ma = qobject_cast<QSGMouseArea*>(item);
     if (ma && ma != q && itemPrivate->acceptedMouseButtons & ev->button()) {
-        switch(sig){
+        switch (sig) {
         case Click:
             if (!ma->d_func()->isClickConnected())
                 return false;
@@ -355,7 +282,7 @@ bool QSGMouseAreaPrivate::propagateHelper(QSGMouseEvent *ev, QSGItem *item,const
             ev->setX(p.x());
             ev->setY(p.y());
             ev->setAccepted(true);//It is connected, they have to explicitly ignore to let it slide
-            switch(sig){
+            switch (sig) {
             case Click: emit ma->clicked(ev); break;
             case DoubleClick: emit ma->doubleClicked(ev); break;
             case PressAndHold: emit ma->pressAndHold(ev); break;
@@ -708,7 +635,6 @@ void QSGMouseArea::mousePressEvent(QMouseEvent *event)
         QSGItem::mousePressEvent(event);
     else {
         d->longPress = false;
-        d->dragRejected = false;
         d->saveEvent(event);
         if (d->drag) {
             d->dragX = drag()->axis() & QSGDrag::XAxis;
@@ -744,7 +670,6 @@ void QSGMouseArea::mouseMoveEvent(QMouseEvent *event)
         setHovered(true);
 
     if (d->drag && d->drag->target()) {
-
         if (!d->moved) {
             d->targetStartPos = d->drag->target()->parentItem()
                     ? d->drag->target()->parentItem()->mapToScene(d->drag->target()->pos())
@@ -765,28 +690,14 @@ void QSGMouseArea::mouseMoveEvent(QMouseEvent *event)
         qreal dx = qAbs(curLocalPos.x() - startLocalPos.x());
         qreal dy = qAbs(curLocalPos.y() - startLocalPos.y());
 
-        if (keepMouseGrab() && d->stealMouse && !d->dragRejected && !d->drag->active()) {
-            QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
-            d->drag->emitDragged(&me);
-            if (me.isAccepted()) {
-                d->drag->setActive(true);
-                QSGDragEvent dragEvent(
-                        QSGEvent::SGDragEnter,
-                        d->startScene,
-                        d->drag->data(),
-                        d->drag->keys());
-                QCoreApplication::sendEvent(canvas(), &dragEvent);
-
-                d->drag->setGrabItem(dragEvent.grabItem());
-                d->drag->setDropItem(dragEvent.dropItem());
-            } else {
-                d->dragRejected = true;
-            }
-        }
+        if (keepMouseGrab() && d->stealMouse && !d->drag->active())
+            d->drag->setActive(true);
 
         QPointF startPos = d->drag->target()->parentItem()
                 ? d->drag->target()->parentItem()->mapFromScene(d->targetStartPos)
                 : d->targetStartPos;
+
+        QPointF dragPos = d->drag->target()->pos();
 
         if (d->dragX && d->drag->active()) {
             qreal x = (curLocalPos.x() - startLocalPos.x()) + startPos.x();
@@ -794,7 +705,7 @@ void QSGMouseArea::mouseMoveEvent(QMouseEvent *event)
                 x = drag()->xmin();
             else if (x > drag()->xmax())
                 x = drag()->xmax();
-            drag()->target()->setX(x);
+            dragPos.setX(x);
         }
         if (d->dragY && d->drag->active()) {
             qreal y = (curLocalPos.y() - startLocalPos.y()) + startPos.y();
@@ -802,8 +713,9 @@ void QSGMouseArea::mouseMoveEvent(QMouseEvent *event)
                 y = drag()->ymin();
             else if (y > drag()->ymax())
                 y = drag()->ymax();
-            drag()->target()->setY(y);
+            dragPos.setY(y);
         }
+        d->drag->target()->setPos(dragPos);
 
         if (!keepMouseGrab()) {
             if ((!d->dragY && dy < dragThreshold && d->dragX && dx > dragThreshold)
@@ -815,18 +727,6 @@ void QSGMouseArea::mouseMoveEvent(QMouseEvent *event)
         }
 
         d->moved = true;
-
-        if (d->drag->active()) {
-            QSGDragEvent dragEvent(
-                    QSGEvent::SGDragMove,
-                    event->windowPos(),
-                    d->drag->data(),
-                    d->drag->keys(),
-                    d->drag->grabItem());
-            QCoreApplication::sendEvent(canvas(), &dragEvent);
-            d->drag->setGrabItem(dragEvent.grabItem());
-            d->drag->setDropItem(dragEvent.dropItem());
-        }
     }
     QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
     emit mouseXChanged(&me);
@@ -845,24 +745,8 @@ void QSGMouseArea::mouseReleaseEvent(QMouseEvent *event)
     } else {
         d->saveEvent(event);
         setPressed(false);
-        if (d->drag && d->drag->active()) {
-            QSGDragEvent dragEvent(
-                    QSGEvent::SGDragDrop,
-                    event->windowPos(),
-                    d->drag->data(),
-                    d->drag->keys(),
-                    d->drag->grabItem());
-            QCoreApplication::sendEvent(canvas(), &dragEvent);
-            d->drag->setGrabItem(0);
-            if (dragEvent.isAccepted()) {
-                d->drag->setDropItem(dragEvent.dropItem());
-                d->drag->emitDropped(dragEvent.dropItem());
-            } else {
-                d->drag->emitCanceled();
-            }
-            d->drag->setDropItem(0);
+        if (d->drag)
             d->drag->setActive(false);
-        }
         // If we don't accept hover, we need to reset containsMouse.
         if (!acceptHoverEvents())
             setHovered(false);

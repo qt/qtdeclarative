@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeenginedebug_p.h"
+#include "qdeclarativeenginedebug_p.h"
 
-#include "private/qdeclarativedebugclient_p.h"
+#include "qdeclarativedebugclient_p.h"
 
-#include <qdeclarativeenginedebugservice_p.h>
+#include "qdeclarativeenginedebugservice_p.h"
 
 #include <private/qobject_p.h>
 

@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qdeclarativevaluetypes
 macx:CONFIG -= app_bundle
 
 HEADERS += testtypes.h
@@ -7,14 +7,10 @@ HEADERS += testtypes.h
 SOURCES += tst_qdeclarativevaluetypes.cpp \
            testtypes.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 
-QT += core-private gui-private v8-private declarative-private
+QT += core-private gui-private v8-private declarative-private testlib

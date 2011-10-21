@@ -43,8 +43,8 @@
 #include "qsganimation_p_p.h"
 #include "qsgstateoperations_p.h"
 
-#include <qdeclarativeproperty_p.h>
-#include <qdeclarativepath_p.h>
+#include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativepath_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
@@ -114,7 +114,7 @@ void QSGParentAnimation::setVia(QSGItem *via)
 //### mirrors same-named function in QSGItem
 QPointF QSGParentAnimationPrivate::computeTransformOrigin(QSGItem::TransformOrigin origin, qreal width, qreal height) const
 {
-    switch(origin) {
+    switch (origin) {
     default:
     case QSGItem::TopLeft:
         return QPointF(0, 0);
@@ -695,8 +695,8 @@ void QSGPathAnimationUpdater::setValue(qreal v)
     }
 
     //### could cache properties rather than reconstructing each time
-    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, "x"), currentPos.x(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
-    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, "y"), currentPos.y(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
+    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("x")), currentPos.x(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
+    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("y")), currentPos.y(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
 
     //adjust angle according to orientation
     if (!fixed) {
@@ -747,7 +747,7 @@ void QSGPathAnimationUpdater::setValue(qreal v)
             else if (v > exitStart)
                 angle = endRotation * (v - exitStart) / exitInterval + angle * (exitInterval - (v - exitStart)) / exitInterval;
         }
-        QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, "rotation"), angle, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
+        QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("rotation")), angle, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
     }
 
     /*

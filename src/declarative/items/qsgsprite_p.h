@@ -127,6 +127,7 @@ private:
     QUrl m_source;
     int m_frameHeight;
     int m_frameWidth;
+    int m_rowY;
 
 };
 

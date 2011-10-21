@@ -130,10 +130,14 @@ struct SpriteVertex {
     float rotation;
     float rotationSpeed;
     float autoRotate;//Assumed that GPUs prefer floats to bools
-    float animIdx;
+    float animInterpolate;
     float frameDuration;
     float frameCount;
     float animT;
+    float animX;
+    float animY;
+    float animWidth;
+    float animHeight;
 };
 
 template <typename Vertex>
@@ -177,6 +181,7 @@ class QSGImageParticle : public QSGParticlePainter
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
     Q_PROPERTY(QSGDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged RESET resetDeformation)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
+    Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
     Q_PROPERTY(bool bloat READ bloat WRITE setBloat NOTIFY bloatChanged)//Just a debugging property to bypass optimizations
@@ -248,6 +253,8 @@ public:
 
     QSGDirection* yVector() const { return m_yVector; }
 
+    bool spritesInterpolate() const { return m_spritesInterpolate; }
+
     bool bloat() const { return m_bloat; }
 
     EntryEffect entryEffect() const { return m_entryEffect; }
@@ -291,6 +298,8 @@ signals:
 
     void yVectorChanged(QSGDirection* arg);
 
+    void spritesInterpolateChanged(bool arg);
+
     void bloatChanged(bool arg);
 
     void entryEffectChanged(EntryEffect arg);
@@ -321,6 +330,8 @@ public slots:
 
     void setYVector(QSGDirection* arg);
 
+    void setSpritesInterpolate(bool arg);
+
     void setBloat(bool arg);
 
     void setEntryEffect(EntryEffect arg);
@@ -338,8 +349,6 @@ private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
 private:
-    bool m_do_reset;
-
     QUrl m_image_name;
     QUrl m_colortable_name;
     QUrl m_sizetable_name;
@@ -374,6 +383,7 @@ private:
 
     QList<QSGSprite*> m_sprites;
     QSGSpriteEngine* m_spriteEngine;
+    bool m_spritesInterpolate;
 
     bool m_explicitColor;
     bool m_explicitRotation;

@@ -192,6 +192,8 @@ void QSGNodeUpdater::leaveGeometryNode(QSGGeometryNode *g)
 {
 #ifdef QSG_UPDATER_DEBUG
     qDebug() << "leave geometry" << g;
+#else
+    Q_UNUSED(g)
 #endif
 }
 

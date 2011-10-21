@@ -296,13 +296,13 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
             v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
 
             QDeclarativePropertyCache::Data cacheData;
-            cacheData.setFlags(QDeclarativePropertyCache::Data::IsWritable);
+            cacheData.setFlags(QDeclarativePropertyCache::Data::IsWritable |
+                               QDeclarativePropertyCache::Data::IsValueTypeVirtual);
             cacheData.propType = reference->object->metaObject()->property(reference->property).userType();
             cacheData.coreIndex = reference->property;
-
-            QDeclarativePropertyCache::ValueTypeData valueTypeData;
-            valueTypeData.valueTypeCoreIdx = index;
-            valueTypeData.valueTypePropType = p.userType();
+            cacheData.valueTypeFlags = 0;
+            cacheData.valueTypeCoreIndex = index;
+            cacheData.valueTypePropType = p.userType();
 
             v8::Local<v8::StackTrace> trace = 
                 v8::StackTrace::CurrentStackTrace(1, 
@@ -314,8 +314,8 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
 
             newBinding = new QDeclarativeBinding(&function, reference->object, context);
             newBinding->setSourceLocation(url, lineNumber);
-            newBinding->setTarget(QDeclarativePropertyPrivate::restore(cacheData, valueTypeData, 
-                                                                       reference->object, context));
+            newBinding->setTarget(QDeclarativePropertyPrivate::restore(cacheData, reference->object, 
+                                                                       context));
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() | QDeclarativeBinding::RequiresThisObject);
         }
 

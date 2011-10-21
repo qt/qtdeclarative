@@ -52,14 +52,9 @@
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
 #include <QtDeclarative/private/qdeclarativechangeset_p.h>
-#include "../../../shared/util.h"
+#include "../shared/util.h"
 #include "incrementalmodel.h"
-#include <QtOpenGL/QGLShaderProgram>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QSGListView::Orientation)
@@ -81,7 +76,11 @@ private slots:
     void qAbstractItemModel_changed();
 
     void qListModelInterface_inserted();
+    void qListModelInterface_inserted_more();
+    void qListModelInterface_inserted_more_data();
     void qAbstractItemModel_inserted();
+    void qAbstractItemModel_inserted_more();
+    void qAbstractItemModel_inserted_more_data();
 
     void qListModelInterface_removed();
     void qAbstractItemModel_removed();
@@ -99,6 +98,8 @@ private slots:
 
     void swapWithFirstItem();
     void itemList();
+    void currentIndex_delayedItemCreation();
+    void currentIndex_delayedItemCreation_data();
     void currentIndex();
     void noCurrentIndex();
     void enforceRange();
@@ -113,9 +114,7 @@ private slots:
     void propertyChanges();
     void componentChanges();
     void modelChanges();
-    void QTBUG_9791();
     void manualHighlight();
-    void QTBUG_11105();
     void header();
     void header_data();
     void header_delayItemCreation();
@@ -123,6 +122,7 @@ private slots:
     void footer_data();
     void headerFooter();
     void resizeView();
+    void resizeViewAndRepaint();
     void sizeLessThan1();
     void QTBUG_14821();
     void resizeDelegate();
@@ -136,15 +136,25 @@ private slots:
     void onRemove_data();
     void rightToLeft();
     void test_mirroring();
+    void margins();
+    void creationContext();
+    void snapToItem_data();
+    void snapToItem();
+
+    void QTBUG_9791();
+    void QTBUG_11105();
+    void QTBUG_21742();
 
 private:
     template <class T> void items();
     template <class T> void changed();
     template <class T> void inserted();
+    template <class T> void inserted_more();
     template <class T> void removed(bool animated);
     template <class T> void moved();
     template <class T> void clear();
     QSGView *createView();
+    void flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration);
     QSGItem *findVisibleChild(QSGItem *parent, const QString &objectName);
     template<typename T>
     T *findItem(QSGItem *parent, const QString &id, int index=-1);
@@ -152,6 +162,7 @@ private:
     QList<T*> findItems(QSGItem *parent, const QString &objectName);
     void dumpTree(QSGItem *parent, int depth = 0);
 
+    void inserted_more_data();
     void moved_data();
 };
 
@@ -248,7 +259,7 @@ public:
 
     QList<int> roles() const { return QList<int>() << Name << Number; }
     QString toString(int role) const {
-        switch(role) {
+        switch (role) {
         case Name:
             return "name";
         case Number:
@@ -272,7 +283,7 @@ public:
         for (int i = 0; i < roles.size(); ++i) {
             int role = roles.at(i);
             QVariant info;
-            switch(role) {
+            switch (role) {
             case Name:
                 info = list.at(index).first;
                 break;
@@ -455,7 +466,7 @@ void tst_QSGListView::items()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -535,7 +546,7 @@ void tst_QSGListView::changed()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGFlickable *listview = findItem<QSGFlickable>(canvas->rootObject(), "list");
@@ -573,7 +584,7 @@ void tst_QSGListView::inserted()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -655,6 +666,159 @@ void tst_QSGListView::inserted()
 }
 
 template <class T>
+void tst_QSGListView::inserted_more()
+{
+    QFETCH(qreal, contentY);
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(qreal, itemsOffsetAfterMove);
+
+    QSGText *name;
+    QSGText *number;
+    QSGView *canvas = createView();
+    canvas->show();
+
+    T model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    listview->setContentY(contentY);
+
+    QList<QPair<QString, QString> > newData;
+    for (int i=0; i<insertCount; i++)
+        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+    model.insertItems(insertIndex, newData);
+    QTRY_COMPARE(listview->property("count").toInt(), model.count());
+
+    // check visibleItems.first() is in correct position
+    QSGItem *item0 = findItem<QSGItem>(contentItem, "wrapper", 0);
+    QVERIFY(item0);
+    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+
+    QList<QSGItem*> items = findItems<QSGItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
+        name = findItem<QSGText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+        number = findItem<QSGText>(contentItem, "textNumber", i);
+        QVERIFY(number != 0);
+        QTRY_COMPARE(number->text(), model.number(i));
+    }
+
+    delete canvas;
+    delete testObject;
+}
+
+void tst_QSGListView::inserted_more_data()
+{
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+
+    QTest::newRow("add 1, before visible items")
+            << 80.0     // show 4-19
+            << 3 << 1
+            << -20.0;   // insert above first visible i.e. 0 is at -20, first visible should not move
+
+    QTest::newRow("add multiple, before visible")
+            << 80.0     // show 4-19
+            << 3 << 3
+            << -20.0 * 3;   // again first visible should not move
+
+    QTest::newRow("add 1, at start of visible, content at start")
+            << 0.0
+            << 0 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, start of visible, content at start")
+            << 0.0
+            << 0 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at start of visible, content not at start")
+            << 80.0     // show 4-19
+            << 4 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at start of visible, content not at start")
+            << 80.0     // show 4-19
+            << 4 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 15 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 15 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content not at start")
+            << 80.0     // show 4-19
+            << 19 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at end of visible, content not at start")
+            << 80.0     // show 4-19
+            << 19 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 16 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 16 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content not at start")
+            << 80.0     // show 4-19
+            << 20 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, after visible, content not at start")
+            << 80.0     // show 4-19
+            << 20 << 3
+            << 0.0;
+}
+
+template <class T>
 void tst_QSGListView::removed(bool animated)
 {
     QSGView *canvas = createView();
@@ -669,7 +833,7 @@ void tst_QSGListView::removed(bool animated)
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -847,7 +1011,7 @@ void tst_QSGListView::clear()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -897,7 +1061,7 @@ void tst_QSGListView::moved()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -913,7 +1077,7 @@ void tst_QSGListView::moved()
     model.moveItems(from, to, count);
 
     // wait for items to move
-    QTest::qWait(300);
+    QTest::qWait(100);
 
     QList<QSGItem*> items = findItems<QSGItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
@@ -985,7 +1149,7 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move 1 forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 1
-            << 20.0;
+            << 0.0;
 
 
     QTest::newRow("move 1 backwards, within visible items")
@@ -1022,7 +1186,12 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move multiple forwards, within visible items")
             << 0.0
             << 0 << 5 << 3
-            << 20.0 * 3;
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, before visible items")
+            << 140.0     // show 7-22
+            << 4 << 5 << 3      // 4,5,6 move to below 7
+            << 20.0 * 3;      // 4,5,6 moved down
 
     QTest::newRow("move multiple forwards, from non-visible -> visible")
             << 80.0     // show 4-19
@@ -1042,7 +1211,7 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 3
-            << 20.0 * 3;
+            << 0.0;
 
 
     QTest::newRow("move multiple backwards, within visible items")
@@ -1105,7 +1274,7 @@ void tst_QSGListView::multipleChanges()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1322,7 +1491,7 @@ void tst_QSGListView::swapWithFirstItem()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1348,7 +1517,7 @@ void tst_QSGListView::enforceRange()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-enforcerange.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-enforcerange.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1409,7 +1578,7 @@ void tst_QSGListView::enforceRange_withoutHighlight()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-enforcerange-nohighlight.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-enforcerange-nohighlight.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1451,7 +1620,7 @@ void tst_QSGListView::spacing()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1508,7 +1677,7 @@ void tst_QSGListView::sections()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-sections.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-sections.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1602,7 +1771,7 @@ void tst_QSGListView::sectionsDelegate()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-sections_delegate.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-sections_delegate.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1715,7 +1884,7 @@ void tst_QSGListView::sectionsPositioning()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-sections_delegate.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-sections_delegate.qml")));
     qApp->processEvents();
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QSGViewSection::InlineLabels | QSGViewSection::CurrentLabelAtStart | QSGViewSection::NextLabelAtEnd)));
 
@@ -1804,18 +1973,18 @@ void tst_QSGListView::sectionsPositioning()
     QTRY_VERIFY(topItem = findVisibleChild(contentItem, "sect_aaa")); // section header
     QCOMPARE(topItem->y(), 120.);
     QVERIFY(topItem = findVisibleChild(contentItem, "sect_1"));
-    QCOMPARE(topItem->y(), 140.);
+    QTRY_COMPARE(topItem->y(), 140.);
 
     // Change the next section
     listview->setContentY(0);
     bottomItem = findVisibleChild(contentItem, "sect_3"); // section footer
     QVERIFY(bottomItem);
-    QCOMPARE(bottomItem->y(), 320.);
+    QTRY_COMPARE(bottomItem->y(), 320.);
 
     model.modifyItem(14, "New", "new");
 
     QTRY_VERIFY(bottomItem = findVisibleChild(contentItem, "sect_new")); // section footer
-    QCOMPARE(bottomItem->y(), 320.);
+    QTRY_COMPARE(bottomItem->y(), 320.);
 
     // Turn sticky footer off
     listview->setContentY(50);
@@ -1832,6 +2001,42 @@ void tst_QSGListView::sectionsPositioning()
     delete canvas;
 }
 
+void tst_QSGListView::currentIndex_delayedItemCreation()
+{
+    QFETCH(bool, setCurrentToZero);
+
+    QSGView *canvas = createView();
+
+    TestModel model;
+
+    // test currentIndexChanged() is emitted even if currentIndex = 0 on start up
+    // (since the currentItem will have changed and that shares the same index)
+    canvas->rootContext()->setContextProperty("setCurrentToZero", setCurrentToZero);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("fillModelOnComponentCompleted.qml")));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QSignalSpy spy(listview, SIGNAL(currentIndexChanged()));
+    QCOMPARE(listview->currentIndex(), 0);
+    QTRY_COMPARE(spy.count(), 1);
+
+    delete canvas;
+}
+
+void tst_QSGListView::currentIndex_delayedItemCreation_data()
+{
+    QTest::addColumn<bool>("setCurrentToZero");
+
+    QTest::newRow("set to 0") << true;
+    QTest::newRow("don't set to 0") << false;
+}
+
 void tst_QSGListView::currentIndex()
 {
     TestModel model;
@@ -1845,7 +2050,7 @@ void tst_QSGListView::currentIndex()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testWrap", QVariant(false));
 
-    QString filename(SRCDIR "/data/listview-initCurrent.qml");
+    QString filename(TESTDATA("listview-initCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -1914,12 +2119,8 @@ void tst_QSGListView::currentIndex()
     // Test keys
     canvas->show();
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-
-    qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
 
     listview->setCurrentIndex(0);
 
@@ -1985,7 +2186,7 @@ void tst_QSGListView::noCurrentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QString filename(SRCDIR "/data/listview-noCurrent.qml");
+    QString filename(TESTDATA("listview-noCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -2015,7 +2216,7 @@ void tst_QSGListView::itemList()
 {
     QSGView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/itemlist.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("itemlist.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "view");
@@ -2066,7 +2267,7 @@ void tst_QSGListView::cacheBuffer()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -2119,7 +2320,7 @@ void tst_QSGListView::positionViewAtIndex()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -2284,7 +2485,7 @@ void tst_QSGListView::resetModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/displaylist.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaylist.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -2320,7 +2521,7 @@ void tst_QSGListView::propertyChanges()
 {
     QSGView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychangestest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
 
     QSGListView *listView = canvas->rootObject()->findChild<QSGListView*>("listView");
     QTRY_VERIFY(listView);
@@ -2388,7 +2589,7 @@ void tst_QSGListView::componentChanges()
 {
     QSGView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychangestest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
 
     QSGListView *listView = canvas->rootObject()->findChild<QSGListView*>("listView");
     QTRY_VERIFY(listView);
@@ -2436,7 +2637,7 @@ void tst_QSGListView::modelChanges()
 {
     QSGView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychangestest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
 
     QSGListView *listView = canvas->rootObject()->findChild<QSGListView*>("listView");
     QTRY_VERIFY(listView);
@@ -2463,7 +2664,7 @@ void tst_QSGListView::QTBUG_9791()
 {
     QSGView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/strictlyenforcerange.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("strictlyenforcerange.qml")));
     qApp->processEvents();
 
     QSGListView *listview = qobject_cast<QSGListView*>(canvas->rootObject());
@@ -2499,7 +2700,7 @@ void tst_QSGListView::manualHighlight()
     QSGView *canvas = new QSGView(0);
     canvas->setGeometry(0,0,240,320);
 
-    QString filename(SRCDIR "/data/manual-highlight.qml");
+    QString filename(TESTDATA("manual-highlight.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -2544,7 +2745,7 @@ void tst_QSGListView::QTBUG_11105()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -2597,7 +2798,7 @@ void tst_QSGListView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 240);
     canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2654,7 +2855,7 @@ void tst_QSGListView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 0.0);
     canvas->rootContext()->setContextProperty("initialViewHeight", 0.0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
 
     listview = findItem<QSGListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2729,7 +2930,8 @@ void tst_QSGListView::header_delayItemCreation()
 
     TestModel model;
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header1.qml"));
+    canvas->rootContext()->setContextProperty("setCurrentToZero", false);
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("fillModelOnComponentCompleted.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -2770,7 +2972,7 @@ void tst_QSGListView::footer()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/footer.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("footer.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -2925,7 +3127,7 @@ void tst_QSGListView::headerFooter()
         QDeclarativeContext *ctxt = canvas->rootContext();
         ctxt->setContextProperty("testModel", &model);
 
-        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/headerfooter.qml"));
+        canvas->setSource(QUrl::fromLocalFile(TESTDATA("headerfooter.qml")));
         qApp->processEvents();
 
         QSGListView *listview = qobject_cast<QSGListView*>(canvas->rootObject());
@@ -2955,7 +3157,7 @@ void tst_QSGListView::headerFooter()
         QDeclarativeContext *ctxt = canvas->rootContext();
         ctxt->setContextProperty("testModel", &model);
 
-        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/headerfooter.qml"));
+        canvas->setSource(QUrl::fromLocalFile(TESTDATA("headerfooter.qml")));
         canvas->rootObject()->setProperty("horizontal", true);
         qApp->processEvents();
 
@@ -2986,7 +3188,7 @@ void tst_QSGListView::headerFooter()
         QDeclarativeContext *ctxt = canvas->rootContext();
         ctxt->setContextProperty("testModel", &model);
 
-        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/headerfooter.qml"));
+        canvas->setSource(QUrl::fromLocalFile(TESTDATA("headerfooter.qml")));
         canvas->rootObject()->setProperty("horizontal", true);
         canvas->rootObject()->setProperty("rtl", true);
         qApp->processEvents();
@@ -3026,7 +3228,7 @@ void tst_QSGListView::resizeView()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -3057,6 +3259,39 @@ void tst_QSGListView::resizeView()
     delete testObject;
 }
 
+void tst_QSGListView::resizeViewAndRepaint()
+{
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("initialHeight", 100);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizeview.qml")));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // item at index 10 should not be currently visible
+    QVERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    listview->setHeight(320);
+    QTRY_VERIFY(findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    listview->setHeight(100);
+    QTRY_VERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    delete canvas;
+}
+
 void tst_QSGListView::sizeLessThan1()
 {
     QSGView *canvas = createView();
@@ -3071,7 +3306,7 @@ void tst_QSGListView::sizeLessThan1()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/sizelessthan1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("sizelessthan1.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -3097,7 +3332,7 @@ void tst_QSGListView::QTBUG_14821()
 {
     QSGView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/qtbug14821.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("qtbug14821.qml")));
     qApp->processEvents();
 
     QSGListView *listview = qobject_cast<QSGListView*>(canvas->rootObject());
@@ -3128,7 +3363,7 @@ void tst_QSGListView::resizeDelegate()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/displaylist.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaylist.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -3211,7 +3446,7 @@ void tst_QSGListView::resizeFirstDelegate()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -3251,7 +3486,7 @@ void tst_QSGListView::QTBUG_16037()
     QSGView *canvas = createView();
     canvas->show();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/qtbug16037.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("qtbug16037.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "listview");
@@ -3280,7 +3515,7 @@ void tst_QSGListView::indexAt()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -3307,7 +3542,7 @@ void tst_QSGListView::incrementalModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/displaylist.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaylist.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -3342,7 +3577,7 @@ void tst_QSGListView::onAdd()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/attachedSignals.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
 
     QObject *object = canvas->rootObject();
     object->setProperty("width", canvas->width());
@@ -3396,7 +3631,7 @@ void tst_QSGListView::onRemove()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/attachedSignals.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
     QObject *object = canvas->rootObject();
 
     model.removeItems(indexToRemove, removeCount);
@@ -3434,7 +3669,7 @@ void tst_QSGListView::rightToLeft()
 {
     QSGView *canvas = createView();
     canvas->setGeometry(0,0,640,320);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/rightToLeft.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("rightToLeft.qml")));
     qApp->processEvents();
 
     QVERIFY(canvas->rootObject() != 0);
@@ -3484,12 +3719,12 @@ void tst_QSGListView::rightToLeft()
 void tst_QSGListView::test_mirroring()
 {
     QSGView *canvasA = createView();
-    canvasA->setSource(QUrl::fromLocalFile(SRCDIR "/data/rightToLeft.qml"));
+    canvasA->setSource(QUrl::fromLocalFile(TESTDATA("rightToLeft.qml")));
     QSGListView *listviewA = findItem<QSGListView>(canvasA->rootObject(), "view");
     QTRY_VERIFY(listviewA != 0);
 
     QSGView *canvasB = createView();
-    canvasB->setSource(QUrl::fromLocalFile(SRCDIR "/data/rightToLeft.qml"));
+    canvasB->setSource(QUrl::fromLocalFile(TESTDATA("rightToLeft.qml")));
     QSGListView *listviewB = findItem<QSGListView>(canvasB->rootObject(), "view");
     QTRY_VERIFY(listviewA != 0);
     qApp->processEvents();
@@ -3502,14 +3737,14 @@ void tst_QSGListView::test_mirroring()
     QCOMPARE(listviewA->layoutDirection(), listviewA->effectiveLayoutDirection());
 
     // LTR != RTL
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(listviewA, objectName)->x() != findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::LeftToRight);
     listviewB->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == LTR
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(listviewA, objectName)->x(), findItem<QSGItem>(listviewB, objectName)->x());
 
     QVERIFY(listviewB->layoutDirection() == listviewB->effectiveLayoutDirection());
@@ -3517,29 +3752,185 @@ void tst_QSGListView::test_mirroring()
     QVERIFY(listviewB->layoutDirection() != listviewB->effectiveLayoutDirection());
 
     // LTR != LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(listviewA, objectName)->x() != findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL == LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(listviewA, objectName)->x(), findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewB->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL != RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(listviewA, objectName)->x() != findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(listviewA, objectName)->x(), findItem<QSGItem>(listviewB, objectName)->x());
 
     delete canvasA;
     delete canvasB;
+}
+
+void tst_QSGListView::margins()
+{
+    QSGView *canvas = createView();
+
+    TestModel2 model;
+    for (int i = 0; i < 50; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QCOMPARE(listview->contentY(), -30.);
+    QCOMPARE(listview->yOrigin(), 0.);
+
+    // check end bound
+    listview->positionViewAtEnd();
+    qreal pos = listview->contentY();
+    listview->setContentY(pos + 80);
+    listview->returnToBounds();
+    QTRY_COMPARE(listview->contentY(), pos + 50);
+
+    // remove item before visible and check that top margin is maintained
+    // and yOrigin is updated
+    listview->setContentY(100);
+    model.removeItem(1);
+    QTest::qWait(100);
+    listview->setContentY(-50);
+    listview->returnToBounds();
+    QCOMPARE(listview->yOrigin(), 20.);
+    QTRY_COMPARE(listview->contentY(), -10.);
+
+    // reduce top margin
+    listview->setTopMargin(20);
+    QCOMPARE(listview->yOrigin(), 20.);
+    QTRY_COMPARE(listview->contentY(), 0.);
+
+    // check end bound
+    listview->positionViewAtEnd();
+    pos = listview->contentY();
+    listview->setContentY(pos + 80);
+    listview->returnToBounds();
+    QTRY_COMPARE(listview->contentY(), pos + 50);
+
+    // reduce bottom margin
+    pos = listview->contentY();
+    listview->setBottomMargin(40);
+    QCOMPARE(listview->yOrigin(), 20.);
+    QTRY_COMPARE(listview->contentY(), pos-10);
+
+    delete canvas;
+}
+
+void tst_QSGListView::snapToItem_data()
+{
+    QTest::addColumn<QSGListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<int>("highlightRangeMode");
+    QTest::addColumn<QPoint>("flickStart");
+    QTest::addColumn<QPoint>("flickEnd");
+    QTest::addColumn<qreal>("snapAlignment");
+    QTest::addColumn<qreal>("endExtent");
+    QTest::addColumn<qreal>("startExtent");
+
+    QTest::newRow("vertical, left to right") << QSGListView::Vertical << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, left to right") << QSGListView::Horizontal << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, right to left") << QSGListView::Horizontal << Qt::RightToLeft << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+
+    QTest::newRow("vertical, left to right, enforce range") << QSGListView::Vertical << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, left to right, enforce range") << QSGListView::Horizontal << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, right to left, enforce range") << QSGListView::Horizontal << Qt::RightToLeft << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+}
+
+void tst_QSGListView::snapToItem()
+{
+    QFETCH(QSGListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(int, highlightRangeMode);
+    QFETCH(QPoint, flickStart);
+    QFETCH(QPoint, flickEnd);
+    QFETCH(qreal, snapAlignment);
+    QFETCH(qreal, endExtent);
+    QFETCH(qreal, startExtent);
+
+    QSGView *canvas = createView();
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapToItem.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+    listview->setHighlightRangeMode(QSGItemView::HighlightRangeMode(highlightRangeMode));
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // confirm that a flick hits an item boundary
+    flick(canvas, flickStart, flickEnd, 180);
+    QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    if (orientation == QSGListView::Vertical)
+        QCOMPARE(qreal(fmod(listview->contentY(),80.0)), snapAlignment);
+    else
+        QCOMPARE(qreal(fmod(listview->contentX(),80.0)), snapAlignment);
+
+    // flick to end
+    do {
+        flick(canvas, flickStart, flickEnd, 180);
+        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    } while (orientation == QSGListView::Vertical
+           ? !listview->isAtYEnd()
+           : layoutDirection == Qt::LeftToRight ? !listview->isAtXEnd() : !listview->isAtXBeginning());
+
+    if (orientation == QSGListView::Vertical)
+        QCOMPARE(listview->contentY(), endExtent);
+    else
+        QCOMPARE(listview->contentX(), endExtent);
+
+    // flick to start
+    do {
+        flick(canvas, flickEnd, flickStart, 180);
+        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    } while (orientation == QSGListView::Vertical
+           ? !listview->isAtYBeginning()
+           : layoutDirection == Qt::LeftToRight ? !listview->isAtXBeginning() : !listview->isAtXEnd());
+
+    if (orientation == QSGListView::Vertical)
+        QCOMPARE(listview->contentY(), startExtent);
+    else
+        QCOMPARE(listview->contentX(), startExtent);
+
+    delete canvas;
 }
 
 void tst_QSGListView::qListModelInterface_items()
@@ -3567,9 +3958,29 @@ void tst_QSGListView::qListModelInterface_inserted()
     inserted<TestModel>();
 }
 
+void tst_QSGListView::qListModelInterface_inserted_more()
+{
+    inserted_more<TestModel>();
+}
+
+void tst_QSGListView::qListModelInterface_inserted_more_data()
+{
+    inserted_more_data();
+}
+
 void tst_QSGListView::qAbstractItemModel_inserted()
 {
     inserted<TestModel2>();
+}
+
+void tst_QSGListView::qAbstractItemModel_inserted_more()
+{
+    inserted_more<TestModel2>();
+}
+
+void tst_QSGListView::qAbstractItemModel_inserted_more_data()
+{
+    inserted_more_data();
 }
 
 void tst_QSGListView::qListModelInterface_removed()
@@ -3614,6 +4025,40 @@ void tst_QSGListView::qAbstractItemModel_clear()
     clear<TestModel2>();
 }
 
+void tst_QSGListView::creationContext()
+{
+    QSGView canvas;
+    canvas.setGeometry(0,0,240,320);
+    canvas.setSource(QUrl::fromLocalFile(TESTDATA("creationContext.qml")));
+    qApp->processEvents();
+
+    QSGItem *rootItem = qobject_cast<QSGItem *>(canvas.rootObject());
+    QVERIFY(rootItem);
+    QVERIFY(rootItem->property("count").toInt() > 0);
+
+    QSGItem *item;
+    QVERIFY(item = rootItem->findChild<QSGItem *>("listItem"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("header"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("footer"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("section"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+}
+
+void tst_QSGListView::QTBUG_21742()
+{
+    QSGView canvas;
+    canvas.setGeometry(0,0,200,200);
+    canvas.setSource(QUrl::fromLocalFile(TESTDATA("qtbug-21742.qml")));
+    qApp->processEvents();
+
+    QSGItem *rootItem = qobject_cast<QSGItem *>(canvas.rootObject());
+    QVERIFY(rootItem);
+    QCOMPARE(rootItem->property("count").toInt(), 1);
+}
+
 QSGView *tst_QSGListView::createView()
 {
     QSGView *canvas = new QSGView(0);
@@ -3621,6 +4066,25 @@ QSGView *tst_QSGListView::createView()
 
     return canvas;
 }
+
+void tst_QSGListView::flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration)
+{
+    const int pointCount = 5;
+    QPoint diff = to - from;
+
+    // send press, five equally spaced moves, and release.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
+
+    for (int i = 0; i < pointCount; ++i) {
+        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QApplication::sendEvent(canvas, &mv);
+        QTest::qWait(duration/pointCount);
+        QCoreApplication::processEvents();
+    }
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
+}
+
 
 QSGItem *tst_QSGListView::findVisibleChild(QSGItem *parent, const QString &objectName)
 {
@@ -3645,7 +4109,7 @@ T *tst_QSGListView::findItem(QSGItem *parent, const QString &objectName, int ind
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -3673,7 +4137,7 @@ QList<T*> tst_QSGListView::findItems(QSGItem *parent, const QString &objectName)
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item || !item->isVisible())
+        if (!item || !item->isVisible())
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
@@ -3689,13 +4153,12 @@ void tst_QSGListView::dumpTree(QSGItem *parent, int depth)
     static QString padding("                       ");
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         qDebug() << padding.left(depth*2) << item;
         dumpTree(item, depth+1);
     }
 }
-
 
 QTEST_MAIN(tst_QSGListView)
 

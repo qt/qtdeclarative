@@ -48,9 +48,8 @@
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qpointer.h>
-#include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/private/qsgcanvas_p.h>
+#include "qsgcanvas_p.h"
 
 #include "qsgitemchangelistener_p.h"
 

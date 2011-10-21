@@ -180,10 +180,16 @@ void QTcpServerConnection::newConnection()
     d->socket->setParent(this);
     d->protocol = new QPacketProtocol(d->socket, this);
     QObject::connect(d->protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    QObject::connect(d->protocol, SIGNAL(invalidPacket()), this, SLOT(invalidPacket()));
 
     if (d->block) {
         d->protocol->waitForReadyRead(-1);
     }
+}
+
+void QTcpServerConnection::invalidPacket()
+{
+    qWarning("QDeclarativeDebugServer: Received a corrupted packet! Giving up ...");
 }
 
 Q_EXPORT_PLUGIN2(tcpserver, QTcpServerConnection)

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativescript_p.h"
+#include "qdeclarativescript_p.h"
 
 #include "parser/qdeclarativejsengine_p.h"
 #include "parser/qdeclarativejsparser_p.h"
@@ -47,7 +47,7 @@
 #include "parser/qdeclarativejsmemorypool_p.h"
 #include "parser/qdeclarativejsastvisitor_p.h"
 #include "parser/qdeclarativejsast_p.h"
-#include "private/qdeclarativerewrite_p.h"
+#include <private/qdeclarativerewrite_p.h>
 
 #include <QStack>
 #include <QCoreApplication>
@@ -307,7 +307,6 @@ bool QDeclarativeScript::Variant::asBoolean() const
 QString QDeclarativeScript::Variant::asString() const
 {
     if (t == String) {
-        // XXX aakenned
         return l->value.toString();
     } else {
         return asWritten.toString();
@@ -379,7 +378,6 @@ QString QDeclarativeScript::Variant::asScript() const
         return escapedString(asString());
     case Script:
         if (AST::IdentifierExpression *i = AST::cast<AST::IdentifierExpression *>(n)) {
-            // XXX aakenned
             return i->name.toString();
         } else
             return asWritten.toString();
@@ -738,7 +736,7 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
 
         // XXX this doesn't do anything (_scope never builds up)
         _scope.append(resolvableObjectType);
-        obj->typeName = qualifiedNameId().toUtf8();
+        obj->typeName = qualifiedNameId();
         _scope.removeLast();
 
         obj->location = location;
@@ -922,7 +920,8 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         // { "time", strlen("time"), Object::DynamicProperty::Time, "QTime", strlen("QTime") },
         // { "date", strlen("date"), Object::DynamicProperty::Date, "QDate", strlen("QDate") },
         { "date", strlen("date"), Object::DynamicProperty::DateTime, "QDateTime", strlen("QDateTime") },
-        { "variant", strlen("variant"), Object::DynamicProperty::Variant, "QVariant", strlen("QVariant") }
+        { "variant", strlen("variant"), Object::DynamicProperty::Variant, "QVariant", strlen("QVariant") },
+        { "var", strlen("var"), Object::DynamicProperty::Var, "QVariant", strlen("QVariant") }
     };
     static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
                                                 sizeof(propTypeNameToTypes[0]);

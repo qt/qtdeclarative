@@ -55,15 +55,15 @@
 
 #include "qdeclarative.h"
 #include "qdeclarativeerror.h"
-#include "private/qv8_p.h"
-#include "private/qdeclarativeinstruction_p.h"
-#include "private/qdeclarativescript_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qbitfield_p.h"
-#include "private/qdeclarativepropertycache_p.h"
-#include "private/qdeclarativeintegercache_p.h"
-#include "private/qdeclarativetypenamecache_p.h"
-#include "private/qdeclarativetypeloader_p.h"
+#include <private/qv8_p.h>
+#include "qdeclarativeinstruction_p.h"
+#include "qdeclarativescript_p.h"
+#include "qdeclarativeengine_p.h"
+#include <private/qbitfield_p.h>
+#include "qdeclarativepropertycache_p.h"
+#include "qdeclarativeintegercache_p.h"
+#include "qdeclarativetypenamecache_p.h"
+#include "qdeclarativetypeloader_p.h"
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qset.h>
@@ -76,11 +76,14 @@ class QDeclarativeComponent;
 class QDeclarativeContext;
 class QDeclarativeContextData;
 
-class Q_AUTOTEST_EXPORT QDeclarativeCompiledData : public QDeclarativeRefCount, public QDeclarativeCleanup
+class Q_AUTOTEST_EXPORT QDeclarativeCompiledData : public QDeclarativeRefCount,
+                                                   public QDeclarativeCleanup
 {
 public:
     QDeclarativeCompiledData(QDeclarativeEngine *engine);
     virtual ~QDeclarativeCompiledData();
+
+    QDeclarativeEngine *engine;
 
     QString name;
     QUrl url;
@@ -96,7 +99,6 @@ public:
         QDeclarativePropertyCache *typePropertyCache;
         QDeclarativeCompiledData *component;
 
-        QObject *createInstance(QDeclarativeContextData *, const QBitField &, QList<QDeclarativeError> *) const;
         const QMetaObject *metaObject() const;
         QDeclarativePropertyCache *propertyCache() const;
         QDeclarativePropertyCache *createPropertyCache(QDeclarativeEngine *);
@@ -111,7 +113,6 @@ public:
     QList<QString> primitives;
     QList<QByteArray> datas;
     QByteArray bytecode;
-    QList<QJSValue *> cachedClosures;
     QList<QDeclarativePropertyCache *> propertyCaches;
     QList<QDeclarativeIntegerCache *> contextCaches;
     QList<QDeclarativeScriptData *> scripts;
@@ -138,16 +139,21 @@ public:
     QDeclarativeInstruction *instruction(int index);
     QDeclarativeInstruction::Type instructionType(const QDeclarativeInstruction *instr);
 
+    bool isInitialized() const { return hasEngine(); }
+    void initialize(QDeclarativeEngine *);
+
 protected:
+    virtual void destroy(); // From QDeclarativeRefCount
     virtual void clear(); // From QDeclarativeCleanup
 
 private:
+    friend class QDeclarativeCompiler;
+
     int addInstructionHelper(QDeclarativeInstruction::Type type, QDeclarativeInstruction &instr);
     void dump(QDeclarativeInstruction *, int idx = -1);
     QDeclarativeCompiledData(const QDeclarativeCompiledData &other);
     QDeclarativeCompiledData &operator=(const QDeclarativeCompiledData &other);
     QByteArray packData;
-    friend class QDeclarativeCompiler;
     int pack(const char *, size_t);
 
     int indexForString(const QString &);
@@ -204,16 +210,35 @@ namespace QDeclarativeCompilerTypes {
         }
     };
 
+    struct DepthStack {
+        DepthStack() : _depth(0), _maxDepth(0) {}
+        DepthStack(const DepthStack &o) : _depth(o._depth), _maxDepth(o._maxDepth) {}
+        DepthStack &operator=(const DepthStack &o) { _depth = o._depth; _maxDepth = o._maxDepth; return *this; }
+
+        int depth() const { return _depth; }
+        int maxDepth() const { return _maxDepth; }
+
+        void push() { ++_depth; _maxDepth = qMax(_depth, _maxDepth); }
+        void pop() { --_depth; Q_ASSERT(_depth >= 0); Q_ASSERT(_maxDepth > _depth); }
+
+        void pushPop(int count) { _maxDepth = qMax(_depth + count, _maxDepth); }
+    private:
+        int _depth;
+        int _maxDepth;
+    };
+
     // Contains all the incremental compiler state about a component.  As
     // a single QML file can have multiple components defined, there may be
     // more than one of these for each compile
     struct ComponentCompileState : public QDeclarativePool::Class
     {
         ComponentCompileState() 
-        : parserStatusCount(0), pushedProperties(0), nested(false), v8BindingProgramLine(-1), root(0) {}
+        : parserStatusCount(0), totalBindingsCount(0), pushedProperties(0), nested(false), 
+          v8BindingProgramLine(-1), root(0) {}
 
         IdList ids;
         int parserStatusCount;
+        int totalBindingsCount;
         int pushedProperties;
         bool nested;
 
@@ -221,6 +246,9 @@ namespace QDeclarativeCompilerTypes {
         QString v8BindingProgram;
         int v8BindingProgramLine;
         int v8BindingProgramIndex;
+
+        DepthStack objectDepth;
+        DepthStack listDepth;
 
         typedef QDeclarativeCompilerTypes::BindingReference B;
         typedef QFieldList<B, &B::nextReference> BindingReferenceList;
@@ -250,7 +278,7 @@ public:
     static bool isSignalPropertyName(const QHashedStringRef &);
 
     int evaluateEnum(const QByteArray& script) const; // for QDeclarativeCustomParser::evaluateEnum
-    const QMetaObject *resolveType(const QByteArray& name) const; // for QDeclarativeCustomParser::resolveType
+    const QMetaObject *resolveType(const QString& name) const; // for QDeclarativeCustomParser::resolveType
     int rewriteBinding(const QString& expression, const QString& name); // for QDeclarativeCustomParser::rewriteBinding
 
 private:
@@ -345,8 +373,8 @@ private:
                               QDeclarativeScript::Property *valueTypeProperty = 0);
     int genContextCache();
 
-    int genValueTypeData(QDeclarativeScript::Property *prop, QDeclarativeScript::Property *valueTypeProp);
-    int genPropertyData(QDeclarativeScript::Property *prop);
+    QDeclarativePropertyCache::Data genValueTypeData(QDeclarativeScript::Property *prop, 
+                                                     QDeclarativeScript::Property *valueTypeProp);
 
     int componentTypeRef();
 
@@ -385,7 +413,6 @@ private:
     QDeclarativeEnginePrivate *enginePrivate;
     QDeclarativeScript::Object *unitRoot;
     QDeclarativeTypeData *unit;
-
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat

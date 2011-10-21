@@ -44,12 +44,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/private/qdeclarativepath_p.h>
 
-#include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
+#include "../shared/util.h"
 
 class tst_QDeclarativePath : public QObject
 {
@@ -66,7 +61,7 @@ private slots:
 void tst_QDeclarativePath::arc()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/arc.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("arc.qml")));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 
@@ -101,7 +96,7 @@ void tst_QDeclarativePath::arc()
 void tst_QDeclarativePath::catmullromCurve()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/curve.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("curve.qml")));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 
@@ -136,7 +131,7 @@ void tst_QDeclarativePath::catmullromCurve()
 void tst_QDeclarativePath::svg()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/svg.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("svg.qml")));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 

@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativepropertycache_p.h"
+#include "qdeclarativepropertycache_p.h"
 
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativebinding_p.h"
-#include "private/qv8engine_p.h"
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativebinding_p.h"
+#include <private/qv8engine_p.h>
 
 #include <private/qmetaobject_p.h>
 
@@ -200,7 +200,7 @@ void QDeclarativePropertyCache::Data::lazyLoad(const QMetaMethod &m)
 Creates a new empty QDeclarativePropertyCache.
 */
 QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e)
-: QDeclarativeCleanup(e), engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0)
+: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0)
 {
     Q_ASSERT(engine);
 }
@@ -209,7 +209,7 @@ QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e)
 Creates a new QDeclarativePropertyCache of \a metaObject.
 */
 QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e, const QMetaObject *metaObject)
-: QDeclarativeCleanup(e), engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0)
+: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0)
 {
     Q_ASSERT(engine);
     Q_ASSERT(metaObject);
@@ -223,6 +223,16 @@ QDeclarativePropertyCache::~QDeclarativePropertyCache()
 
     if (parent) parent->release();
     parent = 0;
+    engine = 0;
+}
+
+void QDeclarativePropertyCache::destroy()
+{
+    Q_ASSERT(engine || constructor.IsEmpty());
+    if (constructor.IsEmpty())
+        delete this;
+    else
+        QDeclarativeEnginePrivate::deleteInEngineThread(engine, this);
 }
 
 // This is inherited from QDeclarativeCleanup, so it should only clear the things
@@ -305,8 +315,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
                                        Data::Flag propertyFlags, Data::Flag methodFlags, Data::Flag signalFlags)
 {
     Q_UNUSED(revision);
-
-    qPersistentDispose(constructor); // Now invalid
+    Q_ASSERT(constructor.IsEmpty()); // We should not be appending to an in-use property cache
 
     bool dynamicMetaObject = isDynamicMetaObject(metaObject);
 
@@ -329,8 +338,12 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         // Extract method name
         const char *signature = m.signature();
         const char *cptr = signature;
-        bool utf8 = false;
-        while (*cptr != '(') { Q_ASSERT(*cptr != 0); utf8 |= *cptr & 0x80; ++cptr; }
+        char utf8 = 0;
+        while (*cptr != '(') {
+            Q_ASSERT(*cptr != 0);
+            utf8 |= *cptr & 0x80;
+            ++cptr;
+        }
 
         Data *data = &methodIndexCache[ii - methodIndexCacheStart];
         Data *sigdata = 0;
@@ -408,9 +421,12 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
             continue;
 
         const char *str = p.name();
-        bool utf8 = false;
+        char utf8 = 0;
         const char *cptr = str;
-        while (*cptr != 0) { utf8 |= *cptr & 0x80; ++cptr; }
+        while (*cptr != 0) {
+            utf8 |= *cptr & 0x80;
+            ++cptr;
+        }
 
         Data *data = &propertyIndexCache[ii - propertyIndexCacheStart];
 

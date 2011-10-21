@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 class QSGTextPrivate;
+class QSGTextLine;
 class Q_DECLARATIVE_PRIVATE_EXPORT QSGText : public QSGImplicitSizeItem
 {
     Q_OBJECT
@@ -172,6 +173,7 @@ public:
     qreal paintedHeight() const;
 
     QRectF boundingRect() const;
+    Q_INVOKABLE void doLayout();
 
 Q_SIGNALS:
     void textChanged(const QString &text);
@@ -192,6 +194,7 @@ Q_SIGNALS:
     void lineHeightChanged(qreal lineHeight);
     void lineHeightModeChanged(LineHeightMode mode);
     void effectiveHorizontalAlignmentChanged();
+    void lineLaidOut(QSGTextLine *line);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -206,9 +209,43 @@ private:
     Q_DECLARE_PRIVATE(QSGText)
 };
 
+class QTextLine;
+class Q_AUTOTEST_EXPORT QSGTextLine : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int number READ number)
+    Q_PROPERTY(qreal width READ width WRITE setWidth)
+    Q_PROPERTY(qreal height READ height WRITE setHeight)
+    Q_PROPERTY(qreal x READ x WRITE setX)
+    Q_PROPERTY(qreal y READ y WRITE setY)
+
+public:
+    QSGTextLine();
+
+    void setLine(QTextLine* line);
+    int number() const;
+
+    qreal width() const;
+    void setWidth(qreal width);
+
+    qreal height() const;
+    void setHeight(qreal height);
+
+    qreal x() const;
+    void setX(qreal x);
+
+    qreal y() const;
+    void setY(qreal y);
+
+private:
+    QTextLine *m_line;
+    qreal m_height;
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QSGText)
+QML_DECLARE_TYPE(QSGTextLine)
 
 QT_END_HEADER
 

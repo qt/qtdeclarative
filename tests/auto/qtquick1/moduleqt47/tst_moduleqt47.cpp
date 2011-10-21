@@ -44,11 +44,6 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QDebug>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_moduleqt47 : public QObject
 {
     Q_OBJECT

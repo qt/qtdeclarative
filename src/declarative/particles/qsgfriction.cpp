@@ -54,6 +54,10 @@ QT_BEGIN_NAMESPACE
 
     A drag will be applied to moving objects which is this factor of their current velocity.
 */
+static qreal sign(qreal a)
+{
+    return a >= 0 ? 1 : -1;
+}
 
 QSGFrictionAffector::QSGFrictionAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_factor(0.0)
@@ -66,8 +70,17 @@ bool QSGFrictionAffector::affectParticle(QSGParticleData *d, qreal dt)
         return false;
     qreal curVX = d->curVX();
     qreal curVY = d->curVY();
-    d->setInstantaneousVX(curVX + (curVX * m_factor * -1 * dt));
-    d->setInstantaneousVY(curVY + (curVY * m_factor * -1 * dt));
+    qreal newVX = curVX + (curVX * m_factor * -1 * dt);
+    qreal newVY = curVY + (curVY * m_factor * -1 * dt);
+
+    //Since we're modelling a continuous function, it will never pass 0.
+    if (sign(curVX) != sign(newVX))
+        newVX = 0;
+    if (sign(curVY) != sign(newVY))
+        newVY = 0;
+
+    d->setInstantaneousVX(newVX);
+    d->setInstantaneousVY(newVY);
     return true;
 }
 QT_END_NAMESPACE

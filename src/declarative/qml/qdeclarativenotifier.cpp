@@ -39,88 +39,77 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativenotifier_p.h"
-#include "private/qdeclarativeproperty_p.h"
+#include "qdeclarativenotifier_p.h"
+#include "qdeclarativeproperty_p.h"
 
 QT_BEGIN_NAMESPACE
 
 void QDeclarativeNotifier::emitNotify(QDeclarativeNotifierEndpoint *endpoint)
 {
-    QDeclarativeNotifierEndpoint::Notifier *n = endpoint->asNotifier();
+    QDeclarativeNotifierEndpoint **oldDisconnected = endpoint->disconnected;
+    endpoint->disconnected = &endpoint;
+    endpoint->notifying = 1;
 
-    QDeclarativeNotifierEndpoint **oldDisconnected = n->disconnected;
-    n->disconnected = &endpoint;
-
-    if (n->next)
-        emitNotify(n->next);
+    if (endpoint->next)
+        emitNotify(endpoint->next);
 
     if (endpoint) {
-        void *args[] = { 0 };
 
-        QMetaObject::metacall(endpoint->target, QMetaObject::InvokeMetaMethod, 
-                              endpoint->targetMethod, args);
+        Q_ASSERT(endpoint->callback);
+        
+        endpoint->callback(endpoint);
 
-        if (endpoint)
-            endpoint->asNotifier()->disconnected = oldDisconnected;
+        if (endpoint) 
+            endpoint->disconnected = oldDisconnected;
     } 
 
     if (oldDisconnected) *oldDisconnected = endpoint;
+    else if (endpoint) endpoint->notifying = 0;
 }
 
 void QDeclarativeNotifierEndpoint::connect(QObject *source, int sourceSignal)
 {
-    Signal *s = toSignal();
-    
-    if (s->source == source && s->sourceSignal == sourceSignal)
-        return;
-
     disconnect();
 
-    QDeclarativePropertyPrivate::connect(source, sourceSignal, target, targetMethod);
-
-    s->source = source;
-    s->sourceSignal = sourceSignal;
+    this->source = source;
+    this->sourceSignal = sourceSignal;
+    QDeclarativePropertyPrivate::flushSignal(source, sourceSignal);
+    QDeclarativeData *ddata = QDeclarativeData::get(source, true);
+    ddata->addNotify(sourceSignal, this);
 }
 
 void QDeclarativeNotifierEndpoint::copyAndClear(QDeclarativeNotifierEndpoint &other)
 {
+    if (&other == this)
+        return;
+
     other.disconnect();
 
-    other.target = target;
-    other.targetMethod = targetMethod;
+    other.callback = callback;
 
     if (!isConnected())
         return;
 
-    if (SignalType == type) {
-        Signal *other_s = other.toSignal();
-        Signal *s = asSignal();
+    other.notifier = notifier;
+    other.sourceSignal = sourceSignal;
+    other.disconnected = disconnected;
+    other.notifying = notifying;
+    if (other.disconnected) *other.disconnected = &other;
 
-        other_s->source = s->source;
-        other_s->sourceSignal = s->sourceSignal;
-        s->source = 0;
-    } else if(NotifierType == type) {
-        Notifier *other_n = other.toNotifier();
-        Notifier *n = asNotifier();
+    if (next) {
+        other.next = next;
+        next->prev = &other.next;
+    }
+    other.prev = prev;
+    *other.prev = &other;
 
-        other_n->notifier = n->notifier;
-        other_n->disconnected = n->disconnected;
-        if (other_n->disconnected) *other_n->disconnected = &other;
-
-        if (n->next) {
-            other_n->next = n->next;
-            n->next->asNotifier()->prev = &other_n->next;
-        }
-        other_n->prev = n->prev;
-        *other_n->prev = &other;
-
-        n->prev = 0;
-        n->next = 0;
-        n->disconnected = 0;
-        n->notifier = 0;
-    } 
+    prev = 0;
+    next = 0;
+    disconnected = 0;
+    notifier = 0;
+    notifying = 0;
+    sourceSignal = -1;
 }
-
 
 QT_END_NAMESPACE
 

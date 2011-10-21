@@ -46,17 +46,10 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtWidgets/qmenubar.h>
 #include <QSignalSpy>
-#include "../../../shared/util.h"
 #include "qmlruntime.h"
 #include "deviceorientation.h"
-#include "../../../shared/util.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
-#if defined(Q_OS_MAC) || defined(Q_WS_MAEMO_5) || defined(Q_WS_S60)
+#if defined(Q_OS_MAC) || defined(Q_WS_MAEMO_5)
 #  define MENUBAR_HEIGHT(mw) 0
 #else
 #  define MENUBAR_HEIGHT(mw) (mw->menuBar()->height())

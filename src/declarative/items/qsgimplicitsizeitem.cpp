@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "private/qsgimplicitsizeitem_p.h"
-#include "private/qsgimplicitsizeitem_p_p.h"
+#include "qsgimplicitsizeitem_p.h"
+#include "qsgimplicitsizeitem_p_p.h"
 
 QT_BEGIN_NAMESPACE
 

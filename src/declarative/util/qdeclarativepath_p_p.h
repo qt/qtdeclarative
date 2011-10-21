@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "private/qdeclarativepath_p.h"
+#include "qdeclarativepath_p.h"
 
 #include <qdeclarative.h>
 #include <QtCore/QStringList>

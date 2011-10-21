@@ -60,6 +60,7 @@
 #include <qdeclarativenetworkaccessmanagerfactory.h>
 
 #include <QSettings>
+#include <QMimeData>
 #include <QXmlStreamReader>
 #include <QBuffer>
 #include <QNetworkReply>
@@ -87,6 +88,7 @@
 #include <QGraphicsObject>
 #include <QNetworkProxyFactory>
 #include <QKeyEvent>
+#include <QMimeData>
 #include <QMutex>
 #include <QMutexLocker>
 #include "proxysettings.h"

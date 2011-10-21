@@ -50,11 +50,6 @@
 #include <QtQuick1/private/qdeclarativeanchors_p_p.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 Q_DECLARE_METATYPE(QDeclarative1Anchors::Anchor)
 Q_DECLARE_METATYPE(QDeclarative1AnchorLine::AnchorLine)
 
@@ -381,7 +376,7 @@ void tst_QDeclarative1Anchors::loops()
     }
 
     {
-        QSKIP("This causes a lockup due to Bearer management stuff", SkipSingle);
+        QSKIP("This causes a lockup due to Bearer management stuff");
         QUrl source(QUrl::fromLocalFile(SRCDIR "/data/loop2.qml"));
 
         QString expect = source.toString() + ":8:3: QML Image: Possible anchor loop detected on horizontal anchor.";
