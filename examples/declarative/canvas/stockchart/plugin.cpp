@@ -40,7 +40,7 @@
 
 #include <QtDeclarative/QDeclarativeExtensionPlugin>
 #include <QtDeclarative/qdeclarative.h>
-#include <qapplication.h>
+#include <QtGui/QGuiApplication>
 #include "model.h"
 
 class QStockChartExampleQmlPlugin : public QDeclarativeExtensionPlugin
