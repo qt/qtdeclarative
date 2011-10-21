@@ -303,38 +303,44 @@ QAbstractAnimation2Pointer QSGParentAnimation::transition(QDeclarativeStateActio
         }
     }
 
-    //TODO: only create necessary animations
     QSequentialAnimationGroup2 *topLevelGroup = new QSequentialAnimationGroup2;
-    QActionAnimation *startAction = new QActionAnimation;
-    QActionAnimation *endAction = new QActionAnimation;
+    QActionAnimation *viaAction = d->via ? new QActionAnimation : 0;
+    QActionAnimation *targetAction = new QActionAnimation;
+    //we'll assume the common case by far is to have children, and always create ag
     QParallelAnimationGroup2 *ag = new QParallelAnimationGroup2;
 
     if (data->actions.count()) {
-        if (direction == QDeclarativeAbstractAnimation::Forward) {
-            startAction->setAnimAction(d->via ? viaData : data);
-            endAction->setAnimAction(d->via ? data : 0);
+        if (d->via)
+            viaAction->setAnimAction(viaData);
+        targetAction->setAnimAction(data);
+
+        //take care of any child animations
+        bool valid = d->defaultProperty.isValid();
+        QAbstractAnimation2Pointer anim;
+        for (int ii = 0; ii < d->animations.count(); ++ii) {
+            if (valid)
+                d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
+            anim = d->animations.at(ii)->transition(actions, modified, direction);
+            ag->addAnimation(anim);
+        }
+
+        //TODO: simplify/clarify logic
+        bool forwards = direction == QDeclarativeAbstractAnimation::Forward;
+        if (forwards) {
+            topLevelGroup->addAnimation(d->via ? viaAction : targetAction);
+            topLevelGroup->addAnimation(ag);
+            if (d->via)
+                topLevelGroup->addAnimation(targetAction);
         } else {
-            endAction->setAnimAction(d->via ? viaData : data);
-            startAction->setAnimAction(d->via ? data : 0);
+            if (d->via)
+                topLevelGroup->addAnimation(targetAction);
+            topLevelGroup->addAnimation(ag);
+            topLevelGroup->addAnimation(d->via ? viaAction : targetAction);
         }
     } else {
         delete data;
         delete viaData;
     }
-
-    //take care of any child animations
-    bool valid = d->defaultProperty.isValid();
-    QAbstractAnimation2Pointer anim;
-    for (int ii = 0; ii < d->animations.count(); ++ii) {
-        if (valid)
-            d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        anim = d->animations.at(ii)->transition(actions, modified, direction);
-        ag->addAnimation(anim);
-    }
-
-    topLevelGroup->addAnimation(startAction);
-    topLevelGroup->addAnimation(ag);
-    topLevelGroup->addAnimation(endAction);
 
     return topLevelGroup;
 }
