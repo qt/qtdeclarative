@@ -43,9 +43,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QPauseAnimation2::QPauseAnimation2(QDeclarativeAbstractAnimation* animation)
-    : QAbstractAnimation2(animation)
-    , m_duration(250)
+QPauseAnimation2::QPauseAnimation2(int duration)
+    : QAbstractAnimation2()
+    , m_duration(duration)
 {
     m_isPause = true;
 }

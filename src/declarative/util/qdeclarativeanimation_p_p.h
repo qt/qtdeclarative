@@ -207,11 +207,9 @@ class QDeclarativePauseAnimationPrivate : public QDeclarativeAbstractAnimationPr
     Q_DECLARE_PUBLIC(QDeclarativePauseAnimation)
 public:
     QDeclarativePauseAnimationPrivate()
-    : QDeclarativeAbstractAnimationPrivate(), pa(0) {}
+        : QDeclarativeAbstractAnimationPrivate(), duration(250) {}
 
-    void init();
-
-    QDeclarativeRefPointer<QPauseAnimation2> pa;
+    int duration;
 };
 
 class QDeclarativeScriptActionPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -219,8 +217,6 @@ class QDeclarativeScriptActionPrivate : public QDeclarativeAbstractAnimationPriv
     Q_DECLARE_PUBLIC(QDeclarativeScriptAction)
 public:
     QDeclarativeScriptActionPrivate();
-
-    void init();
 
     QDeclarativeScriptString script;
     QString name;
@@ -232,7 +228,6 @@ public:
 
     QAnimationActionProxy<QDeclarativeScriptActionPrivate,
                   &QDeclarativeScriptActionPrivate::execute> proxy;
-    QDeclarativeRefPointer<QActionAnimation> rsa;
 };
 
 class QDeclarativePropertyActionPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -240,9 +235,7 @@ class QDeclarativePropertyActionPrivate : public QDeclarativeAbstractAnimationPr
     Q_DECLARE_PUBLIC(QDeclarativePropertyAction)
 public:
     QDeclarativePropertyActionPrivate()
-    : QDeclarativeAbstractAnimationPrivate(), target(0), spa(0) {}
-
-    void init();
+    : QDeclarativeAbstractAnimationPrivate(), target(0) {}
 
     QObject *target;
     QString propertyName;
@@ -251,8 +244,6 @@ public:
     QList<QObject *> exclude;
 
     QDeclarativeNullableValue<QVariant> value;
-
-    QDeclarativeRefPointer<QActionAnimation> spa;
 };
 
 class QDeclarativeAnimationGroupPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -260,12 +251,11 @@ class QDeclarativeAnimationGroupPrivate : public QDeclarativeAbstractAnimationPr
     Q_DECLARE_PUBLIC(QDeclarativeAnimationGroup)
 public:
     QDeclarativeAnimationGroupPrivate()
-    : QDeclarativeAbstractAnimationPrivate(), ag(0) {}
+    : QDeclarativeAbstractAnimationPrivate() {}
 
     static void append_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list, QDeclarativeAbstractAnimation *role);
     static void clear_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list);
     QList<QDeclarativeAbstractAnimation *> animations;
-    QDeclarativeRefPointer<QAnimationGroup2> ag;
 };
 
 class QDeclarativePropertyAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -274,9 +264,7 @@ class QDeclarativePropertyAnimationPrivate : public QDeclarativeAbstractAnimatio
 public:
     QDeclarativePropertyAnimationPrivate()
     : QDeclarativeAbstractAnimationPrivate(), target(0), fromSourced(false), fromIsDefined(false), toIsDefined(false),
-      defaultToInterpolatorType(0), interpolatorType(0), interpolator(0),  va(0), actions(0) {}
-
-    void init();
+      defaultToInterpolatorType(0), interpolatorType(0), interpolator(0), duration(250), actions(0) {}
 
     QVariant from;
     QVariant to;
@@ -294,7 +282,8 @@ public:
     bool defaultToInterpolatorType:1;
     int interpolatorType;
     QVariantAnimation::Interpolator interpolator;
-    QDeclarativeRefPointer<QDeclarativeBulkValueAnimator> va;
+    int duration;
+    QEasingCurve easing;
 
     // for animations that don't use the QDeclarativeBulkValueAnimator
     QDeclarativeStateActions *actions;

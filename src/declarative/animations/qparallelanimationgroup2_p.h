@@ -51,8 +51,6 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-
 class Q_DECLARATIVE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
 {
 public:
@@ -69,14 +67,13 @@ protected:
     void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
 
 private:
-    int m_lastLoop;
-    int m_lastCurrentTime;
+    //state
+    int m_previousLoop;
+    int m_previousCurrentTime;
     bool shouldAnimationStart(QAbstractAnimation2Pointer animation, bool startIfAtEnd) const;
     void applyGroupState(QAbstractAnimation2Pointer animation);
     void animationRemoved(int index, QAbstractAnimation2Pointer );
 };
-
-
 
 QT_END_NAMESPACE
 

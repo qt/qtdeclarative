@@ -41,28 +41,25 @@
 #include "private/qparallelanimationgroup2_p.h"
 //#define QANIMATION_DEBUG
 
-
-
 QT_BEGIN_NAMESPACE
 
 QParallelAnimationGroup2::QParallelAnimationGroup2(QDeclarativeAbstractAnimation *animation)
     : QAnimationGroup2(animation)
-    , m_lastLoop(0)
-    , m_lastCurrentTime(0)
+    , m_previousLoop(0)
+    , m_previousCurrentTime(0)
 {
 }
 
 QParallelAnimationGroup2::QParallelAnimationGroup2(const QParallelAnimationGroup2 &other)
     : QAnimationGroup2(other)
-    , m_lastLoop(other.m_lastLoop)
-    , m_lastCurrentTime(other.m_lastCurrentTime)
+    , m_previousLoop(other.m_previousLoop)
+    , m_previousCurrentTime(other.m_previousCurrentTime)
 {
 }
 
 QParallelAnimationGroup2::~QParallelAnimationGroup2()
 {
 }
-
 
 //only calculate once
 int QParallelAnimationGroup2::duration() const
@@ -86,7 +83,7 @@ void QParallelAnimationGroup2::updateCurrentTime(int currentTime)
     if (m_animations.isEmpty())
         return;
 
-    if (m_currentLoop > m_lastLoop) {
+    if (m_currentLoop > m_previousLoop) {
         // simulate completion of the loop
         int dura = duration();
         if (dura > 0) {
@@ -96,7 +93,7 @@ void QParallelAnimationGroup2::updateCurrentTime(int currentTime)
                     m_animations.at(i)->setCurrentTime(dura);   // will stop
             }
         }
-    } else if (m_currentLoop < m_lastLoop) {
+    } else if (m_currentLoop < m_previousLoop) {
         // simulate completion of the loop seeking backwards
         for (int i = 0; i < m_animations.size(); ++i) {
             QAbstractAnimation2Pointer animation = m_animations.at(i);
@@ -117,10 +114,10 @@ void QParallelAnimationGroup2::updateCurrentTime(int currentTime)
         QAbstractAnimation2Pointer animation = m_animations.at(i);
         const int dura = animation->totalDuration();
         //if the loopcount is bigger we should always start all animations
-        if (m_currentLoop > m_lastLoop
+        if (m_currentLoop > m_previousLoop
             //if we're at the end of the animation, we need to start it if it wasn't already started in this loop
             //this happens in Backward direction where not all animations are started at the same time
-            || shouldAnimationStart(animation, m_lastCurrentTime > dura /*startIfAtEnd*/)) {
+            || shouldAnimationStart(animation, m_previousCurrentTime > dura /*startIfAtEnd*/)) {
             applyGroupState(animation);
         }
 
@@ -130,8 +127,8 @@ void QParallelAnimationGroup2::updateCurrentTime(int currentTime)
                 animation->stop();
         }
     }
-    m_lastLoop = m_currentLoop;
-    m_lastCurrentTime = m_currentTime;
+    m_previousLoop = m_currentLoop;
+    m_previousCurrentTime = m_currentTime;
 }
 
 void QParallelAnimationGroup2::updateState(QAbstractAnimation2::State newState,
@@ -211,12 +208,12 @@ void QParallelAnimationGroup2::updateDirection(QAbstractAnimation2::Direction di
         }
     } else {
         if (direction == Forward) {
-            m_lastLoop = 0;
-            m_lastCurrentTime = 0;
+            m_previousLoop = 0;
+            m_previousCurrentTime = 0;
         } else {
             // Looping backwards with loopCount == -1 does not really work well...
-            m_lastLoop = (m_loopCount == -1 ? 0 : m_loopCount - 1);
-            m_lastCurrentTime = duration();
+            m_previousLoop = (m_loopCount == -1 ? 0 : m_loopCount - 1);
+            m_previousCurrentTime = duration();
         }
     }
 }

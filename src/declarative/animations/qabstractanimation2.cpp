@@ -494,7 +494,7 @@ void QDefaultAnimationDriver2::stopTimer()
     m_timer.stop();
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void QAbstractAnimation2::setState(QAbstractAnimation2::State newState)
 {
@@ -611,14 +611,18 @@ QAbstractAnimation2::AnimationType QAbstractAnimation2::type() const
     return QAbstractAnimation2::DefaultAnimation;
 }
 
+QDeclarativeAbstractAnimation* QAbstractAnimation2::animation() const
+{
+    return qobject_cast<QDeclarativeAbstractAnimation*>(m_animationGuard);
+}
+
 void QAbstractAnimation2::setAnimation(QObject *animation)
 {
-        m_animationGuard = animation;
+    m_animationGuard = animation;
 }
 
 QAbstractAnimation2::~QAbstractAnimation2()
 {
-    qDebug() << "~QAbstractAnimation2";
     //we can't call stop here. Otherwise we get pure virtual calls
     if (m_state != Stopped) {
         QAbstractAnimation2::State oldState = m_state;
@@ -630,11 +634,6 @@ QAbstractAnimation2::~QAbstractAnimation2()
 
     if (m_group)
         m_group->removeAnimation(this);
-}
-
-QDeclarativeAbstractAnimation* QAbstractAnimation2::animation() const
-{
-    return qobject_cast<QDeclarativeAbstractAnimation*>(m_animationGuard);
 }
 
 void QAbstractAnimation2::setDirection(Direction direction)
@@ -875,4 +874,3 @@ void QAbstractAnimation2::registerDirectionChanged(QObject* object, const char* 
 QT_END_NAMESPACE
 
 #include "moc_qabstractanimation2_p.cpp"
-

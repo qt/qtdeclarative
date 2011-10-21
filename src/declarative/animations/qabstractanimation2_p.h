@@ -55,7 +55,6 @@
 #include <qt_windows.h>
 #endif
 
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -98,25 +97,32 @@ public:
     QAbstractAnimation2(const QAbstractAnimation2& other);
     ~QAbstractAnimation2();
 
-    inline QAbstractAnimation2::State state() const {return m_state;}
+    //definition
     inline QAnimationGroup2 *group() const {return m_group;}
-    inline QDeclarativeAbstractAnimation *animation() const;
-    inline QAbstractAnimation2::Direction direction() const {return m_direction;}
-    inline int currentTime() const {return m_totalCurrentTime;}
-    inline int currentLoopTime() const {return m_currentTime;}
-    inline int loopCount() const {return m_loopCount;}
-    inline int currentLoop() const {return m_currentLoop;}
-    int totalDuration() const;
-
-    void setLoopCount(int loopCount);
-    void setDirection(QAbstractAnimation2::Direction direction);
-    void setAnimation(QObject *animation);
     void setGroup(QAnimationGroup2* group) {m_group = group;}   //### remove from old group, add to new
-    void setPaused(bool);
-    void setCurrentTime(int msecs);
+
+    inline QDeclarativeAbstractAnimation *animation() const;
+    void setAnimation(QObject *animation);
+
+    inline int loopCount() const {return m_loopCount;}
+    void setLoopCount(int loopCount);
+
+    int totalDuration() const;
 
     virtual int duration() const {return 0;}
     virtual QAbstractAnimation2::AnimationType type() const;
+
+    inline QAbstractAnimation2::Direction direction() const {return m_direction;}
+    void setDirection(QAbstractAnimation2::Direction direction);
+
+    //state
+    inline int currentTime() const {return m_totalCurrentTime;}
+    inline int currentLoopTime() const {return m_currentTime;}
+    inline int currentLoop() const {return m_currentLoop;}
+    inline QAbstractAnimation2::State state() const {return m_state;}
+
+    void setPaused(bool);
+    void setCurrentTime(int msecs);
 
     void start();
     void pause();
@@ -131,26 +137,30 @@ protected:
     virtual void updateCurrentTime(int) {}
     virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     virtual void updateDirection(QAbstractAnimation2::Direction direction);
+
+    void setState(QAbstractAnimation2::State state);
+
     void finished();
     void stateChanged(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void currentLoopChanged(int currentLoop);
     void directionChanged(QAbstractAnimation2::Direction);
-    void setState(QAbstractAnimation2::State state);
 
-    QAbstractAnimation2::State m_state;
-    QAbstractAnimation2::Direction m_direction;
-    int m_totalCurrentTime;
-    int m_currentTime;
+    //definition
     int m_loopCount;
-    int m_currentLoop;
-
-    bool m_hasRegisteredTimer:1;
-    bool m_isPause:1;
-    bool m_isGroup:1;
-
+    bool m_isPause;
+    bool m_isGroup;
     QAnimationGroup2 *m_group;
     QDeclarativeGuard<QObject> m_animationGuard;
     AnimationType m_type;
+    QAbstractAnimation2::Direction m_direction; //???
+
+    //state
+    QAbstractAnimation2::State m_state;
+    int m_totalCurrentTime;
+    int m_currentTime;
+    int m_currentLoop;
+    bool m_hasRegisteredTimer;
+
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_finishedSlots;
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_stateChangedSlots;
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_currentLoopChangedSlots;

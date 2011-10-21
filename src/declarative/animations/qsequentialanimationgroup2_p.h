@@ -61,14 +61,12 @@ public:
     QAbstractAnimation2Pointer currentAnimation() const;
     int duration() const;
 
-//Q_SIGNALS:
-//    void currentAnimationChanged(QAbstractAnimation2Pointer current);
-
 protected:
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
     void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
+
 private:
     struct AnimationIndex
     {
@@ -90,15 +88,15 @@ private:
 
     bool atEnd() const;
 
+    //state
     QAbstractAnimation2Pointer m_currentAnimation;
     int m_currentAnimationIndex;
-
     // this is the actual duration of uncontrolled animations
     // it helps seeking and even going forward
     QList<int> m_actualDuration;
+    int m_previousLoop;
 
     void restart();
-    int m_lastLoop;
 
     // handle time changes
     void rewindForwards(const AnimationIndex &newAnimationIndex);

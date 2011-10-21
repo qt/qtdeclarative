@@ -108,13 +108,13 @@ void QSequentialAnimationGroup2::restart()
 {
     // restarting the group by making the first/last animation the current one
     if (m_direction == QAbstractAnimation2::Forward) {
-        m_lastLoop = 0;
+        m_previousLoop = 0;
         if (m_currentAnimationIndex == 0)
             activateCurrentAnimation();
         else
             setCurrentAnimation(0);
     } else { // direction == QAbstractAnimation2::Backward
-        m_lastLoop = m_loopCount - 1;
+        m_previousLoop = m_loopCount - 1;
         int index = m_animations.size() - 1;
         if (m_currentAnimationIndex == index)
             activateCurrentAnimation();
@@ -125,7 +125,7 @@ void QSequentialAnimationGroup2::restart()
 
 void QSequentialAnimationGroup2::advanceForwards(const AnimationIndex &newAnimationIndex)
 {
-    if (m_lastLoop < m_currentLoop) {
+    if (m_previousLoop < m_currentLoop) {
         // we need to fast forward to the end
         for (int i = m_currentAnimationIndex; i < m_animations.size(); ++i) {
             QAbstractAnimation2Pointer anim = m_animations.at(i);
@@ -151,7 +151,7 @@ void QSequentialAnimationGroup2::advanceForwards(const AnimationIndex &newAnimat
 
 void QSequentialAnimationGroup2::rewindForwards(const AnimationIndex &newAnimationIndex)
 {
-    if (m_lastLoop > m_currentLoop) {
+    if (m_previousLoop > m_currentLoop) {
         // we need to fast rewind to the beginning
         for (int i = m_currentAnimationIndex; i >= 0 ; --i) {
             QAbstractAnimation2Pointer anim = m_animations.at(i);
@@ -179,7 +179,7 @@ QSequentialAnimationGroup2::QSequentialAnimationGroup2(QDeclarativeAbstractAnima
     : QAnimationGroup2(animation)
     , m_currentAnimation(0)
     , m_currentAnimationIndex(-1)
-    , m_lastLoop(0)
+    , m_previousLoop(0)
 {
 }
 
@@ -187,7 +187,7 @@ QSequentialAnimationGroup2::QSequentialAnimationGroup2(const QSequentialAnimatio
     : QAnimationGroup2(other)
     , m_currentAnimation(other.m_currentAnimation)
     , m_currentAnimationIndex(other.m_currentAnimationIndex)
-    , m_lastLoop(other.m_lastLoop)
+    , m_previousLoop(other.m_previousLoop)
 {
 }
 QSequentialAnimationGroup2::~QSequentialAnimationGroup2()
@@ -228,12 +228,12 @@ void QSequentialAnimationGroup2::updateCurrentTime(int currentTime)
         m_actualDuration.removeLast();
 
     // newAnimationIndex.index is the new current animation
-    if (m_lastLoop < m_currentLoop
-        || (m_lastLoop == m_currentLoop && m_currentAnimationIndex < newAnimationIndex.index)) {
+    if (m_previousLoop < m_currentLoop
+        || (m_previousLoop == m_currentLoop && m_currentAnimationIndex < newAnimationIndex.index)) {
             // advancing with forward direction is the same as rewinding with backwards direction
             advanceForwards(newAnimationIndex);
-    } else if (m_lastLoop > m_currentLoop
-        || (m_lastLoop == m_currentLoop && m_currentAnimationIndex > newAnimationIndex.index)) {
+    } else if (m_previousLoop > m_currentLoop
+        || (m_previousLoop == m_currentLoop && m_currentAnimationIndex > newAnimationIndex.index)) {
             // rewinding with forward direction is the same as advancing with backwards direction
             rewindForwards(newAnimationIndex);
     }
@@ -257,7 +257,7 @@ void QSequentialAnimationGroup2::updateCurrentTime(int currentTime)
         stop();
     }
 
-    m_lastLoop = m_currentLoop;
+    m_previousLoop = m_currentLoop;
 }
 
 void QSequentialAnimationGroup2::updateState(QAbstractAnimation2::State newState,
@@ -320,7 +320,7 @@ void QSequentialAnimationGroup2::setCurrentAnimation(int index, bool intermediat
     m_currentAnimation = m_animations.at(index);
     m_currentAnimationIndex = index;
 
-//    currentAnimationChanged(currentAnimation);
+//    emit currentAnimationChanged(currentAnimation);
 
     activateCurrentAnimation(intermediate);
 }

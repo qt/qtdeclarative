@@ -75,7 +75,7 @@ public:
 private:
     //can likely be removed after refactor
     virtual void animationInsertedAt(int) { }
-    virtual void animationRemoved(int, QAbstractAnimation2Pointer );
+    virtual void animationRemoved(int, QAbstractAnimation2Pointer);
 
     void connectUncontrolledAnimations();
     void disconnectUncontrolledAnimations();
@@ -87,8 +87,10 @@ private:
     friend class QParallelAnimationGroup2;
     friend class QSequentialAnimationGroup2;
 private:
-    QList<QAbstractAnimation2Pointer > m_animations;
-    QHash<QAbstractAnimation2Pointer , int> m_uncontrolledFinishTime;
+    //definition
+    QList<QAbstractAnimation2Pointer> m_animations;
+    //state
+    QHash<QAbstractAnimation2Pointer, int> m_uncontrolledFinishTime;
 };
 
 QT_END_NAMESPACE
