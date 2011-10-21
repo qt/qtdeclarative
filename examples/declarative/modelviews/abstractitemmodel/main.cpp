@@ -39,7 +39,7 @@
 ****************************************************************************/
 #include "model.h"
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarative.h>
@@ -49,7 +49,7 @@
 //![0]
 int main(int argc, char ** argv)
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     AnimalModel model;
     model.addAnimal(Animal("Wolf", "Medium"));
