@@ -66,16 +66,11 @@ class QSGParentAnimationPrivate : public QDeclarativeAnimationGroupPrivate
     Q_DECLARE_PUBLIC(QSGParentAnimation)
 public:
     QSGParentAnimationPrivate()
-    : QDeclarativeAnimationGroupPrivate(), target(0), newParent(0),
-       via(0), topLevelGroup(0), startAction(0), endAction(0) {}
+    : QDeclarativeAnimationGroupPrivate(), target(0), newParent(0), via(0) {}
 
     QSGItem *target;
     QSGItem *newParent;
     QSGItem *via;
-
-    QSequentialAnimationGroup2 *topLevelGroup;
-    QActionAnimation *startAction;
-    QActionAnimation *endAction;
 
     QPointF computeTransformOrigin(QSGItem::TransformOrigin origin, qreal width, qreal height) const;
 };
@@ -84,10 +79,11 @@ class QSGAnchorAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QSGAnchorAnimation)
 public:
-    QSGAnchorAnimationPrivate() : va(0),interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)) {}
+    QSGAnchorAnimationPrivate() : interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)), duration(250) {}
 
-    QDeclarativeBulkValueAnimator *va;
     QVariantAnimation::Interpolator interpolator;
+    int duration;
+    QEasingCurve easing;
     QList<QSGItem*> targets;
 };
 

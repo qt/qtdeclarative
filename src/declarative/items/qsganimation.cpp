@@ -57,17 +57,6 @@ QT_BEGIN_NAMESPACE
 QSGParentAnimation::QSGParentAnimation(QObject *parent)
     : QDeclarativeAnimationGroup(*(new QSGParentAnimationPrivate), parent)
 {
-    Q_D(QSGParentAnimation);
-    d->topLevelGroup = new QSequentialAnimationGroup2;
-
-    d->startAction = new QActionAnimation;
-    d->topLevelGroup->addAnimation(d->startAction);
-
-    //d->ag = new QParallelAnimationGroup2;
-    d->topLevelGroup->addAnimation(new QParallelAnimationGroup2);
-
-    d->endAction = new QActionAnimation;
-    d->topLevelGroup->addAnimation(d->endAction);
 }
 
 QSGParentAnimation::~QSGParentAnimation()
@@ -314,13 +303,19 @@ QAbstractAnimation2Pointer QSGParentAnimation::transition(QDeclarativeStateActio
         }
     }
 
+    //TODO: only create necessary animations
+    QSequentialAnimationGroup2 *topLevelGroup = new QSequentialAnimationGroup2;
+    QActionAnimation *startAction = new QActionAnimation;
+    QActionAnimation *endAction = new QActionAnimation;
+    QParallelAnimationGroup2 *ag = new QParallelAnimationGroup2;
+
     if (data->actions.count()) {
         if (direction == QDeclarativeAbstractAnimation::Forward) {
-            d->startAction->setAnimAction(d->via ? viaData : data);
-            d->endAction->setAnimAction(d->via ? data : 0);
+            startAction->setAnimAction(d->via ? viaData : data);
+            endAction->setAnimAction(d->via ? data : 0);
         } else {
-            d->endAction->setAnimAction(d->via ? viaData : data);
-            d->startAction->setAnimAction(d->via ? data : 0);
+            endAction->setAnimAction(d->via ? viaData : data);
+            startAction->setAnimAction(d->via ? data : 0);
         }
     } else {
         delete data;
@@ -329,19 +324,24 @@ QAbstractAnimation2Pointer QSGParentAnimation::transition(QDeclarativeStateActio
 
     //take care of any child animations
     bool valid = d->defaultProperty.isValid();
+    QAbstractAnimation2Pointer anim;
     for (int ii = 0; ii < d->animations.count(); ++ii) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        d->animations.at(ii)->transition(actions, modified, direction);
+        anim = d->animations.at(ii)->transition(actions, modified, direction);
+        ag->addAnimation(anim);
     }
-    return d->topLevelGroup;
+
+    topLevelGroup->addAnimation(startAction);
+    topLevelGroup->addAnimation(ag);
+    topLevelGroup->addAnimation(endAction);
+
+    return topLevelGroup;
 }
 
 QSGAnchorAnimation::QSGAnchorAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QSGAnchorAnimationPrivate), parent)
 {
-    Q_D(QSGAnchorAnimation);
-    d->va = new QDeclarativeBulkValueAnimator(this);
 }
 
 QSGAnchorAnimation::~QSGAnchorAnimation()
@@ -357,7 +357,7 @@ QDeclarativeListProperty<QSGItem> QSGAnchorAnimation::targets()
 int QSGAnchorAnimation::duration() const
 {
     Q_D(const QSGAnchorAnimation);
-    return d->va->duration();
+    return d->duration;
 }
 
 void QSGAnchorAnimation::setDuration(int duration)
@@ -368,25 +368,25 @@ void QSGAnchorAnimation::setDuration(int duration)
     }
 
     Q_D(QSGAnchorAnimation);
-    if (d->va->duration() == duration)
+    if (d->duration == duration)
         return;
-    d->va->setDuration(duration);
+    d->duration = duration;
     emit durationChanged(duration);
 }
 
 QEasingCurve QSGAnchorAnimation::easing() const
 {
     Q_D(const QSGAnchorAnimation);
-    return d->va->easingCurve();
+    return d->easing;
 }
 
 void QSGAnchorAnimation::setEasing(const QEasingCurve &e)
 {
     Q_D(QSGAnchorAnimation);
-    if (d->va->easingCurve() == e)
+    if (d->easing == e)
         return;
 
-    d->va->setEasingCurve(e);
+    d->easing = e;
     emit easingChanged(e);
 }
 
@@ -411,13 +411,14 @@ QAbstractAnimation2Pointer QSGAnchorAnimation::transition(QDeclarativeStateActio
         }
     }
 
+    QDeclarativeBulkValueAnimator *animator = new QDeclarativeBulkValueAnimator;
     if (data->actions.count()) {
-        d->va->setAnimValue(data);
-        d->va->setFromSourcedValue(&data->fromSourced);
+        animator->setAnimValue(data);
+        animator->setFromSourcedValue(&data->fromSourced);
     } else {
         delete data;
     }
-    return d->va;
+    return animator;
 }
 
 QSGPathAnimation::QSGPathAnimation(QObject *parent)
