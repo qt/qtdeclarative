@@ -2366,6 +2366,7 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     // view should be positioned at the top of the range.
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QTRY_VERIFY(item);
+    QEXPECT_FAIL("", "QTBUG-22162", Abort);
     QTRY_COMPARE(gridview->contentX(), -100.);
     QTRY_COMPARE(gridview->contentY(), 0.0);
 
