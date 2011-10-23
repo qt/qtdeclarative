@@ -9,5 +9,3 @@ win32-msvc* {
     QMAKE_CXXFLAGS_RELEASE -= -O1 -O2
     QMAKE_CXXFLAGS_RELEASE += -Od
 }
-#temporary
-CONFIG += insignificant_test

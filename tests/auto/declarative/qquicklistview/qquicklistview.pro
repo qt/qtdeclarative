@@ -9,5 +9,5 @@ testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
-CONFIG += insignificant_test parallel_test
+CONFIG += parallel_test
 QT += core-private gui-private declarative-private widgets widgets-private v8-private opengl-private testlib
