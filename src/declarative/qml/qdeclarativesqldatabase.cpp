@@ -51,7 +51,7 @@
 #include <QtSql/qsqlerror.h>
 #include <QtSql/qsqlrecord.h>
 #include <QtSql/qsqlfield.h>
-#include <QtGui/qdesktopservices.h>
+#include <QtCore/qstandardpaths.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qsettings.h>
@@ -517,7 +517,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_open_sync(const v8::Arguments& args)
 
 QDeclarativeSqlDatabaseData::QDeclarativeSqlDatabaseData(QV8Engine *engine)
 {
-    QString dataLocation = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
     offlineStoragePath = dataLocation.replace(QLatin1Char('/'), QDir::separator()) +
                          QDir::separator() + QLatin1String("QML") +
                          QDir::separator() + QLatin1String("OfflineStorage");
