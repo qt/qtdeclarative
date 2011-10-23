@@ -51,6 +51,12 @@
 
 QT_BEGIN_NAMESPACE
 
+struct SignalHandlerData
+{
+    QString functionName;
+    bool enabled;
+};
+
 Q_GLOBAL_STATIC(QV8DebugService, v8ServiceInstance)
 
 void DebugMessageHandler(const v8::Debug::Message& message)
@@ -107,9 +113,9 @@ public:
     v8::Isolate *isolate;
     QList<QDeclarativeEngine *> engines;
     QEventLoop loop;
-    QHash<QString,QString> sourcePath;
-    QHash<QString,QString> requestCache;
-    QHash<int,QString> eventList;
+    QHash<QString, QString> sourcePath;
+    QHash<QString, QString> requestCache;
+    QHash<int, SignalHandlerData> handlersList;
 };
 
 QV8DebugService::QV8DebugService(QObject *parent)
@@ -207,10 +213,18 @@ void QV8DebugService::signalEmitted(const QString &signal)
     //is no need for additional check.
     Q_D(QV8DebugService);
 
+    bool debugBreak = false;
     //Parse just the name and remove the class info
-    if (d->eventList.key(signal.left(signal.indexOf(QLatin1String("("))))) {
-        v8::Debug::DebugBreak();
+    //Normalize to Lower case.
+    QString signalName = signal.left(signal.indexOf(QLatin1String("("))).toLower();
+    foreach (const SignalHandlerData &data, d->handlersList) {
+        if (data.functionName == signalName
+                && data.enabled) {
+            debugBreak = true;
+        }
     }
+    if (debugBreak)
+        v8::Debug::DebugBreak();
 }
 
 void QV8DebugService::messageReceived(const QByteArray &message)
@@ -286,7 +300,7 @@ void QV8DebugService::messageReceived(const QByteArray &message)
                     //   "success"     : true
                     // }
                     {
-                        v8::Isolate::Scope(d->isolate);
+                        v8::Isolate::Scope i_scope(d->isolate);
                         const QString obj(QLatin1String("{}"));
                         QJSValue parser = d->engine->evaluate(QLatin1String("JSON.parse"));
                         QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
@@ -301,7 +315,12 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
 
                         if (eventName.startsWith(QLatin1String("on"))) {
-                            d->eventList.insert(-sequence, eventName.remove(0,2).toLower());
+                            SignalHandlerData data;
+                            //Only store the probable signal name.
+                            //Normalize to lower case.
+                            data.functionName = eventName.remove(0,2).toLower();
+                            data.enabled = arguments.value(QLatin1String("enabled")).toBool();
+                            d->handlersList.insert(-sequence, data);
 
                             QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
 
@@ -324,13 +343,24 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
                     }
                 }
+            } else if (debugCommand == QLatin1String("changebreakpoint")) {
+                //check if the breakpoint is a negative integer (event breakpoint)
+                const QVariantMap arguments = reqMap.value(QLatin1String("arguments")).toMap();
+                const int bp = arguments.value(QLatin1String("breakpoint")).toInt();
+
+                if (bp < 0) {
+                    SignalHandlerData data = d->handlersList.value(bp);
+                    data.enabled = arguments.value(QLatin1String("enabled")).toBool();
+                    d->handlersList.insert(bp, data);
+                    forwardRequestToV8 = false;
+                }
             } else if (debugCommand == QLatin1String("clearbreakpoint")) {
                 //check if the breakpoint is a negative integer (event breakpoint)
                 const QVariantMap arguments = reqMap.value(QLatin1String("arguments")).toMap();
                 const int bp = arguments.value(QLatin1String("breakpoint")).toInt();
 
                 if (bp < 0) {
-                    d->eventList.remove(bp);
+                    d->handlersList.remove(bp);
                     forwardRequestToV8 = false;
                 }
             }
