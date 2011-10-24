@@ -579,7 +579,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
                                   qMax(1, d->pix.width() - border->right() - border->left()),
                                   qMax(1, d->pix.height() - border->bottom() - border->top())));
     } else {
-        node->setInnerRect(QRectF(0, 0, width(), height()));
+        node->setInnerRect(QRectF(0, 0, d->pix.width(), d->pix.height()));
     }
     node->setRect(QRectF(0, 0, width(), height()));
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
