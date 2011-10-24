@@ -684,6 +684,8 @@ Item {
     }
 
     Component.onCompleted: {
+        qtest.hasTestCase = true;
+
         if (util.printAvailableFunctions) {
             var testList = []
             for (var prop in testCase) {
