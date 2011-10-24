@@ -84,7 +84,7 @@
 
 #include <private/qdeclarativeutilmodule_p.h>
 #include <private/qquickitemsmodule_p.h>
-#include <private/qsgparticlesmodule_p.h>
+#include <private/qquickparticlesmodule_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
@@ -345,7 +345,7 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
         QDeclarativeUtilModule::defineModule();
         QDeclarativeEnginePrivate::defineModule();
         QQuickItemsModule::defineModule();
-        QSGParticlesModule::defineModule();
+        QQuickParticlesModule::defineModule();
         QDeclarativeValueTypeFactory::registerValueTypes();
     }
 }

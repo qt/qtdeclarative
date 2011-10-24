@@ -39,126 +39,96 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
 #include <QtTest/QtTest>
-#include "../../../auto/particles/shared/particlestestsshared.h"
-#include <private/qsgparticlesystem_p.h>
+#include "../shared/particlestestsshared.h"
+#include <private/qquickparticlesystem_p.h>
+#include <private/qabstractanimation_p.h>
 
-class tst_affectors : public QObject
+class tst_qquickfriction : public QObject
 {
     Q_OBJECT
 public:
-    tst_affectors();
+    tst_qquickfriction();
 
 private slots:
     void test_basic();
-    void test_basic_data();
-    void test_filtered();
-    void test_filtered_data();
+    void test_threshold();
 };
 
-tst_affectors::tst_affectors()
+tst_qquickfriction::tst_qquickfriction()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
-void tst_affectors::test_basic_data()
+void tst_qquickfriction::test_basic()
 {
-    QTest::addColumn<int> ("dt");
-    QTest::newRow("16ms") << 16;
-    QTest::newRow("32ms") << 32;
-    QTest::newRow("100ms") << 100;
-    QTest::newRow("500ms") << 500;
-}
-
-void tst_affectors::test_filtered_data()
-{
-    QTest::addColumn<int> ("dt");
-    QTest::newRow("16ms") << 16;
-    QTest::newRow("32ms") << 32;
-    QTest::newRow("100ms") << 100;
-    QTest::newRow("500ms") << 500;
-}
-
-void tst_affectors::test_basic()
-{
-    QFETCH(int, dt);
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
-    //Pretend we're running, but we manually advance the simulation
-    system->m_running = true;
-    system->m_animation = 0;
-    system->reset();
+    ensureAnimTime(600, system->m_animation);
 
-    int curTime = 1;
-    system->updateCurrentTime(curTime);//Fixed point and get init out of the way - including emission
-
-    QBENCHMARK {
-        curTime += dt;
-        system->updateCurrentTime(curTime);
-    }
-
-    int stillAlive = 0;
-    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 1000, 10));//Small simulation variance is permissible.
+    //Default is just slowed a little
+    QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
 
-        if (d->stillAlive())
-            stillAlive++;
-        QCOMPARE(d->x, 0.f);
+        QVERIFY(d->vx < 100.f);
         QCOMPARE(d->y, 0.f);
-        QCOMPARE(d->vx, 0.f);
         QCOMPARE(d->vy, 0.f);
         QCOMPARE(d->ax, 0.f);
         QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
-    QVERIFY(extremelyFuzzyCompare(stillAlive, 1000, 10));//Small simulation variance is permissible.
-    delete view;
-}
 
-void tst_affectors::test_filtered()
-{
-    QFETCH(int, dt);
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/filtered.qml");
-    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
-    //Pretend we're running, but we manually advance the simulation
-    system->m_running = true;
-    system->m_animation = 0;
-    system->reset();
-
-    int curTime = 1;
-    system->updateCurrentTime(curTime);//Fixed point and get init out of the way - including emission
-
-    QBENCHMARK {
-        curTime += dt;
-        system->updateCurrentTime(curTime);
-    }
-
-    int stillAlive = 0;
-    QVERIFY(extremelyFuzzyCompare(system->groupData[1]->size(), 1000, 10));//Small simulation variance is permissible.
+    //Nondefault comes to a complete stop within the first half of its life
+    QCOMPARE(system->groupData[1]->size(), 500);
     foreach (QQuickParticleData *d, system->groupData[1]->data) {
         if (d->t == -1)
             continue; //Particle data unused
 
-        if (d->stillAlive())
-            stillAlive++;
-        QCOMPARE(d->x, 160.f);
-        QCOMPARE(d->y, 160.f);
-        QCOMPARE(d->vx, 0.f);
+        if (d->t > ((qreal)system->timeInt/1000.0) - 0.25)
+            continue;
+        QVERIFY(myFuzzyCompare(d->vx, 0.f));
+        QCOMPARE(d->y, 200.f);
         QCOMPARE(d->vy, 0.f);
         QCOMPARE(d->ax, 0.f);
         QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
-    QVERIFY(extremelyFuzzyCompare(stillAlive, 1000, 10));//Small simulation variance is permissible.
-    delete view;
 }
 
-QTEST_MAIN(tst_affectors);
+void tst_qquickfriction::test_threshold()
+{
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/threshold.qml", 600);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
-#include "tst_affectors.moc"
+    //Speed capped at 50, but it might take a frame or two to get there
+    QCOMPARE(system->groupData[0]->size(), 500);
+    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1.0f)
+            continue; //Particle data unused
+        if (myFuzzyGEQ(d->t, ((qreal)system->timeInt/1000.0) - 0.1))
+            continue; //Particle data too young
+
+        QVERIFY(myFuzzyLEQ(d->vx, 50.f));
+        QCOMPARE(d->y, 0.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
+    }
+}
+
+QTEST_MAIN(tst_qquickfriction);
+
+#include "tst_qquickfriction.moc"

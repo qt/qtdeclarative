@@ -240,7 +240,7 @@ public slots:
     uint updateSprites(uint time);
 
 protected:
-    friend class QSGParticleSystem;
+    friend class QQuickParticleSystem;
     void restart(int index);
     void addToUpdateList(uint t, int idx);
     int goalSeek(int curState, int idx, int dist=-1);
