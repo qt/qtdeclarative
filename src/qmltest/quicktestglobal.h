@@ -44,6 +44,8 @@
 
 #include <QtCore/qglobal.h>
 
+QT_BEGIN_HEADER
+
 QT_LICENSED_MODULE(QtQuickTest)
 #if defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)
 #  if defined(QT_NODLL)
@@ -69,5 +71,7 @@ QT_LICENSED_MODULE(QtQuickTest)
 #       define Q_QUICK_TEST_EXPORT
 #   endif
 #endif
+
+QT_END_HEADER
 
 #endif

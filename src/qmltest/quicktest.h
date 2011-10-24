@@ -48,6 +48,8 @@
 #include <QtGui/qopengl.h>
 #endif
 
+QT_BEGIN_HEADER
+
 QT_BEGIN_NAMESPACE
 
 typedef QWidget *(*quick_test_viewport_create)();
@@ -93,5 +95,7 @@ Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name,
 #endif
 
 QT_END_NAMESPACE
+
+QT_END_HEADER
 
 #endif
