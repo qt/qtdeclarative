@@ -195,6 +195,7 @@ private slots:
     void nonscriptable();
     void deleteLater();
     void in();
+    void typeOf();
     void sharedAttachedObject();
     void objectName();
     void writeRemovesBinding();
@@ -4509,6 +4510,25 @@ void tst_qdeclarativeecmascript::in()
     QVERIFY(o != 0);
     QCOMPARE(o->property("test1").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
+    delete o;
+}
+
+void tst_qdeclarativeecmascript::typeOf()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("typeOf.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test1").toString(), QLatin1String("undefined"));
+    QEXPECT_FAIL("", "QTBUG-21864", Abort);
+    QCOMPARE(o->property("test2").toString(), QLatin1String("object"));
+    QCOMPARE(o->property("test3").toString(), QLatin1String("number"));
+    QCOMPARE(o->property("test4").toString(), QLatin1String("string"));
+    QCOMPARE(o->property("test5").toString(), QLatin1String("function"));
+    QCOMPARE(o->property("test6").toString(), QLatin1String("object"));
+    QCOMPARE(o->property("test7").toString(), QLatin1String("undefined"));
+    QCOMPARE(o->property("test8").toString(), QLatin1String("boolean"));
+    QCOMPARE(o->property("test9").toString(), QLatin1String("object"));
+
     delete o;
 }
 
