@@ -95,6 +95,9 @@ QT_BEGIN_NAMESPACE
     the canvas.
     \image qml-item-canvas-context.gif
 */
+
+Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
+
 static const double Q_PI   = 3.14159265358979323846;   // pi
 
 #define DEGREES(t) ((t) * 180.0 / Q_PI)
@@ -164,7 +167,8 @@ QColor qt_color_from_string(v8::Local<v8::Value> name)
         if (hasAlpha) {
             if (*p++!= ',') return QColor();
             while (isspace(*p)) p++;
-            alpha = qRound(strtod(p, &p) * 255);
+            bool ok = false;
+            alpha = qRound(qstrtod(p, const_cast<const char **>(&p), &ok) * 255);
         }
 
         if (*p != ')') return QColor();
