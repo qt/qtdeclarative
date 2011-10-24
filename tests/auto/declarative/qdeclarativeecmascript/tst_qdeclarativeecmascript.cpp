@@ -207,6 +207,7 @@ private slots:
     void include();
     void signalHandlers();
     void doubleEvaluate();
+    void forInLoop();
 
     void callQtInvokables();
     void invokableObjectArg();
@@ -4776,6 +4777,25 @@ void tst_qdeclarativeecmascript::doubleEvaluate()
     wc->setProperty("x", 9);
 
     QCOMPARE(wc->count(), 2);
+
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::forInLoop()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("forInLoop.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QMetaObject::invokeMethod(object, "listProperty");
+
+    QStringList r = object->property("listResult").toString().split("|", QString::SkipEmptyParts);
+    QCOMPARE(r.size(), 3);
+    QCOMPARE(r[0],QLatin1String("0=obj1"));
+    QCOMPARE(r[1],QLatin1String("1=obj2"));
+    QCOMPARE(r[2],QLatin1String("2=obj3"));
+
+    //TODO: should test for in loop for other objects (such as QObjects) as well.
 
     delete object;
 }

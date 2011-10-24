@@ -85,6 +85,7 @@ private:
                                                const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> LengthGetter(v8::Local<v8::String> property, 
                                               const v8::AccessorInfo &info);
+    static v8::Handle<v8::Array> Enumerator(const v8::AccessorInfo &info);
 
     QV8Engine *m_engine;
     v8::Persistent<v8::Function> m_constructor;
