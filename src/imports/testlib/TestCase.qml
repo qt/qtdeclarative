@@ -74,6 +74,7 @@ Item {
     // Internal private state.  Identifiers prefixed with qtest are reserved.
     property bool qtest_prevWhen: true
     property int qtest_testId: -1
+    property bool qtest_componentCompleted : false
     property variant qtest_testCaseResult
     property variant qtest_results: qtest_results_normal
     TestResult { id: qtest_results_normal }
@@ -659,7 +660,7 @@ Item {
     onWhenChanged: {
         if (when != qtest_prevWhen) {
             qtest_prevWhen = when
-            if (when && !completed && !running)
+            if (when && !completed && !running && qtest_componentCompleted)
                 qtest_run()
         }
     }
@@ -685,6 +686,7 @@ Item {
 
     Component.onCompleted: {
         qtest.hasTestCase = true;
+        qtest_componentCompleted = true;
 
         if (util.printAvailableFunctions) {
             var testList = []
