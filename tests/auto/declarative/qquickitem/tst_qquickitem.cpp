@@ -239,6 +239,7 @@ void tst_qquickitem::simpleFocus()
 {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
 
     QQuickItem *l1c1 = new TestItem(canvas.rootItem());
     QQuickItem *l1c2 = new TestItem(canvas.rootItem());
@@ -289,6 +290,7 @@ void tst_qquickitem::scopedFocus()
 {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
 
     QQuickItem *l1c1 = new TestItem(canvas.rootItem());
     QQuickItem *l1c2 = new TestItem(canvas.rootItem());
@@ -368,6 +370,7 @@ void tst_qquickitem::addedToCanvas()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
 
     QQuickItem *item = new TestItem;
 
@@ -387,6 +390,7 @@ void tst_qquickitem::addedToCanvas()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
 
     QQuickItem *item = new TestItem(canvas.rootItem());
 
@@ -415,6 +419,7 @@ void tst_qquickitem::addedToCanvas()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
 
     QQuickItem *tree = new TestItem;
     QQuickItem *c1 = new TestItem(tree);
@@ -438,6 +443,7 @@ void tst_qquickitem::addedToCanvas()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
     QQuickItem *c2 = new TestItem(tree);
@@ -465,6 +471,7 @@ void tst_qquickitem::addedToCanvas()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
     QQuickItem *c2 = new TestItem(tree);
@@ -490,6 +497,7 @@ void tst_qquickitem::addedToCanvas()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *child = new TestItem(canvas.rootItem());
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
@@ -529,6 +537,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *child = new TestItem(canvas.rootItem());
 
     FocusState focusState;
@@ -550,6 +559,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *child = new TestItem(canvas.rootItem());
     QQuickItem *child2 = new TestItem(canvas.rootItem());
 
@@ -570,6 +580,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *child = new TestItem(canvas.rootItem());
     QQuickItem *child2 = new TestFocusScope(canvas.rootItem());
     QQuickItem *item = new TestItem(child);
@@ -591,6 +602,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *child = new TestItem(canvas.rootItem());
     QQuickItem *child2 = new TestFocusScope(canvas.rootItem());
     QQuickItem *item = new TestItem(child2);
@@ -612,6 +624,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
     QQuickItem *child = new TestItem(canvas.rootItem());
     QQuickItem *child2 = new TestFocusScope(canvas.rootItem());
     QQuickItem *item = new TestItem(child2);

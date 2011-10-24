@@ -213,12 +213,9 @@ void tst_QQuickItem::keys()
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keystest.qml")));
     canvas->show();
-    qApp->processEvents();
-
-    QEvent wa(QEvent::WindowActivate);
-    QApplication::sendEvent(canvas, &wa);
-    QFocusEvent fe(QEvent::FocusIn);
-    QApplication::sendEvent(canvas, &fe);
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
 
     QVERIFY(canvas->rootObject());
     QCOMPARE(canvas->rootObject()->property("isEnabled").toBool(), true);
@@ -334,15 +331,12 @@ void tst_QQuickItem::keysProcessingOrder()
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keyspriority.qml")));
     canvas->show();
-    qApp->processEvents();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
 
     KeyTestItem *testItem = qobject_cast<KeyTestItem*>(canvas->rootObject());
     QVERIFY(testItem);
-
-    QEvent wa(QEvent::WindowActivate);
-    QApplication::sendEvent(canvas, &wa);
-    QFocusEvent fe(QEvent::FocusIn);
-    QApplication::sendEvent(canvas, &fe);
 
     QKeyEvent key(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "A", false, 1);
     QApplication::sendEvent(canvas, &key);
@@ -546,12 +540,9 @@ void tst_QQuickItem::keyNavigation()
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
-    qApp->processEvents();
-
-    QEvent wa(QEvent::WindowActivate);
-    QApplication::sendEvent(canvas, &wa);
-    QFocusEvent fe(QEvent::FocusIn);
-    QApplication::sendEvent(canvas, &fe);
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
 
     QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item1");
     QVERIFY(item);
@@ -626,7 +617,9 @@ void tst_QQuickItem::keyNavigation_RightToLeft()
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
-    qApp->processEvents();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
 
     QQuickItem *rootItem = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(rootItem);
@@ -679,12 +672,9 @@ void tst_QQuickItem::keyNavigation_skipNotVisible()
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
-    qApp->processEvents();
-
-    QEvent wa(QEvent::WindowActivate);
-    QApplication::sendEvent(canvas, &wa);
-    QFocusEvent fe(QEvent::FocusIn);
-    QApplication::sendEvent(canvas, &fe);
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
 
     QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item1");
     QVERIFY(item);
@@ -757,7 +747,9 @@ void tst_QQuickItem::keyNavigation_implicitSetting()
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest_implicit.qml")));
     canvas->show();
-    qApp->processEvents();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
 
     QEvent wa(QEvent::WindowActivate);
     QApplication::sendEvent(canvas, &wa);
@@ -1056,8 +1048,9 @@ void tst_QQuickItem::propertyChanges()
     canvas->setBaseSize(QSize(300, 300));
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
     canvas->show();
-
+    canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
 
     QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item");
     QQuickItem *parentItem = findItem<QQuickItem>(canvas->rootObject(), "parentItem");

@@ -1798,30 +1798,18 @@ void tst_qquicktextinput::cursorVisible()
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 5);
 
-    view.setWindowState(Qt::WindowNoState);
-    QEXPECT_FAIL("", "Most likely a side-effect of QTBUG-21489", Abort);
+    QQuickView alternateView;
+    alternateView.show();
+    alternateView.requestActivateWindow();
+    QTest::qWaitForWindowShown(&alternateView);
+
     QCOMPARE(input.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
 
     view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
-
-    // on mac, setActiveWindow(0) on mac does not deactivate the current application
-    // (you have to switch to a different app or hide the current app to trigger this)
-#if !defined(Q_WS_MAC)
-    // QGuiApplication has no equivalent of setActiveWindow(0).  Is this different to clearing the
-    // active state of the window or can it be removed?
-//    QApplication::setActiveWindow(0);
-//    QTRY_COMPARE(QApplication::focusWindow(), static_cast<QWidget *>(0));
-//    QCOMPARE(input.isCursorVisible(), false);
-//    QCOMPARE(spy.count(), 8);
-
-//    view.requestActivateWindow();
-//    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
-//    QCOMPARE(input.isCursorVisible(), true);
-//    QCOMPARE(spy.count(), 9);
-#endif
 }
 
 void tst_qquicktextinput::cursorRectangle()

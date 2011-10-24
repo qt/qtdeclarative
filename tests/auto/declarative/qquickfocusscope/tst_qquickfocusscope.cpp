@@ -121,6 +121,7 @@ void tst_qquickfocusscope::basic()
     view->requestActivateWindow();
 
     QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QVERIFY(view->isTopLevel());
     QVERIFY(item0->hasActiveFocus() == true);
@@ -165,6 +166,7 @@ void tst_qquickfocusscope::nested()
     view->requestActivateWindow();
 
     QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QVERIFY(item1->hasActiveFocus() == true);
     QVERIFY(item2->hasActiveFocus() == true);
@@ -191,6 +193,7 @@ void tst_qquickfocusscope::noFocus()
     view->show();
     view->requestActivateWindow();
     QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QVERIFY(item0->hasActiveFocus() == false);
     QVERIFY(item1->hasActiveFocus() == false);
@@ -283,6 +286,7 @@ void tst_qquickfocusscope::forceFocus()
     view->show();
     view->requestActivateWindow();
     QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
@@ -318,12 +322,8 @@ void tst_qquickfocusscope::noParentFocus()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
-
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QVERIFY(view->rootObject()->property("focus1") == false);
     QVERIFY(view->rootObject()->property("focus2") == false);
@@ -352,6 +352,7 @@ void tst_qquickfocusscope::signalEmission()
     view->requestActivateWindow();
 
     QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QVariant blue(QColor("blue"));
     QVariant red(QColor("red"));
@@ -417,12 +418,8 @@ void tst_qquickfocusscope::forceActiveFocus()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
-
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QQuickItem *rootObject = view->rootObject();
     QVERIFY(rootObject);
@@ -533,6 +530,8 @@ void tst_qquickfocusscope::canvasFocus()
     QQuickView *view = new QQuickView;
     view->setSource(QUrl::fromLocalFile(TESTDATA("canvasFocus.qml")));
 
+    QQuickView alternateView;
+
     QQuickItem *rootObject = view->rootObject();
     QVERIFY(rootObject);
 
@@ -558,8 +557,6 @@ void tst_qquickfocusscope::canvasFocus()
     QSignalSpy scope2ActiveFocusSpy(scope2, SIGNAL(activeFocusChanged(bool)));
     QSignalSpy item2ActiveFocusSpy(item2, SIGNAL(activeFocusChanged(bool)));
 
-    QEXPECT_FAIL("", "QTBUG-21054 - Root item hasFocus returns true already", Abort);
-
     QCOMPARE(rootItem->hasFocus(), false);
     QCOMPARE(rootItem->hasActiveFocus(), false);
     QCOMPARE(scope1->hasFocus(), true);
@@ -575,6 +572,7 @@ void tst_qquickfocusscope::canvasFocus()
     view->requestActivateWindow();
 
     QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     // Now the canvas has focus, active focus given to item1
     QCOMPARE(rootItem->hasFocus(), true);
@@ -595,7 +593,12 @@ void tst_qquickfocusscope::canvasFocus()
     QCOMPARE(item1ActiveFocusSpy.count(), 1);
 
 
-    view->hide();
+    //    view->hide(); // seemingly doesn't remove focus, so have an another view steal it.
+    alternateView.show();
+    alternateView.requestActivateWindow();
+    QTest::qWaitForWindowShown(&alternateView);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &alternateView);
+
     QCOMPARE(rootItem->hasFocus(), false);
     QCOMPARE(rootItem->hasActiveFocus(), false);
     QCOMPARE(scope1->hasFocus(), true);
@@ -636,6 +639,9 @@ void tst_qquickfocusscope::canvasFocus()
 
     // give the canvas focus, and item2 will get active focus
     view->show();
+    view->requestActivateWindow();
+    QTest::qWaitForWindowShown(view);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == view);
 
     QCOMPARE(rootItem->hasFocus(), true);
     QCOMPARE(rootItem->hasActiveFocus(), true);

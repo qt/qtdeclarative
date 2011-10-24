@@ -348,6 +348,17 @@ void QQuickCanvas::hideEvent(QHideEvent *)
     d->thread->stopRendering();
 }
 
+void QQuickCanvas::focusOutEvent(QFocusEvent *)
+{
+    Q_D(QQuickCanvas);
+    d->rootItem->setFocus(false);
+}
+
+void QQuickCanvas::focusInEvent(QFocusEvent *)
+{
+    Q_D(QQuickCanvas);
+    d->rootItem->setFocus(true);
+}
 
 
 /*!
@@ -483,10 +494,6 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(rootItem);
     rootItemPrivate->canvas = q;
     rootItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
-
-    // QML always has focus. It is important that this call happens after the rootItem
-    // has a canvas..
-    rootItem->setFocus(true);
 
     bool threaded = !qmlNoThreadedRenderer();
 
@@ -626,13 +633,13 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     }
 
     if (!(options & DontChangeFocusProperty)) {
-        // if (item != rootItem || q->hasFocus()) { // ### refactor: focus handling...
+        if (item != rootItem || QGuiApplication::focusWindow() == q) {
             itemPrivate->focus = true;
             changed << item;
-        // }
+        }
     }
 
-    if (newActiveFocusItem) { // ### refactor:  && q->hasFocus()) {
+    if (newActiveFocusItem && QGuiApplication::focusWindow() == q) {
         activeFocusItem = newActiveFocusItem;
 
         QQuickItemPrivate::get(newActiveFocusItem)->activeFocus = true;

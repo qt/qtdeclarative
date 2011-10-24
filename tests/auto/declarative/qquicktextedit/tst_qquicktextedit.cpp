@@ -1683,31 +1683,18 @@ void tst_qquicktextedit::cursorVisible()
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 5);
 
-    QEXPECT_FAIL("", "Most likely a side-effect of QTBUG-21489", Abort);
-    view.setWindowState(Qt::WindowNoState);
+    QQuickView alternateView;
+    alternateView.show();
+    alternateView.requestActivateWindow();
+    QTest::qWaitForWindowShown(&alternateView);
+
     QCOMPARE(edit.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
 
     view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
-
-    // on mac, setActiveWindow(0) on mac does not deactivate the current application
-    // (you have to switch to a different app or hide the current app to trigger this)
-#if !defined(Q_WS_MAC)
-    // on mac, setActiveWindow(0) on mac does not deactivate the current application
-    // (you have to switch to a different app or hide the current app to trigger this)
-//    QApplication::setActiveWindow(0);
-//    QTRY_COMPARE(QApplication::focusWindow(), static_cast<QWidget *>(0));
-//    QCOMPARE(edit.isCursorVisible(), false);
-//    QCOMPARE(spy.count(), 8);
-
-//    view.requestActivateWindow();
-//    QTest::qWaitForWindowShown(&view);
-//    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
-//    QCOMPARE(edit.isCursorVisible(), true);
-//    QCOMPARE(spy.count(), 9);
-#endif
 }
 
 void tst_qquicktextedit::delegateLoading_data()
