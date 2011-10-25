@@ -44,7 +44,6 @@
 
 #include <private/qdeclarativeglobal_p.h>
 
-#include "qmlinspectorconstants.h"
 #include "abstractviewinspector.h"
 
 #include <QtCore/QScopedPointer>

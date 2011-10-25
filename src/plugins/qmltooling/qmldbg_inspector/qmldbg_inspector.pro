@@ -8,6 +8,8 @@ load(qt_plugin)
 DESTDIR  = $$QT.declarative.plugins/qmltooling
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, declarative)"
 
+INCLUDEPATH *= $$PWD
+
 SOURCES += \
     abstractviewinspector.cpp \
     qdeclarativeinspectorplugin.cpp \
