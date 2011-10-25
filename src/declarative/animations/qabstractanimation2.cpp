@@ -534,6 +534,8 @@ void QAbstractAnimation2::setState(QAbstractAnimation2::State newState)
         QUnifiedTimer2::registerAnimation(this, isTopLevel);
     }
 
+    if (newState == Running && oldState == Stopped && !m_group)
+        topLevelAnimationLoopChanged();
     updateState(newState, oldState);
     if (newState != m_state) //this is to be safe if updateState changes the state
         return;
@@ -709,6 +711,9 @@ void QAbstractAnimation2::setCurrentTime(int msecs)
                 --m_currentLoop;
         }
     }
+
+    if (m_currentLoop != oldLoop && !m_group)   //### verify Running as well?
+        topLevelAnimationLoopChanged();
 
     updateCurrentTime(m_currentTime);
 

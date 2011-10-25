@@ -1790,16 +1790,12 @@ void QDeclarativeBulkValueAnimator::updateCurrentTime(int currentTime)
         animValue->setValue(progress);
 }
 
-void QDeclarativeBulkValueAnimator::updateState(State newState, State oldState)
+void QDeclarativeBulkValueAnimator::topLevelAnimationLoopChanged()
 {
-    QAbstractAnimation2::updateState(newState, oldState);
-    if (newState == Running) {
-        //check for new from every loop
-        if (fromSourced)
-            *fromSourced = false;
-    }
+    //check for new from every top-level loop (when the top level animation is started and all subsequent loops)
+    if (fromSourced)
+        *fromSourced = false;
 }
-
 
 /*!
     \qmlclass PropertyAnimation QDeclarativePropertyAnimation

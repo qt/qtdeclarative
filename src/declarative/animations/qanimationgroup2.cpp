@@ -69,6 +69,11 @@ QAnimationGroup2::~QAnimationGroup2()
     m_animations.clear();   //### can remove if setGroup handles this
 }
 
+void QAnimationGroup2::topLevelAnimationLoopChanged()
+{
+    for (int i = 0; i < m_animations.size(); ++i)
+        m_animations.at(i)->topLevelAnimationLoopChanged();
+}
 
 QAbstractAnimation2Pointer QAnimationGroup2::animationAt(int index) const
 {

@@ -72,6 +72,9 @@ public:
     void insertAnimation(int index, QAbstractAnimation2Pointer animation);
     virtual void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
 
+protected:
+    void topLevelAnimationLoopChanged();
+
 private:
     //can likely be removed after refactor
     virtual void animationInsertedAt(int) { }

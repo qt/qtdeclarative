@@ -137,6 +137,7 @@ protected:
     virtual void updateCurrentTime(int) {}
     virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     virtual void updateDirection(QAbstractAnimation2::Direction direction);
+    virtual void topLevelAnimationLoopChanged() {}
 
     void setState(QAbstractAnimation2::State state);
 
@@ -167,6 +168,7 @@ protected:
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_directionChangedSlots;
 
     friend class QUnifiedTimer2;
+    friend class QAnimationGroup2;
 };
 
 typedef QDeclarativeRefPointer<QAbstractAnimation2> QAbstractAnimation2Pointer;

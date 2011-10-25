@@ -144,7 +144,7 @@ public:
 
 protected:
     void updateCurrentTime(int currentTime);
-    void updateState(State newState, State oldState);
+    void topLevelAnimationLoopChanged();
 
 private:
     QDeclarativeBulkValueUpdater *animValue;
