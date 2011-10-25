@@ -1637,7 +1637,7 @@ QAbstractAnimation2Pointer QDeclarativeSequentialAnimation::transition(QDeclarat
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         anim = d->animations.at(ii)->transition(actions, modified, direction);
-        inc == -1 ? ag->insertAnimation(ii, anim) : ag->addAnimation(anim);
+        inc == -1 ? ag->insertAnimation(0, anim) : ag->addAnimation(anim);
     }
 
     return ag;
