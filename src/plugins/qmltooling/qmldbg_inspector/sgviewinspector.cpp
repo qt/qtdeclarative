@@ -45,10 +45,10 @@
 #include "sghighlight.h"
 #include "sgselectiontool.h"
 
-#include <QtDeclarative/private/qsgitem_p.h>
+#include <QtDeclarative/private/qquickitem_p.h>
 
-#include <QtDeclarative/QSGView>
-#include <QtDeclarative/QSGItem>
+#include <QtDeclarative/QQuickView>
+#include <QtDeclarative/QQuickItem>
 
 #include <cfloat>
 
@@ -57,20 +57,20 @@ namespace QmlJSDebugger {
 /*
  * Collects all the items at the given position, from top to bottom.
  */
-static void collectItemsAt(QSGItem *item, const QPointF &pos, QSGItem *overlay,
-                           QList<QSGItem *> &resultList)
+static void collectItemsAt(QQuickItem *item, const QPointF &pos, QQuickItem *overlay,
+                           QList<QQuickItem *> &resultList)
 {
     if (item == overlay)
         return;
 
-    if (item->flags() & QSGItem::ItemClipsChildrenToShape) {
+    if (item->flags() & QQuickItem::ItemClipsChildrenToShape) {
         if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
             return;
     }
 
-    QList<QSGItem *> children = QSGItemPrivate::get(item)->paintOrderChildItems();
+    QList<QQuickItem *> children = QQuickItemPrivate::get(item)->paintOrderChildItems();
     for (int i = children.count() - 1; i >= 0; --i) {
-        QSGItem *child = children.at(i);
+        QQuickItem *child = children.at(i);
         collectItemsAt(child, item->mapToItem(child, pos), overlay, resultList);
     }
 
@@ -84,7 +84,7 @@ static void collectItemsAt(QSGItem *item, const QPointF &pos, QSGItem *overlay,
  * Returns the first visible item at the given position, or 0 when no such
  * child exists.
  */
-static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
+static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos, QQuickItem *overlay)
 {
     if (item == overlay)
         return 0;
@@ -92,19 +92,19 @@ static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
     if (!item->isVisible() || item->opacity() == 0.0)
         return 0;
 
-    if (item->flags() & QSGItem::ItemClipsChildrenToShape) {
+    if (item->flags() & QQuickItem::ItemClipsChildrenToShape) {
         if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
             return 0;
     }
 
-    QList<QSGItem *> children = QSGItemPrivate::get(item)->paintOrderChildItems();
+    QList<QQuickItem *> children = QQuickItemPrivate::get(item)->paintOrderChildItems();
     for (int i = children.count() - 1; i >= 0; --i) {
-        QSGItem *child = children.at(i);
-        if (QSGItem *betterCandidate = itemAt(child, item->mapToItem(child, pos), overlay))
+        QQuickItem *child = children.at(i);
+        if (QQuickItem *betterCandidate = itemAt(child, item->mapToItem(child, pos), overlay))
             return betterCandidate;
     }
 
-    if (!(item->flags() & QSGItem::ItemHasContents))
+    if (!(item->flags() & QQuickItem::ItemHasContents))
         return 0;
 
     if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
@@ -114,21 +114,17 @@ static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
 }
 
 
-SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
+SGViewInspector::SGViewInspector(QQuickView *view, QObject *parent) :
     AbstractViewInspector(parent),
     m_view(view),
-    m_overlay(new QSGItem),
+    m_overlay(new QQuickItem),
     m_selectionTool(new SGSelectionTool(this)),
     m_designMode(true)
 {
     // Try to make sure the overlay is always on top
     m_overlay->setZ(FLT_MAX);
 
-    // TODO
-    // Make sure mouse hover events are received
-//    m_view->setMouseTracking(true);
-
-    if (QSGItem *root = view->rootItem())
+    if (QQuickItem *root = view->rootItem())
         m_overlay->setParentItem(root);
 
     view->installEventFilter(this);
@@ -137,9 +133,9 @@ SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
 
 void SGViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
 {
-    QList<QSGItem*> items;
+    QList<QQuickItem*> items;
     foreach (QObject *obj, objects)
-        if (QSGItem *item = qobject_cast<QSGItem*>(obj))
+        if (QQuickItem *item = qobject_cast<QQuickItem*>(obj))
             items << item;
 
     syncSelectedItems(items);
@@ -157,8 +153,8 @@ void SGViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
         return;
 
     object->setParent(newParent);
-    QSGItem *newParentItem = qobject_cast<QSGItem*>(newParent);
-    QSGItem *item = qobject_cast<QSGItem*>(object);
+    QQuickItem *newParentItem = qobject_cast<QQuickItem*>(newParent);
+    QQuickItem *item = qobject_cast<QQuickItem*>(object);
     if (newParentItem && item)
         item->setParentItem(newParentItem);
 }
@@ -204,7 +200,9 @@ void SGViewInspector::setWindowFlags(Qt::WindowFlags flags)
 {
     QWindow *w = getMasterWindow(m_view);
     w->setWindowFlags(flags);
-    w->show();
+    // make flags are applied
+    w->setVisible(false);
+    w->setVisible(true);
 }
 
 QDeclarativeEngine *SGViewInspector::declarativeEngine() const
@@ -212,48 +210,48 @@ QDeclarativeEngine *SGViewInspector::declarativeEngine() const
     return m_view->engine();
 }
 
-QSGItem *SGViewInspector::topVisibleItemAt(const QPointF &pos) const
+QQuickItem *SGViewInspector::topVisibleItemAt(const QPointF &pos) const
 {
-    QSGItem *root = m_view->rootItem();
+    QQuickItem *root = m_view->rootItem();
     return itemAt(root, root->mapFromScene(pos), m_overlay);
 }
 
-QList<QSGItem *> SGViewInspector::itemsAt(const QPointF &pos) const
+QList<QQuickItem *> SGViewInspector::itemsAt(const QPointF &pos) const
 {
-    QSGItem *root = m_view->rootItem();
-    QList<QSGItem *> resultList;
+    QQuickItem *root = m_view->rootItem();
+    QList<QQuickItem *> resultList;
     collectItemsAt(root, root->mapFromScene(pos), m_overlay, resultList);
     return resultList;
 }
 
-QList<QSGItem*> SGViewInspector::selectedItems() const
+QList<QQuickItem*> SGViewInspector::selectedItems() const
 {
-    QList<QSGItem *> selection;
-    foreach (const QWeakPointer<QSGItem> &selectedItem, m_selectedItems) {
+    QList<QQuickItem *> selection;
+    foreach (const QWeakPointer<QQuickItem> &selectedItem, m_selectedItems) {
         if (selectedItem)
             selection << selectedItem.data();
     }
     return selection;
 }
 
-void SGViewInspector::setSelectedItems(const QList<QSGItem *> &items)
+void SGViewInspector::setSelectedItems(const QList<QQuickItem *> &items)
 {
     if (!syncSelectedItems(items))
         return;
 
     QList<QObject*> objectList;
-    foreach (QSGItem *item, items)
+    foreach (QQuickItem *item, items)
         objectList << item;
 
     sendCurrentObjects(objectList);
 }
 
-bool SGViewInspector::syncSelectedItems(const QList<QSGItem *> &items)
+bool SGViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
 {
     bool selectionChanged = false;
 
     // Disconnect and remove items that are no longer selected
-    foreach (const QWeakPointer<QSGItem> &item, m_selectedItems) {
+    foreach (const QWeakPointer<QQuickItem> &item, m_selectedItems) {
         if (!item) // Don't see how this can happen due to handling of destroyed()
             continue;
         if (items.contains(item.data()))
@@ -266,7 +264,7 @@ bool SGViewInspector::syncSelectedItems(const QList<QSGItem *> &items)
     }
 
     // Connect and add newly selected items
-    foreach (QSGItem *item, items) {
+    foreach (QQuickItem *item, items) {
         if (m_selectedItems.contains(item))
             continue;
 
@@ -281,7 +279,7 @@ bool SGViewInspector::syncSelectedItems(const QList<QSGItem *> &items)
 
 void SGViewInspector::removeFromSelectedItems(QObject *object)
 {
-    if (QSGItem *item = qobject_cast<QSGItem*>(object)) {
+    if (QQuickItem *item = qobject_cast<QQuickItem*>(object)) {
         if (m_selectedItems.removeOne(item))
             delete m_highlightItems.take(item);
     }
@@ -298,7 +296,7 @@ bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)
 bool SGViewInspector::mouseMoveEvent(QMouseEvent *event)
 {
     // TODO
-//    if (QSGItem *item = topVisibleItemAt(event->pos()))
+//    if (QQuickItem *item = topVisibleItemAt(event->pos()))
 //        m_view->setToolTip(titleForItem(item));
 //    else
 //        m_view->setToolTip(QString());
@@ -306,15 +304,15 @@ bool SGViewInspector::mouseMoveEvent(QMouseEvent *event)
     return AbstractViewInspector::mouseMoveEvent(event);
 }
 
-QString SGViewInspector::titleForItem(QSGItem *item) const
+QString SGViewInspector::titleForItem(QQuickItem *item) const
 {
     QString className = QLatin1String(item->metaObject()->className());
     QString objectStringId = idStringForObject(item);
 
     className.remove(QRegExp(QLatin1String("_QMLTYPE_\\d+")));
     className.remove(QRegExp(QLatin1String("_QML_\\d+")));
-    if (className.startsWith(QLatin1String("QSG")))
-        className = className.mid(3);
+    if (className.startsWith(QLatin1String("QQuick")))
+        className = className.mid(6);
 
     QString constructedName;
 

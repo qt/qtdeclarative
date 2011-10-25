@@ -43,25 +43,25 @@
 #define SGHIGHLIGHT_H
 
 #include <QtCore/QWeakPointer>
-#include <QtDeclarative/QSGPaintedItem>
+#include <QtDeclarative/QQuickPaintedItem>
 
 namespace QmlJSDebugger {
 
-class SGHighlight : public QSGPaintedItem
+class SGHighlight : public QQuickPaintedItem
 {
     Q_OBJECT
 
 public:
-    SGHighlight(QSGItem *parent) : QSGPaintedItem(parent) {}
-    SGHighlight(QSGItem *item, QSGItem *parent);
+    SGHighlight(QQuickItem *parent) : QQuickPaintedItem(parent) {}
+    SGHighlight(QQuickItem *item, QQuickItem *parent);
 
-    void setItem(QSGItem *item);
+    void setItem(QQuickItem *item);
 
 private slots:
     void adjust();
 
 private:
-    QWeakPointer<QSGItem> m_item;
+    QWeakPointer<QQuickItem> m_item;
 };
 
 /**
@@ -70,7 +70,7 @@ private:
 class SGSelectionHighlight : public SGHighlight
 {
 public:
-    SGSelectionHighlight(QSGItem *item, QSGItem *parent)
+    SGSelectionHighlight(QQuickItem *item, QQuickItem *parent)
         : SGHighlight(item, parent)
     {}
 
@@ -83,7 +83,7 @@ public:
 class SGHoverHighlight : public SGHighlight
 {
 public:
-    SGHoverHighlight(QSGItem *parent)
+    SGHoverHighlight(QQuickItem *parent)
         : SGHighlight(parent)
     {
         setZ(1); // hover highlight on top of selection highlight

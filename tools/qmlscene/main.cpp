@@ -58,8 +58,8 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 
 // ### This should be private API
-#include <qsgitem.h>
-#include <qsgview.h>
+#include <qquickitem.h>
+#include <qquickview.h>
 
 #define QT_NO_SCENEGRAPHITEM
 
@@ -143,12 +143,12 @@ void RenderStatistics::printTotalStats()
 }
 #endif
 
-class MyQSGView : public QSGView
+class MyQQuickView : public QQuickView
 {
 public:
-    MyQSGView() : QSGView()
+    MyQQuickView() : QQuickView()
     {
-        setResizeMode(QSGView::SizeRootObjectToView);
+        setResizeMode(QQuickView::SizeRootObjectToView);
     }
 };
 
@@ -491,7 +491,7 @@ int main(int argc, char ** argv)
 #endif
         if (options.versionDetection)
             checkAndAdaptVersion(options.file);
-        QSGView *qxView = new MyQSGView();
+        QQuickView *qxView = new MyQQuickView();
         qxView->setVSyncAnimations(options.vsync);
         engine = qxView->engine();
         for (int i = 0; i < imports.size(); ++i)

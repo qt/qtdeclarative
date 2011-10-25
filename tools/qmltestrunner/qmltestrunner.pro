@@ -1,5 +1,6 @@
 TEMPLATE = app
 TARGET = qmltestrunner
+DESTDIR= $$QT.declarative.bins
 CONFIG += warn_on
 SOURCES += main.cpp
 

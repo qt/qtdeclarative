@@ -49,7 +49,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
-#include <QtDeclarative/qsgview.h>
+#include <QtDeclarative/qquickview.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
 #include <QtDeclarative/qjsvalue.h>
@@ -72,23 +72,28 @@ class QTestRootObject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool windowShown READ windowShown NOTIFY windowShownChanged)
+    Q_PROPERTY(bool hasTestCase READ hasTestCase WRITE setHasTestCase NOTIFY hasTestCaseChanged)
 public:
     QTestRootObject(QObject *parent = 0)
-        : QObject(parent), hasQuit(false), m_windowShown(false) {}
+        : QObject(parent), hasQuit(false), m_hasTestCase(false), m_windowShown(false) {}
 
-    bool hasQuit;
+    bool hasQuit:1;
+    bool hasTestCase() const { return m_hasTestCase; }
+    void setHasTestCase(bool value) { m_hasTestCase = value; emit hasTestCaseChanged(); }
 
     bool windowShown() const { return m_windowShown; }
     void setWindowShown(bool value) { m_windowShown = value; emit windowShownChanged(); }
 
 Q_SIGNALS:
     void windowShownChanged();
+    void hasTestCaseChanged();
 
 private Q_SLOTS:
     void quit() { hasQuit = true; }
 
 private:
-    bool m_windowShown;
+    bool m_windowShown : 1;
+    bool m_hasTestCase :1;
 };
 
 static inline QString stripQuotes(const QString &s)
@@ -175,7 +180,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // in turn with a QDeclarativeView.
 #ifdef QUICK_TEST_SCENEGRAPH
     if (qtQuick2) {
-        QSGView view;
+        QQuickView view;
         QTestRootObject rootobj;
         QEventLoop eventLoop;
         QObject::connect(view.engine(), SIGNAL(quit()),
@@ -192,14 +197,17 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
             if (!fi.exists())
                 continue;
 
+            rootobj.setHasTestCase(false);
+
             QString path = fi.absoluteFilePath();
             if (path.startsWith(QLatin1String(":/")))
                 view.setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
             else
                 view.setSource(QUrl::fromLocalFile(path));
+
             if (QTest::printAvailableFunctions)
                 continue;
-            if (view.status() == QSGView::Error) {
+            if (view.status() == QQuickView::Error) {
                 // Error compiling the test - flag failure in the log and continue.
                 QList<QDeclarativeError> errors = view.errors();
                 QuickTestResult results;
@@ -224,7 +232,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                 view.show();
                 QTest::qWaitForWindowShown(&view);
                 rootobj.setWindowShown(true);
-                if (!rootobj.hasQuit)
+                if (!rootobj.hasQuit && rootobj.hasTestCase())
                     eventLoop.exec();
             }
         }

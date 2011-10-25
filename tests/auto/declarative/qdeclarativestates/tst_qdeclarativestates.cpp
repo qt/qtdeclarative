@@ -41,14 +41,14 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qsgview.h>
-#include <private/qsgstateoperations_p.h>
-#include <private/qsganchors_p_p.h>
-#include <private/qsgrectangle_p.h>
-#include <private/qsgimage_p.h>
+#include <QtDeclarative/qquickview.h>
+#include <private/qquickstateoperations_p.h>
+#include <private/qquickanchors_p_p.h>
+#include <private/qquickrectangle_p.h>
+#include <private/qquickimage_p.h>
 #include <private/qdeclarativepropertychanges_p.h>
 #include <private/qdeclarativestategroup_p.h>
-#include <private/qsgitem_p.h>
+#include <private/qquickitem_p.h>
 #include <private/qdeclarativeproperty_p.h>
 #include "../shared/util.h"
 
@@ -66,7 +66,7 @@ private:
     int m_foo;
 };
 
-class MyRect : public QSGRectangle
+class MyRect : public QQuickRectangle
 {
    Q_OBJECT
    Q_PROPERTY(int propertyWithNotify READ propertyWithNotify WRITE setPropertyWithNotify NOTIFY oddlyNamedNotifySignal)
@@ -163,8 +163,8 @@ void tst_qdeclarativestates::basicChanges()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -178,8 +178,8 @@ void tst_qdeclarativestates::basicChanges()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges2.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -199,8 +199,8 @@ void tst_qdeclarativestates::basicChanges()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges3.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -259,7 +259,7 @@ void tst_qdeclarativestates::attachedPropertyChanges()
     QDeclarativeComponent component(&engine, TESTDATA("attachedPropertyChanges.qml"));
     QVERIFY(component.isReady());
 
-    QSGItem *item = qobject_cast<QSGItem*>(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
     QCOMPARE(item->width(), 50.0);
 
@@ -279,8 +279,8 @@ void tst_qdeclarativestates::basicExtension()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicExtension.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -313,8 +313,8 @@ void tst_qdeclarativestates::basicExtension()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("fakeExtension.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -345,8 +345,8 @@ void tst_qdeclarativestates::basicBinding()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -373,8 +373,8 @@ void tst_qdeclarativestates::basicBinding()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding2.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -404,8 +404,8 @@ void tst_qdeclarativestates::basicBinding()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding3.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -429,8 +429,8 @@ void tst_qdeclarativestates::basicBinding()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding4.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
 
         QCOMPARE(rect->color(),QColor("red"));
@@ -469,7 +469,7 @@ void tst_qdeclarativestates::signalOverride()
         rect->doSomething();
         QCOMPARE(rect->color(),QColor("blue"));
 
-        QSGItemPrivate::get(rect)->setState("green");
+        QQuickItemPrivate::get(rect)->setState("green");
         rect->doSomething();
         QCOMPARE(rect->color(),QColor("green"));
     }
@@ -483,8 +483,8 @@ void tst_qdeclarativestates::signalOverride()
         rect->doSomething();
         QCOMPARE(rect->color(),QColor("blue"));
 
-        QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("extendedRect"));
-        QSGItemPrivate::get(innerRect)->setState("green");
+        QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("extendedRect"));
+        QQuickItemPrivate::get(innerRect)->setState("green");
         rect->doSomething();
         QCOMPARE(rect->color(),QColor("blue"));
         QCOMPARE(innerRect->color(),QColor("green"));
@@ -500,7 +500,7 @@ void tst_qdeclarativestates::signalOverrideCrash()
     MyRect *rect = qobject_cast<MyRect*>(rectComponent.create());
     QVERIFY(rect != 0);
 
-    QSGItemPrivate::get(rect)->setState("overridden");
+    QQuickItemPrivate::get(rect)->setState("overridden");
     rect->doSomething();
 }
 
@@ -509,12 +509,12 @@ void tst_qdeclarativestates::signalOverrideCrash2()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("signalOverrideCrash2.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
-    QSGItemPrivate::get(rect)->setState("state1");
-    QSGItemPrivate::get(rect)->setState("state2");
-    QSGItemPrivate::get(rect)->setState("state1");
+    QQuickItemPrivate::get(rect)->setState("state1");
+    QQuickItemPrivate::get(rect)->setState("state2");
+    QQuickItemPrivate::get(rect)->setState("state1");
 
     delete rect;
 }
@@ -525,10 +525,10 @@ void tst_qdeclarativestates::parentChange()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange1.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
-        QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+        QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
         QVERIFY(innerRect != 0);
 
         QDeclarativeListReference list(rect, "states");
@@ -536,14 +536,14 @@ void tst_qdeclarativestates::parentChange()
         QVERIFY(state != 0);
 
         qmlExecuteDeferred(state);
-        QSGParentChange *pChange = qobject_cast<QSGParentChange*>(state->operationAt(0));
+        QQuickParentChange *pChange = qobject_cast<QQuickParentChange*>(state->operationAt(0));
         QVERIFY(pChange != 0);
-        QSGItem *nParent = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("NewParent"));
+        QQuickItem *nParent = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("NewParent"));
         QVERIFY(nParent != 0);
 
         QCOMPARE(pChange->parent(), nParent);
 
-        QSGItemPrivate::get(rect)->setState("reparented");
+        QQuickItemPrivate::get(rect)->setState("reparented");
         QCOMPARE(innerRect->rotation(), qreal(0));
         QCOMPARE(innerRect->scale(), qreal(1));
         QCOMPARE(innerRect->x(), qreal(-133));
@@ -552,10 +552,10 @@ void tst_qdeclarativestates::parentChange()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange2.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
-        QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+        QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
         QVERIFY(innerRect != 0);
 
         rectPrivate->setState("reparented");
@@ -567,10 +567,10 @@ void tst_qdeclarativestates::parentChange()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange3.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
-        QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+        QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
         QVERIFY(innerRect != 0);
 
         rectPrivate->setState("reparented");
@@ -589,13 +589,13 @@ void tst_qdeclarativestates::parentChange()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange6.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
-        QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+        QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
         QVERIFY(innerRect != 0);
 
-        QSGItemPrivate::get(rect)->setState("reparented");
+        QQuickItemPrivate::get(rect)->setState("reparented");
         QCOMPARE(innerRect->rotation(), qreal(180));
         QCOMPARE(innerRect->scale(), qreal(1));
         QCOMPARE(innerRect->x(), qreal(-105));
@@ -609,14 +609,14 @@ void tst_qdeclarativestates::parentChangeErrors()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange4.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
-        QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+        QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
         QVERIFY(innerRect != 0);
 
         QTest::ignoreMessage(QtWarningMsg, fullDataPath("parentChange4.qml") + ":25:9: QML ParentChange: Unable to preserve appearance under non-uniform scale");
-        QSGItemPrivate::get(rect)->setState("reparented");
+        QQuickItemPrivate::get(rect)->setState("reparented");
         QCOMPARE(innerRect->rotation(), qreal(0));
         QCOMPARE(innerRect->scale(), qreal(1));
         QCOMPARE(innerRect->x(), qreal(5));
@@ -625,14 +625,14 @@ void tst_qdeclarativestates::parentChangeErrors()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange5.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
-        QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+        QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
         QVERIFY(innerRect != 0);
 
         QTest::ignoreMessage(QtWarningMsg, fullDataPath("parentChange5.qml") + ":25:9: QML ParentChange: Unable to preserve appearance under complex transform");
-        QSGItemPrivate::get(rect)->setState("reparented");
+        QQuickItemPrivate::get(rect)->setState("reparented");
         QCOMPARE(innerRect->rotation(), qreal(0));
         QCOMPARE(innerRect->scale(), qreal(1));
         QCOMPARE(innerRect->x(), qreal(5));
@@ -645,11 +645,11 @@ void tst_qdeclarativestates::anchorChanges()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges1.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
 
     QDeclarativeListReference list(rect, "states");
@@ -657,15 +657,15 @@ void tst_qdeclarativestates::anchorChanges()
     QVERIFY(state != 0);
 
     qmlExecuteDeferred(state);
-    QSGAnchorChanges *aChanges = qobject_cast<QSGAnchorChanges*>(state->operationAt(0));
+    QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), qreal(150));
-    QCOMPARE(aChanges->object(), qobject_cast<QSGItem*>(innerRect));
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QSGAnchorLine::Invalid);  //### was reset (how do we distinguish from not set at all)
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
+    QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickAnchorLine::Invalid);  //### was reset (how do we distinguish from not set at all)
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
 
     rectPrivate->setState("");
     QCOMPARE(innerRect->x(), qreal(5));
@@ -678,11 +678,11 @@ void tst_qdeclarativestates::anchorChanges2()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges2.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
 
     rectPrivate->setState("right");
@@ -699,17 +699,17 @@ void tst_qdeclarativestates::anchorChanges3()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges3.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
 
-    QSGItem *leftGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("LeftGuideline"));
+    QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
     QVERIFY(leftGuideline != 0);
 
-    QSGItem *bottomGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("BottomGuideline"));
+    QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
     QVERIFY(bottomGuideline != 0);
 
     QDeclarativeListReference list(rect, "states");
@@ -717,19 +717,19 @@ void tst_qdeclarativestates::anchorChanges3()
     QVERIFY(state != 0);
 
     qmlExecuteDeferred(state);
-    QSGAnchorChanges *aChanges = qobject_cast<QSGAnchorChanges*>(state->operationAt(0));
+    QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
     rectPrivate->setState("reanchored");
-    QCOMPARE(aChanges->object(), qobject_cast<QSGItem*>(innerRect));
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->left().item, QSGItemPrivate::get(leftGuideline)->left().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QSGItemPrivate::get(leftGuideline)->left().anchorLine);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->top().item, rectPrivate->top().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->top().anchorLine, rectPrivate->top().anchorLine);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->bottom().item, QSGItemPrivate::get(bottomGuideline)->bottom().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->bottom().anchorLine, QSGItemPrivate::get(bottomGuideline)->bottom().anchorLine);
+    QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().item, QQuickItemPrivate::get(leftGuideline)->left().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickItemPrivate::get(leftGuideline)->left().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->top().item, rectPrivate->top().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->top().anchorLine, rectPrivate->top().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->bottom().item, QQuickItemPrivate::get(bottomGuideline)->bottom().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->bottom().anchorLine, QQuickItemPrivate::get(bottomGuideline)->bottom().anchorLine);
 
     QCOMPARE(innerRect->x(), qreal(10));
     QCOMPARE(innerRect->y(), qreal(0));
@@ -750,16 +750,16 @@ void tst_qdeclarativestates::anchorChanges4()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges4.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
 
-    QSGItem *leftGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("LeftGuideline"));
+    QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
     QVERIFY(leftGuideline != 0);
 
-    QSGItem *bottomGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("BottomGuideline"));
+    QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
     QVERIFY(bottomGuideline != 0);
 
     QDeclarativeListReference list(rect, "states");
@@ -767,15 +767,15 @@ void tst_qdeclarativestates::anchorChanges4()
     QVERIFY(state != 0);
 
     qmlExecuteDeferred(state);
-    QSGAnchorChanges *aChanges = qobject_cast<QSGAnchorChanges*>(state->operationAt(0));
+    QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
-    QSGItemPrivate::get(rect)->setState("reanchored");
-    QCOMPARE(aChanges->object(), qobject_cast<QSGItem*>(innerRect));
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->horizontalCenter().item, QSGItemPrivate::get(bottomGuideline)->horizontalCenter().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->horizontalCenter().anchorLine, QSGItemPrivate::get(bottomGuideline)->horizontalCenter().anchorLine);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->verticalCenter().item, QSGItemPrivate::get(leftGuideline)->verticalCenter().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->verticalCenter().anchorLine, QSGItemPrivate::get(leftGuideline)->verticalCenter().anchorLine);
+    QQuickItemPrivate::get(rect)->setState("reanchored");
+    QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->horizontalCenter().item, QQuickItemPrivate::get(bottomGuideline)->horizontalCenter().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->horizontalCenter().anchorLine, QQuickItemPrivate::get(bottomGuideline)->horizontalCenter().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->verticalCenter().item, QQuickItemPrivate::get(leftGuideline)->verticalCenter().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->verticalCenter().anchorLine, QQuickItemPrivate::get(leftGuideline)->verticalCenter().anchorLine);
 
     delete rect;
 }
@@ -785,16 +785,16 @@ void tst_qdeclarativestates::anchorChanges5()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges5.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
 
-    QSGItem *leftGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("LeftGuideline"));
+    QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
     QVERIFY(leftGuideline != 0);
 
-    QSGItem *bottomGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("BottomGuideline"));
+    QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
     QVERIFY(bottomGuideline != 0);
 
     QDeclarativeListReference list(rect, "states");
@@ -802,11 +802,11 @@ void tst_qdeclarativestates::anchorChanges5()
     QVERIFY(state != 0);
 
     qmlExecuteDeferred(state);
-    QSGAnchorChanges *aChanges = qobject_cast<QSGAnchorChanges*>(state->operationAt(0));
+    QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
-    QSGItemPrivate::get(rect)->setState("reanchored");
-    QCOMPARE(aChanges->object(), qobject_cast<QSGItem*>(innerRect));
+    QQuickItemPrivate::get(rect)->setState("reanchored");
+    QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
     //QCOMPARE(aChanges->anchors()->horizontalCenter().item, bottomGuideline->horizontalCenter().item);
     //QCOMPARE(aChanges->anchors()->horizontalCenter().anchorLine, bottomGuideline->horizontalCenter().anchorLine);
     //QCOMPARE(aChanges->anchors()->baseline().item, leftGuideline->baseline().item);
@@ -815,12 +815,12 @@ void tst_qdeclarativestates::anchorChanges5()
     delete rect;
 }
 
-void mirrorAnchors(QSGItem *item) {
-    QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
+void mirrorAnchors(QQuickItem *item) {
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     itemPrivate->setLayoutMirror(true);
 }
 
-qreal offsetRTL(QSGItem *anchorItem, QSGItem *item) {
+qreal offsetRTL(QQuickItem *anchorItem, QQuickItem *item) {
     return anchorItem->width()+2*anchorItem->x()-item->width();
 }
 
@@ -829,11 +829,11 @@ void tst_qdeclarativestates::anchorChangesRTL()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges1.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
     mirrorAnchors(innerRect);
 
@@ -842,15 +842,15 @@ void tst_qdeclarativestates::anchorChangesRTL()
     QVERIFY(state != 0);
 
     qmlExecuteDeferred(state);
-    QSGAnchorChanges *aChanges = qobject_cast<QSGAnchorChanges*>(state->operationAt(0));
+    QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), offsetRTL(rect, innerRect) - qreal(150));
-    QCOMPARE(aChanges->object(), qobject_cast<QSGItem*>(innerRect));
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QSGAnchorLine::Invalid);  //### was reset (how do we distinguish from not set at all)
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
+    QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickAnchorLine::Invalid);  //### was reset (how do we distinguish from not set at all)
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
 
     rectPrivate->setState("");
     QCOMPARE(innerRect->x(), offsetRTL(rect, innerRect) -qreal(5));
@@ -863,11 +863,11 @@ void tst_qdeclarativestates::anchorChangesRTL2()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges2.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
     mirrorAnchors(innerRect);
 
@@ -885,18 +885,18 @@ void tst_qdeclarativestates::anchorChangesRTL3()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges3.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
-    QSGRectangle *innerRect = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("MyRect"));
+    QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QVERIFY(innerRect != 0);
     mirrorAnchors(innerRect);
 
-    QSGItem *leftGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("LeftGuideline"));
+    QQuickItem *leftGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("LeftGuideline"));
     QVERIFY(leftGuideline != 0);
 
-    QSGItem *bottomGuideline = qobject_cast<QSGItem*>(rect->findChild<QSGItem*>("BottomGuideline"));
+    QQuickItem *bottomGuideline = qobject_cast<QQuickItem*>(rect->findChild<QQuickItem*>("BottomGuideline"));
     QVERIFY(bottomGuideline != 0);
 
     QDeclarativeListReference list(rect, "states");
@@ -904,19 +904,19 @@ void tst_qdeclarativestates::anchorChangesRTL3()
     QVERIFY(state != 0);
 
     qmlExecuteDeferred(state);
-    QSGAnchorChanges *aChanges = qobject_cast<QSGAnchorChanges*>(state->operationAt(0));
+    QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
     rectPrivate->setState("reanchored");
-    QCOMPARE(aChanges->object(), qobject_cast<QSGItem*>(innerRect));
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->left().item, QSGItemPrivate::get(leftGuideline)->left().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QSGItemPrivate::get(leftGuideline)->left().anchorLine);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->top().item, rectPrivate->top().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->top().anchorLine, rectPrivate->top().anchorLine);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->bottom().item, QSGItemPrivate::get(bottomGuideline)->bottom().item);
-    QCOMPARE(QSGItemPrivate::get(aChanges->object())->anchors()->bottom().anchorLine, QSGItemPrivate::get(bottomGuideline)->bottom().anchorLine);
+    QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().item, QQuickItemPrivate::get(leftGuideline)->left().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().anchorLine, QQuickItemPrivate::get(leftGuideline)->left().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().item, rectPrivate->right().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->right().anchorLine, rectPrivate->right().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->top().item, rectPrivate->top().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->top().anchorLine, rectPrivate->top().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->bottom().item, QQuickItemPrivate::get(bottomGuideline)->bottom().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->bottom().anchorLine, QQuickItemPrivate::get(bottomGuideline)->bottom().anchorLine);
 
     QCOMPARE(innerRect->x(), offsetRTL(leftGuideline, innerRect) - qreal(10));
     QCOMPARE(innerRect->y(), qreal(0));
@@ -940,10 +940,10 @@ void tst_qdeclarativestates::anchorChangesCrash()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChangesCrash.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
-    QSGItemPrivate::get(rect)->setState("reanchored");
+    QQuickItemPrivate::get(rect)->setState("reanchored");
 
     delete rect;
 }
@@ -951,7 +951,7 @@ void tst_qdeclarativestates::anchorChangesCrash()
 // QTBUG-12273
 void tst_qdeclarativestates::anchorRewindBug()
 {
-    QSGView *view = new QSGView;
+    QQuickView *view = new QQuickView;
     view->setSource(QUrl::fromLocalFile(TESTDATA("anchorRewindBug.qml")));
 
     view->show();
@@ -959,29 +959,29 @@ void tst_qdeclarativestates::anchorRewindBug()
 
     QTest::qWaitForWindowShown(view);
 
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(view->rootObject());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(view->rootObject());
     QVERIFY(rect != 0);
 
-    QSGItem * column = rect->findChild<QSGItem*>("column");
+    QQuickItem * column = rect->findChild<QQuickItem*>("column");
 
     QVERIFY(column != 0);
-    QVERIFY(!QSGItemPrivate::get(column)->heightValid);
-    QVERIFY(!QSGItemPrivate::get(column)->widthValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
     QCOMPARE(column->height(), 200.0);
-    QSGItemPrivate::get(rect)->setState("reanchored");
+    QQuickItemPrivate::get(rect)->setState("reanchored");
 
     // column height and width should stay implicit
     // and column's implicit resizing should still work
-    QVERIFY(!QSGItemPrivate::get(column)->heightValid);
-    QVERIFY(!QSGItemPrivate::get(column)->widthValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
     QTRY_COMPARE(column->height(), 100.0);
 
-    QSGItemPrivate::get(rect)->setState("");
+    QQuickItemPrivate::get(rect)->setState("");
 
     // column height and width should stay implicit
     // and column's implicit resizing should still work
-    QVERIFY(!QSGItemPrivate::get(column)->heightValid);
-    QVERIFY(!QSGItemPrivate::get(column)->widthValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
     QTRY_COMPARE(column->height(), 200.0);
 
     delete view;
@@ -993,20 +993,20 @@ void tst_qdeclarativestates::anchorRewindBug2()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorRewindBug2.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
-    QSGRectangle *mover = rect->findChild<QSGRectangle*>("mover");
+    QQuickRectangle *mover = rect->findChild<QQuickRectangle*>("mover");
 
     QVERIFY(mover != 0);
     QCOMPARE(mover->y(), qreal(0.0));
     QCOMPARE(mover->width(), qreal(50.0));
 
-    QSGItemPrivate::get(rect)->setState("anchored");
+    QQuickItemPrivate::get(rect)->setState("anchored");
     QCOMPARE(mover->y(), qreal(250.0));
     QCOMPARE(mover->width(), qreal(200.0));
 
-    QSGItemPrivate::get(rect)->setState("");
+    QQuickItemPrivate::get(rect)->setState("");
     QCOMPARE(mover->y(), qreal(0.0));
     QCOMPARE(mover->width(), qreal(50.0));
 
@@ -1019,9 +1019,9 @@ void tst_qdeclarativestates::script()
 
     {
         QDeclarativeComponent rectComponent(&engine, TESTDATA("script.qml"));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
-        QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+        QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QCOMPARE(rect->color(),QColor("red"));
 
         rectPrivate->setState("blue");
@@ -1037,9 +1037,9 @@ void tst_qdeclarativestates::restoreEntryValues()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("restoreEntryValues.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QCOMPARE(rect->color(),QColor("red"));
 
     rectPrivate->setState("blue");
@@ -1054,9 +1054,9 @@ void tst_qdeclarativestates::explicitChanges()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("explicit.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QDeclarativeListReference list(rect, "states");
     QDeclarativeState *state = qobject_cast<QDeclarativeState*>(list.at(0));
     QVERIFY(state != 0);
@@ -1087,14 +1087,14 @@ void tst_qdeclarativestates::propertyErrors()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent rectComponent(&engine, TESTDATA("propertyErrors.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
     QCOMPARE(rect->color(),QColor("red"));
 
     QTest::ignoreMessage(QtWarningMsg, fullDataPath("propertyErrors.qml") + ":8:9: QML PropertyChanges: Cannot assign to non-existent property \"colr\"");
     QTest::ignoreMessage(QtWarningMsg, fullDataPath("propertyErrors.qml") + ":8:9: QML PropertyChanges: Cannot assign to read-only property \"activeFocus\"");
-    QSGItemPrivate::get(rect)->setState("blue");
+    QQuickItemPrivate::get(rect)->setState("blue");
 }
 
 void tst_qdeclarativestates::incorrectRestoreBug()
@@ -1102,9 +1102,9 @@ void tst_qdeclarativestates::incorrectRestoreBug()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QCOMPARE(rect->color(),QColor("red"));
 
     rectPrivate->setState("blue");
@@ -1145,9 +1145,9 @@ void tst_qdeclarativestates::deletingChange()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("deleting.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     rectPrivate->setState("blue");
     QCOMPARE(rect->color(),QColor("blue"));
     QCOMPARE(rect->radius(),qreal(5));
@@ -1177,7 +1177,7 @@ void tst_qdeclarativestates::deletingState()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("deletingState.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
     QDeclarativeStateGroup *sg = rect->findChild<QDeclarativeStateGroup*>();
@@ -1208,9 +1208,9 @@ void tst_qdeclarativestates::tempState()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("legalTempState.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QTest::ignoreMessage(QtDebugMsg, "entering placed");
     QTest::ignoreMessage(QtDebugMsg, "entering idle");
     rectPrivate->setState("placed");
@@ -1222,9 +1222,9 @@ void tst_qdeclarativestates::illegalTempState()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("illegalTempState.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML StateGroup: Can't apply a state change as part of a state definition.");
     rectPrivate->setState("placed");
     QCOMPARE(rectPrivate->state(), QLatin1String("placed"));
@@ -1235,9 +1235,9 @@ void tst_qdeclarativestates::nonExistantProperty()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent rectComponent(&engine, TESTDATA("nonExistantProp.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QTest::ignoreMessage(QtWarningMsg, fullDataPath("nonExistantProp.qml") + ":9:9: QML PropertyChanges: Cannot assign to non-existent property \"colr\"");
     rectPrivate->setState("blue");
     QCOMPARE(rectPrivate->state(), QLatin1String("blue"));
@@ -1248,15 +1248,15 @@ void tst_qdeclarativestates::reset()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("reset.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QSGImage *image = rect->findChild<QSGImage*>();
+    QQuickImage *image = rect->findChild<QQuickImage*>();
     QVERIFY(image != 0);
     QCOMPARE(image->width(), qreal(40.));
     QCOMPARE(image->height(), qreal(20.));
 
-    QSGItemPrivate::get(rect)->setState("state1");
+    QQuickItemPrivate::get(rect)->setState("state1");
 
     QCOMPARE(image->width(), 20.0);
     QCOMPARE(image->height(), qreal(20.));
@@ -1280,9 +1280,9 @@ void tst_qdeclarativestates::whenOrdering()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("whenOrdering.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QCOMPARE(rectPrivate->state(), QLatin1String(""));
     rect->setProperty("condition2", true);
@@ -1303,16 +1303,16 @@ void tst_qdeclarativestates::urlResolution()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("urlResolution.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QSGItem *myType = rect->findChild<QSGItem*>("MyType");
-    QSGImage *image1 = rect->findChild<QSGImage*>("image1");
-    QSGImage *image2 = rect->findChild<QSGImage*>("image2");
-    QSGImage *image3 = rect->findChild<QSGImage*>("image3");
+    QQuickItem *myType = rect->findChild<QQuickItem*>("MyType");
+    QQuickImage *image1 = rect->findChild<QQuickImage*>("image1");
+    QQuickImage *image2 = rect->findChild<QQuickImage*>("image2");
+    QQuickImage *image3 = rect->findChild<QQuickImage*>("image3");
     QVERIFY(myType != 0 && image1 != 0 && image2 != 0 && image3 != 0);
 
-    QSGItemPrivate::get(myType)->setState("SetImageState");
+    QQuickItemPrivate::get(myType)->setState("SetImageState");
     QUrl resolved = QUrl::fromLocalFile(TESTDATA("Implementation/images/qt-logo.png"));
     QCOMPARE(image1->source(), resolved);
     QCOMPARE(image2->source(), resolved);
@@ -1324,9 +1324,9 @@ void tst_qdeclarativestates::unnamedWhen()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("unnamedWhen.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QCOMPARE(rectPrivate->state(), QLatin1String(""));
     QCOMPARE(rect->property("stateString").toString(), QLatin1String(""));
@@ -1343,9 +1343,9 @@ void tst_qdeclarativestates::returnToBase()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("returnToBase.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QCOMPARE(rectPrivate->state(), QLatin1String(""));
     QCOMPARE(rect->property("stateString").toString(), QLatin1String(""));
@@ -1363,10 +1363,10 @@ void tst_qdeclarativestates::extendsBug()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("extendsBug.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
-    QSGRectangle *greenRect = rect->findChild<QSGRectangle*>("greenRect");
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+    QQuickRectangle *greenRect = rect->findChild<QQuickRectangle*>("greenRect");
 
     rectPrivate->setState("b");
     QCOMPARE(greenRect->x(), qreal(100));
@@ -1378,10 +1378,10 @@ void tst_qdeclarativestates::editProperties()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("editProperties.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
     QDeclarativeStateGroup *stateGroup = rectPrivate->_states();
     QVERIFY(stateGroup != 0);
@@ -1401,7 +1401,7 @@ void tst_qdeclarativestates::editProperties()
     QDeclarativePropertyChanges *propertyChangesGreen = qobject_cast<QDeclarativePropertyChanges*>(greenState->operationAt(0));
     QVERIFY(propertyChangesGreen != 0);
 
-    QSGRectangle *childRect = rect->findChild<QSGRectangle*>("rect2");
+    QQuickRectangle *childRect = rect->findChild<QQuickRectangle*>("rect2");
     QVERIFY(childRect != 0);
     QCOMPARE(childRect->width(), qreal(402));
     QVERIFY(QDeclarativePropertyPrivate::binding(QDeclarativeProperty(childRect, "width")));
@@ -1506,9 +1506,9 @@ void tst_qdeclarativestates::QTBUG_14830()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, TESTDATA("QTBUG-14830.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
-    QSGItem *item = rect->findChild<QSGItem*>("area");
+    QQuickItem *item = rect->findChild<QQuickItem*>("area");
 
     QCOMPARE(item->width(), qreal(171));
 }
@@ -1519,10 +1519,10 @@ void tst_qdeclarativestates::avoidFastForward()
 
     //shouldn't fast forward if there isn't a transition
     QDeclarativeComponent c(&engine, TESTDATA("avoidFastForward.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     rectPrivate->setState("a");
     QCOMPARE(rect->property("updateCount").toInt(), 1);
 }

@@ -61,10 +61,9 @@ QT_END_NAMESPACE
 namespace QmlJSDebugger {
 
 class AbstractTool;
-class ToolBox;
 
 /*
- * The common code between QSGView and QDeclarativeView inspectors lives here,
+ * The common code between QQuickView and QDeclarativeView inspectors lives here,
  */
 class AbstractViewInspector : public QObject
 {
@@ -73,25 +72,10 @@ class AbstractViewInspector : public QObject
 public:
     explicit AbstractViewInspector(QObject *parent = 0);
 
-    virtual void changeCurrentObjects(const QList<QObject*> &objects) = 0;
-
-    virtual void reloadView() = 0;
-
     void createQmlObject(const QString &qml, QObject *parent,
                          const QStringList &importList,
                          const QString &filename = QString());
-
-    virtual void reparentQmlObject(QObject *object, QObject *newParent) = 0;
-
-    virtual void changeTool(InspectorProtocol::Tool tool) = 0;
-
     void clearComponentCache();
-
-    virtual Qt::WindowFlags windowFlags() const = 0;
-    virtual void setWindowFlags(Qt::WindowFlags flags) = 0;
-
-    virtual QDeclarativeEngine *declarativeEngine() const = 0;
-
 
     bool showAppOnTop() const { return m_showAppOnTop; }
     bool designModeBehavior() const { return m_designModeBehavior; }
@@ -108,21 +92,13 @@ public:
 
     QString idStringForObject(QObject *obj) const;
 
-public slots:
-    void sendDesignModeBehavior(bool inDesignMode);
-    void sendColorChanged(const QColor &color);
-
-    void changeToColorPickerTool();
-    void changeToZoomTool();
-    void changeToSingleSelectTool();
-    void changeToMarqueeSelectTool();
-
-    virtual void setDesignModeBehavior(bool value);
-
-    void setShowAppOnTop(bool appOnTop);
-
-    void setAnimationSpeed(qreal factor);
-    void setAnimationPaused(bool paused);
+    virtual void changeCurrentObjects(const QList<QObject*> &objects) = 0;
+    virtual void reloadView() = 0;
+    virtual void reparentQmlObject(QObject *object, QObject *newParent) = 0;
+    virtual void changeTool(InspectorProtocol::Tool tool) = 0;
+    virtual Qt::WindowFlags windowFlags() const = 0;
+    virtual void setWindowFlags(Qt::WindowFlags flags) = 0;
+    virtual QDeclarativeEngine *declarativeEngine() const = 0;
 
 signals:
     void designModeBehaviorChanged(bool inDesignMode);
@@ -138,6 +114,8 @@ signals:
     void animationPausedChanged(bool paused);
 
 protected:
+    AbstractTool *currentTool() const { return m_currentTool; }
+    void setCurrentTool(AbstractTool *tool) { m_currentTool = tool; }
     bool eventFilter(QObject *, QEvent *);
 
     virtual bool leaveEvent(QEvent *);
@@ -149,13 +127,25 @@ protected:
     virtual bool mouseDoubleClickEvent(QMouseEvent *event);
     virtual bool wheelEvent(QWheelEvent *event);
 
-    AbstractTool *currentTool() const { return m_currentTool; }
-    void setCurrentTool(AbstractTool *tool) { m_currentTool = tool; }
-
 private slots:
     void handleMessage(const QByteArray &message);
+    void sendColorChanged(const QColor &color);
 
 private:
+    void sendDesignModeBehavior(bool inDesignMode);
+
+    void changeToColorPickerTool();
+    void changeToZoomTool();
+    void changeToSingleSelectTool();
+    void changeToMarqueeSelectTool();
+
+    virtual void setDesignModeBehavior(bool value);
+
+    void setShowAppOnTop(bool appOnTop);
+
+    void setAnimationSpeed(qreal factor);
+    void setAnimationPaused(bool paused);
+
     void animationSpeedChangeRequested(qreal factor);
     void animationPausedChangeRequested(bool paused);
 

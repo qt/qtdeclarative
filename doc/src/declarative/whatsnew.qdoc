@@ -39,10 +39,10 @@ QtQuick 2 is based on an OpenGL scenegraph.  The following
 classes replace their equivalents in QtQuick 1:
 
 \list
-\o QSGView
-\o QSGCanvas
-\o QSGItem
-\o QSGPaintedItem
+\o QQuickView
+\o QQuickCanvas
+\o QQuickItem
+\o QQuickPaintedItem
 \endlist
 
 \section2 QML Engine/Language Improvements

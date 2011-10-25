@@ -45,7 +45,8 @@
 #include "qsgnode.h"
 #include "qsgtexturematerial.h"
 #include "qsgtexture_p.h"
-#include "qsgpainteditem.h"
+
+#include <qquickpainteditem.h>
 
 #include <QtGui/qcolor.h>
 
@@ -74,10 +75,10 @@ private:
 class Q_DECLARATIVE_EXPORT QSGPainterNode : public QSGGeometryNode
 {
 public:
-    QSGPainterNode(QSGPaintedItem *item);
+    QSGPainterNode(QQuickPaintedItem *item);
     virtual ~QSGPainterNode();
 
-    void setPreferredRenderTarget(QSGPaintedItem::RenderTarget target);
+    void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target);
 
     void setSize(const QSize &size);
     QSize size() const { return m_size; }
@@ -118,10 +119,10 @@ private:
 
     QSGContext *m_context;
 
-    QSGPaintedItem::RenderTarget m_preferredRenderTarget;
-    QSGPaintedItem::RenderTarget m_actualRenderTarget;
+    QQuickPaintedItem::RenderTarget m_preferredRenderTarget;
+    QQuickPaintedItem::RenderTarget m_actualRenderTarget;
 
-    QSGPaintedItem *m_item;
+    QQuickPaintedItem *m_item;
 
     QOpenGLFramebufferObject *m_fbo;
     QOpenGLFramebufferObject *m_multisampledFbo;

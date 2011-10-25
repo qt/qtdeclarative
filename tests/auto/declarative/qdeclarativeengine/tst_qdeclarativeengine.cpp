@@ -45,7 +45,7 @@
 #include <QNetworkAccessManager>
 #include <QPointer>
 #include <QDir>
-#include <QDesktopServices>
+#include <QStandardPaths>
 #include <QDebug>
 #include <QDeclarativeComponent>
 #include <QDeclarativeNetworkAccessManagerFactory>
@@ -177,7 +177,7 @@ void tst_qdeclarativeengine::offlineStoragePath()
 
     QDeclarativeEngine engine;
 
-    QDir dir(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
     dir.mkpath("QML");
     dir.cd("QML");
     dir.mkpath("OfflineStorage");

@@ -41,8 +41,8 @@
 #include <QPainter>
 
 //![0]
-PieChart::PieChart(QSGItem *parent)
-    : QSGPaintedItem(parent)
+PieChart::PieChart(QQuickItem *parent)
+    : QQuickPaintedItem(parent)
 {
 }
 //![0]

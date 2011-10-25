@@ -44,7 +44,8 @@
 
 #include <private/qsgadaptationlayer_p.h>
 #include "qsgtexture.h"
-#include <private/qsgtext_p.h>
+
+#include <private/qquicktext_p.h>
 
 QT_BEGIN_HEADER
 
@@ -67,7 +68,7 @@ public:
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode mode);
 
-    virtual void setStyle(QSGText::TextStyle style);
+    virtual void setStyle(QQuickText::TextStyle style);
     virtual void setStyleColor(const QColor &color);
 
     virtual void update();
@@ -85,7 +86,7 @@ private:
     QSGDistanceFieldGlyphCacheManager *m_glyph_cacheManager;
     QSGDistanceFieldGlyphCache *m_glyph_cache;
     QSGGeometry m_geometry;
-    QSGText::TextStyle m_style;
+    QQuickText::TextStyle m_style;
     QColor m_styleColor;
     AntialiasingMode m_antialiasingMode;
 

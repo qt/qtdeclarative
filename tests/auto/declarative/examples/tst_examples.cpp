@@ -44,7 +44,7 @@
 #include <QDir>
 #include <QProcess>
 #include <QDebug>
-#include <QSGView>
+#include <QQuickView>
 #include <QDeclarativeError>
 
 class tst_examples : public QObject
@@ -68,11 +68,9 @@ private:
 tst_examples::tst_examples()
 {
     // Add directories you want excluded here
-#ifdef Q_WS_QPA
     excludedDirs << "examples/declarative/text/fonts"; // QTBUG-21415
-#endif
 
-    // Not run in QSGView
+    // Not run in QQuickView
     excludedDirs << "examples/declarative/qtquick1";
 
     // These snippets are not expected to run on their own.
@@ -207,16 +205,16 @@ void tst_examples::sgexamples()
 {
     QFETCH(QString, file);
 
-    QSGView view;
+    QQuickView view;
 
     QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
     view.setSource(file);
     qInstallMsgHandler(old);
 
-    if (view.status() == QSGView::Error)
+    if (view.status() == QQuickView::Error)
         qWarning() << view.errors();
 
-    QCOMPARE(view.status(), QSGView::Ready);
+    QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
 
     QTest::qWait(100);

@@ -45,13 +45,13 @@
 #include <QtDeclarative>
 
 //! [0]
-class TextBalloon : public QSGPaintedItem
+class TextBalloon : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(bool rightAligned READ isRightAligned WRITE setRightAligned NOTIFY rightAlignedChanged)
 
     public:
-        TextBalloon(QSGItem *parent = 0);
+        TextBalloon(QQuickItem *parent = 0);
         void paint(QPainter *painter);
 
         bool isRightAligned();

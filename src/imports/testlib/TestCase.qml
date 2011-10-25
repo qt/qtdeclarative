@@ -271,8 +271,8 @@ Item {
     }
 
     function compare(actual, expected, msg) {
-        var act = qtest_formatValue(actual)
-        var exp = qtest_formatValue(expected)
+        var act = testCase.qtest_formatValue(actual)
+        var exp = testCase.qtest_formatValue(expected)
 
         var success = qtest_compareInternal(actual, expected)
         if (msg === undefined) {
@@ -297,8 +297,8 @@ Item {
             i += 50
         }
         var actual = obj[prop]
-        var act = qtest_formatValue(actual)
-        var exp = qtest_formatValue(value)
+        var act = testCase.qtest_formatValue(actual)
+        var exp = testCase.qtest_formatValue(value)
         var success = qtest_compareInternal(actual, value)
         if (!qtest_results.compare(success, "property " + prop, act, exp, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
@@ -348,7 +348,7 @@ Item {
     function warn(msg) {
         if (msg === undefined)
             msg = ""
-        qtest_results.warn(msg);
+        qtest_results.warn(msg, util.callerFile(), util.callerLine());
     }
 
     function ignoreWarning(msg) {
@@ -619,7 +619,8 @@ Item {
                         qtest_results.dataTag = ""
                     }
                     if (!haveData)
-                        qtest_results.warn("no data supplied for " + prop + "() by " + datafunc + "()")
+                        qtest_results.warn("no data supplied for " + prop + "() by " + datafunc + "()"
+                                           , util.callerFile(), util.callerLine());
                     qtest_results.clearTestTable()
                 }
             } else if (isBenchmark) {
@@ -683,6 +684,8 @@ Item {
     }
 
     Component.onCompleted: {
+        qtest.hasTestCase = true;
+
         if (util.printAvailableFunctions) {
             var testList = []
             for (var prop in testCase) {

@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtGui/QGuiApplication>
-#include <qsgview.h>
+#include <qquickview.h>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeEngine>
 
@@ -49,12 +49,12 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    QSGView canvas;
+    QQuickView canvas;
 
     qmlRegisterType<TileData>();
     MinehuntGame* game = new MinehuntGame();
 
-    canvas.setResizeMode(QSGView::SizeRootObjectToView);
+    canvas.setResizeMode(QQuickView::SizeRootObjectToView);
     canvas.engine()->rootContext()->setContextObject(game);
     canvas.setSource(QString("qrc:minehunt.qml"));
     QObject::connect(canvas.engine(), SIGNAL(quit()), &app, SLOT(quit()));

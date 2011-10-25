@@ -47,17 +47,17 @@ inline v8::Handle<v8::Value> QV8Engine::makeJSValue(bool value)
     return value ? v8::True() : v8::False();
 }
 
-inline v8::Handle<v8::Value> QV8Engine::makeJSValue(int value)
+inline v8::Local<v8::Value> QV8Engine::makeJSValue(int value)
 {
     return v8::Integer::New(value);
 }
 
-inline v8::Handle<v8::Value> QV8Engine::makeJSValue(uint value)
+inline v8::Local<v8::Value> QV8Engine::makeJSValue(uint value)
 {
     return v8::Integer::NewFromUnsigned(value);
 }
 
-inline v8::Handle<v8::Value> QV8Engine::makeJSValue(double value)
+inline v8::Local<v8::Value> QV8Engine::makeJSValue(double value)
 {
     return v8::Number::New(value);
 }
@@ -68,7 +68,7 @@ inline v8::Handle<v8::Value> QV8Engine::makeJSValue(QJSValue::SpecialValue value
     return v8::Undefined();
 }
 
-inline v8::Handle<v8::Value> QV8Engine::makeJSValue(const QString& value)
+inline v8::Local<v8::Value> QV8Engine::makeJSValue(const QString &value)
 {
     return QJSConverter::toString(value);
 }

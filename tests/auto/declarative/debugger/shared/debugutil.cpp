@@ -101,3 +101,78 @@ void QDeclarativeDebugTestClient::messageReceived(const QByteArray &ba)
     lastMsg = ba;
     emit serverMessage(ba);
 }
+
+QDeclarativeDebugProcess::QDeclarativeDebugProcess(const QString &executable)
+    : m_executable(executable)
+    , m_started(false)
+{
+    m_process.setProcessChannelMode(QProcess::MergedChannels);
+    m_timer.setSingleShot(true);
+    m_timer.setInterval(5000);
+    connect(&m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(processAppOutput()));
+    connect(&m_timer, SIGNAL(timeout()), &m_eventLoop, SLOT(quit()));
+}
+
+QDeclarativeDebugProcess::~QDeclarativeDebugProcess()
+{
+    stop();
+}
+
+void QDeclarativeDebugProcess::start(const QStringList &arguments)
+{
+    m_mutex.lock();
+    m_process.start(m_executable, arguments);
+    m_process.waitForStarted();
+    m_timer.start();
+    m_mutex.unlock();
+}
+
+void QDeclarativeDebugProcess::stop()
+{
+    if (m_process.state() != QProcess::NotRunning) {
+        m_process.terminate();
+        m_process.waitForFinished(5000);
+    }
+}
+
+bool QDeclarativeDebugProcess::waitForSessionStart()
+{
+    if (m_process.state() != QProcess::Running) {
+        qWarning() << "Could not start up " << m_executable;
+        return false;
+    }
+    m_eventLoop.exec(QEventLoop::ExcludeUserInputEvents);
+
+    return m_started;
+}
+
+QString QDeclarativeDebugProcess::output() const
+{
+    return m_outputBuffer;
+}
+
+void QDeclarativeDebugProcess::processAppOutput()
+{
+    m_mutex.lock();
+    const QString appOutput = m_process.readAll();
+    static QRegExp newline("[\n\r]{1,2}");
+    QStringList lines = appOutput.split(newline);
+    foreach (const QString &line, lines) {
+        if (line.isEmpty())
+            continue;
+        if (line.startsWith("Qml debugging is enabled")) // ignore
+            continue;
+        if (line.startsWith("QDeclarativeDebugServer:")) {
+            if (line.contains("Waiting for connection ")) {
+                m_started = true;
+                m_eventLoop.quit();
+                continue;
+            }
+            if (line.contains("Connection established")) {
+                continue;
+            }
+        }
+        m_outputBuffer.append(appOutput);
+    }
+    m_mutex.unlock();
+}

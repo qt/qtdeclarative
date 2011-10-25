@@ -453,7 +453,7 @@ QJSValue QJSEngine::newDate(const QDateTime &dt)
     Q_D(QJSEngine);
     QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(v8::Handle<v8::Value>(QJSConverter::toDateTime(dt)));
+    return d->scriptValueFromInternal(QJSConverter::toDateTime(dt));
 }
 
 /*!

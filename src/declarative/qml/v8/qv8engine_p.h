@@ -364,23 +364,23 @@ public:
     void setExtensionData(int, Deletable *);
 
     inline v8::Handle<v8::Value> makeJSValue(bool value);
-    inline v8::Handle<v8::Value> makeJSValue(int value);
-    inline v8::Handle<v8::Value> makeJSValue(uint value);
-    inline v8::Handle<v8::Value> makeJSValue(double value);
+    inline v8::Local<v8::Value> makeJSValue(int value);
+    inline v8::Local<v8::Value> makeJSValue(uint value);
+    inline v8::Local<v8::Value> makeJSValue(double value);
     inline v8::Handle<v8::Value> makeJSValue(QJSValue::SpecialValue value);
-    inline v8::Handle<v8::Value> makeJSValue(const QString& value);
+    inline v8::Local<v8::Value> makeJSValue(const QString &value);
 
     inline QScriptPassPointer<QJSValuePrivate> evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1);
     QScriptPassPointer<QJSValuePrivate> evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
 
     QScriptPassPointer<QJSValuePrivate> newArray(uint length);
-    v8::Handle<v8::Object> newVariant(const QVariant &variant);
+    v8::Local<v8::Object> newVariant(const QVariant &variant);
     QScriptPassPointer<QJSValuePrivate> newVariant(QJSValuePrivate* value, const QVariant &variant);
 
-    v8::Handle<v8::Array> variantListToJS(const QVariantList &lst);
+    v8::Local<v8::Array> variantListToJS(const QVariantList &lst);
     QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray);
 
-    v8::Handle<v8::Object> variantMapToJS(const QVariantMap &vmap);
+    v8::Local<v8::Object> variantMapToJS(const QVariantMap &vmap);
     QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject);
 
     v8::Handle<v8::Value> variantToJS(const QVariant &value);

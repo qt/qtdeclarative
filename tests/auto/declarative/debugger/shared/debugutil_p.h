@@ -44,6 +44,7 @@
 #include <QTimer>
 #include <QThread>
 #include <QTest>
+#include <QProcess>
 
 #include <QtDeclarative/qdeclarativeengine.h>
 
@@ -90,4 +91,30 @@ private:
     QByteArray lastMsg;
 };
 
+class QDeclarativeDebugProcess : public QObject
+{
+    Q_OBJECT
+public:
+    QDeclarativeDebugProcess(const QString &executable);
+    ~QDeclarativeDebugProcess();
 
+    void start(const QStringList &arguments);
+    bool waitForSessionStart();
+
+    QString output() const;
+
+private slots:
+    void processAppOutput();
+
+private:
+    void stop();
+
+private:
+    QString m_executable;
+    QProcess m_process;
+    QString m_outputBuffer;
+    QTimer m_timer;
+    QEventLoop m_eventLoop;
+    QMutex m_mutex;
+    bool m_started;
+};

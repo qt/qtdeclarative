@@ -107,7 +107,7 @@
     \section1 Running tests with QtQuick 1
 
     The \c{-qtquick1} option can be passed to a test binary to run
-    the tests using QDeclarativeView (QtQuick 1) rather than QSGView (QtQuick 2):
+    the tests using QDeclarativeView (QtQuick 1) rather than QQuickView (QtQuick 2):
 
     \code
     tst_example -qtquick1

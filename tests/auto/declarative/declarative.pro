@@ -61,32 +61,32 @@ PRIVATETESTS += \
 # This test requires the xmlpatterns module
 !contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qdeclarativexmllistmodel
 
-SGTESTS =  \
-    qsganimatedimage \
-    qsgborderimage \
-    qsgcanvas \
-    qsgdrag \
-    qsgdroparea \
-    qsgflickable \
-    qsgflipable \
-    qsgfocusscope \
-    qsggridview \
-    qsgimage \
-    qsgitem \
-    qsgitem2 \
-    qsglistview \
-    qsgloader \
-    qsgmousearea \
-    qsgpathview \
-    qsgpincharea \
-    qsgpositioners \
-    qsgrepeater \
-    qsgtext \
-    qsgtextedit \
-    qsgtextinput \
-    qsgvisualdatamodel \
-    qsgview \
-    qsgcanvasitem \
+QUICKTESTS =  \
+    qquickanimatedimage \
+    qquickborderimage \
+    qquickcanvas \
+    qquickdrag \
+    qquickdroparea \
+    qquickflickable \
+    qquickflipable \
+    qquickfocusscope \
+    qquickgridview \
+    qquickimage \
+    qquickitem \
+    qquickitem2 \
+    qquicklistview \
+    qquickloader \
+    qquickmousearea \
+    qquickpathview \
+    qquickpincharea \
+    qquickpositioners \
+    qquickrepeater \
+    qquicktext \
+    qquicktextedit \
+    qquicktextinput \
+    qquickvisualdatamodel \
+    qquickview \
+    qquickcanvasitem \
 
 
 SUBDIRS += $$PUBLICTESTS
@@ -95,5 +95,5 @@ SUBDIRS += debugger
 
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS
-    SUBDIRS += $$SGTESTS
+    SUBDIRS += $$QUICKTESTS
 }

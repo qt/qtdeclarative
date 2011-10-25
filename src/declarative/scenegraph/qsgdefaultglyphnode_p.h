@@ -64,7 +64,7 @@ public:
     virtual void setColor(const QColor &color);
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode) { }
-    virtual void setStyle(QSGText::TextStyle) { }
+    virtual void setStyle(QQuickText::TextStyle) { }
     virtual void setStyleColor(const QColor &) { }
 
     virtual void update() { }

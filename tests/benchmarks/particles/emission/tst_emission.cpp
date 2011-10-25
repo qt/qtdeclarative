@@ -73,8 +73,8 @@ void tst_emission::test_basic_data()
 void tst_emission::test_basic()
 {
     QFETCH(int, dt);
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
-    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     //Pretend we're running, but we manually advance the simulation
     system->m_running = true;
     system->m_animation = 0;
@@ -92,7 +92,7 @@ void tst_emission::test_basic()
 
     int stillAlive = 0;
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 1000, 10));//Small simulation variance is permissible.
-    foreach (QSGParticleData *d, system->groupData[0]->data) {
+    foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
 

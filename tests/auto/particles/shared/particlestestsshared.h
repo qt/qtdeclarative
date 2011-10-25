@@ -41,7 +41,7 @@
 
 #ifndef PARTICLES_TESTS_SHARED
 #define PARTICLES_TESTS_SHARED
-#include <QSGView>
+#include <QQuickView>
 #include <QtTest>
 #include <QAbstractAnimation>
 const qreal EPSILON = 0.0001;
@@ -66,12 +66,12 @@ bool myFuzzyGEQ(qreal a, qreal b)
     return (a + EPSILON > b);
 }
 
-QSGView* createView(const QString &filename, int additionalWait=0)
+QQuickView* createView(const QString &filename, int additionalWait=0)
 {
-    QSGView *canvas = new QSGView(0);
+    QQuickView *canvas = new QQuickView(0);
 
     canvas->setSource(QUrl::fromLocalFile(filename));
-    if (canvas->status() != QSGView::Ready)
+    if (canvas->status() != QQuickView::Ready)
         return 0;
     canvas->show();
     QTest::qWaitForWindowShown(canvas);

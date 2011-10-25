@@ -48,8 +48,8 @@
 #include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
-class QSGView;
-class QSGItem;
+class QQuickView;
+class QQuickItem;
 QT_END_NAMESPACE
 
 namespace QmlJSDebugger {
@@ -61,7 +61,7 @@ class SGViewInspector : public AbstractViewInspector
 {
     Q_OBJECT
 public:
-    explicit SGViewInspector(QSGView *view, QObject *parent = 0);
+    explicit SGViewInspector(QQuickView *view, QObject *parent = 0);
 
     // AbstractViewInspector
     void changeCurrentObjects(const QList<QObject*> &objects);
@@ -72,16 +72,16 @@ public:
     void setWindowFlags(Qt::WindowFlags flags);
     QDeclarativeEngine *declarativeEngine() const;
 
-    QSGView *view() const { return m_view; }
-    QSGItem *overlay() const { return m_overlay; }
+    QQuickView *view() const { return m_view; }
+    QQuickItem *overlay() const { return m_overlay; }
 
-    QSGItem *topVisibleItemAt(const QPointF &pos) const;
-    QList<QSGItem *> itemsAt(const QPointF &pos) const;
+    QQuickItem *topVisibleItemAt(const QPointF &pos) const;
+    QList<QQuickItem *> itemsAt(const QPointF &pos) const;
 
-    QList<QSGItem *> selectedItems() const;
-    void setSelectedItems(const QList<QSGItem*> &items);
+    QList<QQuickItem *> selectedItems() const;
+    void setSelectedItems(const QList<QQuickItem*> &items);
 
-    QString titleForItem(QSGItem *item) const;
+    QString titleForItem(QQuickItem *item) const;
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
@@ -92,15 +92,15 @@ private slots:
     void removeFromSelectedItems(QObject *);
 
 private:
-    bool syncSelectedItems(const QList<QSGItem*> &items);
+    bool syncSelectedItems(const QList<QQuickItem*> &items);
 
-    QSGView *m_view;
-    QSGItem *m_overlay;
+    QQuickView *m_view;
+    QQuickItem *m_overlay;
 
     SGSelectionTool *m_selectionTool;
 
-    QList<QWeakPointer<QSGItem> > m_selectedItems;
-    QHash<QSGItem*, SGSelectionHighlight*> m_highlightItems;
+    QList<QWeakPointer<QQuickItem> > m_selectedItems;
+    QHash<QQuickItem*, SGSelectionHighlight*> m_highlightItems;
 
     bool m_designMode;
 };

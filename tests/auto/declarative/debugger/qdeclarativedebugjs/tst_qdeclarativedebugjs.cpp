@@ -131,7 +131,6 @@ const char *JSFILE = "test.js";
     jsonVal.setProperty(SEQ,QJSValue(seq++)); \
     jsonVal.setProperty(TYPE,REQUEST);
 
-class QJSDebugProcess;
 class QJSDebugClient;
 
 class tst_QDeclarativeDebugJS : public QObject
@@ -197,108 +196,10 @@ private slots:
     //    void verifyQMLOptimizerDisabled();
 
 private:
-    QJSDebugProcess *process;
+    QDeclarativeDebugProcess *process;
     QJSDebugClient *client;
     QDeclarativeDebugConnection *connection;
 };
-
-class QJSDebugProcess : public QObject
-{
-    Q_OBJECT
-public:
-    QJSDebugProcess();
-    ~QJSDebugProcess();
-
-    void start(const QStringList &arguments);
-    bool waitForSessionStart();
-
-private slots:
-    void processAppOutput();
-
-private:
-    void stop();
-
-private:
-    QProcess m_process;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    bool m_started;
-};
-
-QJSDebugProcess::QJSDebugProcess()
-    : m_started(false)
-{
-    m_process.setProcessChannelMode(QProcess::MergedChannels);
-    m_timer.setSingleShot(true);
-    m_timer.setInterval(5000);
-    connect(&m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(processAppOutput()));
-    connect(&m_timer, SIGNAL(timeout()), &m_eventLoop, SLOT(quit()));
-
-//    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-//    env.insert("QML_DISABLE_OPTIMIZER", "1"); // Add an environment variable
-//    m_process.setProcessEnvironment(env);
-
-}
-
-QJSDebugProcess::~QJSDebugProcess()
-{
-    stop();
-}
-
-void QJSDebugProcess::start(const QStringList &arguments)
-{
-    m_mutex.lock();
-    m_process.start(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", arguments);
-    m_process.waitForStarted();
-    m_timer.start();
-    m_mutex.unlock();
-}
-
-void QJSDebugProcess::stop()
-{
-    if (m_process.state() != QProcess::NotRunning) {
-        m_process.terminate();
-        m_process.waitForFinished(5000);
-    }
-}
-
-bool QJSDebugProcess::waitForSessionStart()
-{
-    m_eventLoop.exec(QEventLoop::ExcludeUserInputEvents);
-
-    return m_started;
-}
-
-void QJSDebugProcess::processAppOutput()
-{
-    m_mutex.lock();
-    const QString appOutput = m_process.readAll();
-    static QRegExp newline("[\n\r]{1,2}");
-    QStringList lines = appOutput.split(newline);
-    foreach (const QString &line, lines) {
-        if (line.isEmpty())
-            continue;
-        if (line.startsWith("Qml debugging is enabled")) // ignore
-            continue;
-        if (line.startsWith("QDeclarativeDebugServer:")) {
-            if (line.contains("Waiting for connection ")) {
-                m_started = true;
-                m_eventLoop.quit();
-                continue;
-            }
-            if (line.contains("Connection established")) {
-                continue;
-            }
-        }
-        if (line.startsWith("QDeclarativeDebugServer: Unable to listen on port")) {
-            QFAIL("Application cannot open port 3771: Port is blocked?");
-            break;
-        }
-//        qWarning() << line;
-    }
-    m_mutex.unlock();
-}
 
 class QJSDebugClient : public QDeclarativeDebugClient
 {
@@ -1051,11 +952,13 @@ void tst_QDeclarativeDebugJS::cleanupTestCase()
 void tst_QDeclarativeDebugJS::init()
 {
     connection = new QDeclarativeDebugConnection();
-    process = new QJSDebugProcess();
+    process = new QDeclarativeDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     client = new QJSDebugClient(connection);
 
     process->start(QStringList() << QLatin1String(BLOCKMODE) << TESTDATA(QLatin1String(QMLFILE)));
-    QVERIFY(process->waitForSessionStart());
+    if (!process->waitForSessionStart()) {
+        QFAIL(QString("Could not launch app. Application output: \n%1").arg(process->output()).toAscii());
+    }
 
     connection->connectToHost("127.0.0.1", 3771);
     QVERIFY(connection->waitForConnected());

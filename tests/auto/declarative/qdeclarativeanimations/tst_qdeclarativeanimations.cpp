@@ -41,13 +41,13 @@
 #include <QtTest/QtTest>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qsgview.h>
-#include <QtDeclarative/private/qsgrectangle_p.h>
+#include <QtDeclarative/qquickview.h>
+#include <QtDeclarative/private/qquickrectangle_p.h>
 #include <QtDeclarative/private/qdeclarativeanimation_p.h>
 #include <QtDeclarative/private/qdeclarativetransition_p.h>
-#include <QtDeclarative/private/qsganimation_p.h>
+#include <QtDeclarative/private/qquickanimation_p.h>
 #include <QtDeclarative/private/qdeclarativepathinterpolator_p.h>
-#include <QtDeclarative/private/qsgitem_p.h>
+#include <QtDeclarative/private/qquickitem_p.h>
 #include <QVariantAnimation>
 #include <QEasingCurve>
 
@@ -111,7 +111,7 @@ private slots:
 
 void tst_qdeclarativeanimations::simpleProperty()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("x");
@@ -136,7 +136,7 @@ void tst_qdeclarativeanimations::simpleProperty()
 
 void tst_qdeclarativeanimations::simpleNumber()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativeNumberAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("x");
@@ -161,7 +161,7 @@ void tst_qdeclarativeanimations::simpleNumber()
 
 void tst_qdeclarativeanimations::simpleColor()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativeColorAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("color");
@@ -195,7 +195,7 @@ void tst_qdeclarativeanimations::simpleColor()
 
 void tst_qdeclarativeanimations::simpleRotation()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativeRotationAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("rotation");
@@ -224,12 +224,12 @@ void tst_qdeclarativeanimations::simplePath()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathAnimation.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
+        QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
         QVERIFY(redRect);
-        QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
+        QQuickPathAnimation *pathAnim = rect->findChild<QQuickPathAnimation*>();
         QVERIFY(pathAnim);
 
         pathAnim->start();
@@ -250,8 +250,8 @@ void tst_qdeclarativeanimations::simplePath()
         QTRY_COMPARE(redRect->x(), qreal(300));
         QCOMPARE(redRect->y(), qreal(300));
 
-        pathAnim->setOrientation(QSGPathAnimation::RightFirst);
-        QCOMPARE(pathAnim->orientation(), QSGPathAnimation::RightFirst);
+        pathAnim->setOrientation(QQuickPathAnimation::RightFirst);
+        QCOMPARE(pathAnim->orientation(), QQuickPathAnimation::RightFirst);
         pathAnim->start();
         QTRY_VERIFY(redRect->rotation() != 0);
         pathAnim->stop();
@@ -260,15 +260,15 @@ void tst_qdeclarativeanimations::simplePath()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathAnimation2.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
+        QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
         QVERIFY(redRect);
-        QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
+        QQuickPathAnimation *pathAnim = rect->findChild<QQuickPathAnimation*>();
         QVERIFY(pathAnim);
 
-        QCOMPARE(pathAnim->orientation(), QSGPathAnimation::RightFirst);
+        QCOMPARE(pathAnim->orientation(), QQuickPathAnimation::RightFirst);
 
         pathAnim->start();
         pathAnim->pause();
@@ -349,12 +349,12 @@ void tst_qdeclarativeanimations::pathWithNoStart()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathAnimationNoStart.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
-    QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
+    QQuickRectangle *redRect = rect->findChild<QQuickRectangle*>();
     QVERIFY(redRect);
-    QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
+    QQuickPathAnimation *pathAnim = rect->findChild<QQuickPathAnimation*>();
     QVERIFY(pathAnim);
 
     pathAnim->start();
@@ -381,7 +381,7 @@ void tst_qdeclarativeanimations::pathWithNoStart()
 
 void tst_qdeclarativeanimations::alwaysRunToEnd()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("x");
@@ -401,7 +401,7 @@ void tst_qdeclarativeanimations::alwaysRunToEnd()
 
 void tst_qdeclarativeanimations::complete()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("x");
@@ -422,7 +422,7 @@ void tst_qdeclarativeanimations::complete()
 
 void tst_qdeclarativeanimations::resume()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("x");
@@ -449,7 +449,7 @@ void tst_qdeclarativeanimations::resume()
 
 void tst_qdeclarativeanimations::dotProperty()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativeNumberAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("border.width");
@@ -470,7 +470,7 @@ void tst_qdeclarativeanimations::badTypes()
 {
     //don't crash
     {
-        QSGView *view = new QSGView;
+        QQuickView *view = new QQuickView;
         view->setSource(QUrl::fromLocalFile(TESTDATA("badtype1.qml")));
 
         qApp->processEvents();
@@ -504,12 +504,12 @@ void tst_qdeclarativeanimations::badTypes()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("badtype4.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGItemPrivate::get(rect)->setState("state1");
+        QQuickItemPrivate::get(rect)->setState("state1");
         QTest::qWait(1000 + 50);
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("MyRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("MyRect");
         QVERIFY(myRect);
         QCOMPARE(myRect->x(),qreal(200));
     }
@@ -524,13 +524,13 @@ void tst_qdeclarativeanimations::badProperties()
         QDeclarativeComponent c1(&engine, QUrl::fromLocalFile(TESTDATA("badproperty1.qml")));
         QByteArray message = QUrl::fromLocalFile(TESTDATA("badproperty1.qml")).toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate non-existent property \"border.colr\"";
         QTest::ignoreMessage(QtWarningMsg, message);
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c1.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c1.create());
         QVERIFY(rect);
 
         QDeclarativeComponent c2(&engine, QUrl::fromLocalFile(TESTDATA("badproperty2.qml")));
         message = QUrl::fromLocalFile(TESTDATA("badproperty2.qml")).toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate read-only property \"border\"";
         QTest::ignoreMessage(QtWarningMsg, message);
-        rect = qobject_cast<QSGRectangle*>(c2.create());
+        rect = qobject_cast<QQuickRectangle*>(c2.create());
         QVERIFY(rect);
 
         //### should we warn here are well?
@@ -546,12 +546,12 @@ void tst_qdeclarativeanimations::mixedTypes()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("mixedtype1.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGItemPrivate::get(rect)->setState("state1");
+        QQuickItemPrivate::get(rect)->setState("state1");
         QTest::qWait(500);
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("MyRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("MyRect");
         QVERIFY(myRect);
 
         //rather inexact -- is there a better way?
@@ -562,12 +562,12 @@ void tst_qdeclarativeanimations::mixedTypes()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("mixedtype2.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGItemPrivate::get(rect)->setState("state1");
+        QQuickItemPrivate::get(rect)->setState("state1");
         QTest::qWait(500);
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("MyRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("MyRect");
         QVERIFY(myRect);
 
         //rather inexact -- is there a better way?
@@ -582,10 +582,10 @@ void tst_qdeclarativeanimations::properties()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(200));
@@ -594,10 +594,10 @@ void tst_qdeclarativeanimations::properties()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties2.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(200));
@@ -606,10 +606,10 @@ void tst_qdeclarativeanimations::properties()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties3.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(300));
@@ -618,10 +618,10 @@ void tst_qdeclarativeanimations::properties()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties4.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->y(),qreal(200));
@@ -631,10 +631,10 @@ void tst_qdeclarativeanimations::properties()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties5.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(100));
@@ -648,11 +648,11 @@ void tst_qdeclarativeanimations::propertiesTransition()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGItemPrivate::get(rect)->setState("moved");
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickItemPrivate::get(rect)->setState("moved");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(200));
@@ -661,12 +661,12 @@ void tst_qdeclarativeanimations::propertiesTransition()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition2.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
-        QSGItemPrivate::get(rect)->setState("moved");
+        QQuickItemPrivate::get(rect)->setState("moved");
         QCOMPARE(myRect->x(),qreal(200));
         QCOMPARE(myRect->y(),qreal(100));
         QTest::qWait(waitDuration);
@@ -676,12 +676,12 @@ void tst_qdeclarativeanimations::propertiesTransition()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition3.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
-        QSGItemPrivate::get(rect)->setState("moved");
+        QQuickItemPrivate::get(rect)->setState("moved");
         QCOMPARE(myRect->x(),qreal(200));
         QCOMPARE(myRect->y(),qreal(100));
     }
@@ -689,12 +689,12 @@ void tst_qdeclarativeanimations::propertiesTransition()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition4.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
-        QSGItemPrivate::get(rect)->setState("moved");
+        QQuickItemPrivate::get(rect)->setState("moved");
         QCOMPARE(myRect->x(),qreal(100));
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(200));
@@ -703,12 +703,12 @@ void tst_qdeclarativeanimations::propertiesTransition()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition5.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
-        QSGItemPrivate::get(rect)->setState("moved");
+        QQuickItemPrivate::get(rect)->setState("moved");
         QCOMPARE(myRect->x(),qreal(100));
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(200));
@@ -717,12 +717,12 @@ void tst_qdeclarativeanimations::propertiesTransition()
     /*{
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition6.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
-        QSGItemPrivate::get(rect)->setState("moved");
+        QQuickItemPrivate::get(rect)->setState("moved");
         QCOMPARE(myRect->x(),qreal(100));
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(100));
@@ -731,11 +731,11 @@ void tst_qdeclarativeanimations::propertiesTransition()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition7.qml")));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
-        QSGItemPrivate::get(rect)->setState("moved");
-        QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+        QQuickItemPrivate::get(rect)->setState("moved");
+        QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
         QVERIFY(myRect);
         QTest::qWait(waitDuration);
         QTIMED_COMPARE(myRect->x(),qreal(200));
@@ -747,18 +747,18 @@ void tst_qdeclarativeanimations::pathTransition()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathTransition.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
-    QSGRectangle *myRect = rect->findChild<QSGRectangle*>("redRect");
+    QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("redRect");
     QVERIFY(myRect);
 
-    QSGItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect)->setState("moved");
     QTRY_VERIFY(myRect->x() < 500 && myRect->x() > 100 && myRect->y() > 50 && myRect->y() < 700 );  //animation started
     QTRY_VERIFY(qFuzzyCompare(myRect->x(), qreal(100)) && qFuzzyCompare(myRect->y(), qreal(700)));
     QTest::qWait(100);
 
-    QSGItemPrivate::get(rect)->setState("");
+    QQuickItemPrivate::get(rect)->setState("");
     QTRY_VERIFY(myRect->x() < 500 && myRect->x() > 100 && myRect->y() > 50 && myRect->y() < 700 );  //animation started
     QTRY_VERIFY(qFuzzyCompare(myRect->x(), qreal(500)) && qFuzzyCompare(myRect->y(), qreal(50)));
 }
@@ -767,10 +767,10 @@ void tst_qdeclarativeanimations::disabledTransition()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("disabledTransition.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
-    QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+    QQuickRectangle *myRect = rect->findChild<QQuickRectangle*>("TheRect");
     QVERIFY(myRect);
 
     QDeclarativeTransition *trans = rect->findChild<QDeclarativeTransition*>();
@@ -778,12 +778,12 @@ void tst_qdeclarativeanimations::disabledTransition()
 
     QCOMPARE(trans->enabled(), false);
 
-    QSGItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect)->setState("moved");
     QCOMPARE(myRect->x(),qreal(200));
 
     trans->setEnabled(true);
 
-    QSGItemPrivate::get(rect)->setState("");
+    QQuickItemPrivate::get(rect)->setState("");
     QCOMPARE(myRect->x(),qreal(200));
     QTest::qWait(300);
     QTIMED_COMPARE(myRect->x(),qreal(100));
@@ -809,7 +809,7 @@ void tst_qdeclarativeanimations::attached()
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("attached.qml")));
     QTest::ignoreMessage(QtDebugMsg, "off");
     QTest::ignoreMessage(QtDebugMsg, "on");
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 }
 
@@ -820,7 +820,7 @@ void tst_qdeclarativeanimations::propertyValueSourceDefaultStart()
 
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("valuesource.qml")));
 
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
@@ -833,7 +833,7 @@ void tst_qdeclarativeanimations::propertyValueSourceDefaultStart()
 
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("valuesource2.qml")));
 
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
@@ -846,7 +846,7 @@ void tst_qdeclarativeanimations::propertyValueSourceDefaultStart()
 
         QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("dontAutoStart.qml")));
 
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
@@ -866,7 +866,7 @@ void tst_qdeclarativeanimations::dontStart()
 
         QString warning = c.url().toString() + ":14:13: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
@@ -882,7 +882,7 @@ void tst_qdeclarativeanimations::dontStart()
 
         QString warning = c.url().toString() + ":15:17: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
@@ -947,15 +947,15 @@ void tst_qdeclarativeanimations::rotation()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("rotation.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
-    QSGRectangle *rr = rect->findChild<QSGRectangle*>("rr");
-    QSGRectangle *rr2 = rect->findChild<QSGRectangle*>("rr2");
-    QSGRectangle *rr3 = rect->findChild<QSGRectangle*>("rr3");
-    QSGRectangle *rr4 = rect->findChild<QSGRectangle*>("rr4");
+    QQuickRectangle *rr = rect->findChild<QQuickRectangle*>("rr");
+    QQuickRectangle *rr2 = rect->findChild<QQuickRectangle*>("rr2");
+    QQuickRectangle *rr3 = rect->findChild<QQuickRectangle*>("rr3");
+    QQuickRectangle *rr4 = rect->findChild<QQuickRectangle*>("rr4");
 
-    QSGItemPrivate::get(rect)->setState("state1");
+    QQuickItemPrivate::get(rect)->setState("state1");
     QTest::qWait(800);
     qreal r1 = rr->rotation();
     qreal r2 = rr2->rotation();
@@ -978,10 +978,10 @@ void tst_qdeclarativeanimations::runningTrueBug()
     //ensure we start correctly when "running: true" is explicitly set
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("runningTrueBug.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
-    QSGRectangle *cloud = rect->findChild<QSGRectangle*>("cloud");
+    QQuickRectangle *cloud = rect->findChild<QQuickRectangle*>("cloud");
     QVERIFY(cloud);
     QTest::qWait(1000);
     QVERIFY(cloud->x() > qreal(0));
@@ -995,10 +995,10 @@ void tst_qdeclarativeanimations::nonTransitionBug()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("nonTransitionBug.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
-    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
-    QSGRectangle *mover = rect->findChild<QSGRectangle*>("mover");
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+    QQuickRectangle *mover = rect->findChild<QQuickRectangle*>("mover");
 
     mover->setX(100);
     QCOMPARE(mover->x(), qreal(100));
@@ -1021,7 +1021,7 @@ void tst_qdeclarativeanimations::registrationBug()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("registrationBug.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QTRY_COMPARE(rect->property("value"), QVariant(int(100)));
 }
@@ -1031,7 +1031,7 @@ void tst_qdeclarativeanimations::doubleRegistrationBug()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("doubleRegistrationBug.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
     QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
@@ -1044,7 +1044,7 @@ void tst_qdeclarativeanimations::doubleRegistrationBug()
 //QTBUG-16736
 void tst_qdeclarativeanimations::alwaysRunToEndRestartBug()
 {
-    QSGRectangle rect;
+    QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("x");
@@ -1071,7 +1071,7 @@ void tst_qdeclarativeanimations::transitionAssignmentBug()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("transitionAssignmentBug.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
     QCOMPARE(rect->property("nullObject").toBool(), false);
@@ -1083,7 +1083,7 @@ void tst_qdeclarativeanimations::pauseBindingBug()
     QDeclarativeEngine engine;
 
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pauseBindingBug.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
     QVERIFY(anim->qtAnimation()->state() == QAbstractAnimation2::Paused);

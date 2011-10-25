@@ -40,8 +40,8 @@
 #include "piechart.h"
 #include "pieslice.h"
 
-PieChart::PieChart(QSGItem *parent)
-    : QSGItem(parent)
+PieChart::PieChart(QQuickItem *parent)
+    : QQuickItem(parent)
 {
 }
 

@@ -42,8 +42,8 @@
 #include "textballoon.h"
 
 //! [0]
-TextBalloon::TextBalloon(QSGItem *parent)
-    : QSGPaintedItem(parent)
+TextBalloon::TextBalloon(QQuickItem *parent)
+    : QQuickPaintedItem(parent)
     , rightAligned(false)
 {
 }

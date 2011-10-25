@@ -43,8 +43,8 @@
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarative.h>
-#include <qsgitem.h>
-#include <qsgview.h>
+#include <qquickitem.h>
+#include <qquickview.h>
 
 #include "dataobject.h"
 
@@ -64,8 +64,8 @@ int main(int argc, char ** argv)
     dataList.append(new DataObject("Item 3", "blue"));
     dataList.append(new DataObject("Item 4", "yellow"));
 
-    QSGView view;
-    view.setResizeMode(QSGView::SizeRootObjectToView);
+    QQuickView view;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
 //![0]

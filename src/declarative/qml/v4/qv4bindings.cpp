@@ -48,7 +48,7 @@
 
 #include <private/qdeclarativefastproperties_p.h>
 #include <private/qdeclarativedebugtrace_p.h>
-#include <private/qsganchors_p_p.h> // For AnchorLine
+#include <private/qquickanchors_p_p.h> // For AnchorLine
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qnumeric.h>
@@ -444,9 +444,9 @@ static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
         QDeclarative1AnchorLine ra = qvariant_cast<QDeclarative1AnchorLine>(v4);
 
         return la == ra;
-    } else if (type == qMetaTypeId<QSGAnchorLine>()) {
-        QSGAnchorLine la = qvariant_cast<QSGAnchorLine>(qtscript);
-        QSGAnchorLine ra = qvariant_cast<QSGAnchorLine>(v4);
+    } else if (type == qMetaTypeId<QQuickAnchorLine>()) {
+        QQuickAnchorLine la = qvariant_cast<QQuickAnchorLine>(qtscript);
+        QQuickAnchorLine ra = qvariant_cast<QQuickAnchorLine>(v4);
 
         return la == ra;
     } else if (type == QMetaType::Double) {
@@ -529,8 +529,8 @@ static void testBindingResult(const QString &binding, int line, int column,
         default:
             if (resultType == qMetaTypeId<QDeclarative1AnchorLine>()) {
                 v4value = qVariantFromValue<QDeclarative1AnchorLine>(*(QDeclarative1AnchorLine *)result.typeDataPtr());
-            } else if (resultType == qMetaTypeId<QSGAnchorLine>()) {
-                v4value = qVariantFromValue<QSGAnchorLine>(*(QSGAnchorLine *)result.typeDataPtr());
+            } else if (resultType == qMetaTypeId<QQuickAnchorLine>()) {
+                v4value = qVariantFromValue<QQuickAnchorLine>(*(QQuickAnchorLine *)result.typeDataPtr());
             } else {
                 iserror = true;
                 v4Result = "Unknown V4 type";

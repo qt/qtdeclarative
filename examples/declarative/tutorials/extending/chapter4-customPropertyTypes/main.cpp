@@ -40,7 +40,7 @@
 #include "piechart.h"
 #include "pieslice.h"
 
-#include <QSGView>
+#include <QQuickView>
 #include <QGuiApplication>
 
 //![0]
@@ -55,8 +55,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<PieSlice>("Charts", 1, 0, "PieSlice");
 //![1]
 
-    QSGView view;
-    view.setResizeMode(QSGView::SizeRootObjectToView);
+    QQuickView view;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl::fromLocalFile("app.qml"));
     view.show();
     return app.exec();

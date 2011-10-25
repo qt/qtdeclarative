@@ -66,12 +66,11 @@ Rectangle {
             height: 80
         }
 
-        Move {
+        Affector {
             groups: ["A"]
             x: 120
             width: 80
             height: 80
-            relative: true
             once: true
             position: PointDirection { x: 120; }
         }
@@ -96,13 +95,12 @@ Rectangle {
             height: 10
         }
 
-        Move {
+        Affector {
             groups: ["B"]
             x: 120
             y: 240
             width: 80
             height: 80
-            relative: true
             once: true
             speed: AngleDirection { angleVariation:360; magnitude: 72 }
         }
@@ -123,18 +121,19 @@ Rectangle {
             size: 32
             sizeVariation: 8
             speed: PointDirection{ x: 80; xVariation: 10 }
+            acceleration: PointDirection { y: 10; x: 20; }
             width: 80
             height: 80
         }
 
-        Move {
+        Affector {
             groups: ["C"]
             x: 120
             y: 400
             width: 80
-            height: 80
-            relative: true
+            height: 120
             once: true
+            relative: false
             acceleration: PointDirection { y: -80; }
         }
 

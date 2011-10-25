@@ -43,7 +43,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativetimer_p.h>
-#include <QtDeclarative/qsgitem.h>
+#include <QtDeclarative/qquickitem.h>
 #include <QDebug>
 
 class tst_qdeclarativetimer : public QObject
@@ -319,7 +319,7 @@ void tst_qdeclarativetimer::parentProperty()
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.0\nItem { Timer { objectName: \"timer\"; running: parent.visible } }"), QUrl::fromLocalFile(""));
-    QSGItem *item = qobject_cast<QSGItem*>(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
     QDeclarativeTimer *timer = item->findChild<QDeclarativeTimer*>("timer");
     QVERIFY(timer != 0);

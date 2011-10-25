@@ -41,12 +41,12 @@
 
 #include "qdeclarativeinspectorplugin.h"
 
-#include "qdeclarativeviewinspector_p.h"
+#include "qtquick1/qdeclarativeviewinspector_p.h"
 #include "sgviewinspector.h"
 
 #include <QtCore/qplugin.h>
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
-#include <QtDeclarative/QSGView>
+#include <QtDeclarative/QQuickView>
 
 namespace QmlJSDebugger {
 
@@ -71,7 +71,7 @@ void QDeclarativeInspectorPlugin::activate()
     QObject *firstView = views.first();
     if (QDeclarativeView *declarativeView = qobject_cast<QDeclarativeView*>(firstView))
         m_inspector = new QDeclarativeViewInspector(declarativeView, declarativeView);
-    else if (QSGView *sgView = qobject_cast<QSGView*>(firstView))
+    else if (QQuickView *sgView = qobject_cast<QQuickView*>(firstView))
         m_inspector = new SGViewInspector(sgView, sgView);
 }
 

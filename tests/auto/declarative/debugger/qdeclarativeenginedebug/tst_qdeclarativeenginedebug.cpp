@@ -50,7 +50,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
-#include <QtDeclarative/qsgitem.h>
+#include <QtDeclarative/qquickitem.h>
 
 #include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativeenginedebug_p.h>
@@ -80,7 +80,7 @@ private:
     QDeclarativeDebugConnection *m_conn;
     QDeclarativeEngineDebug *m_dbg;
     QDeclarativeEngine *m_engine;
-    QSGItem *m_rootItem;
+    QQuickItem *m_rootItem;
 
     QObjectList m_components;
 
@@ -224,7 +224,7 @@ void tst_QDeclarativeEngineDebug::recursiveObjectTest(QObject *o, const QDeclara
             QCOMPARE(p.value(), pmeta.read(o));
 
         if (p.name() == "parent")
-            QVERIFY(p.valueTypeName() == "QGraphicsObject*" || p.valueTypeName() == "QSGItem*");
+            QVERIFY(p.valueTypeName() == "QGraphicsObject*" || p.valueTypeName() == "QQuickItem*");
         else
             QCOMPARE(p.valueTypeName(), QString::fromUtf8(pmeta.typeName()));
 
@@ -362,9 +362,9 @@ void tst_QDeclarativeEngineDebug::initTestCase()
         QDeclarativeComponent component(m_engine);
         component.setData(qml[i], QUrl::fromLocalFile(""));
         QVERIFY(component.isReady());  // fails if bad syntax
-        m_components << qobject_cast<QSGItem*>(component.create());
+        m_components << qobject_cast<QQuickItem*>(component.create());
     }
-    m_rootItem = qobject_cast<QSGItem*>(m_components.first());
+    m_rootItem = qobject_cast<QQuickItem*>(m_components.first());
 
     // add an extra context to test for multiple contexts
     QDeclarativeContext *context = new QDeclarativeContext(m_engine->rootContext(), this);

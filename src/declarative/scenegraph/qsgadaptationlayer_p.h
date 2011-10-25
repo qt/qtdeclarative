@@ -44,7 +44,6 @@
 
 #include "qsgnode.h"
 #include "qsgtexture.h"
-#include <private/qsgtext_p.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
 #include <QtGui/qbrush.h>
@@ -53,7 +52,8 @@
 #include <QtGui/qglyphrun.h>
 #include <QtCore/qurl.h>
 
-#include <private/qsgtext_p.h>
+// ### remove
+#include <private/qquicktext_p.h>
 
 QT_BEGIN_HEADER
 
@@ -109,7 +109,7 @@ public:
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
-    virtual void setStyle(QSGText::TextStyle style) = 0;
+    virtual void setStyle(QQuickText::TextStyle style) = 0;
     virtual void setStyleColor(const QColor &color) = 0;
     virtual QPointF baseLine() const = 0;
 
