@@ -58,6 +58,7 @@
 #include "qdeclarativenotifier_p.h"
 
 #include <private/qhashedstring_p.h>
+#include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 
 QT_BEGIN_NAMESPACE
@@ -66,6 +67,7 @@ class QDeclarativeEngine;
 class QMetaProperty;
 class QV8Engine;
 class QV8QObjectWrapper;
+class QDeclarativePropertyCacheMethodArguments;
 
 class Q_DECLARATIVE_EXPORT QDeclarativePropertyCache : public QDeclarativeRefCount, public QDeclarativeCleanup
 {
@@ -109,9 +111,10 @@ public:
                     IsVMESignal        = 0x00040000, // Signal was added by QML
                     IsV8Function       = 0x00080000, // Function takes QDeclarativeV8Function* args
                     IsSignalHandler    = 0x00100000, // Function is a signal handler
+                    IsOverload         = 0x00200000, // Function is an overload of another function
 
                     // Internal QDeclarativePropertyCache flags
-                    NotFullyResolved   = 0x00200000  // True if the type data is to be lazily resolved
+                    NotFullyResolved   = 0x00400000  // True if the type data is to be lazily resolved
         };
         Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -141,6 +144,7 @@ public:
         bool isVMESignal() const { return flags & IsVMESignal; }
         bool isV8Function() const { return flags & IsV8Function; }
         bool isSignalHandler() const { return flags & IsSignalHandler; }
+        bool isOverload() const { return flags & IsOverload; }
 
         union {
             int propType;             // When !NotFullyResolved
@@ -149,7 +153,7 @@ public:
         int coreIndex;
         union {
             int notifyIndex;  // When !IsFunction
-            int relatedIndex; // When IsFunction
+            void *arguments;  // When IsFunction && HasArguments
         };
         union {
             struct { // When !IsValueTypeVirtual
@@ -219,9 +223,10 @@ public:
     inline QDeclarativeEngine *qmlEngine() const;
     static Data *property(QDeclarativeEngine *, QObject *, const QString &, Data &);
     static Data *property(QDeclarativeEngine *, QObject *, const QHashedV8String &, Data &);
+    static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
+                                     QByteArray *unknownTypeError);
 
     static bool isDynamicMetaObject(const QMetaObject *);
-
 protected:
     virtual void destroy();
     virtual void clear();
@@ -252,6 +257,9 @@ private:
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
     v8::Persistent<v8::Function> constructor;
+
+    const QMetaObject *metaObject;
+    QDeclarativePropertyCacheMethodArguments *argumentsCache;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativePropertyCache::Data::Flags);
   

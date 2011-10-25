@@ -54,6 +54,13 @@ Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 
 QT_BEGIN_NAMESPACE
 
+class QDeclarativePropertyCacheMethodArguments 
+{
+public:
+    QDeclarativePropertyCacheMethodArguments *next;
+    int arguments[0];
+};
+
 // Flags that do *NOT* depend on the property's QMetaProperty::userType() and thus are quick
 // to load
 static QDeclarativePropertyCache::Data::Flags fastFlagsForProperty(const QMetaProperty &p)
@@ -143,7 +150,7 @@ void QDeclarativePropertyCache::Data::load(const QMetaProperty &p, QDeclarativeE
 void QDeclarativePropertyCache::Data::load(const QMetaMethod &m)
 {
     coreIndex = m.methodIndex();
-    relatedIndex = -1;
+    arguments = 0;
     flags |= Data::IsFunction;
     if (m.methodType() == QMetaMethod::Signal)
         flags |= Data::IsSignal;
@@ -170,7 +177,7 @@ void QDeclarativePropertyCache::Data::load(const QMetaMethod &m)
 void QDeclarativePropertyCache::Data::lazyLoad(const QMetaMethod &m)
 {
     coreIndex = m.methodIndex();
-    relatedIndex = -1;
+    arguments = 0;
     flags |= Data::IsFunction;
     if (m.methodType() == QMetaMethod::Signal)
         flags |= Data::IsSignal;
@@ -200,7 +207,8 @@ void QDeclarativePropertyCache::Data::lazyLoad(const QMetaMethod &m)
 Creates a new empty QDeclarativePropertyCache.
 */
 QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e)
-: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0)
+: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0), metaObject(0), 
+  argumentsCache(0)
 {
     Q_ASSERT(engine);
 }
@@ -209,7 +217,8 @@ QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e)
 Creates a new QDeclarativePropertyCache of \a metaObject.
 */
 QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e, const QMetaObject *metaObject)
-: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0)
+: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0), metaObject(0),
+  argumentsCache(0)
 {
     Q_ASSERT(engine);
     Q_ASSERT(metaObject);
@@ -220,6 +229,13 @@ QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e, cons
 QDeclarativePropertyCache::~QDeclarativePropertyCache()
 {
     clear();
+
+    QDeclarativePropertyCacheMethodArguments *args = argumentsCache;
+    while (args) {
+        QDeclarativePropertyCacheMethodArguments *next = args->next;
+        qFree(args);
+        args = next;
+    }
 
     if (parent) parent->release();
     parent = 0;
@@ -298,6 +314,7 @@ QDeclarativePropertyCache *QDeclarativePropertyCache::copy(int reserve)
     cache->methodIndexCacheStart = methodIndexCache.count() + methodIndexCacheStart;
     cache->stringCache.copyAndReserve(stringCache, reserve);
     cache->allowedRevisionCache = allowedRevisionCache;
+    cache->metaObject = metaObject;
 
     // We specifically do *NOT* copy the constructor
 
@@ -316,6 +333,8 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 {
     Q_UNUSED(revision);
     Q_ASSERT(constructor.IsEmpty()); // We should not be appending to an in-use property cache
+
+    this->metaObject = metaObject;
 
     bool dynamicMetaObject = isDynamicMetaObject(metaObject);
 
@@ -404,8 +423,8 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         if (old) {
             // We only overload methods in the same class, exactly like C++
-            if (old->flags & Data::IsFunction && old->coreIndex >= methodOffset)
-                data->relatedIndex = old->coreIndex;
+            if (old->flags & Data::IsFunction && old->coreIndex >= methodOffset) 
+                data->flags |= Data::IsOverload;
             data->overrideIndexIsProperty = !bool(old->flags & Data::IsFunction);
             data->overrideIndex = old->coreIndex;
         }
@@ -586,6 +605,94 @@ QStringList QDeclarativePropertyCache::propertyNames() const
     for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) 
         keys.append(iter.key());
     return keys;
+}
+
+static int EnumType(const QMetaObject *meta, const QByteArray &str)
+{
+    QByteArray scope;
+    QByteArray name;
+    int scopeIdx = str.lastIndexOf("::");
+    if (scopeIdx != -1) {
+        scope = str.left(scopeIdx);
+        name = str.mid(scopeIdx + 2);
+    } else { 
+        name = str;
+    }
+    for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
+        QMetaEnum m = meta->enumerator(i);
+        if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
+            return QVariant::Int;
+    }
+    return QVariant::Invalid;
+}
+
+// Returns an array of the arguments for method \a index.  The first entry in the array
+// is the number of arguments.
+int *QDeclarativePropertyCache::methodParameterTypes(QObject *object, int index, 
+                                                     QVarLengthArray<int, 9> &dummy,
+                                                     QByteArray *unknownTypeError)
+{
+    Q_ASSERT(object && index >= 0);
+
+    QDeclarativeData *ddata = QDeclarativeData::get(object, false);
+
+    if (ddata && ddata->propertyCache) {
+        typedef QDeclarativePropertyCacheMethodArguments A;
+
+        QDeclarativePropertyCache *c = ddata->propertyCache;
+        Q_ASSERT(index < c->methodIndexCacheStart + c->methodIndexCache.count());
+
+        while (index < c->methodIndexCacheStart)
+            c = c->parent;
+
+        Data *rv = const_cast<Data *>(&c->methodIndexCache.at(index - c->methodIndexCacheStart));
+
+        if (rv->arguments)  
+            return static_cast<A *>(rv->arguments)->arguments;
+
+        const QMetaObject *metaObject = object->metaObject();
+        QMetaMethod m = metaObject->method(index);
+        QList<QByteArray> argTypeNames = m.parameterTypes();
+
+        A *args = static_cast<A *>(qMalloc(sizeof(A) + (argTypeNames.count() + 1) * sizeof(int)));
+        args->arguments[0] = argTypeNames.count();
+
+        for (int ii = 0; ii < argTypeNames.count(); ++ii) {
+            int type = QMetaType::type(argTypeNames.at(ii));
+            if (type == QVariant::Invalid)
+                type = EnumType(object->metaObject(), argTypeNames.at(ii));
+            if (type == QVariant::Invalid) {
+                if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
+                qFree(args);
+                return 0;
+            }
+            args->arguments[ii + 1] = type;
+        }
+
+        rv->arguments = args;
+        args->next = c->argumentsCache;
+        c->argumentsCache = args;
+        return static_cast<A *>(rv->arguments)->arguments;
+
+    } else {
+        QMetaMethod m = object->metaObject()->method(index);
+        QList<QByteArray> argTypeNames = m.parameterTypes();
+        dummy.resize(argTypeNames.count() + 1);
+        dummy[0] = argTypeNames.count();
+
+        for (int ii = 0; ii < argTypeNames.count(); ++ii) {
+            int type = QMetaType::type(argTypeNames.at(ii));
+            if (type == QVariant::Invalid)
+                type = EnumType(object->metaObject(), argTypeNames.at(ii));
+            if (type == QVariant::Invalid) {
+                if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
+                return 0;
+            }
+            dummy[ii + 1] = type;
+        }
+
+        return dummy.data();
+    }
 }
 
 QDeclarativePropertyCache::Data *

@@ -1173,20 +1173,17 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
 
         QList<Connection> connections = connectionList;
 
-        QMetaMethod method = data()->metaObject()->method(index);
-        Q_ASSERT(method.methodType() == QMetaMethod::Signal);
-        // XXX TODO: We should figure out a way to cache the parameter types to avoid resolving
-        // them each time.
-        QList<QByteArray> params = method.parameterTypes();
+        QVarLengthArray<int, 9> dummy;
+        int *argsTypes = QDeclarativePropertyCache::methodParameterTypes(data(), index, dummy, 0);
 
         v8::HandleScope handle_scope;
         v8::Context::Scope scope(engine->context());
 
-        QVarLengthArray<v8::Handle<v8::Value> > args(params.count());
-        int argCount = params.count();
+        int argCount = argsTypes?argsTypes[0]:0;
+        QVarLengthArray<v8::Handle<v8::Value>, 9> args(argCount);
 
         for (int ii = 0; ii < argCount; ++ii) {
-            int type = QMetaType::type(params.at(ii).constData());
+            int type = argsTypes[ii + 1];
             if (type == qMetaTypeId<QVariant>()) {
                 args[ii] = engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
             } else {
@@ -1452,34 +1449,13 @@ static v8::Handle<v8::Value> CallMethod(QObject *object, int index, int returnTy
     }
 }
 
-static int EnumType(const QMetaObject *meta, const QString &strname)
-{
-    QByteArray str = strname.toUtf8();
-    QByteArray scope;
-    QByteArray name;
-    int scopeIdx = str.lastIndexOf("::");
-    if (scopeIdx != -1) {
-        scope = str.left(scopeIdx);
-        name = str.mid(scopeIdx + 2);
-    } else { 
-        name = str;
-    }
-    for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
-        QMetaEnum m = meta->enumerator(i);
-        if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
-            return QVariant::Int;
-    }
-    return QVariant::Invalid;
-}
-
 /*!
     Returns the match score for converting \a actual to be of type \a conversionType.  A 
     zero score means "perfect match" whereas a higher score is worse.
 
     The conversion table is copied out of the QtScript callQtMethod() function.
 */
-static int MatchScore(v8::Handle<v8::Value> actual, int conversionType, 
-                      const QByteArray &conversionTypeName)
+static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
 {
     if (actual->IsNumber()) {
         switch (conversionType) {
@@ -1551,11 +1527,13 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType,
         case QMetaType::VoidStar:
         case QMetaType::QObjectStar:
             return 0;
-        default:
-            if (!conversionTypeName.endsWith('*'))
-                return 10;
-            else
+        default: {
+            const char *typeName = QMetaType::typeName(conversionType);
+            if (typeName && typeName[strlen(typeName) - 1] == '*')
                 return 0;
+            else
+                return 10;
+        }
         }
     } else if (actual->IsObject()) {
         v8::Handle<v8::Object> obj = v8::Handle<v8::Object>::Cast(actual);
@@ -1615,28 +1593,32 @@ static const QDeclarativePropertyCache::Data * RelatedMethod(QObject *object,
                                                              QDeclarativePropertyCache::Data &dummy)
 {
     QDeclarativePropertyCache *cache = QDeclarativeData::get(object)->propertyCache;
-    if (current->relatedIndex == -1)
+    if (!current->isOverload())
         return 0;
 
+    Q_ASSERT(!current->overrideIndexIsProperty);
+
     if (cache) {
-        return cache->method(current->relatedIndex);
+        return cache->method(current->overrideIndex);
     } else {
         const QMetaObject *mo = object->metaObject();
         int methodOffset = mo->methodCount() - QMetaObject_methods(mo);
 
-        while (methodOffset > current->relatedIndex) {
+        while (methodOffset > current->overrideIndex) {
             mo = mo->superClass();
             methodOffset -= QMetaObject_methods(mo);
         }
 
-        QMetaMethod method = mo->method(current->relatedIndex);
+        QMetaMethod method = mo->method(current->overrideIndex);
         dummy.load(method);
         
         // Look for overloaded methods
         QByteArray methodName = QMetaMethod_name(method);
-        for (int ii = current->relatedIndex - 1; ii >= methodOffset; --ii) {
+        for (int ii = current->overrideIndex - 1; ii >= methodOffset; --ii) {
             if (methodName == QMetaMethod_name(mo->method(ii))) {
-                dummy.relatedIndex = ii;
+                dummy.setFlags(dummy.getFlags() | QDeclarativePropertyCache::Data::IsOverload);
+                dummy.overrideIndexIsProperty = 0;
+                dummy.overrideIndex = ii;
                 return &dummy;
             }
         }
@@ -1650,30 +1632,27 @@ static v8::Handle<v8::Value> CallPrecise(QObject *object, const QDeclarativeProp
 {
     if (data.hasArguments()) {
 
-        QMetaMethod m = object->metaObject()->method(data.coreIndex);
-        QList<QByteArray> argTypeNames = m.parameterTypes();
-        QVarLengthArray<int, 9> argTypes(argTypeNames.count());
+        int *args = 0;
+        QVarLengthArray<int, 9> dummy;
+        QByteArray unknownTypeError;
 
-        // ### Cache
-        for (int ii = 0; ii < argTypeNames.count(); ++ii) {
-            argTypes[ii] = QMetaType::type(argTypeNames.at(ii));
-            if (argTypes[ii] == QVariant::Invalid) 
-                argTypes[ii] = EnumType(object->metaObject(), QString::fromLatin1(argTypeNames.at(ii)));
-            if (argTypes[ii] == QVariant::Invalid) {
-                QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(QLatin1String(argTypeNames.at(ii)));
-                v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-                return v8::Handle<v8::Value>();
-            }
+        args = QDeclarativePropertyCache::methodParameterTypes(object, data.coreIndex, dummy, 
+                                                               &unknownTypeError);
+
+        if (!args) {
+            QString typeName = QString::fromLatin1(unknownTypeError);
+            QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(typeName);
+            v8::ThrowException(v8::Exception::Error(engine->toString(error)));
+            return v8::Handle<v8::Value>();
         }
 
-        if (argTypes.count() > callArgs.Length()) {
+        if (args[0] > callArgs.Length()) {
             QString error = QLatin1String("Insufficient arguments");
             v8::ThrowException(v8::Exception::Error(engine->toString(error)));
             return v8::Handle<v8::Value>();
         }
 
-        return CallMethod(object, data.coreIndex, data.propType, argTypes.count(), 
-                          argTypes.data(), engine, callArgs);
+        return CallMethod(object, data.coreIndex, data.propType, args[0], args + 1, engine, callArgs);
 
     } else {
 
@@ -1708,12 +1687,18 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QDeclarativeP
     const QDeclarativePropertyCache::Data *attempt = &data;
 
     do {
-        QList<QByteArray> methodArgTypeNames;
+        QVarLengthArray<int, 9> dummy;
+        int methodArgumentCount = 0;
+        int *methodArgTypes = 0;
+        if (attempt->hasArguments()) {
+            typedef QDeclarativePropertyCache PC;
+            int *args = PC::methodParameterTypes(object, attempt->coreIndex, dummy, 0);
+            if (!args) // Must be an unknown argument
+                continue;
 
-        if (attempt->hasArguments())
-            methodArgTypeNames = object->metaObject()->method(attempt->coreIndex).parameterTypes();
-
-        int methodArgumentCount = methodArgTypeNames.count();
+            methodArgumentCount = args[0];
+            methodArgTypes = args + 1;
+        }
 
         if (methodArgumentCount > argumentCount)
             continue; // We don't have sufficient arguments to call this method
@@ -1723,22 +1708,8 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QDeclarativeP
             continue; // We already have a better option
 
         int methodMatchScore = 0;
-        QVarLengthArray<int, 9> methodArgTypes(methodArgumentCount);
-
-        bool unknownArgument = false;
-        for (int ii = 0; ii < methodArgumentCount; ++ii) {
-            methodArgTypes[ii] = QMetaType::type(methodArgTypeNames.at(ii));
-            if (methodArgTypes[ii] == QVariant::Invalid) 
-                methodArgTypes[ii] = EnumType(object->metaObject(), 
-                                              QString::fromLatin1(methodArgTypeNames.at(ii)));
-            if (methodArgTypes[ii] == QVariant::Invalid) {
-                unknownArgument = true;
-                break;
-            }
-            methodMatchScore += MatchScore(callArgs[ii], methodArgTypes[ii], methodArgTypeNames.at(ii));
-        }
-        if (unknownArgument)
-            continue; // We don't understand all the parameters
+        for (int ii = 0; ii < methodArgumentCount; ++ii) 
+            methodMatchScore += MatchScore(callArgs[ii], methodArgTypes[ii]);
 
         if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
             best = attempt;
@@ -1887,7 +1858,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     }
 
     CallArgs callArgs(argCount, &arguments);
-    if (method.relatedIndex == -1) {
+    if (!method.isOverload()) {
         return CallPrecise(object, method, resource->engine, callArgs);
     } else {
         return CallOverloaded(object, method, resource->engine, callArgs);
