@@ -674,8 +674,8 @@ void QDeclarativeEngineDebugService::setMethodBody(int objectId, const QString &
     if (!contextData)
         return;
 
-    QDeclarativePropertyCache::Data dummy;
-    QDeclarativePropertyCache::Data *prop =
+    QDeclarativePropertyData dummy;
+    QDeclarativePropertyData *prop =
             QDeclarativePropertyCache::property(context->engine(), object, method, dummy);
 
     if (!prop || !prop->isVMEFunction())

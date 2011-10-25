@@ -381,8 +381,8 @@ QVariant QDeclarativeContext::contextProperty(const QString &name) const
         QByteArray utf8Name = name.toUtf8();
         if (data->contextObject) {
             QObject *obj = data->contextObject;
-            QDeclarativePropertyCache::Data local;
-            QDeclarativePropertyCache::Data *property =
+            QDeclarativePropertyData local;
+            QDeclarativePropertyData *property =
                 QDeclarativePropertyCache::property(data->engine, obj, name, local);
 
             if (property) value = obj->metaObject()->property(property->coreIndex).read(obj);

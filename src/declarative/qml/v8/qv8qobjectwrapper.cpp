@@ -348,7 +348,7 @@ QObject *QV8QObjectWrapper::toQObject(QV8ObjectResource *r)
 
 // Load value properties
 static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object, 
-                                          const QDeclarativePropertyCache::Data &property)
+                                          const QDeclarativePropertyData &property)
 {
     Q_ASSERT(!property.isFunction());
 
@@ -394,7 +394,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
 }
 
 static v8::Handle<v8::Value> LoadPropertyDirect(QV8Engine *engine, QObject *object, 
-                                                const QDeclarativePropertyCache::Data &property)
+                                                const QDeclarativePropertyData &property)
 {
     Q_ASSERT(!property.isFunction());
 
@@ -478,8 +478,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         }
     }
 
-    QDeclarativePropertyCache::Data local;
-    QDeclarativePropertyCache::Data *result = 0;
+    QDeclarativePropertyData local;
+    QDeclarativePropertyData *result = 0;
     {
         QDeclarativeData *ddata = QDeclarativeData::get(object, false);
         if (ddata && ddata->propertyCache)
@@ -533,7 +533,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
 }
 
 // Setter for writable properties.  Shared between the interceptor and fast property accessor
-static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativePropertyCache::Data *property,
+static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativePropertyData *property,
                                  v8::Handle<v8::Value> value)
 {
     QDeclarativeBinding *newBinding = 0;
@@ -623,8 +623,8 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
         engine->qobjectWrapper()->m_destroyString == property)
         return true;
 
-    QDeclarativePropertyCache::Data local;
-    QDeclarativePropertyCache::Data *result = 0;
+    QDeclarativePropertyData local;
+    QDeclarativePropertyData *result = 0;
     result = QDeclarativePropertyCache::property(engine->engine(), object, property, local);
 
     if (!result)
@@ -730,8 +730,8 @@ v8::Handle<v8::Integer> QV8QObjectWrapper::Query(v8::Local<v8::String> property,
 
     QHashedV8String propertystring(property);
 
-    QDeclarativePropertyCache::Data local;
-    QDeclarativePropertyCache::Data *result = 0;
+    QDeclarativePropertyData local;
+    QDeclarativePropertyData *result = 0;
     result = QDeclarativePropertyCache::property(engine->engine(), object, propertystring, local);
 
     if (!result)
@@ -811,7 +811,7 @@ static void FastValueSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
     Q_ASSERT(ddata);
     Q_ASSERT(ddata->propertyCache);
 
-    QDeclarativePropertyCache::Data *pdata = ddata->propertyCache->property(index);
+    QDeclarativePropertyData *pdata = ddata->propertyCache->property(index);
     Q_ASSERT(pdata);
 
     Q_ASSERT(pdata->isWritable() || pdata->isQList());
@@ -881,7 +881,7 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
         // performance, but the  cost of setting up this structure hasn't been measured so 
         // its not guarenteed that this is a win overall.  We need to try and measure the cost.
         for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) {
-            Data *property = *iter;
+            QDeclarativePropertyData *property = *iter;
             if (property->isFunction() || 
                 property->coreIndex >= 0x7FFF || property->notifyIndex >= 0x0FFF || 
                 property->coreIndex == 0)
@@ -1588,9 +1588,9 @@ static QByteArray QMetaMethod_name(const QMetaMethod &m)
 /*!
 Returns the next related method, if one, or 0.
 */
-static const QDeclarativePropertyCache::Data * RelatedMethod(QObject *object, 
-                                                             const QDeclarativePropertyCache::Data *current, 
-                                                             QDeclarativePropertyCache::Data &dummy)
+static const QDeclarativePropertyData * RelatedMethod(QObject *object,
+                                                      const QDeclarativePropertyData *current,
+                                                      QDeclarativePropertyData &dummy)
 {
     QDeclarativePropertyCache *cache = QDeclarativeData::get(object)->propertyCache;
     if (!current->isOverload())
@@ -1616,7 +1616,7 @@ static const QDeclarativePropertyCache::Data * RelatedMethod(QObject *object,
         QByteArray methodName = QMetaMethod_name(method);
         for (int ii = current->overrideIndex - 1; ii >= methodOffset; --ii) {
             if (methodName == QMetaMethod_name(mo->method(ii))) {
-                dummy.setFlags(dummy.getFlags() | QDeclarativePropertyCache::Data::IsOverload);
+                dummy.setFlags(dummy.getFlags() | QDeclarativePropertyData::IsOverload);
                 dummy.overrideIndexIsProperty = 0;
                 dummy.overrideIndex = ii;
                 return &dummy;
@@ -1627,7 +1627,7 @@ static const QDeclarativePropertyCache::Data * RelatedMethod(QObject *object,
     }
 }
 
-static v8::Handle<v8::Value> CallPrecise(QObject *object, const QDeclarativePropertyCache::Data &data, 
+static v8::Handle<v8::Value> CallPrecise(QObject *object, const QDeclarativePropertyData &data,
                                          QV8Engine *engine, CallArgs &callArgs)
 {
     if (data.hasArguments()) {
@@ -1674,17 +1674,17 @@ Resolve the overloaded method to call.  The algorithm works conceptually like th
         If two or more overloads have the same match score, call the last one.  The match
         score is constructed by adding the matchScore() result for each of the parameters.
 */
-static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QDeclarativePropertyCache::Data &data, 
+static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QDeclarativePropertyData &data,
                                             QV8Engine *engine, CallArgs &callArgs)
 {
     int argumentCount = callArgs.Length();
 
-    const QDeclarativePropertyCache::Data *best = 0;
+    const QDeclarativePropertyData *best = 0;
     int bestParameterScore = INT_MAX;
     int bestMatchScore = INT_MAX;
 
-    QDeclarativePropertyCache::Data dummy;
-    const QDeclarativePropertyCache::Data *attempt = &data;
+    QDeclarativePropertyData dummy;
+    const QDeclarativePropertyData *attempt = &data;
 
     do {
         QVarLengthArray<int, 9> dummy;
@@ -1726,7 +1726,7 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QDeclarativeP
         return CallPrecise(object, *best, engine, callArgs);
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
-        const QDeclarativePropertyCache::Data *candidate = &data;
+        const QDeclarativePropertyData *candidate = &data;
         while (candidate) {
             error += QLatin1String("\n    ") + 
                      QString::fromUtf8(object->metaObject()->method(candidate->coreIndex).signature());
@@ -1822,11 +1822,11 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
         }
     }
 
-    QDeclarativePropertyCache::Data method;
+    QDeclarativePropertyData method;
 
     if (QDeclarativeData *ddata = static_cast<QDeclarativeData *>(QObjectPrivate::get(object)->declarativeData)) {
         if (ddata->propertyCache) {
-            QDeclarativePropertyCache::Data *d = ddata->propertyCache->method(index);
+            QDeclarativePropertyData *d = ddata->propertyCache->method(index);
             if (!d) 
                 return v8::Undefined();
             method = *d;

@@ -688,7 +688,7 @@ QString QQuickVisualAdaptorModel::stringValue(int index, const QString &name)
 
     QDeclarativeData *ddata = QDeclarativeData::get(data);
     if (ddata && ddata->propertyCache) {
-        QDeclarativePropertyCache::Data *prop = ddata->propertyCache->property(name);
+        QDeclarativePropertyData *prop = ddata->propertyCache->property(name);
         if (prop) {
             if (prop->propType == QVariant::String) {
                 void *args[] = { &val, 0 };

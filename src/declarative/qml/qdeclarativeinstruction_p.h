@@ -211,13 +211,13 @@ union QDeclarativeInstruction
     };
     struct instr_assignValueSource {
         QML_INSTR_HEADER
-        QDeclarativePropertyCache::RawData property;
+        QDeclarativePropertyRawData property;
         int owner;
         int castValue;
     };
     struct instr_assignValueInterceptor {
         QML_INSTR_HEADER
-        QDeclarativePropertyCache::RawData property;
+        QDeclarativePropertyRawData property;
         int owner;
         int castValue;
     };
@@ -238,7 +238,7 @@ union QDeclarativeInstruction
     };
     struct instr_assignBinding {
         QML_INSTR_HEADER
-        QDeclarativePropertyCache::RawData property;
+        QDeclarativePropertyRawData property;
         int value;
         short context;
         short owner;

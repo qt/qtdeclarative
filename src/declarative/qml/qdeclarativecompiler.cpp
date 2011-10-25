@@ -1125,8 +1125,8 @@ void QDeclarativeCompiler::genObject(QDeclarativeScript::Object *obj)
                 reinterpret_cast<const QDeclarativeVMEMetaData *>(obj->synthdata.constData());
             for (int ii = 0; ii < vmeMetaData->aliasCount; ++ii) {
                 int index = obj->metaObject()->propertyOffset() + vmeMetaData->propertyCount + ii;
-                QDeclarativePropertyCache::Data *data = propertyCache->property(index);
-                data->setFlags(data->getFlags() | QDeclarativePropertyCache::Data::IsAlias);
+                QDeclarativePropertyData *data = propertyCache->property(index);
+                data->setFlags(data->getFlags() | QDeclarativePropertyData::IsAlias);
             }
         }
 
@@ -1529,7 +1529,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeScript::Property *prop, QDecl
 
     bool notInRevision = false;
 
-    QDeclarativePropertyCache::Data *sig = signal(obj, QStringRef(&name), &notInRevision);
+    QDeclarativePropertyData *sig = signal(obj, QStringRef(&name), &notInRevision);
 
     if (sig == 0) {
 
@@ -1634,7 +1634,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeScript::Property *prop,
     } else {
         // Setup regular property data
         bool notInRevision = false;
-        QDeclarativePropertyCache::Data *d = 
+        QDeclarativePropertyData *d =
             prop->name().isEmpty()?0:property(obj, prop->name(), &notInRevision);
 
         if (d == 0 && notInRevision) {
@@ -1650,7 +1650,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeScript::Property *prop,
             prop->core = *d;
         } else if (prop->isDefault) {
             QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
-            QDeclarativePropertyCache::Data defaultPropertyData;
+            QDeclarativePropertyData defaultPropertyData;
             defaultPropertyData.load(p, engine);
             if (p.name())
                 prop->setName(QLatin1String(p.name()));
@@ -2056,7 +2056,7 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
 
     for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
 
-        QDeclarativePropertyCache::Data *d = property(obj, prop->name());
+        QDeclarativePropertyData *d = property(obj, prop->name());
         if (d == 0) 
             COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name().toString()));
 
@@ -2627,7 +2627,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
 
         if (!resolveAlias) {
             // No point doing this for both the alias and non alias cases
-            QDeclarativePropertyCache::Data *d = property(obj, p->name);
+            QDeclarativePropertyData *d = property(obj, p->name);
             if (d && d->isFinal())
                 COMPILE_EXCEPTION(p, tr("Cannot override FINAL property"));
         }
@@ -2988,16 +2988,16 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
     if (obj->type != -1) {
         QDeclarativePropertyCache *cache = output->types[obj->type].createPropertyCache(engine)->copy();
         cache->append(engine, &obj->extObject,
-                      QDeclarativePropertyCache::Data::NoFlags,
-                      QDeclarativePropertyCache::Data::IsVMEFunction, 
-                      QDeclarativePropertyCache::Data::IsVMESignal);
+                      QDeclarativePropertyData::NoFlags,
+                      QDeclarativePropertyData::IsVMEFunction,
+                      QDeclarativePropertyData::IsVMESignal);
 
         // now we modify the flags appropriately for var properties.
         int propertyOffset = obj->extObject.propertyOffset();
-        QDeclarativePropertyCache::Data *currPropData = 0;
+        QDeclarativePropertyData *currPropData = 0;
         for (int pvi = firstPropertyVarIndex; pvi < totalPropCount; ++pvi) {
             currPropData = cache->property(pvi + propertyOffset);
-            currPropData->setFlags(currPropData->getFlags() | QDeclarativePropertyCache::Data::IsVMEProperty);
+            currPropData->setFlags(currPropData->getFlags() | QDeclarativePropertyData::IsVMEProperty);
         }
 
         obj->synthCache = cache;
@@ -3275,7 +3275,7 @@ int QDeclarativeCompiler::genContextCache()
     return output->contextCaches.count() - 1;
 }
 
-QDeclarativePropertyCache::Data 
+QDeclarativePropertyData
 QDeclarativeCompiler::genValueTypeData(QDeclarativeScript::Property *valueTypeProp, 
                                        QDeclarativeScript::Property *prop)
 {
@@ -3498,7 +3498,7 @@ QStringList QDeclarativeCompiler::deferredProperties(QDeclarativeScript::Object 
     return rv;
 }
 
-QDeclarativePropertyCache::Data *
+QDeclarativePropertyData *
 QDeclarativeCompiler::property(QDeclarativeScript::Object *object, int index)
 {
     QDeclarativePropertyCache *cache = 0;
@@ -3513,7 +3513,7 @@ QDeclarativeCompiler::property(QDeclarativeScript::Object *object, int index)
     return cache->property(index);
 }
 
-QDeclarativePropertyCache::Data *
+QDeclarativePropertyData *
 QDeclarativeCompiler::property(QDeclarativeScript::Object *object, const QHashedStringRef &name, bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
@@ -3527,7 +3527,7 @@ QDeclarativeCompiler::property(QDeclarativeScript::Object *object, const QHashed
     else
         cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
-    QDeclarativePropertyCache::Data *d = cache->property(name);
+    QDeclarativePropertyData *d = cache->property(name);
 
     // Find the first property
     while (d && d->isFunction())
@@ -3542,7 +3542,7 @@ QDeclarativeCompiler::property(QDeclarativeScript::Object *object, const QHashed
 }
 
 // This code must match the semantics of QDeclarativePropertyPrivate::findSignalByName
-QDeclarativePropertyCache::Data *
+QDeclarativePropertyData *
 QDeclarativeCompiler::signal(QDeclarativeScript::Object *object, const QHashedStringRef &name, bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
@@ -3557,7 +3557,7 @@ QDeclarativeCompiler::signal(QDeclarativeScript::Object *object, const QHashedSt
         cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
 
-    QDeclarativePropertyCache::Data *d = cache->property(name);
+    QDeclarativePropertyData *d = cache->property(name);
     if (notInRevision) *notInRevision = false;
 
     while (d && !(d->isFunction()))
@@ -3585,7 +3585,7 @@ QDeclarativeCompiler::signal(QDeclarativeScript::Object *object, const QHashedSt
 int QDeclarativeCompiler::indexOfSignal(QDeclarativeScript::Object *object, const QString &name, 
                                         bool *notInRevision)
 {
-    QDeclarativePropertyCache::Data *d = signal(object, QStringRef(&name), notInRevision);
+    QDeclarativePropertyData *d = signal(object, QStringRef(&name), notInRevision);
     return d?d->coreIndex:-1;
 }
 
@@ -3598,7 +3598,7 @@ int QDeclarativeCompiler::indexOfProperty(QDeclarativeScript::Object *object, co
 int QDeclarativeCompiler::indexOfProperty(QDeclarativeScript::Object *object, const QHashedStringRef &name, 
                                           bool *notInRevision)
 {
-    QDeclarativePropertyCache::Data *d = property(object, name, notInRevision);
+    QDeclarativePropertyData *d = property(object, name, notInRevision);
     return d?d->coreIndex:-1;
 }
 

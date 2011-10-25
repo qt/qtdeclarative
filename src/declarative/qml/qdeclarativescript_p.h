@@ -250,7 +250,7 @@ public:
     // The core data in the case of a regular property.  
     // XXX This has to be a value now as the synthCache may change during
     // compilation which invalidates pointers.  We should fix this.
-    QDeclarativePropertyCache::Data core;
+    QDeclarativePropertyData core;
 
     // Returns true if this is an empty property - both value and values
     // are unset.

@@ -182,7 +182,7 @@ QV8Bindings::~QV8Bindings()
 }
 
 QDeclarativeAbstractBinding *QV8Bindings::configBinding(int index, QObject *target, QObject *scope, 
-                                                        const QDeclarativePropertyCache::Data &p,
+                                                        const QDeclarativePropertyData &p,
                                                         int line)
 {
     QV8Bindings::Binding *rv = bindings + index;

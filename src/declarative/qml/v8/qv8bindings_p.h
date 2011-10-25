@@ -74,7 +74,7 @@ public:
     virtual ~QV8Bindings();
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, 
-                                               const QDeclarativePropertyCache::Data &prop,
+                                               const QDeclarativePropertyData &prop,
                                                int line);
 
 private:
@@ -101,7 +101,7 @@ private:
         bool updating:1;
         int line;
         QObject *object;
-        QDeclarativePropertyCache::Data property;
+        QDeclarativePropertyData property;
         QV8Bindings *parent;
     };
 

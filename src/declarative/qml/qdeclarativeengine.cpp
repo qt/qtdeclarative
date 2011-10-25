@@ -1659,12 +1659,12 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
          !overloadError && iter != raw->stringCache.end();
          ++iter) {
 
-        QDeclarativePropertyCache::Data *d = *iter;
+        QDeclarativePropertyData *d = *iter;
         if (raw->isAllowedInRevision(d))
             continue; // Not excluded - no problems
 
         // check that a regular "name" overload isn't happening
-        QDeclarativePropertyCache::Data *current = d;
+        QDeclarativePropertyData *current = d;
         while (!overloadError && current) {
             current = d->overrideData(current);
             if (current && raw->isAllowedInRevision(current))
