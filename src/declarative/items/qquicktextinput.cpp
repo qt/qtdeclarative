@@ -1162,16 +1162,9 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
 bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if !defined QT_NO_IM
-    if (control->composeMode() && event->type() == QEvent::KeyRelease) {
+    if (control->composeMode() && event->type() == QEvent::MouseButtonRelease) {
         int tmp_cursor = xToPos(event->localPos().x());
         int mousePos = tmp_cursor - control->cursor();
-        if (mousePos < 0 || mousePos > control->preeditAreaText().length()) {
-            mousePos = -1;
-            // don't send move events outside the preedit area
-            if (event->type() == QEvent::MouseMove)
-                return true;
-        }
-
         // may be causing reset() in some input methods
         qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
         if (!control->preeditAreaText().isEmpty())
