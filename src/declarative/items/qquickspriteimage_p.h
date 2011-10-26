@@ -56,7 +56,7 @@ class QQuickSprite;
 class QQuickSpriteEngine;
 class QSGGeometryNode;
 class QQuickSpriteMaterial;
-class QQuickSpriteImage : public QQuickItem
+class Q_AUTOTEST_EXPORT QQuickSpriteImage : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
