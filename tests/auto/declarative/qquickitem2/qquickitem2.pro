@@ -1,5 +1,5 @@
 CONFIG += testcase
-TARGET = tst_qquickitem
+TARGET = tst_qquickitem2
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qquickitem.cpp
