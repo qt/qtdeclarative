@@ -62,6 +62,7 @@ PRIVATETESTS += \
 !contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qdeclarativexmllistmodel
 
 QUICKTESTS =  \
+    qquickanchors \
     qquickanimatedimage \
     qquickborderimage \
     qquickcanvas \
