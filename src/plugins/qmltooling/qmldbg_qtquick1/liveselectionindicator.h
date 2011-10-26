@@ -39,61 +39,44 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef LIVESELECTIONINDICATOR_H
+#define LIVESELECTIONINDICATOR_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
-
-#include <QtCore/QList>
-
-QT_BEGIN_HEADER
+#include <QtCore/QWeakPointer>
+#include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
-{
-    Q_OBJECT
-
-public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
-
-    void addView(QObject *);
-    void removeView(QObject *);
-
-    void sendMessage(const QByteArray &message);
-
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
-
-private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
-};
-
+class QGraphicsObject;
+class QGraphicsRectItem;
+class QGraphicsItem;
+class QPolygonF;
 QT_END_NAMESPACE
 
-QT_END_HEADER
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+class QDeclarativeViewInspector;
+
+class LiveSelectionIndicator
+{
+public:
+    LiveSelectionIndicator(QDeclarativeViewInspector *viewInspector, QGraphicsObject *layerItem);
+    ~LiveSelectionIndicator();
+
+    void show();
+    void hide();
+
+    void clear();
+
+    void setItems(const QList<QWeakPointer<QGraphicsObject> > &itemList);
+
+private:
+    QHash<QGraphicsItem*, QGraphicsRectItem *> m_indicatorShapeHash;
+    QWeakPointer<QGraphicsObject> m_layerItem;
+    QDeclarativeViewInspector *m_view;
+};
+
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
+
+#endif // LIVESELECTIONINDICATOR_H

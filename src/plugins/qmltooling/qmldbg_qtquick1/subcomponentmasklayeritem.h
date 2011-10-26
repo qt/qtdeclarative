@@ -39,61 +39,35 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef SUBCOMPONENTMASKLAYERITEM_H
+#define SUBCOMPONENTMASKLAYERITEM_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtWidgets/QGraphicsPolygonItem>
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-#include <QtCore/QList>
+class QDeclarativeViewInspector;
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class SubcomponentMaskLayerItem : public QGraphicsPolygonItem
 {
-    Q_OBJECT
-
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
-
-    void addView(QObject *);
-    void removeView(QObject *);
-
-    void sendMessage(const QByteArray &message);
-
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    explicit SubcomponentMaskLayerItem(QDeclarativeViewInspector *inspector,
+                                       QGraphicsItem *parentItem = 0);
+    int type() const;
+    void setCurrentItem(QGraphicsItem *item);
+    void setBoundingBox(const QRectF &boundingBox);
+    QGraphicsItem *currentItem() const;
+    QRectF itemRect() const;
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+    QDeclarativeViewInspector *m_inspector;
+    QGraphicsItem *m_currentItem;
+    QGraphicsRectItem *m_borderRect;
+    QRectF m_itemPolyRect;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // SUBCOMPONENTMASKLAYERITEM_H

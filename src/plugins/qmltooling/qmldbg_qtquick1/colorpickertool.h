@@ -39,61 +39,56 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef COLORPICKERTOOL_H
+#define COLORPICKERTOOL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "abstractliveedittool.h"
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+#include <QtGui/QColor>
 
-#include <QtCore/QList>
+QT_FORWARD_DECLARE_CLASS(QPoint)
 
-QT_BEGIN_HEADER
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class ColorPickerTool : public AbstractLiveEditTool
 {
     Q_OBJECT
-
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    explicit ColorPickerTool(QDeclarativeViewInspector *view);
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    virtual ~ColorPickerTool();
 
-    void sendMessage(const QByteArray &message);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *) {}
+
+    void hoverMoveEvent(QMouseEvent *) {}
+
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *) {}
+
+    void wheelEvent(QWheelEvent *) {}
+
+    void itemsAboutToRemoved(const QList<QGraphicsItem*> &) {}
+
+    void clear();
+
+signals:
+    void selectedColorChanged(const QColor &color);
 
 protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    void selectedItemsChanged(const QList<QGraphicsItem*> &) {}
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
+    void pickColor(const QPoint &pos);
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+private:
+    QColor m_selectedColor;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // COLORPICKERTOOL_H

@@ -39,61 +39,39 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef QDECLARATIVEINSPECTORPLUGIN_H
+#define QDECLARATIVEINSPECTORPLUGIN_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtCore/QPointer>
+#include <QtDeclarative/private/qdeclarativeinspectorinterface_p.h>
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+namespace QmlJSDebugger {
 
-#include <QtCore/QList>
+class AbstractViewInspector;
 
-QT_BEGIN_HEADER
+namespace QtQuick1 {
 
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class QtQuick1Plugin : public QObject, public QDeclarativeInspectorInterface
 {
     Q_OBJECT
+    Q_DISABLE_COPY(QtQuick1Plugin)
+    Q_INTERFACES(QDeclarativeInspectorInterface)
 
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    QtQuick1Plugin();
+    ~QtQuick1Plugin();
 
-    void addView(QObject *);
-    void removeView(QObject *);
-
-    void sendMessage(const QByteArray &message);
-
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    // QDeclarativeInspectorInterface
+    bool canHandleView(QObject *view);
+    void activate(QObject *view);
+    void deactivate();
+    void clientMessage(const QByteArray &message);
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+    QPointer<AbstractViewInspector> m_inspector;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // QDECLARATIVEINSPECTORPLUGIN_H

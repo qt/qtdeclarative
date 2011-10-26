@@ -39,61 +39,74 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef QSGVIEWINSPECTOR_H
+#define QSGVIEWINSPECTOR_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "abstractviewinspector.h"
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
-
-#include <QtCore/QList>
-
-QT_BEGIN_HEADER
+#include <QtCore/QWeakPointer>
+#include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
-{
-    Q_OBJECT
-
-public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
-
-    void addView(QObject *);
-    void removeView(QObject *);
-
-    void sendMessage(const QByteArray &message);
-
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
-
-private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
-};
-
+class QQuickView;
+class QQuickItem;
 QT_END_NAMESPACE
 
-QT_END_HEADER
+namespace QmlJSDebugger {
+namespace QtQuick2 {
 
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+class SGSelectionTool;
+class SGSelectionHighlight;
+
+class SGViewInspector : public AbstractViewInspector
+{
+    Q_OBJECT
+public:
+    explicit SGViewInspector(QQuickView *view, QObject *parent = 0);
+
+    // AbstractViewInspector
+    void changeCurrentObjects(const QList<QObject*> &objects);
+    void reloadView();
+    void reparentQmlObject(QObject *object, QObject *newParent);
+    void changeTool(InspectorProtocol::Tool tool);
+    Qt::WindowFlags windowFlags() const;
+    void setWindowFlags(Qt::WindowFlags flags);
+    QDeclarativeEngine *declarativeEngine() const;
+
+    QQuickView *view() const { return m_view; }
+    QQuickItem *overlay() const { return m_overlay; }
+
+    QQuickItem *topVisibleItemAt(const QPointF &pos) const;
+    QList<QQuickItem *> itemsAt(const QPointF &pos) const;
+
+    QList<QQuickItem *> selectedItems() const;
+    void setSelectedItems(const QList<QQuickItem*> &items);
+
+    QString titleForItem(QQuickItem *item) const;
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
+    bool mouseMoveEvent(QMouseEvent *);
+
+private slots:
+    void removeFromSelectedItems(QObject *);
+
+private:
+    bool syncSelectedItems(const QList<QQuickItem*> &items);
+
+    QQuickView *m_view;
+    QQuickItem *m_overlay;
+
+    SGSelectionTool *m_selectionTool;
+
+    QList<QWeakPointer<QQuickItem> > m_selectedItems;
+    QHash<QQuickItem*, SGSelectionHighlight*> m_highlightItems;
+
+    bool m_designMode;
+};
+
+} // namespace QtQuick2
+} // namespace QmlJSDebugger
+
+#endif // QSGVIEWINSPECTOR_H

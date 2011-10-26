@@ -39,61 +39,56 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#include "livelayeritem.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qmlinspectorconstants.h"
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+#include <QGraphicsScene>
 
-#include <QtCore/QList>
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+LiveLayerItem::LiveLayerItem(QGraphicsScene* scene)
+    : QGraphicsObject()
 {
-    Q_OBJECT
+    scene->addItem(this);
+    setZValue(1);
+    setFlag(QGraphicsItem::ItemIsMovable, false);
+}
 
-public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+LiveLayerItem::~LiveLayerItem()
+{
+}
 
-    void addView(QObject *);
-    void removeView(QObject *);
+void LiveLayerItem::paint(QPainter * /*painter*/, const QStyleOptionGraphicsItem * /*option*/,
+                          QWidget * /*widget*/)
+{
+}
 
-    void sendMessage(const QByteArray &message);
+int LiveLayerItem::type() const
+{
+    return Constants::EditorItemType;
+}
 
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+QRectF LiveLayerItem::boundingRect() const
+{
+    return childrenBoundingRect();
+}
 
-private:
-    void updateStatus();
-    void loadInspectorPlugins();
+QList<QGraphicsItem*> LiveLayerItem::findAllChildItems() const
+{
+    return findAllChildItems(this);
+}
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
-};
+QList<QGraphicsItem*> LiveLayerItem::findAllChildItems(const QGraphicsItem *item) const
+{
+    QList<QGraphicsItem*> itemList(item->childItems());
 
-QT_END_NAMESPACE
+    foreach (QGraphicsItem *childItem, item->childItems())
+        itemList += findAllChildItems(childItem);
 
-QT_END_HEADER
+    return itemList;
+}
 
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+} // namespace QtQuick1
+} // namespace QmlJSDebugger

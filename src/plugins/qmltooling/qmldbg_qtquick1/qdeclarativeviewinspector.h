@@ -39,61 +39,64 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef QDECLARATIVEVIEWINSPECTOR_H
+#define QDECLARATIVEVIEWINSPECTOR_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qdeclarativedebugservice_p.h"
 #include <private/qdeclarativeglobal_p.h>
 
-#include <QtCore/QList>
+#include "abstractviewinspector.h"
 
-QT_BEGIN_HEADER
+#include <QtCore/QScopedPointer>
+#include <QtQuick1/QDeclarativeView>
 
-QT_BEGIN_NAMESPACE
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-QT_MODULE(Declarative)
+class AbstractLiveEditTool;
+class QDeclarativeViewInspectorPrivate;
 
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class QDeclarativeViewInspector : public AbstractViewInspector
 {
     Q_OBJECT
 
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    explicit QDeclarativeViewInspector(QDeclarativeView *view, QObject *parent = 0);
+    ~QDeclarativeViewInspector();
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    // AbstractViewInspector
+    void changeCurrentObjects(const QList<QObject*> &objects);
+    void reloadView();
+    void reparentQmlObject(QObject *object, QObject *newParent);
+    void changeTool(InspectorProtocol::Tool tool);
+    Qt::WindowFlags windowFlags() const;
+    void setWindowFlags(Qt::WindowFlags flags);
+    QDeclarativeEngine *declarativeEngine() const;
 
-    void sendMessage(const QByteArray &message);
+    void setSelectedItems(QList<QGraphicsItem *> items);
+    QList<QGraphicsItem *> selectedItems() const;
+
+    QDeclarativeView *declarativeView() const;
+
+    QRectF adjustToScreenBoundaries(const QRectF &boundingRectInSceneSpace);
 
 protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    bool eventFilter(QObject *obj, QEvent *event);
+
+    bool leaveEvent(QEvent *);
+    bool mouseMoveEvent(QMouseEvent *event);
+
+    AbstractLiveEditTool *currentTool() const;
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
+    Q_DISABLE_COPY(QDeclarativeViewInspector)
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+    inline QDeclarativeViewInspectorPrivate *d_func() { return data.data(); }
+    QScopedPointer<QDeclarativeViewInspectorPrivate> data;
+    friend class QDeclarativeViewInspectorPrivate;
+    friend class AbstractLiveEditTool;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // QDECLARATIVEVIEWINSPECTOR_H

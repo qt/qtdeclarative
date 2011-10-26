@@ -39,61 +39,55 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef SGSELECTIONTOOL_H
+#define SGSELECTIONTOOL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+#include "abstracttool.h"
 
 #include <QtCore/QList>
+#include <QtCore/QPoint>
 
-QT_BEGIN_HEADER
+QT_FORWARD_DECLARE_CLASS(QAction)
+QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
-QT_BEGIN_NAMESPACE
+namespace QmlJSDebugger {
+namespace QtQuick2 {
 
-QT_MODULE(Declarative)
+class SGViewInspector;
+class SGHoverHighlight;
 
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class SGSelectionTool : public AbstractTool
 {
     Q_OBJECT
-
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    explicit SGSelectionTool(SGViewInspector *inspector);
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    void leaveEvent(QEvent *);
 
-    void sendMessage(const QByteArray &message);
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *) {}
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *) {}
 
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    void hoverMoveEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *) {}
+
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *) {}
+
+private slots:
+    void contextMenuElementHovered(QAction *action);
+    void contextMenuElementSelected();
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
+    void createContextMenu(const QList<QQuickItem*> &items, QPoint pos);
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+    SGViewInspector *inspector() const;
+
+    SGHoverHighlight *m_hoverHighlight;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick2
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // SGSELECTIONTOOL_H

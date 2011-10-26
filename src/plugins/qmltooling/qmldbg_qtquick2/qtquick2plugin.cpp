@@ -39,61 +39,50 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#include "qtquick2plugin.h"
+#include "sgviewinspector.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtCore/qplugin.h>
+#include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
+#include <QtDeclarative/QQuickView>
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+namespace QmlJSDebugger {
+namespace QtQuick2 {
 
-#include <QtCore/QList>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+QtQuick2Plugin::QtQuick2Plugin() :
+    m_inspector(0)
 {
-    Q_OBJECT
+}
 
-public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+QtQuick2Plugin::~QtQuick2Plugin()
+{
+    delete m_inspector;
+}
 
-    void addView(QObject *);
-    void removeView(QObject *);
+bool QtQuick2Plugin::canHandleView(QObject *view)
+{
+    return qobject_cast<QQuickView*>(view);
+}
 
-    void sendMessage(const QByteArray &message);
+void QtQuick2Plugin::activate(QObject *view)
+{
+    QQuickView *qtQuickView = qobject_cast<QQuickView*>(view);
+    Q_ASSERT(qtQuickView);
+    m_inspector = new SGViewInspector(qtQuickView, qtQuickView);
+}
 
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+void QtQuick2Plugin::deactivate()
+{
+    delete m_inspector;
+}
 
-private:
-    void updateStatus();
-    void loadInspectorPlugins();
+void QtQuick2Plugin::clientMessage(const QByteArray &message)
+{
+    if (m_inspector)
+        m_inspector->handleMessage(message);
+}
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
-};
+} // namespace QtQuick2
+} // namespace QmlJSDebugger
 
-QT_END_NAMESPACE
-
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+Q_EXPORT_PLUGIN2(qmldbg_qtquick2, QmlJSDebugger::QtQuick2::QtQuick2Plugin)

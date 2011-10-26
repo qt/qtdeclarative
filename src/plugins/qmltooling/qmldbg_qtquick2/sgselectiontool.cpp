@@ -1,0 +1,137 @@
+/****************************************************************************
+**
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the QtDeclarative module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** GNU Lesser General Public License Usage
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights. These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "sgselectiontool.h"
+
+#include "sghighlight.h"
+#include "sgviewinspector.h"
+
+#include <QtWidgets/QMenu>
+#include <QtGui/QMouseEvent>
+#include <QtDeclarative/QQuickView>
+#include <QtDeclarative/QQuickItem>
+
+namespace QmlJSDebugger {
+namespace QtQuick2 {
+
+SGSelectionTool::SGSelectionTool(SGViewInspector *inspector) :
+    AbstractTool(inspector),
+    m_hoverHighlight(new SGHoverHighlight(inspector->overlay()))
+{
+}
+
+void SGSelectionTool::leaveEvent(QEvent *)
+{
+    m_hoverHighlight->setVisible(false);
+}
+
+void SGSelectionTool::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        if (QQuickItem *item = inspector()->topVisibleItemAt(event->pos()))
+            inspector()->setSelectedItems(QList<QQuickItem*>() << item);
+    } else if (event->button() == Qt::RightButton) {
+        QList<QQuickItem*> items = inspector()->itemsAt(event->pos());
+        createContextMenu(items, event->globalPos());
+    }
+}
+
+void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
+{
+    QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
+    if (!item) {
+        m_hoverHighlight->setVisible(false);
+    } else {
+        m_hoverHighlight->setItem(item);
+        m_hoverHighlight->setVisible(true);
+    }
+}
+
+void SGSelectionTool::createContextMenu(const QList<QQuickItem *> &items, QPoint pos)
+{
+    QMenu contextMenu;
+    connect(&contextMenu, SIGNAL(hovered(QAction*)),
+            this, SLOT(contextMenuElementHovered(QAction*)));
+
+    const QList<QQuickItem*> selectedItems = inspector()->selectedItems();
+    int shortcutKey = Qt::Key_1;
+
+    foreach (QQuickItem *item, items) {
+        const QString title = inspector()->titleForItem(item);
+        QAction *elementAction = contextMenu.addAction(title);
+        elementAction->setData(QVariant::fromValue(item));
+
+        connect(elementAction, SIGNAL(triggered()), this, SLOT(contextMenuElementSelected()));
+
+        if (selectedItems.contains(item)) {
+            QFont font = elementAction->font();
+            font.setBold(true);
+            elementAction->setFont(font);
+        }
+
+        if (shortcutKey <= Qt::Key_9) {
+            elementAction->setShortcut(QKeySequence(shortcutKey));
+            shortcutKey++;
+        }
+    }
+
+    contextMenu.exec(pos);
+}
+
+void SGSelectionTool::contextMenuElementHovered(QAction *action)
+{
+    if (QQuickItem *item = action->data().value<QQuickItem*>())
+        m_hoverHighlight->setItem(item);
+}
+
+void SGSelectionTool::contextMenuElementSelected()
+{
+    if (QQuickItem *item = static_cast<QAction*>(sender())->data().value<QQuickItem*>())
+        inspector()->setSelectedItems(QList<QQuickItem*>() << item);
+}
+
+SGViewInspector *SGSelectionTool::inspector() const
+{
+    return static_cast<SGViewInspector*>(AbstractTool::inspector());
+}
+
+} // namespace QtQuick2
+} // namespace QmlJSDebugger

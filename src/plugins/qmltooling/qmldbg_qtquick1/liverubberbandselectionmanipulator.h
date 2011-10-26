@@ -39,61 +39,60 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef RUBBERBANDSELECTIONMANIPULATOR_H
+#define RUBBERBANDSELECTIONMANIPULATOR_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "liveselectionrectangle.h"
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+#include <QtCore/QPointF>
 
-#include <QtCore/QList>
+QT_FORWARD_DECLARE_CLASS(QGraphicsItem)
 
-QT_BEGIN_HEADER
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-QT_BEGIN_NAMESPACE
+class QDeclarativeViewInspector;
 
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class LiveRubberBandSelectionManipulator
 {
-    Q_OBJECT
-
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    enum SelectionType {
+        ReplaceSelection,
+        AddToSelection,
+        RemoveFromSelection
+    };
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    LiveRubberBandSelectionManipulator(QGraphicsObject *layerItem,
+                                       QDeclarativeViewInspector *editorView);
 
-    void sendMessage(const QByteArray &message);
+    void setItems(const QList<QGraphicsItem*> &itemList);
+
+    void begin(const QPointF& beginPoint);
+    void update(const QPointF& updatePoint);
+    void end();
+
+    void clear();
+
+    void select(SelectionType selectionType);
+
+    QPointF beginPoint() const;
+
+    bool isActive() const;
 
 protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    QGraphicsItem *topFormEditorItem(const QList<QGraphicsItem*> &itemList);
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+    QList<QGraphicsItem*> m_itemList;
+    QList<QGraphicsItem*> m_oldSelectionList;
+    LiveSelectionRectangle m_selectionRectangleElement;
+    QPointF m_beginPoint;
+    QDeclarativeViewInspector *m_editorView;
+    QGraphicsItem *m_beginFormEditorItem;
+    bool m_isActive;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // RUBBERBANDSELECTIONMANIPULATOR_H

@@ -39,61 +39,62 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#include "sghighlight.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtGui/QPainter>
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+namespace QmlJSDebugger {
+namespace QtQuick2 {
 
-#include <QtCore/QList>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+SGHighlight::SGHighlight(QQuickItem *item, QQuickItem *parent)
+    : QQuickPaintedItem(parent)
 {
-    Q_OBJECT
+    setItem(item);
+}
 
-public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+void SGHighlight::setItem(QQuickItem *item)
+{
+    if (m_item)
+        m_item.data()->disconnect(this);
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    if (item) {
+        connect(item, SIGNAL(xChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(yChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(widthChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(heightChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(rotationChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(transformOriginChanged(TransformOrigin)),
+                SLOT(adjust()));
+    }
 
-    void sendMessage(const QByteArray &message);
+    m_item = item;
+    adjust();
+}
 
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+void SGHighlight::adjust()
+{
+    const QQuickItem *item = m_item.data();
+    setSize(QSizeF(item->width(), item->height()));
+    setPos(parentItem()->mapFromItem(item->parentItem(), item->pos()));
+    setRotation(item->rotation());
+    setTransformOrigin(item->transformOrigin());
+}
 
-private:
-    void updateStatus();
-    void loadInspectorPlugins();
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
-};
+void SGSelectionHighlight::paint(QPainter *painter)
+{
+    painter->setPen(QColor(108, 141, 221));
+    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
 
-QT_END_NAMESPACE
 
-QT_END_HEADER
+void SGHoverHighlight::paint(QPainter *painter)
+{
+    painter->setPen(QPen(QColor(0, 22, 159)));
+    painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
+    painter->setPen(QColor(158, 199, 255));
+    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
 
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+} // namespace QtQuick2
+} // namespace QmlJSDebugger

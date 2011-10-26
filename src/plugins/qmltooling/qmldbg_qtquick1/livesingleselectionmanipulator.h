@@ -39,61 +39,53 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef LIVESINGLESELECTIONMANIPULATOR_H
+#define LIVESINGLESELECTIONMANIPULATOR_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
-
+#include <QtCore/QPointF>
 #include <QtCore/QList>
 
-QT_BEGIN_HEADER
+QT_FORWARD_DECLARE_CLASS(QGraphicsItem)
 
-QT_BEGIN_NAMESPACE
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-QT_MODULE(Declarative)
+class QDeclarativeViewInspector;
 
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class LiveSingleSelectionManipulator
 {
-    Q_OBJECT
-
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    LiveSingleSelectionManipulator(QDeclarativeViewInspector *editorView);
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    enum SelectionType {
+        ReplaceSelection,
+        AddToSelection,
+        RemoveFromSelection,
+        InvertSelection
+    };
 
-    void sendMessage(const QByteArray &message);
+    void begin(const QPointF& beginPoint);
+    void update(const QPointF& updatePoint);
+    void end(const QPointF& updatePoint);
 
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    void select(SelectionType selectionType, const QList<QGraphicsItem*> &items,
+                bool selectOnlyContentItems);
+    void select(SelectionType selectionType, bool selectOnlyContentItems);
+
+    void clear();
+
+    QPointF beginPoint() const;
+
+    bool isActive() const;
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+    QList<QGraphicsItem*> m_oldSelectionList;
+    QPointF m_beginPoint;
+    QDeclarativeViewInspector *m_editorView;
+    bool m_isActive;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // LIVESINGLESELECTIONMANIPULATOR_H

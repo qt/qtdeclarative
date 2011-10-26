@@ -39,61 +39,68 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+#ifndef ABSTRACTLIVEEDITTOOL_H
+#define ABSTRACTLIVEEDITTOOL_H
 
 #include <QtCore/QList>
-
-QT_BEGIN_HEADER
+#include "abstracttool.h"
 
 QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
-{
-    Q_OBJECT
-
-public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
-
-    void addView(QObject *);
-    void removeView(QObject *);
-
-    void sendMessage(const QByteArray &message);
-
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
-
-private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
-};
-
+class QMouseEvent;
+class QGraphicsItem;
+class QDeclarativeItem;
+class QKeyEvent;
+class QGraphicsScene;
+class QGraphicsObject;
+class QWheelEvent;
+class QDeclarativeView;
 QT_END_NAMESPACE
 
-QT_END_HEADER
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+class QDeclarativeViewInspector;
+
+class AbstractLiveEditTool : public AbstractTool
+{
+    Q_OBJECT
+public:
+    AbstractLiveEditTool(QDeclarativeViewInspector *inspector);
+
+    virtual ~AbstractLiveEditTool();
+
+    void leaveEvent(QEvent *) {}
+
+    virtual void itemsAboutToRemoved(const QList<QGraphicsItem*> &itemList) = 0;
+
+    virtual void clear() = 0;
+
+    void updateSelectedItems();
+    QList<QGraphicsItem*> items() const;
+
+    bool topItemIsMovable(const QList<QGraphicsItem*> &itemList);
+    bool topItemIsResizeHandle(const QList<QGraphicsItem*> &itemList);
+    bool topSelectedItemIsMovable(const QList<QGraphicsItem*> &itemList);
+
+    QString titleForItem(QGraphicsItem *item);
+
+    static QList<QGraphicsObject*> toGraphicsObjectList(const QList<QGraphicsItem*> &itemList);
+    static QGraphicsItem* topMovableGraphicsItem(const QList<QGraphicsItem*> &itemList);
+    static QDeclarativeItem* topMovableDeclarativeItem(const QList<QGraphicsItem*> &itemList);
+    static QDeclarativeItem *toQDeclarativeItem(QGraphicsItem *item);
+
+protected:
+    virtual void selectedItemsChanged(const QList<QGraphicsItem*> &objectList) = 0;
+
+    QDeclarativeViewInspector *inspector() const;
+    QDeclarativeView *view() const;
+    QGraphicsScene *scene() const;
+
+private:
+    QList<QGraphicsItem*> m_itemList;
+};
+
+} // namespace QtQuick1
+} // namesacpe QmlJSDebugger
+
+#endif // ABSTRACTLIVEEDITTOOL_H

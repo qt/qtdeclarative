@@ -39,61 +39,62 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#include "colorpickertool.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qdeclarativeviewinspector.h"
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+#include <QtGui/QMouseEvent>
+#include <QtGui/QKeyEvent>
+#include <QtCore/QRectF>
+#include <QtGui/QRgb>
+#include <QtGui/QImage>
+#include <QtWidgets/QApplication>
+#include <QtGui/QPalette>
 
-#include <QtCore/QList>
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+ColorPickerTool::ColorPickerTool(QDeclarativeViewInspector *view) :
+    AbstractLiveEditTool(view)
 {
-    Q_OBJECT
+    m_selectedColor.setRgb(0,0,0);
+}
 
-public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+ColorPickerTool::~ColorPickerTool()
+{
+}
 
-    void addView(QObject *);
-    void removeView(QObject *);
+void ColorPickerTool::mousePressEvent(QMouseEvent *event)
+{
+    pickColor(event->pos());
+}
 
-    void sendMessage(const QByteArray &message);
+void ColorPickerTool::mouseMoveEvent(QMouseEvent *event)
+{
+    pickColor(event->pos());
+}
 
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+void ColorPickerTool::clear()
+{
+    view()->setCursor(Qt::CrossCursor);
+}
 
-private:
-    void updateStatus();
-    void loadInspectorPlugins();
+void ColorPickerTool::pickColor(const QPoint &pos)
+{
+    QRgb fillColor = view()->backgroundBrush().color().rgb();
+    if (view()->backgroundBrush().style() == Qt::NoBrush)
+        fillColor = view()->palette().color(QPalette::Base).rgb();
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
-};
+    QRectF target(0,0, 1, 1);
+    QRect source(pos.x(), pos.y(), 1, 1);
+    QImage img(1, 1, QImage::Format_ARGB32);
+    img.fill(fillColor);
+    QPainter painter(&img);
+    view()->render(&painter, target, source);
+    m_selectedColor = QColor::fromRgb(img.pixel(0, 0));
 
-QT_END_NAMESPACE
+    emit selectedColorChanged(m_selectedColor);
+}
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+} // namespace QtQuick1
+} // namespace QmlJSDebugger

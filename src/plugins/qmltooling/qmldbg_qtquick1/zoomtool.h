@@ -39,61 +39,71 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef ZOOMTOOL_H
+#define ZOOMTOOL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "abstractliveedittool.h"
+#include "liverubberbandselectionmanipulator.h"
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+QT_FORWARD_DECLARE_CLASS(QAction)
 
-#include <QtCore/QList>
+namespace QmlJSDebugger {
+namespace QtQuick1 {
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class ZoomTool : public AbstractLiveEditTool
 {
     Q_OBJECT
 
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    enum ZoomDirection {
+        ZoomIn,
+        ZoomOut
+    };
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    explicit ZoomTool(QDeclarativeViewInspector *view);
 
-    void sendMessage(const QByteArray &message);
+    virtual ~ZoomTool();
+
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
+
+    void hoverMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
+
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *keyEvent);
+    void itemsAboutToRemoved(const QList<QGraphicsItem*> &) {}
+
+    void clear();
 
 protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+    void selectedItemsChanged(const QList<QGraphicsItem*> &) {}
+
+private slots:
+    void zoomTo100();
+    void zoomIn();
+    void zoomOut();
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
+    qreal nextZoomScale(ZoomDirection direction) const;
+    void scaleView(const QPointF &centerPos);
 
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+private:
+    bool m_dragStarted;
+    QPoint m_mousePos; // in view coords
+    QPointF m_dragBeginPos;
+    QAction *m_zoomTo100Action;
+    QAction *m_zoomInAction;
+    QAction *m_zoomOutAction;
+    LiveRubberBandSelectionManipulator *m_rubberbandManipulator;
+
+    qreal m_smoothZoomMultiplier;
+    qreal m_currentScale;
 };
 
-QT_END_NAMESPACE
+} // namespace QtQuick1
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+#endif // ZOOMTOOL_H

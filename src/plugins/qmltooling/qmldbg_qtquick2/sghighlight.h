@@ -39,61 +39,61 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORSERVICE_H
-#define QDECLARATIVEINSPECTORSERVICE_H
+#ifndef SGHIGHLIGHT_H
+#define SGHIGHLIGHT_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtCore/QWeakPointer>
+#include <QtDeclarative/QQuickPaintedItem>
 
-#include "qdeclarativedebugservice_p.h"
-#include <private/qdeclarativeglobal_p.h>
+namespace QmlJSDebugger {
+namespace QtQuick2 {
 
-#include <QtCore/QList>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeInspectorInterface;
-
-class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
+class SGHighlight : public QQuickPaintedItem
 {
     Q_OBJECT
 
 public:
-    QDeclarativeInspectorService();
-    static QDeclarativeInspectorService *instance();
+    SGHighlight(QQuickItem *parent) : QQuickPaintedItem(parent) {}
+    SGHighlight(QQuickItem *item, QQuickItem *parent);
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    void setItem(QQuickItem *item);
 
-    void sendMessage(const QByteArray &message);
-
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &);
+private slots:
+    void adjust();
 
 private:
-    void updateStatus();
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
-    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
+    QWeakPointer<QQuickItem> m_item;
 };
 
-QT_END_NAMESPACE
+/**
+ * A highlight suitable for indicating selection.
+ */
+class SGSelectionHighlight : public SGHighlight
+{
+public:
+    SGSelectionHighlight(QQuickItem *item, QQuickItem *parent)
+        : SGHighlight(item, parent)
+    {}
 
-QT_END_HEADER
+    void paint(QPainter *painter);
+};
 
-#endif // QDECLARATIVEINSPECTORSERVICE_H
+/**
+ * A highlight suitable for indicating hover.
+ */
+class SGHoverHighlight : public SGHighlight
+{
+public:
+    SGHoverHighlight(QQuickItem *parent)
+        : SGHighlight(parent)
+    {
+        setZ(1); // hover highlight on top of selection highlight
+    }
+
+    void paint(QPainter *painter);
+};
+
+} // namespace QtQuick2
+} // namespace QmlJSDebugger
+
+#endif // SGHIGHLIGHT_H
