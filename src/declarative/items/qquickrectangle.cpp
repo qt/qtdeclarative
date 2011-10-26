@@ -492,7 +492,8 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     Q_UNUSED(data);
     Q_D(QQuickRectangle);
 
-    if (width() <= 0 || height() <= 0) {
+    if (width() <= 0 || height() <= 0
+            || (d->color.alpha() == 0 && (!d->pen || d->pen->width() == 0 || d->pen->color().alpha() == 0))) {
         delete oldNode;
         return 0;
     }
