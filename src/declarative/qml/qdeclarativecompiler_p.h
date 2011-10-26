@@ -336,7 +336,7 @@ private:
     bool doesPropertyExist(QDeclarativeScript::Property *prop, QDeclarativeScript::Object *obj);
     bool testLiteralAssignment(QDeclarativeScript::Property *prop,
                                QDeclarativeScript::Value *value);
-    bool testQualifiedEnumAssignment(const QMetaProperty &prop,
+    bool testQualifiedEnumAssignment(QDeclarativeScript::Property *prop,
                                      QDeclarativeScript::Object *obj,
                                      QDeclarativeScript::Value *value,
                                      bool *isAssignment);

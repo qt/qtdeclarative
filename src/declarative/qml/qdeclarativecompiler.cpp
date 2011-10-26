@@ -208,7 +208,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
 {
     const QDeclarativeScript::Variant &value = v->value;
 
-    if (!prop->core.isWritable())
+    if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration)
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     if (prop->core.isEnum()) {
@@ -2004,7 +2004,7 @@ bool QDeclarativeCompiler::buildGroupedProperty(QDeclarativeScript::Property *pr
                 }
             }
 
-            if (!obj->metaObject()->property(prop->index).isWritable()) {
+            if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration) {
                 COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
             }
 
@@ -2082,8 +2082,7 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
                 bool isEnumAssignment = false;
 
                 if (prop->core.isEnum()) 
-                    COMPILE_CHECK(testQualifiedEnumAssignment(obj->metatype->property(prop->index), obj, 
-                                                              value, &isEnumAssignment));
+                    COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, value, &isEnumAssignment));
 
                 if (isEnumAssignment) {
                     value->type = Value::Literal;
@@ -2222,7 +2221,7 @@ bool QDeclarativeCompiler::buildPropertyObjectAssignment(QDeclarativeScript::Pro
     Q_ASSERT(prop->index != -1);
     Q_ASSERT(v->object->type != -1);
 
-    if (!obj->metaObject()->property(prop->index).isWritable())
+    if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration)
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     if (QDeclarativeMetaType::isInterface(prop->type)) {
@@ -2303,7 +2302,9 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeScript::Propert
     Q_ASSERT(prop->index != -1);
     Q_ASSERT(v->object->type != -1);
 
-    if (!obj->metaObject()->property(prop->index).isWritable())
+    Q_UNUSED(obj);
+
+    if (!prop->core.isWritable())
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
 
@@ -2350,8 +2351,7 @@ bool QDeclarativeCompiler::buildPropertyLiteralAssignment(QDeclarativeScript::Pr
         //optimization for <Type>.<EnumValue> enum assignments
         if (prop->core.isEnum()) {
             bool isEnumAssignment = false;
-            COMPILE_CHECK(testQualifiedEnumAssignment(obj->metaObject()->property(prop->index), obj, 
-                                                      v, &isEnumAssignment));
+            COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, v, &isEnumAssignment));
             if (isEnumAssignment) {
                 v->type = Value::Literal;
                 return true;
@@ -2372,17 +2372,19 @@ bool QDeclarativeCompiler::buildPropertyLiteralAssignment(QDeclarativeScript::Pr
     return true;
 }
 
-bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop,
+bool QDeclarativeCompiler::testQualifiedEnumAssignment(QDeclarativeScript::Property *prop,
                                                        QDeclarativeScript::Object *obj,
                                                        QDeclarativeScript::Value *v,
                                                        bool *isAssignment)
 {
     *isAssignment = false;
-    if (!prop.isEnumType())
+    if (!prop->core.isEnum())
         return true;
 
-    if (!prop.isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop.name())));
+    QMetaProperty mprop = obj->metaObject()->property(prop->index);
+
+    if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration)
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     QString string = v->value.asString();
     if (!string.at(0).isUpper())
@@ -2413,10 +2415,10 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
 
     if (objTypeName == type->qmlTypeName()) {
         // When these two match, we can short cut the search
-        if (prop.isFlagType()) {
-            value = prop.enumerator().keysToValue(enumValue.toUtf8().constData(), &ok);
+        if (mprop.isFlagType()) {
+            value = mprop.enumerator().keysToValue(enumValue.toUtf8().constData(), &ok);
         } else {
-            value = prop.enumerator().keyToValue(enumValue.toUtf8().constData(), &ok);
+            value = mprop.enumerator().keyToValue(enumValue.toUtf8().constData(), &ok);
         }
     } else {
         // Otherwise we have to search the whole type
@@ -2571,7 +2573,8 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeScript::Object *obj)
 
 bool QDeclarativeCompiler::mergeDynamicMetaProperties(QDeclarativeScript::Object *obj)
 {
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
+    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+         p = obj->dynamicProperties.next(p)) {
 
         if (!p->defaultValue || p->type == Object::DynamicProperty::Alias)
             continue;
@@ -2584,6 +2587,9 @@ bool QDeclarativeCompiler::mergeDynamicMetaProperties(QDeclarativeScript::Object
             if (!property->values.isEmpty()) 
                 COMPILE_EXCEPTION(property, tr("Property value set multiple times"));
         }
+
+        if (p->isReadOnly)
+            property->isReadOnlyDeclaration = true;
 
         if (property->value)
             COMPILE_EXCEPTION(property, tr("Invalid property nesting"));
@@ -2755,6 +2761,9 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
             if (p->type == Object::DynamicProperty::Var)
                 continue;
 
+            if (p->isReadOnly)
+                readonly = true;
+
             if (buildData) {
                 VMD *vmd = (QDeclarativeVMEMetaData *)dynamicData.data();
                 vmd->propertyCount++;
@@ -2790,8 +2799,10 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
                         (vmd->propertyData() + effectivePropertyIndex)->propertyType = -1;
                     }
 
-                    builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef, (QMetaType::Type)-1,
-                                        QFastMetaBuilder::Writable, effectivePropertyIndex);
+                    builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef,
+                                        (QMetaType::Type)-1,
+                                        p->isReadOnly?QFastMetaBuilder::None:QFastMetaBuilder::Writable,
+                                        effectivePropertyIndex);
 
                     p->changedSignatureRef = builder.newString(p->name.utf8length() + strlen("Changed()"));
                     builder.setSignal(effectivePropertyIndex, p->changedSignatureRef);
@@ -3098,8 +3109,8 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
         if (!aliasProperty.isScriptable())
             COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias location"));
 
-        writable = aliasProperty.isWritable();
-        resettable = aliasProperty.isResettable();
+        writable = aliasProperty.isWritable() && !prop.isReadOnly;
+        resettable = aliasProperty.isResettable() && !prop.isReadOnly;
 
         if (aliasProperty.type() < QVariant::UserType)
             type = aliasProperty.type();
@@ -3175,7 +3186,7 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeScript::Value *value,
     Q_ASSERT(prop->parent);
     Q_ASSERT(prop->parent->metaObject());
 
-    if (!prop->core.isWritable() && !prop->core.isQList())
+    if (!prop->core.isWritable() && !prop->core.isQList() && !prop->isReadOnlyDeclaration)
         COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     BindingReference *reference = pool->New<BindingReference>();

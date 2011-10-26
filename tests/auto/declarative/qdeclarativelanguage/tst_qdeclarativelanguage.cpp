@@ -156,6 +156,7 @@ private slots:
     void inlineAssignmentsOverrideBindings();
     void nestedComponentRoots();
     void registrationOrder();
+    void readonly();
 
     void basicRemote_data();
     void basicRemote();
@@ -364,7 +365,6 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("property.2") << "property.2.qml" << "property.2.errors.txt" << false;
     QTest::newRow("property.3") << "property.3.qml" << "property.3.errors.txt" << false;
     QTest::newRow("property.4") << "property.4.qml" << "property.4.errors.txt" << false;
-    QTest::newRow("property.5") << "property.5.qml" << "property.5.errors.txt" << false;
     QTest::newRow("property.6") << "property.6.qml" << "property.6.errors.txt" << false;
     QTest::newRow("property.7") << "property.7.qml" << "property.7.errors.txt" << false;
 
@@ -2139,6 +2139,40 @@ void tst_qdeclarativelanguage::registrationOrder()
     QObject *o = component.create();
     QVERIFY(o != 0);
     QVERIFY(o->metaObject() == &MyVersion2Class::staticMetaObject);
+    delete o;
+}
+
+void tst_qdeclarativelanguage::readonly()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("readonly.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 18);
+    QCOMPARE(o->property("test3").toInt(), 13);
+
+    o->setProperty("testData", 13);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 22);
+    QCOMPARE(o->property("test3").toInt(), 13);
+
+    o->setProperty("testData2", 2);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 22);
+    QCOMPARE(o->property("test3").toInt(), 2);
+
+    o->setProperty("test1", 11);
+    o->setProperty("test2", 11);
+    o->setProperty("test3", 11);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 22);
+    QCOMPARE(o->property("test3").toInt(), 2);
+
     delete o;
 }
 

@@ -169,7 +169,7 @@ private slots:
     void booleanConversion();
     void handleReferenceManagement();
     void stringArg();
-
+    void readonlyDeclaration();
     void bug1();
     void bug2();
     void dynamicCreationCrash();
@@ -4032,6 +4032,18 @@ void tst_qdeclarativeecmascript::stringArg()
     QTest::ignoreMessage(QtWarningMsg, w1.toAscii().constData());
     QMetaObject::invokeMethod(object, "failure");
     QVERIFY(object->property("returnValue").toBool());
+
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::readonlyDeclaration()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("readonlyDeclaration.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
 
     delete object;
 }
