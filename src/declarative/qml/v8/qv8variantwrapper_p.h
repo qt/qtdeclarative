@@ -72,8 +72,8 @@ public:
 
     v8::Local<v8::Object> newVariant(const QVariant &);
     bool isVariant(v8::Handle<v8::Value>);
-    QVariant toVariant(v8::Handle<v8::Object>);
-    QVariant toVariant(QV8ObjectResource *);
+    static QVariant toVariant(v8::Handle<v8::Object>);
+    static QVariant toVariant(QV8ObjectResource *);
     QVariant &variantValue(v8::Handle<v8::Value>);
 
 private:
