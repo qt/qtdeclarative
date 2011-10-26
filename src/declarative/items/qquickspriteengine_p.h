@@ -212,8 +212,6 @@ public:
     int count() const {return m_things.count();}
     void setCount(int c);
 
-
-
     void setGoal(int state, int sprite=0, bool jump=false);
     void start(int index=0, int state=0);
     void stop(int index=0);
@@ -221,6 +219,13 @@ public:
 
     QQuickStochasticState* state(int idx){return m_states[idx];}
     int stateIndex(QQuickStochasticState* s){return m_states.indexOf(s);}
+    int stateIndex(const QString& s) {
+        for (int i=0; i<m_states.count(); i++)
+            if (m_states[i]->name() == s)
+                return i;
+        return -1;
+    }
+
     int stateCount() {return m_states.count();}
 private:
 signals:

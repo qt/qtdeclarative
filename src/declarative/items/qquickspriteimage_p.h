@@ -61,6 +61,7 @@ class QQuickSpriteImage : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
+    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
     //###try to share similar spriteEngines for less overhead?
     Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
     Q_CLASSINFO("DefaultProperty", "sprites")
@@ -80,28 +81,37 @@ public:
         return m_interpolate;
     }
 
+    QString goalState() const
+    {
+        return m_goalState;
+    }
+
 signals:
 
     void runningChanged(bool arg);
     void interpolateChanged(bool arg);
+    void goalStateChanged(QString arg);
 
 public slots:
 
-void setRunning(bool arg)
-{
-    if (m_running != arg) {
-        m_running = arg;
-        emit runningChanged(arg);
-    }
-}
+    void jumpTo(const QString &sprite);
+    void setGoalState(const QString &sprite);
 
-void setInterpolate(bool arg)
-{
-    if (m_interpolate != arg) {
-        m_interpolate = arg;
-        emit interpolateChanged(arg);
+    void setRunning(bool arg)
+    {
+        if (m_running != arg) {
+            m_running = arg;
+            emit runningChanged(arg);
+        }
     }
-}
+
+    void setInterpolate(bool arg)
+    {
+        if (m_interpolate != arg) {
+            m_interpolate = arg;
+            emit interpolateChanged(arg);
+        }
+    }
 
 private slots:
     void createEngine();
@@ -120,6 +130,7 @@ private:
     bool m_pleaseReset;
     bool m_running;
     bool m_interpolate;
+    QString m_goalState;
 };
 
 QT_END_NAMESPACE
