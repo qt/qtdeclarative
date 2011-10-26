@@ -467,9 +467,13 @@ specified in QML files, plugins, or applications.
 
 \section1 JavaScript Runtime
 
-    The runtime implements the \l{ECMA-262}{ECMAScript Language Specification} standard.
-    The reserved words, conditionals, variables, and object behaviors follow
-    after the standard.
+    The runtime implements the \l{ECMA-262}{ECMAScript Language Specification} standard,
+    5th edition. The reserved words, conditionals, variables, and object behaviors
+    follow after the standard.
+
+    The \l{QML JavaScript Host Environment} article has information about the
+    JavaScript host environment provided by QML, which is different than the
+    browser host environment many are familiar with.
 
     The \l{JavaScript Code} article has information about placing JavaScript
     code within QML code.
