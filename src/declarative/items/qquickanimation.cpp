@@ -342,7 +342,8 @@ QAbstractAnimation2Pointer QQuickParentAnimation::transition(QDeclarativeStateAc
         delete viaData;
     }
 
-    return topLevelGroup;
+    QAbstractAnimation2Pointer animationInstance;
+    return animationInstance.take(topLevelGroup);
 }
 
 QQuickAnchorAnimation::QQuickAnchorAnimation(QObject *parent)
@@ -424,7 +425,9 @@ QAbstractAnimation2Pointer QQuickAnchorAnimation::transition(QDeclarativeStateAc
     } else {
         delete data;
     }
-    return animator;
+
+    QAbstractAnimation2Pointer animationInstance;
+    return animationInstance.take(animator);
 }
 
 QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
@@ -657,6 +660,8 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
         d->pa->setAnimValue(0);
         delete data;
     }
+
+    //FIXME:Need more work to make multiple animation instances play properly
     return d->pa;
 }
 

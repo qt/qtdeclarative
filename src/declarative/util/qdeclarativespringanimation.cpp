@@ -450,6 +450,8 @@ QAbstractAnimation2Pointer QDeclarativeSpringAnimation::transition(QDeclarativeS
             }
         }
     }
+
+    //FIXME: This should be changed to enable multiple animation instances properly.
     return d->clock;
 }
 

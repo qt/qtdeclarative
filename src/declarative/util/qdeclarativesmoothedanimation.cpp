@@ -420,6 +420,8 @@ QAbstractAnimation2Pointer QDeclarativeSmoothedAnimation::transition(QDeclarativ
             d->wrapperGroup->takeAnimation(i);
         }
     }
+    //FIXME: Multiple animation instances problem:
+    //       the animation instance should not tie to declarative object.
     return d->wrapperGroup;
 }
 

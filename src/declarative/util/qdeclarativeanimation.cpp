@@ -631,7 +631,8 @@ QAbstractAnimation2Pointer QDeclarativePauseAnimation::transition(QDeclarativeSt
                                     TransitionDirection direction)
 {
     Q_D(QDeclarativePauseAnimation);
-    return new QPauseAnimation2(d->duration);
+    QAbstractAnimation2Pointer animationInstance;
+    return animationInstance.take(new QPauseAnimation2(d->duration));
 }
 
 /*!
@@ -754,7 +755,7 @@ QActionAnimation::QActionAnimation(QAbstractAnimationAction *action, QDeclarativ
 
 QActionAnimation::~QActionAnimation()
 {
-
+    delete animAction;
 }
 
 int QActionAnimation::duration() const
@@ -820,7 +821,7 @@ QDeclarativeScriptAction::~QDeclarativeScriptAction()
 }
 
 QDeclarativeScriptActionPrivate::QDeclarativeScriptActionPrivate()
-    : QDeclarativeAbstractAnimationPrivate(), hasRunScriptScript(false), reversing(false), proxy(this) {}
+    : QDeclarativeAbstractAnimationPrivate(), hasRunScriptScript(false), reversing(false){}
 
 /*!
     \qmlproperty script QtQuick2::ScriptAction::script
@@ -860,6 +861,11 @@ void QDeclarativeScriptAction::setStateChangeScriptName(const QString &name)
     d->name = name;
 }
 
+QAbstractAnimationAction* QDeclarativeScriptActionPrivate::createAction()
+{
+    return new Proxy(this);
+}
+
 void QDeclarativeScriptActionPrivate::execute()
 {
     Q_Q(QDeclarativeScriptAction);
@@ -896,8 +902,8 @@ QAbstractAnimation2Pointer QDeclarativeScriptAction::transition(QDeclarativeStat
             break;  //only match one (names should be unique)
         }
     }
-    //FIXME: proxy shouldn't live with the declarative animation (needs to be unique per QActionAnimation)
-    return new QActionAnimation(&d->proxy);
+    QAbstractAnimation2Pointer animationInstance;
+    return animationInstance.take(new QActionAnimation(d->createAction()));
 }
 
 /*!
@@ -1145,7 +1151,8 @@ QAbstractAnimation2Pointer QDeclarativePropertyAction::transition(QDeclarativeSt
     } else {
         delete data;
     }
-    return action;
+    QAbstractAnimation2Pointer animationInstance;
+    return animationInstance.take(action);
 }
 
 /*!
@@ -1639,8 +1646,9 @@ QAbstractAnimation2Pointer QDeclarativeSequentialAnimation::transition(QDeclarat
         anim = d->animations.at(ii)->transition(actions, modified, direction);
         inc == -1 ? ag->insertAnimation(0, anim) : ag->addAnimation(anim);
     }
+    QAbstractAnimation2Pointer animationInstance;
 
-    return ag;
+    return animationInstance.take(ag);
 }
 
 
@@ -1697,8 +1705,8 @@ QAbstractAnimation2Pointer QDeclarativeParallelAnimation::transition(QDeclarativ
         anim = d->animations.at(ii)->transition(actions, modified, direction);
         ag->addAnimation(anim);
     }
-
-    return ag;
+    QAbstractAnimation2Pointer animationInstance;
+    return animationInstance.take(ag);
 }
 
 //convert a variant from string type to another animatable type
@@ -1770,6 +1778,7 @@ QDeclarativeBulkValueAnimator::QDeclarativeBulkValueAnimator(const QDeclarativeB
 
 QDeclarativeBulkValueAnimator::~QDeclarativeBulkValueAnimator()
 {
+    delete animValue;
 }
 
 void QDeclarativeBulkValueAnimator::setAnimValue(QDeclarativeBulkValueUpdater *value)
@@ -2467,8 +2476,8 @@ QAbstractAnimation2Pointer QDeclarativePropertyAnimation::transition(QDeclarativ
         //animator->setAnimValue(0);  //clear previous data
         d->actions = 0;
     }
-
-    return animator;
+    QAbstractAnimation2Pointer animationInstance;
+    return animationInstance.take(animator);
 }
 
 QT_END_NAMESPACE

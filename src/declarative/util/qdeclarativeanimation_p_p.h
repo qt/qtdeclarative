@@ -224,9 +224,9 @@ public:
     bool reversing;
 
     void execute();
-
-    QAnimationActionProxy<QDeclarativeScriptActionPrivate,
-                  &QDeclarativeScriptActionPrivate::execute> proxy;
+    QAbstractAnimationAction* createAction();
+    typedef QAnimationActionProxy<QDeclarativeScriptActionPrivate,
+                                 &QDeclarativeScriptActionPrivate::execute> Proxy;
 };
 
 class QDeclarativePropertyActionPrivate : public QDeclarativeAbstractAnimationPrivate
