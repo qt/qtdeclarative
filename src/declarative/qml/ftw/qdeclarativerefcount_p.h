@@ -69,7 +69,7 @@ public:
     inline virtual ~QDeclarativeRefCount();
     inline void addref();
     inline void release();
-
+    inline bool isLastRef() const {return refCount == 1;}
 protected:
     inline virtual void destroy();
 
@@ -91,6 +91,7 @@ public:
     
     inline bool isNull() const { return !o; }
 
+    inline bool operator()() const { return !isNull();}
     inline T* operator->() const { return o; }
     inline T& operator*() const { return *o; }
     inline operator T*() const { return o; }
@@ -153,14 +154,24 @@ QDeclarativeRefPointer<T>::QDeclarativeRefPointer(const QDeclarativeRefPointer<T
 template<class T>
 QDeclarativeRefPointer<T>::~QDeclarativeRefPointer()
 {
-    if (o) o->release();
+    if (o) {
+        bool deleted = o->isLastRef();
+        o->release();
+        if (deleted)
+            o = 0;
+    }
 }
 
 template<class T>
 QDeclarativeRefPointer<T> &QDeclarativeRefPointer<T>::operator=(const QDeclarativeRefPointer<T> &other)
 {
     if (other.o) other.o->addref();
-    if (o) o->release();
+    if (o) {
+        bool deleted = o->isLastRef();
+        o->release();
+        if (deleted)
+            o = 0;
+    }
     o = other.o;
     return *this;
 }
@@ -169,7 +180,12 @@ template<class T>
 QDeclarativeRefPointer<T> &QDeclarativeRefPointer<T>::operator=(T *other)
 {
     if (other) other->addref();
-    if (o) o->release();
+    if (o) {
+        bool deleted = o->isLastRef();
+        o->release();
+        if (deleted)
+            o = 0;
+    }
     o = other;
     return *this;
 }
@@ -181,7 +197,12 @@ of the callers reference of other.
 template<class T>
 QDeclarativeRefPointer<T> &QDeclarativeRefPointer<T>::take(T *other)
 {
-    if (o) o->release();
+    if (o) {
+        bool deleted = o->isLastRef();
+        o->release();
+        if (deleted)
+            o = 0;
+    }
     o = other;
     return *this;
 }
