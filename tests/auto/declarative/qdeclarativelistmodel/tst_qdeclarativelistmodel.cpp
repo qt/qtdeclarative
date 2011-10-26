@@ -51,6 +51,8 @@
 #include <QtCore/qtranslator.h>
 #include <QSignalSpy>
 
+#include "../shared/util.h"
+
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<QVariantHash>)
 
@@ -545,7 +547,7 @@ void tst_qdeclarativelistmodel::dynamic_worker()
 
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -591,7 +593,7 @@ void tst_qdeclarativelistmodel::dynamic_worker_sync()
 
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -622,7 +624,7 @@ void tst_qdeclarativelistmodel::dynamic_worker_sync()
 void tst_qdeclarativelistmodel::enumerate()
 {
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/enumerate.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("enumerate.qml")));
     QVERIFY(!component.isError());
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
@@ -846,7 +848,7 @@ void tst_qdeclarativelistmodel::get_worker()
 
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -996,7 +998,7 @@ void tst_qdeclarativelistmodel::get_nested_data()
 void tst_qdeclarativelistmodel::crash_model_with_multiple_roles()
 {
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/multipleroles.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("multipleroles.qml")));
     QObject *rootItem = component.create();
     QVERIFY(component.errorString().isEmpty());
     QVERIFY(rootItem != 0);
@@ -1013,7 +1015,7 @@ void tst_qdeclarativelistmodel::crash_model_with_multiple_roles()
 void tst_qdeclarativelistmodel::set_model_cache()
 {
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/setmodelcachelist.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("setmodelcachelist.qml")));
     QObject *model = component.create();
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
     QVERIFY(model != 0);
@@ -1156,7 +1158,7 @@ void tst_qdeclarativelistmodel::property_changes_worker()
 
     QDeclarativeListModel model;
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QQuickItem *item = createWorkerTest(&engine, &component, &model);
     QVERIFY(item != 0);
@@ -1226,7 +1228,7 @@ void tst_qdeclarativelistmodel::clear()
 void tst_qdeclarativelistmodel::signal_handlers()
 {
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/signalhandlers.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("signalhandlers.qml")));
     QObject *model = component.create();
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
     QVERIFY(model != 0);
@@ -1239,7 +1241,7 @@ void tst_qdeclarativelistmodel::worker_sync()
 {
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/workersync.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("workersync.qml")));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -1296,7 +1298,7 @@ void tst_qdeclarativelistmodel::worker_remove_element()
 {
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/workerremoveelement.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("workerremoveelement.qml")));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -1329,7 +1331,7 @@ void tst_qdeclarativelistmodel::worker_remove_list()
 {
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/workerremovelist.qml"));
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("workerremovelist.qml")));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
