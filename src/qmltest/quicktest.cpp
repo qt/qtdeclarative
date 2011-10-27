@@ -65,6 +65,7 @@
 #include <QtGui/qtextdocument.h>
 #include <stdio.h>
 #include <QtGui/QGuiApplication>
+#include <QtCore/QTranslator>
 QT_BEGIN_NAMESPACE
 
 
@@ -115,8 +116,10 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     //      -import dir         Specify an import directory.
     //      -input dir          Specify the input directory for test cases.
     //      -qtquick1           Run with QtQuick 1 rather than QtQuick 2.
+    //      -translation file   Specify the translation file.
     QStringList imports;
     QString testPath;
+    QString translationFile;
     bool qtQuick2 = true;
     int outargc = 1;
     int index = 1;
@@ -132,6 +135,9 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
         } else if (strcmp(argv[index], "-qtquick1") == 0) {
             qtQuick2 = false;
             ++index;
+        } else if (strcmp(argv[index], "-translation") == 0 && (index + 1) < argc) {
+            translationFile = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
+            index += 2;
         } else if (outargc != index) {
             argv[outargc++] = argv[index++];
         } else {
@@ -145,6 +151,15 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // Parse the command-line arguments.
     QuickTestResult::parseArgs(argc, argv);
     QuickTestResult::setProgramName(name);
+
+    QTranslator translator;
+    if (!translationFile.isEmpty()) {
+        if (translator.load(translationFile)) {
+            app->installTranslator(&translator);
+        } else {
+            qWarning() << "Could not load the translation file" << translationFile;
+        }
+    }
 
     // Determine where to look for the test data.
     if (testPath.isEmpty() && sourceDir)
