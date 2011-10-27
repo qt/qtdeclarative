@@ -378,9 +378,9 @@ void QSGPainterNode::setSize(const QSize &size)
     m_dirtyTexture = true;
 }
 
-void QSGPainterNode::setDirty(bool d, const QRect &dirtyRect)
+void QSGPainterNode::setDirty(const QRect &dirtyRect)
 {
-    m_dirtyContents = d;
+    m_dirtyContents = true;
     m_dirtyRect = dirtyRect;
 
     if (m_mipmapping)

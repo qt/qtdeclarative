@@ -43,16 +43,24 @@
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qquickview.h>
 #include <QtDeclarative/qquickpainteditem.h>
-
 class MyPaintItem : public QQuickPaintedItem
 {
     Q_OBJECT
+    Q_PROPERTY(QString face READ face WRITE setFace NOTIFY faceChanged)
 public:
-    MyPaintItem() : QQuickPaintedItem()
+    MyPaintItem()
+      : QQuickPaintedItem()
+      , m_face(QLatin1String(":-)"))
     {
         setAntialiasing(true);
     }
-
+    QString face() const {return m_face;}
+    void setFace(const QString &face) {
+       if (m_face != face) {
+          m_face = face;
+          emit faceChanged();
+       }
+    }
     virtual void paint(QPainter *p)
     {
         QRectF rect(0, 0, width(), height());
@@ -62,8 +70,12 @@ public:
         p->drawEllipse(rect);
         p->setPen(Qt::black);
         p->setFont(QFont(QLatin1String("Times"), qRound(rect.height() / 2)));
-        p->drawText(rect, Qt::AlignCenter, QLatin1String(":-)"));
+        p->drawText(rect, Qt::AlignCenter, m_face);
     }
+signals:
+    void faceChanged();
+private:
+    QString m_face;
 };
 
 int main(int argc, char ** argv)

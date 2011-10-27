@@ -114,7 +114,6 @@ Q_SIGNALS:
 
 protected:
     QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = 0);
-    virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
 private:

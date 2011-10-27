@@ -83,7 +83,7 @@ public:
     void setSize(const QSize &size);
     QSize size() const { return m_size; }
 
-    void setDirty(bool d, const QRect &dirtyRect = QRect());
+    void setDirty(const QRect &dirtyRect = QRect());
 
     void setOpaquePainting(bool opaque);
     bool opaquePainting() const { return m_opaquePainting; }
