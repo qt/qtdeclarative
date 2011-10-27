@@ -1,5 +1,5 @@
 CONFIG += testcase
-TARGET = tst_qdeclarativinspector
+TARGET = tst_qdeclarativeinspector
 macx:CONFIG -= app_bundle
 
 HEADERS += ../shared/debugutil_p.h
