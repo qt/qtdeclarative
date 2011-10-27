@@ -124,6 +124,13 @@ QV8DebugService::QV8DebugService(QObject *parent)
 {
     Q_D(QV8DebugService);
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
+
+    // This call forces the debugger context to be loaded and made resident.
+    // Without this the debugger is loaded/unloaded whenever required, which
+    // has a very significant effect on the timing reported in the QML
+    // profiler in Qt Creator.
+    v8::Debug::GetDebugContext();
+
     if (status() == Enabled) {
         // ,block mode, client attached
         while (!d->initialized) {
