@@ -203,6 +203,8 @@ QDeclarativeConnectionsParser::compile(const QList<QDeclarativeCustomParserPrope
     for(int ii = 0; ii < props.count(); ++ii)
     {
         QString propName = props.at(ii).name();
+        int propLine = props.at(ii).location().line;
+
         if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
             error(props.at(ii), QDeclarativeConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
             return QByteArray();
@@ -224,6 +226,7 @@ QDeclarativeConnectionsParser::compile(const QList<QDeclarativeCustomParserPrope
                 if (v.isScript()) {
                     ds << propName;
                     ds << v.asScript();
+                    ds << propLine;
                 } else {
                     error(props.at(ii), QDeclarativeConnections::tr("Connections: script expected"));
                     return QByteArray();
@@ -256,6 +259,8 @@ void QDeclarativeConnections::connectSignals()
         ds >> propName;
         QString script;
         ds >> script;
+        int line;
+        ds >> line;
         QDeclarativeProperty prop(target(), propName);
         if (prop.isValid() && (prop.type() & QDeclarativeProperty::SignalProperty)) {
             QDeclarativeBoundSignal *signal =
@@ -263,7 +268,7 @@ void QDeclarativeConnections::connectSignals()
             QDeclarativeExpression *expression = new QDeclarativeExpression(qmlContext(this), 0, script);
             QDeclarativeData *ddata = QDeclarativeData::get(this);
             if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber);
+                expression->setSourceLocation(ddata->outerContext->url.toString(), line);
             signal->setExpression(expression);
             d->boundsignals += signal;
         } else {
