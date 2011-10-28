@@ -557,6 +557,7 @@ void tst_qquickfocusscope::canvasFocus()
     QSignalSpy scope2ActiveFocusSpy(scope2, SIGNAL(activeFocusChanged(bool)));
     QSignalSpy item2ActiveFocusSpy(item2, SIGNAL(activeFocusChanged(bool)));
 
+    QEXPECT_FAIL("", "QTBUG-22415", Abort);
     QCOMPARE(rootItem->hasFocus(), false);
     QCOMPARE(rootItem->hasActiveFocus(), false);
     QCOMPARE(scope1->hasFocus(), true);
@@ -585,6 +586,7 @@ void tst_qquickfocusscope::canvasFocus()
     QCOMPARE(scope2->hasActiveFocus(), false);
     QCOMPARE(item2->hasFocus(), false);
     QCOMPARE(item2->hasActiveFocus(), false);
+
     QCOMPARE(rootFocusSpy.count(), 1);
     QCOMPARE(rootActiveFocusSpy.count(), 1);
     QCOMPARE(scope1FocusSpy.count(), 0);
@@ -605,12 +607,14 @@ void tst_qquickfocusscope::canvasFocus()
     QCOMPARE(scope1->hasActiveFocus(), false);
     QCOMPARE(item1->hasFocus(), true);
     QCOMPARE(item1->hasActiveFocus(), false);
+
     QCOMPARE(rootFocusSpy.count(), 2);
     QCOMPARE(rootActiveFocusSpy.count(), 2);
     QCOMPARE(scope1FocusSpy.count(), 0);
     QCOMPARE(scope1ActiveFocusSpy.count(), 2);
     QCOMPARE(item1FocusSpy.count(), 0);
     QCOMPARE(item1ActiveFocusSpy.count(), 2);
+
 
     // canvas does not have focus, so item2 will not get active focus
     item2->forceActiveFocus();

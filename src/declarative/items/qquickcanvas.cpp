@@ -495,6 +495,12 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     rootItemPrivate->canvas = q;
     rootItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
+    // In the absence of a focus in event on some platforms assume the window will
+    // be activated immediately and set focus on the rootItem
+    // ### Remove when QTBUG-22415 is resolved.
+    //It is important that this call happens after the rootItem has a canvas..
+    rootItem->setFocus(true);
+
     bool threaded = !qmlNoThreadedRenderer();
 
     if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
@@ -633,13 +639,13 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     }
 
     if (!(options & DontChangeFocusProperty)) {
-        if (item != rootItem || QGuiApplication::focusWindow() == q) {
+//        if (item != rootItem || QGuiApplication::focusWindow() == q) {    // QTBUG-22415
             itemPrivate->focus = true;
             changed << item;
-        }
+//        }
     }
 
-    if (newActiveFocusItem && QGuiApplication::focusWindow() == q) {
+    if (newActiveFocusItem && rootItem->hasFocus()) {
         activeFocusItem = newActiveFocusItem;
 
         QQuickItemPrivate::get(newActiveFocusItem)->activeFocus = true;
