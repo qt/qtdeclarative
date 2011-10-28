@@ -76,6 +76,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
 
     if (!geometry) {
         bool error = true;
+        Q_UNUSED(error)
         switch (attrCount) {
         case 0:
             qWarning("QQuickGridMesh:: No attributes specified.");

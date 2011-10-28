@@ -1146,7 +1146,6 @@ qreal QQuickItemViewPrivate::endPosition() const
 
 qreal QQuickItemViewPrivate::contentStartPosition() const
 {
-    Q_Q(const QQuickItemView);
     qreal pos = -headerSize();
     if (layoutOrientation() == Qt::Vertical)
         pos -= vData.startMargin;

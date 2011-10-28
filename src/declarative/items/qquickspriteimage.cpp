@@ -151,7 +151,7 @@ QQuickSpriteMaterial::~QQuickSpriteMaterial()
 class SpriteMaterialData : public QSGMaterialShader
 {
 public:
-    SpriteMaterialData(const char *vertexFile = 0, const char *fragmentFile = 0)
+    SpriteMaterialData(const char * /* vertexFile */ = 0, const char * /* fragmentFile */ = 0)
     {
     }
 
@@ -438,7 +438,6 @@ void QQuickSpriteImage::prepareNextFrame()
     m_material->interpolate = m_interpolate;
 
     //Advance State
-    SpriteVertices *p = (SpriteVertices *) m_node->geometry()->vertexData();
     m_spriteEngine->updateSprites(timeInt);
     int curY = m_spriteEngine->spriteY();
     if (curY != m_material->animY){

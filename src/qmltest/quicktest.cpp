@@ -76,7 +76,7 @@ class QTestRootObject : public QObject
     Q_PROPERTY(bool hasTestCase READ hasTestCase WRITE setHasTestCase NOTIFY hasTestCaseChanged)
 public:
     QTestRootObject(QObject *parent = 0)
-        : QObject(parent), hasQuit(false), m_hasTestCase(false), m_windowShown(false) {}
+        : QObject(parent), hasQuit(false), m_windowShown(false), m_hasTestCase(false)  {}
 
     bool hasQuit:1;
     bool hasTestCase() const { return m_hasTestCase; }

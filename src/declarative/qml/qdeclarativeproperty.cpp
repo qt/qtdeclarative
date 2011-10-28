@@ -1619,7 +1619,6 @@ QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObject, int in
                                            const QMetaObject *subObject, int subIndex,
                                            QDeclarativeEngine *)
 {
-    QMetaProperty prop = metaObject->property(index);
     QMetaProperty subProp = subObject->property(subIndex);
 
     QDeclarativePropertyData core;

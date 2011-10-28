@@ -2321,8 +2321,6 @@ void QQuickListView::updateSections()
 
 bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, FxViewItem *firstVisible, InsertionsResult *insertResult)
 {
-    Q_Q(QQuickListView);
-
     int modelIndex = change.index;
     int count = change.count;
 

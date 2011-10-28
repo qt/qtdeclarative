@@ -75,7 +75,6 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
         else if (t == qMetaTypeId<QQuickAnchorLine>())
             return IR::SGAnchorLineType;
         else if (const QMetaObject *m = engine->metaObjectForType(t)) {
-            meta = m;
             return IR::ObjectType;
         }
 

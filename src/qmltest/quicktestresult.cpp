@@ -314,7 +314,6 @@ void QuickTestResult::startLogging()
 {
     // The program name is used for logging headers and footers if it
     // is set.  Otherwise the test case name is used.
-    Q_D(QuickTestResult);
     if (loggingStarted)
         return;
     QTestLog::startLogging();

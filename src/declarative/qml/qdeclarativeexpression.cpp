@@ -506,7 +506,6 @@ QDeclarativeJavaScriptExpression::GuardList::updateGuards(QDeclarativeJavaScript
     }
 
     bool outputWarningHeader = false;
-    bool noChanges = true;
     for (int ii = 0; ii < properties.count(); ++ii) {
         Endpoint &guard = endpoints[ii];
         const QDeclarativeEnginePrivate::CapturedProperty &property = properties.at(ii);

@@ -1834,7 +1834,6 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
     }
 
     if (method.coreIndex == -1) {
-        QMetaMethod mm = object->metaObject()->method(index);
         method.load(object->metaObject()->method(index));
 
         if (method.coreIndex == -1)

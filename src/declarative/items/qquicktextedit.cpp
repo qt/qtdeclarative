@@ -1396,7 +1396,6 @@ void QQuickTextEdit::inputMethodEvent(QInputMethodEvent *event)
 
 void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    Q_D(QQuickTextEdit);
     if (change == ItemActiveFocusHasChanged) {
         setCursorVisible(value.boolValue); // ### refactor: focus handling && d->canvas && d->canvas->hasFocus());
     }

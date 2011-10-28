@@ -220,7 +220,7 @@ void QSGMaterialShader::deactivate()
     \sa activate(), deactivate()
  */
 
-void QSGMaterialShader::updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+void QSGMaterialShader::updateState(const RenderState & /* state */, QSGMaterial * /* newMaterial */, QSGMaterial * /* oldMaterial */)
 {
 }
 
