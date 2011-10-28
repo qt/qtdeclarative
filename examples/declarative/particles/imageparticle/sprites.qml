@@ -57,7 +57,8 @@ Rectangle {
         width: 250
         height: 250
         x: 20
-        y: 20
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 20
         z:4
     }
 

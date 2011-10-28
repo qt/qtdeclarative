@@ -1114,11 +1114,15 @@ void QQuickImageParticle::createEngine()
 {
     if (m_spriteEngine)
         delete m_spriteEngine;
-    if (m_sprites.count())
+    if (m_sprites.count()) {
         m_spriteEngine = new QQuickSpriteEngine(m_sprites, this);
-    else
+        connect(m_spriteEngine, SIGNAL(stateChanged(int)),
+                this, SLOT(spriteAdvance(int)));
+        m_explicitAnimation = true;
+    } else {
         m_spriteEngine = 0;
-    m_explicitAnimation = true;
+        m_explicitAnimation = false;
+    }
     reset();
 }
 
@@ -1329,6 +1333,7 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
 
         m_nodes.insert(gIdx, node);
         m_idxStarts.insert(gIdx, m_lastIdxStart);
+        m_startsIdx.append(qMakePair<int,int>(m_lastIdxStart, gIdx));
         m_lastIdxStart += count;
 
         //Create Particle Geometry
@@ -1404,6 +1409,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
         m_nodes.clear();
 
         m_idxStarts.clear();
+        m_startsIdx.clear();
         m_lastIdxStart = 0;
 
         m_material = 0;
@@ -1448,26 +1454,6 @@ void QQuickImageParticle::prepareNextFrame()
     case Sprites:
         //Advance State
         m_spriteEngine->updateSprites(timeStamp);
-        foreach (const QString &str, m_groups){
-            int gIdx = m_system->groupIds[str];
-            int count = m_system->groupData[gIdx]->size();
-
-            Vertices<SpriteVertex>* particles = (Vertices<SpriteVertex> *) m_nodes[gIdx]->geometry()->vertexData();
-            for (int i=0; i < count; i++){
-                int spriteIdx = m_idxStarts[gIdx] + i;
-                Vertices<SpriteVertex> &p = particles[i];
-                int curY = m_spriteEngine->spriteY(spriteIdx);//Y is fixed per sprite row, used to distinguish rows here
-                if (curY != p.v1.animY){
-                    p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
-                    p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(spriteIdx);
-                    p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
-                    p.v1.animX = p.v2.animX = p.v3.animX = p.v4.animX = m_spriteEngine->spriteX(spriteIdx);
-                    p.v1.animY = p.v2.animY = p.v3.animY = p.v4.animY = m_spriteEngine->spriteY(spriteIdx);
-                    p.v1.animWidth = p.v2.animWidth = p.v3.animWidth = p.v4.animWidth = m_spriteEngine->spriteWidth(spriteIdx);
-                    p.v1.animHeight = p.v2.animHeight = p.v3.animHeight = p.v4.animHeight = m_spriteEngine->spriteHeight(spriteIdx);
-                }
-            }
-        }
     case Tabled:
     case Deformable:
     case Colored:
@@ -1479,6 +1465,38 @@ void QQuickImageParticle::prepareNextFrame()
 
     foreach (QSGGeometryNode* node, m_nodes)
         node->markDirty(QSGNode::DirtyMaterial);
+}
+
+void QQuickImageParticle::spriteAdvance(int spriteIdx)
+{
+    if (!m_startsIdx.count())//Probably overly defensive
+        return;
+
+    int gIdx = -1;
+    int i;
+    for (i = 0; i<m_startsIdx.count(); i++) {
+        if (spriteIdx < m_startsIdx[i].first) {
+            gIdx = m_startsIdx[i-1].second;
+            break;
+        }
+    }
+    if (gIdx == -1)
+        gIdx = m_startsIdx[i-1].second;
+    int pIdx = spriteIdx - m_startsIdx[i-1].first;
+
+    QQuickParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
+    QQuickParticleData* d = (datum->animationOwner == this ? datum : getShadowDatum(datum));
+
+    d->animIdx = m_spriteEngine->spriteState(spriteIdx);
+    Vertices<SpriteVertex>* particles = (Vertices<SpriteVertex> *) m_nodes[gIdx]->geometry()->vertexData();
+    Vertices<SpriteVertex> &p = particles[pIdx];
+    d->animT = p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
+    d->frameCount = p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(spriteIdx);
+    d->frameDuration = p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+    d->animX = p.v1.animX = p.v2.animX = p.v3.animX = p.v4.animX = m_spriteEngine->spriteX(spriteIdx);
+    d->animY = p.v1.animY = p.v2.animY = p.v3.animY = p.v4.animY = m_spriteEngine->spriteY(spriteIdx);
+    d->animWidth = p.v1.animWidth = p.v2.animWidth = p.v3.animWidth = p.v4.animWidth = m_spriteEngine->spriteWidth(spriteIdx);
+    d->animHeight = p.v1.animHeight = p.v2.animHeight = p.v3.animHeight = p.v4.animHeight = m_spriteEngine->spriteHeight(spriteIdx);
 }
 
 void QQuickImageParticle::reloadColor(const Color4ub &c, QQuickParticleData* d)
@@ -1518,7 +1536,8 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 }else{
                     writeTo->frameCount = 1;
                     writeTo->frameDuration = 9999;
-                    writeTo->animX = writeTo->animY = writeTo->animWidth = writeTo->animHeight = 0;
+                    writeTo->animX = writeTo->animY = 0;
+                    writeTo->animWidth = writeTo->animHeight = 1;
                 }
             }
         case Tabled:

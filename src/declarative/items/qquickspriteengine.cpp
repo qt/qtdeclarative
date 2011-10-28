@@ -48,9 +48,9 @@
 
 QT_BEGIN_NAMESPACE
 
-/* TODO: Split out image logic from stochastic state logic
-   Also make sharable
-   Also solve the state data initialization/transfer issue so as to not need to make friends
+/* TODO:
+   make sharable?
+   solve the state data initialization/transfer issue so as to not need to make friends
 */
 
 QQuickStochasticEngine::QQuickStochasticEngine(QObject *parent) :
@@ -177,7 +177,8 @@ int QQuickSpriteEngine::spriteCount()//TODO: Actually image state count, need to
 
 void QQuickStochasticEngine::setGoal(int state, int sprite, bool jump)
 {
-    if (sprite >= m_things.count() || state >= m_states.count())
+    if (sprite >= m_things.count() || state >= m_states.count()
+            || sprite < 0 || state < 0)
         return;
     if (!jump){
         m_goals[sprite] = state;
