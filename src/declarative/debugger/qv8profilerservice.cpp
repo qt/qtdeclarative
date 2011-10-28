@@ -184,9 +184,11 @@ void QV8ProfilerService::stopProfiling(const QString &title)
     v8::HandleScope handle_scope;
     v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     const v8::CpuProfile *cpuProfile = v8::CpuProfiler::StopProfiling(v8title);
-    const v8::CpuProfileNode *rootNode = cpuProfile->GetTopDownRoot();
-
-    d->printProfileTree(rootNode);
+    if (cpuProfile) {
+        // can happen at start
+        const v8::CpuProfileNode *rootNode = cpuProfile->GetTopDownRoot();
+        d->printProfileTree(rootNode);
+    }
 }
 
 void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node, int level)
