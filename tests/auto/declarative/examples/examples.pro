@@ -10,4 +10,4 @@ CONFIG += parallel_test
 CONFIG += insignificant_test
 QT += core-private gui-private declarative-private qtquick1-private widgets-private v8-private testlib
 
-qpa:CONFIG+=insignificant_test  # QTBUG-20990, aborts
+CONFIG+=insignificant_test  # QTBUG-20990, aborts

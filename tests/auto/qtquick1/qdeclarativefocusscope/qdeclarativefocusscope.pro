@@ -6,4 +6,4 @@ macx:CONFIG -= app_bundle
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 QT += core-private gui-private widgets-private declarative-private qtquick1-private testlib
-qpa:CONFIG+=insignificant_test  # QTBUG-21013 unstable
+CONFIG+=insignificant_test  # QTBUG-21013 unstable
