@@ -45,7 +45,7 @@
 #include <QDebug>
 #include <QThread>
 
-#include "../../../../src/plugins/qmltooling/qmldbg_inspector/qdeclarativeinspectorprotocol.h"
+#include "../../../../../src/plugins/qmltooling/qmldbg_inspector/qdeclarativeinspectorprotocol.h"
 #include "../shared/debugutil_p.h"
 
 using namespace QmlJSDebugger;
