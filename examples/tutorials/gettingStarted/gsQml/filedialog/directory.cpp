@@ -56,7 +56,7 @@ Directory::Directory(QObject *parent) : QObject(parent)
         m_dir.mkdir(m_saveDir);
         m_dir.cd(m_saveDir);
     }
-     m_filterList << "*.txt";
+    m_filterList << "*.txt";
     refresh();
 }
 
