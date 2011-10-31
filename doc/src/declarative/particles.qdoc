@@ -35,6 +35,8 @@
 
   For a simple overview of how the system can be used, see \l{qml-particlesystem.html}{Using the Qt Quick Particle System}.
 
+  For details on the performance characteristics see \l{qml-particlesystem-performance.html}{Qt Quick Particle System Performance}.
+
 */
 
 /*!
@@ -78,14 +80,14 @@
     Emitters emit logical particles into the system. These particles have a trajectory and lifespan, but no visualization.
     These particles are emitted from the location of the Emitter.
 
-    FollowEmitters are a special type of emitter which emits particles from the location of other logicial particles. Any logical
-    particle of the followed type within the bounds of a FollowEmitter will cause particle emission from its location, as if there
-    were an Emitter on it with the same properties as the FollowEmitter.
+    TrailEmitters are a special type of emitter which emits particles from the location of other logicial particles. Any logical
+    particle of the followed type within the bounds of a TrailEmitter will cause particle emission from its location, as if there
+    were an Emitter on it with the same properties as the TrailEmitter.
 
     \section1 ParticlePainters
     Painters are the elements that visualize logical particles. For each logical particle in the groups assigned to it,
     which are within its bounds (or outside, if you do not set the clip property on the element) it will be visualized
-    in a manner dependant on the type of ParticlePainter.  The base type of ParticlePainter does not draw anything.
+    in a manner dependent on the type of ParticlePainter.  The base type of ParticlePainter does not draw anything.
     ImageParticle renders an image at the particle location. CustomParticle allows you to write your own shaders to render
     the particles, passing in the logical particle state as vertex data. ItemParticle allows you to visualize logical
     particles using arbitrary QML delegates. ModelParticle is similar, but coordinates model data amongst the delegates
@@ -108,11 +110,34 @@
     Directions can be specified by angle and magnitude, or by x and y components. While any direction can be specified with
     either method, there is a significant difference between varying the x and y components and varying the angle and magnitude.
     Varying the x and y components will lead to a rectangular area around the specified point, while varying the angle will lead
-    to an arc centered on the specfied point.
+    to an arc centered on the specified point.
 
     \section2 Shapes
     The particle system contains several elements which represent shapes. These elements do not visualize shapes, and are used
     for the purpose of selecting a random point within the shape. If you want a specific point with no randomness, use a 0 width
     and 0 height shape (which is the default). Otherwise you can use the shape elements provides to specify an area, so that the
     result can use a random point selected from that area.
+*/
+
+/*!
+    \page qml-particlesystem-performance.html
+    \title Qt Quick Particle System Performance Guide
+
+    The performance of the particle system scales with the number of particles it is maintaining. After prototyping the desired
+    effect, performance can be improved by lowering the particle count. Conversely, if performance is well withing acceptable
+    bounds you can increase the number of particles until you hit that point (should that improve the effect).
+    
+    Note that particle count is often estimated by the particle system, and in some cases explicitly providing hints as to how
+    many particles will be needed will improve performance. You can do this by setting maximumEmitted on an Emitter, and it is
+    generally useful for Emitters which do not continuously emit particles.
+
+    Like ShaderEffect, the performance of the particle system is largely dependent on the graphics hardware it is running on.
+    The exception to this is Affectors. For systems not including Affectors, the majority of the performance cost of particles
+    will be on the GPU. Since the GPU is better at parallelizing large numbers of operations more particles can be drawn at 60FPS
+    when Affectors are not used.
+    
+    Affectors, particularly if modifying the particles in javascript, can be relatively slow as well as increasing the CPU cost
+    of using particles. Avoid using them in high-volume systems where possible. Some easy cases where Affectors can be avoided
+    are using timed ParticleGroup transitions instead of time-triggered Affectors, or setting acceleration due to gravity in the
+    acceleration property of the Emitter instead of with a Gravity Affector.
 */
