@@ -89,8 +89,6 @@ QDeclarativeDebugTrace::QDeclarativeDebugTrace()
 
 QDeclarativeDebugTrace::~QDeclarativeDebugTrace()
 {
-    // unregister the callback
-    QUnifiedTimer::instance()->registerProfilerCallback( 0 );
 }
 
 void QDeclarativeDebugTrace::addEngine(QDeclarativeEngine * /*engine*/)
