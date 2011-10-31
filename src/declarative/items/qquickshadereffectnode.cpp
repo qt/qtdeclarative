@@ -117,7 +117,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                 continue;
             }
         }
-        qWarning("ShaderEffectItem: source or provider missing when binding textures");
+        qWarning("ShaderEffect: source or provider missing when binding textures");
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 

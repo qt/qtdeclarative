@@ -634,7 +634,7 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         }
         for (int i = 0; i < m_sources.size(); ++i) {
             const SourceData &source = m_sources.at(i);
-            QSGTextureProvider *t = source.sourceObject->textureProvider();
+            QSGTextureProvider *t = source.sourceObject ? source.sourceObject->textureProvider() : 0;
             textures.append(qMakePair(source.name, t));
             if (t)
                 connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
