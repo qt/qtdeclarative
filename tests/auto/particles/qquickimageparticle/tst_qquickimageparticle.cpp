@@ -71,7 +71,7 @@ void tst_qquickimageparticle::test_basic()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -114,7 +114,7 @@ void tst_qquickimageparticle::test_colored()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -157,7 +157,7 @@ void tst_qquickimageparticle::test_deformed()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -200,7 +200,7 @@ void tst_qquickimageparticle::test_tabled()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -244,7 +244,7 @@ void tst_qquickimageparticle::test_sprite()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused

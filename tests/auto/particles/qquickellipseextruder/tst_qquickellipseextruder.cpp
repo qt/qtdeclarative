@@ -82,7 +82,7 @@ void tst_qquickellipseextruder::test_basic()
     ensureAnimTime(600, system->m_animation);
 
     //Filled
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
