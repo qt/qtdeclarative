@@ -77,6 +77,8 @@ QT_BEGIN_NAMESPACE
 
 const int protocolVersion = 1;
 
+// print detailed information about loading of plugins
+DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
 
 class QDeclarativeDebugServerPrivate : public QObjectPrivate
 {
@@ -137,16 +139,29 @@ QDeclarativeDebugServerConnection *QDeclarativeDebugServerPrivate::loadConnectio
     }
 
     foreach (const QString &pluginPath, pluginCandidates) {
+        if (qmlDebugVerbose())
+            qDebug() << "QDeclarativeDebugServer: Trying to load plugin " << pluginPath << "...";
+
         QPluginLoader loader(pluginPath);
         if (!loader.load()) {
+            if (qmlDebugVerbose())
+                qDebug() << "QDeclarativeDebugServer: Error while loading: " << loader.errorString();
             continue;
         }
         QDeclarativeDebugServerConnection *connection = 0;
         if (QObject *instance = loader.instance())
             connection = qobject_cast<QDeclarativeDebugServerConnection*>(instance);
 
-        if (connection)
+        if (connection) {
+            if (qmlDebugVerbose())
+                qDebug() << "QDeclarativeDebugServer: Plugin successfully loaded.";
+
             return connection;
+        }
+
+        if (qmlDebugVerbose())
+            qDebug() << "QDeclarativeDebugServer: Plugin does not implement interface QDeclarativeDebugServerConnection.";
+
         loader.unload();
     }
 #endif
