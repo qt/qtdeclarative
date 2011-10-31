@@ -8,4 +8,4 @@ testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
 QT += core-private gui-private v8-private declarative-private opengl-private testlib
-
+CONFIG += insignificant_test
