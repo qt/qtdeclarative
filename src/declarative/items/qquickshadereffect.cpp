@@ -229,6 +229,7 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
     if (isComponentComplete()) {
         reset();
         updateProperties();
+        update();
     }
     emit fragmentShaderChanged();
 }
@@ -250,6 +251,7 @@ void QQuickShaderEffect::setVertexShader(const QByteArray &code)
     if (isComponentComplete()) {
         reset();
         updateProperties();
+        update();
     }
     emit vertexShaderChanged();
 }
