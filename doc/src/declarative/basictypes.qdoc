@@ -449,21 +449,22 @@
     }
     \endqml
 
-    It is important to note that properties of JavaScript objects cannot
-    be bound to:
+    It is important to note that changes in regular properties of JavaScript
+    objects assigned to a var property will \bold{not} trigger updates of bindings
+    that access them.  The example below will display "The car has 4 wheels" as
+    the change to the wheels property will not cause the reevaluation of the
+    binding assigned to the "text" property:
 
     \qml
     Item {
-        property var car: new vehicle(4)
-        property int wheelCount: car.wheels
+        property var car: new Object({wheels: 4})
 
-        function vehicle(wheels) {
-            this.wheels = wheels;
-            this.talk = function() { print("I have " + this.wheels + " wheels!"); }
+        Text {
+            text: "The car has " + car.wheels + " wheels";
         }
 
         Component.onCompleted: {
-            car.wheels = 6; // wheelCount will _not_ be updated
+            car.wheels = 6;
         }
     }
     \endqml
