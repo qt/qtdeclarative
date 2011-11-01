@@ -73,7 +73,7 @@ void QQuickViewPrivate::init()
 }
 
 QQuickViewPrivate::QQuickViewPrivate()
-    : root(0), component(0), resizeMode(QQuickView::SizeViewToRootObject), initialSize(0,0), resized(false)
+    : root(0), component(0), resizeMode(QQuickView::SizeViewToRootObject), initialSize(0,0)
 {
 }
 
@@ -313,11 +313,9 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
     }
     if (root) {
         initialSize = rootObjectSize();
-        if ((resizeMode == QQuickView::SizeViewToRootObject || !resized) // ### refactor:  || !q->testAttribute(Qt::WA_Resized)
-             && initialSize != q->size()) {
-
+        if ((resizeMode == QQuickView::SizeViewToRootObject || !q->width() || !q->height())
+                && initialSize != q->size()) {
             q->resize(initialSize);
-            resized = true;
         }
         initResize();
     }
