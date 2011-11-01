@@ -542,6 +542,9 @@ QDeclarativeEngine::~QDeclarativeEngine()
 
     // ensure we clean up QObjects with JS ownership
     d->v8engine()->gc();
+
+    if (d->incubationController)
+        d->incubationController->d = 0;
 }
 
 /*! \fn void QDeclarativeEngine::quit()

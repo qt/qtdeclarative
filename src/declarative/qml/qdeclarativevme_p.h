@@ -125,7 +125,7 @@ public:
     void reset();
 
     QObject *execute(QList<QDeclarativeError> *errors, const Interrupt & = Interrupt());
-    bool complete(const Interrupt & = Interrupt());
+    QDeclarativeContextData *complete(const Interrupt & = Interrupt());
 
 private:
     friend class QDeclarativeVMEGuard;

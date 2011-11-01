@@ -310,7 +310,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             }
             if (states.count() == 1) {
                 rootContext = CTXT;
-                rootContext->activeVME = this;
+                rootContext->activeVMEData = data;
             }
             if (states.count() == 1 && !creationContext.isNull()) {
                 // A component that is logically created within another component instance shares the 
@@ -1207,7 +1207,7 @@ void QDeclarativeVME::reset()
         delete objects.at(0); 
     
     if (!rootContext.isNull()) 
-        rootContext->activeVME = 0;
+        rootContext->activeVMEData = 0;
 
     // Remove the QDeclarativeParserStatus and QDeclarativeAbstractBinding back pointers
     blank(parserStatus);
@@ -1342,7 +1342,7 @@ void **QDeclarativeVME::instructionJumpTable()
 }
 #endif
 
-bool QDeclarativeVME::complete(const Interrupt &interrupt) 
+QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
 {
     Q_ASSERT(engine ||
              (bindValues.isEmpty() &&
@@ -1352,7 +1352,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
               finalizeCallbacks.isEmpty()));
 
     if (!engine)
-        return true;
+        return 0;
 
     ActiveVMERestorer restore(this, QDeclarativeEnginePrivate::get(engine));
     QRecursionWatcher<QDeclarativeVME, &QDeclarativeVME::recursion> watcher(this);
@@ -1367,7 +1367,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
         }
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-            return false;
+            return 0;
     }
     bindValues.deallocate();
 
@@ -1380,7 +1380,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
         }
         
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-            return false;
+            return 0;
     }
     parserStatus.deallocate();
 
@@ -1394,11 +1394,8 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
         emit a->completed();
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-            return false;
+            return 0;
     }
-
-    if (!rootContext.isNull()) 
-        rootContext->activeVME = 0;
 
     for (int ii = 0; ii < finalizeCallbacks.count(); ++ii) {
         QDeclarativeEnginePrivate::FinalizeCallback callback = finalizeCallbacks.at(ii);
@@ -1408,13 +1405,17 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
         }
         if (watcher.hasRecursed())
-            return false;
+            return 0;
     }
     finalizeCallbacks.clear();
 
+    QDeclarativeContextData *rv = rootContext;
+
     reset();
 
-    return true;
+    if (rv) rv->activeVMEData = data;
+
+    return rv;
 }
 
 void QDeclarativeVME::blank(QFiniteStack<QDeclarativeAbstractBinding *> &bs)

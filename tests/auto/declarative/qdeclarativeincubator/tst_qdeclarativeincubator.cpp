@@ -83,6 +83,7 @@ private slots:
     void asynchronousIfNested();
     void nestedComponent();
     void chainedAsynchronousIfNested();
+    void chainedAsynchronousIfNestedOnCompleted();
     void selfDelete();
 
 private:
@@ -771,6 +772,134 @@ void tst_qdeclarativeincubator::chainedAsynchronousIfNested()
     QVERIFY(incubator.isReady());
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
+}
+
+// Checks that new AsynchronousIfNested incubators can be correctly chained if started in
+// componentCompleted().
+void tst_qdeclarativeincubator::chainedAsynchronousIfNestedOnCompleted()
+{
+    SelfRegisteringType::clearMe();
+
+    QDeclarativeComponent component(&engine, TEST_FILE("chainInCompletion.qml"));
+    QVERIFY(component.isReady());
+
+    QDeclarativeComponent c1(&engine, TEST_FILE("chainedAsynchronousIfNested.qml"));
+    QVERIFY(c1.isReady());
+
+    struct MyIncubator : public QDeclarativeIncubator {
+        MyIncubator(MyIncubator *next, QDeclarativeComponent *component, QDeclarativeContext *ctxt)
+        : QDeclarativeIncubator(AsynchronousIfNested), next(next), component(component), ctxt(ctxt) {}
+
+    protected:
+        virtual void statusChanged(Status s) {
+            if (s == Ready && next) {
+                component->create(*next, 0, ctxt);
+            }
+        }
+
+    private:
+        MyIncubator *next;
+        QDeclarativeComponent *component;
+        QDeclarativeContext *ctxt;
+    };
+
+    struct CallbackData {
+        CallbackData(QDeclarativeComponent *c, MyIncubator *i, QDeclarativeContext *ct)
+            : component(c), incubator(i), ctxt(ct) {}
+        QDeclarativeComponent *component;
+        MyIncubator *incubator;
+        QDeclarativeContext *ctxt;
+        static void callback(CompletionCallbackType *o, void *data) {
+            CallbackData *d = (CallbackData *)data;
+            d->component->create(*d->incubator, 0, d->ctxt);
+        }
+    };
+
+    QDeclarativeIncubator incubator(QDeclarativeIncubator::Asynchronous);
+    component.create(incubator);
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(SelfRegisteringType::me() == 0);
+
+    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(incubator.isLoading());
+
+    MyIncubator incubator3(0, &c1, qmlContext(SelfRegisteringType::me()));
+    MyIncubator incubator2(&incubator3, &c1, qmlContext(SelfRegisteringType::me()));
+    MyIncubator incubator1(&incubator2, &c1, qmlContext(SelfRegisteringType::me()));
+
+    // start incubator1 in componentComplete
+    CallbackData cd(&c1, &incubator1, qmlContext(SelfRegisteringType::me()));
+    CompletionCallbackType::registerCallback(&CallbackData::callback, &cd);
+
+    while (!incubator1.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        QVERIFY(incubator2.isNull());
+        QVERIFY(incubator3.isNull());
+
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(incubator1.isLoading());
+    QVERIFY(incubator2.isNull());
+    QVERIFY(incubator3.isNull());
+
+    while (incubator1.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        QVERIFY(incubator1.isLoading());
+        QVERIFY(incubator2.isNull());
+        QVERIFY(incubator3.isNull());
+
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(incubator1.isReady());
+    QVERIFY(incubator2.isLoading());
+    QVERIFY(incubator3.isNull());
+
+    while (incubator2.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        QVERIFY(incubator1.isReady());
+        QVERIFY(incubator2.isLoading());
+        QVERIFY(incubator3.isNull());
+
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(incubator1.isReady());
+    QVERIFY(incubator2.isReady());
+    QVERIFY(incubator3.isLoading());
+
+    while (incubator3.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        QVERIFY(incubator1.isReady());
+        QVERIFY(incubator2.isReady());
+        QVERIFY(incubator3.isLoading());
+
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    {
+    bool b = true;
+    controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator1.isReady());
+    QVERIFY(incubator2.isReady());
+    QVERIFY(incubator3.isReady());
 }
 
 void tst_qdeclarativeincubator::selfDelete()

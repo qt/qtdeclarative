@@ -146,9 +146,8 @@ public:
     quint32 dummy:28;
     QDeclarativeContext *publicContext;
 
-    // VME that is constructing this context if any
-    // XXX remove if possible
-    QDeclarativeVME *activeVME;
+    // VME data that is constructing this context if any
+    void *activeVMEData;
 
     // Property name cache
     QDeclarativeIntegerCache *propertyNames;
