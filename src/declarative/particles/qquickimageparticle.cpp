@@ -1518,7 +1518,13 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
     qreal redVariation = m_color_variation + m_redVariation;
     qreal greenVariation = m_color_variation + m_greenVariation;
     qreal blueVariation = m_color_variation + m_blueVariation;
-    int spriteIdx = m_idxStarts[gIdx] + datum->index;
+    int spriteIdx = 0;
+    if (m_spriteEngine) {
+        spriteIdx = m_idxStarts[gIdx] + datum->index;
+        if (spriteIdx >= m_spriteEngine->count())
+            m_spriteEngine->setCount(spriteIdx+1);
+    }
+
     float rotation;
     float rotationSpeed;
     float autoRotate;

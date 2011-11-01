@@ -91,9 +91,9 @@ void QQuickParticlePainter::setSystem(QQuickParticleSystem *arg)
 
 void QQuickParticlePainter::load(QQuickParticleData* d)
 {
+    initialize(d->group, d->index);
     if (m_pleaseReset)
         return;
-    initialize(d->group, d->index);
     m_pendingCommits << qMakePair<int, int>(d->group, d->index);
 }
 
