@@ -333,13 +333,21 @@ void QSGDefaultRectangleNode::updateGeometry()
             qreal c = 1 - part;
             qreal s = part;
             for (int i = 0; i <= segments; ++i) {
-                qreal y = (part ? innerRect.bottom() : innerRect.top()) - innerRadius * c; // current inner y-coordinate.
-                qreal lx = innerRect.left() - innerRadius * s; // current inner left x-coordinate.
-                qreal rx = innerRect.right() + innerRadius * s; // current inner right x-coordinate.
+                qreal y, lx, rx;
+                if (innerRadius > 0) {
+                    y = (part ? innerRect.bottom() : innerRect.top()) - innerRadius * c; // current inner y-coordinate.
+                    lx = innerRect.left() - innerRadius * s; // current inner left x-coordinate.
+                    rx = innerRect.right() + innerRadius * s; // current inner right x-coordinate.
+                    gradientPos = ((part ? innerRect.height() : 0) + radius - innerRadius * c) / (innerRect.height() + 2 * radius);
+                } else {
+                    y = (part ? innerRect.bottom() + innerRadius : innerRect.top() - innerRadius); // current inner y-coordinate.
+                    lx = innerRect.left() - innerRadius; // current inner left x-coordinate.
+                    rx = innerRect.right() + innerRadius; // current inner right x-coordinate.
+                    gradientPos = ((part ? innerRect.height() + innerRadius : -innerRadius) + radius) / (innerRect.height() + 2 * radius);
+                }
                 qreal Y = (part ? innerRect.bottom() : innerRect.top()) - outerRadius * c; // current outer y-coordinate.
                 qreal lX = innerRect.left() - outerRadius * s; // current outer left x-coordinate.
                 qreal rX = innerRect.right() + outerRadius * s; // current outer right x-coordinate.
-                gradientPos = ((part ? innerRect.height() : 0) + radius - innerRadius * c) / (innerRect.height() + 2 * radius);
 
                 while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                     // Insert vertices at gradient stops.
