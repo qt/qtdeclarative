@@ -220,7 +220,8 @@ void QQuickParticleAffector::affectSystem(qreal dt)
                         m_system->timeInt -= myDt * 1000.0;
                         while (myDt > simulationDelta) {
                             m_system->timeInt += simulationDelta * 1000.0;
-                            affected = affectParticle(d, simulationDelta) || affected;
+                            if (d->alive())//Only affect during the parts it was alive for
+                                affected = affectParticle(d, simulationDelta) || affected;
                             myDt -= simulationDelta;
                         }
                         m_system->timeInt = realTime;

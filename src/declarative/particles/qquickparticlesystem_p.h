@@ -219,7 +219,8 @@ public:
     QQuickImageParticle* animationOwner;
 
     void debugDump();
-    bool stillAlive();
+    bool stillAlive();//Only checks end, because usually that's all you need and it's a little faster.
+    bool alive();
     float lifeLeft();
     float curSize();
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
