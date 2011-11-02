@@ -177,8 +177,10 @@ private slots:
     void sequenceConversionThreads();
     void sequenceConversionBindings();
     void sequenceConversionCopy();
+    void assignSequenceTypes();
     void qtbug_22464();
     void qtbug_21580();
+
     void bug1();
     void bug2();
     void dynamicCreationCrash();
@@ -4318,6 +4320,89 @@ void tst_qdeclarativeecmascript::sequenceConversionCopy()
     QMetaObject::invokeMethod(object, "testEqualitySemantics");
     QCOMPARE(object->property("success").toBool(), true);
     delete object;
+}
+
+void tst_qdeclarativeecmascript::assignSequenceTypes()
+{
+    // test binding array to sequence type property
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.1.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1 << 2));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false << true));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com") << QUrl("http://www.example2.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one") << QLatin1String("two")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("one") << QLatin1String("two")));
+    delete object;
+    }
+
+    // test binding literal to sequence type property
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.2.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("two")));
+    delete object;
+    }
+
+    // test binding single value to sequence type property
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.3.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html"))));
+    delete object;
+    }
+
+    // test assigning array to sequence type property in js function
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.4.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1 << 2));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false << true));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com") << QUrl("http://www.example2.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one") << QLatin1String("two")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("one") << QLatin1String("two")));
+    delete object;
+    }
+
+    // test assigning literal to sequence type property in js function
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.5.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("two")));
+    delete object;
+    }
+
+    // test assigning single value to sequence type property in js function
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.6.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html"))));
+    delete object;
+    }
 }
 
 // Test that assigning a null object works 

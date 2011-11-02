@@ -624,6 +624,27 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreString)
 
+        QML_BEGIN_INSTR(StoreStringList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QStringList stringlist(PRIMITIVES.at(instr.value));
+            void *a[] = { (void *)&stringlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreStringList)
+
+        QML_BEGIN_INSTR(StoreStringQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<QString> stringqlist;
+            stringqlist.append(PRIMITIVES.at(instr.value));
+            void *a[] = { (void *)&stringqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreStringQList)
+
         QML_BEGIN_INSTR(StoreByteArray)
             QObject *target = objects.top();
             void *a[] = { (void *)&DATAS.at(instr.value), 0, &status, &flags };
@@ -639,6 +660,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreUrl)
+
+        QML_BEGIN_INSTR(StoreUrlQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<QUrl> urlqlist;
+            urlqlist.append(URLS.at(instr.value));
+            void *a[] = { (void *)&urlqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreUrlQList)
 
         QML_BEGIN_INSTR(StoreFloat)
             QObject *target = objects.top();
@@ -660,6 +692,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreDouble)
 
+        QML_BEGIN_INSTR(StoreDoubleQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<double> doubleqlist;
+            doubleqlist.append(instr.value);
+            void *a[] = { (void *)&doubleqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreDoubleQList)
+
         QML_BEGIN_INSTR(StoreBool)
             QObject *target = objects.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
@@ -669,6 +712,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreBool)
 
+        QML_BEGIN_INSTR(StoreBoolQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<bool> boolqlist;
+            boolqlist.append(instr.value);
+            void *a[] = { (void *)&boolqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreBoolQList)
+
         QML_BEGIN_INSTR(StoreInteger)
             QObject *target = objects.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
@@ -677,6 +731,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreInteger)
+
+        QML_BEGIN_INSTR(StoreIntegerQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<int> intqlist;
+            intqlist.append(instr.value);
+            void *a[] = { (void *)&intqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreIntegerQList)
 
         QML_BEGIN_INSTR(StoreColor)
             QObject *target = objects.top();
