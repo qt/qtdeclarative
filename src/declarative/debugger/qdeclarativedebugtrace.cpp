@@ -267,16 +267,20 @@ void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
     QByteArray rwData = message;
     QDataStream stream(&rwData, QIODevice::ReadOnly);
 
-    bool wasEnabled = m_enabled;
-    stream >> m_enabled;
+    bool enabled;
+    stream >> enabled;
 
     m_messageReceived = true;
 
-    if (!m_enabled && wasEnabled) {
-        m_enabled = true;
-        addEvent(EndTrace);
-        m_enabled = false;
-        sendMessages();
+    if (m_enabled != enabled) {
+        if (enabled) {
+            m_enabled = true;
+            addEvent(StartTrace);
+        } else {
+            addEvent(EndTrace);
+            m_enabled = false;
+            sendMessages();
+        }
     }
 }
 

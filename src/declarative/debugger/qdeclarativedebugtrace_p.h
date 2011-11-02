@@ -102,6 +102,7 @@ public:
         Key,
         AnimationFrame,
         EndTrace,
+        StartTrace,
 
         MaximumEventType
     };
