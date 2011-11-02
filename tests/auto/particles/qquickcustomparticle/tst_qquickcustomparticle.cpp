@@ -86,6 +86,7 @@ void tst_qquickcustomparticle::test_basic()
         if (d->r != 0.0 )
             oneNonZero = true;
     }
+    delete view;
     QVERIFY(oneNonZero);//Zero is a valid value, but it also needs to be set to a random number
 }
 

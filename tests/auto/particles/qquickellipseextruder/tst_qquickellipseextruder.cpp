@@ -97,6 +97,7 @@ void tst_qquickellipseextruder::test_basic()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+
     //Just border
     QCOMPARE(system->groupData[1]->size(), 500);
     foreach (QQuickParticleData *d, system->groupData[1]->data) {
@@ -113,6 +114,7 @@ void tst_qquickellipseextruder::test_basic()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickellipseextruder);

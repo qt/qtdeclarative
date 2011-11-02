@@ -88,6 +88,7 @@ void tst_qquickitemparticle::test_basic()
         QVERIFY(d->delegate);
         QVERIFY(qobject_cast<QQuickImage*>(d->delegate));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickitemparticle);

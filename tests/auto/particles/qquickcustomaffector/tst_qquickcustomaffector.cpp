@@ -90,6 +90,7 @@ void tst_qquickcustomaffector::test_basic()
         QCOMPARE(d->color.a, (uchar)0);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 void tst_qquickcustomaffector::test_move()
@@ -116,6 +117,7 @@ void tst_qquickcustomaffector::test_move()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickcustomaffector);

@@ -73,6 +73,7 @@ void tst_qquickspritegoal::test_instantTransition()
         QCOMPARE(d->animIdx, 1.f);//Spawns at 0, affector moves it.
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickspritegoal);

@@ -84,6 +84,7 @@ void tst_qquickage::test_kill()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(d->t <= ((qreal)system->timeInt/1000.0) - 0.5f + EPSILON);
     }
+    delete view;
 }
 
 void tst_qquickage::test_jump()
@@ -109,6 +110,7 @@ void tst_qquickage::test_jump()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(d->t <= ((qreal)system->timeInt/1000.0) - 0.4f + EPSILON);
     }
+    delete view;
 }
 
 void tst_qquickage::test_onceOff()
@@ -133,6 +135,7 @@ void tst_qquickage::test_onceOff()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(d->t <= ((qreal)system->timeInt/1000.0) - 0.4f + EPSILON);
     }
+    delete view;
 }
 
 void tst_qquickage::test_sustained()
@@ -158,6 +161,7 @@ void tst_qquickage::test_sustained()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyCompare(d->t, ((qreal)system->timeInt/1000.0) - 0.4f));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickage);

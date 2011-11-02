@@ -106,6 +106,7 @@ void tst_qquickrectangleextruder::test_basic()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickrectangleextruder);

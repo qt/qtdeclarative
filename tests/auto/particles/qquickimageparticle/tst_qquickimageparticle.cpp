@@ -105,6 +105,7 @@ void tst_qquickimageparticle::test_basic()
         QCOMPARE(d->frameCount, 1.0f);
         QCOMPARE(d->animT, -1.0f);
     }
+    delete view;
 }
 
 
@@ -148,6 +149,7 @@ void tst_qquickimageparticle::test_colored()
         QCOMPARE(d->frameCount, 1.0f);
         QCOMPARE(d->animT, -1.0f);
     }
+    delete view;
 }
 
 
@@ -191,6 +193,7 @@ void tst_qquickimageparticle::test_deformed()
         QCOMPARE(d->frameCount, 1.0f);
         QCOMPARE(d->animT, -1.0f);
     }
+    delete view;
 }
 
 
@@ -235,6 +238,7 @@ void tst_qquickimageparticle::test_tabled()
         QCOMPARE(d->animT, -1.0f);
         //TODO: This performance level doesn't alter particleData, but goes straight to shaders. Find something to test
     }
+    delete view;
 }
 
 
@@ -278,6 +282,7 @@ void tst_qquickimageparticle::test_sprite()
         QCOMPARE(d->animWidth, 31.0f);
         QCOMPARE(d->animHeight, 30.0f);
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickimageparticle);

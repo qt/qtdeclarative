@@ -85,6 +85,7 @@ void tst_qquickwander::test_basic()
         if (d->vy != 0.0f)
             vyChanged = true;
     }
+    delete view;
     QVERIFY(vxChanged);
     QVERIFY(vyChanged);
 }
