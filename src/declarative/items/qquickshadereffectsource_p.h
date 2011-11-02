@@ -119,7 +119,8 @@ public:
     QImage toImage() const;
 
 Q_SIGNALS:
-    void textureChanged();
+    void updateRequested();
+    void scheduledUpdateCompleted();
 
 public Q_SLOTS:
     void markDirtyTexture();
@@ -226,7 +227,7 @@ Q_SIGNALS:
     void mipmapChanged();
     void recursiveChanged();
 
-    void textureChanged();
+    void scheduledUpdateCompleted();
 
 protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);

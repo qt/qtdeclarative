@@ -216,7 +216,7 @@ void QQuickShaderEffectTexture::scheduleUpdate()
         return;
     m_grab = true;
     if (m_dirtyTexture)
-        emit textureChanged();
+        emit updateRequested();
 }
 
 void QQuickShaderEffectTexture::setRecursive(bool recursive)
@@ -228,7 +228,7 @@ void QQuickShaderEffectTexture::markDirtyTexture()
 {
     m_dirtyTexture = true;
     if (m_live || m_grab)
-        emit textureChanged();
+        emit updateRequested();
 }
 
 void QQuickShaderEffectTexture::grab()
@@ -238,6 +238,8 @@ void QQuickShaderEffectTexture::grab()
         delete m_secondaryFbo;
         m_fbo = m_secondaryFbo = 0;
         m_dirtyTexture = false;
+        if (m_grab)
+            emit scheduledUpdateCompleted();
         return;
     }
     QSGNode *root = m_item;
@@ -246,16 +248,9 @@ void QQuickShaderEffectTexture::grab()
     if (root->type() != QSGNode::RootNodeType)
         return;
 
-    if (m_size.isEmpty()) {
-        delete m_fbo;
-        delete m_secondaryFbo;
-        m_secondaryFbo = m_fbo = 0;
-        return;
-    }
-
     if (!m_renderer) {
         m_renderer = m_context->createRenderer();
-        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()), Qt::DirectConnection);
+        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     }
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
@@ -388,6 +383,9 @@ void QQuickShaderEffectTexture::grab()
 #endif
     if (m_recursive)
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
+
+    if (m_grab)
+        emit scheduledUpdateCompleted();
 }
 
 QImage QQuickShaderEffectTexture::toImage() const
@@ -516,7 +514,8 @@ void QQuickShaderEffectSource::ensureTexture()
                "Cannot be used outside the rendering thread");
 
     m_texture = new QQuickShaderEffectTexture(this);
-    connect(m_texture, SIGNAL(textureChanged()), this, SLOT(update()));
+    connect(m_texture, SIGNAL(updateRequested()), this, SLOT(update()));
+    connect(m_texture, SIGNAL(scheduledUpdateCompleted()), this, SIGNAL(scheduledUpdateCompleted()));
 }
 
 QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
@@ -529,9 +528,8 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
                    "QQuickShaderEffectSource::textureProvider",
                    "Cannot be used outside the rendering thread");
         const_cast<QQuickShaderEffectSource *>(this)->m_provider = new QQuickShaderEffectSourceTextureProvider();
-
         const_cast<QQuickShaderEffectSource *>(this)->ensureTexture();
-        connect(m_texture, SIGNAL(textureChanged()), m_provider, SIGNAL(textureChanged()), Qt::DirectConnection);
+        connect(m_texture, SIGNAL(updateRequested()), m_provider, SIGNAL(textureChanged()));
         m_provider->sourceTexture = m_texture;
     }
     return m_provider;
@@ -884,7 +882,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     if (!node) {
         node = new QQuickShaderEffectSourceNode;
         node->setTexture(m_texture);
-        connect(m_texture, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+        connect(m_texture, SIGNAL(updateRequested()), node, SLOT(markDirtyTexture()));
     }
 
     // If live and recursive, update continuously.
