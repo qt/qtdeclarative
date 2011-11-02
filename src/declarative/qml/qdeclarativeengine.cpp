@@ -332,7 +332,7 @@ the same object as is returned from the Qt.include() call.
 
 
 QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
-: captureProperties(false), rootContext(0), isDebugging(false),
+: propertyCapture(0), rootContext(0), isDebugging(false),
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
   cleanup(0), erroredBindings(0), inProgressCreations(0), 
   workerScriptEngine(0), activeVME(0),

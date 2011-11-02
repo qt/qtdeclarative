@@ -107,6 +107,7 @@ N *QFieldList<N, nextMember>::takeFirst()
             Q_ASSERT(_first == 0);
             _last = 0;
         }
+        value->*nextMember = 0;
         --_count;
     } 
     return value;

@@ -70,12 +70,14 @@ bool QDeclarativeDelayedError::addError(QDeclarativeEnginePrivate *e)
 
 QDeclarativeJavaScriptExpression::QDeclarativeJavaScriptExpression()
 : m_requiresThisObject(0), m_useSharedContext(0), m_notifyOnValueChanged(0), 
-  m_scopeObject(0)
+  m_scopeObject(0), guardCapture(0)
 {
 }
 
 QDeclarativeJavaScriptExpression::~QDeclarativeJavaScriptExpression()
 {
+    if (guardCapture) guardCapture->expression = 0;
+    clearGuards();
 }
 
 QDeclarativeExpressionPrivate::QDeclarativeExpressionPrivate()
@@ -396,12 +398,12 @@ void QDeclarativeExpressionPrivate::exceptionToError(v8::Handle<v8::Message> mes
 void QDeclarativeJavaScriptExpression::setNotifyOnValueChanged(bool v)
 {
     m_notifyOnValueChanged = v;
-    if (!v) guardList.clear();
+    if (!v) clearGuards();
 }
 
 void QDeclarativeJavaScriptExpression::resetNotifyOnValueChanged()
 {
-    guardList.clear();
+    clearGuards();
 }
 
 v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::Function> function, bool *isUndefined)
@@ -415,12 +417,15 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
 
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context()->engine);
 
-    bool lastCaptureProperties = ep->captureProperties;
-    QPODVector<QDeclarativeEnginePrivate::CapturedProperty> lastCapturedProperties;
-    ep->captureProperties = notifyOnValueChanged();
+    Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
+    GuardCapture capture(this);
 
-    if (ep->capturedProperties.count())
-        ep->capturedProperties.copyAndClear(lastCapturedProperties);
+    QDeclarativeEnginePrivate::PropertyCapture *lastPropertyCapture = ep->propertyCapture;
+    ep->propertyCapture = notifyOnValueChanged()?&capture:0;
+
+
+    if (notifyOnValueChanged())
+        capture.guards.copyAndClear(activeGuards);
 
     QDeclarativeContextData *lastSharedContext = 0;
     QObject *lastSharedScope = 0;
@@ -471,77 +476,88 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
         ep->sharedScope = lastSharedScope;
     }
 
-    if (!watcher.wasDeleted() && notifyOnValueChanged()) {
-        guardList.updateGuards(this, ep->capturedProperties);
+    if (capture.errorString) {
+        for (int ii = 0; ii < capture.errorString->count(); ++ii)
+            qWarning("%s", qPrintable(capture.errorString->at(ii)));
+        delete capture.errorString;
+        capture.errorString = 0;
     }
 
-    if (lastCapturedProperties.count())
-        lastCapturedProperties.copyAndClear(ep->capturedProperties);
-    else
-        ep->capturedProperties.clear();
+    while (Guard *g = capture.guards.takeFirst())
+        g->Delete();
 
-    ep->captureProperties = lastCaptureProperties;
+    ep->propertyCapture = lastPropertyCapture;
 
     return result;
 }
 
-void 
-QDeclarativeJavaScriptExpression::GuardList::updateGuards(QDeclarativeJavaScriptExpression *expression,
-                                                          const CapturedProperties &properties)
+void QDeclarativeJavaScriptExpression::GuardCapture::captureProperty(QDeclarativeNotifier *n)
 {
-    if (properties.count() == 0) {
-        clear();
-        return;
-    }
+    if (expression) {
 
-    if (properties.count() != length) {
-        Endpoint *newGuardList = new Endpoint[properties.count()];
+        // Try and find a matching guard
+        while (!guards.isEmpty() && !guards.first()->isConnected(n))
+            guards.takeFirst()->Delete();
 
-        for (int ii = 0; ii < qMin(length, properties.count()); ++ii) 
-           endpoints[ii].copyAndClear(newGuardList[ii]);
-
-        delete [] endpoints;
-        endpoints = newGuardList;
-        length = properties.count();
-    }
-
-    bool outputWarningHeader = false;
-    for (int ii = 0; ii < properties.count(); ++ii) {
-        Endpoint &guard = endpoints[ii];
-        const QDeclarativeEnginePrivate::CapturedProperty &property = properties.at(ii);
-
-        guard.expression = expression;
-
-        if (property.notifier != 0) {
-
-            if (guard.isConnected(property.notifier)) {
-                 guard.cancelNotify();
-            } else {
-                guard.connect(property.notifier);
-            }
-
-        } else if (property.notifyIndex != -1) {
-
-            if (guard.isConnected(property.object, property.notifyIndex)) {
-                guard.cancelNotify();
-            } else { 
-                guard.connect(property.object, property.notifyIndex);
-            }
-
+        Guard *g = 0;
+        if (!guards.isEmpty()) {
+            g = guards.takeFirst();
+            g->cancelNotify();
+            Q_ASSERT(g->isConnected(n));
         } else {
-            if (!outputWarningHeader) {
-                QString e = expression->expressionIdentifier();
-                outputWarningHeader = true;
-                qWarning() << "QDeclarativeExpression: Expression" << qPrintable(e)
-                           << "depends on non-NOTIFYable properties:";
+            g = Guard::New(expression);
+            g->connect(n);
+        }
+
+        expression->activeGuards.append(g);
+    }
+}
+
+void QDeclarativeJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, int n)
+{
+    if (expression) {
+        if (n == -1) {
+            if (!errorString) {
+                errorString = new QStringList;
+                QString preamble = QLatin1String("QDeclarativeExpression: Expression ") +
+                                   expression->expressionIdentifier() +
+                                   QLatin1String(" depends on non-NOTIFYable properties:");
+                errorString->append(preamble);
             }
 
-            const QMetaObject *metaObj = property.object->metaObject();
-            QMetaProperty metaProp = metaObj->property(property.coreIndex);
+            const QMetaObject *metaObj = o->metaObject();
+            QMetaProperty metaProp = metaObj->property(c);
 
-            qWarning().nospace() << "    " << metaObj->className() << "::" << metaProp.name();
+            QString error = QLatin1String("    ") +
+                            QString::fromUtf8(metaObj->className()) +
+                            QLatin1String("::") +
+                            QString::fromUtf8(metaProp.name());
+            errorString->append(error);
+        } else {
+
+            // Try and find a matching guard
+            while (!guards.isEmpty() && !guards.first()->isConnected(o, n))
+                guards.takeFirst()->Delete();
+
+            Guard *g = 0;
+            if (!guards.isEmpty()) {
+                g = guards.takeFirst();
+                g->cancelNotify();
+                Q_ASSERT(g->isConnected(o, n));
+            } else {
+                g = Guard::New(expression);
+                g->connect(o, n);
+            }
+
+            expression->activeGuards.append(g);
         }
     }
+}
+
+void QDeclarativeJavaScriptExpression::clearGuards()
+{
+    while (Guard *g = activeGuards.takeFirst())
+        g->Delete();
 }
 
 // Must be called with a valid handle scope

@@ -317,21 +317,17 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
             int propertyIdx = context->propertyNames->value(propertystring);
 
             if (propertyIdx != -1) {
-                typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty;
 
                 if (propertyIdx < context->idValueCount) {
 
-                    if (ep->captureProperties)
-                        ep->capturedProperties << CapturedProperty(&context->idValues[propertyIdx].bindings);
-
+                    ep->captureProperty(&context->idValues[propertyIdx].bindings);
                     return engine->newQObject(context->idValues[propertyIdx]);
                 } else {
 
                     QDeclarativeContextPrivate *cp = context->asQDeclarativeContextPrivate();
 
-                    if (ep->captureProperties)
-                        ep->capturedProperties << CapturedProperty(context->asQDeclarativeContext(), -1, 
-                                                                   propertyIdx + cp->notifyIndex);
+                    ep->captureProperty(context->asQDeclarativeContext(), -1,
+                                        propertyIdx + cp->notifyIndex);
 
                     const QVariant &value = cp->propertyValues.at(propertyIdx);
                     if (value.userType() == qMetaTypeId<QList<QObject*> >()) {

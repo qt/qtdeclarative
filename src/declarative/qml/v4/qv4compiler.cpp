@@ -59,6 +59,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
 DEFINE_BOOL_CONFIG_OPTION(qmlBindingsTestEnv, QML_BINDINGS_TEST)
 
 static bool qmlBindingsTest = false;
+static bool qmlEnableV4 = true;
 
 using namespace QDeclarativeJS;
 QV4CompilerPrivate::QV4CompilerPrivate()
@@ -1219,7 +1220,7 @@ int QV4Compiler::compile(const Expression &expression, QDeclarativeEnginePrivate
     if (!qmlExperimental() && expression.property->isValueTypeSubProperty)
         return -1;
 
-    if (qmlDisableOptimizer())
+    if (qmlDisableOptimizer() || !qmlEnableV4)
         return -1;
 
     d->expression = &expression;
@@ -1339,6 +1340,11 @@ void QV4Compiler::enableBindingsTest(bool e)
         qmlBindingsTest = true;
     else 
         qmlBindingsTest = qmlBindingsTestEnv();
+}
+
+void QV4Compiler::enableV4(bool e)
+{
+    qmlEnableV4 = e;
 }
 
 QT_END_NAMESPACE

@@ -1229,6 +1229,26 @@ private:
     QList<QPoint> m_pointList; // not a supported sequence type
 };
 
+class MyDeleteObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *nestedObject READ nestedObject NOTIFY nestedObjectChanged);
+    Q_PROPERTY(int deleteNestedObject READ deleteNestedObject NOTIFY deleteNestedObjectChanged);
+
+public:
+    MyDeleteObject() : m_nestedObject(new MyQmlObject) {}
+
+    QObject *nestedObject() const { return m_nestedObject; }
+    int deleteNestedObject() { delete m_nestedObject; m_nestedObject = 0; return 1; }
+
+signals:
+    void nestedObjectChanged();
+    void deleteNestedObjectChanged();
+
+private:
+    MyQmlObject *m_nestedObject;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

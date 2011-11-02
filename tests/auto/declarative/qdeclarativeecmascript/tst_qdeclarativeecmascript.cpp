@@ -51,6 +51,7 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qv8gccallback_p.h>
 #include <private/qdeclarativevmemetaobject_p.h>
+#include <private/qv4compiler_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../shared/util.h"
@@ -216,7 +217,8 @@ private slots:
     void signalHandlers();
     void doubleEvaluate();
     void forInLoop();
-
+    void nonNotifyable();
+    void deleteWhileBindingRunning();
     void callQtInvokables();
     void invokableObjectArg();
     void invokableObjectRet();
@@ -5046,6 +5048,39 @@ void tst_qdeclarativeecmascript::doubleEvaluate()
     delete object;
 }
 
+static QStringList messages;
+static void captureMsgHandler(QtMsgType, const char *msg)
+{
+    messages.append(QLatin1String(msg));
+}
+
+void tst_qdeclarativeecmascript::nonNotifyable()
+{
+    QV4Compiler::enableV4(false);
+    QDeclarativeComponent component(&engine, TEST_FILE("nonNotifyable.qml"));
+    QV4Compiler::enableV4(true);
+
+    QtMsgHandler old = qInstallMsgHandler(captureMsgHandler);
+    messages.clear();
+    QObject *object = component.create();
+    qInstallMsgHandler(old);
+
+    QVERIFY(object != 0);
+
+    QString expected1 = QLatin1String("QDeclarativeExpression: Expression ") +
+                        component.url().toString() +
+                        QLatin1String(":5 depends on non-NOTIFYable properties:");
+    QString expected2 = QLatin1String("    ") +
+                        QLatin1String(object->metaObject()->className()) +
+                        QLatin1String("::value");
+
+    QCOMPARE(messages.length(), 2);
+    QCOMPARE(messages.at(0), expected1);
+    QCOMPARE(messages.at(1), expected2);
+
+    delete object;
+}
+
 void tst_qdeclarativeecmascript::forInLoop()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("forInLoop.qml"));
@@ -5062,6 +5097,15 @@ void tst_qdeclarativeecmascript::forInLoop()
 
     //TODO: should test for in loop for other objects (such as QObjects) as well.
 
+    delete object;
+}
+
+// An object the binding depends on is deleted while the binding is still running
+void tst_qdeclarativeecmascript::deleteWhileBindingRunning()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("deleteWhileBindingRunning.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
     delete object;
 }
 

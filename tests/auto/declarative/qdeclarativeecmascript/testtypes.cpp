@@ -161,6 +161,7 @@ void registerTypes()
     qmlRegisterExtendedType<DefaultPropertyExtendedObject, DefaultPropertyExtensionObject>("Qt.test", 1,0, "DefaultPropertyExtendedObject");
     qmlRegisterType<OverrideDefaultPropertyObject>("Qt.test", 1,0, "OverrideDefaultPropertyObject");
     qmlRegisterType<MyRevisionedClass>("Qt.test",1,0,"MyRevisionedClass");
+    qmlRegisterType<MyDeleteObject>("Qt.test", 1,0, "MyDeleteObject");
     qmlRegisterType<MyRevisionedClass,1>("Qt.test",1,1,"MyRevisionedClass");
 
     // test scarce resource property binding post-evaluation optimisation

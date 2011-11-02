@@ -229,10 +229,8 @@ static v8::Handle<v8::Value> name ## ValueGetter(v8::Local<v8::String>, const v8
     if (notify == 0x0FFF) notify = -1; \
  \
     QDeclarativeEnginePrivate *ep = resource->engine->engine()?QDeclarativeEnginePrivate::get(resource->engine->engine()):0; \
-    if (ep && notify /* 0 means constant */ && ep->captureProperties) { \
-        typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty; \
-        ep->capturedProperties << CapturedProperty(object, index, notify); \
-    } \
+    if (ep && notify /* 0 means constant */ ) \
+        ep->captureProperty(object, index, notify); \
  \
     cpptype value = defaultvalue; \
     void *args[] = { &value, 0 }; \
@@ -255,10 +253,8 @@ static v8::Handle<v8::Value> name ## ValueGetterDirect(v8::Local<v8::String>, co
     if (notify == 0x0FFF) notify = -1; \
  \
     QDeclarativeEnginePrivate *ep = resource->engine->engine()?QDeclarativeEnginePrivate::get(resource->engine->engine()):0; \
-    if (ep && notify /* 0 means constant */ && ep->captureProperties) { \
-        typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty; \
-        ep->capturedProperties << CapturedProperty(object, index, notify); \
-    } \
+    if (ep && notify /* 0 means constant */ ) \
+        ep->captureProperty(object, index, notify); \
  \
     cpptype value = defaultvalue; \
     void *args[] = { &value, 0 }; \
@@ -508,8 +504,6 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             return v8::Handle<v8::Value>();
     }
 
-    typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty;
-
     if (result->isFunction()) {
         if (result->isVMEFunction()) {
             return ((QDeclarativeVMEMetaObject *)(object->metaObject()))->vmeMethod(result->coreIndex);
@@ -526,11 +520,11 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     }
 
     QDeclarativeEnginePrivate *ep = engine->engine()?QDeclarativeEnginePrivate::get(engine->engine()):0;
-    if (ep && ep->captureProperties && !result->isConstant()) {
+    if (ep && !result->isConstant()) {
         if (result->coreIndex == 0)
-            ep->capturedProperties << CapturedProperty(QDeclarativeData::get(object, true)->objectNameNotifier());
+            ep->captureProperty(QDeclarativeData::get(object, true)->objectNameNotifier());
         else
-            ep->capturedProperties << CapturedProperty(object, result->coreIndex, result->notifyIndex);
+            ep->captureProperty(object, result->coreIndex, result->notifyIndex);
     }
 
     if (result->isVMEProperty())

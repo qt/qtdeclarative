@@ -55,10 +55,10 @@
 
 #include "qdeclarativeexpression.h"
 
-#include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativeguard_p.h>
-
 #include <private/qv8engine_p.h>
+#include <private/qfieldlist_p.h>
+#include <private/qdeclarativeguard_p.h>
+#include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -164,28 +164,28 @@ private:
 
     QObject *m_scopeObject;
 
-    class GuardList {
-    public:
-        inline GuardList();
-        inline ~GuardList();
-        void inline clear();
+    typedef QDeclarativeJavaScriptExpressionGuard Guard;
 
-        typedef QPODVector<QDeclarativeEnginePrivate::CapturedProperty> CapturedProperties;
-        void updateGuards(QDeclarativeJavaScriptExpression *, const CapturedProperties &properties);
+    struct GuardCapture : public QDeclarativeEnginePrivate::PropertyCapture {
+        GuardCapture(QDeclarativeJavaScriptExpression *e) : expression(e), errorString(0) {
+        }
+        ~GuardCapture()  {
+            Q_ASSERT(guards.isEmpty());
+            Q_ASSERT(errorString == 0);
+        }
 
-    private:
-        struct Endpoint : public QDeclarativeNotifierEndpoint {
-            Endpoint() : expression(0) { callback = &endpointCallback; }
-            static void endpointCallback(QDeclarativeNotifierEndpoint *e) { 
-                static_cast<Endpoint *>(e)->expression->expressionChanged(); 
-            }
-            QDeclarativeJavaScriptExpression *expression;
-        };
+        virtual void captureProperty(QDeclarativeNotifier *);
+        virtual void captureProperty(QObject *, int, int);
 
-        Endpoint *endpoints;
-        int length;
+        QDeclarativeJavaScriptExpression *expression;
+        QFieldList<Guard, &Guard::next> guards;
+        QStringList *errorString;
     };
-    GuardList guardList;
+
+    QFieldList<Guard, &Guard::next> activeGuards;
+    GuardCapture *guardCapture;
+
+    void clearGuards();
 };
 
 class QDeclarativeExpression;
@@ -302,29 +302,12 @@ QString QDeclarativeJavaScriptExpression::expressionIdentifier()
     return QString();
 }
 
-QDeclarativeJavaScriptExpression::GuardList::GuardList() 
-: endpoints(0), length(0) 
-{
-}
-
-QDeclarativeJavaScriptExpression::GuardList::~GuardList() 
-{ 
-    clear(); 
-}
-
-void QDeclarativeJavaScriptExpression::GuardList::clear() 
-{ 
-    delete [] endpoints; 
-    endpoints = 0; 
-    length = 0; 
-}
-
-QDeclarativeExpressionPrivate *QDeclarativeExpressionPrivate::get(QDeclarativeExpression *expr) 
+QDeclarativeExpressionPrivate *QDeclarativeExpressionPrivate::get(QDeclarativeExpression *expr)
 {
     return static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr));
 }
 
-QDeclarativeExpression *QDeclarativeExpressionPrivate::get(QDeclarativeExpressionPrivate *expr) 
+QDeclarativeExpression *QDeclarativeExpressionPrivate::get(QDeclarativeExpressionPrivate *expr)
 {
     return expr->q_func();
 }
@@ -332,6 +315,29 @@ QDeclarativeExpression *QDeclarativeExpressionPrivate::get(QDeclarativeExpressio
 QString QDeclarativeExpressionPrivate::expressionIdentifier()
 {
     return QLatin1String("\"") + expression + QLatin1String("\"");
+}
+
+QDeclarativeJavaScriptExpressionGuard::QDeclarativeJavaScriptExpressionGuard(QDeclarativeJavaScriptExpression *e)
+: expression(e), next(0)
+{ 
+    callback = &endpointCallback;
+}
+
+void QDeclarativeJavaScriptExpressionGuard::endpointCallback(QDeclarativeNotifierEndpoint *e)
+{
+    static_cast<QDeclarativeJavaScriptExpressionGuard *>(e)->expression->expressionChanged();
+}
+
+QDeclarativeJavaScriptExpressionGuard *
+QDeclarativeJavaScriptExpressionGuard::New(QDeclarativeJavaScriptExpression *e)
+{
+    Q_ASSERT(e);
+    return QDeclarativeEnginePrivate::get(e->context()->engine)->jsExpressionGuardPool.New(e);
+}
+
+void QDeclarativeJavaScriptExpressionGuard::Delete()
+{
+    QRecyclePool<QDeclarativeJavaScriptExpressionGuard>::Delete(this);
 }
 
 QT_END_NAMESPACE

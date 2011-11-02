@@ -92,6 +92,7 @@ public:
 
     static void dump(const QByteArray &);
     static void enableBindingsTest(bool);
+    static void enableV4(bool);
 private:
     QV4CompilerPrivate *d;
 };

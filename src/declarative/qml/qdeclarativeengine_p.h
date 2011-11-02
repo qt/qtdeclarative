@@ -69,6 +69,7 @@
 #include "qdeclarativemetatype_p.h"
 #include "qdeclarativedirparser_p.h"
 #include <private/qintrusivelist_p.h>
+#include <private/qrecyclepool_p.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>
@@ -103,6 +104,21 @@ class QSGTexture;
 class QDeclarativeIncubator;
 class QSGContext;
 
+// This needs to be declared here so that the pool for it can live in QDeclarativeEnginePrivate.
+// The inline method definitions are in qdeclarativeexpression_p.h
+class QDeclarativeJavaScriptExpressionGuard : public QDeclarativeNotifierEndpoint
+{
+public:
+    inline QDeclarativeJavaScriptExpressionGuard(QDeclarativeJavaScriptExpression *);
+
+    static inline void endpointCallback(QDeclarativeNotifierEndpoint *);
+    static inline QDeclarativeJavaScriptExpressionGuard *New(QDeclarativeJavaScriptExpression *e);
+    inline void Delete();
+
+    QDeclarativeJavaScriptExpression *expression;
+    QDeclarativeJavaScriptExpressionGuard *next;
+};
+
 class Q_DECLARATIVE_EXPORT QDeclarativeEnginePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativeEngine)
@@ -112,19 +128,18 @@ public:
 
     void init();
 
-    struct CapturedProperty {
-        CapturedProperty(QObject *o, int c, int n)
-            : object(o), coreIndex(c), notifier(0), notifyIndex(n) {}
-        CapturedProperty(QDeclarativeNotifier *n)
-            : object(0), coreIndex(-1), notifier(n), notifyIndex(-1) {}
-
-        QObject *object;
-        int coreIndex;
-        QDeclarativeNotifier *notifier;
-        int notifyIndex;
+    class PropertyCapture {
+    public:
+        inline virtual ~PropertyCapture() {}
+        virtual void captureProperty(QDeclarativeNotifier *) = 0;
+        virtual void captureProperty(QObject *, int, int) = 0;
     };
-    bool captureProperties;
-    QPODVector<CapturedProperty> capturedProperties;
+
+    PropertyCapture *propertyCapture;
+    inline void captureProperty(QDeclarativeNotifier *);
+    inline void captureProperty(QObject *, int, int);
+
+    QRecyclePool<QDeclarativeJavaScriptExpressionGuard> jsExpressionGuardPool;
 
     QDeclarativeContext *rootContext;
     bool isDebugging;
@@ -490,6 +505,18 @@ QDeclarativeEnginePrivate *QDeclarativeEnginePrivate::get(QDeclarativeContextDat
 QDeclarativeEngine *QDeclarativeEnginePrivate::get(QDeclarativeEnginePrivate *p) 
 { 
     return p->q_func(); 
+}
+
+void QDeclarativeEnginePrivate::captureProperty(QDeclarativeNotifier *n)
+{
+    if (propertyCapture)
+        propertyCapture->captureProperty(n);
+}
+
+void QDeclarativeEnginePrivate::captureProperty(QObject *o, int c, int n)
+{
+    if (propertyCapture)
+        propertyCapture->captureProperty(o, c, n);
 }
 
 QT_END_NAMESPACE
