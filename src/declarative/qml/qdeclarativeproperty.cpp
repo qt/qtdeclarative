@@ -1348,7 +1348,7 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
 
     int type = core.isValueTypeVirtual()?core.valueTypePropType:core.propType;
 
-    QDeclarativeDeleteWatcher watcher(expression);
+    QDeleteWatcher watcher(expression);
 
     QVariant value;
     bool isVmeProperty = core.isVMEProperty();

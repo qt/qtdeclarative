@@ -434,7 +434,7 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
 
     // All code that follows must check with watcher before it accesses data members 
     // incase we have been deleted.
-    QDeclarativeDeleteWatcher watcher(this);
+    QDeleteWatcher watcher(this);
 
     if (sharedContext) {
         lastSharedContext = ep->sharedContext;

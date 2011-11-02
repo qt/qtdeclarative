@@ -85,7 +85,7 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 
         bool isUndefined = false;
 
-        QDeclarativeDeleteWatcher watcher(this);
+        QDeleteWatcher watcher(this);
         ep->referenceScarceResources(); 
 
         v8::HandleScope handle_scope;

@@ -57,12 +57,13 @@
 
 #include <private/qv8engine_p.h>
 #include <private/qfieldlist_p.h>
+#include <private/qdeletewatcher_p.h>
 #include <private/qdeclarativeguard_p.h>
 #include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeAbstractExpression
+class QDeclarativeAbstractExpression : public QDeleteWatchable
 {
 public:
     QDeclarativeAbstractExpression();
@@ -107,31 +108,8 @@ private:
     QDeclarativeDelayedError **prevError;
 };
 
-class QDeclarativeDeleteWatchable
-{
-public:
-    inline QDeclarativeDeleteWatchable();
-    inline ~QDeclarativeDeleteWatchable();
-private:
-    friend class QDeclarativeDeleteWatcher;
-    bool *m_wasDeleted;
-};
-
-class QDeclarativeDeleteWatcher {
-public:
-    inline QDeclarativeDeleteWatcher(QDeclarativeDeleteWatchable *data);
-    inline ~QDeclarativeDeleteWatcher();
-    inline bool wasDeleted() const;
-private:
-    void *operator new(size_t);
-    bool *m_wasDeleted;
-    bool m_wasDeletedStorage;
-    QDeclarativeDeleteWatchable *m_d;
-};
-
 class QDeclarativeJavaScriptExpression : public QDeclarativeAbstractExpression, 
-                                         public QDeclarativeDelayedError,
-                                         public QDeclarativeDeleteWatchable
+                                         public QDeclarativeDelayedError
 {
 public:
     QDeclarativeJavaScriptExpression();
@@ -232,35 +210,6 @@ public:
 
     QDeclarativeRefCount *dataRef;
 };
-
-QDeclarativeDeleteWatchable::QDeclarativeDeleteWatchable()
-: m_wasDeleted(0)
-{
-}
-
-QDeclarativeDeleteWatchable::~QDeclarativeDeleteWatchable()
-{
-    if (m_wasDeleted) *m_wasDeleted = true;
-}
-
-QDeclarativeDeleteWatcher::QDeclarativeDeleteWatcher(QDeclarativeDeleteWatchable *data)
-: m_wasDeletedStorage(false), m_d(data) 
-{
-    if (!m_d->m_wasDeleted) 
-        m_d->m_wasDeleted = &m_wasDeletedStorage; 
-    m_wasDeleted = m_d->m_wasDeleted;
-}
-
-QDeclarativeDeleteWatcher::~QDeclarativeDeleteWatcher() 
-{
-    if (false == *m_wasDeleted && m_wasDeleted == m_d->m_wasDeleted)
-        m_d->m_wasDeleted = 0;
-}
-
-bool QDeclarativeDeleteWatcher::wasDeleted() const 
-{ 
-    return *m_wasDeleted; 
-}
 
 bool QDeclarativeJavaScriptExpression::requiresThisObject() const 
 { 

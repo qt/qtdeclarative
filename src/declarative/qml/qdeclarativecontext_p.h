@@ -216,6 +216,8 @@ public:
     }
 
 private:
+    void refreshExpressionsRecursive();
+    void refreshExpressionsRecursive(QDeclarativeAbstractExpression *);
     ~QDeclarativeContextData() {}
 };
 

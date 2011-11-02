@@ -653,23 +653,82 @@ void QDeclarativeContextData::setParent(QDeclarativeContextData *p, bool parentT
     }
 }
 
-/*
-Refreshes all expressions that could possibly depend on this context.  Refreshing flushes all
-context-tree dependent caches in the expressions, and should occur every time the context tree
- *structure* (not values) changes.
-*/
+void QDeclarativeContextData::refreshExpressionsRecursive(QDeclarativeAbstractExpression *expression)
+{
+    QDeleteWatcher w(expression);
+
+    if (expression->m_nextExpression)
+        refreshExpressionsRecursive(expression->m_nextExpression);
+
+    if (!w.wasDeleted())
+        expression->refresh();
+}
+
+void QDeclarativeContextData::refreshExpressionsRecursive()
+{
+    // For efficiency, we try and minimize the number of guards we have to create
+    if (expressions && (nextChild || childContexts)) {
+        QDeclarativeGuardedContextData guard(this);
+
+        if (childContexts)
+            childContexts->refreshExpressionsRecursive();
+
+        if (guard.isNull()) return;
+
+        if (nextChild)
+            nextChild->refreshExpressionsRecursive();
+
+        if (guard.isNull()) return;
+
+        if (expressions)
+            refreshExpressionsRecursive(expressions);
+
+    } else if (expressions) {
+
+        refreshExpressionsRecursive(expressions);
+
+    } else if (nextChild && childContexts) {
+
+        QDeclarativeGuardedContextData guard(this);
+
+        childContexts->refreshExpressionsRecursive();
+
+        if (!guard.isNull() && nextChild)
+            nextChild->refreshExpressionsRecursive();
+
+    } else if (nextChild) {
+
+        nextChild->refreshExpressionsRecursive();
+
+    } else if (childContexts) {
+
+        childContexts->refreshExpressionsRecursive();
+
+    }
+}
+
+// Refreshes all expressions that could possibly depend on this context.  Refreshing flushes all
+// context-tree dependent caches in the expressions, and should occur every time the context tree
+// *structure* (not values) changes.
 void QDeclarativeContextData::refreshExpressions()
 {
-    QDeclarativeContextData *child = childContexts;
-    while (child) {
-        child->refreshExpressions();
-        child = child->nextChild;
-    }
+    // For efficiency, we try and minimize the number of guards we have to create
+    if (expressions && childContexts) {
+        QDeclarativeGuardedContextData guard(this);
 
-    QDeclarativeAbstractExpression *expression = expressions;
-    while (expression) {
-        expression->refresh();
-        expression = expression->m_nextExpression;
+        childContexts->refreshExpressionsRecursive();
+
+        if (!guard.isNull() && expressions)
+            refreshExpressionsRecursive(expressions);
+
+    } else if (expressions) {
+
+        refreshExpressionsRecursive(expressions);
+
+    } else if (childContexts) {
+
+        childContexts->refreshExpressionsRecursive();
+
     }
 }
 
