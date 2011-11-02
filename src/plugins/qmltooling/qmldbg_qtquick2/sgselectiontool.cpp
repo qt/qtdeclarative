@@ -44,7 +44,6 @@
 #include "sghighlight.h"
 #include "sgviewinspector.h"
 
-#include <QtWidgets/QMenu>
 #include <QtGui/QMouseEvent>
 #include <QtDeclarative/QQuickView>
 #include <QtDeclarative/QQuickItem>
@@ -69,8 +68,7 @@ void SGSelectionTool::mousePressEvent(QMouseEvent *event)
         if (QQuickItem *item = inspector()->topVisibleItemAt(event->pos()))
             inspector()->setSelectedItems(QList<QQuickItem*>() << item);
     } else if (event->button() == Qt::RightButton) {
-        QList<QQuickItem*> items = inspector()->itemsAt(event->pos());
-        createContextMenu(items, event->globalPos());
+        // todo: Show context menu
     }
 }
 
@@ -83,49 +81,6 @@ void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
         m_hoverHighlight->setItem(item);
         m_hoverHighlight->setVisible(true);
     }
-}
-
-void SGSelectionTool::createContextMenu(const QList<QQuickItem *> &items, QPoint pos)
-{
-    QMenu contextMenu;
-    connect(&contextMenu, SIGNAL(hovered(QAction*)),
-            this, SLOT(contextMenuElementHovered(QAction*)));
-
-    const QList<QQuickItem*> selectedItems = inspector()->selectedItems();
-    int shortcutKey = Qt::Key_1;
-
-    foreach (QQuickItem *item, items) {
-        const QString title = inspector()->titleForItem(item);
-        QAction *elementAction = contextMenu.addAction(title);
-        elementAction->setData(QVariant::fromValue(item));
-
-        connect(elementAction, SIGNAL(triggered()), this, SLOT(contextMenuElementSelected()));
-
-        if (selectedItems.contains(item)) {
-            QFont font = elementAction->font();
-            font.setBold(true);
-            elementAction->setFont(font);
-        }
-
-        if (shortcutKey <= Qt::Key_9) {
-            elementAction->setShortcut(QKeySequence(shortcutKey));
-            shortcutKey++;
-        }
-    }
-
-    contextMenu.exec(pos);
-}
-
-void SGSelectionTool::contextMenuElementHovered(QAction *action)
-{
-    if (QQuickItem *item = action->data().value<QQuickItem*>())
-        m_hoverHighlight->setItem(item);
-}
-
-void SGSelectionTool::contextMenuElementSelected()
-{
-    if (QQuickItem *item = static_cast<QAction*>(sender())->data().value<QQuickItem*>())
-        inspector()->setSelectedItems(QList<QQuickItem*>() << item);
 }
 
 SGViewInspector *SGSelectionTool::inspector() const
