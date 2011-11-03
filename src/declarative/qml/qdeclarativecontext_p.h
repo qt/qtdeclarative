@@ -143,6 +143,7 @@ public:
     quint32 ownedByParent:1; // unrelated to isInternal; parent context deletes children if true.
     quint32 isJSContext:1;
     quint32 isPragmaLibraryContext:1;
+    quint32 unresolvedNames:1; // True if expressions in this context failed to resolve a toplevel name
     quint32 dummy:28;
     QDeclarativeContext *publicContext;
 
@@ -216,7 +217,7 @@ public:
     }
 
 private:
-    void refreshExpressionsRecursive();
+    void refreshExpressionsRecursive(bool isGlobal);
     void refreshExpressionsRecursive(QDeclarativeAbstractExpression *);
     ~QDeclarativeContextData() {}
 };

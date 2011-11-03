@@ -258,6 +258,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     // Its possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definately needed.
     QDeclarativeContextData *context = resource->getContext();
+    QDeclarativeContextData *expressionContext = context;
 
     if (!context)
         return v8::Undefined();
@@ -362,6 +363,8 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
         context = context->parent;
     }
 
+    expressionContext->unresolvedNames = true;
+
     QString error = QLatin1String("Can't find variable: ") + engine->toString(property);
     v8::ThrowException(v8::Exception::ReferenceError(engine->toString(error)));
     return v8::Undefined();
@@ -394,6 +397,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     // Its possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definately needed.
     QDeclarativeContextData *context = resource->getContext();
+    QDeclarativeContextData *expressionContext = context;
 
     if (!context)
         return v8::Undefined();
@@ -435,6 +439,8 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
 
         context = context->parent;
     }
+
+    expressionContext->unresolvedNames = true;
 
     if (!resource->readOnly) {
         return v8::Handle<v8::Value>();

@@ -78,6 +78,7 @@ private slots:
 
     void refreshExpressions();
     void refreshExpressionsCrash();
+    void refreshExpressionsRootContext();
 
 private:
     QDeclarativeEngine engine;
@@ -606,6 +607,39 @@ void tst_qdeclarativecontext::refreshExpressions()
     QCOMPARE(command.count, 10);
 
     delete o3;
+    delete o2;
+    delete o1;
+}
+
+// Test that updating the root context, only causes expressions in contexts with an
+// unresolved name to reevaluate
+void tst_qdeclarativecontext::refreshExpressionsRootContext()
+{
+    QDeclarativeEngine engine;
+
+    CountCommand command;
+    engine.rootContext()->setContextProperty("countCommand", &command);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("refreshExpressions.qml"));
+    QDeclarativeComponent component2(&engine, TEST_FILE("refreshExpressionsRootContext.qml"));
+
+    QDeclarativeContext context(engine.rootContext());
+    QDeclarativeContext context2(engine.rootContext());
+
+    QString warning = component2.url().toString() + QLatin1String(":4: ReferenceError: Can't find variable: unresolvedName");
+
+    QObject *o1 = component.create(&context);
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    QObject *o2 = component2.create(&context2);
+
+    QCOMPARE(command.count, 3);
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    QDeclarativeContextData::get(engine.rootContext())->refreshExpressions();
+
+    QCOMPARE(command.count, 4);
+
     delete o2;
     delete o1;
 }
