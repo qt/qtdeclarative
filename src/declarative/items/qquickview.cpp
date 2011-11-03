@@ -54,8 +54,6 @@
 #include <QtCore/qbasictimer.h>
 
 
-// XXX todo - This whole class should probably be merged with QDeclarativeView for
-// maximum seamlessness
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(frameRateDebug, QML_SHOW_FRAMERATE)
@@ -117,6 +115,48 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
     QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
 }
 
+/*!
+    \class QQuickView
+    \since QtQuick 2.0
+    \brief The QQuickView class provides a window for displaying a Qt Quick user interface.
+
+    This is a convenience subclass of QQuickCanvas which
+    will automatically load and display a QML scene when given the URL of the main source file. Alternatively,
+    you can instantiate your own objects using QDeclarativeComponent and place them in a manually setup QQuickCanvas.
+
+    Typical usage:
+
+    \code
+    QQuickView *view = new QQuickView;
+    view->setSource(QUrl::fromLocalFile("myqmlfile.qml"));
+    view->show();
+    \endcode
+
+    To receive errors related to loading and executing QML with QQuickView,
+    you can connect to the statusChanged() signal and monitor for QQuickView::Error.
+    The errors are available via QQuickView::errors().
+
+    \sa {Using QML Bindings in C++ Applications}
+*/
+
+
+/*! \fn void QQuickView::sceneResized(QSize size)
+  This signal is emitted when the view is resized to \a size.
+*/
+
+/*! \fn void QQuickView::statusChanged(QQuickView::Status status)
+    This signal is emitted when the component's current \a status changes.
+*/
+
+/*! \fn void QQuickView::initialSizeChanged(QSize size)
+  \internal
+*/
+
+/*!
+  \fn QQuickView::QQuickView(QWindow *parent)
+
+  Constructs a QQuickView with the given \a parent.
+*/
 QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
 : QQuickCanvas(*(new QQuickViewPrivate), parent)
 {
@@ -124,6 +164,11 @@ QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
     d_func()->init();
 }
 
+/*!
+  \fn QQuickView::QQuickView(const QUrl &source, QWidget *parent)
+
+  Constructs a QQuickView with the given QML \a source and \a parent.
+*/
 QQuickView::QQuickView(const QUrl &source, QWindow *parent, Qt::WindowFlags f)
 : QQuickCanvas(*(new QQuickViewPrivate), parent)
 {
@@ -136,6 +181,24 @@ QQuickView::~QQuickView()
 {
 }
 
+/*! \property QQuickView::source
+  \brief The URL of the source of the QML component.
+
+  Changing this property causes the QML component to be reloaded.
+
+    Ensure that the URL provided is full and correct, in particular, use
+    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+ */
+
+/*!
+    Sets the source to the \a url, loads the QML component and instantiates it.
+
+    Ensure that the URL provided is full and correct, in particular, use
+    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+
+    Calling this methods multiple times with the same url will result
+    in the QML being reloaded.
+ */
 void QQuickView::setSource(const QUrl& url)
 {
     Q_D(QQuickView);
@@ -143,23 +206,63 @@ void QQuickView::setSource(const QUrl& url)
     d->execute();
 }
 
+/*!
+  Returns the source URL, if set.
+
+  \sa setSource()
+ */
 QUrl QQuickView::source() const
 {
     Q_D(const QQuickView);
     return d->source;
 }
 
+/*!
+  Returns a pointer to the QDeclarativeEngine used for instantiating
+  QML Components.
+ */
 QDeclarativeEngine* QQuickView::engine() const
 {
     Q_D(const QQuickView);
     return const_cast<QDeclarativeEngine *>(&d->engine);
 }
 
+/*!
+  This function returns the root of the context hierarchy.  Each QML
+  component is instantiated in a QDeclarativeContext.  QDeclarativeContext's are
+  essential for passing data to QML components.  In QML, contexts are
+  arranged hierarchically and this hierarchy is managed by the
+  QDeclarativeEngine.
+ */
 QDeclarativeContext* QQuickView::rootContext() const
 {
     Q_D(const QQuickView);
     return d->engine.rootContext();
 }
+
+/*!
+    \enum QQuickView::Status
+    Specifies the loading status of the QQuickView.
+
+    \value Null This QQuickView has no source set.
+    \value Ready This QQuickView has loaded and created the QML component.
+    \value Loading This QQuickView is loading network data.
+    \value Error One or more errors has occurred. Call errors() to retrieve a list
+           of errors.
+*/
+
+/*! \enum QQuickView::ResizeMode
+
+  This enum specifies how to resize the view.
+
+  \value SizeViewToRootObject The view resizes with the root item in the QML.
+  \value SizeRootObjectToView The view will automatically resize the root item to the size of the view.
+*/
+
+/*!
+    \property QQuickView::status
+    The component's current \l{QQuickView::Status} {status}.
+*/
 
 QQuickView::Status QQuickView::status() const
 {
@@ -170,6 +273,10 @@ QQuickView::Status QQuickView::status() const
     return QQuickView::Status(d->component->status());
 }
 
+/*!
+    Return the list of errors that occurred during the last compile or create
+    operation.  When the status is not Error, an empty list is returned.
+*/
 QList<QDeclarativeError> QQuickView::errors() const
 {
     Q_D(const QQuickView);
@@ -177,6 +284,21 @@ QList<QDeclarativeError> QQuickView::errors() const
         return d->component->errors();
     return QList<QDeclarativeError>();
 }
+
+/*!
+    \property QQuickView::resizeMode
+    \brief whether the view should resize the canvas contents
+
+    If this property is set to SizeViewToRootObject (the default), the view
+    resizes with the root item in the QML.
+
+    If this property is set to SizeRootObjectToView, the view will
+    automatically resize the root item.
+
+    Regardless of this property, the sizeHint of the view
+    is the initial size of the root item. Note though that
+    since QML may load dynamically, that size may change.
+*/
 
 void QQuickView::setResizeMode(ResizeMode mode)
 {
@@ -350,12 +472,18 @@ QSize QQuickView::sizeHint() const
     }
 }
 
+/*!
+  Returns the initial size of the root object
+*/
 QSize QQuickView::initialSize() const
 {
     Q_D(const QQuickView);
     return d->initialSize;
 }
 
+/*!
+  Returns the view's root \l {QQuickItem} {item}.
+ */
 QQuickItem *QQuickView::rootObject() const
 {
     Q_D(const QQuickView);

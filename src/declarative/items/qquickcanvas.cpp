@@ -789,6 +789,9 @@ void QQuickCanvasPrivate::updateInputMethodData()
     qApp->inputPanel()->setInputItem(inputItem);
 }
 
+/*!
+  Queries the Input Method.
+*/
 QVariant QQuickCanvas::inputMethodQuery(Qt::InputMethodQuery query) const
 {
     Q_D(const QQuickCanvas);
@@ -824,6 +827,19 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 }
 
 
+/*!
+    \class QQuickCanvas
+    \since QtQuick 2.0
+    \brief The QQuickCanvas class provides the canvas for displaying a graphical QML scene
+
+    QQuickCanvas provides the graphical scene management needed to interact with and display
+    a scene of QQuickItems.
+
+    A QQuickCanvas always has a single invisible root item. To add items to this canvas,
+    reparent the items to the root item or to an existing item in the scene.
+
+    For easily displaying a scene from a QML file, see \l{QQuickView}.
+*/
 QQuickCanvas::QQuickCanvas(QWindow *parent)
     : QWindow(*(new QQuickCanvasPrivate), parent)
 {
@@ -859,6 +875,12 @@ QQuickCanvas::~QQuickCanvas()
     d->cleanupNodes();
 }
 
+/*!
+  Returns the invisible root item of the scene.
+
+  A QQuickCanvas always has a single invisible root item. To add items to this canvas,
+  reparent the items to the root item or to an existing item in the scene.
+*/
 QQuickItem *QQuickCanvas::rootItem() const
 {
     Q_D(const QQuickCanvas);
@@ -866,6 +888,9 @@ QQuickItem *QQuickCanvas::rootItem() const
     return d->rootItem;
 }
 
+/*!
+  Returns the item which currently has active focus.
+*/
 QQuickItem *QQuickCanvas::activeFocusItem() const
 {
     Q_D(const QQuickCanvas);
@@ -873,6 +898,9 @@ QQuickItem *QQuickCanvas::activeFocusItem() const
     return d->activeFocusItem;
 }
 
+/*!
+  Returns the item which currently has the mouse grab.
+*/
 QQuickItem *QQuickCanvas::mouseGrabberItem() const
 {
     Q_D(const QQuickCanvas);
@@ -1518,6 +1546,9 @@ bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
     return false;
 }
 
+/*!
+    Propagates an event to a QQuickItem on the canvas
+*/
 bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
 {
     Q_D(QQuickCanvas);
@@ -1944,7 +1975,8 @@ QImage QQuickCanvas::grabFrameBuffer()
 
 /*!
     Returns an incubation controller that splices incubation between frames
-    for this canvas.  QQuickView automatically installs this controller for you.
+    for this canvas. QQuickView automatically installs this controller for you,
+    otherwise you will need to install it yourself using \l{QDeclarativeEngine::setIncubationController}
 
     The controller is owned by the canvas and will be destroyed when the canvas
     is deleted.
