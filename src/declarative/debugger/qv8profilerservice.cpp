@@ -149,13 +149,13 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     if (command == "V8PROFILER") {
         ds >>  title;
         if (option == "start") {
-            d->initialized = true;
             startProfiling(QString::fromUtf8(title));
         } else if (option == "stop") {
             stopProfiling(QString::fromUtf8(title));
             // Send messages to client
             d->sendMessages();
         }
+        d->initialized = true;
     }
 
     if (command == "V8SNAPSHOT") {
