@@ -45,6 +45,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 #include <QtDeclarative/private/qquickpathview_p.h>
 #include <QtDeclarative/private/qdeclarativepath_p.h>
 #include <QtDeclarative/private/qquicktext_p.h>
@@ -118,6 +119,7 @@ private slots:
     void missingPercent();
     void creationContext();
     void currentOffsetOnInsertion();
+    void asynchronous();
 
 private:
     QQuickView *createView();
@@ -833,7 +835,7 @@ void tst_QQuickPathView::pathMoved()
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(firstItem->width()/2);
     offset.setY(firstItem->height()/2);
-    QCOMPARE(firstItem->pos() + offset, start);
+    QTRY_COMPARE(firstItem->pos() + offset, start);
     pathview->setOffset(1.0);
 
     for (int i=0; i<model.count(); i++) {
@@ -1493,6 +1495,62 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
 
     // verify that current item (item 1) is still at offset 0.5
     QCOMPARE(item->pos() + offset, start);
+
+    delete canvas;
+}
+
+void tst_QQuickPathView::asynchronous()
+{
+    QQuickView *canvas = createView();
+    canvas->show();
+    QDeclarativeIncubationController controller;
+    canvas->engine()->setIncubationController(&controller);
+
+    canvas->setSource(TESTDATA("asyncloader.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QVERIFY(rootObject);
+
+    QQuickPathView *pathview = 0;
+    while (!pathview) {
+        bool b = false;
+        controller.incubateWhile(&b);
+        pathview = rootObject->findChild<QQuickPathView*>("view");
+    }
+
+    // items will be created one at a time
+    for (int i = 0; i < 5; ++i) {
+        QVERIFY(findItem<QQuickItem>(pathview, "wrapper", i) == 0);
+        QQuickItem *item = 0;
+        while (!item) {
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(pathview, "wrapper", i);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    // verify positioning
+    QQuickRectangle *firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 0);
+    QVERIFY(firstItem);
+    QDeclarativePath *path = qobject_cast<QDeclarativePath*>(pathview->path());
+    QVERIFY(path);
+    QPointF start = path->pointAt(0.0);
+    QPointF offset;//Center of item is at point, but pos is from corner
+    offset.setX(firstItem->width()/2);
+    offset.setY(firstItem->height()/2);
+    QTRY_COMPARE(firstItem->pos() + offset, start);
+    pathview->setOffset(1.0);
+
+    for (int i=0; i<5; i++) {
+        QQuickItem *curItem = findItem<QQuickItem>(pathview, "wrapper", i);
+        QPointF itemPos(path->pointAt(0.2 + i*0.2));
+        QCOMPARE(curItem->pos() + offset, QPointF(qRound(itemPos.x()), qRound(itemPos.y())));
+    }
 
     delete canvas;
 }

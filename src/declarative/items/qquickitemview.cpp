@@ -178,6 +178,7 @@ void QQuickItemView::setModel(const QVariant &model)
     if (d->model) {
         disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
                 this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
+        disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
         disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
         disconnect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
     }
@@ -212,6 +213,9 @@ void QQuickItemView::setModel(const QVariant &model)
 
     if (d->model) {
         d->bufferMode = QQuickItemViewPrivate::BufferBefore | QQuickItemViewPrivate::BufferAfter;
+        connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
+        connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
+        connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
         if (isComponentComplete()) {
             updateSections();
             d->refill();
@@ -231,8 +235,6 @@ void QQuickItemView::setModel(const QVariant &model)
         }
         connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
                 this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
-        connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
-        connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
         emit countChanged();
     }
     emit modelChanged();
@@ -785,26 +787,11 @@ void QQuickItemView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
     }
 }
 
-void QQuickItemView::createdItem(int index, QQuickItem *item)
-{
-    Q_D(QQuickItemView);
-    if (d->requestedIndex != index) {
-        item->setParentItem(contentItem());
-        d->unrequestedItems.insert(item, index);
-        d->repositionPackageItemAt(item, index);
-    }
-}
-
-void QQuickItemView::destroyingItem(QQuickItem *item)
-{
-    Q_D(QQuickItemView);
-    d->unrequestedItems.remove(item);
-}
-
 void QQuickItemView::animStopped()
 {
     Q_D(QQuickItemView);
-    d->bufferMode = QQuickItemViewPrivate::NoBuffer;
+    d->bufferMode = QQuickItemViewPrivate::BufferBefore | QQuickItemViewPrivate::BufferAfter;
+    d->refill();
     if (d->haveHighlightRange && d->highlightRange == QQuickItemView::StrictlyEnforceRange)
         d->updateHighlight();
 }
@@ -1104,16 +1091,17 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , moveReason(Other)
     , visibleIndex(0)
     , currentIndex(-1), currentItem(0)
-    , trackedItem(0), requestedIndex(-1)
+    , trackedItem(0), requestedIndex(-1), requestedItem(0)
     , highlightComponent(0), highlight(0)
     , highlightRange(QQuickItemView::NoHighlightRange)
     , highlightRangeStart(0), highlightRangeEnd(0)
     , highlightMoveDuration(150)
     , headerComponent(0), header(0), footerComponent(0), footer(0)
     , minExtent(0), maxExtent(0)
-    , ownModel(false), wrap(false), lazyRelease(false), deferredRelease(false)
+    , ownModel(false), wrap(false), deferredRelease(false)
     , inApplyModelChanges(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
+    , fillCacheBuffer(false), inRequest(false), requestedAsync(false)
 {
 }
 
@@ -1229,6 +1217,7 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
             currentItem = 0;
             currentIndex = modelIndex;
             emit q->currentIndexChanged();
+            emit q->currentItemChanged();
             updateHighlight();
         } else if (currentIndex != modelIndex) {
             currentIndex = modelIndex;
@@ -1243,8 +1232,9 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     }
 
     FxViewItem *oldCurrentItem = currentItem;
+    int oldCurrentIndex = currentIndex;
     currentIndex = modelIndex;
-    currentItem = createItem(modelIndex);
+    currentItem = createItem(modelIndex, false);
     if (oldCurrentItem && (!currentItem || oldCurrentItem->item != currentItem->item))
         oldCurrentItem->attached->setIsCurrentItem(false);
     if (currentItem) {
@@ -1254,7 +1244,10 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     }
 
     updateHighlight();
-    emit q->currentIndexChanged();
+    if (oldCurrentIndex != currentIndex)
+        emit q->currentIndexChanged();
+    if (oldCurrentItem != currentItem)
+        emit q->currentItemChanged();
     releaseItem(oldCurrentItem);
 }
 
@@ -1318,7 +1311,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to, bool doBuffer)
 
     bool changed = addVisibleItems(fillFrom, fillTo, doBuffer);
 
-    if (!lazyRelease || !changed || deferredRelease) { // avoid destroying items in the same frame that we create
+    if (!changed || deferredRelease) { // avoid destroying items in the same frame that we create
         if (removeNonVisibleItems(bufferFrom, bufferTo))
             changed = true;
         deferredRelease = false;
@@ -1333,7 +1326,11 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to, bool doBuffer)
         refill(from, to, true);
     }
 
-    lazyRelease = false;
+    if (!q->isMoving() && changed) {
+        fillCacheBuffer = true;
+        q->polish();
+    }
+
     if (prevCount != itemCount)
         emit q->countChanged();
 }
@@ -1380,8 +1377,11 @@ void QQuickItemViewPrivate::layout()
         return;
     }
 
-    if (!applyModelChanges() && !forceLayout)
+    if (!applyModelChanges() && !forceLayout) {
+        if (fillCacheBuffer)
+            refill();
         return;
+    }
     forceLayout = false;
 
     layoutVisibleItems();
@@ -1407,6 +1407,7 @@ bool QQuickItemViewPrivate::applyModelChanges()
     Q_Q(QQuickItemView);
     if (!q->isComponentComplete() || !currentChanges.hasPendingChanges() || inApplyModelChanges)
         return false;
+
     inApplyModelChanges = true;
 
     updateUnrequestedIndexes();
@@ -1557,38 +1558,87 @@ bool QQuickItemViewPrivate::applyModelChanges()
     return visibleAffected;
 }
 
-FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex)
+/*
+  This may return 0 if the item is being created asynchronously.
+  When the item becomes available, refill() will be called and the item
+  will be returned on the next call to createItem().
+*/
+FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
 {
     Q_Q(QQuickItemView);
+    if (requestedIndex == modelIndex && (asynchronous || requestedAsync == asynchronous))
+        return 0;
+
+    if (requestedIndex != -1 && requestedIndex != modelIndex) {
+        delete requestedItem;
+        requestedItem = 0;
+    }
 
     requestedIndex = modelIndex;
-    FxViewItem *viewItem = 0;
+    requestedAsync = asynchronous;
+    inRequest = true;
 
-    if (QQuickItem *item = model->item(modelIndex, false)) {
-        viewItem = newViewItem(modelIndex, item);
+    if (QQuickItem *item = model->item(modelIndex, asynchronous)) {
+        item->setParentItem(q->contentItem());
+        QDeclarative_setParent_noEvent(item, q->contentItem());
+        requestedIndex = -1;
+        fillCacheBuffer = false;
+        FxViewItem *viewItem = requestedItem;
+        if (!viewItem)
+            viewItem = newViewItem(modelIndex, item); // already in cache, so viewItem not initialized in initItem()
         if (viewItem) {
             viewItem->index = modelIndex;
-            if (model->completePending()) {
-                // complete
-                viewItem->item->setZ(1);
-                QDeclarative_setParent_noEvent(viewItem->item, q->contentItem());
-                viewItem->item->setParentItem(q->contentItem());
-                model->completeItem();
-            } else {
-                QDeclarative_setParent_noEvent(viewItem->item, q->contentItem());
-                viewItem->item->setParentItem(q->contentItem());
-            }
             // do other set up for the new item that should not happen
             // until after bindings are evaluated
             initializeViewItem(viewItem);
-
-            unrequestedItems.remove(viewItem->item);
+            unrequestedItems.remove(item);
         }
+        requestedItem = 0;
+        inRequest = false;
+        return viewItem;
     }
-    requestedIndex = -1;
-    return viewItem;
+
+    inRequest = false;
+    return 0;
 }
 
+void QQuickItemView::createdItem(int index, QQuickItem *item)
+{
+    Q_D(QQuickItemView);
+    if (d->requestedIndex != index) {
+        item->setParentItem(contentItem());
+        d->unrequestedItems.insert(item, index);
+        item->setVisible(false);
+        d->repositionPackageItemAt(item, index);
+    } else {
+        d->requestedIndex = -1;
+        if (!d->inRequest) {
+            if (index == d->currentIndex)
+                d->updateCurrent(index);
+            d->refill();
+        } else {
+            d->fillCacheBuffer = true;
+            polish();
+        }
+    }
+}
+
+void QQuickItemView::initItem(int index, QQuickItem *item)
+{
+    Q_D(QQuickItemView);
+    item->setZ(1);
+    if (d->requestedIndex == index) {
+        item->setParentItem(contentItem());
+        QDeclarative_setParent_noEvent(item, contentItem());
+        d->requestedItem = d->newViewItem(index, item);
+    }
+}
+
+void QQuickItemView::destroyingItem(QQuickItem *item)
+{
+    Q_D(QQuickItemView);
+    d->unrequestedItems.remove(item);
+}
 
 void QQuickItemViewPrivate::releaseItem(FxViewItem *item)
 {

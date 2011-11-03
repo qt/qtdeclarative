@@ -46,10 +46,12 @@
 #include <QtDeclarative/qquickview.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 #include <private/qquickrepeater_p.h>
 #include <private/qquicktext_p.h>
 
 #include "../shared/util.h"
+#include "../../../shared/util.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {
@@ -73,6 +75,7 @@ private slots:
     void resetModel();
     void modelChanged();
     void properties();
+    void asynchronous();
 
 private:
     QQuickView *createView();
@@ -634,6 +637,62 @@ void tst_QQuickRepeater::properties()
     QCOMPARE(delegateSpy.count(),1);
 
     delete rootObject;
+}
+
+void tst_QQuickRepeater::asynchronous()
+{
+    QQuickView *canvas = createView();
+    canvas->show();
+    QDeclarativeIncubationController controller;
+    canvas->engine()->setIncubationController(&controller);
+
+    canvas->setSource(TEST_FILE("asyncloader.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QVERIFY(rootObject);
+
+    QQuickItem *container = findItem<QQuickItem>(rootObject, "container");
+    QVERIFY(!container);
+    while (!container) {
+        bool b = false;
+        controller.incubateWhile(&b);
+        container = findItem<QQuickItem>(rootObject, "container");
+    }
+
+    QQuickRepeater *repeater = 0;
+    while (!repeater) {
+        bool b = false;
+        controller.incubateWhile(&b);
+        repeater = findItem<QQuickRepeater>(rootObject, "repeater");
+    }
+
+    // items will be created one at a time
+    for (int i = 0; i < 10; ++i) {
+        QString name("delegate");
+        name += QString::number(i);
+        QVERIFY(findItem<QQuickItem>(container, name) == 0);
+        QQuickItem *item = 0;
+        while (!item) {
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(container, name);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    // verify positioning
+    for (int i = 0; i < 10; ++i) {
+        QString name("delegate");
+        name += QString::number(i);
+        QQuickItem *item = findItem<QQuickItem>(container, name);
+        QTRY_COMPARE(item->y(), i * 50.0);
+    }
+
+    delete canvas;
 }
 
 QQuickView *tst_QQuickRepeater::createView()

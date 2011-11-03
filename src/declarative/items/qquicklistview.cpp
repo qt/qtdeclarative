@@ -603,27 +603,25 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
     qreal pos = itemEnd;
     while (modelIndex < model->count() && pos <= fillTo) {
 //        qDebug() << "refill: append item" << modelIndex << "pos" << pos;
-        if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex))))
+        if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
         item->setPosition(pos);
+        item->item->setVisible(!doBuffer);
         pos += item->size() + spacing;
         visibleItems.append(item);
         ++modelIndex;
         changed = true;
-        if (doBuffer) // never buffer more than one item per frame
-            break;
     }
-    while (visibleIndex > 0 && visibleIndex <= model->count() && visiblePos >= fillFrom) {
+    while (visibleIndex > 0 && visibleIndex <= model->count() && visiblePos > fillFrom) {
 //        qDebug() << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos;
-        if (!(item = static_cast<FxListItemSG*>(createItem(visibleIndex-1))))
+        if (!(item = static_cast<FxListItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
         --visibleIndex;
         visiblePos -= item->size() + spacing;
         item->setPosition(visiblePos);
+        item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
         changed = true;
-        if (doBuffer) // never buffer more than one item per frame
-            break;
     }
 
     return changed;
@@ -640,7 +638,7 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
     // over by refill().
     int index = 0;
     while (visibleItems.count() > 1 && index < visibleItems.count()
-           && (item = visibleItems.at(index)) && item->endPosition() <= bufferFrom) {
+           && (item = visibleItems.at(index)) && item->endPosition() < bufferFrom) {
         if (item->attached->delayRemove())
             break;
         if (item->size() > 0) {
@@ -665,7 +663,7 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
     while (visibleItems.count() > 1 && (item = visibleItems.last()) && item->position() > bufferTo) {
         if (item->attached->delayRemove())
             break;
-//            qDebug() << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position();
+//        qDebug() << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position();
         visibleItems.removeLast();
         releaseItem(item);
         changed = true;
@@ -1916,11 +1914,15 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     This property determines whether delegates are retained outside the
     visible area of the view.
 
-    If this value is non-zero, the view keeps as many delegates
+    If this value is non-zero, the view may keep as many delegates
     instantiated as it can fit within the buffer specified.  For example,
     if in a vertical view the delegate is 20 pixels high and \c cacheBuffer is
     set to 40, then up to 2 delegates above and 2 delegates below the visible
-    area may be retained.
+    area may be created/retained.  The buffered delegates are created asynchronously,
+    allowing creation to occur across multiple frames and reducing the
+    likelihood of skipping frames.  In order to improve painting performance
+    delegates outside the visible area have their \l visible property set to
+    false until they are moved into the visible area.
 
     Note that cacheBuffer is not a pixel buffer - it only maintains additional
     instantiated delegates.
@@ -2163,7 +2165,22 @@ void QQuickListView::viewportMoved()
     if (d->inViewportMoved)
         return;
     d->inViewportMoved = true;
-    d->lazyRelease = true;
+
+    // Set visibility of items to eliminate cost of items outside the visible area.
+    qreal from = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
+    qreal to = d->isContentFlowReversed() ? -d->position() : d->position()+d->size();
+    for (int i = 0; i < d->visibleItems.count(); ++i) {
+        FxViewItem *item = static_cast<FxListItemSG*>(d->visibleItems.at(i));
+        item->item->setVisible(item->endPosition() >= from && item->position() <= to);
+    }
+
+    if (yflick())
+        d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
+    else if (d->isRightToLeft())
+        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferAfter : QQuickListViewPrivate::BufferBefore;
+    else
+        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
+
     d->refill();
     if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QQuickListViewPrivate::Mouse;
@@ -2201,13 +2218,11 @@ void QQuickListView::viewportMoved()
                 if ((minY - d->vData.move.value() < height()/2 || d->vData.flickTarget - d->vData.move.value() < height()/2)
                     && minY != d->vData.flickTarget)
                     d->flickY(-d->vData.smoothVelocity.value());
-                d->bufferMode = QQuickListViewPrivate::BufferBefore;
             } else if (d->vData.velocity < 0) {
                 const qreal maxY = maxYExtent();
                 if ((d->vData.move.value() - maxY < height()/2 || d->vData.move.value() - d->vData.flickTarget < height()/2)
                     && maxY != d->vData.flickTarget)
                     d->flickY(-d->vData.smoothVelocity.value());
-                d->bufferMode = QQuickListViewPrivate::BufferAfter;
             }
         }
 
@@ -2217,13 +2232,11 @@ void QQuickListView::viewportMoved()
                 if ((minX - d->hData.move.value() < width()/2 || d->hData.flickTarget - d->hData.move.value() < width()/2)
                     && minX != d->hData.flickTarget)
                     d->flickX(-d->hData.smoothVelocity.value());
-                d->bufferMode = d->isRightToLeft() ? QQuickListViewPrivate::BufferAfter : QQuickListViewPrivate::BufferBefore;
             } else if (d->hData.velocity < 0) {
                 const qreal maxX = maxXExtent();
                 if ((d->hData.move.value() - maxX < width()/2 || d->hData.move.value() - d->hData.flickTarget < width()/2)
                     && maxX != d->hData.flickTarget)
                     d->flickX(-d->hData.smoothVelocity.value());
-                d->bufferMode = d->isRightToLeft() ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
             }
         }
         d->inFlickCorrection = false;
@@ -2398,6 +2411,8 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
                 }
                 if (!item)
                     item = createItem(modelIndex + i);
+                if (!item)
+                    return false;
 
                 visibleItems.insert(insertionIdx, item);
                 if (!change.isMove()) {
@@ -2420,6 +2435,8 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             }
             if (!item)
                 item = createItem(modelIndex + i);
+            if (!item)
+                return false;
 
             visibleItems.insert(index, item);
             if (!change.isMove())

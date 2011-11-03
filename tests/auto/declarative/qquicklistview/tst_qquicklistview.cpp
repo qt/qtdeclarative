@@ -45,6 +45,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 #include <QtDeclarative/private/qquickitem_p.h>
 #include <QtDeclarative/private/qquicklistview_p.h>
 #include <QtDeclarative/private/qquicktext_p.h>
@@ -146,6 +147,8 @@ private slots:
     void QTBUG_9791();
     void QTBUG_11105();
     void QTBUG_21742();
+
+    void asynchronous();
 
 private:
     template <class T> void items();
@@ -1049,8 +1052,8 @@ void tst_QQuickListView::removed(bool /* animated */)
     // Confirm items positioned correctly
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i+2);
-        if (!item) qWarning() << "Item" << i+2 << "not found";
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i+1);
+        if (!item) qWarning() << "Item" << i+1 << "not found";
         QTRY_VERIFY(item);
         QTRY_COMPARE(item->y(),80+i*20.0);
     }
@@ -2067,33 +2070,33 @@ void tst_QQuickListView::sectionsPositioning()
         QTRY_COMPARE(item->y(), qreal(i*20*6));
     }
 
-    QTRY_VERIFY(topItem = findVisibleChild(contentItem, "sect_aaa")); // section header
-    QCOMPARE(topItem->y(), 120.);
     QVERIFY(topItem = findVisibleChild(contentItem, "sect_1"));
-    QTRY_COMPARE(topItem->y(), 140.);
+    QTRY_COMPARE(topItem->y(), 120.);
 
     // Change the next section
     listview->setContentY(0);
     bottomItem = findVisibleChild(contentItem, "sect_3"); // section footer
     QVERIFY(bottomItem);
-    QTRY_COMPARE(bottomItem->y(), 320.);
+    QTRY_COMPARE(bottomItem->y(), 300.);
 
     model.modifyItem(14, "New", "new");
 
     QTRY_VERIFY(bottomItem = findVisibleChild(contentItem, "sect_new")); // section footer
-    QTRY_COMPARE(bottomItem->y(), 320.);
+    QTRY_COMPARE(bottomItem->y(), 300.);
 
     // Turn sticky footer off
-    listview->setContentY(50);
+    listview->setContentY(40);
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart)));
     item = findVisibleChild(contentItem, "sect_new"); // inline label restored
+    QVERIFY(item);
     QCOMPARE(item->y(), 360.);
 
     // Turn sticky header off
-    listview->setContentY(50);
+    listview->setContentY(30);
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels)));
     item = findVisibleChild(contentItem, "sect_aaa"); // inline label restored
-    QCOMPARE(item->y(), 20.);
+    QVERIFY(item);
+    QCOMPARE(item->y(), 0.);
 
     delete canvas;
 }
@@ -2119,7 +2122,7 @@ void tst_QQuickListView::currentIndex_delayedItemCreation()
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    QSignalSpy spy(listview, SIGNAL(currentIndexChanged()));
+    QSignalSpy spy(listview, SIGNAL(currentItemChanged()));
     QCOMPARE(listview->currentIndex(), 0);
     QTRY_COMPARE(spy.count(), 1);
 
@@ -2355,7 +2358,7 @@ void tst_QQuickListView::cacheBuffer()
     QQuickView *canvas = createView();
 
     TestModel model;
-    for (int i = 0; i < 30; i++)
+    for (int i = 0; i < 90; i++)
         model.addItem("Item" + QString::number(i), "");
 
     QDeclarativeContext *ctxt = canvas->rootContext();
@@ -2365,6 +2368,7 @@ void tst_QQuickListView::cacheBuffer()
     ctxt->setContextProperty("testObject", testObject);
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->show();
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -2385,11 +2389,30 @@ void tst_QQuickListView::cacheBuffer()
         QTRY_VERIFY(item->y() == i*20);
     }
 
-    testObject->setCacheBuffer(400);
-    QTRY_VERIFY(listview->cacheBuffer() == 400);
+    QDeclarativeIncubationController controller;
+    canvas->engine()->setIncubationController(&controller);
 
-    int newItemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    QTRY_VERIFY(newItemCount > itemCount);
+    testObject->setCacheBuffer(200);
+    QTRY_VERIFY(listview->cacheBuffer() == 200);
+
+    // items will be created one at a time
+    for (int i = itemCount; i < qMin(itemCount+10,model.count()); ++i) {
+        QVERIFY(findItem<QQuickItem>(listview, "wrapper", i) == 0);
+        QQuickItem *item = 0;
+        while (!item) {
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(listview, "wrapper", i);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    int newItemCount = 0;
+    newItemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
 
     // Confirm items positioned correctly
     for (int i = 0; i < model.count() && i < newItemCount; ++i) {
@@ -2397,6 +2420,34 @@ void tst_QQuickListView::cacheBuffer()
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
         QTRY_VERIFY(item->y() == i*20);
+    }
+
+    // move view and confirm items in view are visible immediately and outside are created async
+    listview->setContentY(300);
+
+    for (int i = 15; i < 32; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QVERIFY(item);
+        QVERIFY(item->y() == i*20);
+    }
+
+    QVERIFY(findItem<QQuickItem>(listview, "wrapper", 32) == 0);
+
+    // ensure buffered items are created
+    for (int i = 32; i < qMin(41,model.count()); ++i) {
+        QQuickItem *item = 0;
+        while (!item) {
+            qGuiApp->processEvents(); // allow refill to happen
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(listview, "wrapper", i);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
     }
 
     delete canvas;
@@ -3590,9 +3641,10 @@ void tst_QQuickListView::resizeFirstDelegate()
     listview->setCurrentIndex(19);
     qApp->processEvents();
 
-    // items 0-3 should have been deleted
-    for (int i=0; i<4; i++)
+    // items 0-2 should have been deleted
+    for (int i=0; i<3; i++) {
         QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", i));
+    }
 
     delete testObject;
     delete canvas;
@@ -4202,6 +4254,50 @@ void tst_QQuickListView::flick(QQuickView *canvas, const QPoint &from, const QPo
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
 }
 
+void tst_QQuickListView::asynchronous()
+{
+    QQuickView *canvas = createView();
+    canvas->show();
+    QDeclarativeIncubationController controller;
+    canvas->engine()->setIncubationController(&controller);
+
+    canvas->setSource(TESTDATA("asyncloader.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QVERIFY(rootObject);
+
+    QQuickListView *listview = 0;
+    while (!listview) {
+        bool b = false;
+        controller.incubateWhile(&b);
+        listview = rootObject->findChild<QQuickListView*>("view");
+    }
+
+    // items will be created one at a time
+    for (int i = 0; i < 8; ++i) {
+        QVERIFY(findItem<QQuickItem>(listview, "wrapper", i) == 0);
+        QQuickItem *item = 0;
+        while (!item) {
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(listview, "wrapper", i);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    // verify positioning
+    QQuickItem *contentItem = listview->contentItem();
+    for (int i = 0; i < 8; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_COMPARE(item->y(), i*50.0);
+    }
+
+    delete canvas;
+}
 
 QQuickItem *tst_QQuickListView::findVisibleChild(QQuickItem *parent, const QString &objectName)
 {

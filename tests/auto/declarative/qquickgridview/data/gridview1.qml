@@ -5,6 +5,7 @@ Rectangle {
     property int count: grid.count
     property bool showHeader: false
     property bool showFooter: false
+    property real cacheBuffer: 0
     property int added: -1
     property variant removed
 
@@ -63,5 +64,6 @@ Rectangle {
         delegate: myDelegate
         header: root.showHeader ? headerFooter : null
         footer: root.showFooter ? headerFooter : null
+        cacheBuffer: root.cacheBuffer
     }
 }

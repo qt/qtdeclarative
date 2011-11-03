@@ -69,10 +69,8 @@ public:
 
     virtual int count() const = 0;
     virtual bool isValid() const = 0;
-    virtual QQuickItem *item(int index, bool complete=true) = 0;
+    virtual QQuickItem *item(int index, bool asynchronous=false) = 0;
     virtual ReleaseFlags release(QQuickItem *item) = 0;
-    virtual bool completePending() const = 0;
-    virtual void completeItem() = 0;
     virtual QString stringValue(int, const QString &) = 0;
     virtual void setWatchedRoles(QList<QByteArray> roles) = 0;
 
@@ -82,6 +80,7 @@ Q_SIGNALS:
     void countChanged();
     void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
     void createdItem(int index, QQuickItem *item);
+    void initItem(int index, QQuickItem *item);
     void destroyingItem(QQuickItem *item);
 
 protected:
@@ -108,10 +107,8 @@ public:
 
     virtual int count() const;
     virtual bool isValid() const;
-    virtual QQuickItem *item(int index, bool complete=true);
+    virtual QQuickItem *item(int index, bool asynchronous=false);
     virtual ReleaseFlags release(QQuickItem *item);
-    virtual bool completePending() const;
-    virtual void completeItem();
     virtual QString stringValue(int index, const QString &role);
     virtual void setWatchedRoles(QList<QByteArray>) {}
 

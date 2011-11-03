@@ -294,7 +294,10 @@ qreal QQuickGridViewPrivate::colPosAt(int modelIndex) const
     if (FxViewItem *item = visibleItem(modelIndex))
         return static_cast<FxGridItemSG*>(item)->colPos();
     if (!visibleItems.isEmpty()) {
-        if (modelIndex < visibleIndex) {
+        if (modelIndex == visibleIndex) {
+            FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
+            return firstItem->colPos();
+        } else if (modelIndex < visibleIndex) {
             int count = (visibleIndex - modelIndex) % columns;
             int col = static_cast<FxGridItemSG*>(visibleItems.first())->colPos() / colSize();
             col = (columns - count + col) % columns;
@@ -312,7 +315,10 @@ qreal QQuickGridViewPrivate::rowPosAt(int modelIndex) const
     if (FxViewItem *item = visibleItem(modelIndex))
         return static_cast<FxGridItemSG*>(item)->rowPos();
     if (!visibleItems.isEmpty()) {
-        if (modelIndex < visibleIndex) {
+        if (modelIndex == visibleIndex) {
+            FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
+            return firstItem->rowPos();
+        } else if (modelIndex < visibleIndex) {
             FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
             int firstCol = firstItem->colPos() / colSize();
             int col = visibleIndex - modelIndex + (columns - firstCol - 1);
@@ -438,10 +444,11 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
     bool changed = false;
 
     while (modelIndex < model->count() && rowPos <= fillTo + rowSize()*(columns - colNum)/(columns+1)) {
-//        qDebug() << "refill: append item" << modelIndex;
-        if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex))))
+//        qDebug() << "refill: append item" << modelIndex << colPos << rowPos;
+        if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, doBuffer))))
             break;
         item->setPosition(colPos, rowPos);
+        item->item->setVisible(!doBuffer);
         visibleItems.append(item);
         if (++colNum >= columns) {
             colNum = 0;
@@ -450,8 +457,6 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         colPos = colNum * colSize();
         ++modelIndex;
         changed = true;
-        if (doBuffer) // never buffer more than one item per frame
-            break;
     }
 
     // Find first column
@@ -471,10 +476,11 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
     colPos = colNum * colSize();
     while (visibleIndex > 0 && rowPos + rowSize() - 1 >= fillFrom - rowSize()*(colNum+1)/(columns+1)){
 //        qDebug() << "refill: prepend item" << visibleIndex-1 << "top pos" << rowPos << colPos;
-        if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1))))
+        if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
         --visibleIndex;
         item->setPosition(colPos, rowPos);
+        item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
         if (--colNum < 0) {
             colNum = columns-1;
@@ -482,8 +488,6 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         }
         colPos = colNum * colSize();
         changed = true;
-        if (doBuffer) // never buffer more than one item per frame
-            break;
     }
 
     return changed;
@@ -491,6 +495,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 
 bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
+    Q_Q(QQuickGridView);
     FxGridItemSG *item = 0;
     bool changed = false;
 
@@ -499,7 +504,7 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
                 && item->rowPos()+rowSize()-1 < bufferFrom - rowSize()*(item->colPos()/colSize()+1)/(columns+1)) {
         if (item->attached->delayRemove())
             break;
-//            qDebug() << "refill: remove first" << visibleIndex << "top end pos" << item->endRowPos();
+//        qDebug() << "refill: remove first" << visibleIndex << "top end pos" << item->endRowPos();
         if (item->index != -1)
             visibleIndex++;
         visibleItems.removeFirst();
@@ -511,7 +516,7 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
                 && item->rowPos() > bufferTo + rowSize()*(columns - item->colPos()/colSize())/(columns+1)) {
         if (item->attached->delayRemove())
             break;
-//            qDebug() << "refill: remove last" << visibleIndex+visibleItems.count()-1;
+//        qDebug() << "refill: remove last" << visibleIndex+visibleItems.count()-1;
         visibleItems.removeLast();
         releaseItem(item);
         changed = true;
@@ -1341,11 +1346,16 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     This property determines whether delegates are retained outside the
     visible area of the view.
 
-    If non-zero the view will keep as many delegates
+    If non-zero the view may keep as many delegates
     instantiated as will fit within the buffer specified.  For example,
-    if in a vertical view the delegate is 20 pixels high and \c cacheBuffer is
-    set to 40, then up to 2 delegates above and 2 delegates below the visible
-    area may be retained.
+    if in a vertical view the delegate is 20 pixels high, there are 3
+    columns and \c cacheBuffer is
+    set to 40, then up to 6 delegates above and 6 delegates below the visible
+    area may be created/retained.  The buffered delegates are created asynchronously,
+    allowing creation to occur across multiple frames and reducing the
+    likelihood of skipping frames.  In order to improve painting performance
+    delegates outside the visible area have their \l visible property set to
+    false until they are moved into the visible area.
 
     Note that cacheBuffer is not a pixel buffer - it only maintains additional
     instantiated delegates.
@@ -1507,22 +1517,21 @@ void QQuickGridView::viewportMoved()
         return;
     d->inViewportMoved = true;
 
-    d->lazyRelease = true;
-    if (d->hData.flicking || d->vData.flicking) {
-        if (yflick()) {
-            if (d->vData.velocity > 0)
-                d->bufferMode = QQuickGridViewPrivate::BufferBefore;
-            else if (d->vData.velocity < 0)
-                d->bufferMode = QQuickGridViewPrivate::BufferAfter;
-        }
-
-        if (xflick()) {
-            if (d->hData.velocity > 0)
-                d->bufferMode = QQuickGridViewPrivate::BufferBefore;
-            else if (d->hData.velocity < 0)
-                d->bufferMode = QQuickGridViewPrivate::BufferAfter;
-        }
+    // Set visibility of items to eliminate cost of items outside the visible area.
+    qreal from = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
+    qreal to = d->isContentFlowReversed() ? -d->position() : d->position()+d->size();
+    for (int i = 0; i < d->visibleItems.count(); ++i) {
+        FxGridItemSG *item = static_cast<FxGridItemSG*>(d->visibleItems.at(i));
+        item->item->setVisible(item->rowPos() + d->rowSize() >= from && item->rowPos() <= to);
     }
+
+    if (yflick())
+        d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferBefore : QQuickItemViewPrivate::BufferAfter;
+    else if (d->isRightToLeftTopToBottom())
+        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferAfter : QQuickItemViewPrivate::BufferBefore;
+    else
+        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferBefore : QQuickItemViewPrivate::BufferAfter;
+
     d->refill();
     if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QQuickGridViewPrivate::Mouse;
@@ -1815,7 +1824,10 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
                 }
                 if (!item)
                     item = createItem(modelIndex + i);
+                if (!item)
+                    return false;
 
+                item->item->setVisible(true);
                 visibleItems.insert(insertionIdx, item);
                 if (!change.isMove()) {
                     insertResult->addedItems.append(item);
@@ -1843,7 +1855,10 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             }
             if (!item)
                 item = createItem(modelIndex + i);
+            if (!item)
+                return false;
 
+            item->item->setVisible(true);
             visibleItems.insert(index, item);
             if (!change.isMove())
                 insertResult->addedItems.append(item);
