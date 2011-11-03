@@ -59,6 +59,7 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/QElapsedTimer>
 
 #include <private/qv8_p.h>
 #include <qjsengine.h>
@@ -405,6 +406,10 @@ public:
 
     void emitSignalHandlerException();
 
+    // used for console.time(), console.timeEnd()
+    void startTimer(const QString &timerName);
+    qint64 stopTimer(const QString &timerName, bool *wasRunning);
+
     QObject *qtObjectFromJS(v8::Handle<v8::Value> value);
     QSet<int> visitedConversionObjects;
 protected:
@@ -435,6 +440,9 @@ protected:
     QStringHash<bool> m_illegalNames;
 
     Exception m_exception;
+
+    QElapsedTimer m_time;
+    QHash<QString, qint64> m_startedTimers;
 
     QVariant toBasicVariant(v8::Handle<v8::Value>);
 

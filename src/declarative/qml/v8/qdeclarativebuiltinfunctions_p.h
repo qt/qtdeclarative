@@ -91,6 +91,8 @@ v8::Handle<v8::Value> qsTr(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTrId(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleTime(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args);
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args);
 }
 

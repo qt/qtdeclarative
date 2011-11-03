@@ -519,10 +519,14 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 {
     using namespace QDeclarativeBuiltinFunctions;
     v8::Local<v8::Function> printFn = V8FUNCTION(print, this);
+    v8::Local<v8::Function> consoleTimeFn = V8FUNCTION(consoleTime, this);
+    v8::Local<v8::Function> consoleTimeEndFn = V8FUNCTION(consoleTimeEnd, this);
 
     v8::Local<v8::Object> console = v8::Object::New();
     console->Set(v8::String::New("log"), printFn);
     console->Set(v8::String::New("debug"), printFn);
+    console->Set(v8::String::New("time"), consoleTimeFn);
+    console->Set(v8::String::New("timeEnd"), consoleTimeEndFn);
 
     v8::Local<v8::Object> qt = v8::Object::New();
 
@@ -1396,6 +1400,24 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::newArray(uint length)
 void QV8Engine::emitSignalHandlerException()
 {
     emit q->signalHandlerException(scriptValueFromInternal(uncaughtException()));
+}
+
+void QV8Engine::startTimer(const QString &timerName)
+{
+    if (!m_time.isValid())
+        m_time.start();
+    m_startedTimers[timerName] = m_time.elapsed();
+}
+
+qint64 QV8Engine::stopTimer(const QString &timerName, bool *wasRunning)
+{
+    if (!m_startedTimers.contains(timerName)) {
+        *wasRunning = false;
+        return 0;
+    }
+    *wasRunning = true;
+    qint64 startedAt = m_startedTimers.take(timerName);
+    return m_time.elapsed() - startedAt;
 }
 
 QThreadStorage<QV8GCCallback::ThreadData *> QV8GCCallback::threadData;

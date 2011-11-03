@@ -92,6 +92,28 @@ v8::Handle<v8::Value> print(const v8::Arguments &args)
     return v8::Undefined();
 }
 
+v8::Handle<v8::Value> consoleTime(const v8::Arguments &args)
+{
+    if (args.Length() != 1)
+        V8THROW_ERROR("console.time(): Invalid arguments");
+    QString name = V8ENGINE()->toString(args[0]);
+    V8ENGINE()->startTimer(name);
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
+{
+    if (args.Length() != 1)
+        V8THROW_ERROR("console.time(): Invalid arguments");
+    QString name = V8ENGINE()->toString(args[0]);
+    bool wasRunning;
+    qint64 elapsed = V8ENGINE()->stopTimer(name, &wasRunning);
+    if (wasRunning) {
+        qDebug("%s: %llims", qPrintable(name), elapsed);
+    }
+    return v8::Undefined();
+}
+
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
 {
     QString value = V8ENGINE()->toString(args.This()->ToString());
