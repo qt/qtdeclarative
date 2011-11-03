@@ -738,7 +738,7 @@ int main(int argc, char *argv[])
     qml.writeEndObject();
     qml.writeEndDocument();
 
-    std::cout << bytes.constData();
+    std::cout << bytes.constData() << std::flush;
 
     // workaround to avoid crashes on exit
     QTimer timer;
