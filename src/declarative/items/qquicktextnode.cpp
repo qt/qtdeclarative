@@ -1174,8 +1174,10 @@ void QQuickTextNode::addTextDocument(const QPointF &, QTextDocument *textDocumen
                         }
                         textPos += text.length();
                     } else {
-                        if (!textColor.isValid())
+                        if (charFormat.foreground().style() != Qt::NoBrush)
                             engine.setTextColor(charFormat.foreground().color());
+                        else
+                            engine.setTextColor(textColor);
 
                         int fragmentEnd = textPos + fragment.length();
                         if (preeditPosition >= 0

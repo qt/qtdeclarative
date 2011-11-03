@@ -1728,7 +1728,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
         if (d->richText) {
             d->ensureDoc();
-            node->addTextDocument(bounds.topLeft(), d->doc, QColor(), d->style, d->styleColor);
+            node->addTextDocument(bounds.topLeft(), d->doc, d->color, d->style, d->styleColor);
 
         } else {
             node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
