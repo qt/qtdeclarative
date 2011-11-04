@@ -265,9 +265,65 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
         if (debugCommand == QLatin1String("connect")) {
             d->initialized = true;
+            //Prepare the response string
+            //Create a json message using v8 debugging protocol
+            //and send it to client
+
+            // { "type"        : "response",
+            //   "request_seq" : <number>,
+            //   "command"     : "connect",
+            //   "running"     : <is the VM running after sending this response>
+            //   "success"     : true
+            // }
+            {
+                v8::Isolate::Scope i_scope(d->isolate);
+                const QString obj(QLatin1String("{}"));
+                QJSValue parser = d->engine->evaluate(QLatin1String("JSON.parse"));
+                QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
+                jsonVal.setProperty(QLatin1String("type"), QJSValue(QLatin1String("response")));
+
+                const int sequence = reqMap.value(QLatin1String("seq")).toInt();
+                jsonVal.setProperty(QLatin1String("request_seq"), QJSValue(sequence));
+                jsonVal.setProperty(QLatin1String("command"), QJSValue(debugCommand));
+                jsonVal.setProperty(QLatin1String("success"), QJSValue(true));
+                jsonVal.setProperty(QLatin1String("running"), QJSValue(!d->loop.isRunning()));
+
+                QJSValue stringify = d->engine->evaluate(QLatin1String("JSON.stringify"));
+                QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+                debugMessageHandler(json.toString());
+
+            }
 
         } else if (debugCommand == QLatin1String("interrupt")) {
             v8::Debug::DebugBreak();
+            //Prepare the response string
+            //Create a json message using v8 debugging protocol
+            //and send it to client
+
+            // { "type"        : "response",
+            //   "request_seq" : <number>,
+            //   "command"     : "connect",
+            //   "running"     : <is the VM running after sending this response>
+            //   "success"     : true
+            // }
+            {
+                v8::Isolate::Scope i_scope(d->isolate);
+                const QString obj(QLatin1String("{}"));
+                QJSValue parser = d->engine->evaluate(QLatin1String("JSON.parse"));
+                QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
+                jsonVal.setProperty(QLatin1String("type"), QJSValue(QLatin1String("response")));
+
+                const int sequence = reqMap.value(QLatin1String("seq")).toInt();
+                jsonVal.setProperty(QLatin1String("request_seq"), QJSValue(sequence));
+                jsonVal.setProperty(QLatin1String("command"), QJSValue(debugCommand));
+                jsonVal.setProperty(QLatin1String("success"), QJSValue(true));
+                jsonVal.setProperty(QLatin1String("running"), QJSValue(!d->loop.isRunning()));
+
+                QJSValue stringify = d->engine->evaluate(QLatin1String("JSON.stringify"));
+                QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+                debugMessageHandler(json.toString());
+
+            }
 
         } else {
             bool forwardRequestToV8 = true;
