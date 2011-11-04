@@ -69,6 +69,7 @@ private slots:
     void messaging_data();
     void messaging_sendQObjectList();
     void messaging_sendJsObject();
+    void messaging_sendExternalObject();
     void script_with_pragma();
     void script_included();
     void scriptError_onLoad();
@@ -198,6 +199,16 @@ void tst_QDeclarativeWorkerScript::messaging_sendJsObject()
 
     qApp->processEvents();
     delete worker;
+}
+
+void tst_QDeclarativeWorkerScript::messaging_sendExternalObject()
+{
+    QDeclarativeComponent component(&m_engine, TESTDATA("externalObjectWorker.qml"));
+    QObject *obj = component.create();
+    QVERIFY(obj);
+    QMetaObject::invokeMethod(obj, "testExternalObject");
+    QTest::qWait(100); // shouldn't crash.
+    delete obj;
 }
 
 void tst_QDeclarativeWorkerScript::script_with_pragma()

@@ -257,23 +257,25 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
         if (v->IsObject()) {
             v8::Handle<v8::Object> seqObj = v->ToObject();
             QV8ObjectResource *r = static_cast<QV8ObjectResource *>(seqObj->GetExternalResource());
-            QVariant sequenceVariant = engine->sequenceWrapper()->toVariant(r);
-            if (!sequenceVariant.isNull()) {
-                // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
-                uint32_t seqLength = engine->sequenceWrapper()->sequenceLength(r);
-                uint32_t length = seqLength + 1;
-                if (length > 0xFFFFFF) {
-                    push(data, valueheader(WorkerUndefined));
+            if (r->resourceType() == QV8ObjectResource::SequenceType) {
+                QVariant sequenceVariant = engine->sequenceWrapper()->toVariant(r);
+                if (!sequenceVariant.isNull()) {
+                    // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
+                    uint32_t seqLength = engine->sequenceWrapper()->sequenceLength(r);
+                    uint32_t length = seqLength + 1;
+                    if (length > 0xFFFFFF) {
+                        push(data, valueheader(WorkerUndefined));
+                        return;
+                    }
+                    reserve(data, sizeof(quint32) + length * sizeof(quint32));
+                    push(data, valueheader(WorkerSequence, length));
+                    serialize(data, v8::Integer::New(sequenceVariant.userType()), engine); // sequence type
+                    for (uint32_t ii = 0; ii < seqLength; ++ii) {
+                        serialize(data, seqObj->Get(ii), engine); // sequence elements
+                    }
+
                     return;
                 }
-                reserve(data, sizeof(quint32) + length * sizeof(quint32));
-                push(data, valueheader(WorkerSequence, length));
-                serialize(data, v8::Integer::New(sequenceVariant.userType()), engine); // sequence type
-                for (uint32_t ii = 0; ii < seqLength; ++ii) {
-                    serialize(data, seqObj->Get(ii), engine); // sequence elements
-                }
-
-                return;
             }
         }
 
