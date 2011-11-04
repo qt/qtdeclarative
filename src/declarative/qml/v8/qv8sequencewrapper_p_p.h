@@ -79,7 +79,6 @@ public:
     enum ObjectType { Reference, Copy };
 
     virtual QVariant toVariant() = 0;
-    virtual bool isEqual(const QVariant &v) = 0;
     virtual bool isEqual(const QV8SequenceResource *v) = 0;
 
     virtual quint32 lengthGetter() = 0;
@@ -255,16 +254,6 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
                 } \
                 return QVariant::fromValue<SequenceType>(c); \
-            } \
-            bool isEqual(const QVariant &v) \
-            { \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    if (!object) \
-                        return false; \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
-                } \
-                return (c == v.value<SequenceType>()); \
             } \
             bool isEqual(const QV8SequenceResource *v) \
             { \

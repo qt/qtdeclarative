@@ -43,6 +43,11 @@ Item {
         worker.sendSequence(msco.urlListProperty);
     }
 
+    function testVariantSequence() {
+        msco.variantListProperty = [ "one", true, 3, "four" ];
+        worker.sendSequence(msco.variantListProperty);
+    }
+
     WorkerScript {
         id: worker
         source: "threadScript.js"

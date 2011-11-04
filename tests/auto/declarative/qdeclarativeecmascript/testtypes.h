@@ -1160,9 +1160,10 @@ class MySequenceConversionObject : public QObject
     Q_PROPERTY (QList<bool> boolListProperty READ boolListProperty WRITE setBoolListProperty NOTIFY boolListPropertyChanged)
     Q_PROPERTY (QList<QString> stringListProperty READ stringListProperty WRITE setStringListProperty NOTIFY stringListPropertyChanged)
     Q_PROPERTY (QList<QUrl> urlListProperty READ urlListProperty WRITE setUrlListProperty NOTIFY urlListPropertyChanged)
-
     Q_PROPERTY (QStringList qstringListProperty READ qstringListProperty WRITE setQStringListProperty NOTIFY qstringListPropertyChanged)
+
     Q_PROPERTY (QList<QPoint> pointListProperty READ pointListProperty WRITE setPointListProperty NOTIFY pointListPropertyChanged)
+    Q_PROPERTY (QList<QVariant> variantListProperty READ variantListProperty WRITE setVariantListProperty NOTIFY variantListPropertyChanged)
 
 public:
     MySequenceConversionObject()
@@ -1173,9 +1174,10 @@ public:
         m_boolList << true << false << true << false;
         m_stringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
         m_urlList << QUrl("http://www.example1.com") << QUrl("http://www.example2.com") << QUrl("http://www.example3.com");
-
         m_qstringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
+
         m_pointList << QPoint(1, 2) << QPoint(3, 4) << QPoint(5, 6);
+        m_variantList << QVariant(QLatin1String("one")) << QVariant(true) << QVariant(3);
     }
 
     ~MySequenceConversionObject() {}
@@ -1196,6 +1198,8 @@ public:
     void setQStringListProperty(const QStringList &list) { m_qstringList = list; emit qstringListPropertyChanged(); }
     QList<QPoint> pointListProperty() const { return m_pointList; }
     void setPointListProperty(const QList<QPoint> &list) { m_pointList = list; emit pointListPropertyChanged(); }
+    QList<QVariant> variantListProperty() const { return m_variantList; }
+    void setVariantListProperty(const QList<QVariant> &list) { m_variantList = list; emit variantListPropertyChanged(); }
 
     // now for "copy resource" sequences:
     Q_INVOKABLE QList<int> generateIntSequence() const { QList<int> retn; retn << 1 << 2 << 3; return retn; }
@@ -1218,6 +1222,7 @@ signals:
     void urlListPropertyChanged();
     void qstringListPropertyChanged();
     void pointListPropertyChanged();
+    void variantListPropertyChanged();
 
 private:
     QList<int> m_intList;
@@ -1226,9 +1231,10 @@ private:
     QList<bool> m_boolList;
     QList<QString> m_stringList;
     QList<QUrl> m_urlList;
+    QStringList m_qstringList;
 
-    QStringList m_qstringList; // not a supported sequence type, but QStringList support is hardcoded.
     QList<QPoint> m_pointList; // not a supported sequence type
+    QList<QVariant> m_variantList; // not a supported sequence type, but QVariantList support is hardcoded.
 };
 
 class MyDeleteObject : public QObject

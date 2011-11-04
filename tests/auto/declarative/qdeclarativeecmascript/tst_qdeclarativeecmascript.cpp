@@ -4239,6 +4239,10 @@ void tst_qdeclarativeecmascript::sequenceConversionThreads()
     QTRY_VERIFY(object->property("finished").toBool());
     QVERIFY(object->property("success").toBool());
 
+    QMetaObject::invokeMethod(object, "testVariantSequence");
+    QTRY_VERIFY(object->property("finished").toBool());
+    QVERIFY(object->property("success").toBool());
+
     delete object;
 }
 

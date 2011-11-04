@@ -89,19 +89,11 @@ void QV8SequenceWrapper::destroy()
     qPersistentDispose(m_constructor);
 }
 
-bool QV8SequenceWrapper::isEqual(QV8ObjectResource *lhs, const QVariant &rhs)
-{
-    Q_ASSERT(lhs->resourceType() == QV8ObjectResource::SequenceType);
-    QV8SequenceResource *r = static_cast<QV8SequenceResource *>(lhs);
-    Q_ASSERT(r);
-    return r->isEqual(rhs);
-}
-
 bool QV8SequenceWrapper::isEqual(QV8ObjectResource *lhs, QV8ObjectResource *rhs)
 {
+    Q_ASSERT(lhs && rhs && lhs->resourceType() == QV8ObjectResource::SequenceType && rhs->resourceType() == QV8ObjectResource::SequenceType);
     QV8SequenceResource *lr = static_cast<QV8SequenceResource *>(lhs);
     QV8SequenceResource *rr = static_cast<QV8SequenceResource *>(rhs);
-    Q_ASSERT(lr && rr);
     return lr->isEqual(rr);
 }
 
@@ -173,23 +165,7 @@ QVariant QV8SequenceWrapper::toVariant(QV8ObjectResource *r)
 QVariant QV8SequenceWrapper::toVariant(v8::Handle<v8::Array> array, int typeHint, bool *succeeded)
 {
     *succeeded = true;
-    QV8SequenceResource *sr = static_cast<QV8SequenceResource *>(array->GetExternalResource());
-    if (sr)
-        return sr->toVariant();
-
-    // if no typehint is given it's just a sequence of arbitrary variants
     uint32_t length = array->Length();
-    if (typeHint == -1) {
-        QVariantList list;
-        for (uint32_t ii = 0; ii < length; ++ii) {
-            v8::Local<v8::Value> arrayItem = array->Get(ii);
-            list.append(m_engine->toVariant(arrayItem, -1));
-        }
-
-        return list;
-    }
-
-    // otherwise, try to build a sequence of the correct type
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
 }
 #undef SEQUENCE_TO_VARIANT
