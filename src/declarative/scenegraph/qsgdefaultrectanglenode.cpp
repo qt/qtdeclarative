@@ -77,13 +77,8 @@ QSGDefaultRectangleNode::QSGDefaultRectangleNode(QSGContext *context)
 
 QSGDefaultRectangleNode::~QSGDefaultRectangleNode()
 {
-    switch (m_material_type) {
-    case TypeFlat:
-        break;
-    case TypeVertexGradient:
+    if (m_material_type == TypeVertexGradient)
         delete material();
-        break;
-    }
     delete m_border;
 }
 
@@ -111,10 +106,10 @@ void QSGDefaultRectangleNode::setColor(const QColor &color)
 {
     if (color == m_fill_material.color())
         return;
+    m_fill_material.setColor(color);
     if (m_gradient_stops.isEmpty()) {
         Q_ASSERT(m_material_type == TypeFlat);
-        m_fill_material.setColor(color);
-        setMaterial(&m_fill_material); // Indicate that the material state has changed.
+        markDirty(DirtyMaterial);
     }
 }
 
@@ -123,7 +118,8 @@ void QSGDefaultRectangleNode::setPenColor(const QColor &color)
     if (color == m_border_material.color())
         return;
     m_border_material.setColor(color);
-    border()->setMaterial(&m_border_material); // Indicate that the material state has changed.
+    if (m_border)
+        m_border->markDirty(DirtyMaterial);
 }
 
 void QSGDefaultRectangleNode::setPenWidth(qreal width)
@@ -131,11 +127,10 @@ void QSGDefaultRectangleNode::setPenWidth(qreal width)
     if (width == m_pen_width)
         return;
     m_pen_width = width;
-    QSGNode *b = border();
-    if (m_pen_width <= 0 && b->parent())
-        removeChildNode(b);
-    else if (m_pen_width > 0 && !b->parent())
-        appendChildNode(b);
+    if (m_pen_width <= 0 && m_border && m_border->parent())
+        removeChildNode(m_border);
+    else if (m_pen_width > 0 && !border()->parent())
+        appendChildNode(m_border);
     m_dirty_geometry = true;
 }
 
@@ -154,10 +149,7 @@ void QSGDefaultRectangleNode::setGradientStops(const QGradientStops &stops)
     if (stops.isEmpty()) {
         // No gradient specified, use flat color.
         if (m_material_type != TypeFlat) {
-
             delete material();
-            delete opaqueMaterial();
-            setOpaqueMaterial(0);
 
             setMaterial(&m_fill_material);
             m_material_type = TypeFlat;
@@ -253,7 +245,7 @@ void QSGDefaultRectangleNode::updateGeometry()
 
     QSGGeometry *borderGeometry = 0;
     if (m_border) {
-        borderGeometry = border()->geometry();
+        borderGeometry = m_border->geometry();
         Q_ASSERT(borderGeometry->sizeOfVertex() == sizeof(Vertex));
     }
 

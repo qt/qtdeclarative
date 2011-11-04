@@ -65,7 +65,7 @@ void QSGDefaultGlyphNode::setColor(const QColor &color)
     m_color = color;
     if (m_material != 0) {
         m_material->setColor(color);
-        setMaterial(m_material); // Indicate the material state has changed
+        markDirty(DirtyMaterial);
     }
 }
 
