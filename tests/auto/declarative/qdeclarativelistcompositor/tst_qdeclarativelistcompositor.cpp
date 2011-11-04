@@ -676,6 +676,27 @@ void tst_qdeclarativelistcompositor::setFlags_data()
                 << IndexArray(defaultIndexes) << ListArray(defaultLists)
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray(selectionIndexes) << ListArray(selectionLists);
+    } { static const int cacheIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11};
+        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a, a};
+        static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11};
+        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a};
+        static const int visibleIndexes[] = {0,1,3,4,5,6,7,8,9,10,11};
+        static const void *visibleLists[] = {a,a,a,a,a,a,a,a,a, a, a};
+        static const int selectionIndexes[] = {2,6,7,8,9};
+        static const void *selectionLists[] = {a,a,a,a,a};
+        QTest::newRow("Existing flag, sparse selection")
+                << (RangeList()
+                    << Range(a, 0, 2, C::PrependFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 2, 1, C::PrependFlag | SelectionFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 3, 3, C::PrependFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 6, 4, C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a,10, 2, C::AppendFlag | C::PrependFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag))
+                << C::Cache << 3 << 1 << int(VisibleFlag)
+                << InsertList()
+                << IndexArray(cacheIndexes) << ListArray(cacheLists)
+                << IndexArray(defaultIndexes) << ListArray(defaultLists)
+                << IndexArray(visibleIndexes) << ListArray(visibleLists)
+                << IndexArray(selectionIndexes) << ListArray(selectionLists);
     }
 }
 
@@ -885,6 +906,35 @@ void tst_qdeclarativelistcompositor::move_data()
                 << IndexArray(defaultIndexes) << ListArray(defaultLists)
                 << IndexArray() << ListArray()
                 << IndexArray() << ListArray();
+    } { static const int cacheIndexes[] = {8,9,10,4,11,0,1,2,3,5,6,7};
+        static const void *cacheLists[] = {a,a, a,a, a,a,a,a,a,a,a,a};
+        static const int defaultIndexes[] = {8,9,10,4,11,0,1,2,3,5,6,7};
+        static const void *defaultLists[] = {a,a, a,a, a,a,a,a,a,a,a,a};
+        static const int visibleIndexes[] = {8,9,10,4,11,0,1,2,3,5,6,7};
+        static const void *visibleLists[] = {a,a, a,a, a,a,a,a,a,a,a,a};
+        QTest::newRow("3, 4, 5")
+                << (RangeList()
+                    << Range(a, 8, 4, VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 0, 2, C::PrependFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 2, 1, C::PrependFlag)
+                    << Range(a, 2, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 3, 5, C::PrependFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 8, 4, C::AppendFlag | C::PrependFlag))
+                << C::Default << 3 << C::Default << 4 << 5
+                << (RemoveList()
+                    << Remove(0, 3, 3, 3, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 0)
+                    << Remove(0, 3, 3, 3, 2, VisibleFlag | C::DefaultFlag | C::CacheFlag, 1)
+                    << Remove(0, 3, 3, 3, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 2)
+                    << Remove(0, 3, 3, 3, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 3))
+                << (InsertList()
+                    << Insert(0, 4, 4, 4, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 0)
+                    << Insert(0, 5, 5, 5, 2, VisibleFlag | C::DefaultFlag | C::CacheFlag, 1)
+                    << Insert(0, 7, 7, 7, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 2)
+                    << Insert(0, 8, 8, 8, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 3))
+                << IndexArray(cacheIndexes) << ListArray(cacheLists)
+                << IndexArray(defaultIndexes) << ListArray(defaultLists)
+                << IndexArray(visibleIndexes) << ListArray(visibleLists)
+                << IndexArray() << ListArray();
     }
 }
 
@@ -1080,6 +1130,21 @@ void tst_qdeclarativelistcompositor::listItemsInserted_data()
                 << a << 3 << 2
                 << (InsertList()
                     << Insert(0, 0, 3, 6, 2, VisibleFlag | C::DefaultFlag))
+                << IndexArray(cacheIndexes)
+                << IndexArray(defaultIndexes)
+                << IndexArray(visibleIndexes)
+                << IndexArray();
+    } { static const int cacheIndexes[] = {/*A*/0,1,2,3,4};
+        static const int defaultIndexes[] = {/*A*/0,1,2,3,4,5,6};
+        static const int visibleIndexes[] = {/*A*/0,1,2,3,4,5,6};
+        QTest::newRow("Consecutive appends")
+                << (RangeList()
+                    << Range(a, 0, 5, C::PrependFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 5, 1, C::PrependFlag | VisibleFlag | C::DefaultFlag)
+                    << Range(a, 6, 0, C::AppendFlag | VisibleFlag | C::PrependFlag | C::DefaultFlag | C::CacheFlag))
+                << a << 6 << 1
+                << (InsertList()
+                    << Insert(0, 6, 6, 5, 1, VisibleFlag | C::DefaultFlag))
                 << IndexArray(cacheIndexes)
                 << IndexArray(defaultIndexes)
                 << IndexArray(visibleIndexes)
@@ -1354,6 +1419,24 @@ void tst_qdeclarativelistcompositor::listItemsMoved_data()
                     << Remove(0, 0, 4, 7, 2, C::DefaultFlag | C::CacheFlag, 0))
                 << (InsertList()
                     << Insert(0, 0, 2, 5, 2, C::DefaultFlag | C::CacheFlag, 0))
+                << IndexArray(cacheIndexes)
+                << IndexArray(defaultIndexes)
+                << IndexArray()
+                << IndexArray();
+    } { static const int cacheIndexes[] = {/*A*/0,1,5,6,7,8,9,10,11,12};
+        static const int defaultIndexes[] = {/*A*/0,1,2,3,4,5,6,7,8,9,10,11,12};
+        QTest::newRow("Move merge tail")
+                << (RangeList()
+                    << Range(a, 0, 10, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 10, 3, C::PrependFlag | C::DefaultFlag)
+                    << Range(a, 13, 0, C::AppendFlag | C::PrependFlag | C::DefaultFlag | C::CacheFlag))
+                << a << 8 << 0 << 5
+                << (RemoveList()
+                    << Remove(0, 0, 8, 8, 2, C::DefaultFlag | C::CacheFlag, 0)
+                    << Remove(0, 0, 8, 8, 3, C::DefaultFlag, 1))
+                << (InsertList()
+                    << Insert(0, 0, 0, 0, 2, C::DefaultFlag | C::CacheFlag, 0)
+                    << Insert(0, 0, 2, 2, 3, C::DefaultFlag, 1))
                 << IndexArray(cacheIndexes)
                 << IndexArray(defaultIndexes)
                 << IndexArray()

@@ -55,7 +55,7 @@ static bool qt_verifyMinimal(
     bool minimal = true;
     int index = 0;
 
-    for (const QDeclarativeListCompositor::Range *range = begin->next; range != end; range = range->next, ++index) {
+    for (const QDeclarativeListCompositor::Range *range = begin->next; range != *end; range = range->next, ++index) {
         if (range->previous->list == range->list
                 && range->previous->flags == (range->flags & ~QDeclarativeListCompositor::AppendFlag)
                 && range->previous->end() == range->index) {
@@ -456,7 +456,12 @@ void QDeclarativeListCompositor::setFlags(
                     from->previous->flags |= AppendFlag;
                 *from = erase(*from)->previous;
                 continue;
+            } else {
+                break;
             }
+        } else if (!insertFlags) {
+            from.incrementIndexes(from->count - difference);
+            continue;
         } else if (difference < from->count) {
             *from = insert(*from, from->list, from->index, difference, setFlags)->next;
             from->index += difference;
@@ -674,6 +679,16 @@ void QDeclarativeListCompositor::move(
             if (fromIt->append())
                 fromIt->previous->flags |= AppendFlag;
             *fromIt = erase(*fromIt);
+
+            if (*fromIt != m_ranges.next && fromIt->flags == PrependFlag
+                    && fromIt->previous != &m_ranges
+                    && fromIt->previous->flags == PrependFlag
+                    && fromIt->previous->list == fromIt->list
+                    && fromIt->previous->end() == fromIt->index) {
+                fromIt.incrementIndexes(fromIt->count);
+                fromIt->previous->count += fromIt->count;
+                *fromIt = erase(*fromIt);
+            }
         } else if (count > 0) {
             *fromIt = fromIt->next;
         }
@@ -797,6 +812,14 @@ void QDeclarativeListCompositor::listItemsInserted(
                     }
                     if ((it->flags & ~AppendFlag) == flags) {
                         it->count += insertion.count;
+                    } else if (offset == 0
+                            && it->previous != &m_ranges
+                            && it->previous->list == list
+                            && it->previous->end() == insertion.index
+                            && it->previous->flags == flags) {
+                        it->previous->count += insertion.count;
+                        it->index += insertion.count;
+                        it.incrementIndexes(insertion.count);
                     } else {
                         if (offset > 0) {
                             it.incrementIndexes(offset);
@@ -956,16 +979,22 @@ void QDeclarativeListCompositor::listItemsRemoved(
                 }
             } else if (relativeIndex < 0) {
                 it->index -= itemsRemoved;
+
+                if (it->previous != &m_ranges
+                        && it->previous->list == it->list
+                        && it->previous->end() == it->index
+                        && it->previous->flags == (it->flags & ~AppendFlag)) {
+                    it->previous->count += it->count;
+                    it->previous->flags = it->flags;
+                    it.incrementIndexes(it->count);
+                    *it = erase(*it);
+                    removed = true;
+                }
             }
         }
-        if (it->next != &m_ranges
-                && it->list == it->next->list
-                && (it->flags == CacheFlag || it->end() == it->next->index)
-                && it->flags == (it->next->flags & ~AppendFlag)) {
-
+        if (it->flags == CacheFlag && it->next->flags == CacheFlag && it->next->list == it->list) {
             it.index[Cache] += it->next->count;
             it->count += it->next->count;
-            it->flags = it->next->flags;
             erase(it->next);
         } else if (!removed) {
             it.incrementIndexes(it->count);
@@ -994,7 +1023,6 @@ void QDeclarativeListCompositor::listItemsMoved(
         QVector<Remove> *translatedRemovals,
         QVector<Insert> *translatedInsertions)
 {
-
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< list << from << to << count)
     Q_ASSERT(count >= 0);
 
