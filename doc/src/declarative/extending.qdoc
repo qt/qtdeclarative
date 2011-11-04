@@ -116,6 +116,10 @@ Person {
 \l {Extending QML - Adding Types Example} shows the complete code used to create
 the \c Person type.
 
+If you wish to provide functionality to clients without requiring them to
+instantiate an element, consider providing a module API instead of registering
+a type; see qmlRegisterModuleApi() for more information.
+
 \section1 QML Type Versioning
 
 In C++ adding a new method or property cannot break old applications.
