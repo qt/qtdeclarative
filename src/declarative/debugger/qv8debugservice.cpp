@@ -370,7 +370,10 @@ void QV8DebugService::messageReceived(const QByteArray &message)
                     d->handlersList.remove(bp);
                     forwardRequestToV8 = false;
                 }
+            } else if (debugCommand == QLatin1String("disconnect")) {
+                v8::Debug::CancelDebugBreak();
             }
+
             if (forwardRequestToV8)
                 d->sendDebugMessage(request);
         }
