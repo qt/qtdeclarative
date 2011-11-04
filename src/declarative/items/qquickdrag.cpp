@@ -105,7 +105,7 @@ public:
 
     \snippet doc/src/snippets/declarative/drag.qml 0
 
-    A drag can be terminated either by cancelling it with Drag.cancel() or setting
+    A drag can be terminated either by canceling it with Drag.cancel() or setting
     Drag.active to false, or it can be terminated with a drop event by calling
     Drag.drop().  If the drop event is accepted Drag.drop() will return the
     \l {supportedActions}{drop action} chosen by the recipient of the event,
@@ -217,7 +217,7 @@ void QQuickDragAttached::resetSource()
 
     When a drag is not active this property holds the object that accepted
     the drop event that ended the drag, if no object accepted the drop or
-    the drag was cancelled the target will then be null.
+    the drag was canceled the target will then be null.
 */
 
 QObject *QQuickDragAttached::target() const

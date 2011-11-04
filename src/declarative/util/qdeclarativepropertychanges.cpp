@@ -108,7 +108,7 @@ QT_BEGIN_NAMESPACE
     \section2 Resetting property values
 
     The \c undefined value can be used to reset the property value for a state.
-    In the following example, when \c theText changes to the \e widerText
+    In the following example, when \c myText changes to the \e widerText
     state, its \c width property is reset, giving the text its natural width
     and displaying the whole string on a single line.
 

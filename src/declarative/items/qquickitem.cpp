@@ -4626,7 +4626,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 
     Maps the point (\a x, \a y), which is in \a item's coordinate system, to
     this item's coordinate system, and returns an object with \c x and \c y
-    properties matching the mapped cooordinate.
+    properties matching the mapped coordinate.
 
     If \a item is a \c null value, this maps the point from the coordinate
     system of the root QML view.
@@ -4636,7 +4636,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 
     Maps the point (\a x, \a y), which is in this item's coordinate system, to
     \a item's coordinate system, and returns an object with \c x and \c y
-    properties matching the mapped cooordinate.
+    properties matching the mapped coordinate.
 
     If \a item is a \c null value, this maps \a x and \a y to the coordinate
     system of the root QML view.

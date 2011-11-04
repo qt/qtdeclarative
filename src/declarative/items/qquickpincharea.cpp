@@ -194,7 +194,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     including the scale, center and angle of the pinch.
 
     To ignore this gesture set the \c pinch.accepted property to false.  The gesture
-    will be cancelled and no further events will be sent.
+    will be canceled and no further events will be sent.
 */
 
 /*!

@@ -717,7 +717,7 @@ int QQuickTextEdit::positionAt(int x, int y) const
     \o TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
     the previous cursor position) to the specified position.
     \o TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
-    words between the specified postion and the previous cursor position.  Words partially in the
+    words between the specified position and the previous cursor position.  Words partially in the
     range are included.
     \endlist
 

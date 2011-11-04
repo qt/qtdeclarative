@@ -1396,7 +1396,7 @@ void QDeclarativePathSvg::addToPath(QPainterPath &path, const QDeclarativePathDa
     PathView's path. You can use it to bunch together items on part of
     the path, and spread them out on other parts of the path.
 
-    The examples below show the normal distrubution of items along a path
+    The examples below show the normal distribution of items along a path
     compared to a distribution which places 50% of the items along the
     PathLine section of the path.
     \table
@@ -1438,7 +1438,7 @@ void QDeclarativePathSvg::addToPath(QPainterPath &path, const QDeclarativePathDa
 
 /*!
     \qmlproperty real QtQuick2::PathPercent::value
-    The proporation of items that should be laid out up to this point.
+    The proportion of items that should be laid out up to this point.
 
     This value should always be higher than the last value specified
     by a PathPercent at a previous position in the Path.

@@ -684,7 +684,7 @@ qreal QQuickFlickable::verticalVelocity() const
     \qmlproperty bool QtQuick2::Flickable::atYEnd
 
     These properties are true if the flickable view is positioned at the beginning,
-    or end respecively.
+    or end respectively.
 */
 bool QQuickFlickable::isAtXEnd() const
 {
@@ -1315,7 +1315,7 @@ QDeclarativeListProperty<QQuickItem> QQuickFlickable::flickableChildren()
 /*!
     \qmlproperty enumeration QtQuick2::Flickable::boundsBehavior
     This property holds whether the surface may be dragged
-    beyond the Fickable's boundaries, or overshoot the
+    beyond the Flickable's boundaries, or overshoot the
     Flickable's boundaries when flicked.
 
     This enables the feeling that the edges of the view are soft,

@@ -871,7 +871,7 @@ void QQuickTextInputPrivate::updateInputMethodHints()
     Specifies how the text should be displayed in the TextInput.
     \list
     \o TextInput.Normal - Displays the text as it is. (Default)
-    \o TextInput.Password - Displays asterixes instead of characters.
+    \o TextInput.Password - Displays asterisks instead of characters.
     \o TextInput.NoEcho - Displays nothing.
     \o TextInput.PasswordEchoOnEdit - Displays characters as they are entered
     while editing, otherwise displays asterisks.
@@ -1609,7 +1609,7 @@ void QQuickTextInput::moveCursorSelection(int position)
     \o TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
     the previous cursor position) to the specified position.
     \o TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
-    words between the specified postion and the previous cursor position.  Words partially in the
+    words between the specified position and the previous cursor position.  Words partially in the
     range are included.
     \endlist
 
