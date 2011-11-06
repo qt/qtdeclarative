@@ -115,7 +115,7 @@ void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2Pointer ani
     animationInsertedAt(index);
 }
 
-void QAnimationGroup2::removeAnimation(QAbstractAnimation2Pointer animation)
+void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
 {
     if (!animation) {
         qWarning("QAnimationGroup2::remove: cannot remove null animation");

@@ -7,6 +7,7 @@ SOURCES += \
     $$PWD/qdeclarativesystempalette.cpp \
     $$PWD/qdeclarativespringanimation.cpp \
     $$PWD/qdeclarativesmoothedanimation.cpp \
+    $$PWD/qdeclarativeanimationcontroller.cpp \
     $$PWD/qdeclarativestate.cpp\
     $$PWD/qdeclarativetransitionmanager.cpp \
     $$PWD/qdeclarativestateoperations.cpp \
@@ -43,6 +44,7 @@ HEADERS += \
     $$PWD/qdeclarativespringanimation_p.h \
     $$PWD/qdeclarativesmoothedanimation_p.h \
     $$PWD/qdeclarativesmoothedanimation_p_p.h \
+    $$PWD/qdeclarativeanimationcontroller_p.h \
     $$PWD/qdeclarativestate_p.h\
     $$PWD/qdeclarativestateoperations_p.h \
     $$PWD/qdeclarativepropertychanges_p.h \

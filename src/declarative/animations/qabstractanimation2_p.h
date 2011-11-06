@@ -248,7 +248,10 @@ public:
     static QUnifiedTimer2 *instance(bool create);
 
     static void registerAnimation(QAbstractAnimation2Pointer animation, bool isTopLevel);
-    static void unregisterAnimation(QAbstractAnimation2Pointer animation);
+
+    //the parameter needs to be "QAbstractAnimation2 *" here, as it will be
+    //called in the QAbstractAnimation2's dtor
+    static void unregisterAnimation(QAbstractAnimation2 *animation);
 
     //defines the timing interval. Default is DEFAULT_TIMER_INTERVAL
     void setTimingInterval(int interval);
@@ -323,7 +326,7 @@ private:
     QList<QAbstractAnimation2Pointer> runningPauseAnimations;
 
     void registerRunningAnimation(QAbstractAnimation2Pointer animation);
-    void unregisterRunningAnimation(QAbstractAnimation2Pointer animation);
+    void unregisterRunningAnimation(QAbstractAnimation2 *animation);
 
     int closestPauseAnimationTimeToFinish();
 };

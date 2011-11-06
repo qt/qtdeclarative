@@ -215,7 +215,7 @@ void QUnifiedTimer2::registerAnimation(QAbstractAnimation2Pointer animation, boo
     }
 }
 
-void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2Pointer animation)
+void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2 *animation)
 {
     QUnifiedTimer2 *inst = QUnifiedTimer2::instance(false);
     if (inst) {
@@ -254,7 +254,7 @@ void QUnifiedTimer2::registerRunningAnimation(QAbstractAnimation2Pointer animati
         runningLeafAnimations++;
 }
 
-void QUnifiedTimer2::unregisterRunningAnimation(QAbstractAnimation2Pointer animation)
+void QUnifiedTimer2::unregisterRunningAnimation(QAbstractAnimation2 *animation)
 {
     if (animation->m_isGroup)
         return;
@@ -630,8 +630,9 @@ QAbstractAnimation2::~QAbstractAnimation2()
         QAbstractAnimation2::State oldState = m_state;
         m_state = Stopped;
         stateChanged(oldState, m_state);
-        if (oldState == QAbstractAnimation2::Running)
-            QUnifiedTimer2::unregisterAnimation(this);
+        if (oldState == QAbstractAnimation2::Running) {
+             QUnifiedTimer2::unregisterAnimation(this);
+        }
     }
 
     if (m_group)

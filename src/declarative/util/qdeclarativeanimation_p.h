@@ -94,6 +94,8 @@ public:
     int loops() const;
     void setLoops(int);
 
+    int duration() const;
+
     int currentTime();
     void setCurrentTime(int);
 
@@ -102,6 +104,9 @@ public:
 
     void setDefaultTarget(const QDeclarativeProperty &);
     void setDisableUserControl();
+    void setEnableUserControl();
+
+    bool userControlDisabled() const;
 
     void classBegin();
     void componentComplete();

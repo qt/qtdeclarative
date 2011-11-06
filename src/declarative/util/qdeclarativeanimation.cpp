@@ -165,7 +165,6 @@ void QDeclarativeAbstractAnimationPrivate::commence()
     animationInstance->setAnimation(q);
     //TODO: set in the transition function
     animationInstance->setLoopCount(loopCount);
-
     animationInstance->start();
     if (animationInstance->state() == QAbstractAnimation2::Stopped) {
         running = false;
@@ -221,7 +220,6 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
                 d->animationInstance->setLoopCount(d->animationInstance->currentLoop() + d->loopCount);
             supressStart = true;    //we want the animation to continue, rather than restart
         }
-
         if (!supressStart)
             d->commence();
         emit started();
@@ -381,6 +379,11 @@ void QDeclarativeAbstractAnimation::setLoops(int loops)
     emit loopCountChanged(loops);
 }
 
+int QDeclarativeAbstractAnimation::duration() const
+{
+    Q_D(const QDeclarativeAbstractAnimation);
+    return d->animationInstance ? d->animationInstance->duration() : 0;
+}
 
 int QDeclarativeAbstractAnimation::currentTime()
 {
@@ -548,6 +551,19 @@ void QDeclarativeAbstractAnimation::setDisableUserControl()
 {
     Q_D(QDeclarativeAbstractAnimation);
     d->disableUserControl = true;
+}
+
+void QDeclarativeAbstractAnimation::setEnableUserControl()
+{
+    Q_D(QDeclarativeAbstractAnimation);
+    d->disableUserControl = false;
+
+}
+
+bool QDeclarativeAbstractAnimation::userControlDisabled() const
+{
+    Q_D(const QDeclarativeAbstractAnimation);
+    return d->disableUserControl;
 }
 
 QAbstractAnimation2Pointer QDeclarativeAbstractAnimation::transition(QDeclarativeStateActions &actions,
@@ -1791,12 +1807,12 @@ void QDeclarativeBulkValueAnimator::setAnimValue(QDeclarativeBulkValueUpdater *v
 void QDeclarativeBulkValueAnimator::updateCurrentTime(int currentTime)
 {
     const qreal progress = easing.valueForProgress(((m_duration == 0) ? qreal(1) : qreal(currentTime) / qreal(m_duration)));
-
     if (state() == QAbstractAnimation2::Stopped)
         return;
 
-    if (animValue)
+    if (animValue) {
         animValue->setValue(progress);
+    }
 }
 
 void QDeclarativeBulkValueAnimator::topLevelAnimationLoopChanged()

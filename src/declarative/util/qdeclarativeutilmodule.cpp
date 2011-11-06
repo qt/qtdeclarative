@@ -62,6 +62,7 @@
 #include "qdeclarativeapplication_p.h"
 #include <qdeclarativeinfo.h>
 #include <private/qdeclarativetypenotavailable_p.h>
+#include <private/qdeclarativeanimationcontroller_p.h>
 #ifndef QT_NO_XMLPATTERNS
 #include "qdeclarativexmllistmodel_p.h"
 #endif
@@ -96,6 +97,7 @@ void QDeclarativeUtilModule::defineModule()
     qmlRegisterType<QDeclarativeScriptAction>("QtQuick",2,0,"ScriptAction");
     qmlRegisterType<QDeclarativeSequentialAnimation>("QtQuick",2,0,"SequentialAnimation");
     qmlRegisterType<QDeclarativeSpringAnimation>("QtQuick",2,0,"SpringAnimation");
+    qmlRegisterType<QDeclarativeAnimationController>("QtQuick",2,0,"AnimationController");
     qmlRegisterType<QDeclarativeStateChangeScript>("QtQuick",2,0,"StateChangeScript");
     qmlRegisterType<QDeclarativeStateGroup>("QtQuick",2,0,"StateGroup");
     qmlRegisterType<QDeclarativeState>("QtQuick",2,0,"State");
