@@ -998,7 +998,7 @@ QObject *QQuickVisualDataModelPrivate::object(Compositor::Group group, int index
             }
 
             cacheItem->attached = QQuickVisualDataModelAttached::properties(cacheItem->object);
-            cacheItem->attached->m_cacheItem = cacheItem;
+            cacheItem->attached->setCacheItem(cacheItem);
             new QQuickVisualDataModelAttachedMetaObject(cacheItem->attached, m_cacheMetaType);
             cacheItem->attached->emitChanges();
 
@@ -1726,6 +1726,13 @@ int QQuickVisualDataModelAttachedMetaObject::metaCall(QMetaObject::Call call, in
         }
     }
     return attached->qt_metacall(call, _id, arguments);
+}
+
+void QQuickVisualDataModelAttached::setCacheItem(QQuickVisualDataModelCacheItem *item)
+{
+    m_cacheItem = item;
+    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i)
+        m_previousIndex[i] = m_cacheItem->index[i];
 }
 
 /*!

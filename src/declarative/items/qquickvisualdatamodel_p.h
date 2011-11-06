@@ -199,6 +199,8 @@ public:
     {}
     ~QQuickVisualDataModelAttached() { attachedProperties.remove(parent()); }
 
+    void setCacheItem(QQuickVisualDataModelCacheItem *item);
+
     QQuickVisualDataModel *model() const;
 
     QStringList groups() const;
