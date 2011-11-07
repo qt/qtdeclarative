@@ -18,6 +18,8 @@ feature.path = $$[QT_INSTALL_DATA]/mkspecs/features
 feature.files = $$PWD/features/qtquick1.prf
 INSTALLS += feature
 
+win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
+
 symbian {
     DEFINES += QT_MAKEDLL
     CONFIG += epocallowdlldata
