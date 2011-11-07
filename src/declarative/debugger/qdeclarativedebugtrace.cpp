@@ -91,13 +91,13 @@ QDeclarativeDebugTrace::~QDeclarativeDebugTrace()
 {
 }
 
-void QDeclarativeDebugTrace::addEngine(QDeclarativeEngine * /*engine*/)
+void QDeclarativeDebugTrace::addEngine(QDeclarativeEngine *)
 {
     // just make sure that the service is properly registered
     traceInstance();
 }
 
-void QDeclarativeDebugTrace::removeEngine(QDeclarativeEngine */*engine*/)
+void QDeclarativeDebugTrace::removeEngine(QDeclarativeEngine *)
 {
 
 }

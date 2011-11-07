@@ -165,7 +165,7 @@ public:
         qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
     }
 
-    void initializeEngine(QDeclarativeEngine *engine, const char *)
+    void initializeEngine(QDeclarativeEngine *, const char *)
     {
     }
 };
@@ -174,4 +174,4 @@ QT_END_NAMESPACE
 
 #include "main.moc"
 
-Q_EXPORT_PLUGIN2(qmltestplugin, QT_PREPEND_NAMESPACE(QTestQmlModule));
+Q_EXPORT_PLUGIN2(qmltestplugin, QT_PREPEND_NAMESPACE(QTestQmlModule))

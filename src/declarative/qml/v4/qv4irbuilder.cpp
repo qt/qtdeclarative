@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QDeclarativeJS;
 
-static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, const QMetaObject *meta)
+static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, const QMetaObject * /* meta */)
 {
     switch (t) {
     case QMetaType::Bool:
@@ -74,7 +74,7 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
             return IR::AnchorLineType;
         else if (t == qMetaTypeId<QQuickAnchorLine>())
             return IR::SGAnchorLineType;
-        else if (const QMetaObject *m = engine->metaObjectForType(t)) {
+        else if (engine->metaObjectForType(t)) {
             return IR::ObjectType;
         }
 

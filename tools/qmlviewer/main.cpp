@@ -84,7 +84,7 @@ void myMessageOutput(QtMsgType type, const char *msg)
         if (!logger.isNull()) {
             if (recursiveLock.testAndSetOrdered(0, 1)) {
                 QMetaObject::invokeMethod(logger.data(), "append", Q_ARG(QString, strMsg));
-                recursiveLock = 0;
+                recursiveLock.store(0);
             }
         } else {
             warnings += strMsg;
