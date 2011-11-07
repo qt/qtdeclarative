@@ -77,6 +77,7 @@ private slots:
     void runningTrue();
     void sameValue();
     void delayedRegistration();
+    void startOnCompleted();
 };
 
 void tst_qdeclarativebehaviors::simpleBehavior()
@@ -430,6 +431,25 @@ void tst_qdeclarativebehaviors::delayedRegistration()
     QCOMPARE(innerRect->property("x").toInt(), int(0));
 
     QTRY_COMPARE(innerRect->property("x").toInt(), int(100));
+}
+
+//QTBUG-22555
+void tst_qdeclarativebehaviors::startOnCompleted()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("startOnCompleted.qml")));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QQuickItem *innerRect = rect->findChild<QQuickRectangle*>();
+    QVERIFY(innerRect != 0);
+
+    QCOMPARE(innerRect->property("x").toInt(), int(0));
+
+    QTRY_COMPARE(innerRect->property("x").toInt(), int(100));
+
+    delete rect;
 }
 
 QTEST_MAIN(tst_qdeclarativebehaviors)

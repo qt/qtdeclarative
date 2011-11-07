@@ -1384,6 +1384,18 @@ QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
     }
     parserStatus.deallocate();
 
+    for (int ii = 0; ii < finalizeCallbacks.count(); ++ii) {
+        QDeclarativeEnginePrivate::FinalizeCallback callback = finalizeCallbacks.at(ii);
+        QObject *obj = callback.first;
+        if (obj) {
+            void *args[] = { 0 };
+            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
+        }
+        if (watcher.hasRecursed())
+            return 0;
+    }
+    finalizeCallbacks.clear();
+
     while (componentAttached) {
         QDeclarativeComponentAttached *a = componentAttached;
         a->rem();
@@ -1396,18 +1408,6 @@ QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;
     }
-
-    for (int ii = 0; ii < finalizeCallbacks.count(); ++ii) {
-        QDeclarativeEnginePrivate::FinalizeCallback callback = finalizeCallbacks.at(ii);
-        QObject *obj = callback.first;
-        if (obj) {
-            void *args[] = { 0 };
-            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
-        }
-        if (watcher.hasRecursed())
-            return 0;
-    }
-    finalizeCallbacks.clear();
 
     QDeclarativeContextData *rv = rootContext;
 
