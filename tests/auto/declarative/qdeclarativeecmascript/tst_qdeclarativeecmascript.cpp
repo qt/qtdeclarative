@@ -222,7 +222,7 @@ private slots:
     void callQtInvokables();
     void invokableObjectArg();
     void invokableObjectRet();
-
+    void qtbug_20344();
     void revisionErrors();
     void revision();
 
@@ -4903,6 +4903,19 @@ void tst_qdeclarativeecmascript::aliasWritesOverrideBindings()
 void tst_qdeclarativeecmascript::aliasToCompositeElement()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("aliasToCompositeElement.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::qtbug_20344()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_20344.qml"));
+
+    QString warning = component.url().toString() + ":5: Error: Exception thrown from within QObject slot";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QObject *object = component.create();
     QVERIFY(object != 0);

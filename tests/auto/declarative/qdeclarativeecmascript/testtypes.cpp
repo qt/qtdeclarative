@@ -101,6 +101,12 @@ public:
     void setWidth(int) { }
 };
 
+void MyQmlObject::v8function(QDeclarativeV8Function *args)
+{
+    const char *error = "Exception thrown from within QObject slot";
+    v8::ThrowException(v8::Exception::Error(v8::String::New(error)));
+}
+
 static QJSValue script_api(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)

@@ -298,7 +298,8 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     }
     {
     v8::ScriptOrigin origin(m_hiddenObject); // Hack to allow us to identify these functions
-    v8::Local<v8::Script> script = v8::Script::New(v8::String::New(CREATE_FUNCTION), &origin);
+    v8::Local<v8::Script> script = v8::Script::New(v8::String::New(CREATE_FUNCTION), &origin, 0,
+                                                   v8::Handle<v8::String>(), v8::Script::NativeMode);
     v8::Local<v8::Function> fn = v8::Local<v8::Function>::Cast(script->Run());
     v8::Handle<v8::Value> invokeFn = v8::FunctionTemplate::New(Invoke)->GetFunction();
     v8::Handle<v8::Value> args[] = { invokeFn };

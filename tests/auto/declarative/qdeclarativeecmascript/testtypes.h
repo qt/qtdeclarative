@@ -59,6 +59,7 @@
 
 #include <private/qv8gccallback_p.h>
 #include <private/qdeclarativeengine_p.h>
+#include <private/qv8engine_p.h>
 
 class MyQmlAttachedObject : public QObject
 {
@@ -184,6 +185,7 @@ public slots:
     void setString(const QString &s) { m_string = s; }
     void myinvokable(MyQmlObject *o) { myinvokableObject = o; }
     void variantMethod(const QVariant &v) { m_variant = v; }
+    void v8function(QDeclarativeV8Function*);
 
 private:
     friend class tst_qdeclarativeecmascript;
