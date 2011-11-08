@@ -185,7 +185,7 @@ v8::Handle<v8::Array> QV8ListWrapper::Enumerator(const v8::AccessorInfo &info)
 
     v8::Local<v8::Array> rv = v8::Array::New(count);
 
-    for (int ii = 0; ii < count; ++ii)
+    for (uint ii = 0; ii < count; ++ii)
         rv->Set(ii, v8::Number::New(ii));
 
     return rv;

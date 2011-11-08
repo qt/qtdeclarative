@@ -56,8 +56,6 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(frameRateDebug, QML_SHOW_FRAMERATE)
-
 void QQuickViewPrivate::init()
 {
     Q_Q(QQuickView);
