@@ -182,6 +182,7 @@ public:
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems();
     bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *, InsertionsResult *);
+    virtual bool needsRefillForAddedOrRemovedIndex(int index) const;
 
     virtual qreal headerSize() const;
     virtual qreal footerSize() const;
@@ -1851,6 +1852,13 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
     updateVisibleIndex();
 
     return insertResult->addedItems.count() > prevAddedCount;
+}
+
+bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) const
+{
+    // If we add or remove items before visible items, a layout may be
+    // required to ensure item 0 is in the first column.
+    return modelIndex < visibleIndex;
 }
 
 /*!

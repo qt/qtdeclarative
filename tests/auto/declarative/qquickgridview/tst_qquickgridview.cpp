@@ -72,6 +72,8 @@ private slots:
     void inserted_more();
     void inserted_more_data();
     void removed();
+    void addOrRemoveBeforeVisible();
+    void addOrRemoveBeforeVisible_data();
     void clear();
     void moved();
     void moved_data();
@@ -738,6 +740,91 @@ void tst_QQuickGridView::removed()
     QTRY_VERIFY(gridview->currentItem() == oldCurrent);
 
     delete canvas;
+}
+
+void tst_QQuickGridView::addOrRemoveBeforeVisible()
+{
+    // QTBUG-21588: ensure re-layout is done on grid after adding or removing
+    // items from before the visible area
+
+    QFETCH(bool, doAdd);
+    QFETCH(qreal, newTopContentY);
+
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(false));
+    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QQuickText *name = findItem<QQuickText>(contentItem, "textName", 0);
+    QTRY_COMPARE(name->text(), QString("Item0"));
+
+    gridview->setCurrentIndex(0);
+    qApp->processEvents();
+
+    // scroll down until item 0 is no longer drawn
+    // (bug not triggered if we just move using content y, since that doesn't
+    // refill and change the visible items)
+    gridview->setCurrentIndex(24);
+    qApp->processEvents();
+
+    QTRY_COMPARE(gridview->currentIndex(), 24);
+    QTRY_COMPARE(gridview->contentY(), 220.0);
+
+    QTest::qWait(100);  // wait for refill to complete
+    QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 0));  // 0 shouldn't be visible
+
+    if (doAdd) {
+        model.insertItem(0, "New Item", "New Item number");
+        QTRY_COMPARE(gridview->count(), 31);
+    } else {
+        model.removeItem(0);
+        QTRY_COMPARE(gridview->count(), 29);
+    }
+
+    // scroll back up and item 0 should be gone
+    gridview->setCurrentIndex(0);
+    qApp->processEvents();
+    QTRY_COMPARE(gridview->currentIndex(), 0);
+    QTRY_COMPARE(gridview->contentY(), newTopContentY);
+
+    name = findItem<QQuickText>(contentItem, "textName", 0);
+    if (doAdd)
+        QCOMPARE(name->text(), QString("New Item"));
+    else
+        QCOMPARE(name->text(), QString("Item1"));
+
+    // Confirm items positioned correctly
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QTRY_VERIFY(findItem<QQuickItem>(contentItem, "wrapper", i));
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item->x() == (i%3)*80);
+        QTRY_VERIFY(item->y() == (i/3)*60 + newTopContentY);
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::addOrRemoveBeforeVisible_data()
+{
+    QTest::addColumn<bool>("doAdd");
+    QTest::addColumn<qreal>("newTopContentY");
+
+    QTest::newRow("add") << true << -60.0;
+    QTest::newRow("remove") << false << 0.0;
 }
 
 void tst_QQuickGridView::clear()
