@@ -69,12 +69,12 @@ class QSmoothedAnimationTimer : public QTimer
 {
     Q_OBJECT
 public:
-    explicit QSmoothedAnimationTimer(QSmoothedAnimation* animation, QObject *parent = 0);
+    explicit QSmoothedAnimationTimer(QDeclarativeRefPointer<QSmoothedAnimation> animation, QObject *parent = 0);
     ~QSmoothedAnimationTimer();
 public Q_SLOTS:
     void stopAnimation();
 private:
-    QSmoothedAnimation* m_animation;
+    QDeclarativeRefPointer<QSmoothedAnimation> m_animation;
 };
 
 
@@ -140,9 +140,8 @@ public:
     ~QDeclarativeSmoothedAnimationPrivate();
     void updateRunningAnimations();
 
-    QParallelAnimationGroup2 *wrapperGroup;
-    QSmoothedAnimation *anim;
-    QHash<QDeclarativeProperty, QSmoothedAnimation*> activeAnimations;
+    QDeclarativeRefPointer<QSmoothedAnimation> anim;
+    QHash<QDeclarativeProperty, QDeclarativeRefPointer<QSmoothedAnimation> > activeAnimations;
 };
 
 QT_END_NAMESPACE

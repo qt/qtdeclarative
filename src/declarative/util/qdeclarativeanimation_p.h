@@ -287,6 +287,8 @@ public:
 
 protected:
     QDeclarativePropertyAnimation(QDeclarativePropertyAnimationPrivate &dd, QObject *parent);
+    QDeclarativeStateActions createTransitionActions(QDeclarativeStateActions &actions,
+                                                     QDeclarativeProperties &modified);
     virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);

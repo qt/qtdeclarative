@@ -64,7 +64,7 @@ protected:
     void updateCurrentTime(int currentTime);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
+    void uncontrolledAnimationFinished(QAbstractAnimation2 *animation);
 
 private:
     //state
@@ -72,7 +72,7 @@ private:
     int m_previousCurrentTime;
     bool shouldAnimationStart(QAbstractAnimation2Pointer animation, bool startIfAtEnd) const;
     void applyGroupState(QAbstractAnimation2Pointer animation);
-    void animationRemoved(int index, QAbstractAnimation2Pointer );
+    void animationRemoved(int index, QAbstractAnimation2* );
 };
 
 QT_END_NAMESPACE

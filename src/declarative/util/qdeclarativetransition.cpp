@@ -113,9 +113,10 @@ class QDeclarativeTransitionPrivate : public QObjectPrivate
 public:
     QDeclarativeTransitionPrivate()
     : fromState(QLatin1String("*")), toState(QLatin1String("*")),
-      reversed(false), reversible(false), enabled(true), manager(0)
+      reversed(false), reversible(false), enabled(true), group(0), manager(0)
     {
-        group.trans = this;
+        group.take(new ParallelAnimationWrapper());
+        group->trans = this;
     }
 
     QString fromState;
@@ -123,7 +124,7 @@ public:
     bool reversed;
     bool reversible;
     bool enabled;
-    ParallelAnimationWrapper group;
+    QDeclarativeRefPointer<ParallelAnimationWrapper> group;
     QDeclarativeTransitionManager *manager;
 
     void complete()
@@ -190,7 +191,7 @@ QDeclarativeTransition::~QDeclarativeTransition()
 void QDeclarativeTransition::stop()
 {
     Q_D(QDeclarativeTransition);
-    d->group.stop();
+    d->group->stop();
 }
 
 void QDeclarativeTransition::setReversed(bool r)
@@ -207,7 +208,7 @@ void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &act
 
     qmlExecuteDeferred(this);
 
-    d->group.clear();
+    d->group->clear();
     QDeclarativeAbstractAnimation::TransitionDirection direction = d->reversed ? QDeclarativeAbstractAnimation::Backward : QDeclarativeAbstractAnimation::Forward;
     int start = d->reversed ? d->animations.count() - 1 : 0;
     int end = d->reversed ? -1 : d->animations.count();
@@ -216,13 +217,13 @@ void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &act
     for (int i = start; i != end;) {
         anim = d->animations.at(i)->transition(actions, after, direction);
         if (anim)
-            d->reversed ? d->group.insertAnimation(0, anim) : d->group.addAnimation(anim);
+            d->reversed ? d->group->insertAnimation(0, anim) : d->group->addAnimation(anim);
         d->reversed ? --i : ++i;
     }
 
     d->manager = manager;
-    d->group.setDirection(d->reversed ? QAbstractAnimation2::Backward : QAbstractAnimation2::Forward);
-    d->group.start();
+    d->group->setDirection(d->reversed ? QAbstractAnimation2::Backward : QAbstractAnimation2::Forward);
+    d->group->start();
 }
 
 /*!

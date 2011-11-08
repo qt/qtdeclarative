@@ -72,7 +72,7 @@ public:
 
     void addAnimation(QAbstractAnimation2Pointer animation);
     void insertAnimation(int index, QAbstractAnimation2Pointer animation);
-    virtual void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
+    virtual void uncontrolledAnimationFinished(QAbstractAnimation2 *animation);
 
 protected:
     void topLevelAnimationLoopChanged();
@@ -80,14 +80,14 @@ protected:
 private:
     //can likely be removed after refactor
     virtual void animationInsertedAt(int) { }
-    virtual void animationRemoved(int, QAbstractAnimation2Pointer);
+    virtual void animationRemoved(int, QAbstractAnimation2*);
 
     void connectUncontrolledAnimations();
     void disconnectUncontrolledAnimations();
-    void connectUncontrolledAnimation(QAbstractAnimation2Pointer anim);
-    void disconnectUncontrolledAnimation(QAbstractAnimation2Pointer anim);
-    bool isAnimationConnected(QAbstractAnimation2Pointer anim) const;
-    bool isUncontrolledAnimationFinished(QAbstractAnimation2Pointer anim) const;
+    void connectUncontrolledAnimation(QAbstractAnimation2 *anim);
+    void disconnectUncontrolledAnimation(QAbstractAnimation2 *anim);
+    bool isAnimationConnected(QAbstractAnimation2 *anim) const;
+    bool isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const;
 
     friend class QParallelAnimationGroup2;
     friend class QSequentialAnimationGroup2;

@@ -65,7 +65,7 @@ protected:
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
+    void uncontrolledAnimationFinished(QAbstractAnimation2 *animation);
 
 private:
     struct AnimationIndex
@@ -84,7 +84,7 @@ private:
     void activateCurrentAnimation(bool intermediate = false);
 
     void animationInsertedAt(int index);
-    void animationRemoved(int index, QAbstractAnimation2Pointer anim);
+    void animationRemoved(int index, QAbstractAnimation2 *anim);
 
     bool atEnd() const;
 

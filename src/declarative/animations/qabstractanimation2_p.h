@@ -172,10 +172,7 @@ protected:
 };
 
 typedef QDeclarativeRefPointer<QAbstractAnimation2> QAbstractAnimation2Pointer;
-static uint qHash(const QAbstractAnimation2Pointer& value)
-{
-    return qHash(value.data());
-}
+uint qHash(const QAbstractAnimation2Pointer& value);
 
 class QAnimationDriver2Private;
 class Q_DECLARATIVE_EXPORT QAnimationDriver2 : public QObject
@@ -247,7 +244,7 @@ public:
     static QUnifiedTimer2 *instance();
     static QUnifiedTimer2 *instance(bool create);
 
-    static void registerAnimation(QAbstractAnimation2Pointer animation, bool isTopLevel);
+    static void registerAnimation(QAbstractAnimation2* animation, bool isTopLevel);
 
     //the parameter needs to be "QAbstractAnimation2 *" here, as it will be
     //called in the QAbstractAnimation2's dtor
@@ -319,13 +316,13 @@ private:
     // bool to indicate that only pause animations are active
     bool isPauseTimerActive;
 
-    QList<QAbstractAnimation2Pointer> animations, animationsToStart;
+    QList<QAbstractAnimation2*> animations, animationsToStart;
 
     // this is the count of running animations that are not a group neither a pause animation
     int runningLeafAnimations;
-    QList<QAbstractAnimation2Pointer> runningPauseAnimations;
+    QList<QAbstractAnimation2*> runningPauseAnimations;
 
-    void registerRunningAnimation(QAbstractAnimation2Pointer animation);
+    void registerRunningAnimation(QAbstractAnimation2* animation);
     void unregisterRunningAnimation(QAbstractAnimation2 *animation);
 
     int closestPauseAnimationTimeToFinish();

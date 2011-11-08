@@ -344,7 +344,7 @@ void QSequentialAnimationGroup2::activateCurrentAnimation(bool intermediate)
         m_currentAnimation->pause();
 }
 
-void QSequentialAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation)
+void QSequentialAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2 *animation)
 {
     if (isAnimationConnected(animation)) {
         Q_ASSERT(animation == m_currentAnimation);
@@ -390,7 +390,7 @@ void QSequentialAnimationGroup2::animationInsertedAt(int index)
     }
 }
 
-void QSequentialAnimationGroup2::animationRemoved(int index, QAbstractAnimation2Pointer anim)
+void QSequentialAnimationGroup2::animationRemoved(int index, QAbstractAnimation2 *anim)
 {
     QAnimationGroup2::animationRemoved(index, anim);
 

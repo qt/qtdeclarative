@@ -647,6 +647,10 @@ QAbstractAnimation2Pointer QDeclarativePauseAnimation::transition(QDeclarativeSt
                                     TransitionDirection direction)
 {
     Q_D(QDeclarativePauseAnimation);
+    Q_UNUSED(actions);
+    Q_UNUSED(modified);
+    Q_UNUSED(direction);
+
     QAbstractAnimation2Pointer animationInstance;
     return animationInstance.take(new QPauseAnimation2(d->duration));
 }
@@ -792,6 +796,8 @@ void QActionAnimation::updateCurrentTime(int)
 
 void QActionAnimation::updateState(State newState, State oldState)
 {
+    Q_UNUSED(oldState);
+
     if (newState == Running) {
         if (animAction) {
             animAction->doAction();
@@ -2381,11 +2387,11 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
     fromSourced = true;
 }
 
-QAbstractAnimation2Pointer QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions,
-                                     QDeclarativeProperties &modified,
-                                     TransitionDirection direction)
+QDeclarativeStateActions QDeclarativePropertyAnimation::createTransitionActions(QDeclarativeStateActions &actions,
+                                                                                QDeclarativeProperties &modified)
 {
     Q_D(QDeclarativePropertyAnimation);
+    QDeclarativeStateActions newActions;
 
     QStringList props = d->properties.isEmpty() ? QStringList() : d->properties.split(QLatin1Char(','));
     for (int ii = 0; ii < props.count(); ++ii)
@@ -2409,13 +2415,6 @@ QAbstractAnimation2Pointer QDeclarativePropertyAnimation::transition(QDeclarativ
         props << d->defaultProperties.split(QLatin1Char(','));
     }
 
-    QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
-    data->interpolatorType = d->interpolatorType;
-    data->interpolator = d->interpolator;
-    data->reverse = direction == Backward ? true : false;
-    data->fromSourced = false;
-    data->fromDefined = d->fromIsDefined;
-
     bool hasExplicit = false;
     //an explicit animation has been specified
     if (d->toIsDefined) {
@@ -2430,7 +2429,7 @@ QAbstractAnimation2Pointer QDeclarativePropertyAnimation::transition(QDeclarativ
                     }
                     myAction.toValue = d->to;
                     d->convertVariant(myAction.toValue, d->interpolatorType ? d->interpolatorType : myAction.property.propertyType());
-                    data->actions << myAction;
+                    newActions << myAction;
                     hasExplicit = true;
                     for (int ii = 0; ii < actions.count(); ++ii) {
                         QDeclarativeAction &action = actions[ii];
@@ -2473,25 +2472,38 @@ QAbstractAnimation2Pointer QDeclarativePropertyAnimation::transition(QDeclarativ
 
             modified << action.property;
 
-            data->actions << myAction;
+            newActions << myAction;
             action.fromValue = myAction.toValue;
         }
     }
+    return newActions;
+}
+
+QAbstractAnimation2Pointer QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions,
+                                                                     QDeclarativeProperties &modified,
+                                                                     TransitionDirection direction)
+{
+    Q_D(QDeclarativePropertyAnimation);
+
+    QDeclarativeStateActions dataActions = createTransitionActions(actions, modified);
 
     QDeclarativeBulkValueAnimator *animator = new QDeclarativeBulkValueAnimator;
     animator->setDuration(d->duration);
     animator->setEasingCurve(d->easing);
 
-    if (data->actions.count()) {
+    if (!dataActions.isEmpty()) {
+        QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
+        data->interpolatorType = d->interpolatorType;
+        data->interpolator = d->interpolator;
+        data->reverse = direction == Backward ? true : false;
+        data->fromSourced = false;
+        data->fromDefined = d->fromIsDefined;
+        data->actions = dataActions;
         animator->setAnimValue(data);
         animator->setFromSourcedValue(&data->fromSourced);
-        d->actions = &data->actions;
-    } else {
-        delete data;
-        //animator->setFromSourcedValue(0);  //clear previous data
-        //animator->setAnimValue(0);  //clear previous data
-        d->actions = 0;
+        d->actions = &data->actions; //remove this?
     }
+
     QAbstractAnimation2Pointer animationInstance;
     return animationInstance.take(animator);
 }

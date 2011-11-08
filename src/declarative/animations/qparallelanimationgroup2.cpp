@@ -40,7 +40,7 @@
 ****************************************************************************/
 #include "private/qparallelanimationgroup2_p.h"
 //#define QANIMATION_DEBUG
-
+#include <QDebug>
 QT_BEGIN_NAMESPACE
 
 QParallelAnimationGroup2::QParallelAnimationGroup2(QDeclarativeAbstractAnimation *animation)
@@ -59,6 +59,7 @@ QParallelAnimationGroup2::QParallelAnimationGroup2(const QParallelAnimationGroup
 
 QParallelAnimationGroup2::~QParallelAnimationGroup2()
 {
+
 }
 
 //only calculate once
@@ -154,8 +155,9 @@ void QParallelAnimationGroup2::updateState(QAbstractAnimation2::State newState,
             if (oldState == Stopped)
                 animation->stop();
             animation->setDirection(m_direction);
-            if (shouldAnimationStart(animation, oldState == Stopped))
+            if (shouldAnimationStart(animation, oldState == Stopped)) {
                 animation->start();
+            }
         }
         break;
     }
@@ -192,7 +194,7 @@ void QParallelAnimationGroup2::applyGroupState(QAbstractAnimation2Pointer animat
     }
 }
 
-void QParallelAnimationGroup2::animationRemoved(int index, QAbstractAnimation2Pointer anim)
+void QParallelAnimationGroup2::animationRemoved(int index, QAbstractAnimation2 *anim)
 {
     QAnimationGroup2::animationRemoved(index, anim);
     disconnectUncontrolledAnimation(anim);
@@ -218,7 +220,7 @@ void QParallelAnimationGroup2::updateDirection(QAbstractAnimation2::Direction di
     }
 }
 
-void QParallelAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation)
+void QParallelAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2 *animation)
 {
     if (isAnimationConnected(animation)) {
         Q_ASSERT(animation && animation->duration() == -1 || animation->loopCount() < 0);

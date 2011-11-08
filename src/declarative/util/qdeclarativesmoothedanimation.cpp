@@ -58,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 
-QSmoothedAnimationTimer::QSmoothedAnimationTimer(QSmoothedAnimation* animation, QObject *parent)
+QSmoothedAnimationTimer::QSmoothedAnimationTimer(QDeclarativeRefPointer<QSmoothedAnimation> animation, QObject *parent)
     : QTimer(parent)
     , m_animation(animation)
 {
@@ -71,6 +71,7 @@ QSmoothedAnimationTimer::~QSmoothedAnimationTimer()
 
 void QSmoothedAnimationTimer::stopAnimation()
 {
+    m_animation->setAnimation(0);
     m_animation->stop();
 }
 
@@ -350,22 +351,18 @@ QDeclarativeSmoothedAnimation::~QDeclarativeSmoothedAnimation()
 }
 
 QDeclarativeSmoothedAnimationPrivate::QDeclarativeSmoothedAnimationPrivate()
-    : wrapperGroup(0), anim(new QSmoothedAnimation)
+    : anim(0)
 {
-    Q_Q(QDeclarativeSmoothedAnimation);
-    wrapperGroup = new QParallelAnimationGroup2(q);
+    anim.take(new QSmoothedAnimation);
 }
 
 QDeclarativeSmoothedAnimationPrivate::~QDeclarativeSmoothedAnimationPrivate()
 {
-    delete wrapperGroup;
-    delete anim;
-    qDeleteAll(activeAnimations);
 }
 
 void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
 {
-    foreach(QSmoothedAnimation* ease, activeAnimations.values()){
+    foreach (const QDeclarativeRefPointer<QSmoothedAnimation> &ease, activeAnimations.values()){
         ease->maximumEasingTime = anim->maximumEasingTime;
         ease->reversingMode = anim->reversingMode;
         ease->velocity = anim->velocity;
@@ -378,51 +375,51 @@ QAbstractAnimation2Pointer QDeclarativeSmoothedAnimation::transition(QDeclarativ
                                                QDeclarativeProperties &modified,
                                                TransitionDirection direction)
 {
+    Q_UNUSED(direction);
     Q_D(QDeclarativeSmoothedAnimation);
-    QDeclarativeNumberAnimation::transition(actions, modified, direction);
 
-    if (!d->actions)
-        return d->wrapperGroup;
+    QDeclarativeStateActions dataActions = QDeclarativePropertyAnimation::createTransitionActions(actions, modified);
 
-    QSet<QAbstractAnimation2Pointer> anims;
-    for (int i = 0; i < d->actions->size(); i++) {
-        QSmoothedAnimation *ease;
-        bool needsRestart;
-        if (!d->activeAnimations.contains((*d->actions)[i].property)) {
-            ease = new QSmoothedAnimation();
-            d->wrapperGroup->addAnimation(ease);
-            d->activeAnimations.insert((*d->actions)[i].property, ease);
-            needsRestart = false;
-        } else {
-            ease = d->activeAnimations.value((*d->actions)[i].property);
-            needsRestart = true;
+    QDeclarativeRefPointer<QParallelAnimationGroup2> wrapperGroup;
+    wrapperGroup.take(new QParallelAnimationGroup2());
+
+    if (!dataActions.isEmpty()) {
+        QSet<QAbstractAnimation2Pointer> anims;
+        for (int i = 0; i < dataActions.size(); i++) {
+            QDeclarativeRefPointer<QSmoothedAnimation> ease;
+            bool needsRestart;
+            if (!d->activeAnimations.contains(dataActions[i].property)) {
+                ease.take(new QSmoothedAnimation());
+                d->activeAnimations.insert(dataActions[i].property, ease);
+                ease->target = dataActions[i].property;
+                needsRestart = false;
+            } else {
+                ease = d->activeAnimations.value(dataActions[i].property);
+                needsRestart = true;
+            }
+            wrapperGroup->addAnimation(QAbstractAnimation2Pointer(ease));
+
+            ease->to = dataActions[i].toValue.toReal();
+
+            // copying public members from main value holder animation
+            ease->maximumEasingTime = d->anim->maximumEasingTime;
+            ease->reversingMode = d->anim->reversingMode;
+            ease->velocity = d->anim->velocity;
+            ease->userDuration = d->anim->userDuration;
+
+            ease->initialVelocity = ease->trackVelocity;
+
+            if (needsRestart)
+                ease->restart();
+            anims.insert(QAbstractAnimation2Pointer(ease));
         }
-        ease->target = (*d->actions)[i].property;
-        ease->to = (*d->actions)[i].toValue.toReal();
 
-        // copying public members from main value holder animation
-        ease->maximumEasingTime = d->anim->maximumEasingTime;
-        ease->reversingMode = d->anim->reversingMode;
-        ease->velocity = d->anim->velocity;
-        ease->userDuration = d->anim->userDuration;
-
-        ease->initialVelocity = ease->trackVelocity;
-
-        if (needsRestart)
-            ease->init();
-        anims.insert(ease);
-    }
-
-    for (int i = d->wrapperGroup->animationCount() - 1; i >= 0 ; --i) {
-        if (!anims.contains(d->wrapperGroup->animationAt(i))) {
-            QSmoothedAnimation *ease = static_cast<QSmoothedAnimation*>(d->wrapperGroup->animationAt(i).data());
-            d->activeAnimations.remove(ease->target);
-            d->wrapperGroup->takeAnimation(i);
+        foreach (const QDeclarativeRefPointer<QSmoothedAnimation> &ease, d->activeAnimations.values()){
+            if (!anims.contains(ease.data()))
+                d->activeAnimations.remove(ease->target);
         }
     }
-    //FIXME: Multiple animation instances problem:
-    //       the animation instance should not tie to declarative object.
-    return d->wrapperGroup;
+    return QAbstractAnimation2Pointer(wrapperGroup);
 }
 
 /*!

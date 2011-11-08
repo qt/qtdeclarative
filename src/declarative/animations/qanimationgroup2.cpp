@@ -153,11 +153,11 @@ void QAnimationGroup2::clear()
     //TODO: other cleanup
 }
 
-bool QAnimationGroup2::isAnimationConnected(QAbstractAnimation2Pointer anim) const
+bool QAnimationGroup2::isAnimationConnected(QAbstractAnimation2* anim) const
 {
     return m_uncontrolledFinishTime.contains(anim);
 }
-bool QAnimationGroup2::isUncontrolledAnimationFinished(QAbstractAnimation2Pointer anim) const
+bool QAnimationGroup2::isUncontrolledAnimationFinished(QAbstractAnimation2* anim) const
 {
     return m_uncontrolledFinishTime.value(anim, -1) >= 0;
 }
@@ -176,22 +176,22 @@ void QAnimationGroup2::connectUncontrolledAnimations()
         }
     }
 }
-void QAnimationGroup2::connectUncontrolledAnimation(QAbstractAnimation2Pointer anim)
+void QAnimationGroup2::connectUncontrolledAnimation(QAbstractAnimation2 *anim)
 {
     m_uncontrolledFinishTime[anim] = -1;
 }
 
-void QAnimationGroup2::disconnectUncontrolledAnimation(QAbstractAnimation2Pointer anim)
+void QAnimationGroup2::disconnectUncontrolledAnimation(QAbstractAnimation2 *anim)
 {
     m_uncontrolledFinishTime.remove(anim);
 }
 
-void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation)
+void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2 *animation)
 {
     Q_UNUSED(animation);
 }
 
-void QAnimationGroup2::animationRemoved(int index, QAbstractAnimation2Pointer )
+void QAnimationGroup2::animationRemoved(int index, QAbstractAnimation2* )
 {
     Q_UNUSED(index);
     if (m_animations.isEmpty()) {

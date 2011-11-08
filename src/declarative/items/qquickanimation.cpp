@@ -434,17 +434,17 @@ QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QQuickPathAnimationPrivate), parent)
 {
     Q_D(QQuickPathAnimation);
-    d->pa = new QDeclarativeBulkValueAnimator(this);
 }
 
 QQuickPathAnimation::~QQuickPathAnimation()
 {
+    Q_D(QQuickPathAnimation);
 }
 
 int QQuickPathAnimation::duration() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->pa->duration();
+    return d->duration;
 }
 
 void QQuickPathAnimation::setDuration(int duration)
@@ -455,25 +455,25 @@ void QQuickPathAnimation::setDuration(int duration)
     }
 
     Q_D(QQuickPathAnimation);
-    if (d->pa->duration() == duration)
+    if (d->duration == duration)
         return;
-    d->pa->setDuration(duration);
+    d->duration = duration;
     emit durationChanged(duration);
 }
 
 QEasingCurve QQuickPathAnimation::easing() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->pa->easingCurve();
+    return d->easingCurve;
 }
 
 void QQuickPathAnimation::setEasing(const QEasingCurve &e)
 {
     Q_D(QQuickPathAnimation);
-    if (d->pa->easingCurve() == e)
+    if (d->easingCurve == e)
         return;
 
-    d->pa->setEasingCurve(e);
+    d->easingCurve = e;
     emit easingChanged(e);
 }
 
@@ -592,7 +592,24 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
                                            TransitionDirection direction)
 {
     Q_D(QQuickPathAnimation);
-    QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater;
+
+    QList<QQuickItem*> keys = d->activeAnimations.keys();
+    foreach (QQuickItem *item, keys) {
+        if (d->activeAnimations.value(item)->state() == QAbstractAnimation2::Stopped)
+            d->activeAnimations.remove(item);
+    }
+
+    QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater();
+    QQuickPathAnimationUpdater *prevData = 0;
+    QDeclarativeRefPointer<QDeclarativeBulkValueAnimator> pa;
+    pa.take(new QDeclarativeBulkValueAnimator());
+
+    if (d->activeAnimations.contains(d->target)) {
+        prevData = static_cast<QQuickPathAnimationUpdater*>(d->activeAnimations[d->target]->getAnimValue());
+    }
+
+    d->activeAnimations[d->target] = pa;
+
 
     data->orientation = d->orientation;
     data->anchorPoint = d->anchorPoint;
@@ -625,13 +642,8 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
         (modified.count() > origModifiedSize || data->toDefined)) {
         data->target = d->target;
         data->path = d->path;
-        /*
-            NOTE: The following block relies on the fact that the previous value hasn't
-            yet been deleted, and has the same target, etc, which may be a bit fragile.
-         */
-        if (d->pa->getAnimValue()) {
-            QQuickPathAnimationUpdater *prevData = static_cast<QQuickPathAnimationUpdater*>(d->pa->getAnimValue());
 
+        if (prevData) {
             // get the original start angle that was used (so we can exactly reverse).
             data->startRotation = prevData->startRotation;
 
@@ -653,16 +665,17 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
                 }
             }
         }
-        d->pa->setFromSourcedValue(&data->fromSourced);
-        d->pa->setAnimValue(data);
+        pa->setFromSourcedValue(&data->fromSourced);
+        pa->setAnimValue(data);
     } else {
-        d->pa->setFromSourcedValue(0);
-        d->pa->setAnimValue(0);
+        pa->setFromSourcedValue(0);
+        pa->setAnimValue(0);
         delete data;
     }
 
-    //FIXME:Need more work to make multiple animation instances play properly
-    return d->pa;
+    pa->setDuration(d->duration);
+    pa->setEasingCurve(d->easingCurve);
+    return QAbstractAnimation2Pointer(pa);
 }
 
 void QQuickPathAnimationUpdater::setValue(qreal v)

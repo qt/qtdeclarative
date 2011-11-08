@@ -123,12 +123,21 @@ public:
     QDeclarativeNullableValue<qreal> startRotation;
 };
 
+class QQuickPathAnimationAnimator : public QDeclarativeBulkValueAnimator
+{
+public:
+    QQuickPathAnimationAnimator(QQuickPathAnimation *pathAnimation);
+    ~QQuickPathAnimationAnimator();
+private:
+    QQuickPathAnimation *pathAnimation;
+};
+
 class QQuickPathAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPathAnimation)
 public:
     QQuickPathAnimationPrivate() : path(0), target(0),
-        orientation(QQuickPathAnimation::Fixed), entryInterval(0), exitInterval(0), pa(0) {}
+        orientation(QQuickPathAnimation::Fixed), entryInterval(0), exitInterval(0), duration(250) {}
 
     QDeclarativePath *path;
     QQuickItem *target;
@@ -138,7 +147,9 @@ public:
     qreal entryInterval;
     qreal exitInterval;
     QDeclarativeNullableValue<qreal> endRotation;
-    QDeclarativeBulkValueAnimator *pa;
+    int duration;
+    QEasingCurve easingCurve;
+    QHash<QQuickItem*, QDeclarativeRefPointer<QDeclarativeBulkValueAnimator> > activeAnimations;
 };
 
 

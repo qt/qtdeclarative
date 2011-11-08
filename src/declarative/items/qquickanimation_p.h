@@ -123,6 +123,7 @@ protected:
 class QQuickItem;
 class QDeclarativePath;
 class QQuickPathAnimationPrivate;
+class QQuickPathAnimationUpdater;
 class Q_AUTOTEST_EXPORT QQuickPathAnimation : public QDeclarativeAbstractAnimation
 {
     Q_OBJECT
@@ -177,7 +178,6 @@ public:
 
     qreal endRotation() const;
     void setEndRotation(qreal);
-
 protected:
     virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,

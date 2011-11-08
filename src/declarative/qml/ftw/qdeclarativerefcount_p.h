@@ -69,7 +69,7 @@ public:
     inline virtual ~QDeclarativeRefCount();
     inline void addref();
     inline void release();
-    inline bool isLastRef() const {return refCount == 1;}
+    inline bool isLastRef() const {return refCount.load() == 1;}
 protected:
     inline virtual void destroy();
 

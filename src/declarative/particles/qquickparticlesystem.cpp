@@ -635,9 +635,6 @@ QQuickParticleSystem::~QQuickParticleSystem()
 {
     foreach (QQuickParticleGroupData* gd, groupData)
         delete gd;
-
-    if (m_animation)
-        delete m_animation;
 }
 
 void QQuickParticleSystem::initGroups()
@@ -761,7 +758,7 @@ void QQuickParticleSystem::componentComplete()
 {
     QQuickItem::componentComplete();
     m_componentComplete = true;
-    m_animation = new QQuickParticleSystemAnimation(this);
+    m_animation.take(new QQuickParticleSystemAnimation(this));
     reset();//restarts animation as well
 }
 

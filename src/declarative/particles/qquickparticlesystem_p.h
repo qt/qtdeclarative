@@ -300,7 +300,7 @@ public:
 
     //Also only here for auto-test usage
     void updateCurrentTime( int currentTime );
-    QQuickParticleSystemAnimation* m_animation;
+    QDeclarativeRefPointer<QQuickParticleSystemAnimation> m_animation;
     bool m_running;
 
     int timeInt;
