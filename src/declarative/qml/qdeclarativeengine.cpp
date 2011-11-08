@@ -70,6 +70,7 @@
 #include <private/qdeclarativedebugtrace_p.h>
 #include <private/qdeclarativeapplication_p.h>
 #include <private/qv8debugservice_p.h>
+#include <private/qdebugmessageservice_p.h>
 #include "qdeclarativeincubator.h"
 #include <private/qv8profilerservice_p.h>
 
@@ -451,6 +452,7 @@ void QDeclarativeEnginePrivate::init()
         QV8DebugService::initialize(v8engine());
         QV8ProfilerService::initialize();
         QDeclarativeDebugTrace::initialize();
+        QDebugMessageService::instance();
     }
 }
 
