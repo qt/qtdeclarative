@@ -1352,6 +1352,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                     // Match!
                     if (connections.connectionsInUse) {
                         connection.needsDestroy = true;
+                        connections.connectionsNeedClean = true;
                     } else {
                         connection.dispose();
                         connections.removeAt(ii);
@@ -1371,6 +1372,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                 // Match!
                 if (connections.connectionsInUse) {
                     connection.needsDestroy = true;
+                    connections.connectionsNeedClean = true;
                 } else {
                     connection.dispose();
                     connections.removeAt(ii);
