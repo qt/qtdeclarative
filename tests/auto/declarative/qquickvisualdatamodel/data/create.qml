@@ -7,6 +7,8 @@ ListView {
     model: VisualDataModel {
         id: visualModel
 
+        persistedItems.includeByDefault: true
+
         model: myModel
         delegate: Item {
             id: delegate
@@ -15,6 +17,7 @@ ListView {
             height: 20
 
             property bool destroyed: false
+
 
             Component.onDestruction: destroyed = true
         }

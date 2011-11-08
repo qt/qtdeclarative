@@ -766,7 +766,7 @@ QQuickVisualDataGroup *QQuickVisualDataModelPrivate::group_at(
 {
     QQuickVisualDataModelPrivate *d = static_cast<QQuickVisualDataModelPrivate *>(property->data);
     return index >= 0 && index < d->m_groupCount - 1
-            ? d->m_groups[index - 1]
+            ? d->m_groups[index + 1]
             : 0;
 }
 
@@ -1865,7 +1865,7 @@ void QQuickVisualDataGroupPrivate::emitChanges(QV8Engine *engine)
 {
     Q_Q(QQuickVisualDataGroup);
     static int idx = signalIndex("changed(QDeclarativeV8Handle,QDeclarativeV8Handle)");
-    if (isSignalConnected(idx)) {
+    if (isSignalConnected(idx) && !changeSet.isEmpty()) {
         v8::HandleScope handleScope;
         v8::Context::Scope contextScope(engine->context());
         v8::Local<v8::Array> removed  = QQuickVisualDataModelPrivate::buildChangeList(changeSet.removes());
@@ -2372,8 +2372,11 @@ void QQuickVisualPartsModel::updateFilterGroup()
     if (!model->m_cacheMetaType)
         return;
 
-    if (m_inheritGroup)
-        return;
+    if (m_inheritGroup) {
+        if (m_filterGroup == model->m_filterGroup)
+            return;
+        m_filterGroup = model->m_filterGroup;
+    }
 
     QDeclarativeListCompositor::Group previousGroup = m_compositorGroup;
     m_compositorGroup = Compositor::Default;

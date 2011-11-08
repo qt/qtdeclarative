@@ -139,7 +139,10 @@ private slots:
     void move();
     void groups_data();
     void groups();
+    void invalidGroups();
     void get();
+    void onChanged_data();
+    void onChanged();
     void create();
 
 private:
@@ -1208,25 +1211,25 @@ void tst_qquickvisualdatamodel::groups()
         QCOMPARE(selectedItems->count(), 2);
     } {
         evaluate<void>(visualModel, part + "filterOnGroup = \"visible\"");
-        qDebug() << "listview->count()" << listview->count();
         QCOMPARE(listview->count(), 9);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
+        QCOMPARE(evaluate<QString>(visualModel, part + "filterOnGroup"), QString("visible"));
     } {
         evaluate<void>(visualModel, part + "filterOnGroup = \"selected\"");
-        qDebug() << "listview->count()" << listview->count();
         QCOMPARE(listview->count(), 2);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
+        QCOMPARE(evaluate<QString>(visualModel, part + "filterOnGroup"), QString("selected"));
     } {
-        evaluate<void>(visualModel, part + "filterOnGroup = \"items\"");
-        qDebug() << "listview->count()" << listview->count();
+        evaluate<void>(visualModel, part + "filterOnGroup = undefined");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
+        QCOMPARE(evaluate<QString>(visualModel, part + "filterOnGroup"), QString("items"));
     } {
         QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", 5);
         QVERIFY(delegate);
@@ -1490,6 +1493,144 @@ void tst_qquickvisualdatamodel::get()
     }
 }
 
+void tst_qquickvisualdatamodel::invalidGroups()
+{
+    QUrl source = QUrl::fromLocalFile(TESTDATA("groups-invalid.qml"));
+    QTest::ignoreMessage(QtWarningMsg, (source.toString() + ":12:9: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("Group names must start with a lower case letter")).toUtf8());
+
+    QDeclarativeComponent component(&engine, source);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+
+    QCOMPARE(evaluate<int>(object.data(), "groups.length"), 4);
+    QCOMPARE(evaluate<QString>(object.data(), "groups[0].name"), QString("items"));
+    QCOMPARE(evaluate<QString>(object.data(), "groups[1].name"), QString("persistedItems"));
+    QCOMPARE(evaluate<QString>(object.data(), "groups[2].name"), QString("visible"));
+    QCOMPARE(evaluate<QString>(object.data(), "groups[3].name"), QString("selected"));
+}
+
+void tst_qquickvisualdatamodel::onChanged_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<QStringList>("tests");
+
+    QTest::newRow("item appended")
+            << QString("listModel.append({\"number\": \"five\"})")
+            << (QStringList()
+                << "verify(vm.removed, [], [], [])"
+                << "verify(vm.inserted, [4], [1], [undefined])"
+                << "verify(vi.removed, [], [], [])"
+                << "verify(vi.inserted, [4], [1], [undefined])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+    QTest::newRow("item prepended")
+            << QString("listModel.insert(0, {\"number\": \"five\"})")
+            << (QStringList()
+                << "verify(vm.removed, [], [], [])"
+                << "verify(vm.inserted, [0], [1], [undefined])"
+                << "verify(vi.removed, [], [], [])"
+                << "verify(vi.inserted, [0], [1], [undefined])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+    QTest::newRow("item inserted")
+            << QString("listModel.insert(2, {\"number\": \"five\"})")
+            << (QStringList()
+                << "verify(vm.removed, [], [], [])"
+                << "verify(vm.inserted, [2], [1], [undefined])"
+                << "verify(vi.removed, [], [], [])"
+                << "verify(vi.inserted, [2], [1], [undefined])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+
+    QTest::newRow("item removed tail")
+            << QString("listModel.remove(3)")
+            << (QStringList()
+                << "verify(vm.removed, [3], [1], [undefined])"
+                << "verify(vm.inserted, [], [], [])"
+                << "verify(vi.removed, [3], [1], [undefined])"
+                << "verify(vi.inserted, [], [], [])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+    QTest::newRow("item removed head")
+            << QString("listModel.remove(0)")
+            << (QStringList()
+                << "verify(vm.removed, [0], [1], [undefined])"
+                << "verify(vm.inserted, [], [], [])"
+                << "verify(vi.removed, [0], [1], [undefined])"
+                << "verify(vi.inserted, [], [], [])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+    QTest::newRow("item removed middle")
+            << QString("listModel.remove(1)")
+            << (QStringList()
+                << "verify(vm.removed, [1], [1], [undefined])"
+                << "verify(vm.inserted, [], [], [])"
+                << "verify(vi.removed, [1], [1], [undefined])"
+                << "verify(vi.inserted, [], [], [])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+
+
+    QTest::newRow("item moved from tail")
+            << QString("listModel.move(3, 0, 1)")
+            << (QStringList()
+                << "verify(vm.removed, [3], [1], [vm.inserted[0].moveId])"
+                << "verify(vm.inserted, [0], [1], [vm.removed[0].moveId])"
+                << "verify(vi.removed, [3], [1], [vi.inserted[0].moveId])"
+                << "verify(vi.inserted, [0], [1], [vi.removed[0].moveId])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+    QTest::newRow("item moved from head")
+            << QString("listModel.move(0, 2, 2)")
+            << (QStringList()
+                << "verify(vm.removed, [0], [2], [vm.inserted[0].moveId])"
+                << "verify(vm.inserted, [2], [2], [vm.removed[0].moveId])"
+                << "verify(vi.removed, [0], [2], [vi.inserted[0].moveId])"
+                << "verify(vi.inserted, [2], [2], [vi.removed[0].moveId])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+
+    QTest::newRow("groups changed")
+            << QString("items.setGroups(1, 2, [\"items\", \"selected\"])")
+            << (QStringList()
+                << "verify(vm.inserted, [], [], [])"
+                << "verify(vm.removed, [], [], [])"
+                << "verify(vi.removed, [1], [2], [undefined])"
+                << "verify(vi.inserted, [], [], [])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [0], [2], [undefined])");
+
+    QTest::newRow("multiple removes")
+            << QString("{ vi.remove(1, 1); "
+                       "vi.removeGroups(0, 2, \"items\") }")
+            << (QStringList()
+                << "verify(vm.removed, [0, 1], [1, 1], [undefined, undefined])"
+                << "verify(vm.inserted, [], [], [])"
+                << "verify(vi.removed, [1], [1], [undefined])"
+                << "verify(vi.inserted, [], [], [])"
+                << "verify(si.removed, [], [], [])"
+                << "verify(si.inserted, [], [], [])");
+}
+
+void tst_qquickvisualdatamodel::onChanged()
+{
+    QFETCH(QString, expression);
+    QFETCH(QStringList, tests);
+
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("onChanged.qml")));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+
+    evaluate<void>(object.data(), expression);
+
+    foreach (const QString &test, tests) {
+        bool passed = evaluate<bool>(object.data(), test);
+        if (!passed)
+            qWarning() << test;
+        QVERIFY(passed);
+    }
+}
+
 void tst_qquickvisualdatamodel::create()
 {
     QQuickView view;
@@ -1535,8 +1676,20 @@ void tst_qquickvisualdatamodel::create()
 
     QQuickItem *delegate;
 
+    // persistedItems.includeByDefault is true, so all items belong to persistedItems initially.
+    QVERIFY(delegate = findItem<QQuickItem>(contentItem, "delegate", 1));
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
+
+    // changing include by default doesn't remove persistance.
+    evaluate<void>(visualModel, "persistedItems.includeByDefault = false");
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
+
+    // removing from persistedItems does.
+    evaluate<void>(visualModel, "persistedItems.remove(0, 20)");
+    QCOMPARE(listview->count(), 20);
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), false);
+
     // Request an item instantiated by the view.
-    QVERIFY(findItem<QQuickItem>(contentItem, "delegate", 1));
     QVERIFY(delegate = qobject_cast<QQuickItem *>(evaluate<QObject *>(visualModel, "items.create(1)")));
     QCOMPARE(delegate, findItem<QQuickItem>(contentItem, "delegate", 1));
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
