@@ -54,6 +54,7 @@ public:
 
 private slots:
     void scriptString();
+    void syntaxError();
 };
 
 class TestObject : public QObject
@@ -104,6 +105,15 @@ void tst_qdeclarativeexpression::scriptString()
     QDeclarativeError error = expressionError.error();
     QCOMPARE(error.url(), c.url());
     QCOMPARE(error.line(), 8);
+}
+
+// QTBUG-21310 - crash test
+void tst_qdeclarativeexpression::syntaxError()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeExpression expression(engine.rootContext(), 0, "asd asd");
+    QVariant v = expression.evaluate();
+    QCOMPARE(v, QVariant());
 }
 
 QTEST_MAIN(tst_qdeclarativeexpression)

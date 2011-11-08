@@ -151,6 +151,7 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     v8::TryCatch tc;
     v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
     v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, filename, line);
+    if (tc.HasCaught()) return v8::Persistent<v8::Function>();
     v8::Local<v8::Value> result = script->Run(scopeobject);
     if (tc.HasCaught()) return v8::Persistent<v8::Function>();
     if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
