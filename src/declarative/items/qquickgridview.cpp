@@ -335,9 +335,6 @@ qreal QQuickGridViewPrivate::snapPosAt(qreal pos) const
     qreal snapPos = 0;
     if (!visibleItems.isEmpty()) {
         qreal highlightStart = highlightRangeStart;
-        if (isRightToLeftTopToBottom())
-            highlightStart = highlightRangeEndValid ? -size() + highlightRangeEnd : -size();
-
         pos += highlightStart;
         pos += rowSize()/2;
         snapPos = static_cast<FxGridItemSG*>(visibleItems.first())->rowPos() - visibleIndex / columns * rowSize();
@@ -346,8 +343,8 @@ qreal QQuickGridViewPrivate::snapPosAt(qreal pos) const
         qreal maxExtent;
         qreal minExtent;
         if (isRightToLeftTopToBottom()) {
-            maxExtent = q->minXExtent();
-            minExtent = q->maxXExtent();
+            maxExtent = q->minXExtent()-size();
+            minExtent = q->maxXExtent()-size();
         } else {
             maxExtent = flow == QQuickGridView::LeftToRight ? -q->maxYExtent() : -q->maxXExtent();
             minExtent = flow == QQuickGridView::LeftToRight ? -q->minYExtent() : -q->minXExtent();

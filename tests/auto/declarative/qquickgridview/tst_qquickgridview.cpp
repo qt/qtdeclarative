@@ -2356,18 +2356,17 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
-    QTRY_COMPARE(gridview->preferredHighlightBegin(), 100.0);
-    QTRY_COMPARE(gridview->preferredHighlightEnd(), 100.0);
-    QTRY_COMPARE(gridview->highlightRangeMode(), QQuickGridView::StrictlyEnforceRange);
+    QCOMPARE(gridview->preferredHighlightBegin(), 100.0);
+    QCOMPARE(gridview->preferredHighlightEnd(), 100.0);
+    QCOMPARE(gridview->highlightRangeMode(), QQuickGridView::StrictlyEnforceRange);
 
     QQuickItem *contentItem = gridview->contentItem();
-    QTRY_VERIFY(contentItem != 0);
+    QVERIFY(contentItem != 0);
 
     // view should be positioned at the top of the range.
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
-    QTRY_VERIFY(item);
-    QEXPECT_FAIL("", "QTBUG-22162", Abort);
-    QTRY_COMPARE(gridview->contentX(), -100.);
+    QVERIFY(item);
+    QTRY_COMPARE(gridview->contentX(), -140.);
     QTRY_COMPARE(gridview->contentY(), 0.0);
 
     QQuickText *name = findItem<QQuickText>(contentItem, "textName", 0);
@@ -2378,11 +2377,11 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     QTRY_COMPARE(number->text(), model.number(0));
 
     // Check currentIndex is updated when contentItem moves
-    gridview->setContentX(-200);
+    gridview->setContentX(-240);
     QTRY_COMPARE(gridview->currentIndex(), 3);
 
     gridview->setCurrentIndex(7);
-    QTRY_COMPARE(gridview->contentX(), -300.);
+    QTRY_COMPARE(gridview->contentX(), -340.);
     QTRY_COMPARE(gridview->contentY(), 0.0);
 
     TestModel model2;
