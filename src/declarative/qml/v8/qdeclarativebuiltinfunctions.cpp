@@ -66,29 +66,69 @@ QT_BEGIN_NAMESPACE
 
 namespace QDeclarativeBuiltinFunctions {
 
-v8::Handle<v8::Value> gc(const v8::Arguments &args)
-{
-    Q_UNUSED(args);
-    QV8Engine::gc();
-    return v8::Undefined();
-}
+enum ConsoleLogTypes {
+    Log,
+    Warn,
+    Error
+};
 
-v8::Handle<v8::Value> print(const v8::Arguments &args)
+v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args)
 {
+    int line = -1;
+    QString scriptName;
+    v8::HandleScope handleScope;
+
+    {
+        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
+        if (stackTrace->GetFrameCount()) {
+            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
+            line = currentStackFrame->GetLineNumber();
+            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
+        }
+    }
+
     QString result;
     for (int i = 0; i < args.Length(); ++i) {
         if (i != 0)
             result.append(QLatin1Char(' '));
 
-        v8::Local<v8::String> jsstr = args[i]->ToString();
-        if (!jsstr.IsEmpty()) {
-            QString qstr;
-            qstr.resize(jsstr->Length());
-            jsstr->Write((uint16_t*)qstr.data());
-            result.append(qstr);
+        v8::Local<v8::Value> value = args[i];
+        //Check for Object Type
+        if (value->IsObject() && !value->IsFunction()
+                && !value->IsArray() && !value->IsDate()
+                && !value->IsRegExp()) {
+            result = QLatin1String("Object");
+        } else {
+            v8::Local<v8::String> jsstr = value->ToString();
+            result.append(V8ENGINE()->toString(jsstr));
+            if (value->IsArray())
+                result = QString(QLatin1String("[%1]")).arg(result);
         }
     }
-    qDebug("%s", qPrintable(result));
+
+    QString log = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
+
+    switch (logType) {
+    case Log:
+        qDebug("%s", qPrintable(log));
+        break;
+    case Warn:
+        qWarning("%s", qPrintable(log));
+        break;
+    case Error:
+        qCritical("%s", qPrintable(log));
+        break;
+    default:
+        break;
+    }
+
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> gc(const v8::Arguments &args)
+{
+    Q_UNUSED(args);
+    QV8Engine::gc();
     return v8::Undefined();
 }
 
@@ -112,6 +152,24 @@ v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
         qDebug("%s: %llims", qPrintable(name), elapsed);
     }
     return v8::Undefined();
+}
+
+v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
+{
+    //console.log
+    //console.debug
+    //print
+    return console(Log, args);
+}
+
+v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args)
+{
+    return console(Warn, args);
+}
+
+v8::Handle<v8::Value> consoleError(const v8::Arguments &args)
+{
+    return console(Error, args);
 }
 
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)

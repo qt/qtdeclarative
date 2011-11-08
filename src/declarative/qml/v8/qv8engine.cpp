@@ -518,13 +518,17 @@ struct StaticQtMetaObject : public QObject
 void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 {
     using namespace QDeclarativeBuiltinFunctions;
-    v8::Local<v8::Function> printFn = V8FUNCTION(print, this);
-    v8::Local<v8::Function> consoleTimeFn = V8FUNCTION(consoleTime, this);
-    v8::Local<v8::Function> consoleTimeEndFn = V8FUNCTION(consoleTimeEnd, this);
 
     v8::Local<v8::Object> console = v8::Object::New();
-    console->Set(v8::String::New("log"), printFn);
-    console->Set(v8::String::New("debug"), printFn);
+    v8::Local<v8::Function> consoleLogFn = V8FUNCTION(consoleLog, this);
+    v8::Local<v8::Function> consoleWarnFn = V8FUNCTION(consoleWarn, this);
+    v8::Local<v8::Function> consoleErrorFn = V8FUNCTION(consoleError, this);
+    v8::Local<v8::Function> consoleTimeFn = V8FUNCTION(consoleTime, this);
+    v8::Local<v8::Function> consoleTimeEndFn = V8FUNCTION(consoleTimeEnd, this);
+    console->Set(v8::String::New("log"), consoleLogFn);
+    console->Set(v8::String::New("debug"), consoleLogFn);
+    console->Set(v8::String::New("warn"), consoleWarnFn);
+    console->Set(v8::String::New("error"), consoleErrorFn);
     console->Set(v8::String::New("time"), consoleTimeFn);
     console->Set(v8::String::New("timeEnd"), consoleTimeEndFn);
 
@@ -579,7 +583,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     global->Set(v8::String::New("qsTrId"), V8FUNCTION(qsTrId, this));
     global->Set(v8::String::New("QT_TRID_NOOP"), V8FUNCTION(qsTrIdNoOp, this));
 
-    global->Set(v8::String::New("print"), printFn);
+    global->Set(v8::String::New("print"), consoleLogFn);
     global->Set(v8::String::New("console"), console);
     global->Set(v8::String::New("Qt"), qt);
     global->Set(v8::String::New("gc"), V8FUNCTION(QDeclarativeBuiltinFunctions::gc, this));
