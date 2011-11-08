@@ -83,6 +83,7 @@ QUICKTESTS =  \
     qquickpincharea \
     qquickpositioners \
     qquickrepeater \
+    qquickspriteimage \
     qquicktext \
     qquicktextedit \
     qquicktextinput \
