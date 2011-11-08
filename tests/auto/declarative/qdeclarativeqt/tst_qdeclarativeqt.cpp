@@ -89,6 +89,7 @@ private slots:
     void atob();
     void fontFamilies();
     void quit();
+    void resolvedUrl();
 
 private:
     QDeclarativeEngine engine;
@@ -723,6 +724,19 @@ void tst_qdeclarativeqt::quit()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(spy.count(), 1);
+
+    delete object;
+}
+
+void tst_qdeclarativeqt::resolvedUrl()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("resolvedUrl.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("result").toString(), component.url().toString());
+    QCOMPARE(object->property("isString").toBool(), true);
 
     delete object;
 }

@@ -676,12 +676,12 @@ v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args)
     if (p) {
         QDeclarativeContextData *ctxt = V8ENGINE()->callingContext();
         if (ctxt)
-            return V8ENGINE()->fromVariant(ctxt->resolvedUrl(url));
+            return V8ENGINE()->toString(ctxt->resolvedUrl(url).toString());
         else
-            return V8ENGINE()->fromVariant(url);
+            return V8ENGINE()->toString(url.toString());
     }
 
-    return V8ENGINE()->fromVariant(e->baseUrl().resolved(url));
+    return V8ENGINE()->toString(e->baseUrl().resolved(url).toString());
 }
 
 /*!
