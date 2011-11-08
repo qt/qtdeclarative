@@ -248,12 +248,12 @@ void tst_qdeclarativelistmodel::static_types_data()
     QTest::newRow("role error")
         << "ListElement { foo: 1 } ListElement { foo: 'string' }"
         << QVariant()
-        << QString("<Unknown File>: Can't assign to pre-existing role of different type foo");
+        << QString("<Unknown File>: Can't assign to existing role 'foo' of different type [String -> Number]");
 
     QTest::newRow("list type error")
         << "ListElement { foo: 1 } ListElement { foo: ListElement { bar: 1 } }"
         << QVariant()
-        << QString("<Unknown File>: Can't assign to pre-existing role of different type foo");
+        << QString("<Unknown File>: Can't assign to existing role 'foo' of different type [List -> Number]");
 }
 
 void tst_qdeclarativelistmodel::static_types()
@@ -491,7 +491,24 @@ void tst_qdeclarativelistmodel::dynamic_data()
 
     QTest::newRow("large1") << "{append({'a':1,'b':2,'c':3,'d':4,'e':5,'f':6,'g':7,'h':8});get(0).h}" << 8 << "";
 
-    QTest::newRow("datatypes1") << "{append({'a':1});append({'a':'string'});}" << 0 << "<Unknown File>: Can't assign to pre-existing role of different type a";
+    QTest::newRow("datatypes1") << "{append({'a':1});append({'a':'string'});}" << 0 << "<Unknown File>: Can't assign to existing role 'a' of different type [String -> Number]";
+
+    QTest::newRow("null") << "{append({'a':null});}" << 0 << "";
+    QTest::newRow("setNull") << "{append({'a':1});set(0, {'a':null});}" << 0 << "";
+    QTest::newRow("setString") << "{append({'a':'hello'});set(0, {'a':'world'});get(0).a == 'world'}" << 1 << "";
+    QTest::newRow("setInt") << "{append({'a':5});set(0, {'a':10});get(0).a}" << 10 << "";
+    QTest::newRow("setNumber") << "{append({'a':6});set(0, {'a':5.5});get(0).a < 5.6}" << 1 << "";
+    QTest::newRow("badType0") << "{append({'a':'hello'});set(0, {'a':1});}" << 0 << "<Unknown File>: Can't assign to existing role 'a' of different type [Number -> String]";
+    QTest::newRow("invalidInsert0") << "{insert(0);}" << 0 << "<Unknown File>: QML ListModel: insert: value is not an object";
+    QTest::newRow("invalidAppend0") << "{append();}" << 0 << "<Unknown File>: QML ListModel: append: value is not an object";
+    QTest::newRow("invalidInsert1") << "{insert(0, 34);}" << 0 << "<Unknown File>: QML ListModel: insert: value is not an object";
+    QTest::newRow("invalidAppend1") << "{append(37);}" << 0 << "<Unknown File>: QML ListModel: append: value is not an object";
+
+    // QObjects
+    QTest::newRow("qobject0") << "{append({'a':dummyItem0});}" << 0 << "";
+    QTest::newRow("qobject1") << "{append({'a':dummyItem0});set(0,{'a':dummyItem1});get(0).a == dummyItem1;}" << 1 << "";
+    QTest::newRow("qobject2") << "{append({'a':dummyItem0});get(0).a == dummyItem0;}" << 1 << "";
+    QTest::newRow("qobject3") << "{append({'a':dummyItem0});append({'b':1});}" << 0 << "";
 
     // Nested models
     QTest::newRow("nested-append1") << "{append({'foo':123,'bars':[{'a':1},{'a':2},{'a':3}]});count}" << 1 << "";
@@ -511,10 +528,13 @@ void tst_qdeclarativelistmodel::dynamic()
     QFETCH(int, result);
     QFETCH(QString, warning);
 
+    QQuickItem dummyItem0, dummyItem1;
     QDeclarativeEngine engine;
     QDeclarativeListModel model;
     QDeclarativeEngine::setContextForObject(&model,engine.rootContext());
     engine.rootContext()->setContextObject(&model);
+    engine.rootContext()->setContextProperty("dummyItem0", QVariant::fromValue(&dummyItem0));
+    engine.rootContext()->setContextProperty("dummyItem1", QVariant::fromValue(&dummyItem1));
     QDeclarativeExpression e(engine.rootContext(), &model, script);
     if (!warning.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1());
@@ -541,6 +561,9 @@ void tst_qdeclarativelistmodel::dynamic_worker()
     QFETCH(QString, script);
     QFETCH(int, result);
     QFETCH(QString, warning);
+
+    if (QByteArray(QTest::currentDataTag()).startsWith("qobject"))
+        return;
 
     // This is same as dynamic() except it applies the test to a ListModel called
     // from a WorkerScript.
@@ -586,6 +609,9 @@ void tst_qdeclarativelistmodel::dynamic_worker_sync()
     QFETCH(QString, script);
     QFETCH(int, result);
     QFETCH(QString, warning);
+
+    if (QByteArray(QTest::currentDataTag()).startsWith("qobject"))
+        return;
 
     // This is the same as dynamic_worker() except that it executes a set of list operations
     // from the worker script, calls sync(), and tests the changes are reflected in the

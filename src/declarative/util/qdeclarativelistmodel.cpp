@@ -64,14 +64,24 @@ enum { MIN_LISTMODEL_UID = 1024 };
 
 QAtomicInt ListModel::uidCounter(MIN_LISTMODEL_UID);
 
+static QString roleTypeName(ListLayout::Role::DataType t)
+{
+    QString result;
+    const char *roleTypeNames[] = { "String", "Number", "Bool", "List", "QObject" };
+
+    if (t > ListLayout::Role::Invalid && t < ListLayout::Role::MaxDataType)
+        result = QString::fromLatin1(roleTypeNames[t]);
+
+    return result;
+}
+
 const ListLayout::Role &ListLayout::getRoleOrCreate(const QString &key, Role::DataType type)
 {
     QStringHash<Role *>::Node *node = roleHash.findNode(key);
     if (node) {
         const Role &r = *node->value;
-        if (type != r.type) {
-            qmlInfo(0) << "Can't assign to pre-existing role of different type " << r.name;
-        }
+        if (type != r.type)
+            qmlInfo(0) << QString::fromLatin1("Can't assign to existing role '%1' of different type [%2 -> %3]").arg(r.name).arg(roleTypeName(type)).arg(roleTypeName(r.type));
         return r;
     }
 
@@ -84,9 +94,8 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(v8::Handle<v8::String> key, 
     QStringHash<Role *>::Node *node = roleHash.findNode(hashedKey);
     if (node) {
         const Role &r = *node->value;
-        if (type != r.type) {
-            qmlInfo(0) << "Can't assign to pre-existing role of different type " << r.name;
-        }
+        if (type != r.type)
+            qmlInfo(0) << QString::fromLatin1("Can't assign to existing role '%1' of different type [%2 -> %3]").arg(r.name).arg(roleTypeName(type)).arg(roleTypeName(r.type));
         return r;
     }
 
@@ -99,8 +108,8 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(v8::Handle<v8::String> key, 
 
 const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
 {
-    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(QDeclarativeListModel *), sizeof(ListModel *), sizeof(QDeclarativeGuard<QObject>) };
-    const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(QDeclarativeListModel *), sizeof(ListModel *), sizeof(QObject *) };
+    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QDeclarativeGuard<QObject>) };
+    const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *) };
 
     Role *r = new Role;
     r->name = key;
@@ -429,9 +438,6 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QList<int> 
             }
 
             roleIndex = e->setListProperty(r, subModel);
-        } else if (propertyValue->IsInt32()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
-            roleIndex = e->setDoubleProperty(r, (double) propertyValue->Int32Value());
         } else if (propertyValue->IsBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             roleIndex = e->setBoolProperty(r, propertyValue->BooleanValue());
@@ -497,11 +503,6 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object)
                 }
 
                 e->setListPropertyFast(r, subModel);
-            }
-        } else if (propertyValue->IsInt32()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
-            if (r.type == ListLayout::Role::Number) {
-                e->setDoublePropertyFast(r, (double) propertyValue->Int32Value());
             }
         } else if (propertyValue->IsBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
@@ -624,7 +625,20 @@ QObject *ListElement::getQObjectProperty(const ListLayout::Role &role)
 QDeclarativeGuard<QObject> *ListElement::getGuardProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
-    QDeclarativeGuard<QObject> *o = reinterpret_cast<QDeclarativeGuard<QObject> *>(mem);
+
+    bool existingGuard = false;
+    for (size_t i=0 ; i < sizeof(QDeclarativeGuard<QObject>) ; ++i) {
+        if (mem[i] != 0) {
+            existingGuard = true;
+            break;
+        }
+    }
+
+    QDeclarativeGuard<QObject> *o = 0;
+
+    if (existingGuard)
+        o = reinterpret_cast<QDeclarativeGuard<QObject> *>(mem);
+
     return o;
 }
 
@@ -709,8 +723,6 @@ int ListElement::setStringProperty(const ListLayout::Role &role, const QString &
         }
         if (changed)
             roleIndex = role.index;
-    } else {
-        qmlInfo(0) << "Unable to assign string to role '" << role.name << "' of different type.";
     }
 
     return roleIndex;
@@ -727,8 +739,6 @@ int ListElement::setDoubleProperty(const ListLayout::Role &role, double d)
         *value = d;
         if (changed)
             roleIndex = role.index;
-    } else {
-        qmlInfo(0) << "Unable to assign number to role '" << role.name << "' of different type.";
     }
 
     return roleIndex;
@@ -745,8 +755,6 @@ int ListElement::setBoolProperty(const ListLayout::Role &role, bool b)
         *value = b;
         if (changed)
             roleIndex = role.index;
-    } else {
-        qmlInfo(0) << "Unable to assign bool to role '" << role.name << "' of different type.";
     }
 
     return roleIndex;
@@ -765,8 +773,6 @@ int ListElement::setListProperty(const ListLayout::Role &role, ListModel *m)
         }
         *value = m;
         roleIndex = role.index;
-    } else {
-        qmlInfo(0) << "Unable to assign list to role '" << role.name << "' of different type.";
     }
 
     return roleIndex;
@@ -779,13 +785,23 @@ int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
     if (role.type == ListLayout::Role::QObject) {
         char *mem = getPropertyMemory(role);
         QDeclarativeGuard<QObject> *g = reinterpret_cast<QDeclarativeGuard<QObject> *>(mem);
-        bool changed = g->data() != o;
-        g->~QDeclarativeGuard();
+        bool existingGuard = false;
+        for (size_t i=0 ; i < sizeof(QDeclarativeGuard<QObject>) ; ++i) {
+            if (mem[i] != 0) {
+                existingGuard = true;
+                break;
+            }
+        }
+        bool changed;
+        if (existingGuard) {
+            changed = g->data() != o;
+            g->~QDeclarativeGuard();
+        } else {
+            changed = true;
+        }
         new (mem) QDeclarativeGuard<QObject>(o);
         if (changed)
             roleIndex = role.index;
-    } else {
-        qmlInfo(0) << "Unable to assign string to role '" << role.name << "' of different type.";
     }
 
     return roleIndex;
@@ -935,7 +951,8 @@ void ListElement::destroy(ListLayout *layout)
                 case ListLayout::Role::QObject:
                     {
                         QDeclarativeGuard<QObject> *guard = getGuardProperty(r);
-                        guard->~QDeclarativeGuard();
+                        if (guard)
+                            guard->~QDeclarativeGuard();
                     }
                     break;
                 default:
@@ -999,8 +1016,6 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
             subModel->append(subObject);
         }
         roleIndex = setListProperty(role, subModel);
-    } else if (d->IsInt32()) {
-        roleIndex = setDoubleProperty(role, (double) d->Int32Value());
     } else if (d->IsBoolean()) {
         roleIndex = setBoolProperty(role, d->BooleanValue());
     } else if (d->IsObject()) {

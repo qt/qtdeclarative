@@ -129,6 +129,7 @@ public:
         explicit Role(const Role *other);
         ~Role();
 
+        // This enum must be kept in sync with the roleTypeNames variable in qdeclarativelistmodel.cpp
         enum DataType
         {
             Invalid = -1,
@@ -137,7 +138,9 @@ public:
             Number,
             Bool,
             List,
-            QObject
+            QObject,
+
+            MaxDataType
         };
 
         QString name;

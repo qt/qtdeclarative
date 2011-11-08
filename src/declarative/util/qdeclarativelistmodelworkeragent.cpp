@@ -94,10 +94,6 @@ QDeclarativeListModelWorkerAgent::QDeclarativeListModelWorkerAgent(QDeclarativeL
 {
 }
 
-QDeclarativeListModelWorkerAgent::~QDeclarativeListModelWorkerAgent()
-{
-}
-
 void QDeclarativeListModelWorkerAgent::setV8Engine(QV8Engine *eng)
 {
     m_copy->m_engine = eng;
@@ -183,43 +179,39 @@ bool QDeclarativeListModelWorkerAgent::event(QEvent *e)
 
         const QList<Change> &changes = s->data.changes;
 
-        if (m_copy) {
-            bool cc = m_orig->count() != s->list->count();
+        bool cc = m_orig->count() != s->list->count();
 
-            QHash<int, ListModel *> targetModelHash;
-            ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelHash);
+        QHash<int, ListModel *> targetModelHash;
+        ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelHash);
 
-            for (int ii = 0; ii < changes.count(); ++ii) {
-                const Change &change = changes.at(ii);
+        for (int ii = 0; ii < changes.count(); ++ii) {
+            const Change &change = changes.at(ii);
 
-                ListModel *model = targetModelHash.value(change.modelUid);
+            ListModel *model = targetModelHash.value(change.modelUid);
 
-                if (model && model->m_modelCache) {
-                    switch (change.type) {
-                    case Change::Inserted:
-                        emit model->m_modelCache->itemsInserted(change.index, change.count);
-                        break;
-                    case Change::Removed:
-                        emit model->m_modelCache->itemsRemoved(change.index, change.count);
-                        break;
-                    case Change::Moved:
-                        emit model->m_modelCache->itemsMoved(change.index, change.to, change.count);
-                        break;
-                    case Change::Changed:
-                        emit model->m_modelCache->itemsChanged(change.index, change.count, change.roles);
-                        break;
-                    }
+            if (model && model->m_modelCache) {
+                switch (change.type) {
+                case Change::Inserted:
+                    emit model->m_modelCache->itemsInserted(change.index, change.count);
+                    break;
+                case Change::Removed:
+                    emit model->m_modelCache->itemsRemoved(change.index, change.count);
+                    break;
+                case Change::Moved:
+                    emit model->m_modelCache->itemsMoved(change.index, change.to, change.count);
+                    break;
+                case Change::Changed:
+                    emit model->m_modelCache->itemsChanged(change.index, change.count, change.roles);
+                    break;
                 }
             }
-
-            syncDone.wakeAll();
-            locker.unlock();
-
-            if (cc)
-                emit m_orig->countChanged();
-        } else {
-            syncDone.wakeAll();
         }
+
+        syncDone.wakeAll();
+        locker.unlock();
+
+        if (cc)
+            emit m_orig->countChanged();
     }
 
     return QObject::event(e);

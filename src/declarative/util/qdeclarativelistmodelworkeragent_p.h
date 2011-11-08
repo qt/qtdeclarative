@@ -76,7 +76,6 @@ class QDeclarativeListModelWorkerAgent : public QObject
 
 public:
     QDeclarativeListModelWorkerAgent(QDeclarativeListModel *);
-    ~QDeclarativeListModelWorkerAgent();
 
     void setV8Engine(QV8Engine *eng);
 
