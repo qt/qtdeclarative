@@ -557,7 +557,6 @@ void QQuickVisualDataModel::componentComplete()
 
     d->connectModel(d->m_adaptorModel);
     QVector<Compositor::Insert> inserts;
-    d->m_reset = true;
     d->m_compositor.append(
             d->m_adaptorModel,
             0,

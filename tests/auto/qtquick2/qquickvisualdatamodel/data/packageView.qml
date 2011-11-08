@@ -49,7 +49,6 @@ Item {
             right: parent.horizontalCenter; bottom: parent.bottom
         }
         model: visualModel.parts.left
-        currentIndex: 0
     }
 
     ListView {
@@ -60,6 +59,5 @@ Item {
             right: parent.right; bottom: parent.bottom
         }
         model: visualModel.parts.right
-        currentIndex: 20
     }
 }

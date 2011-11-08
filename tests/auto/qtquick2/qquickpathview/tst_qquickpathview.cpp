@@ -1208,6 +1208,8 @@ void tst_QQuickPathView::package()
     QQuickView *canvas = createView();
     QVERIFY(canvas);
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview_package.qml")));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("photoPathView");
     QVERIFY(pathView);

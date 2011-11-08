@@ -692,7 +692,10 @@ void tst_qquickvisualdatamodel::packagesDestroyed()
     QTRY_VERIFY(rightContent != 0);
 
     QCOMPARE(leftview->currentIndex(), 0);
-    QCOMPARE(rightview->currentIndex(), 20);
+    QCOMPARE(rightview->currentIndex(), 0);
+
+    rightview->setCurrentIndex(20);
+    QTRY_COMPARE(rightview->contentY(), 100.0);
 
     QDeclarativeGuard<QQuickItem> left;
     QDeclarativeGuard<QQuickItem> right;
