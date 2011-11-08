@@ -2375,7 +2375,7 @@ void QQuickVisualPartsModel::updateFilterGroup()
     if (m_inheritGroup)
         return;
 
-    QDeclarativeListCompositor::Group previousGroup = model->m_compositorGroup;
+    QDeclarativeListCompositor::Group previousGroup = m_compositorGroup;
     m_compositorGroup = Compositor::Default;
     QQuickVisualDataGroupPrivate::get(model->m_groups[Compositor::Default])->emitters.insert(this);
     for (int i = 1; i < model->m_groupCount; ++i) {
@@ -2477,8 +2477,10 @@ QQuickVisualModel::ReleaseFlags QQuickVisualPartsModel::release(QQuickItem *item
         m_packaged.erase(it);
         if (!m_packaged.contains(item))
             flags &= ~Referenced;
-        if (flags & Destroyed)
+        if (flags & Destroyed) {
             QQuickVisualDataModelPrivate::get(m_model)->emitDestroyingPackage(package);
+            item->setParentItem(0);
+        }
     }
     return flags;
 }

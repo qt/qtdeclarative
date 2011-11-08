@@ -122,16 +122,22 @@ private slots:
     void initTestCase();
     void cleanupTestCase();
     void rootIndex();
+    void updateLayout_data();
     void updateLayout();
+    void childChanged_data();
     void childChanged();
     void objectListModel();
     void singleRole();
     void modelProperties();
+    void noDelegate_data();
     void noDelegate();
     void qaimRowsMoved();
     void qaimRowsMoved_data();
+    void remove_data();
     void remove();
+    void move_data();
     void move();
+    void groups_data();
     void groups();
     void get();
     void create();
@@ -262,8 +268,18 @@ void tst_qquickvisualdatamodel::rootIndex()
     delete obj;
 }
 
+void tst_qquickvisualdatamodel::updateLayout_data()
+{
+    QTest::addColumn<QUrl>("source");
+
+    QTest::newRow("item delegate") << QUrl::fromLocalFile(TESTDATA("datalist.qml"));
+    QTest::newRow("package delegate") << QUrl::fromLocalFile(TESTDATA("datalist-package.qml"));
+}
+
 void tst_qquickvisualdatamodel::updateLayout()
 {
+    QFETCH(QUrl, source);
+
     QQuickView view;
 
     QStandardItemModel model;
@@ -271,7 +287,7 @@ void tst_qquickvisualdatamodel::updateLayout()
 
     view.rootContext()->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("datalist.qml")));
+    view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -302,8 +318,18 @@ void tst_qquickvisualdatamodel::updateLayout()
     QCOMPARE(name->text(), QString("Row 1 Item"));
 }
 
+void tst_qquickvisualdatamodel::childChanged_data()
+{
+    QTest::addColumn<QUrl>("source");
+
+    QTest::newRow("item delegate") << QUrl::fromLocalFile(TESTDATA("datalist.qml"));
+    QTest::newRow("package delegate") << QUrl::fromLocalFile(TESTDATA("datalist-package.qml"));
+}
+
 void tst_qquickvisualdatamodel::childChanged()
 {
+    QFETCH(QUrl, source);
+
     QQuickView view;
 
     QStandardItemModel model;
@@ -311,7 +337,7 @@ void tst_qquickvisualdatamodel::childChanged()
 
     view.rootContext()->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("datalist.qml")));
+    view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -567,8 +593,18 @@ void tst_qquickvisualdatamodel::modelProperties()
     //### should also test QStringList and QVariantList
 }
 
+void tst_qquickvisualdatamodel::noDelegate_data()
+{
+    QTest::addColumn<QUrl>("source");
+
+    QTest::newRow("item delegate") << QUrl::fromLocalFile(TESTDATA("datalist.qml"));
+    QTest::newRow("package delegate") << QUrl::fromLocalFile(TESTDATA("datalist-package.qml"));
+}
+
 void tst_qquickvisualdatamodel::noDelegate()
 {
+    QFETCH(QUrl, source);
+
     QQuickView view;
 
     QStandardItemModel model;
@@ -576,7 +612,7 @@ void tst_qquickvisualdatamodel::noDelegate()
 
     view.rootContext()->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("datalist.qml")));
+    view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -667,6 +703,19 @@ void tst_qquickvisualdatamodel::qaimRowsMoved_data()
     QTest::newRow("move multiple backwards")
         << 10 << 14 << 1
         << 10 << 1 << 5;
+}
+
+void tst_qquickvisualdatamodel::remove_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<QString>("package delegate");
+
+    QTest::newRow("item delegate")
+            << QUrl::fromLocalFile(TESTDATA("groups.qml"))
+            << QString();
+    QTest::newRow("package")
+            << QUrl::fromLocalFile(TESTDATA("groups-package.qml"))
+            << QString("package.");
 }
 
 void tst_qquickvisualdatamodel::remove()
@@ -764,6 +813,19 @@ void tst_qquickvisualdatamodel::remove()
         QCOMPARE(listview->count(), 7);
         QCOMPARE(visualModel->items()->count(), 7);
     }
+}
+
+void tst_qquickvisualdatamodel::move_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<QString>("package delegate");
+
+    QTest::newRow("item delegate")
+            << QUrl::fromLocalFile(TESTDATA("groups.qml"))
+            << QString();
+    QTest::newRow("package")
+            << QUrl::fromLocalFile(TESTDATA("groups-package.qml"))
+            << QString("package.");
 }
 
 void tst_qquickvisualdatamodel::move()
@@ -906,6 +968,18 @@ void tst_qquickvisualdatamodel::move()
     }
 }
 
+void tst_qquickvisualdatamodel::groups_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<QString>("part");
+
+    QTest::newRow("item delegate")
+            << QUrl::fromLocalFile(TESTDATA("groups.qml"))
+            << QString();
+    QTest::newRow("package")
+            << QUrl::fromLocalFile(TESTDATA("groups-package.qml"))
+            << QString("visualModel.parts.package.");
+}
 
 template <int N> void tst_qquickvisualdatamodel::groups_verify(
         const SingleRoleModel &model,
@@ -921,17 +995,17 @@ template <int N> void tst_qquickvisualdatamodel::groups_verify(
     for (int i = 0; i < N; ++i) {
         QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
         QVERIFY(delegate);
-        QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
-        QCOMPARE(delegate->property("test2").toInt() , mIndex[i]);
-        QCOMPARE(delegate->property("test3").toInt() , iIndex[i]);
-        QCOMPARE(delegate->property("test4").toBool(), true);
-        QCOMPARE(delegate->property("test5").toInt() , vIndex[i]);
-        QCOMPARE(delegate->property("test6").toBool(), vMember[i]);
-        QCOMPARE(delegate->property("test7").toInt() , sIndex[i]);
-        QCOMPARE(delegate->property("test8").toBool(), sMember[i]);
-        QCOMPARE(delegate->property("test9").toStringList().contains("items")   , QBool(true));
-        QCOMPARE(delegate->property("test9").toStringList().contains("visible") , QBool(vMember[i]));
-        QCOMPARE(delegate->property("test9").toStringList().contains("selected"), QBool(sMember[i]));
+        QCOMPARE(evaluate<QString>(delegate, "test1"), model.list.at(mIndex[i]));
+        QCOMPARE(evaluate<int>(delegate, "test2") , mIndex[i]);
+        QCOMPARE(evaluate<int>(delegate, "test3") , iIndex[i]);
+        QCOMPARE(evaluate<bool>(delegate, "test4"), true);
+        QCOMPARE(evaluate<int>(delegate, "test5") , vIndex[i]);
+        QCOMPARE(evaluate<bool>(delegate, "test6"), vMember[i]);
+        QCOMPARE(evaluate<int>(delegate, "test7") , sIndex[i]);
+        QCOMPARE(evaluate<bool>(delegate, "test8"), sMember[i]);
+        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("items")   , QBool(true));
+        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("visible") , QBool(vMember[i]));
+        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("selected"), QBool(sMember[i]));
     }
     failed = false;
 }
@@ -943,6 +1017,9 @@ template <int N> void tst_qquickvisualdatamodel::groups_verify(
 
 void tst_qquickvisualdatamodel::groups()
 {
+    QFETCH(QUrl, source);
+    QFETCH(QString, part);
+
     QQuickView view;
 
     SingleRoleModel model;
@@ -963,7 +1040,7 @@ void tst_qquickvisualdatamodel::groups()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
+    view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -971,13 +1048,13 @@ void tst_qquickvisualdatamodel::groups()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
 
-    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel *>(qvariant_cast<QObject *>(listview->model()));
+    QQuickVisualDataModel *visualModel = listview->findChild<QQuickVisualDataModel *>("visualModel");
     QVERIFY(visualModel);
 
-    QQuickVisualDataGroup *visibleItems = visualModel->findChild<QQuickVisualDataGroup *>("visibleItems");
+    QQuickVisualDataGroup *visibleItems = listview->findChild<QQuickVisualDataGroup *>("visibleItems");
     QVERIFY(visibleItems);
 
-    QQuickVisualDataGroup *selectedItems = visualModel->findChild<QQuickVisualDataGroup *>("selectedItems");
+    QQuickVisualDataGroup *selectedItems = listview->findChild<QQuickVisualDataGroup *>("selectedItems");
     QVERIFY(selectedItems);
 
     const bool f = false;
@@ -1130,19 +1207,22 @@ void tst_qquickvisualdatamodel::groups()
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        evaluate<void>(visualModel, "filterOnGroup = \"visible\"");
+        evaluate<void>(visualModel, part + "filterOnGroup = \"visible\"");
+        qDebug() << "listview->count()" << listview->count();
         QCOMPARE(listview->count(), 9);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        evaluate<void>(visualModel, "filterOnGroup = \"selected\"");
+        evaluate<void>(visualModel, part + "filterOnGroup = \"selected\"");
+        qDebug() << "listview->count()" << listview->count();
         QCOMPARE(listview->count(), 2);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        evaluate<void>(visualModel, "filterOnGroup = \"items\"");
+        evaluate<void>(visualModel, part + "filterOnGroup = \"items\"");
+        qDebug() << "listview->count()" << listview->count();
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);

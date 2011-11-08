@@ -10,8 +10,8 @@ ListView {
                 return true
         return false
     }
+    model: visualModel.parts.package
 
-    model: visualModel
     VisualDataModel {
         id: visualModel
 
@@ -23,12 +23,9 @@ ListView {
         ]
 
         model: myModel
-        delegate: Item {
+        delegate: Package {
             id: delegate
 
-            objectName: "delegate"
-            width: 100
-            height: 2
             property variant test1: name
             property variant test2: index
             property variant test3: VisualDataModel.itemsIndex
@@ -41,6 +38,15 @@ ListView {
 
             function hide() { VisualDataModel.inVisible = false }
             function select() { VisualDataModel.inSelected = true }
+
+            Item {
+                Package.name: "package"
+
+                objectName: "delegate"
+                width: 100
+                height: 2
+            }
         }
     }
+
 }
