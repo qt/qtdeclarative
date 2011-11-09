@@ -256,7 +256,7 @@ void QDeclarativePath::endpoint(QList<AttributePoint> &attributePoints, const QS
     }
 }
 
-static QString percentString(QStringLiteral("_qfx_percent"));
+static QString percentString(QLatin1String("_qfx_percent"));
 
 void QDeclarativePath::processPath()
 {
