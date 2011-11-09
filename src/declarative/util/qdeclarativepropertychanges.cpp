@@ -170,7 +170,8 @@ public:
         reverseExpression = rewindExpression;
     }
 
-    /*virtual void copyOriginals(QDeclarativeActionEvent *other)
+    virtual bool needsCopy() { return true; }
+    virtual void copyOriginals(QDeclarativeActionEvent *other)
     {
         QDeclarativeReplaceSignalHandler *rsh = static_cast<QDeclarativeReplaceSignalHandler*>(other);
         saveCurrentValues();
@@ -181,7 +182,7 @@ public:
             ownedExpression = rsh->ownedExpression;
             rsh->ownedExpression = 0;
         }
-    }*/
+    }
 
     virtual void rewind() {
         ownedExpression = QDeclarativePropertyPrivate::setSignalExpression(property, rewindExpression);
