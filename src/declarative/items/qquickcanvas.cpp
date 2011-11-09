@@ -1633,6 +1633,30 @@ void QQuickCanvasPrivate::cleanupNodes()
     cleanupNodeList.clear();
 }
 
+void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
+{
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    if (p->itemNodeInstance) {
+        delete p->itemNodeInstance;
+        p->itemNodeInstance = 0;
+        p->opacityNode = 0;
+        p->clipNode = 0;
+        p->groupNode = 0;
+        p->paintNode = 0;
+    }
+
+    for (int ii = 0; ii < p->childItems.count(); ++ii)
+        cleanupNodesOnShutdown(p->childItems.at(ii));
+}
+
+// This must be called from the render thread, with the main thread frozen
+void QQuickCanvasPrivate::cleanupNodesOnShutdown()
+{
+    cleanupNodes();
+
+    cleanupNodesOnShutdown(rootItem);
+}
+
 void QQuickCanvasPrivate::updateDirtyNodes()
 {
 #ifdef DIRTY_DEBUG
@@ -2135,6 +2159,11 @@ void QQuickCanvasRenderThread::run()
         // Process any "deleteLater" objects...
         QCoreApplication::processEvents();
     }
+
+#ifdef THREAD_DEBUG
+    printf("                RenderThread: deleting all outstanding nodes\n");
+#endif
+    cleanupNodesOnShutdown();
 
 #ifdef THREAD_DEBUG
     printf("                RenderThread: render loop exited... Good Night!\n");
