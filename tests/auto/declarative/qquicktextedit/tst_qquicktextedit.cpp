@@ -1525,36 +1525,28 @@ void tst_qquicktextedit::positionAt()
     const int y1 = fm.height() * 3 / 2;
 
     int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
-    int width = 0;
+    int widthBegin = 0;
+    int widthEnd = 0;
     if (!qmlDisableDistanceField()) {
-        QTextLayout layout(texteditObject->text().left(pos));
+        QTextLayout layout(texteditObject->text());
 
-        {
-            QTextOption option;
-            option.setUseDesignMetrics(true);
-            layout.setTextOption(option);
-        }
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
 
         layout.beginLayout();
         QTextLine line = layout.createLine();
         layout.endLayout();
 
-        width = ceil(line.horizontalAdvance());
-
+        widthBegin = floor(line.cursorToX(pos - 1));
+        widthEnd = ceil(line.cursorToX(pos + 1));
     } else {
-        width = fm.width(texteditObject->text().left(pos));
+        widthBegin = fm.width(texteditObject->text().left(pos - 1));
+        widthEnd = fm.width(texteditObject->text().left(pos + 1));
     }
 
-
-    int diff = abs(int(width-texteditObject->width()/2));
-
-    QEXPECT_FAIL("", "QTBUG-21689", Abort);
-    // some tollerance for different fonts.
-#ifdef Q_OS_LINUX
-    QVERIFY(diff < 2);
-#else
-    QVERIFY(diff < 5);
-#endif
+    QVERIFY(widthBegin <= texteditObject->width() / 2);
+    QVERIFY(widthEnd >= texteditObject->width() / 2);
 
     const qreal x0 = texteditObject->positionToRectangle(pos).x();
     const qreal x1 = texteditObject->positionToRectangle(pos + 1).x();
@@ -1564,7 +1556,7 @@ void tst_qquicktextedit::positionAt()
     texteditObject->setCursorPosition(0);
 
     QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QGuiApplication::sendEvent(&canvas, &inputEvent);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent);
 
     // Check all points within the preedit text return the same position.
     QCOMPARE(texteditObject->positionAt(0, y0), 0);

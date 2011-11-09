@@ -1215,52 +1215,30 @@ void tst_qquicktextinput::positionAt()
 
     int pos = textinputObject->positionAt(textinputObject->width()/2);
     int textWidth = 0;
-    int textLeftWidth = 0;
+    int textLeftWidthBegin = 0;
+    int textLeftWidthEnd = 0;
     if (!qmlDisableDistanceField()) {
-        {
-            QTextLayout layout(textinputObject->text().left(pos));
+        QTextLayout layout(textinputObject->text());
 
-            {
-                QTextOption option;
-                option.setUseDesignMetrics(true);
-                layout.setTextOption(option);
-            }
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
 
-            layout.beginLayout();
-            QTextLine line = layout.createLine();
-            layout.endLayout();
+        layout.beginLayout();
+        QTextLine line = layout.createLine();
+        layout.endLayout();
 
-            textLeftWidth = ceil(line.horizontalAdvance());
-        }
-        {
-            QTextLayout layout(textinputObject->text());
-
-            {
-                QTextOption option;
-                option.setUseDesignMetrics(true);
-                layout.setTextOption(option);
-            }
-
-            layout.beginLayout();
-            QTextLine line = layout.createLine();
-            layout.endLayout();
-
-            textWidth = ceil(line.horizontalAdvance());
-        }
+        textLeftWidthBegin = floor(line.cursorToX(pos - 1));
+        textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
+        textWidth = floor(line.horizontalAdvance());
     } else {
         textWidth = fm.width(textinputObject->text());
-        textLeftWidth = fm.width(textinputObject->text().left(pos));
+        textLeftWidthBegin = fm.width(textinputObject->text().left(pos - 1));
+        textLeftWidthEnd = fm.width(textinputObject->text().left(pos + 1));
     }
 
-    int diff = abs(textWidth - (textLeftWidth+textinputObject->width()/2));
-
-    // some tollerance for different fonts.
-    QEXPECT_FAIL("", "QTBUG-21689", Abort);
-#ifdef Q_OS_LINUX
-    QVERIFY(diff < 2);
-#else
-    QVERIFY(diff < 5);
-#endif
+    QVERIFY(textLeftWidthBegin <= textWidth - textinputObject->width() / 2);
+    QVERIFY(textLeftWidthEnd >= textWidth - textinputObject->width() / 2);
 
     int x = textinputObject->positionToRectangle(pos + 1).x() - 1;
     QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorBetweenCharacters), pos + 1);
@@ -1271,33 +1249,25 @@ void tst_qquicktextinput::positionAt()
     pos = textinputObject->positionAt(textinputObject->width()/2);
 
     if (!qmlDisableDistanceField()) {
-        {
-            QTextLayout layout(textinputObject->text().left(pos));
+        QTextLayout layout(textinputObject->text());
 
-            {
-                QTextOption option;
-                option.setUseDesignMetrics(true);
-                layout.setTextOption(option);
-            }
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
 
-            layout.beginLayout();
-            QTextLine line = layout.createLine();
-            layout.endLayout();
+        layout.beginLayout();
+        QTextLine line = layout.createLine();
+        layout.endLayout();
 
-            textLeftWidth = ceil(line.horizontalAdvance());
-        }
+        textLeftWidthBegin = floor(line.cursorToX(pos - 1));
+        textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
     } else {
-        textLeftWidth = fm.width(textinputObject->text().left(pos));
+        textLeftWidthBegin = fm.width(textinputObject->text().left(pos - 1));
+        textLeftWidthEnd = fm.width(textinputObject->text().left(pos + 1));
     }
 
-    diff = abs(int(textLeftWidth-textinputObject->width()/2));
-
-    // some tollerance for different fonts.
-#ifdef Q_OS_LINUX
-    QVERIFY(diff < 2);
-#else
-    QVERIFY(diff < 5);
-#endif
+    QVERIFY(textLeftWidthBegin <= textinputObject->width() / 2);
+    QVERIFY(textLeftWidthEnd >= textinputObject->width() / 2);
 
     x = textinputObject->positionToRectangle(pos + 1).x() - 1;
     QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorBetweenCharacters), pos + 1);
@@ -1311,7 +1281,7 @@ void tst_qquicktextinput::positionAt()
     textinputObject->setCursorPosition(0);
 
     QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QGuiApplication::sendEvent(&canvas, &inputEvent);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent);
 
     // Check all points within the preedit text return the same position.
     QCOMPARE(textinputObject->positionAt(0), 0);
