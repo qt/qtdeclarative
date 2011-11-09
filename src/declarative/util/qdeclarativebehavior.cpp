@@ -60,7 +60,6 @@ public:
       , blockRunningChanged(false) {}
 
     QDeclarativeProperty property;
-    QVariant currentValue;
     QVariant targetValue;
     QDeclarativeGuard<QDeclarativeAbstractAnimation> animation;
     bool enabled;
@@ -185,7 +184,7 @@ void QDeclarativeBehavior::write(const QVariant &value)
     if (d->animation->isRunning() && value == d->targetValue)
         return;
 
-    d->currentValue = d->property.read();
+    const QVariant &currentValue = d->property.read();
     d->targetValue = value;
 
     if (d->animation->qtAnimation()->duration() != -1
@@ -197,7 +196,7 @@ void QDeclarativeBehavior::write(const QVariant &value)
     QDeclarativeStateOperation::ActionList actions;
     QDeclarativeAction action;
     action.property = d->property;
-    action.fromValue = d->currentValue;
+    action.fromValue = currentValue;
     action.toValue = value;
     actions << action;
 
@@ -213,7 +212,6 @@ void QDeclarativeBehavior::setTarget(const QDeclarativeProperty &property)
 {
     Q_D(QDeclarativeBehavior);
     d->property = property;
-    d->currentValue = property.read();
     if (d->animation)
         d->animation->setDefaultTarget(property);
 

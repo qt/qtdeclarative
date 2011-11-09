@@ -66,6 +66,7 @@ private slots:
     void replaceBinding();
     //void transitionOverrides();
     void group();
+    void valueType();
     void emptyBehavior();
     void explicitSelection();
     void nonSelectingBehavior();
@@ -235,6 +236,19 @@ void tst_qdeclarativebehaviors::group()
 
         delete rect;
     }
+}
+
+void tst_qdeclarativebehaviors::valueType()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("valueType.qml")));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect);
+
+    //QTBUG-20827
+    QCOMPARE(rect->color(), QColor::fromRgb(255,0,255));
+
+    delete rect;
 }
 
 void tst_qdeclarativebehaviors::emptyBehavior()
