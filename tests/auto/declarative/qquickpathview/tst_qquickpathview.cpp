@@ -111,6 +111,7 @@ private slots:
     void changePreferredHighlight();
     void missingPercent();
     void creationContext();
+    void currentOffsetOnInsertion();
 
 private:
     QQuickView *createView();
@@ -240,6 +241,8 @@ void tst_QQuickPathView::initValues()
     QCOMPARE(obj->dragMargin(), 0.);
     QCOMPARE(obj->count(), 0);
     QCOMPARE(obj->pathItemCount(), -1);
+
+    delete obj;
 }
 
 void tst_QQuickPathView::items()
@@ -303,6 +306,8 @@ void tst_QQuickPathView::pathview2()
     QCOMPARE(obj->dragMargin(), 0.);
     QCOMPARE(obj->count(), 8);
     QCOMPARE(obj->pathItemCount(), 10);
+
+    delete obj;
 }
 
 void tst_QQuickPathView::pathview3()
@@ -321,6 +326,8 @@ void tst_QQuickPathView::pathview3()
     QCOMPARE(obj->dragMargin(), 24.);
     QCOMPARE(obj->count(), 8);
     QCOMPARE(obj->pathItemCount(), 4);
+
+    delete obj;
 }
 
 void tst_QQuickPathView::path()
@@ -366,6 +373,8 @@ void tst_QQuickPathView::path()
     QCOMPARE(cubic->control1Y(), 90.);
     QCOMPARE(cubic->control2X(), 210.);
     QCOMPARE(cubic->control2Y(), 90.);
+
+    delete obj;
 }
 
 void tst_QQuickPathView::dataModel()
@@ -1079,6 +1088,86 @@ void tst_QQuickPathView::creationContext()
     QQuickItem *item;
     QVERIFY(item = findItem<QQuickItem>(rootItem, "listItem", 0));
     QCOMPARE(item->property("text").toString(), QString("Hello!"));
+}
+
+// QTBUG-21320
+void tst_QQuickPathView::currentOffsetOnInsertion()
+{
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathline.qml")));
+    qApp->processEvents();
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QVERIFY(pathview != 0);
+
+    pathview->setPreferredHighlightBegin(0.5);
+    pathview->setPreferredHighlightEnd(0.5);
+
+    QCOMPARE(pathview->count(), model.count());
+
+    model.addItem("item0", "0");
+
+    QCOMPARE(pathview->count(), model.count());
+
+    QQuickRectangle *item = 0;
+    QTRY_VERIFY(item = findItem<QQuickRectangle>(pathview, "wrapper", 0));
+
+    QDeclarativePath *path = qobject_cast<QDeclarativePath*>(pathview->path());
+    QVERIFY(path);
+
+    QPointF start = path->pointAt(0.5);
+    start = QPointF(qRound(start.x()), qRound(start.y()));
+    QPointF offset;//Center of item is at point, but pos is from corner
+    offset.setX(item->width()/2);
+    offset.setY(item->height()/2);
+    QCOMPARE(item->pos() + offset, start);
+
+    QSignalSpy currentIndexSpy(pathview, SIGNAL(currentIndexChanged()));
+
+    // insert an item at the beginning
+    model.insertItem(0, "item1", "1");
+    qApp->processEvents();
+
+    QCOMPARE(currentIndexSpy.count(), 1);
+
+    // currentIndex is now 1
+    QVERIFY(item = findItem<QQuickRectangle>(pathview, "wrapper", 1));
+
+    // verify that current item (item 1) is still at offset 0.5
+    QCOMPARE(item->pos() + offset, start);
+
+    // insert another item at the beginning
+    model.insertItem(0, "item2", "2");
+    qApp->processEvents();
+
+    QCOMPARE(currentIndexSpy.count(), 2);
+
+    // currentIndex is now 2
+    QVERIFY(item = findItem<QQuickRectangle>(pathview, "wrapper", 2));
+
+    // verify that current item (item 2) is still at offset 0.5
+    QCOMPARE(item->pos() + offset, start);
+
+    // verify that remove before current maintains current item
+    model.removeItem(0);
+    qApp->processEvents();
+
+    QCOMPARE(currentIndexSpy.count(), 3);
+
+    // currentIndex is now 1
+    QVERIFY(item = findItem<QQuickRectangle>(pathview, "wrapper", 1));
+
+    // verify that current item (item 1) is still at offset 0.5
+    QCOMPARE(item->pos() + offset, start);
+
+    delete canvas;
 }
 
 QQuickView *tst_QQuickPathView::createView()

@@ -494,7 +494,7 @@ void QQuickPathView::setModel(const QVariant &model)
         disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
         for (int i=0; i<d->items.count(); i++){
             QQuickItem *p = d->items[i];
-            d->model->release(p);
+            d->releaseItem(p);
         }
         d->items.clear();
     }
@@ -1537,9 +1537,12 @@ void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
         if (d->modelCount) {
             if (moveId == -1 && i.index <= d->currentIndex) {
                 d->currentIndex += i.count;
+                currentChanged = true;
             } else if (d->offset != 0) {
-                if (moveId != -1 && moveId == i.moveId)
+                if (moveId != -1 && moveId == i.moveId) {
                     d->currentIndex = i.index + moveOffset;
+                    currentChanged = true;
+                }
                 d->offset += i.count;
                 d->offsetAdj += i.count;
             }
@@ -1558,13 +1561,20 @@ void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
         d->tl.reset(d->moveOffset);
     } else if (removed) {
         d->regenerate();
-        d->updateCurrent();
-        if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QQuickPathView::StrictlyEnforceRange)
-            d->snapToCurrent();
+        if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QQuickPathView::StrictlyEnforceRange) {
+            qreal targetOffset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
+            if (targetOffset != d->offset)
+                d->tl.set(d->moveOffset, targetOffset);
+        }
     } else if (inserted) {
         d->firstIndex = -1;
         d->updateMappedRange();
         d->scheduleLayout();
+        if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QQuickPathView::StrictlyEnforceRange) {
+            qreal targetOffset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
+            if (targetOffset != d->offset)
+                d->tl.set(d->moveOffset, targetOffset);
+        }
     }
     if (changedOffset)
         emit offsetChanged();
@@ -1697,6 +1707,9 @@ void QQuickPathViewPrivate::snapToCurrent()
         return;
 
     qreal targetOffset = qmlMod(modelCount - currentIndex, modelCount);
+
+    if (offset == targetOffset)
+        return;
 
     moveReason = Other;
     offsetAdj = 0.0;
