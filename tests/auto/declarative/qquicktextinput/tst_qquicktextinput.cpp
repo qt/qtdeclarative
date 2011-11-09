@@ -1162,11 +1162,14 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 
     // If there is no commited text, the preedit text should determine the alignment.
     textInput->setText(QString());
-    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(&canvas, &ev); }
-    QEXPECT_FAIL("", "QTBUG-21691", Continue);
+    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(&canvas, &ev); }
+    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
+
+    // Clear pre-edit text.  TextInput should maybe do this itself on setText, but that may be
+    // redundant as an actual input method may take care of it.
+    { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
 
 #ifdef Q_OS_MAC
     // empty text with implicit alignment follows the system locale-based
