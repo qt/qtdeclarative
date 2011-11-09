@@ -151,7 +151,7 @@ private slots:
     void testQtQuick11Attributes();
     void testQtQuick11Attributes_data();
 
-    void preeditMicroFocus();
+    void preeditCursorRectangle();
     void inputContextMouseHandler();
     void inputMethodComposing();
     void cursorRectangleSize();
@@ -2179,12 +2179,8 @@ void tst_qquicktextedit::testQtQuick11Attributes_data()
         << ":1 \"TextEdit.onLinkActivated\" is not available in QtQuick 1.0.\n";
 }
 
-void tst_qquicktextedit::preeditMicroFocus()
+void tst_qquicktextedit::preeditCursorRectangle()
 {
-#ifdef QTBUG_21691
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
-    QVERIFY(false);
-#else
     QString preeditText = "super";
 
     QQuickView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
@@ -2196,43 +2192,52 @@ void tst_qquicktextedit::preeditMicroFocus()
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
 
-    QSignalSpy cursorRectangleSpy(edit, SIGNAL(cursorRectangleChanged()));
+    QSignalSpy editSpy(edit, SIGNAL(cursorRectangleChanged()));
+    QSignalSpy panelSpy(qGuiApp->inputPanel(), SIGNAL(cursorRectangleChanged()));
 
     QRect currentRect;
-    QRect previousRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
+
+    QInputMethodQueryEvent query(Qt::ImCursorRectangle);
+    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    QRect previousRect = query.value(Qt::ImCursorRectangle).toRect();
 
     // Verify that the micro focus rect is positioned the same for position 0 as
     // it would be if there was no preedit text.
-    ic.updateReceived = false;
-    ic.sendPreeditText(preeditText, 0);
-    currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
+    QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>()
+            << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, preeditText.length(), QVariant()));
+    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
+    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    currentRect = query.value(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-    QCOMPARE(ic.updateReceived, false); // The cursor position hasn't changed.
-    QCOMPARE(cursorRectangleSpy.count(), 0);
+    QCOMPARE(editSpy.count(), 0);
+    QCOMPARE(panelSpy.count(), 0);
 
     // Verify that the micro focus rect moves to the left as the cursor position
     // is incremented.
     for (int i = 1; i <= 5; ++i) {
-        ic.updateReceived = false;
-        ic.sendPreeditText(preeditText, i);
-        currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
+        QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, i, preeditText.length(), QVariant()));
+        QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
+        QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+        currentRect = query.value(Qt::ImCursorRectangle).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
-        QCOMPARE(ic.updateReceived, true);
-        QVERIFY(cursorRectangleSpy.count() > 0);
-        cursorRectangleSpy.clear();
+        QVERIFY(editSpy.count() > 0); editSpy.clear();
+        QVERIFY(panelSpy.count() > 0); panelSpy.clear();
         previousRect = currentRect;
     }
 
     // Verify that if there is no preedit cursor then the micro focus rect is the
     // same as it would be if it were positioned at the end of the preedit text.
-    ic.sendPreeditText(preeditText, 0);
-    ic.updateReceived = false;
-    ic.sendEvent(QInputMethodEvent(preeditText, QList<QInputMethodEvent::Attribute>()));
-    currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
+    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
+    editSpy.clear();
+    panelSpy.clear();
+    {   QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
+        QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent); }
+    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    currentRect = query.value(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-    QCOMPARE(ic.updateReceived, true);
-    QVERIFY(cursorRectangleSpy.count() > 0);
-#endif
+    QVERIFY(editSpy.count() > 0);
+    QVERIFY(panelSpy.count() > 0);
 }
 
 void tst_qquicktextedit::inputContextMouseHandler()
