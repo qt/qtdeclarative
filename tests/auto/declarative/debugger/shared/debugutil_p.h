@@ -113,6 +113,7 @@ private:
     QString m_executable;
     QProcess m_process;
     QString m_outputBuffer;
+    QString m_output;
     QTimer m_timer;
     QEventLoop m_eventLoop;
     QMutex m_mutex;

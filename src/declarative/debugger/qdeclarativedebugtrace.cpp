@@ -275,9 +275,9 @@ void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
     if (m_enabled != enabled) {
         if (enabled) {
             m_enabled = true;
-            addEvent(StartTrace);
+            addEventImpl(StartTrace);
         } else {
-            addEvent(EndTrace);
+            addEventImpl(EndTrace);
             m_enabled = false;
             sendMessages();
         }

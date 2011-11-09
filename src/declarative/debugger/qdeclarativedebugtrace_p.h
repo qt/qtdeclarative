@@ -62,7 +62,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-struct QDeclarativeDebugData
+struct Q_AUTOTEST_EXPORT QDeclarativeDebugData
 {
     qint64 time;
     int messageType;
