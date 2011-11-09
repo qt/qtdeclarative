@@ -103,29 +103,9 @@ public Q_SLOTS:
     bool compare(const QVariant& act, const QVariant& exp) const {
         return act == exp;
     }
-//    QDeclarativeV8Handle toString(const QVariant& v) const
-//    {
-//        QString name(v.typeName());
-
-//        if (v.canConvert<QObject*>()) {
-//            QDeclarativeType *type = 0;
-//            const QMetaObject *mo = v.value<QObject*>()->metaObject();
-//            while (!type && mo) {
-//                type = QDeclarativeMetaType::qmlType(mo);
-//                mo = mo->superClass();
-//            }
-//            if (type) {
-//                name = type->qmlTypeName();
-//            }
-//        }
-
-//        return QDeclarativeV8Handle::fromHandle(v8::String::New(name.toUtf8()));
-//    }
 
     QDeclarativeV8Handle callerFile(int frameIndex = 0) const
     {
-        v8::HandleScope scope;
-
         v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
         if (count >= frameIndex + 2) {
@@ -136,7 +116,6 @@ public Q_SLOTS:
     }
     int callerLine(int frameIndex = 0) const
     {
-        v8::HandleScope scope;
         v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
         if (count >= frameIndex + 2) {

@@ -213,7 +213,8 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                 continue;
 
             rootobj.setHasTestCase(false);
-
+            rootobj.setWindowShown(false);
+            rootobj.hasQuit = false;
             QString path = fi.absoluteFilePath();
             if (path.startsWith(QLatin1String(":/")))
                 view.setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
