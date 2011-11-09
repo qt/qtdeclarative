@@ -1922,8 +1922,7 @@ void tst_qquicktextedit::textInput()
     // test that input method event is committed
     QInputMethodEvent event;
     event.setCommitString( "Hello world!", 0, 0);
-    QGuiApplication::sendEvent(&view, &event);
-    QEXPECT_FAIL("", "QTBUG-21689", Abort);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(edit->text(), QString("Hello world!"));
 
     // QTBUG-12339
