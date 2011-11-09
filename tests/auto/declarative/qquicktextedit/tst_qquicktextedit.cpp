@@ -152,7 +152,6 @@ private slots:
     void testQtQuick11Attributes_data();
 
     void preeditCursorRectangle();
-    void inputContextMouseHandler();
     void inputMethodComposing();
     void cursorRectangleSize();
 
@@ -1909,55 +1908,6 @@ void tst_qquicktextedit::simulateKey(QQuickView *view, int key, Qt::KeyboardModi
     QGuiApplication::sendEvent(view, &release);
 }
 
-
-#ifndef QTBUG_21691
-class MyInputContext : public QInputContext
-{
-public:
-    MyInputContext() : updateReceived(false), eventType(QEvent::None) {}
-    ~MyInputContext() {}
-
-    QString identifierName() { return QString(); }
-    QString language() { return QString(); }
-
-    void reset() {}
-
-    bool isComposing() const { return false; }
-
-    void update() { updateReceived = true; }
-
-    void sendPreeditText(const QString &text, int cursor)
-    {
-        QList<QInputMethodEvent::Attribute> attributes;
-        attributes.append(QInputMethodEvent::Attribute(
-                QInputMethodEvent::Cursor, cursor, text.length(), QVariant()));
-
-        QInputMethodEvent event(text, attributes);
-        sendEvent(event);
-    }
-
-    void mouseHandler(int x, QMouseEvent *event)
-    {
-        cursor = x;
-        eventType = event->type();
-        eventPosition = event->pos();
-        eventGlobalPosition = event->globalPos();
-        eventButton = event->button();
-        eventButtons = event->buttons();
-        eventModifiers = event->modifiers();
-    }
-
-    bool updateReceived;
-    int cursor;
-    QEvent::Type eventType;
-    QPoint eventPosition;
-    QPoint eventGlobalPosition;
-    Qt::MouseButton eventButton;
-    Qt::MouseButtons eventButtons;
-    Qt::KeyboardModifiers eventModifiers;
-};
-#endif
-
 void tst_qquicktextedit::textInput()
 {
     QQuickView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
@@ -2238,130 +2188,6 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QCOMPARE(currentRect, previousRect);
     QVERIFY(editSpy.count() > 0);
     QVERIFY(panelSpy.count() > 0);
-}
-
-void tst_qquicktextedit::inputContextMouseHandler()
-{
-
-#ifdef QTBUG_21691
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
-    QVERIFY(false);
-#else
-    QString text = "supercalifragisiticexpialidocious!";
-
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
-    MyInputContext ic;
-    // QQuickCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has focus
-    // and QWidget won't allow an input context to be set when the flag is not set.
-    view.setAttribute(Qt::WA_InputMethodEnabled, true);
-    view.setInputContext(&ic);
-    view.setAttribute(Qt::WA_InputMethodEnabled, false);
-    view.show();
-    view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
-
-    QTRY_COMPARE(&view, qGuiApp->focusWindow());
-    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
-    QVERIFY(edit);
-    edit->setCursorPosition(12);
-
-    QFontMetricsF fm(edit->font());
-    const qreal y = fm.height() / 2;
-
-    QPoint position2 = edit->mapToScene(QPointF(fm.width(text.mid(0, 2)), y)).toPoint();
-    QPoint position8 = edit->mapToScene(QPointF(fm.width(text.mid(0, 8)), y)).toPoint();
-    QPoint position20 = edit->mapToScene(QPointF(fm.width(text.mid(0, 20)), y)).toPoint();
-    QPoint position27 = edit->mapToScene(QPointF(fm.width(text.mid(0, 27)), y)).toPoint();
-    QPoint globalPosition2 = view.mapToGlobal(position2);
-    QPoint globalposition8 = view.mapToGlobal(position8);
-    QPoint globalposition20 = view.mapToGlobal(position20);
-    QPoint globalposition27 = view.mapToGlobal(position27);
-
-    ic.sendEvent(QInputMethodEvent(text.mid(12), QList<QInputMethodEvent::Attribute>()));
-
-    QTest::mouseDClick(&view, Qt::LeftButton, Qt::NoModifier, position2);
-    QCOMPARE(ic.eventType, QEvent::MouseButtonDblClick);
-    QCOMPARE(ic.eventPosition, position2);
-    QCOMPARE(ic.eventGlobalPosition, globalPosition2);
-    QCOMPARE(ic.eventButton, Qt::LeftButton);
-    QCOMPARE(ic.eventModifiers, Qt::NoModifier);
-    QVERIFY(ic.cursor < 0);
-    ic.eventType = QEvent::None;
-
-    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, position2);
-    QCOMPARE(ic.eventType, QEvent::MouseButtonPress);
-    QCOMPARE(ic.eventPosition, position2);
-    QCOMPARE(ic.eventGlobalPosition, globalPosition2);
-    QCOMPARE(ic.eventButton, Qt::LeftButton);
-    QCOMPARE(ic.eventModifiers, Qt::NoModifier);
-    QVERIFY(ic.cursor < 0);
-    ic.eventType = QEvent::None;
-
-    {   QMouseEvent mv(QEvent::MouseMove, position8, globalposition8, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(&view, &mv); }
-    QCOMPARE(ic.eventType, QEvent::None);
-
-    {   QMouseEvent mv(QEvent::MouseMove, position27, globalposition27, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(&view, &mv); }
-    QCOMPARE(ic.eventType, QEvent::MouseMove);
-    QCOMPARE(ic.eventPosition, position27);
-        QCOMPARE(ic.eventGlobalPosition, globalposition27);
-    QCOMPARE(ic.eventButton, Qt::LeftButton);
-    QCOMPARE(ic.eventModifiers, Qt::NoModifier);
-    QVERIFY(ic.cursor >= 14 && ic.cursor <= 16);    // 15 is expected but some platforms may be off by one.
-    ic.eventType = QEvent::None;
-
-    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, position27);
-    QCOMPARE(ic.eventType, QEvent::MouseButtonRelease);
-    QCOMPARE(ic.eventPosition, position27);
-    QCOMPARE(ic.eventGlobalPosition, globalposition27);
-    QCOMPARE(ic.eventButton, Qt::LeftButton);
-    QCOMPARE(ic.eventModifiers, Qt::NoModifier);
-    QVERIFY(ic.cursor >= 14 && ic.cursor <= 16);
-    ic.eventType = QEvent::None;
-
-    // And in the other direction.
-    QTest::mouseDClick(&view, Qt::LeftButton, Qt::ControlModifier, position27);
-    QCOMPARE(ic.eventType, QEvent::MouseButtonDblClick);
-    QCOMPARE(ic.eventPosition, position27);
-    QCOMPARE(ic.eventGlobalPosition, globalposition27);
-    QCOMPARE(ic.eventButton, Qt::LeftButton);
-    QCOMPARE(ic.eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic.cursor >= 14 && ic.cursor <= 16);
-    ic.eventType = QEvent::None;
-
-    QTest::mousePress(&view, Qt::RightButton, Qt::ControlModifier, position27);
-    QCOMPARE(ic.eventType, QEvent::MouseButtonPress);
-    QCOMPARE(ic.eventPosition, position27);
-    QCOMPARE(ic.eventGlobalPosition, globalposition27);
-    QCOMPARE(ic.eventButton, Qt::RightButton);
-    QCOMPARE(ic.eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic.cursor >= 14 && ic.cursor <= 16);
-    ic.eventType = QEvent::None;
-
-    {   QMouseEvent mv(QEvent::MouseMove, position20, globalposition20, Qt::RightButton, Qt::RightButton,Qt::ControlModifier);
-        QGuiApplication::sendEvent(&view, &mv); }
-    QCOMPARE(ic.eventType, QEvent::MouseMove);
-    QCOMPARE(ic.eventPosition, position20);
-    QCOMPARE(ic.eventGlobalPosition, globalposition20);
-    QCOMPARE(ic.eventButton, Qt::RightButton);
-    QCOMPARE(ic.eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic.cursor >= 7 && ic.cursor <= 9);
-    ic.eventType = QEvent::None;
-
-    {   QMouseEvent mv(QEvent::MouseMove, position2, globalPosition2, Qt::RightButton, Qt::RightButton,Qt::ControlModifier);
-        QGuiApplication::sendEvent(&view, &mv); }
-    QCOMPARE(ic.eventType, QEvent::None);
-
-    QTest::mouseRelease(&view, Qt::RightButton, Qt::ControlModifier, position2);
-    QCOMPARE(ic.eventType, QEvent::MouseButtonRelease);
-    QCOMPARE(ic.eventPosition, position2);
-    QCOMPARE(ic.eventGlobalPosition, globalPosition2);
-    QCOMPARE(ic.eventButton, Qt::RightButton);
-    QCOMPARE(ic.eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic.cursor < 0);
-    ic.eventType = QEvent::None;
-#endif
 }
 
 void tst_qquicktextedit::inputMethodComposing()
