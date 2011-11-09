@@ -1497,25 +1497,24 @@ void tst_qquicktextinput::inputMethods()
     // test that input method event is committed
     QInputMethodEvent event;
     event.setCommitString( "My ", -12, 0);
-    QGuiApplication::sendEvent(&canvas, &event);
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(input->text(), QString("My Hello world!"));
 
     input->setCursorPosition(2);
     event.setCommitString("Your", -2, 2);
-    QGuiApplication::sendEvent(&canvas, &event);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(input->text(), QString("Your Hello world!"));
     QCOMPARE(input->cursorPosition(), 4);
 
     input->setCursorPosition(7);
     event.setCommitString("Goodbye", -2, 5);
-    QGuiApplication::sendEvent(&canvas, &event);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(input->text(), QString("Your Goodbye world!"));
     QCOMPARE(input->cursorPosition(), 12);
 
     input->setCursorPosition(8);
     event.setCommitString("Our", -8, 4);
-    QGuiApplication::sendEvent(&canvas, &event);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
     QCOMPARE(input->cursorPosition(), 7);
 }
