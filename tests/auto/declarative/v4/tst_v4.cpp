@@ -77,6 +77,7 @@ private slots:
     void qtscript_data();
     void nestedObjectAccess();
     void subscriptionsInConditionalExpressions();
+    void qtbug_21883();
 
 private:
     QDeclarativeEngine engine;
@@ -236,6 +237,19 @@ void tst_v4::subscriptionsInConditionalExpressions()
 
     QCOMPARE(ro->property("result").toReal(), qreal(2));
 
+    delete o;
+}
+
+// Crash test
+void tst_v4::qtbug_21883()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_21883.qml"));
+
+    QString warning = component.url().toString() + ":4: Unable to assign null to ResultObject*";
+    QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
     delete o;
 }
 

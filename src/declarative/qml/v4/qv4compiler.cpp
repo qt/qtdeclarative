@@ -311,7 +311,8 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         attached.output = currentReg;
         attached.reg = currentReg;
         attached.exceptionId = exceptionId(e->line, e->column);
-        Q_ASSERT(e->declarativeType->attachedPropertiesId() != -1);
+        if (e->declarativeType->attachedPropertiesId() == -1)
+            discard();
         attached.id = e->declarativeType->attachedPropertiesId();
         gen(attached);
     } break;
