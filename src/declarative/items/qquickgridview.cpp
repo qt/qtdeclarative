@@ -398,16 +398,17 @@ FxViewItem *QQuickGridViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
 
 bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
 {
-    int colPos = colPosAt(visibleIndex);
-    int rowPos = rowPosAt(visibleIndex);
+    qreal colPos = colPosAt(visibleIndex);
+    qreal rowPos = rowPosAt(visibleIndex);
     if (visibleItems.count()) {
         FxGridItemSG *lastItem = static_cast<FxGridItemSG*>(visibleItems.last());
         rowPos = lastItem->rowPos();
-        colPos = lastItem->colPos() + colSize();
-        if (colPos > colSize() * (columns-1)) {
-            colPos = 0;
+        int colNum = qFloor((lastItem->colPos()+colSize()/2) / colSize());
+        if (++colNum >= columns) {
+            colNum = 0;
             rowPos += rowSize();
         }
+        colPos = colNum * colSize();
     }
 
     int modelIndex = findLastVisibleIndex();
@@ -432,7 +433,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         rowPos = rowPosAt(visibleIndex);
     }
 
-    int colNum = colPos / colSize();
+    int colNum = qFloor((colPos+colSize()/2) / colSize());
     FxGridItemSG *item = 0;
     bool changed = false;
 
@@ -442,30 +443,32 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
             break;
         item->setPosition(colPos, rowPos);
         visibleItems.append(item);
-        colPos += colSize();
-        colNum++;
-        if (colPos > colSize() * (columns-1)) {
-            colPos = 0;
+        if (++colNum >= columns) {
             colNum = 0;
             rowPos += rowSize();
         }
+        colPos = colNum * colSize();
         ++modelIndex;
         changed = true;
         if (doBuffer) // never buffer more than one item per frame
             break;
     }
 
+    // Find first column
     if (visibleItems.count()) {
         FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
         rowPos = firstItem->rowPos();
-        colPos = firstItem->colPos() - colSize();
-        if (colPos < 0) {
-            colPos = colSize() * (columns - 1);
+        colNum = qFloor((firstItem->colPos()+colSize()/2) / colSize());
+        if (--colNum < 0) {
+            colNum = columns - 1;
             rowPos -= rowSize();
         }
+    } else {
+        colNum = qFloor((colPos+colSize()/2) / colSize());
     }
 
-    colNum = colPos / colSize();
+    // Prepend
+    colPos = colNum * colSize();
     while (visibleIndex > 0 && rowPos + rowSize() - 1 >= fillFrom - rowSize()*(colNum+1)/(columns+1)){
 //        qDebug() << "refill: prepend item" << visibleIndex-1 << "top pos" << rowPos << colPos;
         if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1))))
@@ -473,13 +476,11 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         --visibleIndex;
         item->setPosition(colPos, rowPos);
         visibleItems.prepend(item);
-        colPos -= colSize();
-        colNum--;
-        if (colPos < 0) {
-            colPos = colSize() * (columns - 1);
+        if (--colNum < 0) {
             colNum = columns-1;
             rowPos -= rowSize();
         }
+        colPos = colNum * colSize();
         changed = true;
         if (doBuffer) // never buffer more than one item per frame
             break;
@@ -529,7 +530,8 @@ void QQuickGridViewPrivate::visibleItemsChanged()
 void QQuickGridViewPrivate::updateViewport()
 {
     Q_Q(QQuickGridView);
-    columns = (int)qMax((flow == QQuickGridView::LeftToRight ? q->width() : q->height()) / colSize(), qreal(1.));
+    qreal length = flow == QQuickGridView::LeftToRight ? q->width() : q->height();
+    columns = (int)qMax((length + colSize()/2) / colSize(), qreal(1.));
     QQuickItemViewPrivate::updateViewport();
 }
 
@@ -546,11 +548,11 @@ void QQuickGridViewPrivate::layoutVisibleItems()
         }
         for (int i = 1; i < visibleItems.count(); ++i) {
             FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.at(i));
-            colPos += colSize();
-            if (colPos > colSize() * (columns-1)) {
-                colPos = 0;
+            if (++col >= columns) {
+                col = 0;
                 rowPos += rowSize();
             }
+            colPos = col * colSize();
             item->setPosition(colPos, rowPos);
         }
     }
@@ -1763,22 +1765,25 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
     }
 
     qreal tempPos = isRightToLeftTopToBottom() ? -position()-size()+q->width()+1 : position();
-    int colPos = 0;
-    int rowPos = 0;
+    qreal colPos = 0;
+    qreal rowPos = 0;
+    int colNum = 0;
     if (visibleItems.count()) {
         if (index < visibleItems.count()) {
             FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.at(index));
             colPos = gridItem->colPos();
             rowPos = gridItem->rowPos();
+            colNum = qFloor((colPos+colSize()/2) / colSize());
         } else {
             // appending items to visible list
             FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.at(index-1));
-            colPos = gridItem->colPos() + colSize();
             rowPos = gridItem->rowPos();
-            if (colPos > colSize() * (columns-1)) {
-                colPos = 0;
+            colNum = qFloor((gridItem->colPos()+colSize()/2) / colSize());
+            if (++colNum >= columns) {
+                colNum = 0;
                 rowPos += rowSize();
             }
+            colPos = colNum * colSize();
         }
     }
 
@@ -1815,11 +1820,12 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
                     insertResult->sizeAddedBeforeVisible += rowSize();
                 }
             }
-            colPos -= colSize();
-            if (colPos < 0) {
-                colPos = colSize() * (columns - 1);
+
+            if (--colNum < 0 ) {
+                colNum = columns - 1;
                 rowPos -= rowSize();
             }
+            colPos = colNum * colSize();
             index++;
             i--;
         }
@@ -1839,11 +1845,11 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             visibleItems.insert(index, item);
             if (!change.isMove())
                 insertResult->addedItems.append(item);
-            colPos += colSize();
-            if (colPos > colSize() * (columns-1)) {
-                colPos = 0;
+            if (++colNum >= columns) {
+                colNum = 0;
                 rowPos += rowSize();
             }
+            colPos = colNum * colSize();
             ++index;
             ++i;
         }

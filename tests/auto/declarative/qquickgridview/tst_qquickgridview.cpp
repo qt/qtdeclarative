@@ -114,6 +114,7 @@ private slots:
     void creationContext();
     void snapToRow_data();
     void snapToRow();
+    void unaligned();
 
 private:
     QQuickView *createView();
@@ -3343,6 +3344,65 @@ void tst_QQuickGridView::snapToRow()
     delete canvas;
 }
 
+void tst_QQuickGridView::unaligned()
+{
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 10; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("unaligned.qml")));
+    qApp->processEvents();
+
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+    QVERIFY(gridview != 0);
+
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+
+    for (int i = 0; i < 10; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QVERIFY(item);
+        QCOMPARE(item->x(), qreal((i%9)*gridview->cellWidth()));
+        QCOMPARE(item->y(), qreal((i/9)*gridview->cellHeight()));
+    }
+
+    // appending
+    for (int i = 10; i < 18; ++i) {
+        model.addItem("Item" + QString::number(i), "");
+        QQuickItem *item = 0;
+        QTRY_VERIFY(item = findItem<QQuickItem>(contentItem, "wrapper", i));
+        QCOMPARE(item->x(), qreal((i%9)*gridview->cellWidth()));
+        QCOMPARE(item->y(), qreal((i/9)*gridview->cellHeight()));
+    }
+
+    // inserting
+    for (int i = 0; i < 10; ++i) {
+        model.insertItem(i, "Item" + QString::number(i), "");
+        QQuickItem *item = 0;
+        QTRY_VERIFY(item = findItem<QQuickItem>(contentItem, "wrapper", i));
+        QCOMPARE(item->x(), qreal((i%9)*gridview->cellWidth()));
+        QCOMPARE(item->y(), qreal((i/9)*gridview->cellHeight()));
+    }
+
+    // removing
+    model.removeItems(7, 10);
+    qApp->processEvents();
+    for (int i = 0; i < 18; ++i) {
+        QQuickItem *item = 0;
+        QTRY_VERIFY(item = findItem<QQuickItem>(contentItem, "wrapper", i));
+        QCOMPARE(item->x(), qreal(i%9)*gridview->cellWidth());
+        QCOMPARE(item->y(), qreal(i/9)*gridview->cellHeight());
+    }
+
+    delete canvas;
+}
 
 QQuickView *tst_QQuickGridView::createView()
 {
