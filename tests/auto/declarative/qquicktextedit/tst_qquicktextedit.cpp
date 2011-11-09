@@ -1404,8 +1404,6 @@ void tst_qquicktextedit::mouseSelection()
     QTest::mouseClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mouseClick(&canvas, Qt::LeftButton, Qt::ShiftModifier, p2);
     QTest::qWait(50);
-    if (!selectedText.isEmpty())
-        QEXPECT_FAIL("", "QTBUG-21743", Continue);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
 }
 
