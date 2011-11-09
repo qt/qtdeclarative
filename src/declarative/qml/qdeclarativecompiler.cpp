@@ -3112,7 +3112,8 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
         writable = aliasProperty.isWritable() && !prop.isReadOnly;
         resettable = aliasProperty.isResettable() && !prop.isReadOnly;
 
-        if (aliasProperty.type() < QVariant::UserType)
+        if (aliasProperty.type() < QVariant::UserType ||
+            aliasProperty.type() == QVariant::LastType /* for QVariant */ )
             type = aliasProperty.type();
 
         if (alias.count() == 3) {
