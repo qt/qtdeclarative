@@ -572,11 +572,14 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
     textEdit->setText(QString());
-    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(&canvas, &ev); }
-    QEXPECT_FAIL("", "QTBUG-21691", Abort);
+    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
-    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(&canvas, &ev); }
+    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignLeft);
+
+    // Clear pre-edit text.  TextEdit should maybe do this itself on setText, but that may be
+    // redundant as an actual input method may take care of it.
+    { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
 
 #ifndef Q_OS_MAC    // QTBUG-18040
     // empty text with implicit alignment follows the system locale-based

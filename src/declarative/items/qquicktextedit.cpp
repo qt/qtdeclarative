@@ -550,7 +550,15 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
 {
     Q_Q(QQuickTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
-        bool alignToRight = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
+        bool alignToRight;
+        if (text.isEmpty()) {
+            const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
+            alignToRight = preeditText.isEmpty()
+                    ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft
+                    : preeditText.isRightToLeft();
+        } else {
+            alignToRight = rightToLeftText;
+        }
         return setHAlign(alignToRight ? QQuickTextEdit::AlignRight : QQuickTextEdit::AlignLeft);
     }
     return false;
