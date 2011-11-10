@@ -162,7 +162,7 @@ void tst_QDeclarativeDebugClient::sequentialConnect()
     QCOMPARE(m_conn->state(), QAbstractSocket::UnconnectedState);
 
     // Make sure that the disconnect is actually delivered to the server
-    QGuiApplication::processEvents();
+    QTest::qWait(100);
 
     connection2.connectToHost("127.0.0.1", PORT);
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Connection established");
