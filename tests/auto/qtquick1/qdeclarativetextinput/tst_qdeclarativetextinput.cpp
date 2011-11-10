@@ -1812,7 +1812,7 @@ void tst_qdeclarativetextinput::canPasteEmpty() {
     QDeclarative1TextInput *textInput = qobject_cast<QDeclarative1TextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QLineControl lc;
+    QWidgetLineControl lc;
     bool cp = !lc.isReadOnly() && QApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 
@@ -1830,7 +1830,7 @@ void tst_qdeclarativetextinput::canPaste() {
     QDeclarative1TextInput *textInput = qobject_cast<QDeclarative1TextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QLineControl lc;
+    QWidgetLineControl lc;
     bool cp = !lc.isReadOnly() && QApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 

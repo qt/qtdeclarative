@@ -561,7 +561,7 @@ QRect QDeclarative1TextInput::cursorRectangle() const
     Q_D(const QDeclarative1TextInput);
     QRect r = d->control->cursorRect();
     // Scroll and make consistent with TextEdit
-    // QLineControl inexplicably adds 1 to the height and horizontal padding
+    // QWidgetLineControl inexplicably adds 1 to the height and horizontal padding
     // for unicode direction markers.
     r.adjust(5 - d->hscroll, 0, -4 - d->hscroll, -1);
     return r;
@@ -905,7 +905,7 @@ void QDeclarative1TextInput::setEchoMode(QDeclarative1TextInput::EchoMode echo)
     Q_D(QDeclarative1TextInput);
     if (echoMode() == echo)
         return;
-    d->control->setEchoMode((QLineControl::EchoMode)echo);
+    d->control->setEchoMode(echo);
     d->updateInputMethodHints();
     q_textChanged();
     emit echoModeChanged(echoMode());
@@ -997,7 +997,7 @@ void QDeclarative1TextInput::createCursor()
     QDeclarative_setParent_noEvent(d->cursorItem, this);
     d->cursorItem->setParentItem(this);
     d->cursorItem->setX(d->control->cursorToX());
-    d->cursorItem->setHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
+    d->cursorItem->setHeight(d->control->height()-1); // -1 to counter QWidgetLineControl's +1 which is not consistent with Text.
 }
 
 /*!
@@ -1064,7 +1064,7 @@ void QDeclarative1TextInputPrivate::focusChanged(bool hasFocus)
     focused = hasFocus;
     q->setCursorVisible(hasFocus && scene && scene->hasFocus());
     if(!hasFocus && control->passwordEchoEditing())
-        control->updatePasswordEchoEditing(false);//QLineControl sets it on key events, but doesn't deal with focus events
+        control->updatePasswordEchoEditing(false);//QWidgetLineControl sets it on key events, but doesn't deal with focus events
     if (!hasFocus)
         control->deselect();
     QDeclarativeItemPrivate::focusChanged(hasFocus);
@@ -1214,7 +1214,16 @@ void QDeclarative1TextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         }
     }
     d->clickCausedFocus = false;
-    d->control->processEvent(event);
+#ifndef QT_NO_CLIPBOARD
+    if (QGuiApplication::clipboard()->supportsSelection()) {
+        if (event->button() == Qt::LeftButton) {
+            d->control->copy(QClipboard::Selection);
+        } else if (!isReadOnly() && event->button() == Qt::MidButton) {
+            d->control->deselect();
+            d->control->insert(QGuiApplication::clipboard()->text(QClipboard::Selection));
+        }
+    }
+#endif
     if (!event->isAccepted())
         QDeclarative1PaintedItem::mouseReleaseEvent(event);
 }
@@ -1254,24 +1263,15 @@ bool QDeclarative1TextInput::sceneEvent(QEvent *event)
 
 bool QDeclarative1TextInput::event(QEvent* ev)
 {
+#ifndef QT_NO_SHORTCUT
     Q_D(QDeclarative1TextInput);
-    //Anything we don't deal with ourselves, pass to the control
-    bool handled = false;
-    switch(ev->type()){
-        case QEvent::KeyPress:
-        case QEvent::KeyRelease://###Should the control be doing anything with release?
-        case QEvent::InputMethod:
-        case QEvent::GraphicsSceneMousePress:
-        case QEvent::GraphicsSceneMouseMove:
-        case QEvent::GraphicsSceneMouseRelease:
-        case QEvent::GraphicsSceneMouseDoubleClick:
-            break;
-        default:
-            handled = d->control->processEvent(ev);
+
+    if (ev->type() == QEvent::ShortcutOverride) {
+        d->control->processShortcutOverrideEvent(static_cast<QKeyEvent *>(ev));
+        return ev->isAccepted();
     }
-    if(!handled)
-        handled = QDeclarative1PaintedItem::event(ev);
-    return handled;
+#endif
+    return QDeclarative1PaintedItem::event(ev);
 }
 
 void QDeclarative1TextInput::geometryChanged(const QRectF &newGeometry,
@@ -1354,11 +1354,11 @@ void QDeclarative1TextInput::drawContents(QPainter *p, const QRect &r)
     p->setRenderHint(QPainter::TextAntialiasing, true);
     p->save();
     p->setPen(QPen(d->color));
-    int flags = QLineControl::DrawText;
+    int flags = QWidgetLineControl::DrawText;
     if(!isReadOnly() && d->cursorVisible && !d->cursorItem)
-        flags |= QLineControl::DrawCursor;
+        flags |= QWidgetLineControl::DrawCursor;
     if (d->control->hasSelectedText())
-            flags |= QLineControl::DrawSelections;
+            flags |= QWidgetLineControl::DrawSelections;
     QPoint offset = QPoint(0,0);
     QFontMetrics fm = QFontMetrics(d->font);
     QRect br(boundingRect().toRect());
@@ -1387,7 +1387,7 @@ QVariant QDeclarative1TextInput::inputMethodQuery(Qt::InputMethodQuery property)
     case Qt::ImCursorPosition:
         return QVariant(d->control->cursor());
     case Qt::ImSurroundingText:
-        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit
+        if (d->control->echoMode() == PasswordEchoOnEdit
             && !d->control->passwordEchoEditing())
             return QVariant(displayText());
         else
@@ -1987,7 +1987,7 @@ void QDeclarative1TextInput::updateSize(bool needsRedraw)
     Q_D(QDeclarative1TextInput);
     int w = width();
     int h = height();
-    setImplicitHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
+    setImplicitHeight(d->control->height()-1); // -1 to counter QWidgetLineControl's +1 which is not consistent with Text.
     setImplicitWidth(d->calculateTextWidth());
     setContentsSize(QSize(width(), height()));//Repaints if changed
     if(w==width() && h==height() && needsRedraw){
