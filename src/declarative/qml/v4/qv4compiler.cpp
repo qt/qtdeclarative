@@ -277,7 +277,7 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
 
         Instr::LoadId instr;
         instr.reg = currentReg;
-        instr.index = e->index;
+        instr.index = e->idObject->idIndex;
         gen(instr);
 
         _subscribeName << QLatin1String("$$$ID_") + *e->id;
@@ -320,10 +320,13 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
     case IR::Name::Property: {
         _subscribeName << *e->id;
 
-        QMetaProperty prop = e->meta->property(e->index);
-        int fastFetchIndex = QDeclarativeFastProperties::instance()->accessorIndexForProperty(e->meta, e->index);
+        if (e->property->coreIndex == -1) {
+            QMetaProperty prop;
+            e->property->load(prop, QDeclarativeEnginePrivate::get(engine));
+        }
+        int fastFetchIndex = QDeclarativeFastProperties::instance()->accessorIndexForProperty(e->meta, e->property->coreIndex);
 
-        const int propTy = prop.userType();
+        const int propTy = e->property->propType;
         QDeclarativeRegisterType regType;
 
         switch (propTy) {
@@ -366,17 +369,17 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
             fetch.valueType = regType;
             gen(fetch);
         } else {
-            if (blockNeedsSubscription(_subscribeName) && prop.hasNotifySignal() && prop.notifySignalIndex() != -1) {
+            if (blockNeedsSubscription(_subscribeName) && e->property->notifyIndex != -1) {
                 Instr::Subscribe sub;
                 sub.reg = currentReg;
                 sub.offset = subscriptionIndex(_subscribeName);
-                sub.index = prop.notifySignalIndex();
+                sub.index = e->property->notifyIndex;
                 gen(sub);
             }
 
             Instr::Fetch fetch;
             fetch.reg = currentReg;
-            fetch.index = e->index;
+            fetch.index = e->property->coreIndex;
             fetch.exceptionId = exceptionId(e->line, e->column);
             fetch.valueType = regType;
             gen(fetch);

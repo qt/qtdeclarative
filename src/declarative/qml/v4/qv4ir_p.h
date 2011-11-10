@@ -269,7 +269,7 @@ struct Name: Expr {
         const QDeclarativeType *declarativeType;
         const QDeclarativeScript::Object *idObject;
     };
-    int index;
+    QDeclarativePropertyData *property;
     Storage storage;
     BuiltinSymbol builtin;
     quint32 line;
@@ -531,9 +531,9 @@ struct BasicBlock {
 
     Name *NAME(const QString &id, quint32 line, quint32 column);
     Name *NAME(Name *base, const QString &id, quint32 line, quint32 column);
-    Name *SYMBOL(Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage, quint32 line, quint32 column);
-    Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, quint32 line, quint32 column);
-    Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage, quint32 line, quint32 column);
+    Name *SYMBOL(Type type, const QString &id, const QMetaObject *meta, QDeclarativePropertyData *property, Name::Storage storage, quint32 line, quint32 column);
+    Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QDeclarativePropertyData *property, quint32 line, quint32 column);
+    Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QDeclarativePropertyData *property, Name::Storage storage, quint32 line, quint32 column);
     Name *ID_OBJECT(const QString &id, const QDeclarativeScript::Object *object, quint32 line, quint32 column);
     Name *ATTACH_TYPE(const QString &id, const QDeclarativeType *attachType, Name::Storage storage, quint32 line, quint32 column);
 
