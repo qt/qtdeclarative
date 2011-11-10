@@ -227,6 +227,7 @@ private slots:
     void revision();
 
     void automaticSemicolon();
+    void unaryExpression();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -5046,6 +5047,13 @@ void tst_qdeclarativeecmascript::dynamicString()
 void tst_qdeclarativeecmascript::automaticSemicolon()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("automaticSemicolon.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
+void tst_qdeclarativeecmascript::unaryExpression()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("unaryExpression.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 }
