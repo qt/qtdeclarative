@@ -15,6 +15,6 @@ testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
 
-CONFIG += parallel_test
+CONFIG += parallel_test insignificant_test
 
 OTHER_FILES += data/test.qml data/test.js

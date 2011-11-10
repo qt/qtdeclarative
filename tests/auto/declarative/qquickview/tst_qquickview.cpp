@@ -89,9 +89,8 @@ void tst_QQuickView::resizemodeitem()
 
     // size update from view
     canvas->resize(QSize(80,100));
-    QTest::qWait(50);
 
-    QCOMPARE(item->width(), 80.0);
+    QTRY_COMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
     QCOMPARE(canvas->size(), QSize(80, 100));
     QCOMPARE(canvas->size(), canvas->sizeHint());

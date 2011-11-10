@@ -4765,8 +4765,8 @@ void tst_qdeclarativeecmascript::typeOf()
     QDeclarativeComponent component(&engine, TEST_FILE("typeOf.qml"));
     QObject *o = component.create();
     QVERIFY(o != 0);
-    QCOMPARE(o->property("test1").toString(), QLatin1String("undefined"));
     QEXPECT_FAIL("", "QTBUG-21864", Abort);
+    QCOMPARE(o->property("test1").toString(), QLatin1String("undefined"));
     QCOMPARE(o->property("test2").toString(), QLatin1String("object"));
     QCOMPARE(o->property("test3").toString(), QLatin1String("number"));
     QCOMPARE(o->property("test4").toString(), QLatin1String("string"));

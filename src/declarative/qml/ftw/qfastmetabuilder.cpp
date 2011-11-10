@@ -41,6 +41,8 @@
 
 #include "qfastmetabuilder_p.h"
 
+#include <QtCore/qmetaobject.h>
+
 QT_BEGIN_NAMESPACE
 
 struct QFastMetaBuilderHeader

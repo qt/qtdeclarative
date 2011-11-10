@@ -60,6 +60,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QMetaObject;
 class QFastMetaBuilder
 {
 public:

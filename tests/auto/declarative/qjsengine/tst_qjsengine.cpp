@@ -2168,7 +2168,6 @@ void tst_QJSEngine::evaluate()
         ret = eng.evaluate(code, /*fileName =*/QString(), lineNumber);
     else
         ret = eng.evaluate(code);
-    QEXPECT_FAIL("/a/gimp", "v8 ignore invalid flags", Abort);
     QCOMPARE(eng.hasUncaughtException(), expectHadError);
 #if 0 // ###FIXME: No support for the line number of an uncaught exception
     QEXPECT_FAIL("f()", "SyntaxError do not report line number", Continue);
