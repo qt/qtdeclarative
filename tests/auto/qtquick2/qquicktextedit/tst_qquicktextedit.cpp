@@ -58,7 +58,7 @@
 #include <QInputPanel>
 #include <QClipboard>
 #include <QMimeData>
-#include <private/qtextcontrol_p.h>
+#include <private/qquicktextcontrol_p.h>
 #include "../../shared/util.h"
 #include <qplatforminputcontext_qpa.h>
 #include <private/qinputpanel_p.h>
@@ -1913,7 +1913,7 @@ void tst_qquicktextedit::canPaste() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QTextControl tc;
+    QQuickTextControl tc;
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif
@@ -1931,7 +1931,7 @@ void tst_qquicktextedit::canPasteEmpty() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QTextControl tc;
+    QQuickTextControl tc;
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif

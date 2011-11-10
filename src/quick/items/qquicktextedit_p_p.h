@@ -63,7 +63,7 @@
 QT_BEGIN_NAMESPACE
 class QTextLayout;
 class QQuickTextDocumentWithImageResources;
-class QTextControl;
+class QQuickTextControl;
 class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextEdit)
@@ -122,7 +122,7 @@ public:
     QQuickItem* cursor;
     QQuickTextEdit::TextFormat format;
     QQuickTextDocumentWithImageResources *document;
-    QTextControl *control;
+    QQuickTextControl *control;
     QQuickTextEdit::WrapMode wrapMode;
     QQuickTextEdit::SelectionMode mouseSelectionMode;
     int lineCount;

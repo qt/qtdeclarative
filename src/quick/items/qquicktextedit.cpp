@@ -41,6 +41,7 @@
 
 #include "qquicktextedit_p.h"
 #include "qquicktextedit_p_p.h"
+#include "qquicktextcontrol_p.h"
 #include "qquicktext_p_p.h"
 #include "qquickevents_p_p.h"
 #include "qquickcanvas.h"
@@ -55,7 +56,6 @@
 #include <QtCore/qmath.h>
 
 #include <private/qdeclarativeglobal_p.h>
-#include <private/qtextcontrol_p.h>
 #include <private/qtextengine_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -1630,12 +1630,12 @@ void QQuickTextEditPrivate::init()
 
     document = new QQuickTextDocumentWithImageResources(q);
 
-    control = new QTextControl(document, q);
+    control = new QQuickTextControl(document, q);
     control->setIgnoreUnusedNavigationEvents(true);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
     control->setDragEnabled(false);
 
-    // By default, QTextControl will issue both a updateCursorRequest() and an updateRequest()
+    // By default, QQuickTextControl will issue both a updateCursorRequest() and an updateRequest()
     // when the cursor needs to be repainted. We need the signals to be separate to be able to
     // distinguish the cursor updates so that we can avoid updating the whole subtree when the
     // cursor blinks.
@@ -1644,7 +1644,7 @@ void QQuickTextEditPrivate::init()
         qWarning("QQuickTextEditPrivate::init: Failed to disconnect updateCursorRequest and updateRequest");
     }
 
-    // QTextControl follows the default text color
+    // QQuickTextControl follows the default text color
     // defined by the platform, declarative text
     // should be black by default
     QPalette pal = control->palette();
