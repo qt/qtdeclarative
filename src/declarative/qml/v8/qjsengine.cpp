@@ -22,6 +22,7 @@
 ****************************************************************************/
 
 #include "qjsengine.h"
+#include "qjsengine_p.h"
 #include "qjsvalue.h"
 #include "qjsvalue_p.h"
 #include "qscriptisolate_p.h"
@@ -178,7 +179,7 @@ QJSEngine::QJSEngine(QObject *parent)
 {
 }
 
-QJSEngine::QJSEngine(QObjectPrivate &dd, QObject *parent)
+QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
     , d(new QV8Engine(this))
 {

@@ -22,6 +22,7 @@ PUBLICTESTS += \
     qdeclarativeqt \
     qdeclarativetranslation \
     qdeclarativexmlhttprequest \
+    qdeclarativelocale \
     qjsvalue \
     qjsvalueiterator \
     qjsengine \

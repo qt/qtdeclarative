@@ -139,7 +139,7 @@ public:
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
                         ListModelType, Context2DType, Context2DStyleType, Context2DPixelArrayType, 
                         ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType,
-                        SequenceType };
+                        SequenceType, LocaleDataType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;
@@ -412,6 +412,9 @@ public:
 
     QObject *qtObjectFromJS(v8::Handle<v8::Value> value);
     QSet<int> visitedConversionObjects;
+
+    static QDateTime qtDateTimeFromJsDate(double jsDate);
+
 protected:
     QJSEngine* q;
     QDeclarativeEngine *m_engine;
@@ -449,7 +452,6 @@ protected:
     void initializeGlobal(v8::Handle<v8::Object>);
 
     double qtDateTimeToJsDate(const QDateTime &dt);
-    QDateTime qtDateTimeFromJsDate(double jsDate);
 
 private:
     typedef QScriptIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;

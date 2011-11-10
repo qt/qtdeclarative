@@ -32,7 +32,7 @@
 \contentspage QML Features
 \previouspage {Network Transparency}{Loading Resources in QML}
 \nextpage {QML Features}
-\title QML Internationalization
+\title Qt Quick 1 Internationalization
 
 
 Strings in QML can be marked for translation using the qsTr(), qsTranslate(),

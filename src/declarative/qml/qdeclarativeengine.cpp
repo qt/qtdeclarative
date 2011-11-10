@@ -85,6 +85,7 @@
 #include <private/qdeclarativeutilmodule_p.h>
 #include <private/qquickitemsmodule_p.h>
 #include <private/qquickparticlesmodule_p.h>
+#include <private/qdeclarativelocale_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
@@ -174,6 +175,7 @@ void QDeclarativeEnginePrivate::defineModule()
 {
     registerBaseTypes("QtQuick", 2, 0);
     qmlRegisterType<QDeclarativeBinding>();
+    qmlRegisterUncreatableType<QDeclarativeLocale>("QtQuick",2,0,"Locale",QDeclarativeEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 }
 
 /*!

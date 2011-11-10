@@ -43,6 +43,7 @@ SOURCES += \
     $$PWD/qdeclarativeextensionplugin.cpp \
     $$PWD/qdeclarativeimport.cpp \
     $$PWD/qdeclarativelist.cpp \
+    $$PWD/qdeclarativelocale.cpp \
 
 HEADERS += \
     $$PWD/qdeclarativeglobal_p.h \
@@ -104,7 +105,8 @@ HEADERS += \
     $$PWD/qdeclarativeimport_p.h \
     $$PWD/qdeclarativeextensionplugin.h \
     $$PWD/qdeclarativenullablevalue_p_p.h \
-    $$PWD/qdeclarativescriptstring_p.h
+    $$PWD/qdeclarativescriptstring_p.h \
+    $$PWD/qdeclarativelocale_p.h \
 
 QT += sql
 include(parser/parser.pri)

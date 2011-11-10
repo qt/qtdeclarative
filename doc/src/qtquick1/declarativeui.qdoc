@@ -77,7 +77,7 @@ Qt applications.
 \o \l{Integrating QML Code with Existing Qt UI Code}
 \o \l{Dynamic Object Management in QML}{Dynamic Object Management}
 \o \l{Network Transparency}{Loading Resources in QML}
-\o \l{QML Internationalization}{Internationalization}
+\o \l{QML Internationalization}{Qt Quick 1 Internationalization}
 \endlist
 
 \section1 QML Add-Ons
