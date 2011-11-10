@@ -55,6 +55,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qmetatype.h>
+#include <QtCore/qmetaobject.h>
 
 #include <private/qhashedstring_p.h>
 

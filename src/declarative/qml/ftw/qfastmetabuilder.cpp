@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qfastmetabuilder_p.h"
+#include "qvariant.h"
 
 #include <QtCore/qmetaobject.h>
 
