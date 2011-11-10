@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QV8ProfilerService, v8ServiceInstance)
+Q_GLOBAL_STATIC(QV8ProfilerService, v8ProfilerInstance)
 
 class ByteArrayOutputStream : public v8::OutputStream
 {
@@ -115,7 +115,7 @@ QV8ProfilerService::~QV8ProfilerService()
 
 QV8ProfilerService *QV8ProfilerService::instance()
 {
-    return v8ServiceInstance();
+    return v8ProfilerInstance();
 }
 
 void QV8ProfilerService::addEngine(QDeclarativeEngine *engine)
