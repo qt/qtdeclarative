@@ -1823,7 +1823,7 @@ void tst_qquicktextinput::canPasteEmpty() {
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QLineControl lc;
+    QQuickLineControl lc;
     bool cp = !lc.isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 
@@ -1841,7 +1841,7 @@ void tst_qquicktextinput::canPaste() {
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QLineControl lc;
+    QQuickLineControl lc;
     bool cp = !lc.isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 

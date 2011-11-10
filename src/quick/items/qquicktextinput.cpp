@@ -553,7 +553,7 @@ QRect QQuickTextInput::cursorRectangle() const
     Q_D(const QQuickTextInput);
     QRect r = d->control->cursorRect();
     // Scroll and make consistent with TextEdit
-    // QLineControl inexplicably adds 1 to the height and horizontal padding
+    // QQuickLineControl inexplicably adds 1 to the height and horizontal padding
     // for unicode direction markers.
     r.adjust(5 - d->hscroll, 0, -4 - d->hscroll, -1);
     return r;
@@ -892,7 +892,7 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     Q_D(QQuickTextInput);
     if (echoMode() == echo)
         return;
-    d->control->setEchoMode((QLineControl::EchoMode)echo);
+    d->control->setEchoMode((QQuickLineControl::EchoMode)echo);
     d->updateInputMethodHints();
     q_textChanged();
     emit echoModeChanged(echoMode());
@@ -987,7 +987,7 @@ void QQuickTextInput::createCursor()
     QDeclarative_setParent_noEvent(d->cursorItem, this);
     d->cursorItem->setParentItem(this);
     d->cursorItem->setX(d->control->cursorToX());
-    d->cursorItem->setHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
+    d->cursorItem->setHeight(d->control->height()-1); // -1 to counter QQuickLineControl's +1 which is not consistent with Text.
 }
 
 /*!
@@ -1365,7 +1365,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
     case Qt::ImCursorPosition:
         return QVariant(d->control->cursor());
     case Qt::ImSurroundingText:
-        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit
+        if (d->control->echoMode() == QQuickLineControl::PasswordEchoOnEdit
             && !d->control->passwordEchoEditing()) {
             return QVariant(displayText());
         } else {
@@ -1800,7 +1800,7 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
         d->focused = hasFocus;
         setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
         if (echoMode() == QQuickTextInput::PasswordEchoOnEdit && !hasFocus)
-            d->control->updatePasswordEchoEditing(false);//QLineControl sets it on key events, but doesn't deal with focus events
+            d->control->updatePasswordEchoEditing(false);//QQuickLineControl sets it on key events, but doesn't deal with focus events
         if (!hasFocus)
             d->control->deselect();
     }
@@ -1985,7 +1985,7 @@ void QQuickTextInput::updateSize(bool needsRedraw)
     Q_D(QQuickTextInput);
     int w = width();
     int h = height();
-    setImplicitSize(d->calculateTextWidth(), d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
+    setImplicitSize(d->calculateTextWidth(), d->control->height()-1); // -1 to counter QQuickLineControl's +1 which is not consistent with Text.
     if (w==width() && h==height() && needsRedraw)
         update();
 }
