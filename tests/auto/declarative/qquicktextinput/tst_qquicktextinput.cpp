@@ -56,6 +56,10 @@
 #include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
 
+#ifdef Q_OS_MAC
+#include <Carbon/Carbon.h>
+#endif
+
 #include "qplatformdefs.h"
 
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
