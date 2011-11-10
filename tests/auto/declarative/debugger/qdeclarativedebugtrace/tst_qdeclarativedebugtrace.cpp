@@ -226,6 +226,7 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
         QFAIL(qPrintable(failMsg));
     }
 
+    QVERIFY(m_client->traceMessages.count());
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
     QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
@@ -248,6 +249,8 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
                 = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
         QFAIL(qPrintable(failMsg));
     }
+
+    QVERIFY(m_client->traceMessages.count());
 
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);

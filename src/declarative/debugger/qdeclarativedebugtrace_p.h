@@ -119,8 +119,9 @@ public:
 
     static void initialize();
 
+    static bool startProfiling();
+    static bool stopProfiling();
     static void addEvent(EventType);
-
     static void startRange(RangeType);
     static void rangeData(RangeType, const QString &);
     static void rangeData(RangeType, const QUrl &);
@@ -129,11 +130,17 @@ public:
     static void endRange(RangeType);
     static void animationFrame(qint64);
 
+    static void sendProfilingData();
+
     QDeclarativeDebugTrace();
     ~QDeclarativeDebugTrace();
+
 protected:
     virtual void messageReceived(const QByteArray &);
+
 private:
+    bool startProfilingImpl();
+    bool stopProfilingImpl();
     void addEventImpl(EventType);
     void startRangeImpl(RangeType);
     void rangeDataImpl(RangeType, const QString &);
@@ -142,8 +149,13 @@ private:
     void rangeLocationImpl(RangeType, const QUrl &, int);
     void endRangeImpl(RangeType);
     void animationFrameImpl(qint64);
-    void processMessage(const QDeclarativeDebugData &);
+
+    bool profilingEnabled();
+    void setProfilingEnabled(bool enable);
     void sendMessages();
+    void processMessage(const QDeclarativeDebugData &);
+
+private:
     QElapsedTimer m_timer;
     bool m_enabled;
     bool m_messageReceived;

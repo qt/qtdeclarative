@@ -78,7 +78,7 @@ private slots:
     void createComponent();
     void createComponent_pragmaLibrary();
     void createQmlObject();
-    void consoleLog();
+    void console();
     void dateTimeConversion();
     void dateTimeFormatting();
     void dateTimeFormatting_data();
@@ -458,10 +458,14 @@ void tst_qdeclarativeqt::createQmlObject()
     delete object;
 }
 
-void tst_qdeclarativeqt::consoleLog()
+void tst_qdeclarativeqt::console()
 {
-    int startLineNumber = 30;
-    QUrl testFileUrl = TEST_FILE("consoleLog.qml");
+    QUrl testFileUrl = TEST_FILE("console.qml");
+    QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testFileUrl.toString()).arg(34);
+    QString testTrace = QString(QLatin1String("onCompleted (%1:%2:%3)\n")).arg(testFileUrl.toString()).arg(31).arg(17);
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(testTrace));
+    QTest::ignoreMessage(QtDebugMsg, "Profiling started.");
+    QTest::ignoreMessage(QtDebugMsg, "Profiling ended.");
     QTest::ignoreMessage(QtDebugMsg, "completed ok");
     QTest::ignoreMessage(QtDebugMsg, "completed ok");
     QTest::ignoreMessage(QtDebugMsg, "completed ok");
@@ -479,8 +483,9 @@ void tst_qdeclarativeqt::consoleLog()
     QTest::ignoreMessage(QtDebugMsg, "1 pong! Object");
     QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] Object 2");
 
-    QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(testException.arg(startLineNumber++)));
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(testException));
+
 
     QDeclarativeComponent component(&engine, testFileUrl);
     QObject *object = component.create();

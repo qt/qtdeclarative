@@ -525,16 +525,16 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 
     v8::Local<v8::Object> console = v8::Object::New();
     v8::Local<v8::Function> consoleLogFn = V8FUNCTION(consoleLog, this);
-    v8::Local<v8::Function> consoleWarnFn = V8FUNCTION(consoleWarn, this);
-    v8::Local<v8::Function> consoleErrorFn = V8FUNCTION(consoleError, this);
-    v8::Local<v8::Function> consoleTimeFn = V8FUNCTION(consoleTime, this);
-    v8::Local<v8::Function> consoleTimeEndFn = V8FUNCTION(consoleTimeEnd, this);
-    console->Set(v8::String::New("log"), consoleLogFn);
+
     console->Set(v8::String::New("debug"), consoleLogFn);
-    console->Set(v8::String::New("warn"), consoleWarnFn);
-    console->Set(v8::String::New("error"), consoleErrorFn);
-    console->Set(v8::String::New("time"), consoleTimeFn);
-    console->Set(v8::String::New("timeEnd"), consoleTimeEndFn);
+    console->Set(v8::String::New("error"), V8FUNCTION(consoleError, this));
+    console->Set(v8::String::New("log"), consoleLogFn);
+    console->Set(v8::String::New("profile"), V8FUNCTION(consoleProfile, this));
+    console->Set(v8::String::New("profileEnd"), V8FUNCTION(consoleProfileEnd, this));
+    console->Set(v8::String::New("time"), V8FUNCTION(consoleTime, this));
+    console->Set(v8::String::New("timeEnd"), V8FUNCTION(consoleTimeEnd, this));
+    console->Set(v8::String::New("trace"), V8FUNCTION(consoleTrace, this));
+    console->Set(v8::String::New("warn"), V8FUNCTION(consoleWarn, this));
 
     v8::Local<v8::Object> qt = v8::Object::New();
 
