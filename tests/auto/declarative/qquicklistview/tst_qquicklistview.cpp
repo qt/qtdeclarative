@@ -3468,7 +3468,7 @@ void tst_QQuickListView::resizeFirstDelegate()
     // check the content y has not jumped up and down
     QCOMPARE(listview->contentY(), 0.0);
     QSignalSpy spy(listview, SIGNAL(contentYChanged()));
-    QTest::qWait(300);
+    QTest::qWait(100);
     QCOMPARE(spy.count(), 0);
 
     for (int i = 1; i < model.count(); ++i) {
@@ -3476,6 +3476,24 @@ void tst_QQuickListView::resizeFirstDelegate()
         QVERIFY(item != 0);
         QTRY_COMPARE(item->y(), (i-1)*20.0);
     }
+
+
+    // QTBUG-22014: refill doesn't clear items scrolling off the top of the
+    // list if they follow a zero-sized delegate
+
+    for (int i = 0; i < 10; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    item = findItem<QQuickItem>(contentItem, "wrapper", 1);
+    QVERIFY(item);
+    item->setHeight(0);
+
+    listview->setCurrentIndex(19);
+    qApp->processEvents();
+
+    // items 0-3 should have been deleted
+    for (int i=0; i<4; i++)
+        QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", i));
 
     delete testObject;
     delete canvas;

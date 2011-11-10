@@ -634,18 +634,34 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
     FxViewItem *item = 0;
     bool changed = false;
 
-    while (visibleItems.count() > 1 && (item = visibleItems.first()) && item->endPosition() <= bufferFrom) {
+    // Remove items from the start of the view.
+    // Zero-sized items shouldn't be removed unless a non-zero-sized item is also being
+    // removed, otherwise a zero-sized item is infinitely added and removed over and
+    // over by refill().
+    int index = 0;
+    while (visibleItems.count() > 1 && index < visibleItems.count()
+           && (item = visibleItems.at(index)) && item->endPosition() <= bufferFrom) {
         if (item->attached->delayRemove())
             break;
-        if (item->size() == 0)
-            break;
+        if (item->size() > 0) {
 //            qDebug() << "refill: remove first" << visibleIndex << "top end pos" << item->endPosition();
-        if (item->index != -1)
-            visibleIndex++;
-        visibleItems.removeFirst();
-        releaseItem(item);
-        changed = true;
+
+            // remove this item and all zero-sized items before it
+            while (item) {
+                if (item->index != -1)
+                    visibleIndex++;
+                visibleItems.removeAt(index);
+                releaseItem(item);
+                if (index == 0)
+                    break;
+                item = visibleItems.at(--index);
+            }
+            changed = true;
+        } else {
+            index++;
+        }
     }
+
     while (visibleItems.count() > 1 && (item = visibleItems.last()) && item->position() > bufferTo) {
         if (item->attached->delayRemove())
             break;
