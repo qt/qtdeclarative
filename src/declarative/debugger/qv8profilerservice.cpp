@@ -152,8 +152,7 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
             startProfiling(QString::fromUtf8(title));
         } else if (option == "stop") {
             stopProfiling(QString::fromUtf8(title));
-            // Send messages to client
-            d->sendMessages();
+            sendProfilingData();
         }
         d->initialized = true;
     }
@@ -189,6 +188,13 @@ void QV8ProfilerService::stopProfiling(const QString &title)
         const v8::CpuProfileNode *rootNode = cpuProfile->GetTopDownRoot();
         d->printProfileTree(rootNode);
     }
+}
+
+void QV8ProfilerService::sendProfilingData()
+{
+    Q_D(QV8ProfilerService);
+    // Send messages to client
+    d->sendMessages();
 }
 
 void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node, int level)
