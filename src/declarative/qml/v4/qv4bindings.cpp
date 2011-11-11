@@ -212,7 +212,7 @@ QV4Bindings::~QV4Bindings()
 }
 
 QDeclarativeAbstractBinding *QV4Bindings::configBinding(int index, QObject *target, 
-                                                                   QObject *scope, int property)
+                                                                   QObject *scope, int property, int line)
 {
     Binding *rv = bindings + index;
 
@@ -220,6 +220,7 @@ QDeclarativeAbstractBinding *QV4Bindings::configBinding(int index, QObject *targ
     rv->property = property;
     rv->target = target;
     rv->scope = scope;
+    rv->line = line;
     rv->parent = this;
 
     addref(); // This is decremented in Binding::destroy()
@@ -239,6 +240,9 @@ void QV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::Write
 void QV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
+    if (parent->context())
+        QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding,
+                                              parent->context()->url, line);
     parent->run(this, flags);
     QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
 }

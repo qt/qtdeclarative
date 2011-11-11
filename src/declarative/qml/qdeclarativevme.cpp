@@ -958,7 +958,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 QML_NEXT_INSTR(StoreV4Binding);
 
             QDeclarativeAbstractBinding *binding = 
-                CTXT->v4bindings->configBinding(instr.value, target, scope, property);
+                CTXT->v4bindings->configBinding(instr.value, target, scope, property, instr.line);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
             binding->addToObject(target, property);
