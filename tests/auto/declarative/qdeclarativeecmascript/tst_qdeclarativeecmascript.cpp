@@ -223,6 +223,7 @@ private slots:
     void invokableObjectArg();
     void invokableObjectRet();
     void qtbug_20344();
+    void qtbug_22679();
     void revisionErrors();
     void revision();
 
@@ -5146,6 +5147,22 @@ void tst_qdeclarativeecmascript::deleteWhileBindingRunning()
     QObject *object = component.create();
     QVERIFY(object != 0);
     delete object;
+}
+
+void tst_qdeclarativeecmascript::qtbug_22679()
+{
+    MyQmlObject object;
+    object.setStringProperty(QLatin1String("Please work correctly"));
+    engine.rootContext()->setContextProperty("contextProp", &object);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22679.qml"));
+    qRegisterMetaType<QList<QDeclarativeError> >("QList<QDeclarativeError>");
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QDeclarativeError>)));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(warningsSpy.count(), 0);
+    delete o;
 }
 
 QTEST_MAIN(tst_qdeclarativeecmascript)
