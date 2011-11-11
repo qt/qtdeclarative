@@ -139,6 +139,7 @@ public:
             Bool,
             List,
             QObject,
+            VariantMap,
 
             MaxDataType
         };
@@ -193,19 +194,22 @@ private:
 
     int setVariantProperty(const ListLayout::Role &role, const QVariant &d);
 
-    int setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Value> d);
+    int setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Value> d, QV8Engine *eng);
 
     int setStringProperty(const ListLayout::Role &role, const QString &s);
     int setDoubleProperty(const ListLayout::Role &role, double n);
     int setBoolProperty(const ListLayout::Role &role, bool b);
     int setListProperty(const ListLayout::Role &role, ListModel *m);
     int setQObjectProperty(const ListLayout::Role &role, QObject *o);
+    int setVariantMapProperty(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
+    int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
 
     void setStringPropertyFast(const ListLayout::Role &role, const QString &s);
     void setDoublePropertyFast(const ListLayout::Role &role, double n);
     void setBoolPropertyFast(const ListLayout::Role &role, bool b);
     void setQObjectPropertyFast(const ListLayout::Role &role, QObject *o);
     void setListPropertyFast(const ListLayout::Role &role, ListModel *m);
+    void setVariantMapFast(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
 
     void clearProperty(const ListLayout::Role &role);
 
@@ -214,6 +218,7 @@ private:
     QString *getStringProperty(const ListLayout::Role &role);
     QObject *getQObjectProperty(const ListLayout::Role &role);
     QDeclarativeGuard<QObject> *getGuardProperty(const ListLayout::Role &role);
+    QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
 
     inline char *getPropertyMemory(const ListLayout::Role &role);
 
@@ -238,7 +243,7 @@ public:
     void destroy();
 
     int setOrCreateProperty(int elementIndex, const QString &key, const QVariant &data);
-    int setExistingProperty(int uid, const QString &key, v8::Handle<v8::Value> data);
+    int setExistingProperty(int uid, const QString &key, v8::Handle<v8::Value> data, QV8Engine *eng);
 
     QVariant getProperty(int elementIndex, int roleIndex, const QDeclarativeListModel *owner, QV8Engine *eng);
     ListModel *getListProperty(int elementIndex, const ListLayout::Role &role);
@@ -263,11 +268,11 @@ public:
         return elements.count();
     }
 
-    void set(int elementIndex, v8::Handle<v8::Object> object, QList<int> *roles);
-    void set(int elementIndex, v8::Handle<v8::Object> object);
+    void set(int elementIndex, v8::Handle<v8::Object> object, QList<int> *roles, QV8Engine *eng);
+    void set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
 
-    int append(v8::Handle<v8::Object> object);
-    void insert(int elementIndex, v8::Handle<v8::Object> object);
+    int append(v8::Handle<v8::Object> object, QV8Engine *eng);
+    void insert(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
 
     void clear();
     void remove(int index);
