@@ -147,7 +147,6 @@ private:
     void sendMessages();
     QElapsedTimer m_timer;
     bool m_enabled;
-    bool m_deferredSend;
     bool m_messageReceived;
     QVector<QDeclarativeDebugData> m_data;
     QMutex m_mutex;

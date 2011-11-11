@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 Q_GLOBAL_STATIC(QDeclarativeDebugTrace, traceInstance);
 
 // convert to a QByteArray that can be sent to the debug client
-// use of QDataStream can skew results if m_deferredSend == false
+// use of QDataStream can skew results
 //     (see tst_qdeclarativedebugtrace::trace() benchmark)
 QByteArray QDeclarativeDebugData::toByteArray() const
 {
@@ -75,7 +75,7 @@ QByteArray QDeclarativeDebugData::toByteArray() const
 
 QDeclarativeDebugTrace::QDeclarativeDebugTrace()
     : QDeclarativeDebugService(QLatin1String("CanvasFrameRate")),
-      m_enabled(false), m_deferredSend(true), m_messageReceived(false)
+      m_enabled(false), m_messageReceived(false)
 {
     m_timer.start();
     if (status() == Enabled) {
@@ -235,11 +235,7 @@ void QDeclarativeDebugTrace::animationFrameImpl(qint64 delta)
 void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message)
 {
     QMutexLocker locker(&m_mutex);
-    if (m_deferredSend
-            || (QThread::currentThread() != QCoreApplication::instance()->thread()))
-        m_data.append(message);
-    else
-        sendMessage(message.toByteArray());
+    m_data.append(message);
 }
 
 /*
@@ -247,19 +243,17 @@ void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message
 */
 void QDeclarativeDebugTrace::sendMessages()
 {
-    if (m_deferredSend) {
-        QMutexLocker locker(&m_mutex);
-        //### this is a suboptimal way to send batched messages
-        for (int i = 0; i < m_data.count(); ++i)
-            sendMessage(m_data.at(i).toByteArray());
-        m_data.clear();
+    QMutexLocker locker(&m_mutex);
+    //### this is a suboptimal way to send batched messages
+    for (int i = 0; i < m_data.count(); ++i)
+        sendMessage(m_data.at(i).toByteArray());
+    m_data.clear();
 
-        //indicate completion
-        QByteArray data;
-        QDataStream ds(&data, QIODevice::WriteOnly);
-        ds << (qint64)-1 << (int)Complete;
-        sendMessage(data);
-    }
+    //indicate completion
+    QByteArray data;
+    QDataStream ds(&data, QIODevice::WriteOnly);
+    ds << (qint64)-1 << (int)Complete;
+    sendMessage(data);
 }
 
 void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
