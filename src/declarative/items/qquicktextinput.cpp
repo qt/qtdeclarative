@@ -44,7 +44,6 @@
 #include "qquickcanvas.h"
 
 #include <private/qdeclarativeglobal_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qevent.h>

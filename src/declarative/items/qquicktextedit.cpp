@@ -56,7 +56,6 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qtextcontrol_p.h>
 #include <private/qtextengine_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
 

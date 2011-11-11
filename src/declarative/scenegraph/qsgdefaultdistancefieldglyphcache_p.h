@@ -39,69 +39,70 @@
 **
 ****************************************************************************/
 
-#ifndef DISTANCEFIELD_GLYPHNODE_H
-#define DISTANCEFIELD_GLYPHNODE_H
+#ifndef QSGDEFAULTDISTANCEFIELDGLYPHCACHE_H
+#define QSGDEFAULTDISTANCEFIELDGLYPHCACHE_H
 
+#include <QtGui/qopenglfunctions.h>
 #include <private/qsgadaptationlayer_p.h>
-#include "qsgtexture.h"
-
-#include <private/qquicktext_p.h>
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
-
-class QSGDistanceFieldGlyphCacheManager;
-class QSGDistanceFieldTextMaterial;
-class QSGDistanceFieldGlyphNode: public QSGGlyphNode
+class Q_DECLARATIVE_EXPORT QSGDefaultDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheManager *cacheManager);
-    ~QSGDistanceFieldGlyphNode();
+    QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
 
-    virtual QPointF baseLine() const { return m_baseLine; }
-    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
-    virtual void setColor(const QColor &color);
+    void requestGlyphs(const QVector<glyph_t> &glyphs);
+    void storeGlyphs(const QHash<glyph_t, QImage> &glyphs);
+    void releaseGlyphs(const QVector<glyph_t> &glyphs);
 
-    virtual void setPreferredAntialiasingMode(AntialiasingMode mode);
-
-    virtual void setStyle(QQuickText::TextStyle style);
-    virtual void setStyleColor(const QColor &color);
-
-    virtual void update();
-
-    void updateGeometry();
+    bool cacheIsFull() const { return m_textureData->currY >= maxTextureSize(); }
+    bool useWorkaroundBrokenFBOReadback() const;
+    int maxTextureSize() const;
 
 private:
-    void updateMaterial();
+    void createTexture(int width, int height);
+    void resizeTexture(int width, int height);
 
-    QColor m_color;
-    QPointF m_baseLine;
-    QSGDistanceFieldTextMaterial *m_material;
-    QPointF m_position;
-    QGlyphRun m_glyphs;
-    QSGDistanceFieldGlyphCacheManager *m_glyph_cacheManager;
-    QSGDistanceFieldGlyphCache *m_glyph_cache;
-    QSGGeometry m_geometry;
-    QQuickText::TextStyle m_style;
-    QColor m_styleColor;
-    AntialiasingMode m_antialiasingMode;
-    QRectF m_boundingRect;
+    mutable int m_maxTextureSize;
 
-    struct GlyphInfo {
-        quint32 glyphIndex;
-        QPointF position;
+    struct DistanceFieldTextureData : public QOpenGLSharedResource {
+        GLuint texture;
+        GLuint fbo;
+        QSize size;
+        QHash<glyph_t, quint32> glyphRefCount;
+        QSet<glyph_t> unusedGlyphs;
+        int currX;
+        int currY;
+        QImage image;
+
+        DistanceFieldTextureData(QOpenGLContext *ctx)
+            : QOpenGLSharedResource(ctx->shareGroup())
+            , texture(0)
+            , fbo(0)
+            , currX(0)
+            , currY(0)
+        {}
+
+        void invalidateResource()
+        {
+            texture = 0;
+            fbo = 0;
+            size = QSize();
+        }
+
+        void freeResource(QOpenGLContext *ctx)
+        {
+            glDeleteTextures(1, &texture);
+            ctx->functions()->glDeleteFramebuffers(1, &fbo);
+        }
     };
-    QLinkedList<GlyphInfo> m_glyphsToAdd;
 
-    uint m_dirtyGeometry: 1;
-    uint m_dirtyMaterial: 1;
+    DistanceFieldTextureData *textureData();
+    DistanceFieldTextureData *m_textureData;
+    static QHash<QString, QOpenGLMultiGroupSharedResource> m_textures_data;
 };
-
-QT_END_HEADER
 
 QT_END_NAMESPACE
 
-#endif // DISTANCEFIELD_GLYPHNODE_H
+#endif // QSGDEFAULTDISTANCEFIELDGLYPHCACHE_H

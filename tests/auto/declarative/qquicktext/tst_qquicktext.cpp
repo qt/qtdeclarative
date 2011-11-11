@@ -45,7 +45,6 @@
 #include <private/qquicktext_p.h>
 #include <private/qquicktext_p_p.h>
 #include <private/qdeclarativevaluetype_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <QFontMetrics>
 #include <QGraphicsSceneMouseEvent>
 #include <qmath.h>

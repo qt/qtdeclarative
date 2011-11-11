@@ -51,7 +51,6 @@
 #include <QtGui/qguiapplication.h>
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktextedit_p_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <QFontMetrics>
 #include <QQuickView>
 #include <QDir>

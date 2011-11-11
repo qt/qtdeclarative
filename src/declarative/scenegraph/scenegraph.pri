@@ -33,7 +33,8 @@ HEADERS += \
     $$PWD/util/qsgtexture.h \
     $$PWD/util/qsgtexture_p.h \
     $$PWD/util/qsgtextureprovider_p.h \
-    $$PWD/util/qsgpainternode_p.h
+    $$PWD/util/qsgpainternode_p.h \
+    $$PWD/util/qsgdistancefieldutil_p.h
 
 SOURCES += \
     $$PWD/util/qsgareaallocator.cpp \
@@ -45,7 +46,8 @@ SOURCES += \
     $$PWD/util/qsgvertexcolormaterial.cpp \
     $$PWD/util/qsgtexture.cpp \
     $$PWD/util/qsgtextureprovider.cpp \
-    $$PWD/util/qsgpainternode.cpp
+    $$PWD/util/qsgpainternode.cpp \
+    $$PWD/util/qsgdistancefieldutil.cpp
 
 
 # QML / Adaptations API
@@ -54,7 +56,7 @@ HEADERS += \
     $$PWD/qsgcontext_p.h \
     $$PWD/qsgcontextplugin_p.h \
     $$PWD/qsgdefaultglyphnode_p.h \
-    $$PWD/qsgdistancefieldglyphcache_p.h \
+    $$PWD/qsgdefaultdistancefieldglyphcache_p.h \
     $$PWD/qsgdistancefieldglyphnode_p.h \
     $$PWD/qsgdistancefieldglyphnode_p_p.h \
     $$PWD/qsgdefaultglyphnode_p_p.h \
@@ -69,10 +71,16 @@ SOURCES += \
     $$PWD/qsgcontextplugin.cpp \
     $$PWD/qsgdefaultglyphnode.cpp \
     $$PWD/qsgdefaultglyphnode_p.cpp \
-    $$PWD/qsgdistancefieldglyphcache.cpp \
+    $$PWD/qsgdefaultdistancefieldglyphcache.cpp \
     $$PWD/qsgdistancefieldglyphnode.cpp \
     $$PWD/qsgdistancefieldglyphnode_p.cpp \
     $$PWD/qsgdefaultimagenode.cpp \
     $$PWD/qsgdefaultrectanglenode.cpp \
     $$PWD/qsgflashnode.cpp \
     $$PWD/qsgpathsimplifier.cpp
+
+
+
+
+
+

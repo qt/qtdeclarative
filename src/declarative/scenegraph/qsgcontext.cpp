@@ -45,11 +45,12 @@
 
 #include <private/qsgdefaultrenderer_p.h>
 
+#include <private/qsgdistancefieldutil_p.h>
+#include <private/qsgdefaultdistancefieldglyphcache_p.h>
 #include <private/qsgdefaultrectanglenode_p.h>
 #include <private/qsgdefaultimagenode_p.h>
 #include <private/qsgdefaultglyphnode_p.h>
 #include <private/qsgdistancefieldglyphnode_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 
 #include <private/qsgtexture_p.h>
 #include <qsgengine.h>
@@ -289,6 +290,15 @@ QSGImageNode *QSGContext::createImageNode()
 }
 
 /*!
+    Factory function for scene graph backends of the distance-field glyph cache.
+ */
+QSGDistanceFieldGlyphCache *QSGContext::createDistanceFieldGlyphCache(const QRawFont &font)
+{
+    Q_D(QSGContext);
+    return new QSGDefaultDistanceFieldGlyphCache(d->distanceFieldCacheManager, glContext(), font);
+}
+
+/*!
     Factory function for scene graph backends of the Text elements;
  */
 QSGGlyphNode *QSGContext::createGlyphNode()
@@ -304,7 +314,7 @@ QSGGlyphNode *QSGContext::createGlyphNode()
         return new QSGDefaultGlyphNode;
     } else {
         if (!d->distanceFieldCacheManager) {
-            d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager(d->gl);
+            d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager(this);
             if (doSubpixel)
                 d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::HighQualitySubPixelAntialiasing);
             else if (doLowQualSubpixel)

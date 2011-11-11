@@ -52,7 +52,6 @@
 #include <QDir>
 #include <QStyle>
 #include <QInputContext>
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
 
