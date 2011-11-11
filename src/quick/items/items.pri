@@ -16,7 +16,6 @@ HEADERS += \
     $$PWD/qquicktext_p.h \
     $$PWD/qquicktext_p_p.h \
     $$PWD/qquicktextnode_p.h \
-    $$PWD/qquicklinecontrol_p.h \
     $$PWD/qquicktextinput_p.h \
     $$PWD/qquicktextinput_p_p.h \
     $$PWD/qquicktextcontrol_p.h \
@@ -85,7 +84,6 @@ SOURCES += \
     $$PWD/qquickpainteditem.cpp \
     $$PWD/qquicktext.cpp \
     $$PWD/qquicktextnode.cpp \
-    $$PWD/qquicklinecontrol.cpp \
     $$PWD/qquicktextinput.cpp \
     $$PWD/qquicktextcontrol.cpp \
     $$PWD/qquicktextedit.cpp \

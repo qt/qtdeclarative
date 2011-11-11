@@ -256,6 +256,7 @@ protected:
     void mouseUngrabEvent();
     bool event(QEvent *e);
     void focusInEvent(QFocusEvent *event);
+    void timerEvent(QTimerEvent *event);
     virtual void itemChange(ItemChange, const ItemChangeData &);
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data);
 
@@ -276,7 +277,6 @@ private Q_SLOTS:
     void q_textChanged();
     void selectionChanged();
     void createCursor();
-    void cursorPosChanged();
     void updateCursorRectangle();
     void updateRect(const QRect &r = QRect());
     void q_canPasteChanged();
