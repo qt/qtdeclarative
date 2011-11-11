@@ -7,7 +7,8 @@ PRIVATETESTS += \
     qdeclarativedebugjs \
     qdeclarativeinspector \
     qdeclarativedebugtrace \
-    qpacketprotocol
+    qpacketprotocol \
+    qv8profilerservice
 
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS

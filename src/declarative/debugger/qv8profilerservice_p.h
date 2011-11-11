@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-struct QV8ProfilerData
+struct Q_AUTOTEST_EXPORT QV8ProfilerData
 {
     int messageType;
     QString filename;
@@ -77,7 +77,7 @@ struct QV8ProfilerData
 class QDeclarativeEngine;
 class QV8ProfilerServicePrivate;
 
-class QV8ProfilerService : public QDeclarativeDebugService
+class Q_AUTOTEST_EXPORT QV8ProfilerService : public QDeclarativeDebugService
 {
     Q_OBJECT
 public:
