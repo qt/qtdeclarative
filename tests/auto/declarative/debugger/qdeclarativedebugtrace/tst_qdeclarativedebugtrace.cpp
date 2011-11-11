@@ -92,12 +92,14 @@ private:
     QDeclarativeDebugConnection *m_connection;
     QDeclarativeDebugTraceClient *m_client;
 
+    void connect(bool block);
+
 private slots:
-    void init();
     void cleanup();
 
-    void connectWithTraceEnabled();
-    void connectWithTraceDisabled();
+    void blockingConnectWithTraceEnabled();
+    void blockingConnectWithTraceDisabled();
+    void nonBlockingConnect();
 };
 
 void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
@@ -178,11 +180,16 @@ void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
     traceMessages.append(data);
 }
 
-void tst_QDeclarativeDebugTrace::init()
+void tst_QDeclarativeDebugTrace::connect(bool block)
 {
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
-    arguments << QString("-qmljsdebugger=port:"STR_PORT",block");
+
+    if (block)
+        arguments << QString("-qmljsdebugger=port:"STR_PORT",block");
+    else
+        arguments << QString("-qmljsdebugger=port:"STR_PORT);
+
     arguments << QString(TESTDATA(QLatin1String("test.qml")));
 
     m_process = new QDeclarativeDebugProcess(executable);
@@ -206,9 +213,37 @@ void tst_QDeclarativeDebugTrace::cleanup()
     delete m_client;
 }
 
-void tst_QDeclarativeDebugTrace::connectWithTraceEnabled()
+void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
 {
+    connect(true);
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+
+    m_client->setTraceStatus(true);
+    m_client->setTraceStatus(false);
+    if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
+        QString failMsg
+                = QString("No trace received in time. App output: \n\n").arg(m_process->output());
+        QFAIL(qPrintable(failMsg));
+    }
+
+    for (int i = 0; i < m_client->traceMessages.size(); ++i)
+        qDebug() << m_client->traceMessages.at(i).messageType << m_client->traceMessages.at(i).detailType;
+
+    // must start with "StartTrace"
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
+
+    // must end with "EndTrace"
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeDebugTrace::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeDebugTrace::EndTrace);
+}
+
+void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
+{
+    connect(true);
+    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+
+    m_client->setTraceStatus(false);
     m_client->setTraceStatus(true);
     m_client->setTraceStatus(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
@@ -226,10 +261,11 @@ void tst_QDeclarativeDebugTrace::connectWithTraceEnabled()
     QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeDebugTrace::EndTrace);
 }
 
-void tst_QDeclarativeDebugTrace::connectWithTraceDisabled()
+void tst_QDeclarativeDebugTrace::nonBlockingConnect()
 {
+    connect(false);
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
-    m_client->setTraceStatus(false);
+
     m_client->setTraceStatus(true);
     m_client->setTraceStatus(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
