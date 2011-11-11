@@ -1172,7 +1172,16 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
-    d->control->processEvent(event);
+#ifndef QT_NO_CLIPBOARD
+    if (QGuiApplication::clipboard()->supportsSelection()) {
+        if (event->button() == Qt::LeftButton) {
+            d->control->copy(QClipboard::Selection);
+        } else if (!isReadOnly() && event->button() == Qt::MidButton) {
+            d->control->deselect();
+            d->control->insert(QGuiApplication::clipboard()->text(QClipboard::Selection));
+        }
+    }
+#endif
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mouseReleaseEvent(event);
 }
@@ -1207,24 +1216,53 @@ void QQuickTextInput::mouseUngrabEvent()
 
 bool QQuickTextInput::event(QEvent* ev)
 {
-    Q_D(QQuickTextInput);
-    //Anything we don't deal with ourselves, pass to the control
-    bool handled = false;
-    switch (ev->type()) {
-        case QEvent::KeyPress:
-        case QEvent::KeyRelease://###Should the control be doing anything with release?
-        case QEvent::InputMethod:
-        case QEvent::MouseButtonPress:
-        case QEvent::MouseMove:
-        case QEvent::MouseButtonRelease:
-        case QEvent::MouseButtonDblClick:
-            break;
-        default:
-            handled = d->control->processEvent(ev);
+#ifndef QT_NO_SHORTCUT
+    if (ev->type() == QEvent::ShortcutOverride) {
+        if (isReadOnly())
+            return false;
+        QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+        if (ke == QKeySequence::Copy
+            || ke == QKeySequence::Paste
+            || ke == QKeySequence::Cut
+            || ke == QKeySequence::Redo
+            || ke == QKeySequence::Undo
+            || ke == QKeySequence::MoveToNextWord
+            || ke == QKeySequence::MoveToPreviousWord
+            || ke == QKeySequence::MoveToStartOfDocument
+            || ke == QKeySequence::MoveToEndOfDocument
+            || ke == QKeySequence::SelectNextWord
+            || ke == QKeySequence::SelectPreviousWord
+            || ke == QKeySequence::SelectStartOfLine
+            || ke == QKeySequence::SelectEndOfLine
+            || ke == QKeySequence::SelectStartOfBlock
+            || ke == QKeySequence::SelectEndOfBlock
+            || ke == QKeySequence::SelectStartOfDocument
+            || ke == QKeySequence::SelectAll
+            || ke == QKeySequence::SelectEndOfDocument) {
+            ke->accept();
+        } else if (ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier
+                   || ke->modifiers() == Qt::KeypadModifier) {
+            if (ke->key() < Qt::Key_Escape) {
+                ke->accept();
+                return true;
+            } else {
+                switch (ke->key()) {
+                case Qt::Key_Delete:
+                case Qt::Key_Home:
+                case Qt::Key_End:
+                case Qt::Key_Backspace:
+                case Qt::Key_Left:
+                case Qt::Key_Right:
+                    return true;
+                default:
+                    break;
+                }
+            }
+        }
     }
-    if (!handled)
-        handled = QQuickImplicitSizeItem::event(ev);
-    return handled;
+#endif
+
+    return QQuickImplicitSizeItem::event(ev);
 }
 
 void QQuickTextInput::geometryChanged(const QRectF &newGeometry,

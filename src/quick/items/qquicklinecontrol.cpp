@@ -569,55 +569,6 @@ void QQuickLineControl::processInputMethodEvent(QInputMethodEvent *event)
 /*!
     \internal
 
-    Draws the display text for the line control using the given
-    \a painter, \a clip, and \a offset.  Which aspects of the display text
-    are drawn is specified by the given \a flags.
-
-    If the flags contain DrawSelections, then the selection or input mask
-    backgrounds and foregrounds will be applied before drawing the text.
-
-    If the flags contain DrawCursor a cursor of the current cursorWidth()
-    will be drawn after drawing the text.
-
-    The display text will only be drawn if the flags contain DrawText
-*/
-void QQuickLineControl::draw(QPainter *painter, const QPoint &offset, const QRect &clip, int flags)
-{
-    QVector<QTextLayout::FormatRange> selections;
-    if (flags & DrawSelections) {
-        QTextLayout::FormatRange o;
-        if (m_selstart < m_selend) {
-            o.start = m_selstart;
-            o.length = m_selend - m_selstart;
-            o.format.setBackground(m_palette.brush(QPalette::Highlight));
-            o.format.setForeground(m_palette.brush(QPalette::HighlightedText));
-        } else {
-            // mask selection
-            if (!m_blinkPeriod || m_blinkStatus){
-                o.start = m_cursor;
-                o.length = 1;
-                o.format.setBackground(m_palette.brush(QPalette::Text));
-                o.format.setForeground(m_palette.brush(QPalette::Window));
-            }
-        }
-        selections.append(o);
-    }
-
-    if (flags & DrawText)
-        m_textLayout.draw(painter, offset, selections, clip);
-
-    if (flags & DrawCursor){
-        int cursor = m_cursor;
-        if (m_preeditCursor != -1)
-            cursor += m_preeditCursor;
-        if (!m_hideCursor && (!m_blinkPeriod || m_blinkStatus))
-            m_textLayout.drawCursor(painter, offset, cursor, m_cursorWidth);
-    }
-}
-
-/*!
-    \internal
-
     Sets the selection to cover the word at the given cursor position.
     The word boundaries are defined by the behavior of QTextLayout::SkipWords
     cursor mode.
@@ -1364,144 +1315,6 @@ void QQuickLineControl::timerEvent(QTimerEvent *event)
         killTimer(m_deleteAllTimer);
         m_deleteAllTimer = 0;
         clear();
-    } else if (event->timerId() == m_tripleClickTimer) {
-        killTimer(m_tripleClickTimer);
-        m_tripleClickTimer = 0;
-    }
-}
-
-bool QQuickLineControl::processEvent(QEvent* ev)
-{
-#ifdef QT_KEYPAD_NAVIGATION
-    if (QGuiApplication::keypadNavigationEnabled()) {
-        if ((ev->type() == QEvent::KeyPress) || (ev->type() == QEvent::KeyRelease)) {
-            QKeyEvent *ke = (QKeyEvent *)ev;
-            if (ke->key() == Qt::Key_Back) {
-                if (ke->isAutoRepeat()) {
-                    // Swallow it. We don't want back keys running amok.
-                    ke->accept();
-                    return true;
-                }
-                if ((ev->type() == QEvent::KeyRelease)
-                    && !isReadOnly()
-                    && m_deleteAllTimer) {
-                    killTimer(m_deleteAllTimer);
-                    m_deleteAllTimer = 0;
-                    backspace();
-                    ke->accept();
-                    return true;
-                }
-            }
-        }
-    }
-#endif
-    switch (ev->type()){
-        case QEvent::MouseButtonPress:
-        case QEvent::MouseButtonRelease:
-        case QEvent::MouseButtonDblClick:
-        case QEvent::MouseMove:
-            processMouseEvent(static_cast<QMouseEvent*>(ev)); break;
-        case QEvent::KeyPress:
-        case QEvent::KeyRelease:
-            processKeyEvent(static_cast<QKeyEvent*>(ev)); break;
-        case QEvent::InputMethod:
-            processInputMethodEvent(static_cast<QInputMethodEvent*>(ev)); break;
-#ifndef QT_NO_SHORTCUT
-        case QEvent::ShortcutOverride:{
-            if (isReadOnly())
-                return false;
-            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
-            if (ke == QKeySequence::Copy
-                || ke == QKeySequence::Paste
-                || ke == QKeySequence::Cut
-                || ke == QKeySequence::Redo
-                || ke == QKeySequence::Undo
-                || ke == QKeySequence::MoveToNextWord
-                || ke == QKeySequence::MoveToPreviousWord
-                || ke == QKeySequence::MoveToStartOfDocument
-                || ke == QKeySequence::MoveToEndOfDocument
-                || ke == QKeySequence::SelectNextWord
-                || ke == QKeySequence::SelectPreviousWord
-                || ke == QKeySequence::SelectStartOfLine
-                || ke == QKeySequence::SelectEndOfLine
-                || ke == QKeySequence::SelectStartOfBlock
-                || ke == QKeySequence::SelectEndOfBlock
-                || ke == QKeySequence::SelectStartOfDocument
-                || ke == QKeySequence::SelectAll
-                || ke == QKeySequence::SelectEndOfDocument) {
-                ke->accept();
-            } else if (ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier
-                       || ke->modifiers() == Qt::KeypadModifier) {
-                if (ke->key() < Qt::Key_Escape) {
-                    ke->accept();
-                } else {
-                    switch (ke->key()) {
-                    case Qt::Key_Delete:
-                    case Qt::Key_Home:
-                    case Qt::Key_End:
-                    case Qt::Key_Backspace:
-                    case Qt::Key_Left:
-                    case Qt::Key_Right:
-                        ke->accept();
-                    default:
-                        break;
-                    }
-                }
-            }
-        }
-#endif
-        default:
-            return false;
-    }
-    return true;
-}
-
-void QQuickLineControl::processMouseEvent(QMouseEvent* ev)
-{
-
-    switch (ev->type()) {
-        case QEvent::MouseButtonPress:{
-            if (m_tripleClickTimer
-                    && (ev->localPos() - m_tripleClick).manhattanLength() < qApp->styleHints()->startDragDistance()) {
-                selectAll();
-                return;
-            }
-            if (ev->button() == Qt::RightButton)
-                return;
-
-            bool mark = ev->modifiers() & Qt::ShiftModifier;
-            int cursor = xToPos(ev->localPos().x());
-            moveCursor(cursor, mark);
-            break;
-        }
-        case QEvent::MouseButtonDblClick:
-            if (ev->button() == Qt::LeftButton) {
-                selectWordAtPos(xToPos(ev->localPos().x()));
-                if (m_tripleClickTimer)
-                    killTimer(m_tripleClickTimer);
-                m_tripleClickTimer = startTimer(qApp->styleHints()->mouseDoubleClickInterval());
-                m_tripleClick = ev->localPos();
-            }
-            break;
-        case QEvent::MouseButtonRelease:
-#ifndef QT_NO_CLIPBOARD
-            if (QGuiApplication::clipboard()->supportsSelection()) {
-                if (ev->button() == Qt::LeftButton) {
-                    copy(QClipboard::Selection);
-                } else if (!isReadOnly() && ev->button() == Qt::MidButton) {
-                    deselect();
-                    insert(QGuiApplication::clipboard()->text(QClipboard::Selection));
-                }
-            }
-#endif
-            break;
-        case QEvent::MouseMove:
-            if (ev->buttons() & Qt::LeftButton) {
-                moveCursor(xToPos(ev->localPos().x()), true);
-            }
-            break;
-        default:
-            break;
     }
 }
 
@@ -1525,12 +1338,6 @@ void QQuickLineControl::processKeyEvent(QKeyEvent* event)
         && !passwordEchoEditing()
         && !isReadOnly()
         && !event->text().isEmpty()
-#ifdef QT_KEYPAD_NAVIGATION
-        && event->key() != Qt::Key_Select
-        && event->key() != Qt::Key_Up
-        && event->key() != Qt::Key_Down
-        && event->key() != Qt::Key_Back
-#endif
         && !(event->modifiers() & Qt::ControlModifier)) {
         // Clear the edit and reset to normal echo mode while editing; the
         // echo mode switches back when the edit loses focus
@@ -1677,25 +1484,6 @@ void QQuickLineControl::processKeyEvent(QKeyEvent* event)
                     backspace();
                 }
                 break;
-#ifdef QT_KEYPAD_NAVIGATION
-            case Qt::Key_Back:
-                if (QGuiApplication::keypadNavigationEnabled() && !event->isAutoRepeat()
-                    && !isReadOnly()) {
-                    if (text().length() == 0) {
-                        setText(m_cancelText);
-
-                        if (passwordEchoEditing())
-                            updatePasswordEchoEditing(false);
-
-                        emit editFocusChange(false);
-                    } else if (!m_deleteAllTimer) {
-                        m_deleteAllTimer = startTimer(750);
-                    }
-                } else {
-                    unknown = true;
-                }
-                break;
-#endif
             default:
                 if (!handled)
                     unknown = true;

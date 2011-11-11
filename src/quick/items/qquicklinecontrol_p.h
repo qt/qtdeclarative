@@ -78,10 +78,10 @@ public:
     QQuickLineControl(const QString &txt = QString())
         : m_cursor(0), m_preeditCursor(0), m_cursorWidth(0), m_layoutDirection(Qt::LayoutDirectionAuto),
         m_hideCursor(false), m_separator(0), m_readOnly(0),
-        m_dragEnabled(0), m_echoMode(Normal), m_textDirty(0), m_selDirty(0),
+        m_echoMode(Normal), m_textDirty(0), m_selDirty(0),
         m_validInput(1), m_blinkStatus(0), m_blinkPeriod(0), m_blinkTimer(0), m_deleteAllTimer(0),
         m_ascent(0), m_maxLength(32767), m_lastCursorPos(-1),
-        m_tripleClickTimer(0), m_maskData(0), m_modifiedState(0), m_undoState(0),
+        m_maskData(0), m_modifiedState(0), m_undoState(0),
         m_selstart(0), m_selend(0), m_passwordEchoEditing(false)
     {
         init(txt);
@@ -314,7 +314,6 @@ public:
         DrawCursor = 0x04,
         DrawAll = DrawText | DrawSelections | DrawCursor
     };
-    void draw(QPainter *, const QPoint &, const QRect &, int flags = DrawAll);
 
     bool processEvent(QEvent *ev);
 
@@ -352,7 +351,6 @@ private:
     uint m_hideCursor : 1; // used to hide the m_cursor inside preedit areas
     uint m_separator : 1;
     uint m_readOnly : 1;
-    uint m_dragEnabled : 1;
     uint m_echoMode : 2;
     uint m_textDirty : 1;
     uint m_selDirty : 1;
@@ -365,8 +363,6 @@ private:
     int m_maxLength;
     int m_lastCursorPos;
     QList<int> m_transactions;
-    QPointF m_tripleClick;
-    int m_tripleClickTimer;
     QString m_cancelText;
 
     void emitCursorPositionChanged();
@@ -437,9 +433,6 @@ Q_SIGNALS:
     void editingFinished();
     void updateNeeded(const QRect &);
 
-#ifdef QT_KEYPAD_NAVIGATION
-    void editFocusChange(bool);
-#endif
 protected:
     virtual void timerEvent(QTimerEvent *event);
 
