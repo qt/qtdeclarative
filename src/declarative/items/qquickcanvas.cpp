@@ -488,7 +488,9 @@ QQuickCanvasPrivate::~QQuickCanvasPrivate()
 
 void QQuickCanvasPrivate::init(QQuickCanvas *c)
 {
-    QUnifiedTimer::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
+    QUnifiedTimer* ut = QUnifiedTimer::instance(true);
+    if (qmlFixedAnimationStep())
+        ut->setConsistentTiming(true);
 
     q_ptr = c;
 
