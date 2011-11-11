@@ -119,7 +119,7 @@ QRectF QSGTexture::convertToNormalizedSourceRect(const QRectF &rect) const
 }
 
 
-class QSGDynamicTexture : public QSGTexture
+class Q_DECLARATIVE_EXPORT QSGDynamicTexture : public QSGTexture
 {
     Q_OBJECT
 public:
