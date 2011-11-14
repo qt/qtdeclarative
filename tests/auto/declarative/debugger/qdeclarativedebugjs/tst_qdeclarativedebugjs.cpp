@@ -131,6 +131,17 @@ const char *JSFILE = "test.js";
     jsonVal.setProperty(SEQ,QJSValue(seq++)); \
     jsonVal.setProperty(TYPE,REQUEST);
 
+
+#undef QVERIFY
+#define QVERIFY(statement) \
+do {\
+    if (!QTest::qVerify((statement), #statement, "", __FILE__, __LINE__)) {\
+        qDebug().nospace() << "\nDEBUGGEE OUTPUT:\n" << process->output();\
+        return;\
+    }\
+} while (0)
+
+
 class QJSDebugClient;
 
 class tst_QDeclarativeDebugJS : public QObject
