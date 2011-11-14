@@ -819,7 +819,7 @@ void QJSDebugClient::gc()
 
     QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
 
-    args.setProperty(QLatin1String(FLAGS),QJSValue(QLatin1String(ALL)));
+    args.setProperty(QLatin1String(TYPE),QJSValue(QLatin1String(ALL)));
 
     if (args.isValid()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
