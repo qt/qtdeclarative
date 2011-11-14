@@ -146,6 +146,7 @@ private slots:
     void editProperties();
     void QTBUG_14830();
     void avoidFastForward();
+    void revertListBug();
 };
 
 void tst_qdeclarativestates::initTestCase()
@@ -1543,6 +1544,48 @@ void tst_qdeclarativestates::avoidFastForward()
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     rectPrivate->setState("a");
     QCOMPARE(rect->property("updateCount").toInt(), 1);
+}
+
+//QTBUG-22583
+void tst_qdeclarativestates::revertListBug()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, TESTDATA("revertListBug.qml"));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QQuickRectangle *rect1 = rect->findChild<QQuickRectangle*>("rect1");
+    QQuickRectangle *rect2 = rect->findChild<QQuickRectangle*>("rect2");
+    QQuickItem *origParent1 = rect->findChild<QQuickItem*>("originalParent1");
+    QQuickItem *origParent2 = rect->findChild<QQuickItem*>("originalParent2");
+    QQuickItem *newParent = rect->findChild<QQuickItem*>("newParent");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), origParent2);
+
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+    rectPrivate->setState("reparented");
+
+    QCOMPARE(rect1->parentItem(), newParent);
+    QCOMPARE(rect2->parentItem(), origParent2);
+
+    rectPrivate->setState("");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), origParent2);
+
+    QMetaObject::invokeMethod(rect, "switchTargetItem");
+
+    rectPrivate->setState("reparented");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), newParent);
+
+    rectPrivate->setState("");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), origParent2); //QTBUG-22583 causes rect2's parent item to be origParent1
 }
 
 QTEST_MAIN(tst_qdeclarativestates)

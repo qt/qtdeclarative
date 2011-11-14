@@ -303,7 +303,10 @@ void QDeclarativeStatePrivate::complete()
 
     for (int ii = 0; ii < reverting.count(); ++ii) {
         for (int jj = 0; jj < revertList.count(); ++jj) {
-            if (revertList.at(jj).property() == reverting.at(ii)) {
+            const QDeclarativeRevertAction &revert = reverting.at(ii);
+            const QDeclarativeSimpleAction &simple = revertList.at(jj);
+            if ((revert.event && simple.event() == revert.event) ||
+                simple.property() == revert.property) {
                 revertList.removeAt(jj);
                 break;
             }
@@ -685,7 +688,10 @@ void QDeclarativeState::apply(QDeclarativeTransition *trans, QDeclarativeState *
                 a.event->saveCurrentValues();
             applyList << a;
             // Store these special reverts in the reverting list
-            d->reverting << d->revertList.at(ii).property();
+            if (a.event)
+                d->reverting << a.event;
+            else
+                d->reverting << a.property;
         }
     }
     // All the local reverts now become part of the ongoing revertList
