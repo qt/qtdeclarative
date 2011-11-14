@@ -107,6 +107,30 @@ public:
 
 
     struct State {
+        State()
+            : strokeStyle(QColor("#000000"))
+            , fillStyle(QColor("#000000"))
+            , fillPatternRepeatX(false)
+            , fillPatternRepeatY(false)
+            , strokePatternRepeatX(false)
+            , strokePatternRepeatY(false)
+            , fillRule(Qt::WindingFill)
+            , globalAlpha(1.0)
+            , lineWidth(1)
+            , lineCap(Qt::FlatCap)
+            , lineJoin(Qt::MiterJoin)
+            , miterLimit(10)
+            , shadowOffsetX(0)
+            , shadowOffsetY(0)
+            , shadowBlur(0)
+            , shadowColor(qRgba(0, 0, 0, 0))
+            , globalCompositeOperation(QPainter::CompositionMode_SourceOver)
+            , font(QFont(QLatin1String("sans-serif"), 10))
+            , textAlign(QQuickContext2D::Start)
+            , textBaseline(QQuickContext2D::Alphabetic)
+        {
+        }
+
         QTransform matrix;
         QPainterPath clipPath;
         QBrush strokeStyle;
