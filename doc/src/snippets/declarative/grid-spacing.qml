@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 //! [document]
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
     width: 112; height: 112

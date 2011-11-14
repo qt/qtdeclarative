@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 //! [imports]
-import QtQuick 1.0
+import QtQuick 2.0
 import com.nokia.qml.mymodule 1.0
 //! [imports]
 

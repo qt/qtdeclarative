@@ -44,7 +44,10 @@
 #include <QDir>
 #include <QProcess>
 #include <QDebug>
+#include <QQuickItem>
 #include <QQuickView>
+#include <QDeclarativeComponent>
+#include <QDeclarativeEngine>
 #include <QDeclarativeError>
 
 class tst_examples : public QObject
@@ -60,13 +63,19 @@ private slots:
     void namingConvention();
 private:
     QStringList excludedDirs;
+    QStringList excludedFiles;
 
     void namingConvention(const QDir &);
     QStringList findQmlFiles(const QDir &);
+
+    QDeclarativeEngine engine;
 };
 
 tst_examples::tst_examples()
 {
+    // Add files to exclude here
+    excludedFiles << "doc/src/snippets/declarative/listmodel.qml"; //Just a ListModel, no root QQuickItem
+
     // Add directories you want excluded here
     excludedDirs << "examples/declarative/text/fonts"; // QTBUG-21415
 
@@ -158,10 +167,21 @@ QStringList tst_examples::findQmlFiles(const QDir &d)
                                         QDir::Files);
         foreach (const QString &file, files) {
             if (file.at(0).isLower()) {
+                bool superContinue = false;
+                for (int ii = 0; ii < excludedFiles.count(); ++ii) {
+                    QString e = excludedFiles.at(ii);
+                    if (d.absoluteFilePath(file).endsWith(e)) {
+                        superContinue = true;
+                        break;
+                    }
+                }
+                if (superContinue)
+                    continue;
                 rv << d.absoluteFilePath(file);
             }
         }
     }
+
 
     QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
                                    QDir::NoSymLinks);
@@ -191,7 +211,7 @@ void tst_examples::sgexamples_data()
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/declarative/";
-    QString snippets = QLatin1String(SRCDIR) + "/../../../../doc/src/snippets/";
+    QString snippets = QLatin1String(SRCDIR) + "/../../../../doc/src/snippets/declarative";
 
     QStringList files;
     files << findQmlFiles(QDir(examples));
@@ -205,19 +225,26 @@ void tst_examples::sgexamples()
 {
     QFETCH(QString, file);
 
-    QQuickView view;
-
     QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
-    view.setSource(file);
     qInstallMsgHandler(old);
 
-    if (view.status() == QQuickView::Error)
-        qWarning() << view.errors();
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(file));
+    if (component.status() == QDeclarativeComponent::Error)
+        qWarning() << component.errors();
+    QCOMPARE(component.status(), QDeclarativeComponent::Ready);
 
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQuickItem *root = qobject_cast<QQuickItem *>(object.data());
+    if (!root)
+        component.completeCreate();
+    QVERIFY(root);
 
-    QTest::qWait(100);
+    QQuickCanvas canvas;
+    root->setParentItem(canvas.rootItem());
+    component.completeCreate();
+    canvas.show();
+
+    QTest::qWaitForWindowShown(&canvas);
 
 }
 

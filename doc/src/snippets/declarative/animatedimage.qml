@@ -42,7 +42,7 @@
 // examples/declarative/imageelements/animatedimage
 
 //! [document]
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
     width: animation.width; height: animation.height + 8
