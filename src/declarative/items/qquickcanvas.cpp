@@ -2157,8 +2157,10 @@ void QQuickCanvasRenderThread::run()
 
         unlock();
 
-        // Process any "deleteLater" objects...
         QCoreApplication::processEvents();
+
+        // Process any "deleteLater" objects...
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 
 #ifdef THREAD_DEBUG
