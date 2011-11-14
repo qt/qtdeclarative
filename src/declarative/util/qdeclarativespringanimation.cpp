@@ -242,7 +242,6 @@ void QSpringAnimation::updateCurrentTime(int time)
                 currentValue = fmod(currentValue, modulus) + modulus;
         }
         if (lastTime - startTime >= dura) {
-            qDebug() << "velocity mode:" << "lastTime:" << lastTime << " dura:" << dura;
             currentValue = to;
             stopped = true;
         }

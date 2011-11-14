@@ -1038,9 +1038,7 @@ void tst_qdeclarativeanimations::doubleRegistrationBug()
 
     QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
     QVERIFY(anim != 0);
-    QTest::qWait(100);
-    //the animation instance should not be created here
-    QVERIFY(!anim->qtAnimation());
+    QTRY_COMPARE(anim->qtAnimation()->state(), QAbstractAnimation2::Stopped);
 }
 
 //QTBUG-16736
