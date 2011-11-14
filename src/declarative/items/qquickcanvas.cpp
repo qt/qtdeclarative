@@ -132,13 +132,6 @@ public:
         : updatePending(false)
         , animationRunning(false)
     {
-        static bool warningMessage = false;
-        if (!warningMessage) {
-            warningMessage = true;
-            qWarning("QQuickCanvas: using non-threaded render loop. Be very sure to not access scene "
-                     "graph objects outside the QQuickItem::updatePaintNode() call. Failing to do so "
-                     "will cause your code to crash on other platforms!");
-        }
     }
 
     virtual void paint() {
