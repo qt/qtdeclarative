@@ -100,6 +100,24 @@ private:
     static CompletionRegisteringType *m_me;
 };
 
+class CompletionCallbackType : public QObject, public QDeclarativeParserStatus
+{
+Q_OBJECT
+public:
+    CompletionCallbackType();
+
+    virtual void classBegin();
+    virtual void componentComplete();
+
+    typedef void (*callback)(CompletionCallbackType *, void *);
+    static void clearCallback();
+    static void registerCallback(callback, void *);
+
+private:
+    static callback m_callback;
+    static void *m_data;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

@@ -203,7 +203,7 @@ May throw exception with code property SQLException.DATABASE_ERR, SQLException.S
 
 \section1 Logging
 
-\c console.log() and \c console.debug() can be used to print information
+\c console.log(), \c console.debug(), \c console.time(), and \c console.timeEnd() can be used to print information
 to the console. See \l{Debugging QML} for more information.
 
 */

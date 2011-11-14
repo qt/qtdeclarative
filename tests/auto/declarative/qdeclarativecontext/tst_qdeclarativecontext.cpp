@@ -45,6 +45,18 @@
 #include <QDeclarativeContext>
 #include <QDeclarativeComponent>
 #include <QDeclarativeExpression>
+#include <private/qdeclarativecontext_p.h>
+#include "../shared/util.h"
+
+inline QUrl TEST_FILE(const QString &filename)
+{
+    return QUrl::fromLocalFile(TESTDATA(filename));
+}
+
+inline QUrl TEST_FILE(const char *filename)
+{
+    return TEST_FILE(QLatin1String(filename));
+}
 
 class tst_qdeclarativecontext : public QObject
 {
@@ -63,6 +75,10 @@ private slots:
     void idAsContextProperty();
     void readOnlyContexts();
     void nameForObject();
+
+    void refreshExpressions();
+    void refreshExpressionsCrash();
+    void refreshExpressionsRootContext();
 
 private:
     QDeclarativeEngine engine;
@@ -488,6 +504,144 @@ void tst_qdeclarativecontext::nameForObject()
     QCOMPARE(qmlContext(o)->nameForObject(&o1), QString());
 
     delete o;
+}
+
+class DeleteCommand : public QObject
+{
+Q_OBJECT
+public:
+    DeleteCommand() : object(0) {}
+
+    QObject *object;
+
+public slots:
+    void doCommand() { if (object) delete object; object = 0; }
+};
+
+// Calling refresh expressions would crash if an expression or context was deleted during
+// the refreshing
+void tst_qdeclarativecontext::refreshExpressionsCrash()
+{
+    {
+    QDeclarativeEngine engine;
+
+    DeleteCommand command;
+    engine.rootContext()->setContextProperty("deleteCommand", &command);
+    // We use a fresh context here to bypass any root-context optimizations in
+    // the engine
+    QDeclarativeContext ctxt(engine.rootContext());
+
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0; QtObject { property var binding: deleteCommand.doCommand() }", QUrl());
+    QVERIFY(component.isReady());
+
+    QObject *o1 = component.create(&ctxt);
+    QObject *o2 = component.create(&ctxt);
+
+    command.object = o2;
+
+    QDeclarativeContextData::get(&ctxt)->refreshExpressions();
+
+    delete o1;
+    }
+    {
+    QDeclarativeEngine engine;
+
+    DeleteCommand command;
+    engine.rootContext()->setContextProperty("deleteCommand", &command);
+    // We use a fresh context here to bypass any root-context optimizations in
+    // the engine
+    QDeclarativeContext ctxt(engine.rootContext());
+
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0; QtObject { property var binding: deleteCommand.doCommand() }", QUrl());
+    QVERIFY(component.isReady());
+
+    QObject *o1 = component.create(&ctxt);
+    QObject *o2 = component.create(&ctxt);
+
+    command.object = o1;
+
+    QDeclarativeContextData::get(&ctxt)->refreshExpressions();
+
+    delete o2;
+    }
+}
+
+class CountCommand : public QObject
+{
+Q_OBJECT
+public:
+    CountCommand() : count(0) {}
+
+    int count;
+
+public slots:
+    void doCommand() { ++count; }
+};
+
+
+// Test that calling refresh expressions causes all the expressions to refresh
+void tst_qdeclarativecontext::refreshExpressions()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, TEST_FILE("refreshExpressions.qml"));
+    QDeclarativeComponent component2(&engine, TEST_FILE("RefreshExpressionsType.qml"));
+
+    CountCommand command;
+    engine.rootContext()->setContextProperty("countCommand", &command);
+
+    // We use a fresh context here to bypass any root-context optimizations in
+    // the engine
+    QDeclarativeContext context(engine.rootContext());
+    QDeclarativeContext context2(&context);
+
+    QObject *o1 = component.create(&context);
+    QObject *o2 = component.create(&context2);
+    QObject *o3 = component2.create(&context);
+
+    QCOMPARE(command.count, 5);
+
+    QDeclarativeContextData::get(&context)->refreshExpressions();
+
+    QCOMPARE(command.count, 10);
+
+    delete o3;
+    delete o2;
+    delete o1;
+}
+
+// Test that updating the root context, only causes expressions in contexts with an
+// unresolved name to reevaluate
+void tst_qdeclarativecontext::refreshExpressionsRootContext()
+{
+    QDeclarativeEngine engine;
+
+    CountCommand command;
+    engine.rootContext()->setContextProperty("countCommand", &command);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("refreshExpressions.qml"));
+    QDeclarativeComponent component2(&engine, TEST_FILE("refreshExpressionsRootContext.qml"));
+
+    QDeclarativeContext context(engine.rootContext());
+    QDeclarativeContext context2(engine.rootContext());
+
+    QString warning = component2.url().toString() + QLatin1String(":4: ReferenceError: Can't find variable: unresolvedName");
+
+    QObject *o1 = component.create(&context);
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    QObject *o2 = component2.create(&context2);
+
+    QCOMPARE(command.count, 3);
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    QDeclarativeContextData::get(engine.rootContext())->refreshExpressions();
+
+    QCOMPARE(command.count, 4);
+
+    delete o2;
+    delete o1;
 }
 
 QTEST_MAIN(tst_qdeclarativecontext)

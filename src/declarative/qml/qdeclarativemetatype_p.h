@@ -129,6 +129,7 @@ public:
         QObject *(*qobject)(QDeclarativeEngine *, QJSEngine *);
     };
     static ModuleApi moduleApi(const QString &, int, int);
+    static QHash<QString, QList<ModuleApi> > moduleApis();
 };
 
 class QHashedStringRef;

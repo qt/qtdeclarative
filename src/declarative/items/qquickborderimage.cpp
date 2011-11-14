@@ -161,7 +161,7 @@ QT_BEGIN_NAMESPACE
 
     Note that this property is only valid for images read from the
     local filesystem.  Images loaded via a network resource (e.g. HTTP)
-    are always loaded asynchonously.
+    are always loaded asynchronously.
 */
 QQuickBorderImage::QQuickBorderImage(QQuickItem *parent)
 : QQuickImageBase(*(new QQuickBorderImagePrivate), parent)

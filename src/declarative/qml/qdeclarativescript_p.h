@@ -250,7 +250,7 @@ public:
     // The core data in the case of a regular property.  
     // XXX This has to be a value now as the synthCache may change during
     // compilation which invalidates pointers.  We should fix this.
-    QDeclarativePropertyCache::Data core;
+    QDeclarativePropertyData core;
 
     // Returns true if this is an empty property - both value and values
     // are unset.
@@ -279,6 +279,8 @@ public:
     // True if this property is a property alias.  Set by the 
     // QDeclarativeCompiler
     bool isAlias;
+    // True if this is a readonly property declaration
+    bool isReadOnlyDeclaration;
 
     // Used for scriptStringProperties
     int scriptStringScope;
@@ -388,7 +390,9 @@ public:
         enum Type { Var, Variant, Int, Bool, Real, String, Url, Color,
                     Time, Date, DateTime, Alias, Custom, CustomList };
 
-        bool isDefaultProperty;
+        quint32 isDefaultProperty:1;
+        quint32 isReadOnly:1;
+
         Type type;
 
         QHashedStringRef customType;

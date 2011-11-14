@@ -929,13 +929,11 @@ void tst_QJSEngine::jsParseDate()
     }
 
     // Date.parse() should be able to parse the output of Date().toString()
-#ifndef Q_WS_WIN // TODO: Test and remove this since 169701 has been fixed
     {
         QJSValue ret = eng.evaluate("var x = new Date(); var s = x.toString(); s == new Date(Date.parse(s)).toString()");
         QVERIFY(ret.isBoolean());
         QCOMPARE(ret.toBoolean(), true);
     }
-#endif
 }
 
 void tst_QJSEngine::newQObject()
@@ -1073,7 +1071,7 @@ void tst_QJSEngine::newQObject_promoteObject()
 void tst_QJSEngine::newQObject_sameQObject()
 {
 #if 0 // ###FIXME: No QObjectWrapOptions API
-    QSKIP("This test stongly relay on strictlyEquals feature that would change in near future");
+    QSKIP("This test strongly relies on strictlyEquals feature that would change in near future");
     QScriptEngine eng;
     // calling newQObject() several times with same object
     for (int x = 0; x < 2; ++x) {
@@ -2170,7 +2168,6 @@ void tst_QJSEngine::evaluate()
         ret = eng.evaluate(code, /*fileName =*/QString(), lineNumber);
     else
         ret = eng.evaluate(code);
-    QEXPECT_FAIL("/a/gimp", "v8 ignore invalid flags", Abort);
     QCOMPARE(eng.hasUncaughtException(), expectHadError);
 #if 0 // ###FIXME: No support for the line number of an uncaught exception
     QEXPECT_FAIL("f()", "SyntaxError do not report line number", Continue);

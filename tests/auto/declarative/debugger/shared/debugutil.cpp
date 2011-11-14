@@ -148,18 +148,24 @@ bool QDeclarativeDebugProcess::waitForSessionStart()
 
 QString QDeclarativeDebugProcess::output() const
 {
-    return m_outputBuffer;
+    return m_output;
 }
 
 void QDeclarativeDebugProcess::processAppOutput()
 {
     m_mutex.lock();
-    const QString appOutput = m_process.readAll();
-    static QRegExp newline("[\n\r]{1,2}");
-    QStringList lines = appOutput.split(newline);
-    foreach (const QString &line, lines) {
-        if (line.isEmpty())
-            continue;
+
+    QString newOutput = m_process.readAll();
+    m_output.append(newOutput);
+    m_outputBuffer.append(newOutput);
+
+    while (true) {
+        const int nlIndex = m_outputBuffer.indexOf(QLatin1Char('\n'));
+        if (nlIndex < 0) // no further complete lines
+            break;
+        const QString line = m_outputBuffer.left(nlIndex);
+        m_outputBuffer = m_outputBuffer.right(m_outputBuffer.size() - nlIndex - 1);
+
         if (line.startsWith("Qml debugging is enabled")) // ignore
             continue;
         if (line.startsWith("QDeclarativeDebugServer:")) {
@@ -172,7 +178,6 @@ void QDeclarativeDebugProcess::processAppOutput()
                 continue;
             }
         }
-        m_outputBuffer.append(appOutput);
     }
     m_mutex.unlock();
 }

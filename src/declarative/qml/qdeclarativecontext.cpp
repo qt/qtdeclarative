@@ -381,8 +381,8 @@ QVariant QDeclarativeContext::contextProperty(const QString &name) const
         QByteArray utf8Name = name.toUtf8();
         if (data->contextObject) {
             QObject *obj = data->contextObject;
-            QDeclarativePropertyCache::Data local;
-            QDeclarativePropertyCache::Data *property =
+            QDeclarativePropertyData local;
+            QDeclarativePropertyData *property =
                 QDeclarativePropertyCache::property(data->engine, obj, name, local);
 
             if (property) value = obj->metaObject()->property(property->coreIndex).read(obj);
@@ -511,18 +511,18 @@ QObject *QDeclarativeContextPrivate::context_at(QDeclarativeListProperty<QObject
 
 QDeclarativeContextData::QDeclarativeContextData()
 : parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
-  isPragmaLibraryContext(false), publicContext(0), activeVME(0), propertyNames(0), contextObject(0), 
-  imports(0), childContexts(0), nextChild(0), prevChild(0), expressions(0), contextObjects(0), 
-  contextGuards(0), idValues(0), idValueCount(0), linkedContext(0), componentAttached(0), 
-  v4bindings(0), v8bindings(0)
+  isPragmaLibraryContext(false), unresolvedNames(false), publicContext(0), activeVMEData(0),
+  propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
+  expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
+  componentAttached(0), v4bindings(0), v8bindings(0)
 {
 }
 
 QDeclarativeContextData::QDeclarativeContextData(QDeclarativeContext *ctxt)
 : parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
-  isPragmaLibraryContext(false), publicContext(ctxt), activeVME(0), propertyNames(0), 
-  contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0), expressions(0), 
-  contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0), 
+  isPragmaLibraryContext(false), unresolvedNames(false), publicContext(ctxt), activeVMEData(0),
+  propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
+  expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
   componentAttached(0), v4bindings(0), v8bindings(0)
 {
 }
@@ -653,23 +653,89 @@ void QDeclarativeContextData::setParent(QDeclarativeContextData *p, bool parentT
     }
 }
 
-/*
-Refreshes all expressions that could possibly depend on this context.  Refreshing flushes all
-context-tree dependent caches in the expressions, and should occur every time the context tree
- *structure* (not values) changes.
-*/
+void QDeclarativeContextData::refreshExpressionsRecursive(QDeclarativeAbstractExpression *expression)
+{
+    QDeleteWatcher w(expression);
+
+    if (expression->m_nextExpression)
+        refreshExpressionsRecursive(expression->m_nextExpression);
+
+    if (!w.wasDeleted())
+        expression->refresh();
+}
+
+static inline bool expressions_to_run(QDeclarativeContextData *ctxt, bool isGlobalRefresh)
+{
+    return ctxt->expressions && (!isGlobalRefresh || ctxt->unresolvedNames);
+}
+
+void QDeclarativeContextData::refreshExpressionsRecursive(bool isGlobal)
+{
+    // For efficiency, we try and minimize the number of guards we have to create
+    if (expressions_to_run(this, isGlobal) && (nextChild || childContexts)) {
+        QDeclarativeGuardedContextData guard(this);
+
+        if (childContexts)
+            childContexts->refreshExpressionsRecursive(isGlobal);
+
+        if (guard.isNull()) return;
+
+        if (nextChild)
+            nextChild->refreshExpressionsRecursive(isGlobal);
+
+        if (guard.isNull()) return;
+
+        if (expressions_to_run(this, isGlobal))
+            refreshExpressionsRecursive(expressions);
+
+    } else if (expressions_to_run(this, isGlobal)) {
+
+        refreshExpressionsRecursive(expressions);
+
+    } else if (nextChild && childContexts) {
+
+        QDeclarativeGuardedContextData guard(this);
+
+        childContexts->refreshExpressionsRecursive(isGlobal);
+
+        if (!guard.isNull() && nextChild)
+            nextChild->refreshExpressionsRecursive(isGlobal);
+
+    } else if (nextChild) {
+
+        nextChild->refreshExpressionsRecursive(isGlobal);
+
+    } else if (childContexts) {
+
+        childContexts->refreshExpressionsRecursive(isGlobal);
+
+    }
+}
+
+// Refreshes all expressions that could possibly depend on this context.  Refreshing flushes all
+// context-tree dependent caches in the expressions, and should occur every time the context tree
+// *structure* (not values) changes.
 void QDeclarativeContextData::refreshExpressions()
 {
-    QDeclarativeContextData *child = childContexts;
-    while (child) {
-        child->refreshExpressions();
-        child = child->nextChild;
-    }
+    bool isGlobal = (parent == 0);
 
-    QDeclarativeAbstractExpression *expression = expressions;
-    while (expression) {
-        expression->refresh();
-        expression = expression->m_nextExpression;
+    // For efficiency, we try and minimize the number of guards we have to create
+    if (expressions_to_run(this, isGlobal) && childContexts) {
+        QDeclarativeGuardedContextData guard(this);
+
+        childContexts->refreshExpressionsRecursive(isGlobal);
+
+        if (!guard.isNull() && expressions_to_run(this, isGlobal))
+            refreshExpressionsRecursive(expressions);
+
+    } else if (expressions_to_run(this, isGlobal)) {
+
+        refreshExpressionsRecursive(expressions);
+
+    } else if (childContexts) {
+
+        childContexts->refreshExpressionsRecursive(isGlobal);
+
     }
 }
 

@@ -83,7 +83,7 @@ public:
     v8::Handle<v8::Value> newQObject(QObject *object);
     bool isQObject(v8::Handle<v8::Object>);
     QObject *toQObject(v8::Handle<v8::Object>);
-    QObject *toQObject(QV8ObjectResource *);
+    static QObject *toQObject(QV8ObjectResource *);
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
     inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV8String &, RevisionMode);

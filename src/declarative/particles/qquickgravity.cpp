@@ -47,11 +47,11 @@ const qreal CONV = 0.017453292520444443;
     \qmlclass Gravity QQuickGravityAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The Gravity element allows you to set a constant accleration in an angle
+    \brief The Gravity element allows you to set an accleration in an angle
 
-    This element will set the acceleration of all affected particles to a vector of
-    the specified magnitude in the specified angle. If the angle or acceleration is
-    not varying, it is more efficient to set the specified acceleration on the Emitter.
+    This element will accelerate all affected particles to a vector of
+    the specified magnitude in the specified angle. If the angle and acceleration do
+    not vary, it is more efficient to set the specified acceleration on the Emitter.
 
     This element models the gravity of a massive object whose center of
     gravity is far away (and thus the gravitational pull is effectively constant
@@ -60,9 +60,14 @@ const qreal CONV = 0.017453292520444443;
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Gravity::acceleration
+    \qmlproperty real QtQuick.Particles2::Gravity::magnitude
 
     Pixels per second that objects will be accelerated by.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Gravity::acceleration
+
+    Name changed to magnitude, will be removed soon.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::Gravity::angle
@@ -71,34 +76,22 @@ const qreal CONV = 0.017453292520444443;
 */
 
 QQuickGravityAffector::QQuickGravityAffector(QQuickItem *parent) :
-    QQuickParticleAffector(parent), m_acceleration(-10), m_angle(90), m_xAcc(0), m_yAcc(0)
+    QQuickParticleAffector(parent), m_magnitude(-10), m_angle(90), m_needRecalc(true)
 {
-    connect(this, SIGNAL(accelerationChanged(qreal)),
-            this, SLOT(recalc()));
-    connect(this, SIGNAL(angleChanged(qreal)),
-            this, SLOT(recalc()));
-    recalc();
-}
-
-void QQuickGravityAffector::recalc()
-{
-    qreal theta = m_angle * CONV;
-    m_xAcc = m_acceleration * cos(theta);
-    m_yAcc = m_acceleration * sin(theta);
 }
 
 bool QQuickGravityAffector::affectParticle(QQuickParticleData *d, qreal dt)
 {
-    Q_UNUSED(dt);
-    bool changed = false;
-    if (d->ax != m_xAcc){
-        d->setInstantaneousAX(m_xAcc);
-        changed = true;
+    if (!m_magnitude)
+        return false;
+    if (m_needRecalc) {
+        m_needRecalc = false;
+        m_dx = m_magnitude * cos(m_angle * CONV);
+        m_dy = m_magnitude * sin(m_angle * CONV);
     }
-    if (d->ay != m_yAcc){
-        d->setInstantaneousAY(m_yAcc);
-        changed = true;
-    }
-    return changed;
+
+    d->setInstantaneousVX(d->curVX() + m_dx*dt);
+    d->setInstantaneousVY(d->curVY() + m_dy*dt);
+    return true;
 }
 QT_END_NAMESPACE

@@ -1146,7 +1146,6 @@ qreal QQuickItemViewPrivate::endPosition() const
 
 qreal QQuickItemViewPrivate::contentStartPosition() const
 {
-    Q_Q(const QQuickItemView);
     qreal pos = -headerSize();
     if (layoutOrientation() == Qt::Vertical)
         pos -= vData.startMargin;
@@ -1414,7 +1413,7 @@ bool QQuickItemViewPrivate::applyModelChanges()
     moveReason = QQuickItemViewPrivate::Other;
 
     int prevCount = itemCount;
-    bool removedVisible = false;
+    bool visibleAffected = false;
     bool viewportChanged = !currentChanges.pendingChanges.removes().isEmpty()
             || !currentChanges.pendingChanges.inserts().isEmpty();
 
@@ -1433,8 +1432,8 @@ bool QQuickItemViewPrivate::applyModelChanges()
             FxViewItem *item = *it;
             if (item->index == -1 || item->index < removals[i].index) {
                 // already removed, or before removed items
-                if (item->index < removals[i].index && !removedVisible)
-                    removedVisible = true;
+                if (!visibleAffected && item->index < removals[i].index)
+                    visibleAffected = true;
                 ++it;
             } else if (item->index >= removals[i].index + removals[i].count) {
                 // after removed items
@@ -1442,7 +1441,7 @@ bool QQuickItemViewPrivate::applyModelChanges()
                 ++it;
             } else {
                 // removed item
-                removedVisible = true;
+                visibleAffected = true;
                 if (!removals[i].isMove())
                     item->attached->emitRemove();
 
@@ -1464,20 +1463,22 @@ bool QQuickItemViewPrivate::applyModelChanges()
                 }
             }
         }
-
+        if (!visibleAffected && needsRefillForAddedOrRemovedIndex(removals[i].index))
+            visibleAffected = true;
     }
     if (!removals.isEmpty())
         updateVisibleIndex();
 
     const QVector<QDeclarativeChangeSet::Insert> &insertions = currentChanges.pendingChanges.inserts();
-    bool addedVisible = false;
     InsertionsResult insertResult;
     bool allInsertionsBeforeVisible = true;
 
     for (int i=0; i<insertions.count(); i++) {
         bool wasEmpty = visibleItems.isEmpty();
         if (applyInsertionChange(insertions[i], firstVisible, &insertResult))
-            addedVisible = true;
+            visibleAffected = true;
+        if (!visibleAffected && needsRefillForAddedOrRemovedIndex(insertions[i].index))
+            visibleAffected = true;
         if (insertions[i].index >= visibleIndex)
             allInsertionsBeforeVisible = false;
         if (wasEmpty && !visibleItems.isEmpty())
@@ -1543,7 +1544,8 @@ bool QQuickItemViewPrivate::applyModelChanges()
     if (prevCount != itemCount)
         emit q->countChanged();
 
-    bool visibleAffected = removedVisible || addedVisible || !currentChanges.pendingChanges.changes().isEmpty();
+    if (!visibleAffected)
+        visibleAffected = !currentChanges.pendingChanges.changes().isEmpty();
     if (!visibleAffected && viewportChanged)
         updateViewport();
 

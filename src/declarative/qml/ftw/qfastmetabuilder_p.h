@@ -55,11 +55,13 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qmetatype.h>
+#include <QtCore/qmetaobject.h>
 
 #include <private/qhashedstring_p.h>
 
 QT_BEGIN_NAMESPACE
 
+class QMetaObject;
 class QFastMetaBuilder
 {
 public:

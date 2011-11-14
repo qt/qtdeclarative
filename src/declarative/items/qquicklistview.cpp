@@ -1677,7 +1677,7 @@ QQuickListView::~QQuickListView()
     The ListView will lay out the items based on the size of the root item
     in the delegate.
 
-    It is recommended that the delagate's size be a whole number to avoid sub-pixel
+    It is recommended that the delegate's size be a whole number to avoid sub-pixel
     alignment of items.
 
     \note Delegates are instantiated as needed and may be destroyed at any time.
@@ -2325,8 +2325,6 @@ void QQuickListView::updateSections()
 
 bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, FxViewItem *firstVisible, InsertionsResult *insertResult)
 {
-    Q_Q(QQuickListView);
-
     int modelIndex = change.index;
     int count = change.count;
 

@@ -116,6 +116,10 @@ Person {
 \l {Extending QML - Adding Types Example} shows the complete code used to create
 the \c Person type.
 
+If you wish to provide functionality to clients without requiring them to
+instantiate an element, consider providing a module API instead of registering
+a type; see qmlRegisterModuleApi() for more information.
+
 \section1 QML Type Versioning
 
 In C++ adding a new method or property cannot break old applications.
@@ -235,6 +239,36 @@ The \c guest property declaration looks like this:
 
 \l {Extending QML - Object and List Property Types Example} shows the complete
 code used to create the \c BirthdayParty type.
+
+\section1 Sequence Types
+
+Certain C++ sequence types are supported transparently in QML as JavaScript Array types.
+In particular, QML currently supports:
+\list
+  \o \c {QList<int>}
+  \o \c {QList<qreal>}
+  \o \c {QList<bool>}
+  \o \c {QList<QString>}
+  \o \c {QList<QUrl>}
+\endlist
+
+These sequence types are implemented directly in terms of the underlying C++ sequence.
+There are two ways in which such sequences can be exposed to QML: as a Q_PROPERTY of
+the given sequence type; or as the return type of a Q_INVOKABLE method.  There are some
+differences in the way these are implemented, which are important to note.
+
+If the sequence is exposed as a Q_PROPERTY, accessing any value in the sequence by index
+will cause the sequence data to be read from the QObject's property, then a read to occur.
+Similarly, modifying any value in the sequence will cause the sequence data to be read,
+and then the modification will be performed and the modified sequence will be written back
+to the QObject's property.
+
+If the sequence is returned from a Q_INVOKABLE function, access and mutation is much cheaper,
+as no QObject property read or write occurs; instead, the C++ sequence data is accessed and
+modified directly.
+
+Other sequence types are not supported transparently, and instead an instance of any other
+sequence type will be passed between QML and C++ as an opaque QVariantList.
 
 \section1 Inheritance and Coercion
 

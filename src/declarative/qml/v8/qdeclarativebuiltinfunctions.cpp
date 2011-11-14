@@ -66,6 +66,65 @@ QT_BEGIN_NAMESPACE
 
 namespace QDeclarativeBuiltinFunctions {
 
+enum ConsoleLogTypes {
+    Log,
+    Warn,
+    Error
+};
+
+v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args)
+{
+    int line = -1;
+    QString scriptName;
+    v8::HandleScope handleScope;
+
+    {
+        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
+        if (stackTrace->GetFrameCount()) {
+            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
+            line = currentStackFrame->GetLineNumber();
+            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
+        }
+    }
+
+    QString result;
+    for (int i = 0; i < args.Length(); ++i) {
+        if (i != 0)
+            result.append(QLatin1Char(' '));
+
+        v8::Local<v8::Value> value = args[i];
+        //Check for Object Type
+        if (value->IsObject() && !value->IsFunction()
+                && !value->IsArray() && !value->IsDate()
+                && !value->IsRegExp()) {
+            result = QLatin1String("Object");
+        } else {
+            v8::Local<v8::String> jsstr = value->ToString();
+            result.append(V8ENGINE()->toString(jsstr));
+            if (value->IsArray())
+                result = QString(QLatin1String("[%1]")).arg(result);
+        }
+    }
+
+    QString log = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
+
+    switch (logType) {
+    case Log:
+        qDebug("%s", qPrintable(log));
+        break;
+    case Warn:
+        qWarning("%s", qPrintable(log));
+        break;
+    case Error:
+        qCritical("%s", qPrintable(log));
+        break;
+    default:
+        break;
+    }
+
+    return v8::Undefined();
+}
+
 v8::Handle<v8::Value> gc(const v8::Arguments &args)
 {
     Q_UNUSED(args);
@@ -73,23 +132,44 @@ v8::Handle<v8::Value> gc(const v8::Arguments &args)
     return v8::Undefined();
 }
 
-v8::Handle<v8::Value> print(const v8::Arguments &args)
+v8::Handle<v8::Value> consoleTime(const v8::Arguments &args)
 {
-    QString result;
-    for (int i = 0; i < args.Length(); ++i) {
-        if (i != 0)
-            result.append(QLatin1Char(' '));
-
-        v8::Local<v8::String> jsstr = args[i]->ToString();
-        if (!jsstr.IsEmpty()) {
-            QString qstr;
-            qstr.resize(jsstr->Length());
-            jsstr->Write((uint16_t*)qstr.data());
-            result.append(qstr);
-        }
-    }
-    qDebug("%s", qPrintable(result));
+    if (args.Length() != 1)
+        V8THROW_ERROR("console.time(): Invalid arguments");
+    QString name = V8ENGINE()->toString(args[0]);
+    V8ENGINE()->startTimer(name);
     return v8::Undefined();
+}
+
+v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
+{
+    if (args.Length() != 1)
+        V8THROW_ERROR("console.time(): Invalid arguments");
+    QString name = V8ENGINE()->toString(args[0]);
+    bool wasRunning;
+    qint64 elapsed = V8ENGINE()->stopTimer(name, &wasRunning);
+    if (wasRunning) {
+        qDebug("%s: %llims", qPrintable(name), elapsed);
+    }
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
+{
+    //console.log
+    //console.debug
+    //print
+    return console(Log, args);
+}
+
+v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args)
+{
+    return console(Warn, args);
+}
+
+v8::Handle<v8::Value> consoleError(const v8::Arguments &args)
+{
+    return console(Error, args);
 }
 
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
@@ -654,12 +734,12 @@ v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args)
     if (p) {
         QDeclarativeContextData *ctxt = V8ENGINE()->callingContext();
         if (ctxt)
-            return V8ENGINE()->fromVariant(ctxt->resolvedUrl(url));
+            return V8ENGINE()->toString(ctxt->resolvedUrl(url).toString());
         else
-            return V8ENGINE()->fromVariant(url);
+            return V8ENGINE()->toString(url.toString());
     }
 
-    return V8ENGINE()->fromVariant(e->baseUrl().resolved(url));
+    return V8ENGINE()->toString(e->baseUrl().resolved(url).toString());
 }
 
 /*!

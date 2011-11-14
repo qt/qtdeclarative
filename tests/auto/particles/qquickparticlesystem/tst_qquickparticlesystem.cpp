@@ -65,7 +65,7 @@ void tst_qquickparticlesystem::test_basic()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     int stillAlive = 0;
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
@@ -84,6 +84,7 @@ void tst_qquickparticlesystem::test_basic()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
     QVERIFY(extremelyFuzzyCompare(stillAlive, 500, 5));//Small simulation variance is permissible.
 }
 

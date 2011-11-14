@@ -120,6 +120,7 @@ QColor qt_color_from_string(v8::Local<v8::Value> name)
         return QColor(p);
     else {
         bool isRgb(false), isHsl(false), hasAlpha(false);
+        Q_UNUSED(isHsl)
 
         while (isspace(*p)) p++;
         if (strncmp(p, "rgb", 3) == 0)

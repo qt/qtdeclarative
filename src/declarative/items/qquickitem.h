@@ -282,6 +282,11 @@ public:
     bool filtersChildMouseEvents() const;
     void setFiltersChildMouseEvents(bool filter);
 
+    void grabTouchPoints(const QList<int> &ids);
+    void ungrabTouchPoints();
+    bool keepTouchGrab() const;
+    void setKeepTouchGrab(bool);
+
     QTransform itemTransform(QQuickItem *, bool *) const;
     QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     QPointF mapToScene(const QPointF &point) const;
@@ -368,6 +373,7 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent(); // XXX todo - params?
+    virtual void touchUngrabEvent();
     virtual void wheelEvent(QWheelEvent *event);
     virtual void touchEvent(QTouchEvent *event);
     virtual void hoverEnterEvent(QHoverEvent *event);

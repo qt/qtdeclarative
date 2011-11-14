@@ -123,8 +123,6 @@ QQuickPaintedItemPrivate::QQuickPaintedItemPrivate()
     , fillColor(Qt::transparent)
     , renderTarget(QQuickPaintedItem::Image)
     , performanceHints(0)
-    , geometryDirty(false)
-    , contentsDirty(false)
     , opaquePainting(false)
     , antialiasing(false)
     , mipmap(false)
@@ -171,7 +169,6 @@ QQuickPaintedItem::~QQuickPaintedItem()
 void QQuickPaintedItem::update(const QRect &rect)
 {
     Q_D(QQuickPaintedItem);
-    d->contentsDirty = true;
 
     if (rect.isNull() && !d->dirtyRect.isNull())
         d->dirtyRect = contentsBoundingRect().toAlignedRect();
@@ -492,17 +489,6 @@ void QQuickPaintedItem::setRenderTarget(RenderTarget target)
 */
 
 /*!
-    This function is called after the item's geometry has changed.
-*/
-void QQuickPaintedItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
-{
-    Q_D(QQuickPaintedItem);
-    d->geometryDirty = true;
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
-}
-
-
-/*!
     This function is called when the Scene Graph node associated to the item needs to
     be updated.
 */
@@ -531,11 +517,9 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     node->setOpaquePainting(d->opaquePainting);
     node->setFillColor(d->fillColor);
     node->setContentsScale(d->contentsScale);
-    node->setDirty(d->contentsDirty || d->geometryDirty, d->dirtyRect);
+    node->setDirty(d->dirtyRect);
     node->update();
 
-    d->contentsDirty = false;
-    d->geometryDirty = false;
     d->dirtyRect = QRect();
 
     return node;

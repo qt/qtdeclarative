@@ -580,6 +580,14 @@ bool QQuickParticleData::stillAlive()
     return (t + lifeSpan - EPSILON) > ((qreal)system->timeInt/1000.0);
 }
 
+bool QQuickParticleData::alive()
+{
+    if (!system)
+        return false;
+    qreal st = ((qreal)system->timeInt/1000.0);
+    return (t + EPSILON) < st && (t + lifeSpan - EPSILON) > st;
+}
+
 float QQuickParticleData::curSize()
 {
     if (!system || !lifeSpan)

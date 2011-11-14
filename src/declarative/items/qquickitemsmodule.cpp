@@ -80,6 +80,7 @@
 #include "qquickspriteimage_p.h"
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
+#include "qquickmultipointtoucharea_p.h"
 
 static QDeclarativePrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
@@ -201,6 +202,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickDropEvent>();
     qmlRegisterType<QQuickDropAreaDrag>();
     qmlRegisterUncreatableType<QQuickDrag>("QtQuick", 2, 0, "Drag", QQuickDragAttached::tr("Drag is only available via attached properties"));
+
+    qmlRegisterType<QQuickMultiPointTouchArea>("QtQuick", 2, 0, "MultiPointTouchArea");
+    qmlRegisterType<QQuickTouchPoint>("QtQuick", 2, 0, "TouchPoint");
+    qmlRegisterType<QQuickGrabGestureEvent>();
 }
 
 void QQuickItemsModule::defineModule()

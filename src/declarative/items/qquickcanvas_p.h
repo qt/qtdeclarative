@@ -110,7 +110,7 @@ public:
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
     bool deliverInitialMousePressEvent(QQuickItem *, QMouseEvent *);
     bool deliverMouseEvent(QMouseEvent *);
-    bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QMouseEvent *);
+    bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *);
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *);
@@ -152,6 +152,7 @@ public:
 
     void updateDirtyNodes();
     void cleanupNodes();
+    void cleanupNodesOnShutdown();
     bool updateEffectiveOpacity(QQuickItem *);
     void updateEffectiveOpacityRoot(QQuickItem *, qreal);
     void updateDirtyNode(QQuickItem *);
@@ -171,6 +172,8 @@ public:
     QHash<int, QQuickItem *> itemForTouchPointId;
 
     mutable QQuickCanvasIncubationController *incubationController;
+private:
+    static void cleanupNodesOnShutdown(QQuickItem *);
 };
 
 class QQuickCanvasRenderLoop
@@ -205,6 +208,7 @@ public:
 protected:
     void initializeSceneGraph() { d->initializeSceneGraph(); }
     void syncSceneGraph() { d->syncSceneGraph(); }
+    void cleanupNodesOnShutdown() { d->cleanupNodesOnShutdown(); }
     void renderSceneGraph(const QSize &size) { d->renderSceneGraph(size); }
     void polishItems() { d->polishItems(); }
     QAnimationDriver2 *animationDriver() const { return d->animationDriver; }

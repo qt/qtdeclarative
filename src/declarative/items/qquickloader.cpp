@@ -428,7 +428,7 @@ void QQuickLoader::loadFromSourceComponent()
     the \a source component will be created with the initial \a properties set.
 
     Setting the initial property values of an instance of a component in this manner
-    will \e not trigger any associated \l{Behavior}s.
+    will \bold{not} trigger any associated \l{Behavior}s.
 
     Note that the cached \a properties will be cleared if the \l source or \l sourceComponent
     is changed after calling this function but prior to setting the loader \l active.

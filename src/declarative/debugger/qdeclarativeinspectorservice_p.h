@@ -76,12 +76,8 @@ public:
 
     void addView(QObject *);
     void removeView(QObject *);
-    QList<QObject*> views() const { return m_views; }
 
     void sendMessage(const QByteArray &message);
-
-Q_SIGNALS:
-    void gotMessage(const QByteArray &message);
 
 protected:
     virtual void statusChanged(Status status);
@@ -89,10 +85,11 @@ protected:
 
 private:
     void updateStatus();
-    static QDeclarativeInspectorInterface *loadInspectorPlugin();
+    void loadInspectorPlugins();
 
     QList<QObject*> m_views;
-    QDeclarativeInspectorInterface *m_inspectorPlugin;
+    QDeclarativeInspectorInterface *m_currentInspectorPlugin;
+    QList<QDeclarativeInspectorInterface*> m_inspectorPlugins;
 };
 
 QT_END_NAMESPACE

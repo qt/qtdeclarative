@@ -294,7 +294,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
     the gradient is used.
 
     You can add an optional border to a rectangle with its own color and thickness
-    by settting the \l border.color and \l border.width properties.
+    by setting the \l border.color and \l border.width properties.
 
     You can also create rounded rectangles using the \l radius property. Since this
     introduces curved edges to the corners of a rectangle, it may be appropriate to
@@ -492,7 +492,8 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     Q_UNUSED(data);
     Q_D(QQuickRectangle);
 
-    if (width() <= 0 || height() <= 0) {
+    if (width() <= 0 || height() <= 0
+            || (d->color.alpha() == 0 && (!d->pen || d->pen->width() == 0 || d->pen->color().alpha() == 0))) {
         delete oldNode;
         return 0;
     }
@@ -542,7 +543,7 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     filtering at the beginning of the animation and reenable it at the conclusion.
 
     \image rect-smooth.png
-    On this image, smooth is turned off on the top half and on on the bottom half.
+    On this image, smooth is turned off for the top half and on for the bottom half.
 */
 
 QRectF QQuickRectangle::boundingRect() const

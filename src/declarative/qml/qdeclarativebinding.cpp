@@ -345,7 +345,7 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         QDeclarativeBindingProfiler prof(this);
         d->updating = true;
 
-        QDeclarativeDeleteWatcher watcher(d);
+        QDeleteWatcher watcher(d);
 
         if (d->property.propertyType() == qMetaTypeId<QDeclarativeBinding *>()) {
 

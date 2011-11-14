@@ -820,7 +820,7 @@ v8::Handle<v8::Value> NamedNodeMap::indexed(uint32_t index, const v8::AccessorIn
     if (!r || !r->list) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
 
-    if (index < r->list->count()) {
+    if ((int)index < r->list->count()) {
         return Node::create(engine, r->list->at(index));
     } else {
         return v8::Undefined();
@@ -876,7 +876,7 @@ v8::Handle<v8::Value> NodeList::indexed(uint32_t index, const v8::AccessorInfo& 
     if (!r) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
 
-    if (index < r->d->children.count()) {
+    if ((int)index < r->d->children.count()) {
         return Node::create(engine, r->d->children.at(index));
     } else {
         return v8::Undefined();

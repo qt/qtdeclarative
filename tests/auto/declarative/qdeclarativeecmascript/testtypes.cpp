@@ -101,6 +101,12 @@ public:
     void setWidth(int) { }
 };
 
+void MyQmlObject::v8function(QDeclarativeV8Function *args)
+{
+    const char *error = "Exception thrown from within QObject slot";
+    v8::ThrowException(v8::Exception::Error(v8::String::New(error)));
+}
+
 static QJSValue script_api(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
@@ -161,6 +167,7 @@ void registerTypes()
     qmlRegisterExtendedType<DefaultPropertyExtendedObject, DefaultPropertyExtensionObject>("Qt.test", 1,0, "DefaultPropertyExtendedObject");
     qmlRegisterType<OverrideDefaultPropertyObject>("Qt.test", 1,0, "OverrideDefaultPropertyObject");
     qmlRegisterType<MyRevisionedClass>("Qt.test",1,0,"MyRevisionedClass");
+    qmlRegisterType<MyDeleteObject>("Qt.test", 1,0, "MyDeleteObject");
     qmlRegisterType<MyRevisionedClass,1>("Qt.test",1,1,"MyRevisionedClass");
 
     // test scarce resource property binding post-evaluation optimisation
@@ -196,6 +203,8 @@ void registerTypes()
 
     qmlRegisterType<MyDynamicCreationDestructionObject>("Qt.test", 1, 0, "MyDynamicCreationDestructionObject");
     qmlRegisterType<WriteCounter>("Qt.test", 1, 0, "WriteCounter");
+
+    qmlRegisterType<MySequenceConversionObject>("Qt.test", 1, 0, "MySequenceConversionObject");
 }
 
 #include "testtypes.moc"

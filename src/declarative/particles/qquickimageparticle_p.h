@@ -348,6 +348,7 @@ protected:
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
+    void spriteAdvance(int spriteIndex);
 private:
     QUrl m_image_name;
     QUrl m_colortable_name;
@@ -362,6 +363,8 @@ private:
     QSGGeometryNode *m_rootNode;
     QHash<int, QSGGeometryNode *> m_nodes;
     QHash<int, int> m_idxStarts;//TODO: Proper resizing will lead to needing a spriteEngine per particle - do this after sprite engine gains transparent sharing?
+    QList<QPair<int, int> > m_startsIdx;//Same data, optimized for alternate retrieval
+
     int m_lastIdxStart;
     QSGMaterial *m_material;
 

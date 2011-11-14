@@ -49,9 +49,7 @@
 #include <QCryptographicHash>
 #include <QGraphicsObject>
 #include <QtCore/private/qabstractanimation_p.h>
-#ifndef Q_OS_SYMBIAN
 #include <QtQuick1/private/qdeclarativeitem_p.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -269,9 +267,8 @@ void QDeclarativeTester::save()
 
 void QDeclarativeTester::updateCurrentTime(int msec)
 {
-#ifndef Q_OS_SYMBIAN
     QDeclarativeItemPrivate::setConsistentTime(msec);
-#endif
+
     if (!testscript && msec > 16 && options & QDeclarativeViewer::Snapshot)
         return;
 
@@ -280,14 +277,14 @@ void QDeclarativeTester::updateCurrentTime(int msec)
     if (options & QDeclarativeViewer::TestImages) {
         img.fill(qRgb(255,255,255));
 
-#ifdef Q_WS_MAC
+/*#ifdef Q_OS_MAC //Compile failure on Cocoa x64 QTBUG-22304
         bool oldSmooth = qt_applefontsmoothing_enabled;
         qt_applefontsmoothing_enabled = false;
-#endif
+#endif*/
         QPainter p(&img);
-#ifdef Q_WS_MAC
+/*#ifdef Q_OS_MAC //Compile failure on Cocoa x64 QTBUG-22304
         qt_applefontsmoothing_enabled = oldSmooth;
-#endif
+#endif*/
 
         m_view->render(&p);
     }

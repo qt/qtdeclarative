@@ -211,3 +211,127 @@
 
   Returns the QML type id.
 */
+
+/*!
+   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QJSValue (*callback)(QDeclarativeEngine *, QJSEngine *))
+   \relates QDeclarativeEngine
+
+   This function may be used to register a module API provider \a callback in a particular \a uri
+   with a version specified in \a versionMajor and \a versionMinor.
+
+   Installing a module API into a uri allows developers to provide arbitrary functionality
+   (methods and properties) in a namespace that doesn't necessarily contain elements.
+
+   A module API may be either a QObject or a QJSValue.  Only one module API provider
+   may be registered into any given namespace (combination of \a uri, \a versionMajor and \a versionMinor).
+   This function should be used to register a module API provider function which returns a QJSValue as a module API.
+
+   \bold{NOTE:} QJSValue module API properties will \bold{not} trigger binding re-evaluation if changed.
+
+   Usage:
+   \code
+   // first, define the module API provider function (callback).
+   static QJSValue *example_qjsvalue_module_api_provider(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
+   {
+       Q_UNUSED(engine)
+
+       static int seedValue = 5;
+       QJSValue example = scriptEngine->newObject();
+       example.setProperty("someProperty", seedValue++);
+       return example;
+   }
+
+   // second, register the module API provider with QML by calling this function in an initialization function.
+   ...
+   qmlRegisterModuleApi("Qt.example.qjsvalueApi", 1, 0, example_qjsvalue_module_api_provider);
+   ...
+   \endcode
+
+   In order to use the registered module API in QML, you must import the module API.
+   \qml
+   import QtQuick 2.0
+   import Qt.example.qjsvalueApi 1.0 as ExampleApi
+   Item {
+       id: root
+       property int someValue: ExampleApi.someProperty
+   }
+   \endqml
+  */
+
+/*!
+   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QDeclarativeEngine *, QJSEngine *))
+   \relates QDeclarativeEngine
+
+   This function may be used to register a module API provider \a callback in a particular \a uri
+   with a version specified in \a versionMajor and \a versionMinor.
+
+   Installing a module API into a uri allows developers to provide arbitrary functionality
+   (methods and properties) in a namespace that doesn't necessarily contain elements.
+
+   A module API may be either a QObject or a QJSValue.  Only one module API provider
+   may be registered into any given namespace (combination of \a uri, \a versionMajor and \a versionMinor).
+   This function should be used to register a module API provider function which returns a QObject as a module API.
+
+   A QObject module API must be imported with a qualifier, and that qualifier may be used as
+   the target in a \l Connections element or otherwise used as any other element id would.
+   One exception to this is that a QObject module API property may not be aliased (because the
+   module API qualifier does not identify an object within the same component as any other item).
+
+   Usage:
+   \code
+   // first, define your QObject which provides the functionality.
+   class ModuleApiExample : public QObject
+   {
+       Q_OBJECT
+       Q_PROPERTY (int someProperty READ someProperty WRITE setSomeProperty NOTIFY somePropertyChanged)
+
+   public:
+       ModuleApiExample(QObject* parent = 0)
+           : QObject(parent), m_someProperty(0)
+       {
+       }
+
+       ~ModuleApiExample() {}
+
+       Q_INVOKABLE int doSomething() { setSomeProperty(5); return m_someProperty; }
+
+       int someProperty() const { return m_someProperty; }
+       void setSomeProperty(int val) { m_someProperty = val; emit somePropertyChanged(val); }
+
+   signals:
+       void somePropertyChanged(int newValue);
+
+   private:
+       int m_someProperty;
+   };
+
+   // second, define the module API provider function (callback).
+   static QObject *example_qobject_module_api_provider(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
+   {
+       Q_UNUSED(engine)
+       Q_UNUSED(scriptEngine)
+
+       ModuleApiExample *example = new ModuleApiExample();
+       return example;
+   }
+
+   // third, register the module API provider with QML by calling this function in an initialization function.
+   ...
+   qmlRegisterModuleApi("Qt.example.qobjectApi", 1, 0, example_qobject_module_api_provider);
+   ...
+   \endcode
+
+   In order to use the registered module API in QML, you must import the module API.
+   \qml
+   import QtQuick 2.0
+   import Qt.example.qobjectApi 1.0 as ExampleApi
+   Item {
+       id: root
+       property int someValue: ExampleApi.someProperty
+
+       Component.onCompleted: {
+           someValue = ExampleApi.doSomething()
+       }
+   }
+   \endqml
+  */

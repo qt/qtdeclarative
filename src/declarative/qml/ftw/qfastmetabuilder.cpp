@@ -40,6 +40,9 @@
 ****************************************************************************/
 
 #include "qfastmetabuilder_p.h"
+#include "qvariant.h"
+
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_NAMESPACE
 

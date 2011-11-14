@@ -336,7 +336,7 @@ private:
     bool doesPropertyExist(QDeclarativeScript::Property *prop, QDeclarativeScript::Object *obj);
     bool testLiteralAssignment(QDeclarativeScript::Property *prop,
                                QDeclarativeScript::Value *value);
-    bool testQualifiedEnumAssignment(const QMetaProperty &prop,
+    bool testQualifiedEnumAssignment(QDeclarativeScript::Property *prop,
                                      QDeclarativeScript::Object *obj,
                                      QDeclarativeScript::Value *value,
                                      bool *isAssignment);
@@ -373,8 +373,8 @@ private:
                               QDeclarativeScript::Property *valueTypeProperty = 0);
     int genContextCache();
 
-    QDeclarativePropertyCache::Data genValueTypeData(QDeclarativeScript::Property *prop, 
-                                                     QDeclarativeScript::Property *valueTypeProp);
+    QDeclarativePropertyData genValueTypeData(QDeclarativeScript::Property *prop,
+                                              QDeclarativeScript::Property *valueTypeProp);
 
     int componentTypeRef();
 
@@ -385,11 +385,11 @@ private:
 
     QStringList deferredProperties(QDeclarativeScript::Object *);
 
-    QDeclarativePropertyCache::Data *property(QDeclarativeScript::Object *, int);
-    QDeclarativePropertyCache::Data *property(QDeclarativeScript::Object *, const QHashedStringRef &, 
-                                              bool *notInRevision = 0);
-    QDeclarativePropertyCache::Data *signal(QDeclarativeScript::Object *, const QHashedStringRef &, 
-                                            bool *notInRevision = 0);
+    QDeclarativePropertyData *property(QDeclarativeScript::Object *, int);
+    QDeclarativePropertyData *property(QDeclarativeScript::Object *, const QHashedStringRef &,
+                                       bool *notInRevision = 0);
+    QDeclarativePropertyData *signal(QDeclarativeScript::Object *, const QHashedStringRef &,
+                                     bool *notInRevision = 0);
     int indexOfProperty(QDeclarativeScript::Object *, const QHashedStringRef &, bool *notInRevision = 0);
     int indexOfProperty(QDeclarativeScript::Object *, const QString &, bool *notInRevision = 0);
     int indexOfSignal(QDeclarativeScript::Object *, const QString &, bool *notInRevision = 0);

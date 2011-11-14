@@ -602,7 +602,8 @@ private:
     int m_unreferencedCost;
     int m_timerId;
 };
-Q_GLOBAL_STATIC(QDeclarative1PixmapStore, pixmapStore);
+
+Q_GLOBAL_STATIC(QDeclarative1PixmapStore, pixmapStore)
 
 QDeclarative1PixmapStore::QDeclarative1PixmapStore()
 : m_unreferencedPixmaps(0), m_lastUnreferencedPixmap(0), m_unreferencedCost(0), m_timerId(-1)
@@ -790,6 +791,7 @@ static QDeclarative1PixmapData* createPixmapDataSync(QDeclarativeEngine *engine,
                     return new QDeclarative1PixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
                 }
             }
+            break;
             case QDeclarativeImageProvider::Pixmap:
             {
                 QPixmap pixmap = ep->getPixmapFromProvider(url, &readSize, requestSize);
@@ -798,6 +800,10 @@ static QDeclarative1PixmapData* createPixmapDataSync(QDeclarativeEngine *engine,
                     return new QDeclarative1PixmapData(url, pixmap, readSize, requestSize);
                 }
             }
+            break;
+        case QDeclarativeImageProvider::Texture:
+        case QDeclarativeImageProvider::Invalid:
+            break;
         }
 
         // no matching provider, or provider has bad image type, or provider returned null image

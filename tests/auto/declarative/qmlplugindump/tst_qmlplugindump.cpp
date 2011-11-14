@@ -66,10 +66,16 @@ tst_qmlplugindump::tst_qmlplugindump()
 
 void tst_qmlplugindump::initTestCase()
 {
-    qmlplugindumpPath = QLibraryInfo::location(QLibraryInfo::BinariesPath) + QLatin1String("/qmlplugindump");
-#ifdef Q_OS_WIN
-    qmlplugindumpPath += QLatin1String(".exe");
+    qmlplugindumpPath = QLibraryInfo::location(QLibraryInfo::BinariesPath);
+
+#if defined(Q_OS_MAC)
+    qmlplugindumpPath += QLatin1String("/qmlplugindump.app/Contents/MacOS/qmlplugindump");
+#elif defined(Q_OS_WIN)
+    qmlplugindumpPath += QLatin1String("/qmlplugindump.exe");
+#else
+    qmlplugindumpPath += QLatin1String("/qmlplugindump");
 #endif
+
     if (!QFileInfo(qmlplugindumpPath).exists()) {
         QString message = QString::fromLatin1("qmlplugindump executable not found (looked for %0)")
                 .arg(qmlplugindumpPath);

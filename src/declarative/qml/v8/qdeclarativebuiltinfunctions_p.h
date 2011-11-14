@@ -61,7 +61,11 @@ QT_BEGIN_NAMESPACE
 namespace QDeclarativeBuiltinFunctions
 {
 v8::Handle<v8::Value> gc(const v8::Arguments &args);
-v8::Handle<v8::Value> print(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleLog(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleError(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleTime(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args);
 v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);
 v8::Handle<v8::Value> rgba(const v8::Arguments &args);
 v8::Handle<v8::Value> hsla(const v8::Arguments &args);

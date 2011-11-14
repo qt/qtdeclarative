@@ -871,7 +871,7 @@ void QQuickTextInputPrivate::updateInputMethodHints()
     Specifies how the text should be displayed in the TextInput.
     \list
     \o TextInput.Normal - Displays the text as it is. (Default)
-    \o TextInput.Password - Displays asterixes instead of characters.
+    \o TextInput.Password - Displays asterisks instead of characters.
     \o TextInput.NoEcho - Displays nothing.
     \o TextInput.PasswordEchoOnEdit - Displays characters as they are entered
     while editing, otherwise displays asterisks.
@@ -1162,16 +1162,9 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
 bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if !defined QT_NO_IM
-    if (control->composeMode() && event->type() == QEvent::KeyRelease) {
+    if (control->composeMode() && event->type() == QEvent::MouseButtonRelease) {
         int tmp_cursor = xToPos(event->localPos().x());
         int mousePos = tmp_cursor - control->cursor();
-        if (mousePos < 0 || mousePos > control->preeditAreaText().length()) {
-            mousePos = -1;
-            // don't send move events outside the preedit area
-            if (event->type() == QEvent::MouseMove)
-                return true;
-        }
-
         // may be causing reset() in some input methods
         qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
         if (!control->preeditAreaText().isEmpty())
@@ -1616,7 +1609,7 @@ void QQuickTextInput::moveCursorSelection(int position)
     \o TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
     the previous cursor position) to the specified position.
     \o TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
-    words between the specified postion and the previous cursor position.  Words partially in the
+    words between the specified position and the previous cursor position.  Words partially in the
     range are included.
     \endlist
 
@@ -1699,12 +1692,10 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
     customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextInput. On other platforms
-    the panels are automatically opened when TextInput element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style. Input panels are
     always closed if no editor has active focus.
 
-  . You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
+    You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
     and use functions openSoftwareInputPanel() and closeSoftwareInputPanel() to implement
     the behavior you want.
 
@@ -1744,12 +1735,10 @@ void QQuickTextInput::openSoftwareInputPanel()
     for customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextInput. On other platforms
-    the panels are automatically opened when TextInput element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style. Input panels are
     always closed if no editor has active focus.
 
-  . You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
+    You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
     and use functions openSoftwareInputPanel() and closeSoftwareInputPanel() to implement
     the behavior you want.
 
@@ -1826,9 +1815,6 @@ bool QQuickTextInput::isInputMethodComposing() const
 void QQuickTextInputPrivate::init()
 {
     Q_Q(QQuickTextInput);
-#if defined(Q_WS_MAC)
-    control->setThreadChecks(true);
-#endif
     control->setParent(q);//Now mandatory due to accessibility changes
     control->setCursorWidth(1);
     control->setPasswordCharacter(QLatin1Char('*'));

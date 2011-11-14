@@ -89,9 +89,8 @@ void tst_QQuickView::resizemodeitem()
 
     // size update from view
     canvas->resize(QSize(80,100));
-    QTest::qWait(50);
 
-    QCOMPARE(item->width(), 80.0);
+    QTRY_COMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
     QCOMPARE(canvas->size(), QSize(80, 100));
     QCOMPARE(canvas->size(), canvas->sizeHint());
@@ -177,7 +176,6 @@ void tst_QQuickView::resizemodeitem()
     QTest::qWait(50);
 
     // initial size from root object
-    QEXPECT_FAIL("", "QTBUG-22019", Abort);
     QCOMPARE(item->width(), 300.0);
     QCOMPARE(item->height(), 300.0);
     QCOMPARE(canvas->size(), QSize(300, 300));

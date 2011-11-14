@@ -67,7 +67,7 @@ void tst_qquickcustomparticle::test_basic()
     ensureAnimTime(600, system->m_animation);
 
     bool oneNonZero = false;
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -86,6 +86,7 @@ void tst_qquickcustomparticle::test_basic()
         if (d->r != 0.0 )
             oneNonZero = true;
     }
+    delete view;
     QVERIFY(oneNonZero);//Zero is a valid value, but it also needs to be set to a random number
 }
 

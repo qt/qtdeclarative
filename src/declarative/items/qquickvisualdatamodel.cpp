@@ -766,7 +766,7 @@ QQuickVisualDataGroup *QQuickVisualDataModelPrivate::group_at(
 {
     QQuickVisualDataModelPrivate *d = static_cast<QQuickVisualDataModelPrivate *>(property->data);
     return index >= 0 && index < d->m_groupCount - 1
-            ? d->m_groups[index - 1]
+            ? d->m_groups[index + 1]
             : 0;
 }
 
@@ -998,7 +998,7 @@ QObject *QQuickVisualDataModelPrivate::object(Compositor::Group group, int index
             }
 
             cacheItem->attached = QQuickVisualDataModelAttached::properties(cacheItem->object);
-            cacheItem->attached->m_cacheItem = cacheItem;
+            cacheItem->attached->setCacheItem(cacheItem);
             new QQuickVisualDataModelAttachedMetaObject(cacheItem->attached, m_cacheMetaType);
             cacheItem->attached->emitChanges();
 
@@ -1728,6 +1728,13 @@ int QQuickVisualDataModelAttachedMetaObject::metaCall(QMetaObject::Call call, in
     return attached->qt_metacall(call, _id, arguments);
 }
 
+void QQuickVisualDataModelAttached::setCacheItem(QQuickVisualDataModelCacheItem *item)
+{
+    m_cacheItem = item;
+    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i)
+        m_previousIndex[i] = m_cacheItem->index[i];
+}
+
 /*!
     \qmlattachedproperty int QtQuick2::VisualDataModel::model
 
@@ -1858,7 +1865,7 @@ void QQuickVisualDataGroupPrivate::emitChanges(QV8Engine *engine)
 {
     Q_Q(QQuickVisualDataGroup);
     static int idx = signalIndex("changed(QDeclarativeV8Handle,QDeclarativeV8Handle)");
-    if (isSignalConnected(idx)) {
+    if (isSignalConnected(idx) && !changeSet.isEmpty()) {
         v8::HandleScope handleScope;
         v8::Context::Scope contextScope(engine->context());
         v8::Local<v8::Array> removed  = QQuickVisualDataModelPrivate::buildChangeList(changeSet.removes());
@@ -2365,10 +2372,13 @@ void QQuickVisualPartsModel::updateFilterGroup()
     if (!model->m_cacheMetaType)
         return;
 
-    if (m_inheritGroup)
-        return;
+    if (m_inheritGroup) {
+        if (m_filterGroup == model->m_filterGroup)
+            return;
+        m_filterGroup = model->m_filterGroup;
+    }
 
-    QDeclarativeListCompositor::Group previousGroup = model->m_compositorGroup;
+    QDeclarativeListCompositor::Group previousGroup = m_compositorGroup;
     m_compositorGroup = Compositor::Default;
     QQuickVisualDataGroupPrivate::get(model->m_groups[Compositor::Default])->emitters.insert(this);
     for (int i = 1; i < model->m_groupCount; ++i) {
@@ -2470,8 +2480,10 @@ QQuickVisualModel::ReleaseFlags QQuickVisualPartsModel::release(QQuickItem *item
         m_packaged.erase(it);
         if (!m_packaged.contains(item))
             flags &= ~Referenced;
-        if (flags & Destroyed)
+        if (flags & Destroyed) {
             QQuickVisualDataModelPrivate::get(m_model)->emitDestroyingPackage(package);
+            item->setParentItem(0);
+        }
     }
     return flags;
 }

@@ -65,8 +65,8 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
         QDeclarativeIncubatorPrivate *parentIncubator = 0;
         QDeclarativeContextData *cctxt = forContext;
         while (cctxt) {
-            if (cctxt->activeVME) {
-                parentIncubator = (QDeclarativeIncubatorPrivate *)cctxt->activeVME->data;
+            if (cctxt->activeVMEData) {
+                parentIncubator = (QDeclarativeIncubatorPrivate *)cctxt->activeVMEData;
                 break;
             }
             cctxt = cctxt->parent;
@@ -113,6 +113,8 @@ and it does not take ownership of it.
 void QDeclarativeEngine::setIncubationController(QDeclarativeIncubationController *controller)
 {
     Q_D(QDeclarativeEngine);
+    if (d->incubationController)
+        d->incubationController->d = 0;
     d->incubationController = controller;
     if (controller) controller->d = d;
 }
@@ -154,6 +156,10 @@ void QDeclarativeIncubatorPrivate::clear()
     } else if (component) {
         component->release();
         component = 0;
+    }
+    if (!rootContext.isNull()) {
+        rootContext->activeVMEData = 0;
+        rootContext = 0;
     }
 
     if (nextWaitingFor.isInList()) {
@@ -250,6 +256,8 @@ void QDeclarativeIncubationController::incubatingObjectCountChanged(int incubati
 
 void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
 {
+    if (!component)
+        return;
     typedef QDeclarativeIncubatorPrivate IP;
     QRecursionWatcher<IP, &IP::recursion> watcher(this);
 
@@ -311,7 +319,9 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
             if (watcher.hasRecursed())
                 return;
 
-            if (vme.complete(i)) {
+            QDeclarativeContextData *ctxt = vme.complete(i);
+            if (ctxt) {
+                rootContext = ctxt;
                 progress = QDeclarativeIncubatorPrivate::Completed;
                 goto finishIncubate;
             }
@@ -570,7 +580,6 @@ void QDeclarativeIncubator::forceCompletion()
         if (Loading == status())
             d->incubate(i);
     }
-
 }
 
 /*!

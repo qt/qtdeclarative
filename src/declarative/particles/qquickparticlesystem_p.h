@@ -120,7 +120,7 @@ public:
     QVector<QQuickParticleData*> data;
     QQuickParticleDataHeap dataHeap;
     QSet<int> reusableIndexes;
-    bool recycle(); //Force recycling round, reutrns true if all indexes are now reusable
+    bool recycle(); //Force recycling round, returns true if all indexes are now reusable
 
     void initList();
     void kill(QQuickParticleData* d);
@@ -219,7 +219,8 @@ public:
     QQuickImageParticle* animationOwner;
 
     void debugDump();
-    bool stillAlive();
+    bool stillAlive();//Only checks end, because usually that's all you need and it's a little faster.
+    bool alive();
     float lifeLeft();
     float curSize();
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index

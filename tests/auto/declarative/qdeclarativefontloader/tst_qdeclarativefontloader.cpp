@@ -46,6 +46,8 @@
 #include <QtDeclarative/private/qdeclarativefontloader_p.h>
 #include "../shared/util.h"
 #include "../../declarative/shared/testhttpserver.h"
+#include <QQuickView>
+#include <QQuickItem>
 
 #define SERVER_PORT 14448
 
@@ -65,6 +67,7 @@ private slots:
     void redirWebFont();
     void failWebFont();
     void changeFont();
+    void changeFontSourceViaState();
 
 private:
     QDeclarativeEngine engine;
@@ -218,6 +221,26 @@ void tst_qdeclarativefontloader::changeFont()
     QCOMPARE(nameSpy.count(), 3);
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
+}
+
+void tst_qdeclarativefontloader::changeFontSourceViaState()
+{
+    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("qtbug-20268.qml")));
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
+
+    QDeclarativeFontLoader *fontObject = qobject_cast<QDeclarativeFontLoader*>(qvariant_cast<QObject *>(canvas.rootObject()->property("fontloader")));
+    QVERIFY(fontObject != 0);
+    QTRY_VERIFY(fontObject->status() == QDeclarativeFontLoader::Ready);
+    QVERIFY(fontObject->source() != QUrl(""));
+    QTRY_COMPARE(fontObject->name(), QString("OCRA"));
+
+    canvas.rootObject()->setProperty("usename", true);
+    QEXPECT_FAIL("", "QTBUG-20268", Abort);
+    QTRY_VERIFY(fontObject->status() == QDeclarativeFontLoader::Ready);
+    QCOMPARE(canvas.rootObject()->property("name").toString(), QString("Tahoma"));
 }
 
 QTEST_MAIN(tst_qdeclarativefontloader)

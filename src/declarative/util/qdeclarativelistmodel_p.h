@@ -53,6 +53,7 @@
 #include <private/qlistmodelinterface_p.h>
 
 #include <private/qv8engine_p.h>
+#include <private/qpodvector_p.h>
 
 QT_BEGIN_HEADER
 
@@ -60,10 +61,10 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class FlatListModel;
-class NestedListModel;
 class QDeclarativeListModelWorkerAgent;
-struct ModelNode;
+class ListModel;
+class ListLayout;
+
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeListModel : public QListModelInterface
 {
     Q_OBJECT
@@ -80,8 +81,8 @@ public:
 
     Q_INVOKABLE void clear();
     Q_INVOKABLE void remove(int index);
-    Q_INVOKABLE void append(const QDeclarativeV8Handle &);
-    Q_INVOKABLE void insert(int index, const QDeclarativeV8Handle &);
+    Q_INVOKABLE void append(QDeclarativeV8Function *args);
+    Q_INVOKABLE void insert(QDeclarativeV8Function *args);
     Q_INVOKABLE QDeclarativeV8Handle get(int index) const;
     Q_INVOKABLE void set(int index, const QDeclarativeV8Handle &);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
@@ -96,24 +97,31 @@ Q_SIGNALS:
 private:
     friend class QDeclarativeListModelParser;
     friend class QDeclarativeListModelWorkerAgent;
-    friend class FlatListModel;
-    friend class QDeclarativeListModelV8Data;
-    friend struct ModelNode;
+    friend class ModelObject;
+    friend class ModelNodeMetaObject;
+    friend class ListModel;
+    friend class ListElement;
 
     // Constructs a flat list model for a worker agent
-    QDeclarativeListModel(const QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *parent);
+    QDeclarativeListModel(QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *agent);
+    QDeclarativeListModel(const QDeclarativeListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent=0);
 
-    void set(int index, const QDeclarativeV8Handle &, QList<int> *roles);
-    void setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles);
-
-    bool flatten();
-    bool inWorkerThread() const;
+    QV8Engine *engine() const;
 
     inline bool canMove(int from, int to, int n) const { return !(from+n > count() || to+n > count() || from < 0 || to < 0 || n < 0); }
 
+    ListLayout *m_layout;
+    ListModel *m_listModel;
+
     QDeclarativeListModelWorkerAgent *m_agent;
-    NestedListModel *m_nested;
-    FlatListModel *m_flat;
+    bool m_mainThread;
+    bool m_primary;
+    mutable QV8Engine *m_engine;
+
+    void emitItemsChanged(int index, int count, const QList<int> &roles);
+    void emitItemsRemoved(int index, int count);
+    void emitItemsInserted(int index, int count);
+    void emitItemsMoved(int from, int to, int n);
 };
 
 // ### FIXME
@@ -146,8 +154,16 @@ private:
     bool definesEmptyList(const QString &);
 
     QString listElementTypeName;
-};
 
+    struct DataStackElement
+    {
+        DataStackElement() : model(0), elementIndex(0) {}
+
+        QString name;
+        ListModel *model;
+        int elementIndex;
+    };
+};
 
 QT_END_NAMESPACE
 

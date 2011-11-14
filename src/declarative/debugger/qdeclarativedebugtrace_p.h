@@ -62,7 +62,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-struct QDeclarativeDebugData
+struct Q_AUTOTEST_EXPORT QDeclarativeDebugData
 {
     qint64 time;
     int messageType;
@@ -102,6 +102,7 @@ public:
         Key,
         AnimationFrame,
         EndTrace,
+        StartTrace,
 
         MaximumEventType
     };
@@ -146,7 +147,6 @@ private:
     void sendMessages();
     QElapsedTimer m_timer;
     bool m_enabled;
-    bool m_deferredSend;
     bool m_messageReceived;
     QVector<QDeclarativeDebugData> m_data;
     QMutex m_mutex;

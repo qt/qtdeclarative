@@ -67,8 +67,12 @@ public:
     QDeclarativeInspectorInterface() {}
     virtual ~QDeclarativeInspectorInterface() {}
 
-    virtual void activate() = 0;
+    virtual bool canHandleView(QObject *view) = 0;
+
+    virtual void activate(QObject *view) = 0;
     virtual void deactivate() = 0;
+
+    virtual void clientMessage(const QByteArray &message) = 0;
 };
 
 Q_DECLARE_INTERFACE(QDeclarativeInspectorInterface, "com.trolltech.Qt.QDeclarativeInspectorInterface/1.0")

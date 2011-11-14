@@ -111,6 +111,7 @@ private slots:
     void signalOverride();
     void signalOverrideCrash();
     void signalOverrideCrash2();
+    void signalOverrideCrash3();
     void parentChange();
     void parentChangeErrors();
     void anchorChanges();
@@ -515,6 +516,22 @@ void tst_qdeclarativestates::signalOverrideCrash2()
     QQuickItemPrivate::get(rect)->setState("state1");
     QQuickItemPrivate::get(rect)->setState("state2");
     QQuickItemPrivate::get(rect)->setState("state1");
+
+    delete rect;
+}
+
+void tst_qdeclarativestates::signalOverrideCrash3()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent rectComponent(&engine, TESTDATA("signalOverrideCrash3.qml"));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
+    QVERIFY(rect != 0);
+
+    QQuickItemPrivate::get(rect)->setState("state1");
+    QQuickItemPrivate::get(rect)->setState("");
+    QQuickItemPrivate::get(rect)->setState("state2");
+    QQuickItemPrivate::get(rect)->setState("");
 
     delete rect;
 }
@@ -1211,8 +1228,9 @@ void tst_qdeclarativestates::tempState()
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-    QTest::ignoreMessage(QtDebugMsg, "entering placed");
-    QTest::ignoreMessage(QtDebugMsg, "entering idle");
+    QString messageFormat = QString(QLatin1String("%1 (file://%2:%3)"));
+    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("entering placed")).arg(TESTDATA("legalTempState.qml")).arg(11).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("entering idle")).arg(TESTDATA("legalTempState.qml")).arg(15).toLatin1());
     rectPrivate->setState("placed");
     QCOMPARE(rectPrivate->state(), QLatin1String("idle"));
 }

@@ -148,7 +148,17 @@ QByteArray convertToId(const QByteArray &cppName)
     return cppToId.value(cppName, cppName);
 }
 
-QSet<const QMetaObject *> collectReachableMetaObjects(const QList<QDeclarativeType *> &skip = QList<QDeclarativeType *>())
+/* All exported module APIs are collected into this list */
+class ModuleApi {
+public:
+    QString uri;
+    int majorVersion;
+    int minorVersion;
+    QByteArray objectId;
+};
+QList<ModuleApi> moduleApis;
+
+QSet<const QMetaObject *> collectReachableMetaObjects(QDeclarativeEngine *engine, const QList<QDeclarativeType *> &skip = QList<QDeclarativeType *>())
 {
     QSet<const QMetaObject *> metas;
     metas.insert(FriendlyQObject::qtMeta());
@@ -219,6 +229,33 @@ QSet<const QMetaObject *> collectReachableMetaObjects(const QList<QDeclarativeTy
             collectReachableMetaObjects(object, &metas);
         else
             qWarning() << "Could not create" << tyName;
+    }
+
+    // extract exported module api
+    QHashIterator<QString, QList<QDeclarativeMetaType::ModuleApi> > moduleApiIt(QDeclarativeMetaType::moduleApis());
+    while (moduleApiIt.hasNext()) {
+        moduleApiIt.next();
+        foreach (const QDeclarativeMetaType::ModuleApi &api, moduleApiIt.value()) {
+            ModuleApi moduleApi;
+            moduleApi.uri = moduleApiIt.key();
+            moduleApi.majorVersion = api.major;
+            moduleApi.minorVersion = api.minor;
+
+            if (api.qobject) {
+                if (QObject *object = (*api.qobject)(engine, engine)) {
+                    collectReachableMetaObjects(object, &metas);
+                    moduleApi.objectId = convertToId(object->metaObject()->className());
+                    delete object;
+                }
+            } else if (api.script) {
+                qWarning() << "Can't dump the module api in " << moduleApi.uri << ". QJSValue based module API is not supported.";
+//                QJSValue value = (*api.script)(engine, engine);
+//                IdToObjectHash jsObjects;
+//                collectReachableJSObjects(value, &jsObjects, &metas);
+            }
+
+            moduleApis += moduleApi;
+        }
     }
 
     return metas;
@@ -318,9 +355,21 @@ public:
         qml->writeEndObject();
     }
 
+    void dump(const ModuleApi &api)
+    {
+        qml->writeStartObject(QLatin1String("ModuleApi"));
+        if (api.uri != relocatableModuleUri)
+            qml->writeScriptBinding(QLatin1String("uri"), enquote(api.uri));
+        qml->writeScriptBinding(QLatin1String("version"), QString("%1.%2").arg(
+                                    QString::number(api.majorVersion),
+                                    QString::number(api.minorVersion)));
+        qml->writeScriptBinding(QLatin1String("name"), enquote(api.objectId));
+        qml->writeEndObject();
+    }
+
     void writeEasingCurve()
     {
-        qml->writeStartObject("Component");
+        qml->writeStartObject(QLatin1String("Component"));
         qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("QEasingCurve")));
         qml->writeScriptBinding(QLatin1String("prototype"), enquote(QLatin1String("QDeclarativeEasingValueType")));
         qml->writeEndObject();
@@ -582,7 +631,7 @@ int main(int argc, char *argv[])
     }
 
     // find all QMetaObjects reachable from the builtin module
-    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects();
+    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine);
     QList<QDeclarativeType *> defaultTypes = QDeclarativeMetaType::qmlTypes();
 
     // add some otherwise unreachable QMetaObjects
@@ -633,7 +682,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(defaultTypes);
+        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, defaultTypes);
         candidates.subtract(defaultReachable);
 
         // Also eliminate meta objects with the same classname.
@@ -681,10 +730,15 @@ int main(int argc, char *argv[])
     if (pluginImportUri.isEmpty())
         dumper.writeEasingCurve();
 
+    // write out module api elements
+    foreach (const ModuleApi &api, moduleApis) {
+        dumper.dump(api);
+    }
+
     qml.writeEndObject();
     qml.writeEndDocument();
 
-    std::cout << bytes.constData();
+    std::cout << bytes.constData() << std::flush;
 
     // workaround to avoid crashes on exit
     QTimer timer;

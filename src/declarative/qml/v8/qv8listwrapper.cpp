@@ -69,11 +69,11 @@ void QV8ListWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
+    ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter, 0, 0, Enumerator);
     ft->InstanceTemplate()->SetIndexedPropertyHandler(IndexedGetter);
     ft->InstanceTemplate()->SetAccessor(v8::String::New("length"), LengthGetter, 0, 
                                         v8::Handle<v8::Value>(), v8::DEFAULT, 
-                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
+                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetHasExternalResource(true);
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
@@ -173,6 +173,22 @@ v8::Handle<v8::Value> QV8ListWrapper::LengthGetter(v8::Local<v8::String> propert
     quint32 count = resource->property.count?resource->property.count(&resource->property):0;
 
     return v8::Integer::NewFromUnsigned(count);
+}
+
+v8::Handle<v8::Array> QV8ListWrapper::Enumerator(const v8::AccessorInfo &info)
+{
+    QV8ListResource *resource = v8_resource_cast<QV8ListResource>(info.This());
+
+    if (!resource || resource->object.isNull()) return v8::Array::New();
+
+    quint32 count = resource->property.count?resource->property.count(&resource->property):0;
+
+    v8::Local<v8::Array> rv = v8::Array::New(count);
+
+    for (uint ii = 0; ii < count; ++ii)
+        rv->Set(ii, v8::Number::New(ii));
+
+    return rv;
 }
 
 QT_END_NAMESPACE

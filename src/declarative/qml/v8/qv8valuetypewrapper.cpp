@@ -295,9 +295,9 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
             QDeclarativeContextData *context = r->engine->callingContext();
             v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
 
-            QDeclarativePropertyCache::Data cacheData;
-            cacheData.setFlags(QDeclarativePropertyCache::Data::IsWritable |
-                               QDeclarativePropertyCache::Data::IsValueTypeVirtual);
+            QDeclarativePropertyData cacheData;
+            cacheData.setFlags(QDeclarativePropertyData::IsWritable |
+                               QDeclarativePropertyData::IsValueTypeVirtual);
             cacheData.propType = reference->object->metaObject()->property(reference->property).userType();
             cacheData.coreIndex = reference->property;
             cacheData.valueTypeFlags = 0;

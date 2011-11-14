@@ -74,7 +74,8 @@ enum Type {
     WorkerNumber,
     WorkerDate,
     WorkerRegexp,
-    WorkerListModel
+    WorkerListModel,
+    WorkerSequence
 };
 
 static inline quint32 valueheader(Type type, quint32 size = 0)
@@ -252,6 +253,33 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
         // No other QObject's are allowed to be sent
         push(data, valueheader(WorkerUndefined));
     } else {
+        // we can convert sequences, but not other types with external data.
+        if (v->IsObject()) {
+            v8::Handle<v8::Object> seqObj = v->ToObject();
+            QV8ObjectResource *r = static_cast<QV8ObjectResource *>(seqObj->GetExternalResource());
+            if (r->resourceType() == QV8ObjectResource::SequenceType) {
+                QVariant sequenceVariant = engine->sequenceWrapper()->toVariant(r);
+                if (!sequenceVariant.isNull()) {
+                    // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
+                    uint32_t seqLength = engine->sequenceWrapper()->sequenceLength(r);
+                    uint32_t length = seqLength + 1;
+                    if (length > 0xFFFFFF) {
+                        push(data, valueheader(WorkerUndefined));
+                        return;
+                    }
+                    reserve(data, sizeof(quint32) + length * sizeof(quint32));
+                    push(data, valueheader(WorkerSequence, length));
+                    serialize(data, v8::Integer::New(sequenceVariant.userType()), engine); // sequence type
+                    for (uint32_t ii = 0; ii < seqLength; ++ii) {
+                        serialize(data, seqObj->Get(ii), engine); // sequence elements
+                    }
+
+                    return;
+                }
+            }
+        }
+
+        // not a sequence.
         push(data, valueheader(WorkerUndefined));
     }
 }
@@ -329,6 +357,18 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
         agent->release();
         agent->setV8Engine(engine);
         return rv;
+    }
+    case WorkerSequence:
+    {
+        bool succeeded = false;
+        quint32 length = headersize(header);
+        quint32 seqLength = length - 1;
+        int sequenceType = deserialize(data, engine)->Int32Value();
+        v8::Local<v8::Array> array = v8::Array::New(seqLength);
+        for (quint32 ii = 0; ii < seqLength; ++ii)
+            array->Set(ii, deserialize(data, engine));
+        QVariant seqVariant = engine->sequenceWrapper()->toVariant(array, sequenceType, &succeeded);
+        return engine->sequenceWrapper()->fromVariant(seqVariant, &succeeded);
     }
     }
     Q_ASSERT(!"Unreachable");

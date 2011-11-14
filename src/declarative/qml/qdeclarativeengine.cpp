@@ -332,7 +332,7 @@ the same object as is returned from the Qt.include() call.
 
 
 QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
-: captureProperties(false), rootContext(0), isDebugging(false),
+: propertyCapture(0), rootContext(0), isDebugging(false),
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
   cleanup(0), erroredBindings(0), inProgressCreations(0), 
   workerScriptEngine(0), activeVME(0),
@@ -542,6 +542,9 @@ QDeclarativeEngine::~QDeclarativeEngine()
 
     // ensure we clean up QObjects with JS ownership
     d->v8engine()->gc();
+
+    if (d->incubationController)
+        d->incubationController->d = 0;
 }
 
 /*! \fn void QDeclarativeEngine::quit()
@@ -1111,7 +1114,7 @@ void QDeclarativeData::addNotify(int index, QDeclarativeNotifierEndpoint *endpoi
     Q_ASSERT(!endpoint->isConnected());
 
     index = qMin(index, 0xFFFF - 1);
-    notifyList->connectionMask |= (1 << (quint64(index) % 64));
+    notifyList->connectionMask |= (1ULL << quint64(index % 64));
 
     if (index < notifyList->notifiesSize) {
 
@@ -1659,12 +1662,12 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
          !overloadError && iter != raw->stringCache.end();
          ++iter) {
 
-        QDeclarativePropertyCache::Data *d = *iter;
+        QDeclarativePropertyData *d = *iter;
         if (raw->isAllowedInRevision(d))
             continue; // Not excluded - no problems
 
         // check that a regular "name" overload isn't happening
-        QDeclarativePropertyCache::Data *current = d;
+        QDeclarativePropertyData *current = d;
         while (!overloadError && current) {
             current = d->overrideData(current);
             if (current && raw->isAllowedInRevision(current))

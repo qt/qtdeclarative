@@ -236,7 +236,7 @@ void drawTriangle(qint32 *bits, int width, int height, const QPoint *center,
     const int v2Frac = clip == Clip ? (y2 << 8) + 0xff - v2->y() : ~v1->y() & 0xff;
     const int centerFrac = clip == Clip ? (yC << 8) + 0xff - center->y() : ~center->y() & 0xff;
 
-    int dx1, x1, dx2, x2;
+    int dx1 = 0, x1 = 0, dx2 = 0, x2 = 0;
     qint32 dd1, d1, dd2, d2;
     if (v1->y() != center->y()) {
         dx1 = ((v1->x() - center->x()) << 8) / (v1->y() - center->y());
@@ -372,8 +372,8 @@ void drawRectangle(qint32 *bits, int width, int height,
     const int int1Frac = clip == Clip ? (yi1 << 8) + 0xff - int1->y() : ~int1->y() & 0xff;
     const int ext1Frac = clip == Clip ? (ye1 << 8) + 0xff - ext1->y() : ~ext1->y() & 0xff;
 
-    int dxC, dxE; // cap slope, edge slope
-    qint32 ddC;
+    int dxC = 0, dxE = 0; // cap slope, edge slope
+    qint32 ddC = 0;
     if (ext1->y() != int1->y()) {
         dxC = ((ext1->x() - int1->x()) << 8) / (ext1->y() - int1->y());
         ddC = (extValue << 9) / (ext1->y() - int1->y());

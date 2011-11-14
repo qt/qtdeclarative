@@ -1630,10 +1630,8 @@ void tst_qdeclarativetextedit::positionAt()
     int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
     int diff = abs(int(fm.width(texteditObject->text().left(pos))-texteditObject->width()/2));
 
-#ifdef Q_WS_QPA
     QEXPECT_FAIL("", "QTBUG-21016 fails", Continue);
-#endif
-    // some tollerance for different fonts.
+    // some tolerance for different fonts.
 #ifdef Q_OS_LINUX
     QVERIFY(diff < 2);
 #else

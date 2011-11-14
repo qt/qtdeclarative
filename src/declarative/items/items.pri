@@ -64,6 +64,7 @@ HEADERS += \
     $$PWD/qquickspriteimage_p.h \
     $$PWD/qquickdrag_p.h \
     $$PWD/qquickdroparea_p.h \
+    $$PWD/qquickmultipointtoucharea_p.h \
     $$PWD/qquickitemview_p.h \
     $$PWD/qquickitemview_p_p.h
 
@@ -110,6 +111,7 @@ SOURCES += \
     $$PWD/qquickspriteimage.cpp \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
+    $$PWD/qquickmultipointtoucharea.cpp \
     $$PWD/qquickitemview.cpp
 
 SOURCES += \

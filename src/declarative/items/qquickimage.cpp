@@ -64,7 +64,7 @@ public:
 
     QSGTexture *texture() const {
 
-        if (m_texture->isAtlasTexture())
+        if (m_texture && m_texture->isAtlasTexture())
             const_cast<QQuickImageTextureProvider *>(this)->m_texture = m_texture->removedFromAtlas();
 
         if (m_texture) {
@@ -404,7 +404,7 @@ qreal QQuickImage::paintedHeight() const
     other dimension is set in proportion to preserve the source image's aspect ratio.
     (The \l fillMode is independent of this.)
 
-    If the source is an instrinsically scalable image (eg. SVG), this property
+    If the source is an intrinsically scalable image (eg. SVG), this property
     determines the size of the loaded image regardless of intrinsic size.
     Avoid changing this property dynamically; rendering an SVG is \e slow compared
     to an image.
@@ -442,7 +442,7 @@ qreal QQuickImage::paintedHeight() const
 
     Note that this property is only valid for images read from the
     local filesystem.  Images loaded via a network resource (e.g. HTTP)
-    are always loaded asynchonously.
+    are always loaded asynchronously.
 */
 
 /*!

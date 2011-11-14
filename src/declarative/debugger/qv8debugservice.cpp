@@ -124,6 +124,13 @@ QV8DebugService::QV8DebugService(QObject *parent)
 {
     Q_D(QV8DebugService);
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
+
+    // This call forces the debugger context to be loaded and made resident.
+    // Without this the debugger is loaded/unloaded whenever required, which
+    // has a very significant effect on the timing reported in the QML
+    // profiler in Qt Creator.
+    v8::Debug::GetDebugContext();
+
     if (status() == Enabled) {
         // ,block mode, client attached
         while (!d->initialized) {
@@ -258,9 +265,65 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
         if (debugCommand == QLatin1String("connect")) {
             d->initialized = true;
+            //Prepare the response string
+            //Create a json message using v8 debugging protocol
+            //and send it to client
+
+            // { "type"        : "response",
+            //   "request_seq" : <number>,
+            //   "command"     : "connect",
+            //   "running"     : <is the VM running after sending this response>
+            //   "success"     : true
+            // }
+            {
+                v8::Isolate::Scope i_scope(d->isolate);
+                const QString obj(QLatin1String("{}"));
+                QJSValue parser = d->engine->evaluate(QLatin1String("JSON.parse"));
+                QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
+                jsonVal.setProperty(QLatin1String("type"), QJSValue(QLatin1String("response")));
+
+                const int sequence = reqMap.value(QLatin1String("seq")).toInt();
+                jsonVal.setProperty(QLatin1String("request_seq"), QJSValue(sequence));
+                jsonVal.setProperty(QLatin1String("command"), QJSValue(debugCommand));
+                jsonVal.setProperty(QLatin1String("success"), QJSValue(true));
+                jsonVal.setProperty(QLatin1String("running"), QJSValue(!d->loop.isRunning()));
+
+                QJSValue stringify = d->engine->evaluate(QLatin1String("JSON.stringify"));
+                QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+                debugMessageHandler(json.toString());
+
+            }
 
         } else if (debugCommand == QLatin1String("interrupt")) {
             v8::Debug::DebugBreak();
+            //Prepare the response string
+            //Create a json message using v8 debugging protocol
+            //and send it to client
+
+            // { "type"        : "response",
+            //   "request_seq" : <number>,
+            //   "command"     : "connect",
+            //   "running"     : <is the VM running after sending this response>
+            //   "success"     : true
+            // }
+            {
+                v8::Isolate::Scope i_scope(d->isolate);
+                const QString obj(QLatin1String("{}"));
+                QJSValue parser = d->engine->evaluate(QLatin1String("JSON.parse"));
+                QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
+                jsonVal.setProperty(QLatin1String("type"), QJSValue(QLatin1String("response")));
+
+                const int sequence = reqMap.value(QLatin1String("seq")).toInt();
+                jsonVal.setProperty(QLatin1String("request_seq"), QJSValue(sequence));
+                jsonVal.setProperty(QLatin1String("command"), QJSValue(debugCommand));
+                jsonVal.setProperty(QLatin1String("success"), QJSValue(true));
+                jsonVal.setProperty(QLatin1String("running"), QJSValue(!d->loop.isRunning()));
+
+                QJSValue stringify = d->engine->evaluate(QLatin1String("JSON.stringify"));
+                QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+                debugMessageHandler(json.toString());
+
+            }
 
         } else {
             bool forwardRequestToV8 = true;
@@ -363,7 +426,10 @@ void QV8DebugService::messageReceived(const QByteArray &message)
                     d->handlersList.remove(bp);
                     forwardRequestToV8 = false;
                 }
+            } else if (debugCommand == QLatin1String("disconnect")) {
+                v8::Debug::CancelDebugBreak();
             }
+
             if (forwardRequestToV8)
                 d->sendDebugMessage(request);
         }

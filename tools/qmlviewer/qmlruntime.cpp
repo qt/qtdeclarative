@@ -44,15 +44,7 @@
 #ifdef hz
 #undef hz
 #endif
-#ifdef Q_WS_MAEMO_5
-#  include <QMaemo5ValueButton>
-#  include <QMaemo5ListPickSelector>
-#  include <QWidgetAction>
-#  include <QStringListModel>
-#  include "ui_recopts_maemo5.h"
-#else
 #  include "ui_recopts.h"
-#endif
 
 #include "qmlruntime.h"
 #include <qdeclarativecontext.h>
@@ -93,13 +85,10 @@
 #include <QMutexLocker>
 #include "proxysettings.h"
 #include "deviceorientation.h"
+#include <qdeclarativetester.h>
 
 #ifdef GL_SUPPORTED
 #include <QGLWidget>
-#endif
-
-#if defined(Q_WS_S60)
-#include <aknappui.h> // For locking app orientation
 #endif
 
 #include <qdeclarativetester.h>
@@ -192,60 +181,6 @@ private:
     bool activeWindow;
 };
 
-
-
-#if defined(Q_WS_MAEMO_5)
-
-class Maemo5PickerAction : public QWidgetAction {
-    Q_OBJECT
-public:
-    Maemo5PickerAction(const QString &text, QActionGroup *actions, QObject *parent)
-        : QWidgetAction(parent), m_text(text), m_actions(actions)
-    { }
-
-    QWidget *createWidget(QWidget *parent)
-    {
-	QMaemo5ValueButton *button = new QMaemo5ValueButton(m_text, parent);
-	button->setValueLayout(QMaemo5ValueButton::ValueUnderTextCentered);
-        QMaemo5ListPickSelector *pick = new QMaemo5ListPickSelector(button);
-	button->setPickSelector(pick);
-	if (m_actions) {
-	    QStringList sl;
-	    int curIdx = -1, idx = 0;
-	    foreach (QAction *a, m_actions->actions()) {
-		sl << a->text();
-		if (a->isChecked())
-		    curIdx = idx;
-		idx++;
-            }
-	    pick->setModel(new QStringListModel(sl));
-	    pick->setCurrentIndex(curIdx);
-	} else {
-	    button->setEnabled(false);
-	}
-	connect(pick, SIGNAL(selected(QString)), this, SLOT(emitTriggered()));
-	return button;
-    }
-
-private slots:
-    void emitTriggered()
-    {
-	QMaemo5ListPickSelector *pick = qobject_cast<QMaemo5ListPickSelector *>(sender());
-	if (!pick)
-	    return;
-	int idx = pick->currentIndex();
-
-	if (m_actions && idx >= 0 && idx < m_actions->actions().count())
-	    m_actions->actions().at(idx)->trigger();
-    }
-
-private:
-    QString m_text;
-    QPointer<QActionGroup> m_actions;
-};
-
-#endif // Q_WS_MAEMO_5
-
 static struct { const char *name, *args; } ffmpegprofiles[] = {
     {"Maximum Quality", "-sameq"},
     {"High Quality", "-qmax 2"},
@@ -262,9 +197,7 @@ public:
     RecordingDialog(QWidget *parent) : QDialog(parent)
     {
         setupUi(this);
-#ifndef Q_WS_MAEMO_5
         hz->setValidator(new QDoubleValidator(hz));
-#endif
         for (int i=0; ffmpegprofiles[i].name; ++i) {
             profile->addItem(QString::fromAscii(ffmpegprofiles[i].name));
         }
@@ -295,59 +228,25 @@ public:
     {
         QString str = tr("Original (%1x%2)").arg(s.width()).arg(s.height());
 
-#ifdef Q_WS_MAEMO_5
-        sizeCombo->setItemText(0, str);
-#else
         sizeOriginal->setText(str);
         if (sizeWidth->value()<=1) {
             sizeWidth->setValue(s.width());
             sizeHeight->setValue(s.height());
         }
-#endif
     }
 
     void showffmpegOptions(bool b)
     {
-#ifdef Q_WS_MAEMO_5
-        profileLabel->setVisible(b);
-        profile->setVisible(b);
-        ffmpegHelp->setVisible(b);
-        args->setVisible(b);
-#else
         ffmpegOptions->setVisible(b);
-#endif
     }
 
     void showRateOptions(bool b)
     {
-#ifdef Q_WS_MAEMO_5
-        rateLabel->setVisible(b);
-        rateCombo->setVisible(b);
-#else
         rateOptions->setVisible(b);
-#endif
     }
 
     void setVideoRate(int rate)
     {
-#ifdef Q_WS_MAEMO_5
-        int idx;
-        if (rate >= 60)
-            idx = 0;
-        else if (rate >= 50)
-            idx = 2;
-        else if (rate >= 25)
-            idx = 3;
-        else if (rate >= 24)
-            idx = 4;
-        else if (rate >= 20)
-            idx = 5;
-        else if (rate >= 15)
-            idx = 6;
-        else
-            idx = 7;
-        rateCombo->setCurrentIndex(idx);
-#else
         if (rate == 24)
             hz24->setChecked(true);
         else if (rate == 25)
@@ -360,23 +259,10 @@ public:
             hzCustom->setChecked(true);
             hz->setText(QString::number(rate));
         }
-#endif
     }
 
     int videoRate() const
     {
-#ifdef Q_WS_MAEMO_5
-        switch (rateCombo->currentIndex()) {
-            case 0: return 60;
-            case 1: return 50;
-            case 2: return 25;
-            case 3: return 24;
-            case 4: return 20;
-            case 5: return 15;
-            case 7: return 10;
-            default: return 60;
-        }
-#else
         if (hz24->isChecked())
             return 24;
         else if (hz25->isChecked())
@@ -388,20 +274,10 @@ public:
         else {
             return hz->text().toInt();
         }
-#endif
     }
 
     QSize videoSize() const
     {
-#ifdef Q_WS_MAEMO_5
-        switch (sizeCombo->currentIndex()) {
-            case 0: return QSize();
-            case 1: return QSize(640,480);
-            case 2: return QSize(320,240);
-            case 3: return QSize(1280,720);
-            default: return QSize();
-        }
-#else
         if (sizeOriginal->isChecked())
             return QSize();
         else if (size720p->isChecked())
@@ -412,7 +288,6 @@ public:
             return QSize(320,240);
         else
             return QSize(sizeWidth->value(), sizeHeight->value());
-#endif
     }
 
 
@@ -615,11 +490,6 @@ QDeclarativeViewer::QDeclarativeViewer(QWidget *parent, Qt::WindowFlags flags)
 {
     QDeclarativeViewer::registerTypes();
     setWindowTitle(tr("Qt QML Viewer"));
-#ifdef Q_WS_MAEMO_5
-    setAttribute(Qt::WA_Maemo5StackedWindow);
-//    setPalette(QApplication::palette("QLabel"));
-#endif
-
     devicemode = false;
     canvas = 0;
     record_autotime = 0;
@@ -742,10 +612,8 @@ void QDeclarativeViewer::createMenu()
     connect(slowAction, SIGNAL(triggered(bool)), this, SLOT(setSlowMode(bool)));
 
     showWarningsWindow = new QAction(tr("Show Warnings"), this);
-#if !defined(Q_OS_SYMBIAN)
     showWarningsWindow->setCheckable((true));
     showWarningsWindow->setChecked(loggerWindow->isVisible());
-#endif
     connect(showWarningsWindow, SIGNAL(triggered(bool)), this, SLOT(showWarnings(bool)));
 
     QAction *proxyAction = new QAction(tr("HTTP &Proxy..."), this);
@@ -763,30 +631,22 @@ void QDeclarativeViewer::createMenu()
     orientation->setExclusive(true);
     connect(orientation, SIGNAL(triggered(QAction*)), this, SLOT(changeOrientation(QAction*)));
 
-#if defined(Q_OS_SYMBIAN)
-    QAction *autoOrientationAction = new QAction(tr("Auto-orientation"), this);
-    autoOrientationAction->setCheckable(true);
-#endif
     QAction *portraitAction = new QAction(tr("Portrait"), this);
     portraitAction->setCheckable(true);
     QAction *landscapeAction = new QAction(tr("Landscape"), this);
     landscapeAction->setCheckable(true);
-#if !defined(Q_OS_SYMBIAN)
     QAction *portraitInvAction = new QAction(tr("Portrait (inverted)"), this);
     portraitInvAction->setCheckable(true);
     QAction *landscapeInvAction = new QAction(tr("Landscape (inverted)"), this);
     landscapeInvAction->setCheckable(true);
-#endif
 
     QAction *aboutAction = new QAction(tr("&About Qt..."), this);
     aboutAction->setMenuRole(QAction::AboutQtRole);
     connect(aboutAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
-#if !defined(Q_OS_SYMBIAN)
     QAction *closeAction = new QAction(tr("&Close"), this);
     closeAction->setShortcuts(QKeySequence::Close);
     connect(closeAction, SIGNAL(triggered()), this, SLOT(close()));
-#endif
 
     QAction *quitAction = new QAction(tr("&Quit"), this);
     quitAction->setMenuRole(QAction::QuitRole);
@@ -795,34 +655,12 @@ void QDeclarativeViewer::createMenu()
 
     QMenuBar *menu = menuBar();
     if (!menu)
-	return;
-
-#if defined(Q_WS_MAEMO_5)
-    menu->addAction(openAction);
-    menu->addAction(openUrlAction);
-    menu->addAction(reloadAction);
-
-    menu->addAction(snapshotAction);
-    menu->addAction(recordAction);
-
-    menu->addAction(recordOptions);
-    menu->addAction(proxyAction);
-
-    menu->addAction(slowAction);
-    menu->addAction(showWarningsWindow);
-
-    orientation->addAction(landscapeAction);
-    orientation->addAction(portraitAction);
-    menu->addAction(new Maemo5PickerAction(tr("Set orientation"), orientation, this));
-    menu->addAction(fullscreenAction);
-    return;
-#endif // Q_WS_MAEMO_5
+        return;
 
     QMenu *fileMenu = menu->addMenu(tr("&File"));
     fileMenu->addAction(openAction);
     fileMenu->addAction(openUrlAction);
     fileMenu->addAction(reloadAction);
-#if !defined(Q_OS_SYMBIAN)
     fileMenu->addSeparator();
     fileMenu->addAction(closeAction);
     fileMenu->addAction(quitAction);
@@ -830,7 +668,6 @@ void QDeclarativeViewer::createMenu()
     QMenu *recordMenu = menu->addMenu(tr("&Recording"));
     recordMenu->addAction(snapshotAction);
     recordMenu->addAction(recordAction);
-#endif // ! Q_OS_SYMBIAN
 
     QMenu *debugMenu = menu->addMenu(tr("&Debugging"));
     debugMenu->addAction(slowAction);
@@ -838,25 +675,16 @@ void QDeclarativeViewer::createMenu()
 
     QMenu *settingsMenu = menu->addMenu(tr("&Settings"));
     settingsMenu->addAction(proxyAction);
-#if defined(Q_OS_SYMBIAN)
-    settingsMenu->addAction(fullscreenAction);
-#else
     settingsMenu->addAction(recordOptions);
     settingsMenu->addMenu(loggerWindow->preferencesMenu());
-#endif // !Q_OS_SYMBIAN
     settingsMenu->addAction(rotateAction);
 
     QMenu *propertiesMenu = settingsMenu->addMenu(tr("Properties"));
 
-#if defined(Q_OS_SYMBIAN)
-    orientation->addAction(autoOrientationAction);
-#endif
     orientation->addAction(portraitAction);
     orientation->addAction(landscapeAction);
-#if !defined(Q_OS_SYMBIAN)
     orientation->addAction(portraitInvAction);
     orientation->addAction(landscapeInvAction);
-#endif
     propertiesMenu->addActions(orientation->actions());
 
     QMenu *helpMenu = menu->addMenu(tr("&Help"));
@@ -880,23 +708,6 @@ void QDeclarativeViewer::proxySettingsChanged()
 
 void QDeclarativeViewer::rotateOrientation()
 {
-#if defined(Q_WS_S60)
-    CAknAppUi *appUi = static_cast<CAknAppUi *>(CEikonEnv::Static()->AppUi());
-    if (appUi) {
-        CAknAppUi::TAppUiOrientation oldOrientation = appUi->Orientation();
-        QString newOrientation;
-        if (oldOrientation == CAknAppUi::EAppUiOrientationPortrait) {
-            newOrientation = QLatin1String("Landscape");
-        } else {
-            newOrientation = QLatin1String("Portrait");
-        }
-        foreach (QAction *action, orientation->actions()) {
-            if (action->text() == newOrientation) {
-                changeOrientation(action);
-            }
-        }
-    }
-#else
     QAction *current = orientation->checkedAction();
     QList<QAction *> actions = orientation->actions();
     int index = actions.indexOf(current);
@@ -905,7 +716,6 @@ void QDeclarativeViewer::rotateOrientation()
 
     QAction *newOrientation = actions[(index + 1) % actions.count()];
     changeOrientation(newOrientation);
-#endif
 }
 
 void QDeclarativeViewer::toggleFullScreen()
@@ -918,11 +728,7 @@ void QDeclarativeViewer::toggleFullScreen()
 
 void QDeclarativeViewer::showWarnings(bool show)
 {
-#if defined(Q_OS_SYMBIAN)
-    loggerWindow->showMaximized();
-#else
     loggerWindow->setVisible(show);
-#endif
 }
 
 void QDeclarativeViewer::warningsWidgetOpened()
@@ -1117,12 +923,7 @@ bool QDeclarativeViewer::open(const QString& file_or_url)
     canvas->engine()->clearComponentCache();
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty(QLatin1String("qmlViewer"), this);
-#ifdef Q_OS_SYMBIAN
-    ctxt->setContextProperty(QLatin1String("qmlViewerFolder"), QLatin1String("E:\\")); // Documents on your S60 phone
-#else
     ctxt->setContextProperty(QLatin1String("qmlViewerFolder"), QDir::currentPath());
-#endif
-
     ctxt->setContextProperty(QLatin1String("runtime"), Runtime::instance());
 
     QString fileName = url.toLocalFile();
@@ -1442,22 +1243,6 @@ void QDeclarativeViewer::changeOrientation(QAction *action)
         return;
     QString o = action->text();
     action->setChecked(true);
-#if defined(Q_WS_S60)
-    CAknAppUi *appUi = static_cast<CAknAppUi *>(CEikonEnv::Static()->AppUi());
-    if (appUi) {
-        CAknAppUi::TAppUiOrientation orientation = appUi->Orientation();
-        if (o == QLatin1String("Auto-orientation")) {
-            appUi->SetOrientationL(CAknAppUi::EAppUiOrientationAutomatic);
-            rotateAction->setVisible(false);
-        } else if (o == QLatin1String("Portrait")) {
-            appUi->SetOrientationL(CAknAppUi::EAppUiOrientationPortrait);
-            rotateAction->setVisible(true);
-        } else if (o == QLatin1String("Landscape")) {
-            appUi->SetOrientationL(CAknAppUi::EAppUiOrientationLandscape);
-            rotateAction->setVisible(true);
-        }
-    }
-#else
     if (o == QLatin1String("Portrait"))
         DeviceOrientation::instance()->setOrientation(DeviceOrientation::Portrait);
     else if (o == QLatin1String("Landscape"))
@@ -1466,7 +1251,6 @@ void QDeclarativeViewer::changeOrientation(QAction *action)
         DeviceOrientation::instance()->setOrientation(DeviceOrientation::PortraitInverted);
     else if (o == QLatin1String("Landscape (inverted)"))
         DeviceOrientation::instance()->setOrientation(DeviceOrientation::LandscapeInverted);
-#endif
 }
 
 void QDeclarativeViewer::orientationChanged()
@@ -1489,7 +1273,7 @@ void QDeclarativeViewer::setUseGL(bool useGL)
 #ifdef GL_SUPPORTED
     if (useGL) {
         QGLFormat format = QGLFormat::defaultFormat();
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
         format.setSampleBuffers(true);
         format.setSwapInterval(1);
 #else

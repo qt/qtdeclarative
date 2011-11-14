@@ -108,7 +108,7 @@ QT_BEGIN_NAMESPACE
     \section2 Resetting property values
 
     The \c undefined value can be used to reset the property value for a state.
-    In the following example, when \c theText changes to the \e widerText
+    In the following example, when \c myText changes to the \e widerText
     state, its \c width property is reset, giving the text its natural width
     and displaying the whole string on a single line.
 
@@ -170,7 +170,8 @@ public:
         reverseExpression = rewindExpression;
     }
 
-    /*virtual void copyOriginals(QDeclarativeActionEvent *other)
+    virtual bool needsCopy() { return true; }
+    virtual void copyOriginals(QDeclarativeActionEvent *other)
     {
         QDeclarativeReplaceSignalHandler *rsh = static_cast<QDeclarativeReplaceSignalHandler*>(other);
         saveCurrentValues();
@@ -181,7 +182,7 @@ public:
             ownedExpression = rsh->ownedExpression;
             rsh->ownedExpression = 0;
         }
-    }*/
+    }
 
     virtual void rewind() {
         ownedExpression = QDeclarativePropertyPrivate::setSignalExpression(property, rewindExpression);

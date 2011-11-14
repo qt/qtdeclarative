@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QDeclarativeJS;
 
-static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, const QMetaObject *meta)
+static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, const QMetaObject * /* meta */)
 {
     switch (t) {
     case QMetaType::Bool:
@@ -74,8 +74,7 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
             return IR::AnchorLineType;
         else if (t == qMetaTypeId<QQuickAnchorLine>())
             return IR::SGAnchorLineType;
-        else if (const QMetaObject *m = engine->metaObjectForType(t)) {
-            meta = m;
+        else if (engine->metaObjectForType(t)) {
             return IR::ObjectType;
         }
 
@@ -456,7 +455,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 const QMetaObject *metaObject = m_expression->context->metaObject();
                 if (!cache) cache = m_engine->cache(metaObject);
 
-                QDeclarativePropertyCache::Data *data = cache->property(name);
+                QDeclarativePropertyData *data = cache->property(name);
 
                 if (data && data->revision != 0) {
                     if (qmlVerboseCompiler()) 
@@ -477,7 +476,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 const QMetaObject *metaObject = m_expression->component->metaObject();
                 if (!cache) cache = m_engine->cache(metaObject);
 
-                QDeclarativePropertyCache::Data *data = cache->property(name);
+                QDeclarativePropertyData *data = cache->property(name);
 
                 if (data && data->revision != 0) {
                     if (qmlVerboseCompiler()) 
@@ -603,7 +602,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                                    << (*baseName->id + QLatin1String(".") + ast->name.toString());
                 } else if(const QMetaObject *attachedMeta = baseName->declarativeType->attachedPropertiesType()) {
                     QDeclarativePropertyCache *cache = m_engine->cache(attachedMeta);
-                    QDeclarativePropertyCache::Data *data = cache->property(name);
+                    QDeclarativePropertyData *data = cache->property(name);
 
                     if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
@@ -625,7 +624,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 QDeclarativePropertyCache *cache = 
                     idObject->synthCache?idObject->synthCache:m_engine->cache(idObject->metaObject());
 
-                QDeclarativePropertyCache::Data *data = cache->property(name);
+                QDeclarativePropertyData *data = cache->property(name);
 
                 if (!data || data->isFunction())
                     return false; // Don't support methods (or non-existing properties ;)
@@ -649,7 +648,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                         m_engine->metaObjectForType(baseName->meta->property(baseName->index).userType());
                     QDeclarativePropertyCache *cache = m_engine->cache(m);
 
-                    QDeclarativePropertyCache::Data *data = cache->property(name);
+                    QDeclarativePropertyData *data = cache->property(name);
 
                     if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)

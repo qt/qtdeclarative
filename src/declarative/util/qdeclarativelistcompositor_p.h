@@ -132,7 +132,6 @@ public:
         Range *operator ->() { return range; }
         const Range *operator ->() const { return range; }
 
-        iterator &operator ++();
         iterator &operator +=(int difference);
         iterator &operator -=(int difference);
 
@@ -168,7 +167,6 @@ public:
         inline insert_iterator(Range *, int, Group, int);
         inline ~insert_iterator() {}
 
-        insert_iterator &operator ++();
         insert_iterator &operator +=(int difference);
         insert_iterator &operator -=(int difference);
     };

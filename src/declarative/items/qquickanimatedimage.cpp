@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
     a way to play animations stored as images containing a series of frames,
     such as those stored in GIF files.
 
-    Information about the current frame and totla length of the animation can be
+    Information about the current frame and total length of the animation can be
     obtained using the \l currentFrame and \l frameCount properties. You can
     start, pause and stop the animation by changing the values of the \l playing
     and \l paused properties.
@@ -110,7 +110,7 @@ QT_BEGIN_NAMESPACE
 
     Note that this property is only valid for images read from the
     local filesystem.  Images loaded via a network resource (e.g. HTTP)
-    are always loaded asynchonously.
+    are always loaded asynchronously.
 */
 
 /*!

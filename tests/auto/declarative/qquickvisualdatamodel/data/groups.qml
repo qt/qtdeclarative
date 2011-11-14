@@ -11,7 +11,12 @@ ListView {
         return false
     }
 
-    model: VisualDataModel {
+    model: visualModel
+    VisualDataModel {
+        id: visualModel
+
+        objectName: "visualModel"
+
         groups: [
             VisualDataGroup { id: visibleItems; objectName: "visibleItems"; name: "visible"; includeByDefault: true },
             VisualDataGroup { id: selectedItems; objectName: "selectedItems"; name: "selected" }
@@ -20,6 +25,7 @@ ListView {
         model: myModel
         delegate: Item {
             id: delegate
+
             objectName: "delegate"
             width: 100
             height: 2

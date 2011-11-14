@@ -234,6 +234,8 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
     int tagLength = 0;
     while (!ch->isNull()) {
         if (*ch == greaterThan) {
+            if (tagLength == 0)
+                return false;
             QStringRef tag(&textIn, tagStart, tagLength);
             const QChar char0 = tag.at(0);
             if (char0 == QLatin1Char('b')) {
@@ -343,6 +345,8 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
     int tagLength = 0;
     while (!ch->isNull()) {
         if (*ch == greaterThan) {
+            if (tagLength == 0)
+                return false;
             QStringRef tag(&textIn, tagStart, tagLength);
             const QChar char0 = tag.at(0);
             hasNewLine = false;

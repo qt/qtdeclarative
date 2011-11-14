@@ -135,8 +135,8 @@ QDeclarativeListReference::QDeclarativeListReference(QObject *object, const char
 {
     if (!object || !property) return;
 
-    QDeclarativePropertyCache::Data local;
-    QDeclarativePropertyCache::Data *data = 
+    QDeclarativePropertyData local;
+    QDeclarativePropertyData *data =
         QDeclarativePropertyCache::property(engine, object, QLatin1String(property), local);
 
     if (!data || !data->isQList()) return;

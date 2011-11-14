@@ -62,6 +62,7 @@ PRIVATETESTS += \
 !contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qdeclarativexmllistmodel
 
 QUICKTESTS =  \
+    qquickanchors \
     qquickanimatedimage \
     qquickborderimage \
     qquickcanvas \
@@ -77,10 +78,12 @@ QUICKTESTS =  \
     qquicklistview \
     qquickloader \
     qquickmousearea \
+    qquickmultipointtoucharea \
     qquickpathview \
     qquickpincharea \
     qquickpositioners \
     qquickrepeater \
+    qquickspriteimage \
     qquicktext \
     qquicktextedit \
     qquicktextinput \

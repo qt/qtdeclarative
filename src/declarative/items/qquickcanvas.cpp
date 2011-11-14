@@ -132,9 +132,13 @@ public:
         : updatePending(false)
         , animationRunning(false)
     {
-        qWarning("QQuickCanvas: using non-threaded render loop. Be very sure to not access scene graph "
-                 "objects outside the QQuickItem::updatePaintNode() call. Failing to do so will cause "
-                 "your code to crash on other platforms!");
+        static bool warningMessage = false;
+        if (!warningMessage) {
+            warningMessage = true;
+            qWarning("QQuickCanvas: using non-threaded render loop. Be very sure to not access scene "
+                     "graph objects outside the QQuickItem::updatePaintNode() call. Failing to do so "
+                     "will cause your code to crash on other platforms!");
+        }
     }
 
     virtual void paint() {
@@ -495,6 +499,12 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     rootItemPrivate->canvas = q;
     rootItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
+    // In the absence of a focus in event on some platforms assume the window will
+    // be activated immediately and set focus on the rootItem
+    // ### Remove when QTBUG-22415 is resolved.
+    //It is important that this call happens after the rootItem has a canvas..
+    rootItem->setFocus(true);
+
     bool threaded = !qmlNoThreadedRenderer();
 
     if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
@@ -633,13 +643,13 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     }
 
     if (!(options & DontChangeFocusProperty)) {
-        if (item != rootItem || QGuiApplication::focusWindow() == q) {
+//        if (item != rootItem || QGuiApplication::focusWindow() == q) {    // QTBUG-22415
             itemPrivate->focus = true;
             changed << item;
-        }
+//        }
     }
 
-    if (newActiveFocusItem && QGuiApplication::focusWindow() == q) {
+    if (newActiveFocusItem && rootItem->hasFocus()) {
         activeFocusItem = newActiveFocusItem;
 
         QQuickItemPrivate::get(newActiveFocusItem)->activeFocus = true;
@@ -783,6 +793,9 @@ void QQuickCanvasPrivate::updateInputMethodData()
     qApp->inputPanel()->setInputItem(inputItem);
 }
 
+/*!
+  Queries the Input Method.
+*/
 QVariant QQuickCanvas::inputMethodQuery(Qt::InputMethodQuery query) const
 {
     Q_D(const QQuickCanvas);
@@ -818,6 +831,19 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 }
 
 
+/*!
+    \class QQuickCanvas
+    \since QtQuick 2.0
+    \brief The QQuickCanvas class provides the canvas for displaying a graphical QML scene
+
+    QQuickCanvas provides the graphical scene management needed to interact with and display
+    a scene of QQuickItems.
+
+    A QQuickCanvas always has a single invisible root item. To add items to this canvas,
+    reparent the items to the root item or to an existing item in the scene.
+
+    For easily displaying a scene from a QML file, see \l{QQuickView}.
+*/
 QQuickCanvas::QQuickCanvas(QWindow *parent)
     : QWindow(*(new QQuickCanvasPrivate), parent)
 {
@@ -853,6 +879,12 @@ QQuickCanvas::~QQuickCanvas()
     d->cleanupNodes();
 }
 
+/*!
+  Returns the invisible root item of the scene.
+
+  A QQuickCanvas always has a single invisible root item. To add items to this canvas,
+  reparent the items to the root item or to an existing item in the scene.
+*/
 QQuickItem *QQuickCanvas::rootItem() const
 {
     Q_D(const QQuickCanvas);
@@ -860,6 +892,9 @@ QQuickItem *QQuickCanvas::rootItem() const
     return d->rootItem;
 }
 
+/*!
+  Returns the item which currently has active focus.
+*/
 QQuickItem *QQuickCanvas::activeFocusItem() const
 {
     Q_D(const QQuickCanvas);
@@ -867,6 +902,9 @@ QQuickItem *QQuickCanvas::activeFocusItem() const
     return d->activeFocusItem;
 }
 
+/*!
+  Returns the item which currently has the mouse grab.
+*/
 QQuickItem *QQuickCanvas::mouseGrabberItem() const
 {
     Q_D(const QQuickCanvas);
@@ -1496,7 +1534,7 @@ bool QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     return accepted;
 }
 
-bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem *item, QMouseEvent *event)
+bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem *item, QEvent *event)
 {
     if (!target)
         return false;
@@ -1512,6 +1550,9 @@ bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
     return false;
 }
 
+/*!
+    Propagates an event to a QQuickItem on the canvas
+*/
 bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
 {
     Q_D(QQuickCanvas);
@@ -1550,12 +1591,9 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
         // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
-        {
-            QMouseEvent *se = static_cast<QMouseEvent *>(e);
-            if (!d->sendFilteredMouseEvent(item->parentItem(), item, se)) {
-                se->accept();
-                QQuickItemPrivate::get(item)->deliverMouseEvent(se);
-            }
+        if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
+            e->accept();
+            QQuickItemPrivate::get(item)->deliverMouseEvent(static_cast<QMouseEvent *>(e));
         }
         break;
     case QEvent::Wheel:
@@ -1569,7 +1607,11 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
-        QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
+        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
+        if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
+            e->accept();
+            QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
+        }
         break;
     case QEvent::DragEnter:
     case QEvent::DragMove:
@@ -1589,6 +1631,30 @@ void QQuickCanvasPrivate::cleanupNodes()
     for (int ii = 0; ii < cleanupNodeList.count(); ++ii)
         delete cleanupNodeList.at(ii);
     cleanupNodeList.clear();
+}
+
+void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
+{
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    if (p->itemNodeInstance) {
+        delete p->itemNodeInstance;
+        p->itemNodeInstance = 0;
+        p->opacityNode = 0;
+        p->clipNode = 0;
+        p->groupNode = 0;
+        p->paintNode = 0;
+    }
+
+    for (int ii = 0; ii < p->childItems.count(); ++ii)
+        cleanupNodesOnShutdown(p->childItems.at(ii));
+}
+
+// This must be called from the render thread, with the main thread frozen
+void QQuickCanvasPrivate::cleanupNodesOnShutdown()
+{
+    cleanupNodes();
+
+    cleanupNodesOnShutdown(rootItem);
 }
 
 void QQuickCanvasPrivate::updateDirtyNodes()
@@ -1937,7 +2003,8 @@ QImage QQuickCanvas::grabFrameBuffer()
 
 /*!
     Returns an incubation controller that splices incubation between frames
-    for this canvas.  QQuickView automatically installs this controller for you.
+    for this canvas. QQuickView automatically installs this controller for you,
+    otherwise you will need to install it yourself using \l{QDeclarativeEngine::setIncubationController}
 
     The controller is owned by the canvas and will be destroyed when the canvas
     is deleted.
@@ -2092,6 +2159,11 @@ void QQuickCanvasRenderThread::run()
         // Process any "deleteLater" objects...
         QCoreApplication::processEvents();
     }
+
+#ifdef THREAD_DEBUG
+    printf("                RenderThread: deleting all outstanding nodes\n");
+#endif
+    cleanupNodesOnShutdown();
 
 #ifdef THREAD_DEBUG
     printf("                RenderThread: render loop exited... Good Night!\n");

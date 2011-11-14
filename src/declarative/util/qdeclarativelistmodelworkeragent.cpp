@@ -53,54 +53,50 @@
 QT_BEGIN_NAMESPACE
 
 
-void QDeclarativeListModelWorkerAgent::Data::clearChange() 
-{ 
-    changes.clear(); 
+void QDeclarativeListModelWorkerAgent::Data::clearChange(QDeclarativeListModel *model)
+{
+    int uid = model->m_listModel->getUid();
+
+    for (int i=0 ; i < changes.count() ; ++i) {
+        if (changes[i].modelUid == uid) {
+            changes.removeAt(i);
+            --i;
+        }
+    }
 }
 
-void QDeclarativeListModelWorkerAgent::Data::insertChange(int index, int count) 
+void QDeclarativeListModelWorkerAgent::Data::insertChange(QDeclarativeListModel *model, int index, int count)
 {
-    Change c = { Change::Inserted, index, count, 0, QList<int>() };
+    Change c = { model->m_listModel->getUid(), Change::Inserted, index, count, 0, QList<int>() };
     changes << c;
 }
 
-void QDeclarativeListModelWorkerAgent::Data::removeChange(int index, int count) 
+void QDeclarativeListModelWorkerAgent::Data::removeChange(QDeclarativeListModel *model, int index, int count)
 {
-    Change c = { Change::Removed, index, count, 0, QList<int>() };
+    Change c = { model->m_listModel->getUid(), Change::Removed, index, count, 0, QList<int>() };
     changes << c;
 }
 
-void QDeclarativeListModelWorkerAgent::Data::moveChange(int index, int count, int to)
+void QDeclarativeListModelWorkerAgent::Data::moveChange(QDeclarativeListModel *model, int index, int count, int to)
 {
-    Change c = { Change::Moved, index, count, to, QList<int>() };
+    Change c = { model->m_listModel->getUid(), Change::Moved, index, count, to, QList<int>() };
     changes << c;
 }
 
-void QDeclarativeListModelWorkerAgent::Data::changedChange(int index, int count, const QList<int> &roles)
+void QDeclarativeListModelWorkerAgent::Data::changedChange(QDeclarativeListModel *model, int index, int count, const QList<int> &roles)
 {
-    Change c = { Change::Changed, index, count, 0, roles };
+    Change c = { model->m_listModel->getUid(), Change::Changed, index, count, 0, roles };
     changes << c;
 }
 
 QDeclarativeListModelWorkerAgent::QDeclarativeListModelWorkerAgent(QDeclarativeListModel *model)
-: m_engine(0), m_ref(1), m_orig(model), m_copy(new QDeclarativeListModel(model, this))
-{
-}
-
-QDeclarativeListModelWorkerAgent::~QDeclarativeListModelWorkerAgent()
+: m_ref(1), m_orig(model), m_copy(new QDeclarativeListModel(model, this))
 {
 }
 
 void QDeclarativeListModelWorkerAgent::setV8Engine(QV8Engine *eng)
 {
-    m_engine = eng;
-    if (m_copy->m_flat)
-        m_copy->m_flat->m_engine = eng;
-}
-
-QV8Engine *QDeclarativeListModelWorkerAgent::v8engine() const
-{
-    return m_engine;
+    m_copy->m_engine = eng;
 }
 
 void QDeclarativeListModelWorkerAgent::addref()
@@ -123,36 +119,22 @@ int QDeclarativeListModelWorkerAgent::count() const
 
 void QDeclarativeListModelWorkerAgent::clear()
 {
-    data.clearChange();
-    data.removeChange(0, m_copy->count());
     m_copy->clear();
 }
 
 void QDeclarativeListModelWorkerAgent::remove(int index)
 {
-    int count = m_copy->count();
     m_copy->remove(index);
-
-    if (m_copy->count() != count)
-        data.removeChange(index, 1);
 }
 
-void QDeclarativeListModelWorkerAgent::append(const QDeclarativeV8Handle &value)
+void QDeclarativeListModelWorkerAgent::append(QDeclarativeV8Function *args)
 {
-    int count = m_copy->count();
-    m_copy->append(value);
-
-    if (m_copy->count() != count)
-        data.insertChange(m_copy->count() - 1, 1);
+    m_copy->append(args);
 }
 
-void QDeclarativeListModelWorkerAgent::insert(int index, const QDeclarativeV8Handle &value)
+void QDeclarativeListModelWorkerAgent::insert(QDeclarativeV8Function *args)
 {
-    int count = m_copy->count();
-    m_copy->insert(index, value);
-
-    if (m_copy->count() != count)
-        data.insertChange(index, 1);
+    m_copy->insert(args);
 }
 
 QDeclarativeV8Handle QDeclarativeListModelWorkerAgent::get(int index) const
@@ -162,24 +144,17 @@ QDeclarativeV8Handle QDeclarativeListModelWorkerAgent::get(int index) const
 
 void QDeclarativeListModelWorkerAgent::set(int index, const QDeclarativeV8Handle &value)
 {
-    QList<int> roles;
-    m_copy->set(index, value, &roles);
-    if (!roles.isEmpty())
-        data.changedChange(index, 1, roles);
+    m_copy->set(index, value);
 }
 
 void QDeclarativeListModelWorkerAgent::setProperty(int index, const QString& property, const QVariant& value)
 {
-    QList<int> roles;
-    m_copy->setProperty(index, property, value, &roles);
-    if (!roles.isEmpty())
-        data.changedChange(index, 1, roles);
+    m_copy->setProperty(index, property, value);
 }
 
 void QDeclarativeListModelWorkerAgent::move(int from, int to, int count)
 {
     m_copy->move(from, to, count);
-    data.moveChange(from, to, count);
 }
 
 void QDeclarativeListModelWorkerAgent::sync()
@@ -195,77 +170,48 @@ void QDeclarativeListModelWorkerAgent::sync()
     mutex.unlock();
 }
 
-void QDeclarativeListModelWorkerAgent::changedData(int index, int count, const QList<int> &roles)
-{
-    data.changedChange(index, count, roles);
-}
-
 bool QDeclarativeListModelWorkerAgent::event(QEvent *e)
 {
     if (e->type() == QEvent::User) {
+
         QMutexLocker locker(&mutex);
         Sync *s = static_cast<Sync *>(e);
 
         const QList<Change> &changes = s->data.changes;
 
-        if (m_copy) {
-            bool cc = m_orig->count() != s->list->count();
+        bool cc = m_orig->count() != s->list->count();
 
-            FlatListModel *orig = m_orig->m_flat;
-            FlatListModel *copy = s->list->m_flat;
-            if (!orig || !copy) {
-                syncDone.wakeAll();
-                return QObject::event(e);
-            }
+        QHash<int, ListModel *> targetModelHash;
+        ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelHash);
 
-            orig->m_roles = copy->m_roles;
-            orig->m_strings = copy->m_strings;
-            orig->m_values = copy->m_values;
+        for (int ii = 0; ii < changes.count(); ++ii) {
+            const Change &change = changes.at(ii);
 
-            // update the orig->m_nodeData list
-            for (int ii = 0; ii < changes.count(); ++ii) {
-                const Change &change = changes.at(ii);
+            ListModel *model = targetModelHash.value(change.modelUid);
+
+            if (model && model->m_modelCache) {
                 switch (change.type) {
                 case Change::Inserted:
-                    orig->insertedNode(change.index);
+                    emit model->m_modelCache->itemsInserted(change.index, change.count);
                     break;
                 case Change::Removed:
-                    orig->removedNode(change.index);
+                    emit model->m_modelCache->itemsRemoved(change.index, change.count);
                     break;
                 case Change::Moved:
-                    orig->moveNodes(change.index, change.to, change.count);
+                    emit model->m_modelCache->itemsMoved(change.index, change.to, change.count);
                     break;
                 case Change::Changed:
+                    emit model->m_modelCache->itemsChanged(change.index, change.count, change.roles);
                     break;
                 }
             }
-
-            syncDone.wakeAll();
-            locker.unlock();
-
-            for (int ii = 0; ii < changes.count(); ++ii) {
-                const Change &change = changes.at(ii);
-                switch (change.type) {
-                case Change::Inserted:
-                    emit m_orig->itemsInserted(change.index, change.count);
-                    break;
-                case Change::Removed:
-                    emit m_orig->itemsRemoved(change.index, change.count);
-                    break;
-                case Change::Moved:
-                    emit m_orig->itemsMoved(change.index, change.to, change.count);
-                    break;
-                case Change::Changed:
-                    emit m_orig->itemsChanged(change.index, change.count, change.roles);
-                    break;
-                }
-            }
-
-            if (cc)
-                emit m_orig->countChanged();
-        } else {
-            syncDone.wakeAll();
         }
+
+        syncDone.wakeAll();
+        locker.unlock();
+
+        if (cc)
+            emit m_orig->countChanged();
     }
 
     return QObject::event(e);

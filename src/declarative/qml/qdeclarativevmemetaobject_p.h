@@ -84,6 +84,8 @@ struct QDeclarativeVMEMetaData
     short aliasCount;
     short signalCount;
     short methodCount;
+    short dummyForAlignment; // Add padding to ensure that the following
+                             // AliasData/PropertyData/MethodData is int aligned.
 
     struct AliasData {
         int contextIdx;

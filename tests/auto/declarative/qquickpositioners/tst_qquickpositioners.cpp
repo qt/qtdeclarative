@@ -267,8 +267,8 @@ void tst_qquickpositioners::test_horizontal_animated()
     QTRY_COMPARE(row->height(), 50.0);
 
     QTest::qWait(0);//Let the animation start
-    QCOMPARE(two->x(), -100.0);
-    QCOMPARE(three->x(), 50.0);
+    QVERIFY(two->x() >= -100.0 && two->x() < 50.0);
+    QVERIFY(three->x() >= 50.0 && three->x() < 100.0);
 
     QTRY_COMPARE(two->x(), 50.0);
     QTRY_COMPARE(three->x(), 100.0);
@@ -323,8 +323,8 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
     QTRY_COMPARE(row->height(), 50.0);
 
     QTest::qWait(0);//Let the animation start
-    QCOMPARE(one->x(), 50.0);
-    QCOMPARE(two->x(), -100.0);
+    QVERIFY(one->x() >= 50.0 && one->x() < 100);
+    QVERIFY(two->x() >= -100.0 && two->x() < 50.0);
 
     QTRY_COMPARE(one->x(), 100.0);
     QTRY_COMPARE(two->x(), 50.0);
@@ -361,13 +361,11 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
     //Add 'two'
     two->setVisible(true);
     QCOMPARE(two->isVisible(), true);
-    qApp->processEvents();
-    QCOMPARE(row->width(), 150.0);
-    QCOMPARE(row->height(), 50.0);
+    QTRY_COMPARE(row->width(), 150.0);
+    QTRY_COMPARE(row->height(), 50.0);
 
-    qApp->processEvents();
-    QCOMPARE(two->x(), 50.0);
-    QCOMPARE(three->x(), 100.0);
+    QTRY_COMPARE(two->x(), 50.0);
+    QTRY_COMPARE(three->x(), 100.0);
 
     delete canvas;
 }
@@ -468,8 +466,8 @@ void tst_qquickpositioners::test_vertical_animated()
     QTRY_COMPARE(column->height(), 150.0);
     QTRY_COMPARE(column->width(), 50.0);
     QTest::qWait(0);//Let the animation start
-    QCOMPARE(two->y(), -100.0);
-    QCOMPARE(three->y(), 50.0);
+    QVERIFY(two->y() >= -100.0 && two->y() < 50.0);
+    QVERIFY(three->y() >= 50.0 && three->y() < 100.0);
 
     QTRY_COMPARE(two->y(), 50.0);
     QTRY_COMPARE(three->y(), 100.0);

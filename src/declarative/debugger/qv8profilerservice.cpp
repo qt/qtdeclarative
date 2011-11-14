@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QV8ProfilerService, v8ServiceInstance)
+Q_GLOBAL_STATIC(QV8ProfilerService, v8ProfilerInstance)
 
 class ByteArrayOutputStream : public v8::OutputStream
 {
@@ -115,7 +115,7 @@ QV8ProfilerService::~QV8ProfilerService()
 
 QV8ProfilerService *QV8ProfilerService::instance()
 {
-    return v8ServiceInstance();
+    return v8ProfilerInstance();
 }
 
 void QV8ProfilerService::addEngine(QDeclarativeEngine *engine)
@@ -149,13 +149,12 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     if (command == "V8PROFILER") {
         ds >>  title;
         if (option == "start") {
-            d->initialized = true;
             startProfiling(QString::fromUtf8(title));
         } else if (option == "stop") {
             stopProfiling(QString::fromUtf8(title));
-            // Send messages to client
-            d->sendMessages();
+            sendProfilingData();
         }
+        d->initialized = true;
     }
 
     if (command == "V8SNAPSHOT") {
@@ -184,9 +183,18 @@ void QV8ProfilerService::stopProfiling(const QString &title)
     v8::HandleScope handle_scope;
     v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     const v8::CpuProfile *cpuProfile = v8::CpuProfiler::StopProfiling(v8title);
-    const v8::CpuProfileNode *rootNode = cpuProfile->GetTopDownRoot();
+    if (cpuProfile) {
+        // can happen at start
+        const v8::CpuProfileNode *rootNode = cpuProfile->GetTopDownRoot();
+        d->printProfileTree(rootNode);
+    }
+}
 
-    d->printProfileTree(rootNode);
+void QV8ProfilerService::sendProfilingData()
+{
+    Q_D(QV8ProfilerService);
+    // Send messages to client
+    d->sendMessages();
 }
 
 void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node, int level)

@@ -43,6 +43,20 @@ Rectangle {
 }
 \endqml
 
+\c console.time and console.timeEnd log the time (in milliseconds) that was spent between
+the calls. Both take a string argument that identifies the measurement. For example:
+
+\qml
+function f() {
+    console.time("wholeFunction");
+    console.time("firstPart");
+    // first part
+    console.timeEnd("firstPart");
+    // second part
+    console.timeEnd("wholeFunction");
+}
+\endqml
+
 \section1 Debugging Transitions
 
 When a transition doesn't look quite right, it can be helpful to view it in slow

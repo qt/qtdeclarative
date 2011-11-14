@@ -123,5 +123,6 @@ Rectangle {
         ListElement { label: "Shape"; help: "The Shape element allows you to specify an area for affectors and emitter." }
         ListElement { label: "TrailEmitter"; help: "The TrailEmitter element allows you to emit logical particles from other logical particles." }
         ListElement { label: "Direction"; help: "The Direction elements allow you to specify a vector space." }
+        ListElement { label: "SpriteImage"; help: "The SpriteImage element plays stochastic sprite animations." }
     }
 }

@@ -76,13 +76,6 @@ void exitApp(int i)
 QWeakPointer<LoggerWidget> logger;
 static QAtomicInt recursiveLock(0);
 
-#if defined (Q_OS_SYMBIAN)
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif
-
 void myMessageOutput(QtMsgType type, const char *msg)
 {
     QString strMsg = QString::fromLatin1(msg);
@@ -91,26 +84,13 @@ void myMessageOutput(QtMsgType type, const char *msg)
         if (!logger.isNull()) {
             if (recursiveLock.testAndSetOrdered(0, 1)) {
                 QMetaObject::invokeMethod(logger.data(), "append", Q_ARG(QString, strMsg));
-                recursiveLock = 0;
+                recursiveLock.store(0);
             }
         } else {
             warnings += strMsg;
             warnings += QLatin1Char('\n');
         }
     }
-#if defined (Q_OS_SYMBIAN)
-    static int fd = -1;
-    if (fd == -1)
-        fd = ::open("E:\\qml.log", O_WRONLY | O_CREAT);
-
-    ::write(fd, msg, strlen(msg));
-    ::write(fd, "\n", 1);
-    ::fsync(fd);
-    switch (type) {
-    case QtFatalMsg:
-        abort();
-    }
-#endif
 
     if (systemMsgOutput) {
         systemMsgOutput(type, msg);
@@ -154,7 +134,7 @@ void usage()
     qWarning("  -I <directory> ........................... prepend to the module import search path,");
     qWarning("                                             display path if <directory> is empty");
     qWarning("  -P <directory> ........................... prepend to the plugin search path");
-#if defined(Q_WS_MAC)
+#if defined(Q_OS_MAC)
     qWarning("  -no-opengl ............................... don't use a QGLWidget for the viewport");
     qWarning("  -opengl .................................. use a QGLWidget for the viewport (default)");
 #else
@@ -212,12 +192,8 @@ struct ViewerOptions
           warningsConfig(DefaultWarnings),
           sizeToView(true)
     {
-#if defined(Q_OS_SYMBIAN)
-        maximized = true;
-        useNativeFileBrowser = false;
-#endif
 
-#if defined(Q_WS_MAC)
+#if defined(Q_OS_MAC)
         useGL = true;
 #endif
     }
@@ -522,22 +498,6 @@ QDeclarativeViewer *openFile(const QString &fileName)
 int main(int argc, char ** argv)
 {
     systemMsgOutput = qInstallMsgHandler(myMessageOutput);
-
-#if defined (Q_WS_X11) || defined (Q_WS_MAC)
-    //### default to using raster graphics backend for now
-    bool gsSpecified = false;
-    for (int i = 0; i < argc; ++i) {
-        QString arg = QString::fromAscii(argv[i]);
-        if (arg == QLatin1String("-graphicssystem")) {
-            gsSpecified = true;
-            break;
-        }
-    }
-
-    if (!gsSpecified)
-        QApplication::setGraphicsSystem(QLatin1String("raster"));
-#endif
-
     Application app(argc, argv);
     app.setApplicationName(QLatin1String("QtQmlViewer"));
     app.setOrganizationName(QLatin1String("Nokia"));

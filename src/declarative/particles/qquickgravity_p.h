@@ -53,13 +53,14 @@ QT_MODULE(Declarative)
 class QQuickGravityAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(qreal acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
+    Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
+    Q_PROPERTY(qreal acceleration READ magnitude WRITE setAcceleration NOTIFY magnitudeChanged)
     Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
 public:
     explicit QQuickGravityAffector(QQuickItem *parent = 0);
-    qreal acceleration() const
+    qreal magnitude() const
     {
-        return m_acceleration;
+        return m_magnitude;
     }
 
     qreal angle() const
@@ -70,16 +71,27 @@ protected:
     virtual bool affectParticle(QQuickParticleData *d, qreal dt);
 signals:
 
-    void accelerationChanged(qreal arg);
+    void magnitudeChanged(qreal arg);
 
     void angleChanged(qreal arg);
 
 public slots:
 void setAcceleration(qreal arg)
 {
-    if (m_acceleration != arg) {
-        m_acceleration = arg;
-        emit accelerationChanged(arg);
+    qWarning() << "Gravity::acceleration has been renamed Gravity::magnitude";
+    if (m_magnitude != arg) {
+        m_magnitude = arg;
+        m_needRecalc = true;
+        emit magnitudeChanged(arg);
+    }
+}
+
+void setMagnitude(qreal arg)
+{
+    if (m_magnitude != arg) {
+        m_magnitude = arg;
+        m_needRecalc = true;
+        emit magnitudeChanged(arg);
     }
 }
 
@@ -87,18 +99,18 @@ void setAngle(qreal arg)
 {
     if (m_angle != arg) {
         m_angle = arg;
+        m_needRecalc = true;
         emit angleChanged(arg);
     }
 }
 
-private slots:
-    void recalc();
 private:
-    qreal m_acceleration;
+    qreal m_magnitude;
     qreal m_angle;
 
-    qreal m_xAcc;
-    qreal m_yAcc;
+    bool m_needRecalc;
+    qreal m_dx;
+    qreal m_dy;
 };
 
 QT_END_NAMESPACE

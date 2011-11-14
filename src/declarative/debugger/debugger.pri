@@ -1,5 +1,4 @@
 SOURCES += \
-    $$PWD/qdeclarativedebuggerstatus.cpp \
     $$PWD/qpacketprotocol.cpp \
     $$PWD/qdeclarativedebugservice.cpp \
     $$PWD/qdeclarativedebugclient.cpp \
@@ -13,7 +12,6 @@ SOURCES += \
     $$PWD/qdeclarativeenginedebugservice.cpp
 
 HEADERS += \
-    $$PWD/qdeclarativedebuggerstatus_p.h \
     $$PWD/qpacketprotocol_p.h \
     $$PWD/qdeclarativedebugservice_p.h \
     $$PWD/qdeclarativedebugservice_p_p.h \

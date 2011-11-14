@@ -76,10 +76,8 @@ class QDeclarativeListModelWorkerAgent : public QObject
 
 public:
     QDeclarativeListModelWorkerAgent(QDeclarativeListModel *);
-    ~QDeclarativeListModelWorkerAgent();
 
     void setV8Engine(QV8Engine *eng);
-    QV8Engine *v8engine() const;
 
     void addref();
     void release();
@@ -88,8 +86,8 @@ public:
 
     Q_INVOKABLE void clear();
     Q_INVOKABLE void remove(int index);
-    Q_INVOKABLE void append(const QDeclarativeV8Handle &);
-    Q_INVOKABLE void insert(int index, const QDeclarativeV8Handle &);
+    Q_INVOKABLE void append(QDeclarativeV8Function *args);
+    Q_INVOKABLE void insert(QDeclarativeV8Function *args);
     Q_INVOKABLE QDeclarativeV8Handle get(int index) const;
     Q_INVOKABLE void set(int index, const QDeclarativeV8Handle &);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
@@ -116,10 +114,11 @@ protected:
 
 private:
     friend class QDeclarativeWorkerScriptEnginePrivate;
-    friend class QDeclarativeListModelV8Data;
-    QV8Engine *m_engine;
+    friend class QDeclarativeListModel;
 
-    struct Change {
+    struct Change
+    {
+        int modelUid;
         enum { Inserted, Removed, Moved, Changed } type;
         int index; // Inserted/Removed/Moved/Changed
         int count; // Inserted/Removed/Moved/Changed
@@ -127,14 +126,15 @@ private:
         QList<int> roles;
     };
 
-    struct Data {
+    struct Data
+    {
         QList<Change> changes;
 
-        void clearChange();
-        void insertChange(int index, int count);
-        void removeChange(int index, int count);
-        void moveChange(int index, int count, int to);
-        void changedChange(int index, int count, const QList<int> &roles);
+        void clearChange(QDeclarativeListModel *model);
+        void insertChange(QDeclarativeListModel *model, int index, int count);
+        void removeChange(QDeclarativeListModel *model, int index, int count);
+        void moveChange(QDeclarativeListModel *model, int index, int count, int to);
+        void changedChange(QDeclarativeListModel *model, int index, int count, const QList<int> &roles);
     };
     Data data;
 
@@ -143,8 +143,6 @@ private:
         Data data;
         QDeclarativeListModel *list;
     };
-
-    void changedData(int index, int count, const QList<int> &roles);
 
     QAtomicInt m_ref;
     QDeclarativeListModel *m_orig;

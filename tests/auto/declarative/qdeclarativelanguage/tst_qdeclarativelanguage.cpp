@@ -156,6 +156,7 @@ private slots:
     void inlineAssignmentsOverrideBindings();
     void nestedComponentRoots();
     void registrationOrder();
+    void readonly();
 
     void basicRemote_data();
     void basicRemote();
@@ -364,7 +365,6 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("property.2") << "property.2.qml" << "property.2.errors.txt" << false;
     QTest::newRow("property.3") << "property.3.qml" << "property.3.errors.txt" << false;
     QTest::newRow("property.4") << "property.4.qml" << "property.4.errors.txt" << false;
-    QTest::newRow("property.5") << "property.5.qml" << "property.5.errors.txt" << false;
     QTest::newRow("property.6") << "property.6.qml" << "property.6.errors.txt" << false;
     QTest::newRow("property.7") << "property.7.qml" << "property.7.errors.txt" << false;
 
@@ -850,7 +850,8 @@ void tst_qdeclarativelanguage::dynamicObjectProperties()
 // Tests the declaration of dynamic signals and slots
 void tst_qdeclarativelanguage::dynamicSignalsAndSlots()
 {
-    QTest::ignoreMessage(QtDebugMsg, "1921");
+    QString message = QString(QLatin1String("1921 (%1:%2)")).arg(TEST_FILE("dynamicSignalsAndSlots.qml").toString()).arg(9);
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(message));
 
     QDeclarativeComponent component(&engine, TEST_FILE("dynamicSignalsAndSlots.qml"));
     VERIFY_ERRORS(0);
@@ -1288,9 +1289,10 @@ void tst_qdeclarativelanguage::onCompleted()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("onCompleted.qml"));
     VERIFY_ERRORS(0);
-    QTest::ignoreMessage(QtDebugMsg, "Completed 6 10");
-    QTest::ignoreMessage(QtDebugMsg, "Completed 6 10");
-    QTest::ignoreMessage(QtDebugMsg, "Completed 10 11");
+    QString formatMessage = QString(QLatin1String("%1 (%2:%3)"));
+    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Completed 6 10")).arg(TEST_FILE("onCompleted.qml").toString()).arg(8).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Completed 6 10")).arg(TEST_FILE("onCompleted.qml").toString()).arg(14).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Completed 10 11")).arg(TEST_FILE("OnCompletedType.qml").toString()).arg(7).toLatin1());
     QObject *object = component.create();
     QVERIFY(object != 0);
 }
@@ -1302,10 +1304,10 @@ void tst_qdeclarativelanguage::onDestruction()
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
-
-    QTest::ignoreMessage(QtDebugMsg, "Destruction 6 10");
-    QTest::ignoreMessage(QtDebugMsg, "Destruction 6 10");
-    QTest::ignoreMessage(QtDebugMsg, "Destruction 10 11");
+    QString formatMessage = QString(QLatin1String("%1 (%2:%3)"));
+    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Destruction 6 10")).arg(TEST_FILE("onDestruction.qml").toString()).arg(8).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Destruction 6 10")).arg(TEST_FILE("onDestruction.qml").toString()).arg(14).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Destruction 10 11")).arg(TEST_FILE("OnDestructionType.qml").toString()).arg(7).toLatin1());
     delete object;
 }
 
@@ -2139,6 +2141,40 @@ void tst_qdeclarativelanguage::registrationOrder()
     QObject *o = component.create();
     QVERIFY(o != 0);
     QVERIFY(o->metaObject() == &MyVersion2Class::staticMetaObject);
+    delete o;
+}
+
+void tst_qdeclarativelanguage::readonly()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("readonly.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 18);
+    QCOMPARE(o->property("test3").toInt(), 13);
+
+    o->setProperty("testData", 13);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 22);
+    QCOMPARE(o->property("test3").toInt(), 13);
+
+    o->setProperty("testData2", 2);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 22);
+    QCOMPARE(o->property("test3").toInt(), 2);
+
+    o->setProperty("test1", 11);
+    o->setProperty("test2", 11);
+    o->setProperty("test3", 11);
+
+    QCOMPARE(o->property("test1").toInt(), 10);
+    QCOMPARE(o->property("test2").toInt(), 22);
+    QCOMPARE(o->property("test3").toInt(), 2);
+
     delete o;
 }
 

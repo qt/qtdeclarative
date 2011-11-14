@@ -240,6 +240,7 @@ protected:
     virtual void layoutVisibleItems() = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
     virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *, InsertionsResult *) = 0;
+    virtual bool needsRefillForAddedOrRemovedIndex(int) const { return false; }
 
     virtual void initializeViewItem(FxViewItem *) {}
     virtual void initializeCurrentItem() {}

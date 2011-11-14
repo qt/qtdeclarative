@@ -208,7 +208,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
 {
     const QDeclarativeScript::Variant &value = v->value;
 
-    if (!prop->core.isWritable())
+    if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration)
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     if (prop->core.isEnum()) {
@@ -303,7 +303,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
         case QVariant::PointF:
             {
             bool ok;
-            QPointF point = QDeclarativeStringConverters::pointFFromString(value.asString(), &ok);
+            QDeclarativeStringConverters::pointFFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: point expected"));
             }
             break;
@@ -311,7 +311,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
         case QVariant::SizeF:
             {
             bool ok;
-            QSizeF size = QDeclarativeStringConverters::sizeFFromString(value.asString(), &ok);
+            QDeclarativeStringConverters::sizeFFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: size expected"));
             }
             break;
@@ -319,7 +319,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
         case QVariant::RectF:
             {
             bool ok;
-            QRectF rect = QDeclarativeStringConverters::rectFFromString(value.asString(), &ok);
+            QDeclarativeStringConverters::rectFFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: rect expected"));
             }
             break;
@@ -1125,8 +1125,8 @@ void QDeclarativeCompiler::genObject(QDeclarativeScript::Object *obj)
                 reinterpret_cast<const QDeclarativeVMEMetaData *>(obj->synthdata.constData());
             for (int ii = 0; ii < vmeMetaData->aliasCount; ++ii) {
                 int index = obj->metaObject()->propertyOffset() + vmeMetaData->propertyCount + ii;
-                QDeclarativePropertyCache::Data *data = propertyCache->property(index);
-                data->setFlags(data->getFlags() | QDeclarativePropertyCache::Data::IsAlias);
+                QDeclarativePropertyData *data = propertyCache->property(index);
+                data->setFlags(data->getFlags() | QDeclarativePropertyData::IsAlias);
             }
         }
 
@@ -1529,7 +1529,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeScript::Property *prop, QDecl
 
     bool notInRevision = false;
 
-    QDeclarativePropertyCache::Data *sig = signal(obj, QStringRef(&name), &notInRevision);
+    QDeclarativePropertyData *sig = signal(obj, QStringRef(&name), &notInRevision);
 
     if (sig == 0) {
 
@@ -1634,7 +1634,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeScript::Property *prop,
     } else {
         // Setup regular property data
         bool notInRevision = false;
-        QDeclarativePropertyCache::Data *d = 
+        QDeclarativePropertyData *d =
             prop->name().isEmpty()?0:property(obj, prop->name(), &notInRevision);
 
         if (d == 0 && notInRevision) {
@@ -1650,7 +1650,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeScript::Property *prop,
             prop->core = *d;
         } else if (prop->isDefault) {
             QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
-            QDeclarativePropertyCache::Data defaultPropertyData;
+            QDeclarativePropertyData defaultPropertyData;
             defaultPropertyData.load(p, engine);
             if (p.name())
                 prop->setName(QLatin1String(p.name()));
@@ -2004,7 +2004,7 @@ bool QDeclarativeCompiler::buildGroupedProperty(QDeclarativeScript::Property *pr
                 }
             }
 
-            if (!obj->metaObject()->property(prop->index).isWritable()) {
+            if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration) {
                 COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
             }
 
@@ -2056,7 +2056,7 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
 
     for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
 
-        QDeclarativePropertyCache::Data *d = property(obj, prop->name());
+        QDeclarativePropertyData *d = property(obj, prop->name());
         if (d == 0) 
             COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name().toString()));
 
@@ -2082,8 +2082,7 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
                 bool isEnumAssignment = false;
 
                 if (prop->core.isEnum()) 
-                    COMPILE_CHECK(testQualifiedEnumAssignment(obj->metatype->property(prop->index), obj, 
-                                                              value, &isEnumAssignment));
+                    COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, value, &isEnumAssignment));
 
                 if (isEnumAssignment) {
                     value->type = Value::Literal;
@@ -2222,7 +2221,7 @@ bool QDeclarativeCompiler::buildPropertyObjectAssignment(QDeclarativeScript::Pro
     Q_ASSERT(prop->index != -1);
     Q_ASSERT(v->object->type != -1);
 
-    if (!obj->metaObject()->property(prop->index).isWritable())
+    if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration)
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     if (QDeclarativeMetaType::isInterface(prop->type)) {
@@ -2303,7 +2302,9 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeScript::Propert
     Q_ASSERT(prop->index != -1);
     Q_ASSERT(v->object->type != -1);
 
-    if (!obj->metaObject()->property(prop->index).isWritable())
+    Q_UNUSED(obj);
+
+    if (!prop->core.isWritable())
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
 
@@ -2350,8 +2351,7 @@ bool QDeclarativeCompiler::buildPropertyLiteralAssignment(QDeclarativeScript::Pr
         //optimization for <Type>.<EnumValue> enum assignments
         if (prop->core.isEnum()) {
             bool isEnumAssignment = false;
-            COMPILE_CHECK(testQualifiedEnumAssignment(obj->metaObject()->property(prop->index), obj, 
-                                                      v, &isEnumAssignment));
+            COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, v, &isEnumAssignment));
             if (isEnumAssignment) {
                 v->type = Value::Literal;
                 return true;
@@ -2372,17 +2372,19 @@ bool QDeclarativeCompiler::buildPropertyLiteralAssignment(QDeclarativeScript::Pr
     return true;
 }
 
-bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop,
+bool QDeclarativeCompiler::testQualifiedEnumAssignment(QDeclarativeScript::Property *prop,
                                                        QDeclarativeScript::Object *obj,
                                                        QDeclarativeScript::Value *v,
                                                        bool *isAssignment)
 {
     *isAssignment = false;
-    if (!prop.isEnumType())
+    if (!prop->core.isEnum())
         return true;
 
-    if (!prop.isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop.name())));
+    QMetaProperty mprop = obj->metaObject()->property(prop->index);
+
+    if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration)
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     QString string = v->value.asString();
     if (!string.at(0).isUpper())
@@ -2413,10 +2415,10 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
 
     if (objTypeName == type->qmlTypeName()) {
         // When these two match, we can short cut the search
-        if (prop.isFlagType()) {
-            value = prop.enumerator().keysToValue(enumValue.toUtf8().constData(), &ok);
+        if (mprop.isFlagType()) {
+            value = mprop.enumerator().keysToValue(enumValue.toUtf8().constData(), &ok);
         } else {
-            value = prop.enumerator().keyToValue(enumValue.toUtf8().constData(), &ok);
+            value = mprop.enumerator().keyToValue(enumValue.toUtf8().constData(), &ok);
         }
     } else {
         // Otherwise we have to search the whole type
@@ -2571,7 +2573,8 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeScript::Object *obj)
 
 bool QDeclarativeCompiler::mergeDynamicMetaProperties(QDeclarativeScript::Object *obj)
 {
-    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
+    for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
+         p = obj->dynamicProperties.next(p)) {
 
         if (!p->defaultValue || p->type == Object::DynamicProperty::Alias)
             continue;
@@ -2584,6 +2587,9 @@ bool QDeclarativeCompiler::mergeDynamicMetaProperties(QDeclarativeScript::Object
             if (!property->values.isEmpty()) 
                 COMPILE_EXCEPTION(property, tr("Property value set multiple times"));
         }
+
+        if (p->isReadOnly)
+            property->isReadOnlyDeclaration = true;
 
         if (property->value)
             COMPILE_EXCEPTION(property, tr("Invalid property nesting"));
@@ -2627,7 +2633,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
 
         if (!resolveAlias) {
             // No point doing this for both the alias and non alias cases
-            QDeclarativePropertyCache::Data *d = property(obj, p->name);
+            QDeclarativePropertyData *d = property(obj, p->name);
             if (d && d->isFinal())
                 COMPILE_EXCEPTION(p, tr("Cannot override FINAL property"));
         }
@@ -2755,6 +2761,9 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
             if (p->type == Object::DynamicProperty::Var)
                 continue;
 
+            if (p->isReadOnly)
+                readonly = true;
+
             if (buildData) {
                 VMD *vmd = (QDeclarativeVMEMetaData *)dynamicData.data();
                 vmd->propertyCount++;
@@ -2790,8 +2799,10 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
                         (vmd->propertyData() + effectivePropertyIndex)->propertyType = -1;
                     }
 
-                    builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef, (QMetaType::Type)-1,
-                                        QFastMetaBuilder::Writable, effectivePropertyIndex);
+                    builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef,
+                                        (QMetaType::Type)-1,
+                                        p->isReadOnly?QFastMetaBuilder::None:QFastMetaBuilder::Writable,
+                                        effectivePropertyIndex);
 
                     p->changedSignatureRef = builder.newString(p->name.utf8length() + strlen("Changed()"));
                     builder.setSignal(effectivePropertyIndex, p->changedSignatureRef);
@@ -2988,16 +2999,16 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
     if (obj->type != -1) {
         QDeclarativePropertyCache *cache = output->types[obj->type].createPropertyCache(engine)->copy();
         cache->append(engine, &obj->extObject,
-                      QDeclarativePropertyCache::Data::NoFlags,
-                      QDeclarativePropertyCache::Data::IsVMEFunction, 
-                      QDeclarativePropertyCache::Data::IsVMESignal);
+                      QDeclarativePropertyData::NoFlags,
+                      QDeclarativePropertyData::IsVMEFunction,
+                      QDeclarativePropertyData::IsVMESignal);
 
         // now we modify the flags appropriately for var properties.
         int propertyOffset = obj->extObject.propertyOffset();
-        QDeclarativePropertyCache::Data *currPropData = 0;
+        QDeclarativePropertyData *currPropData = 0;
         for (int pvi = firstPropertyVarIndex; pvi < totalPropCount; ++pvi) {
             currPropData = cache->property(pvi + propertyOffset);
-            currPropData->setFlags(currPropData->getFlags() | QDeclarativePropertyCache::Data::IsVMEProperty);
+            currPropData->setFlags(currPropData->getFlags() | QDeclarativePropertyData::IsVMEProperty);
         }
 
         obj->synthCache = cache;
@@ -3098,8 +3109,8 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
         if (!aliasProperty.isScriptable())
             COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias location"));
 
-        writable = aliasProperty.isWritable();
-        resettable = aliasProperty.isResettable();
+        writable = aliasProperty.isWritable() && !prop.isReadOnly;
+        resettable = aliasProperty.isResettable() && !prop.isReadOnly;
 
         if (aliasProperty.type() < QVariant::UserType)
             type = aliasProperty.type();
@@ -3175,7 +3186,7 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeScript::Value *value,
     Q_ASSERT(prop->parent);
     Q_ASSERT(prop->parent->metaObject());
 
-    if (!prop->core.isWritable() && !prop->core.isQList())
+    if (!prop->core.isWritable() && !prop->core.isQList() && !prop->isReadOnlyDeclaration)
         COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     BindingReference *reference = pool->New<BindingReference>();
@@ -3275,7 +3286,7 @@ int QDeclarativeCompiler::genContextCache()
     return output->contextCaches.count() - 1;
 }
 
-QDeclarativePropertyCache::Data 
+QDeclarativePropertyData
 QDeclarativeCompiler::genValueTypeData(QDeclarativeScript::Property *valueTypeProp, 
                                        QDeclarativeScript::Property *prop)
 {
@@ -3498,7 +3509,7 @@ QStringList QDeclarativeCompiler::deferredProperties(QDeclarativeScript::Object 
     return rv;
 }
 
-QDeclarativePropertyCache::Data *
+QDeclarativePropertyData *
 QDeclarativeCompiler::property(QDeclarativeScript::Object *object, int index)
 {
     QDeclarativePropertyCache *cache = 0;
@@ -3513,7 +3524,7 @@ QDeclarativeCompiler::property(QDeclarativeScript::Object *object, int index)
     return cache->property(index);
 }
 
-QDeclarativePropertyCache::Data *
+QDeclarativePropertyData *
 QDeclarativeCompiler::property(QDeclarativeScript::Object *object, const QHashedStringRef &name, bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
@@ -3527,7 +3538,7 @@ QDeclarativeCompiler::property(QDeclarativeScript::Object *object, const QHashed
     else
         cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
-    QDeclarativePropertyCache::Data *d = cache->property(name);
+    QDeclarativePropertyData *d = cache->property(name);
 
     // Find the first property
     while (d && d->isFunction())
@@ -3542,7 +3553,7 @@ QDeclarativeCompiler::property(QDeclarativeScript::Object *object, const QHashed
 }
 
 // This code must match the semantics of QDeclarativePropertyPrivate::findSignalByName
-QDeclarativePropertyCache::Data *
+QDeclarativePropertyData *
 QDeclarativeCompiler::signal(QDeclarativeScript::Object *object, const QHashedStringRef &name, bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
@@ -3557,7 +3568,7 @@ QDeclarativeCompiler::signal(QDeclarativeScript::Object *object, const QHashedSt
         cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
 
-    QDeclarativePropertyCache::Data *d = cache->property(name);
+    QDeclarativePropertyData *d = cache->property(name);
     if (notInRevision) *notInRevision = false;
 
     while (d && !(d->isFunction()))
@@ -3585,7 +3596,7 @@ QDeclarativeCompiler::signal(QDeclarativeScript::Object *object, const QHashedSt
 int QDeclarativeCompiler::indexOfSignal(QDeclarativeScript::Object *object, const QString &name, 
                                         bool *notInRevision)
 {
-    QDeclarativePropertyCache::Data *d = signal(object, QStringRef(&name), notInRevision);
+    QDeclarativePropertyData *d = signal(object, QStringRef(&name), notInRevision);
     return d?d->coreIndex:-1;
 }
 
@@ -3598,7 +3609,7 @@ int QDeclarativeCompiler::indexOfProperty(QDeclarativeScript::Object *object, co
 int QDeclarativeCompiler::indexOfProperty(QDeclarativeScript::Object *object, const QHashedStringRef &name, 
                                           bool *notInRevision)
 {
-    QDeclarativePropertyCache::Data *d = property(object, name, notInRevision);
+    QDeclarativePropertyData *d = property(object, name, notInRevision);
     return d?d->coreIndex:-1;
 }
 

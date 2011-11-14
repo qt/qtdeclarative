@@ -44,13 +44,6 @@
 #include <QtDeclarative/QDeclarativeView>
 #include <QtDeclarative/QDeclarativeEngine>
 
-#if defined(Q_OS_SYMBIAN)
-#include <eikenv.h>
-#include <eikappui.h>
-#include <aknenv.h>
-#include <aknappui.h>
-#endif // Q_OS_SYMBIAN
-
 int main(int argc, char *argv[])
 {
     QApplication application(argc, argv);
@@ -65,16 +58,6 @@ int main(int argc, char *argv[])
     QApplication::setNavigationMode(Qt::NavigationModeCursorAuto);
 #endif // QT_KEYPAD_NAVIGATION
 
-#if defined(Q_OS_SYMBIAN)
-    CAknAppUi* appUi = dynamic_cast<CAknAppUi*> (CEikonEnv::Static()->AppUi());
-    TRAPD(error,
-        if (appUi)
-            appUi->SetOrientationL(CAknAppUi::EAppUiOrientationLandscape)
-    )
-    view.showFullScreen();
-#else // Q_OS_SYMBIAN
     view.show();
-#endif // Q_OS_SYMBIAN
-
     return application.exec();
 }

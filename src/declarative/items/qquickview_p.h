@@ -96,8 +96,6 @@ public:
     QQuickView::ResizeMode resizeMode;
     QSize initialSize;
     QElapsedTimer frameTimer;
-
-    bool resized;
 };
 
 QT_END_NAMESPACE

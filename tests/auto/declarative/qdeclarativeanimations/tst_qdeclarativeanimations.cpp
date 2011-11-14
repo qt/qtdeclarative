@@ -806,9 +806,11 @@ void tst_qdeclarativeanimations::attached()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("attached.qml")));
-    QTest::ignoreMessage(QtDebugMsg, "off");
-    QTest::ignoreMessage(QtDebugMsg, "on");
+    QUrl url(QUrl::fromLocalFile(TESTDATA("attached.qml")));
+    QDeclarativeComponent c(&engine, url);
+    QString messageFormat = QString(QLatin1String("%1 (%2:%3)"));
+    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("off")).arg(url.toString()).arg(24).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("on")).arg(url.toString()).arg(20).toLatin1());
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 }

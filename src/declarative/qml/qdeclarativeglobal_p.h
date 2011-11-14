@@ -90,11 +90,7 @@ QT_MODULE(Declarative)
     QMetaObject::connect(sender, signalIdx, receiver, methodIdx, Qt::DirectConnection); \
 }
 
-#ifdef Q_OS_SYMBIAN
-#define Q_DECLARATIVE_PRIVATE_EXPORT Q_AUTOTEST_EXPORT
-#else
 #define Q_DECLARATIVE_PRIVATE_EXPORT Q_DECLARATIVE_EXPORT
-#endif
 
 struct QDeclarativeGraphics_DerivedObject : public QObject
 {

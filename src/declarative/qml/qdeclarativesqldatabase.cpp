@@ -217,7 +217,7 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Eng
 
 static v8::Handle<v8::Value> qmlsqldatabase_rows_index(QV8SqlDatabaseResource *r, uint32_t index)
 {
-    if (r->query.at() == index || r->query.seek(index)) {
+    if (r->query.at() == (int)index || r->query.seek(index)) {
 
         QSqlRecord record = r->query.record();
         // XXX optimize

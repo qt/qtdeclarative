@@ -533,7 +533,7 @@ void tst_qquickflickable::disabled()
 
 void tst_qquickflickable::flickVelocity()
 {
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
     QSKIP("Producing flicks on Mac CI impossible due to timing problems");
 #endif
 

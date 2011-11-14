@@ -67,7 +67,7 @@ void tst_qquickfriction::test_basic()
     ensureAnimTime(600, system->m_animation);
 
     //Default is just slowed a little
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -101,6 +101,7 @@ void tst_qquickfriction::test_basic()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 void tst_qquickfriction::test_threshold()
@@ -110,7 +111,7 @@ void tst_qquickfriction::test_threshold()
     ensureAnimTime(600, system->m_animation);
 
     //Speed capped at 50, but it might take a frame or two to get there
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1.0f)
             continue; //Particle data unused
@@ -127,6 +128,7 @@ void tst_qquickfriction::test_threshold()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickfriction);

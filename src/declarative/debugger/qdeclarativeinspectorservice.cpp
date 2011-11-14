@@ -48,13 +48,16 @@
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 
+// print detailed information about loading of plugins
+DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
+
 QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QDeclarativeInspectorService, serviceInstance)
 
 QDeclarativeInspectorService::QDeclarativeInspectorService()
     : QDeclarativeDebugService(QLatin1String("QDeclarativeObserverMode"))
-    , m_inspectorPlugin(0)
+    , m_currentInspectorPlugin(0)
 {
 }
 
@@ -91,34 +94,50 @@ void QDeclarativeInspectorService::statusChanged(Status /*status*/)
 void QDeclarativeInspectorService::updateStatus()
 {
     if (m_views.isEmpty()) {
-        if (m_inspectorPlugin)
-            m_inspectorPlugin->deactivate();
+        if (m_currentInspectorPlugin) {
+            m_currentInspectorPlugin->deactivate();
+            m_currentInspectorPlugin = 0;
+        }
         return;
     }
 
     if (status() == Enabled) {
-        if (!m_inspectorPlugin)
-            m_inspectorPlugin = loadInspectorPlugin();
+        if (m_inspectorPlugins.isEmpty())
+            loadInspectorPlugins();
 
-        if (!m_inspectorPlugin) {
-            qWarning() << "Error while loading inspector plugin";
+        if (m_inspectorPlugins.isEmpty()) {
+            qWarning() << "QDeclarativeInspector: No plugins found.";
             QDeclarativeDebugServer::instance()->removeService(this);
             return;
         }
 
-        m_inspectorPlugin->activate();
+        foreach (QDeclarativeInspectorInterface *inspector, m_inspectorPlugins) {
+            if (inspector->canHandleView(m_views.first())) {
+                m_currentInspectorPlugin = inspector;
+                break;
+            }
+        }
+
+        if (!m_currentInspectorPlugin) {
+            qWarning() << "QDeclarativeInspector: No plugin available for view '" << m_views.first()->metaObject()->className() << "'.";
+            return;
+        }
+        m_currentInspectorPlugin->activate(m_views.first());
     } else {
-        if (m_inspectorPlugin)
-            m_inspectorPlugin->deactivate();
+        if (m_currentInspectorPlugin) {
+            m_currentInspectorPlugin->deactivate();
+            m_currentInspectorPlugin = 0;
+        }
     }
 }
 
 void QDeclarativeInspectorService::messageReceived(const QByteArray &message)
 {
-    emit gotMessage(message);
+    if (m_currentInspectorPlugin)
+        m_currentInspectorPlugin->clientMessage(message);
 }
 
-QDeclarativeInspectorInterface *QDeclarativeInspectorService::loadInspectorPlugin()
+void QDeclarativeInspectorService::loadInspectorPlugins()
 {
     QStringList pluginCandidates;
     const QStringList paths = QCoreApplication::libraryPaths();
@@ -130,18 +149,30 @@ QDeclarativeInspectorInterface *QDeclarativeInspectorService::loadInspectorPlugi
     }
 
     foreach (const QString &pluginPath, pluginCandidates) {
+        if (qmlDebugVerbose())
+            qDebug() << "QDeclarativeInspector: Trying to load plugin " << pluginPath << "...";
+
         QPluginLoader loader(pluginPath);
-        if (!loader.load())
+        if (!loader.load()) {
+            if (qmlDebugVerbose())
+                qDebug() << "QDeclarativeInspector: Error while loading: " << loader.errorString();
+
             continue;
+        }
 
         QDeclarativeInspectorInterface *inspector =
                 qobject_cast<QDeclarativeInspectorInterface*>(loader.instance());
+        if (inspector) {
+            if (qmlDebugVerbose())
+                qDebug() << "QDeclarativeInspector: Plugin successfully loaded.";
+            m_inspectorPlugins << inspector;
+        } else {
+            if (qmlDebugVerbose())
+                qDebug() << "QDeclarativeInspector: Plugin does not implement interface QDeclarativeInspectorInterface.";
 
-        if (inspector)
-            return inspector;
-        loader.unload();
+            loader.unload();
+        }
     }
-    return 0;
 }
 
 QT_END_NAMESPACE

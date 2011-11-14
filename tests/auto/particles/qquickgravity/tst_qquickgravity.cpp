@@ -65,18 +65,21 @@ void tst_qquickgravity::test_basic()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
+    float mag = 707.10678f;
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
-        if (d->t == -1)
-            continue; //Particle data unused
+        if (d->t == -1 || !d->stillAlive())
+            continue; //Particle data unused or dead
 
-        QCOMPARE(d->ax, 707.10678f);
-        QCOMPARE(d->ay, 707.10678f);
+        float t = ((qreal)system->timeInt/1000.0) - d->t;
+        QVERIFY(extremelyFuzzyCompare(d->vx, t*mag, 20.0f));
+        QVERIFY(extremelyFuzzyCompare(d->vy, t*mag, 20.0f));
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickgravity);

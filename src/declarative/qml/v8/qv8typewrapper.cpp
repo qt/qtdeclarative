@@ -159,7 +159,6 @@ QVariant QV8TypeWrapper::toVariant(QV8ObjectResource *r)
 v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property, 
                                              const v8::AccessorInfo &info)
 {
-    v8::Object::ExternalResource *r = info.This()->GetExternalResource();
     QV8TypeResource *resource = v8_resource_cast<QV8TypeResource>(info.This());
 
     if (!resource) 
@@ -257,7 +256,6 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
                                              v8::Local<v8::Value> value,
                                              const v8::AccessorInfo &info)
 {
-    v8::Object::ExternalResource *r = info.This()->GetExternalResource();
     QV8TypeResource *resource = v8_resource_cast<QV8TypeResource>(info.This());
 
     if (!resource) 

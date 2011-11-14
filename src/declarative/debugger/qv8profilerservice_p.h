@@ -100,6 +100,8 @@ public:
     void startProfiling(const QString &title);
     void stopProfiling(const QString &title);
 
+    void sendProfilingData();
+
 protected:
     void messageReceived(const QByteArray &);
 

@@ -9,6 +9,3 @@ SOURCES += main.cpp
 
 CONFIG += console
 
-symbian {
-    TARGET.EPOCHEAPSIZE = 0x20000 0x5000000
-}

@@ -266,8 +266,8 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
 
         }
 
-        QDeclarativePropertyCache::Data local;
-        QDeclarativePropertyCache::Data *property = 
+        QDeclarativePropertyData local;
+        QDeclarativePropertyData *property =
             QDeclarativePropertyCache::property(engine, obj, pathName, local);
 
         if (!property) return; // Not a property
@@ -285,7 +285,7 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
 
             QMetaProperty vtProp = typeObject->metaObject()->property(idx);
 
-            typedef QDeclarativePropertyCache::Data PCD;
+            typedef QDeclarativePropertyData PCD;
 
             Q_ASSERT(PCD::flagsForProperty(vtProp) <= PCD::ValueTypeFlagMask);
             Q_ASSERT(vtProp.userType() <= 0xFF);
@@ -330,8 +330,8 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
     }
 
     // Property
-    QDeclarativePropertyCache::Data local;
-    QDeclarativePropertyCache::Data *property = 
+    QDeclarativePropertyData local;
+    QDeclarativePropertyData *property =
         QDeclarativePropertyCache::property(engine, currentObject, terminal, local);
     if (property && !property->isFunction()) {
         object = currentObject;
@@ -707,7 +707,7 @@ QDeclarativePropertyPrivate::binding(QObject *object, int coreIndex, int valueTy
     if (!data)
         return 0;
 
-    QDeclarativePropertyCache::Data *propertyData = 
+    QDeclarativePropertyData *propertyData =
         data->propertyCache?data->propertyCache->property(coreIndex):0;
     if (propertyData && propertyData->isAlias()) {
         const QDeclarativeVMEMetaObject *vme = 
@@ -748,7 +748,7 @@ void QDeclarativePropertyPrivate::findAliasTarget(QObject *object, int bindingIn
 
     QDeclarativeData *data = QDeclarativeData::get(object, false);
     if (data) {
-        QDeclarativePropertyCache::Data *propertyData = 
+        QDeclarativePropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):0;
         if (propertyData && propertyData->isAlias()) {
             const QDeclarativeVMEMetaObject *vme = 
@@ -782,7 +782,7 @@ QDeclarativePropertyPrivate::setBinding(QObject *object, int coreIndex, int valu
     QDeclarativeAbstractBinding *binding = 0;
 
     if (data) {
-        QDeclarativePropertyCache::Data *propertyData = 
+        QDeclarativePropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):0;
         if (propertyData && propertyData->isAlias()) {
             const QDeclarativeVMEMetaObject *vme = 
@@ -836,7 +836,7 @@ QDeclarativePropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, 
     QDeclarativeAbstractBinding *binding = 0;
 
     if (data) {
-        QDeclarativePropertyCache::Data *propertyData = 
+        QDeclarativePropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):0;
         if (propertyData && propertyData->isAlias()) {
             const QDeclarativeVMEMetaObject *vme = 
@@ -1089,7 +1089,7 @@ bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, Writ
 
 bool 
 QDeclarativePropertyPrivate::writeValueProperty(QObject *object, QDeclarativeEngine *engine,
-                                                const QDeclarativePropertyCache::Data &core, 
+                                                const QDeclarativePropertyData &core,
                                                 const QVariant &value, 
                                                 QDeclarativeContextData *context, WriteFlags flags)
 {
@@ -1114,8 +1114,8 @@ QDeclarativePropertyPrivate::writeValueProperty(QObject *object, QDeclarativeEng
 
         writeBack->read(object, core.coreIndex);
 
-        QDeclarativePropertyCache::Data data = core;
-        data.setFlags(QDeclarativePropertyCache::Data::Flag(core.valueTypeFlags));
+        QDeclarativePropertyData data = core;
+        data.setFlags(QDeclarativePropertyData::Flag(core.valueTypeFlags));
         data.coreIndex = core.valueTypeCoreIndex;
         data.propType = core.valueTypePropType;
 
@@ -1134,7 +1134,7 @@ QDeclarativePropertyPrivate::writeValueProperty(QObject *object, QDeclarativeEng
 }
 
 bool QDeclarativePropertyPrivate::write(QObject *object, 
-                                        const QDeclarativePropertyCache::Data &property, 
+                                        const QDeclarativePropertyData &property,
                                         const QVariant &value, QDeclarativeContextData *context, 
                                         WriteFlags flags)
 {
@@ -1298,7 +1298,7 @@ bool QDeclarativePropertyPrivate::write(QObject *object,
 
 // Returns true if successful, false if an error description was set on expression
 bool QDeclarativePropertyPrivate::writeBinding(QObject *object, 
-                                               const QDeclarativePropertyCache::Data &core,
+                                               const QDeclarativePropertyData &core,
                                                QDeclarativeJavaScriptExpression *expression, 
                                                v8::Handle<v8::Value> result, bool isUndefined,
                                                WriteFlags flags)
@@ -1348,7 +1348,7 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
 
     int type = core.isValueTypeVirtual()?core.valueTypePropType:core.propType;
 
-    QDeclarativeDeleteWatcher watcher(expression);
+    QDeleteWatcher watcher(expression);
 
     QVariant value;
     bool isVmeProperty = core.isVMEProperty();
@@ -1606,7 +1606,7 @@ int QDeclarativePropertyPrivate::bindingIndex(const QDeclarativeProperty &that)
     return bindingIndex(that.d->core);
 }
 
-int QDeclarativePropertyPrivate::bindingIndex(const QDeclarativePropertyCache::Data &that)
+int QDeclarativePropertyPrivate::bindingIndex(const QDeclarativePropertyData &that)
 {
     int rv = that.coreIndex;
     if (rv != -1 && that.isValueTypeVirtual())
@@ -1614,18 +1614,17 @@ int QDeclarativePropertyPrivate::bindingIndex(const QDeclarativePropertyCache::D
     return rv;
 }
 
-QDeclarativePropertyCache::Data
+QDeclarativePropertyData
 QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObject, int index, 
                                            const QMetaObject *subObject, int subIndex,
                                            QDeclarativeEngine *)
 {
-    QMetaProperty prop = metaObject->property(index);
     QMetaProperty subProp = subObject->property(subIndex);
 
-    QDeclarativePropertyCache::Data core;
+    QDeclarativePropertyData core;
     core.load(metaObject->property(index));
-    core.setFlags(core.getFlags() | QDeclarativePropertyCache::Data::IsValueTypeVirtual);
-    core.valueTypeFlags = QDeclarativePropertyCache::Data::flagsForProperty(subProp);
+    core.setFlags(core.getFlags() | QDeclarativePropertyData::IsValueTypeVirtual);
+    core.valueTypeFlags = QDeclarativePropertyData::flagsForProperty(subProp);
     core.valueTypeCoreIndex = subIndex;
     core.valueTypePropType = subProp.userType();
 
@@ -1633,7 +1632,7 @@ QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObject, int in
 }
 
 QDeclarativeProperty
-QDeclarativePropertyPrivate::restore(const QDeclarativePropertyCache::Data &data, 
+QDeclarativePropertyPrivate::restore(const QDeclarativePropertyData &data,
                                      QObject *object, QDeclarativeContextData *ctxt)
 {
     QDeclarativeProperty prop;
@@ -1737,7 +1736,7 @@ static inline void flush_vme_signal(const QObject *object, int index)
 {
     QDeclarativeData *data = static_cast<QDeclarativeData *>(QObjectPrivate::get(const_cast<QObject *>(object))->declarativeData);
     if (data && data->propertyCache) {
-        QDeclarativePropertyCache::Data *property = data->propertyCache->method(index);
+        QDeclarativePropertyData *property = data->propertyCache->method(index);
 
         if (property && property->isVMESignal()) {
             const QMetaObject *metaObject = object->metaObject();

@@ -202,17 +202,6 @@ void tst_qdeclarativemetatype::copy()
     QT_COPY_TEST(QPalette, QPalette(Qt::green));
     
     {
-        QPixmap icon(100, 100);
-
-        QIcon v = QIcon(icon); QIcon v2 = QIcon(icon);
-        QEXPECT_FAIL("", "QTBUG-21629 - copy() test function failure.", Abort);
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QIcon, &v, 0)); 
-        QVERIFY(v.isNull() == QIcon().isNull());
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QIcon , &v, &v2)); 
-        QVERIFY(v.isNull() == QIcon(icon).isNull());
-    }
-
-    {
         QImage v = QImage(100, 100, QImage::Format_RGB32); 
         QImage v2 = QImage(100, 100, QImage::Format_RGB32);
         QVERIFY(QDeclarativeMetaType::copy(QMetaType::QImage, &v, 0)); 
@@ -240,7 +229,6 @@ void tst_qdeclarativemetatype::copy()
         QVERIFY(v.shape() == QCursor(Qt::SizeFDiagCursor).shape());
     }
 
-    QT_COPY_TEST(QSizePolicy, QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum));
     QT_COPY_TEST(QKeySequence, QKeySequence("Ctrl+O"));
     QT_COPY_TEST(QPen, QPen(Qt::red));
     QT_COPY_TEST(QTextLength, QTextLength(QTextLength::FixedLength, 10.2));

@@ -10,6 +10,7 @@ QT = core-private gui gui-private network sql v8-private
 
 DEFINES   += QT_BUILD_DECLARATIVE_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000
+win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 
 unix|win32-g++*:QMAKE_PKGCONFIG_REQUIRES = QtCore QtGui
@@ -35,18 +36,6 @@ include(items/items.pri)
 include(particles/particles.pri)
 include(designer/designer.pri)
 include(animations/animations.pri)
-
-symbian: {
-    TARGET.UID3=0x2001E623
-    LIBS += -lefsrv
-
-    contains(QT_CONFIG, freetype) {
-        DEFINES += QT_NO_FONTCONFIG
-        INCLUDEPATH += \
-            ../3rdparty/freetype/src \
-            ../3rdparty/freetype/include
-    }
-}
 
 linux-g++-maemo:DEFINES += QDECLARATIVEVIEW_NOBACKGROUND
 

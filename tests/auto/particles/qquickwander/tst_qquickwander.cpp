@@ -65,7 +65,7 @@ void tst_qquickwander::test_basic()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     //Since Wander is random perturbations, the compromise between stability and actual testing is to hope that one of
     //the 500 was randomly changed from 0.0 in velocity
     bool vxChanged = false;
@@ -85,6 +85,7 @@ void tst_qquickwander::test_basic()
         if (d->vy != 0.0f)
             vyChanged = true;
     }
+    delete view;
     QVERIFY(vxChanged);
     QVERIFY(vyChanged);
 }

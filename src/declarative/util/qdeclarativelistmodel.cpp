@@ -59,141 +59,1137 @@ Q_DECLARE_METATYPE(QListModelInterface *)
 
 QT_BEGIN_NAMESPACE
 
-QV8ListModelResource::QV8ListModelResource(FlatListModel *model, FlatNodeData *data, QV8Engine *engine)
-: QV8ObjectResource(engine), model(model), nodeData(data)
+// Set to 1024 as a debugging aid - easier to distinguish uids from indices of elements/models.
+enum { MIN_LISTMODEL_UID = 1024 };
+
+QAtomicInt ListModel::uidCounter(MIN_LISTMODEL_UID);
+
+template <typename T>
+static bool isMemoryUsed(const char *mem)
 {
-    if (nodeData) nodeData->addData(this);
-}
-
-QV8ListModelResource::~QV8ListModelResource()
-{
-    if (nodeData) nodeData->removeData(this);
-}
-
-class QDeclarativeListModelV8Data : public QV8Engine::Deletable
-{
-public:
-    QDeclarativeListModelV8Data();
-    ~QDeclarativeListModelV8Data();
-
-    v8::Persistent<v8::Function> constructor;
-
-    static v8::Local<v8::Object> create(QV8Engine *);
-
-    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
-                                        const v8::AccessorInfo &info);
-    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
-                                        v8::Local<v8::Value> value,
-                                        const v8::AccessorInfo &info);
-};
-
-v8::Local<v8::Object> QDeclarativeListModelV8Data::create(QV8Engine *engine)
-{
-    if (!engine->listModelData()) {
-        QDeclarativeListModelV8Data *d = new QDeclarativeListModelV8Data;
-        engine->setListModelData(d);
+    for (size_t i=0 ; i < sizeof(T) ; ++i) {
+        if (mem[i] != 0)
+            return true;
     }
 
-    QDeclarativeListModelV8Data *d = (QDeclarativeListModelV8Data *)engine->listModelData();
-    return d->constructor->NewInstance();
+    return false;
 }
 
-QDeclarativeListModelV8Data::QDeclarativeListModelV8Data()
+static QString roleTypeName(ListLayout::Role::DataType t)
 {
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    QString result;
+    const char *roleTypeNames[] = { "String", "Number", "Bool", "List", "QObject" };
+
+    if (t > ListLayout::Role::Invalid && t < ListLayout::Role::MaxDataType)
+        result = QString::fromLatin1(roleTypeNames[t]);
+
+    return result;
 }
 
-QDeclarativeListModelV8Data::~QDeclarativeListModelV8Data()
+const ListLayout::Role &ListLayout::getRoleOrCreate(const QString &key, Role::DataType type)
 {
-    qPersistentDispose(constructor);
-}
-
-v8::Handle<v8::Value> QDeclarativeListModelV8Data::Getter(v8::Local<v8::String> property, 
-                                                          const v8::AccessorInfo &info)
-{
-    QV8ListModelResource *r =  v8_resource_cast<QV8ListModelResource>(info.This());
-    if (!r)
-        return v8::Undefined();
-
-    if (!r->nodeData) // Item at this index has been deleted
-        return v8::Undefined();
-
-
-    int index = r->nodeData->index;
-    QString propName = r->engine->toString(property);
-
-    int role = r->model->m_strings.value(propName, -1);
-
-    if (role >= 0 && index >=0 ) {
-        const QHash<int, QVariant> &row = r->model->m_values[index];
-        return r->engine->fromVariant(row[role]);
+    QStringHash<Role *>::Node *node = roleHash.findNode(key);
+    if (node) {
+        const Role &r = *node->value;
+        if (type != r.type)
+            qmlInfo(0) << QString::fromLatin1("Can't assign to existing role '%1' of different type [%2 -> %3]").arg(r.name).arg(roleTypeName(type)).arg(roleTypeName(r.type));
+        return r;
     }
 
-    return v8::Undefined();
+    return createRole(key, type);
 }
 
-v8::Handle<v8::Value> QDeclarativeListModelV8Data::Setter(v8::Local<v8::String> property, 
-                                                          v8::Local<v8::Value> value,
-                                                          const v8::AccessorInfo &info)
+const ListLayout::Role &ListLayout::getRoleOrCreate(v8::Handle<v8::String> key, Role::DataType type)
 {
-    QV8ListModelResource *r =  v8_resource_cast<QV8ListModelResource>(info.This());
-    if (!r)
-        return v8::Undefined();
-
-    if (!r->nodeData) // item at this index has been deleted
-        return value;
-
-
-    if (!value->IsRegExp() && !value->IsDate() && value->IsObject() && !r->engine->isVariant(value)) {
-        qmlInfo(r->model->m_listModel) << "Cannot add list-type data when modifying or after modification from a worker script";
-        return value;
+    QHashedV8String hashedKey(key);
+    QStringHash<Role *>::Node *node = roleHash.findNode(hashedKey);
+    if (node) {
+        const Role &r = *node->value;
+        if (type != r.type)
+            qmlInfo(0) << QString::fromLatin1("Can't assign to existing role '%1' of different type [%2 -> %3]").arg(r.name).arg(roleTypeName(type)).arg(roleTypeName(r.type));
+        return r;
     }
 
-    int index = r->nodeData->index;
-    QString propName = r->engine->toString(property);
+    QString qkey;
+    qkey.resize(key->Length());
+    key->Write(reinterpret_cast<uint16_t*>(qkey.data()));
 
-    int role = r->model->m_strings.value(propName, -1);
-    if (role >= 0 && index >= 0) {
-        QHash<int, QVariant> &row = r->model->m_values[index];
-        row[role] = r->engine->toVariant(value, -1);
+    return createRole(qkey, type);
+}
 
-        QList<int> roles;
-        roles << role;
-        if (r->model->m_parentAgent) {
-            // This is the list in the worker thread, so tell the agent to
-            // emit itemsChanged() later
-            r->model->m_parentAgent->changedData(index, 1, roles);
+const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
+{
+    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QDeclarativeGuard<QObject>), sizeof(QVariantMap) };
+    const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap) };
+
+    Role *r = new Role;
+    r->name = key;
+    r->type = type;
+
+    if (type == Role::List) {
+        r->subLayout = new ListLayout;
+    } else {
+        r->subLayout = 0;
+    }
+
+    int dataSize = dataSizes[type];
+    int dataAlignment = dataAlignments[type];
+
+    int dataOffset = (currentBlockOffset + dataAlignment-1) & ~(dataAlignment-1);
+    if (dataOffset + dataSize > ListElement::BLOCK_SIZE) {
+        r->blockIndex = ++currentBlock;
+        r->blockOffset = 0;
+        currentBlockOffset = dataSize;
+    } else {
+        r->blockIndex = currentBlock;
+        r->blockOffset = dataOffset;
+        currentBlockOffset = dataOffset + dataSize;
+    }
+
+    int roleIndex = roles.count();
+    r->index = roleIndex;
+
+    roles.append(r);
+    roleHash.insert(key, r);
+
+    return *r;
+}
+
+ListLayout::ListLayout(const ListLayout *other) : currentBlock(0), currentBlockOffset(0)
+{
+    for (int i=0 ; i < other->roles.count() ; ++i) {
+        Role *role = new Role(other->roles[i]);
+        roles.append(role);
+        roleHash.insert(role->name, role);
+    }
+    currentBlockOffset = other->currentBlockOffset;
+    currentBlock = other->currentBlock;
+}
+
+ListLayout::~ListLayout()
+{
+    for (int i=0 ; i < roles.count() ; ++i) {
+        delete roles[i];
+    }
+}
+
+void ListLayout::sync(ListLayout *src, ListLayout *target)
+{
+    int roleOffset = target->roles.count();
+    int newRoleCount = src->roles.count() - roleOffset;
+
+    for (int i=0 ; i < newRoleCount ; ++i) {
+        Role *role = new Role(src->roles[roleOffset + i]);
+        target->roles.append(role);
+        target->roleHash.insert(role->name, role);
+    }
+
+    target->currentBlockOffset = src->currentBlockOffset;
+    target->currentBlock = src->currentBlock;
+}
+
+ListLayout::Role::Role(const Role *other)
+{
+    name = other->name;
+    type = other->type;
+    blockIndex = other->blockIndex;
+    blockOffset = other->blockOffset;
+    index = other->index;
+    if (other->subLayout)
+        subLayout = new ListLayout(other->subLayout);
+    else
+        subLayout = 0;
+}
+
+ListLayout::Role::~Role()
+{
+    delete subLayout;
+}
+
+const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QVariant &data)
+{
+    Role::DataType type;
+
+    switch (data.type()) {
+        case QVariant::Double:      type = Role::Number;      break;
+        case QVariant::Int:         type = Role::Number;      break;
+        case QVariant::UserType:    type = Role::List;        break;
+        case QVariant::Bool:        type = Role::Bool;        break;
+        case QVariant::String:      type = Role::String;      break;
+        default:                    type = Role::Invalid;     break;
+    }
+
+    if (type == Role::Invalid) {
+        qmlInfo(0) << "Can't create role for unsupported data type";
+        return 0;
+    }
+
+    return &getRoleOrCreate(key, type);
+}
+
+const ListLayout::Role *ListLayout::getExistingRole(const QString &key)
+{
+    Role *r = 0;
+    QStringHash<Role *>::Node *node = roleHash.findNode(key);
+    if (node)
+        r = node->value;
+    return r;
+}
+
+const ListLayout::Role *ListLayout::getExistingRole(v8::Handle<v8::String> key)
+{
+    Role *r = 0;
+    QHashedV8String hashedKey(key);
+    QStringHash<Role *>::Node *node = roleHash.findNode(hashedKey);
+    if (node)
+        r = node->value;
+    return r;
+}
+
+ModelObject *ListModel::getOrCreateModelObject(QDeclarativeListModel *model, int elementIndex)
+{
+    ListElement *e = elements[elementIndex];
+    if (e->m_objectCache == 0) {
+        e->m_objectCache = new ModelObject(model, elementIndex);
+    }
+    return e->m_objectCache;
+}
+
+void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *targetModelHash)
+{
+    // Sanity check
+    target->m_uid = src->m_uid;
+    if (targetModelHash)
+        targetModelHash->insert(target->m_uid, target);
+
+    // Build hash of elements <-> uid for each of the lists
+    QHash<int, ElementSync> elementHash;
+    for (int i=0 ; i < target->elements.count() ; ++i) {
+        ListElement *e = target->elements.at(i);
+        int uid = e->getUid();
+        ElementSync sync;
+        sync.target = e;
+        elementHash.insert(uid, sync);
+    }
+    for (int i=0 ; i < src->elements.count() ; ++i) {
+        ListElement *e = src->elements.at(i);
+        int uid = e->getUid();
+
+        QHash<int, ElementSync>::iterator it = elementHash.find(uid);
+        if (it == elementHash.end()) {
+            ElementSync sync;
+            sync.src = e;
+            elementHash.insert(uid, sync);
         } else {
-            // This is the list in the main thread, so emit itemsChanged()
-            emit r->model->m_listModel->itemsChanged(index, 1, roles);
+            ElementSync &sync = it.value();
+            sync.src = e;
         }
     }
 
-    return value;
+    // Get list of elements that are in the target but no longer in the source. These get deleted first.
+    QHash<int, ElementSync>::iterator it = elementHash.begin();
+    QHash<int, ElementSync>::iterator end = elementHash.end();
+    while (it != end) {
+        const ElementSync &s = it.value();
+        if (s.src == 0) {
+            s.target->destroy(target->m_layout);
+            target->elements.removeOne(s.target);
+            delete s.target;
+        }
+        ++it;
+    }
+
+    // Sync the layouts
+    ListLayout::sync(src->m_layout, target->m_layout);
+
+    // Clear the target list, and append in correct order from the source
+    target->elements.clear();
+    for (int i=0 ; i < src->elements.count() ; ++i) {
+        ListElement *srcElement = src->elements.at(i);
+        it = elementHash.find(srcElement->getUid());
+        const ElementSync &s = it.value();
+        ListElement *targetElement = s.target;
+        if (targetElement == 0) {
+            targetElement = new ListElement(srcElement->getUid());
+        }
+        ListElement::sync(srcElement, src->m_layout, targetElement, target->m_layout, targetModelHash);
+        target->elements.append(targetElement);
+    }
+
+    target->updateCacheIndices();
+
+    // Update values stored in target meta objects
+    for (int i=0 ; i < target->elements.count() ; ++i) {
+        ListElement *e = target->elements[i];
+        if (e->m_objectCache)
+            e->m_objectCache->updateValues();
+    }
 }
 
-template<typename T>
-void qdeclarativelistmodel_move(int from, int to, int n, T *items)
+int ListModel::allocateUid()
 {
-    if (n == 1) {
-        items->move(from, to);
-    } else {
-        T replaced;
-        int i=0;
-        typename T::ConstIterator it=items->begin(); it += from+n;
-        for (; i<to-from; ++i,++it)
-            replaced.append(*it);
-        i=0;
-        it=items->begin(); it += from;
-        for (; i<n; ++i,++it)
-            replaced.append(*it);
-        typename T::ConstIterator f=replaced.begin();
-        typename T::Iterator t=items->begin(); t += from;
-        for (; f != replaced.end(); ++f, ++t)
-            *t = *f;
+    return uidCounter.fetchAndAddOrdered(1);
+}
+
+ListModel::ListModel(ListLayout *layout, QDeclarativeListModel *modelCache, int uid) : m_layout(layout), m_modelCache(modelCache)
+{
+    if (uid == -1)
+        uid = allocateUid();
+    m_uid = uid;
+}
+
+void ListModel::destroy()
+{
+    clear();
+    m_uid = -1;
+    m_layout = 0;
+    if (m_modelCache && m_modelCache->m_primary == false)
+        delete m_modelCache;
+    m_modelCache = 0;
+}
+
+int ListModel::appendElement()
+{
+    int elementIndex = elements.count();
+    newElement(elementIndex);
+    return elementIndex;
+}
+
+void ListModel::insertElement(int index)
+{
+    newElement(index);
+    updateCacheIndices();
+}
+
+void ListModel::move(int from, int to, int n)
+{
+    if (from > to) {
+        // Only move forwards - flip if backwards moving
+        int tfrom = from;
+        int tto = to;
+        from = tto;
+        to = tto+n;
+        n = tfrom-tto;
+    }
+
+    QPODVector<ListElement *, 4> store;
+    for (int i=0 ; i < (to-from) ; ++i)
+        store.append(elements[from+n+i]);
+    for (int i=0 ; i < n ; ++i)
+        store.append(elements[from+i]);
+    for (int i=0 ; i < store.count() ; ++i)
+        elements[from+i] = store[i];
+
+    updateCacheIndices();
+}
+
+void ListModel::newElement(int index)
+{
+    ListElement *e = new ListElement;
+    elements.insert(index, e);
+}
+
+void ListModel::updateCacheIndices()
+{
+    for (int i=0 ; i < elements.count() ; ++i) {
+        ListElement *e = elements.at(i);
+        if (e->m_objectCache) {
+            e->m_objectCache->m_elementIndex = i;
+        }
+    }
+}
+
+QVariant ListModel::getProperty(int elementIndex, int roleIndex, const QDeclarativeListModel *owner, QV8Engine *eng)
+{
+    ListElement *e = elements[elementIndex];
+    const ListLayout::Role &r = m_layout->getExistingRole(roleIndex);
+    return e->getProperty(r, owner, eng);
+}
+
+ListModel *ListModel::getListProperty(int elementIndex, const ListLayout::Role &role)
+{
+    ListElement *e = elements[elementIndex];
+    return e->getListProperty(role);
+}
+
+void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QList<int> *roles, QV8Engine *eng)
+{
+    ListElement *e = elements[elementIndex];
+
+    v8::Local<v8::Array> propertyNames = object->GetPropertyNames();
+    int propertyCount = propertyNames->Length();
+
+    for (int i=0 ; i < propertyCount ; ++i) {
+        v8::Local<v8::String> propertyName = propertyNames->Get(i)->ToString();
+        v8::Local<v8::Value> propertyValue = object->Get(propertyName);
+
+        // Check if this key exists yet
+        int roleIndex = -1;
+
+        // Add the value now
+        if (propertyValue->IsString()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
+            v8::Handle<v8::String> jsString = propertyValue->ToString();
+            QString qstr;
+            qstr.resize(jsString->Length());
+            jsString->Write(reinterpret_cast<uint16_t*>(qstr.data()));
+            roleIndex = e->setStringProperty(r, qstr);
+        } else if (propertyValue->IsNumber()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
+            roleIndex = e->setDoubleProperty(r, propertyValue->NumberValue());
+        } else if (propertyValue->IsArray()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
+            ListModel *subModel = new ListModel(r.subLayout, 0, -1);
+
+            v8::Handle<v8::Array> subArray = v8::Handle<v8::Array>::Cast(propertyValue);
+            int arrayLength = subArray->Length();
+            for (int j=0 ; j < arrayLength ; ++j) {
+                v8::Handle<v8::Object> subObject = subArray->Get(j)->ToObject();
+                subModel->append(subObject, eng);
+            }
+
+            roleIndex = e->setListProperty(r, subModel);
+        } else if (propertyValue->IsBoolean()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
+            roleIndex = e->setBoolProperty(r, propertyValue->BooleanValue());
+        } else if (propertyValue->IsObject()) {
+            QV8ObjectResource *r = (QV8ObjectResource *) propertyValue->ToObject()->GetExternalResource();
+            if (r && r->resourceType() == QV8ObjectResource::QObjectType) {
+                QObject *o = QV8QObjectWrapper::toQObject(r);
+                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
+                if (role.type == ListLayout::Role::QObject)
+                    e->setQObjectProperty(role, o);
+            } else {
+                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
+                if (role.type == ListLayout::Role::VariantMap)
+                    e->setVariantMapProperty(role, propertyValue->ToObject(), eng);
+            }
+        } else if (propertyValue.IsEmpty() || propertyValue->IsUndefined() || propertyValue->IsNull()) {
+            const ListLayout::Role *r = m_layout->getExistingRole(propertyName);
+            if (r)
+                e->clearProperty(*r);
+        }
+
+        if (roleIndex != -1)
+            roles->append(roleIndex);
+    }
+
+    if (e->m_objectCache) {
+        e->m_objectCache->updateValues(*roles);
+    }
+}
+
+void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng)
+{
+    ListElement *e = elements[elementIndex];
+
+    v8::Local<v8::Array> propertyNames = object->GetPropertyNames();
+    int propertyCount = propertyNames->Length();
+
+    for (int i=0 ; i < propertyCount ; ++i) {
+        v8::Local<v8::String> propertyName = propertyNames->Get(i)->ToString();
+        v8::Local<v8::Value> propertyValue = object->Get(propertyName);
+
+        // Add the value now
+        if (propertyValue->IsString()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
+            if (r.type == ListLayout::Role::String) {
+                v8::Handle<v8::String> jsString = propertyValue->ToString();
+                QString qstr;
+                qstr.resize(jsString->Length());
+                jsString->Write(reinterpret_cast<uint16_t*>(qstr.data()));
+                e->setStringPropertyFast(r, qstr);
+            }
+        } else if (propertyValue->IsNumber()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
+            if (r.type == ListLayout::Role::Number) {
+                e->setDoublePropertyFast(r, propertyValue->NumberValue());
+            }
+        } else if (propertyValue->IsArray()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
+            if (r.type == ListLayout::Role::List) {
+                ListModel *subModel = new ListModel(r.subLayout, 0, -1);
+
+                v8::Handle<v8::Array> subArray = v8::Handle<v8::Array>::Cast(propertyValue);
+                int arrayLength = subArray->Length();
+                for (int j=0 ; j < arrayLength ; ++j) {
+                    v8::Handle<v8::Object> subObject = subArray->Get(j)->ToObject();
+                    subModel->append(subObject, eng);
+                }
+
+                e->setListPropertyFast(r, subModel);
+            }
+        } else if (propertyValue->IsBoolean()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
+            if (r.type == ListLayout::Role::Bool) {
+                e->setBoolPropertyFast(r, propertyValue->BooleanValue());
+            }
+        } else if (propertyValue->IsObject()) {
+            QV8ObjectResource *r = (QV8ObjectResource *) propertyValue->ToObject()->GetExternalResource();
+            if (r && r->resourceType() == QV8ObjectResource::QObjectType) {
+                QObject *o = QV8QObjectWrapper::toQObject(r);
+                const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
+                if (r.type == ListLayout::Role::QObject)
+                    e->setQObjectPropertyFast(r, o);
+            } else {
+                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
+                if (role.type == ListLayout::Role::VariantMap)
+                    e->setVariantMapFast(role, propertyValue->ToObject(), eng);
+            }
+        } else if (propertyValue.IsEmpty() || propertyValue->IsUndefined() || propertyValue->IsNull()) {
+            const ListLayout::Role *r = m_layout->getExistingRole(propertyName);
+            if (r)
+                e->clearProperty(*r);
+        }
+    }
+}
+
+void ListModel::clear()
+{
+    int elementCount = elements.count();
+    for (int i=0 ; i < elementCount ; ++i) {
+        elements[i]->destroy(m_layout);
+        delete elements[i];
+    }
+    elements.clear();
+}
+
+void ListModel::remove(int index)
+{
+    elements[index]->destroy(m_layout);
+    delete elements[index];
+    elements.remove(index);
+    updateCacheIndices();
+}
+
+void ListModel::insert(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng)
+{
+    insertElement(elementIndex);
+    set(elementIndex, object, eng);
+}
+
+int ListModel::append(v8::Handle<v8::Object> object, QV8Engine *eng)
+{
+    int elementIndex = appendElement();
+    set(elementIndex, object, eng);
+    return elementIndex;
+}
+
+int ListModel::setOrCreateProperty(int elementIndex, const QString &key, const QVariant &data)
+{
+    int roleIndex = -1;
+
+    if (elementIndex >= 0 && elementIndex < elements.count()) {
+        ListElement *e = elements[elementIndex];
+        const ListLayout::Role *r = m_layout->getRoleOrCreate(key, data);
+        if (r) {
+            roleIndex = e->setVariantProperty(*r, data);
+
+            if (roleIndex != -1 && e->m_objectCache) {
+                QList<int> roles;
+                roles << roleIndex;
+                e->m_objectCache->updateValues(roles);
+            }
+        }
+    }
+
+    return roleIndex;
+}
+
+int ListModel::setExistingProperty(int elementIndex, const QString &key, v8::Handle<v8::Value> data, QV8Engine *eng)
+{
+    int roleIndex = -1;
+
+    if (elementIndex >= 0 && elementIndex < elements.count()) {
+        ListElement *e = elements[elementIndex];
+        const ListLayout::Role *r = m_layout->getExistingRole(key);
+        if (r)
+            roleIndex = e->setJsProperty(*r, data, eng);
+    }
+
+    return roleIndex;
+}
+
+inline char *ListElement::getPropertyMemory(const ListLayout::Role &role)
+{
+    ListElement *e = this;
+    int blockIndex = 0;
+    while (blockIndex < role.blockIndex) {
+        if (e->next == 0) {
+            e->next = new ListElement;
+            e->next->uid = uid;
+        }
+        e = e->next;
+        ++blockIndex;
+    }
+
+    char *mem = &e->data[role.blockOffset];
+    return mem;
+}
+
+QString *ListElement::getStringProperty(const ListLayout::Role &role)
+{
+    char *mem = getPropertyMemory(role);
+    QString *s = reinterpret_cast<QString *>(mem);
+    return s->data_ptr() ? s : 0;
+}
+
+QObject *ListElement::getQObjectProperty(const ListLayout::Role &role)
+{
+    char *mem = getPropertyMemory(role);
+    QDeclarativeGuard<QObject> *o = reinterpret_cast<QDeclarativeGuard<QObject> *>(mem);
+    return o->data();
+}
+
+QVariantMap *ListElement::getVariantMapProperty(const ListLayout::Role &role)
+{
+    QVariantMap *map = 0;
+
+    char *mem = getPropertyMemory(role);
+    if (isMemoryUsed<QVariantMap>(mem))
+        map = reinterpret_cast<QVariantMap *>(mem);
+
+    return map;
+}
+
+QDeclarativeGuard<QObject> *ListElement::getGuardProperty(const ListLayout::Role &role)
+{
+    char *mem = getPropertyMemory(role);
+
+    bool existingGuard = false;
+    for (size_t i=0 ; i < sizeof(QDeclarativeGuard<QObject>) ; ++i) {
+        if (mem[i] != 0) {
+            existingGuard = true;
+            break;
+        }
+    }
+
+    QDeclarativeGuard<QObject> *o = 0;
+
+    if (existingGuard)
+        o = reinterpret_cast<QDeclarativeGuard<QObject> *>(mem);
+
+    return o;
+}
+
+ListModel *ListElement::getListProperty(const ListLayout::Role &role)
+{
+    char *mem = getPropertyMemory(role);
+    ListModel **value = reinterpret_cast<ListModel **>(mem);
+    return *value;
+}
+
+QVariant ListElement::getProperty(const ListLayout::Role &role, const QDeclarativeListModel *owner, QV8Engine *eng)
+{
+    char *mem = getPropertyMemory(role);
+
+    QVariant data;
+
+    switch (role.type) {
+        case ListLayout::Role::Number:
+            {
+                double *value = reinterpret_cast<double *>(mem);
+                data = *value;
+            }
+            break;
+        case ListLayout::Role::String:
+            {
+                QString *value = reinterpret_cast<QString *>(mem);
+                if (value->data_ptr() != 0)
+                    data = *value;
+            }
+            break;
+        case ListLayout::Role::Bool:
+            {
+                bool *value = reinterpret_cast<bool *>(mem);
+                data = *value;
+            }
+            break;
+        case ListLayout::Role::List:
+            {
+                ListModel **value = reinterpret_cast<ListModel **>(mem);
+                ListModel *model = *value;
+
+                if (model) {
+                    if (model->m_modelCache == 0) {
+                        model->m_modelCache = new QDeclarativeListModel(owner, model, eng);
+                        QDeclarativeEngine::setContextForObject(model->m_modelCache, QDeclarativeEngine::contextForObject(owner));
+                    }
+
+                    QObject *object = model->m_modelCache;
+                    data = QVariant::fromValue(object);
+                }
+            }
+            break;
+        case ListLayout::Role::QObject:
+            {
+                QDeclarativeGuard<QObject> *guard = reinterpret_cast<QDeclarativeGuard<QObject> *>(mem);
+                QObject *object = guard->data();
+                if (object)
+                    data = QVariant::fromValue(object);
+            }
+            break;
+        case ListLayout::Role::VariantMap:
+            {
+                if (isMemoryUsed<QVariantMap>(mem)) {
+                    QVariantMap *map = reinterpret_cast<QVariantMap *>(mem);
+                    data = *map;
+                }
+            }
+            break;
+        default:
+            break;
+    }
+
+    return data;
+}
+
+int ListElement::setStringProperty(const ListLayout::Role &role, const QString &s)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::String) {
+        char *mem = getPropertyMemory(role);
+        QString *c = reinterpret_cast<QString *>(mem);
+        bool changed;
+        if (c->data_ptr() == 0) {
+            new (mem) QString(s);
+            changed = true;
+        } else {
+            changed = c->compare(s) != 0;
+            *c = s;
+        }
+        if (changed)
+            roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+int ListElement::setDoubleProperty(const ListLayout::Role &role, double d)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::Number) {
+        char *mem = getPropertyMemory(role);
+        double *value = new (mem) double;
+        bool changed = *value != d;
+        *value = d;
+        if (changed)
+            roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+int ListElement::setBoolProperty(const ListLayout::Role &role, bool b)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::Bool) {
+        char *mem = getPropertyMemory(role);
+        bool *value = new (mem) bool;
+        bool changed = *value != b;
+        *value = b;
+        if (changed)
+            roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+int ListElement::setListProperty(const ListLayout::Role &role, ListModel *m)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::List) {
+        char *mem = getPropertyMemory(role);
+        ListModel **value = new (mem) ListModel *;
+        if (*value) {
+            (*value)->destroy();
+            delete *value;
+        }
+        *value = m;
+        roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::QObject) {
+        char *mem = getPropertyMemory(role);
+        QDeclarativeGuard<QObject> *g = reinterpret_cast<QDeclarativeGuard<QObject> *>(mem);
+        bool existingGuard = false;
+        for (size_t i=0 ; i < sizeof(QDeclarativeGuard<QObject>) ; ++i) {
+            if (mem[i] != 0) {
+                existingGuard = true;
+                break;
+            }
+        }
+        bool changed;
+        if (existingGuard) {
+            changed = g->data() != o;
+            g->~QDeclarativeGuard();
+        } else {
+            changed = true;
+        }
+        new (mem) QDeclarativeGuard<QObject>(o);
+        if (changed)
+            roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+int ListElement::setVariantMapProperty(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::VariantMap) {
+        char *mem = getPropertyMemory(role);
+        if (isMemoryUsed<QVariantMap>(mem)) {
+            QVariantMap *map = reinterpret_cast<QVariantMap *>(mem);
+            map->~QMap();
+        }
+        new (mem) QVariantMap(eng->variantMapFromJS(o));
+        roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+int ListElement::setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::VariantMap) {
+        char *mem = getPropertyMemory(role);
+        if (isMemoryUsed<QVariantMap>(mem)) {
+            QVariantMap *map = reinterpret_cast<QVariantMap *>(mem);
+            map->~QMap();
+        }
+        if (m)
+            new (mem) QVariantMap(*m);
+        else
+            new (mem) QVariantMap;
+        roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+void ListElement::setStringPropertyFast(const ListLayout::Role &role, const QString &s)
+{
+    char *mem = getPropertyMemory(role);
+    new (mem) QString(s);
+}
+
+void ListElement::setDoublePropertyFast(const ListLayout::Role &role, double d)
+{
+    char *mem = getPropertyMemory(role);
+    double *value = new (mem) double;
+    *value = d;
+}
+
+void ListElement::setBoolPropertyFast(const ListLayout::Role &role, bool b)
+{
+    char *mem = getPropertyMemory(role);
+    bool *value = new (mem) bool;
+    *value = b;
+}
+
+void ListElement::setQObjectPropertyFast(const ListLayout::Role &role, QObject *o)
+{
+    char *mem = getPropertyMemory(role);
+    new (mem) QDeclarativeGuard<QObject>(o);
+}
+
+void ListElement::setListPropertyFast(const ListLayout::Role &role, ListModel *m)
+{
+    char *mem = getPropertyMemory(role);
+    ListModel **value = new (mem) ListModel *;
+    *value = m;
+}
+
+void ListElement::setVariantMapFast(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng)
+{
+    char *mem = getPropertyMemory(role);
+    QVariantMap *map = new (mem) QVariantMap;
+    *map = eng->variantMapFromJS(o);
+}
+
+void ListElement::clearProperty(const ListLayout::Role &role)
+{
+    switch (role.type) {
+    case ListLayout::Role::String:
+        setStringProperty(role, QString());
+        break;
+    case ListLayout::Role::Number:
+        setDoubleProperty(role, 0.0);
+        break;
+    case ListLayout::Role::Bool:
+        setBoolProperty(role, false);
+        break;
+    case ListLayout::Role::List:
+        setListProperty(role, 0);
+        break;
+    case ListLayout::Role::QObject:
+        setQObjectProperty(role, 0);
+        break;
+    case ListLayout::Role::VariantMap:
+        setVariantMapProperty(role, 0);
+        break;
+    default:
+        break;
+    }
+}
+
+ListElement::ListElement()
+{
+    m_objectCache = 0;
+    uid = ListModel::allocateUid();
+    next = 0;
+    qMemSet(data, 0, sizeof(data));
+}
+
+ListElement::ListElement(int existingUid)
+{
+    m_objectCache = 0;
+    uid = existingUid;
+    next = 0;
+    qMemSet(data, 0, sizeof(data));
+}
+
+ListElement::~ListElement()
+{
+    delete next;
+}
+
+void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout, QHash<int, ListModel *> *targetModelHash)
+{
+    for (int i=0 ; i < srcLayout->roleCount() ; ++i) {
+        const ListLayout::Role &srcRole = srcLayout->getExistingRole(i);
+        const ListLayout::Role &targetRole = targetLayout->getExistingRole(i);
+
+        switch (srcRole.type) {
+            case ListLayout::Role::List:
+                {
+                    ListModel *srcSubModel = src->getListProperty(srcRole);
+                    ListModel *targetSubModel = target->getListProperty(targetRole);
+
+                    if (srcSubModel) {
+                        if (targetSubModel == 0) {
+                            targetSubModel = new ListModel(targetRole.subLayout, 0, srcSubModel->getUid());
+                            target->setListPropertyFast(targetRole, targetSubModel);
+                        }
+                        ListModel::sync(srcSubModel, targetSubModel, targetModelHash);
+                    }
+                }
+                break;
+            case ListLayout::Role::QObject:
+                {
+                    QObject *object = src->getQObjectProperty(srcRole);
+                    target->setQObjectProperty(targetRole, object);
+                }
+                break;
+            case ListLayout::Role::String:
+            case ListLayout::Role::Number:
+            case ListLayout::Role::Bool:
+                {
+                    QVariant v = src->getProperty(srcRole, 0, 0);
+                    target->setVariantProperty(targetRole, v);
+                }
+            case ListLayout::Role::VariantMap:
+                {
+                    QVariantMap *map = src->getVariantMapProperty(srcRole);
+                    target->setVariantMapProperty(targetRole, map);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+}
+
+void ListElement::destroy(ListLayout *layout)
+{
+    if (layout) {
+        for (int i=0 ; i < layout->roleCount() ; ++i) {
+            const ListLayout::Role &r = layout->getExistingRole(i);
+
+            switch (r.type) {
+                case ListLayout::Role::String:
+                    {
+                        QString *string = getStringProperty(r);
+                        if (string)
+                            string->~QString();
+                    }
+                    break;
+                case ListLayout::Role::List:
+                    {
+                        ListModel *model = getListProperty(r);
+                        if (model) {
+                            model->destroy();
+                            delete model;
+                        }
+                    }
+                    break;
+                case ListLayout::Role::QObject:
+                    {
+                        QDeclarativeGuard<QObject> *guard = getGuardProperty(r);
+                        if (guard)
+                            guard->~QDeclarativeGuard();
+                    }
+                    break;
+                case ListLayout::Role::VariantMap:
+                    {
+                        QVariantMap *map = getVariantMapProperty(r);
+                        if (map)
+                            map->~QMap();
+                    }
+                    break;
+                default:
+                    // other types don't need explicit cleanup.
+                    break;
+            }
+        }
+
+        delete m_objectCache;
+    }
+
+    if (next)
+        next->destroy(0);
+    uid = -1;
+}
+
+int ListElement::setVariantProperty(const ListLayout::Role &role, const QVariant &d)
+{
+    int roleIndex = -1;
+
+    switch (role.type) {
+        case ListLayout::Role::Number:
+            roleIndex = setDoubleProperty(role, d.toDouble());
+            break;
+        case ListLayout::Role::String:
+            roleIndex = setStringProperty(role, d.toString());
+            break;
+        case ListLayout::Role::Bool:
+            roleIndex = setBoolProperty(role, d.toBool());
+            break;
+        case ListLayout::Role::List:
+            roleIndex = setListProperty(role, d.value<ListModel *>());
+            break;
+        default:
+            break;
+    }
+
+    return roleIndex;
+}
+
+int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Value> d, QV8Engine *eng)
+{
+    // Check if this key exists yet
+    int roleIndex = -1;
+
+    // Add the value now
+    if (d->IsString()) {
+        v8::Handle<v8::String> jsString = d->ToString();
+        QString qstr;
+        qstr.resize(jsString->Length());
+        jsString->Write(reinterpret_cast<uint16_t*>(qstr.data()));
+        roleIndex = setStringProperty(role, qstr);
+    } else if (d->IsNumber()) {
+        roleIndex = setDoubleProperty(role, d->NumberValue());
+    } else if (d->IsArray()) {
+        ListModel *subModel = new ListModel(role.subLayout, 0, -1);
+        v8::Handle<v8::Array> subArray = v8::Handle<v8::Array>::Cast(d);
+        int arrayLength = subArray->Length();
+        for (int j=0 ; j < arrayLength ; ++j) {
+            v8::Handle<v8::Object> subObject = subArray->Get(j)->ToObject();
+            subModel->append(subObject, eng);
+        }
+        roleIndex = setListProperty(role, subModel);
+    } else if (d->IsBoolean()) {
+        roleIndex = setBoolProperty(role, d->BooleanValue());
+    } else if (d->IsObject()) {
+        QV8ObjectResource *r = (QV8ObjectResource *) d->ToObject()->GetExternalResource();
+        if (role.type == ListLayout::Role::QObject && r && r->resourceType() == QV8ObjectResource::QObjectType) {
+            QObject *o = QV8QObjectWrapper::toQObject(r);
+            roleIndex = setQObjectProperty(role, o);
+        } else if (role.type == ListLayout::Role::VariantMap) {
+            roleIndex = setVariantMapProperty(role, d->ToObject(), eng);
+        }
+    } else if (d.IsEmpty() || d->IsUndefined() || d->IsNull()) {
+        clearProperty(role);
+    }
+
+    return roleIndex;
+}
+
+ModelObject::ModelObject(QDeclarativeListModel *model, int elementIndex)
+: m_model(model), m_elementIndex(elementIndex), m_meta(new ModelNodeMetaObject(this))
+{
+    updateValues();
+    setNodeUpdatesEnabled(true);
+}
+
+void ModelObject::updateValues()
+{
+    int roleCount = m_model->m_listModel->roleCount();
+    for (int i=0 ; i < roleCount ; ++i) {
+        const ListLayout::Role &role = m_model->m_listModel->getExistingRole(i);
+        QByteArray name = role.name.toUtf8();
+        const QVariant &data = m_model->data(m_elementIndex, i);
+        setValue(name, data, role.type == ListLayout::Role::List);
+    }
+}
+
+void ModelObject::updateValues(const QList<int> &roles)
+{
+    int roleCount = roles.count();
+    for (int i=0 ; i < roleCount ; ++i) {
+        int roleIndex = roles.at(i);
+        const ListLayout::Role &role = m_model->m_listModel->getExistingRole(roleIndex);
+        QByteArray name = role.name.toUtf8();
+        const QVariant &data = m_model->data(m_elementIndex, roleIndex);
+        setValue(name, data, role.type == ListLayout::Role::List);
+    }
+}
+
+ModelNodeMetaObject::ModelNodeMetaObject(ModelObject *object)
+: QDeclarativeOpenMetaObject(object), m_enabled(false), m_obj(object)
+{
+}
+
+ModelNodeMetaObject::~ModelNodeMetaObject()
+{
+}
+
+void ModelNodeMetaObject::propertyWritten(int index)
+{
+    if (!m_enabled)
+        return;
+
+    QV8Engine *eng = m_obj->m_model->engine();
+
+    QString propName = QString::fromUtf8(name(index));
+    QVariant value = operator[](index);
+
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(eng->context());
+
+    v8::Handle<v8::Value> v = eng->fromVariant(value);
+
+    int roleIndex = m_obj->m_model->m_listModel->setExistingProperty(m_obj->m_elementIndex, propName, v, eng);
+    if (roleIndex != -1) {
+        QList<int> roles;
+        roles << roleIndex;
+        m_obj->m_model->emitItemsChanged(m_obj->m_elementIndex, 1, roles);
     }
 }
 
@@ -293,114 +1289,112 @@ QDeclarativeListModelParser::ListInstruction *QDeclarativeListModelParser::ListM
     handler. You must call sync() or else the changes made to the list from the external
     thread will not be reflected in the list model in the main thread.
 
-    \section1 Restrictions
-
-    If a list model is to be accessed from a WorkerScript, it cannot
-    contain list-type data. So, the following model cannot be used from a WorkerScript
-    because of the list contained in the "attributes" property:
-
-    \code
-    ListModel {
-        id: fruitModel
-        ListElement {
-            name: "Apple"
-            cost: 2.45
-            attributes: [
-                ListElement { description: "Core" },
-                ListElement { description: "Deciduous" }
-            ]
-        }
-    }
-    \endcode
-
-    In addition, the WorkerScript cannot add list-type data to the model.
-
     \sa {qmlmodels}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, QtDeclarative
 */
 
-
-/*
-    A ListModel internally uses either a NestedListModel or FlatListModel.
-
-    A NestedListModel can contain lists of ListElements (which
-    when retrieved from get() is accessible as a list model within the list
-    model) whereas a FlatListModel cannot.
-
-    ListModel uses a NestedListModel to begin with, and if the model is later 
-    used from a WorkerScript, it changes to use a FlatListModel instead. This
-    is because ModelNode (which abstracts the nested list model data) needs
-    access to the declarative engine and script engine, which cannot be
-    safely used from outside of the main thread.
-*/
-
 QDeclarativeListModel::QDeclarativeListModel(QObject *parent)
-: QListModelInterface(parent), m_agent(0), m_nested(new NestedListModel(this)), m_flat(0)
+: QListModelInterface(parent)
 {
+    m_mainThread = true;
+    m_primary = true;
+    m_agent = 0;
+
+    m_layout = new ListLayout;
+    m_listModel = new ListModel(m_layout, this, -1);
+
+    m_engine = 0;
 }
 
-QDeclarativeListModel::QDeclarativeListModel(const QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *parent)
-: QListModelInterface(parent), m_agent(0), m_nested(0), m_flat(0)
+QDeclarativeListModel::QDeclarativeListModel(const QDeclarativeListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent)
+: QListModelInterface(parent)
 {
-    m_flat = new FlatListModel(this);
-    m_flat->m_parentAgent = parent;
+    m_mainThread = owner->m_mainThread;
+    m_primary = false;
+    m_agent = owner->m_agent;
 
-    if (orig->m_flat) {
-        m_flat->m_roles = orig->m_flat->m_roles;
-        m_flat->m_strings = orig->m_flat->m_strings;
-        m_flat->m_values = orig->m_flat->m_values;
+    m_layout = 0;
+    m_listModel = data;
 
-        m_flat->m_nodeData.reserve(m_flat->m_values.count());
-        for (int i=0; i<m_flat->m_values.count(); i++)
-            m_flat->m_nodeData << 0;
-    }
+    m_engine = eng;
+}
+
+QDeclarativeListModel::QDeclarativeListModel(QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *agent)
+: QListModelInterface(agent)
+{
+    m_mainThread = false;
+    m_primary = true;
+    m_agent = agent;
+
+    m_layout = new ListLayout(orig->m_layout);
+    m_listModel = new ListModel(m_layout, this, orig->m_listModel->getUid());
+    ListModel::sync(orig->m_listModel, m_listModel, 0);
+
+    m_engine = 0;
 }
 
 QDeclarativeListModel::~QDeclarativeListModel()
 {
-    if (m_agent)
-        m_agent->release();
+    if (m_primary) {
+        m_listModel->destroy();
+        delete m_listModel;
 
-    delete m_nested;
-    delete m_flat;
-}
-
-bool QDeclarativeListModel::flatten()
-{
-    if (m_flat)
-        return true;
-
-    QList<int> roles = m_nested->roles();
-
-    QList<QHash<int, QVariant> > values;
-    bool hasNested = false;
-    for (int i=0; i<m_nested->count(); i++) {
-        values.append(m_nested->data(i, roles, &hasNested));
-        if (hasNested)
-            return false;
+        if (m_mainThread && m_agent)
+            m_agent->release();
     }
 
-    FlatListModel *flat = new FlatListModel(this);
-    flat->m_values = values;
+    m_listModel = 0;
 
-    for (int i=0; i<roles.count(); i++) {
-        QString s = m_nested->toString(roles[i]);
-        flat->m_roles.insert(roles[i], s);
-        flat->m_strings.insert(s, roles[i]);
-    }
-
-    flat->m_nodeData.reserve(flat->m_values.count());
-    for (int i=0; i<flat->m_values.count(); i++)
-        flat->m_nodeData << 0;
-
-    m_flat = flat;
-    delete m_nested;
-    m_nested = 0;
-    return true;
+    delete m_layout;
+    m_layout = 0;
 }
 
-bool QDeclarativeListModel::inWorkerThread() const
+QV8Engine *QDeclarativeListModel::engine() const
 {
-    return m_flat && m_flat->m_parentAgent;
+    if (m_engine == 0) {
+        m_engine  = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this));
+    }
+
+    return m_engine;
+}
+
+void QDeclarativeListModel::emitItemsChanged(int index, int count, const QList<int> &roles)
+{
+    if (m_mainThread) {
+        emit itemsChanged(index, count, roles);
+    } else {
+        m_agent->data.changedChange(this, index, count, roles);
+    }
+}
+
+void QDeclarativeListModel::emitItemsRemoved(int index, int count)
+{
+    if (m_mainThread) {
+        emit itemsRemoved(index, count);
+        emit countChanged();
+    } else {
+        if (index == 0 && count == this->count())
+            m_agent->data.clearChange(this);
+        m_agent->data.removeChange(this, index, count);
+    }
+}
+
+void QDeclarativeListModel::emitItemsInserted(int index, int count)
+{
+    if (m_mainThread) {
+        emit itemsInserted(index, count);
+        emit countChanged();
+    } else {
+        m_agent->data.insertChange(this, index, count);
+    }
+}
+
+void QDeclarativeListModel::emitItemsMoved(int from, int to, int n)
+{
+    if (m_mainThread) {
+        emit itemsMoved(from, to, n);
+    } else {
+        m_agent->data.moveChange(this, from, n, to);
+    }
 }
 
 QDeclarativeListModelWorkerAgent *QDeclarativeListModel::agent()
@@ -408,23 +1402,24 @@ QDeclarativeListModelWorkerAgent *QDeclarativeListModel::agent()
     if (m_agent)
         return m_agent;
 
-    if (!flatten()) {
-        qmlInfo(this) << "List contains list-type data and cannot be used from a worker script";
-        return 0;
-    }
-
     m_agent = new QDeclarativeListModelWorkerAgent(this);
     return m_agent;
 }
 
 QList<int> QDeclarativeListModel::roles() const
 {
-    return m_flat ? m_flat->roles() : m_nested->roles();
+    QList<int> rolesArray;
+
+    for (int i=0 ; i < m_listModel->roleCount() ; ++i)
+        rolesArray << i;
+
+    return rolesArray;
 }
 
 QString QDeclarativeListModel::toString(int role) const
 {
-    return m_flat ? m_flat->toString(role) : m_nested->toString(role);
+    const ListLayout::Role &r = m_listModel->getExistingRole(role);
+    return r.name;
 }
 
 QVariant QDeclarativeListModel::data(int index, int role) const
@@ -432,7 +1427,7 @@ QVariant QDeclarativeListModel::data(int index, int role) const
     if (index >= count() || index < 0)
         return QVariant();
 
-    return m_flat ? m_flat->data(index, role) : m_nested->data(index, role);
+    return m_listModel->getProperty(index, role, this, engine());
 }
 
 /*!
@@ -441,7 +1436,7 @@ QVariant QDeclarativeListModel::data(int index, int role) const
 */
 int QDeclarativeListModel::count() const
 {
-    return m_flat ? m_flat->count() : m_nested->count();
+    return m_listModel->elementCount();
 }
 
 /*!
@@ -454,47 +1449,9 @@ int QDeclarativeListModel::count() const
 void QDeclarativeListModel::clear()
 {
     int cleared = count();
-    if (m_flat)
-        m_flat->clear();
-    else
-        m_nested->clear();
 
-    if (!inWorkerThread()) {
-        emit itemsRemoved(0, cleared);
-        emit countChanged();
-    }
-}
-
-QDeclarativeListModel *ModelNode::model(const NestedListModel *model)
-{
-    if (!modelCache) { 
-        modelCache = new QDeclarativeListModel;
-        QDeclarativeEngine::setContextForObject(modelCache,QDeclarativeEngine::contextForObject(model->m_listModel));
-        modelCache->m_nested->_root = this;  // ListModel defaults to nestable model
-
-        for (int i=0; i<values.count(); ++i) {
-            ModelNode *subNode = qvariant_cast<ModelNode *>(values.at(i));
-            if (subNode)
-                subNode->m_model = modelCache->m_nested;
-        }
-    }
-    return modelCache;
-}
-
-ModelObject *ModelNode::object(const NestedListModel *model)
-{
-    if (!objectCache) {
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(qmlEngine(model->m_listModel));
-        objectCache = new ModelObject(this, const_cast<NestedListModel*>(model), ep->v8engine());
-
-        QHash<QString, ModelNode *>::iterator it;
-        for (it = properties.begin(); it != properties.end(); ++it) {
-            objectCache->setValue(it.key().toUtf8(), model->valueForNode(*it));
-        }
-
-        objectCache->setNodeUpdatesEnabled(true);
-    }
-    return objectCache;
+    m_listModel->clear();
+    emitItemsRemoved(0, cleared);
 }
 
 /*!
@@ -511,15 +1468,9 @@ void QDeclarativeListModel::remove(int index)
         return;
     }
 
-    if (m_flat)
-        m_flat->remove(index);
-    else
-        m_nested->remove(index);
+    m_listModel->remove(index);
 
-    if (!inWorkerThread()) {
-        emit itemsRemoved(index, 1);
-        emit countChanged();
-    }
+    emitItemsRemoved(index, 1);
 }
 
 /*!
@@ -537,25 +1488,39 @@ void QDeclarativeListModel::remove(int index)
 
     \sa set() append()
 */
-void QDeclarativeListModel::insert(int index, const QDeclarativeV8Handle &handle)
+
+void QDeclarativeListModel::insert(QDeclarativeV8Function *args)
 {
-    v8::Handle<v8::Value> valuemap = handle.toHandle();
+    if (args->Length() == 2) {
 
-    if (!valuemap->IsObject() || valuemap->IsArray()) {
+        v8::Handle<v8::Value> arg0 = (*args)[0];
+        int index = arg0->Int32Value();
+
+        if (index < 0 || index > count()) {
+            qmlInfo(this) << tr("insert: index %1 out of range").arg(index);
+            return;
+        }
+
+        v8::Handle<v8::Value> arg1 = (*args)[1];
+
+        if (arg1->IsArray()) {
+            v8::Handle<v8::Array> objectArray = v8::Handle<v8::Array>::Cast(arg1);
+            int objectArrayLength = objectArray->Length();
+            for (int i=0 ; i < objectArrayLength ; ++i) {
+                v8::Handle<v8::Object> argObject = objectArray->Get(i)->ToObject();
+                m_listModel->insert(index+i, argObject, args->engine());
+            }
+            emitItemsInserted(index, objectArrayLength);
+        } else if (arg1->IsObject()) {
+            v8::Handle<v8::Object> argObject = arg1->ToObject();
+
+            m_listModel->insert(index, argObject, args->engine());
+            emitItemsInserted(index, 1);
+        } else {
+            qmlInfo(this) << tr("insert: value is not an object");
+        }
+    } else {
         qmlInfo(this) << tr("insert: value is not an object");
-        return;
-    }
-
-    if (index < 0 || index > count()) {
-        qmlInfo(this) << tr("insert: index %1 out of range").arg(index);
-        return;
-    }
-
-    bool ok = m_flat ?  m_flat->insert(index, valuemap) : m_nested->insert(index, valuemap);
-
-    if (ok && !inWorkerThread()) {
-        emit itemsInserted(index, 1);
-        emit countChanged();
     }
 }
 
@@ -582,25 +1547,8 @@ void QDeclarativeListModel::move(int from, int to, int n)
         return;
     }
 
-    int origfrom = from;
-    int origto = to;
-    int orign = n;
-    if (from > to) {
-        // Only move forwards - flip if backwards moving
-        int tfrom = from;
-        int tto = to;
-        from = tto;
-        to = tto+n;
-        n = tfrom-tto;
-    }
-
-    if (m_flat)
-        m_flat->move(from, to, n);
-    else
-        m_nested->move(from, to, n);
-
-    if (!inWorkerThread())
-        emit itemsMoved(origfrom, origto, orign);
+    m_listModel->move(from, to, n);
+    emitItemsMoved(from, to, n);
 }
 
 /*!
@@ -615,16 +1563,32 @@ void QDeclarativeListModel::move(int from, int to, int n)
 
     \sa set() remove()
 */
-void QDeclarativeListModel::append(const QDeclarativeV8Handle &handle)
+void QDeclarativeListModel::append(QDeclarativeV8Function *args)
 {
-    v8::Handle<v8::Value> valuemap = handle.toHandle();
+    if (args->Length() == 1) {
+        v8::Handle<v8::Value> arg = (*args)[0];
 
-    if (!valuemap->IsObject() || valuemap->IsArray()) {
+        if (arg->IsArray()) {
+            v8::Handle<v8::Array> objectArray = v8::Handle<v8::Array>::Cast(arg);
+            int objectArrayLength = objectArray->Length();
+            int index = m_listModel->elementCount();
+            for (int i=0 ; i < objectArrayLength ; ++i) {
+                v8::Handle<v8::Object> argObject = objectArray->Get(i)->ToObject();
+                m_listModel->append(argObject, args->engine());
+            }
+            emitItemsInserted(index, objectArrayLength);
+        } else if (arg->IsObject()) {
+            v8::Handle<v8::Object> argObject = arg->ToObject();
+
+            int index = m_listModel->append(argObject, args->engine());
+            emitItemsInserted(index, 1);
+
+        } else {
+            qmlInfo(this) << tr("append: value is not an object");
+        }
+    } else {
         qmlInfo(this) << tr("append: value is not an object");
-        return;
     }
-
-    insert(count(), handle);
 }
 
 /*!
@@ -660,8 +1624,16 @@ void QDeclarativeListModel::append(const QDeclarativeV8Handle &handle)
 */
 QDeclarativeV8Handle QDeclarativeListModel::get(int index) const
 {
-    // the internal flat/nested class checks for bad index
-    return QDeclarativeV8Handle::fromHandle(m_flat ? m_flat->get(index) : m_nested->get(index));
+    v8::Handle<v8::Value> result = v8::Undefined();
+
+    if (index >= 0 && index < m_listModel->elementCount()) {
+        QV8Engine *v8engine = engine();
+
+        ModelObject *object = m_listModel->getOrCreateModelObject(const_cast<QDeclarativeListModel *>(this), index);
+        result = v8engine->newQObject(object);
+    }
+
+    return QDeclarativeV8Handle::fromHandle(result);
 }
 
 /*!
@@ -680,15 +1652,7 @@ QDeclarativeV8Handle QDeclarativeListModel::get(int index) const
 
     \sa append()
 */
-void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &valuemap)
-{
-    QList<int> roles;
-    set(index, valuemap, &roles);
-    if (!roles.isEmpty() && !inWorkerThread())
-        emit itemsChanged(index, 1, roles);
-}
-
-void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &handle, QList<int> *roles)
+void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &handle)
 {
     v8::Handle<v8::Value> valuemap = handle.toHandle();
 
@@ -701,13 +1665,18 @@ void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &handle, Q
         return;
     }
 
+    v8::Handle<v8::Object> object = valuemap->ToObject();
+
     if (index == count()) {
-        append(handle);
+        m_listModel->insert(index, object, engine());
+        emitItemsInserted(index, 1);
     } else {
-        if (m_flat)
-            m_flat->set(index, valuemap, roles);
-        else
-            m_nested->set(index, valuemap, roles);
+
+        QList<int> roles;
+        m_listModel->set(index, object, &roles, engine());
+
+        if (roles.count())
+            emitItemsChanged(index, 1, roles);
     }
 }
 
@@ -726,23 +1695,19 @@ void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &handle, Q
 */
 void QDeclarativeListModel::setProperty(int index, const QString& property, const QVariant& value)
 {
-    QList<int> roles;
-    setProperty(index, property, value, &roles);
-    if (!roles.isEmpty() && !inWorkerThread())
-        emit itemsChanged(index, 1, roles);
-}
-
-void QDeclarativeListModel::setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles)
-{
     if (count() == 0 || index >= count() || index < 0) {
         qmlInfo(this) << tr("set: index %1 out of range").arg(index);
         return;
     }
 
-    if (m_flat)
-        m_flat->setProperty(index, property, value, roles);
-    else
-        m_nested->setProperty(index, property, value, roles);
+    int roleIndex = m_listModel->setOrCreateProperty(index, property, value);
+    if (roleIndex != -1) {
+
+        QList<int> roles;
+        roles << roleIndex;
+
+        emitItemsChanged(index, 1, roles);
+    }
 }
 
 /*!
@@ -931,16 +1896,13 @@ void QDeclarativeListModelParser::setCustomData(QObject *obj, const QByteArray &
 {
     QDeclarativeListModel *rv = static_cast<QDeclarativeListModel *>(obj);
 
-    ModelNode *root = new ModelNode(rv->m_nested);
-    rv->m_nested->m_ownsRoot = true;
-    rv->m_nested->_root = root;
-    QStack<ModelNode *> nodes;
-    nodes << root;
-
-    bool processingSet = false;
+    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(rv));
+    rv->m_engine = engine;
 
     const ListModelData *lmd = (const ListModelData *)d.constData();
     const char *data = ((const char *)lmd) + lmd->dataOffset;
+
+    QStack<DataStackElement> stack;
 
     for (int ii = 0; ii < lmd->instrCount; ++ii) {
         const ListInstruction &instr = lmd->instructions()[ii];
@@ -948,60 +1910,78 @@ void QDeclarativeListModelParser::setCustomData(QObject *obj, const QByteArray &
         switch(instr.type) {
         case ListInstruction::Push:
             {
-                ModelNode *n = nodes.top();
-                ModelNode *n2 = new ModelNode(rv->m_nested);
-                n->values << QVariant::fromValue(n2);
-                nodes.push(n2);
-                if (processingSet)
-                    n->isArray = true;
+                ListModel *subModel = 0;
+
+                if (stack.count() == 0) {
+                    subModel = rv->m_listModel;
+                } else {
+                    const DataStackElement &e0 = stack.at(stack.size() - 1);
+                    DataStackElement &e1 = stack[stack.size() - 2];
+
+                    const ListLayout::Role &role = e1.model->getOrCreateListRole(e0.name);
+                    if (role.type == ListLayout::Role::List) {
+                        subModel = e1.model->getListProperty(e1.elementIndex, role);
+
+                        if (subModel == 0) {
+                            subModel = new ListModel(role.subLayout, 0, -1);
+                            QVariant vModel = QVariant::fromValue(subModel);
+                            e1.model->setOrCreateProperty(e1.elementIndex, e0.name, vModel);
+                        }
+                    }
+                }
+
+                DataStackElement e;
+                e.model = subModel;
+                e.elementIndex = subModel ? subModel->appendElement() : -1;
+                stack.push(e);
             }
             break;
 
         case ListInstruction::Pop:
-            nodes.pop();
+            stack.pop();
             break;
 
         case ListInstruction::Value:
             {
-                ModelNode *n = nodes.top();
+                const DataStackElement &e0 = stack.at(stack.size() - 1);
+                DataStackElement &e1 = stack[stack.size() - 2];
+
+                QString name = e0.name;
+                QVariant value;
+
                 switch (QDeclarativeScript::Variant::Type(data[instr.dataIdx])) {
-                 case QDeclarativeScript::Variant::Invalid:
-                    n->isArray = true;
-                    break;
-                 case QDeclarativeScript::Variant::Boolean:
-                    n->values.append(bool(data[1 + instr.dataIdx]));
-                    break;
-                 case QDeclarativeScript::Variant::Number:
-                    n->values.append(QByteArray(data + 1 + instr.dataIdx).toDouble());
-                    break;
-                 case QDeclarativeScript::Variant::String:
-                    n->values.append(QString::fromUtf8(data + 1 + instr.dataIdx));
-                    break;
-                 default:
-                    Q_ASSERT("Format error in ListInstruction");
+                    case QDeclarativeScript::Variant::Invalid:
+                        {
+                            const ListLayout::Role &role = e1.model->getOrCreateListRole(e0.name);
+                            ListModel *emptyModel = new ListModel(role.subLayout, 0, -1);
+                            value = QVariant::fromValue(emptyModel);
+                        }
+                        break;
+                    case QDeclarativeScript::Variant::Boolean:
+                        value = bool(data[1 + instr.dataIdx]);
+                        break;
+                    case QDeclarativeScript::Variant::Number:
+                        value = QByteArray(data + 1 + instr.dataIdx).toDouble();
+                        break;
+                    case QDeclarativeScript::Variant::String:
+                        value = QString::fromUtf8(data + 1 + instr.dataIdx);
+                        break;
+                    default:
+                        Q_ASSERT("Format error in ListInstruction");
                 }
 
-                processingSet = false;
+                e1.model->setOrCreateProperty(e1.elementIndex, name, value);
             }
             break;
 
         case ListInstruction::Set:
             {
-                ModelNode *n = nodes.top();
-                ModelNode *n2 = new ModelNode(rv->m_nested);
-                n->properties.insert(QString::fromUtf8(data + instr.dataIdx), n2);
-                nodes.push(n2);
-                processingSet = true;
+                DataStackElement e;
+                e.name = QString::fromUtf8(data + instr.dataIdx);
+                stack.push(e);
             }
             break;
         }
-    }
-
-    ModelNode *rootNode = rv->m_nested->_root;
-    for (int i=0; i<rootNode->values.count(); ++i) {
-        ModelNode *node = qvariant_cast<ModelNode *>(rootNode->values[i]);
-        node->listIndex = i;
-        node->updateListIndexes();
     }
 }
 
@@ -1059,692 +2039,5 @@ bool QDeclarativeListModelParser::definesEmptyList(const QString &s)
 
     \sa ListModel
 */
-
-FlatListModel::FlatListModel(QDeclarativeListModel *base)
-: m_engine(0), m_listModel(base), m_parentAgent(0)
-{
-}
-
-FlatListModel::~FlatListModel()
-{
-    qDeleteAll(m_nodeData);
-}
-
-QVariant FlatListModel::data(int index, int role) const
-{
-    Q_ASSERT(index >= 0 && index < m_values.count());
-    if (m_values[index].contains(role))
-        return m_values[index][role];
-    return QVariant();
-}
-
-QList<int> FlatListModel::roles() const
-{
-    return m_roles.keys();
-}
-
-QString FlatListModel::toString(int role) const
-{
-    if (m_roles.contains(role))
-        return m_roles[role];
-    return QString();
-}
-
-int FlatListModel::count() const
-{
-    return m_values.count();
-}
-
-void FlatListModel::clear()
-{
-    m_values.clear();
-
-    qDeleteAll(m_nodeData);
-    m_nodeData.clear();
-}
-
-void FlatListModel::remove(int index)
-{
-    m_values.removeAt(index);
-    removedNode(index);
-}
-
-bool FlatListModel::insert(int index, v8::Handle<v8::Value> value)
-{
-    Q_ASSERT(index >= 0 && index <= m_values.count());
-
-    QHash<int, QVariant> row;
-    if (!addValue(value, &row, 0))
-        return false;
-
-    m_values.insert(index, row);
-    insertedNode(index);
-
-    return true;
-}
-
-QV8Engine *FlatListModel::engine() const
-{
-    return m_engine?m_engine:QDeclarativeEnginePrivate::getV8Engine(qmlEngine(m_listModel));
-}
-
-QV8Engine *NestedListModel::engine() const
-{
-    return QDeclarativeEnginePrivate::getV8Engine(qmlEngine(m_listModel));
-}
-
-v8::Handle<v8::Value> FlatListModel::get(int index) const
-{
-    QV8Engine *v8engine = engine();
-
-    if (!v8engine) 
-        return v8::Undefined();
-
-    if (index < 0 || index >= m_values.count())
-        return v8::Undefined();
-
-    FlatListModel *that = const_cast<FlatListModel*>(this);
-
-    FlatNodeData *data = m_nodeData.value(index);
-    if (!data) {
-        data = new FlatNodeData(index);
-        that->m_nodeData.replace(index, data);
-    }
-
-    v8::Local<v8::Object> rv = QDeclarativeListModelV8Data::create(v8engine);
-    QV8ListModelResource *r = new QV8ListModelResource(that, data, v8engine);
-    rv->SetExternalResource(r);
-    return rv;
-}
-
-void FlatListModel::set(int index, v8::Handle<v8::Value> value, QList<int> *roles)
-{
-    Q_ASSERT(index >= 0 && index < m_values.count());
-
-    QHash<int, QVariant> row = m_values[index];
-    if (addValue(value, &row, roles))
-        m_values[index] = row;
-}
-
-void FlatListModel::setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles)
-{
-    Q_ASSERT(index >= 0 && index < m_values.count());
-
-    QHash<QString, int>::Iterator iter = m_strings.find(property);
-    int role;
-    if (iter == m_strings.end()) {
-        role = m_roles.count();
-        m_roles.insert(role, property);
-        m_strings.insert(property, role);
-    } else {
-        role = iter.value();
-    }
-
-    if (m_values[index][role] != value) {
-        roles->append(role);
-        m_values[index][role] = value;
-    }
-}
-
-void FlatListModel::move(int from, int to, int n)
-{
-    qdeclarativelistmodel_move<QList<QHash<int, QVariant> > >(from, to, n, &m_values);
-    moveNodes(from, to, n);
-}
-
-bool FlatListModel::addValue(v8::Handle<v8::Value> value, QHash<int, QVariant> *row, QList<int> *roles)
-{
-    if (!value->IsObject())
-        return false;
-
-    v8::Local<v8::Array> properties = engine()->getOwnPropertyNames(value->ToObject());
-    uint32_t length = properties->Length();
-    for (uint32_t ii = 0; ii < length; ++ii) {
-        // XXX TryCatch?
-        v8::Handle<v8::Value> property = properties->Get(ii);
-        v8::Handle<v8::Value> jsv = value->ToObject()->Get(property);
-
-        if (!jsv->IsRegExp() && !jsv->IsDate() && jsv->IsObject() && !engine()->isVariant(jsv)) {
-            qmlInfo(m_listModel) << "Cannot add list-type data when modifying or after modification from a worker script";
-            return false;
-        }
-
-        QString name = engine()->toString(property);
-        QVariant v = engine()->toVariant(jsv, -1);
-
-        QHash<QString, int>::Iterator iter = m_strings.find(name);
-        if (iter == m_strings.end()) {
-            int role = m_roles.count();
-            m_roles.insert(role, name);
-            iter = m_strings.insert(name, role);
-            if (roles)
-                roles->append(role);
-        } else {
-            int role = iter.value();
-            if (roles && row->contains(role) && row->value(role) != v)
-                roles->append(role);
-        }
-        row->insert(*iter, v);
-    }
-    return true;
-}
-
-void FlatListModel::insertedNode(int index)
-{
-    if (index >= 0 && index <= m_values.count()) {
-        m_nodeData.insert(index, 0);
-
-        for (int i=index + 1; i<m_nodeData.count(); i++) {
-            if (m_nodeData[i])
-                m_nodeData[i]->index = i;
-        }
-    }
-}
-
-void FlatListModel::removedNode(int index)
-{
-    if (index >= 0 && index < m_nodeData.count()) {
-        delete m_nodeData.takeAt(index);
-
-        for (int i=index; i<m_nodeData.count(); i++) {
-            if (m_nodeData[i])
-                m_nodeData[i]->index = i;
-        }
-    }
-}
-
-void FlatListModel::moveNodes(int from, int to, int n)
-{
-    if (!m_listModel->canMove(from, to, n))
-        return;
-
-    qdeclarativelistmodel_move<QList<FlatNodeData *> >(from, to, n, &m_nodeData);
-
-    for (int i=from; i<from + (to-from); i++)  {
-        if (m_nodeData[i]) 
-            m_nodeData[i]->index = i;
-    }
-}
-
-FlatNodeData::~FlatNodeData()
-{
-    for (QSet<QV8ListModelResource *>::Iterator iter = objects.begin(); iter != objects.end(); ++iter) {
-        QV8ListModelResource *data = *iter;
-        data->nodeData = 0;
-    }
-}
-
-void FlatNodeData::addData(QV8ListModelResource *data) 
-{
-    objects.insert(data);
-}
-
-void FlatNodeData::removeData(QV8ListModelResource *data)
-{
-    objects.remove(data);
-}
-
-NestedListModel::NestedListModel(QDeclarativeListModel *base)
-: _root(0), m_ownsRoot(false), m_listModel(base), _rolesOk(false)
-{
-}
-
-NestedListModel::~NestedListModel()
-{
-    if (m_ownsRoot)
-        delete _root;
-}
-
-QVariant NestedListModel::valueForNode(ModelNode *node, bool *hasNested) const
-{
-    QObject *rv = 0;
-    if (hasNested)
-        *hasNested = false;
-
-    if (node->isArray) {
-        // List
-        rv = node->model(this);
-        if (hasNested)
-            *hasNested = true;
-    } else {
-        if (!node->properties.isEmpty()) {
-            // Object
-            rv = node->object(this);
-        } else if (node->values.count() == 0) {
-            // Invalid
-            return QVariant();
-        } else if (node->values.count() == 1) {
-            // Value
-            QVariant &var = node->values[0];
-            ModelNode *valueNode = qvariant_cast<ModelNode *>(var);
-            if (valueNode) {
-                if (!valueNode->properties.isEmpty())
-                    rv = valueNode->object(this);
-                else
-                    rv = valueNode->model(this);
-            } else {
-                return var;
-            }
-        }
-    }
-
-    if (rv) {
-        return QVariant::fromValue(rv);
-    } else {
-        return QVariant();
-    }
-}
-
-QHash<int,QVariant> NestedListModel::data(int index, const QList<int> &roles, bool *hasNested) const
-{
-    Q_ASSERT(_root && index >= 0 && index < _root->values.count());
-    checkRoles();
-    QHash<int, QVariant> rv;
-
-    ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
-    if (!node)
-        return rv;
-
-    for (int ii = 0; ii < roles.count(); ++ii) {
-        const QString &roleString = roleStrings.at(roles.at(ii));
-
-        QHash<QString, ModelNode *>::ConstIterator iter = node->properties.find(roleString);
-        if (iter != node->properties.end()) {
-            ModelNode *row = *iter;
-            rv.insert(roles.at(ii), valueForNode(row, hasNested));
-        }
-    }
-
-    return rv;
-}
-
-QVariant NestedListModel::data(int index, int role) const
-{
-    Q_ASSERT(_root && index >= 0 && index < _root->values.count());
-    checkRoles();
-    QVariant rv;
-    if (roleStrings.count() < role)
-        return rv;
-
-    ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
-    if (!node)
-        return rv;
-
-    const QString &roleString = roleStrings.at(role);
-
-    QHash<QString, ModelNode *>::ConstIterator iter = node->properties.find(roleString);
-    if (iter != node->properties.end()) {
-        ModelNode *row = *iter;
-        rv = valueForNode(row);
-    }
-
-    return rv;
-}
-
-int NestedListModel::count() const
-{
-    if (!_root) return 0;
-    return _root->values.count();
-}
-
-void NestedListModel::clear()
-{
-    if (_root)
-        _root->clear();
-}
-
-void NestedListModel::remove(int index)
-{
-    if (!_root)
-        return;
-    ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
-    _root->values.removeAt(index);
-    for (int i = 0; i < _root->values.count(); ++i) {
-        ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(i));
-        if (node)
-            node->listIndex = i;
-    }
-    if (node)
-        delete node;
-}
-
-bool NestedListModel::insert(int index, v8::Handle<v8::Value> valuemap)
-{
-    if (!_root) {
-        _root = new ModelNode(this);
-        m_ownsRoot = true;
-    }
-
-    ModelNode *mn = new ModelNode(this);
-    mn->listIndex = index;
-    mn->setObjectValue(valuemap);
-    _root->values.insert(index,QVariant::fromValue(mn));
-    for (int i = index + 1; i < _root->values.count(); ++i) {
-        ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(i));
-        if (node)
-            node->listIndex = i;
-    }
-    return true;
-}
-
-void NestedListModel::move(int from, int to, int n)
-{
-    if (!_root)
-        return;
-    qdeclarativelistmodel_move<QVariantList>(from, to, n, &_root->values);
-    for (int i = qMin(from, to), end = qMin(_root->values.count(), qMax(from, to) + n); i < end; ++i) {
-        ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(i));
-        if (node)
-            node->listIndex = i;
-    }
-}
-
-v8::Handle<v8::Value> NestedListModel::get(int index) const
-{   
-    QDeclarativeEngine *eng = qmlEngine(m_listModel);
-    if (!eng) 
-        return v8::Undefined();;
-
-    if (index < 0 || index >= count()) 
-        return v8::Undefined();
-
-    ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
-    if (!node)
-        return v8::Undefined();;
-
-    return QDeclarativeEnginePrivate::get(eng)->v8engine()->newQObject(node->object(this));
-}
-
-void NestedListModel::set(int index, v8::Handle<v8::Value> valuemap, QList<int> *roles)
-{
-    Q_ASSERT(index >=0 && index < count());
-
-    if (!valuemap->IsObject())
-        return;
-
-    ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
-    bool emitItemsChanged = node->setObjectValue(valuemap);
-    if (!emitItemsChanged)
-        return;
-
-    QV8Engine *v8engine = engine();
-
-    v8::Local<v8::Array> properties = v8engine->getOwnPropertyNames(valuemap->ToObject());
-    uint32_t length = properties->Length();
-    for (uint32_t ii = 0; ii < length; ++ii) {
-        // XXX TryCatch?
-        v8::Handle<v8::Value> property = properties->Get(ii);
-        QString name = v8engine->toString(property);
-
-        int r = roleStrings.indexOf(name);
-        if (r < 0) {
-            r = roleStrings.count();
-            roleStrings << name;
-        }
-        roles->append(r);
-    }
-}
-
-void NestedListModel::setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles)
-{
-    Q_ASSERT(index >=0 && index < count());
-
-    ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
-    bool emitItemsChanged = node->setProperty(property, value);
-    if (!emitItemsChanged)
-        return;
-
-    int r = roleStrings.indexOf(property);
-    if (r < 0) {
-        r = roleStrings.count();
-        roleStrings << property;
-    }
-    roles->append(r);
-}
-
-void NestedListModel::checkRoles() const
-{
-    if (_rolesOk || !_root)
-        return;
-
-    for (int i = 0; i<_root->values.count(); ++i) {
-        ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(i));
-        if (node) {
-            foreach (const QString &role, node->properties.keys()) {
-                if (!roleStrings.contains(role))
-                    roleStrings.append(role);
-            }
-        }
-    }
-
-    _rolesOk = true;
-}
-
-QList<int> NestedListModel::roles() const
-{
-    checkRoles();
-    QList<int> rv;
-    for (int ii = 0; ii < roleStrings.count(); ++ii)
-        rv << ii;
-    return rv;
-}
-
-QString NestedListModel::toString(int role) const
-{
-    checkRoles();
-    if (role < roleStrings.count())
-        return roleStrings.at(role);
-    else
-        return QString();
-}
-
-
-ModelNode::ModelNode(NestedListModel *model)
-: modelCache(0), objectCache(0), isArray(false), m_model(model), listIndex(-1)
-{
-}
-
-ModelNode::~ModelNode()
-{
-    clear();
-    if (modelCache) { modelCache->m_nested->_root = 0/* ==this */; delete modelCache; modelCache = 0; }
-    if (objectCache) { delete objectCache; objectCache = 0; }
-}
-
-void ModelNode::clear()
-{
-    ModelNode *node;
-    for (int ii = 0; ii < values.count(); ++ii) {
-        node = qvariant_cast<ModelNode *>(values.at(ii));
-        if (node) { delete node; node = 0; }
-    }
-    values.clear();
-
-    qDeleteAll(properties.values());
-    properties.clear();
-}
-
-bool ModelNode::setObjectValue(v8::Handle<v8::Value> valuemap, bool writeToCache)
-{
-    if (!valuemap->IsObject())
-        return false;
-
-    bool emitItemsChanged = false;
-
-    QV8Engine *v8engine = m_model->engine();
-
-    v8::Local<v8::Array> propertyNames = v8engine->getOwnPropertyNames(valuemap->ToObject());
-    uint32_t length = propertyNames->Length();
-
-    for (uint32_t ii = 0; ii < length; ++ii) {
-        // XXX TryCatch?
-        v8::Handle<v8::Value> property = propertyNames->Get(ii);
-        v8::Handle<v8::Value> v = valuemap->ToObject()->Get(property);
-
-        QString name = v8engine->toString(property);
-        ModelNode *prev = properties.value(name);
-        ModelNode *value = new ModelNode(m_model);
-
-        if (v->IsArray()) {
-            value->isArray = true;
-            value->setListValue(v);
-            if (writeToCache && objectCache)
-                objectCache->setValue(name.toUtf8(), QVariant::fromValue(value->model(m_model)));
-            emitItemsChanged = true;    // for now, too inefficient to check whether list and sublists have changed
-        } else {
-            value->values << v8engine->toVariant(v, -1);
-            if (writeToCache && objectCache)
-                objectCache->setValue(name.toUtf8(), value->values.last());
-            if (!emitItemsChanged && prev && prev->values.count() == 1
-                    && prev->values[0] != value->values.last()) {
-                emitItemsChanged = true;
-            }
-        }
-        if (properties.contains(name))
-            delete properties[name];
-        properties.insert(name, value);
-    }
-    return emitItemsChanged;
-}
-
-void ModelNode::setListValue(v8::Handle<v8::Value> valuelist) 
-{
-    Q_ASSERT(valuelist->IsArray());
-    values.clear();
-
-    QV8Engine *engine = m_model->engine();
-
-    v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(valuelist);
-    uint32_t length = array->Length();
-    for (uint32_t ii = 0; ii < length; ++ii) {
-        ModelNode *value = new ModelNode(m_model);
-
-        // XXX TryCatch?
-        v8::Handle<v8::Value> v = array->Get(ii);
-
-        if (v->IsArray()) {
-            value->isArray = true;
-            value->setListValue(v);
-        } else if (v->IsObject()) {
-            value->listIndex = ii;
-            value->setObjectValue(v);
-        } else {
-            value->listIndex = ii;
-            value->values << engine->toVariant(v, -1);
-        }
-
-        values.append(QVariant::fromValue(value));
-    }
-}
-
-bool ModelNode::setProperty(const QString& prop, const QVariant& val) {
-    QHash<QString, ModelNode *>::const_iterator it = properties.find(prop);
-    bool emitItemsChanged = false;
-    if (it != properties.end()) {
-        if (val != (*it)->values[0])
-            emitItemsChanged = true;
-        (*it)->values[0] = val;
-    } else {
-        ModelNode *n = new ModelNode(m_model);
-        n->values << val;
-        properties.insert(prop,n);
-    }
-    if (objectCache)
-        objectCache->setValue(prop.toUtf8(), val);
-    return emitItemsChanged;
-}
-
-void ModelNode::updateListIndexes()
-{
-    for (QHash<QString, ModelNode *>::ConstIterator iter = properties.begin(); iter != properties.end(); ++iter) {
-        ModelNode *node = iter.value();
-        if (node->isArray) {
-            for (int i=0; i<node->values.count(); ++i) {
-                ModelNode *subNode = qvariant_cast<ModelNode *>(node->values.at(i));
-                if (subNode)
-                    subNode->listIndex = i;
-            }
-        }
-        node->updateListIndexes();
-    }
-}
-
-/*
-    Need to call this to emit itemsChanged() for modifications outside of set()
-    and setProperty(), i.e. if an item returned from get() is modified
-*/
-void ModelNode::changedProperty(const QString &name) const
-{
-    if (listIndex < 0)
-        return;
-
-    m_model->checkRoles();
-    QList<int> roles;
-    int role = m_model->roleStrings.indexOf(name);
-    if (role < 0)
-        roles = m_model->roles();
-    else
-        roles << role;
-    emit m_model->m_listModel->itemsChanged(listIndex, 1, roles);
-}
-
-void ModelNode::dump(ModelNode *node, int ind)
-{
-    QByteArray indentBa(ind * 4, ' ');
-    const char *indent = indentBa.constData();
-
-    for (int ii = 0; ii < node->values.count(); ++ii) {
-        ModelNode *subNode = qvariant_cast<ModelNode *>(node->values.at(ii));
-        if (subNode) {
-            qWarning().nospace() << indent << "Sub-node " << ii;
-            dump(subNode, ind + 1);
-        } else {
-            qWarning().nospace() << indent << "Sub-node " << ii << ": " << node->values.at(ii).toString();
-        }
-    }
-
-    for (QHash<QString, ModelNode *>::ConstIterator iter = node->properties.begin(); iter != node->properties.end(); ++iter) {
-        qWarning().nospace() << indent << "Property " << iter.key() << ':';
-        dump(iter.value(), ind + 1);
-    }
-}
-
-ModelObject::ModelObject(ModelNode *node, NestedListModel *model, QV8Engine *eng)
-: m_model(model), m_node(node), m_meta(new ModelNodeMetaObject(eng, this))
-{
-}
-
-void ModelObject::setValue(const QByteArray &name, const QVariant &val)
-{
-    m_meta->setValue(name, val);
-    //setProperty(name.constData(), val);
-}
-
-void ModelObject::setNodeUpdatesEnabled(bool enable)
-{
-    m_meta->m_enabled = enable;
-}
-
-ModelNodeMetaObject::ModelNodeMetaObject(QV8Engine *eng, ModelObject *object)
-: QDeclarativeOpenMetaObject(object), m_enabled(false), m_engine(eng), m_obj(object)
-{
-}
-
-void ModelNodeMetaObject::propertyWritten(int index)
-{
-    if (!m_enabled)
-        return;
-
-    QString propName = QString::fromUtf8(name(index));
-    QVariant value = operator[](index);
-
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(m_engine->context());
-    v8::Local<v8::Object> object = v8::Object::New();
-    object->Set(m_engine->toString(propName), m_engine->variantWrapper()->newVariant(value));
-    bool changed = m_obj->m_node->setObjectValue(object, false);
-    if (changed)
-        m_obj->m_node->changedProperty(propName);
-}
 
 QT_END_NAMESPACE

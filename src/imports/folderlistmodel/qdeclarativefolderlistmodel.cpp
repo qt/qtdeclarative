@@ -269,7 +269,7 @@ QUrl QDeclarativeFolderListModel::parentFolder() const
     QString localFile = d->folder.toLocalFile();
     if (!localFile.isEmpty()) {
         QDir dir(localFile);
-#if defined(Q_OS_SYMBIAN) || defined(Q_OS_WIN)
+#if defined(Q_OS_WIN)
         if (dir.isRoot())
             dir.setPath("");
         else

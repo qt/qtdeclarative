@@ -55,7 +55,7 @@ static bool qt_verifyMinimal(
     bool minimal = true;
     int index = 0;
 
-    for (const QDeclarativeListCompositor::Range *range = begin->next; range != end; range = range->next, ++index) {
+    for (const QDeclarativeListCompositor::Range *range = begin->next; range != *end; range = range->next, ++index) {
         if (range->previous->list == range->list
                 && range->previous->flags == (range->flags & ~QDeclarativeListCompositor::AppendFlag)
                 && range->previous->end() == range->index) {
@@ -154,22 +154,6 @@ static bool qt_verifyIntegrity(
 //#define QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(args) qDebug() << m_end.index[1] << m_end.index[0] << Q_FUNC_INFO args;
 #define QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(args)
 
-QDeclarativeListCompositor::iterator &QDeclarativeListCompositor::iterator::operator ++()
-{
-    while (!(range->flags & groupFlag)) {
-        incrementIndexes(range->count - offset);
-        offset = 0;
-        range = range->next;
-    }
-    incrementIndexes(1);
-    if (++offset == range->count) {
-        while (!((range = range->next)->flags & groupFlag))
-            incrementIndexes(range->count);
-        offset = 0;
-    }
-    return *this;
-}
-
 QDeclarativeListCompositor::iterator &QDeclarativeListCompositor::iterator::operator +=(int difference)
 {
     Q_ASSERT(difference >= 0);
@@ -210,27 +194,10 @@ QDeclarativeListCompositor::iterator &QDeclarativeListCompositor::iterator::oper
     return *this;
 }
 
-QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator ++()
-{
-    while (!(range->flags & groupFlag)) {
-        incrementIndexes(range->count - offset);
-        offset = 0;
-        range = range->next;
-    }
-    incrementIndexes(1);
-    if (++offset == range->count && !range->append()) {
-        while (!((range = range->next)->flags & groupFlag) ){
-            incrementIndexes(range->count);
-        }
-        offset = 0;
-    }
-    return *this;
-}
-
 QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator +=(int difference)
 {
     Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag) && range->flags & GroupMask) {
+    while (!(range->flags & groupFlag) && (range->flags & (GroupMask | CacheFlag))) {
         incrementIndexes(range->count - offset);
         offset = 0;
         range = range->next;
@@ -252,7 +219,7 @@ QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_
 QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator -=(int difference)
 {
     Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag) && range->flags & GroupMask) {
+    while (!(range->flags & groupFlag) && (range->flags & (GroupMask | CacheFlag))) {
         decrementIndexes(offset);
         range = range->previous;
         offset = range->count;
@@ -359,7 +326,7 @@ QDeclarativeListCompositor::insert_iterator QDeclarativeListCompositor::findInse
     Q_ASSERT(index >=0 && index <= count(group));
     insert_iterator it;
     if (m_cacheIt == m_end) {
-        m_cacheIt = iterator(m_ranges.next, 0, group, m_groupCount);
+        it = iterator(m_ranges.next, 0, group, m_groupCount);
         it += index;
     } else {
         const int offset = index - m_cacheIt.index[group];
@@ -489,7 +456,12 @@ void QDeclarativeListCompositor::setFlags(
                     from->previous->flags |= AppendFlag;
                 *from = erase(*from)->previous;
                 continue;
+            } else {
+                break;
             }
+        } else if (!insertFlags) {
+            from.incrementIndexes(from->count - difference);
+            continue;
         } else if (difference < from->count) {
             *from = insert(*from, from->list, from->index, difference, setFlags)->next;
             from->index += difference;
@@ -707,6 +679,16 @@ void QDeclarativeListCompositor::move(
             if (fromIt->append())
                 fromIt->previous->flags |= AppendFlag;
             *fromIt = erase(*fromIt);
+
+            if (*fromIt != m_ranges.next && fromIt->flags == PrependFlag
+                    && fromIt->previous != &m_ranges
+                    && fromIt->previous->flags == PrependFlag
+                    && fromIt->previous->list == fromIt->list
+                    && fromIt->previous->end() == fromIt->index) {
+                fromIt.incrementIndexes(fromIt->count);
+                fromIt->previous->count += fromIt->count;
+                *fromIt = erase(*fromIt);
+            }
         } else if (count > 0) {
             *fromIt = fromIt->next;
         }
@@ -830,6 +812,14 @@ void QDeclarativeListCompositor::listItemsInserted(
                     }
                     if ((it->flags & ~AppendFlag) == flags) {
                         it->count += insertion.count;
+                    } else if (offset == 0
+                            && it->previous != &m_ranges
+                            && it->previous->list == list
+                            && it->previous->end() == insertion.index
+                            && it->previous->flags == flags) {
+                        it->previous->count += insertion.count;
+                        it->index += insertion.count;
+                        it.incrementIndexes(insertion.count);
                     } else {
                         if (offset > 0) {
                             it.incrementIndexes(offset);
@@ -976,6 +966,7 @@ void QDeclarativeListCompositor::listItemsRemoved(
                     } else {
                         *it = insert(*it, it->list, -1, removeCount, CacheFlag)->next;
                     }
+                    it.index[Cache] += removeCount;
                 }
                 if (removeFlags & GroupMask)
                     translatedRemovals->append(translatedRemoval);
@@ -988,16 +979,23 @@ void QDeclarativeListCompositor::listItemsRemoved(
                 }
             } else if (relativeIndex < 0) {
                 it->index -= itemsRemoved;
+
+                if (it->previous != &m_ranges
+                        && it->previous->list == it->list
+                        && it->previous->end() == it->index
+                        && it->previous->flags == (it->flags & ~AppendFlag)) {
+                    it->previous->count += it->count;
+                    it->previous->flags = it->flags;
+                    it.incrementIndexes(it->count);
+                    *it = erase(*it);
+                    removed = true;
+                }
             }
         }
-        if (it->next != &m_ranges
-                && it->list == it->next->list
-                && (it->flags == CacheFlag || it->end() == it->next->index)
-                && it->flags == (it->next->flags & ~AppendFlag)) {
+        if (it->flags == CacheFlag && it->next->flags == CacheFlag && it->next->list == it->list) {
+            it.index[Cache] += it->next->count;
             it->count += it->next->count;
-            it->flags = it->next->flags;
             erase(it->next);
-            *it = it->previous;
         } else if (!removed) {
             it.incrementIndexes(it->count);
         }
@@ -1025,7 +1023,6 @@ void QDeclarativeListCompositor::listItemsMoved(
         QVector<Remove> *translatedRemovals,
         QVector<Insert> *translatedInsertions)
 {
-
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< list << from << to << count)
     Q_ASSERT(count >= 0);
 

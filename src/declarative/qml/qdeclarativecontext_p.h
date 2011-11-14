@@ -143,12 +143,12 @@ public:
     quint32 ownedByParent:1; // unrelated to isInternal; parent context deletes children if true.
     quint32 isJSContext:1;
     quint32 isPragmaLibraryContext:1;
+    quint32 unresolvedNames:1; // True if expressions in this context failed to resolve a toplevel name
     quint32 dummy:28;
     QDeclarativeContext *publicContext;
 
-    // VME that is constructing this context if any
-    // XXX remove if possible
-    QDeclarativeVME *activeVME;
+    // VME data that is constructing this context if any
+    void *activeVMEData;
 
     // Property name cache
     QDeclarativeIntegerCache *propertyNames;
@@ -217,6 +217,8 @@ public:
     }
 
 private:
+    void refreshExpressionsRecursive(bool isGlobal);
+    void refreshExpressionsRecursive(QDeclarativeAbstractExpression *);
     ~QDeclarativeContextData() {}
 };
 

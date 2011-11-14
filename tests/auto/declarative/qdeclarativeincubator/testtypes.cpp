@@ -101,9 +101,37 @@ void CallbackRegisteringType::registerCallback(callback c, void *d)
     m_data = d;
 }
 
+CompletionCallbackType::callback CompletionCallbackType::m_callback = 0;
+void *CompletionCallbackType::m_data = 0;
+CompletionCallbackType::CompletionCallbackType()
+{
+}
+
+void CompletionCallbackType::classBegin()
+{
+}
+
+void CompletionCallbackType::componentComplete()
+{
+    if (m_callback) m_callback(this, m_data);
+}
+
+void CompletionCallbackType::clearCallback()
+{
+    m_callback = 0;
+    m_data = 0;
+}
+
+void CompletionCallbackType::registerCallback(callback c, void *d)
+{
+    m_callback = c;
+    m_data = d;
+}
+
 void registerTypes()
 {
     qmlRegisterType<SelfRegisteringType>("Qt.test", 1,0, "SelfRegistering");
     qmlRegisterType<CompletionRegisteringType>("Qt.test", 1,0, "CompletionRegistering");
     qmlRegisterType<CallbackRegisteringType>("Qt.test", 1,0, "CallbackRegistering");
+    qmlRegisterType<CompletionCallbackType>("Qt.test", 1,0, "CompletionCallback");
 }

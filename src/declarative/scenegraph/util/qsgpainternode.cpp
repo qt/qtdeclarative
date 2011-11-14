@@ -75,33 +75,38 @@ QSGPainterTexture::QSGPainterTexture()
 
 void QSGPainterTexture::bind()
 {
-    if (m_dirty_rect.isNull() || m_texture_id == 0) {
+    if (m_dirty_rect.isNull()) {
         QSGPlainTexture::bind();
-    } else {
-        glBindTexture(GL_TEXTURE_2D, m_texture_id);
+        return;
+    }
 
-        QImage subImage = m_image.copy(m_dirty_rect);
+    bool oldMipmapsGenerated = m_mipmaps_generated;
+    m_mipmaps_generated = true;
+    QSGPlainTexture::bind();
+    m_mipmaps_generated = oldMipmapsGenerated;
 
-        int w = m_dirty_rect.width();
-        int h = m_dirty_rect.height();
+    QImage subImage = m_image.copy(m_dirty_rect);
+
+    int w = m_dirty_rect.width();
+    int h = m_dirty_rect.height();
 
 #ifdef QT_OPENGL_ES
-        glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
-                        GL_RGBA, GL_UNSIGNED_BYTE, subImage.constBits());
+    glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
+                    GL_RGBA, GL_UNSIGNED_BYTE, subImage.constBits());
 #else
-        glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
-                        GL_BGRA, GL_UNSIGNED_BYTE, subImage.constBits());
+    glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
+                    GL_BGRA, GL_UNSIGNED_BYTE, subImage.constBits());
 #endif
 
-        if (m_has_mipmaps && !m_mipmaps_generated) {
-            QOpenGLContext *ctx = QOpenGLContext::currentContext();
-            ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
-            m_mipmaps_generated = true;
-        }
-
-        m_dirty_texture = false;
-        m_dirty_bind_options = false;
+    if (m_has_mipmaps && !m_mipmaps_generated) {
+        QOpenGLContext *ctx = QOpenGLContext::currentContext();
+        ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
+        m_mipmaps_generated = true;
     }
+
+    m_dirty_texture = false;
+    m_dirty_bind_options = false;
+
     m_dirty_rect = QRect();
 }
 
@@ -373,9 +378,9 @@ void QSGPainterNode::setSize(const QSize &size)
     m_dirtyTexture = true;
 }
 
-void QSGPainterNode::setDirty(bool d, const QRect &dirtyRect)
+void QSGPainterNode::setDirty(const QRect &dirtyRect)
 {
-    m_dirtyContents = d;
+    m_dirtyContents = true;
     m_dirtyRect = dirtyRect;
 
     if (m_mipmapping)

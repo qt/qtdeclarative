@@ -49,6 +49,7 @@
 #include <QtCore/QtCore>
 #include <QtTest/QtTest>
 
+#include <QtDeclarative/QtDeclarative>
 
 class tst_HeadersClean: public QObject
 {

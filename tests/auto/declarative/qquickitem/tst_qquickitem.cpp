@@ -137,11 +137,6 @@ private:
         w->show();
         w->requestActivateWindow();
         qApp->processEvents();
-
-#ifdef Q_WS_X11
-        // to be safe and avoid failing setFocus with window managers
-        qt_x11_wait_for_window_manager(w);
-#endif
     }
 };
 

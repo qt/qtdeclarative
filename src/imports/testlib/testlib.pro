@@ -2,24 +2,7 @@ TARGET  = qmltestplugin
 TARGETPATH = QtTest
 include(../qimportbase.pri)
 
-
 CONFIG += qt plugin
-
-symbian {
-    CONFIG += epocallowdlldata
-    contains(QT_EDITION, OpenSource) {
-        TARGET.CAPABILITY = LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData
-    } else {
-        TARGET.CAPABILITY = All -Tcb
-    }
-
-    isEmpty(DESTDIR):importFiles.files = qmltestplugin$${QT_LIBINFIX}.dll qmldir
-    else:importFiles.files = $$DESTDIR/qmltestplugin$${QT_LIBINFIX}.dll qmldir
-    importFiles.path = $$QT_IMPORTS_BASE_DIR/$$TARGETPATH
-
-    DEPLOYMENT = importFiles
-
-}
 
 QT += declarative qmltest qmltest-private v8-private declarative-private core-private testlib
 

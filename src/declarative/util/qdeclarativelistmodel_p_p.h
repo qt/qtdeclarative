@@ -64,142 +64,13 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QDeclarativeOpenMetaObject;
-class QDeclarativeListModelWorkerAgent;
-struct ModelNode;
-class FlatNodeData;
-
-class FlatListModel
-{
-public:
-    FlatListModel(QDeclarativeListModel *base);
-    ~FlatListModel();
-
-    QVariant data(int index, int role) const;
-
-    QList<int> roles() const;
-    QString toString(int role) const;
-
-    int count() const;
-    void clear();
-    void remove(int index);
-    bool insert(int index, v8::Handle<v8::Value>);
-    v8::Handle<v8::Value> get(int index) const;
-    void set(int index, v8::Handle<v8::Value>, QList<int> *roles);
-    void setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles);
-    void move(int from, int to, int count);
-
-private:    
-    friend class QDeclarativeListModelWorkerAgent;
-    friend class QDeclarativeListModel;
-    friend class QDeclarativeListModelV8Data;
-    friend class FlatNodeData;
-
-    bool addValue(v8::Handle<v8::Value> value, QHash<int, QVariant> *row, QList<int> *roles);
-    void insertedNode(int index);
-    void removedNode(int index);
-    void moveNodes(int from, int to, int n);
-
-    QV8Engine *engine() const;
-    QV8Engine *m_engine;
-    QHash<int, QString> m_roles;
-    QHash<QString, int> m_strings;
-    QList<QHash<int, QVariant> > m_values;
-    QDeclarativeListModel *m_listModel;
-
-    QList<FlatNodeData *> m_nodeData;
-    QDeclarativeListModelWorkerAgent *m_parentAgent;
-};
-
-/*
-    FlatNodeData and FlatNodeObjectData allow objects returned by get() to still
-    point to the correct list index if move(), insert() or remove() are called.
-*/
-class QV8ListModelResource;
-class FlatNodeData
-{
-public:
-    FlatNodeData(int i)
-        : index(i) {}
-
-    ~FlatNodeData();
-
-    void addData(QV8ListModelResource *data);
-    void removeData(QV8ListModelResource *data);
-
-    int index;
-
-private:
-    QSet<QV8ListModelResource*> objects;
-};
-
-class QV8ListModelResource : public QV8ObjectResource
-{
-    V8_RESOURCE_TYPE(ListModelType);
-public:
-    QV8ListModelResource(FlatListModel *model, FlatNodeData *data, QV8Engine *engine);
-    ~QV8ListModelResource();
-
-    FlatListModel *model;
-    FlatNodeData *nodeData;
-};
-
-class NestedListModel
-{
-public:
-    NestedListModel(QDeclarativeListModel *base);
-    ~NestedListModel();
-
-    QHash<int,QVariant> data(int index, const QList<int> &roles, bool *hasNested = 0) const;
-    QVariant data(int index, int role) const;
-
-    QList<int> roles() const;
-    QString toString(int role) const;
-
-    int count() const;
-    void clear();
-    void remove(int index);
-    bool insert(int index, v8::Handle<v8::Value>);
-    v8::Handle<v8::Value> get(int index) const;
-    void set(int index, v8::Handle<v8::Value>, QList<int> *roles);
-    void setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles);
-    void move(int from, int to, int count);
-
-    QVariant valueForNode(ModelNode *, bool *hasNested = 0) const;
-    void checkRoles() const;
-
-    ModelNode *_root;
-    bool m_ownsRoot;
-    QDeclarativeListModel *m_listModel;
-
-    QV8Engine *engine() const;
-private:
-    friend struct ModelNode;
-    mutable QStringList roleStrings;
-    mutable bool _rolesOk;
-};
-
-
-class ModelNodeMetaObject;
-class ModelObject : public QObject
-{
-    Q_OBJECT
-public:
-    ModelObject(ModelNode *node, NestedListModel *model, QV8Engine *eng);
-    void setValue(const QByteArray &name, const QVariant &val);
-    void setNodeUpdatesEnabled(bool enable);
-
-    NestedListModel *m_model;
-    ModelNode *m_node;
-
-private:
-    ModelNodeMetaObject *m_meta;
-};
+class ModelObject;
 
 class ModelNodeMetaObject : public QDeclarativeOpenMetaObject
 {
 public:
-    ModelNodeMetaObject(QV8Engine *eng, ModelObject *object);
+    ModelNodeMetaObject(ModelObject *object);
+    ~ModelNodeMetaObject();
 
     bool m_enabled;
 
@@ -207,45 +78,246 @@ protected:
     void propertyWritten(int index);
 
 private:
-    QV8Engine *m_engine;
+
     ModelObject *m_obj;
 };
 
-/*
-    A ModelNode is created for each item in a NestedListModel.
-*/
-struct ModelNode
+class ModelObject : public QObject
 {
-    ModelNode(NestedListModel *model);
-    ~ModelNode();
+    Q_OBJECT
+public:
+    ModelObject(QDeclarativeListModel *model, int elementIndex);
 
-    QList<QVariant> values;
-    QHash<QString, ModelNode *> properties;
+    void setValue(const QByteArray &name, const QVariant &val, bool force)
+    {
+        if (force) {
+            QVariant existingValue = m_meta->value(name);
+            if (existingValue.isValid()) {
+                (*m_meta)[name] = QVariant();
+            }
+        }
+        m_meta->setValue(name, val);
+    }
 
-    void clear();
+    void setNodeUpdatesEnabled(bool enable)
+    {
+        m_meta->m_enabled = enable;
+    }
 
-    QDeclarativeListModel *model(const NestedListModel *model);
-    ModelObject *object(const NestedListModel *model);
+    void updateValues();
+    void updateValues(const QList<int> &roles);
 
-    bool setObjectValue(v8::Handle<v8::Value> valuemap, bool writeToCache = true);
-    void setListValue(v8::Handle<v8::Value> valuelist);
-    bool setProperty(const QString& prop, const QVariant& val);
-    void changedProperty(const QString &name) const;
-    void updateListIndexes();
-    static void dump(ModelNode *node, int ind);
+    QDeclarativeListModel *m_model;
+    int m_elementIndex;
 
-    QDeclarativeListModel *modelCache;
-    ModelObject *objectCache;
-    bool isArray;
-
-    NestedListModel *m_model;
-    int listIndex;  // only used for top-level nodes within a list
+private:
+    ModelNodeMetaObject *m_meta;
 };
 
+class ListLayout
+{
+public:
+    ListLayout() : currentBlock(0), currentBlockOffset(0) {}
+    ListLayout(const ListLayout *other);
+    ~ListLayout();
+
+    class Role
+    {
+    public:
+
+        Role() : type(Invalid), blockIndex(-1), blockOffset(-1), index(-1), subLayout(0) {}
+        explicit Role(const Role *other);
+        ~Role();
+
+        // This enum must be kept in sync with the roleTypeNames variable in qdeclarativelistmodel.cpp
+        enum DataType
+        {
+            Invalid = -1,
+
+            String,
+            Number,
+            Bool,
+            List,
+            QObject,
+            VariantMap,
+
+            MaxDataType
+        };
+
+        QString name;
+        DataType type;
+        int blockIndex;
+        int blockOffset;
+        int index;
+        ListLayout *subLayout;
+    };
+
+    const Role *getRoleOrCreate(const QString &key, const QVariant &data);
+    const Role &getRoleOrCreate(v8::Handle<v8::String> key, Role::DataType type);
+    const Role &getRoleOrCreate(const QString &key, Role::DataType type);
+
+    const Role &getExistingRole(int index) { return *roles.at(index); }
+    const Role *getExistingRole(const QString &key);
+    const Role *getExistingRole(v8::Handle<v8::String> key);
+
+    int roleCount() const { return roles.count(); }
+
+    static void sync(ListLayout *src, ListLayout *target);
+
+private:
+    const Role &createRole(const QString &key, Role::DataType type);
+
+    int currentBlock;
+    int currentBlockOffset;
+    QVector<Role *> roles;
+    QStringHash<Role *> roleHash;
+};
+
+class ListElement
+{
+public:
+
+    ListElement();
+    ListElement(int existingUid);
+    ~ListElement();
+
+    static void sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout, QHash<int, ListModel *> *targetModelHash);
+
+    enum
+    {
+        BLOCK_SIZE = 64 - sizeof(int) - sizeof(ListElement *) - sizeof(ModelObject *)
+    };
+
+private:
+
+    void destroy(ListLayout *layout);
+
+    int setVariantProperty(const ListLayout::Role &role, const QVariant &d);
+
+    int setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Value> d, QV8Engine *eng);
+
+    int setStringProperty(const ListLayout::Role &role, const QString &s);
+    int setDoubleProperty(const ListLayout::Role &role, double n);
+    int setBoolProperty(const ListLayout::Role &role, bool b);
+    int setListProperty(const ListLayout::Role &role, ListModel *m);
+    int setQObjectProperty(const ListLayout::Role &role, QObject *o);
+    int setVariantMapProperty(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
+    int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
+
+    void setStringPropertyFast(const ListLayout::Role &role, const QString &s);
+    void setDoublePropertyFast(const ListLayout::Role &role, double n);
+    void setBoolPropertyFast(const ListLayout::Role &role, bool b);
+    void setQObjectPropertyFast(const ListLayout::Role &role, QObject *o);
+    void setListPropertyFast(const ListLayout::Role &role, ListModel *m);
+    void setVariantMapFast(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
+
+    void clearProperty(const ListLayout::Role &role);
+
+    QVariant getProperty(const ListLayout::Role &role, const QDeclarativeListModel *owner, QV8Engine *eng);
+    ListModel *getListProperty(const ListLayout::Role &role);
+    QString *getStringProperty(const ListLayout::Role &role);
+    QObject *getQObjectProperty(const ListLayout::Role &role);
+    QDeclarativeGuard<QObject> *getGuardProperty(const ListLayout::Role &role);
+    QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
+
+    inline char *getPropertyMemory(const ListLayout::Role &role);
+
+    int getUid() const { return uid; }
+
+    char data[BLOCK_SIZE];
+    ListElement *next;
+
+    int uid;
+    ModelObject *m_objectCache;
+
+    friend class ListModel;
+};
+
+class ListModel
+{
+public:
+
+    ListModel(ListLayout *layout, QDeclarativeListModel *modelCache, int uid);
+    ~ListModel() {}
+
+    void destroy();
+
+    int setOrCreateProperty(int elementIndex, const QString &key, const QVariant &data);
+    int setExistingProperty(int uid, const QString &key, v8::Handle<v8::Value> data, QV8Engine *eng);
+
+    QVariant getProperty(int elementIndex, int roleIndex, const QDeclarativeListModel *owner, QV8Engine *eng);
+    ListModel *getListProperty(int elementIndex, const ListLayout::Role &role);
+
+    int roleCount() const
+    {
+        return m_layout->roleCount();
+    }
+
+    const ListLayout::Role &getExistingRole(int index)
+    {
+        return m_layout->getExistingRole(index);
+    }
+
+    const ListLayout::Role &getOrCreateListRole(const QString &name)
+    {
+        return m_layout->getRoleOrCreate(name, ListLayout::Role::List);
+    }
+
+    int elementCount() const
+    {
+        return elements.count();
+    }
+
+    void set(int elementIndex, v8::Handle<v8::Object> object, QList<int> *roles, QV8Engine *eng);
+    void set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
+
+    int append(v8::Handle<v8::Object> object, QV8Engine *eng);
+    void insert(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
+
+    void clear();
+    void remove(int index);
+
+    int appendElement();
+    void insertElement(int index);
+
+    void move(int from, int to, int n);
+
+    int getUid() const { return m_uid; }
+
+    static int allocateUid();
+
+    static void sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *srcModelHash);
+
+    ModelObject *getOrCreateModelObject(QDeclarativeListModel *model, int elementIndex);
+
+private:
+    QPODVector<ListElement *, 4> elements;
+    ListLayout *m_layout;
+    int m_uid;
+
+    QDeclarativeListModel *m_modelCache;
+
+    struct ElementSync
+    {
+        ElementSync() : src(0), target(0) {}
+
+        ListElement *src;
+        ListElement *target;
+    };
+
+    void newElement(int index);
+
+    void updateCacheIndices();
+
+    friend class ListElement;
+    friend class QDeclarativeListModelWorkerAgent;
+
+    static QAtomicInt uidCounter;
+};
+
+Q_DECLARE_METATYPE(ListModel *);
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(ModelNode *)
 
 QT_END_HEADER
 

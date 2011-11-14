@@ -151,7 +151,7 @@ QQuickSpriteMaterial::~QQuickSpriteMaterial()
 class SpriteMaterialData : public QSGMaterialShader
 {
 public:
-    SpriteMaterialData(const char *vertexFile = 0, const char *fragmentFile = 0)
+    SpriteMaterialData(const char * /* vertexFile */ = 0, const char * /* fragmentFile */ = 0)
     {
     }
 
@@ -250,6 +250,24 @@ struct SpriteVertices {
     Default is true.
 */
 /*!
+    \qmlproperty string QtQuick2::SpriteImage::goalState
+
+    The name of the Sprite which the animation should move to.
+
+    Sprite states have defined durations and transitions between them, setting goalState
+    will cause it to disregard any path weightings (including 0) and head down the path
+    which will reach the goalState quickest (fewest animations). It will pass through
+    intermediate states on that path, and animate them for their duration.
+
+    If it is possible to return to the goalState from the starting point of the goalState
+    it will continue to do so until goalState is set to "" or an unreachable state.
+*/
+/*! \qmlmethod void QtQuick2::SpriteImage::jumpTo(string sprite)
+
+    This function causes the sprite to jump to the specified state immediately, intermediate
+    states are not played.
+*/
+/*!
     \qmlproperty list<Sprite> QtQuick2::SpriteImage::sprites
 
     The sprite or sprites to draw. Sprites will be scaled to the size of this element.
@@ -268,6 +286,22 @@ QQuickSpriteImage::QQuickSpriteImage(QQuickItem *parent) :
     setFlag(ItemHasContents);
     connect(this, SIGNAL(runningChanged(bool)),
             this, SLOT(update()));
+}
+
+void QQuickSpriteImage::jumpTo(const QString &sprite)
+{
+    if (!m_spriteEngine)
+        return;
+    m_spriteEngine->setGoal(m_spriteEngine->stateIndex(sprite), 0, true);
+}
+
+void QQuickSpriteImage::setGoalState(const QString &sprite)
+{
+    if (m_goalState != sprite){
+        m_goalState = sprite;
+        emit goalStateChanged(sprite);
+        m_spriteEngine->setGoal(m_spriteEngine->stateIndex(sprite));
+    }
 }
 
 QDeclarativeListProperty<QQuickSprite> QQuickSpriteImage::sprites()
@@ -404,7 +438,6 @@ void QQuickSpriteImage::prepareNextFrame()
     m_material->interpolate = m_interpolate;
 
     //Advance State
-    SpriteVertices *p = (SpriteVertices *) m_node->geometry()->vertexData();
     m_spriteEngine->updateSprites(timeInt);
     int curY = m_spriteEngine->spriteY();
     if (curY != m_material->animY){

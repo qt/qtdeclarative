@@ -182,7 +182,7 @@ Property *QDeclarativeScript::Object::getProperty(const QString &name, bool crea
 }
 
 QDeclarativeScript::Object::DynamicProperty::DynamicProperty()
-: isDefaultProperty(false), type(Variant), defaultValue(0), nextProperty(0), 
+: isDefaultProperty(false), isReadOnly(false), type(Variant), defaultValue(0), nextProperty(0),
   resolvedCustomTypeName(0)
 {
 }
@@ -225,8 +225,8 @@ int QDeclarativeScript::Object::DynamicSlot::parameterNamesLength() const
 
 QDeclarativeScript::Property::Property()
 : parent(0), type(0), index(-1), value(0), isDefault(true), isDeferred(false), 
-  isValueTypeSubProperty(false), isAlias(false), scriptStringScope(-1), 
-  nextMainProperty(0), nextProperty(0)
+  isValueTypeSubProperty(false), isAlias(false), isReadOnlyDeclaration(false),
+  scriptStringScope(-1), nextMainProperty(0), nextProperty(0)
 {
 }
 
@@ -1028,18 +1028,9 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             return false;
         }
 
-        if (node->isReadonlyMember) {
-            QDeclarativeError error;
-            error.setDescription(QCoreApplication::translate("QDeclarativeParser","Readonly not yet supported"));
-            error.setLine(node->readonlyToken.startLine);
-            error.setColumn(node->readonlyToken.startColumn);
-            _parser->_errors << error;
-            return false;
-
-        }
-
         Object::DynamicProperty *property = _parser->_pool.New<Object::DynamicProperty>();
         property->isDefaultProperty = node->isDefaultMember;
+        property->isReadOnly = node->isReadonlyMember;
         property->type = type;
         if (type >= Object::DynamicProperty::Custom) {
             QDeclarativeScript::TypeReference *typeRef =

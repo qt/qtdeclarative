@@ -18,12 +18,3 @@ ImageProviderCore_sources.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarati
 
 INSTALLS = sources ImageProviderCore_sources target
 
-symbian:{
-    CONFIG += qt_example
-    TARGET.EPOCALLOWDLLDATA = 1
-
-    importFiles.files = ImageProviderCore/qmlimageproviderplugin.dll ImageProviderCore/qmldir
-    importFiles.path = ImageProviderCore
-    DEPLOYMENT += importFiles
-}
-maemo5: CONFIG += qt_example

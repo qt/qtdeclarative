@@ -46,6 +46,7 @@
 #include <private/qdeclarativevme_p.h>
 #include <private/qrecursionwatcher_p.h>
 #include <private/qdeclarativeengine_p.h>
+#include <private/qdeclarativecontext_p.h>
 
 //
 //  W A R N I N G
@@ -83,6 +84,7 @@ public:
     Progress progress;
 
     QObject *result;
+    QDeclarativeGuardedContextData rootContext;
     QDeclarativeCompiledData *component;
     QDeclarativeVME vme;
     QDeclarativeVMEGuard vmeGuard;

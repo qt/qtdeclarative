@@ -68,7 +68,7 @@ void tst_qquickage::test_kill()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -84,6 +84,7 @@ void tst_qquickage::test_kill()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(d->t <= ((qreal)system->timeInt/1000.0) - 0.5f + EPSILON);
     }
+    delete view;
 }
 
 void tst_qquickage::test_jump()
@@ -92,14 +93,14 @@ void tst_qquickage::test_jump()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
 
-        //Allow for a small variance because jump is trying to simulate off wall time
-        extremelyFuzzyCompare(d->x, -100.f, 5.0f);
-        extremelyFuzzyCompare(d->y, -100.f, 5.0f);
+        //Allow for variance because jump is trying to simulate off wall time and things have emitted 'continuously' before first affect
+        QVERIFY(d->x <= -50.f);
+        QVERIFY(d->y <= -50.f);
         QCOMPARE(d->vx, 500.f);
         QCOMPARE(d->vy, 500.f);
         QCOMPARE(d->ax, 0.f);
@@ -109,6 +110,7 @@ void tst_qquickage::test_jump()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(d->t <= ((qreal)system->timeInt/1000.0) - 0.4f + EPSILON);
     }
+    delete view;
 }
 
 void tst_qquickage::test_onceOff()
@@ -117,7 +119,7 @@ void tst_qquickage::test_onceOff()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -133,6 +135,7 @@ void tst_qquickage::test_onceOff()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(d->t <= ((qreal)system->timeInt/1000.0) - 0.4f + EPSILON);
     }
+    delete view;
 }
 
 void tst_qquickage::test_sustained()
@@ -142,7 +145,7 @@ void tst_qquickage::test_sustained()
     ensureAnimTime(600, system->m_animation);
     //TODO: Ensure some particles have lived to 0.4s point despite unified timer
 
-    QCOMPARE(system->groupData[0]->size(), 500);
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
@@ -158,6 +161,7 @@ void tst_qquickage::test_sustained()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyCompare(d->t, ((qreal)system->timeInt/1000.0) - 0.4f));
     }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickage);

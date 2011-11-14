@@ -44,11 +44,7 @@
 
 #include <QDialog>
 #include <QNetworkProxy>
-#ifdef Q_WS_MAEMO_5
-#include "ui_proxysettings_maemo5.h"
-#else
 #include "ui_proxysettings.h"
-#endif
 
 QT_BEGIN_NAMESPACE
 /**
