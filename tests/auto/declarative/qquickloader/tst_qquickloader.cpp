@@ -108,6 +108,8 @@ private slots:
     void asynchronous();
     void asynchronous_clear();
 
+    void parented();
+
 private:
     QDeclarativeEngine engine;
 };
@@ -942,6 +944,23 @@ void tst_QQuickLoader::asynchronous_clear()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+}
+
+void tst_QQuickLoader::parented()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("parented.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(root);
+
+    QQuickItem *item = root->findChild<QQuickItem*>("comp");
+    QVERIFY(item);
+
+    QVERIFY(item->parentItem() == root);
+
+    QCOMPARE(item->width(), 300.);
+    QCOMPARE(item->height(), 300.);
+
+    delete root;
 }
 
 
