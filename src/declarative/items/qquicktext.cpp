@@ -444,33 +444,6 @@ void QQuickText::doLayout()
     d->updateSize();
 }
 
-/*!
-    \qmlsignal QtQuick2::Text::onLineLaidOut(line)
-
-    This handler is called for every line during the layout process.
-    This gives the opportunity to position and resize a line as it is being laid out.
-    It can for example be used to create columns or lay out text around objects.
-
-    The properties of a line are:
-    \list
-    \o number (read-only)
-    \o x
-    \o y
-    \o width
-    \o height
-    \endlist
-
-    For example, this will move the first 5 lines of a text element by 100 pixels to the right:
-    \code
-    onLineLaidOut: {
-        if (line.number < 5) {
-            line.x = line.x + 100
-            line.width = line.width - 100
-        }
-    }
-    \endcode
-*/
-
 bool QQuickTextPrivate::isLineLaidOutConnected()
 {
     static int idx = this->signalIndex("lineLaidOut(QQuickTextLine*)");
@@ -951,6 +924,33 @@ QQuickText::~QQuickText()
     \note Generally scaling artifacts are only visible if the item is stationary on
     the screen.  A common pattern when animating an item is to disable smooth
     filtering at the beginning of the animation and reenable it at the conclusion.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Text::onLineLaidOut(line)
+
+    This handler is called for every line during the layout process.
+    This gives the opportunity to position and resize a line as it is being laid out.
+    It can for example be used to create columns or lay out text around objects.
+
+    The properties of a line are:
+    \list
+    \o number (read-only)
+    \o x
+    \o y
+    \o width
+    \o height
+    \endlist
+
+    For example, this will move the first 5 lines of a text element by 100 pixels to the right:
+    \code
+    onLineLaidOut: {
+        if (line.number < 5) {
+            line.x = line.x + 100
+            line.width = line.width - 100
+        }
+    }
+    \endcode
 */
 
 /*!
