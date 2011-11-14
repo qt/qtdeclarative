@@ -122,8 +122,9 @@ const char *UNCAUGHT = "uncaught";
 
 const char *BLOCKMODE = "-qmljsdebugger=port:3771,block";
 const char *NORMALMODE = "-qmljsdebugger=port:3771";
-const char *QMLFILE = "test.qml";
-const char *JSFILE = "test.js";
+const char *TEST_QMLFILE = "test.qml";
+const char *TEST_JSFILE = "test.js";
+const char *TIMER_QMLFILE = "timer.qml";
 
 #define VARIANTMAPINIT \
     QString obj("{}"); \
@@ -148,15 +149,16 @@ class tst_QDeclarativeDebugJS : public QObject
 {
     Q_OBJECT
 
-private slots:
+    bool init(const QString &qmlFile = QString(TEST_QMLFILE), bool blockMode = true);
 
+private slots:
     void initTestCase();
     void cleanupTestCase();
 
-    void init();
     void cleanup();
 
     void getVersion();
+    void getVersionWhenAttaching();
 
     void applyV8Flags();
 
@@ -173,6 +175,7 @@ private slots:
     void setBreakpointInScriptOnEmptyLine();
     void setBreakpointInScriptWithCondition();
     //void setBreakpointInFunction(); //NOT SUPPORTED
+    void setBreakpointWhenAttaching();
 
     void changeBreakpoint();
     void changeBreakpointOnCondition();
@@ -962,21 +965,26 @@ void tst_QDeclarativeDebugJS::cleanupTestCase()
         delete connection;
 }
 
-void tst_QDeclarativeDebugJS::init()
+bool tst_QDeclarativeDebugJS::init(const QString &qmlFile, bool blockMode)
 {
     connection = new QDeclarativeDebugConnection();
     process = new QDeclarativeDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     client = new QJSDebugClient(connection);
 
-    process->start(QStringList() << QLatin1String(BLOCKMODE) << TESTDATA(QLatin1String(QMLFILE)));
+    if (blockMode)
+        process->start(QStringList() << QLatin1String(BLOCKMODE) << TESTDATA(qmlFile));
+    else
+        process->start(QStringList() << QLatin1String(NORMALMODE) << TESTDATA(qmlFile));
+
     if (!process->waitForSessionStart()) {
-        QFAIL(QString("Could not launch app. Application output: \n%1").arg(process->output()).toAscii());
+        return false;
     }
 
     connection->connectToHost("127.0.0.1", 3771);
-    QVERIFY(connection->waitForConnected());
+    if (!connection->waitForConnected())
+        return false;
 
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(enabled())));
+    return QDeclarativeDebugTest::waitForSignal(client, SIGNAL(enabled()));
 }
 
 void tst_QDeclarativeDebugJS::cleanup()
@@ -1001,6 +1009,20 @@ void tst_QDeclarativeDebugJS::getVersion()
 {
     //void version()
 
+    QVERIFY(init());
+    client->interrupt();
+    client->startDebugging();
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+
+    client->version();
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
+}
+
+void tst_QDeclarativeDebugJS::getVersionWhenAttaching()
+{
+    //void version()
+
+    QVERIFY(init(QLatin1String(TIMER_QMLFILE), false));
     client->interrupt();
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1013,6 +1035,7 @@ void tst_QDeclarativeDebugJS::applyV8Flags()
 {
     //void v8flags(QString flags)
 
+    QVERIFY(init());
     client->interrupt();
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1025,6 +1048,7 @@ void tst_QDeclarativeDebugJS::disconnect()
 {
     //void disconnect()
 
+    QVERIFY(init());
     client->interrupt();
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1037,7 +1061,8 @@ void tst_QDeclarativeDebugJS::gc()
 {
     //void gc()
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(JSFILE), 2, -1, true);
+    QVERIFY(init());
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), 2, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1053,9 +1078,10 @@ void tst_QDeclarativeDebugJS::listBreakpoints()
     int sourceLine2 = 60;
     int sourceLine3 = 67;
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine1, -1, true);
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine2, -1, true);
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(JSFILE), sourceLine3, -1, true);
+    QVERIFY(init());
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine2, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), sourceLine3, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1075,8 +1101,9 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnCompleted()
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
     int sourceLine = 49;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1086,16 +1113,18 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnCompleted()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_QMLFILE));
 }
 
 void tst_QDeclarativeDebugJS::setBreakpointInScriptOnTimerCallback()
 {
     int sourceLine = 49;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    QVERIFY(init());
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     sourceLine = 67;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1110,7 +1139,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnTimerCallback()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_QMLFILE));
 }
 
 void tst_QDeclarativeDebugJS::setBreakpointInScriptInDifferentFile()
@@ -1118,8 +1147,9 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptInDifferentFile()
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
     int sourceLine = 43;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(JSFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1129,7 +1159,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptInDifferentFile()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(JSFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_JSFILE));
 }
 
 void tst_QDeclarativeDebugJS::setBreakpointInScriptOnComment()
@@ -1138,8 +1168,9 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnComment()
 
     int sourceLine = 48;
     int actualLine = 50;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(JSFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1149,7 +1180,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnComment()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(JSFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_JSFILE));
 }
 
 void tst_QDeclarativeDebugJS::setBreakpointInScriptOnEmptyLine()
@@ -1158,8 +1189,9 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnEmptyLine()
 
     int sourceLine = 49;
     int actualLine = 50;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(JSFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1169,7 +1201,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnEmptyLine()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(JSFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_JSFILE));
 }
 
 void tst_QDeclarativeDebugJS::setBreakpointInScriptWithCondition()
@@ -1178,8 +1210,9 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptWithCondition()
 
     int out = 10;
     int sourceLine = 51;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(JSFILE), sourceLine, -1, true, QLatin1String("out > 10"));
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), sourceLine, -1, true, QLatin1String("out > 10"));
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1202,6 +1235,16 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptWithCondition()
     body = value.value("body").toMap();
 
     QVERIFY(body.value("value").toInt() > out);
+}
+
+void tst_QDeclarativeDebugJS::setBreakpointWhenAttaching()
+{
+    int sourceLine = 49;
+    QVERIFY(init(QLatin1String(TIMER_QMLFILE), false));
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TIMER_QMLFILE), sourceLine);
+    client->startDebugging();
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 }
 
 //void tst_QDeclarativeDebugJS::setBreakpointInFunction()
@@ -1230,9 +1273,10 @@ void tst_QDeclarativeDebugJS::changeBreakpoint()
 
     int sourceLine1 = 77;
     int sourceLine2 = 78;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine1, -1, true);
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine2, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine2, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1276,9 +1320,10 @@ void tst_QDeclarativeDebugJS::changeBreakpointOnCondition()
     int sourceLine1 = 56;
     int sourceLine2 = 60;
     int result = 0;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine1, -1, true);
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine2, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine2, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1342,9 +1387,10 @@ void tst_QDeclarativeDebugJS::clearBreakpoint()
 
     int sourceLine1 = 77;
     int sourceLine2 = 78;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine1, -1, true);
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine2, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine2, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1384,7 +1430,9 @@ void tst_QDeclarativeDebugJS::setExceptionBreak()
     //void setExceptionBreak(QString type, bool enabled = false);
 
     int sourceLine = 49;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    QVERIFY(init());
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->setExceptionBreak(QJSDebugClient::All,true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1399,8 +1447,9 @@ void tst_QDeclarativeDebugJS::stepNext()
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
     int sourceLine = 57;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1413,7 +1462,7 @@ void tst_QDeclarativeDebugJS::stepNext()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine + 1);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_QMLFILE));
 }
 
 void tst_QDeclarativeDebugJS::stepNextWithCount()
@@ -1421,8 +1470,9 @@ void tst_QDeclarativeDebugJS::stepNextWithCount()
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
     int sourceLine = 59;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1435,7 +1485,7 @@ void tst_QDeclarativeDebugJS::stepNextWithCount()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine + 2);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_QMLFILE));
 }
 
 void tst_QDeclarativeDebugJS::stepIn()
@@ -1444,8 +1494,9 @@ void tst_QDeclarativeDebugJS::stepIn()
 
     int sourceLine = 61;
     int actualLine = 78;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1458,7 +1509,7 @@ void tst_QDeclarativeDebugJS::stepIn()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_QMLFILE));
 }
 
 void tst_QDeclarativeDebugJS::stepOut()
@@ -1467,8 +1518,9 @@ void tst_QDeclarativeDebugJS::stepOut()
 
     int sourceLine = 56;
     int actualLine = 49;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1481,7 +1533,7 @@ void tst_QDeclarativeDebugJS::stepOut()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_QMLFILE));
 }
 
 void tst_QDeclarativeDebugJS::continueDebugging()
@@ -1490,9 +1542,10 @@ void tst_QDeclarativeDebugJS::continueDebugging()
 
     int sourceLine1 = 56;
     int sourceLine2 = 60;
+    QVERIFY(init());
 
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine1, -1, true);
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine2, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine2, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1505,7 +1558,7 @@ void tst_QDeclarativeDebugJS::continueDebugging()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine2);
-    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(QMLFILE));
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(TEST_QMLFILE));
 }
 
 void tst_QDeclarativeDebugJS::backtrace()
@@ -1513,7 +1566,9 @@ void tst_QDeclarativeDebugJS::backtrace()
     //void backtrace(int fromFrame = -1, int toFrame = -1, bool bottom = false);
 
     int sourceLine = 60;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    QVERIFY(init());
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1526,7 +1581,9 @@ void tst_QDeclarativeDebugJS::getFrameDetails()
     //void frame(int number = -1);
 
     int sourceLine = 60;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    QVERIFY(init());
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1539,7 +1596,9 @@ void tst_QDeclarativeDebugJS::getScopeDetails()
     //void scope(int number = -1, int frameNumber = -1);
 
     int sourceLine = 60;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    QVERIFY(init());
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1552,7 +1611,9 @@ void tst_QDeclarativeDebugJS::evaluateInGlobalScope()
     //void evaluate(QString expr, bool global = false, bool disableBreak = false, int frame = -1, const QVariantMap &addContext = QVariantMap());
 
     int sourceLine = 49;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    QVERIFY(init());
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1573,7 +1634,9 @@ void tst_QDeclarativeDebugJS::evaluateInLocalScope()
     //void evaluate(QString expr, bool global = false, bool disableBreak = false, int frame = -1, const QVariantMap &addContext = QVariantMap());
 
     int sourceLine = 60;
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    QVERIFY(init());
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1604,6 +1667,8 @@ void tst_QDeclarativeDebugJS::getScopes()
 {
     //void scopes(int frameNumber = -1);
 
+    QVERIFY(init());
+
     client->interrupt();
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1616,17 +1681,29 @@ void tst_QDeclarativeDebugJS::getScripts()
 {
     //void scripts(int types = -1, QList<int> ids = QList<int>(), bool includeSource = false, QVariant filter = QVariant());
 
+    QVERIFY(init(QLatin1String(TIMER_QMLFILE), true));
+
     client->interrupt();
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->scripts();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
+    QString jsonString(client->response);
+    QVariantMap value = client->parser.call(QJSValue(),
+                                            QJSValueList()
+                                            << QJSValue(jsonString)).toVariant().toMap();
+
+    QList<QVariant> scripts = value.value("body").toList();
+
+    QCOMPARE(scripts.count(), 2);
 }
 
 void tst_QDeclarativeDebugJS::getSource()
 {
     //void source(int frame = -1, int fromLine = -1, int toLine = -1);
+
+    QVERIFY(init());
 
     client->interrupt();
     client->startDebugging();

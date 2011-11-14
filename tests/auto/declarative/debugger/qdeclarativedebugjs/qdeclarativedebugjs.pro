@@ -17,4 +17,5 @@ DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 
-OTHER_FILES += data/test.qml data/test.js
+OTHER_FILES += data/test.qml data/test.js \
+    data/timer.qml
