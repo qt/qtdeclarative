@@ -582,8 +582,11 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
 {
     if (item == m_sourceItem)
         return;
-    if (m_sourceItem)
+    if (m_sourceItem) {
         QQuickItemPrivate::get(m_sourceItem)->derefFromEffectItem(m_hideSource);
+        disconnect(m_sourceItem, SIGNAL(widthChanged()), this, SLOT(update()));
+        disconnect(m_sourceItem, SIGNAL(heightChanged()), this, SLOT(update()));
+    }
     m_sourceItem = item;
     if (m_sourceItem) {
         // TODO: Find better solution.
@@ -595,6 +598,8 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
             m_sourceItem->setVisible(false);
         }
         QQuickItemPrivate::get(m_sourceItem)->refFromEffectItem(m_hideSource);
+        connect(m_sourceItem, SIGNAL(widthChanged()), this, SLOT(update()));
+        connect(m_sourceItem, SIGNAL(heightChanged()), this, SLOT(update()));
     }
     update();
     emit sourceItemChanged();
