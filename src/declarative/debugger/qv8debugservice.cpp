@@ -58,6 +58,10 @@ struct SignalHandlerData
 
 Q_GLOBAL_STATIC(QV8DebugService, v8ServiceInstance)
 
+// DebugMessageHandler will call back already when the QV8DebugService constructor is
+// running, we therefore need a plain pointer.
+static QV8DebugService *v8ServiceInstancePtr = 0;
+
 void DebugMessageHandler(const v8::Debug::Message& message)
 {
     v8::DebugEvent event = message.GetEvent();
@@ -70,11 +74,10 @@ void DebugMessageHandler(const v8::Debug::Message& message)
     const QString response(QV8Engine::toStringStatic(
                                   message.GetJSON()));
 
-    QV8DebugService *service = QV8DebugService::instance();
-    service->debugMessageHandler(response, message.WillStartRunning());
+    v8ServiceInstancePtr->debugMessageHandler(response, message.WillStartRunning());
 
     if (event == v8::AfterCompile) {
-        service->appendSourcePath(response);
+        v8ServiceInstancePtr->appendSourcePath(response);
     } //TODO::v8::Exception
 }
 
@@ -82,17 +85,15 @@ class QV8DebugServicePrivate : public QDeclarativeDebugServicePrivate
 {
 public:
     QV8DebugServicePrivate()
-        :initialized(false)
+        : connectReceived(false)
         , scheduleBreak(false)
         , debuggerThreadIsolate(0)
         , debuggerThreadEngine(0)
+        , guiThreadIsolate(0)
+        , guiThreadEngine(0)
         , isRunning(true)
+        , internalRequests(0)
     {
-        //Create an isolate & engine in GUI thread
-        guiThreadIsolate = v8::Isolate::New();
-        v8::Isolate::Scope i_scope(guiThreadIsolate);
-        v8::V8::Initialize();
-        guiThreadEngine = new QJSEngine();
     }
 
     ~QV8DebugServicePrivate()
@@ -105,22 +106,28 @@ public:
             guiThreadIsolate->Dispose();
     }
 
+    void initializeDebuggerThread();
+
     void sendDebugMessage(const QString &message);
+    void updateSourcePath(const QString &sourcePath);
     static QByteArray packMessage(const QString &message);
 
-    bool initialized;
+    bool connectReceived;
     bool scheduleBreak;
 
     v8::Isolate *debuggerThreadIsolate;
     QJSEngine *debuggerThreadEngine;
     v8::Isolate *guiThreadIsolate;
     QJSEngine *guiThreadEngine;
+    // keep messageReceived() from running until initialize() has finished
+    QMutex initializeMutex;
 
     QList<QDeclarativeEngine *> engines;
     bool isRunning;
     QHash<QString, QString> sourcePath;
     QHash<QString, QString> requestCache;
     QHash<int, SignalHandlerData> handlersList;
+    int internalRequests;
 };
 
 QV8DebugService::QV8DebugService(QObject *parent)
@@ -128,19 +135,17 @@ QV8DebugService::QV8DebugService(QObject *parent)
                                QLatin1String("V8Debugger"), parent)
 {
     Q_D(QV8DebugService);
-    v8::Debug::SetMessageHandler2(DebugMessageHandler);
-
-    // This call forces the debugger context to be loaded and made resident.
-    // Without this the debugger is loaded/unloaded whenever required, which
-    // has a very significant effect on the timing reported in the QML
-    // profiler in Qt Creator.
-    v8::Debug::GetDebugContext();
-
+    v8ServiceInstancePtr = this;
+    // wait for statusChanged() -> initialize()
+    d->initializeMutex.lock();
     if (registerService() == Enabled) {
+        initialize();
         // ,block mode, client attached
-        while (!d->initialized) {
+        while (!d->connectReceived) {
             waitForMessage();
         }
+    } else {
+        d->initializeMutex.unlock();
     }
 }
 
@@ -179,6 +184,42 @@ void QV8DebugService::debugMessageHandler(const QString &message, bool willStart
     if (d->scheduleBreak)
         scheduledDebugBreak();
 
+    if (d->internalRequests > 0) {
+        // there are outstanding internal requests,
+        // check the sequence number: internal if seq is -1
+
+        QVariantMap responseMap;
+        {
+            v8::Isolate::Scope i_scope(d->guiThreadIsolate);
+            QJSValue parser = d->guiThreadEngine->evaluate(QLatin1String("JSON.parse"));
+            QJSValue out = parser.call(QJSValue(), QJSValueList() << QJSValue(message));
+            responseMap = out.toVariant().toMap();
+        }
+
+        if (responseMap.value(QLatin1String("request_seq")).toInt() == -1) {
+            if (responseMap.value(QLatin1String("command")) == QLatin1String("scripts")) {
+
+                // Reply to scripts request on connect:
+
+                // {
+                //   "type": "response",
+                //   "request_seq": <number>,
+                //   "command": "scripts",
+                //   "body": [ { "name" : <name of script> } ]
+                // }
+
+                QVariantList body = responseMap.value(QLatin1String("body")).toList();
+                foreach (const QVariant &listEntry, body) {
+                    QVariantMap entryMap = listEntry.toMap();
+                    const QString sourcePath = entryMap.value(QLatin1String("name")).toString();
+                    d->updateSourcePath(sourcePath);
+                }
+            }
+
+            d->internalRequests--;
+            return;
+        }
+    }
     sendMessage(QV8DebugServicePrivate::packMessage(message));
 }
 
@@ -201,19 +242,7 @@ void QV8DebugService::appendSourcePath(const QString &message)
     const QString sourcePath(msgMap.value(QLatin1String("body")).toMap().value(
                                  QLatin1String("script")).toMap().value(
                                  QLatin1String("name")).toString());
-    const QString fileName(QFileInfo(sourcePath).fileName());
-
-    d->sourcePath.insert(fileName, sourcePath);
-
-    //Check if there are any pending breakpoint requests for this file
-    if (d->requestCache.contains(fileName)) {
-        QList<QString> list = d->requestCache.values(fileName);
-        d->requestCache.remove(fileName);
-        foreach (QString request, list) {
-            request.replace(fileName, sourcePath);
-            d->sendDebugMessage(request);
-        }
-    }
+    d->updateSourcePath(sourcePath);
 }
 
 void QV8DebugService::signalEmitted(const QString &signal)
@@ -236,6 +265,19 @@ void QV8DebugService::signalEmitted(const QString &signal)
         scheduledDebugBreak();
 }
 
+void QV8DebugService::initialize()
+{
+    Q_D(QV8DebugService);
+    v8::Debug::SetMessageHandler2(DebugMessageHandler);
+
+    //Create an isolate & engine for parsing JSON messages in GUI thread
+    d->guiThreadIsolate = v8::Isolate::New();
+    v8::Isolate::Scope scope(d->guiThreadIsolate);
+    d->guiThreadEngine = new QJSEngine();
+
+    d->initializeMutex.unlock();
+}
+
 void QV8DebugService::scheduledDebugBreak()
 {
     Q_D(QV8DebugService);
@@ -245,6 +287,46 @@ void QV8DebugService::scheduledDebugBreak()
     }
 }
 
+// executed in the debugger thread
+void QV8DebugService::statusChanged(QDeclarativeDebugService::Status newStatus)
+{
+    Q_D(QV8DebugService);
+    if (newStatus == Enabled) {
+        if (!d->debuggerThreadEngine)
+            d->initializeDebuggerThread();
+
+        // execute in GUI thread
+        d->initializeMutex.lock();
+        QMetaObject::invokeMethod(this, "initialize", Qt::QueuedConnection);
+
+        // Request already compiled scripts from v8 (recycling the sequence number from connect)
+
+        // { "seq"       : -1,
+        //    "type"      : "request",
+        //    "command"   : "scripts",
+        //     "arguments" : { "includeSource" : false }
+        // }
+        const QString obj(QLatin1String("{}"));
+        v8::Isolate::Scope i_scope(d->debuggerThreadIsolate);
+        QJSValue parser = d->debuggerThreadEngine->evaluate(QLatin1String("JSON.parse"));
+        QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
+        jsonVal.setProperty(QLatin1String("type"), QJSValue(QLatin1String("request")));
+        jsonVal.setProperty(QLatin1String("seq"), QJSValue(-1));
+        jsonVal.setProperty(QLatin1String("command"), QJSValue(QLatin1String("scripts")));
+
+        QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+
+        args.setProperty(QLatin1String("includeSource"), QJSValue(false));
+        jsonVal.setProperty(QLatin1String("arguments"), args);
+
+        QJSValue stringify = d->debuggerThreadEngine->evaluate(QLatin1String("JSON.stringify"));
+        QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+        d->internalRequests++;
+        d->sendDebugMessage(json.toString());
+    }
+}
+
+// executed in the debugger thread
 void QV8DebugService::messageReceived(const QByteArray &message)
 {
     Q_D(QV8DebugService);
@@ -253,15 +335,11 @@ void QV8DebugService::messageReceived(const QByteArray &message)
     QByteArray command;
     ds >> command;
 
-    if (command == "V8DEBUG") {
+    QMutexLocker locker(&d->initializeMutex);
 
-        if (!d->debuggerThreadEngine) {
-            //Create an isolate & engine in debugger thread
-            d->debuggerThreadIsolate = v8::Isolate::New();
-            v8::Isolate::Scope i_scope(d->debuggerThreadIsolate);
-            v8::V8::Initialize();
-            d->debuggerThreadEngine = new QJSEngine();
-        }
+    if (command == "V8DEBUG") {
+        if (!d->debuggerThreadEngine)
+            d->initializeDebuggerThread();
 
 
         QString request;
@@ -278,11 +356,11 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             QJSValue out = parser.call(QJSValue(), QJSValueList() << QJSValue(request));
             reqMap = out.toVariant().toMap();
         }
-
         const QString debugCommand(reqMap.value(QLatin1String("command")).toString());
+        const int sequence = reqMap.value(QLatin1String("seq")).toInt();
 
         if (debugCommand == QLatin1String("connect")) {
-            d->initialized = true;
+            d->connectReceived = true;
             //Prepare the response string
             //Create a json message using v8 debugging protocol
             //and send it to client
@@ -300,7 +378,6 @@ void QV8DebugService::messageReceived(const QByteArray &message)
                 QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
                 jsonVal.setProperty(QLatin1String("type"), QJSValue(QLatin1String("response")));
 
-                const int sequence = reqMap.value(QLatin1String("seq")).toInt();
                 jsonVal.setProperty(QLatin1String("request_seq"), QJSValue(sequence));
                 jsonVal.setProperty(QLatin1String("command"), QJSValue(debugCommand));
                 jsonVal.setProperty(QLatin1String("success"), QJSValue(true));
@@ -310,7 +387,6 @@ void QV8DebugService::messageReceived(const QByteArray &message)
                 QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
                 sendMessage(QV8DebugServicePrivate::packMessage(json.toString()));
             }
-
         } else if (debugCommand == QLatin1String("interrupt")) {
             //Prepare the response string
             //Create a json message using v8 debugging protocol
@@ -318,7 +394,7 @@ void QV8DebugService::messageReceived(const QByteArray &message)
 
             // { "type"        : "response",
             //   "request_seq" : <number>,
-            //   "command"     : "connect",
+            //   "command"     : "interrupt",
             //   "running"     : <is the VM running after sending this response>
             //   "success"     : true
             // }
@@ -450,13 +526,37 @@ void QV8DebugService::messageReceived(const QByteArray &message)
                 d->sendDebugMessage(request);
         }
     }
+}
 
-    QDeclarativeDebugService::messageReceived(message);
+void QV8DebugServicePrivate::initializeDebuggerThread()
+{
+    Q_ASSERT(!debuggerThreadEngine);
+
+    //Create an isolate & engine in debugger thread
+    debuggerThreadIsolate = v8::Isolate::New();
+    v8::Isolate::Scope i_scope(debuggerThreadIsolate);
+    debuggerThreadEngine = new QJSEngine();
 }
 
 void QV8DebugServicePrivate::sendDebugMessage(const QString &message)
 {
     v8::Debug::SendCommand(message.utf16(), message.size());
+}
+
+void QV8DebugServicePrivate::updateSourcePath(const QString &source)
+{
+    const QString fileName(QFileInfo(source).fileName());
+    sourcePath.insert(fileName, source);
+
+    //Check if there are any pending breakpoint requests for this file
+    if (requestCache.contains(fileName)) {
+        QList<QString> list = requestCache.values(fileName);
+        requestCache.remove(fileName);
+        foreach (QString request, list) {
+            request.replace(fileName, source);
+            sendDebugMessage(request);
+        }
+    }
 }
 
 QByteArray QV8DebugServicePrivate::packMessage(const QString &message)

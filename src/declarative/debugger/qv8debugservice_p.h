@@ -84,8 +84,10 @@ public:
 
 private slots:
     void scheduledDebugBreak();
+    void initialize();
 
 protected:
+    void statusChanged(Status newStatus);
     void messageReceived(const QByteArray &);
 
 private:
