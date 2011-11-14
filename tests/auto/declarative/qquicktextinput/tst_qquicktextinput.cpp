@@ -84,6 +84,8 @@ QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& 
     return expectfile;
 }
 
+typedef QPair<int, QChar> Key;
+
 class tst_qquicktextinput : public QObject
 
 {
@@ -128,6 +130,7 @@ private slots:
     void navigation();
     void navigation_RTL();
     void copyAndPaste();
+    void copyAndPasteKeySequence();
     void canPasteEmpty();
     void canPaste();
     void readOnly();
@@ -149,6 +152,16 @@ private slots:
     void inputMethodComposing();
     void cursorRectangleSize();
 
+    void keySequence_data();
+    void keySequence();
+
+    void undo_data();
+    void undo();
+    void redo_data();
+    void redo();
+    void undo_keypressevents_data();
+    void undo_keypressevents();
+
     void QTBUG_19956();
     void QTBUG_19956_data();
     void QTBUG_19956_regexp();
@@ -156,10 +169,68 @@ private slots:
 private:
     void simulateKey(QQuickView *, int key);
 
+    void simulateKeys(QWindow *window, const QList<Key> &keys);
+    void simulateKeys(QWindow *window, const QKeySequence &sequence);
+
     QDeclarativeEngine engine;
     QStringList standard;
     QStringList colorStrings;
 };
+
+typedef QList<int> IntList;
+Q_DECLARE_METATYPE(IntList)
+
+typedef QList<Key> KeyList;
+Q_DECLARE_METATYPE(KeyList)
+
+void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
+{
+    for (int i = 0; i < keys.count(); ++i) {
+        const int key = keys.at(i).first;
+        const int modifiers = key & Qt::KeyboardModifierMask;
+        const QString text = !keys.at(i).second.isNull() ? QString(keys.at(i).second) : QString();
+
+        QKeyEvent press(QEvent::KeyPress, Qt::Key(key), Qt::KeyboardModifiers(modifiers), text);
+        QKeyEvent release(QEvent::KeyRelease, Qt::Key(key), Qt::KeyboardModifiers(modifiers), text);
+
+        QGuiApplication::sendEvent(window, &press);
+        QGuiApplication::sendEvent(window, &release);
+    }
+}
+
+void tst_qquicktextinput::simulateKeys(QWindow *window, const QKeySequence &sequence)
+{
+    for (uint i = 0; i < sequence.count(); ++i) {
+        const int key = sequence[i];
+        const int modifiers = key & Qt::KeyboardModifierMask;
+
+        QTest::keyClick(window, Qt::Key(key & ~modifiers), Qt::KeyboardModifiers(modifiers));
+    }
+}
+
+QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
+{
+    for (int i = 0; i < sequence.count(); ++i)
+        keys << Key(sequence[i], QChar());
+    return keys;
+}
+
+template <int N> QList<Key> &operator <<(QList<Key> &keys, const char (&characters)[N])
+{
+    for (int i = 0; i < N - 1; ++i) {
+        int key = QTest::asciiToKey(characters[i]);
+        QChar character = QLatin1Char(characters[i]);
+        keys << Key(key, character);
+    }
+    return keys;
+}
+
+QList<Key> &operator <<(QList<Key> &keys, Qt::Key key)
+{
+    keys << Key(key, QChar());
+    return keys;
+}
+
 void tst_qquicktextinput::initTestCase()
 {
 }
@@ -1656,6 +1727,83 @@ void tst_qquicktextinput::copyAndPaste() {
 #endif
 }
 
+void tst_qquicktextinput::copyAndPasteKeySequence() {
+#ifndef QT_NO_CLIPBOARD
+
+#ifdef Q_OS_MAC
+    {
+        PasteboardRef pasteboard;
+        OSStatus status = PasteboardCreate(0, &pasteboard);
+        if (status == noErr)
+            CFRelease(pasteboard);
+        else
+            QSKIP("This machine doesn't support the clipboard");
+    }
+#endif
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\"; focus: true }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    // copy and paste
+    QVERIFY(textInput->hasActiveFocus());
+    QCOMPARE(textInput->text().length(), 12);
+    textInput->select(0, textInput->text().length());
+    simulateKeys(&canvas, QKeySequence::Copy);
+    QCOMPARE(textInput->selectedText(), QString("Hello world!"));
+    QCOMPARE(textInput->selectedText().length(), 12);
+    textInput->setCursorPosition(0);
+    QVERIFY(textInput->canPaste());
+    simulateKeys(&canvas, QKeySequence::Paste);
+    QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
+    QCOMPARE(textInput->text().length(), 24);
+
+    // select all and cut
+    simulateKeys(&canvas, QKeySequence::SelectAll);
+    simulateKeys(&canvas, QKeySequence::Cut);
+    QCOMPARE(textInput->text().length(), 0);
+    simulateKeys(&canvas, QKeySequence::Paste);
+    QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
+    QCOMPARE(textInput->text().length(), 24);
+
+    // clear copy buffer
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    QVERIFY(clipboard);
+    clipboard->clear();
+    QVERIFY(!textInput->canPaste());
+
+    // test that copy functionality is disabled
+    // when echo mode is set to hide text/password mode
+    int index = 0;
+    while (index < 4) {
+        QQuickTextInput::EchoMode echoMode = QQuickTextInput::EchoMode(index);
+        textInput->setEchoMode(echoMode);
+        textInput->setText("My password");
+        textInput->select(0, textInput->text().length());;
+        simulateKeys(&canvas, QKeySequence::Copy);
+        if (echoMode == QQuickTextInput::Normal) {
+            QVERIFY(!clipboard->text().isEmpty());
+            QCOMPARE(clipboard->text(), QString("My password"));
+            clipboard->clear();
+        } else {
+            QVERIFY(clipboard->text().isEmpty());
+        }
+        index++;
+    }
+
+    delete textInput;
+#endif
+}
+
 void tst_qquicktextinput::canPasteEmpty() {
 #ifndef QT_NO_CLIPBOARD
 
@@ -2000,54 +2148,6 @@ void tst_qquicktextinput::simulateKey(QQuickView *view, int key)
     QGuiApplication::sendEvent(view, &press);
     QGuiApplication::sendEvent(view, &release);
 }
-
-#ifndef QTBUG_21691
-class MyInputContext : public QInputContext
-{
-public:
-    MyInputContext() : updateReceived(false), eventType(QEvent::None) {}
-    ~MyInputContext() {}
-
-    QString identifierName() { return QString(); }
-    QString language() { return QString(); }
-
-    void reset() {}
-
-    bool isComposing() const { return false; }
-
-    void update() { updateReceived = true; }
-
-    void mouseHandler(int x, QMouseEvent *event)
-    {
-        cursor = x;
-        eventType = event->type();
-        eventPosition = event->pos();
-        eventGlobalPosition = event->globalPos();
-        eventButton = event->button();
-        eventButtons = event->buttons();
-        eventModifiers = event->modifiers();
-    }
-
-    void sendPreeditText(const QString &text, int cursor)
-    {
-        QList<QInputMethodEvent::Attribute> attributes;
-        attributes.append(QInputMethodEvent::Attribute(
-                QInputMethodEvent::Cursor, cursor, text.length(), QVariant()));
-
-        QInputMethodEvent event(text, attributes);
-        sendEvent(event);
-    }
-
-    bool updateReceived;
-    int cursor;
-    QEvent::Type eventType;
-    QPoint eventPosition;
-    QPoint eventGlobalPosition;
-    Qt::MouseButton eventButton;
-    Qt::MouseButtons eventButtons;
-    Qt::KeyboardModifiers eventModifiers;
-};
-#endif
 
 void tst_qquicktextinput::openInputPanel()
 {
@@ -2492,6 +2592,520 @@ void tst_qquicktextinput::QTBUG_19956_data()
     QTest::addColumn<QString>("url");
     QTest::newRow("intvalidator") << "qtbug-19956int.qml";
     QTest::newRow("doublevalidator") << "qtbug-19956double.qml";
+}
+
+void tst_qquicktextinput::keySequence_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QKeySequence>("sequence");
+    QTest::addColumn<int>("selectionStart");
+    QTest::addColumn<int>("selectionEnd");
+    QTest::addColumn<int>("cursorPosition");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<QString>("selectedText");
+
+    // standard[0] == "the [4]quick [10]brown [16]fox [20]jumped [27]over [32]the [36]lazy [41]dog"
+
+    QTest::newRow("select all")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectAll) << 0 << 0
+            << 44 << standard.at(0) << standard.at(0);
+    QTest::newRow("select end of line")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfLine) << 5 << 5
+            << 44 << standard.at(0) << standard.at(0).mid(5);
+    QTest::newRow("select end of document") // ### Not handled.
+            << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfDocument) << 3 << 3
+            << 3 << standard.at(0) << QString();
+    QTest::newRow("select end of block")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfBlock) << 18 << 18
+            << 44 << standard.at(0) << standard.at(0).mid(18);
+    QTest::newRow("delete end of line")
+            << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfLine) << 24 << 24
+            << 24 << standard.at(0).mid(0, 24) << QString();
+    QTest::newRow("move to start of line")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfLine) << 31 << 31
+            << 0 << standard.at(0) << QString();
+    QTest::newRow("move to start of block")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfBlock) << 25 << 25
+            << 0 << standard.at(0) << QString();
+    QTest::newRow("move to next char")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToNextChar) << 12 << 12
+            << 13 << standard.at(0) << QString();
+    QTest::newRow("move to previous char")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 3
+            << 2 << standard.at(0) << QString();
+    QTest::newRow("select next char")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectNextChar) << 23 << 23
+            << 24 << standard.at(0) << standard.at(0).mid(23, 1);
+    QTest::newRow("select previous char")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousChar) << 19 << 19
+            << 18 << standard.at(0) << standard.at(0).mid(18, 1);
+    QTest::newRow("move to next word")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
+            << 10 << standard.at(0) << QString();
+    QTest::newRow("move to previous word")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
+            << 4 << standard.at(0) << QString();
+    QTest::newRow("select previous word")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousWord) << 11 << 11
+            << 10 << standard.at(0) << standard.at(0).mid(10, 1);
+    QTest::newRow("delete (selection)")
+            << standard.at(0) << QKeySequence(QKeySequence::Delete) << 12 << 15
+            << 12 << (standard.at(0).mid(0, 12) + standard.at(0).mid(15)) << QString();
+    QTest::newRow("delete (no selection)")
+            << standard.at(0) << QKeySequence(QKeySequence::Delete) << 15 << 15
+            << 15 << (standard.at(0).mid(0, 15) + standard.at(0).mid(16)) << QString();
+    QTest::newRow("delete end of word")
+            << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfWord) << 24 << 24
+            << 24 << (standard.at(0).mid(0, 24) + standard.at(0).mid(27)) << QString();
+    QTest::newRow("delete start of word")
+            << standard.at(0) << QKeySequence(QKeySequence::DeleteStartOfWord) << 7 << 7
+            << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString();
+}
+
+void tst_qquicktextinput::keySequence()
+{
+    QFETCH(QString, text);
+    QFETCH(QKeySequence, sequence);
+    QFETCH(int, selectionStart);
+    QFETCH(int, selectionEnd);
+    QFETCH(int, cursorPosition);
+    QFETCH(QString, expectedText);
+    QFETCH(QString, selectedText);
+
+    if (sequence.isEmpty()) {
+        QSKIP("Key sequence is undefined");
+    }
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; text: \"" + text + "\" }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    textInput->select(selectionStart, selectionEnd);
+
+    simulateKeys(&canvas, sequence);
+
+    QCOMPARE(textInput->cursorPosition(), cursorPosition);
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->selectedText(), selectedText);
+}
+
+#define NORMAL 0
+#define REPLACE_UNTIL_END 1
+
+void tst_qquicktextinput::undo_data()
+{
+    QTest::addColumn<QStringList>("insertString");
+    QTest::addColumn<IntList>("insertIndex");
+    QTest::addColumn<IntList>("insertMode");
+    QTest::addColumn<QStringList>("expectedString");
+    QTest::addColumn<bool>("use_keys");
+
+    for (int i=0; i<2; i++) {
+        QString keys_str = "keyboard";
+        bool use_keys = true;
+        if (i==0) {
+            keys_str = "insert";
+            use_keys = false;
+        }
+
+        {
+            IntList insertIndex;
+            IntList insertMode;
+            QStringList insertString;
+            QStringList expectedString;
+
+            insertIndex << -1;
+            insertMode << NORMAL;
+            insertString << "1";
+
+            insertIndex << -1;
+            insertMode << NORMAL;
+            insertString << "5";
+
+            insertIndex << 1;
+            insertMode << NORMAL;
+            insertString << "3";
+
+            insertIndex << 1;
+            insertMode << NORMAL;
+            insertString << "2";
+
+            insertIndex << 3;
+            insertMode << NORMAL;
+            insertString << "4";
+
+            expectedString << "12345";
+            expectedString << "1235";
+            expectedString << "135";
+            expectedString << "15";
+            expectedString << "";
+
+            QTest::newRow(QString(keys_str + "_numbers").toLatin1()) <<
+                insertString <<
+                insertIndex <<
+                insertMode <<
+                expectedString <<
+                bool(use_keys);
+        }
+        {
+            IntList insertIndex;
+            IntList insertMode;
+            QStringList insertString;
+            QStringList expectedString;
+
+            insertIndex << -1;
+            insertMode << NORMAL;
+            insertString << "World"; // World
+
+            insertIndex << 0;
+            insertMode << NORMAL;
+            insertString << "Hello"; // HelloWorld
+
+            insertIndex << 0;
+            insertMode << NORMAL;
+            insertString << "Well"; // WellHelloWorld
+
+            insertIndex << 9;
+            insertMode << NORMAL;
+            insertString << "There"; // WellHelloThereWorld;
+
+            expectedString << "WellHelloThereWorld";
+            expectedString << "WellHelloWorld";
+            expectedString << "HelloWorld";
+            expectedString << "World";
+            expectedString << "";
+
+            QTest::newRow(QString(keys_str + "_helloworld").toLatin1()) <<
+                insertString <<
+                insertIndex <<
+                insertMode <<
+                expectedString <<
+                bool(use_keys);
+        }
+        {
+            IntList insertIndex;
+            IntList insertMode;
+            QStringList insertString;
+            QStringList expectedString;
+
+            insertIndex << -1;
+            insertMode << NORMAL;
+            insertString << "Ensuring";
+
+            insertIndex << -1;
+            insertMode << NORMAL;
+            insertString << " instan";
+
+            insertIndex << 9;
+            insertMode << NORMAL;
+            insertString << "an ";
+
+            insertIndex << 10;
+            insertMode << REPLACE_UNTIL_END;
+            insertString << " unique instance.";
+
+            expectedString << "Ensuring a unique instance.";
+            expectedString << "Ensuring an instan";
+            expectedString << "Ensuring instan";
+            expectedString << "";
+
+            QTest::newRow(QString(keys_str + "_patterns").toLatin1()) <<
+                insertString <<
+                insertIndex <<
+                insertMode <<
+                expectedString <<
+                bool(use_keys);
+        }
+    }
+}
+
+void tst_qquicktextinput::undo()
+{
+    QFETCH(QStringList, insertString);
+    QFETCH(IntList, insertIndex);
+    QFETCH(IntList, insertMode);
+    QFETCH(QStringList, expectedString);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    int i;
+
+// STEP 1: First build up an undo history by inserting or typing some strings...
+    for (i = 0; i < insertString.size(); ++i) {
+        if (insertIndex[i] > -1)
+            textInput->setCursorPosition(insertIndex[i]);
+
+ // experimental stuff
+        if (insertMode[i] == REPLACE_UNTIL_END) {
+            textInput->select(insertIndex[i], insertIndex[i] + 8);
+
+            // This is what I actually want...
+            // QTest::keyClick(testWidget, Qt::Key_End, Qt::ShiftModifier);
+        }
+
+        for (int j = 0; j < insertString.at(i).length(); j++)
+            QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
+    }
+
+// STEP 2: Next call undo several times and see if we can restore to the previous state
+    for (i = 0; i < expectedString.size() - 1; ++i) {
+        QCOMPARE(textInput->text(), expectedString[i]);
+        simulateKeys(&canvas, QKeySequence::Undo);
+    }
+
+// STEP 3: Verify that we have undone everything
+    QVERIFY(textInput->text().isEmpty());
+}
+
+void tst_qquicktextinput::redo_data()
+{
+    QTest::addColumn<QStringList>("insertString");
+    QTest::addColumn<IntList>("insertIndex");
+    QTest::addColumn<QStringList>("expectedString");
+
+    {
+        IntList insertIndex;
+        QStringList insertString;
+        QStringList expectedString;
+
+        insertIndex << -1;
+        insertString << "World"; // World
+        insertIndex << 0;
+        insertString << "Hello"; // HelloWorld
+        insertIndex << 0;
+        insertString << "Well"; // WellHelloWorld
+        insertIndex << 9;
+        insertString << "There"; // WellHelloThereWorld;
+
+        expectedString << "World";
+        expectedString << "HelloWorld";
+        expectedString << "WellHelloWorld";
+        expectedString << "WellHelloThereWorld";
+
+        QTest::newRow("Inserts and setting cursor") << insertString << insertIndex << expectedString;
+    }
+}
+
+void tst_qquicktextinput::redo()
+{
+    QFETCH(QStringList, insertString);
+    QFETCH(IntList, insertIndex);
+    QFETCH(QStringList, expectedString);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    int i;
+    // inserts the diff strings at diff positions
+    for (i = 0; i < insertString.size(); ++i) {
+        if (insertIndex[i] > -1)
+            textInput->setCursorPosition(insertIndex[i]);
+        for (int j = 0; j < insertString.at(i).length(); j++)
+            QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
+    }
+
+    // undo everything
+    while (!textInput->text().isEmpty())
+        simulateKeys(&canvas, QKeySequence::Undo);
+
+    for (i = 0; i < expectedString.size(); ++i) {
+        simulateKeys(&canvas, QKeySequence::Redo);
+        QCOMPARE(textInput->text() , expectedString[i]);
+    }
+}
+
+void tst_qquicktextinput::undo_keypressevents_data()
+{
+    QTest::addColumn<KeyList>("keys");
+    QTest::addColumn<QStringList>("expectedString");
+
+    {
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "AFRAID"
+                << Qt::Key_Home
+                << "VERY"
+                << Qt::Key_Left
+                << Qt::Key_Left
+                << Qt::Key_Left
+                << Qt::Key_Left
+                << "BE"
+                << Qt::Key_End
+                << "!";
+
+        expectedString << "BEVERYAFRAID!";
+        expectedString << "BEVERYAFRAID";
+        expectedString << "VERYAFRAID";
+        expectedString << "AFRAID";
+
+        QTest::newRow("Inserts and moving cursor") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        // inserting '1234'
+        keys << "1234" << Qt::Key_Home
+                // skipping '12'
+                << Qt::Key_Right << Qt::Key_Right
+                // selecting '34'
+                << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
+                // deleting '34'
+                << Qt::Key_Delete;
+
+        expectedString << "12";
+        expectedString << "1234";
+
+        QTest::newRow("Inserts,moving,selection and delete") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        // inserting 'AB12'
+        keys << "AB12"
+                << Qt::Key_Home
+                // selecting 'AB'
+                << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
+                << Qt::Key_Delete
+                << QKeySequence::Undo
+                << Qt::Key_Right
+#ifdef Q_OS_WIN //Mac(?) has a specialcase to handle jumping to the end of a selection
+                << Qt::Key_Left
+#endif
+                << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
+                << Qt::Key_Delete;
+
+        expectedString << "AB";
+        expectedString << "AB12";
+
+        QTest::newRow("Inserts,moving,selection, delete and undo") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        // inserting 'ABCD'
+        keys << "abcd"
+                //move left two
+                << Qt::Key_Left << Qt::Key_Left
+                // inserting '1234'
+                << "1234"
+                // selecting '1234'
+                << (Qt::Key_Left | Qt::ShiftModifier) << (Qt::Key_Left | Qt::ShiftModifier) << (Qt::Key_Left | Qt::ShiftModifier) << (Qt::Key_Left | Qt::ShiftModifier)
+                // overwriting '1234' with '5'
+                << "5"
+                // undoing deletion of 'AB'
+                << QKeySequence::Undo
+                // overwriting '1234' with '6'
+                << "6";
+
+        expectedString << "ab6cd";
+        // for versions previous to 3.2 we overwrite needed two undo operations
+        expectedString << "ab1234cd";
+        expectedString << "abcd";
+
+        QTest::newRow("Inserts,moving,selection and undo, removing selection") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        // inserting 'ABC'
+        keys << "ABC"
+                // removes 'C'
+                << Qt::Key_Backspace;
+
+        expectedString << "AB";
+        expectedString << "ABC";
+
+        QTest::newRow("Inserts,backspace") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "ABC"
+                // removes 'C'
+                << Qt::Key_Backspace
+                // inserting 'Z'
+                << "Z";
+
+        expectedString << "ABZ";
+        expectedString << "AB";
+        expectedString << "ABC";
+
+        QTest::newRow("Inserts,backspace,inserts") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        // inserting '123'
+        keys << "123" << Qt::Key_Home
+            // selecting '123'
+             << (Qt::Key_End | Qt::ShiftModifier)
+            // overwriting '123' with 'ABC'
+             << "ABC";
+
+        expectedString << "ABC";
+        // for versions previous to 3.2 we overwrite needed two undo operations
+        expectedString << "123";
+
+        QTest::newRow("Inserts,moving,selection and overwriting") << keys << expectedString;
+    }
+}
+
+void tst_qquicktextinput::undo_keypressevents()
+{
+    QFETCH(KeyList, keys);
+    QFETCH(QStringList, expectedString);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    simulateKeys(&canvas, keys);
+
+    for (int i = 0; i < expectedString.size(); ++i) {
+        QCOMPARE(textInput->text() , expectedString[i]);
+        simulateKeys(&canvas, QKeySequence::Undo);
+    }
+    QVERIFY(textInput->text().isEmpty());
 }
 
 void tst_qquicktextinput::QTBUG_19956()
