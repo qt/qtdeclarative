@@ -864,6 +864,12 @@ QQuickCanvas::~QQuickCanvas()
 {
     Q_D(QQuickCanvas);
 
+    /* The threaded renderer will clean up the nodes which will fire
+       sceneGraphChanged events through back to the canvas. This signal
+       is connected to maybeUpdate which should only be called from GUI or during
+       updatePaintNode(), so disconnect them before starting the shutdown
+     */
+    disconnect(d->context->renderer(), SIGNAL(sceneGraphChanged()), this, SLOT(maybeUpdate()));
     if (d->thread->isRunning()) {
         d->thread->stopRendering();
         delete d->thread;
