@@ -195,7 +195,10 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
         else if (!d->registered) {
             d->registered = true;
             QDeclarativeEnginePrivate *engPriv = QDeclarativeEnginePrivate::get(qmlEngine(this));
-            engPriv->registerFinalizeCallback(this, this->metaObject()->indexOfSlot("componentFinalized()"));
+            static int finalizedIdx = -1;
+            if (finalizedIdx < 0)
+                finalizedIdx = metaObject()->indexOfSlot("componentFinalized()");
+            engPriv->registerFinalizeCallback(this, finalizedIdx);
         }
         return;
     }
