@@ -557,39 +557,45 @@ namespace {
 
             if (qt_isalpha(s[index])) {
                 // Read identifier.
-                int identifierIndex = index;
+                int idIndex = index;
                 ++index;
                 while (qt_isalnum(s[index]))
                     ++index;
-                int identifierLength = index - identifierIndex;
+                int idLength = index - idIndex;
+
+                const int attrLen = sizeof("attribute") - 1;
+                const int uniLen = sizeof("uniform") - 1;
+                const int loLen = sizeof("lowp") - 1;
+                const int medLen = sizeof("mediump") - 1;
+                const int hiLen = sizeof("highp") - 1;
 
                 switch (expected) {
                 case QualifierIdentifier:
-                    if (qstrncmp("attribute", s + identifierIndex, identifierLength) == 0) {
+                    if (idLength == attrLen && qstrncmp("attribute", s + idIndex, attrLen) == 0) {
                         decl = AttributeQualifier;
                         expected = PrecisionIdentifier;
-                    } else if (qstrncmp("uniform", s + identifierIndex, identifierLength) == 0) {
+                    } else if (idLength == uniLen && qstrncmp("uniform", s + idIndex, uniLen) == 0) {
                         decl = UniformQualifier;
                         expected = PrecisionIdentifier;
                     }
                     break;
                 case PrecisionIdentifier:
-                    if (qstrncmp("lowp", s + identifierIndex, identifierLength) == 0
-                            || qstrncmp("mediump", s + identifierIndex, identifierLength) == 0
-                            || qstrncmp("highp", s + identifierIndex, identifierLength) == 0)
+                    if ((idLength == loLen && qstrncmp("lowp", s + idIndex, loLen) == 0)
+                            || (idLength == medLen && qstrncmp("mediump", s + idIndex, medLen) == 0)
+                            || (idLength == hiLen && qstrncmp("highp", s + idIndex, hiLen) == 0))
                     {
                         expected = TypeIdentifier;
                         break;
                     }
                     // Fall through.
                 case TypeIdentifier:
-                    typeIndex = identifierIndex;
-                    typeLength = identifierLength;
+                    typeIndex = idIndex;
+                    typeLength = idLength;
                     expected = NameIdentifier;
                     break;
                 case NameIdentifier:
-                    nameIndex = identifierIndex;
-                    nameLength = identifierLength;
+                    nameIndex = idIndex;
+                    nameLength = idLength;
                     return index; // Attribute or uniform declaration found. Return result.
                 default:
                     break;

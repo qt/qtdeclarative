@@ -64,7 +64,7 @@ class QSGContext;
 class QSignalMapper;
 class QQuickCustomMaterialShader;
 
-class QQuickShaderEffect : public QQuickItem
+class Q_AUTOTEST_EXPORT QQuickShaderEffect : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QByteArray fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
