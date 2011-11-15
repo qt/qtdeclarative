@@ -80,7 +80,7 @@ public:
     virtual QVariant data(int index, int role) const;
 
     Q_INVOKABLE void clear();
-    Q_INVOKABLE void remove(int index);
+    Q_INVOKABLE void remove(QDeclarativeV8Function *args);
     Q_INVOKABLE void append(QDeclarativeV8Function *args);
     Q_INVOKABLE void insert(QDeclarativeV8Function *args);
     Q_INVOKABLE QDeclarativeV8Handle get(int index) const;

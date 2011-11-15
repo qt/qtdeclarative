@@ -122,9 +122,9 @@ void QDeclarativeListModelWorkerAgent::clear()
     m_copy->clear();
 }
 
-void QDeclarativeListModelWorkerAgent::remove(int index)
+void QDeclarativeListModelWorkerAgent::remove(QDeclarativeV8Function *args)
 {
-    m_copy->remove(index);
+    m_copy->remove(args);
 }
 
 void QDeclarativeListModelWorkerAgent::append(QDeclarativeV8Function *args)

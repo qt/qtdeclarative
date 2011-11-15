@@ -554,11 +554,13 @@ void ListModel::clear()
     elements.clear();
 }
 
-void ListModel::remove(int index)
+void ListModel::remove(int index, int count)
 {
-    elements[index]->destroy(m_layout);
-    delete elements[index];
-    elements.remove(index);
+    for (int i=0 ; i < count ; ++i) {
+        elements[index+i]->destroy(m_layout);
+        delete elements[index+i];
+    }
+    elements.remove(index, count);
     updateCacheIndices();
 }
 
@@ -1455,22 +1457,30 @@ void QDeclarativeListModel::clear()
 }
 
 /*!
-    \qmlmethod QtQuick2::ListModel::remove(int index)
+    \qmlmethod QtQuick2::ListModel::remove(int index, int count = 1)
 
     Deletes the content at \a index from the model.
 
     \sa clear()
 */
-void QDeclarativeListModel::remove(int index)
+void QDeclarativeListModel::remove(QDeclarativeV8Function *args)
 {
-    if (index < 0 || index >= count()) {
-        qmlInfo(this) << tr("remove: index %1 out of range").arg(index);
-        return;
+    int argLength = args->Length();
+
+    if (argLength == 1 || argLength == 2) {
+        int index = (*args)[0]->Int32Value();
+        int removeCount = (argLength == 2 ? ((*args)[1]->Int32Value()) : 1);
+
+        if (index < 0 || index+removeCount > count() || removeCount <= 0) {
+            qmlInfo(this) << tr("remove: indices [%1 - %2] out of range [0 - %3]").arg(index).arg(index+removeCount).arg(count());
+            return;
+        }
+
+        m_listModel->remove(index, removeCount);
+        emitItemsRemoved(index, removeCount);
+    } else {
+        qmlInfo(this) << tr("remove: incorrect number of arguments");
     }
-
-    m_listModel->remove(index);
-
-    emitItemsRemoved(index, 1);
 }
 
 /*!

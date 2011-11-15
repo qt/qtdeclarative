@@ -275,7 +275,7 @@ public:
     void insert(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
 
     void clear();
-    void remove(int index);
+    void remove(int index, int count);
 
     int appendElement();
     void insertElement(int index);
