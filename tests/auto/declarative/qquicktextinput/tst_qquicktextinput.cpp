@@ -562,6 +562,19 @@ void tst_qquicktextinput::selection()
     textinputObject->deselect();
     QVERIFY(textinputObject->selectedText().isNull());
 
+    // test input method selection
+    QSignalSpy selectionSpy(textinputObject, SIGNAL(selectedTextChanged()));
+    textinputObject->setFocus(true);
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        attributes << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 12, 5, QVariant());
+        QInputMethodEvent event("", attributes);
+        QApplication::sendEvent(textinputObject, &event);
+    }
+    QCOMPARE(selectionSpy.count(), 1);
+    QCOMPARE(textinputObject->selectionStart(), 12);
+    QCOMPARE(textinputObject->selectionEnd(), 17);
+
     delete textinputObject;
 }
 
