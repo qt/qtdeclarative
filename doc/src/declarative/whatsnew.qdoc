@@ -86,9 +86,10 @@ The \l{QtQuick.Particles 2}{QtQuick.Particles} module contains elements that can
 New \l SpriteImage element renders animated sprites and can transition between animations.
 It uses the \l Sprite element to represent each animation.
 
-MouseArea now propagates clicked, doubleClicked and pressAndHold differently to pressed. 
-These will now be propagated to the highest-stacking-order enabled MouseArea which has a handler for them.
+MouseArea can now propagate clicked, doubleClicked and pressAndHold differently to pressed. 
+These can now be propagated to the highest-stacking-order enabled MouseArea which has a handler for them.
 You can still ignore these events in the handler to let them pass through.
+This behavior is triggered with the new property propagateComposedEvents.
 
 The Binding element can now be used as a value source, and will also restore any previously
 set binding when its \i when clause becomes false.

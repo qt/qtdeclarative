@@ -716,6 +716,26 @@ void tst_QQuickMouseArea::clickThrough()
     QCOMPARE(canvas->rootObject()->property("doubleClicks").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
 
+    canvas->rootObject()->setProperty("noPropagation", QVariant(true));
+
+    QTest::qWait(800); // to avoid generating a double click.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
+
+    QTest::qWait(800); // to avoid generating a double click.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(1000);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(100);
+
+    QTest::mouseDClick(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(100);
+
+    QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
+    QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 2);
+    QCOMPARE(canvas->rootObject()->property("doubleClicks").toInt(), 1);
+    QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
+
     delete canvas;
 }
 

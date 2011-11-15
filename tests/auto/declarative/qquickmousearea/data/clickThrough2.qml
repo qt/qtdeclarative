@@ -8,6 +8,7 @@ Item{
     property int pressAndHolds: 0
     property int presses: 0
     property bool letThrough: false
+    property bool noPropagation: false
     Rectangle{
         z: 0
         color: "lightsteelblue"
@@ -15,6 +16,7 @@ Item{
         height: 150
         MouseArea{
             anchors.fill: parent
+            propagateComposedEvents: true
             onPressed: presses++
             onClicked: clicks++
             onPressAndHold: pressAndHolds++
@@ -25,6 +27,7 @@ Item{
         z: 1
         enabled: true
         anchors.fill: parent
+        propagateComposedEvents: !noPropagation
         onClicked: mouse.accepted = !letThrough;
         onDoubleClicked: mouse.accepted = !letThrough;
         onPressAndHold: mouse.accepted = !letThrough;

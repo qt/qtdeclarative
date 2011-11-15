@@ -137,6 +137,7 @@ class Q_DECLARATIVE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
     Q_PROPERTY(QQuickDrag *drag READ drag CONSTANT) //### add flicking to QQuickDrag or add a QDeclarativeFlick ???
     Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged)
+    Q_PROPERTY(bool propagateComposedEvents READ propagateComposedEvents WRITE setPropagateComposedEvents NOTIFY propagateComposedEventsChanged)
 
 public:
     QQuickMouseArea(QQuickItem *parent=0);
@@ -164,6 +165,9 @@ public:
     bool preventStealing() const;
     void setPreventStealing(bool prevent);
 
+    bool propagateComposedEvents() const;
+    void setPropagateComposedEvents(bool propagate);
+
 Q_SIGNALS:
     void hoveredChanged();
     void pressedChanged();
@@ -174,6 +178,7 @@ Q_SIGNALS:
     void mouseXChanged(QQuickMouseEvent *mouse);
     void mouseYChanged(QQuickMouseEvent *mouse);
     void preventStealingChanged();
+    void propagateComposedEventsChanged();
 
     void pressed(QQuickMouseEvent *mouse);
     void pressAndHold(QQuickMouseEvent *mouse);
