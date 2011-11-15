@@ -327,7 +327,7 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     The textured material will fill every pixel in a geometry with
     the supplied texture.
 
-    The geometry to be rendered with an opaque texture material requires
+    The geometry to be rendered with a texture material requires
     vertices in attribute location 0 and texture coordinates in attribute
     location 1. The texture coordinate is a 2-dimensional floating-point
     tuple. The QSGGeometry::defaultAttributes_TexturedPoint2D returns an
@@ -339,9 +339,9 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     The rendering state is set on the texture instance just before it
     is bound.
 
-    The opaque textured material respects the current matrix and the alpha
-    channel of the texture. It will disregard the accumulated opacity in
-    the scenegraph.
+    The textured material respects the current matrix and the alpha
+    channel of the texture. It will also respect the accumulated opacity
+    in the scenegraph.
 
     A texture material must have a texture set before it is used as
     a material in the scene graph.
