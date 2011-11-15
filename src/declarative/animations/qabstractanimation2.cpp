@@ -209,7 +209,6 @@ void QUnifiedTimer2::registerAnimation(QAbstractAnimation2* animation, bool isTo
     if (isTopLevel) {
         Q_ASSERT(!animation->m_hasRegisteredTimer);
         animation->m_hasRegisteredTimer = true;
-        animation->addref();
         inst->animationsToStart << animation;
         if (!inst->startStopAnimationTimer.isActive())
             inst->startStopAnimationTimer.start(STARTSTOP_TIMER_DELAY, inst);
@@ -237,11 +236,9 @@ void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2 *animation)
 
             if (inst->animations.isEmpty() && !inst->startStopAnimationTimer.isActive())
                 inst->startStopAnimationTimer.start(STARTSTOP_TIMER_DELAY, inst);
-            animation->release();
         } else {
             if (inst->animationsToStart.contains(animation)) {
                 inst->animationsToStart.removeOne(animation);
-                animation->release();
             }
         }
     }
@@ -254,7 +251,6 @@ void QUnifiedTimer2::registerRunningAnimation(QAbstractAnimation2* animation)
         return;
 
     if (animation->m_isPause) {
-        animation->addref();
         runningPauseAnimations << animation;
     } else
         runningLeafAnimations++;
@@ -266,7 +262,6 @@ void QUnifiedTimer2::unregisterRunningAnimation(QAbstractAnimation2 *animation)
         return;
 
     if (animation->m_isPause && runningPauseAnimations.contains(animation)) {
-        animation->release();
         runningPauseAnimations.removeOne(animation);
     } else
         runningLeafAnimations--;
@@ -527,8 +522,6 @@ void QAbstractAnimation2::setState(QAbstractAnimation2::State newState)
     }
 
     m_state = newState;
-    QAbstractAnimation2Pointer guard(this);
-
     //(un)registration of the animation must always happen before calls to
     //virtual function (updateState) to ensure a correct state of the timer
     bool isTopLevel = !m_group || m_group->state() == QAbstractAnimation2::Stopped;
@@ -637,13 +630,11 @@ QAbstractAnimation2::~QAbstractAnimation2()
         QAbstractAnimation2::State oldState = m_state;
         m_state = Stopped;
         stateChanged(oldState, m_state);
-        if (oldState == QAbstractAnimation2::Running) {
-             QUnifiedTimer2::unregisterAnimation(this);
-        }
     }
 
     if (m_group)
         m_group->removeAnimation(this);
+    QUnifiedTimer2::unregisterAnimation(this);
 }
 
 void QAbstractAnimation2::setDirection(Direction direction)
