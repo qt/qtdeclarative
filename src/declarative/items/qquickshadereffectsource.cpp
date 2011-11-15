@@ -116,6 +116,8 @@ QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
 
 QQuickShaderEffectTexture::~QQuickShaderEffectTexture()
 {
+    if (m_renderer)
+        disconnect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     delete m_renderer;
     delete m_fbo;
     delete m_secondaryFbo;
