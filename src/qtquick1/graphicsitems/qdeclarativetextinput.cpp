@@ -1396,7 +1396,7 @@ QVariant QDeclarative1TextInput::inputMethodQuery(Qt::InputMethodQuery property)
             && !d->control->passwordEchoEditing())
             return QVariant(displayText());
         else
-            return QVariant(text());
+            return QVariant(d->control->realText());
     case Qt::ImCurrentSelection:
         return QVariant(selectedText());
     case Qt::ImMaximumTextLength:

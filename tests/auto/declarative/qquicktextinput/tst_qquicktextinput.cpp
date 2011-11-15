@@ -1565,6 +1565,28 @@ void tst_qquicktextinput::inputMethods()
     QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
     QCOMPARE(input->cursorPosition(), 7);
+
+    // test that basic tentative commit gets to text property on preedit state
+    input->setText("");
+    QList<QInputMethodEvent::Attribute> attributes;
+    QInputMethodEvent preeditEvent("test", attributes);
+    preeditEvent.setTentativeCommitString("test");
+    QApplication::sendEvent(input, &preeditEvent);
+    QCOMPARE(input->text(), QString("test"));
+
+    // tentative commit not allowed present in surrounding text
+    QInputMethodQueryEvent queryEvent(Qt::ImSurroundingText);
+    QApplication::sendEvent(input, &queryEvent);
+    QCOMPARE(queryEvent.value(Qt::ImSurroundingText).toString(), QString(""));
+
+    // if text with tentative commit does not validate, not allowed to be part of text property
+    input->setText(""); // ensure input state is reset
+    QValidator *validator = new QIntValidator(0, 100);
+    input->setValidator(validator);
+    QApplication::sendEvent(input, &preeditEvent);
+    QCOMPARE(input->text(), QString(""));
+    input->setValidator(0);
+    delete validator;
 }
 
 /*

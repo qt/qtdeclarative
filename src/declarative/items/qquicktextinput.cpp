@@ -1355,7 +1355,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
             && !d->control->passwordEchoEditing()) {
             return QVariant(displayText());
         } else {
-            return QVariant(text());
+            return QVariant(d->control->realText());
         }
     case Qt::ImCurrentSelection:
         return QVariant(selectedText());
