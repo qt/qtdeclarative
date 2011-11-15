@@ -226,9 +226,11 @@ static void removeBindingOnProperty(QObject *o, int index)
     case QDeclarativeInstruction::I: \
     QML_BEGIN_INSTR_COMMON(I)
 
-#  define QML_NEXT_INSTR(I) \
+#  define QML_NEXT_INSTR(I) { \
     if (watcher.hasRecursed()) return 0; \
-    break;
+    break; \
+    }
+
 #  define QML_END_INSTR(I) \
     if (watcher.hasRecursed() || interrupt.shouldInterrupt()) return 0; \
     } break;
