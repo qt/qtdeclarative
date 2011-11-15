@@ -221,18 +221,23 @@ void QSGDefaultImageNode::updateGeometry()
             float a, b;
             b = m_targetRect.width() / m_sourceRect.width();
             a = m_targetRect.x() - m_sourceRect.x() * b;
+
+            float tex_x1 = textureRect.x();
+            float tex_x2 = textureRect.right();
+            float tex_y1 = textureRect.y();
+            float tex_y2 = textureRect.bottom();
             for (int i = floorLeft + 1; i <= ceilRight - 1; ++i) {
                 xs[0].x = xs[1].x = a + b * i;
-                xs[0].tx = 1;
-                xs[1].tx = 0;
+                xs[0].tx = tex_x2;
+                xs[1].tx = tex_x1;
                 xs += 2;
             }
             b = m_targetRect.height() / m_sourceRect.height();
             a = m_targetRect.y() - m_sourceRect.y() * b;
             for (int i = floorTop + 1; i <= ceilBottom - 1; ++i) {
                 ys[0].y = ys[1].y = a + b * i;
-                ys[0].ty = 1;
-                ys[1].ty = 0;
+                ys[0].ty = tex_y2;
+                ys[1].ty = tex_y1;
                 ys += 2;
             }
 
