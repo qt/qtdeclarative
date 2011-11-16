@@ -71,7 +71,7 @@ Rectangle {
         //General Children
         Image {
             anchors.centerIn: parent
-            source: "../images/pics/finalfrontier.png"
+            source: "../images/finalfrontier.png"
         }
         ParticleSystem {
             id: particles
