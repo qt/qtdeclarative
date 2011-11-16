@@ -1005,6 +1005,11 @@ void tst_QQuickGridView::moved_data()
             << 0 << 5 << 3
             << 0.0;
 
+    QTest::newRow("move multiple backwards, within visible items (move first item)")
+            << 0.0
+            << 10 << 0 << 3
+            << 0.0;
+
     QTest::newRow("move multiple forwards, before visible items")
             << 120.0     // show 6-23
             << 3 << 4 << 3      // 3, 4, 5 move to after 6

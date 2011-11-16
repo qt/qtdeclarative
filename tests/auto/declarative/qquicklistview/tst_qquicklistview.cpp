@@ -1219,6 +1219,11 @@ void tst_QQuickListView::moved_data()
             << 4 << 1 << 3
             << 0.0;
 
+    QTest::newRow("move multiple backwards, within visible items (move first item)")
+            << 0.0
+            << 10 << 0 << 3
+            << 0.0;
+
     QTest::newRow("move multiple backwards, from non-visible -> visible")
             << 0.0
             << 20 << 4 << 3

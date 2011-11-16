@@ -1491,18 +1491,18 @@ bool QQuickItemViewPrivate::applyModelChanges()
     // if the first visible item has moved, ensure another one takes its place
     // so that we avoid shifting all content forwards
     // (if an item is removed from before the first visible, the first visible should not move upwards)
+    bool movedBackToFirstVisible = false;
     if (firstVisible && firstItemIndex >= 0) {
-        bool found = false;
         for (int i=0; i<insertResult.movedBackwards.count(); i++) {
             if (insertResult.movedBackwards[i]->index == firstItemIndex) {
                 // an item has moved backwards up to the first visible's position
                 resetItemPosition(insertResult.movedBackwards[i], firstVisible);
                 insertResult.movedBackwards.removeAt(i);
-                found = true;
+                movedBackToFirstVisible = true;
                 break;
             }
         }
-        if (!found && !allInsertionsBeforeVisible) {
+        if (!movedBackToFirstVisible && !allInsertionsBeforeVisible) {
             // first visible item has moved forward, another visible item takes its place
             FxViewItem *item = visibleItem(firstItemIndex);
             if (item)
@@ -1516,10 +1516,14 @@ bool QQuickItemViewPrivate::applyModelChanges()
         // since it will be used to position all subsequent items
         if (insertResult.movedBackwards.count() && origVisibleItemsFirst)
             resetItemPosition(visibleItems.first(), origVisibleItemsFirst);
-        qreal moveBackwardsBy = insertResult.sizeAddedBeforeVisible;
-        for (int i=0; i<insertResult.movedBackwards.count(); i++)
-            moveBackwardsBy += insertResult.movedBackwards[i]->size();
-        moveItemBy(visibleItems.first(), removedBeforeFirstVisibleBy, moveBackwardsBy);
+
+        // correct the first item position (unless it has already been fixed)
+        if (!movedBackToFirstVisible) {
+            qreal moveBackwardsBy = insertResult.sizeAddedBeforeVisible;
+            for (int i=0; i<insertResult.movedBackwards.count(); i++)
+                moveBackwardsBy += insertResult.movedBackwards[i]->size();
+            moveItemBy(visibleItems.first(), removedBeforeFirstVisibleBy, moveBackwardsBy);
+        }
     }
 
     // Whatever removed/moved items remain are no longer visible items.
