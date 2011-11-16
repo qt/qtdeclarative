@@ -157,9 +157,12 @@ public:
     void updateEffectiveOpacityRoot(QQuickItem *, qreal);
     void updateDirtyNode(QQuickItem *);
 
+    QSGEngine *engine;
     QSGContext *context;
+    QColor clearColor;
 
     uint vsyncAnimations : 1;
+    uint clearBeforeRendering : 1;
 
     QQuickCanvasRenderLoop *thread;
     QSize widgetSize;

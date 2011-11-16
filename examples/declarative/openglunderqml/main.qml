@@ -1,10 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the demonstration applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,64 +39,40 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
+import QtQuick 2.0
 
-#include <QObject>
+Item {
 
-#include <qsgtexture.h>
+    width: 400
+    height: 300
 
-QT_BEGIN_HEADER
+    Squircle {
+        SequentialAnimation on t {
+            NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
+            NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }
+            loops: Animation.Infinite
+            running: true
+        }
+    }
 
-QT_BEGIN_NAMESPACE
+    Rectangle {
+        color: Qt.rgba(1, 1, 1, 0.8);
+        radius: 10
+        border.width: 1
+        border.color: "white"
+        anchors.fill: label
+        anchors.margins: -10
+    }
 
-QT_MODULE(Declarative)
+    Text {
+        id: label
+        color: "black"
+        wrapMode: Text.WordWrap
+        text: "The background here is a squircle rendered with raw OpenGL using the 'beforeRender()' signal in QQuickCanvas. This text label and its border is rendered using QML"
+        anchors.right: parent.right
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: 20
+    }
 
-class QSGEnginePrivate;
-
-class QQuickCanvas;
-
-class Q_DECLARATIVE_EXPORT QSGEngine : public QObject
-{
-    Q_OBJECT
-
-    Q_DECLARE_PRIVATE(QSGEngine)
-
-public:
-
-    enum TextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureHasMipmaps       = 0x0002,
-        TextureOwnsGLTexture    = 0x0004
-    };
-    Q_DECLARE_FLAGS(TextureOptions, TextureOption)
-
-    QSGTexture *createTextureFromImage(const QImage &image) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, TextureOptions options = TextureOption(0)) const;
-
-    void setClearBeforeRendering(bool enabled);
-    bool clearBeforeRendering() const;
-
-    void setClearColor(const QColor &color);
-    QColor clearColor() const;
-
-Q_SIGNALS:
-    void beforeRendering();
-    void afterRendering();
-
-private:
-    QSGEngine(QObject *parent = 0);
-    ~QSGEngine();
-
-    friend class QSGContext;
-    friend class QSGContextPrivate;
-    friend class QQuickCanvasPrivate;
-    void setCanvas(QQuickCanvas *canvas);
-
-};
-
-QT_END_NAMESPACE
-
-QT_END_HEADER
-
-#endif // QSGENGINE_H
+}

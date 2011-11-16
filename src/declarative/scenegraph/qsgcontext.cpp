@@ -53,8 +53,6 @@
 #include <private/qsgdistancefieldglyphnode_p.h>
 
 #include <private/qsgtexture_p.h>
-#include <qsgengine.h>
-
 #include <QGuiApplication>
 #include <QOpenGLContext>
 
@@ -108,8 +106,6 @@ public:
 
     QOpenGLContext *gl;
 
-    QSGEngine engine;
-
     QHash<QSGMaterialType *, QSGMaterialShader *> materials;
 
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
@@ -138,7 +134,6 @@ QSGContext::QSGContext(QObject *parent) :
     QObject(*(new QSGContextPrivate), parent)
 {
     Q_D(QSGContext);
-    d->engine.setContext(this);
 }
 
 
@@ -150,18 +145,6 @@ QSGContext::~QSGContext()
     cleanupTextures();
     qDeleteAll(d->materials.values());
     delete d->distanceFieldCacheManager;
-}
-
-/*!
-    Returns the scene graph engine for this context.
-
-    The main purpose of the QSGEngine is to serve as a public API
-    to the QSGContext.
-
- */
-QSGEngine *QSGContext::engine() const
-{
-    return const_cast<QSGEngine *>(&d_func()->engine);
 }
 
 /*!
@@ -258,8 +241,6 @@ void QSGContext::renderNextFrame(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QSGContext);
 
-    emit d->engine.beforeRendering();
-
     cleanupTextures();
 
     if (fbo) {
@@ -268,8 +249,6 @@ void QSGContext::renderNextFrame(QOpenGLFramebufferObject *fbo)
     } else {
         d->renderer->renderScene();
     }
-
-    emit d->engine.afterRendering();
 
 }
 

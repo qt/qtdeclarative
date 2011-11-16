@@ -46,7 +46,9 @@
 #include "qquickitem_p.h"
 
 #include <private/qsgrenderer_p.h>
+#include <private/qsgtexture_p.h>
 #include <private/qsgflashnode_p.h>
+#include <qsgengine.h>
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputPanel>
@@ -412,6 +414,9 @@ void QQuickCanvasPrivate::initializeSceneGraph()
         context->rootNode()->appendChildNode(QQuickItemPrivate::get(rootItem)->itemNode());
     }
 
+    engine = new QSGEngine();
+    engine->setCanvas(q);
+
     emit q_func()->sceneGraphInitialized();
 }
 
@@ -431,16 +436,26 @@ void QQuickCanvasPrivate::polishItems()
 void QQuickCanvasPrivate::syncSceneGraph()
 {
     updateDirtyNodes();
+
+    // Copy the current state of clearing from canvas into renderer.
+    context->renderer()->setClearColor(clearColor);
+    QSGRenderer::ClearMode mode = QSGRenderer::ClearStencilBuffer | QSGRenderer::ClearDepthBuffer;
+    if (clearBeforeRendering)
+        mode |= QSGRenderer::ClearColorBuffer;
+    context->renderer()->setClearMode(mode);
 }
 
 
 void QQuickCanvasPrivate::renderSceneGraph(const QSize &size)
 {
+    Q_Q(QQuickCanvas);
     context->renderer()->setDeviceRect(QRect(QPoint(0, 0), size));
     context->renderer()->setViewportRect(QRect(QPoint(0, 0), renderTarget ? renderTarget->size() : size));
     context->renderer()->setProjectionMatrixToDeviceRect();
 
+    emit q->beforeRendering();
     context->renderNextFrame(renderTarget);
+    emit q->afterRendering();
 
 #ifdef FRAME_TIMING
     sceneGraphRenderTime = frameTimer.elapsed();
@@ -467,7 +482,9 @@ QQuickCanvasPrivate::QQuickCanvasPrivate()
     , mouseGrabberItem(0)
     , dirtyItemList(0)
     , context(0)
+    , clearColor(Qt::white)
     , vsyncAnimations(false)
+    , clearBeforeRendering(true)
     , thread(0)
     , animationDriver(0)
     , renderTarget(0)
@@ -1937,13 +1954,16 @@ void QQuickCanvas::maybeUpdate()
     The engine will only be available once the scene graph has been
     initialized. Register for the sceneGraphEngine() signal to get
     notification about this.
+
+    \deprecated
  */
 
 QSGEngine *QQuickCanvas::sceneGraphEngine() const
 {
     Q_D(const QQuickCanvas);
+    qWarning("QQuickCanvas::sceneGraphEngine() is deprecated, use members of QQuickCanvas instead");
     if (d->context && d->context->isReady())
-        return d->context->engine();
+        return d->engine;
     return 0;
 }
 
@@ -2017,6 +2037,166 @@ QDeclarativeIncubationController *QQuickCanvas::incubationController() const
         d->incubationController = new QQuickCanvasIncubationController(const_cast<QQuickCanvasPrivate *>(d));
     return d->incubationController;
 }
+
+
+
+/*!
+    \enum QQuickCanvas::CreateTextureOption
+
+    The CreateTextureOption enums are used to customize a texture is wrapped.
+
+    \value TextureHasAlphaChannel The texture has an alpha channel and should
+    be drawn using blending.
+
+    \value TextureHasMipmaps The texture has mipmaps and can be drawn with
+    mipmapping enabled.
+
+    \value TextureOwnsGLTexture The texture object owns the texture id and
+    will delete the GL texture when the texture object is deleted.
+ */
+
+/*!
+    \fn void QQuickCanvas::beforeRendering()
+
+    This signal is emitted before the scene starts rendering.
+
+    Combined with the modes for clearing the background, this option
+    can be used to paint using raw GL under QML content.
+
+    The GL context used for rendering the scene graph will be bound
+    at this point.
+
+    Since this signal is emitted from the scene graph rendering thread, the receiver should
+    be on the scene graph thread or the connection should be Qt::DirectConnection.
+
+*/
+
+/*!
+    \fn void QQuickCanvas::afterRendering()
+
+    This signal is emitted after the scene has completed rendering, before swapbuffers is called.
+
+    This signal can be used to paint using raw GL on top of QML content,
+    or to do screen scraping of the current frame buffer.
+
+    The GL context used for rendering the scene graph will be bound at this point.
+
+    Since this signal is emitted from the scene graph rendering thread, the receiver should
+    be on the scene graph thread or the connection should be Qt::DirectConnection.
+ */
+
+
+
+/*!
+    Sets weither the scene graph rendering of QML should clear the color buffer
+    before it starts rendering to \a enbled.
+
+    By disabling clearing of the color buffer, it is possible to do GL painting
+    under the scene graph.
+
+    The color buffer is cleared by default.
+
+    \sa beforeRendering()
+ */
+
+void QQuickCanvas::setClearBeforeRendering(bool enabled)
+{
+    Q_D(QQuickCanvas);
+    d->clearBeforeRendering = enabled;
+}
+
+
+
+/*!
+    Returns weither clearing of the color buffer is done before rendering or not.
+ */
+
+bool QQuickCanvas::clearBeforeRendering() const
+{
+    Q_D(const QQuickCanvas);
+    return d->clearBeforeRendering;
+}
+
+
+
+/*!
+    Creates a new QSGTexture from the supplied \a image. If the image has an
+    alpha channel, the corresponding texture will have an alpha channel.
+
+    The caller of the function is responsible for deleting the returned texture.
+    The actual GL texture will be deleted when the texture object is deleted.
+
+    \warning This function will return 0 if the scene graph has not yet been
+    initialized.
+
+    This function can be called both from the GUI thread and the rendering thread.
+
+    \sa sceneGraphInitialized()
+ */
+
+QSGTexture *QQuickCanvas::createTextureFromImage(const QImage &image) const
+{
+    Q_D(const QQuickCanvas);
+    if (d->context)
+        return d->context->createTexture(image);
+    else
+        return 0;
+}
+
+
+
+/*!
+    Creates a new QSGTexture object from an existing GL texture \a id.
+
+    The caller of the function is responsible for deleting the returned texture.
+
+    Use \a options to customize the texture attributes.
+
+    \warning This function will return 0 if the scenegraph has not yet been
+    initialized.
+
+    \sa sceneGraphInitialized()
+ */
+QSGTexture *QQuickCanvas::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
+{
+    Q_D(const QQuickCanvas);
+    if (d->context) {
+        QSGPlainTexture *texture = new QSGPlainTexture();
+        texture->setTextureId(id);
+        texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
+        texture->setHasMipmaps(options & TextureHasMipmaps);
+        texture->setOwnsTexture(options & TextureOwnsGLTexture);
+        texture->setTextureSize(size);
+        return texture;
+    }
+    return 0;
+}
+
+
+/*!
+    Sets the color used to clear the opengl context to \a color.
+
+    Setting the clear color has no effect when clearing is disabled.
+
+    \sa setClearBeforeRendering()
+ */
+
+void QQuickCanvas::setClearColor(const QColor &color)
+{
+    d_func()->clearColor = color;
+}
+
+
+
+/*!
+    Returns the color used to clear the opengl context.
+ */
+
+QColor QQuickCanvas::clearColor() const
+{
+    return d_func()->clearColor;
+}
+
 
 
 void QQuickCanvasRenderLoop::createGLContext()

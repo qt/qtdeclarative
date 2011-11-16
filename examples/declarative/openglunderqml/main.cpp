@@ -1,10 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the demonstration applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,64 +39,23 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
+#include <QGuiApplication>
 
-#include <QObject>
+#include <QQuickView>
 
-#include <qsgtexture.h>
+#include "squircle.h"
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QSGEnginePrivate;
-
-class QQuickCanvas;
-
-class Q_DECLARATIVE_EXPORT QSGEngine : public QObject
+int main(int argc, char **argv)
 {
-    Q_OBJECT
+    QGuiApplication app(argc, argv);
 
-    Q_DECLARE_PRIVATE(QSGEngine)
+    qmlRegisterType<Squircle>("QtQuick", 2, 0, "Squircle");
 
-public:
+    QQuickView view;
+    view.setVSyncAnimations(true);
+    view.setSource(QUrl("main.qml"));
+    view.show();
 
-    enum TextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureHasMipmaps       = 0x0002,
-        TextureOwnsGLTexture    = 0x0004
-    };
-    Q_DECLARE_FLAGS(TextureOptions, TextureOption)
+    return app.exec();
 
-    QSGTexture *createTextureFromImage(const QImage &image) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, TextureOptions options = TextureOption(0)) const;
-
-    void setClearBeforeRendering(bool enabled);
-    bool clearBeforeRendering() const;
-
-    void setClearColor(const QColor &color);
-    QColor clearColor() const;
-
-Q_SIGNALS:
-    void beforeRendering();
-    void afterRendering();
-
-private:
-    QSGEngine(QObject *parent = 0);
-    ~QSGEngine();
-
-    friend class QSGContext;
-    friend class QSGContextPrivate;
-    friend class QQuickCanvasPrivate;
-    void setCanvas(QQuickCanvas *canvas);
-
-};
-
-QT_END_NAMESPACE
-
-QT_END_HEADER
-
-#endif // QSGENGINE_H
+}

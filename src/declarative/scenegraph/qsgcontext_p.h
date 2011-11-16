@@ -89,7 +89,6 @@ public:
     void setRootNode(QSGRootNode *node);
     QSGRootNode *rootNode() const;
 
-    QSGEngine *engine() const;
     QOpenGLContext *glContext() const;
 
     bool isReady() const;
