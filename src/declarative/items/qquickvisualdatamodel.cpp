@@ -457,7 +457,9 @@ QQuickVisualDataModel::QQuickVisualDataModel(QDeclarativeContext *ctxt, QObject 
 QQuickVisualDataModel::~QQuickVisualDataModel()
 {
     Q_D(QQuickVisualDataModel);
+
     foreach (QQuickVisualDataModelCacheItem *cacheItem, d->m_cache) {
+        delete cacheItem->object;
         cacheItem->object = 0;
         cacheItem->objectRef = 0;
         if (!cacheItem->isReferenced())

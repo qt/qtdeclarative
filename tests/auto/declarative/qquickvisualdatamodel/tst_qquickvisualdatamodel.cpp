@@ -131,6 +131,8 @@ private slots:
     void modelProperties();
     void noDelegate_data();
     void noDelegate();
+    void itemsDestroyed_data();
+    void itemsDestroyed();
     void qaimRowsMoved();
     void qaimRowsMoved_data();
     void remove_data();
@@ -628,6 +630,37 @@ void tst_qquickvisualdatamodel::noDelegate()
     QCOMPARE(vdm->count(), 0);
 }
 
+void tst_qquickvisualdatamodel::itemsDestroyed_data()
+{
+    QTest::addColumn<QUrl>("source");
+
+    QTest::newRow("listView") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_listView.qml"));
+    QTest::newRow("package") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_package.qml"));
+    QTest::newRow("pathView") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_pathView.qml"));
+    QTest::newRow("repeater") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_repeater.qml"));
+}
+
+void tst_qquickvisualdatamodel::itemsDestroyed()
+{
+    QFETCH(QUrl, source);
+
+    QDeclarativeGuard<QQuickItem> delegate;
+
+    {
+        QQuickView view;
+        QStandardItemModel model;
+        initStandardTreeModel(&model);
+        view.rootContext()->setContextProperty("myModel", &model);
+        view.setSource(source);
+
+        view.show();
+        QTest::qWaitForWindowShown(&view);
+
+        QVERIFY(delegate = findItem<QQuickItem>(view.rootItem(), "delegate", 1));
+    }
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QVERIFY(!delegate);
+}
 
 void tst_qquickvisualdatamodel::qaimRowsMoved()
 {
