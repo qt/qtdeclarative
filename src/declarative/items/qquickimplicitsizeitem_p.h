@@ -56,9 +56,6 @@ class Q_AUTOTEST_EXPORT QQuickImplicitSizeItem : public QQuickItem
     Q_PROPERTY(qreal implicitWidth READ implicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight NOTIFY implicitHeightChanged)
 
-public:
-    QQuickImplicitSizeItem(QQuickItem *parent = 0);
-
 protected:
     QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent);
 
@@ -69,29 +66,6 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuickImplicitSizeItem)
     Q_DECLARE_PRIVATE(QQuickImplicitSizeItem)
-};
-
-class QQuickImplicitSizePaintedItemPrivate;
-class Q_AUTOTEST_EXPORT QQuickImplicitSizePaintedItem : public QQuickPaintedItem
-{
-    Q_OBJECT
-    Q_PROPERTY(qreal implicitWidth READ implicitWidth NOTIFY implicitWidthChanged)
-    Q_PROPERTY(qreal implicitHeight READ implicitHeight NOTIFY implicitHeightChanged)
-
-public:
-    QQuickImplicitSizePaintedItem(QQuickItem *parent = 0);
-
-protected:
-    QQuickImplicitSizePaintedItem(QQuickImplicitSizePaintedItemPrivate &dd, QQuickItem *parent);
-    virtual void drawContents(QPainter *, const QRect &) {};
-
-Q_SIGNALS:
-    void implicitWidthChanged();
-    void implicitHeightChanged();
-
-private:
-    Q_DISABLE_COPY(QQuickImplicitSizePaintedItem)
-    Q_DECLARE_PRIVATE(QQuickImplicitSizePaintedItem)
 };
 
 QT_END_NAMESPACE

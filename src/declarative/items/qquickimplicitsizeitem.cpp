@@ -56,36 +56,8 @@ void QQuickImplicitSizeItemPrivate::implicitHeightChanged()
     emit q->implicitHeightChanged();
 }
 
-QQuickImplicitSizeItem::QQuickImplicitSizeItem(QQuickItem *parent)
-    : QQuickItem(*(new QQuickImplicitSizeItemPrivate), parent)
-{
-}
-
 QQuickImplicitSizeItem::QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
-{
-}
-
-
-void QQuickImplicitSizePaintedItemPrivate::implicitWidthChanged()
-{
-    Q_Q(QQuickImplicitSizePaintedItem);
-    emit q->implicitWidthChanged();
-}
-
-void QQuickImplicitSizePaintedItemPrivate::implicitHeightChanged()
-{
-    Q_Q(QQuickImplicitSizePaintedItem);
-    emit q->implicitHeightChanged();
-}
-
-QQuickImplicitSizePaintedItem::QQuickImplicitSizePaintedItem(QQuickItem *parent)
-    : QQuickPaintedItem(*(new QQuickImplicitSizePaintedItemPrivate), parent)
-{
-}
-
-QQuickImplicitSizePaintedItem::QQuickImplicitSizePaintedItem(QQuickImplicitSizePaintedItemPrivate &dd, QQuickItem *parent)
-    : QQuickPaintedItem(dd, parent)
 {
 }
 
