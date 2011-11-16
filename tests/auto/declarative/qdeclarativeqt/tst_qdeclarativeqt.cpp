@@ -503,11 +503,13 @@ void tst_qdeclarativeqt::dateTimeConversion()
     QDate date(2008,12,24);
     QTime time(14,15,38,200);
     QDateTime dateTime(date, time);
+    //Note that when converting Date to QDateTime they can argue over historical DST data when converting to local time.
+    //Tests should use UTC or recent dates.
     QDateTime dateTime2(QDate(2852,12,31), QTime(23,59,59,500));
-    QDateTime dateTime3(QDate(1970,1,1), QTime(0,0,0,0));
-    QDateTime dateTime4(QDate(1586,2,2), QTime(0,0,0,0));
-    QDateTime dateTime5(QDate(955,1,1), QTime(0,0,0,0));
-    QDateTime dateTime6(QDate(113,2,24), QTime(14,15,38,200));
+    QDateTime dateTime3(QDate(2000,1,1), QTime(0,0,0,0));
+    QDateTime dateTime4(QDate(2001,2,2), QTime(0,0,0,0));
+    QDateTime dateTime5(QDate(1999,1,1), QTime(2,3,4,0));
+    QDateTime dateTime6(QDate(2008,2,24), QTime(14,15,38,200));
 
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, TEST_FILE("dateTimeConversion.qml"));
