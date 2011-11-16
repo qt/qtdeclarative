@@ -484,6 +484,10 @@ void tst_qdeclarativeqt::consoleLog()
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testBoolean.arg(startLineNumber++)));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
+    QString testMix = QString::fromLatin1("1 pong! Object (%1:%2)").arg(testFileUrl.toString());
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(testMix.arg(startLineNumber++)));
+    testMix = QString::fromLatin1("1 [ping,pong] Object 2 (%1:%2)").arg(testFileUrl.toString());
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(testMix.arg(startLineNumber++)));
 
     QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testFileUrl.toString());
     QTest::ignoreMessage(QtWarningMsg, qPrintable(testException.arg(startLineNumber++)));

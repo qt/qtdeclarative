@@ -25,6 +25,8 @@ QtObject {
         console.log(f)
         console.log(root)
         console.log(g)
+        console.log(1, "pong!", new Object)
+        console.log(1, ["ping","pong"], new Object, 2)
         console.log(exception) //This has to be at the end
     }
 }

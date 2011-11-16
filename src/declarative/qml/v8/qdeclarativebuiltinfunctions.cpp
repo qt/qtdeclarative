@@ -97,12 +97,14 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
         if (value->IsObject() && !value->IsFunction()
                 && !value->IsArray() && !value->IsDate()
                 && !value->IsRegExp()) {
-            result = QLatin1String("Object");
+            result.append(QLatin1String("Object"));
         } else {
             v8::Local<v8::String> jsstr = value->ToString();
-            result.append(V8ENGINE()->toString(jsstr));
+            QString tmp = V8ENGINE()->toString(jsstr);
             if (value->IsArray())
-                result = QString(QLatin1String("[%1]")).arg(result);
+                result.append(QString::fromLatin1("[%1]").arg(tmp));
+            else
+                result.append(tmp);
         }
     }
 
