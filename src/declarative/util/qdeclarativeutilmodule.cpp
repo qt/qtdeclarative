@@ -59,9 +59,6 @@
 #include "qdeclarativetransition_p.h"
 #include <qdeclarativeinfo.h>
 #include <private/qdeclarativetypenotavailable_p.h>
-#ifndef QT_NO_XMLPATTERNS
-#include "qdeclarativexmllistmodel_p.h"
-#endif
 #include <QtCore/qcoreapplication.h>
 #include <QtGui/QInputPanel>
 
@@ -93,15 +90,6 @@ void QDeclarativeUtilModule::defineModule()
     qmlRegisterType<QDeclarativeTimer>("QtQuick",2,0,"Timer");
     qmlRegisterType<QDeclarativeTransition>("QtQuick",2,0,"Transition");
     qmlRegisterType<QDeclarativeVector3dAnimation>("QtQuick",2,0,"Vector3dAnimation");
-#ifdef QT_NO_XMLPATTERNS
-    qmlRegisterTypeNotAvailable("QtQuick",2,0,"XmlListModel",
-        qApp->translate("QDeclarativeXmlListModel","Qt was built without support for xmlpatterns"));
-    qmlRegisterTypeNotAvailable("QtQuick",2,0,"XmlRole",
-        qApp->translate("QDeclarativeXmlListModel","Qt was built without support for xmlpatterns"));
-#else
-    qmlRegisterType<QDeclarativeXmlListModel>("QtQuick",2,0,"XmlListModel");
-    qmlRegisterType<QDeclarativeXmlListModelRole>("QtQuick",2,0,"XmlRole");
-#endif
 
     qmlRegisterType<QDeclarativeStateOperation>();
 

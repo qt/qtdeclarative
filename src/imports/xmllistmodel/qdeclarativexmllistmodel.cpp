@@ -112,7 +112,6 @@ typedef QPair<int, int> QDeclarativeXmlListRange;
     For example, if there is an XML document like this:
 
     \quotefile doc/src/snippets/declarative/xmlrole.xml
-        
     Here are some valid XPath expressions for XmlRole queries on this document:
 
     \snippet doc/src/snippets/declarative/xmlrole.qml 0
@@ -125,7 +124,6 @@ typedef QPair<int, int> QDeclarativeXmlListRange;
 /*!
     \qmlproperty bool QtQuick2::XmlRole::isKey
     Defines whether this is a key role.
-    
     Key roles are used to to determine whether a set of values should
     be updated or added to the XML list model when XmlListModel::reload()
     is called.
@@ -448,10 +446,9 @@ void QDeclarativeXmlQueryEngine::doSubQueryJob(XmlQueryJob *currentJob, QDeclara
             for (int i=0; i<currentJob->keyRoleResultsCache.count(); i++) {
                 if (!keyRoleResults.contains(currentJob->keyRoleResultsCache[i]))
                     addIndexToRangeList(&currentResult->removed, i);
-                else 
+                else
                     temp << currentJob->keyRoleResultsCache[i];
             }
-
             for (int i=0; i<keyRoleResults.count(); i++) {
                 if (temp.count() == i || keyRoleResults[i] != temp[i]) {
                     temp.insert(i, keyRoleResults[i]);
@@ -641,10 +638,10 @@ void QDeclarativeXmlListModelPrivate::clear_role(QDeclarativeListProperty<QDecla
     \endqml
 
     The \l {XmlListModel::query}{query} value of "/rss/channel/item" specifies that the XmlListModel should generate
-    a model item for each \c <item> in the XML document. 
-    
+    a model item for each \c <item> in the XML document.
+
     The XmlRole objects define the
-    model item attributes. Here, each model item will have \c title and \c pubDate 
+    model item attributes. Here, each model item will have \c title and \c pubDate
     attributes that match the \c title and \c pubDate values of its corresponding \c <item>.
     (See \l XmlRole::query for more examples of valid XPath expressions for XmlRole.)
 
@@ -679,8 +676,8 @@ void QDeclarativeXmlListModelPrivate::clear_role(QDeclarativeListProperty<QDecla
     \endqml
 
     Then when reload() is called, the model will only add and reload
-    items with a "pubDate" value that is not already 
-    present in the model. 
+    items with a "pubDate" value that is not already
+    present in the model.
 
     This is useful when displaying the contents of XML documents that
     are incrementally updated (such as RSS feeds) to avoid repainting the
@@ -900,8 +897,8 @@ QDeclarativeV8Handle QDeclarativeXmlListModel::get(int index) const
     QDeclarativeEngine *engine = qmlContext(this)->engine();
     QV8Engine *v8engine = QDeclarativeEnginePrivate::getV8Engine(engine);
     v8::Local<v8::Object> rv = v8::Object::New();
-    for (int ii = 0; ii < d->roleObjects.count(); ++ii) 
-        rv->Set(v8engine->toString(d->roleObjects[ii]->name()), 
+    for (int ii = 0; ii < d->roleObjects.count(); ++ii)
+        rv->Set(v8engine->toString(d->roleObjects[ii]->name()),
                 v8engine->fromVariant(d->data.value(ii).value(index)));
 
     return QDeclarativeV8Handle::fromHandle(rv);
@@ -936,7 +933,7 @@ QDeclarativeXmlListModel::Status QDeclarativeXmlListModel::status() const
     1.0 (all data downloaded). If the XML data is not from a remote source,
     the progress becomes 1.0 as soon as the data is read.
 
-    Note that when the progress is 1.0, the XML data has been downloaded, but 
+    Note that when the progress is 1.0, the XML data has been downloaded, but
     it is yet to be loaded into the model at this point. Use the status
     property to find out when the XML data has been read and loaded into
     the model.
@@ -984,13 +981,13 @@ void QDeclarativeXmlListModel::componentComplete()
     \qmlmethod QtQuick2::XmlListModel::reload()
 
     Reloads the model.
-    
+
     If no key roles have been specified, all existing model
     data is removed, and the model is rebuilt from scratch.
 
     Otherwise, items are only added if the model does not already
     contain items with matching key role values.
-    
+
     \sa {Using key XML roles}, XmlRole::isKey
 */
 void QDeclarativeXmlListModel::reload()

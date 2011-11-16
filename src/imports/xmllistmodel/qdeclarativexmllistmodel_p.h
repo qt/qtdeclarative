@@ -70,7 +70,7 @@ struct QDeclarativeXmlQueryResult {
     QStringList keyRoleResultsCache;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeXmlListModel : public QListModelInterface, public QDeclarativeParserStatus
+class Q_DECLARATIVE_EXPORT QDeclarativeXmlListModel : public QListModelInterface, public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QDeclarativeParserStatus)

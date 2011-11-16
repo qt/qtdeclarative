@@ -114,8 +114,12 @@ using the model. To reset the roles available in the model, call ListModel::clea
 XmlListModel allows construction of a model from an XML data source. The roles
 are specified via the \l XmlRole element.
 
+Note: From QtQuick 2.0, XmlListModel has been move to a seperate module \l QtQuick.XmlListModel,
+to use XmlListModel item, an additional "import QtQuick.XmlListModel 2.0" is needed.
+
 The following model has three roles, \i title, \i link and \i description:
 \qml
+import QtQuick.XmlListModel 2.0
 XmlListModel {
      id: feedModel
      source: "http://rss.news.yahoo.com/rss/oceania"

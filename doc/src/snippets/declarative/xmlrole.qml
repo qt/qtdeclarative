@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.XmlListModel 2.0
 
 Rectangle {
     width: 300; height: 200
