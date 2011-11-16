@@ -90,6 +90,7 @@ private slots:
     void dontStart();
     void easingProperties();
     void rotation();
+    void reverse();
     void runningTrueBug();
     void nonTransitionBug();
     void registrationBug();
@@ -973,6 +974,26 @@ void tst_qdeclarativeanimations::rotation()
 
     QTest::qWait(800);
     QTIMED_COMPARE(rr->rotation() + rr2->rotation() + rr3->rotation() + rr4->rotation(), qreal(370*4));
+}
+
+void tst_qdeclarativeanimations::reverse()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("reverse.qml")));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QQuickRectangle *innerRect = rect->findChild<QQuickRectangle*>();
+
+    QQuickItemPrivate::get(rect)->setState("moved");
+    QTRY_COMPARE(innerRect->x(), qreal(100));
+
+    QTest::qWait(50);
+
+    QQuickItemPrivate::get(rect)->setState("");
+    QTRY_COMPARE(innerRect->x(), qreal(10));
+
+    delete rect;
 }
 
 void tst_qdeclarativeanimations::runningTrueBug()
