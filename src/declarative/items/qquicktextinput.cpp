@@ -1084,9 +1084,9 @@ void QQuickTextInput::inputMethodEvent(QInputMethodEvent *ev)
 void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextInput);
-    if (d->sendMouseEventToInputContext(event))
-        return;
-    if (d->selectByMouse) {
+
+    if (d->selectByMouse && event->button() == Qt::LeftButton) {
+        d->control->commitPreedit();
         int cursor = d->xToPos(event->localPos().x());
         d->control->selectWordAtPos(cursor);
         event->setAccepted(true);
@@ -1095,6 +1095,8 @@ void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
             d->tripleClickTimer.start();
         }
     } else {
+        if (d->sendMouseEventToInputContext(event))
+            return;
         QQuickImplicitSizeItem::mouseDoubleClickEvent(event);
     }
 }
@@ -1102,8 +1104,9 @@ void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
 void QQuickTextInput::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextInput);
-    if (d->sendMouseEventToInputContext(event))
-        return;
+
+    d->pressPos = event->localPos();
+
     if (d->focusOnPress) {
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
@@ -1114,7 +1117,6 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
-        d->pressPos = event->localPos();
         QPoint distanceVector = d->pressPos.toPoint() - d->tripleClickStartPoint;
         if (d->hasPendingTripleClick()
             && distanceVector.manhattanLength() < qApp->styleHints()->startDragDistance()) {
@@ -1123,6 +1125,10 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
             return;
         }
     }
+
+    if (d->sendMouseEventToInputContext(event))
+        return;
+
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
     int cursor = d->xToPos(event->localPos().x());
     d->control->moveCursor(cursor, mark);
@@ -1132,12 +1138,20 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
 void QQuickTextInput::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextInput);
-    if (d->sendMouseEventToInputContext(event))
-        return;
+
     if (d->selectPressed) {
         if (qAbs(int(event->localPos().x() - d->pressPos.x())) > qApp->styleHints()->startDragDistance())
             setKeepMouseGrab(true);
-        moveCursorSelection(d->xToPos(event->localPos().x()), d->mouseSelectionMode);
+
+        if (d->control->composeMode()) {
+            // start selection
+            int startPos = d->xToPos(d->pressPos.x());
+            int currentPos = d->xToPos(event->localPos().x());
+            if (startPos != currentPos)
+                d->control->setSelection(startPos, currentPos - startPos);
+        } else {
+            moveCursorSelection(d->xToPos(event->localPos().x()), d->mouseSelectionMode);
+        }
         event->setAccepted(true);
     } else {
         QQuickImplicitSizeItem::mouseMoveEvent(event);
@@ -1161,13 +1175,15 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
 bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if !defined QT_NO_IM
-    if (control->composeMode() && event->type() == QEvent::MouseButtonRelease) {
+    if (control->composeMode()) {
         int tmp_cursor = xToPos(event->localPos().x());
         int mousePos = tmp_cursor - control->cursor();
-        // may be causing reset() in some input methods
-        qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
-        if (!control->preeditAreaText().isEmpty())
+        if (mousePos >= 0 && mousePos <= control->preeditAreaText().length()) {
+            if (event->type() == QEvent::MouseButtonRelease) {
+                qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
+            }
             return true;
+        }
     }
 #else
     Q_UNUSED(event);

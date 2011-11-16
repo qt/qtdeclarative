@@ -1124,13 +1124,13 @@ Handles the given mouse \a event.
 void QDeclarative1TextInput::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_D(QDeclarative1TextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonDblClick))
-        return;
-    if (d->selectByMouse) {
+    if (d->selectByMouse && event->button() == Qt::LeftButton) {
         int cursor = d->xToPos(event->pos().x());
         d->control->selectWordAtPos(cursor);
         event->setAccepted(true);
     } else {
+        if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonDblClick))
+            return;
         QDeclarative1PaintedItem::mouseDoubleClickEvent(event);
     }
 }
@@ -1138,8 +1138,9 @@ void QDeclarative1TextInput::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *eve
 void QDeclarative1TextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_D(QDeclarative1TextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonPress))
-        return;
+
+    d->pressPos = event->pos();
+
     if(d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
@@ -1157,8 +1158,10 @@ void QDeclarative1TextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
-        d->pressPos = event->pos();
     }
+    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonPress))
+        return;
+
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
     int cursor = d->xToPos(event->pos().x());
     d->control->moveCursor(cursor, mark);
@@ -1168,12 +1171,20 @@ void QDeclarative1TextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void QDeclarative1TextInput::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_D(QDeclarative1TextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseMove))
-        return;
+
     if (d->selectPressed) {
         if (qAbs(int(event->pos().x() - d->pressPos.x())) > QApplication::startDragDistance())
             setKeepMouseGrab(true);
-        moveCursorSelection(d->xToPos(event->pos().x()), d->mouseSelectionMode);
+
+        if (d->control->composeMode()) {
+            // start selection
+            int startPos = d->xToPos(d->pressPos.x());
+            int currentPos = d->xToPos(event->pos().x());
+            if (startPos != currentPos)
+                d->control->setSelection(startPos, currentPos - startPos);
+        } else {
+            moveCursorSelection(d->xToPos(event->pos().x()), d->mouseSelectionMode);
+        }
         event->setAccepted(true);
     } else {
         QDeclarative1PaintedItem::mouseMoveEvent(event);
@@ -1215,28 +1226,12 @@ bool QDeclarative1TextInputPrivate::sendMouseEventToInputContext(
     if (event->widget() && control->composeMode()) {
         int tmp_cursor = xToPos(event->pos().x());
         int mousePos = tmp_cursor - control->cursor();
-        if (mousePos < 0 || mousePos > control->preeditAreaText().length()) {
-            mousePos = -1;
-            // don't send move events outside the preedit area
-            if (eventType == QEvent::MouseMove)
-                return true;
-        }
-
-        QInputContext *qic = event->widget()->inputContext();
-        if (qic) {
-            QMouseEvent mouseEvent(
-                    eventType,
-                    event->widget()->mapFromGlobal(event->screenPos()),
-                    event->screenPos(),
-                    event->button(),
-                    event->buttons(),
-                    event->modifiers());
-            // may be causing reset() in some input methods
-            qic->mouseHandler(mousePos, &mouseEvent);
-            event->setAccepted(mouseEvent.isAccepted());
-        }
-        if (!control->preeditAreaText().isEmpty())
+        if (mousePos >= 0 && mousePos <= control->preeditAreaText().length()) {
+            if (eventType == QEvent::MouseButtonRelease) {
+                qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
+            }
             return true;
+        }
     }
 #else
     Q_UNUSED(event);

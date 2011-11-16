@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include "../shared/util.h"
+#include <private/qinputpanel_p.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QFile>
 #include <QtDeclarative/qquickview.h>
@@ -94,6 +95,7 @@ public:
 private slots:
     void initTestCase();
     void cleanupTestCase();
+    void cleanup();
     void text();
     void width();
     void font();
@@ -147,6 +149,7 @@ private slots:
 
     void preeditAutoScroll();
     void preeditCursorRectangle();
+    void inputContextMouseHandler();
     void inputMethodComposing();
     void cursorRectangleSize();
 
@@ -208,7 +211,7 @@ void tst_qquicktextinput::simulateKeys(QWindow *window, const QKeySequence &sequ
 
 QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
 {
-    for (int i = 0; i < sequence.count(); ++i)
+    for (uint i = 0; i < sequence.count(); ++i)
         keys << Key(sequence[i], QChar());
     return keys;
 }
@@ -235,8 +238,15 @@ void tst_qquicktextinput::initTestCase()
 
 void tst_qquicktextinput::cleanupTestCase()
 {
-
 }
+
+void tst_qquicktextinput::cleanup()
+{
+    // ensure not even skipped tests with custom input context leave it dangling
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = 0;
+}
+
 tst_qquicktextinput::tst_qquicktextinput()
 {
     standard << "the quick brown fox jumped over the lazy dog"
@@ -2185,7 +2195,11 @@ void tst_qquicktextinput::simulateKey(QQuickView *view, int key)
 class PlatformInputContext : public QPlatformInputContext
 {
 public:
-    PlatformInputContext() : m_visible(false) {}
+    PlatformInputContext()
+        : m_visible(false), m_action(QInputPanel::Click), m_cursorPosition(0),
+          m_invokeActionCallCount(0)
+    {
+    }
 
     virtual void showInputPanel()
     {
@@ -2199,8 +2213,17 @@ public:
     {
         return m_visible;
     }
+    virtual void invokeAction(QInputPanel::Action action, int cursorPosition)
+    {
+        m_invokeActionCallCount++;
+        m_action = action;
+        m_cursorPosition = cursorPosition;
+    }
 
     bool m_visible;
+    QInputPanel::Action m_action;
+    int m_cursorPosition;
+    int m_invokeActionCallCount;
 };
 
 void tst_qquicktextinput::openInputPanel()
@@ -2292,8 +2315,6 @@ void tst_qquicktextinput::openInputPanel()
     // input panel should close when closeSoftwareInputPanel is called
     input->closeSoftwareInputPanel();
     QCOMPARE(qApp->inputPanel()->visible(), false);
-
-    inputPanelPrivate->testContext = 0;
 }
 
 class MyTextInput : public QQuickTextInput
@@ -2543,6 +2564,41 @@ void tst_qquicktextinput::preeditCursorRectangle()
     QCOMPARE(currentRect, previousRect);
     QVERIFY(inputSpy.count() > 0);
     QVERIFY(panelSpy.count() > 0);
+}
+
+void tst_qquicktextinput::inputContextMouseHandler()
+{
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
+    QString text = "supercalifragisiticexpialidocious!";
+    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
+    QVERIFY(input);
+
+    input->setFocus(true);
+    input->setText("");
+
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+
+    QFontMetricsF fm(input->font());
+    const qreal y = fm.height() / 2;
+    QPoint position = QPointF(fm.width(text.mid(0, 2)), y).toPoint();
+
+    QInputMethodEvent inputEvent(text.mid(0, 5), QList<QInputMethodEvent::Attribute>());
+    QApplication::sendEvent(input, &inputEvent);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, position);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, position);
+    QGuiApplication::processEvents();
+
+    QCOMPARE(platformInputContext.m_action, QInputPanel::Click);
+    QCOMPARE(platformInputContext.m_invokeActionCallCount, 1);
+    QCOMPARE(platformInputContext.m_cursorPosition, 2);
 }
 
 void tst_qquicktextinput::inputMethodComposing()

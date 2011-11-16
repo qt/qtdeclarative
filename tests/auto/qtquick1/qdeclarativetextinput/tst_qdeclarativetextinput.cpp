@@ -49,7 +49,8 @@
 #include <QDir>
 #include <QStyle>
 #include <QInputContext>
-#include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
+#include <private/qapplication_p.h>
+#include <private/qinputpanel_p.h>
 
 #include "qplatformdefs.h"
 
@@ -71,6 +72,41 @@ QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& 
     return expectfile;
 }
 
+class PlatformInputContext : public QPlatformInputContext
+{
+public:
+    PlatformInputContext()
+        : m_visible(false), m_action(QInputPanel::Click), m_cursorPosition(0),
+          m_invokeActionCallCount(0)
+    {
+    }
+
+    virtual void showInputPanel()
+    {
+        m_visible = true;
+    }
+    virtual void hideInputPanel()
+    {
+        m_visible = false;
+    }
+    virtual bool isInputPanelVisible() const
+    {
+        return m_visible;
+    }
+    virtual void invokeAction(QInputPanel::Action action, int cursorPosition)
+    {
+        m_invokeActionCallCount++;
+        m_action = action;
+        m_cursorPosition = cursorPosition;
+    }
+
+    bool m_visible;
+    QInputPanel::Action m_action;
+    int m_cursorPosition;
+    int m_invokeActionCallCount;
+};
+
+
 class tst_qdeclarativetextinput : public QObject
 
 {
@@ -79,6 +115,7 @@ public:
     tst_qdeclarativetextinput();
 
 private slots:
+    void cleanup();
 
     void text();
     void width();
@@ -151,6 +188,7 @@ private:
     QStringList colorStrings;
 };
 
+
 tst_qdeclarativetextinput::tst_qdeclarativetextinput()
 {
     standard << "the quick brown fox jumped over the lazy dog"
@@ -171,6 +209,13 @@ tst_qdeclarativetextinput::tst_qdeclarativetextinput()
                  << "#AAAAAA"
                  << "#FFFFFF"
                  << "#2AC05F";
+}
+
+void tst_qdeclarativetextinput::cleanup()
+{
+    // ensure not even skipped tests with custom input context leave it dangling
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = 0;
 }
 
 void tst_qdeclarativetextinput::text()
@@ -2669,15 +2714,17 @@ void tst_qdeclarativetextinput::preeditMicroFocus()
 
 void tst_qdeclarativetextinput::inputContextMouseHandler()
 {
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
     QString text = "supercalifragisiticexpialidocious!";
 
     QGraphicsScene scene;
     QGraphicsView view(&scene);
-    MyInputContext *ic = new MyInputContext;
-    qApp->setInputContext(ic);
+
     QDeclarative1TextInput input;
     input.setWidth(200);
-    input.setText(text.mid(0, 12));
     input.setCursorPosition(12);
     input.setPos(0, 0);
     input.setFocus(true);
@@ -2691,98 +2738,17 @@ void tst_qdeclarativetextinput::inputContextMouseHandler()
     const qreal y = fm.height() / 2;
 
     QPoint position2 = view.mapFromScene(input.mapToScene(QPointF(fm.width(text.mid(0, 2)), y)));
-    QPoint position8 = view.mapFromScene(input.mapToScene(QPointF(fm.width(text.mid(0, 8)), y)));
-    QPoint position20 = view.mapFromScene(input.mapToScene(QPointF(fm.width(text.mid(0, 20)), y)));
-    QPoint position27 = view.mapFromScene(input.mapToScene(QPointF(fm.width(text.mid(0, 27)), y)));
-    QPoint globalPosition2 = view.viewport()->mapToGlobal(position2);
-    QPoint globalposition8 = view.viewport()->mapToGlobal(position8);
-    QPoint globalposition20 = view.viewport()->mapToGlobal(position20);
-    QPoint globalposition27 = view.viewport()->mapToGlobal(position27);
 
-    ic->sendEvent(QInputMethodEvent(text.mid(12), QList<QInputMethodEvent::Attribute>()));
-
-    QTest::mouseDClick(view.viewport(), Qt::LeftButton, Qt::NoModifier, position2);
-    QCOMPARE(ic->eventType, QEvent::MouseButtonDblClick);
-    QCOMPARE(ic->eventPosition, position2);
-    QCOMPARE(ic->eventGlobalPosition, globalPosition2);
-    QCOMPARE(ic->eventButton, Qt::LeftButton);
-    QCOMPARE(ic->eventModifiers, Qt::NoModifier);
-    QVERIFY(ic->cursor < 0);
-    ic->eventType = QEvent::None;
+    QInputMethodEvent inputEvent(text.mid(0, 5), QList<QInputMethodEvent::Attribute>());
+    QApplication::sendEvent(&view, &inputEvent);
 
     QTest::mousePress(view.viewport(), Qt::LeftButton, Qt::NoModifier, position2);
-    QCOMPARE(ic->eventType, QEvent::MouseButtonPress);
-    QCOMPARE(ic->eventPosition, position2);
-    QCOMPARE(ic->eventGlobalPosition, globalPosition2);
-    QCOMPARE(ic->eventButton, Qt::LeftButton);
-    QCOMPARE(ic->eventModifiers, Qt::NoModifier);
-    QVERIFY(ic->cursor < 0);
-    ic->eventType = QEvent::None;
+    QTest::mouseRelease(view.viewport(), Qt::LeftButton, Qt::NoModifier, position2);
+    QApplication::processEvents();
 
-    {   QMouseEvent mv(QEvent::MouseMove, position8, globalposition8, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(view.viewport(), &mv); }
-    QCOMPARE(ic->eventType, QEvent::None);
-
-    {   QMouseEvent mv(QEvent::MouseMove, position27, globalposition27, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(view.viewport(), &mv); }
-    QCOMPARE(ic->eventType, QEvent::MouseMove);
-    QCOMPARE(ic->eventPosition, position27);
-    QCOMPARE(ic->eventGlobalPosition, globalposition27);
-    QCOMPARE(ic->eventButton, Qt::LeftButton);
-    QCOMPARE(ic->eventModifiers, Qt::NoModifier);
-    QVERIFY(ic->cursor >= 14 && ic->cursor <= 16);    // 15 is expected but some platforms may be off by one.
-    ic->eventType = QEvent::None;
-
-    QTest::mouseRelease(view.viewport(), Qt::LeftButton, Qt::NoModifier, position27);
-    QCOMPARE(ic->eventType, QEvent::MouseButtonRelease);
-    QCOMPARE(ic->eventPosition, position27);
-    QCOMPARE(ic->eventGlobalPosition, globalposition27);
-    QCOMPARE(ic->eventButton, Qt::LeftButton);
-    QCOMPARE(ic->eventModifiers, Qt::NoModifier);
-    QVERIFY(ic->cursor >= 14 && ic->cursor <= 16);
-    ic->eventType = QEvent::None;
-
-    // And in the other direction.
-    QTest::mouseDClick(view.viewport(), Qt::LeftButton, Qt::ControlModifier, position27);
-    QCOMPARE(ic->eventType, QEvent::MouseButtonDblClick);
-    QCOMPARE(ic->eventPosition, position27);
-    QCOMPARE(ic->eventGlobalPosition, globalposition27);
-    QCOMPARE(ic->eventButton, Qt::LeftButton);
-    QCOMPARE(ic->eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic->cursor >= 14 && ic->cursor <= 16);
-    ic->eventType = QEvent::None;
-
-    QTest::mousePress(view.viewport(), Qt::RightButton, Qt::ControlModifier, position27);
-    QCOMPARE(ic->eventType, QEvent::MouseButtonPress);
-    QCOMPARE(ic->eventPosition, position27);
-    QCOMPARE(ic->eventGlobalPosition, globalposition27);
-    QCOMPARE(ic->eventButton, Qt::RightButton);
-    QCOMPARE(ic->eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic->cursor >= 14 && ic->cursor <= 16);
-    ic->eventType = QEvent::None;
-
-    {   QMouseEvent mv(QEvent::MouseMove, position20, globalposition20, Qt::RightButton, Qt::RightButton,Qt::ControlModifier);
-        QApplication::sendEvent(view.viewport(), &mv); }
-    QCOMPARE(ic->eventType, QEvent::MouseMove);
-    QCOMPARE(ic->eventPosition, position20);
-    QCOMPARE(ic->eventGlobalPosition, globalposition20);
-    QCOMPARE(ic->eventButton, Qt::RightButton);
-    QCOMPARE(ic->eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic->cursor >= 7 && ic->cursor <= 9);
-    ic->eventType = QEvent::None;
-
-    {   QMouseEvent mv(QEvent::MouseMove, position2, globalPosition2, Qt::RightButton, Qt::RightButton,Qt::ControlModifier);
-        QApplication::sendEvent(view.viewport(), &mv); }
-    QCOMPARE(ic->eventType, QEvent::None);
-
-    QTest::mouseRelease(view.viewport(), Qt::RightButton, Qt::ControlModifier, position2);
-    QCOMPARE(ic->eventType, QEvent::MouseButtonRelease);
-    QCOMPARE(ic->eventPosition, position2);
-    QCOMPARE(ic->eventGlobalPosition, globalPosition2);
-    QCOMPARE(ic->eventButton, Qt::RightButton);
-    QCOMPARE(ic->eventModifiers, Qt::ControlModifier);
-    QVERIFY(ic->cursor < 0);
-    ic->eventType = QEvent::None;
+    QCOMPARE(platformInputContext.m_action, QInputPanel::Click);
+    QCOMPARE(platformInputContext.m_invokeActionCallCount, 1);
+    QCOMPARE(platformInputContext.m_cursorPosition, 2);
 }
 
 void tst_qdeclarativetextinput::inputMethodComposing()
