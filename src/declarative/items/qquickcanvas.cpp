@@ -863,11 +863,8 @@ QQuickCanvas::~QQuickCanvas()
        updatePaintNode(), so disconnect them before starting the shutdown
      */
     disconnect(d->context->renderer(), SIGNAL(sceneGraphChanged()), this, SLOT(maybeUpdate()));
-    if (d->thread->isRunning()) {
+    if (d->thread->isRunning())
         d->thread->stopRendering();
-        delete d->thread;
-        d->thread = 0;
-    }
 
     // ### should we change ~QQuickItem to handle this better?
     // manually cleanup for the root item (item destructor only handles these when an item is parented)
@@ -878,6 +875,8 @@ QQuickCanvas::~QQuickCanvas()
 
     delete d->rootItem; d->rootItem = 0;
     d->cleanupNodes();
+
+    delete d->thread; d->thread = 0;
 }
 
 /*!
