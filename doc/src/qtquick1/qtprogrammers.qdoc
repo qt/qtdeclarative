@@ -27,6 +27,7 @@
 
 /*!
 \page qtprogrammers.html
+\inqmlmodule QtQuick 1
 \target qtprogrammers
 \title QML for Qt Programmers
 

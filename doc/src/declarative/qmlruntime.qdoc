@@ -27,6 +27,7 @@
 
 /*!
 \page qmlruntime.html
+\inqmlmodule QtQuick 2
 \title Qt Declarative UI Runtime
 
 QML documents are loaded and executed by the QML runtime. This includes the

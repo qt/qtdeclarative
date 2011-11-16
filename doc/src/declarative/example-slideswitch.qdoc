@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativeexampletoggleswitch.html
+\inqmlmodule QtQuick 2
 \title QML Example - Toggle Switch
 
 This example shows how to create a reusable switch component in QML.

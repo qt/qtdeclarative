@@ -27,6 +27,7 @@
 
 /*!
 \page qml-extending-tutorial-index.html
+\inqmlmodule QtQuick 1
 \title Tutorial: Writing QML Extensions with C++
 
 The Qt Declarative module provides a set of APIs for extending QML through
@@ -454,6 +455,7 @@ be used by \c app.qml without import statements.
 
 /*!
 \page qml-extending-tutorial7.html
+\inqmlmodule QtQuick 1
 \title Chapter 7: In Summary
 
 In this tutorial, we've shown the basic steps for creating a QML extension:

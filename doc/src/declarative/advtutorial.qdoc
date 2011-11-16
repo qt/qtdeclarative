@@ -27,6 +27,7 @@
 
 /*!
 \page qml-advtutorial.html
+\inqmlmodule QtQuick 2
 \title QML Advanced Tutorial
 \brief A more advanced tutorial, showing how to use QML to create a game.
 \nextpage QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks
@@ -64,6 +65,7 @@ directory.
 
 /*!
 \page qml-advtutorial1.html
+\inqmlmodule QtQuick 2
 \title QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial
@@ -133,6 +135,7 @@ elements to get started. Next, we will populate the game canvas with some blocks
 
 /*!
 \page qml-advtutorial2.html
+\inqmlmodule QtQuick 2
 \title QML Advanced Tutorial 2 - Populating the Game Canvas
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks
@@ -208,6 +211,7 @@ Now, we have a screen of blocks, and we can begin to add the game mechanics.
 
 /*!
 \page qml-advtutorial3.html
+\inqmlmodule QtQuick 2
 \title QML Advanced Tutorial 3 - Implementing the Game Logic
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 2 - Populating the Game Canvas
@@ -296,6 +300,7 @@ until the next chapter - where your application becomes alive!
 
 /*!
 \page qml-advtutorial4.html
+\inqmlmodule QtQuick 2
 \title QML Advanced Tutorial 4 - Finishing Touches
 \contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 3 - Implementing the Game Logic

@@ -27,6 +27,7 @@
 
 /*!
 \page qml-views.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {QML Data Models}{Structuring Data with Models}

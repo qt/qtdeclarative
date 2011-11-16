@@ -27,6 +27,7 @@
 
 /*!
 \page propertybinding.html
+\inqmlmodule QtQuick 1
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {QML Basic Types}{Data Types}

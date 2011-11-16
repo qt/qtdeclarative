@@ -27,6 +27,7 @@
 
 /*!
 \page qml-coding-conventions.html
+\inqmlmodule QtQuick 2
 \title QML Coding Conventions
 
 This document contains the QML coding conventions that we follow in our documentation and examples and recommend that others follow.

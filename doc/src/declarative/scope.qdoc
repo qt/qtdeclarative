@@ -26,6 +26,7 @@
 ****************************************************************************/
 /*!
 \page qdeclarativescope.html
+\inqmlmodule QtQuick 2
 \title QML Scope
 
 \tableofcontents

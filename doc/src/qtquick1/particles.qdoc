@@ -39,6 +39,7 @@
 
 /*!
     \page qml-particlesystem.html
+\inqmlmodule QtQuick 1
     \title Using the Qt Quick Particle System
 
     \section1 The ParticleSystem

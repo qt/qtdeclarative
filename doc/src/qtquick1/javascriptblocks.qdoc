@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativejavascript.html
+\inqmlmodule QtQuick 1
 \title Integrating JavaScript
 
 QML encourages building UIs declaratively, using \l {Property Binding} and the

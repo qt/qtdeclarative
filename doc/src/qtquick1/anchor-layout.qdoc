@@ -27,6 +27,7 @@
 
 /*!
 \page qml-anchor-layout.html
+\inqmlmodule QtQuick 1
 \target anchor-layout
 \contentspage QML Features
 \previouspage {Using QML Positioner and Repeater Items}{Component Layouts}

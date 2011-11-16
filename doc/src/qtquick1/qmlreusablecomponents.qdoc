@@ -27,6 +27,7 @@
 
 /*!
 \page qmlreusablecomponents.html
+\inqmlmodule QtQuick 1
 \ingroup qml-features
 \previouspage {QML Signal and Handler Event System}{Signal and Handler Event System}
 \nextpage {QML States}{States}

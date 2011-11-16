@@ -27,6 +27,7 @@
 
 /*!
 \page qml-positioners.html
+\inqmlmodule QtQuick 1
 \ingroup qml-features
 \previouspage Property Binding
 \nextpage Anchor-based Layout in QML

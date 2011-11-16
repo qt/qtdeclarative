@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativesecurity.html
+\inqmlmodule QtQuick 1
 \title QML Security
 \section1 QML Security
 

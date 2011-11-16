@@ -27,6 +27,7 @@
 
 /*!
 \page qtbinding.html
+\inqmlmodule QtQuick 1
 \ingroup qml-features
 \previouspage {Extending QML Functionalities using C++}
 \nextpage {Integrating QML Code with Existing Qt UI Code}

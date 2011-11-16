@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativemodels.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {QML Animation and Transitions}{Animation and Transitions}
@@ -425,6 +426,7 @@ updated, and that \i{value} holds the new value.
 
 /*!
 \page qml-presenting-data.html
+\inqmlmodule QtQuick 2
 \title Presenting Data with QML
 
 \section1 Introduction

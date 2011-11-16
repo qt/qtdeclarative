@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativenetwork.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \previouspage {Dynamic Object Management in QML}{Dynamic Object Management}
 \nextpage {QML Internationalization}{Internationalization}

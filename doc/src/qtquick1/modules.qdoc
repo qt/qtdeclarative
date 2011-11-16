@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativemodules.html
+\inqmlmodule QtQuick 1
 \title Modules
 \section1 QML Modules
 

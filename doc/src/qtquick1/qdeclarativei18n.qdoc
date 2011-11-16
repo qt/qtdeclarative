@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativei18n.html
+\inqmlmodule QtQuick 1
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {Network Transparency}{Loading Resources in QML}

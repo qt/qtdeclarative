@@ -28,6 +28,7 @@
 /*!
 \title Qt Quick
 \page qtquick1.html
+\inqmlmodule QtQuick 1
 \ingroup qt-gui-concepts
 
 \brief Qt Quick provides a declarative framework for building highly

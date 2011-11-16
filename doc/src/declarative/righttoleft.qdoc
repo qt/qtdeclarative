@@ -27,6 +27,7 @@
 
 /*!
 \page qml-righttoleft.html
+\inqmlmodule QtQuick 2
 \title QML Right-to-left User Interfaces
 
 \section1 Overview

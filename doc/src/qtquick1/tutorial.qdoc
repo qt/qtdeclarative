@@ -27,6 +27,7 @@
 
 /*!
 \page qml-tutorial.html
+\inqmlmodule QtQuick 1
 \title QML Tutorial
 \brief An introduction to the basic concepts and features of QML.
 \nextpage QML Tutorial 1 - Basic Types
@@ -53,6 +54,7 @@ Tutorial chapters:
 
 /*!
 \page qml-tutorial1.html
+\inqmlmodule QtQuick 1
 \title QML Tutorial 1 - Basic Types
 \contentspage QML Tutorial
 \previouspage QML Tutorial
@@ -111,6 +113,7 @@ bin/qmlviewer $QTDIR/examples/declarative/tutorials/helloworld/tutorial1.qml
 
 /*!
 \page qml-tutorial2.html
+\inqmlmodule QtQuick 1
 \title QML Tutorial 2 - QML Components
 \contentspage QML Tutorial
 \previouspage QML Tutorial 1 - Basic Types
@@ -182,6 +185,7 @@ We can react to any signal of our component through a property of the name \e 'o
 
 /*!
 \page qml-tutorial3.html
+\inqmlmodule QtQuick 1
 \title QML Tutorial 3 - States and Transitions
 \contentspage QML Tutorial
 \previouspage QML Tutorial 2 - QML Component

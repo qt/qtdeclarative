@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativestates.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {Importing Reusable Components}

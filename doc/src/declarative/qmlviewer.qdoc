@@ -28,6 +28,7 @@
 /*!
 
 \page qmlviewer.html
+\inqmlmodule QtQuick 2
 \title QML Viewer
 \ingroup qttools
 

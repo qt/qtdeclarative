@@ -27,6 +27,7 @@
 
 /*!
 \page qmlbasicelements.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \contentspage QML Features
 \previouspage QML Features

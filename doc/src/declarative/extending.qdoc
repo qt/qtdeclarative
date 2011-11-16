@@ -27,6 +27,7 @@
 
 /*!
 \page qml-extending.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {Presenting Data with Views}

@@ -27,6 +27,7 @@
 
 /*!
 \page qmlwebkit.html
+\inqmlmodule QtQuick 2
 
 \title QtWebKit QML Module
 

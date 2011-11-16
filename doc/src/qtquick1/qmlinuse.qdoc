@@ -27,6 +27,7 @@
 
 /*!
 \page qmlinuse.html
+\inqmlmodule QtQuick 1
 \title Using QML elements
 
 \raw HTML

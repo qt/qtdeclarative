@@ -27,6 +27,7 @@
 
 /*!
   \page qdeclarativeelements.html
+\inqmlmodule QtQuick 2
   \target elements
   \title QML Elements
   \brief A listing of standard QML elements.

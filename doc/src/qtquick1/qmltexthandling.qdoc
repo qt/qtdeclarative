@@ -27,6 +27,7 @@
 
 /*!
 \page texthandling.html
+\inqmlmodule QtQuick 1
 \title QML Text Handling and Validators
 \ingroup QML Features
 \previouspage {QML Mouse Events}{Mouse Events}
