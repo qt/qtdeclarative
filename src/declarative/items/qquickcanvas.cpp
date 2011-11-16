@@ -259,8 +259,8 @@ have a scope focused item), and the other items will have their focus cleared.
   RenderThread::isRenderBlock: This variable is true when animations are not
   running and the render thread has gone to sleep, waiting for more to do.
 
-  RenderThread::isExternalUpdatePending: This variable is set to false during
-  the sync phase in the GUI thread and to true in maybeUpdate(). It is an
+  RenderThread::isExternalUpdatePending: This variable is set to false when
+  a new render pass is started and to true in maybeUpdate(). It is an
   indication to the render thread that another render pass needs to take
   place, rather than the render thread going to sleep after completing its swap.
 
@@ -2253,7 +2253,7 @@ void QQuickCanvasRenderThread::sync(bool guiAlreadyLocked)
 
 /*!
     Acquires the mutex for the GUI thread. The function uses the isGuiBlocked
-    variable to keep track of how many recursion levels the gui is locket with.
+    variable to keep track of how many recursion levels the gui is locked with.
     We only actually acquire the mutex for the first level to avoid deadlocking
     ourselves.
  */
