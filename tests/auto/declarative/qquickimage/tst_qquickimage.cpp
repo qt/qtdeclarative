@@ -88,6 +88,7 @@ private slots:
     void sourceSize_QTBUG_14303();
     void sourceSize_QTBUG_16389();
     void nullPixmapPaint();
+    void imageCrash_QTBUG_22125();
 
 private:
     template<typename T>
@@ -651,6 +652,27 @@ void tst_qquickimage::nullPixmapPaint()
     qInstallMsgHandler(previousMsgHandler);
     QVERIFY(numberOfWarnings == 0);
     delete image;
+}
+
+void tst_qquickimage::imageCrash_QTBUG_22125()
+{
+    TestHTTPServer server(SERVER_PORT);
+    QVERIFY(server.isValid());
+    server.serveDirectory(TESTDATA(""), TestHTTPServer::Delay);
+
+    {
+        QQuickView view(QUrl::fromLocalFile(TESTDATA("qtbug_22125.qml")));
+        view.show();
+        qApp->processEvents();
+        qApp->processEvents();
+        // shouldn't crash when the view drops out of scope due to
+        // QDeclarativePixmapData attempting to dereference a pointer to
+        // the destroyed reader.
+    }
+
+    // shouldn't crash when deleting cancelled QDeclarativePixmapReplys.
+    QTest::qWait(520); // Delay mode delays for 500 ms.
+    qApp->processEvents(QEventLoop::DeferredDeletion);
 }
 
 /*

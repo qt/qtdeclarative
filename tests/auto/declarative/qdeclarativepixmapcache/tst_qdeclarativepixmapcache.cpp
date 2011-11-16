@@ -73,6 +73,7 @@ private slots:
 #ifndef QT_NO_CONCURRENT
     void networkCrash();
 #endif
+    void lockingCrash();
 private:
     QDeclarativeEngine engine;
     QUrl thisfile;
@@ -382,6 +383,24 @@ void tst_qdeclarativepixmapcache::networkCrash()
 #endif
 
 #endif
+
+// QTBUG-22125
+void tst_qdeclarativepixmapcache::lockingCrash()
+{
+    TestHTTPServer server(14453);
+    server.serveDirectory(QCoreApplication::applicationDirPath() + "/data/http", TestHTTPServer::Delay);
+
+    {
+        QDeclarativePixmap* p = new QDeclarativePixmap;
+        {
+            QDeclarativeEngine e;
+            p->load(&e,  QUrl(QString("http://127.0.0.1:14453/exists6.png")));
+        }
+        p->clear();
+        QVERIFY(p->isNull());
+        delete p;
+    }
+}
 
 QTEST_MAIN(tst_qdeclarativepixmapcache)
 

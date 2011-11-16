@@ -90,8 +90,9 @@ public:
     ~QDeclarativePixmapReply();
 
     QDeclarativePixmapData *data;
-    QDeclarativePixmapReader *reader;
+    QDeclarativeEngine *engineForReader; // always access reader inside readerMutex
     QSize requestSize;
+    QUrl url;
 
     bool loading;
     int redirectCount;
@@ -151,6 +152,7 @@ public:
     void cancel(QDeclarativePixmapReply *rep);
 
     static QDeclarativePixmapReader *instance(QDeclarativeEngine *engine);
+    static QDeclarativePixmapReader *existingInstance(QDeclarativeEngine *engine);
 
 protected:
     void run();
@@ -180,6 +182,7 @@ private:
     static int downloadProgress;
     static int threadNetworkRequestDone;
     static QHash<QDeclarativeEngine *,QDeclarativePixmapReader*> readers;
+public:
     static QMutex readerMutex;
 };
 
@@ -360,6 +363,22 @@ QDeclarativePixmapReader::~QDeclarativePixmapReader()
     readers.remove(engine);
     readerMutex.unlock();
 
+    mutex.lock();
+    // manually cancel all outstanding jobs.
+    foreach (QDeclarativePixmapReply *reply, jobs) {
+        delete reply;
+    }
+    jobs.clear();
+    QList<QDeclarativePixmapReply*> activeJobs = replies.values();
+    foreach (QDeclarativePixmapReply *reply, activeJobs) {
+        if (reply->loading) {
+            cancelled.append(reply);
+            reply->data = 0;
+        }
+    }
+    if (threadObject) threadObject->processJobs();
+    mutex.unlock();
+
     eventLoopQuitHack->deleteLater();
     wait();
 }
@@ -483,8 +502,8 @@ void QDeclarativePixmapReader::processJobs()
             QDeclarativePixmapReply *runningJob = jobs.takeLast();
             runningJob->loading = true;
 
-            QUrl url = runningJob->data->url;
-            QSize requestSize = runningJob->data->requestSize;
+            QUrl url = runningJob->url;
+            QSize requestSize = runningJob->requestSize;
             locker.unlock();
             processJob(runningJob, url, requestSize);
             locker.relock();
@@ -596,22 +615,27 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
 
 QDeclarativePixmapReader *QDeclarativePixmapReader::instance(QDeclarativeEngine *engine)
 {
-    readerMutex.lock();
+    // XXX NOTE: must be called within readerMutex locking.
     QDeclarativePixmapReader *reader = readers.value(engine);
     if (!reader) {
         reader = new QDeclarativePixmapReader(engine);
         readers.insert(engine, reader);
     }
-    readerMutex.unlock();
 
     return reader;
+}
+
+QDeclarativePixmapReader *QDeclarativePixmapReader::existingInstance(QDeclarativeEngine *engine)
+{
+    // XXX NOTE: must be called within readerMutex locking.
+    return readers.value(engine, 0);
 }
 
 QDeclarativePixmapReply *QDeclarativePixmapReader::getImage(QDeclarativePixmapData *data)
 {
     mutex.lock();
     QDeclarativePixmapReply *reply = new QDeclarativePixmapReply(data);
-    reply->reader = this;
+    reply->engineForReader = engine;
     jobs.append(reply);
     // XXX 
     if (threadObject) threadObject->processJobs();
@@ -827,7 +851,7 @@ void QDeclarativePixmapStore::timerEvent(QTimerEvent *)
 }
 
 QDeclarativePixmapReply::QDeclarativePixmapReply(QDeclarativePixmapData *d)
-: data(d), reader(0), requestSize(d->requestSize), loading(false), redirectCount(0)
+: data(d), engineForReader(0), requestSize(d->requestSize), url(d->url), loading(false), redirectCount(0)
 {
     if (finishedIndex == -1) {
         finishedIndex = QDeclarativePixmapReply::staticMetaObject.indexOfSignal("finished()");
@@ -890,11 +914,16 @@ void QDeclarativePixmapData::release()
 {
     Q_ASSERT(refCount > 0);
     --refCount;
-
     if (refCount == 0) {
         if (reply) {
-            reply->reader->cancel(reply);
+            QDeclarativePixmapReply *cancelReply = reply;
+            reply->data = 0;
             reply = 0;
+            QDeclarativePixmapReader::readerMutex.lock();
+            QDeclarativePixmapReader *reader = QDeclarativePixmapReader::existingInstance(cancelReply->engineForReader);
+            if (reader)
+                reader->cancel(cancelReply);
+            QDeclarativePixmapReader::readerMutex.unlock();
         }
 
         if (pixmapStatus == QDeclarativePixmap::Ready) {
@@ -1210,13 +1239,13 @@ void QDeclarativePixmap::load(QDeclarativeEngine *engine, const QUrl &url, const
         if (!engine)
             return;
 
-        QDeclarativePixmapReader *reader = QDeclarativePixmapReader::instance(engine);
-
         d = new QDeclarativePixmapData(url, requestSize);
         if (options & QDeclarativePixmap::Cache)
             d->addToCache();
 
-        d->reply = reader->getImage(d);
+        QDeclarativePixmapReader::readerMutex.lock();
+        d->reply = QDeclarativePixmapReader::instance(engine)->getImage(d);
+        QDeclarativePixmapReader::readerMutex.unlock();
     } else {
         d = *iter;
         d->addref();
