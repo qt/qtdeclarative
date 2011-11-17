@@ -1,5 +1,5 @@
 TARGET = app
-QT = core gui declarative qtquick1
+QT += declarative widgets qtquick1
 
 CONFIG += declarative_debug
 macx:CONFIG -= app_bundle

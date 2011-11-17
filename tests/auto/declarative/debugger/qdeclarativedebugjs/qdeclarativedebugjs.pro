@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativedebugjs
-QT += network declarative-private testlib
+QT += declarative-private testlib
 macx:CONFIG -= app_bundle
 
 HEADERS += ../shared/debugutil_p.h

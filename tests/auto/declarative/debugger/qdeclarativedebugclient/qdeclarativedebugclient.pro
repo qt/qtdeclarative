@@ -8,5 +8,4 @@ SOURCES += tst_qdeclarativedebugclient.cpp \
 
 CONFIG += declarative_debug
 
-QT += core-private gui-private declarative-private network testlib
-
+QT += declarative-private testlib

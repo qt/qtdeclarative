@@ -11,4 +11,4 @@ OTHER_FILES += data/test.qml
 
 CONFIG += parallel_test declarative_debug
 
-QT += core-private gui-private v8-private declarative-private network testlib
+QT += declarative-private testlib
