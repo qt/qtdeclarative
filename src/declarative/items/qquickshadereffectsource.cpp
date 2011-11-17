@@ -586,6 +586,7 @@ QQuickItem *QQuickShaderEffectSource::sourceItem() const
 void QQuickShaderEffectSource::itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect)
 {
     Q_ASSERT(item == m_sourceItem);
+    Q_UNUSED(item);
     if (newRect.size() != oldRect.size())
         update();
 }

@@ -552,6 +552,7 @@ QPointF QDeclarativePath::forwardsPointAt(const QPainterPath &path, const qreal 
 
             while (spc > epc) {
                 Q_ASSERT(!(currElement > lastElement));
+                Q_UNUSED(lastElement);
                 currBez = nextBezier(path, &currElement, &bezLength);
                 currLength += bezLength;
                 epc = currLength / pathLength;
@@ -606,6 +607,7 @@ QPointF QDeclarativePath::backwardsPointAt(const QPainterPath &path, const qreal
 
             while (spc < epc) {
                 Q_ASSERT(!(currElement < firstElement));
+                Q_UNUSED(firstElement);
                 currBez = nextBezier(path, &currElement, &bezLength, true /*reverse*/);
                 currLength = prevLength;
                 prevLength = currLength - bezLength;

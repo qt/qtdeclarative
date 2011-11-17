@@ -129,6 +129,8 @@ inline static void qt_debug_add_texture(QSGTexture* texture)
         item->backTraceSize = backtrace(item->backTrace, BACKTRACE_SIZE);
         qt_debug_allocated_textures.insert(texture, item);
     }
+#else
+    Q_UNUSED(texture);
 #endif // Q_OS_LINUX
 
     ++qt_debug_texture_count;
@@ -150,6 +152,8 @@ static void qt_debug_remove_texture(QSGTexture* texture)
             delete item;
         }
     }
+#else
+    Q_UNUSED(texture)
 #endif
 
     --qt_debug_texture_count;

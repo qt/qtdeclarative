@@ -3212,9 +3212,10 @@ void QQuickItem::setState(const QString &state)
 
 QDeclarativeListProperty<QQuickTransform> QQuickItem::transform()
 {
-    Q_D(QQuickItem);
-    return QDeclarativeListProperty<QQuickTransform>(this, 0, d->transform_append, d->transform_count,
-                                                  d->transform_at, d->transform_clear);
+    return QDeclarativeListProperty<QQuickTransform>(this, 0, QQuickItemPrivate::transform_append,
+                                                     QQuickItemPrivate::transform_count,
+                                                     QQuickItemPrivate::transform_at,
+                                                     QQuickItemPrivate::transform_clear);
 }
 
 void QQuickItem::classBegin()

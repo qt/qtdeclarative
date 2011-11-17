@@ -1107,6 +1107,7 @@ void QDeclarativeComponent::incubateObject(QDeclarativeV8Function *args)
 {
     Q_D(QDeclarativeComponent);
     Q_ASSERT(d->engine);
+    Q_UNUSED(d);
     Q_ASSERT(args);
 
     QObject *parent = 0;

@@ -53,6 +53,7 @@ public:
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt"));
+        Q_UNUSED(uri);
         QDeclarativeQtQuick1Module::defineModule(QDeclarativeQtQuick1Module::Qt47);
     }
 };
