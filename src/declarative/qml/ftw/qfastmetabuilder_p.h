@@ -61,7 +61,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QMetaObject;
+struct QMetaObject;
 class QFastMetaBuilder
 {
 public:

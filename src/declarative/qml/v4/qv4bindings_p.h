@@ -61,7 +61,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QV4Program;
+struct QV4Program;
 class QV4Bindings : public QDeclarativeAbstractExpression, 
                                public QDeclarativeRefCount
 {
