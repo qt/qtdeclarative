@@ -125,6 +125,7 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, bool onPath)
             att->m_view = q;
             att->setOnPath(onPath);
         }
+        QDeclarative_setParent_noEvent(item, q);
         item->setParentItem(q);
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
@@ -1601,6 +1602,7 @@ void QQuickPathView::createdItem(int index, QQuickItem *item)
             att->m_view = this;
             att->setOnPath(false);
         }
+        QDeclarative_setParent_noEvent(item, this);
         item->setParentItem(this);
         d->updateItem(item, index < d->firstIndex ? 0.0 : 1.0);
     }
