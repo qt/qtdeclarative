@@ -47,6 +47,7 @@
 #include <QPointer>
 #include <QFileInfo>
 #include <QDeclarativeEngine>
+#include <QDeclarativeContext>
 #include <QDeclarativeProperty>
 #include <QDeclarativeComponent>
 #include <QDeclarativeIncubator>
@@ -85,6 +86,7 @@ private slots:
     void chainedAsynchronousIfNested();
     void chainedAsynchronousIfNestedOnCompleted();
     void selfDelete();
+    void contextDelete();
 
 private:
     QDeclarativeIncubationController controller;
@@ -972,6 +974,24 @@ void tst_qdeclarativeincubator::selfDelete()
     }
 
     QVERIFY(done);
+    }
+}
+
+// Test that QML doesn't crash if the context is deleted prior to the incubator
+// first executing.
+void tst_qdeclarativeincubator::contextDelete()
+{
+    QDeclarativeContext *context = new QDeclarativeContext(engine.rootContext());
+    QDeclarativeComponent component(&engine, TEST_FILE("contextDelete.qml"));
+
+    QDeclarativeIncubator incubator;
+    component.create(incubator, context);
+
+    delete context;
+
+    {
+        bool b = false;
+        controller.incubateWhile(&b);
     }
 }
 

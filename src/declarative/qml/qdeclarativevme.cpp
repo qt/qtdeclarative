@@ -1455,7 +1455,7 @@ void QDeclarativeVMEGuard::guard(QDeclarativeVME *vme)
     for (int ii = 0; ii < m_objectCount; ++ii)
         m_objects[ii] = vme->objects[ii];
 
-    m_contextCount = (vme->rootContext.isNull())?0:1 + vme->states.count();
+    m_contextCount = (vme->rootContext.isNull()?0:1) + vme->states.count();
     m_contexts = new QDeclarativeGuardedContextData[m_contextCount];
     for (int ii = 0; ii < vme->states.count(); ++ii) 
         m_contexts[ii] = vme->states.at(ii).context;
