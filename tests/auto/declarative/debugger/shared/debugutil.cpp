@@ -131,7 +131,7 @@ void QDeclarativeDebugProcess::start(const QStringList &arguments)
 void QDeclarativeDebugProcess::stop()
 {
     if (m_process.state() != QProcess::NotRunning) {
-        m_process.terminate();
+        m_process.kill();
         m_process.waitForFinished(5000);
     }
 }

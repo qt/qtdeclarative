@@ -950,8 +950,10 @@ void tst_QDeclarativeDebugJS::initTestCase()
 
 void tst_QDeclarativeDebugJS::cleanupTestCase()
 {
-    if (process)
+    if (process) {
+        process->stop();
         delete process;
+    }
 
     if (client)
         delete client;
@@ -979,8 +981,10 @@ void tst_QDeclarativeDebugJS::init()
 
 void tst_QDeclarativeDebugJS::cleanup()
 {
-    if (process)
+    if (process) {
+        process->stop();
         delete process;
+    }
 
     if (client)
         delete client;
