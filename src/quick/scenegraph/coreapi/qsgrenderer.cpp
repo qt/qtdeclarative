@@ -325,15 +325,18 @@ void QSGRenderer::setClearColor(const QColor &color)
     pointer.
 */
 
-void QSGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
+void QSGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 {
-    Q_UNUSED(node);
-    Q_UNUSED(flags);
-
-    if (flags & QSGNode::DirtyNodeAdded)
+    if (state & QSGNode::DirtyNodeAdded)
         addNodesToPreprocess(node);
-    if (flags & QSGNode::DirtyNodeRemoved)
+    if (state & QSGNode::DirtyNodeRemoved)
         removeNodesToPreprocess(node);
+    if (state & QSGNode::DirtyUsePreprocess) {
+        if (node->flags() & QSGNode::UsePreprocess)
+            m_nodes_to_preprocess.insert(node);
+        else
+            m_nodes_to_preprocess.remove(node);
+    }
 
     if (!m_changed_emitted && !m_is_rendering) {
         // Premature overoptimization to avoid excessive signal emissions

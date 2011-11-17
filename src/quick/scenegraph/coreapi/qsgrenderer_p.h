@@ -120,7 +120,7 @@ public:
 
     void renderScene();
     void renderScene(const QSGBindable &bindable);
-    virtual void nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags);
+    virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
     virtual void materialChanged(QSGGeometryNode *node, QSGMaterial *from, QSGMaterial *to);
 
     QSGNodeUpdater *nodeUpdater() const;

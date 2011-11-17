@@ -279,6 +279,7 @@ public:
     bool inheritMirrorFromParent:1;
     bool inheritMirrorFromItem:1;
     bool childrenDoNotOverlap:1;
+    bool staticSubtreeGeometry:1;
 
     QQuickCanvas *canvas;
     QSGContext *sceneGraphContext() const { Q_ASSERT(canvas); return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
@@ -396,6 +397,7 @@ public:
         EffectReference         = 0x00008000,
         Visible                 = 0x00010000,
         HideReference           = 0x00020000,
+        PerformanceHints        = 0x00040000,
         // When you add an attribute here, don't forget to update
         // dirtyToString()
 
@@ -738,6 +740,7 @@ QSGNode *QQuickItemPrivate::childContainerNode()
         else
             itemNode()->appendChildNode(groupNode);
         groupNode->setFlag(QSGNode::ChildrenDoNotOverlap, childrenDoNotOverlap);
+        groupNode->setFlag(QSGNode::StaticSubtreeGeometry, staticSubtreeGeometry);
 #ifdef QML_RUNTIME_TESTING
         groupNode->description = QLatin1String("group");
 #endif

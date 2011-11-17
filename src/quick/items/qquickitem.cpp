@@ -2250,6 +2250,7 @@ QQuickItemPrivate::QQuickItemPrivate()
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
   inheritMirrorFromParent(false), inheritMirrorFromItem(false), childrenDoNotOverlap(false),
+  staticSubtreeGeometry(false),
 
   canvas(0), parentItem(0), sortedChildItems(&childItems),
 
@@ -3960,6 +3961,7 @@ QString QQuickItemPrivate::dirtyToString() const
     DIRTY_TO_STRING(EffectReference);
     DIRTY_TO_STRING(Visible);
     DIRTY_TO_STRING(HideReference);
+    DIRTY_TO_STRING(PerformanceHints);
 
     return rv;
 }

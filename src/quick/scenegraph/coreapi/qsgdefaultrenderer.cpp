@@ -175,18 +175,18 @@ QSGDefaultRenderer::QSGDefaultRenderer(QSGContext *context)
 #endif
 }
 
-void QSGDefaultRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
+void QSGDefaultRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 {
-    QSGRenderer::nodeChanged(node, flags);
+    QSGRenderer::nodeChanged(node, state);
 
-    quint32 rebuildFlags = QSGNode::DirtyNodeAdded | QSGNode::DirtyNodeRemoved
-                         | QSGNode::DirtyMaterial | QSGNode::DirtyOpacity
-                         | QSGNode::DirtyForceUpdate;
+    const quint32 rebuildBits = QSGNode::DirtyNodeAdded | QSGNode::DirtyNodeRemoved
+                                | QSGNode::DirtyMaterial | QSGNode::DirtyOpacity
+                                | QSGNode::DirtyForceUpdate | QSGNode::DirtyChildrenDoNotOverlap;
 
-    if (flags & rebuildFlags)
+    if (state & rebuildBits)
         m_rebuild_lists = true;
 
-    if (flags & (rebuildFlags | QSGNode::DirtyClipList))
+    if (state & (rebuildBits | QSGNode::DirtyClipList))
         m_needs_sorting = true;
 }
 
