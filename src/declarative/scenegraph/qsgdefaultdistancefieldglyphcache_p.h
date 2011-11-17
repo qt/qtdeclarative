@@ -44,6 +44,8 @@
 
 #include <QtGui/qopenglfunctions.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <qopenglshaderprogram.h>
+#include <QtGui/private/qopenglengineshadersource_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -76,29 +78,84 @@ private:
         int currY;
         QImage image;
 
+        QOpenGLShaderProgram *blitProgram;
+        GLfloat blitVertexCoordinateArray[8];
+        GLfloat blitTextureCoordinateArray[8];
+
         DistanceFieldTextureData(QOpenGLContext *ctx)
             : QOpenGLSharedResource(ctx->shareGroup())
             , texture(0)
             , fbo(0)
             , currX(0)
             , currY(0)
-        {}
+            , blitProgram(0)
+        {
+            blitVertexCoordinateArray[0] = -1.0f;
+            blitVertexCoordinateArray[1] = -1.0f;
+            blitVertexCoordinateArray[2] =  1.0f;
+            blitVertexCoordinateArray[3] = -1.0f;
+            blitVertexCoordinateArray[4] =  1.0f;
+            blitVertexCoordinateArray[5] =  1.0f;
+            blitVertexCoordinateArray[6] = -1.0f;
+            blitVertexCoordinateArray[7] =  1.0f;
+
+            blitTextureCoordinateArray[0] = 0.0f;
+            blitTextureCoordinateArray[1] = 0.0f;
+            blitTextureCoordinateArray[2] = 1.0f;
+            blitTextureCoordinateArray[3] = 0.0f;
+            blitTextureCoordinateArray[4] = 1.0f;
+            blitTextureCoordinateArray[5] = 1.0f;
+            blitTextureCoordinateArray[6] = 0.0f;
+            blitTextureCoordinateArray[7] = 1.0f;
+        }
 
         void invalidateResource()
         {
             texture = 0;
             fbo = 0;
             size = QSize();
+            delete blitProgram;
+            blitProgram = 0;
         }
 
         void freeResource(QOpenGLContext *ctx)
         {
             glDeleteTextures(1, &texture);
             ctx->functions()->glDeleteFramebuffers(1, &fbo);
+            delete blitProgram;
+            blitProgram = 0;
+        }
+
+        void createBlitProgram()
+        {
+            blitProgram = new QOpenGLShaderProgram;
+            {
+                QString source;
+                source.append(QLatin1String(qopenglslMainWithTexCoordsVertexShader));
+                source.append(QLatin1String(qopenglslUntransformedPositionVertexShader));
+
+                QOpenGLShader *vertexShader = new QOpenGLShader(QOpenGLShader::Vertex, blitProgram);
+                vertexShader->compileSourceCode(source);
+
+                blitProgram->addShader(vertexShader);
+            }
+            {
+                QString source;
+                source.append(QLatin1String(qopenglslMainFragmentShader));
+                source.append(QLatin1String(qopenglslImageSrcFragmentShader));
+
+                QOpenGLShader *fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, blitProgram);
+                fragmentShader->compileSourceCode(source);
+
+                blitProgram->addShader(fragmentShader);
+            }
+            blitProgram->bindAttributeLocation("vertexCoordsArray", QT_VERTEX_COORDS_ATTR);
+            blitProgram->bindAttributeLocation("textureCoordArray", QT_TEXTURE_COORDS_ATTR);
+            blitProgram->link();
         }
     };
 
-    DistanceFieldTextureData *textureData();
+    DistanceFieldTextureData *textureData(QOpenGLContext *c);
     DistanceFieldTextureData *m_textureData;
     static QHash<QString, QOpenGLMultiGroupSharedResource> m_textures_data;
 };

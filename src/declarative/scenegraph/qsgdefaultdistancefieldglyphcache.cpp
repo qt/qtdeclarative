@@ -42,94 +42,26 @@
 #include "qsgdefaultdistancefieldglyphcache_p.h"
 
 #include <private/qsgdistancefieldutil_p.h>
-#include <qopenglshaderprogram.h>
-#include <QtGui/private/qopenglengineshadersource_p.h>
 #include <qopenglfunctions.h>
 
 
-class TextureBlitHelper
-{
-public:
-    TextureBlitHelper()
-    {
-        m_vertexCoordinateArray[0] = -1.0f;
-        m_vertexCoordinateArray[1] = -1.0f;
-        m_vertexCoordinateArray[2] =  1.0f;
-        m_vertexCoordinateArray[3] = -1.0f;
-        m_vertexCoordinateArray[4] =  1.0f;
-        m_vertexCoordinateArray[5] =  1.0f;
-        m_vertexCoordinateArray[6] = -1.0f;
-        m_vertexCoordinateArray[7] =  1.0f;
-
-        m_textureCoordinateArray[0] = 0.0f;
-        m_textureCoordinateArray[1] = 0.0f;
-        m_textureCoordinateArray[2] = 1.0f;
-        m_textureCoordinateArray[3] = 0.0f;
-        m_textureCoordinateArray[4] = 1.0f;
-        m_textureCoordinateArray[5] = 1.0f;
-        m_textureCoordinateArray[6] = 0.0f;
-        m_textureCoordinateArray[7] = 1.0f;
-
-        m_blitProgram = new QOpenGLShaderProgram;
-        {
-            QString source;
-            source.append(QLatin1String(qopenglslMainWithTexCoordsVertexShader));
-            source.append(QLatin1String(qopenglslUntransformedPositionVertexShader));
-
-            QOpenGLShader *vertexShader = new QOpenGLShader(QOpenGLShader::Vertex, m_blitProgram);
-            vertexShader->compileSourceCode(source);
-
-            m_blitProgram->addShader(vertexShader);
-        }
-        {
-            QString source;
-            source.append(QLatin1String(qopenglslMainFragmentShader));
-            source.append(QLatin1String(qopenglslImageSrcFragmentShader));
-
-            QOpenGLShader *fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, m_blitProgram);
-            fragmentShader->compileSourceCode(source);
-
-            m_blitProgram->addShader(fragmentShader);
-        }
-        m_blitProgram->bindAttributeLocation("vertexCoordsArray", QT_VERTEX_COORDS_ATTR);
-        m_blitProgram->bindAttributeLocation("textureCoordArray", QT_TEXTURE_COORDS_ATTR);
-        m_blitProgram->link();
-    }
-
-    ~TextureBlitHelper()
-    {
-        delete m_blitProgram;
-    }
-
-    QOpenGLShaderProgram *blitProgram() { return m_blitProgram; }
-    const GLfloat *blitVertexArray() const { return &m_vertexCoordinateArray[0]; }
-    const GLfloat *blitTextureArray() const { return &m_textureCoordinateArray[0]; }
-
-private:
-    QOpenGLShaderProgram *m_blitProgram;
-    GLfloat m_vertexCoordinateArray[8];
-    GLfloat m_textureCoordinateArray[8];
-};
-
-static TextureBlitHelper *g_textureBlitHelper = 0;
-
 QHash<QString, QOpenGLMultiGroupSharedResource> QSGDefaultDistanceFieldGlyphCache::m_textures_data;
 
-QSGDefaultDistanceFieldGlyphCache::DistanceFieldTextureData *QSGDefaultDistanceFieldGlyphCache::textureData()
+QSGDefaultDistanceFieldGlyphCache::DistanceFieldTextureData *QSGDefaultDistanceFieldGlyphCache::textureData(QOpenGLContext *c)
 {
     QString key = QString::fromLatin1("%1_%2_%3_%4")
             .arg(font().familyName())
             .arg(font().styleName())
             .arg(font().weight())
             .arg(font().style());
-    return m_textures_data[key].value<QSGDefaultDistanceFieldGlyphCache::DistanceFieldTextureData>(QOpenGLContext::currentContext());
+    return m_textures_data[key].value<QSGDefaultDistanceFieldGlyphCache::DistanceFieldTextureData>(c);
 }
 
 QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
     : QSGDistanceFieldGlyphCache(man, c, font)
     , m_maxTextureSize(0)
 {
-    m_textureData = textureData();
+    m_textureData = textureData(c);
 }
 
 void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QVector<glyph_t> &glyphs)
@@ -288,8 +220,10 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(int width, int height)
         return;
     }
 
-    if (!g_textureBlitHelper)
-        g_textureBlitHelper = new TextureBlitHelper;
+    if (!m_textureData->blitProgram)
+        m_textureData->createBlitProgram();
+
+    Q_ASSERT(m_textureData->blitProgram);
 
     if (!m_textureData->fbo)
         ctx->functions()->glGenFramebuffers(1, &m_textureData->fbo);
@@ -332,14 +266,14 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(int width, int height)
 
     glViewport(0, 0, oldWidth, oldHeight);
 
-    ctx->functions()->glVertexAttribPointer(QT_VERTEX_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, g_textureBlitHelper->blitVertexArray());
-    ctx->functions()->glVertexAttribPointer(QT_TEXTURE_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, g_textureBlitHelper->blitTextureArray());
+    ctx->functions()->glVertexAttribPointer(QT_VERTEX_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_textureData->blitVertexCoordinateArray);
+    ctx->functions()->glVertexAttribPointer(QT_TEXTURE_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_textureData->blitTextureCoordinateArray);
 
-    g_textureBlitHelper->blitProgram()->bind();
-    g_textureBlitHelper->blitProgram()->enableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
-    g_textureBlitHelper->blitProgram()->enableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
-    g_textureBlitHelper->blitProgram()->disableAttributeArray(int(QT_OPACITY_ATTR));
-    g_textureBlitHelper->blitProgram()->setUniformValue("imageTexture", GLuint(0));
+    m_textureData->blitProgram->bind();
+    m_textureData->blitProgram->enableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
+    m_textureData->blitProgram->enableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
+    m_textureData->blitProgram->disableAttributeArray(int(QT_OPACITY_ATTR));
+    m_textureData->blitProgram->setUniformValue("imageTexture", GLuint(0));
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
