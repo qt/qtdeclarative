@@ -296,6 +296,10 @@ QQuickShaderEffectNode::QQuickShaderEffectNode()
 {
     QSGNode::setFlag(UsePreprocess, true);
     setMaterial(&m_material);
+
+#ifdef QML_RUNTIME_TESTING
+    description = QLatin1String("shadereffect");
+#endif
 }
 
 QQuickShaderEffectNode::~QQuickShaderEffectNode()
