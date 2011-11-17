@@ -253,7 +253,6 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseDoubleClickEvent(QMouseEvent *event);
-    bool sceneEvent(QEvent *event);
     void keyPressEvent(QKeyEvent* ev);
     void inputMethodEvent(QInputMethodEvent *);
     void mouseUngrabEvent();
