@@ -222,7 +222,7 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
     m_client->setTraceStatus(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
-                = QString("No trace received in time. App output: \n\n").arg(m_process->output());
+                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
         QFAIL(qPrintable(failMsg));
     }
 
@@ -248,7 +248,7 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
     m_client->setTraceStatus(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
-                = QString("No trace received in time. App output: \n\n").arg(m_process->output());
+                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
         QFAIL(qPrintable(failMsg));
     }
 
@@ -270,7 +270,7 @@ void tst_QDeclarativeDebugTrace::nonBlockingConnect()
     m_client->setTraceStatus(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
-                = QString("No trace received in time. App output: \n\n").arg(m_process->output());
+                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
         QFAIL(qPrintable(failMsg));
     }
 
