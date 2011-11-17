@@ -236,10 +236,10 @@ public:
     inline QColor takeColor() { return colors[colorIdx++]; }
     inline QBrush takeBrush() { return brushes[brushIdx++]; }
 
-    QQuickContext2D::State replay(QPainter* painter, QQuickContext2D::State state);
+    void replay(QPainter* painter, QQuickContext2D::State& state);
 private:
-    QPen makePen(QQuickContext2D::State state);
-    void setPainterState(QPainter* painter, QQuickContext2D::State state, const QPen& pen);
+    QPen makePen(const QQuickContext2D::State& state);
+    void setPainterState(QPainter* painter, const QQuickContext2D::State& state, const QPen& pen);
     int cmdIdx;
     int intIdx;
     int boolIdx;
