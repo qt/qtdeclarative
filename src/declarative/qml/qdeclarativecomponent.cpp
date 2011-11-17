@@ -1277,6 +1277,7 @@ QDeclarativeComponentExtension::~QDeclarativeComponentExtension()
 {
     qPersistentDispose(incubationConstructor);
     qPersistentDispose(initialProperties);
+    qPersistentDispose(forceCompletion);
 }
 
 QV8IncubatorResource::QV8IncubatorResource(QV8Engine *engine, IncubationMode m)
