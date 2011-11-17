@@ -266,6 +266,11 @@ void RewriteBinding::endVisit(AST::LocalForEachStatement *)
     --_inLoop;
 }
 
+QString RewriteSignalHandler::operator()(const QString &code, const QString &name)
+{
+    return QStringLiteral("(function ") + name + QStringLiteral("() { ") + code + QStringLiteral(" })");
+}
+
 } // namespace QDeclarativeRewrite
 
 QT_END_NAMESPACE

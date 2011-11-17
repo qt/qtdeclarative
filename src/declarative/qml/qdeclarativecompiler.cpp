@@ -1227,10 +1227,11 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 
             Instruction::StoreSignal store;
             store.signalIndex = prop->index;
-            store.value =
-                output->indexForString(v->value.asScript().trimmed());
+            QDeclarativeRewrite::RewriteSignalHandler rewriteSignalHandler;
+            const QString &rewrite =
+                    rewriteSignalHandler(v->value.asScript().trimmed(), prop->name().toString());
+            store.value = output->indexForString(rewrite);
             store.context = v->signalExpressionContextStack;
-            store.name = output->indexForByteArray(prop->name().toUtf8());
             store.line = v->location.start.line;
             output->addInstruction(store);
 

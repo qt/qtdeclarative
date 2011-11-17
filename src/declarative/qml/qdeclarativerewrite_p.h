@@ -119,6 +119,12 @@ private:
     int _inLoop;
 };
 
+class RewriteSignalHandler
+{
+public:
+    QString operator()(const QString &code, const QString &name);
+};
+
 } // namespace QDeclarativeRewrite
 
 QT_END_NAMESPACE

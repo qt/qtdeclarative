@@ -53,6 +53,7 @@
 #include <QtDeclarative/qquickitem.h>
 
 #include <private/qdeclarativebinding_p.h>
+#include <private/qdeclarativeboundsignal_p.h>
 #include <private/qdeclarativeenginedebug_p.h>
 #include <private/qdeclarativedebugservice_p.h>
 #include <private/qdeclarativemetatype_p.h>
@@ -209,7 +210,15 @@ void tst_QDeclarativeEngineDebug::recursiveObjectTest(QObject *o, const QDeclara
 
         // signal properties are fake - they are generated from QDeclarativeBoundSignal children
         if (p.name().startsWith("on") && p.name().length() > 2 && p.name()[2].isUpper()) {
-            QVERIFY(p.value().toString().startsWith('{') && p.value().toString().endsWith('}'));
+            QList<QDeclarativeBoundSignal*> signalHandlers = o->findChildren<QDeclarativeBoundSignal*>();
+            QString signal = p.value().toString();
+            bool found = false;
+            for (int i = 0; i < signalHandlers.count(); ++i)
+                if (signalHandlers.at(i)->expression()->expression() == signal) {
+                    found = true;
+                    break;
+                }
+            QVERIFY(found);
             QVERIFY(p.valueTypeName().isEmpty());
             QVERIFY(p.binding().isEmpty());
             QVERIFY(!p.hasNotifySignal());
@@ -1031,7 +1040,7 @@ void tst_QDeclarativeEngineDebug::setBindingForObject()
     QDeclarativeDebugPropertyReference onEnteredRef = findProperty(mouseAreaObject.properties(), "onEntered");
 
     QCOMPARE(onEnteredRef.name(), QString("onEntered"));
-    QCOMPARE(onEnteredRef.value(),  QVariant("{ console.log('hello') }"));
+    QCOMPARE(onEnteredRef.value(),  QVariant("(function onEntered() { { console.log('hello') } })"));
 
     m_dbg->setBindingForObject(mouseAreaObject.debugId(), "onEntered", "{console.log('hello, world') }", false) ;
 

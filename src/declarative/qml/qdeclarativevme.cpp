@@ -863,9 +863,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 
             QDeclarativeBoundSignal *bs = new QDeclarativeBoundSignal(target, signal, target);
             QDeclarativeExpression *expr = 
-                new QDeclarativeExpression(CTXT, context, PRIMITIVES.at(instr.value));
-            expr->setSourceLocation(COMP->name, instr.line);
-            static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr))->name = QString::fromUtf8(DATAS.at(instr.name));
+                new QDeclarativeExpression(CTXT, context, PRIMITIVES.at(instr.value), true, COMP->name, instr.line, *new QDeclarativeExpressionPrivate);
             bs->setExpression(expr);
         QML_END_INSTR(StoreSignal)
 

@@ -382,7 +382,6 @@ union QDeclarativeInstruction
         int signalIndex;
         int value;
         short context;
-        int name;
         ushort line;
     };
     struct instr_assignSignalObject {
