@@ -114,7 +114,7 @@ public:
     void setSize(int newSize);
 
     int index;
-    QSet<QQuickParticlePainter*> painters;
+    QSet<QQuickParticlePainter*> painters;//TODO: What if they are dynamically removed?
 
     //TODO: Refactor particle data list out into a separate class
     QVector<QQuickParticleData*> data;

@@ -1060,6 +1060,10 @@ void QQuickParticleSystem::updateCurrentTime( int currentTime )
     dt = time - dt;
     needsReset.clear();
 
+    m_emitters.removeAll(0);
+    m_painters.removeAll(0);
+    m_affectors.removeAll(0);
+
     bool oldClear = m_empty;
     m_empty = true;
     foreach (QQuickParticleGroupData* gd, groupData)//Recycle all groups and see if they're out of live particles
@@ -1069,15 +1073,12 @@ void QQuickParticleSystem::updateCurrentTime( int currentTime )
         stateEngine->updateSprites(timeInt);
 
     foreach (QQuickParticleEmitter* emitter, m_emitters)
-        if (emitter)
-            emitter->emitWindow(timeInt);
+        emitter->emitWindow(timeInt);
     foreach (QQuickParticleAffector* a, m_affectors)
-        if (a)
-            a->affectSystem(dt);
+        a->affectSystem(dt);
     foreach (QQuickParticleData* d, needsReset)
         foreach (QQuickParticlePainter* p, groupData[d->group]->painters)
-            if (p && d)
-                p->reload(d);
+            p->reload(d);
 
     if (oldClear != m_empty)
         emptyChanged(m_empty);

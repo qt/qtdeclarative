@@ -1197,7 +1197,6 @@ static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 
 void QQuickImageParticle::clearShadows()
 {
-    m_shadowInit = false;
     foreach (const QVector<QQuickParticleData*> data, m_shadowData)
         qDeleteAll(data);
     m_shadowData.clear();

@@ -124,9 +124,7 @@ protected:
     QPointF m_systemOffset;
 
 private:
-    QQuickParticleData* m_sentinel;
     QSet<QPair<int,int> > m_pendingCommits;
-    //QVector<QQuickParticleData*> m_shadowData;//For when we implement overwrite: false
 };
 
 QT_END_NAMESPACE
