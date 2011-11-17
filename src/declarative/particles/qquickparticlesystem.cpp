@@ -428,6 +428,11 @@ QQuickParticleData::QQuickParticleData(QQuickParticleSystem* sys)
     modelIndex = -1;
 }
 
+QQuickParticleData::~QQuickParticleData()
+{
+    delete v8Datum;
+}
+
 void QQuickParticleData::clone(const QQuickParticleData& other)
 {
     x = other.x;
