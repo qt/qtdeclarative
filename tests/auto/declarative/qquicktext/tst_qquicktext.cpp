@@ -1334,8 +1334,7 @@ void tst_qquicktext::lineHeight()
 
     qreal h = myText->height();
     myText->setLineHeight(1.5);
-    QEXPECT_FAIL("", "QTBUG-21009 fails", Continue);
-    QVERIFY(myText->height() == h * 1.5);
+    QVERIFY(myText->height() == qCeil(h * 1.5));
 
     myText->setLineHeightMode(QQuickText::FixedHeight);
     myText->setLineHeight(20);
