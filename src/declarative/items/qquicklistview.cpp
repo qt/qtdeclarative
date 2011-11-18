@@ -2384,10 +2384,12 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
         int from = tempPos - buffer;
 
         for (i = count-1; i >= 0; --i) {
-            if (pos > from) {
-                insertResult->sizeAddedBeforeVisible += averageSize;
-                pos -= averageSize;
+            if (pos > from && insertionIdx < visibleIndex) {
+                // item won't be visible, just note the size for repositioning
+                insertResult->sizeAddedBeforeVisible += averageSize + spacing;
+                pos -= averageSize + spacing;
             } else {
+                // item is before first visible e.g. in cache buffer
                 FxViewItem *item = 0;
                 if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
                     if (item->index > modelIndex + i)

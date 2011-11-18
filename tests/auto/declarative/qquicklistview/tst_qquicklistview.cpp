@@ -96,6 +96,8 @@ private slots:
     void qListModelInterface_clear();
     void qAbstractItemModel_clear();
 
+    void insertBeforeVisible();
+    void insertBeforeVisible_data();
     void swapWithFirstItem();
     void itemList();
     void currentIndex_delayedItemCreation();
@@ -816,6 +818,96 @@ void tst_QQuickListView::inserted_more_data()
             << 80.0     // show 4-19
             << 20 << 3
             << 0.0;
+}
+
+void tst_QQuickListView::insertBeforeVisible()
+{
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(int, cacheBuffer);
+
+    QQuickText *name;
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    listview->setCacheBuffer(cacheBuffer);
+
+    // trigger a refill (not just setting contentY) so that the visibleItems grid is updated
+    int firstVisibleIndex = 20;     // move to an index where the top item is not visible
+    listview->setContentY(firstVisibleIndex * 20.0);
+    listview->setCurrentIndex(firstVisibleIndex);
+    qApp->processEvents();
+    QTRY_COMPARE(listview->currentIndex(), firstVisibleIndex);
+    QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", firstVisibleIndex);
+    QVERIFY(item);
+    QCOMPARE(item->y(), listview->contentY());
+
+    QList<QPair<QString, QString> > newData;
+    for (int i=0; i<insertCount; i++)
+        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+    model.insertItems(insertIndex, newData);
+    QTRY_COMPARE(listview->property("count").toInt(), model.count());
+
+    // now, moving to the top of the view should position the inserted items correctly
+    int itemsOffsetAfterMove = -(insertCount * 20);
+    listview->setCurrentIndex(0);
+    QTRY_COMPARE(listview->currentIndex(), 0);
+    QTRY_COMPARE(listview->contentY(), 0.0 + itemsOffsetAfterMove);
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
+        name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+    delete testObject;
+}
+
+void tst_QQuickListView::insertBeforeVisible_data()
+{
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<int>("cacheBuffer");
+
+    QTest::newRow("insert 1 at 0, 0 buffer") << 0 << 1 << 0;
+    QTest::newRow("insert 1 at 0, 100 buffer") << 0 << 1 << 100;
+    QTest::newRow("insert 1 at 0, 500 buffer") << 0 << 1 << 500;
+
+    QTest::newRow("insert 1 at 1, 0 buffer") << 1 << 1 << 0;
+    QTest::newRow("insert 1 at 1, 100 buffer") << 1 << 1 << 100;
+    QTest::newRow("insert 1 at 1, 500 buffer") << 1 << 1 << 500;
+
+    QTest::newRow("insert multiple at 0, 0 buffer") << 0 << 3 << 0;
+    QTest::newRow("insert multiple at 0, 100 buffer") << 0 << 3 << 100;
+    QTest::newRow("insert multiple at 0, 500 buffer") << 0 << 3 << 500;
+
+    QTest::newRow("insert multiple at 1, 0 buffer") << 1 << 3 << 0;
+    QTest::newRow("insert multiple at 1, 100 buffer") << 1 << 3 << 100;
+    QTest::newRow("insert multiple at 1, 500 buffer") << 1 << 3 << 500;
 }
 
 template <class T>

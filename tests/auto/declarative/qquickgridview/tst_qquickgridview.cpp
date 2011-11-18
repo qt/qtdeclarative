@@ -71,6 +71,8 @@ private slots:
     void inserted();
     void inserted_more();
     void inserted_more_data();
+    void insertBeforeVisible();
+    void insertBeforeVisible_data();
     void removed();
     void addOrRemoveBeforeVisible();
     void addOrRemoveBeforeVisible_data();
@@ -595,6 +597,94 @@ void tst_QQuickGridView::inserted_more_data()
             << 120.0     // show 6-23
             << 24 << 3
             << 0.0;
+}
+
+void tst_QQuickGridView::insertBeforeVisible()
+{
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(int, cacheBuffer);
+
+    QQuickText *name;
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(false));
+    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    gridview->setCacheBuffer(cacheBuffer);
+
+    // trigger a refill (not just setting contentY) so that the visibleItems grid is updated
+    int firstVisibleIndex = 20;     // move to an index where the top item is not visible
+    gridview->setContentY(firstVisibleIndex * 20.0);
+    gridview->setCurrentIndex(firstVisibleIndex);
+    qApp->processEvents();
+    QTRY_COMPARE(gridview->currentIndex(), firstVisibleIndex);
+    QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", firstVisibleIndex);
+    QVERIFY(item);
+    QCOMPARE(item->y(), gridview->contentY());
+
+    QList<QPair<QString, QString> > newData;
+    for (int i=0; i<insertCount; i++)
+        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+    model.insertItems(insertIndex, newData);
+    QTRY_COMPARE(gridview->property("count").toInt(), model.count());
+
+    // now, moving to the top of the view should position the inserted items correctly
+    int itemsOffsetAfterMove = (insertCount / 3) * -60.0;
+    gridview->setCurrentIndex(0);
+    QTRY_COMPARE(gridview->currentIndex(), 0);
+    QTRY_COMPARE(gridview->contentY(), 0.0 + itemsOffsetAfterMove);
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0 + itemsOffsetAfterMove);
+        name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::insertBeforeVisible_data()
+{
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<int>("cacheBuffer");
+
+    QTest::newRow("insert 1 at 0, 0 buffer") << 0 << 1 << 0;
+    QTest::newRow("insert 1 at 0, 100 buffer") << 0 << 1 << 100;
+    QTest::newRow("insert 1 at 0, 500 buffer") << 0 << 1 << 500;
+
+    QTest::newRow("insert 1 at 1, 0 buffer") << 1 << 1 << 0;
+    QTest::newRow("insert 1 at 1, 100 buffer") << 1 << 1 << 100;
+    QTest::newRow("insert 1 at 1, 500 buffer") << 1 << 1 << 500;
+
+    QTest::newRow("insert multiple at 0, 0 buffer") << 0 << 6 << 0;
+    QTest::newRow("insert multiple at 0, 100 buffer") << 0 << 6 << 100;
+    QTest::newRow("insert multiple at 0, 500 buffer") << 0 << 6 << 500;
+
+    QTest::newRow("insert multiple at 1, 0 buffer") << 1 << 6 << 0;
+    QTest::newRow("insert multiple at 1, 100 buffer") << 1 << 6 << 100;
+    QTest::newRow("insert multiple at 1, 500 buffer") << 1 << 6 << 500;
 }
 
 void tst_QQuickGridView::removed()

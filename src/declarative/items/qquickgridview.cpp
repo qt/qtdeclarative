@@ -1802,9 +1802,11 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
         int from = tempPos - buffer;
 
         while (i >= 0) {
-            if (rowPos > from) {
+            if (rowPos > from && insertionIdx < visibleIndex) {
+                // item won't be visible, just note the size for repositioning
                 insertResult->sizeAddedBeforeVisible += rowSize();
             } else {
+                // item is before first visible e.g. in cache buffer
                 FxViewItem *item = 0;
                 if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
                     if (item->index > modelIndex + i)
