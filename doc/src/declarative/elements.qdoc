@@ -46,7 +46,7 @@ To see the QML elements listed by functional area, see the
 \list
 \o \l {Item} - Basic item element inherited by QML elements
 \o \l {Component} - Encapsulates QML elements during importing
-\o \l {QML:QtObject} {QtObject} - Basic element containing only the \c {objectName} property
+\o \l {QtObject} {QtObject} - Basic element containing only the \c {objectName} property
 \endlist
 
 \section1 Graphics
@@ -58,6 +58,7 @@ To see the QML elements listed by functional area, see the
 \o \l {Gradient} - For defining a color gradient
 \o \l {GradientStop} - Used to define a color within a \l {Gradient}
 \o \l {SystemPalette} - Provides access to the Qt palettes
+\o \l {Canvas} - Provides a 2D canvas element
 \endlist
 
 \section1 Text Handling
@@ -79,6 +80,7 @@ To see the QML elements listed by functional area, see the
 \o \l {Flickable} - Provides a surface that can be "flicked"
 \o \l {Flipable} - Provides a surface that produces "flipping" effects
 \o \l {PinchArea} - Enables simple pinch gesture handling
+\o \l {MultiPointTouchArea} - Enables handling of multiple touch points
 \endlist
 
 \section1 Positioners and Repeater
@@ -133,8 +135,8 @@ Elements that animate properties based on data types
 
 \section1 Models and Data Handling
 \list
-\o \l {ListModel} - Defines a list of data
-\o \l {ListElement} - Defines a data item in a \l {ListModel}
+\o \l {QtQuick2::ListModel}{ListModel} - Defines a list of data
+\o \l {QtQuick2::ListElement}{ListElement} - Defines a data item in a \l {QtQuick2::ListModel}{ListModel}
 \o \l {VisualItemModel} - Contains items that already defines its own visual delegate
 \o \l {VisualDataModel} - Encapsulates a model and a delegate
 \o \l {XmlListModel} - Specifies a model using XPath expressions
@@ -164,34 +166,17 @@ Elements that animate properties based on data types
 \list
 \o \l {Connections} - Explicitly connects signals and signal handlers
 \o \l {Timer} - Provides timed triggers
-\o \l {QML:Qt} {Qt} - The QML global Qt object provides useful enums and functions from Qt.
+\o \l {QmlGlobalQtObject}{Qt} - The QML global Qt object provides useful enums and functions from Qt.
 \o \l {WorkerScript} - Enables the use of threads in QML
 \o \l {Loader} - Controls the loading of items or components
-\o \l {LayoutItem} - Allows declarative UI elements inside Qt's Graphics View layouts
 \endlist
 
 \section1 Graphical Effects
-\section2 QtQuick 1.0
-\list
-\o \l {Particles} - Generates and animates particles
-\o \l {ParticleMotionLinear} - Adds linear motion behavior to \l {Particles}
-\o \l {ParticleMotionGravity} - Adds gravitational motion to \l {Particles}
-\o \l {ParticleMotionWander} - Adds varied motions to \l {Particles}
-\endlist
-\section2 QtQuick 2.0
 \list
 \o \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
 \o \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
 \o \l {GridMesh} - Generates a gird mesh of vertices for use by ShaderEffect
 \o The \l{QtQuick.Particles 2} module provides a set of Particle System elements for QtQuick 2
-\endlist
-
-\section1 Add-On Elements
-These elements are not included in the \c{QtQuick 1.0} module. Their respective QML bindings
-should first be obtained and installed.
-\list
-\o \l{WebView}{QtWebKit QML Module - WebView Element} - For displaying Web contents
-\o \l{http://doc.qt.nokia.com/qtmobility-1.1.0/qml-plugins.html}{Mobility QML Plugins}
 \endlist
 
 */
