@@ -74,7 +74,7 @@ public:
     MyRect() {}
 
     void doSomething() { emit didSomething(); }
-    
+
     int propertyWithNotify() const { return m_prop; }
     void setPropertyWithNotify(int i) { m_prop = i; emit oddlyNamedNotifySignal(); }
 
@@ -1229,9 +1229,8 @@ void tst_qdeclarativestates::tempState()
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-    QString messageFormat = QString(QLatin1String("%1 (file://%2:%3)"));
-    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("entering placed")).arg(TESTDATA("legalTempState.qml")).arg(11).toLatin1());
-    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("entering idle")).arg(TESTDATA("legalTempState.qml")).arg(15).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, "entering placed");
+    QTest::ignoreMessage(QtDebugMsg, "entering idle");
     rectPrivate->setState("placed");
     QCOMPARE(rectPrivate->state(), QLatin1String("idle"));
 }

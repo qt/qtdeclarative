@@ -65,6 +65,9 @@
 
 QT_BEGIN_NAMESPACE
 
+// send more information such as file, line etc for console APIs
+DEFINE_BOOL_CONFIG_OPTION(qmlConsoleExtended, QML_CONSOLE_EXTENDED)
+
 namespace QDeclarativeBuiltinFunctions {
 
 enum ConsoleLogTypes {
@@ -75,18 +78,7 @@ enum ConsoleLogTypes {
 
 v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args)
 {
-    int line = -1;
-    QString scriptName;
     v8::HandleScope handleScope;
-
-    {
-        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
-        if (stackTrace->GetFrameCount()) {
-            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
-            line = currentStackFrame->GetLineNumber();
-            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
-        }
-    }
 
     QString result;
     for (int i = 0; i < args.Length(); ++i) {
@@ -109,17 +101,29 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
         }
     }
 
-    QString log = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
+    if (qmlConsoleExtended()) {
+        int line = -1;
+        QString scriptName;
+        //get only current frame
+        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
+        if (stackTrace->GetFrameCount()) {
+            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
+            line = currentStackFrame->GetLineNumber();
+            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
+        }
+
+        result = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
+    }
 
     switch (logType) {
     case Log:
-        qDebug("%s", qPrintable(log));
+        qDebug("%s", qPrintable(result));
         break;
     case Warn:
-        qWarning("%s", qPrintable(log));
+        qWarning("%s", qPrintable(result));
         break;
     case Error:
-        qCritical("%s", qPrintable(log));
+        qCritical("%s", qPrintable(result));
         break;
     default:
         break;

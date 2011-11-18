@@ -850,8 +850,7 @@ void tst_qdeclarativelanguage::dynamicObjectProperties()
 // Tests the declaration of dynamic signals and slots
 void tst_qdeclarativelanguage::dynamicSignalsAndSlots()
 {
-    QString message = QString(QLatin1String("1921 (%1:%2)")).arg(TEST_FILE("dynamicSignalsAndSlots.qml").toString()).arg(9);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(message));
+    QTest::ignoreMessage(QtDebugMsg, "1921");
 
     QDeclarativeComponent component(&engine, TEST_FILE("dynamicSignalsAndSlots.qml"));
     VERIFY_ERRORS(0);
@@ -1289,10 +1288,9 @@ void tst_qdeclarativelanguage::onCompleted()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("onCompleted.qml"));
     VERIFY_ERRORS(0);
-    QString formatMessage = QString(QLatin1String("%1 (%2:%3)"));
-    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Completed 6 10")).arg(TEST_FILE("onCompleted.qml").toString()).arg(8).toLatin1());
-    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Completed 6 10")).arg(TEST_FILE("onCompleted.qml").toString()).arg(14).toLatin1());
-    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Completed 10 11")).arg(TEST_FILE("OnCompletedType.qml").toString()).arg(7).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, "Completed 6 10");
+    QTest::ignoreMessage(QtDebugMsg, "Completed 6 10");
+    QTest::ignoreMessage(QtDebugMsg, "Completed 10 11");
     QObject *object = component.create();
     QVERIFY(object != 0);
 }
@@ -1304,10 +1302,9 @@ void tst_qdeclarativelanguage::onDestruction()
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
-    QString formatMessage = QString(QLatin1String("%1 (%2:%3)"));
-    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Destruction 6 10")).arg(TEST_FILE("onDestruction.qml").toString()).arg(8).toLatin1());
-    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Destruction 6 10")).arg(TEST_FILE("onDestruction.qml").toString()).arg(14).toLatin1());
-    QTest::ignoreMessage(QtDebugMsg, formatMessage.arg(QLatin1String("Destruction 10 11")).arg(TEST_FILE("OnDestructionType.qml").toString()).arg(7).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, "Destruction 6 10");
+    QTest::ignoreMessage(QtDebugMsg, "Destruction 6 10");
+    QTest::ignoreMessage(QtDebugMsg, "Destruction 10 11");
     delete object;
 }
 

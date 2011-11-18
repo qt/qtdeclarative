@@ -1595,8 +1595,8 @@ void tst_qdeclarativeecmascript::shutdownErrors()
 void tst_qdeclarativeecmascript::compositePropertyType()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("compositePropertyType.qml"));
-    QString messageFormat = QString(QLatin1String("hello world (%1:%2)")).arg(TEST_FILE("compositePropertyType.qml").toString()).arg(7);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(messageFormat));
+
+    QTest::ignoreMessage(QtDebugMsg, "hello world");
     QObject *object = qobject_cast<QObject *>(component.create());
     delete object;
 }
@@ -4392,8 +4392,7 @@ void tst_qdeclarativeecmascript::qtbug_9792()
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create(context));
     QVERIFY(object != 0);
 
-    QString message = QString(QLatin1String("Hello world! (%1:%2)")).arg(TEST_FILE("qtbug_9792.qml").toString()).arg(4);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(message));
+    QTest::ignoreMessage(QtDebugMsg, "Hello world!");
     object->basicSignal();
 
     delete context;

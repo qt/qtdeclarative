@@ -11,6 +11,7 @@ PUBLICTESTS += \
     parserstress \
     qdeclarativecomponent \
     qdeclarativecontext \
+    qdeclarativeconsole \
     qdeclarativeengine \
     qdeclarativeerror \
     qdeclarativefolderlistmodel \
