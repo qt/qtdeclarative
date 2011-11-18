@@ -2553,22 +2553,37 @@ void tst_qquicktextinput::cursorRectangleSize()
 {
     QQuickView *canvas = new QQuickView(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
     QVERIFY(canvas->rootObject() != 0);
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput *>(canvas->rootObject());
+
+    // make sure cursor rectangle is not at (0,0)
+    textInput->setX(10);
+    textInput->setY(10);
+    textInput->setCursorPosition(3);
+    QVERIFY(textInput != 0);
+    textInput->setFocus(true);
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
 
-    QQuickTextInput *textInput = qobject_cast<QQuickTextInput *>(canvas->rootObject());
-    QVERIFY(textInput != 0);
-    textInput->setFocus(Qt::OtherFocusReason);
-    QRectF cursorRect = textInput->positionToRectangle(textInput->cursorPosition());
-    QRectF microFocusFromScene = canvas->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
     QInputMethodQueryEvent event(Qt::ImCursorRectangle);
     qApp->sendEvent(qApp->inputPanel()->inputItem(), &event);
+    QRectF cursorRectFromQuery = event.value(Qt::ImCursorRectangle).toRectF();
 
-    QRectF microFocusFromApp = event.value(Qt::ImCursorRectangle).toRectF();
+    QRect cursorRectFromItem = textInput->cursorRectangle();
+    QRectF cursorRectFromPositionToRectangle = textInput->positionToRectangle(textInput->cursorPosition());
 
-    QCOMPARE(microFocusFromScene.size(), cursorRect.size());
-    QCOMPARE(microFocusFromApp.size(), cursorRect.size());
+    // item and input query cursor rectangles match
+    QCOMPARE(cursorRectFromItem, cursorRectFromQuery.toRect());
+
+    // item cursor rectangle and positionToRectangle calculations match
+    QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
+
+    // item-canvas transform and input item transform match
+    QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputPanel()->inputItemTransform());
+
+    // input panel cursorRectangle property and tranformed item cursor rectangle match
+    QRectF sceneCursorRect = QQuickItemPrivate::get(textInput)->itemToCanvasTransform().mapRect(cursorRectFromItem);
+    QCOMPARE(sceneCursorRect, qApp->inputPanel()->cursorRectangle());
 
     delete canvas;
 }

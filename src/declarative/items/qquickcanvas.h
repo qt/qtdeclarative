@@ -85,8 +85,6 @@ public:
 
     bool sendEvent(QQuickItem *, QEvent *);
 
-    QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
-
     QSGEngine *sceneGraphEngine() const;
 
     void setVSyncAnimations(bool enabled);
@@ -132,7 +130,6 @@ protected:
     virtual bool event(QEvent *);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void keyReleaseEvent(QKeyEvent *);
-    virtual void inputMethodEvent(QInputMethodEvent *);
     virtual void mousePressEvent(QMouseEvent *);
     virtual void mouseReleaseEvent(QMouseEvent *);
     virtual void mouseDoubleClickEvent(QMouseEvent *);

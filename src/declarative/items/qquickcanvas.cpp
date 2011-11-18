@@ -805,28 +805,6 @@ void QQuickCanvasPrivate::updateInputMethodData()
     qApp->inputPanel()->setInputItem(inputItem);
 }
 
-/*!
-  Queries the Input Method.
-*/
-QVariant QQuickCanvas::inputMethodQuery(Qt::InputMethodQuery query) const
-{
-    Q_D(const QQuickCanvas);
-    if (!d->activeFocusItem || !(QQuickItemPrivate::get(d->activeFocusItem)->flags & QQuickItem::ItemAcceptsInputMethod))
-        return QVariant();
-    QVariant value = d->activeFocusItem->inputMethodQuery(query);
-
-    //map geometry types
-    QVariant::Type type = value.type();
-    if (type == QVariant::RectF || type == QVariant::Rect) {
-        const QTransform transform = QQuickItemPrivate::get(d->activeFocusItem)->itemToCanvasTransform();
-        value = transform.mapRect(value.toRectF());
-    } else if (type == QVariant::PointF || type == QVariant::Point) {
-        const QTransform transform = QQuickItemPrivate::get(d->activeFocusItem)->itemToCanvasTransform();
-        value = transform.map(value.toPointF());
-    }
-    return value;
-}
-
 void QQuickCanvasPrivate::dirtyItem(QQuickItem *)
 {
     Q_Q(QQuickCanvas);
@@ -991,14 +969,6 @@ void QQuickCanvas::keyPressEvent(QKeyEvent *e)
 }
 
 void QQuickCanvas::keyReleaseEvent(QKeyEvent *e)
-{
-    Q_D(QQuickCanvas);
-
-    if (d->activeFocusItem)
-        sendEvent(d->activeFocusItem, e);
-}
-
-void QQuickCanvas::inputMethodEvent(QInputMethodEvent *e)
 {
     Q_D(QQuickCanvas);
 
@@ -1589,14 +1559,6 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
         while (!e->isAccepted() && (item = item->parentItem())) {
             e->accept();
             QQuickItemPrivate::get(item)->deliverKeyEvent(static_cast<QKeyEvent *>(e));
-        }
-        break;
-    case QEvent::InputMethod:
-        e->accept();
-        QQuickItemPrivate::get(item)->deliverInputMethodEvent(static_cast<QInputMethodEvent *>(e));
-        while (!e->isAccepted() && (item = item->parentItem())) {
-            e->accept();
-            QQuickItemPrivate::get(item)->deliverInputMethodEvent(static_cast<QInputMethodEvent *>(e));
         }
         break;
     case QEvent::FocusIn:
