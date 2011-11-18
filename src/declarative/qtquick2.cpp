@@ -45,6 +45,7 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include <private/qquickitemsmodule_p.h>
 #include <private/qquickparticlesmodule_p.h>
+#include <private/qquickwindowmodule_p.h>
 
 #include <private/qdeclarativeenginedebugservice_p.h>
 #include <private/qdeclarativedebugstatesdelegate_p.h>
@@ -179,6 +180,7 @@ void QDeclarativeQtQuick2Module::defineModule()
     QDeclarativeEnginePrivate::defineModule();
     QQuickItemsModule::defineModule();
     QQuickParticlesModule::defineModule();
+    QQuickWindowModule::defineModule();
     QDeclarativeValueTypeFactory::registerValueTypes();
 
     if (QDeclarativeEngineDebugService::isDebuggingEnabled()) {

@@ -63,8 +63,11 @@ class QInputMethodEvent;
 
 class Q_DECLARATIVE_EXPORT QQuickCanvas : public QWindow
 {
-Q_OBJECT
-Q_DECLARE_PRIVATE(QQuickCanvas)
+    Q_OBJECT
+    Q_PRIVATE_PROPERTY(QQuickCanvas::d_func(), QDeclarativeListProperty<QObject> data READ data DESIGNABLE false)
+    Q_PROPERTY(QColor color READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
+    Q_CLASSINFO("DefaultProperty", "data")
+    Q_DECLARE_PRIVATE(QQuickCanvas)
 public:
     enum CreateTextureOption {
         TextureHasAlphaChannel  = 0x0001,
@@ -114,6 +117,7 @@ Q_SIGNALS:
     void sceneGraphInitialized();
     void beforeRendering();
     void afterRendering();
+    void clearColorChanged(const QColor &);
 
 protected:
     QQuickCanvas(QQuickCanvasPrivate &dd, QWindow *parent = 0);

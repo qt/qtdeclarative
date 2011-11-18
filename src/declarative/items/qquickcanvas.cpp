@@ -532,6 +532,23 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     q->setFormat(context->defaultSurfaceFormat());
 }
 
+QDeclarativeListProperty<QObject> QQuickCanvasPrivate::data()
+{
+    initRootItem();
+    return QQuickItemPrivate::get(rootItem)->data();
+}
+
+void QQuickCanvasPrivate::initRootItem()
+{
+    Q_Q(QQuickCanvas);
+    q->connect(q, SIGNAL(widthChanged(int)),
+            rootItem, SLOT(setWidth(int)));
+    q->connect(q, SIGNAL(heightChanged(int)),
+            rootItem, SLOT(setHeight(int)));
+    rootItem->setWidth(q->width());
+    rootItem->setHeight(q->height());
+}
+
 void QQuickCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
 {
     for (int i=0; i<touchPoints.count(); i++) {
@@ -815,6 +832,14 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 
 
 /*!
+    \qmlclass Window QQuickCanvas
+    \inqmlmodule QtQuick.Window 2
+    \brief The Window object creates a new top-level window.
+
+    The Window object creates a new top-level window for a QtQuick scene. It automatically sets up the
+    window for use with QtQuick 2.0 graphical elements.
+*/
+/*!
     \class QQuickCanvas
     \since QtQuick 2.0
     \brief The QQuickCanvas class provides the canvas for displaying a graphical QML scene
@@ -893,6 +918,14 @@ QQuickItem *QQuickCanvas::mouseGrabberItem() const
     return d->mouseGrabberItem;
 }
 
+
+/*!
+    \qmlproperty color QtQuick2.Window::Window::color
+
+    The background color for the window.
+
+    Setting this property is more efficient than using a separate Rectangle.
+*/
 
 bool QQuickCanvasPrivate::clearHover()
 {
@@ -2131,7 +2164,10 @@ QSGTexture *QQuickCanvas::createTextureFromId(uint id, const QSize &size, Create
 
 void QQuickCanvas::setClearColor(const QColor &color)
 {
+    if (color == d_func()->clearColor)
+        return;
     d_func()->clearColor = color;
+    emit clearColorChanged(color);
 }
 
 

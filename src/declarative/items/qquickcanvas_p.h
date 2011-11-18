@@ -73,13 +73,18 @@
 QT_BEGIN_NAMESPACE
 
 //Make it easy to identify and customize the root item if needed
+
 class QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
 public:
     QQuickRootItem();
+public Q_SLOTS:
+    void setWidth(int w) {QQuickItem::setWidth(qreal(w));}
+    void setHeight(int h) {QQuickItem::setHeight(qreal(h));}
 };
 
+class QQuickItemPrivate;
 class QQuickCanvasPrivate;
 
 class QTouchEvent;
@@ -97,8 +102,10 @@ public:
     virtual ~QQuickCanvasPrivate();
 
     void init(QQuickCanvas *);
+    void initRootItem();//Currently only used if items added in QML
 
     QQuickRootItem *rootItem;
+    QDeclarativeListProperty<QObject> data();
 
     QQuickItem *activeFocusItem;
     QQuickItem *mouseGrabberItem;
@@ -175,6 +182,7 @@ public:
     QHash<int, QQuickItem *> itemForTouchPointId;
 
     mutable QQuickCanvasIncubationController *incubationController;
+
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };
