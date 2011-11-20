@@ -98,18 +98,16 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \qmlclass Canvas QQuickCanvasItem
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
-    \brief The Canvas item provides HTML5 like canvas element which enables you to
-    draw within the item area by using Javascript.
+    \brief The Canvas item provides a 2D canvas element which enables drawing via Javascript.
     \inherits Item
     \ingroup qml-basic-visual-elements
 
-    With the Canvas item, users can draw straight and curved lines, simple and
-    complex shapes, graphs, and referenced graphic images. can also add texts, colors,
-    shadows, gradients, and patterns, and do low level pixel operations, etc. The Canvas item
-    also enables you to save or export the canvas as a image file or serialize the image data
-    to data url string.
+    The Canvas item allows drawing of straight and curved lines, simple and
+    complex shapes, graphs, and referenced graphic images.  It can also add text, colors,
+    shadows, gradients, and patterns, and do low level pixel operations. The Canvas
+    output may be saved as an image file or serialized to a url.
 
-    To define a drawing area in the Canvas item, just set the \c width and \c height properties.
+    To define a drawing area in the Canvas item set the \c width and \c height properties.
     For example, the following code creates a Canvas item which has a drawing area with a height of 100
     pixels and width of 200 pixels:
     \qml
@@ -123,52 +121,49 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 
     Currently the Canvas item only supports the two-dimensional rendering context.
 
-    \section1 Thread Rendering and Render Target
-    The Canvas item supports two render targets:Canvas.Image and Canvas.FramebufferObject.
-    The Canvas.Image render target is a \a QImage object which is actually a block of system
-    memory. This render target support background thread rendering. So if some complex or long
-    running painting need to be done, the Canvas.Image with thread rendering mode should be
-    chosen to avoid blocking the UI. Otherwise the Canvas.FramebufferObject render target should
-    be chosen as it could be much faster with good OpenGL hardware accelaration than rendering into
-    system memory, especially when the CPU is already very busy.
+    \section1 Threaded Rendering and Render Target
+
+    The Canvas item supports two render targets: \c Canvas.Image and \c Canvas.FramebufferObject.
+
+    The \c Canvas.Image render target is a \a QImage object.  This render target supports background
+    thread rendering, allowing complex or long running painting to be executed without blocking the UI.
+
+    The Canvas.FramebufferObject render target utilizes OpenGL hardware accelaration rather than rendering into
+    system memory, which in many cases results in faster rendering.
 
     The default render target is Canvas.Image and the default renderInThread property is
     false.
 
     \section1 Tiled Canvas
-    The Canvas item also supports tiled rendering mode by setting the proper canvasSize, tileSize
-    and the canvasWindow properties.
+    The Canvas item supports tiled rendering by setting \l canvasSize, \l tileSize
+    and \l canvasWindow properties.
 
-    With tiled canvas, a virtually very large canvas can be provided by a relatively small canvas
-    window. The actual memory consumption only relates to the canvas window size. So the canvas size
-    can be chosen freely as needed. The painting code then doesn't need to worry about the coordinate
-    system and complex matrix transformations at all.
+    Tiling allows efficient display of a very large virtual via a smaller canvas
+    window. The actual memory consumption is in relatation to the canvas window size.  The painting
+    code can draw within the virtual canvas without handling coordinate system transformations.
 
-    As a side effect, by setting a good tile size, the tiles overlapped with the canvas window could be
-    cached and don't need to redraw, which can improve the performance significantly in some situations.
+    The tiles overlapping with the canvas window may be cached eliminating the need to redraw,
+    which can lead to significantly improved performance in some situations.
 
     \section1 Pixel Operations
-    The Canvas item support all HTML5 2d context pixel operations. In order to get better
-    pixel reading/writing performance, the Canvas.Image render target should be chosen. As
-    for Canvas.FramebufferObject render target, the pixel data need to be exchanged between
-    the system memory and the graphic card, which can't be benefit from the hardware acceleration
-    at all. And the OpenGL rendering may synchronise with the V-Sync signal to avoid the
-    {en.wikipedia.org/wiki/Screen_tearing}{screen tearing} which makes the pixel operations
-    even slower with the Canvas.FrambufferObject render target.
+    All HTML5 2D context pixel operations are supported. In order to ensure improved
+    pixel reading/writing performance the \a Canvas.Image render target should be chosen. The
+    \a Canvas.FramebufferObject render target requires the pixel data to be exchanged between
+    the system memory and the graphic card, which is significantly more expensive.  Rendering
+    may also be synchronized with the V-sync signal (to avoid {en.wikipedia.org/wiki/Screen_tearing}{screen tearing})
+    which will futher impact pixel operations with \c Canvas.FrambufferObject render target.
 
     \section1 Tips for Porting Existing HTML5 Canvas applications
 
-    Although the Canvas item is provided as a HTML5 like API, and
-    the canvas context API is as compatible with HTML5 2d context standard
-    as possible, the working HTML5 canvas applications are still need to
-    be modified to run in the Canvas item:
+    Although the Canvas item is provides a HTML5 like API, HTML5 canvas applications
+    need to be modified to run in the Canvas item:
     \list
-    \o Removes and replaces all DOM API calls with QML property bindings or Canvas item methods.
-    \o Removes and replaces all HTML envent handlers with the \a MouseArea item.
-    \o Changes the setInterval/setTimeout function calls with the \a Timer item.
-    \o Puts the actual painting code into the \a QtQuick2::Canvas::onPaint handler and triggers the
-       painting by calling the Canvas's \c markDirty or \c requestPaint methods.
-    \o For drawing images, loads them by calling the Canvas's loadImage method and then request to paint
+    \o Replace all DOM API calls with QML property bindings or Canvas item methods.
+    \o Replace all HTML event handlers with the \a MouseArea item.
+    \o Change setInterval/setTimeout function calls with the \a Timer item.
+    \o Place painting code into the \a QtQuick2::Canvas::onPaint handler and trigger
+       painting by calling the \c markDirty or \c requestPaint methods.
+    \o To draw images, load them by calling the Canvas's loadImage method and then request to paint
        them in the onImageLoaded handler.
     \endlist
 
@@ -192,10 +187,11 @@ QQuickCanvasItem::~QQuickCanvasItem()
      Holds the logical canvas size that the context paints on.
 
      By default, the canvas size is the same size as the current canvas item size.
-     By setting the canvas size, tile size and canvas window, the Canvas
-     item can act as a virtual large canvas with many seperately rendered tile rectangle
-     areas. Only those tiles within the current canvas window would be painted by
+     By setting the canvasSize, tileSize and canvasWindow, the Canvas
+     item can act as a large virtual canvas with many seperately rendered tile rectangles
+     Only those tiles within the current canvas window are painted by
      the Canvas render engine.
+
     \sa QtQuick2::Canvas::tileSize QtQuick2::Canvas::canvasWindow
 */
 QSizeF QQuickCanvasItem::canvasSize() const
@@ -220,15 +216,14 @@ void QQuickCanvasItem::setCanvasSize(const QSizeF & size)
     \qmlproperty size QtQuick2::Canvas::tileSize
      Holds the canvas rendering tile size.
 
-     When the Canvas item in tiled mode by setting the canvas size, tile size and
-     the canvas window. The canvas render can improve the rendering performance
-     by rendering and caching tiles instead of rendering the whole canvas everytime.
+     The Canvas item enters tiled mode by setting canvasSize, tileSize and
+     the canvasWindow. This can improve rendering performance
+     by rendering and caching tiles instead of rendering the whole canvas every time.
 
-     Additionally, the canvas size could be infinitely large without allocating more
-     memories because only those tiles within the current visible region
-     are actually rendered.
+     Memory will be consumed only by those tiles within the current visible region.
 
-     By default, the tile size is the same with the canvas size.
+     By default the tileSize is the same as the canvasSize.
+
      \sa QtQuick2::Canvas::canvaasSize QtQuick2::Canvas::canvasWindow
 */
 QSize QQuickCanvasItem::tileSize() const
@@ -254,12 +249,13 @@ void QQuickCanvasItem::setTileSize(const QSize & size)
     \qmlproperty rect QtQuick2::Canvas::canvasWindow
      Holds the current canvas visible window.
 
-     By default, the canvas window size is the same as the Canvas item
+     By default the canvasWindow size is the same as the Canvas item
      size with the topleft point as (0, 0).
 
-     If the canvas size is different with the Canvas item size, the Canvas
-     item can display different visible areas by changing the canvas window's size
+     If the canvasSize is different to the Canvas item size, the Canvas
+     item can display different visible areas by changing the canvas windowSize
      and/or position.
+
     \sa QtQuick2::Canvas::canvasSize QtQuick2::Canvas::tileSize
 */
 QRectF QQuickCanvasItem::canvasWindow() const
@@ -291,13 +287,13 @@ QQuickContext2D* QQuickCanvasItem::context() const
     \qmlproperty bool QtQuick2::Canvas::renderInThread
      Holds the current canvas rendering mode.
 
-     By setting the renderInThread to true, complex and long
-     running painting can be rendered in a dedicated background
-     rendering thread to avoid blocking the main GUI.
+     Set renderInThread to true to render complex and long
+     running painting in a dedicated background
+     thread, avoiding blocking the main UI.
 
-     Note: Different renderTarget may or may not support the
-     background rendering thread, if not, the renderInThread
-     property will be ignored.
+     \note: Not all renderTargets support background rendering.  If background rendering
+     is not supported by the current renderTarget, the renderInThread
+     property is ignored.
 
      The default value is false.
     \sa QtQuick2::Canvas::renderTarget
@@ -319,7 +315,7 @@ bool QQuickCanvasItem::renderInThread() const
                                    renderInThread property. The actual
                                    rendering happens in the main QML rendering
                                    process, which may be in a seperate render thread
-                                   or in the main GUI thread depends on the platforms.
+                                   or in the main GUI thread depending upon the platform.
      \endlist
 
      The default render target is \c Canvas.Image.
@@ -352,16 +348,6 @@ void QQuickCanvasItem::_doPainting(const QRectF& region)
         d->texture->wake();
 }
 
-/*!
-    \qmlproperty bool QtQuick2::Canvas::renderInThread
-     Holds the current canvas rendering mode.
-
-     When this property is true, all canvas painting commands
-     are rendered in a background rendering thread, otherwise
-     the rendering happens in the main GUI thread.
-
-     The default renderInThread value is false.
-*/
 void QQuickCanvasItem::setRenderInThread(bool renderInThread)
 {
     Q_D(QQuickCanvasItem);
@@ -501,7 +487,7 @@ void QQuickCanvasItem::createContext()
 /*!
   \qmlmethod object QtQuick2::Canvas::getContext(string contextId)
 
-  Currently, the canvas item only support the 2D context. If the \a contextId
+  Currently, the canvas item only supports the 2D context. If the \a contextId
   parameter isn't provided or is "2d", then the QtQuick2::Context2D object is
   returned, otherwise returns an invalid value.
   */
@@ -520,12 +506,11 @@ QDeclarativeV8Handle QQuickCanvasItem::getContext(const QString &contextId)
 /*!
   \qmlmethod void QtQuick2::Canvas::markDirty(rect region)
 
-  Mark the given \a region as dirty, so that when this region is visible
-  the canvas render will redraw it. During the rendering process, the
-  canvas renderer may emit the canvas' "paint" signal so the actual painting
-  scripts can be putted into the canvas's "onPaint" signal handler function.
+    Mark the given \a region as dirty, so that when this region is visible
+    the canvas renderer will redraw it. This will trigger the "onPaint" signal
+    handler function.
 
-  \sa QtQuick2::Canvas::paint QtQuick2::Canvas::requestPaint
+    \sa QtQuick2::Canvas::paint QtQuick2::Canvas::requestPaint
   */
 void QQuickCanvasItem::markDirty(const QRectF& region)
 {
@@ -544,7 +529,7 @@ void QQuickCanvasItem::markDirty(const QRectF& region)
    The saved image format is automatically decided by the \a filename's
    suffix.
 
-   Note: calling this method will force painting the whole canvas, not the
+   Note: calling this method will force painting the whole canvas, not just the
    current canvas visible window.
 
    \sa canvasWindow canvasSize toDataURL
@@ -572,8 +557,9 @@ QImage QQuickCanvasItem::loadedImage(const QUrl& url)
 
 /*!
   \qmlmethod void QtQuick2::Canvas::loadImage(url image)
-    Loads the given \c image asynchronously, when the image is
-    ready, an imageLoaded signal will be emitted.
+    Loads the given \c image asynchronously.
+
+    When the image is ready, onImageLoaded will be emitted.
     The loaded image can be unloaded by the \a QtQuick2::Canvas::unloadImage method.
 
     Note: Only loaded images can be painted on the Canvas item.
@@ -595,11 +581,11 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
     }
 }
 /*!
-  \qmlmethod void QtQuick2::Canvas::loadImage(url image)
+  \qmlmethod void QtQuick2::Canvas::unloadImage(url image)
   Unloads the \c image.
 
-  If the image is unloaded from the Canvas item, it can't be painted by the canvas context
-  until it's loaded again.
+  Once an image is unloaded it cannot be painted by the canvas context
+  unless it is loaded again.
 
   \sa QtQuick2::Canvas::loadImage QtQuick2::Canvas::imageLoaded QtQuick2::Canvas::isImageLoaded
   \sa QtQuick2::Context2D::createImageData QtQuick2::Context2D::drawImage
@@ -616,7 +602,7 @@ void QQuickCanvasItem::unloadImage(const QUrl& url)
 
 /*!
   \qmlmethod void QtQuick2::Canvas::isImageError(url image)
-  Returns true if the image can't be loaded because of error happens.
+  Returns true if the \a image failed to load.
 
   \sa QtQuick2::Canvas::loadImage
   */
@@ -630,7 +616,7 @@ bool QQuickCanvasItem::isImageError(const QUrl& url) const
 
 /*!
   \qmlmethod void QtQuick2::Canvas::isImageLoading(url image)
-  Returns true if the Canvas item still is loading the \c image.
+  Returns true if the \a image is currently loading.
 
   \sa QtQuick2::Canvas::loadImage
   */
@@ -643,7 +629,7 @@ bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
 }
 /*!
   \qmlmethod void QtQuick2::Canvas::isImageLoaded(url image)
-  Returns true if the \c image is sucessfully loaded and ready to use.
+  Returns true if the \a image is sucessfully loaded and ready to use.
 
   \sa QtQuick2::Canvas::loadImage
   */
@@ -670,7 +656,7 @@ QImage QQuickCanvasItem::toImage(const QRectF& region) const
 /*!
   \qmlmethod string QtQuick2::Canvas::toDataURL(string mimeType)
 
-   Returns a data: URL for the image in the canvas.
+   Returns a data URL for the image in the canvas.
 
    The default \a mimeType is "image/png".
 
@@ -712,7 +698,7 @@ QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
 /*!
     \qmlsignal QtQuick2::Canvas::onPaint(QtQuick2::Context2D context, rect region)
 
-    This handler is called before the given \c region needs to be rendered.
+    This handler is called to render the \a region.
 
     This signal can be triggered by QtQuick2::Canvas::markdirty, QtQuick2::Canvas::requestPaint
     or by changing the current canvas window.
@@ -722,7 +708,7 @@ QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
     \qmlsignal QtQuick2::Canvas::onPainted()
 
     This handler is called after all context painting commands are executed and
-    the Canvas is actually rendered.
+    the Canvas has been rendered.
 */
 
 QT_END_NAMESPACE
