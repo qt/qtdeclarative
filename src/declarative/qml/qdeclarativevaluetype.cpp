@@ -958,6 +958,52 @@ void QDeclarativeEasingValueType::setPeriod(qreal period)
     easing.setPeriod(period);
 }
 
+void QDeclarativeEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
+{
+    if (customCurveVariant.isEmpty())
+        return;
+
+    QVariantList variantList = customCurveVariant;
+    if ((variantList.count() % 6) == 0) {
+        bool allRealsOk = true;
+        QList<qreal> reals;
+        for (int i = 0; i < variantList.count(); i++) {
+            bool ok;
+            const qreal real = variantList.at(i).toReal(&ok);
+            reals.append(real);
+            if (!ok)
+                allRealsOk = false;
+        }
+        if (allRealsOk) {
+            QEasingCurve newEasingCurve(QEasingCurve::BezierSpline);
+            for (int i = 0; i < reals.count() / 6; i++) {
+                const qreal c1x = reals.at(i * 6);
+                const qreal c1y = reals.at(i * 6 + 1);
+                const qreal c2x = reals.at(i * 6 + 2);
+                const qreal c2y = reals.at(i * 6 + 3);
+                const qreal c3x = reals.at(i * 6 + 4);
+                const qreal c3y = reals.at(i * 6 + 5);
+
+                const QPointF c1(c1x, c1y);
+                const QPointF c2(c2x, c2y);
+                const QPointF c3(c3x, c3y);
+
+                newEasingCurve.addCubicBezierSegment(c1, c2, c3);
+                easing = newEasingCurve;
+            }
+        }
+    }
+}
+
+QVariantList QDeclarativeEasingValueType::bezierCurve() const
+{
+    QVariantList rv;
+    QList<QPointF> points = easing.cubicBezierSpline();
+    for (int ii = 0; ii < points.count(); ++ii)
+        rv << QVariant(points.at(ii).x()) << QVariant(points.at(ii).y());
+    return rv;
+}
+
 QDeclarativeFontValueType::QDeclarativeFontValueType(QObject *parent)
 : QDeclarativeValueType(parent), pixelSizeSet(false), pointSizeSet(false)
 {

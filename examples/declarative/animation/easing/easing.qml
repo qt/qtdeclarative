@@ -45,6 +45,9 @@ Rectangle {
     id: window
     width: 600; height: 460; color: "#232323"
 
+    property var easingCurve: [ 0.2, 0.2, 0.13, 0.65, 0.2, 0.8,
+                                0.624, 0.98, 0.93, 0.95, 1, 1 ]
+
     ListModel {
         id: easingTypes
         ListElement { name: "Easing.Linear"; type: Easing.Linear; ballColor: "DarkRed" }
@@ -88,6 +91,7 @@ Rectangle {
         ListElement { name: "Easing.InBounce"; type: Easing.InBounce; ballColor: "DimGray" }
         ListElement { name: "Easing.InOutBounce"; type: Easing.InOutBounce; ballColor: "SlateGray" }
         ListElement { name: "Easing.OutInBounce"; type: Easing.OutInBounce; ballColor: "DarkSlateGray" }
+        ListElement { name: "Easing.Bezier"; type: Easing.Bezier; ballColor: "Chartreuse"; }
     }
 
     Component {
@@ -128,8 +132,8 @@ Rectangle {
                 }
 
                 transitions: Transition {
-                    NumberAnimation { properties: "x"; easing.type: type; duration: 1000 }
-                    ColorAnimation { properties: "color"; easing.type: type; duration: 1000 }
+                    NumberAnimation { properties: "x"; easing.type: type; easing.bezierCurve: getBezierCurve(name); duration: 1000 }
+                    ColorAnimation { properties: "color"; easing.type: type; easing.bezierCurve: getBezierCurve(name); duration: 1000 }
                 }
             }
         }
@@ -155,5 +159,12 @@ Rectangle {
             anchors { top: titlePane.bottom; topMargin: 10; left: parent.left; right: parent.right }
             Repeater { model: easingTypes; delegate: delegate }
         }
+    }
+
+    function getBezierCurve(name)
+    {
+        if (name === "Easing.Bezier")
+            return easingCurve;
+        return [];
     }
 }

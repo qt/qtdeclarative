@@ -52,9 +52,10 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QQuickItem;
 class QSGEngine;
+class QQuickItem;
 class QSGTexture;
+class QInputMethodEvent;
 class QQuickCanvasPrivate;
 class QOpenGLFramebufferObject;
 class QDeclarativeIncubationController;

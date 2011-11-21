@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>easing.qml</file>
+        <file>TextField.qml</file>
+    </qresource>
+</RCC>
