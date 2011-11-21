@@ -66,10 +66,10 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
     m_valueOf = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ValueOf)->GetFunction());
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
-    ft->InstanceTemplate()->SetIndexedPropertyHandler(IndexedGetter, IndexedSetter, 0, 0, IndexedEnumerator);
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("length"), LengthGetter, 0,
+    ft->InstanceTemplate()->SetIndexedPropertyHandler(IndexedGetter, IndexedSetter, 0, IndexedDeleter, IndexedEnumerator);
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("length"), LengthGetter, LengthSetter,
                                         v8::Handle<v8::Value>(), v8::DEFAULT,
-                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
+                                        v8::PropertyAttribute(v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0,
                                         m_toString, v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
@@ -184,6 +184,13 @@ v8::Handle<v8::Value> QV8SequenceWrapper::IndexedGetter(quint32 index, const v8:
     return sr->indexedGetter(index);
 }
 
+v8::Handle<v8::Boolean> QV8SequenceWrapper::IndexedDeleter(quint32 index, const v8::AccessorInfo &info)
+{
+    QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
+    Q_ASSERT(sr);
+    return sr->indexedDeleter(index);
+}
+
 v8::Handle<v8::Array> QV8SequenceWrapper::IndexedEnumerator(const v8::AccessorInfo &info)
 {
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
@@ -197,6 +204,14 @@ v8::Handle<v8::Value> QV8SequenceWrapper::LengthGetter(v8::Local<v8::String> pro
     QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
     Q_ASSERT(sr);
     return v8::Integer::NewFromUnsigned(sr->lengthGetter());
+}
+
+void QV8SequenceWrapper::LengthSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    Q_UNUSED(property);
+    QV8SequenceResource *sr = v8_resource_cast<QV8SequenceResource>(info.This());
+    Q_ASSERT(sr);
+    sr->lengthSetter(value);
 }
 
 v8::Handle<v8::Value> QV8SequenceWrapper::ToStringGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info)

@@ -252,7 +252,7 @@ In particular, QML currently supports:
   \o \c {QList<int>}
   \o \c {QList<qreal>}
   \o \c {QList<bool>}
-  \o \c {QList<QString>}
+  \o \c {QList<QString>} and \c{QStringList}
   \o \c {QList<QUrl>}
 \endlist
 
@@ -273,6 +273,27 @@ modified directly.
 
 Other sequence types are not supported transparently, and instead an instance of any other
 sequence type will be passed between QML and C++ as an opaque QVariantList.
+
+\bold {Important Note:} There are some minor differences between the semantics of such
+sequence Array types and default JavaScript Array types which result from the use of a
+C++ storage type in the implementation.  In particular, deleting an element from an Array
+will result in a default-constructed value replacing that element, rather than an
+Undefined value.  Similarly, setting the length property of the Array to a value larger
+than its current value will result in the Array being padded out to the specified length
+with default-constructed elements rather than Undefined elements.
+
+The default-constructed values for each sequence type are as follows:
+\table
+\row \o QList<int> \o integer value 0
+\row \o QList<qreal> \o real value 0.0
+\row \o QList<bool> \o boolean value \c {false}
+\row \o QList<QString> and QStringList \o empty QString
+\row \o QList<QUrl> \o empty QUrl
+\endtable
+
+If you wish to remove elements from a sequence rather than simply replace them with default
+constructed values, do not use the indexed delete operator ("delete sequence[i]") but instead
+use the \c {splice} function ("sequence.splice(startIndex, deleteCount)").
 
 \section1 Inheritance and Coercion
 

@@ -4225,14 +4225,14 @@ void tst_qdeclarativeecmascript::sequenceConversionArray()
     QDeclarativeComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != 0);
-    //QMetaObject::invokeMethod(object, "indexedAccess");
-    //QVERIFY(object->property("success").toBool());
-    //QMetaObject::invokeMethod(object, "arrayOperations");
-    //QVERIFY(object->property("success").toBool());
+    QMetaObject::invokeMethod(object, "indexedAccess");
+    QVERIFY(object->property("success").toBool());
+    QMetaObject::invokeMethod(object, "arrayOperations");
+    QVERIFY(object->property("success").toBool());
     QMetaObject::invokeMethod(object, "testEqualitySemantics");
     QVERIFY(object->property("success").toBool());
-    //QMetaObject::invokeMethod(object, "testReferenceDeletion");
-    //QCOMPARE(object->property("referenceDeletion").toBool(), true);
+    QMetaObject::invokeMethod(object, "testReferenceDeletion");
+    QCOMPARE(object->property("referenceDeletion").toBool(), true);
     delete object;
 }
 
