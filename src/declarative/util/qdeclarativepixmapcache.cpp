@@ -189,43 +189,54 @@ public:
 class QDeclarativePixmapData
 {
 public:
-    QDeclarativePixmapData(const QUrl &u, const QSize &s, const QString &e)
+    QDeclarativePixmapData(QDeclarativePixmap *pixmap, const QUrl &u, const QSize &s, const QString &e)
     : refCount(1), inCache(false), pixmapStatus(QDeclarativePixmap::Error), 
-      url(u), errorString(e), requestSize(s), texture(0), context(0), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
+      url(u), errorString(e), requestSize(s), texture(0), context(0),
+      reply(0), prevUnreferenced(0), prevUnreferencedPtr(0), nextUnreferenced(0)
     {
+        declarativePixmaps.insert(pixmap);
     }
 
-    QDeclarativePixmapData(const QUrl &u, const QSize &r)
+    QDeclarativePixmapData(QDeclarativePixmap *pixmap, const QUrl &u, const QSize &r)
     : refCount(1), inCache(false), pixmapStatus(QDeclarativePixmap::Loading), 
-      url(u), requestSize(r), texture(0), context(0), reply(0), prevUnreferenced(0), prevUnreferencedPtr(0),
-      nextUnreferenced(0)
+      url(u), requestSize(r), texture(0), context(0),
+      reply(0), prevUnreferenced(0), prevUnreferencedPtr(0), nextUnreferenced(0)
     {
+        declarativePixmaps.insert(pixmap);
     }
 
-    QDeclarativePixmapData(const QUrl &u, const QPixmap &p, const QSize &s, const QSize &r)
+    QDeclarativePixmapData(QDeclarativePixmap *pixmap, const QUrl &u, const QPixmap &p, const QSize &s, const QSize &r)
     : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QDeclarativePixmap::Ready),
-      url(u), pixmap(p), implicitSize(s), requestSize(r), texture(0), context(0), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
+      url(u), pixmap(p), implicitSize(s), requestSize(r), texture(0), context(0),
+      reply(0), prevUnreferenced(0), prevUnreferencedPtr(0), nextUnreferenced(0)
     {
+        declarativePixmaps.insert(pixmap);
     }
 
-    QDeclarativePixmapData(const QUrl &u, QSGTexture *t, QSGContext *c, const QPixmap &p, const QSize &s, const QSize &r)
+    QDeclarativePixmapData(QDeclarativePixmap *pixmap, const QUrl &u, QSGTexture *t, QSGContext *c, const QPixmap &p, const QSize &s, const QSize &r)
     : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QDeclarativePixmap::Ready),
-      url(u), pixmap(p), implicitSize(s), requestSize(r), texture(t), context(c), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
+      url(u), pixmap(p), implicitSize(s), requestSize(r), texture(t), context(c),
+      reply(0), prevUnreferenced(0), prevUnreferencedPtr(0), nextUnreferenced(0)
     {
+        declarativePixmaps.insert(pixmap);
     }
 
-    QDeclarativePixmapData(const QPixmap &p)
+    QDeclarativePixmapData(QDeclarativePixmap *pixmap, const QPixmap &p)
     : refCount(1), inCache(false), privatePixmap(true), pixmapStatus(QDeclarativePixmap::Ready),
-      pixmap(p), implicitSize(p.size()), requestSize(p.size()), texture(0), context(0), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
+      pixmap(p), implicitSize(p.size()), requestSize(p.size()), texture(0), context(0),
+      reply(0), prevUnreferenced(0), prevUnreferencedPtr(0), nextUnreferenced(0)
     {
+        declarativePixmaps.insert(pixmap);
     }
 
     ~QDeclarativePixmapData()
     {
+        while (!declarativePixmaps.isEmpty()) {
+            QDeclarativePixmap *referencer = declarativePixmaps.first();
+            declarativePixmaps.remove(referencer);
+            referencer->d = 0;
+        }
+
         if (texture && context) {
             context->scheduleTextureForCleanup(texture);
         }
@@ -252,6 +263,7 @@ public:
     QSGTexture *texture;
     QSGContext *context;
 
+    QIntrusiveList<QDeclarativePixmap, &QDeclarativePixmap::dataListNode> declarativePixmaps;
     QDeclarativePixmapReply *reply;
 
     QDeclarativePixmapData *prevUnreferenced;
@@ -705,6 +717,7 @@ class QDeclarativePixmapStore : public QObject
     Q_OBJECT
 public:
     QDeclarativePixmapStore();
+    ~QDeclarativePixmapStore();
 
     void unreferencePixmap(QDeclarativePixmapData *);
     void referencePixmap(QDeclarativePixmapData *);
@@ -739,6 +752,35 @@ void qt_declarative_pixmapstore_clean(QSGContext *context)
 QDeclarativePixmapStore::QDeclarativePixmapStore()
 : m_unreferencedPixmaps(0), m_lastUnreferencedPixmap(0), m_unreferencedCost(0), m_timerId(-1)
 {
+}
+
+QDeclarativePixmapStore::~QDeclarativePixmapStore()
+{
+    int leakedPixmaps = 0;
+    int leakedTextures = 0;
+    QList<QDeclarativePixmapData*> cachedData = m_cache.values();
+
+    // unreference all (leaked) pixmaps
+    foreach (QDeclarativePixmapData* pixmap, cachedData) {
+        int currRefCount = pixmap->refCount;
+        if (currRefCount) {
+            leakedPixmaps++;
+            if (pixmap->texture)
+                leakedTextures++;
+            while (currRefCount > 0) {
+                pixmap->release();
+                currRefCount--;
+            }
+        }
+    }
+
+    // free all unreferenced pixmaps
+    while (m_lastUnreferencedPixmap) {
+        shrinkCache(20);
+    }
+
+    if (leakedPixmaps)
+        qDebug("Number of leaked pixmaps: %i (of which %i are leaked textures)", leakedPixmaps, leakedTextures);
 }
 
 void QDeclarativePixmapStore::cleanTextureForContext(QDeclarativePixmapData *data)
@@ -953,7 +995,7 @@ void QDeclarativePixmapData::removeFromCache()
     }
 }
 
-static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, const QUrl &url, const QSize &requestSize, bool *ok)
+static QDeclarativePixmapData* createPixmapDataSync(QDeclarativePixmap *declarativePixmap, QDeclarativeEngine *engine, const QUrl &url, const QSize &requestSize, bool *ok)
 {
     QSGContext *sgContext = QDeclarativeEnginePrivate::get(engine)->sgContext;
 
@@ -964,14 +1006,14 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
 
         switch (imageType) {
             case QDeclarativeImageProvider::Invalid:
-                return new QDeclarativePixmapData(url, requestSize,
+                return new QDeclarativePixmapData(declarativePixmap, url, requestSize,
                     QDeclarativePixmap::tr("Invalid image provider: %1").arg(url.toString()));
             case QDeclarativeImageProvider::Texture:
             {
                 QSGTexture *texture = ep->getTextureFromProvider(url, &readSize, requestSize);
                 if (texture) {
                     *ok = true;
-                    return new QDeclarativePixmapData(url, texture, sgContext, QPixmap(), readSize, requestSize);
+                    return new QDeclarativePixmapData(declarativePixmap, url, texture, sgContext, QPixmap(), readSize, requestSize);
                 }
             }
 
@@ -982,9 +1024,9 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
                     *ok = true;
                     if (sgContext) {
                         QSGTexture *t = sgContext->createTexture(image);
-                        return new QDeclarativePixmapData(url, t, sgContext, QPixmap::fromImage(image), readSize, requestSize);
+                        return new QDeclarativePixmapData(declarativePixmap, url, t, sgContext, QPixmap::fromImage(image), readSize, requestSize);
                     }
-                    return new QDeclarativePixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
+                    return new QDeclarativePixmapData(declarativePixmap, url, QPixmap::fromImage(image), readSize, requestSize);
                 }
             }
             case QDeclarativeImageProvider::Pixmap:
@@ -994,15 +1036,15 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
                     *ok = true;
                     if (sgContext) {
                         QSGTexture *t = sgContext->createTexture(pixmap.toImage());
-                        return new QDeclarativePixmapData(url, t, sgContext, pixmap, readSize, requestSize);
+                        return new QDeclarativePixmapData(declarativePixmap, url, t, sgContext, pixmap, readSize, requestSize);
                     }
-                    return new QDeclarativePixmapData(url, pixmap, readSize, requestSize);
+                    return new QDeclarativePixmapData(declarativePixmap, url, pixmap, readSize, requestSize);
                 }
             }
         }
 
         // provider has bad image type, or provider returned null image
-        return new QDeclarativePixmapData(url, requestSize,
+        return new QDeclarativePixmapData(declarativePixmap, url, requestSize,
             QDeclarativePixmap::tr("Failed to get image from provider: %1").arg(url.toString()));
     }
 
@@ -1034,14 +1076,14 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
         }
 
         if (texture)
-            return new QDeclarativePixmapData(url, texture, ctx, QPixmap::fromImage(image), readSize, requestSize);
+            return new QDeclarativePixmapData(declarativePixmap, url, texture, ctx, QPixmap::fromImage(image), readSize, requestSize);
         else
-            return new QDeclarativePixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
+            return new QDeclarativePixmapData(declarativePixmap, url, QPixmap::fromImage(image), readSize, requestSize);
 
     } else {
         errorString = QDeclarativePixmap::tr("Cannot open: %1").arg(url.toString());
     }
-    return new QDeclarativePixmapData(url, requestSize, errorString);
+    return new QDeclarativePixmapData(declarativePixmap, url, requestSize, errorString);
 }
 
 
@@ -1072,6 +1114,7 @@ QDeclarativePixmap::QDeclarativePixmap(QDeclarativeEngine *engine, const QUrl &u
 QDeclarativePixmap::~QDeclarativePixmap()
 {
     if (d) {
+        d->declarativePixmaps.remove(this);
         d->release();
         d = 0;
     }
@@ -1164,7 +1207,7 @@ void QDeclarativePixmap::setPixmap(const QPixmap &p)
     clear();
 
     if (!p.isNull())
-        d = new QDeclarativePixmapData(p);
+        d = new QDeclarativePixmapData(this, p);
 }
 
 int QDeclarativePixmap::width() const
@@ -1208,7 +1251,11 @@ void QDeclarativePixmap::load(QDeclarativeEngine *engine, const QUrl &url, const
 
 void QDeclarativePixmap::load(QDeclarativeEngine *engine, const QUrl &url, const QSize &requestSize, QDeclarativePixmap::Options options)
 {
-    if (d) { d->release(); d = 0; }
+    if (d) {
+        d->declarativePixmaps.remove(this);
+        d->release();
+        d = 0;
+    }
 
     QDeclarativePixmapKey key = { &url, &requestSize };
     QDeclarativePixmapStore *store = pixmapStore();
@@ -1226,7 +1273,7 @@ void QDeclarativePixmap::load(QDeclarativeEngine *engine, const QUrl &url, const
 
         if (!(options & QDeclarativePixmap::Asynchronous)) {
             bool ok = false;
-            d = createPixmapDataSync(engine, url, requestSize, &ok);
+            d = createPixmapDataSync(this, engine, url, requestSize, &ok);
             if (ok) {
                 if (options & QDeclarativePixmap::Cache)
                     d->addToCache();
@@ -1239,7 +1286,7 @@ void QDeclarativePixmap::load(QDeclarativeEngine *engine, const QUrl &url, const
         if (!engine)
             return;
 
-        d = new QDeclarativePixmapData(url, requestSize);
+        d = new QDeclarativePixmapData(this, url, requestSize);
         if (options & QDeclarativePixmap::Cache)
             d->addToCache();
 
@@ -1249,12 +1296,14 @@ void QDeclarativePixmap::load(QDeclarativeEngine *engine, const QUrl &url, const
     } else {
         d = *iter;
         d->addref();
+        d->declarativePixmaps.insert(this);
     }
 }
 
 void QDeclarativePixmap::clear()
 {
     if (d) {
+        d->declarativePixmaps.remove(this);
         d->release();
         d = 0;
     }
@@ -1265,6 +1314,7 @@ void QDeclarativePixmap::clear(QObject *obj)
     if (d) {
         if (d->reply) 
             QObject::disconnect(d->reply, 0, obj, 0);
+        d->declarativePixmaps.remove(this);
         d->release();
         d = 0;
     }

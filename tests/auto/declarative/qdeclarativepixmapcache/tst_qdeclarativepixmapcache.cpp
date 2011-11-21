@@ -44,6 +44,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeimageprovider.h>
 #include <QNetworkReply>
+#include "../shared/util.h"
 #include "testhttpserver.h"
 
 #ifndef QT_NO_CONCURRENT
@@ -51,15 +52,19 @@
 #include <qfuture.h>
 #endif
 
+inline QUrl TEST_FILE(const QString &filename)
+{
+    return QUrl::fromLocalFile(TESTDATA(filename));
+}
+
 class tst_qdeclarativepixmapcache : public QObject
 {
     Q_OBJECT
 public:
     tst_qdeclarativepixmapcache() :
-        thisfile(QUrl::fromLocalFile(QCoreApplication::applicationFilePath())),
         server(14452)
     {
-        server.serveDirectory(QCoreApplication::applicationDirPath() + "/data/http");
+        server.serveDirectory(TESTDATA("http"));
     }
 
 private slots:
@@ -74,12 +79,11 @@ private slots:
     void networkCrash();
 #endif
     void lockingCrash();
+    void dataLeak();
 private:
     QDeclarativeEngine engine;
-    QUrl thisfile;
     TestHTTPServer server;
 };
-
 
 static int slotters=0;
 
@@ -121,8 +125,8 @@ void tst_qdeclarativepixmapcache::single_data()
     QTest::addColumn<bool>("neterror");
 
     // File URLs are optimized
-    QTest::newRow("local") << thisfile.resolved(QUrl("data/exists.png")) << localfile_optimized << true << false;
-    QTest::newRow("local") << thisfile.resolved(QUrl("data/notexists.png")) << localfile_optimized << false << false;
+    QTest::newRow("local") << TEST_FILE("exists.png") << localfile_optimized << true << false;
+    QTest::newRow("local") << TEST_FILE("notexists.png") << localfile_optimized << false << false;
     QTest::newRow("remote") << QUrl("http://127.0.0.1:14452/exists.png") << false << true << false;
     QTest::newRow("remote") << QUrl("http://127.0.0.1:14452/notexists.png") << false << false << true;
 }
@@ -185,8 +189,8 @@ void tst_qdeclarativepixmapcache::parallel_data()
     QTest::addColumn<int>("cancel"); // which one to cancel
 
     QTest::newRow("local")
-            << thisfile.resolved(QUrl("data/exists1.png"))
-            << thisfile.resolved(QUrl("data/exists2.png"))
+            << TEST_FILE("exists1.png")
+            << TEST_FILE("exists2.png")
             << (localfile_optimized ? 2 : 0)
             << -1;
 
@@ -282,7 +286,7 @@ void tst_qdeclarativepixmapcache::parallel()
 void tst_qdeclarativepixmapcache::massive()
 {
     QDeclarativeEngine engine;
-    QUrl url = thisfile.resolved(QUrl("data/massive.png"));
+    QUrl url = TEST_FILE("massive.png");
 
     // Confirm that massive images remain in the cache while they are
     // in use by the application.
@@ -360,7 +364,7 @@ void createNetworkServer()
 {
    QEventLoop eventLoop;
    TestHTTPServer server(14453);
-   server.serveDirectory(QCoreApplication::applicationDirPath() + "/data/http");
+   server.serveDirectory(TESTDATA("http"));
    QTimer::singleShot(100, &eventLoop, SLOT(quit()));
    eventLoop.exec();
 }
@@ -388,7 +392,7 @@ void tst_qdeclarativepixmapcache::networkCrash()
 void tst_qdeclarativepixmapcache::lockingCrash()
 {
     TestHTTPServer server(14453);
-    server.serveDirectory(QCoreApplication::applicationDirPath() + "/data/http", TestHTTPServer::Delay);
+    server.serveDirectory(TESTDATA("http"), TestHTTPServer::Delay);
 
     {
         QDeclarativePixmap* p = new QDeclarativePixmap;
@@ -400,6 +404,53 @@ void tst_qdeclarativepixmapcache::lockingCrash()
         QVERIFY(p->isNull());
         delete p;
     }
+}
+
+#include <QQuickView>
+class DataLeakView : public QQuickView
+{
+    Q_OBJECT
+
+public:
+    explicit DataLeakView() : QQuickView()
+    {
+        setSource(TEST_FILE("dataLeak.qml"));
+    }
+
+    void showFor2Seconds()
+    {
+        showFullScreen();
+        QTimer::singleShot(2000, this, SIGNAL(ready()));
+    }
+
+signals:
+    void ready();
+};
+
+// QTBUG-22742
+Q_GLOBAL_STATIC(QDeclarativePixmap, dataLeakPixmap)
+void tst_qdeclarativepixmapcache::dataLeak()
+{
+    // Should not leak cached QDeclarativePixmapData.
+    // Unfortunately, since the QDeclarativePixmapStore
+    // is a global static, and it releases the cache
+    // entries on dtor (application exit), we must use
+    // valgrind to determine whether it leaks or not.
+    QDeclarativePixmap *p1 = new QDeclarativePixmap;
+    QDeclarativePixmap *p2 = new QDeclarativePixmap;
+    {
+        QScopedPointer<DataLeakView> test(new DataLeakView);
+        test->showFor2Seconds();
+        dataLeakPixmap()->load(test->engine(), TEST_FILE("exists.png"));
+        p1->load(test->engine(), TEST_FILE("exists.png"));
+        p2->load(test->engine(), TEST_FILE("exists2.png"));
+        QTest::qWait(2005); // 2 seconds + a few more millis.
+    }
+
+    // When the (global static) dataLeakPixmap is deleted, it
+    // shouldn't attempt to dereference a QDeclarativePixmapData
+    // which has been deleted by the QDeclarativePixmapStore
+    // destructor.
 }
 
 QTEST_MAIN(tst_qdeclarativepixmapcache)
