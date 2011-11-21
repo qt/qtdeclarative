@@ -166,7 +166,9 @@ public:
         maybeUpdate();
     }
 
-    virtual void stopRendering() { }
+    virtual void stopRendering() {
+        cleanupNodesOnShutdown();
+    }
 
     virtual void maybeUpdate() {
         if (!updatePending) {
@@ -407,8 +409,6 @@ void QQuickCanvasPrivate::initializeSceneGraph()
     context->initialize(glctx);
 
     Q_Q(QQuickCanvas);
-    QObject::connect(context->renderer(), SIGNAL(sceneGraphChanged()), q, SLOT(maybeUpdate()),
-                     Qt::DirectConnection);
 
     if (!QQuickItemPrivate::get(rootItem)->itemNode()->parent()) {
         context->rootNode()->appendChildNode(QQuickItemPrivate::get(rootItem)->itemNode());
@@ -468,13 +468,6 @@ void QQuickCanvasPrivate::renderSceneGraph(const QSize &size)
 #endif
 }
 
-
-// ### Do we need this?
-void QQuickCanvas::sceneGraphChanged()
-{
-//    Q_D(QQuickCanvas);
-//    d->needsRepaint = true;
-}
 
 QQuickCanvasPrivate::QQuickCanvasPrivate()
     : rootItem(0)
@@ -852,12 +845,6 @@ QQuickCanvas::~QQuickCanvas()
 {
     Q_D(QQuickCanvas);
 
-    /* The threaded renderer will clean up the nodes which will fire
-       sceneGraphChanged events through back to the canvas. This signal
-       is connected to maybeUpdate which should only be called from GUI or during
-       updatePaintNode(), so disconnect them before starting the shutdown
-     */
-    disconnect(d->context->renderer(), SIGNAL(sceneGraphChanged()), this, SLOT(maybeUpdate()));
     if (d->thread->isRunning())
         d->thread->stopRendering();
 
@@ -869,7 +856,6 @@ QQuickCanvas::~QQuickCanvas()
     delete d->incubationController; d->incubationController = 0;
 
     delete d->rootItem; d->rootItem = 0;
-    d->cleanupNodes();
 
     delete d->thread; d->thread = 0;
 }

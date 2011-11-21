@@ -139,7 +139,6 @@ protected:
 #endif
 
 private Q_SLOTS:
-    void sceneGraphChanged();
     void maybeUpdate();
     void animationStarted();
     void animationStopped();
