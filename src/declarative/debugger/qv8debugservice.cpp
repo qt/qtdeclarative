@@ -136,7 +136,7 @@ QV8DebugService::QV8DebugService(QObject *parent)
     // profiler in Qt Creator.
     v8::Debug::GetDebugContext();
 
-    if (status() == Enabled) {
+    if (registerService() == Enabled) {
         // ,block mode, client attached
         while (!d->initialized) {
             waitForMessage();

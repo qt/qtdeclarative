@@ -59,6 +59,7 @@ QDeclarativeInspectorService::QDeclarativeInspectorService()
     : QDeclarativeDebugService(QLatin1String("QDeclarativeObserverMode"))
     , m_currentInspectorPlugin(0)
 {
+    registerService();
 }
 
 QDeclarativeInspectorService *QDeclarativeInspectorService::instance()

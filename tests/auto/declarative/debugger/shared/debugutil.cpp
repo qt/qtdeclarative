@@ -62,6 +62,7 @@ bool QDeclarativeDebugTest::waitForSignal(QObject *receiver, const char *member,
 QDeclarativeDebugTestService::QDeclarativeDebugTestService(const QString &s, QObject *parent)
     : QDeclarativeDebugService(s, parent)
 {
+    registerService();
 }
 
 void QDeclarativeDebugTestService::messageReceived(const QByteArray &ba)

@@ -104,7 +104,8 @@ QV8ProfilerService::QV8ProfilerService(QObject *parent)
     : QDeclarativeDebugService(*(new QV8ProfilerServicePrivate()), QLatin1String("V8Profiler"), parent)
 {
     Q_D(QV8ProfilerService);
-    if (status() == Enabled) {
+
+    if (registerService() == Enabled) {
         // ,block mode, client attached
         while (!d->initialized)
             waitForMessage();

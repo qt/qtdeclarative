@@ -118,8 +118,7 @@ void tst_QDeclarativeDebugService::status()
     QTRY_COMPARE(service.status(), QDeclarativeDebugService::Unavailable);
 
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugService: Conflicting plugin name \"tst_QDeclarativeDebugService::status()\" ");
-
-    QDeclarativeDebugService duplicate("tst_QDeclarativeDebugService::status()");
+    QDeclarativeDebugTestService duplicate("tst_QDeclarativeDebugService::status()");
     QCOMPARE(duplicate.status(), QDeclarativeDebugService::NotConnected);
 }
 
@@ -138,7 +137,7 @@ void tst_QDeclarativeDebugService::sendMessage()
     QCOMPARE(resp, msg);
 
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugService: Conflicting plugin name \"tst_QDeclarativeDebugService::sendMessage()\" ");
-    QDeclarativeDebugService duplicate("tst_QDeclarativeDebugService::sendMessage()");
+    QDeclarativeDebugTestService duplicate("tst_QDeclarativeDebugService::sendMessage()");
     duplicate.sendMessage("msg");
 }
 

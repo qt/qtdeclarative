@@ -78,7 +78,8 @@ QDeclarativeDebugTrace::QDeclarativeDebugTrace()
       m_enabled(false), m_messageReceived(false)
 {
     m_timer.start();
-    if (status() == Enabled) {
+
+    if (registerService() == Enabled) {
         // wait for first message indicating whether to trace or not
         while (!m_messageReceived)
             waitForMessage();
