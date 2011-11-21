@@ -178,6 +178,7 @@ private slots:
     void sequenceConversionBindings();
     void sequenceConversionCopy();
     void qtbug_22464();
+    void qtbug_21580();
     void bug1();
     void bug2();
     void dynamicCreationCrash();
@@ -1648,6 +1649,18 @@ void tst_qdeclarativeecmascript::undefinedResetsProperty()
 void tst_qdeclarativeecmascript::qtbug_22464()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22464.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::qtbug_21580()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_21580.qml"));
+
     QObject *object = component.create();
     QVERIFY(object != 0);
 

@@ -67,9 +67,11 @@
 #include <QtCore/qset.h>
 
 #include <private/qobject_p.h>
-#include "qdeclarativeguard_p.h"
+#include <private/qflagpointer_p.h>
+#include <private/qdeclarativeguard_p.h>
 
 #include <private/qv8_p.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -184,13 +186,13 @@ public:
     // id guards
     struct ContextGuard : public QDeclarativeGuard<QObject>
     {
-        ContextGuard() : context(0) {}
-        inline ContextGuard &operator=(QObject *obj)
-        { QDeclarativeGuard<QObject>::operator=(obj); return *this; }
-        virtual void objectDestroyed(QObject *) { 
-            if (context->contextObject && !QObjectPrivate::get(context->contextObject)->wasDeleted) bindings.notify(); 
-        }
-        QDeclarativeContextData *context;
+        inline ContextGuard();
+        inline ContextGuard &operator=(QObject *obj);
+        inline void objectDestroyed(QObject *);
+
+        inline bool wasSet() const;
+
+        QFlagPointer<QDeclarativeContextData> context;
         QDeclarativeNotifier bindings;
     };
     ContextGuard *idValues;
@@ -300,6 +302,30 @@ QDeclarativeGuardedContextData::operator=(QDeclarativeContextData *d)
 {
     setContextData(d);
     return *this;
+}
+
+QDeclarativeContextData::ContextGuard::ContextGuard()
+: context(0)
+{
+}
+
+QDeclarativeContextData::ContextGuard &QDeclarativeContextData::ContextGuard::operator=(QObject *obj)
+{
+    QDeclarativeGuard<QObject>::operator=(obj);
+    context.setFlag();
+    bindings.notify(); // For alias connections
+    return *this;
+}
+
+void QDeclarativeContextData::ContextGuard::objectDestroyed(QObject *)
+{
+    if (context->contextObject && !QObjectPrivate::get(context->contextObject)->wasDeleted)
+        bindings.notify();
+}
+
+bool QDeclarativeContextData::ContextGuard::wasSet() const
+{
+    return context.flag();
 }
 
 QT_END_NAMESPACE

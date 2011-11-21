@@ -139,6 +139,7 @@ struct QDeclarativeVMEMetaData
 class QV8QObjectWrapper;
 class QDeclarativeVMEVariant;
 class QDeclarativeRefCount;
+class QDeclarativeVMEMetaObjectEndpoint;
 class Q_AUTOTEST_EXPORT QDeclarativeVMEMetaObject : public QAbstractDynamicMetaObject,
                                                     public QV8GCCallback::Node
 {
@@ -161,6 +162,8 @@ protected:
     virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);
 
 private:
+    friend class QDeclarativeVMEMetaObjectEndpoint;
+
     QObject *object;
     QDeclarativeCompiledData *compiledData;
     QDeclarativeGuardedContextData ctxt;
@@ -170,6 +173,7 @@ private:
     int methodOffset;
 
     QDeclarativeVMEVariant *data;
+    QDeclarativeVMEMetaObjectEndpoint *aliasEndpoints;
 
     v8::Persistent<v8::Array> varProperties;
     int firstVarPropertyIndex;
