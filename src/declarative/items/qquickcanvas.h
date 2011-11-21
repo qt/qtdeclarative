@@ -58,6 +58,7 @@ class QSGTexture;
 class QQuickCanvasPrivate;
 class QOpenGLFramebufferObject;
 class QDeclarativeIncubationController;
+class QInputMethodEvent;
 
 class Q_DECLARATIVE_EXPORT QQuickCanvas : public QWindow
 {
