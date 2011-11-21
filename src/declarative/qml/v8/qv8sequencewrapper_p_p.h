@@ -220,7 +220,9 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
     F(QUrl, Url, QList<QUrl>, QUrl())
 
 #define QML_SEQUENCE_TYPE_RESOURCE(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue, ConversionToV8fn, ConversionFromV8fn, ToStringfn) \
+    QT_END_NAMESPACE \
     Q_DECLARE_METATYPE(SequenceType) \
+    QT_BEGIN_NAMESPACE \
     class QV8##SequenceElementTypeName##SequenceResource : public QV8SequenceResource { \
         public:\
             QV8##SequenceElementTypeName##SequenceResource(QV8Engine *engine, QObject *obj, int propIdx) \
@@ -372,5 +374,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
 FOREACH_QML_SEQUENCE_TYPE(GENERATE_QML_SEQUENCE_TYPE_RESOURCE)
 #undef GENERATE_QML_SEQUENCE_TYPE_RESOURCE
 #undef QML_SEQUENCE_TYPE_RESOURCE
+
+QT_END_NAMESPACE
 
 #endif // QV8SEQUENCEWRAPPER_P_P_H
