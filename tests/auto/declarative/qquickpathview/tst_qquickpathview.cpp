@@ -621,6 +621,19 @@ void tst_QQuickPathView::setCurrentIndex()
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
+    // move an item, set move duration to 0, and change currentIndex to moved item. QTBUG-22786
+    model.moveItem(0, 3);
+    pathview->setHighlightMoveDuration(0);
+    pathview->setCurrentIndex(3);
+    QCOMPARE(pathview->currentIndex(), 3);
+    firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 3);
+    QVERIFY(firstItem);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QTRY_COMPARE(firstItem->pos() + offset, start);
+    model.moveItem(3, 0);
+    pathview->setCurrentIndex(0);
+    pathview->setHighlightMoveDuration(300);
+
     // Check the current item is still created when outside the bounds of pathItemCount.
     pathview->setPathItemCount(2);
     pathview->setHighlightRangeMode(QQuickPathView::NoHighlightRange);

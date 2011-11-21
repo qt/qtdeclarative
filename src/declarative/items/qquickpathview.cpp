@@ -1720,7 +1720,9 @@ void QQuickPathViewPrivate::snapToCurrent()
 
     const int duration = highlightMoveDuration;
 
-    if (moveDirection == Positive || (moveDirection == Shortest && targetOffset - offset > modelCount/2)) {
+    if (!duration) {
+        tl.set(moveOffset, targetOffset);
+    } else if (moveDirection == Positive || (moveDirection == Shortest && targetOffset - offset > modelCount/2)) {
         qreal distance = modelCount - targetOffset + offset;
         if (targetOffset > moveOffset) {
             tl.move(moveOffset, 0.0, QEasingCurve(QEasingCurve::InQuad), int(duration * offset / distance));
