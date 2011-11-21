@@ -1170,7 +1170,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
         ss.value = output->indexForString(script);
         ss.scope = prop->scriptStringScope;
 //        ss.bindingId = rewriteBinding(script, prop->name());
-        ss.bindingId = rewriteBinding(script, QString()); // XXX
+        ss.bindingId = rewriteBinding(prop->values.first()->value, QString()); // XXX
         ss.line = prop->location.start.line;
         output->addInstruction(ss);
     }
@@ -2484,12 +2484,12 @@ const QMetaObject *QDeclarativeCompiler::resolveType(const QString& name) const
 
 // similar to logic of completeComponentBuild, but also sticks data
 // into primitives at the end
-int QDeclarativeCompiler::rewriteBinding(const QString& expression, const QString& name)
+int QDeclarativeCompiler::rewriteBinding(const QDeclarativeScript::Variant& value, const QString& name)
 {
     QDeclarativeRewrite::RewriteBinding rewriteBinding;
     rewriteBinding.setName(QLatin1Char('$') + name.mid(name.lastIndexOf(QLatin1Char('.')) + 1));
 
-    QString rewrite = rewriteBinding(expression, 0, 0);
+    QString rewrite = rewriteBinding(value.asAST(), value.asScript(), 0);
 
     return output->indexForString(rewrite);
 }

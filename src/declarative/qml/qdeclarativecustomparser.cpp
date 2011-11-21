@@ -298,13 +298,13 @@ const QMetaObject *QDeclarativeCustomParser::resolveType(const QString& name) co
 }
 
 /*!
-    Rewrites \a expression and returns an identifier that can be
+    Rewrites \a value and returns an identifier that can be
     used to construct the binding later. \a name
     is used as the name of the rewritten function.
 */
-QDeclarativeBinding::Identifier QDeclarativeCustomParser::rewriteBinding(const QString& expression, const QString& name)
+QDeclarativeBinding::Identifier QDeclarativeCustomParser::rewriteBinding(const QDeclarativeScript::Variant &value, const QString& name)
 {
-    return compiler->rewriteBinding(expression, name);
+    return compiler->rewriteBinding(value, name);
 }
 
 QT_END_NAMESPACE

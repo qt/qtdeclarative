@@ -298,8 +298,7 @@ QDeclarativePropertyChangesParser::compile(const QList<QDeclarativeCustomParserP
             var = QVariant(v.asScript());
             {
                 // Pre-rewrite the expression
-                QString expression = v.asScript();
-                id = rewriteBinding(expression, data.at(ii).first); //### recreates the AST, which is slow
+                id = rewriteBinding(v, data.at(ii).first);
             }
             break;
         }
