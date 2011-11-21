@@ -1239,8 +1239,11 @@ void QDeclarativeScriptData::initialize(QDeclarativeEngine *engine)
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
 
-    // XXX Handle errors during the script compile!
+    // If compilation throws an error, a surrounding v8::TryCatch will record it.
     v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_programSource, url.toString(), 1);
+    if (program.IsEmpty())
+        return;
+
     m_program = qPersistentNew<v8::Script>(program);
 
     addToEngine(engine);
@@ -1301,13 +1304,18 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(v8engine->context());
 
-    if (!script->isInitialized()) 
+    v8::TryCatch try_catch;
+    if (!script->isInitialized())
         script->initialize(parentCtxt->engine);
 
     v8::Local<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
 
-    v8::TryCatch try_catch;
-    script->m_program->Run(qmlglobal);
+    if (!script->m_program.IsEmpty()) {
+        script->m_program->Run(qmlglobal);
+    } else {
+        // Compilation failed.
+        Q_ASSERT(try_catch.HasCaught());
+    }
 
     v8::Persistent<v8::Object> rv;
     

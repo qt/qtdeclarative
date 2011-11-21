@@ -225,6 +225,8 @@ private slots:
     void invokableObjectRet();
     void qtbug_20344();
     void qtbug_22679();
+    void qtbug_22843_data();
+    void qtbug_22843();
     void revisionErrors();
     void revision();
 
@@ -5176,6 +5178,46 @@ void tst_qdeclarativeecmascript::qtbug_22679()
     QVERIFY(o != 0);
     QCOMPARE(warningsSpy.count(), 0);
     delete o;
+}
+
+void tst_qdeclarativeecmascript::qtbug_22843_data()
+{
+    QTest::addColumn<bool>("library");
+
+    QTest::newRow("without .pragma library") << false;
+    QTest::newRow("with .pragma library") << true;
+}
+
+void tst_qdeclarativeecmascript::qtbug_22843()
+{
+    QFETCH(bool, library);
+
+    QString fileName("qtbug_22843");
+    if (library)
+        fileName += QLatin1String(".library");
+    fileName += QLatin1String(".qml");
+
+    QDeclarativeComponent component(&engine, TEST_FILE(fileName));
+    QString url = component.url().toString();
+    QString warning1 = url.left(url.length()-3) + QLatin1String("js:4: SyntaxError: Unexpected token )");
+    QString warning2 = url + QLatin1String(":5: TypeError: Object [object Object] has no method 'func'");
+
+    qRegisterMetaType<QList<QDeclarativeError> >("QList<QDeclarativeError>");
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QDeclarativeError>)));
+    for (int x = 0; x < 3; ++x) {
+        warningsSpy.clear();
+        // For libraries, only the first import attempt should produce a
+        // SyntaxError warning; subsequent component creation should not
+        // attempt to reload the script.
+        bool expectSyntaxError = !library || (x == 0);
+        if (expectSyntaxError)
+            QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(warningsSpy.count(), 1 + (expectSyntaxError?1:0));
+        delete object;
+    }
 }
 
 QTEST_MAIN(tst_qdeclarativeecmascript)

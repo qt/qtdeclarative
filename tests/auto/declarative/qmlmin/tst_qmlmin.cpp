@@ -105,6 +105,8 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/nonexistantProperty.5.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativefolderlistmodel/data/dummy.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/blank.js";
+    invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.js";
+    invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.library.js";
     invalidFiles << "tests/auto/declarative/qdeclarativeworkerscript/data/script_error_onLoad.js";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/test.js";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/test2.js";
