@@ -529,14 +529,6 @@ QDeclarativeContextData::QDeclarativeContextData(QDeclarativeContext *ctxt)
 
 void QDeclarativeContextData::invalidate()
 {
-    while (childContexts) {
-        if (childContexts->ownedByParent) {
-            childContexts->destroy();
-        } else {
-            childContexts->invalidate();
-        }
-    }
-
     while (componentAttached) {
         QDeclarativeComponentAttached *a = componentAttached;
         componentAttached = a->next;
@@ -546,6 +538,14 @@ void QDeclarativeContextData::invalidate()
         a->prev = 0;
 
         emit a->destruction();
+    }
+
+    while (childContexts) {
+        if (childContexts->ownedByParent) {
+            childContexts->destroy();
+        } else {
+            childContexts->invalidate();
+        }
     }
 
     if (prevChild) {

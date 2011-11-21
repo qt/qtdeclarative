@@ -80,6 +80,7 @@ private slots:
     void refreshExpressionsCrash();
     void refreshExpressionsRootContext();
 
+    void qtbug_22535();
 private:
     QDeclarativeEngine engine;
 };
@@ -642,6 +643,18 @@ void tst_qdeclarativecontext::refreshExpressionsRootContext()
 
     delete o2;
     delete o1;
+}
+
+void tst_qdeclarativecontext::qtbug_22535()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22535.qml"));
+    QDeclarativeContext context(engine.rootContext());
+
+    QObject *o = component.create(&context);
+
+    // Don't crash!
+    delete o;
 }
 
 QTEST_MAIN(tst_qdeclarativecontext)
