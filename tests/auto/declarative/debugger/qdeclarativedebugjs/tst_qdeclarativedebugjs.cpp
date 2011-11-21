@@ -1609,7 +1609,6 @@ void tst_QDeclarativeDebugJS::getScopes()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->scopes();
-    QEXPECT_FAIL("", "Failing after v8 integration", Abort);
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
 }
 
