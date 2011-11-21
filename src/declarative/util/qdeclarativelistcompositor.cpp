@@ -46,6 +46,8 @@
 //#define QT_DECLARATIVE_VERIFY_MINIMAL
 //#define QT_DECLARATIVE_VERIFY_INTEGRITY
 
+QT_BEGIN_NAMESPACE
+
 #ifdef QT_DECLARATIVE_VERIFY_MINIMAL
 #define QT_DECLARATIVE_VERIFY_INTEGRITY
 static bool qt_verifyMinimal(
@@ -1197,3 +1199,5 @@ QDebug operator <<(QDebug debug, const QDeclarativeListCompositor &list)
     }
     return (debug << ")").maybeSpace();
 }
+
+QT_END_NAMESPACE

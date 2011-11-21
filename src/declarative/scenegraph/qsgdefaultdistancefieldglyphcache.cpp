@@ -44,6 +44,7 @@
 #include <private/qsgdistancefieldutil_p.h>
 #include <qopenglfunctions.h>
 
+QT_BEGIN_NAMESPACE
 
 QHash<QString, QOpenGLMultiGroupSharedResource> QSGDefaultDistanceFieldGlyphCache::m_textures_data;
 

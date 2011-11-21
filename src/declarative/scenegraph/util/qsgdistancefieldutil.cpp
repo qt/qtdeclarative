@@ -47,6 +47,7 @@
 #include <QtGui/private/qopenglengineshadersource_p.h>
 #include <private/qsgcontext_p.h>
 
+QT_BEGIN_NAMESPACE
 
 static float defaultThresholdFunc(float glyphScale)
 {
@@ -800,3 +801,5 @@ QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCacheManager::cache(const QRawF
         cache = m_caches.insert(fontD->fontEngine, sgCtx->createDistanceFieldGlyphCache(font));
     return cache.value();
 }
+
+QT_END_NAMESPACE

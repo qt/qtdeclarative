@@ -315,9 +315,9 @@ private:
     static QAtomicInt uidCounter;
 };
 
-Q_DECLARE_METATYPE(ListModel *);
-
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(ListModel *);
 
 QT_END_HEADER
 
