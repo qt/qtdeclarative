@@ -374,8 +374,36 @@ public:
             implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
         }
 
-        for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
-            dump(meta->method(index), implicitSignals);
+        if (meta == &QObject::staticMetaObject) {
+            // for QObject, hide deleteLater() and onDestroyed
+            for (int index = meta->methodOffset(); index < meta->methodCount(); ++index) {
+                QMetaMethod method = meta->method(index);
+                const char *signature(method.signature());
+                if (signature == QLatin1String("destroyed(QObject*)")
+                        || signature == QLatin1String("destroyed()")
+                        || signature == QLatin1String("deleteLater()"))
+                    continue;
+                dump(method, implicitSignals);
+            }
+
+            // and add toString(), destroy() and destroy(int)
+            qml->writeStartObject(QLatin1String("Method"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("toString")));
+            qml->writeEndObject();
+            qml->writeStartObject(QLatin1String("Method"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
+            qml->writeEndObject();
+            qml->writeStartObject(QLatin1String("Method"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
+            qml->writeStartObject(QLatin1String("Parameter"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("delay")));
+            qml->writeScriptBinding(QLatin1String("type"), enquote(QLatin1String("int")));
+            qml->writeEndObject();
+            qml->writeEndObject();
+        } else {
+            for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
+                dump(meta->method(index), implicitSignals);
+        }
 
         qml->writeEndObject();
     }
