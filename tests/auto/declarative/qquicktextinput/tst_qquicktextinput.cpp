@@ -54,6 +54,8 @@
 #include <QInputContext>
 #include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
+#include <qplatforminputcontext_qpa.h>
+#include <private/qinputpanel_p.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>
@@ -2149,8 +2151,33 @@ void tst_qquicktextinput::simulateKey(QQuickView *view, int key)
     QGuiApplication::sendEvent(view, &release);
 }
 
+class PlatformInputContext : public QPlatformInputContext
+{
+public:
+    PlatformInputContext() : m_visible(false) {}
+
+    virtual void showInputPanel()
+    {
+        m_visible = true;
+    }
+    virtual void hideInputPanel()
+    {
+        m_visible = false;
+    }
+    virtual bool isInputPanelVisible() const
+    {
+        return m_visible;
+    }
+
+    bool m_visible;
+};
+
 void tst_qquicktextinput::openInputPanel()
 {
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
     QQuickView view(QUrl::fromLocalFile(TESTDATA("openInputPanel.qml")));
     view.show();
     view.requestActivateWindow();
@@ -2165,7 +2192,6 @@ void tst_qquicktextinput::openInputPanel()
     QVERIFY(!input->hasActiveFocus());
     qDebug() << &input << qApp->inputPanel()->inputItem();
     QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
-    QEXPECT_FAIL("", "QTBUG-21946", Abort);
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
     // input panel should open on focus
@@ -2235,6 +2261,8 @@ void tst_qquicktextinput::openInputPanel()
     // input panel should close when closeSoftwareInputPanel is called
     input->closeSoftwareInputPanel();
     QCOMPARE(qApp->inputPanel()->visible(), false);
+
+    inputPanelPrivate->testContext = 0;
 }
 
 class MyTextInput : public QQuickTextInput

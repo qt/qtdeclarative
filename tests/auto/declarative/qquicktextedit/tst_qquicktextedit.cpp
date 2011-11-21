@@ -61,6 +61,8 @@
 #include <QMimeData>
 #include <private/qtextcontrol_p.h>
 #include "../shared/util.h"
+#include <qplatforminputcontext_qpa.h>
+#include <private/qinputpanel_p.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>
@@ -1993,8 +1995,33 @@ void tst_qquicktextedit::textInput()
     QCOMPARE(editPrivate->text, QString("Hello world!"));
 }
 
+class PlatformInputContext : public QPlatformInputContext
+{
+public:
+    PlatformInputContext() : m_visible(false) {}
+
+    virtual void showInputPanel()
+    {
+        m_visible = true;
+    }
+    virtual void hideInputPanel()
+    {
+        m_visible = false;
+    }
+    virtual bool isInputPanelVisible() const
+    {
+        return m_visible;
+    }
+
+    bool m_visible;
+};
+
 void tst_qquicktextedit::openInputPanel()
 {
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
     QQuickView view(QUrl::fromLocalFile(TESTDATA("openInputPanel.qml")));
     view.show();
     view.requestActivateWindow();
@@ -2009,7 +2036,7 @@ void tst_qquicktextedit::openInputPanel()
     QVERIFY(!edit->hasActiveFocus());
     qDebug() << &edit << qApp->inputPanel()->inputItem();
     QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
-    QEXPECT_FAIL("", "QTBUG-21946", Abort);
+
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
     // input panel should open on focus
@@ -2079,6 +2106,8 @@ void tst_qquicktextedit::openInputPanel()
     // input panel should close when closeSoftwareInputPanel is called
     edit->closeSoftwareInputPanel();
     QCOMPARE(qApp->inputPanel()->visible(), false);
+
+    inputPanelPrivate->testContext = 0;
 }
 
 void tst_qquicktextedit::geometrySignals()
