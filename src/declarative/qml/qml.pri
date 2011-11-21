@@ -1,4 +1,5 @@
 SOURCES += \
+    $$PWD/qdeclarativeapplication.cpp \
     $$PWD/qdeclarativeinstruction.cpp \
     $$PWD/qdeclarativevmemetaobject.cpp \
     $$PWD/qdeclarativeengine.cpp \
@@ -50,6 +51,7 @@ HEADERS += \
     $$PWD/qdeclarativeinstruction_p.h \
     $$PWD/qdeclarativevmemetaobject_p.h \
     $$PWD/qdeclarative.h \
+    $$PWD/qdeclarativeapplication_p.h \
     $$PWD/qdeclarativebinding_p.h \
     $$PWD/qdeclarativebinding_p_p.h \
     $$PWD/qdeclarativeproperty.h \

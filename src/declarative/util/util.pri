@@ -1,5 +1,4 @@
 SOURCES += \
-    $$PWD/qdeclarativeapplication.cpp \
     $$PWD/qdeclarativeutilmodule.cpp\
     $$PWD/qdeclarativeconnections.cpp \
     $$PWD/qdeclarativepackage.cpp \
@@ -33,7 +32,6 @@ SOURCES += \
     $$PWD/qdeclarativesvgparser.cpp
 
 HEADERS += \
-    $$PWD/qdeclarativeapplication_p.h \
     $$PWD/qdeclarativeutilmodule_p.h\
     $$PWD/qdeclarativeconnections_p.h \
     $$PWD/qdeclarativepackage_p.h \

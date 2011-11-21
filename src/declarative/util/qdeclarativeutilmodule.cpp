@@ -59,7 +59,6 @@
 #include "qdeclarativesystempalette_p.h"
 #include "qdeclarativetimer_p.h"
 #include "qdeclarativetransition_p.h"
-#include "qdeclarativeapplication_p.h"
 #include <qdeclarativeinfo.h>
 #include <private/qdeclarativetypenotavailable_p.h>
 #ifndef QT_NO_XMLPATTERNS
@@ -76,7 +75,6 @@ void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor
 
 void QDeclarativeUtilModule::defineModule()
 {
-    qmlRegisterUncreatableType<QDeclarativeApplication>("QtQuick",2,0,"Application", QDeclarativeApplication::tr("Application is an abstract class"));
     qmlRegisterUncreatableType<QInputPanel>("QtQuick",2,0,"InputPanel", QInputPanel::tr("InputPanel is an abstract class"));
     qmlRegisterUncreatableType<QDeclarativeAbstractAnimation>("QtQuick",2,0,"Animation",QDeclarativeAbstractAnimation::tr("Animation is an abstract class"));
 

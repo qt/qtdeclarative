@@ -175,6 +175,7 @@ void QDeclarativeEnginePrivate::defineModule()
 {
     registerBaseTypes("QtQuick", 2, 0);
     qmlRegisterType<QDeclarativeBinding>();
+    qmlRegisterUncreatableType<QDeclarativeApplication>("QtQuick",2,0,"Application", QDeclarativeApplication::tr("Application is an abstract class"));
     qmlRegisterUncreatableType<QDeclarativeLocale>("QtQuick",2,0,"Locale",QDeclarativeEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 }
 
