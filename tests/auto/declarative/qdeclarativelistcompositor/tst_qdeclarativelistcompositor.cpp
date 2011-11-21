@@ -85,6 +85,7 @@ Q_DECLARE_METATYPE(IndexArray)
 Q_DECLARE_METATYPE(ListArray)
 Q_DECLARE_METATYPE(C::Group)
 
+QT_BEGIN_NAMESPACE
 bool operator ==(const C::Change &left, const C::Change &right)
 {
     return left.index[3] == right.index[3]
@@ -96,6 +97,7 @@ bool operator ==(const C::Change &left, const C::Change &right)
             && left.inCache() == right.inCache()
             && (left.moveId == -1) == (right.moveId == -1);
 }
+QT_END_NAMESPACE
 
 static const C::Group Visible = C::Group(2);
 static const C::Group Selection = C::Group(3);
