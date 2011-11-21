@@ -1365,6 +1365,9 @@ void tst_QQuickGridView::currentIndex()
     gridview->moveCurrentIndexLeft();
     QCOMPARE(gridview->currentIndex(), 35);
 
+    // wait until motion stops
+    QTRY_VERIFY(gridview->verticalVelocity() == 0.0);
+
     // no wrap
     gridview->setCurrentIndex(0);
     QCOMPARE(gridview->currentIndex(), 0);
