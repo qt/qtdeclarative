@@ -76,12 +76,7 @@
 QT_BEGIN_NAMESPACE
 
 // The cache limit describes the maximum "junk" in the cache.
-// These are the same defaults as QPixmapCache
-#if defined(Q_WS_QWS) || defined(Q_WS_WINCE)
-static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded
-#else
-static int cache_limit = 128 * 1024; // 10 MB cache limit for desktop
-#endif
+static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded in qpixmapcache.cpp
 
 class QDeclarativePixmapReader;
 class QDeclarativePixmapData;
