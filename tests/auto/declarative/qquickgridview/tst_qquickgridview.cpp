@@ -1346,6 +1346,7 @@ void tst_QQuickGridView::currentIndex()
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QVERIFY(gridview != 0);
+    QTRY_VERIFY(!QQuickItemPrivate::get(gridview)->polishScheduled);
 
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
