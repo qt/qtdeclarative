@@ -130,8 +130,10 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     qMetaTypeId<QList<int> >();
 
     QByteArray v8args = qgetenv("V8ARGS");
-    if (!v8args.isEmpty())
-        v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
+    // change default v8 behaviour to not relocate breakpoints across lines
+    if (!v8args.contains("breakpoint_relocation"))
+        v8args.append(" --nobreakpoint_relocation");
+    v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
 
     v8::HandleScope handle_scope;
     qPersistentRegister(m_context);

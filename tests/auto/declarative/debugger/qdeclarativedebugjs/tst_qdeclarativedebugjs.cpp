@@ -1062,7 +1062,7 @@ void tst_QDeclarativeDebugJS::gc()
     //void gc()
 
     QVERIFY(init());
-    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), 2, -1, true);
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), 43, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
@@ -1172,6 +1172,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnComment()
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     client->startDebugging();
+    QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1193,6 +1194,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnEmptyLine()
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     client->startDebugging();
+    QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1271,8 +1273,8 @@ void tst_QDeclarativeDebugJS::changeBreakpoint()
 {
     //void changeBreakpoint(int breakpoint, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine1 = 77;
-    int sourceLine2 = 78;
+    int sourceLine1 = 78;
+    int sourceLine2 = 79;
     QVERIFY(init());
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
@@ -1385,8 +1387,8 @@ void tst_QDeclarativeDebugJS::clearBreakpoint()
 {
     //void clearBreakpoint(int breakpoint);
 
-    int sourceLine1 = 77;
-    int sourceLine2 = 78;
+    int sourceLine1 = 78;
+    int sourceLine2 = 79;
     QVERIFY(init());
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(TEST_QMLFILE), sourceLine1, -1, true);
