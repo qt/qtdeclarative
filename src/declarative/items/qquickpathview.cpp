@@ -843,6 +843,10 @@ void QQuickPathView::setHighlightRangeMode(HighlightRangeMode mode)
         return;
     d->highlightRangeMode = mode;
     d->haveHighlightRange = d->highlightRangeMode != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
+    if (d->haveHighlightRange) {
+        d->regenerate();
+        d->snapToCurrent();
+    }
     emit highlightRangeModeChanged();
 }
 
@@ -1502,10 +1506,7 @@ void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
     int moveOffset;
     bool currentChanged = false;
     bool changedOffset = false;
-    bool removed = false;
-    bool inserted = false;
     foreach (const QDeclarativeChangeSet::Remove &r, changeSet.removes()) {
-        removed = true;
         if (moveId == -1 && d->currentIndex >= r.index + r.count) {
             d->currentIndex -= r.count;
             currentChanged = true;
@@ -1525,31 +1526,35 @@ void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
         }
 
         if (r.index > d->currentIndex) {
-            if (d->offset >= r.count) {
-                changedOffset = true;
-                d->offset -= r.count;
-                d->offsetAdj -= r.count;
-            }
+            changedOffset = true;
+            d->offset -= r.count;
+            d->offsetAdj -= r.count;
         }
         d->modelCount -= r.count;
     }
     foreach (const QDeclarativeChangeSet::Insert &i, changeSet.inserts()) {
-        inserted = true;
         if (d->modelCount) {
             if (moveId == -1 && i.index <= d->currentIndex) {
                 d->currentIndex += i.count;
                 currentChanged = true;
-            } else if (d->offset != 0) {
+            } else {
                 if (moveId != -1 && moveId == i.moveId) {
                     d->currentIndex = i.index + moveOffset;
                     currentChanged = true;
                 }
-                d->offset += i.count;
-                d->offsetAdj += i.count;
+                if (i.index > d->currentIndex) {
+                    d->offset += i.count;
+                    d->offsetAdj += i.count;
+                    changedOffset = true;
+                }
             }
         }
         d->modelCount += i.count;
     }
+
+    d->offset = qmlMod(d->offset, d->modelCount);
+    if (d->offset < 0)
+        d->offset += d->modelCount;
 
     d->itemCache += d->items;
     d->items.clear();
@@ -1560,22 +1565,14 @@ void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
         d->offset = 0;
         changedOffset = true;
         d->tl.reset(d->moveOffset);
-    } else if (removed) {
-        d->regenerate();
+    } else {
         if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QQuickPathView::StrictlyEnforceRange) {
-            qreal targetOffset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
-            if (targetOffset != d->offset)
-                d->tl.set(d->moveOffset, targetOffset);
+            d->offset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
+            changedOffset = true;
         }
-    } else if (inserted) {
         d->firstIndex = -1;
         d->updateMappedRange();
         d->scheduleLayout();
-        if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QQuickPathView::StrictlyEnforceRange) {
-            qreal targetOffset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
-            if (targetOffset != d->offset)
-                d->tl.set(d->moveOffset, targetOffset);
-        }
     }
     if (changedOffset)
         emit offsetChanged();

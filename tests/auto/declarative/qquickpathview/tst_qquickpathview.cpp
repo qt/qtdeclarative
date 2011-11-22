@@ -91,6 +91,12 @@ private slots:
     void dataModel();
     void pathview2();
     void pathview3();
+    void insertModel_data();
+    void insertModel();
+    void removeModel_data();
+    void removeModel();
+    void moveModel_data();
+    void moveModel();
     void path();
     void pathMoved();
     void setCurrentIndex();
@@ -199,10 +205,24 @@ public:
         endInsertRows();
     }
 
+    void insertItems(int index, const QList<QPair<QString, QString> > &items) {
+        beginInsertRows(QModelIndex(), index, index+items.count()-1);
+        for (int i=0; i<items.count(); i++)
+            list.insert(index + i, QPair<QString,QString>(items[i].first, items[i].second));
+        endInsertRows();
+    }
+
     void removeItem(int index) {
         beginRemoveRows(QModelIndex(), index, index);
         list.removeAt(index);
         endRemoveRows();
+    }
+
+    void removeItems(int index, int count) {
+        emit beginRemoveRows(QModelIndex(), index, index+count-1);
+        while (count--)
+            list.removeAt(index);
+        emit endRemoveRows();
     }
 
     void moveItem(int from, int to) {
@@ -211,9 +231,44 @@ public:
         endMoveRows();
     }
 
+    void moveItems(int from, int to, int count) {
+        beginMoveRows(QModelIndex(), from, from+count-1, QModelIndex(), to > from ? to+count : to);
+        move(from, to, count);
+        endMoveRows();
+    }
+
     void modifyItem(int idx, const QString &name, const QString &number) {
         list[idx] = QPair<QString,QString>(name, number);
         emit dataChanged(index(idx,0), index(idx,0));
+    }
+
+    void move(int from, int to, int n)
+    {
+        if (from > to) {
+            // Only move forwards - flip if backwards moving
+            int tfrom = from;
+            int tto = to;
+            from = tto;
+            to = tto+n;
+            n = tfrom-tto;
+        }
+        if (n == 1) {
+            list.move(from, to);
+        } else {
+            QList<QPair<QString,QString> > replaced;
+            int i=0;
+            QList<QPair<QString,QString> >::ConstIterator it=list.begin(); it += from+n;
+            for (; i<to-from; ++i,++it)
+                replaced.append(*it);
+            i=0;
+            it=list.begin(); it += from;
+            for (; i<n; ++i,++it)
+                replaced.append(*it);
+            QList<QPair<QString,QString> >::ConstIterator f=replaced.begin();
+            QList<QPair<QString,QString> >::Iterator t=list.begin(); t += from;
+            for (; f != replaced.end(); ++f, ++t)
+                *t = *f;
+        }
     }
 
 private:
@@ -328,6 +383,265 @@ void tst_QQuickPathView::pathview3()
     QCOMPARE(obj->pathItemCount(), 4);
 
     delete obj;
+}
+
+void tst_QQuickPathView::insertModel_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::addColumn<int>("idx");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<qreal>("offset");
+
+    // We have 8 items, with currentIndex == 4
+    QTest::newRow("insert after current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 6 << 1 << 5.;
+    QTest::newRow("insert before current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 1 << 4.;
+    QTest::newRow("insert multiple after current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 2 << 6.;
+    QTest::newRow("insert multiple before current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 1 << 2 << 4.;
+    QTest::newRow("insert at end")
+        << int(QQuickPathView::StrictlyEnforceRange) << 8 << 1 << 5.;
+    QTest::newRow("insert at beginning")
+        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << 4.;
+    QTest::newRow("insert at current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 1 << 4.;
+
+    QTest::newRow("no range - insert after current")
+        << int(QQuickPathView::NoHighlightRange) << 6 << 1 << 5.;
+    QTest::newRow("no range - insert before current")
+        << int(QQuickPathView::NoHighlightRange) << 2 << 1 << 4.;
+    QTest::newRow("no range - insert multiple after current")
+        << int(QQuickPathView::NoHighlightRange) << 5 << 2 << 6.;
+    QTest::newRow("no range - insert multiple before current")
+        << int(QQuickPathView::NoHighlightRange) << 1 << 2 << 4.;
+    QTest::newRow("no range - insert at end")
+        << int(QQuickPathView::NoHighlightRange) << 8 << 1 << 5.;
+    QTest::newRow("no range - insert at beginning")
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 4.;
+    QTest::newRow("no range - insert at current")
+        << int(QQuickPathView::NoHighlightRange) << 4 << 1 << 4.;
+}
+
+void tst_QQuickPathView::insertModel()
+{
+    QFETCH(int, mode);
+    QFETCH(int, idx);
+    QFETCH(int, count);
+    QFETCH(qreal, offset);
+
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    model.addItem("Ben", "12345");
+    model.addItem("Bohn", "2345");
+    model.addItem("Bob", "54321");
+    model.addItem("Bill", "4321");
+    model.addItem("Jinny", "679");
+    model.addItem("Milly", "73378");
+    model.addItem("Jimmy", "3535");
+    model.addItem("Barb", "9039");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    qApp->processEvents();
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QVERIFY(pathview != 0);
+
+    pathview->setHighlightRangeMode((QQuickPathView::HighlightRangeMode)mode);
+
+    pathview->setCurrentIndex(4);
+    if (mode == QQuickPathView::StrictlyEnforceRange)
+        QTRY_COMPARE(pathview->offset(), 4.0);
+    else
+        pathview->setOffset(4);
+
+    QList<QPair<QString, QString> > items;
+    for (int i = 0; i < count; ++i)
+        items.append(qMakePair(QString("New"), QString::number(i)));
+
+    model.insertItems(idx, items);
+    QTRY_COMPARE(pathview->offset(), offset);
+
+    delete canvas;
+}
+
+void tst_QQuickPathView::removeModel_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::addColumn<int>("idx");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<qreal>("offset");
+
+    // We have 8 items, with currentIndex == 4
+    QTest::newRow("remove after current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 6 << 1 << 3.;
+    QTest::newRow("remove before current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 1 << 4.;
+    QTest::newRow("remove multiple after current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 2 << 2.;
+    QTest::newRow("remove multiple before current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 1 << 2 << 4.;
+    QTest::newRow("remove last")
+        << int(QQuickPathView::StrictlyEnforceRange) << 7 << 1 << 3.;
+    QTest::newRow("remove first")
+        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << 4.;
+    QTest::newRow("remove current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 1 << 3.;
+
+    QTest::newRow("no range - remove after current")
+        << int(QQuickPathView::NoHighlightRange) << 6 << 1 << 3.;
+    QTest::newRow("no range - remove before current")
+        << int(QQuickPathView::NoHighlightRange) << 2 << 1 << 4.;
+    QTest::newRow("no range - remove multiple after current")
+        << int(QQuickPathView::NoHighlightRange) << 5 << 2 << 2.;
+    QTest::newRow("no range - remove multiple before current")
+        << int(QQuickPathView::NoHighlightRange) << 1 << 2 << 4.;
+    QTest::newRow("no range - remove last")
+        << int(QQuickPathView::NoHighlightRange) << 7 << 1 << 3.;
+    QTest::newRow("no range - remove first")
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 4.;
+    QTest::newRow("no range - remove current offset")
+        << int(QQuickPathView::NoHighlightRange) << 4 << 1 << 4.;
+}
+
+void tst_QQuickPathView::removeModel()
+{
+    QFETCH(int, mode);
+    QFETCH(int, idx);
+    QFETCH(int, count);
+    QFETCH(qreal, offset);
+
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    model.addItem("Ben", "12345");
+    model.addItem("Bohn", "2345");
+    model.addItem("Bob", "54321");
+    model.addItem("Bill", "4321");
+    model.addItem("Jinny", "679");
+    model.addItem("Milly", "73378");
+    model.addItem("Jimmy", "3535");
+    model.addItem("Barb", "9039");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    qApp->processEvents();
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QVERIFY(pathview != 0);
+
+    pathview->setHighlightRangeMode((QQuickPathView::HighlightRangeMode)mode);
+
+    pathview->setCurrentIndex(4);
+    if (mode == QQuickPathView::StrictlyEnforceRange)
+        QTRY_COMPARE(pathview->offset(), 4.0);
+    else
+        pathview->setOffset(4);
+
+    model.removeItems(idx, count);
+    QTRY_COMPARE(pathview->offset(), offset);
+
+    delete canvas;
+}
+
+
+void tst_QQuickPathView::moveModel_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::addColumn<int>("from");
+    QTest::addColumn<int>("to");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<qreal>("offset");
+
+    // We have 8 items, with currentIndex == 4
+    QTest::newRow("move after current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 6 << 1 << 4.;
+    QTest::newRow("move before current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 3 << 1 << 4.;
+    QTest::newRow("move before current to after")
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 6 << 1 << 5.;
+    QTest::newRow("move multiple after current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 5 << 6 << 2 << 4.;
+    QTest::newRow("move multiple before current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 0 << 1 << 2 << 4.;
+    QTest::newRow("move before current to end")
+        << int(QQuickPathView::StrictlyEnforceRange) << 2 << 7 << 1 << 5.;
+    QTest::newRow("move last to beginning")
+        << int(QQuickPathView::StrictlyEnforceRange) << 7 << 0 << 1 << 3.;
+    QTest::newRow("move current")
+        << int(QQuickPathView::StrictlyEnforceRange) << 4 << 6 << 1 << 2.;
+
+    QTest::newRow("no range - move after current")
+        << int(QQuickPathView::NoHighlightRange) << 5 << 6 << 1 << 4.;
+    QTest::newRow("no range - move before current")
+        << int(QQuickPathView::NoHighlightRange) << 2 << 3 << 1 << 4.;
+    QTest::newRow("no range - move before current to after")
+        << int(QQuickPathView::NoHighlightRange) << 2 << 6 << 1 << 5.;
+    QTest::newRow("no range - move multiple after current")
+        << int(QQuickPathView::NoHighlightRange) << 5 << 6 << 2 << 4.;
+    QTest::newRow("no range - move multiple before current")
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 2 << 4.;
+    QTest::newRow("no range - move before current to end")
+        << int(QQuickPathView::NoHighlightRange) << 2 << 7 << 1 << 5.;
+    QTest::newRow("no range - move last to beginning")
+        << int(QQuickPathView::NoHighlightRange) << 7 << 0 << 1 << 3.;
+    QTest::newRow("no range - move current")
+        << int(QQuickPathView::NoHighlightRange) << 4 << 6 << 1 << 4.;
+    QTest::newRow("no range - move multiple incl. current")
+        << int(QQuickPathView::NoHighlightRange) << 0 << 1 << 5 << 4.;
+}
+
+void tst_QQuickPathView::moveModel()
+{
+    QFETCH(int, mode);
+    QFETCH(int, from);
+    QFETCH(int, to);
+    QFETCH(int, count);
+    QFETCH(qreal, offset);
+
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    model.addItem("Ben", "12345");
+    model.addItem("Bohn", "2345");
+    model.addItem("Bob", "54321");
+    model.addItem("Bill", "4321");
+    model.addItem("Jinny", "679");
+    model.addItem("Milly", "73378");
+    model.addItem("Jimmy", "3535");
+    model.addItem("Barb", "9039");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    qApp->processEvents();
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QVERIFY(pathview != 0);
+
+    pathview->setHighlightRangeMode((QQuickPathView::HighlightRangeMode)mode);
+
+    pathview->setCurrentIndex(4);
+    if (mode == QQuickPathView::StrictlyEnforceRange)
+        QTRY_COMPARE(pathview->offset(), 4.0);
+    else
+        pathview->setOffset(4);
+
+    model.moveItems(from, to, count);
+    QTRY_COMPARE(pathview->offset(), offset);
+
+    delete canvas;
 }
 
 void tst_QQuickPathView::path()
