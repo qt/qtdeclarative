@@ -342,6 +342,8 @@ void QV4Bindings::subscribeId(QDeclarativeContextData *p, int idIndex, int subIn
 void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
 {
     Subscription *sub = (subscriptions + subIndex);
+    if (sub->isConnected(o, notifyIndex))
+        return;
     sub->bindings = this;
     sub->method = subIndex; 
     if (o)
