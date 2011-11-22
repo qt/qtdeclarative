@@ -42,7 +42,7 @@
 #include "qv4irbuilder_p.h"
 #include "qv4compiler_p_p.h"
 
-#include <private/qquickanchors_p_p.h> // For AnchorLine
+#include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativetypenamecache_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
@@ -72,7 +72,7 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
     default:
         if (t == qMetaTypeId<QDeclarative1AnchorLine>())
             return IR::AnchorLineType;
-        else if (t == qMetaTypeId<QQuickAnchorLine>())
+        else if (t == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId())
             return IR::SGAnchorLineType;
         else if (engine->metaObjectForType(t)) {
             return IR::ObjectType;

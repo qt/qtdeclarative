@@ -111,6 +111,11 @@ public:
 
     static QList<QDeclarativePrivate::AutoParentFunction> parentFunctions();
 
+    static int QQuickAnchorLineMetaTypeId();
+    typedef bool (*CompareFunction)(const void *, const void *);
+    static void setQQuickAnchorLineCompareFunction(CompareFunction);
+    static bool QQuickAnchorLineCompare(const void *p1, const void *p2);
+
     struct ModuleApiInstance {
         ModuleApiInstance()
             : scriptCallback(0), qobjectCallback(0), qobjectApi(0) {}
@@ -130,6 +135,9 @@ public:
     };
     static ModuleApi moduleApi(const QString &, int, int);
     static QHash<QString, QList<ModuleApi> > moduleApis();
+
+private:
+    static CompareFunction anchorLineCompareFunction;
 };
 
 class QHashedStringRef;
