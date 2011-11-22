@@ -56,6 +56,7 @@
 #include "qdeclarativesqldatabase_p.h"
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativeglobal_p.h"
+#include "qdeclarativelistmodel_p.h"
 #include "qdeclarativeworkerscript_p.h"
 #include "qdeclarativecomponent_p.h"
 #include "qdeclarativenetworkaccessmanagerfactory.h"
@@ -103,7 +104,6 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
     QDeclarativeEnginePrivate::registerBaseTypes(uri, versionMajor, versionMinor);
     QDeclarativeValueTypeFactory::registerBaseTypes(uri, versionMajor, versionMinor);
-    QDeclarativeUtilModule::registerBaseTypes(uri, versionMajor, versionMinor);
 }
 
 /*!
@@ -168,6 +168,8 @@ void QDeclarativeEnginePrivate::registerBaseTypes(const char *uri, int versionMa
 {
     qmlRegisterType<QDeclarativeComponent>(uri,versionMajor,versionMinor,"Component");
     qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
+    qmlRegisterType<QDeclarativeListElement>(uri, versionMajor, versionMinor,"ListElement");
+    qmlRegisterCustomType<QDeclarativeListModel>(uri, versionMajor, versionMinor,"ListModel", new QDeclarativeListModelParser);
     qmlRegisterType<QDeclarativeWorkerScript>(uri,versionMajor,versionMinor,"WorkerScript");
 }
 

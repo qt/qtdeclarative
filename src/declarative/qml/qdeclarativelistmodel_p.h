@@ -50,7 +50,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QList>
 #include <QtCore/QVariant>
-#include <private/qlistmodelinterface_p.h>
+#include "qlistmodelinterface_p.h"
 
 #include <private/qv8engine_p.h>
 #include <private/qpodvector_p.h>

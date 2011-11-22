@@ -41,7 +41,7 @@
 
 #include "qdeclarativepropertychanges_p.h"
 
-#include "qdeclarativeopenmetaobject_p.h"
+#include <private/qdeclarativeopenmetaobject_p.h>
 #include <private/qdeclarativerewrite_p.h>
 #include <private/qdeclarativeengine_p.h>
 

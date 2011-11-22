@@ -47,8 +47,6 @@
 #include "qdeclarativeconnections_p.h"
 #include "qdeclarativesmoothedanimation_p.h"
 #include "qdeclarativefontloader_p.h"
-#include "qdeclarativelistaccessor_p.h"
-#include "qdeclarativelistmodel_p.h"
 #include "qdeclarativepackage_p.h"
 #include "qdeclarativepropertychanges_p.h"
 #include "qdeclarativespringanimation_p.h"
@@ -66,12 +64,6 @@
 #endif
 #include <QtCore/qcoreapplication.h>
 #include <QtGui/QInputPanel>
-
-void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
-{
-    qmlRegisterType<QDeclarativeListElement>(uri, versionMajor, versionMinor,"ListElement");
-    qmlRegisterCustomType<QDeclarativeListModel>(uri, versionMajor, versionMinor,"ListModel", new QDeclarativeListModelParser);
-}
 
 void QDeclarativeUtilModule::defineModule()
 {
@@ -115,5 +107,4 @@ void QDeclarativeUtilModule::defineModule()
 
     qmlRegisterCustomType<QDeclarativePropertyChanges>("QtQuick",2,0,"PropertyChanges", new QDeclarativePropertyChangesParser);
     qmlRegisterCustomType<QDeclarativeConnections>("QtQuick",2,0,"Connections", new QDeclarativeConnectionsParser);
-    registerBaseTypes("QtQuick",2,0);
 }
