@@ -83,9 +83,7 @@
 
 #include <private/qobject_p.h>
 
-#include <private/qdeclarativeutilmodule_p.h>
-#include <private/qquickitemsmodule_p.h>
-#include <private/qquickparticlesmodule_p.h>
+#include <private/qtquick2_p.h>
 #include <private/qdeclarativelocale_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -347,11 +345,7 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 {
     if (!qt_QmlQtModule_registered) {
         qt_QmlQtModule_registered = true;
-        QDeclarativeUtilModule::defineModule();
-        QDeclarativeEnginePrivate::defineModule();
-        QQuickItemsModule::defineModule();
-        QQuickParticlesModule::defineModule();
-        QDeclarativeValueTypeFactory::registerValueTypes();
+        QDeclarativeQtQuick2Module::defineModule();
     }
 }
 

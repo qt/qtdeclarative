@@ -36,6 +36,9 @@ include(items/items.pri)
 include(particles/particles.pri)
 include(designer/designer.pri)
 
+HEADERS += qtquick2_p.h
+SOURCES += qtquick2.cpp
+
 linux-g++-maemo:DEFINES += QDECLARATIVEVIEW_NOBACKGROUND
 
 DEFINES += QT_NO_OPENTYPE
