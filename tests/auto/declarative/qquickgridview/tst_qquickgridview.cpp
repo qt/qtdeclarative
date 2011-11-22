@@ -3487,7 +3487,7 @@ void tst_QQuickGridView::unaligned()
 
     // removing
     model.removeItems(7, 10);
-    qApp->processEvents();
+    QTRY_COMPARE(model.count(), gridview->count());
     for (int i = 0; i < 18; ++i) {
         QQuickItem *item = 0;
         QTRY_VERIFY(item = findItem<QQuickItem>(contentItem, "wrapper", i));
