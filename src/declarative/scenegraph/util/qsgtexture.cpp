@@ -182,14 +182,6 @@ QSGTexture::~QSGTexture()
 
 
 /*!
-    \fn void QSGTexture::setImage(const QImage &image)
-
-    This function may be calld from arbitrary an arbitrary thread and may not
-    use GL calls.
- */
-
-
-/*!
     \fn void QSGTexture::bind()
 
     Call this function to bind this texture to the current texture
