@@ -1,5 +1,5 @@
 TARGET  = qtquick1plugin
-TARGETPATH = QtQuick
+TARGETPATH = QtQuick.1
 include(../qimportbase.pri)
 
 SOURCES += \
