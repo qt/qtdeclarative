@@ -99,7 +99,7 @@ Item {
         Sprite{
             name: "falling"
             source: "content/Bear3.png"
-            frames: 2
+            frames: 5
             frameWidth: 256
             frameHeight: 256
             duration: 160
