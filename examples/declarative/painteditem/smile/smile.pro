@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = painteditem
 
-QT += declarative
+QT += declarative quick
 
 macx: CONFIG -= app_bundle
 

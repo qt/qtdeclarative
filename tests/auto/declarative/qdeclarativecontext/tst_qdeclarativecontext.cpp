@@ -46,7 +46,7 @@
 #include <QDeclarativeComponent>
 #include <QDeclarativeExpression>
 #include <private/qdeclarativecontext_p.h>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {

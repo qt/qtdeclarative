@@ -42,7 +42,7 @@
 #ifndef TEXTBALLOON_H
 #define TEXTBALLOON_H
 
-#include <QtDeclarative>
+#include <QtQuick>
 
 //! [0]
 class TextBalloon : public QQuickPaintedItem

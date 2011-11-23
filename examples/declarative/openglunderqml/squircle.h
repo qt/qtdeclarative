@@ -42,7 +42,7 @@
 #ifndef SQUIRCLE_H
 #define SQUIRCLE_H
 
-#include <QtDeclarative/QQuickItem>
+#include <QtQuick/QQuickItem>
 #include <QtGui/QOpenGLShaderProgram>
 
 class Squircle : public QQuickItem

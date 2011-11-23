@@ -40,7 +40,7 @@
 #ifndef PIECHART_H
 #define PIECHART_H
 
-#include <QQuickItem>
+#include <QtQuick/QQuickItem>
 
 class PieSlice;
 

@@ -43,8 +43,8 @@
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarative.h>
-#include <qquickitem.h>
-#include <qquickview.h>
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickview.h>
 
 #include "dataobject.h"
 

@@ -44,7 +44,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtDeclarative/qdeclarativescriptstring.h>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class tst_qdeclarativeexpression : public QObject
 {

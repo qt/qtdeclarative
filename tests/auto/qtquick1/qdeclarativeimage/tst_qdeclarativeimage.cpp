@@ -54,7 +54,7 @@
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtTest/QSignalSpy>
 
-#include "../../declarative/shared/testhttpserver.h"
+#include "../../shared/testhttpserver.h"
 
 #define SERVER_PORT 14451
 #define SERVER_ADDR "http://127.0.0.1:14451"

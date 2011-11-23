@@ -1,9 +1,9 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativemoduleplugin
 
-HEADERS = ../shared/testhttpserver.h
+HEADERS = ../../shared/testhttpserver.h
 SOURCES = tst_qdeclarativemoduleplugin.cpp \
-          ../shared/testhttpserver.cpp
+          ../../shared/testhttpserver.cpp
 CONFIG -= app_bundle
 
 testDataFiles.files = data

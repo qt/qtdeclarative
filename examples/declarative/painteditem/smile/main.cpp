@@ -41,8 +41,8 @@
 #include <QGuiApplication>
 #include <QPainter>
 #include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qquickview.h>
-#include <QtDeclarative/qquickpainteditem.h>
+#include <QtQuick/qquickview.h>
+#include <QtQuick/qquickpainteditem.h>
 class MyPaintItem : public QQuickPaintedItem
 {
     Q_OBJECT

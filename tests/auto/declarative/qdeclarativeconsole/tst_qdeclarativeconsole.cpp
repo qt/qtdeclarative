@@ -42,7 +42,7 @@
 #include <QDebug>
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class tst_qdeclarativeconsole : public QObject
 {

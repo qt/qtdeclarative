@@ -40,7 +40,7 @@
 #ifndef PIECHART_H
 #define PIECHART_H
 
-#include <QtDeclarative/QQuickPaintedItem>
+#include <QtQuick/QQuickPaintedItem>
 #include <QColor>
 
 //![0]

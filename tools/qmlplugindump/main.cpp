@@ -39,15 +39,19 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative/QtDeclarative>
+#include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/private/qdeclarativemetatype_p.h>
 #include <QtDeclarative/private/qdeclarativeopenmetaobject_p.h>
-#include <QtDeclarative/private/qquickevents_p_p.h>
-#include <QtDeclarative/private/qquickpincharea_p.h>
+#include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquickpincharea_p.h>
 
 #include <QtWidgets/QApplication>
 
+#include <QtCore/QDir>
+#include <QtCore/QFileInfo>
 #include <QtCore/QSet>
+#include <QtCore/QStringList>
+#include <QtCore/QTimer>
 #include <QtCore/QMetaObject>
 #include <QtCore/QMetaProperty>
 #include <QtCore/QDebug>
@@ -674,11 +678,11 @@ int main(int argc, char *argv[])
         engine.addImportPath(pluginImportPath);
     }
 
-    // load the QtQuick 1 plugin
+    // load the QtQuick 1 & 2 plugins
     {
-        QByteArray code("import QtQuick 1.0\nQtObject {}");
+        QByteArray code("import QtQuick 1.0 as Q1\nimport QtQuick 2.0 as Q2\nQ2.QtObject {}");
         QDeclarativeComponent c(&engine);
-        c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick1.qml"));
+        c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick.qml"));
         c.create();
         if (!c.errors().isEmpty()) {
             foreach (const QDeclarativeError &error, c.errors())

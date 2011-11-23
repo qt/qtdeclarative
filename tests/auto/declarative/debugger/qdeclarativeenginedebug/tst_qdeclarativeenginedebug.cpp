@@ -50,7 +50,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
-#include <QtDeclarative/qquickitem.h>
+#include <QtQuick/qquickitem.h>
 
 #include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativeboundsignal_p.h>

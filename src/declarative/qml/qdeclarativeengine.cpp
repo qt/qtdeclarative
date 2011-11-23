@@ -83,7 +83,6 @@
 
 #include <private/qobject_p.h>
 
-#include <private/qtquick2_p.h>
 #include <private/qdeclarativelocale_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -159,7 +158,6 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
     \endcode
 */
 
-static bool qt_QmlQtModule_registered = false;
 bool QDeclarativeEnginePrivate::qml_debugging_enabled = false;
 
 void QDeclarativeEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
@@ -343,10 +341,6 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
-    if (!qt_QmlQtModule_registered) {
-        qt_QmlQtModule_registered = true;
-        QDeclarativeQtQuick2Module::defineModule();
-    }
 }
 
 QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()

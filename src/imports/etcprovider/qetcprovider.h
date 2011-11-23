@@ -44,7 +44,7 @@
 
 #include <qopengl.h>
 #include <QDeclarativeImageProvider>
-#include <QSGTexture>
+#include <QtQuick/QSGTexture>
 #include <QDeclarativeEngine>
 #include <QDeclarativeContext>
 #include <QFileInfo>

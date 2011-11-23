@@ -44,7 +44,7 @@
 
 #include "QtDeclarative/private/qv8profilerservice_p.h"
 #include "../shared/debugutil_p.h"
-#include "../../shared/util.h"
+#include "../../../shared/util.h"
 
 #define PORT 13774
 #define STR_PORT "13774"

@@ -40,7 +40,7 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
-#include "../../declarative/shared/testhttpserver.h"
+#include "../../shared/testhttpserver.h"
 #include <math.h>
 #include <QFile>
 #include <QTextDocument>

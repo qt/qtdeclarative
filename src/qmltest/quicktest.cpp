@@ -49,7 +49,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
-#include <QtDeclarative/qquickview.h>
+#include <QtQuick/qquickview.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
 #include <QtDeclarative/qjsvalue.h>

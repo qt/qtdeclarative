@@ -6,4 +6,4 @@ SOURCES += tst_qdeclarativepropertymap.cpp
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private testlib
+QT += core-private gui-private declarative-private quick-private testlib

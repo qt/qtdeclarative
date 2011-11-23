@@ -1,0 +1,232 @@
+/****************************************************************************
+**
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the QtDeclarative module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** GNU Lesser General Public License Usage
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights. These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef RENDERER_H
+#define RENDERER_H
+
+#include <qset.h>
+#include <qhash.h>
+
+#include <qcolor.h>
+#include <qopenglfunctions.h>
+#include <qopenglshaderprogram.h>
+
+#include "qsgnode.h"
+#include "qsgmaterial.h"
+#include <QtQuick/qsgtexture.h>
+
+#include <QtQuick/private/qsgcontext_p.h>
+
+QT_BEGIN_HEADER
+
+QT_BEGIN_NAMESPACE
+
+class QSGMaterialShader;
+struct QSGMaterialType;
+class QOpenGLFramebufferObject;
+class TextureReference;
+class QSGBindable;
+class QSGNodeUpdater;
+
+class Q_QUICK_EXPORT QSGRenderer : public QObject, public QOpenGLFunctions
+{
+    Q_OBJECT
+public:
+    enum ClipType
+    {
+        NoClip,
+        ScissorClip,
+        StencilClip
+    };
+
+    enum ClearModeBit
+    {
+        ClearColorBuffer    = 0x0001,
+        ClearDepthBuffer    = 0x0002,
+        ClearStencilBuffer  = 0x0004
+    };
+    Q_DECLARE_FLAGS(ClearMode, ClearModeBit)
+
+    QSGRenderer(QSGContext *context);
+    virtual ~QSGRenderer();
+
+    void setRootNode(QSGRootNode *node);
+    QSGRootNode *rootNode() const { return m_root_node; }
+
+    void setDeviceRect(const QRect &rect) { m_device_rect = rect; }
+    inline void setDeviceRect(const QSize &size) { setDeviceRect(QRect(QPoint(), size)); }
+    QRect deviceRect() const { return m_device_rect; }
+
+    void setViewportRect(const QRect &rect) { m_viewport_rect = rect; }
+    inline void setViewportRect(const QSize &size) { setViewportRect(QRect(QPoint(), size)); }
+    QRect viewportRect() const { return m_viewport_rect; }
+
+    // Accessed by QSGMaterialShader::RenderState.
+    QMatrix4x4 currentProjectionMatrix() const { return m_current_projection_matrix; }
+    QMatrix4x4 currentModelViewMatrix() const { return m_current_model_view_matrix; }
+    QMatrix4x4 currentCombinedMatrix() const { return m_current_projection_matrix * m_current_model_view_matrix; }
+    qreal currentOpacity() const { return m_current_opacity; }
+
+    void setProjectionMatrixToDeviceRect();
+    void setProjectionMatrixToRect(const QRectF &rect);
+    void setProjectionMatrix(const QMatrix4x4 &matrix);
+    QMatrix4x4 projectionMatrix() const { return m_projection_matrix; }
+    bool isMirrored() const { return m_mirrored; }
+
+    void setClearColor(const QColor &color);
+    QColor clearColor() const { return m_clear_color; }
+
+    QOpenGLContext *glContext() const { Q_ASSERT(m_context); return m_context->glContext(); }
+
+    QSGContext *context();
+
+    void renderScene();
+    void renderScene(const QSGBindable &bindable);
+    virtual void nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags);
+    virtual void materialChanged(QSGGeometryNode *node, QSGMaterial *from, QSGMaterial *to);
+
+    QSGNodeUpdater *nodeUpdater() const;
+    void setNodeUpdater(QSGNodeUpdater *updater);
+
+    inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
+
+    void setClearMode(ClearMode mode) { m_clear_mode = mode; }
+    ClearMode clearMode() const { return m_clear_mode; }
+
+signals:
+    void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
+
+protected:
+    void draw(const QSGMaterialShader *material, const QSGGeometry *g);
+
+    virtual void render() = 0;
+    QSGRenderer::ClipType updateStencilClip(const QSGClipNode *clip);
+
+    const QSGBindable *bindable() const { return m_bindable; }
+
+    virtual void preprocess();
+
+    void addNodesToPreprocess(QSGNode *node);
+    void removeNodesToPreprocess(QSGNode *node);
+
+
+    QColor m_clear_color;
+    ClearMode m_clear_mode;
+    QMatrix4x4 m_current_projection_matrix;
+    QMatrix4x4 m_current_model_view_matrix;
+    qreal m_current_opacity;
+
+    QSGContext *m_context;
+
+private:
+    QSGRootNode *m_root_node;
+    QSGNodeUpdater *m_node_updater;
+
+    QRect m_device_rect;
+    QRect m_viewport_rect;
+
+    QSet<QSGNode *> m_nodes_to_preprocess;
+
+    QMatrix4x4 m_projection_matrix;
+    QOpenGLShaderProgram m_clip_program;
+    int m_clip_matrix_id;
+
+    const QSGBindable *m_bindable;
+
+    uint m_changed_emitted : 1;
+    uint m_mirrored : 1;
+    uint m_is_rendering : 1;
+
+    uint m_vertex_buffer_bound : 1;
+    uint m_index_buffer_bound : 1;
+};
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)
+
+class Q_QUICK_EXPORT QSGBindable
+{
+public:
+    virtual ~QSGBindable() { }
+    virtual void bind() const = 0;
+    virtual void clear(QSGRenderer::ClearMode mode) const;
+    virtual void reactivate() const;
+};
+
+class QSGBindableFbo : public QSGBindable
+{
+public:
+    QSGBindableFbo(QOpenGLFramebufferObject *fbo);
+    virtual void bind() const;
+private:
+    QOpenGLFramebufferObject *m_fbo;
+};
+
+
+
+QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState::DirtyStates dirty) const
+{
+    QSGMaterialShader::RenderState s;
+    s.m_dirty = dirty;
+    s.m_data = this;
+    return s;
+}
+
+
+class Q_QUICK_EXPORT QSGNodeDumper : public QSGNodeVisitor {
+
+public:
+    static void dump(QSGNode *n);
+
+    QSGNodeDumper() : m_indent(0) {}
+    void visitNode(QSGNode *n);
+    void visitChildren(QSGNode *n);
+
+private:
+    int m_indent;
+};
+
+
+
+QT_END_NAMESPACE
+
+QT_END_HEADER
+
+#endif // RENDERER_H

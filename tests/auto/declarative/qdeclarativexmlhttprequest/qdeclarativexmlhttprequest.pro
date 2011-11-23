@@ -2,11 +2,11 @@ CONFIG += testcase
 TARGET = tst_qdeclarativexmlhttprequest
 macx:CONFIG -= app_bundle
 
-INCLUDEPATH += ../shared/
-HEADERS += ../shared/testhttpserver.h
+INCLUDEPATH += ../../shared/
+HEADERS += ../../shared/testhttpserver.h
 
 SOURCES += tst_qdeclarativexmlhttprequest.cpp \
-           ../shared/testhttpserver.cpp
+           ../../shared/testhttpserver.cpp
 
 testDataFiles.files = data
 testDataFiles.path = .

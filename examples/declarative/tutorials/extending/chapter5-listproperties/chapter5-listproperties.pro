@@ -1,4 +1,4 @@
-QT += declarative
+QT += declarative quick
 
 HEADERS += piechart.h \
            pieslice.h 

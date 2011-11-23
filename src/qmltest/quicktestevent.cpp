@@ -45,8 +45,8 @@
 #include <QtQuick1/qdeclarativeitem.h>
 #include <QtQuick1/qdeclarativeview.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
-#include <QtDeclarative/qquickitem.h>
-#include <QtDeclarative/qquickcanvas.h>
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickcanvas.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
 #include <QtWidgets/qgraphicsscene.h>

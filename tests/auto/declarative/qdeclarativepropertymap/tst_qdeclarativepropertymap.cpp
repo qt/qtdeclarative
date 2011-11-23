@@ -43,7 +43,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativepropertymap.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <private/qquicktext_p.h>
+#include <QtQuick/private/qquicktext_p.h>
 #include <QSignalSpy>
 
 class tst_QDeclarativePropertyMap : public QObject

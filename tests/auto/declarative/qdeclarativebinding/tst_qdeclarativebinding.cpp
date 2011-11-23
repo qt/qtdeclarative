@@ -42,8 +42,8 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativebind_p.h>
-#include <private/qquickrectangle_p.h>
-#include "../shared/util.h"
+#include <QtQuick/private/qquickrectangle_p.h>
+#include "../../shared/util.h"
 
 class tst_qdeclarativebinding : public QObject
 {

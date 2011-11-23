@@ -40,7 +40,7 @@
 #include "piechart.h"
 #include "pieslice.h"
 
-#include <QQuickView>
+#include <QtQuick/QQuickView>
 #include <QGuiApplication>
 
 int main(int argc, char *argv[])

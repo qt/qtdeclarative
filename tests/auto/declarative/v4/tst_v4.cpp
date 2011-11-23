@@ -48,7 +48,7 @@
 
 #include <private/qv4compiler_p.h>
 
-#include "../shared/util.h"
+#include "../../shared/util.h"
 #include "testtypes.h"
 
 inline QUrl TEST_FILE(const QString &filename)

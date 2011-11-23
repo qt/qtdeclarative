@@ -2,8 +2,8 @@ CONFIG += testcase
 TARGET = tst_qdeclarativefontloader
 macx:CONFIG -= app_bundle
 
-HEADERS += ../../declarative/shared/testhttpserver.h
-SOURCES += tst_qdeclarativefontloader.cpp ../../declarative/shared/testhttpserver.cpp
+HEADERS += ../../shared/testhttpserver.h
+SOURCES += tst_qdeclarativefontloader.cpp ../../shared/testhttpserver.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 

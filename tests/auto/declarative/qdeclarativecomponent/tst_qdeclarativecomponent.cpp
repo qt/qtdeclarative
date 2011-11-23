@@ -43,11 +43,10 @@
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qquickitem.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
 #include <QtDeclarative/qdeclarativeincubator.h>
 #include <qcolor.h>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class MyIC : public QObject, public QDeclarativeIncubationController
 {

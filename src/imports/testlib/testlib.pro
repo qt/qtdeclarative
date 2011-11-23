@@ -4,7 +4,7 @@ include(../qimportbase.pri)
 
 CONFIG += qt plugin
 
-QT += declarative qmltest qmltest-private v8-private declarative-private core-private testlib
+QT += declarative quick qmltest qmltest-private v8-private declarative-private core-private testlib
 
 SOURCES += main.cpp
 HEADERS +=

@@ -40,7 +40,7 @@
 #ifndef PIESLICE_H
 #define PIESLICE_H
 
-#include <QtDeclarative/QQuickPaintedItem>
+#include <QtQuick/QQuickPaintedItem>
 #include <QColor>
 
 //![0]

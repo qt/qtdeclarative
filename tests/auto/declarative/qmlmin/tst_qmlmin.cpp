@@ -94,7 +94,7 @@ void tst_qmlmin::initTestCase()
     excludedDirs << "doc/src/snippets/qtquick1/imports";
 
     // Add invalid files (i.e. files with syntax errors)
-    invalidFiles << "tests/auto/declarative/qquickloader/data/InvalidSourceComponent.qml";
+    invalidFiles << "tests/auto/qtquick2/qquickloader/data/InvalidSourceComponent.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/dynamicObjectProperties.2.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/signal.3.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/property.4.qml";

@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtGui/QGuiApplication>
-#include <qquickview.h>
+#include <QtQuick/qquickview.h>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeEngine>
 

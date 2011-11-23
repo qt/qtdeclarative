@@ -2,8 +2,8 @@ CONFIG += testcase
 TARGET = tst_qdeclarativeborderimage
 macx:CONFIG -= app_bundle
 
-HEADERS += ../../declarative/shared/testhttpserver.h
-SOURCES += tst_qdeclarativeborderimage.cpp ../../declarative/shared/testhttpserver.cpp
+HEADERS += ../../shared/testhttpserver.h
+SOURCES += tst_qdeclarativeborderimage.cpp ../../shared/testhttpserver.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 

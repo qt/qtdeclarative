@@ -45,10 +45,10 @@
 #include "sghighlight.h"
 #include "sgselectiontool.h"
 
-#include <QtDeclarative/private/qquickitem_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 
-#include <QtDeclarative/QQuickView>
-#include <QtDeclarative/QQuickItem>
+#include <QtQuick/QQuickView>
+#include <QtQuick/QQuickItem>
 
 #include <cfloat>
 

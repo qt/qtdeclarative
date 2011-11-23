@@ -47,7 +47,7 @@
 #include <QtWidgets/QLineEdit>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {

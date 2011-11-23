@@ -1899,7 +1899,6 @@ int QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()
     static int id = 0;
     if (!id) {
         id = QMetaType::type("QQuickAnchorLine");
-        Q_ASSERT(id != 0);
     }
     return id;
 }

@@ -54,7 +54,7 @@
 #include <private/qv4compiler_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 /*
 This test covers evaluation of ECMAScript expressions and bindings from within

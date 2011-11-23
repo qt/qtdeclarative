@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt plugin
-QT += declarative
+QT += declarative quick
 
 TARGET = qmltextballoonplugin
 

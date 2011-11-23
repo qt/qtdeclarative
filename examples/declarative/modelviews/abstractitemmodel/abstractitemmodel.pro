@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = abstractitemmodel
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += declarative
+QT += declarative quick
 
 HEADERS = model.h
 SOURCES = main.cpp \

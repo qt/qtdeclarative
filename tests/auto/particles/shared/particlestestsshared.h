@@ -41,7 +41,7 @@
 
 #ifndef PARTICLES_TESTS_SHARED
 #define PARTICLES_TESTS_SHARED
-#include <QQuickView>
+#include <QtQuick/QQuickView>
 #include <QtTest>
 #include <QAbstractAnimation>
 const qreal EPSILON = 0.0001;

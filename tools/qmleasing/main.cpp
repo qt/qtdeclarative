@@ -40,10 +40,10 @@
 ****************************************************************************/
 
 #include <QPainter>
-#include <QQuickView>
+#include <QtQuick/QQuickView>
 #include <QApplication>
 #include <QEasingCurve>
-#include <QQuickPaintedItem>
+#include <QtQuick/QQuickPaintedItem>
 
 class EasingPlot : public QQuickPaintedItem
 {

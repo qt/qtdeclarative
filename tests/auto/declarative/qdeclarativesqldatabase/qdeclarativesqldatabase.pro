@@ -10,4 +10,4 @@ testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
-QT += core-private gui-private v8-private declarative-private sql testlib
+QT += core-private gui-private v8-private declarative-private quick-private sql testlib

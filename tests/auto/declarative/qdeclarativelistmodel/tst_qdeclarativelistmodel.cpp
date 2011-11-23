@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 #include <qtest.h>
-#include <QtDeclarative/private/qquickitem_p.h>
-#include <QtDeclarative/private/qquicktext_p.h>
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicktext_p.h>
 #include <QtDeclarative/private/qdeclarativeengine_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include <QtDeclarative/private/qdeclarativeexpression_p.h>
@@ -51,7 +51,7 @@
 #include <QtCore/qtranslator.h>
 #include <QSignalSpy>
 
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<QVariantHash>)
