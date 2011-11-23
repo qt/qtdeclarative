@@ -46,7 +46,132 @@
 #include <private/qquickitemsmodule_p.h>
 #include <private/qquickparticlesmodule_p.h>
 
+#include <private/qdeclarativeenginedebugservice_p.h>
+#include <private/qdeclarativedebugstatesdelegate_p.h>
+#include <private/qdeclarativebinding_p.h>
+#include <private/qdeclarativecontext_p.h>
+#include <private/qdeclarativepropertychanges_p.h>
+#include <private/qdeclarativestate_p.h>
+#include <qdeclarativeproperty.h>
+#include <QtCore/QWeakPointer>
+
 QT_BEGIN_NAMESPACE
+
+class QDeclarativeQtQuick2DebugStatesDelegate : public QDeclarativeDebugStatesDelegate
+{
+public:
+    QDeclarativeQtQuick2DebugStatesDelegate();
+    virtual ~QDeclarativeQtQuick2DebugStatesDelegate();
+    virtual void buildStatesList(QDeclarativeContext *ctxt, bool cleanList);
+    virtual void updateBinding(QDeclarativeContext *context,
+                               const QDeclarativeProperty &property,
+                               const QVariant &expression, bool isLiteralValue,
+                               const QString &fileName, int line,
+                               bool *isBaseState);
+    virtual bool setBindingForInvalidProperty(QObject *object,
+                                              const QString &propertyName,
+                                              const QVariant &expression,
+                                              bool isLiteralValue);
+    virtual void resetBindingForInvalidProperty(QObject *object,
+                                                const QString &propertyName);
+
+private:
+    void buildStatesList(QObject *obj);
+
+    QList<QWeakPointer<QDeclarativeState> > m_allStates;
+};
+
+QDeclarativeQtQuick2DebugStatesDelegate::QDeclarativeQtQuick2DebugStatesDelegate()
+{
+}
+
+QDeclarativeQtQuick2DebugStatesDelegate::~QDeclarativeQtQuick2DebugStatesDelegate()
+{
+}
+
+void QDeclarativeQtQuick2DebugStatesDelegate::buildStatesList(QDeclarativeContext *ctxt, bool cleanList)
+{
+    if (cleanList)
+        m_allStates.clear();
+
+    QDeclarativeContextPrivate *ctxtPriv = QDeclarativeContextPrivate::get(ctxt);
+    for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
+        buildStatesList(ctxtPriv->instances.at(ii));
+    }
+
+    QDeclarativeContextData *child = QDeclarativeContextData::get(ctxt)->childContexts;
+    while (child) {
+        buildStatesList(child->asQDeclarativeContext());
+        child = child->nextChild;
+    }
+}
+
+void QDeclarativeQtQuick2DebugStatesDelegate::buildStatesList(QObject *obj)
+{
+    if (QDeclarativeState *state = qobject_cast<QDeclarativeState *>(obj)) {
+        m_allStates.append(state);
+    }
+
+    QObjectList children = obj->children();
+    for (int ii = 0; ii < children.count(); ++ii) {
+        buildStatesList(children.at(ii));
+    }
+}
+
+void QDeclarativeQtQuick2DebugStatesDelegate::updateBinding(QDeclarativeContext *context,
+                                                            const QDeclarativeProperty &property,
+                                                            const QVariant &expression, bool isLiteralValue,
+                                                            const QString &fileName, int line,
+                                                            bool *inBaseState)
+{
+    QObject *object = property.object();
+    QString propertyName = property.name();
+    foreach (QWeakPointer<QDeclarativeState> statePointer, m_allStates) {
+        if (QDeclarativeState *state = statePointer.data()) {
+            // here we assume that the revert list on itself defines the base state
+            if (state->isStateActive() && state->containsPropertyInRevertList(object, propertyName)) {
+                *inBaseState = false;
+
+                QDeclarativeBinding *newBinding = 0;
+                if (!isLiteralValue) {
+                    newBinding = new QDeclarativeBinding(expression.toString(), object, context);
+                    newBinding->setTarget(property);
+                    newBinding->setNotifyOnValueChanged(true);
+                    newBinding->setSourceLocation(fileName, line);
+                }
+
+                state->changeBindingInRevertList(object, propertyName, newBinding);
+
+                if (isLiteralValue)
+                    state->changeValueInRevertList(object, propertyName, expression);
+            }
+        }
+    }
+}
+
+bool QDeclarativeQtQuick2DebugStatesDelegate::setBindingForInvalidProperty(QObject *object,
+                                                                           const QString &propertyName,
+                                                                           const QVariant &expression,
+                                                                           bool isLiteralValue)
+{
+    if (QDeclarativePropertyChanges *propertyChanges = qobject_cast<QDeclarativePropertyChanges *>(object)) {
+        if (isLiteralValue)
+            propertyChanges->changeValue(propertyName, expression);
+        else
+            propertyChanges->changeExpression(propertyName, expression.toString());
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void QDeclarativeQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *object, const QString &propertyName)
+{
+    if (QDeclarativePropertyChanges *propertyChanges = qobject_cast<QDeclarativePropertyChanges *>(object)) {
+        propertyChanges->removeProperty(propertyName);
+    }
+}
+
 
 void QDeclarativeQtQuick2Module::defineModule()
 {
@@ -55,6 +180,11 @@ void QDeclarativeQtQuick2Module::defineModule()
     QQuickItemsModule::defineModule();
     QQuickParticlesModule::defineModule();
     QDeclarativeValueTypeFactory::registerValueTypes();
+
+    if (QDeclarativeEngineDebugService::isDebuggingEnabled()) {
+        QDeclarativeEngineDebugService::instance()->setStatesDelegate(
+                    new QDeclarativeQtQuick2DebugStatesDelegate);
+    }
 }
 
 QT_END_NAMESPACE

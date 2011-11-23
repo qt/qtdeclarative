@@ -21,6 +21,7 @@ HEADERS += \
     $$PWD/qdeclarativedebughelper_p.h \
     $$PWD/qdeclarativedebugserver_p.h \
     $$PWD/qdeclarativedebugserverconnection_p.h \
+    $$PWD/qdeclarativedebugstatesdelegate_p.h \
     $$PWD/qdeclarativeinspectorservice_p.h \
     $$PWD/qdeclarativeinspectorinterface_p.h \
     $$PWD/qv8debugservice_p.h \
