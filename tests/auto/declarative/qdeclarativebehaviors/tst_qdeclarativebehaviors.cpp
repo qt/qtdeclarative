@@ -57,6 +57,7 @@ public:
     tst_qdeclarativebehaviors() {}
 
 private slots:
+    void init() { qApp->processEvents(); }  //work around animation timer bug (QTBUG-22865)
     void simpleBehavior();
     void scriptTriggered();
     void cppTriggered();
@@ -124,7 +125,6 @@ void tst_qdeclarativebehaviors::cppTriggered()
 
     innerRect->setProperty("x", 200);
     QTRY_VERIFY(innerRect->x() > 0);
-    QEXPECT_FAIL("", "QTBUG-21001", Continue);
     QTRY_VERIFY(innerRect->x() < 200);  //i.e. the behavior has been triggered
 
     delete rect;
@@ -382,6 +382,8 @@ void tst_qdeclarativebehaviors::groupedPropertyCrash()
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("groupedPropertyCrash.qml")));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);  //don't crash
+
+    delete rect;
 }
 
 //QTBUG-5491
@@ -398,6 +400,8 @@ void tst_qdeclarativebehaviors::runningTrue()
     QSignalSpy runningSpy(animation, SIGNAL(runningChanged(bool)));
     rect->setProperty("myValue", 180);
     QTRY_VERIFY(runningSpy.count() > 0);
+
+    delete rect;
 }
 
 //QTBUG-12295
@@ -415,9 +419,6 @@ void tst_qdeclarativebehaviors::sameValue()
     QCOMPARE(target->x(), qreal(100));
 
     target->setProperty("x", 0);
-#ifdef QT_BUILD_INTERNAL
-    QEXPECT_FAIL("", "QTBUG-12295 - Behaviour on x {} does not work consistently.", Continue);
-#endif
     QTRY_VERIFY(target->x() != qreal(0) && target->x() != qreal(100));
     QTRY_VERIFY(target->x() == qreal(0));   //make sure Behavior has finished.
 
@@ -428,6 +429,8 @@ void tst_qdeclarativebehaviors::sameValue()
     //even though we set 0 twice in a row.
     target->setProperty("x", 0);
     QTRY_VERIFY(target->x() != qreal(0) && target->x() != qreal(100));
+
+    delete rect;
 }
 
 //QTBUG-18362
