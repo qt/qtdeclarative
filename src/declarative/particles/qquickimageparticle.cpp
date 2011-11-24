@@ -1440,11 +1440,11 @@ void QQuickImageParticle::prepareNextFrame()
         m_rootNode = buildParticleNodes();
         if (m_rootNode == 0)
             return;
-        if(m_debugMode){
+        if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";
             int count = 0;
-            foreach(int i, m_nodes.keys()){
+            foreach (int i, m_nodes.keys()) {
                 qDebug() << "Group " << i << " (" << m_system->groupData[i]->size() << " particles)";
                 count += m_system->groupData[i]->size();
             }
