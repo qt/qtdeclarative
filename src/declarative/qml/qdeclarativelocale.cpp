@@ -728,37 +728,6 @@ QV8LocaleDataDeletable::~QV8LocaleDataDeletable()
 
 V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
 
-class QV8LocaleData {
-public:
-    QV8LocaleData(QV8Engine*,const QLocale &);
-    ~QV8LocaleData();
-    QDeclarativeV8Handle v8Value();
-private:
-    v8::Persistent<v8::Object> m_v8Value;
-};
-
-QV8LocaleData::QV8LocaleData(QV8Engine *engine, const QLocale &locale)
-{
-    if (!engine)
-        return;
-
-    QV8LocaleDataDeletable *d = localeV8Data(engine);
-    m_v8Value = qPersistentNew(d->constructor->NewInstance());
-    QV8LocaleDataResource *r = new QV8LocaleDataResource(engine);
-    r->locale = locale;
-    m_v8Value->SetExternalResource(r);
-}
-
-QV8LocaleData::~QV8LocaleData()
-{
-    qPersistentDispose(m_v8Value);
-}
-
-QDeclarativeV8Handle QV8LocaleData::v8Value()
-{
-    return QDeclarativeV8Handle::fromHandle(m_v8Value);
-}
-
 /*!
     \qmlclass Locale QDeclarativeLocale
     \inqmlmodule QtQuick 2
