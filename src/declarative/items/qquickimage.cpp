@@ -550,6 +550,7 @@ QSGTextureProvider *QQuickImage::textureProvider() const
                    "Cannot be used outside the GUI thread");
         QQuickImagePrivate *dd = const_cast<QQuickImagePrivate *>(d);
         dd->provider = new QQuickImageTextureProvider;
+        dd->provider->m_smooth = d->smooth;
         dd->provider->m_texture = d->pix.texture(d->sceneGraphContext());
     }
 
