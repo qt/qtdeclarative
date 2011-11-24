@@ -41,7 +41,7 @@
 
 #include "qdeclarativeconnections_p.h"
 
-#include <qdeclarativeexpression.h>
+#include <private/qdeclarativeexpression_p.h>
 #include <private/qdeclarativeproperty_p.h>
 #include <private/qdeclarativeboundsignal_p.h>
 #include <qdeclarativecontext.h>
@@ -225,7 +225,7 @@ QDeclarativeConnectionsParser::compile(const QList<QDeclarativeCustomParserPrope
                 QDeclarativeScript::Variant v = qvariant_cast<QDeclarativeScript::Variant>(value);
                 if (v.isScript()) {
                     ds << propName;
-                    ds << v.asScript();
+                    ds << rewriteSignalHandler(v.asScript(), propName);
                     ds << propLine;
                 } else {
                     error(props.at(ii), QDeclarativeConnections::tr("Connections: script expected"));
@@ -265,10 +265,18 @@ void QDeclarativeConnections::connectSignals()
         if (prop.isValid() && (prop.type() & QDeclarativeProperty::SignalProperty)) {
             QDeclarativeBoundSignal *signal =
                 new QDeclarativeBoundSignal(target(), prop.method(), this);
-            QDeclarativeExpression *expression = new QDeclarativeExpression(qmlContext(this), 0, script);
+
+            QString location;
+            QDeclarativeContextData *ctxtdata = 0;
             QDeclarativeData *ddata = QDeclarativeData::get(this);
-            if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-                expression->setSourceLocation(ddata->outerContext->url.toString(), line);
+            if (ddata) {
+                ctxtdata = ddata->outerContext;
+                if (ctxtdata && !ctxtdata->url.isEmpty())
+                    location = ddata->outerContext->url.toString();
+            }
+
+            QDeclarativeExpression *expression = ctxtdata ?
+                QDeclarativeExpressionPrivate::create(ctxtdata, 0, script, true, location, line) : 0;
             signal->setExpression(expression);
             d->boundsignals += signal;
         } else {

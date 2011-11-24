@@ -158,6 +158,12 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
 }
 
+QDeclarativeExpression *QDeclarativeExpressionPrivate::create(QDeclarativeContextData *ctxt, QObject *object, const QString &expr, bool isRewritten,
+                                      const QString &url, int lineNumber)
+{
+    return new QDeclarativeExpression(ctxt, object, expr, isRewritten, url, lineNumber, *new QDeclarativeExpressionPrivate);
+}
+
 /*!
     \class QDeclarativeExpression
     \since 4.7

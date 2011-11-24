@@ -193,6 +193,8 @@ public:
     static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
                                                      const QString &code, const QString &filename, int line,
                                                      v8::Persistent<v8::Object> *qmlscope = 0);
+    static QDeclarativeExpression *create(QDeclarativeContextData *, QObject *, const QString &, bool,
+                                          const QString &, int);
 
     bool expressionFunctionValid:1;
     bool extractExpressionFromFunction:1;

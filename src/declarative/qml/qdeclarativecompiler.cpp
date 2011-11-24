@@ -2494,6 +2494,12 @@ int QDeclarativeCompiler::rewriteBinding(const QDeclarativeScript::Variant& valu
     return output->indexForString(rewrite);
 }
 
+QString QDeclarativeCompiler::rewriteSignalHandler(const QString &handler, const QString &name)
+{
+    QDeclarativeRewrite::RewriteSignalHandler rewriteSignalHandler;
+    return rewriteSignalHandler(handler, name);
+}
+
 // Ensures that the dynamic meta specification on obj is valid
 bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeScript::Object *obj)
 {

@@ -307,4 +307,13 @@ QDeclarativeBinding::Identifier QDeclarativeCustomParser::rewriteBinding(const Q
     return compiler->rewriteBinding(value, name);
 }
 
+/*!
+    Returns a rewritten \a handler. \a name
+    is used as the name of the rewritten function.
+*/
+QString QDeclarativeCustomParser::rewriteSignalHandler(const QString &handler, const QString &name)
+{
+    return compiler->rewriteSignalHandler(handler, name);
+}
+
 QT_END_NAMESPACE

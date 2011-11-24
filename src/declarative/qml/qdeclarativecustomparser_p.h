@@ -143,6 +143,7 @@ protected:
     const QMetaObject *resolveType(const QString&) const;
 
     QDeclarativeBinding::Identifier rewriteBinding(const QDeclarativeScript::Variant&, const QString&);
+    QString rewriteSignalHandler(const QString&, const QString&);
 
 private:
     QList<QDeclarativeError> exceptions;
