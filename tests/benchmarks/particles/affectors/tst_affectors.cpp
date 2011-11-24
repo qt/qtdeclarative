@@ -42,7 +42,7 @@
 #include <qtest.h>
 #include <QtTest/QtTest>
 #include "../../../auto/particles/shared/particlestestsshared.h"
-#include <private/qsgparticlesystem_p.h>
+#include <private/qquickparticlesystem_p.h>
 
 class tst_affectors : public QObject
 {
