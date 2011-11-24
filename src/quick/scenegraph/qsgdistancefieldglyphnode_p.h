@@ -69,7 +69,6 @@ public:
     virtual void setStyleColor(const QColor &color);
 
     virtual void update();
-
     void preprocess();
 
     void invalidateGlyphs(const QVector<quint32> &glyphs);

@@ -128,6 +128,7 @@ public:
         , m_acceptableInput(1)
         , m_blinkStatus(0)
         , m_passwordEchoEditing(false)
+        , updateType(UpdatePaintNode)
     {
     }
 
@@ -255,6 +256,13 @@ public:
     uint m_acceptableInput : 1;
     uint m_blinkStatus : 1;
     uint m_passwordEchoEditing;
+
+    enum UpdateType {
+        UpdateNone,
+        UpdateOnlyPreprocess,
+        UpdatePaintNode
+    };
+    UpdateType updateType;
 
     static inline QQuickTextInputPrivate *get(QQuickTextInput *t) {
         return t->d_func();

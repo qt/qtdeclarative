@@ -85,7 +85,7 @@ QQuickTextPrivate::QQuickTextPrivate()
   disableDistanceField(false), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), textHasChanged(true),
-  naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull)
+  naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull), updateType(UpdatePaintNode)
 
 #if defined(Q_OS_MAC)
 , layoutThread(0), paintingThread(0)
@@ -371,6 +371,7 @@ void QQuickTextPrivate::updateSize()
         q->setImplicitSize(0, fontHeight);
         paintedSize = QSize(0, fontHeight);
         emit q->paintedSizeChanged();
+        updateType = UpdatePaintNode;
         q->update();
         return;
     }
@@ -445,6 +446,7 @@ void QQuickTextPrivate::updateSize()
         paintedSize = size;
         emit q->paintedSizeChanged();
     }
+    updateType = UpdatePaintNode;
     q->update();
 }
 
@@ -898,6 +900,7 @@ void QQuickTextPrivate::checkImageCache()
 
     imageCacheDirty = false;
     textureImageCacheDirty = true;
+    updateType = UpdatePaintNode;
     q->update();
 }
 
@@ -1325,8 +1328,10 @@ void QQuickText::setStyle(QQuickText::TextStyle style)
         return;
 
     // changing to/from Normal requires the boundingRect() to change
-    if (isComponentComplete() && (d->style == Normal || style == Normal))
+    if (isComponentComplete() && (d->style == Normal || style == Normal)) {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
         update();
+    }
     d->style = style;
     d->markDirty();
     emit styleChanged(d->style);
@@ -1842,6 +1847,14 @@ geomChangeDone:
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
+void QQuickText::triggerPreprocess()
+{
+    Q_D(QQuickText);
+    if (d->updateType == QQuickTextPrivate::UpdateNone)
+        d->updateType = QQuickTextPrivate::UpdatePreprocess;
+    update();
+}
+
 QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     Q_UNUSED(data);
@@ -1851,6 +1864,14 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         delete oldNode;
         return 0;
     }
+
+    if (!d->updateType != QQuickTextPrivate::UpdatePaintNode && oldNode != 0) {
+        // Update done in preprocess() in the nodes
+        d->updateType = QQuickTextPrivate::UpdateNone;
+        return oldNode;
+    }
+
+    d->updateType = QQuickTextPrivate::UpdateNone;
 
     QRectF bounds = boundingRect();
 
@@ -1902,7 +1923,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         QQuickTextNode *node = 0;
         if (!oldNode || d->nodeType != QQuickTextPrivate::NodeIsText) {
             delete oldNode;
-            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext());
+            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
             d->nodeType = QQuickTextPrivate::NodeIsText;
         } else {
             node = static_cast<QQuickTextNode *>(oldNode);

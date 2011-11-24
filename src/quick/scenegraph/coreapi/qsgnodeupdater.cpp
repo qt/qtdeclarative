@@ -97,15 +97,13 @@ void QSGNodeUpdater::updateStates(QSGNode *n)
 bool QSGNodeUpdater::isNodeBlocked(QSGNode *node, QSGNode *root) const
 {
     qreal opacity = 1;
-    while (node != root) {
+    while (node != root && node != 0) {
         if (node->type() == QSGNode::OpacityNodeType) {
             opacity *= static_cast<QSGOpacityNode *>(node)->opacity();
             if (opacity < 0.001)
                 return true;
         }
         node = node->parent();
-
-        Q_ASSERT_X(node, "QSGNodeUpdater::isNodeBlocked", "node is not in the subtree of root");
     }
 
     return false;

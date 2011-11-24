@@ -290,6 +290,7 @@ private Q_SLOTS:
     void updateCursor();
     void q_updateAlignment();
     void updateSize();
+    void triggerPreprocess();
 
 private:
     void updateTotalLines();

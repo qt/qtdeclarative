@@ -78,7 +78,7 @@ public:
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QQuickTextEdit::PlainText), document(0), wrapMode(QQuickTextEdit::NoWrap),
       mouseSelectionMode(QQuickTextEdit::SelectCharacters),
-      lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0)
+      lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0), updateType(UpdatePaintNode)
     {
     }
 
@@ -143,6 +143,13 @@ public:
     NodeType nodeType;
     QSGTexture *texture;
     QPixmap pixmapCache;
+
+    enum UpdateType {
+        UpdateNone,
+        UpdateOnlyPreprocess,
+        UpdatePaintNode
+    };
+    UpdateType updateType;
 };
 
 QT_END_NAMESPACE

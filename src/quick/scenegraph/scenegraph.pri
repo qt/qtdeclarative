@@ -18,7 +18,6 @@ SOURCES += \
     $$PWD/coreapi/qsgnodeupdater.cpp \
     $$PWD/coreapi/qsgrenderer.cpp
 
-
 # Util API
 HEADERS += \
     $$PWD/util/qsgareaallocator_p.h \
@@ -63,7 +62,8 @@ HEADERS += \
     $$PWD/qsgdefaultimagenode_p.h \
     $$PWD/qsgdefaultrectanglenode_p.h \
     $$PWD/qsgflashnode_p.h \
-    $$PWD/qsgpathsimplifier_p.h
+    $$PWD/qsgpathsimplifier_p.h \
+    $$PWD/qsgshareddistancefieldglyphcache_p.h
 
 SOURCES += \
     $$PWD/qsgadaptationlayer.cpp \
@@ -77,7 +77,8 @@ SOURCES += \
     $$PWD/qsgdefaultimagenode.cpp \
     $$PWD/qsgdefaultrectanglenode.cpp \
     $$PWD/qsgflashnode.cpp \
-    $$PWD/qsgpathsimplifier.cpp
+    $$PWD/qsgpathsimplifier.cpp \
+    $$PWD/qsgshareddistancefieldglyphcache.cpp
 
 
 

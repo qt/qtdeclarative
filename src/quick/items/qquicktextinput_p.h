@@ -324,6 +324,7 @@ private Q_SLOTS:
     void updateCursorRectangle();
     void q_canPasteChanged();
     void q_updateAlignment();
+    void triggerPreprocess();
 
 private:
     Q_DECLARE_PRIVATE(QQuickTextInput)

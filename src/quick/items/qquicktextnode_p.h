@@ -74,7 +74,7 @@ public:
     };
     Q_DECLARE_FLAGS(Decorations, Decoration)
 
-    QQuickTextNode(QSGContext *);
+    QQuickTextNode(QSGContext *, QQuickItem *ownerElement);
     ~QQuickTextNode();
 
     static bool isComplexRichText(QTextDocument *);
@@ -103,6 +103,7 @@ private:
     QSGContext *m_context;
     QSGSimpleRectNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
+    QQuickItem *m_ownerElement;
 };
 
 QT_END_NAMESPACE

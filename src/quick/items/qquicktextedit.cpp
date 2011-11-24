@@ -1609,10 +1609,26 @@ void QQuickTextEdit::updateImageCache(const QRectF &)
 
 }
 
+void QQuickTextEdit::triggerPreprocess()
+{
+    Q_D(QQuickTextEdit);
+    if (d->updateType == QQuickTextEditPrivate::UpdateNone)
+        d->updateType = QQuickTextEditPrivate::UpdateOnlyPreprocess;
+    update();
+}
+
 QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
     Q_UNUSED(updatePaintNodeData);
     Q_D(QQuickTextEdit);
+
+    if (d->updateType != QQuickTextEditPrivate::UpdatePaintNode && oldNode != 0) {
+        // Update done in preprocess() in the nodes
+        d->updateType = QQuickTextEditPrivate::UpdateNone;
+        return oldNode;
+    }
+
+    d->updateType = QQuickTextEditPrivate::UpdateNone;
 
     QSGNode *currentNode = oldNode;
     if (d->richText && d->useImageFallback) {
@@ -1651,7 +1667,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         QQuickTextNode *node = 0;
         if (oldNode == 0 || d->nodeType != QQuickTextEditPrivate::NodeIsText) {
             delete oldNode;
-            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext());
+            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
             d->nodeType = QQuickTextEditPrivate::NodeIsText;
             currentNode = node;
         } else {
@@ -1962,6 +1978,7 @@ void QQuickTextEdit::updateDocument()
 
     if (isComponentComplete()) {
         updateImageCache();
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
 }
@@ -1971,6 +1988,7 @@ void QQuickTextEdit::updateCursor()
     Q_D(QQuickTextEdit);
     if (isComponentComplete()) {
         updateImageCache(d->control->cursorRect());
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
 }

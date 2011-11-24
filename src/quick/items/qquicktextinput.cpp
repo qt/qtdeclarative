@@ -328,6 +328,7 @@ void QQuickTextInput::setColor(const QColor &c)
     if (c != d->color) {
         d->color = c;
         d->textLayoutDirty = true;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
         emit colorChanged(c);
     }
@@ -355,6 +356,7 @@ void QQuickTextInput::setSelectionColor(const QColor &color)
     d->m_palette.setColor(QPalette::Highlight, d->selectionColor);
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     }
     emit selectionColorChanged(color);
@@ -380,6 +382,7 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
     d->m_palette.setColor(QPalette::HighlightedText, d->selectedTextColor);
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     }
     emit selectedTextColorChanged(color);
@@ -642,6 +645,7 @@ void QQuickTextInput::setCursorVisible(bool on)
         return;
     d->cursorVisible = on;
     d->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
+    d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
     update();
     emit cursorVisibleChanged(d->cursorVisible);
 }
@@ -1621,14 +1625,30 @@ void QQuickTextInputPrivate::updateVerticalScroll()
         textLayoutDirty = true;
 }
 
+void QQuickTextInput::triggerPreprocess()
+{
+    Q_D(QQuickTextInput);
+    if (d->updateType == QQuickTextInputPrivate::UpdateNone)
+        d->updateType = QQuickTextInputPrivate::UpdateOnlyPreprocess;
+    update();
+}
+
 QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     Q_UNUSED(data);
     Q_D(QQuickTextInput);
 
+    if (d->updateType != QQuickTextInputPrivate::UpdatePaintNode && oldNode != 0) {
+        // Update done in preprocess() in the nodes
+        d->updateType = QQuickTextInputPrivate::UpdateNone;
+        return oldNode;
+    }
+
+    d->updateType = QQuickTextInputPrivate::UpdateNone;
+
     QQuickTextNode *node = static_cast<QQuickTextNode *>(oldNode);
     if (node == 0)
-        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext());
+        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
     d->textNode = node;
 
     if (!d->textLayoutDirty) {
@@ -2408,6 +2428,7 @@ void QQuickTextInput::updateCursorRectangle()
 
     d->updateHorizontalScroll();
     d->updateVerticalScroll();
+    d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
     update();
     emit cursorRectangleChanged();
     if (d->cursorItem) {
@@ -2421,6 +2442,7 @@ void QQuickTextInput::selectionChanged()
 {
     Q_D(QQuickTextInput);
     d->textLayoutDirty = true; //TODO: Only update rect in selection
+    d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
     update();
     emit selectedTextChanged();
 
@@ -2584,6 +2606,7 @@ void QQuickTextInputPrivate::updateLayout()
     m_ascent = qRound(firstLine.ascent());
     textLayoutDirty = true;
 
+    updateType = UpdatePaintNode;
     q->update();
     q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
 
@@ -3788,8 +3811,10 @@ void QQuickTextInputPrivate::setCursorBlinkPeriod(int msec)
         m_blinkStatus = 1;
     } else {
         m_blinkTimer = 0;
-        if (m_blinkStatus == 1)
+        if (m_blinkStatus == 1) {
+            updateType = UpdatePaintNode;
             q->update();
+        }
     }
     m_blinkPeriod = msec;
 }
@@ -3809,6 +3834,7 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
     Q_D(QQuickTextInput);
     if (event->timerId() == d->m_blinkTimer) {
         d->m_blinkStatus = !d->m_blinkStatus;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     } else if (event->timerId() == d->m_deleteAllTimer) {
         killTimer(d->m_deleteAllTimer);

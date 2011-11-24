@@ -69,8 +69,8 @@ QT_BEGIN_NAMESPACE
 /*!
   Creates an empty QQuickTextNode
 */
-QQuickTextNode::QQuickTextNode(QSGContext *context)
-    : m_context(context), m_cursorNode(0)
+QQuickTextNode::QQuickTextNode(QSGContext *context, QQuickItem *ownerElement)
+    : m_context(context), m_cursorNode(0), m_ownerElement(ownerElement)
 {
 #if defined(QML_RUNTIME_TESTING)
     description = QLatin1String("text");
@@ -131,6 +131,7 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
                                      QSGNode *parentNode)
 {
     QSGGlyphNode *node = m_context->createGlyphNode();
+    node->setOwnerElement(m_ownerElement);
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
     node->setStyle(style);
     node->setStyleColor(styleColor);

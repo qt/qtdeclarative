@@ -161,6 +161,13 @@ public:
     };
     NodeType nodeType;
 
+    enum UpdateType {
+        UpdateNone,
+        UpdatePreprocess,
+        UpdatePaintNode
+    };
+    UpdateType updateType;
+
 #if defined(Q_OS_MAC)
     QList<QRectF> linesRects;
     QThread *layoutThread;

@@ -211,6 +211,7 @@ protected:
 
 private Q_SLOTS:
     void q_imagesLoaded();
+    void triggerPreprocess();
 
 private:
     Q_DISABLE_COPY(QQuickText)

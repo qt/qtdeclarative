@@ -267,6 +267,21 @@ void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &g
     }
 }
 
+void QSGDistanceFieldGlyphCache::registerOwnerElement(QQuickItem *ownerElement)
+{
+    Q_UNUSED(ownerElement);
+}
+
+void QSGDistanceFieldGlyphCache::unregisterOwnerElement(QQuickItem *ownerElement)
+{
+    Q_UNUSED(ownerElement);
+}
+
+void QSGDistanceFieldGlyphCache::processPendingGlyphs()
+{
+    /* Intentionally empty */
+}
+
 void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs, const Texture &tex)
 {
     int i = m_cacheData->textures.indexOf(tex);
