@@ -54,6 +54,7 @@
 //
 
 #include "qdeclarativedebugservice_p.h"
+#include <private/qv8_p.h>
 
 QT_BEGIN_HEADER
 
@@ -78,13 +79,14 @@ public:
 
     void debugMessageHandler(const QString &message, bool willStartRunning);
 
-    void appendSourcePath(const QString &message);
+    void appendSourcePath(const v8::Handle<v8::Object> &eventData);
 
     void signalEmitted(const QString &signal);
 
 private slots:
     void scheduledDebugBreak();
-    void initialize();
+    void cancelDebugBreak();
+    void initialize(bool);
 
 protected:
     void statusChanged(Status newStatus);
