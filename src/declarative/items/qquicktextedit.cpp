@@ -1975,4 +1975,64 @@ void QQuickTextEdit::q_canPasteChanged()
         emit canPasteChanged();
 }
 
+/*!
+    \qmlmethod string QtQuick2::TextEdit::getText(int start, int end)
+
+    Returns the section of text that is between the \a start and \a end positions.
+
+    The returned text does not include any rich text formatting.
+*/
+
+QString QQuickTextEdit::getText(int start, int end) const
+{
+    Q_D(const QQuickTextEdit);
+    start = qBound(0, start, d->document->characterCount() - 1);
+    end = qBound(0, end, d->document->characterCount() - 1);
+    QTextCursor cursor(d->document);
+    cursor.setPosition(start, QTextCursor::MoveAnchor);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    return cursor.selectedText();
+}
+
+/*!
+    \qmlmethod void QtQuick2::TextEdit::insert(int position, string text)
+
+    Inserts \a text into the TextEdit at position.
+*/
+void QQuickTextEdit::insert(int position, const QString &text)
+{
+    Q_D(QQuickTextEdit);
+    if (position < 0 || position >= d->document->characterCount())
+        return;
+    QTextCursor cursor(d->document);
+    cursor.setPosition(position);
+    d->richText = d->richText || (d->format == AutoText && Qt::mightBeRichText(text));
+    if (d->richText) {
+#ifndef QT_NO_TEXTHTMLPARSER
+        cursor.insertHtml(text);
+#else
+        cursor.insertText(text);
+#endif
+    } else {
+        cursor.insertText(text);
+    }
+}
+
+/*!
+    \qmlmethod string QtQuick2::TextEdit::getText(int start, int end)
+
+    Removes the section of text that is between the \a start and \a end positions from the TextEdit.
+*/
+
+void QQuickTextEdit::remove(int start, int end)
+{
+    Q_D(QQuickTextEdit);
+    start = qBound(0, start, d->document->characterCount() - 1);
+    end = qBound(0, end, d->document->characterCount() - 1);
+    QTextCursor cursor(d->document);
+    cursor.setPosition(start, QTextCursor::MoveAnchor);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+}
+
 QT_END_NAMESPACE

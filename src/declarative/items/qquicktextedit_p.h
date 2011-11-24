@@ -217,6 +217,8 @@ public:
 
     bool isInputMethodComposing() const;
 
+    Q_INVOKABLE QString getText(int start, int end) const;
+
 Q_SIGNALS:
     void textChanged(const QString &);
     void paintedSizeChanged();
@@ -258,6 +260,8 @@ public Q_SLOTS:
     void copy();
     void paste();
 #endif
+    void insert(int position, const QString &text);
+    void remove(int start, int end);
 
 private Q_SLOTS:
     void q_textChanged();
