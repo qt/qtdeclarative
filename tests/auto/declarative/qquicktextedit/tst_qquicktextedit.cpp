@@ -55,7 +55,6 @@
 #include <QQuickView>
 #include <QDir>
 #include <QStyle>
-#include <QInputContext>
 #include <QInputPanel>
 #include <QClipboard>
 #include <QMimeData>
@@ -68,8 +67,6 @@
 #include <Carbon/Carbon.h>
 #endif
 
-#define QTBUG_21691
-#define QTBUG_21691_MESSAGE "QTBUG-21691: The test needs to be rewritten to not use QInputContext"
 
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)

@@ -52,7 +52,6 @@
 #include <QDebug>
 #include <QDir>
 #include <QStyle>
-#include <QInputContext>
 #include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
 #include <qplatforminputcontext_qpa.h>
@@ -66,10 +65,6 @@
 
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-
-#define QTBUG_21691
-#define QTBUG_21691_MESSAGE "QTBUG-21691: The test needs to be rewritten to not use QInputContext"
-
 
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
