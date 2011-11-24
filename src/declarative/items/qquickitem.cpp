@@ -1903,6 +1903,7 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
     parentPrivate->childItems.insert(siblingIndex, this);
 
     parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
+    parentPrivate->markSortedChildrenDirty(this);
 
     for (int ii = qMin(siblingIndex, myIndex); ii < parentPrivate->childItems.count(); ++ii)
         QQuickItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
@@ -1933,6 +1934,7 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
     parentPrivate->childItems.insert(siblingIndex + 1, this);
 
     parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
+    parentPrivate->markSortedChildrenDirty(this);
 
     for (int ii = qMin(myIndex, siblingIndex + 1); ii < parentPrivate->childItems.count(); ++ii)
         QQuickItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
@@ -1965,11 +1967,27 @@ static bool itemZOrder_sort(QQuickItem *lhs, QQuickItem *rhs)
 
 QList<QQuickItem *> QQuickItemPrivate::paintOrderChildItems() const
 {
-    // XXX todo - optimize, don't sort and return items that are
-    // ignored anyway, like invisible or disabled items.
-    QList<QQuickItem *> items = childItems;
-    qStableSort(items.begin(), items.end(), itemZOrder_sort);
-    return items;
+    if (sortedChildItems)
+        return *sortedChildItems;
+
+    // If none of the items have set Z then the paint order list is the same as
+    // the childItems list.  This is by far the most common case.
+    bool haveZ = false;
+    for (int i = 0; i < childItems.count(); ++i) {
+        if (QQuickItemPrivate::get(childItems.at(i))->z != 0.) {
+            haveZ = true;
+            break;
+        }
+    }
+    if (haveZ) {
+        sortedChildItems = new QList<QQuickItem*>(childItems);
+        qStableSort(sortedChildItems->begin(), sortedChildItems->end(), itemZOrder_sort);
+        return *sortedChildItems;
+    }
+
+    sortedChildItems = const_cast<QList<QQuickItem*>*>(&childItems);
+
+    return childItems;
 }
 
 void QQuickItemPrivate::addChild(QQuickItem *child)
@@ -1980,6 +1998,7 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     childItems.append(child);
 
+    markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
 
     itemChange(QQuickItem::ItemChildAddedChange, child);
@@ -1996,6 +2015,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
+    markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
 
     itemChange(QQuickItem::ItemChildRemovedChange, child);
@@ -2191,7 +2211,7 @@ QQuickItemPrivate::QQuickItemPrivate()
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
   inheritMirrorFromParent(false), inheritMirrorFromItem(false), childrenDoNotOverlap(false),
 
-  canvas(0), parentItem(0),
+  canvas(0), parentItem(0), sortedChildItems(&childItems),
 
   subFocusItem(0),
 
@@ -2208,6 +2228,12 @@ QQuickItemPrivate::QQuickItemPrivate()
   itemNodeInstance(0), opacityNode(0), clipNode(0), rootNode(0), groupNode(0), paintNode(0)
   , beforePaintNode(0), effectRefCount(0), hideRefCount(0)
 {
+}
+
+QQuickItemPrivate::~QQuickItemPrivate()
+{
+    if (sortedChildItems != &childItems)
+        delete sortedChildItems;
 }
 
 void QQuickItemPrivate::init(QQuickItem *parent)
@@ -3518,8 +3544,10 @@ void QQuickItem::setZ(qreal v)
     d->z = v;
 
     d->dirty(QQuickItemPrivate::ZValue);
-    if (d->parentItem)
+    if (d->parentItem) {
         QQuickItemPrivate::get(d->parentItem)->dirty(QQuickItemPrivate::ChildrenStackingChanged);
+        QQuickItemPrivate::get(d->parentItem)->markSortedChildrenDirty(this);
+    }
 
     emit zChanged();
 }

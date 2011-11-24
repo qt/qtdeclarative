@@ -43,10 +43,13 @@
 
 #include "qquickitem.h"
 #include "qquickcanvas.h"
+#include "qquickview.h"
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include "private/qquickfocusscope_p.h"
+#include "private/qquickitem_p.h"
 #include <QDebug>
 #include <QTimer>
+#include "../shared/util.h"
 
 class TestItem : public QQuickItem
 {
@@ -131,7 +134,14 @@ private slots:
     void hoverEvent();
     void hoverEventInParent();
 
+    void paintOrder_data();
+    void paintOrder();
+
 private:
+
+    enum PaintOrderOp {
+        NoOp, Append, Remove, StackBefore, StackAfter, SetZ
+    };
 
     void ensureFocus(QWindow *w) {
         w->show();
@@ -1063,6 +1073,118 @@ void tst_qquickitem::hoverEventInParent()
 
     delete canvas;
 }
+
+void tst_qquickitem::paintOrder_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<int>("op");
+    QTest::addColumn<QVariant>("param1");
+    QTest::addColumn<QVariant>("param2");
+    QTest::addColumn<QStringList>("expected");
+
+    QTest::newRow("test 1 noop") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+        << int(NoOp) << QVariant() << QVariant()
+        << (QStringList() << "1" << "2" << "3");
+    QTest::newRow("test 1 add") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+        << int(Append) << QVariant("new") << QVariant()
+        << (QStringList() << "1" << "2" << "3" << "new");
+    QTest::newRow("test 1 remove") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+        << int(Remove) << QVariant(1) << QVariant()
+        << (QStringList() << "1" << "3");
+    QTest::newRow("test 1 stack before") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+        << int(StackBefore) << QVariant(2) << QVariant(1)
+        << (QStringList() << "1" << "3" << "2");
+    QTest::newRow("test 1 stack after") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+        << int(StackAfter) << QVariant(0) << QVariant(1)
+        << (QStringList() << "2" << "1" << "3");
+    QTest::newRow("test 1 set z") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+        << int(SetZ) << QVariant(1) << QVariant(qreal(1.))
+        << (QStringList() << "1" << "3" << "2");
+
+    QTest::newRow("test 2 noop") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(NoOp) << QVariant() << QVariant()
+        << (QStringList() << "1" << "3" << "2");
+    QTest::newRow("test 2 add") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(Append) << QVariant("new") << QVariant()
+        << (QStringList() << "1" << "3" << "new" << "2");
+    QTest::newRow("test 2 remove 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(Remove) << QVariant(1) << QVariant()
+        << (QStringList() << "1" << "3");
+    QTest::newRow("test 2 remove 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(Remove) << QVariant(2) << QVariant()
+        << (QStringList() << "1" << "2");
+    QTest::newRow("test 2 stack before 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(StackBefore) << QVariant(1) << QVariant(0)
+        << (QStringList() << "1" << "3" << "2");
+    QTest::newRow("test 2 stack before 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(StackBefore) << QVariant(2) << QVariant(0)
+        << (QStringList() << "3" << "1" << "2");
+    QTest::newRow("test 2 stack after 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(StackAfter) << QVariant(0) << QVariant(1)
+        << (QStringList() << "1" << "3" << "2");
+    QTest::newRow("test 2 stack after 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+        << int(StackAfter) << QVariant(0) << QVariant(2)
+        << (QStringList() << "3" << "1" << "2");
+    QTest::newRow("test 1 set z") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+        << int(SetZ) << QVariant(2) << QVariant(qreal(2.))
+        << (QStringList() << "1" << "2" << "3");
+}
+
+void tst_qquickitem::paintOrder()
+{
+    QFETCH(QUrl, source);
+    QFETCH(int, op);
+    QFETCH(QVariant, param1);
+    QFETCH(QVariant, param2);
+    QFETCH(QStringList, expected);
+
+    QQuickView view;
+    view.setSource(source);
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+
+    switch (op) {
+        case Append: {
+                QQuickItem *item = new QQuickItem(root);
+                item->setObjectName(param1.toString());
+            }
+            break;
+        case Remove: {
+                QQuickItem *item = root->childItems().at(param1.toInt());
+                delete item;
+            }
+            break;
+        case StackBefore: {
+                QQuickItem *item1 = root->childItems().at(param1.toInt());
+                QQuickItem *item2 = root->childItems().at(param2.toInt());
+                item1->stackBefore(item2);
+            }
+            break;
+        case StackAfter: {
+                QQuickItem *item1 = root->childItems().at(param1.toInt());
+                QQuickItem *item2 = root->childItems().at(param2.toInt());
+                item1->stackAfter(item2);
+            }
+            break;
+        case SetZ: {
+                QQuickItem *item = root->childItems().at(param1.toInt());
+                item->setZ(param2.toReal());
+            }
+            break;
+        default:
+            break;
+    }
+
+    QList<QQuickItem*> list = QQuickItemPrivate::get(root)->paintOrderChildItems();
+
+    QStringList items;
+    for (int i = 0; i < list.count(); ++i)
+        items << list.at(i)->objectName();
+
+    QCOMPARE(items, expected);
+}
+
 
 QTEST_MAIN(tst_qquickitem)
 

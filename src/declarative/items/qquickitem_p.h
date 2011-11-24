@@ -139,6 +139,7 @@ public:
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
 
     QQuickItemPrivate();
+    ~QQuickItemPrivate();
     void init(QQuickItem *parent);
 
     QDeclarativeListProperty<QObject> data();
@@ -262,10 +263,21 @@ public:
 
     QQuickItem *parentItem;
     QList<QQuickItem *> childItems;
+    mutable QList<QQuickItem *> *sortedChildItems;
     QList<QQuickItem *> paintOrderChildItems() const;
     void addChild(QQuickItem *);
     void removeChild(QQuickItem *);
     void siblingOrderChanged();
+
+    inline void markSortedChildrenDirty(QQuickItem *child) {
+        // If sortedChildItems == &childItems then all in childItems have z == 0
+        // and we don't need to invalidate if the changed item also has z == 0.
+        if (child->z() != 0. || sortedChildItems != &childItems) {
+            if (sortedChildItems != &childItems)
+                delete sortedChildItems;
+            sortedChildItems = 0;
+        }
+    }
 
     class InitializationState {
     public:
