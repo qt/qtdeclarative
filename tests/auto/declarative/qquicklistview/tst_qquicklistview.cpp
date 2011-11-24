@@ -3529,6 +3529,8 @@ void tst_QQuickListView::resizeFirstDelegate()
     // QTBUG-20712: Content Y jumps constantly if first delegate height == 0
     // and other delegates have height > 0
 
+    QSKIP("Test unstable - QTBUG-22872");
+
     QQuickView *canvas = createView();
     canvas->show();
 
