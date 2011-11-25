@@ -88,14 +88,6 @@ const char *qtTexCoordAttributeName()
     return qt_texcoord_attribute_name;
 }
 
-// TODO: Remove after grace period.
-QQuickShaderEffectItem::QQuickShaderEffectItem(QQuickItem *parent)
-    : QQuickShaderEffect(parent)
-{
-    qWarning("ShaderEffectItem has been deprecated. Use ShaderEffect instead.");
-}
-
-
 /*!
     \qmlclass ShaderEffect QQuickShaderEffect
     \inqmlmodule QtQuick 2
@@ -643,16 +635,9 @@ void QQuickShaderEffect::lookThroughShaderCode(const QByteArray &code)
 
             const int matLen = sizeof("qt_Matrix") - 1;
             const int opLen = sizeof("qt_Opacity") - 1;
-            const int mvpMatLen = sizeof("qt_ModelViewProjectionMatrix") - 1;
             const int sampLen = sizeof("sampler2D") - 1;
 
             if (nameLength == matLen && qstrncmp("qt_Matrix", s + nameIndex, matLen) == 0) {
-                m_source.respectsMatrix = true;
-            } else if (nameLength == mvpMatLen && qstrncmp("qt_ModelViewProjectionMatrix",
-                                                           s + nameIndex, mvpMatLen) == 0)
-            {
-                // TODO: Remove after grace period.
-                qWarning("ShaderEffect: qt_ModelViewProjectionMatrix is deprecated. Use qt_Matrix instead.");
                 m_source.respectsMatrix = true;
             } else if (nameLength == opLen && qstrncmp("qt_Opacity", s + nameIndex, opLen) == 0) {
                 m_source.respectsOpacity = true;

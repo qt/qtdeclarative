@@ -151,13 +151,6 @@ private:
     uint m_dirtyGeometry : 1;
 };
 
-// TODO: Remove after grace period.
-class QQuickShaderEffectItem : public QQuickShaderEffect
-{
-public:
-    QQuickShaderEffectItem(QQuickItem *parent = 0);
-};
-
 QT_END_NAMESPACE
 
 QT_END_HEADER

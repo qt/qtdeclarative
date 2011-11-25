@@ -186,7 +186,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPinch>(uri,major,minor,"Pinch");
     qmlRegisterType<QQuickPinchEvent>();
 
-    qmlRegisterType<QQuickShaderEffectItem>("QtQuick", 2, 0, "ShaderEffectItem"); // TODO: Remove after grace period.
     qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
     qmlRegisterUncreatableType<QQuickShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QQuickShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
