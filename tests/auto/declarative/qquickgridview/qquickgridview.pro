@@ -10,4 +10,4 @@ DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 CONFIG += insignificant_test #QTBUG-22807
-QT += core-private gui-private v8-private declarative-private opengl-private testlib
+QT += core-private gui-private v8-private declarative-private opengl-private testlib widgets

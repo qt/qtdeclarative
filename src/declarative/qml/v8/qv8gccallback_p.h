@@ -69,7 +69,7 @@ public:
     static void registerGcPrologueCallback();
     static void releaseWorkerThreadGcPrologueCallbackData();
 
-    class Referencer {
+    class Q_AUTOTEST_EXPORT Referencer {
     public:
         ~Referencer();
         void addRelationship(QObject *object, v8::Persistent<v8::Value> handle);
@@ -81,7 +81,7 @@ public:
         friend class QV8GCCallback::ThreadData;
     };
 
-    class Node {
+    class Q_AUTOTEST_EXPORT Node {
     public:
         typedef void (*PrologueCallback)(Referencer *r, Node *node);
         Node(PrologueCallback callback);

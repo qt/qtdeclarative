@@ -45,6 +45,7 @@
 #include <QFile>
 #include <QtDeclarative/qquickview.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 #include <QInputPanel>
 #include <private/qquicktextinput_p.h>
 #include <private/qquicktextinput_p_p.h>
@@ -2659,7 +2660,7 @@ void tst_qquicktextinput::tripleClickSelectsAll()
     // And now we press the third click too late, so no triple click event is triggered.
     QTest::mouseDClick(&view, Qt::LeftButton, 0, pointInside);
     QGuiApplication::processEvents();
-    QTest::qWait(QApplication::doubleClickInterval() + 1);
+    QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 1);
     QTest::mouseClick(&view, Qt::LeftButton, 0, pointInside);
     QGuiApplication::processEvents();
     QVERIFY(input->selectedText().isEmpty());
