@@ -38,5 +38,3 @@ include(designer/designer.pri)
 
 HEADERS += qtquick2_p.h
 SOURCES += qtquick2.cpp
-
-linux-g++-maemo:DEFINES += QDECLARATIVEVIEW_NOBACKGROUND
