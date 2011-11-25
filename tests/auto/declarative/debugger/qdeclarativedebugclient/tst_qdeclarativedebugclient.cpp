@@ -148,9 +148,9 @@ void tst_QDeclarativeDebugClient::parallelConnect()
 {
     QDeclarativeDebugConnection connection2;
 
-    connection2.connectToHost("127.0.0.1", PORT);
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Another client is already connected");
     // will connect & immediately disconnect
+    connection2.connectToHost("127.0.0.1", PORT);
     QVERIFY(connection2.waitForConnected());
     QTRY_COMPARE(connection2.state(), QAbstractSocket::UnconnectedState);
     QVERIFY(m_conn->isConnected());
