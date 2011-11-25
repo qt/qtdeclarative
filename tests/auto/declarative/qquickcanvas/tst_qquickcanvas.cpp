@@ -149,7 +149,7 @@ protected:
         event->accept();
     }
 
-    virtual void mousePressEvent(QMouseEvent *event) {
+    virtual void mousePressEvent(QMouseEvent *) {
         mousePressId = ++mousePressNum;
     }
 

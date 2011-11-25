@@ -811,7 +811,7 @@ void tst_qdeclarativeincubator::chainedAsynchronousIfNestedOnCompleted()
         QDeclarativeComponent *component;
         MyIncubator *incubator;
         QDeclarativeContext *ctxt;
-        static void callback(CompletionCallbackType *o, void *data) {
+        static void callback(CompletionCallbackType *, void *data) {
             CallbackData *d = (CallbackData *)data;
             d->component->create(*d->incubator, 0, d->ctxt);
         }

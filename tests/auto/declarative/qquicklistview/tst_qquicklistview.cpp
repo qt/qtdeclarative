@@ -911,7 +911,7 @@ void tst_QQuickListView::insertBeforeVisible_data()
 }
 
 template <class T>
-void tst_QQuickListView::removed(bool animated)
+void tst_QQuickListView::removed(bool /* animated */)
 {
     QQuickView *canvas = createView();
 
@@ -3027,7 +3027,7 @@ void tst_QQuickListView::header_delayItemCreation()
 
     TestModel model;
 
-    canvas->rootContext()->setContextProperty("setCurrentToZero", false);
+    canvas->rootContext()->setContextProperty("setCurrentToZero", QVariant(false));
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("fillModelOnComponentCompleted.qml")));
     qApp->processEvents();
 

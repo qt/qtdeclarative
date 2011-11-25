@@ -339,6 +339,8 @@ void tst_qquickimage::mirror()
             p_e.setTransform(transform);
             p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap);
             break;
+        case QQuickImage::Pad:
+            break;
         }
 
         QImage img = expected.toImage();
