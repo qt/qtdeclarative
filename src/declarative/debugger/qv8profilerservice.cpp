@@ -41,7 +41,7 @@
 
 #include "qv8profilerservice_p.h"
 #include "qdeclarativedebugservice_p_p.h"
-#include <private/qdeclarativeengine_p.h>
+#include "private/qjsconverter_impl_p.h"
 #include <private/qv8profiler_p.h>
 
 #include <QtCore/QHash>
@@ -96,7 +96,6 @@ public:
     QList<QV8ProfilerData> m_data;
 
     bool initialized;
-    QList<QDeclarativeEngine *> engines;
     v8::Isolate *isolate;
 };
 
@@ -121,22 +120,10 @@ QV8ProfilerService *QV8ProfilerService::instance()
     return v8ProfilerInstance();
 }
 
-void QV8ProfilerService::addEngine(QDeclarativeEngine *engine)
+void QV8ProfilerService::initialize()
 {
-    Q_D(QV8ProfilerService);
-    Q_ASSERT(engine);
-    Q_ASSERT(!d->engines.contains(engine));
-
-    d->engines.append(engine);
-}
-
-void QV8ProfilerService::removeEngine(QDeclarativeEngine *engine)
-{
-    Q_D(QV8ProfilerService);
-    Q_ASSERT(engine);
-    Q_ASSERT(d->engines.contains(engine));
-
-    d->engines.removeOne(engine);
+    // just make sure that the service is properly registered
+    v8ProfilerInstance();
 }
 
 void QV8ProfilerService::messageReceived(const QByteArray &message)
@@ -212,10 +199,11 @@ void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node,
 {
     for (int index = 0 ; index < node->GetChildrenCount() ; index++) {
         const v8::CpuProfileNode* childNode = node->GetChild(index);
-        if (QV8Engine::toStringStatic(childNode->GetScriptResourceName()).length() > 0) {
+        QString scriptResourceName = QJSConverter::toString(childNode->GetScriptResourceName());
+        if (scriptResourceName.length() > 0) {
 
-            QV8ProfilerData rd = {(int)QV8ProfilerService::V8Entry, QV8Engine::toStringStatic(childNode->GetScriptResourceName()),
-                QV8Engine::toStringStatic(childNode->GetFunctionName()),
+            QV8ProfilerData rd = {(int)QV8ProfilerService::V8Entry, scriptResourceName,
+                QJSConverter::toString(childNode->GetFunctionName()),
                 childNode->GetLineNumber(), childNode->GetTotalTime(), childNode->GetSelfTime(), level};
             m_data.append(rd);
 

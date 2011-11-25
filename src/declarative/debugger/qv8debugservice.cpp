@@ -42,11 +42,11 @@
 #include "qv8debugservice_p.h"
 #include "qdeclarativedebugservice_p_p.h"
 #include <private/qv8debug_p.h>
-#include <private/qdeclarativeengine_p.h>
 #include <private/qjsconverter_impl_p.h>
 
 #include <QtCore/QHash>
 #include <QtCore/QFileInfo>
+#include <QtCore/QMutex>
 
 #define DEBUGGER_SCRIPT "(function(){"\
         "var DebuggerScript = {};"\
@@ -120,8 +120,7 @@ void DebugMessageHandler(const v8::Debug::Message& message)
         return;
     }
 
-    const QString response(QV8Engine::toStringStatic(
-                                  message.GetJSON()));
+    const QString response(QJSConverter::toString(message.GetJSON()));
 
     v8ServiceInstancePtr->debugMessageHandler(response, message.WillStartRunning());
 
@@ -168,7 +167,6 @@ public:
     // keep messageReceived() from running until initialize() has finished
     QMutex initializeMutex;
 
-    QList<QDeclarativeEngine *> engines;
     bool isRunning;
     QHash<QString, QString> sourcePath;
     QHash<QString, QString> requestCache;
@@ -203,22 +201,10 @@ QV8DebugService *QV8DebugService::instance()
     return v8ServiceInstance();
 }
 
-void QV8DebugService::addEngine(QDeclarativeEngine *engine)
+void QV8DebugService::initialize()
 {
-    Q_D(QV8DebugService);
-    Q_ASSERT(engine);
-    Q_ASSERT(!d->engines.contains(engine));
-
-    d->engines.append(engine);
-}
-
-void QV8DebugService::removeEngine(QDeclarativeEngine *engine)
-{
-    Q_D(QV8DebugService);
-    Q_ASSERT(engine);
-    Q_ASSERT(d->engines.contains(engine));
-
-    d->engines.removeAll(engine);
+    // just make sure that the service is properly registered
+    v8ServiceInstance();
 }
 
 void QV8DebugService::debugMessageHandler(const QString &message, bool willStartRunning)

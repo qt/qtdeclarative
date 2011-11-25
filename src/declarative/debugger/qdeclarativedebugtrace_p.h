@@ -117,8 +117,7 @@ public:
         MaximumRangeType
     };
 
-    static void addEngine(QDeclarativeEngine *engine);
-    static void removeEngine(QDeclarativeEngine *engine);
+    static void initialize();
 
     static void addEvent(EventType);
 

@@ -73,9 +73,7 @@ public:
     ~QV8DebugService();
 
     static QV8DebugService *instance();
-
-    void addEngine(QDeclarativeEngine *);
-    void removeEngine(QDeclarativeEngine *);
+    static void initialize();
 
     void debugMessageHandler(const QString &message, bool willStartRunning);
 

@@ -93,9 +93,7 @@ public:
     ~QV8ProfilerService();
 
     static QV8ProfilerService *instance();
-
-    void addEngine(QDeclarativeEngine *);
-    void removeEngine(QDeclarativeEngine *);
+    static void initialize();
 
     void startProfiling(const QString &title);
     void stopProfiling(const QString &title);
