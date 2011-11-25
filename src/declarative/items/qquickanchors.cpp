@@ -146,6 +146,7 @@ QQuickAnchors::QQuickAnchors(QQuickItem *item, QObject *parent)
 QQuickAnchors::~QQuickAnchors()
 {
     Q_D(QQuickAnchors);
+    d->inDestructor = true;
     d->remDepend(d->fill);
     d->remDepend(d->centerIn);
     d->remDepend(d->left.item);
@@ -249,22 +250,67 @@ void QQuickAnchorsPrivate::clearItem(QQuickItem *item)
     }
 }
 
+int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
+{
+    QQuickItemPrivate::GeometryChangeTypes dependency = QQuickItemPrivate::NoChange;
+
+    if (!controlItem || inDestructor)
+        return dependency;
+
+    if (fill == controlItem) {
+        if ((controlItem == item->parentItem()))
+            dependency |= QQuickItemPrivate::SizeChange;
+        else    //sibling
+            dependency |= QQuickItemPrivate::GeometryChange;
+        return dependency;  //exit early
+    }
+
+    if (centerIn == controlItem) {
+        if ((controlItem == item->parentItem()))
+            dependency |= QQuickItemPrivate::SizeChange;
+        else    //sibling
+            dependency |= QQuickItemPrivate::GeometryChange;
+        return dependency;  //exit early
+    }
+
+    if ((usedAnchors & QQuickAnchors::LeftAnchor && left.item == controlItem) ||
+        (usedAnchors & QQuickAnchors::RightAnchor && right.item == controlItem) ||
+        (usedAnchors & QQuickAnchors::HCenterAnchor && hCenter.item == controlItem)) {
+        if ((controlItem == item->parentItem()))
+            dependency |= QQuickItemPrivate::WidthChange;
+        else    //sibling
+            dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::XChange | QQuickItemPrivate::WidthChange);
+    }
+
+    if ((usedAnchors & QQuickAnchors::TopAnchor && top.item == controlItem) ||
+        (usedAnchors & QQuickAnchors::BottomAnchor && bottom.item == controlItem) ||
+        (usedAnchors & QQuickAnchors::VCenterAnchor && vCenter.item == controlItem) ||
+        (usedAnchors & QQuickAnchors::BaselineAnchor && baseline.item == controlItem)) {
+        if ((controlItem == item->parentItem()))
+            dependency |= QQuickItemPrivate::HeightChange;
+        else    //sibling
+            dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::YChange | QQuickItemPrivate::HeightChange);
+    }
+
+    return dependency;
+}
+
 void QQuickAnchorsPrivate::addDepend(QQuickItem *item)
 {
-    if (!item)
+    if (!item || !componentComplete)
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    p->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+    p->updateOrAddGeometryChangeListener(this, QFlags<QQuickItemPrivate::GeometryChangeType>(calculateDependency(item)));
 }
 
 void QQuickAnchorsPrivate::remDepend(QQuickItem *item)
 {
-    if (!item)
+    if (!item || !componentComplete)
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    p->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+    p->updateOrRemoveGeometryChangeListener(this, QFlags<QQuickItemPrivate::GeometryChangeType>(calculateDependency(item)));
 }
 
 bool QQuickAnchors::mirrored()
@@ -339,27 +385,41 @@ void QQuickAnchorsPrivate::updateMe()
         return;
     }
 
-    fillChanged();
-    centerInChanged();
-    updateHorizontalAnchors();
-    updateVerticalAnchors();
+    update();
 }
 
 void QQuickAnchorsPrivate::updateOnComplete()
 {
+    //optimization to only set initial dependencies once, at completion time
+    QSet<QQuickItem *> dependencies;
+    dependencies << fill << centerIn
+                 << left.item << right.item << hCenter.item
+                 << top.item << bottom.item << vCenter.item << baseline.item;
+
+    foreach (QQuickItem *dependency, dependencies)
+        addDepend(dependency);
+
+    update();
+}
+
+
+void QQuickAnchorsPrivate::update()
+{
     fillChanged();
     centerInChanged();
-    updateHorizontalAnchors();
-    updateVerticalAnchors();
+    if (usedAnchors & QQuickAnchorLine::Horizontal_Mask)
+        updateHorizontalAnchors();
+    if (usedAnchors & QQuickAnchorLine::Vertical_Mask)
+        updateVerticalAnchors();
 }
 
 void QQuickAnchorsPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newG, const QRectF &oldG)
 {
     fillChanged();
     centerInChanged();
-    if (newG.x() != oldG.x() || newG.width() != oldG.width())
+    if ((usedAnchors & QQuickAnchorLine::Horizontal_Mask) && (newG.x() != oldG.x() || newG.width() != oldG.width()))
         updateHorizontalAnchors();
-    if (newG.y() != oldG.y() || newG.height() != oldG.height())
+    if ((usedAnchors & QQuickAnchorLine::Vertical_Mask) && (newG.y() != oldG.y() || newG.height() != oldG.height()))
         updateVerticalAnchors();
 }
 
@@ -376,8 +436,9 @@ void QQuickAnchors::setFill(QQuickItem *f)
         return;
 
     if (!f) {
-        d->remDepend(d->fill);
+        QQuickItem *oldFill = d->fill;
         d->fill = f;
+        d->remDepend(oldFill);
         emit fillChanged();
         return;
     }
@@ -385,8 +446,9 @@ void QQuickAnchors::setFill(QQuickItem *f)
         qmlInfo(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
         return;
     }
-    d->remDepend(d->fill);
+    QQuickItem *oldFill = d->fill;
     d->fill = f;
+    d->remDepend(oldFill);
     d->addDepend(d->fill);
     emit fillChanged();
     d->fillChanged();
@@ -410,8 +472,9 @@ void QQuickAnchors::setCenterIn(QQuickItem* c)
         return;
 
     if (!c) {
-        d->remDepend(d->centerIn);
+        QQuickItem *oldCI = d->centerIn;
         d->centerIn = c;
+        d->remDepend(oldCI);
         emit centerInChanged();
         return;
     }
@@ -419,9 +482,9 @@ void QQuickAnchors::setCenterIn(QQuickItem* c)
         qmlInfo(d->item) << tr("Cannot anchor to an item that isn't a parent or sibling.");
         return;
     }
-
-    d->remDepend(d->centerIn);
+    QQuickItem *oldCI = d->centerIn;
     d->centerIn = c;
+    d->remDepend(oldCI);
     d->addDepend(d->centerIn);
     emit centerInChanged();
     d->centerInChanged();
@@ -642,8 +705,9 @@ void QQuickAnchors::setTop(const QQuickAnchorLine &edge)
         return;
     }
 
-    d->remDepend(d->top.item);
+    QQuickItem *oldTop = d->top.item;
     d->top = edge;
+    d->remDepend(oldTop);
     d->addDepend(d->top.item);
     emit topChanged();
     d->updateVerticalAnchors();
@@ -678,8 +742,9 @@ void QQuickAnchors::setBottom(const QQuickAnchorLine &edge)
         return;
     }
 
-    d->remDepend(d->bottom.item);
+    QQuickItem *oldBottom = d->bottom.item;
     d->bottom = edge;
+    d->remDepend(oldBottom);
     d->addDepend(d->bottom.item);
     emit bottomChanged();
     d->updateVerticalAnchors();
@@ -714,8 +779,9 @@ void QQuickAnchors::setVerticalCenter(const QQuickAnchorLine &edge)
         return;
     }
 
-    d->remDepend(d->vCenter.item);
+    QQuickItem *oldVCenter = d->vCenter.item;
     d->vCenter = edge;
+    d->remDepend(oldVCenter);
     d->addDepend(d->vCenter.item);
     emit verticalCenterChanged();
     d->updateVerticalAnchors();
@@ -750,8 +816,9 @@ void QQuickAnchors::setBaseline(const QQuickAnchorLine &edge)
         return;
     }
 
-    d->remDepend(d->baseline.item);
+    QQuickItem *oldBaseline = d->baseline.item;
     d->baseline = edge;
+    d->remDepend(oldBaseline);
     d->addDepend(d->baseline.item);
     emit baselineChanged();
     d->updateVerticalAnchors();
@@ -786,8 +853,9 @@ void QQuickAnchors::setLeft(const QQuickAnchorLine &edge)
         return;
     }
 
-    d->remDepend(d->left.item);
+    QQuickItem *oldLeft = d->left.item;
     d->left = edge;
+    d->remDepend(oldLeft);
     d->addDepend(d->left.item);
     emit leftChanged();
     d->updateHorizontalAnchors();
@@ -822,8 +890,9 @@ void QQuickAnchors::setRight(const QQuickAnchorLine &edge)
         return;
     }
 
-    d->remDepend(d->right.item);
+    QQuickItem *oldRight = d->right.item;
     d->right = edge;
+    d->remDepend(oldRight);
     d->addDepend(d->right.item);
     emit rightChanged();
     d->updateHorizontalAnchors();
@@ -858,8 +927,9 @@ void QQuickAnchors::setHorizontalCenter(const QQuickAnchorLine &edge)
         return;
     }
 
-    d->remDepend(d->hCenter.item);
+    QQuickItem *oldHCenter = d->hCenter.item;
     d->hCenter = edge;
+    d->remDepend(oldHCenter);
     d->addDepend(d->hCenter.item);
     emit horizontalCenterChanged();
     d->updateHorizontalAnchors();

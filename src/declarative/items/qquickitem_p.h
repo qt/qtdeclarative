@@ -216,10 +216,24 @@ public:
 
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
+    enum GeometryChangeType {
+        NoChange = 0,
+        XChange = 0x01,
+        YChange = 0x02,
+        WidthChange = 0x04,
+        HeightChange = 0x08,
+        SizeChange = WidthChange | HeightChange,
+        GeometryChange = XChange | YChange | SizeChange
+    };
+
+    Q_DECLARE_FLAGS(GeometryChangeTypes, GeometryChangeType)
+
     struct ChangeListener {
-        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::ChangeTypes t) : listener(l), types(t) {}
+        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::ChangeTypes t) : listener(l), types(t), gTypes(GeometryChange) {}
+        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::GeometryChangeTypes gt) : listener(l), types(Geometry), gTypes(gt) {}
         QQuickItemChangeListener *listener;
         QQuickItemPrivate::ChangeTypes types;
+        QQuickItemPrivate::GeometryChangeTypes gTypes;  //NOTE: not used for ==
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
 
@@ -227,6 +241,8 @@ public:
         changeListeners.append(ChangeListener(listener, types));
     }
     void removeItemChangeListener(QQuickItemChangeListener *, ChangeTypes types);
+    void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
+    void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
     QPODVector<ChangeListener,4> changeListeners;
 
     QDeclarativeStateGroup *_states();
