@@ -40,8 +40,3 @@ HEADERS += qtquick2_p.h
 SOURCES += qtquick2.cpp
 
 linux-g++-maemo:DEFINES += QDECLARATIVEVIEW_NOBACKGROUND
-
-DEFINES += QT_NO_OPENTYPE
-INCLUDEPATH += $$QT_SOURCE_TREE/src/3rdparty/harfbuzz/src
-
-
