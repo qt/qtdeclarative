@@ -2116,7 +2116,7 @@ void QQuickVisualDataGroup::remove(QDeclarativeV8Function *args)
 bool QQuickVisualDataGroupPrivate::parseGroupArgs(
         QDeclarativeV8Function *args, int *index, int *count, int *groups) const
 {
-    if (!model)
+    if (!model || !QQuickVisualDataModelPrivate::get(model)->m_cacheMetaType)
         return false;
 
     if (args->Length() < 2)
@@ -2300,6 +2300,7 @@ void QQuickVisualDataGroup::move(QDeclarativeV8Function *args)
         model->itemsMoved(removes, inserts);
         model->emitChanges();
     }
+
 }
 
 /*!

@@ -146,6 +146,7 @@ private slots:
     void onChanged_data();
     void onChanged();
     void create();
+    void incompleteModel();
 
 private:
     template <int N> void groups_verify(
@@ -563,7 +564,7 @@ void tst_qquickvisualdatamodel::modelProperties()
 
         QUrl source(QUrl::fromLocalFile(TESTDATA("modelproperties2.qml")));
 
-        //3 items, 3 warnings each
+        //3 items, 3 i each
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
@@ -1787,6 +1788,49 @@ void tst_qquickvisualdatamodel::create()
     evaluate<void>(listview, "positionViewAtIndex(1, ListView.Beginning)");
     QCOMPARE(listview->count(), 20);
     QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+}
+
+
+void tst_qquickvisualdatamodel::incompleteModel()
+{
+    // VisualDataModel is first populated in componentComplete.  Verify various functions are
+    // harmlessly ignored until then.
+
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0\n VisualDataModel {}", QUrl::fromLocalFile(TESTDATA("")));
+
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+
+    QQuickVisualDataModel *model = qobject_cast<QQuickVisualDataModel *>(object.data());
+    QVERIFY(model);
+
+    QSignalSpy itemsSpy(model->items(), SIGNAL(countChanged()));
+    QSignalSpy persistedItemsSpy(model->items(), SIGNAL(countChanged()));
+
+    evaluate<void>(model, "items.removeGroups(0, items.count, \"items\")");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.setGroups(0, items.count, \"persistedItems\")");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.addGroups(0, items.count, \"persistedItems\")");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.remove(0, items.count)");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.insert([ \"color\": \"blue\" ])");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: get: index out of range");
+    QVERIFY(evaluate<bool>(model, "items.get(0) === undefined"));
+
+    component.completeCreate();
 }
 
 template<typename T>
