@@ -199,7 +199,7 @@ QDeclarativeListCompositor::iterator &QDeclarativeListCompositor::iterator::oper
 QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator +=(int difference)
 {
     Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag) && (range->flags & (GroupMask | CacheFlag))) {
+    while (!(range->flags & groupFlag)) {
         incrementIndexes(range->count - offset);
         offset = 0;
         range = range->next;
@@ -221,10 +221,10 @@ QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_
 QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator -=(int difference)
 {
     Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag) && (range->flags & (GroupMask | CacheFlag))) {
+    while (!(range->flags & groupFlag) && range->previous->flags) {
         decrementIndexes(offset);
         range = range->previous;
-        offset = range->count;
+        offset = (range->flags & (GroupMask | CacheFlag)) ? range->count : 0;
     }
     decrementIndexes(offset);
     offset -= difference;

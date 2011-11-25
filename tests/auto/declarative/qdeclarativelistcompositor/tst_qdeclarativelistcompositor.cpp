@@ -159,6 +159,7 @@ private slots:
     void setFlags();
     void move_data();
     void move();
+    void moveFromEnd();
     void clear();
     void listItemsInserted_data();
     void listItemsInserted();
@@ -937,6 +938,25 @@ void tst_qdeclarativelistcompositor::move_data()
                 << IndexArray(defaultIndexes) << ListArray(defaultLists)
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray() << ListArray();
+    } { static const int cacheIndexes[] = {0,1};
+        static const void *cacheLists[] = {a,a};
+        static const int defaultIndexes[] = {0,1};
+        static const void *defaultLists[] = {a,a};
+        QTest::newRow("0, 1, 1")
+                << (RangeList()
+                    << Range(a, 0, 1, C::PrependFlag)
+                    << Range(a, 1, 1, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 2, 0, C::AppendFlag | C::PrependFlag)
+                    << Range(a, 0, 1, C::DefaultFlag | C::CacheFlag))
+                << C::Default << 0 << C::Default << 1 << 1
+                << (RemoveList()
+                    << Remove(0, 0, 0, 0, 1, C::DefaultFlag | C::CacheFlag, 0))
+                << (InsertList()
+                    << Insert(0, 0, 1, 1, 1, C::DefaultFlag | C::CacheFlag, 0))
+                << IndexArray(cacheIndexes) << ListArray(cacheLists)
+                << IndexArray(defaultIndexes) << ListArray(defaultLists)
+                << IndexArray() << ListArray()
+                << IndexArray() << ListArray();
     }
 }
 
@@ -1002,6 +1022,33 @@ void tst_qdeclarativelistcompositor::move()
             QCOMPARE(it.modelIndex(), selectionIndexes[i]);
     }
 }
+
+void tst_qdeclarativelistcompositor::moveFromEnd()
+{
+    int listA; void *a = &listA;
+
+    QDeclarativeListCompositor compositor;
+    compositor.append(a, 0, 1, C::AppendFlag | C::PrependFlag | C::DefaultFlag);
+
+    // Moving an item anchors it to that position.
+    compositor.move(C::Default, 0, C::Default, 0, 1);
+
+    // The existing item is anchored at 0 so prepending an item to the source will append it here
+    QVector<C::Insert> inserts;
+    compositor.listItemsInserted(a, 0, 1, &inserts);
+
+    QCOMPARE(inserts.count(), 1);
+    QCOMPARE(inserts.at(0).index[1], 1);
+    QCOMPARE(inserts.at(0).count, 1);
+
+    C::iterator it;
+    it = compositor.find(C::Default, 0);
+    QCOMPARE(it.modelIndex(), 1);
+
+    it = compositor.find(C::Default, 1);
+    QCOMPARE(it.modelIndex(), 0);
+}
+
 void tst_qdeclarativelistcompositor::clear()
 {
     QDeclarativeListCompositor compositor;
