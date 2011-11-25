@@ -326,12 +326,11 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnResize()
     QVERIFY(!mouseRegion->property("emitPositionChanged").toBool());
     QVERIFY(mouseRegion->property("mouseMatchesPos").toBool());
 
-    QCOMPARE(mouseRegion->property("x1").toInt(), 0);
-    QCOMPARE(mouseRegion->property("y1").toInt(), 0);
+    QCOMPARE(mouseRegion->property("x1").toReal(), 0.0);
+    QCOMPARE(mouseRegion->property("y1").toReal(), 0.0);
 
-    // XXX: is it on purpose that mouseX is real and mouse.x is int?
-    QCOMPARE(mouseRegion->property("x2").toInt(), (int) rect->x());
-    QCOMPARE(mouseRegion->property("y2").toInt(), (int) rect->y());
+    QCOMPARE(mouseRegion->property("x2").toReal(), rect->x());
+    QCOMPARE(mouseRegion->property("y2").toReal(), rect->y());
 
     QCOMPARE(mouseRegion->mouseX(), rect->x());
     QCOMPARE(mouseRegion->mouseY(), rect->y());
