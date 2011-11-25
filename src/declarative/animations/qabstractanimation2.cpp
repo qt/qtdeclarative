@@ -263,7 +263,7 @@ void QUnifiedTimer2::unregisterRunningAnimation(QAbstractAnimation2 *animation)
 
     if (animation->m_isPause && runningPauseAnimations.contains(animation)) {
         runningPauseAnimations.removeOne(animation);
-    } else
+    } else if (animations.contains(animation) || animationsToStart.contains(animation))
         runningLeafAnimations--;
     Q_ASSERT(runningLeafAnimations >= 0);
 }
