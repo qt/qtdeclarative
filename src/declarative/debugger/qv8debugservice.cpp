@@ -274,8 +274,7 @@ void QV8DebugService::initialize(bool getCompiledScripts)
         v8::Context::Scope contextScope(debuggerContext);
         v8::Handle<v8::Function> getScriptsFn =
                 v8::Local<v8::Function>::Cast(d->debuggerScript->Get(v8::String::New("getScripts")));
-        v8::Handle<v8::Value> argv[] = {};
-        v8::Handle<v8::Value> result = getScriptsFn->Call(d->debuggerScript, 0, argv);
+        v8::Handle<v8::Value> result = getScriptsFn->Call(d->debuggerScript, 0, 0);
         if (result.IsEmpty())
             return;
 
