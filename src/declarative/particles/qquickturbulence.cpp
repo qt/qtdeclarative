@@ -103,11 +103,6 @@ QQuickTurbulenceAffector::~QQuickTurbulenceAffector()
     }
 }
 
-static qreal magnitude(qreal x, qreal y)
-{
-    return sqrt(x*x + y*y);
-}
-
 void QQuickTurbulenceAffector::initializeGrid()
 {
     if (!m_inited)
