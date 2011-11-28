@@ -73,6 +73,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(VAlignment verticalAlignment READ vAlign WRITE setVAlign NOTIFY verticalAlignmentChanged)
     Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
     Q_PROPERTY(int lineCount READ lineCount NOTIFY lineCountChanged)
+    Q_PROPERTY(int length READ length NOTIFY textChanged)
     Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedSizeChanged)
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedSizeChanged)
     Q_PROPERTY(TextFormat textFormat READ textFormat WRITE setTextFormat NOTIFY textFormatChanged)
@@ -160,6 +161,8 @@ public:
     void setWrapMode(WrapMode w);
 
     int lineCount() const;
+
+    int length() const;
 
     bool isCursorVisible() const;
     void setCursorVisible(bool on);

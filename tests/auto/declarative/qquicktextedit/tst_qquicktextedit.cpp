@@ -314,6 +314,7 @@ void tst_qquicktextedit::text()
 
         QVERIFY(textEditObject != 0);
         QCOMPARE(textEditObject->text(), QString(""));
+        QCOMPARE(textEditObject->length(), 0);
     }
 
     for (int i = 0; i < standard.size(); i++)
@@ -325,6 +326,7 @@ void tst_qquicktextedit::text()
 
         QVERIFY(textEditObject != 0);
         QCOMPARE(textEditObject->text(), standard.at(i));
+        QCOMPARE(textEditObject->length(), standard.at(i).length());
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -341,6 +343,9 @@ void tst_qquicktextedit::text()
         actual.replace(QRegExp("(<[^>]*>)+"),"<>");
         expected.replace(QRegExp("(<[^>]*>)+"),"<>");
         QCOMPARE(actual.simplified(),expected.simplified());
+
+        expected.replace("<>", " ");
+        QCOMPARE(textEditObject->length(), expected.simplified().length());
     }
 }
 
@@ -2738,7 +2743,9 @@ void tst_qquicktextedit::insert()
         QCOMPARE(textEdit->getText(0, expectedText.length()), expectedText);
     } else {
         QCOMPARE(textEdit->text(), expectedText);
+
     }
+    QCOMPARE(textEdit->length(), expectedText.length());
 
     QCOMPARE(textEdit->selectionStart(), expectedSelectionStart);
     QCOMPARE(textEdit->selectionEnd(), expectedSelectionEnd);
@@ -2751,7 +2758,7 @@ void tst_qquicktextedit::insert()
     QEXPECT_FAIL("into reversed selection", "selectionChanged signal isn't emitted on edits within selection", Continue);
     QCOMPARE(selectionSpy.count() > 0, selectionChanged);
     QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
-    QEXPECT_FAIL("into reversed selection", "yeah I don't know", Continue);
+    QEXPECT_FAIL("into reversed selection", "selectionEndChanged signal not emitted", Continue);
     QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
     QCOMPARE(textSpy.count() > 0, text != expectedText);
     QCOMPARE(cursorPositionSpy.count() > 0, cursorPositionChanged);
@@ -2982,6 +2989,7 @@ void tst_qquicktextedit::remove()
     } else {
         QCOMPARE(textEdit->text(), expectedText);
     }
+    QCOMPARE(textEdit->length(), expectedText.length());
 
     if (selectionStart > selectionEnd)  //
         qSwap(selectionStart, selectionEnd);

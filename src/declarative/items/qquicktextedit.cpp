@@ -636,6 +636,25 @@ int QQuickTextEdit::lineCount() const
 }
 
 /*!
+    \qmlproperty int QtQuick2::TextEdit::length
+
+    Returns the total number of plain text characters in the TextEdit item.
+
+    As this number doesn't include any formatting markup it may not be the same as the
+    length of the string returned by the \l text property.
+
+    This property can be faster than querying the length the \l text property as it doesn't
+    require any copying or conversion of the TextEdit's internal string data.
+*/
+
+int QQuickTextEdit::length() const
+{
+    Q_D(const QQuickTextEdit);
+    // QTextDocument::characterCount() includes the terminating null character.
+    return qMax(0, d->document->characterCount() - 1);
+}
+
+/*!
     \qmlproperty real QtQuick2::TextEdit::paintedWidth
 
     Returns the width of the text, including the width past the width
