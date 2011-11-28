@@ -123,8 +123,8 @@ a type; see qmlRegisterModuleApi() for more information.
 
 \section1 QML Type Versioning
 
-In C++ adding a new method or property cannot break old applications.
-In QML, however, new methods and properties can change what a name previously
+In C++ adding a new class, method or property cannot break old applications.
+In QML, however, new elements, methods and properties can change what a name previously
 resolved to to within a scope chain.
 
 For example, consider these two QML files
@@ -189,6 +189,9 @@ qmlRegisterType<QCppItem,1>("MyModule", 1, 1, "CppItem")
 
 \c root is only available when MyModule 1.1 is imported.
 
+For the same reason, new elements introduced in later versions should use the minor version argument of qmlRegisterType.
+
+This feature of the language allows for behavioural changes to be made without breaking existing applications. Consequently QML module authors should always remember to document what changed between minor versions, and QML module users should check that their application still runs correctly before deploying an updated import statement.
 
 \section1 Object and List Property Types
 
