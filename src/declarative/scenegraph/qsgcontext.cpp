@@ -133,7 +133,6 @@ public:
 QSGContext::QSGContext(QObject *parent) :
     QObject(*(new QSGContextPrivate), parent)
 {
-    Q_D(QSGContext);
 }
 
 
