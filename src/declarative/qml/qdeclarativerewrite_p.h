@@ -93,6 +93,7 @@ protected:
 
     void accept(AST::Node *node);
     QString rewrite(QString code, unsigned position, AST::Statement *node);
+    void rewriteCaseStatements(AST::StatementList *statements, bool rewriteTheLastStatement);
 
     virtual bool visit(AST::Block *ast);
     virtual bool visit(AST::ExpressionStatement *ast);
@@ -114,6 +115,8 @@ protected:
 
     virtual bool visit(AST::LocalForEachStatement *ast);
     virtual void endVisit(AST::LocalForEachStatement *ast);
+
+    virtual bool visit(AST::CaseBlock *ast);
 
 private:
     int _inLoop;

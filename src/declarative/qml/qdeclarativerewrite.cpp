@@ -266,6 +266,60 @@ void RewriteBinding::endVisit(AST::LocalForEachStatement *)
     --_inLoop;
 }
 
+bool RewriteBinding::visit(AST::CaseBlock *ast)
+{
+    // Process the initial sequence of the case clauses.
+    for (AST::CaseClauses *it = ast->clauses; it; it = it->next) {
+        // Return the value of the last statement in the block, if this is the last `case clause'
+        // of the switch statement.
+        bool returnTheValueOfLastStatement = (it->next == 0) && (ast->defaultClause == 0) && (ast->moreClauses == 0);
+
+        if (AST::CaseClause *clause = it->clause) {
+            accept(clause->expression);
+            rewriteCaseStatements(clause->statements, returnTheValueOfLastStatement);
+        }
+    }
+
+    // Process the default case clause
+    if (ast->defaultClause) {
+        // Return the value of the last statement in the block, if this is the last `case clause'
+        // of the switch statement.
+        bool rewriteTheLastStatement = (ast->moreClauses == 0);
+
+        rewriteCaseStatements(ast->defaultClause->statements, rewriteTheLastStatement);
+    }
+
+    // Process trailing `case clauses'
+    for (AST::CaseClauses *it = ast->moreClauses; it; it = it->next) {
+        // Return the value of the last statement in the block, if this is the last `case clause'
+        // of the switch statement.
+        bool returnTheValueOfLastStatement = (it->next == 0);
+
+        if (AST::CaseClause *clause = it->clause) {
+            accept(clause->expression);
+            rewriteCaseStatements(clause->statements, returnTheValueOfLastStatement);
+        }
+    }
+
+    return false;
+}
+
+void RewriteBinding::rewriteCaseStatements(AST::StatementList *statements, bool rewriteTheLastStatement)
+{
+    for (AST::StatementList *it = statements; it; it = it->next) {
+        if (it->next && AST::cast<AST::BreakStatement *>(it->next->statement) != 0) {
+            // The value of the first statement followed by a `break'.
+            accept(it->statement);
+            break;
+        } else if (!it->next) {
+            if (rewriteTheLastStatement)
+                accept(it->statement);
+            else if (AST::Block *block = AST::cast<AST::Block *>(it->statement))
+                rewriteCaseStatements(block->statements, rewriteTheLastStatement);
+        }
+    }
+}
+
 QString RewriteSignalHandler::operator()(const QString &code, const QString &name)
 {
     return QStringLiteral("(function ") + name + QStringLiteral("() { ") + code + QStringLiteral(" })");

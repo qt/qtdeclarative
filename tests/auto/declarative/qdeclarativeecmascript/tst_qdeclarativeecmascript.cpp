@@ -232,6 +232,7 @@ private slots:
 
     void automaticSemicolon();
     void unaryExpression();
+    void switchStatement();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -5216,6 +5217,127 @@ void tst_qdeclarativeecmascript::qtbug_22843()
         QVERIFY(object != 0);
         QCOMPARE(warningsSpy.count(), 1 + (expectSyntaxError?1:0));
         delete object;
+    }
+}
+
+
+void tst_qdeclarativeecmascript::switchStatement()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.1.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 4);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 1);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.2.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 4);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.3.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 6);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.4.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 3);
+
+        QString warning = component.url().toString() + ":4: Unable to assign [undefined] to int";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+
+        object->setStringProperty("something else");
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.5.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 1);
     }
 }
 
