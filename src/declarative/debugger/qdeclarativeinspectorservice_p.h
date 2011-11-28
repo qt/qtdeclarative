@@ -85,9 +85,9 @@ protected:
 
 private slots:
     void processMessage(const QByteArray &message);
+    void updateStatus();
 
 private:
-    void updateStatus();
     void loadInspectorPlugins();
 
     QList<QObject*> m_views;

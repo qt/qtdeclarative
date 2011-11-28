@@ -89,7 +89,7 @@ void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
 
 void QDeclarativeInspectorService::statusChanged(Status /*status*/)
 {
-    updateStatus();
+    QMetaObject::invokeMethod(this, "updateStatus", Qt::QueuedConnection);
 }
 
 void QDeclarativeInspectorService::updateStatus()
