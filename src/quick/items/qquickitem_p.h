@@ -141,6 +141,8 @@ public:
     static QQuickItemPrivate* get(QQuickItem *item) { return item->d_func(); }
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
 
+    static void registerAccessorProperties();
+
     QQuickItemPrivate();
     ~QQuickItemPrivate();
     void init(QQuickItem *parent);
@@ -281,6 +283,8 @@ public:
     QSGContext *sceneGraphContext() const { Q_ASSERT(canvas); return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
 
     QQuickItem *parentItem;
+    QDeclarativeNotifier parentNotifier;
+
     QList<QQuickItem *> childItems;
     mutable QList<QQuickItem *> *sortedChildItems;
     QList<QQuickItem *> paintOrderChildItems() const;

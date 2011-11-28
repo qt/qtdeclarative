@@ -69,20 +69,25 @@ class QDeclarativeJavaScriptExpression;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativePropertyPrivate : public QDeclarativeRefCount
 {
 public:
-    enum WriteFlag { BypassInterceptor = 0x01, DontRemoveBinding = 0x02, RemoveBindingOnAliasWrite = 0x04 };
+    enum WriteFlag {
+        BypassInterceptor = 0x01,
+        DontRemoveBinding = 0x02,
+        RemoveBindingOnAliasWrite = 0x04
+    };
     Q_DECLARE_FLAGS(WriteFlags, WriteFlag)
 
-    QDeclarativePropertyPrivate()
-        : context(0), engine(0), object(0), isNameCached(false) {}
-
-    inline QDeclarativeContextData *effectiveContext() const;
     QDeclarativeContextData *context;
     QDeclarativeEngine *engine;
     QDeclarativeGuard<QObject> object;
 
-    bool isNameCached:1;
     QDeclarativePropertyData core;
+
+    bool isNameCached:1;
     QString nameCache;
+
+    QDeclarativePropertyPrivate();
+
+    inline QDeclarativeContextData *effectiveContext() const;
 
     void initProperty(QObject *obj, const QString &name);
     void initDefault(QObject *obj);
@@ -105,18 +110,21 @@ public:
     static bool write(QObject *, const QDeclarativePropertyData &, const QVariant &,
                       QDeclarativeContextData *, WriteFlags flags = 0);
     static void findAliasTarget(QObject *, int, QObject **, int *);
-    static QDeclarativeAbstractBinding *setBinding(QObject *, int coreIndex, int valueTypeIndex /* -1 */,
+    static QDeclarativeAbstractBinding *setBinding(QObject *, int coreIndex,
+                                                   int valueTypeIndex /* -1 */,
                                                    QDeclarativeAbstractBinding *,
                                                    WriteFlags flags = DontRemoveBinding);
-    static QDeclarativeAbstractBinding *setBindingNoEnable(QObject *, int coreIndex, int valueTypeIndex /* -1 */,
+    static QDeclarativeAbstractBinding *setBindingNoEnable(QObject *, int coreIndex,
+                                                           int valueTypeIndex /* -1 */,
                                                            QDeclarativeAbstractBinding *);
-    static QDeclarativeAbstractBinding *binding(QObject *, int coreIndex, int valueTypeIndex /* -1 */);
+    static QDeclarativeAbstractBinding *binding(QObject *, int coreIndex,
+                                                int valueTypeIndex /* -1 */);
 
     static QDeclarativePropertyData saveValueType(const QMetaObject *, int,
                                                   const QMetaObject *, int,
                                                   QDeclarativeEngine *);
-    static QDeclarativeProperty restore(const QDeclarativePropertyData &,
-                                        QObject *,
+    static QDeclarativeProperty restore(QObject *,
+                                        const QDeclarativePropertyData &,
                                         QDeclarativeContextData *);
 
     static bool equal(const QMetaObject *, const QMetaObject *);

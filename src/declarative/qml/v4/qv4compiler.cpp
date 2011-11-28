@@ -46,7 +46,7 @@
 #include "qv4irbuilder_p.h"
 
 #include <private/qdeclarativejsast_p.h>
-#include <private/qdeclarativefastproperties_p.h>
+#include <private/qdeclarativeaccessors_p.h>
 #include <private/qdeclarativejsengine_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -323,7 +323,6 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
             QMetaProperty prop;
             e->property->load(prop, QDeclarativeEnginePrivate::get(engine));
         }
-        int fastFetchIndex = QDeclarativeFastProperties::instance()->accessorIndexForProperty(e->meta, e->property->coreIndex);
 
         const int propTy = e->property->propType;
         QDeclarativeRegisterType regType;
@@ -359,13 +358,13 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
             break;
         } // switch
 
-        if (fastFetchIndex != -1) {
+        if (e->property->hasAccessors()) {
             Instr::FetchAndSubscribe fetch;
             fetch.reg = currentReg;
-            fetch.function = fastFetchIndex;
             fetch.subscription = subscriptionIndex(_subscribeName);
             fetch.exceptionId = exceptionId(e->line, e->column);
             fetch.valueType = regType;
+            fetch.property = *e->property;
             gen(fetch);
         } else {
             if (blockNeedsSubscription(_subscribeName) && e->property->notifyIndex != -1) {

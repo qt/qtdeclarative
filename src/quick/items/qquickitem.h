@@ -146,6 +146,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QDeclarativeParserStatu
 
     Q_ENUMS(TransformOrigin)
     Q_CLASSINFO("DefaultProperty", "data")
+    Q_CLASSINFO("qt_HasQmlAccessors", "true")
 
 public:
     enum Flag {

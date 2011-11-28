@@ -63,14 +63,15 @@
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeEngine;
-class QMetaProperty;
 class QV8Engine;
+class QMetaProperty;
 class QV8QObjectWrapper;
-class QDeclarativePropertyCacheMethodArguments;
+class QDeclarativeEngine;
 class QDeclarativePropertyData;
+class QDeclarativeAccessors;
+class QDeclarativePropertyCacheMethodArguments;
 
-// We have this somewhat aweful split between RawData and Data so that RawData can be
+// We have this somewhat awful split between RawData and Data so that RawData can be
 // used in unions.  In normal code, you should always use Data which initializes RawData
 // to an invalid state on construction.
 class QDeclarativePropertyRawData
@@ -87,29 +88,31 @@ public:
         IsAlias            = 0x00000008, // Is a QML alias to another property
         IsFinal            = 0x00000010, // Has FINAL flag
         IsDirect           = 0x00000020, // Exists on a C++ QMetaObject
+        HasAccessors       = 0x00000040, // Has property accessors
 
         // These are mutualy exclusive
-        IsFunction         = 0x00000040, // Is an invokable
-        IsQObjectDerived   = 0x00000080, // Property type is a QObject* derived type
-        IsEnumType         = 0x00000100, // Property type is an enum
-        IsQList            = 0x00000200, // Property type is a QML list
-        IsQmlBinding       = 0x00000400, // Property type is a QDeclarativeBinding*
-        IsQJSValue         = 0x00000800, // Property type is a QScriptValue
-        IsV8Handle         = 0x00001000, // Property type is a QDeclarativeV8Handle
-        IsVMEProperty      = 0x00002000, // Property type is a "var" property of VMEMO
-        IsValueTypeVirtual = 0x00004000, // Property is a value type "virtual" property
+        IsFunction         = 0x00000080, // Is an invokable
+        IsQObjectDerived   = 0x00000100, // Property type is a QObject* derived type
+        IsEnumType         = 0x00000200, // Property type is an enum
+        IsQList            = 0x00000400, // Property type is a QML list
+        IsQmlBinding       = 0x00000800, // Property type is a QDeclarativeBinding*
+        IsQJSValue         = 0x00001000, // Property type is a QScriptValue
+        IsV8Handle         = 0x00002000, // Property type is a QDeclarativeV8Handle
+        IsVMEProperty      = 0x00004000, // Property type is a "var" property of VMEMO
+        IsValueTypeVirtual = 0x00008000, // Property is a value type "virtual" property
+        IsQVariant         = 0x00010000, // Property is a QVariant
 
         // Apply only to IsFunctions
-        IsVMEFunction      = 0x00008000, // Function was added by QML
-        HasArguments       = 0x00010000, // Function takes arguments
-        IsSignal           = 0x00020000, // Function is a signal
-        IsVMESignal        = 0x00040000, // Signal was added by QML
-        IsV8Function       = 0x00080000, // Function takes QDeclarativeV8Function* args
-        IsSignalHandler    = 0x00100000, // Function is a signal handler
-        IsOverload         = 0x00200000, // Function is an overload of another function
+        IsVMEFunction      = 0x00020000, // Function was added by QML
+        HasArguments       = 0x00040000, // Function takes arguments
+        IsSignal           = 0x00080000, // Function is a signal
+        IsVMESignal        = 0x00100000, // Signal was added by QML
+        IsV8Function       = 0x00200000, // Function takes QDeclarativeV8Function* args
+        IsSignalHandler    = 0x00400000, // Function is a signal handler
+        IsOverload         = 0x00800000, // Function is an overload of another function
 
         // Internal QDeclarativePropertyCache flags
-        NotFullyResolved   = 0x00400000  // True if the type data is to be lazily resolved
+        NotFullyResolved   = 0x01000000  // True if the type data is to be lazily resolved
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -124,6 +127,7 @@ public:
     bool isAlias() const { return flags & IsAlias; }
     bool isFinal() const { return flags & IsFinal; }
     bool isDirect() const { return flags & IsDirect; }
+    bool hasAccessors() const { return flags & HasAccessors; }
     bool isFunction() const { return flags & IsFunction; }
     bool isQObject() const { return flags & IsQObjectDerived; }
     bool isEnum() const { return flags & IsEnumType; }
@@ -133,6 +137,7 @@ public:
     bool isV8Handle() const { return flags & IsV8Handle; }
     bool isVMEProperty() const { return flags & IsVMEProperty; }
     bool isValueTypeVirtual() const { return flags & IsValueTypeVirtual; }
+    bool isQVariant() const { return flags & IsQVariant; }
     bool isVMEFunction() const { return flags & IsVMEFunction; }
     bool hasArguments() const { return flags & HasArguments; }
     bool isSignal() const { return flags & IsSignal; }
@@ -140,6 +145,11 @@ public:
     bool isV8Function() const { return flags & IsV8Function; }
     bool isSignalHandler() const { return flags & IsSignalHandler; }
     bool isOverload() const { return flags & IsOverload; }
+
+    bool hasOverride() const { return !(flags & IsValueTypeVirtual) && overrideIndex >= 0; }
+
+    // Returns -1 if not a value type virtual property
+    inline int getValueTypeCoreIndex() const;
 
     union {
         int propType;             // When !NotFullyResolved
@@ -163,8 +173,14 @@ public:
                                        //proxy object
         };
     };
-    int revision;
-    int metaObjectOffset;
+
+    qint16 revision;
+    qint16 metaObjectOffset;
+
+    struct { // When HasAccessors
+        QDeclarativeAccessors *accessors;
+        intptr_t accessorData;
+    };
 
 private:
     friend class QDeclarativePropertyData;
@@ -186,9 +202,6 @@ public:
     void load(const QMetaMethod &);
     QString name(QObject *);
     QString name(const QMetaObject *);
-
-    // Returns -1 if not a value type virtual property
-    inline int getValueTypeCoreIndex() const;
 
 private:
     friend class QDeclarativePropertyCache;
@@ -215,8 +228,6 @@ public:
                 QDeclarativePropertyData::Flag propertyFlags = QDeclarativePropertyData::NoFlags,
                 QDeclarativePropertyData::Flag methodFlags = QDeclarativePropertyData::NoFlags,
                 QDeclarativePropertyData::Flag signalFlags = QDeclarativePropertyData::NoFlags);
-
-    static QDeclarativePropertyData create(const QMetaObject *, const QString &);
 
     inline QDeclarativePropertyData *property(const QHashedV8String &) const;
     QDeclarativePropertyData *property(const QHashedStringRef &) const;
@@ -282,6 +293,8 @@ QDeclarativePropertyData::QDeclarativePropertyData()
     overrideIndex = -1;
     revision = 0;
     metaObjectOffset = -1; 
+    accessors = 0;
+    accessorData = 0;
     flags = 0;
 }
 
@@ -302,7 +315,7 @@ bool QDeclarativePropertyData::operator==(const QDeclarativePropertyRawData &oth
              valueTypePropType == other.valueTypePropType));
 }
 
-int QDeclarativePropertyData::getValueTypeCoreIndex() const
+int QDeclarativePropertyRawData::getValueTypeCoreIndex() const
 {
     return isValueTypeVirtual()?valueTypeCoreIndex:-1;
 }
@@ -310,7 +323,7 @@ int QDeclarativePropertyData::getValueTypeCoreIndex() const
 QDeclarativePropertyData *
 QDeclarativePropertyCache::overrideData(QDeclarativePropertyData *data) const
 {
-    if (data->overrideIndex < 0)
+    if (!data->hasOverride())
         return 0;
 
     if (data->overrideIndexIsProperty)

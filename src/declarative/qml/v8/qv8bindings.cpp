@@ -122,7 +122,7 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         ep->dereferenceScarceResources(); 
 
     } else {
-        QDeclarativeProperty p = QDeclarativePropertyPrivate::restore(property, object, context);
+        QDeclarativeProperty p = QDeclarativePropertyPrivate::restore(object, property, context);
         QDeclarativeBindingPrivate::printBindingLoopError(p);
     }
 }

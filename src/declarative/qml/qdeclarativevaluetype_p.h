@@ -79,10 +79,12 @@ public:
     virtual void read(QObject *, int) = 0;
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags flags) = 0;
     virtual QVariant value() = 0;
-    virtual void setValue(QVariant) = 0;
+    virtual void setValue(const QVariant &) = 0;
 
     virtual QString toString() const = 0;
     virtual bool isEqual(const QVariant &value) const = 0;
+
+    inline void onLoad();
 };
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeValueTypeFactory
@@ -117,7 +119,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -142,7 +144,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -167,7 +169,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -192,7 +194,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -219,7 +221,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -251,7 +253,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -280,7 +282,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -305,7 +307,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -333,7 +335,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -363,7 +365,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -405,7 +407,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -490,7 +492,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -546,7 +548,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -586,6 +588,7 @@ public:
     qreal wordSpacing() const;
     void setWordSpacing(qreal spacing);
 
+    void onLoad();
 private:
     QFont font;
     bool pixelSizeSet;
@@ -606,7 +609,7 @@ public:
     virtual void read(QObject *, int);
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
-    virtual void setValue(QVariant value);
+    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
     virtual bool isEqual(const QVariant &value) const;
 
@@ -622,6 +625,10 @@ public:
 private:
     QColor color;
 };
+
+void QDeclarativeValueType::onLoad()
+{
+}
 
 QT_END_NAMESPACE
 

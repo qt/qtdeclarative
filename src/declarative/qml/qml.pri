@@ -29,7 +29,7 @@ SOURCES += \
     $$PWD/qdeclarativescript.cpp \
     $$PWD/qdeclarativerewrite.cpp \
     $$PWD/qdeclarativevaluetype.cpp \
-    $$PWD/qdeclarativefastproperties.cpp \
+    $$PWD/qdeclarativeaccessors.cpp \
     $$PWD/qdeclarativexmlhttprequest.cpp \
     $$PWD/qdeclarativesqldatabase.cpp \
     $$PWD/qdeclarativewatcher.cpp \
@@ -95,7 +95,7 @@ HEADERS += \
     $$PWD/qdeclarativescript_p.h \
     $$PWD/qdeclarativerewrite_p.h \
     $$PWD/qdeclarativevaluetype_p.h \
-    $$PWD/qdeclarativefastproperties_p.h \
+    $$PWD/qdeclarativeaccessors_p.h \
     $$PWD/qdeclarativexmlhttprequest_p.h \
     $$PWD/qdeclarativesqldatabase_p.h \
     $$PWD/qdeclarativewatcher_p.h \

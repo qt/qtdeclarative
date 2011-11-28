@@ -216,10 +216,6 @@ public:
         return item->d_func();
     }
 
-    // Accelerated property accessors
-    QDeclarativeNotifier parentNotifier;
-    static void parentProperty(QObject *o, void *rv, QDeclarativeNotifierEndpoint *e);
-
     QDeclarative1Anchors *anchors() {
         if (!_anchors) {
             Q_Q(QDeclarativeItem);

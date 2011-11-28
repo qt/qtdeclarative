@@ -58,6 +58,8 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qvarlengtharray.h>
 
+#include <private/qdeclarativepropertycache_p.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -166,6 +168,9 @@ QT_BEGIN_NAMESPACE
 #  define QML_V4_INSTR_HEADER quint8 type;
 #endif
 
+class QObject;
+class QDeclarativeNotifier;
+
 namespace QDeclarativeJS {
 
 union V4Instr {
@@ -232,7 +237,7 @@ union V4Instr {
         quint8 exceptionId;
         quint8 valueType;
         quint16 subscription;
-        quint16 function;
+        QDeclarativePropertyRawData property;
     };
 
     struct instr_fetch{

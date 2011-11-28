@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/private/qdeclarativefastproperties_p.h>
 #include <QtQuick1/qdeclarativeitem.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 #include <QtQuick1/private/qdeclarativeutilmodule_p.h>
@@ -51,9 +50,6 @@ QT_BEGIN_NAMESPACE
 
 void QDeclarativeQtQuick1Module::defineModule(QDeclarativeQtQuick1Module::Module module)
 {
-    QDeclarativeFastProperties::instance()->add(&QDeclarativeItem::staticMetaObject,
-                                QDeclarativeItem::staticMetaObject.indexOfProperty("parent"),
-                                QDeclarativeItemPrivate::parentProperty);
     if (module == QtQuick1)
         qmlRegisterBaseTypes("QtQuick", 1, 0);
     else if (module == Qt47)

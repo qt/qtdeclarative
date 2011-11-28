@@ -1986,14 +1986,6 @@ void QDeclarativeItemPrivate::transform_clear(QDeclarativeListProperty<QGraphics
     }
 }
 
-void QDeclarativeItemPrivate::parentProperty(QObject *o, void *rv, QDeclarativeNotifierEndpoint *e)
-{
-    QDeclarativeItem *item = static_cast<QDeclarativeItem*>(o);
-    if (e)
-        e->connect(&item->d_func()->parentNotifier);
-    *((QDeclarativeItem **)rv) = item->parentItem();
-}
-
 /*!
     \qmlproperty list<Object> QtQuick1::Item::data
     \default
@@ -3101,7 +3093,6 @@ QVariant QDeclarativeItem::itemChange(GraphicsItemChange change,
     case ItemParentHasChanged:
         d->resolveLayoutMirror();
         emit parentChanged(parentItem());
-        d->parentNotifier.notify();
         break;
     case ItemVisibleHasChanged: {
             for(int ii = 0; ii < d->changeListeners.count(); ++ii) {
