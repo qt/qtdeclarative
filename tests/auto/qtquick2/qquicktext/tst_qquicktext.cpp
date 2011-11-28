@@ -107,6 +107,12 @@ private slots:
 
     void lineLaidOut();
 
+    void imgTagsAlign_data();
+    void imgTagsAlign();
+    void imgTagsMultipleImages();
+    void imgTagsElide();
+    void imgTagsUpdates();
+    void imgTagsError();
 
 private:
     QStringList standard;
@@ -1476,6 +1482,120 @@ void tst_qquicktext::lineLaidOut()
     }
 
     delete canvas;
+}
+
+void tst_qquicktext::imgTagsAlign_data()
+{
+    QTest::addColumn<QString>("src");
+    QTest::addColumn<int>("imgHeight");
+    QTest::addColumn<QString>("align");
+    QTest::newRow("heart-bottom") << "data/images/heart200.png" << 181 <<  "bottom";
+    QTest::newRow("heart-middle") << "data/images/heart200.png" << 181 <<  "middle";
+    QTest::newRow("heart-top") << "data/images/heart200.png" << 181 <<  "top";
+    QTest::newRow("starfish-bottom") << "data/images/starfish_2.png" << 217 <<  "bottom";
+    QTest::newRow("starfish-middle") << "data/images/starfish_2.png" << 217 <<  "middle";
+    QTest::newRow("starfish-top") << "data/images/starfish_2.png" << 217 <<  "top";
+}
+
+void tst_qquicktext::imgTagsAlign()
+{
+    QFETCH(QString, src);
+    QFETCH(int, imgHeight);
+    QFETCH(QString, align);
+    QString componentStr = "import QtQuick 2.0\nText { text: \"This is a test <img src=\\\"" + src + "\\\" align=\\\"" + align + "\\\"> of image.\" }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+    QVERIFY(textObject != 0);
+    QVERIFY(textObject->height() == imgHeight);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
+    QVERIFY(textPrivate != 0);
+
+    QRectF br = textPrivate->layout.boundingRect();
+    if (align == "bottom")
+        QVERIFY(br.y() == imgHeight - br.height());
+    else if (align == "middle")
+        QVERIFY(br.y() == imgHeight / 2.0 - br.height() / 2.0);
+    else if (align == "top")
+        QVERIFY(br.y() == 0);
+
+    delete textObject;
+}
+
+void tst_qquicktext::imgTagsMultipleImages()
+{
+    QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"data/images/starfish_2.png\\\" width=\\\"60\\\" height=\\\"60\\\" > and another one<img src=\\\"data/images/heart200.png\\\" width=\\\"85\\\" height=\\\"85\\\">.\" }";
+
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+    QVERIFY(textObject != 0);
+    QVERIFY(textObject->height() == 85);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
+    QVERIFY(textPrivate != 0);
+    QVERIFY(textPrivate->visibleImgTags.count() == 2);
+
+    delete textObject;
+}
+
+void tst_qquicktext::imgTagsElide()
+{
+    QQuickView *canvas = createView(testFile("imgTagsElide.qml"));
+    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(myText != 0);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QVERIFY(textPrivate != 0);
+    QVERIFY(textPrivate->visibleImgTags.count() == 0);
+    myText->setMaximumLineCount(20);
+    QTRY_VERIFY(textPrivate->visibleImgTags.count() == 1);
+
+    delete myText;
+    delete canvas;
+}
+
+void tst_qquicktext::imgTagsUpdates()
+{
+    QQuickView *canvas = createView(testFile("imgTagsUpdates.qml"));
+    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(myText != 0);
+
+    QSignalSpy spy(myText, SIGNAL(paintedSizeChanged()));
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QVERIFY(textPrivate != 0);
+
+    myText->setText("This is a heart<img src=\"images/heart200.png\">.");
+    QVERIFY(textPrivate->visibleImgTags.count() == 1);
+    QVERIFY(spy.count() == 1);
+
+    myText->setMaximumLineCount(2);
+    myText->setText("This is another heart<img src=\"images/heart200.png\">.");
+    QTRY_VERIFY(textPrivate->visibleImgTags.count() == 1);
+
+    // if maximumLineCount is set and the img tag doesn't have an explicit size
+    // we relayout twice.
+    QVERIFY(spy.count() == 3);
+
+    delete myText;
+    delete canvas;
+}
+
+void tst_qquicktext::imgTagsError()
+{
+    QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"data/images/starfish_2.pn\\\" width=\\\"60\\\" height=\\\"60\\\">.\" }";
+
+    QDeclarativeComponent textComponent(&engine);
+    QTest::ignoreMessage(QtWarningMsg, "file::2:1: QML Text: Cannot open: file:data/images/starfish_2.pn");
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+    QVERIFY(textObject != 0);
+    delete textObject;
 }
 
 QTEST_MAIN(tst_qquicktext)

@@ -42,23 +42,55 @@
 #ifndef QDECLARATIVESTYLEDTEXT_H
 #define QDECLARATIVESTYLEDTEXT_H
 
-#include <QSizeF>
+#include <QSize>
+#include <QPointF>
+#include <QList>
+#include <QUrl>
+#include <QtQuick/private/qdeclarativepixmapcache_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QPainter;
-class QPointF;
-class QString;
+class QDeclarativeStyledTextImgTag;
 class QDeclarativeStyledTextPrivate;
-class QTextLayout;
+class QString;
+class QDeclarativeContext;
+
+class Q_AUTOTEST_EXPORT QDeclarativeStyledTextImgTag
+{
+public:
+    QDeclarativeStyledTextImgTag()
+        : position(0), align(QDeclarativeStyledTextImgTag::Bottom), pix(0)
+    { }
+
+    ~QDeclarativeStyledTextImgTag() { delete pix; }
+
+    enum Align {
+        Bottom,
+        Middle,
+        Top
+    };
+
+    QUrl url;
+    QPointF pos;
+    QSize size;
+    int position;
+    Align align;
+    QDeclarativePixmap *pix;
+};
 
 class Q_AUTOTEST_EXPORT QDeclarativeStyledText
 {
 public:
-    static void parse(const QString &string, QTextLayout &layout);
+    static void parse(const QString &string, QTextLayout &layout,
+                      QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                      QDeclarativeContext *context,
+                      bool preloadImages);
 
 private:
-    QDeclarativeStyledText(const QString &string, QTextLayout &layout);
+    QDeclarativeStyledText(const QString &string, QTextLayout &layout,
+                           QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                           QDeclarativeContext *context,
+                           bool preloadImages);
     ~QDeclarativeStyledText();
 
     QDeclarativeStyledTextPrivate *d;

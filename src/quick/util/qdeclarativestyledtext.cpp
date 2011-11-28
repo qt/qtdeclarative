@@ -46,6 +46,7 @@
 #include <QDebug>
 #include <qmath.h>
 #include "qdeclarativestyledtext_p.h"
+#include <QDeclarativeContext>
 
 /*
     QDeclarativeStyledText supports few tags:
@@ -61,6 +62,7 @@
     <a href=""> - anchor
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
     <pre></pre> - preformated
+    <img src=""> - images
 
     The opening and closing tags must be correctly nested.
 */
@@ -79,9 +81,12 @@ public:
         ListFormat format;
     };
 
-    QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l)
-        : text(t), layout(l), baseFont(layout.font()), hasNewLine(false)
-        , preFormat(false), prependSpace(false), hasSpace(true)
+    QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l,
+                                  QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                                  QDeclarativeContext *context,
+                                  bool preloadImages)
+        : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), hasNewLine(false), nbImages(0), updateImagePositions(false)
+        , preFormat(false), prependSpace(false), hasSpace(true), preloadImages(preloadImages), context(context)
     {
     }
 
@@ -94,6 +99,7 @@ public:
     bool parseOrderedListAttributes(const QChar *&ch, const QString &textIn);
     bool parseUnorderedListAttributes(const QChar *&ch, const QString &textIn);
     bool parseAnchorAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format);
+    void parseImageAttributes(const QChar *&ch, const QString &textIn, QString &textOut);
     QPair<QStringRef,QStringRef> parseAttribute(const QChar *&ch, const QString &textIn);
     QStringRef parseValue(const QChar *&ch, const QString &textIn);
 
@@ -108,12 +114,17 @@ public:
 
     QString text;
     QTextLayout &layout;
+    QList<QDeclarativeStyledTextImgTag*> *imgTags;
     QFont baseFont;
     QStack<List> listStack;
     bool hasNewLine;
+    int nbImages;
+    bool updateImagePositions;
     bool preFormat;
     bool prependSpace;
     bool hasSpace;
+    bool preloadImages;
+    QDeclarativeContext *context;
 
     static const QChar lessThan;
     static const QChar greaterThan;
@@ -143,8 +154,10 @@ const QChar QDeclarativeStyledTextPrivate::square(0x25a1);
 const QChar QDeclarativeStyledTextPrivate::lineFeed(QLatin1Char('\n'));
 const QChar QDeclarativeStyledTextPrivate::space(QLatin1Char(' '));
 
-QDeclarativeStyledText::QDeclarativeStyledText(const QString &string, QTextLayout &layout)
-: d(new QDeclarativeStyledTextPrivate(string, layout))
+QDeclarativeStyledText::QDeclarativeStyledText(const QString &string, QTextLayout &layout,
+                                               QList<QDeclarativeStyledTextImgTag*> &imgTags, QDeclarativeContext *context,
+                                               bool preloadImages)
+    : d(new QDeclarativeStyledTextPrivate(string, layout, imgTags, context, preloadImages))
 {
 }
 
@@ -153,11 +166,13 @@ QDeclarativeStyledText::~QDeclarativeStyledText()
     delete d;
 }
 
-void QDeclarativeStyledText::parse(const QString &string, QTextLayout &layout)
+void QDeclarativeStyledText::parse(const QString &string, QTextLayout &layout,
+                                   QList<QDeclarativeStyledTextImgTag*> &imgTags, QDeclarativeContext *context,
+                                   bool preloadImages)
 {
     if (string.isEmpty())
         return;
-    QDeclarativeStyledText styledText(string, layout);
+    QDeclarativeStyledText styledText(string, layout, imgTags, context, preloadImages);
     styledText.d->parse();
 }
 
@@ -168,6 +183,8 @@ void QDeclarativeStyledTextPrivate::parse()
 
     QString drawText;
     drawText.reserve(text.count());
+
+    updateImagePositions = !imgTags->isEmpty();
 
     int textStart = 0;
     int textLength = 0;
@@ -401,6 +418,10 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
             if (tag == QLatin1String("a")) {
                 return parseAnchorAttributes(ch, textIn, format);
             }
+            if (tag == QLatin1String("img")) {
+                parseImageAttributes(ch, textIn, textOut);
+                return false;
+            }
             if (*ch == greaterThan || ch->isNull())
                 continue;
         } else if (*ch != slash) {
@@ -604,6 +625,69 @@ bool QDeclarativeStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, cons
     } while (!ch->isNull() && !attr.first.isEmpty());
 
     return valid;
+}
+
+void QDeclarativeStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QString &textIn, QString &textOut)
+{
+    qreal imgWidth = 0.0;
+
+    if (!updateImagePositions) {
+        QDeclarativeStyledTextImgTag *image = new QDeclarativeStyledTextImgTag;
+        image->position = textOut.length() + 1;
+
+        QPair<QStringRef,QStringRef> attr;
+        do {
+            attr = parseAttribute(ch, textIn);
+            if (attr.first == QLatin1String("src")) {
+                image->url =  QUrl(attr.second.toString());
+            } else if (attr.first == QLatin1String("width")) {
+                image->size.setWidth(attr.second.toString().toInt());
+            } else if (attr.first == QLatin1String("height")) {
+                image->size.setHeight(attr.second.toString().toInt());
+            } else if (attr.first == QLatin1String("align")) {
+                if (attr.second.toString() == QLatin1String("top")) {
+                    image->align = QDeclarativeStyledTextImgTag::Top;
+                } else if (attr.second.toString() == QLatin1String("middle")) {
+                    image->align = QDeclarativeStyledTextImgTag::Middle;
+                }
+            }
+        } while (!ch->isNull() && !attr.first.isEmpty());
+
+        if (preloadImages && !image->size.isValid()) {
+            // if we don't know its size but the image is a local image,
+            // we load it in the pixmap cache and save its implicit size
+            // to avoid a relayout later on.
+            QUrl url = context->resolvedUrl(image->url);
+            if (url.isLocalFile()) {
+                QDeclarativePixmap *pix = new QDeclarativePixmap(context->engine(), url, image->size);
+                if (pix && pix->isReady()) {
+                    image->size = pix->implicitSize();
+                    image->pix = pix;
+                }
+            }
+        }
+
+        imgWidth = image->size.width();
+        imgTags->append(image);
+
+    } else {
+        // if we already have a list of img tags for this text
+        // we only want to update the positions of these tags.
+        QDeclarativeStyledTextImgTag *image = imgTags->value(nbImages);
+        image->position = textOut.length() + 1;
+        imgWidth = image->size.width();
+        QPair<QStringRef,QStringRef> attr;
+        do {
+            attr = parseAttribute(ch, textIn);
+        } while (!ch->isNull() && !attr.first.isEmpty());
+        nbImages++;
+    }
+
+    QFontMetricsF fm(layout.font());
+    QString padding(qFloor(imgWidth / fm.width(QChar::Nbsp)), QChar::Nbsp);
+    textOut += QChar(' ');
+    textOut += padding;
+    textOut += QChar(' ');
 }
 
 QPair<QStringRef,QStringRef> QDeclarativeStyledTextPrivate::parseAttribute(const QChar *&ch, const QString &textIn)

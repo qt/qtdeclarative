@@ -60,6 +60,7 @@
 #include <QtDeclarative/qdeclarative.h>
 #include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qtextlayout.h>
+#include <private/qdeclarativestyledtext_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +83,7 @@ public:
     void mirrorChange();
     QTextDocument *textDocument();
     bool isLineLaidOutConnected();
+    void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
 
     QString text;
     QUrl baseUrl;
@@ -127,6 +129,7 @@ public:
     bool richTextAsImage:1;
     bool textureImageCacheDirty:1;
     bool textHasChanged:1;
+    bool needToUpdateLayout:1;
 
     QRect layedOutTextRect;
     QSize paintedSize;
@@ -167,6 +170,10 @@ public:
         UpdatePaintNode
     };
     UpdateType updateType;
+
+    QList<QDeclarativeStyledTextImgTag*> imgTags;
+    QList<QDeclarativeStyledTextImgTag*> visibleImgTags;
+    int nbActiveDownloads;
 
 #if defined(Q_OS_MAC)
     QList<QRectF> linesRects;

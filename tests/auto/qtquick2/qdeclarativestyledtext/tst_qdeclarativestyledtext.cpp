@@ -41,7 +41,8 @@
 #include <qtest.h>
 #include <QtTest/QtTest>
 #include <QtGui/QTextLayout>
-#include <private/qdeclarativestyledtext_p.h>
+#include <QtCore/QList>
+#include <QtQuick/private/qdeclarativestyledtext_p.h>
 
 class tst_qdeclarativestyledtext : public QObject
 {
@@ -148,6 +149,7 @@ void tst_qdeclarativestyledtext::textOutput_data()
     QTest::newRow("space before bold") << "this is <b>bold</b>" << "this is bold" << (FormatList() << Format(Format::Bold, 8, 4));
     QTest::newRow("space leading bold") << "this is<b> bold</b>" << "this is bold" << (FormatList() << Format(Format::Bold, 7, 5));
     QTest::newRow("space trailing bold") << "this is <b>bold </b>" << "this is bold " << (FormatList() << Format(Format::Bold, 8, 5));
+    QTest::newRow("img") << "a<img src=\"blah.png\"/>b" << "a  b" << FormatList();
 }
 
 void tst_qdeclarativestyledtext::textOutput()
@@ -157,7 +159,8 @@ void tst_qdeclarativestyledtext::textOutput()
     QFETCH(FormatList, formats);
 
     QTextLayout layout;
-    QDeclarativeStyledText::parse(input, layout);
+    QList<QDeclarativeStyledTextImgTag*> imgTags;
+    QDeclarativeStyledText::parse(input, layout, imgTags, 0, false);
 
     QCOMPARE(layout.text(), output);
 

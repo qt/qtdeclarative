@@ -58,11 +58,12 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qinputpanel.h>
 
-#include <private/qdeclarativestyledtext_p.h>
 #include <QtQuick/private/qdeclarativepixmapcache_p.h>
 
 #include <qmath.h>
 #include <limits.h>
+
+DEFINE_BOOL_CONFIG_OPTION(qmlTextDebug, QML_TEXT_DEBUG)
 
 QT_BEGIN_NAMESPACE
 
@@ -85,12 +86,12 @@ QQuickTextPrivate::QQuickTextPrivate()
   disableDistanceField(false), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), textHasChanged(true),
-  naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull), updateType(UpdatePaintNode)
+  needToUpdateLayout(false), naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull),
+  updateType(UpdatePaintNode), nbActiveDownloads(0)
 
 #if defined(Q_OS_MAC)
 , layoutThread(0), paintingThread(0)
 #endif
-
 {
     cacheAllTextAsImage = enableImageCache();
     disableDistanceField = qmlDisableDistanceField();
@@ -266,6 +267,8 @@ QQuickTextPrivate::~QQuickTextPrivate()
     delete elipsisLayout;
     delete textLine; textLine = 0;
     delete imageCache;
+    qDeleteAll(imgTags);
+    imgTags.clear();
 }
 
 qreal QQuickTextPrivate::getImplicitWidth() const
@@ -295,6 +298,11 @@ void QQuickTextPrivate::updateLayout()
     }
     updateOnComponentComplete = false;
     layoutTextElided = false;
+
+    if (!visibleImgTags.isEmpty())
+        visibleImgTags.clear();
+    needToUpdateLayout = false;
+
     // Setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
         if (elipsisLayout) {
@@ -329,7 +337,7 @@ void QQuickTextPrivate::updateLayout()
         } else {
             singleline = false;
             if (textHasChanged) {
-                QDeclarativeStyledText::parse(text, layout);
+                QDeclarativeStyledText::parse(text, layout, imgTags, qmlContext(q), !maximumLineCountValid);
                 textHasChanged = false;
             }
         }
@@ -346,6 +354,41 @@ void QQuickTextPrivate::updateLayout()
     }
 
     updateSize();
+
+    if (needToUpdateLayout) {
+        needToUpdateLayout = false;
+        textHasChanged = true;
+        updateLayout();
+    }
+}
+
+void QQuickText::imageDownloadFinished()
+{
+    Q_D(QQuickText);
+
+    (d->nbActiveDownloads)--;
+
+    // when all the remote images have been downloaded,
+    // if one of the sizes was not specified at parsing time
+    // we use the implicit size from pixmapcache and re-layout.
+
+    if (d->nbActiveDownloads == 0) {
+        bool needToUpdateLayout = false;
+        foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
+            if (!img->size.isValid()) {
+                img->size = img->pix->implicitSize();
+                needToUpdateLayout = true;
+            }
+        }
+
+        if (needToUpdateLayout) {
+            d->textHasChanged = true;
+            d->updateLayout();
+        } else {
+            d->updateType = QQuickTextPrivate::UpdatePaintNode;
+            update();
+        }
+    }
 }
 
 void QQuickTextPrivate::updateSize()
@@ -659,6 +702,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         lineWidth = INT_MAX;
     int linesLeft = maximumLineCount;
     int visibleTextLength = 0;
+
     forever {
         QTextLine line = layout.createLine();
         if (!line.isValid())
@@ -667,13 +711,10 @@ QRect QQuickTextPrivate::setupTextLayout()
         visibleCount++;
 
         qreal preLayoutHeight = height;
-        if (customLayout) {
+        if (customLayout)
             setupCustomLineGeometry(line, height);
-        } else if (lineWidth) {
-            line.setLineWidth(lineWidth);
-            line.setPosition(QPointF(line.position().x(), height));
-            height += (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : line.height() * lineHeight;
-        }
+        else if (lineWidth)
+            setLineGeometry(line, lineWidth, height);
 
         bool elide = false;
         if (multilineElideEnabled && q->heightValid() && height > q->height()) {
@@ -682,7 +723,7 @@ QRect QQuickTextPrivate::setupTextLayout()
             if (visibleCount > 1) {
                 --visibleCount;
                 height = preLayoutHeight;
-                line.setLineWidth(0.0);
+                setLineGeometry(line, 0.0, height);
                 line.setPosition(QPointF(FLT_MAX,FLT_MAX));
                 line = layout.lineAt(visibleCount-1);
             }
@@ -693,13 +734,14 @@ QRect QQuickTextPrivate::setupTextLayout()
         if (elide || (maximumLineCountValid && --linesLeft == 0)) {
             if (visibleTextLength < text.length()) {
                 truncate = true;
+                height = preLayoutHeight;
                 if (multilineElideEnabled) {
                     qreal elideWidth = fm.width(elideChar);
                     // Need to correct for alignment
                     if (customLayout)
                         setupCustomLineGeometry(line, height, elideWidth);
                     else
-                        line.setLineWidth(lineWidth - elideWidth);
+                        setLineGeometry(line, lineWidth - elideWidth, height);
                     if (layout.text().mid(line.textStart(), line.textLength()).isRightToLeft()) {
                         line.setPosition(QPointF(line.position().x() + elideWidth, line.position().y()));
                         elidePos.setX(line.naturalTextRect().left() - elideWidth);
@@ -722,6 +764,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         br = br.united(line.naturalTextRect());
     }
     layout.endLayout();
+    br.moveTop(0);
 
     //Update truncated
     if (truncated != truncate) {
@@ -740,8 +783,69 @@ QRect QQuickTextPrivate::setupTextLayout()
         lineCount = visibleCount;
         emit q->lineCountChanged();
     }
-
     return QRect(qRound(br.x()), qRound(br.y()), qCeil(br.width()), qCeil(br.height()));
+}
+
+void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height)
+{
+    Q_Q(QQuickText);
+    line.setLineWidth(lineWidth);
+
+    if (imgTags.isEmpty()) {
+        line.setPosition(QPointF(line.position().x(), height));
+        height += (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : line.height() * lineHeight;
+        return;
+    }
+
+    qreal textTop = 0;
+    qreal textHeight = line.height();
+    qreal totalLineHeight = textHeight;
+
+    QList<QDeclarativeStyledTextImgTag *> imagesInLine;
+
+    foreach (QDeclarativeStyledTextImgTag *image, imgTags) {
+        if (image->position >= line.textStart() &&
+            image->position < line.textStart() + line.textLength()) {
+
+            if (!image->pix) {
+                QUrl url = qmlContext(q)->resolvedUrl(image->url);
+                image->pix = new QDeclarativePixmap(qmlEngine(q), url, image->size);
+                if (image->pix->isLoading()) {
+                    image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
+                    nbActiveDownloads++;
+                } else if (image->pix->isReady()) {
+                    if (!image->size.isValid()) {
+                        image->size = image->pix->implicitSize();
+                        // if the size of the image was not explicitly set, we need to
+                        // call updateLayout() once again.
+                        needToUpdateLayout = true;
+                    }
+                } else if (image->pix->isError()) {
+                    qmlInfo(q) << image->pix->error();
+                }
+            }
+
+            qreal ih = qreal(image->size.height());
+            if (image->align == QDeclarativeStyledTextImgTag::Top)
+                image->pos.setY(0);
+            else if (image->align == QDeclarativeStyledTextImgTag::Middle)
+                image->pos.setY((textHeight / 2.0) - (ih / 2.0));
+            else
+                image->pos.setY(textHeight - ih);
+            imagesInLine << image;
+            textTop = qMax(textTop, qAbs(image->pos.y()));
+        }
+    }
+
+    foreach (QDeclarativeStyledTextImgTag *image, imagesInLine) {
+        totalLineHeight = qMax(totalLineHeight, textTop + image->pos.y() + image->size.height());
+        image->pos.setX(line.cursorToX(image->position));
+        image->pos.setY(image->pos.y() + height + textTop);
+        visibleImgTags << image;
+    }
+
+    line.setPosition(QPointF(line.position().x(), height + textTop));
+    height += (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : totalLineHeight * lineHeight;
 }
 
 /*!
@@ -1251,6 +1355,8 @@ void QQuickText::setText(const QString &n)
         d->determineHorizontalAlignment();
     }
     d->textHasChanged = true;
+    qDeleteAll(d->imgTags);
+    d->imgTags.clear();
     d->updateLayout();
     emit textChanged(d->text);
 }
@@ -1629,6 +1735,7 @@ void QQuickText::resetMaximumLineCount()
     <font color="color_name" size="1-7"></font>
     <h1> to <h6> - headers
     <a href=""> - anchor
+    <img src="" align="top,middle,bottom" width="" height=""> - inline images
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
     <pre></pre> - preformatted
     &gt; &lt; &amp;
@@ -1947,6 +2054,24 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
                 node->addTextLayout(QPoint(0, bounds.y()), d->elipsisLayout, d->color, d->style, d->styleColor);
         }
 
+        foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
+            if (qmlTextDebug()) {
+                QSGRectangleNode *rectangle = d->sceneGraphContext()->createRectangleNode();
+                rectangle->setRect(QRectF(img->pos.x(), img->pos.y() + bounds.y(),img->size.width(), img->size.height()));
+                rectangle->setColor(QColor("red"));
+                rectangle->update();
+                node->appendChildNode(rectangle);
+            }
+            QDeclarativePixmap *pix = img->pix;
+            if (pix && pix->isReady()) {
+                QSGTexture *texture = d->sceneGraphContext()->textureForFactory(pix->textureFactory());
+                QSGImageNode *imgnode = d->sceneGraphContext()->createImageNode();
+                imgnode->setTexture(texture);
+                imgnode->setTargetRect(QRectF(img->pos.x(), img->pos.y() + bounds.y(), pix->width(), pix->height()));
+                node->appendChildNode(imgnode);
+                imgnode->update();
+            }
+        }
         return node;
     }
 }

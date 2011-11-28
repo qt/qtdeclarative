@@ -44,9 +44,7 @@
 #define QQUICKTEXT_P_H
 
 #include "qquickimplicitsizeitem_p.h"
-
 #include <private/qtquickglobal_p.h>
-
 #include <QtGui/qtextoption.h>
 
 QT_BEGIN_HEADER
@@ -212,6 +210,7 @@ protected:
 private Q_SLOTS:
     void q_imagesLoaded();
     void triggerPreprocess();
+    void imageDownloadFinished();
 
 private:
     Q_DISABLE_COPY(QQuickText)
