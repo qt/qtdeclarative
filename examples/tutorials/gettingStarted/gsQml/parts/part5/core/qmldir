@@ -6,8 +6,6 @@ TextEditor ./TextEditor.qml
 EditMenu ./EditMenu.qml
 MenuBar ./MenuBar.qml
 
-plugin FileDialog ../plugins
-
 
 
 

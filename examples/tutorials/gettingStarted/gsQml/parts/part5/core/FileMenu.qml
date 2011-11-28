@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 1.0
+import "../filedialog" 1.0
 
 Rectangle {
     id: fileMenu
