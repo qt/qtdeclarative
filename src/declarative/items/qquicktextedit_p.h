@@ -218,6 +218,7 @@ public:
     bool isInputMethodComposing() const;
 
     Q_INVOKABLE QString getText(int start, int end) const;
+    Q_INVOKABLE QString getFormattedText(int start, int end) const;
 
 Q_SIGNALS:
     void textChanged(const QString &);

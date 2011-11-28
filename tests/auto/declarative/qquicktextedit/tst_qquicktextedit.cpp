@@ -159,6 +159,8 @@ private slots:
 
     void getText_data();
     void getText();
+    void getFormattedText_data();
+    void getFormattedText();
     void insert_data();
     void insert();
     void remove_data();
@@ -2411,7 +2413,7 @@ void tst_qquicktextedit::getText_data()
             << 0 << plainBoldText.length()
             << plainBoldText;
 
-    QTest::newRow("rick text sub string")
+    QTest::newRow("rich text sub string")
             << richBoldText
             << 14 << 21
             << plainBoldText.mid(14, 7);
@@ -2431,6 +2433,115 @@ void tst_qquicktextedit::getText()
     QVERIFY(textEdit != 0);
 
     QCOMPARE(textEdit->getText(start, end), expectedText);
+}
+
+void tst_qquicktextedit::getFormattedText_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QQuickTextEdit::TextFormat>("textFormat");
+    QTest::addColumn<int>("start");
+    QTest::addColumn<int>("end");
+    QTest::addColumn<QString>("expectedText");
+
+    const QString richBoldText = QStringLiteral("This is some <b>bold</b> text");
+    const QString plainBoldText = QStringLiteral("This is some bold text");
+
+    QTest::newRow("all plain text")
+            << standard.at(0)
+            << QQuickTextEdit::PlainText
+            << 0 << standard.at(0).length()
+            << standard.at(0);
+
+    QTest::newRow("plain text sub string")
+            << standard.at(0)
+            << QQuickTextEdit::PlainText
+            << 0 << 12
+            << standard.at(0).mid(0, 12);
+
+    QTest::newRow("plain text sub string reversed")
+            << standard.at(0)
+            << QQuickTextEdit::PlainText
+            << 12 << 0
+            << standard.at(0).mid(0, 12);
+
+    QTest::newRow("plain text cropped beginning")
+            << standard.at(0)
+            << QQuickTextEdit::PlainText
+            << -3 << 4
+            << standard.at(0).mid(0, 4);
+
+    QTest::newRow("plain text cropped end")
+            << standard.at(0)
+            << QQuickTextEdit::PlainText
+            << 23 << standard.at(0).length() + 8
+            << standard.at(0).mid(23);
+
+    QTest::newRow("plain text cropped beginning and end")
+            << standard.at(0)
+            << QQuickTextEdit::PlainText
+            << -9 << standard.at(0).length() + 4
+            << standard.at(0);
+
+    QTest::newRow("all rich (Auto) text")
+            << richBoldText
+            << QQuickTextEdit::AutoText
+            << 0 << plainBoldText.length()
+            << QString("This is some \\<.*\\>bold\\</.*\\> text");
+
+    QTest::newRow("all rich (Rich) text")
+            << richBoldText
+            << QQuickTextEdit::RichText
+            << 0 << plainBoldText.length()
+            << QString("This is some \\<.*\\>bold\\</.*\\> text");
+
+    QTest::newRow("all rich (Plain) text")
+            << richBoldText
+            << QQuickTextEdit::PlainText
+            << 0 << richBoldText.length()
+            << richBoldText;
+
+    QTest::newRow("rich (Auto) text sub string")
+            << richBoldText
+            << QQuickTextEdit::AutoText
+            << 14 << 21
+            << QString("\\<.*\\>old\\</.*\\> tex");
+
+    QTest::newRow("rich (Rich) text sub string")
+            << richBoldText
+            << QQuickTextEdit::RichText
+            << 14 << 21
+            << QString("\\<.*\\>old\\</.*\\> tex");
+
+    QTest::newRow("rich (Plain) text sub string")
+            << richBoldText
+            << QQuickTextEdit::PlainText
+            << 17 << 27
+            << richBoldText.mid(17, 10);
+}
+
+void tst_qquicktextedit::getFormattedText()
+{
+    QFETCH(QString, text);
+    QFETCH(QQuickTextEdit::TextFormat, textFormat);
+    QFETCH(int, start);
+    QFETCH(int, end);
+    QFETCH(QString, expectedText);
+
+    QString componentStr = "import QtQuick 2.0\nTextEdit {}";
+    QDeclarativeComponent textEditComponent(&engine);
+    textEditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
+    QVERIFY(textEdit != 0);
+
+    textEdit->setTextFormat(textFormat);
+    textEdit->setText(text);
+
+    if (textFormat == QQuickTextEdit::RichText
+            || (textFormat == QQuickTextEdit::AutoText && Qt::mightBeRichText(text))) {
+        QVERIFY(textEdit->getFormattedText(start, end).contains(QRegExp(expectedText)));
+    } else {
+        QCOMPARE(textEdit->getFormattedText(start, end), expectedText);
+    }
 }
 
 void tst_qquicktextedit::insert_data()

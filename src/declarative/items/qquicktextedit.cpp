@@ -1995,6 +1995,36 @@ QString QQuickTextEdit::getText(int start, int end) const
 }
 
 /*!
+    \qmlmethod string QtQuick2::TextEdit::getFormattedText(int start, int end)
+
+    Returns the section of text that is between the \a start and \a end positions.
+
+    The returned text will be formatted according the \l textFormat property.
+*/
+
+QString QQuickTextEdit::getFormattedText(int start, int end) const
+{
+    Q_D(const QQuickTextEdit);
+
+    start = qBound(0, start, d->document->characterCount() - 1);
+    end = qBound(0, end, d->document->characterCount() - 1);
+
+    QTextCursor cursor(d->document);
+    cursor.setPosition(start, QTextCursor::MoveAnchor);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+
+    if (d->richText) {
+#ifndef QT_NO_TEXTHTMLPARSER
+        return cursor.selection().toHtml();
+#else
+        return cursor.selection().toPlainText();
+#endif
+    } else {
+        return cursor.selection().toPlainText();
+    }
+}
+
+/*!
     \qmlmethod void QtQuick2::TextEdit::insert(int position, string text)
 
     Inserts \a text into the TextEdit at position.
