@@ -51,9 +51,6 @@
 #include <qfuture.h>
 #endif
 
-// These don't let normal people run tests!
-//#include "../network-settings.h"
-
 class tst_qdeclarativepixmapcache : public QObject
 {
     Q_OBJECT
