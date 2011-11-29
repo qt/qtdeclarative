@@ -1804,12 +1804,16 @@ void QQuickTextEdit::updateSize()
         if (!widthValid() && d->document->textWidth() != newWidth)
             d->document->setTextWidth(newWidth); // ### Text does not align if width is not set (QTextDoc bug)
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
+        qreal iWidth = -1;
         if (!widthValid())
-            setImplicitWidth(newWidth);
+            iWidth = newWidth;
         else if (d->requireImplicitWidth)
-            setImplicitWidth(naturalWidth);
+            iWidth = naturalWidth;
         qreal newHeight = d->document->isEmpty() ? fm.height() : (int)d->document->size().height();
-        setImplicitHeight(newHeight);
+        if (iWidth > -1)
+            setImplicitSize(iWidth, newHeight);
+        else
+            setImplicitHeight(newHeight);
 
         d->paintedSize = QSize(newWidth, newHeight);
         emit paintedSizeChanged();

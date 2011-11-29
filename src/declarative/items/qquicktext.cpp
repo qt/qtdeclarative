@@ -293,8 +293,7 @@ void QQuickTextPrivate::updateSize()
 
     QFontMetrics fm(font);
     if (text.isEmpty()) {
-        q->setImplicitWidth(0);
-        q->setImplicitHeight(fm.height());
+        q->setImplicitSize(0, fm.height());
         paintedSize = QSize(0, fm.height());
         emit q->paintedSizeChanged();
         q->update();
@@ -356,13 +355,17 @@ void QQuickTextPrivate::updateSize()
 
     //### need to comfirm cost of always setting these for richText
     internalWidthUpdate = true;
+    qreal iWidth = -1;
     if (!q->widthValid())
-        q->setImplicitWidth(size.width());
+        iWidth = size.width();
     else if (requireImplicitWidth)
-        q->setImplicitWidth(naturalWidth);
+        iWidth = naturalWidth;
+    if (iWidth > -1)
+        q->setImplicitSize(iWidth, size.height());
     internalWidthUpdate = false;
 
-    q->setImplicitHeight(size.height());
+    if (iWidth == -1)
+        q->setImplicitHeight(size.height());
     if (paintedSize != size) {
         paintedSize = size;
         emit q->paintedSizeChanged();

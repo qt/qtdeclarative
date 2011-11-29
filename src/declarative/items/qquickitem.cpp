@@ -4412,6 +4412,48 @@ void QQuickItem::setImplicitHeight(qreal h)
         d->implicitHeightChanged();
 }
 
+void QQuickItem::setImplicitSize(qreal w, qreal h)
+{
+    Q_D(QQuickItem);
+    bool wChanged = w != d->implicitWidth;
+    bool hChanged = h != d->implicitHeight;
+
+    d->implicitWidth = w;
+    d->implicitHeight = h;
+
+    bool wDone = false;
+    bool hDone = false;
+    if (d->width == w || widthValid()) {
+        if (wChanged)
+            d->implicitWidthChanged();
+        wDone = true;
+    }
+    if (d->height == h || heightValid()) {
+        if (hChanged)
+            d->implicitHeightChanged();
+        hDone = true;
+    }
+    if (wDone && hDone)
+        return;
+
+    qreal oldWidth = d->width;
+    qreal oldHeight = d->height;
+    if (!wDone)
+        d->width = w;
+    if (!hDone)
+        d->height = h;
+
+    d->dirty(QQuickItemPrivate::Size);
+
+    geometryChanged(QRectF(x(), y(), width(), height()),
+                    QRectF(x(), y(), oldWidth, oldHeight));
+
+    if (!wDone && wChanged)
+        d->implicitWidthChanged();
+    if (!hDone && hChanged)
+        d->implicitHeightChanged();
+}
+
 /*!
     Returns whether the height property has been set explicitly.
 */

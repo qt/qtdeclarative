@@ -245,8 +245,7 @@ void QQuickBasePositioner::prePositioning()
         finishApplyTransitions();
     d->doingPositioning = false;
     //Set implicit size to the size of its children
-    setImplicitHeight(contentSize.height());
-    setImplicitWidth(contentSize.width());
+    setImplicitSize(contentSize.width(), contentSize.height());
 }
 
 void QQuickBasePositioner::positionX(int x, const PositionedItem &target)

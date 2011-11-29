@@ -283,7 +283,6 @@ void tst_qquickanchors::loops()
         QString expect = source.toString() + ":6:5: QML Text: Possible anchor loop detected on horizontal anchor.";
         QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
         QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
-        QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
 
         QQuickView *view = new QQuickView;
         view->setSource(source);

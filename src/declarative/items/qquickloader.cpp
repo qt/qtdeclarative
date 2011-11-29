@@ -783,17 +783,12 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
 
     updatingSize = true;
 
-    if (!itemWidthValid)
-        q->setImplicitWidth(item->implicitWidth());
-    else
-        q->setImplicitWidth(item->width());
+    qreal iWidth = !itemWidthValid ? item->implicitWidth() : item->width();
+    qreal iHeight = !itemHeightValid ? item->implicitHeight() : item->height();
+    q->setImplicitSize(iWidth, iHeight);
+
     if (loaderGeometryChanged && q->widthValid())
         item->setWidth(q->width());
-
-    if (!itemHeightValid)
-        q->setImplicitHeight(item->implicitHeight());
-    else
-        q->setImplicitHeight(item->height());
     if (loaderGeometryChanged && q->heightValid())
         item->setHeight(q->height());
 

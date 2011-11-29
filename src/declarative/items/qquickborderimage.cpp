@@ -299,8 +299,7 @@ void QQuickBorderImage::load()
     if (d->url.isEmpty()) {
         d->pix.clear(this);
         d->status = Null;
-        setImplicitWidth(0);
-        setImplicitHeight(0);
+        setImplicitSize(0, 0);
         emit statusChanged(d->status);
         update();
     } else {
@@ -331,8 +330,7 @@ void QQuickBorderImage::load()
                 d->pix.connectDownloadProgress(this, SLOT(requestProgress(qint64,qint64)));
             } else {
                 QSize impsize = d->pix.implicitSize();
-                setImplicitWidth(impsize.width());
-                setImplicitHeight(impsize.height());
+                setImplicitSize(impsize.width(), impsize.height());
 
                 if (d->pix.isReady()) {
                     d->status = Ready;
@@ -474,8 +472,7 @@ void QQuickBorderImage::setGridScaledImage(const QQuickGridScaledImage& sci)
         } else {
 
             QSize impsize = d->pix.implicitSize();
-            setImplicitWidth(impsize.width());
-            setImplicitHeight(impsize.height());
+            setImplicitSize(impsize.width(), impsize.height());
 
             if (d->pix.isReady()) {
                 d->status = Ready;
@@ -505,8 +502,7 @@ void QQuickBorderImage::requestFinished()
         d->status = Ready;
     }
 
-    setImplicitWidth(impsize.width());
-    setImplicitHeight(impsize.height());
+    setImplicitSize(impsize.width(), impsize.height());
 
     if (d->sourcesize.width() != d->pix.width() || d->sourcesize.height() != d->pix.height())
         emit sourceSizeChanged();

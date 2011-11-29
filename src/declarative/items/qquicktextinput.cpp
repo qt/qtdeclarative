@@ -1971,8 +1971,7 @@ void QQuickTextInput::updateSize(bool needsRedraw)
     Q_D(QQuickTextInput);
     int w = width();
     int h = height();
-    setImplicitHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
-    setImplicitWidth(d->calculateTextWidth());
+    setImplicitSize(d->calculateTextWidth(), d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
     if (w==width() && h==height() && needsRedraw)
         update();
 }

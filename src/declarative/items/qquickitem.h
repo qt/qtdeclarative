@@ -359,6 +359,7 @@ protected:
     bool widthValid() const; // ### better name?
     void setImplicitHeight(qreal);
     bool heightValid() const; // ### better name?
+    void setImplicitSize(qreal, qreal);
 
     virtual void classBegin();
     virtual void componentComplete();

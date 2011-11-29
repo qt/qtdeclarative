@@ -478,8 +478,7 @@ void QQuickImage::updatePaintedGeometry()
 
     if (d->fillMode == PreserveAspectFit) {
         if (!d->pix.width() || !d->pix.height()) {
-            setImplicitWidth(0);
-            setImplicitHeight(0);
+            setImplicitSize(0, 0);
             return;
         }
         qreal w = widthValid() ? width() : d->pix.width();
@@ -493,16 +492,10 @@ void QQuickImage::updatePaintedGeometry()
             d->paintedWidth = heightScale * qreal(d->pix.width());
             d->paintedHeight = h;
         }
-        if (widthValid() && !heightValid()) {
-            setImplicitHeight(d->paintedHeight);
-        } else {
-            setImplicitHeight(d->pix.height());
-        }
-        if (heightValid() && !widthValid()) {
-            setImplicitWidth(d->paintedWidth);
-        } else {
-            setImplicitWidth(d->pix.width());
-        }
+        qreal iHeight = (widthValid() && !heightValid()) ? d->paintedHeight : d->pix.height();
+        qreal iWidth = (heightValid() && !widthValid()) ? d->paintedWidth : d->pix.width();
+        setImplicitSize(iWidth, iHeight);
+
     } else if (d->fillMode == PreserveAspectCrop) {
         if (!d->pix.width() || !d->pix.height())
             return;
