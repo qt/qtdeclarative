@@ -233,6 +233,8 @@ private slots:
     void automaticSemicolon();
     void unaryExpression();
     void switchStatement();
+    void withStatement();
+    void tryStatement();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -5337,6 +5339,75 @@ void tst_qdeclarativeecmascript::switchStatement()
         QCOMPARE(object->value(), 1);
 
         object->setStringProperty("something else");
+        QCOMPARE(object->value(), 1);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.6.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 123);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 123);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 321);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 321);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 0);
+    }
+}
+
+void tst_qdeclarativeecmascript::withStatement()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("withStatement.1.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 123);
+    }
+}
+
+void tst_qdeclarativeecmascript::tryStatement()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.1.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 123);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.2.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 321);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.3.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 1);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.4.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
         QCOMPARE(object->value(), 1);
     }
 }
