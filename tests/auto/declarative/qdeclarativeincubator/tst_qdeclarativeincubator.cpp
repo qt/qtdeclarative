@@ -79,6 +79,7 @@ private slots:
     void forceCompletion();
     void setInitialState();
     void clearDuringCompletion();
+    void objectDeletionAfterInit();
     void recursiveClear();
     void statusChanged();
     void asynchronousIfNested();
@@ -432,6 +433,42 @@ void tst_qdeclarativeincubator::clearDuringCompletion()
     QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
     QVERIFY(incubator.isNull());
     QVERIFY(srt.isNull());
+}
+
+void tst_qdeclarativeincubator::objectDeletionAfterInit()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("clear.qml"));
+    QVERIFY(component.isReady());
+
+    struct MyIncubator : public QDeclarativeIncubator
+    {
+        MyIncubator(QDeclarativeIncubator::IncubationMode mode)
+        : QDeclarativeIncubator(mode), obj(0) {}
+
+        virtual void setInitialState(QObject *o) {
+            obj = o;
+        }
+
+        QObject *obj;
+    };
+
+    SelfRegisteringType::clearMe();
+    MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
+    component.create(incubator);
+
+    while (!incubator.obj && incubator.isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(SelfRegisteringType::me() != 0);
+
+    delete incubator.obj;
+
+    incubator.clear();
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QVERIFY(incubator.isNull());
 }
 
 class Switcher : public QObject
