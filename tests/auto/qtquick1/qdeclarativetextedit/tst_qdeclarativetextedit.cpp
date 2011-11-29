@@ -58,7 +58,7 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <private/qapplication_p.h>
-#include <private/qtextcontrol_p.h>
+#include <private/qwidgettextcontrol_p.h>
 
 Q_DECLARE_METATYPE(QDeclarative1TextEdit::SelectionMode)
 
@@ -1977,7 +1977,7 @@ void tst_qdeclarativetextedit::canPaste() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QTextControl tc;
+    QWidgetTextControl tc;
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif
@@ -1995,7 +1995,7 @@ void tst_qdeclarativetextedit::canPasteEmpty() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QTextControl tc;
+    QWidgetTextControl tc;
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif

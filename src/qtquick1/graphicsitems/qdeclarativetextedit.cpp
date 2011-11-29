@@ -58,7 +58,7 @@
 #include <QPainter>
 #include <QtGui/QInputPanel>
 
-#include <private/qtextcontrol_p.h>
+#include <private/qwidgettextcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -555,7 +555,10 @@ bool QDeclarative1TextEditPrivate::determineHorizontalAlignment()
     if (hAlignImplicit && q->isComponentComplete()) {
         bool alignToRight;
         if (text.isEmpty()) {
-            const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
+            QTextCursor cursor = control->textCursor();
+            const QString preeditText = cursor.block().isValid()
+                    ? control->textCursor().block().layout()->preeditAreaText()
+                    : QString();
             alignToRight = preeditText.isEmpty()
                     ? QApplication::keyboardInputDirection() == Qt::RightToLeft
                     : preeditText.isRightToLeft();
@@ -1545,12 +1548,12 @@ void QDeclarative1TextEditPrivate::init()
     q->setFlag(QGraphicsItem::ItemHasNoContents, false);
     q->setFlag(QGraphicsItem::ItemAcceptsInputMethod);
 
-    control = new QTextControl(q);
+    control = new QWidgetTextControl(q);
     control->setIgnoreUnusedNavigationEvents(true);
     control->setTextInteractionFlags(Qt::TextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable));
     control->setDragEnabled(false);
 
-    // QTextControl follows the default text color
+    // QWidgetTextControl follows the default text color
     // defined by the platform, declarative text
     // should be black by default
     QPalette pal = control->palette();
