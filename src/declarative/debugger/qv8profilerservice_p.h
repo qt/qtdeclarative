@@ -95,8 +95,11 @@ public:
     static QV8ProfilerService *instance();
     static void initialize();
 
+public slots:
     void startProfiling(const QString &title);
     void stopProfiling(const QString &title);
+    void takeSnapshot();
+    void deleteSnapshots();
 
     void sendProfilingData();
 

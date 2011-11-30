@@ -84,7 +84,6 @@ class QV8ProfilerServicePrivate : public QDeclarativeDebugServicePrivate
 public:
     QV8ProfilerServicePrivate()
         :initialized(false)
-        , isolate(0)
     {
     }
 
@@ -96,7 +95,6 @@ public:
     QList<QV8ProfilerData> m_data;
 
     bool initialized;
-    v8::Isolate *isolate;
 };
 
 QV8ProfilerService::QV8ProfilerService(QObject *parent)
@@ -136,30 +134,22 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     QByteArray title;
     ds >> command >> option;
 
-    if (!d->isolate) {
-        d->isolate = v8::Isolate::New();
-        v8::Isolate::Scope scope(d->isolate);
-        v8::V8::Initialize();
-    }
-
-    v8::Isolate::Scope scope(d->isolate);
-
     if (command == "V8PROFILER") {
         ds >>  title;
         if (option == "start") {
-            startProfiling(QString::fromUtf8(title));
+            QMetaObject::invokeMethod(this, "startProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
         } else if (option == "stop") {
-            stopProfiling(QString::fromUtf8(title));
-            sendProfilingData();
+            QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
+            QMetaObject::invokeMethod(this, "sendProfilingData", Qt::QueuedConnection);
         }
         d->initialized = true;
     }
 
     if (command == "V8SNAPSHOT") {
         if (option == "full")
-            d->takeSnapshot(v8::HeapSnapshot::kFull);
+            QMetaObject::invokeMethod(this, "takeSnapshot", Qt::QueuedConnection);
         else if (option == "delete") {
-            v8::HeapProfiler::DeleteAllSnapshots();
+            QMetaObject::invokeMethod(this, "deleteSnapshots", Qt::QueuedConnection);
         }
     }
 
@@ -186,6 +176,17 @@ void QV8ProfilerService::stopProfiling(const QString &title)
         const v8::CpuProfileNode *rootNode = cpuProfile->GetTopDownRoot();
         d->printProfileTree(rootNode);
     }
+}
+
+void QV8ProfilerService::takeSnapshot()
+{
+    Q_D(QV8ProfilerService);
+    d->takeSnapshot(v8::HeapSnapshot::kFull);
+}
+
+void QV8ProfilerService::deleteSnapshots()
+{
+    v8::HeapProfiler::DeleteAllSnapshots();
 }
 
 void QV8ProfilerService::sendProfilingData()
