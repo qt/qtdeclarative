@@ -1098,8 +1098,8 @@ void tst_QQuickItem::propertyChanges()
     QCOMPARE(item->baselineOffset(), baselineOffsetArguments.at(0).toReal());
 
     QCOMPARE(parentItem->childrenRect(), QRectF(0.0,0.0,100.0,200.0));
-    QCOMPARE(childrenRectSpy.count(),2);
-    QList<QVariant> childrenRectArguments = childrenRectSpy.at(1);
+    QCOMPARE(childrenRectSpy.count(),1);
+    QList<QVariant> childrenRectArguments = childrenRectSpy.at(0);
     QVERIFY(childrenRectArguments.count() == 1);
     QCOMPARE(parentItem->childrenRect(), childrenRectArguments.at(0).toRectF());
 

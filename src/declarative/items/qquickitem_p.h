@@ -84,33 +84,28 @@ class QNetworkReply;
 class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;
 
-//### merge into private?
-class QQuickContents : public QObject, public QQuickItemChangeListener
+class QQuickContents : public QQuickItemChangeListener
 {
-    Q_OBJECT
 public:
     QQuickContents(QQuickItem *item);
     ~QQuickContents();
 
-    QRectF rectF() const;
+    QRectF rectF() const { return QRectF(m_x, m_y, m_width, m_height); }
 
-    void childRemoved(QQuickItem *item);
-    void childAdded(QQuickItem *item);
-
-    void calcGeometry() { calcWidth(); calcHeight(); }
+    inline void calcGeometry(QQuickItem *changed = 0);
     void complete();
-
-Q_SIGNALS:
-    void rectChanged(QRectF);
 
 protected:
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
     void itemDestroyed(QQuickItem *item);
+    void itemChildAdded(QQuickItem *, QQuickItem *);
+    void itemChildRemoved(QQuickItem *, QQuickItem *);
     //void itemVisibilityChanged(QQuickItem *item)
 
 private:
-    void calcHeight(QQuickItem *changed = 0);
-    void calcWidth(QQuickItem *changed = 0);
+    bool calcHeight(QQuickItem *changed = 0);
+    bool calcWidth(QQuickItem *changed = 0);
+    void updateRect();
 
     QQuickItem *m_item;
     qreal m_x;
@@ -118,6 +113,14 @@ private:
     qreal m_width;
     qreal m_height;
 };
+
+void QQuickContents::calcGeometry(QQuickItem *changed)
+{
+    bool wChanged = calcWidth(changed);
+    bool hChanged = calcHeight(changed);
+    if (wChanged || hChanged)
+        updateRect();
+}
 
 class QQuickTransformPrivate : public QObjectPrivate
 {
@@ -340,6 +343,11 @@ public:
     void setLayoutMirror(bool mirror);
     bool isMirrored() const {
         return effectiveLayoutMirror;
+    }
+
+    void emitChildrenRectChanged(const QRectF &rect) {
+        Q_Q(QQuickItem);
+        emit q->childrenRectChanged(rect);
     }
 
     QPointF computeTransformOrigin() const;

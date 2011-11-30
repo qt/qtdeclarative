@@ -270,8 +270,6 @@ void QQuickTransform::update()
 QQuickContents::QQuickContents(QQuickItem *item)
 : m_item(item), m_x(0), m_y(0), m_width(0), m_height(0)
 {
-    //### optimize
-    connect(this, SIGNAL(rectChanged(QRectF)), m_item, SIGNAL(childrenRectChanged(QRectF)));
 }
 
 QQuickContents::~QQuickContents()
@@ -283,12 +281,7 @@ QQuickContents::~QQuickContents()
     }
 }
 
-QRectF QQuickContents::rectF() const
-{
-    return QRectF(m_x, m_y, m_width, m_height);
-}
-
-void QQuickContents::calcHeight(QQuickItem *changed)
+bool QQuickContents::calcHeight(QQuickItem *changed)
 {
     qreal oldy = m_y;
     qreal oldheight = m_height;
@@ -320,11 +313,10 @@ void QQuickContents::calcHeight(QQuickItem *changed)
         m_height = qMax(bottom - top, qreal(0.0));
     }
 
-    if (m_height != oldheight || m_y != oldy)
-        emit rectChanged(rectF());
+    return (m_height != oldheight || m_y != oldy);
 }
 
-void QQuickContents::calcWidth(QQuickItem *changed)
+bool QQuickContents::calcWidth(QQuickItem *changed)
 {
     qreal oldx = m_x;
     qreal oldwidth = m_width;
@@ -356,30 +348,39 @@ void QQuickContents::calcWidth(QQuickItem *changed)
         m_width = qMax(right - left, qreal(0.0));
     }
 
-    if (m_width != oldwidth || m_x != oldx)
-        emit rectChanged(rectF());
+    return (m_width != oldwidth || m_x != oldx);
 }
 
 void QQuickContents::complete()
 {
+    QQuickItemPrivate::get(m_item)->addItemChangeListener(this, QQuickItemPrivate::Children);
+
     QList<QQuickItem *> children = m_item->childItems();
     for (int i = 0; i < children.count(); ++i) {
         QQuickItem *child = children.at(i);
         QQuickItemPrivate::get(child)->addItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
         //###what about changes to visibility?
     }
-
     calcGeometry();
+}
+
+void QQuickContents::updateRect()
+{
+    QQuickItemPrivate::get(m_item)->emitChildrenRectChanged(rectF());
 }
 
 void QQuickContents::itemGeometryChanged(QQuickItem *changed, const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_UNUSED(changed)
+    bool wChanged = false;
+    bool hChanged = false;
     //### we can only pass changed if the left edge has moved left, or the right edge has moved right
     if (newGeometry.width() != oldGeometry.width() || newGeometry.x() != oldGeometry.x())
-        calcWidth(/*changed*/);
+        wChanged = calcWidth(/*changed*/);
     if (newGeometry.height() != oldGeometry.height() || newGeometry.y() != oldGeometry.y())
-        calcHeight(/*changed*/);
+        hChanged = calcHeight(/*changed*/);
+    if (wChanged || hChanged)
+        updateRect();
 }
 
 void QQuickContents::itemDestroyed(QQuickItem *item)
@@ -389,19 +390,18 @@ void QQuickContents::itemDestroyed(QQuickItem *item)
     calcGeometry();
 }
 
-void QQuickContents::childRemoved(QQuickItem *item)
+void QQuickContents::itemChildRemoved(QQuickItem *, QQuickItem *item)
 {
     if (item)
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
     calcGeometry();
 }
 
-void QQuickContents::childAdded(QQuickItem *item)
+void QQuickContents::itemChildAdded(QQuickItem *, QQuickItem *item)
 {
     if (item)
         QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
-    calcWidth(item);
-    calcHeight(item);
+    calcGeometry(item);
 }
 
 QQuickItemKeyFilter::QQuickItemKeyFilter(QQuickItem *item)
@@ -4001,8 +4001,6 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     switch (change) {
     case QQuickItem::ItemChildAddedChange:
         q->itemChange(change, data);
-        if (_contents && componentComplete)
-            _contents->childAdded(data.item);
         for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QQuickItemPrivate::Children) {
@@ -4012,8 +4010,6 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
         break;
     case QQuickItem::ItemChildRemovedChange:
         q->itemChange(change, data);
-        if (_contents && componentComplete)
-            _contents->childRemoved(data.item);
         for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QQuickItemPrivate::Children) {
