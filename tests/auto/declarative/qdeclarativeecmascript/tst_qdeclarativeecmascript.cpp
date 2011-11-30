@@ -1368,11 +1368,11 @@ void tst_qdeclarativeecmascript::scriptErrors()
     QString warning1 = url.left(url.length() - 3) + "js:2: Error: Invalid write to global property \"a\"";
     QString warning2 = url + ":5: ReferenceError: Can't find variable: a";
     QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
-    QString warning4 = url + ":10: ReferenceError: Can't find variable: a";
-    QString warning5 = url + ":8: ReferenceError: Can't find variable: a";
-    QString warning6 = url + ":7: Unable to assign [undefined] to int";
-    QString warning7 = url + ":12: Error: Cannot assign to read-only property \"trueProperty\"";
-    QString warning8 = url + ":13: Error: Cannot assign to non-existent property \"fakeProperty\"";
+    QString warning4 = url + ":13: ReferenceError: Can't find variable: a";
+    QString warning5 = url + ":11: ReferenceError: Can't find variable: a";
+    QString warning6 = url + ":10: Unable to assign [undefined] to int";
+    QString warning7 = url + ":15: Error: Cannot assign to read-only property \"trueProperty\"";
+    QString warning8 = url + ":16: Error: Cannot assign to non-existent property \"fakeProperty\"";
 
     QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, warning2.toLatin1().constData());

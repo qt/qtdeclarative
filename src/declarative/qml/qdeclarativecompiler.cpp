@@ -3479,6 +3479,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
             }
 
             functionArray += expression;
+            lineNumber += expression.count(QLatin1Char('\n'));
             reference->compiledIndex = ii;
         }
         functionArray += QLatin1String("]");
