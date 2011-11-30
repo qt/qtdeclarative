@@ -122,6 +122,7 @@ QDeclarativeDebugProcess::~QDeclarativeDebugProcess()
 void QDeclarativeDebugProcess::start(const QStringList &arguments)
 {
     m_mutex.lock();
+    m_process.setEnvironment(m_environment);
     m_process.start(m_executable, arguments);
     m_process.waitForStarted();
     m_timer.start();
@@ -145,6 +146,11 @@ bool QDeclarativeDebugProcess::waitForSessionStart()
     m_eventLoop.exec(QEventLoop::ExcludeUserInputEvents);
 
     return m_started;
+}
+
+void QDeclarativeDebugProcess::setEnvironment(const QStringList &environment)
+{
+    m_environment = environment;
 }
 
 QString QDeclarativeDebugProcess::output() const

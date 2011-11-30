@@ -101,6 +101,8 @@ public:
     QDeclarativeDebugProcess(const QString &executable);
     ~QDeclarativeDebugProcess();
 
+    void setEnvironment(const QStringList &environment);
+
     void start(const QStringList &arguments);
     bool waitForSessionStart();
 
@@ -119,6 +121,7 @@ private:
     QEventLoop m_eventLoop;
     QMutex m_mutex;
     bool m_started;
+    QStringList m_environment;
 };
 
 #endif // DEBUGUTIL_H
