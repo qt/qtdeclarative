@@ -1755,10 +1755,13 @@ QQuickItem::~QQuickItem()
             anchor->clearItem(this);
     }
 
-    // XXX todo - the original checks if the parent is being destroyed
+    /*
+        update item anchors that depended on us unless they are our child (and will also be destroyed),
+        or our sibling, and our parent is also being destroyed.
+    */
     for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         QQuickAnchorsPrivate *anchor = d->changeListeners.at(ii).listener->anchorPrivate();
-        if (anchor && anchor->item && anchor->item->parent() != this) //child will be deleted anyway
+        if (anchor && anchor->item && anchor->item->parentItem() && anchor->item->parentItem() != this)
             anchor->update();
     }
 
