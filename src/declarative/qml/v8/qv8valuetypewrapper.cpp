@@ -105,7 +105,10 @@ void QV8ValueTypeWrapper::destroy()
 {
     qPersistentDispose(m_toString);
     qPersistentDispose(m_constructor);
+    qPersistentDispose(m_toStringSymbol);
 }
+
+static quint32 toStringHash = -1;
 
 void QV8ValueTypeWrapper::init(QV8Engine *engine)
 {
@@ -119,6 +122,10 @@ void QV8ValueTypeWrapper::init(QV8Engine *engine)
                                         m_toString, v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+
+    m_toStringSymbol = qPersistentNew<v8::String>(v8::String::NewSymbol("toString"));
+    m_toStringString = QHashedV8String(m_toStringSymbol);
+    toStringHash = m_toStringString.hash();
 }
 
 v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(QObject *object, int property, QDeclarativeValueType *type)
@@ -231,26 +238,36 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
     QV8ValueTypeResource *r =  v8_resource_cast<QV8ValueTypeResource>(info.This());
     if (!r) return v8::Handle<v8::Value>();
 
-    // XXX This is horribly inefficient.  Sadly people seem to have taken a liking to 
-    // value type properties, so we should probably try and optimize it a little.
-    // We should probably just replace all value properties with dedicated accessors.
+    QHashedV8String propertystring(property);
 
-    QByteArray propName = r->engine->toString(property).toUtf8();
-    if (propName == QByteArray("toString")) {
-        return r->engine->valueTypeWrapper()->m_toString;
+    {
+        // Comparing the hash first actually makes a measurable difference here, at least on x86
+        quint32 hash = propertystring.hash();
+        if (hash == toStringHash &&
+            r->engine->valueTypeWrapper()->m_toStringString == propertystring) {
+            return r->engine->valueTypeWrapper()->m_toString;
+        }
     }
 
-    int index = r->type->metaObject()->indexOfProperty(propName.constData());
-    if (index == -1)
-        return v8::Handle<v8::Value>();
+    QDeclarativePropertyData local;
+    QDeclarativePropertyData *result = 0;
+    {
+        QDeclarativeData *ddata = QDeclarativeData::get(r->type, false);
+        if (ddata && ddata->propertyCache)
+            result = ddata->propertyCache->property(propertystring);
+        else
+            result = QDeclarativePropertyCache::property(r->engine->engine(), r->type,
+                                                         propertystring, local);
+    }
 
+    if (!result)
+        return v8::Handle<v8::Value>();
 
     if (r->objectType == QV8ValueTypeResource::Reference) {
         QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(r);
 
         if (!reference->object)
             return v8::Handle<v8::Value>();
-
 
         r->type->read(reference->object, reference->property);
     } else {
@@ -261,10 +278,25 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
         r->type->setValue(copy->value);
     }
 
-    QMetaProperty prop = r->type->metaObject()->property(index);
-    QVariant result = prop.read(r->type);
+#define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
+    if (result->propType == metatype) { \
+        cpptype v; \
+        void *args[] = { &v, 0 }; \
+        r->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args); \
+        return constructor(v); \
+    }
 
-    return r->engine->fromVariant(result);
+    // These four types are the most common used by the value type wrappers
+    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, v8::Number::New);
+    VALUE_TYPE_LOAD(QMetaType::Int, int, v8::Integer::New);
+    VALUE_TYPE_LOAD(QMetaType::QString, QString, r->engine->toString);
+    VALUE_TYPE_LOAD(QMetaType::Bool, bool, v8::Boolean::New);
+
+    QVariant v(result->propType, (void *)0);
+    void *args[] = { v.data(), 0 };
+    r->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args);
+    return r->engine->fromVariant(v);
+#undef VALUE_TYPE_ACCESSOR
 }
 
 v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property, 

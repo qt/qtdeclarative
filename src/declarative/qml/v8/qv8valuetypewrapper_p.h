@@ -56,6 +56,7 @@
 #include <QtCore/qglobal.h>
 #include <QtDeclarative/qdeclarativelist.h>
 #include <private/qv8_p.h>
+#include <private/qhashedstring_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -92,6 +93,8 @@ private:
     QV8Engine *m_engine;
     v8::Persistent<v8::Function> m_constructor;
     v8::Persistent<v8::Function> m_toString;
+    v8::Persistent<v8::String> m_toStringSymbol;
+    QHashedV8String m_toStringString;
 };
 
 QT_END_NAMESPACE
