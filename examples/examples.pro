@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS += declarative 
+SUBDIRS += declarative tutorials
 contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
