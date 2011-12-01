@@ -57,12 +57,14 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qlistmodelinterface_p.h>
+#include "../../../../src/imports/xmllistmodel/qdeclarativexmllistmodel_p.h"
 
 typedef QPair<int, int> QDeclarativeXmlListRange;
 typedef QList<QVariantList> QDeclarativeXmlModelData;
 
 Q_DECLARE_METATYPE(QList<QDeclarativeXmlListRange>)
 Q_DECLARE_METATYPE(QDeclarativeXmlModelData)
+Q_DECLARE_METATYPE(QDeclarativeXmlListModel::Status)
 
 class tst_qdeclarativexmllistmodel : public QObject
 
@@ -70,11 +72,10 @@ class tst_qdeclarativexmllistmodel : public QObject
     Q_OBJECT
 public:
     tst_qdeclarativexmllistmodel() {}
-    enum Status { Null, Ready, Loading, Error };
 
 private slots:
     void initTestCase() {
-        qRegisterMetaType<Status>("tst_qdeclarativexmllistmodel::Status");
+        qRegisterMetaType<QDeclarativeXmlListModel::Status>();
     }
 
     void buildModel();
@@ -152,7 +153,7 @@ private:
 
     QDeclarativeEngine engine;
 };
-Q_DECLARE_METATYPE(tst_qdeclarativexmllistmodel::Status)
+
 class CustomNetworkAccessManagerFactory : public QObject, public QDeclarativeNetworkAccessManagerFactory
 {
     Q_OBJECT
@@ -359,10 +360,12 @@ void tst_qdeclarativexmllistmodel::xml()
     QSignalSpy spy(model, SIGNAL(statusChanged(QDeclarativeXmlListModel::Status)));
     QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
-    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
+    QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+             QDeclarativeXmlListModel::Loading);
     QTRY_COMPARE(spy.count(), 1); spy.clear();
     QTest::qWait(50);
-    QCOMPARE(model->property("status").toInt(), static_cast<int>(Ready));
+    QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+             QDeclarativeXmlListModel::Ready);
     QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
     QCOMPARE(model->count(), 9);
@@ -373,12 +376,15 @@ void tst_qdeclarativexmllistmodel::xml()
     model->setProperty("xml",xml);
     QCOMPARE(model->property("progress").toDouble(), qreal(1.0));   // immediately goes to 1.0 if using setXml()
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
+    QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+             QDeclarativeXmlListModel::Loading);
     QTRY_COMPARE(spy.count(), 1); spy.clear();
     if (xml.isEmpty())
-        QCOMPARE(model->property("status").toInt(), static_cast<int>(Null));
+        QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+                 QDeclarativeXmlListModel::Null);
     else
-        QCOMPARE(model->property("status").toInt(), static_cast<int>(Ready));
+        QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+                 QDeclarativeXmlListModel::Ready);
     QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->count(), count);
 
@@ -406,7 +412,8 @@ void tst_qdeclarativexmllistmodel::headers()
     QDeclarativeComponent component(&qmlEng, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->property("status").toInt(), static_cast<int>(Ready));
+    QTRY_COMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+                 QDeclarativeXmlListModel::Ready);
 
     QVariantMap expectedHeaders;
     expectedHeaders["Accept"] = "application/xml,*/*";
@@ -424,7 +431,7 @@ void tst_qdeclarativexmllistmodel::source()
 {
     QFETCH(QUrl, source);
     QFETCH(int, count);
-    QFETCH(Status, status);
+    QFETCH(QDeclarativeXmlListModel::Status, status);
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
     QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
@@ -432,19 +439,23 @@ void tst_qdeclarativexmllistmodel::source()
 
     QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
-    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
+    QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+             QDeclarativeXmlListModel::Loading);
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->property("status").toInt(), static_cast<int>(Ready));
+    QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+             QDeclarativeXmlListModel::Ready);
     QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
     QCOMPARE(model->count(), 9);
 
     model->setProperty("source",source);
     if (model->property("source").toString().isEmpty())
-        QCOMPARE(model->property("status").toInt(), static_cast<int>(Null));
+        QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+                 QDeclarativeXmlListModel::Null);
     QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
+    QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")),
+             QDeclarativeXmlListModel::Loading);
     QVERIFY(errorString(model).isEmpty());
 
     QEventLoop loop;
@@ -455,19 +466,19 @@ void tst_qdeclarativexmllistmodel::source()
     timer.start(20000);
     loop.exec();
 
-    if (spy.count() == 0 && status != Ready) {
+    if (spy.count() == 0 && status != QDeclarativeXmlListModel::Ready) {
         qWarning("QDeclarativeXmlListModel invalid source test timed out");
     } else {
         QCOMPARE(spy.count(), 1); spy.clear();
     }
 
-    QCOMPARE(model->property("status").toInt(), static_cast<int>(status));
+    QCOMPARE(qvariant_cast<QDeclarativeXmlListModel::Status>(model->property("status")), status);
     QCOMPARE(model->count(), count);
 
-    if (status == Ready)
+    if (status == QDeclarativeXmlListModel::Ready)
         QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
 
-    QCOMPARE(errorString(model).isEmpty(), status == Ready);
+    QCOMPARE(errorString(model).isEmpty(), status == QDeclarativeXmlListModel::Ready);
 
     delete model;
 }
@@ -476,15 +487,18 @@ void tst_qdeclarativexmllistmodel::source_data()
 {
     QTest::addColumn<QUrl>("source");
     QTest::addColumn<int>("count");
-    QTest::addColumn<Status>("status");
+    QTest::addColumn<QDeclarativeXmlListModel::Status>("status");
 
-    QTest::newRow("valid") << QUrl::fromLocalFile(TESTDATA("model2.xml")) << 2 << Ready;
-    QTest::newRow("invalid") << QUrl("http://blah.blah/blah.xml") << 0 << Error;
+    QTest::newRow("valid") << QUrl::fromLocalFile(TESTDATA("model2.xml")) << 2
+                           << QDeclarativeXmlListModel::Ready;
+    QTest::newRow("invalid") << QUrl("http://blah.blah/blah.xml") << 0
+                             << QDeclarativeXmlListModel::Error;
 
     // empty file
     QTemporaryFile *temp = new QTemporaryFile(this);
     if (temp->open())
-        QTest::newRow("empty file") << QUrl::fromLocalFile(temp->fileName()) << 0 << Ready;
+        QTest::newRow("empty file") << QUrl::fromLocalFile(temp->fileName()) << 0
+                                    << QDeclarativeXmlListModel::Ready;
     temp->close();
 }
 

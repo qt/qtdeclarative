@@ -51,6 +51,8 @@
 #include "../shared/testhttpserver.h"
 #include "../shared/util.h"
 
+Q_DECLARE_METATYPE(QQuickImageBase::Status)
+
 class tst_qquickanimatedimage : public QObject
 {
     Q_OBJECT
@@ -340,6 +342,7 @@ void tst_qquickanimatedimage::progressAndStatusChanges()
     QVERIFY(obj->status() == QQuickImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
 
+    qRegisterMetaType<QQuickImageBase::Status>();
     QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(const QUrl &)));
     QSignalSpy progressSpy(obj, SIGNAL(progressChanged(qreal)));
     QSignalSpy statusSpy(obj, SIGNAL(statusChanged(QQuickImageBase::Status)));
