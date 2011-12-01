@@ -1278,6 +1278,8 @@ void tst_qdeclarativestates::reset()
 
     QCOMPARE(image->width(), 20.0);
     QCOMPARE(image->height(), qreal(20.));
+
+    delete rect;
 }
 
 void tst_qdeclarativestates::illegalObjectCreation()
@@ -1335,6 +1337,8 @@ void tst_qdeclarativestates::urlResolution()
     QCOMPARE(image1->source(), resolved);
     QCOMPARE(image2->source(), resolved);
     QCOMPARE(image3->source(), resolved);
+
+    delete rect;
 }
 
 void tst_qdeclarativestates::unnamedWhen()
