@@ -3276,7 +3276,12 @@ void tst_qquicktextinput::QTBUG_19956()
 
 void tst_qquicktextinput::QTBUG_19956_regexp()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("qtbug-19956regexp.qml")));
+    QUrl url = QUrl::fromLocalFile(TESTDATA("qtbug-19956regexp.qml"));
+
+    QString warning = url.toString() + ":11: Unable to assign [undefined] to QRegExp";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+
+    QQuickView canvas(url);
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
