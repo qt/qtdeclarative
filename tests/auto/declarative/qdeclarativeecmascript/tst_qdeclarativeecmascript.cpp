@@ -4885,8 +4885,17 @@ void tst_qdeclarativeecmascript::in()
 void tst_qdeclarativeecmascript::typeOf()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("typeOf.qml"));
+
+    // These warnings should not happen once QTBUG-21864 is fixed
+    QString warning1 = component.url().toString() + QLatin1String(":16: Error: Cannot assign [undefined] to QString");
+    QString warning2 = component.url().resolved(QUrl("typeOf.js")).toString() + QLatin1String(":1: ReferenceError: Can't find variable: a");
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
     QObject *o = component.create();
     QVERIFY(o != 0);
+
     QEXPECT_FAIL("", "QTBUG-21864", Abort);
     QCOMPARE(o->property("test1").toString(), QLatin1String("undefined"));
     QCOMPARE(o->property("test2").toString(), QLatin1String("object"));
@@ -5381,6 +5390,10 @@ void tst_qdeclarativeecmascript::switchStatement()
 
     {
         QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.4.qml"));
+
+        QString warning = component.url().toString() + ":4: Unable to assign [undefined] to int";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -5398,7 +5411,6 @@ void tst_qdeclarativeecmascript::switchStatement()
         object->setStringProperty("F");
         QCOMPARE(object->value(), 3);
 
-        QString warning = component.url().toString() + ":4: Unable to assign [undefined] to int";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
         object->setStringProperty("something else");
