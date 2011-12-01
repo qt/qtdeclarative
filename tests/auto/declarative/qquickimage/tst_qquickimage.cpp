@@ -62,6 +62,8 @@
 #define SERVER_PORT 14451
 #define SERVER_ADDR "http://127.0.0.1:14451"
 
+Q_DECLARE_METATYPE(QQuickImageBase::Status)
+
 class tst_qquickimage : public QObject
 {
     Q_OBJECT
@@ -460,11 +462,24 @@ void tst_qquickimage::big()
     delete obj;
 }
 
+// As tiling_QTBUG_6716 doesn't complete, it doesn't delete the
+// canvas which causes leak warnings.  Use this delete on stack
+// destruction pattern to work around this.
+template<typename T>
+struct AutoDelete {
+    AutoDelete(T *t) : t(t) {}
+    ~AutoDelete() { delete t; }
+private:
+    T *t;
+};
+
 void tst_qquickimage::tiling_QTBUG_6716()
 {
     QFETCH(QString, source);
 
     QQuickView *canvas = new QQuickView(0);
+    AutoDelete<QQuickView> del(canvas);
+
     canvas->setSource(QUrl::fromLocalFile(TESTDATA(source)));
     canvas->show();
     qApp->processEvents();
@@ -479,7 +494,6 @@ void tst_qquickimage::tiling_QTBUG_6716()
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }
-    delete canvas;
 }
 
 void tst_qquickimage::tiling_QTBUG_6716_data()
@@ -491,6 +505,8 @@ void tst_qquickimage::tiling_QTBUG_6716_data()
 
 void tst_qquickimage::noLoading()
 {
+    qRegisterMetaType<QQuickImageBase::Status>();
+
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
     server.serveDirectory(TESTDATA(""));
@@ -625,6 +641,8 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
     QCOMPARE(image->sourceSize().height(), 200);
     QCOMPARE(image->paintedWidth(), 20.0);
     QCOMPARE(image->paintedHeight(), 20.0);
+
+    delete canvas;
 }
 
 static int numberOfWarnings = 0;
