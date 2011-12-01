@@ -582,7 +582,6 @@ QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation* animatio
     , m_isGroup(false)
     , m_group(0)
     , m_animationGuard(animation)
-    , m_type(QAbstractAnimation2::DefaultAnimation)
     , m_direction(QAbstractAnimation2::Forward)
     , m_state(QAbstractAnimation2::Stopped)
     , m_totalCurrentTime(0)
@@ -598,7 +597,6 @@ QAbstractAnimation2::QAbstractAnimation2(const QAbstractAnimation2& other)
     , m_isPause(other.m_isPause)
     , m_group(other.m_group)
     , m_animationGuard(0)
-    , m_type(other.m_type)
     , m_direction(other.m_direction)
     , m_state(QAbstractAnimation2::Stopped)
     , m_totalCurrentTime(0)
@@ -606,11 +604,6 @@ QAbstractAnimation2::QAbstractAnimation2(const QAbstractAnimation2& other)
     , m_currentLoop(0)
     , m_hasRegisteredTimer(false)
 {
-}
-
-QAbstractAnimation2::AnimationType QAbstractAnimation2::type() const
-{
-    return QAbstractAnimation2::DefaultAnimation;
 }
 
 QDeclarativeAbstractAnimation* QAbstractAnimation2::animation() const

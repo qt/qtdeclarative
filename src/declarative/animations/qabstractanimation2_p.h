@@ -69,19 +69,6 @@ class QDeclarativeAbstractAnimation;
 class Q_DECLARATIVE_EXPORT QAbstractAnimation2 : public QDeclarativeRefCount
 {
 public:
-    enum AnimationType {
-        DefaultAnimation,
-        GroupAnimation,
-        ParallelAnimation,
-        SequentialAnimation,
-        PauseAnimation,
-        SmoothedAnimation,
-        ActionAnimation,
-        BulkValueAnimation,
-        ParticleSystemAnimation,
-        SpringAnimation
-    };
-
     enum Direction {
         Forward,
         Backward
@@ -110,7 +97,6 @@ public:
     int totalDuration() const;
 
     virtual int duration() const {return 0;}
-    virtual QAbstractAnimation2::AnimationType type() const;
 
     inline QAbstractAnimation2::Direction direction() const {return m_direction;}
     void setDirection(QAbstractAnimation2::Direction direction);
@@ -152,7 +138,6 @@ protected:
     bool m_isGroup;
     QAnimationGroup2 *m_group;
     QDeclarativeGuard<QObject> m_animationGuard;
-    AnimationType m_type;
     QAbstractAnimation2::Direction m_direction; //???
 
     //state
