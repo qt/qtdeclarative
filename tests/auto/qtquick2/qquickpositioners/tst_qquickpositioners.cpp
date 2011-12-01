@@ -1299,12 +1299,10 @@ void tst_qquickpositioners::test_mirroring()
             QTRY_VERIFY(itemA->x() != itemB->x());
         }
 
-        QQuickItemPrivate* rootPrivateB = QQuickItemPrivate::get(rootB);
-
-        rootPrivateB->effectiveLayoutMirror = true; // LayoutMirroring.enabled: true
-        rootPrivateB->isMirrorImplicit = false;
-        rootPrivateB->inheritMirrorFromItem = true; // LayoutMirroring.childrenInherit: true
-        rootPrivateB->resolveLayoutMirror();
+        QDeclarativeProperty enabledProp(rootB, "LayoutMirroring.enabled", qmlContext(rootB));
+        enabledProp.write(true);
+        QDeclarativeProperty inheritProp(rootB, "LayoutMirroring.childrenInherit", qmlContext(rootB));
+        inheritProp.write(true);
 
         // RTL == mirror
         foreach (const QString objectName, objectNames) {

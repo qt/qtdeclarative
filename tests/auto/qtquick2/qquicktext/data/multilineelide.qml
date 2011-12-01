@@ -5,6 +5,6 @@ Text {
     wrapMode: Text.WordWrap
     elide: Text.ElideRight
     maximumLineCount: 3
-    text: "the quick brown fox jumped over the lazy dog the quick brown fox jumped over the lazy dog"
+    text: "the quick brown fox jumped over the lazy dog the quick brown fox jumped over the lazy dog the quick brown fox jumped over the lazy dog"
 }
 

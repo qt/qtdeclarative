@@ -1261,11 +1261,8 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // redundant as an actual input method may take care of it.
     { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
 
-#ifdef Q_OS_MAC
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QGuiApplication::keyboardInputDirection
-    QEXPECT_FAIL("", "QTBUG-18040", Abort);
-#endif
     textInput->setText("");
     QCOMPARE(textInput->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
@@ -1277,10 +1274,6 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
 
-
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("", "QTBUG-18040", Abort); // alignment of TextInput with no text set to it
-#endif
     QString componentStr = "import QtQuick 2.0\nTextInput {}";
     QDeclarativeComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -2666,6 +2659,9 @@ void tst_qquicktextinput::cursorRectangleSize()
     QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
 
     // item-canvas transform and input item transform match
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("","QTBUG-22966", Abort);
+#endif
     QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputPanel()->inputItemTransform());
 
     // input panel cursorRectangle property and tranformed item cursor rectangle match
@@ -3084,14 +3080,14 @@ void tst_qquicktextinput::undo_keypressevents_data()
         QStringList expectedString;
 
         keys << "AFRAID"
-                << Qt::Key_Home
+                << QKeySequence::MoveToStartOfLine
                 << "VERY"
                 << Qt::Key_Left
                 << Qt::Key_Left
                 << Qt::Key_Left
                 << Qt::Key_Left
                 << "BE"
-                << Qt::Key_End
+                << QKeySequence::MoveToEndOfLine
                 << "!";
 
         expectedString << "BEVERYAFRAID!";
@@ -3105,7 +3101,7 @@ void tst_qquicktextinput::undo_keypressevents_data()
         QStringList expectedString;
 
         // inserting '1234'
-        keys << "1234" << Qt::Key_Home
+        keys << "1234" << QKeySequence::MoveToStartOfLine
                 // skipping '12'
                 << Qt::Key_Right << Qt::Key_Right
                 // selecting '34'
@@ -3123,7 +3119,7 @@ void tst_qquicktextinput::undo_keypressevents_data()
 
         // inserting 'AB12'
         keys << "AB12"
-                << Qt::Key_Home
+                << QKeySequence::MoveToStartOfLine
                 // selecting 'AB'
                 << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
                 << Qt::Key_Delete
@@ -3197,9 +3193,9 @@ void tst_qquicktextinput::undo_keypressevents_data()
         QStringList expectedString;
 
         // inserting '123'
-        keys << "123" << Qt::Key_Home
+        keys << "123" << QKeySequence::MoveToStartOfLine
             // selecting '123'
-             << (Qt::Key_End | Qt::ShiftModifier)
+             << QKeySequence::SelectEndOfLine
             // overwriting '123' with 'ABC'
              << "ABC";
 
