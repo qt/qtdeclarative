@@ -76,6 +76,7 @@ private slots:
     void modelChanged();
     void properties();
     void asynchronous();
+    void initParent();
 
 private:
     QQuickView *createView();
@@ -693,6 +694,17 @@ void tst_QQuickRepeater::asynchronous()
     }
 
     delete canvas;
+}
+
+void tst_QQuickRepeater::initParent()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, TEST_FILE("initparent.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(rootObject);
+
+    QCOMPARE(qvariant_cast<QQuickItem*>(rootObject->property("parentItem")), rootObject);
 }
 
 QQuickView *tst_QQuickRepeater::createView()

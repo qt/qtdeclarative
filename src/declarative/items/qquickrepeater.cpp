@@ -189,6 +189,7 @@ void QQuickRepeater::setModel(const QVariant &model)
         disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
                 this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
+        disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
 //        disconnect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
     }
     d->dataSource = model;
@@ -214,6 +215,7 @@ void QQuickRepeater::setModel(const QVariant &model)
         connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
                 this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
+        connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
 //        connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
         regenerate();
     }
@@ -397,11 +399,17 @@ void QQuickRepeaterPrivate::createItems()
     inRequest = false;
 }
 
-void QQuickRepeater::createdItem(int index, QQuickItem *item)
+void QQuickRepeater::createdItem(int, QQuickItem *)
 {
     Q_D(QQuickRepeater);
     if (!d->inRequest)
         d->createItems();
+}
+
+void QQuickRepeater::initItem(int, QQuickItem *item)
+{
+    QDeclarative_setParent_noEvent(item, parentItem());
+    item->setParentItem(parentItem());
 }
 
 void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
