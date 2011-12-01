@@ -703,9 +703,8 @@ void QQuickImage::pixmapChange()
     updatePaintedGeometry();
     d->pixmapChanged = true;
 
-    // Make sure we update the texture provider when the image has changed.
-    if (d->provider)
-        update();
+    // When the pixmap changes, such as being deleted, we need to update the textures
+    update();
 }
 
 QQuickImage::VAlignment QQuickImage::verticalAlignment() const

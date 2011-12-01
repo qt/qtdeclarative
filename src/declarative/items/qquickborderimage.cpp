@@ -592,6 +592,9 @@ void QQuickBorderImage::pixmapChange()
     Q_D(QQuickBorderImage);
 
     d->pixmapChanged = true;
+
+    // When the pixmap changes, such as being deleted, we need to update the textures
+    update();
 }
 
 QT_END_NAMESPACE
