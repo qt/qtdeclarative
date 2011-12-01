@@ -1490,6 +1490,7 @@ void tst_qdeclarativelanguage::testType(const QString& qml, const QString& type,
         QObject *object = component.create();
         QVERIFY(object != 0);
         QCOMPARE(QString(object->metaObject()->className()), type);
+        delete object;
     }
 }
 
