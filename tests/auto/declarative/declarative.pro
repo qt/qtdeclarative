@@ -9,23 +9,23 @@ PUBLICTESTS += \
     nodes \
     parserstress \
     qdeclarativecomponent \
-    qdeclarativecontext \
     qdeclarativeconsole \
+    qdeclarativecontext \
     qdeclarativeengine \
     qdeclarativeerror \
     qdeclarativefolderlistmodel \
     qdeclarativeincubator \
     qdeclarativeinfo \
     qdeclarativelistreference \
+    qdeclarativelocale \
     qdeclarativemoduleplugin \
     qdeclarativepixmapcache \
     qdeclarativeqt \
     qdeclarativetranslation \
     qdeclarativexmlhttprequest \
-    qdeclarativelocale \
+    qjsengine \
     qjsvalue \
     qjsvalueiterator \
-    qjsengine \
     qmlmin \
     qmlplugindump
 
@@ -36,6 +36,7 @@ PRIVATETESTS += \
     qdeclarativebinding \
     qdeclarativechangeset \
     qdeclarativeconnection \
+    qdeclarativecpputils \
     qdeclarativeecmascript \
     qdeclarativeexpression \
     qdeclarativefontloader \
@@ -49,9 +50,9 @@ PRIVATETESTS += \
     qdeclarativepropertymap \
     qdeclarativesmoothedanimation \
     qdeclarativespringanimation \
-    qdeclarativestyledtext \
     qdeclarativesqldatabase \
     qdeclarativestates \
+    qdeclarativestyledtext \
     qdeclarativesystempalette \
     qdeclarativetimer \
     qdeclarativevaluetypes \
@@ -67,6 +68,7 @@ QUICKTESTS =  \
     qquickanimatedimage \
     qquickborderimage \
     qquickcanvas \
+    qquickcanvasitem \
     qquickdrag \
     qquickdroparea \
     qquickflickable \
@@ -89,9 +91,8 @@ QUICKTESTS =  \
     qquicktext \
     qquicktextedit \
     qquicktextinput \
-    qquickvisualdatamodel \
     qquickview \
-    qquickcanvasitem \
+    qquickvisualdatamodel \
 
 
 SUBDIRS += $$PUBLICTESTS
