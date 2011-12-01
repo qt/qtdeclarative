@@ -59,6 +59,7 @@
 #include <QDeclarativePropertyValueSource>
 #include <QDeclarativeProperty>
 #include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativepropertyvalueinterceptor_p.h>
 
 class MyTypeObject : public QObject
 {

@@ -45,7 +45,6 @@
 #include <QtDeclarative/qdeclarativeprivate.h>
 #include <QtDeclarative/qdeclarativeparserstatus.h>
 #include <QtDeclarative/qdeclarativepropertyvaluesource.h>
-#include <QtDeclarative/qdeclarativepropertyvalueinterceptor.h>
 #include <QtDeclarative/qdeclarativelist.h>
 
 #include <QtCore/qbytearray.h>
@@ -88,6 +87,8 @@ QT_END_NAMESPACE
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
+
+class QDeclarativePropertyValueInterceptor;
 
 template<typename T>
 int qmlRegisterType()

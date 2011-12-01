@@ -70,7 +70,7 @@ HEADERS += \
     $$PWD/qdeclarativecustomparser_p.h \
     $$PWD/qdeclarativecustomparser_p_p.h \
     $$PWD/qdeclarativepropertyvaluesource.h \
-    $$PWD/qdeclarativepropertyvalueinterceptor.h \
+    $$PWD/qdeclarativepropertyvalueinterceptor_p.h \
     $$PWD/qdeclarativeboundsignal_p.h \
     $$PWD/qdeclarativeparserstatus.h \
     $$PWD/qdeclarativeproxymetaobject_p.h \

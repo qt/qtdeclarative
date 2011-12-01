@@ -64,6 +64,7 @@
 #include <private/qfinitestack_p.h>
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativescriptstring_p.h"
+#include "qdeclarativepropertyvalueinterceptor_p.h"
 
 #include <QStack>
 #include <QColor>

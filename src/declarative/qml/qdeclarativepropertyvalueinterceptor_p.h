@@ -39,16 +39,23 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEPROPERTYVALUEINTERCEPTOR_H
-#define QDECLARATIVEPROPERTYVALUEINTERCEPTOR_H
+#ifndef QDECLARATIVEPROPERTYVALUEINTERCEPTOR_P_H
+#define QDECLARATIVEPROPERTYVALUEINTERCEPTOR_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include <QtCore/qobject.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
 
 class QDeclarativeProperty;
 class Q_DECLARATIVE_EXPORT QDeclarativePropertyValueInterceptor
@@ -63,6 +70,4 @@ Q_DECLARE_INTERFACE(QDeclarativePropertyValueInterceptor, "com.trolltech.qml.QDe
 
 QT_END_NAMESPACE
 
-QT_END_HEADER
-
-#endif // QDECLARATIVEPROPERTYVALUEINTERCEPTOR_H
+#endif // QDECLARATIVEPROPERTYVALUEINTERCEPTOR_P_H
