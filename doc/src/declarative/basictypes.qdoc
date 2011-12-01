@@ -434,7 +434,8 @@
     \brief A var type is a generic property type.
 
     A var is a generic property type capable of storing any data type.
-    It is equivalent to a regular JavaScript variable.
+    It is equivalent to a regular JavaScript variable, except that you
+    cannot assign a JavaScript function to such a property.
     For example, var properties can store numbers, strings, objects and
     arrays:
 
@@ -449,10 +450,14 @@
         property var aPoint: Qt.point(10, 10)
         property var aSize: Qt.size(10, 10)
         property var aVector3d: Qt.vector3d(100, 100, 100)
-        property var anArray: [1, 2, 3, "four", "five"]
+        property var anArray: [1, 2, 3, "four", "five", (function() { return "six"; })]
         property var anObject: { "foo": 10, "bar": 20 }
     }
     \endqml
+
+    Attempting to assign a JavaScript function to a var property will result in
+    a binding assignment as per other property types.  You can assign a JavaScript
+    array containing a single function element instead.
 
     It is important to note that changes in regular properties of JavaScript
     objects assigned to a var property will \bold{not} trigger updates of bindings
