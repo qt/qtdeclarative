@@ -99,10 +99,6 @@ void tst_parserstress::ecmascript_data()
 
 void tst_parserstress::ecmascript()
 {
-#ifndef TESTDATADIR
-    QSKIP("Needs QtScript sources");
-#else
-
     QFETCH(QString, file);
 
     QFile f(file);
@@ -150,7 +146,6 @@ void tst_parserstress::ecmascript()
 
         QVERIFY(!component.isError());
     }
-#endif // ifdef TESTDATADIR
 }
 
 
