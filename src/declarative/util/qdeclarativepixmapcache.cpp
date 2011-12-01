@@ -366,7 +366,7 @@ QDeclarativePixmapReader::QDeclarativePixmapReader(QDeclarativeEngine *eng)
     eventLoopQuitHack = new QObject;
     eventLoopQuitHack->moveToThread(this);
     connect(eventLoopQuitHack, SIGNAL(destroyed(QObject*)), SLOT(quit()), Qt::DirectConnection);
-    start(QThread::IdlePriority);
+    start(QThread::LowestPriority);
 }
 
 QDeclarativePixmapReader::~QDeclarativePixmapReader()

@@ -467,7 +467,7 @@ QDeclarativeWorkerScriptEngine::QDeclarativeWorkerScriptEngine(QDeclarativeEngin
 {
     d->m_lock.lock();
     connect(d, SIGNAL(stopThread()), this, SLOT(quit()), Qt::DirectConnection);
-    start(QThread::IdlePriority);
+    start(QThread::LowestPriority);
     d->m_wait.wait(&d->m_lock);
     d->moveToThread(this);
     d->m_lock.unlock();
