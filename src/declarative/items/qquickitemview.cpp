@@ -307,7 +307,7 @@ int QQuickItemView::currentIndex() const
 void QQuickItemView::setCurrentIndex(int index)
 {
     Q_D(QQuickItemView);
-    if (d->requestedIndex >= 0)  // currently creating item
+    if (d->requestedIndex >= 0 && !d->requestedAsync)  // currently creating item
         return;
     d->currentIndexCleared = (index == -1);
 
