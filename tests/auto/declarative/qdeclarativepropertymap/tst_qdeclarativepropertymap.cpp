@@ -228,7 +228,7 @@ void tst_QDeclarativePropertyMap::QTBUG_17868()
     context.setContextProperty("map", &map);
     map.insert("key", 1);
     QDeclarativeComponent c(&engine);
-    c.setData("import QtQuick 2.0\nItem {property bool error:false; Component.onCompleted: {try{console.log(map.keys());}catch(e) {error=true;}}}",QUrl());
+    c.setData("import QtQuick 2.0\nItem {property bool error:false; Component.onCompleted: {try{ map.keys(); }catch(e) {error=true;}}}",QUrl());
     QObject *obj = c.create(&context);
     QVERIFY(obj);
     QVERIFY(!obj->property("error").toBool());
