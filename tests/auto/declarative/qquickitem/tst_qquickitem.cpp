@@ -812,7 +812,6 @@ void tst_qquickitem::mouseGrab()
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(100);
-    qDebug() << canvas->mouseGrabberItem();
     QVERIFY(canvas->mouseGrabberItem() == child1);
     QTest::qWait(100);
 
