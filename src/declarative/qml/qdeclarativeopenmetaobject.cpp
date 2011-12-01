@@ -287,7 +287,7 @@ QVariant &QDeclarativeOpenMetaObject::operator[](int id)
     return d->getData(id);
 }
 
-void QDeclarativeOpenMetaObject::setValue(const QByteArray &name, const QVariant &val)
+bool QDeclarativeOpenMetaObject::setValue(const QByteArray &name, const QVariant &val)
 {
     QHash<QByteArray, int>::ConstIterator iter = d->type->d->names.find(name);
 
@@ -301,11 +301,14 @@ void QDeclarativeOpenMetaObject::setValue(const QByteArray &name, const QVariant
     if (id >= 0) {
         QVariant &dataVal = d->getData(id);
         if (dataVal == val)
-            return;
+            return false;
 
         dataVal = val;
         activate(d->object, id + d->type->d->signalOffset, 0);
+        return true;
     }
+
+    return false;
 }
 
 // returns true if this value has been initialized by a call to either value() or setValue()

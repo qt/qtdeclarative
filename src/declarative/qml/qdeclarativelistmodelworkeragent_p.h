@@ -130,11 +130,11 @@ private:
     {
         QList<Change> changes;
 
-        void clearChange(QDeclarativeListModel *model);
-        void insertChange(QDeclarativeListModel *model, int index, int count);
-        void removeChange(QDeclarativeListModel *model, int index, int count);
-        void moveChange(QDeclarativeListModel *model, int index, int count, int to);
-        void changedChange(QDeclarativeListModel *model, int index, int count, const QList<int> &roles);
+        void clearChange(int uid);
+        void insertChange(int uid, int index, int count);
+        void removeChange(int uid, int index, int count);
+        void moveChange(int uid, int index, int count, int to);
+        void changedChange(int uid, int index, int count, const QList<int> &roles);
     };
     Data data;
 

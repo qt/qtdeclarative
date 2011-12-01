@@ -53,10 +53,8 @@
 QT_BEGIN_NAMESPACE
 
 
-void QDeclarativeListModelWorkerAgent::Data::clearChange(QDeclarativeListModel *model)
+void QDeclarativeListModelWorkerAgent::Data::clearChange(int uid)
 {
-    int uid = model->m_listModel->getUid();
-
     for (int i=0 ; i < changes.count() ; ++i) {
         if (changes[i].modelUid == uid) {
             changes.removeAt(i);
@@ -65,27 +63,27 @@ void QDeclarativeListModelWorkerAgent::Data::clearChange(QDeclarativeListModel *
     }
 }
 
-void QDeclarativeListModelWorkerAgent::Data::insertChange(QDeclarativeListModel *model, int index, int count)
+void QDeclarativeListModelWorkerAgent::Data::insertChange(int uid, int index, int count)
 {
-    Change c = { model->m_listModel->getUid(), Change::Inserted, index, count, 0, QList<int>() };
+    Change c = { uid, Change::Inserted, index, count, 0, QList<int>() };
     changes << c;
 }
 
-void QDeclarativeListModelWorkerAgent::Data::removeChange(QDeclarativeListModel *model, int index, int count)
+void QDeclarativeListModelWorkerAgent::Data::removeChange(int uid, int index, int count)
 {
-    Change c = { model->m_listModel->getUid(), Change::Removed, index, count, 0, QList<int>() };
+    Change c = { uid, Change::Removed, index, count, 0, QList<int>() };
     changes << c;
 }
 
-void QDeclarativeListModelWorkerAgent::Data::moveChange(QDeclarativeListModel *model, int index, int count, int to)
+void QDeclarativeListModelWorkerAgent::Data::moveChange(int uid, int index, int count, int to)
 {
-    Change c = { model->m_listModel->getUid(), Change::Moved, index, count, to, QList<int>() };
+    Change c = { uid, Change::Moved, index, count, to, QList<int>() };
     changes << c;
 }
 
-void QDeclarativeListModelWorkerAgent::Data::changedChange(QDeclarativeListModel *model, int index, int count, const QList<int> &roles)
+void QDeclarativeListModelWorkerAgent::Data::changedChange(int uid, int index, int count, const QList<int> &roles)
 {
-    Change c = { model->m_listModel->getUid(), Change::Changed, index, count, 0, roles };
+    Change c = { uid, Change::Changed, index, count, 0, roles };
     changes << c;
 }
 
@@ -181,27 +179,40 @@ bool QDeclarativeListModelWorkerAgent::event(QEvent *e)
 
         bool cc = m_orig->count() != s->list->count();
 
-        QHash<int, ListModel *> targetModelHash;
-        ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelHash);
+        QHash<int, QDeclarativeListModel *> targetModelDynamicHash;
+        QHash<int, ListModel *> targetModelStaticHash;
+
+        Q_ASSERT(m_orig->m_dynamicRoles == s->list->m_dynamicRoles);
+        if (m_orig->m_dynamicRoles)
+            QDeclarativeListModel::sync(s->list, m_orig, &targetModelDynamicHash);
+        else
+            ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelStaticHash);
 
         for (int ii = 0; ii < changes.count(); ++ii) {
             const Change &change = changes.at(ii);
 
-            ListModel *model = targetModelHash.value(change.modelUid);
+            QDeclarativeListModel *model = 0;
+            if (m_orig->m_dynamicRoles) {
+                model = targetModelDynamicHash.value(change.modelUid);
+            } else {
+                ListModel *lm = targetModelStaticHash.value(change.modelUid);
+                if (lm)
+                    model = lm->m_modelCache;
+            }
 
-            if (model && model->m_modelCache) {
+            if (model) {
                 switch (change.type) {
                 case Change::Inserted:
-                    emit model->m_modelCache->itemsInserted(change.index, change.count);
+                    emit model->itemsInserted(change.index, change.count);
                     break;
                 case Change::Removed:
-                    emit model->m_modelCache->itemsRemoved(change.index, change.count);
+                    emit model->itemsRemoved(change.index, change.count);
                     break;
                 case Change::Moved:
-                    emit model->m_modelCache->itemsMoved(change.index, change.to, change.count);
+                    emit model->itemsMoved(change.index, change.to, change.count);
                     break;
                 case Change::Changed:
-                    emit model->m_modelCache->itemsChanged(change.index, change.count, change.roles);
+                    emit model->itemsChanged(change.index, change.count, change.roles);
                     break;
                 }
             }
