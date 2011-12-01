@@ -48,6 +48,7 @@
 #include <qsgengine.h>
 #include <qsgtexturematerial.h>
 #include <qsgtexture.h>
+#include <qquickcanvas.h>
 #include <QFile>
 #include <cmath>
 #include <qmath.h>
@@ -344,7 +345,7 @@ QSGGeometryNode* QQuickSpriteImage::buildNode()
     QImage image = m_spriteEngine->assembledImage();
     if (image.isNull())
         return 0;
-    m_material->texture = sceneGraphEngine()->createTextureFromImage(image);
+    m_material->texture = canvas()->createTextureFromImage(image);
     m_material->texture->setFiltering(QSGTexture::Linear);
     m_spriteEngine->start(0);
     m_material->interpolate = m_interpolate ? 1.0 : 0.0;
