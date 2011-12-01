@@ -2,7 +2,7 @@ TARGET  = qmlxmllistmodelplugin
 TARGETPATH = QtQuick/XmlListModel
 include(../qimportbase.pri)
 
-QT+= declarative xmlpatterns declarative-private v8-private core-private
+QT += network declarative xmlpatterns declarative-private v8-private core-private
 
 SOURCES += qdeclarativexmllistmodel.cpp plugin.cpp
 HEADERS += qdeclarativexmllistmodel_p.h

@@ -70,7 +70,7 @@ struct QDeclarativeXmlQueryResult {
     QStringList keyRoleResultsCache;
 };
 
-class Q_DECLARATIVE_EXPORT QDeclarativeXmlListModel : public QListModelInterface, public QDeclarativeParserStatus
+class QDeclarativeXmlListModel : public QListModelInterface, public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QDeclarativeParserStatus)
@@ -149,7 +149,7 @@ private:
     Q_DISABLE_COPY(QDeclarativeXmlListModel)
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeXmlListModelRole : public QObject
+class QDeclarativeXmlListModelRole : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
