@@ -7,7 +7,7 @@ module_qtdeclarative_tools.subdir = tools
 module_qtdeclarative_tools.target = module-qtdeclarative-tools
 module_qtdeclarative_tools.depends = module_qtdeclarative_src
 
-module_qtdeclarative_examples.subdir = examples/declarative
+module_qtdeclarative_examples.subdir = examples
 module_qtdeclarative_examples.target = module-qtdeclarative-examples
 module_qtdeclarative_examples.depends = module_qtdeclarative_src
 !contains(QT_BUILD_PARTS,examples) {
