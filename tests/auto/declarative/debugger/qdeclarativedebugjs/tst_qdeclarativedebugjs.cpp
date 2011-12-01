@@ -137,7 +137,8 @@ const char *TIMER_QMLFILE = "timer.qml";
 #define QVERIFY(statement) \
 do {\
     if (!QTest::qVerify((statement), #statement, "", __FILE__, __LINE__)) {\
-        qDebug().nospace() << "\nDEBUGGEE OUTPUT:\n" << process->output();\
+        if (QTest::currentTestFailed()) \
+          qDebug().nospace() << "\nDEBUGGEE OUTPUT:\n" << process->output();\
         return;\
     }\
 } while (0)
