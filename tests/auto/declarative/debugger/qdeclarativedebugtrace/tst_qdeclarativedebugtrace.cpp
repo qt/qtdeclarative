@@ -226,9 +226,6 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
         QFAIL(qPrintable(failMsg));
     }
 
-    for (int i = 0; i < m_client->traceMessages.size(); ++i)
-        qDebug() << m_client->traceMessages.at(i).messageType << m_client->traceMessages.at(i).detailType;
-
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
     QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
