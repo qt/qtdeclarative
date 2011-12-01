@@ -221,6 +221,8 @@ typedef QElapsedTimer ElapsedTimer;
 
 class Q_DECLARATIVE_EXPORT QUnifiedTimer2 : public QObject
 {
+    Q_OBJECT
+
 private:
     QUnifiedTimer2();
 
@@ -273,6 +275,9 @@ public:
 protected:
     void timerEvent(QTimerEvent *);
 
+private slots:
+    void startAnimations();
+    void stopAnimations();
 private:
     friend class QDefaultAnimationDriver2;
     friend class QAnimationDriver2;
@@ -280,18 +285,18 @@ private:
     QAnimationDriver2 *driver;
     QDefaultAnimationDriver2 defaultDriver;
 
-    QBasicTimer animationTimer;
-    // timer used to delay the check if we should start/stop the animation timer
-    QBasicTimer startStopAnimationTimer;
+    QBasicTimer pauseTimer;
 
     ElapsedTimer time;
 
     qint64 lastTick;
     int timingInterval;
     int currentAnimationIdx;
-    bool insideTick;
-    bool consistentTiming;
-    bool slowMode;
+    bool insideTick : 1;
+    bool consistentTiming : 1;
+    bool slowMode : 1;
+    bool startAnimationPending : 1;
+    bool stopAnimationPending : 1;
 
     // This factor will be used to divide the DEFAULT_TIMER_INTERVAL at each tick
     // when slowMode is enabled. Setting it to 0 or higher than DEFAULT_TIMER_INTERVAL (16)

@@ -50,7 +50,6 @@
 #include "private/qdeclarativeanimation_p.h"
 
 #define DEFAULT_TIMER_INTERVAL 16
-#define STARTSTOP_TIMER_DELAY 0
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +60,7 @@ Q_GLOBAL_STATIC(QThreadStorage<QUnifiedTimer2 *>, unifiedTimer)
 QUnifiedTimer2::QUnifiedTimer2() :
     QObject(), defaultDriver(this), lastTick(0), timingInterval(DEFAULT_TIMER_INTERVAL),
     currentAnimationIdx(0), insideTick(false), consistentTiming(false), slowMode(false),
+    startAnimationPending(false), stopAnimationPending(false),
     slowdownFactor(5.0f), isPauseTimerActive(false), runningLeafAnimations(0)
 {
     time.invalidate();
@@ -149,7 +149,7 @@ void QUnifiedTimer2::restartAnimationTimer()
             qDebug() << closestPauseAnimationTimeToFinish();
         }
         driver->stop();
-        animationTimer.start(closestTimeToFinish, this);
+        pauseTimer.start(closestTimeToFinish, this);
         isPauseTimerActive = true;
     } else if (!driver->isRunning() || isPauseTimerActive) {
         driver->start();
@@ -169,33 +169,36 @@ void QUnifiedTimer2::setTimingInterval(int interval)
     }
 }
 
+void QUnifiedTimer2::startAnimations()
+{
+    startAnimationPending = false;
+    //we transfer the waiting animations into the "really running" state
+    animations += animationsToStart;
+    animationsToStart.clear();
+    if (!animations.isEmpty()) {
+        restartAnimationTimer();
+        if (!time.isValid()) {
+            lastTick = 0;
+            time.start();
+        }
+    }
+}
+
+void QUnifiedTimer2::stopAnimations()
+{
+    stopAnimationPending = false;
+    if (animations.isEmpty()) {
+        pauseTimer.stop();
+        isPauseTimerActive = false;
+        // invalidate the start reference time
+        time.invalidate();
+    }
+}
+
 
 void QUnifiedTimer2::timerEvent(QTimerEvent *event)
 {
-    //in the case of consistent timing we make sure the orders in which events come is always the same
-   //for that purpose we do as if the startstoptimer would always fire before the animation timer
-    if ((consistentTiming && startStopAnimationTimer.isActive()) ||
-        event->timerId() == startStopAnimationTimer.timerId()) {
-        startStopAnimationTimer.stop();
-
-        //we transfer the waiting animations into the "really running" state
-        animations += animationsToStart;
-        animationsToStart.clear();
-        if (animations.isEmpty()) {
-            animationTimer.stop();
-            isPauseTimerActive = false;
-            // invalidate the start reference time
-            time.invalidate();
-        } else {
-            restartAnimationTimer();
-            if (!time.isValid()) {
-                lastTick = 0;
-                time.start();
-            }
-        }
-    }
-
-    if (event->timerId() == animationTimer.timerId()) {
+    if (event->timerId() == pauseTimer.timerId()) {
         // update current time on all top level animations
         updateAnimationsTime(-1);
         restartAnimationTimer();
@@ -210,8 +213,10 @@ void QUnifiedTimer2::registerAnimation(QAbstractAnimation2* animation, bool isTo
         Q_ASSERT(!animation->m_hasRegisteredTimer);
         animation->m_hasRegisteredTimer = true;
         inst->animationsToStart << animation;
-        if (!inst->startStopAnimationTimer.isActive())
-            inst->startStopAnimationTimer.start(STARTSTOP_TIMER_DELAY, inst);
+        if (!inst->startAnimationPending) {
+            inst->startAnimationPending = true;
+            QMetaObject::invokeMethod(inst, "startAnimations", Qt::QueuedConnection);
+        }
     }
 }
 
@@ -234,8 +239,10 @@ void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2 *animation)
             if (idx <= inst->currentAnimationIdx)
                 --inst->currentAnimationIdx;
 
-            if (inst->animations.isEmpty() && !inst->startStopAnimationTimer.isActive())
-                inst->startStopAnimationTimer.start(STARTSTOP_TIMER_DELAY, inst);
+            if (inst->animations.isEmpty() && !inst->stopAnimationPending) {
+                inst->stopAnimationPending = true;
+                QMetaObject::invokeMethod(inst, "stopAnimations", Qt::QueuedConnection);
+            }
         } else {
             if (inst->animationsToStart.contains(animation)) {
                 inst->animationsToStart.removeOne(animation);
