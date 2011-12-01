@@ -80,7 +80,9 @@ class SingleRoleModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    SingleRoleModel(const QByteArray &role = "name", QObject * /* parent */ = 0) {
+    SingleRoleModel(const QByteArray &role = "name", QObject *parent = 0)
+        : QAbstractListModel(parent)
+    {
         QHash<int, QByteArray> roles;
         roles.insert(Qt::DisplayRole , role);
         setRoleNames(roles);
@@ -904,7 +906,7 @@ void tst_qquickvisualdatamodel::remove()
         QCOMPARE(listview->count(), 7);
         QCOMPARE(visualModel->items()->count(), 7);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: remove: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: remove: invalid count");
         evaluate<void>(visualModel, "items.remove(5, 3)");
         QCOMPARE(listview->count(), 7);
         QCOMPARE(visualModel->items()->count(), 7);
@@ -1247,7 +1249,7 @@ void tst_qquickvisualdatamodel::groups()
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: addGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: addGroups: invalid count");
         evaluate<void>(visualModel, "items.addGroups(11, 5, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
@@ -1275,7 +1277,7 @@ void tst_qquickvisualdatamodel::groups()
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: setGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: setGroups: invalid count");
         evaluate<void>(visualModel, "items.setGroups(11, 5, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
@@ -1301,7 +1303,7 @@ void tst_qquickvisualdatamodel::groups()
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: removeGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: removeGroups: invalid count");
         evaluate<void>(visualModel, "items.removeGroups(11, 5, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);

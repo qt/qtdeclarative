@@ -411,20 +411,24 @@ QDeclarativeListCompositor::iterator QDeclarativeListCompositor::insert(
 }
 
 void QDeclarativeListCompositor::setFlags(
-        Group group, int index, int count, int flags, QVector<Insert> *inserts)
+        Group fromGroup, int from, int count, Group group, int flags, QVector<Insert> *inserts)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< group << index << count << flags)
-    setFlags(find(group, index), count, flags, inserts);
+    setFlags(find(fromGroup, from), count, group, flags, inserts);
 }
 
 void QDeclarativeListCompositor::setFlags(
-        iterator from, int count, int flags, QVector<Insert> *inserts)
+        iterator from, int count, Group group, int flags, QVector<Insert> *inserts)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< from << count << flags)
     if (!flags || !count)
         return;
 
-    if (from.offset > 0) {
+    if (from != group) {
+        from.incrementIndexes(from->count - from.offset);
+        from.offset = 0;
+        *from = from->next;
+    } else if (from.offset > 0) {
         *from = insert(*from, from->list, from->index, from.offset, from->flags & ~AppendFlag)->next;
         from->index += from.offset;
         from->count -= from.offset;
@@ -489,14 +493,14 @@ void QDeclarativeListCompositor::setFlags(
 }
 
 void QDeclarativeListCompositor::clearFlags(
-        Group group, int index, int count, int flags, QVector<Remove> *removes)
+        Group fromGroup, int from, int count, Group group, int flags, QVector<Remove> *removes)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< group << index << count << flags)
-    clearFlags(find(group, index), count, flags, removes);
+    clearFlags(find(fromGroup, from), count, group, flags, removes);
 }
 
 void QDeclarativeListCompositor::clearFlags(
-        iterator from, int count, int flags, QVector<Remove> *removes)
+        iterator from, int count, Group group, int flags, QVector<Remove> *removes)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< from << count << flags)
     if (!flags || !count)
@@ -504,7 +508,11 @@ void QDeclarativeListCompositor::clearFlags(
 
     const bool clearCache = flags & CacheFlag;
 
-    if (from.offset > 0) {
+    if (from != group) {
+        from.incrementIndexes(from->count - from.offset);
+        from.offset = 0;
+        *from = from->next;
+    } else if (from.offset > 0) {
         *from = insert(*from, from->list, from->index, from.offset, from->flags & ~AppendFlag)->next;
         from->index += from.offset;
         from->count -= from.offset;
@@ -512,7 +520,7 @@ void QDeclarativeListCompositor::clearFlags(
     }
 
     for (; count > 0; *from = from->next) {
-        if (from != from.group) {
+        if (from != group) {
             from.incrementIndexes(from->count);
             continue;
         }
@@ -598,9 +606,9 @@ void QDeclarativeListCompositor::removeList(void *list, QVector<Remove> *removes
 }
 
 bool QDeclarativeListCompositor::verifyMoveTo(
-        Group fromGroup, int from, Group toGroup, int to, int count) const
+        Group fromGroup, int from, Group toGroup, int to, int count, Group group) const
 {
-    if (fromGroup != toGroup) {
+    if (group != toGroup) {
         // determine how many items from the destination group intersect with the source group.
         iterator fromIt = find(fromGroup, from);
 
@@ -609,7 +617,7 @@ bool QDeclarativeListCompositor::verifyMoveTo(
         for (; count > 0; *fromIt = fromIt->next) {
             if (*fromIt == &m_ranges)
                 return false;
-            if (!fromIt->inGroup(fromGroup))
+            if (!fromIt->inGroup(group))
                 continue;
             if (fromIt->inGroup(toGroup))
                 intersectingCount += qMin(count, fromIt->count - fromIt.offset);
@@ -628,16 +636,21 @@ void QDeclarativeListCompositor::move(
         Group toGroup,
         int to,
         int count,
+        Group group,
         QVector<Remove> *removes,
         QVector<Insert> *inserts)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< fromGroup << from << toGroup << to << count)
     Q_ASSERT(count != 0);
     Q_ASSERT(from >=0 && from + count <= m_end.index[toGroup]);
-    Q_ASSERT(verifyMoveTo(fromGroup, from, toGroup, to, count));
+    Q_ASSERT(verifyMoveTo(fromGroup, from, toGroup, to, count, group));
 
     iterator fromIt = find(fromGroup, from);
-    if (fromIt.offset > 0) {
+    if (fromIt != group) {
+        fromIt.incrementIndexes(fromIt->count - fromIt.offset);
+        fromIt.offset = 0;
+        *fromIt = fromIt->next;
+    } else if (fromIt.offset > 0) {
         *fromIt = insert(
                 *fromIt, fromIt->list, fromIt->index, fromIt.offset, fromIt->flags & ~AppendFlag)->next;
         fromIt->index += fromIt.offset;
@@ -647,7 +660,7 @@ void QDeclarativeListCompositor::move(
 
     Range movedFlags;
     for (int moveId = 0; count > 0;) {
-        if (fromIt != fromIt.group) {
+        if (fromIt != group) {
             fromIt.incrementIndexes(fromIt->count);
             *fromIt = fromIt->next;
             continue;

@@ -39,6 +39,7 @@ HEADERS += \
     $$PWD/qquicklistview_p.h \
     $$PWD/qquickvisualadaptormodel_p.h \
     $$PWD/qquickvisualdatamodel_p.h \
+    $$PWD/qquickvisualdatamodel_p_p.h \
     $$PWD/qquickvisualitemmodel_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \

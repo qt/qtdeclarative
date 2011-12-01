@@ -229,15 +229,23 @@ public:
     void insert(Group group, int before, void *list, int index, int count, int flags, QVector<Insert> *inserts = 0);
     iterator insert(iterator before, void *list, int index, int count, int flags, QVector<Insert> *inserts = 0);
 
-    void setFlags(Group group, int index, int count, int flags, QVector<Insert> *inserts = 0);
-    void setFlags(iterator from, int count, int flags, QVector<Insert> *inserts = 0);
+    void setFlags(Group fromGroup, int from, int count, Group group, int flags, QVector<Insert> *inserts = 0);
+    void setFlags(iterator from, int count, Group group, int flags, QVector<Insert> *inserts = 0);
+    void setFlags(Group fromGroup, int from, int count, int flags, QVector<Insert> *inserts = 0) {
+        setFlags(fromGroup, from, count, fromGroup, flags, inserts); }
+    void setFlags(iterator from, int count, int flags, QVector<Insert> *inserts = 0) {
+        setFlags(from, count, from.group, flags, inserts); }
 
-    void clearFlags(Group group, int index, int count, int flags, QVector<Remove> *removals = 0);
-    void clearFlags(iterator from, int count, int flags, QVector<Remove> *removals = 0);
+    void clearFlags(Group fromGroup, int from, int count, Group group, int flags, QVector<Remove> *removals = 0);
+    void clearFlags(iterator from, int count, Group group, int flags, QVector<Remove> *removals = 0);
+    void clearFlags(Group fromGroup, int from, int count, int flags, QVector<Remove> *removals = 0) {
+        clearFlags(fromGroup, from, count, fromGroup, flags, removals); }
+    void clearFlags(iterator from, int count, int flags, QVector<Remove> *removals = 0) {
+        clearFlags(from, count, from.group, flags, removals); }
 
     void removeList(void *list, QVector<Remove> *removals, bool destroyed);
 
-    bool verifyMoveTo(Group fromGroup, int from, Group toGroup, int to, int count) const;
+    bool verifyMoveTo(Group fromGroup, int from, Group toGroup, int to, int count, Group group) const;
 
     void move(
             Group fromGroup,
@@ -245,6 +253,7 @@ public:
             Group toGroup,
             int to,
             int count,
+            Group group,
             QVector<Remove> *removals = 0,
             QVector<Insert> *inserts = 0);
     void clear();

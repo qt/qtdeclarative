@@ -45,13 +45,14 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qabstractitemmodel.h>
 
-#include <private/qdeclarativerefcount_p.h>
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
+
+class QQuickVisualDataModelItem;
+class QQuickVisualDataModelItemMetaType;
 
 class QQuickVisualAdaptorModelPrivate;
 class QQuickVisualAdaptorModel : public QObject
@@ -80,10 +81,9 @@ public:
     QVariant parentModelIndex() const;
 
     int count() const;
-    QObject *data(int index);
+    QQuickVisualDataModelItem *createItem(QQuickVisualDataModelItemMetaType *metaType, int index);
     QString stringValue(int index, const QString &role);
     void replaceWatchedRoles(const QList<QByteArray> &oldRoles, const QList<QByteArray> &newRoles);
-    int indexOf(QObject *object) const;
 
     bool canFetchMore() const;
     void fetchMore();

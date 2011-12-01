@@ -160,9 +160,9 @@ public:
     void setDefaultInclude(bool include);
 
     Q_INVOKABLE QDeclarativeV8Handle get(int index);
-    Q_INVOKABLE QObject *create(int index);
 
 public Q_SLOTS:
+    void create(QDeclarativeV8Function *);
     void remove(QDeclarativeV8Function *);
     void addGroups(QDeclarativeV8Function *);
     void removeGroups(QDeclarativeV8Function *);
@@ -178,7 +178,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickVisualDataGroup)
 };
 
-class QQuickVisualDataModelCacheItem;
+class QQuickVisualDataModelItem;
 class QQuickVisualDataModelAttachedMetaObject;
 class QQuickVisualDataModelAttached : public QObject
 {
@@ -194,7 +194,7 @@ public:
     {}
     ~QQuickVisualDataModelAttached() { attachedProperties.remove(parent()); }
 
-    void setCacheItem(QQuickVisualDataModelCacheItem *item);
+    void setCacheItem(QQuickVisualDataModelItem *item);
 
     QQuickVisualDataModel *model() const;
 
@@ -218,7 +218,7 @@ Q_SIGNALS:
     void groupsChanged();
 
 public:
-    QQuickVisualDataModelCacheItem *m_cacheItem;
+    QQuickVisualDataModelItem *m_cacheItem;
     int m_previousGroups;
     int m_previousIndex[QDeclarativeListCompositor::MaximumGroupCount];
     bool m_modelChanged;

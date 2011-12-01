@@ -233,8 +233,6 @@ void tst_qdeclarativelistcompositor::find()
 void tst_qdeclarativelistcompositor::findInsertPosition_data()
 {
     QTest::addColumn<RangeList>("ranges");
-    QTest::addColumn<C::Group>("startGroup");
-    QTest::addColumn<int>("startIndex");
     QTest::addColumn<C::Group>("group");
     QTest::addColumn<int>("index");
     QTest::addColumn<int>("selectionIndex");
@@ -251,7 +249,6 @@ void tst_qdeclarativelistcompositor::findInsertPosition_data()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
                 << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
-            << C::Cache << 2
             << Selection << 0
             << 0 << 0 << 0 << 0
             << int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
@@ -260,7 +257,6 @@ void tst_qdeclarativelistcompositor::findInsertPosition_data()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
                 << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
-            << C::Cache << 2
             << Selection << 1
             << 1 << 0 << 1 << 1
             << int(C::AppendFlag | C::PrependFlag | C::CacheFlag) << 1;
@@ -269,8 +265,6 @@ void tst_qdeclarativelistcompositor::findInsertPosition_data()
 void tst_qdeclarativelistcompositor::findInsertPosition()
 {
     QFETCH(RangeList, ranges);
-    QFETCH(C::Group, startGroup);
-    QFETCH(int, startIndex);
     QFETCH(C::Group, group);
     QFETCH(int, index);
     QFETCH(int, cacheIndex);
@@ -988,7 +982,7 @@ void tst_qdeclarativelistcompositor::move()
 
     QVector<C::Remove> removes;
     QVector<C::Insert> inserts;
-    compositor.move(fromGroup, from, toGroup, to, count, &removes, &inserts);
+    compositor.move(fromGroup, from, toGroup, to, count, fromGroup, &removes, &inserts);
 
     QCOMPARE(removes, expectedRemoves);
     QCOMPARE(inserts, expectedInserts);
@@ -1031,7 +1025,7 @@ void tst_qdeclarativelistcompositor::moveFromEnd()
     compositor.append(a, 0, 1, C::AppendFlag | C::PrependFlag | C::DefaultFlag);
 
     // Moving an item anchors it to that position.
-    compositor.move(C::Default, 0, C::Default, 0, 1);
+    compositor.move(C::Default, 0, C::Default, 0, 1, C::Default);
 
     // The existing item is anchored at 0 so prepending an item to the source will append it here
     QVector<C::Insert> inserts;

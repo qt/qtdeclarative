@@ -83,7 +83,7 @@ Item {
                 }
                 DropArea {
                     anchors.fill: parent
-                    onEntered: visualModel.items.move(selectedItems, 0, packageRoot.VisualDataModel.itemsIndex, selectedItems.count)
+                    onEntered: selectedItems.move(0, visualModel.items.get(packageRoot.VisualDataModel.itemsIndex), selectedItems.count)
                 }
             }
             Item {
