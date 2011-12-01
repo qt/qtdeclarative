@@ -1177,13 +1177,19 @@ void QQuickFlickable::viewportMoved()
             qreal horizontalVelocity = (prevX - d->hData.move.value()) * 1000 / elapsed;
             if (qAbs(horizontalVelocity) > 0) {
                 d->velocityTimeline.reset(d->hData.smoothVelocity);
-                d->velocityTimeline.move(d->hData.smoothVelocity, horizontalVelocity, d->reportedVelocitySmoothing);
+                if (d->calcVelocity)
+                    d->velocityTimeline.set(d->hData.smoothVelocity, horizontalVelocity);
+                else
+                    d->velocityTimeline.move(d->hData.smoothVelocity, horizontalVelocity, d->reportedVelocitySmoothing);
                 d->velocityTimeline.move(d->hData.smoothVelocity, 0, d->reportedVelocitySmoothing);
             }
             qreal verticalVelocity = (prevY - d->vData.move.value()) * 1000 / elapsed;
             if (qAbs(verticalVelocity) > 0) {
                 d->velocityTimeline.reset(d->vData.smoothVelocity);
-                d->velocityTimeline.move(d->vData.smoothVelocity, verticalVelocity, d->reportedVelocitySmoothing);
+                if (d->calcVelocity)
+                    d->velocityTimeline.set(d->vData.smoothVelocity, verticalVelocity);
+                else
+                    d->velocityTimeline.move(d->vData.smoothVelocity, verticalVelocity, d->reportedVelocitySmoothing);
                 d->velocityTimeline.move(d->vData.smoothVelocity, 0, d->reportedVelocitySmoothing);
             }
         }
