@@ -593,6 +593,13 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
 {
     Q_D(QQuickPathAnimation);
 
+    QQuickPathAnimationUpdater prevData;
+    bool havePrevData = false;
+    if (d->activeAnimations.contains(d->target)) {
+        havePrevData = true;
+        prevData = *static_cast<QQuickPathAnimationUpdater*>(d->activeAnimations[d->target]->getAnimValue());
+    }
+
     QList<QQuickItem*> keys = d->activeAnimations.keys();
     foreach (QQuickItem *item, keys) {
         if (d->activeAnimations.value(item)->state() == QAbstractAnimation2::Stopped)
@@ -600,16 +607,10 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
     }
 
     QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater();
-    QQuickPathAnimationUpdater *prevData = 0;
     QDeclarativeRefPointer<QDeclarativeBulkValueAnimator> pa;
     pa.take(new QDeclarativeBulkValueAnimator());
 
-    if (d->activeAnimations.contains(d->target)) {
-        prevData = static_cast<QQuickPathAnimationUpdater*>(d->activeAnimations[d->target]->getAnimValue());
-    }
-
     d->activeAnimations[d->target] = pa;
-
 
     data->orientation = d->orientation;
     data->anchorPoint = d->anchorPoint;
@@ -643,24 +644,24 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
         data->target = d->target;
         data->path = d->path;
 
-        if (prevData) {
+        if (havePrevData) {
             // get the original start angle that was used (so we can exactly reverse).
-            data->startRotation = prevData->startRotation;
+            data->startRotation = prevData.startRotation;
 
             // treat interruptions specially, otherwise we end up with strange paths
-            if ((data->reverse || prevData->reverse) && prevData->currentV > 0 && prevData->currentV < 1) {
-                if (!data->fromDefined && !data->toDefined && !prevData->painterPath.isEmpty()) {
-                    QPointF pathPos = QDeclarativePath::sequentialPointAt(prevData->painterPath, prevData->pathLength, prevData->attributePoints, prevData->prevBez, prevData->currentV);
-                    if (!prevData->anchorPoint.isNull())
-                        pathPos -= prevData->anchorPoint;
+            if ((data->reverse || prevData.reverse) && prevData.currentV > 0 && prevData.currentV < 1) {
+                if (!data->fromDefined && !data->toDefined && !prevData.painterPath.isEmpty()) {
+                    QPointF pathPos = QDeclarativePath::sequentialPointAt(prevData.painterPath, prevData.pathLength, prevData.attributePoints, prevData.prevBez, prevData.currentV);
+                    if (!prevData.anchorPoint.isNull())
+                        pathPos -= prevData.anchorPoint;
                     if (pathPos == data->target->pos()) {   //only treat as interruption if we interrupted ourself
-                        data->painterPath = prevData->painterPath;
+                        data->painterPath = prevData.painterPath;
                         data->toDefined = data->fromDefined = data->fromSourced = true;
                         data->prevBez.isValid = false;
-                        data->interruptStart = prevData->currentV;
-                        data->startRotation = prevData->startRotation;
-                        data->pathLength = prevData->pathLength;
-                        data->attributePoints = prevData->attributePoints;
+                        data->interruptStart = prevData.currentV;
+                        data->startRotation = prevData.startRotation;
+                        data->pathLength = prevData.pathLength;
+                        data->attributePoints = prevData.attributePoints;
                     }
                 }
             }
@@ -712,9 +713,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
         }
     }
 
-    //### could cache properties rather than reconstructing each time
-    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("x")), currentPos.x(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
-    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("y")), currentPos.y(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
+    target->setPos(currentPos);
 
     //adjust angle according to orientation
     if (!fixed) {
@@ -765,7 +764,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
             else if (v > exitStart)
                 angle = endRotation * (v - exitStart) / exitInterval + angle * (exitInterval - (v - exitStart)) / exitInterval;
         }
-        QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("rotation")), angle, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
+        target->setRotation(angle);
     }
 
     /*

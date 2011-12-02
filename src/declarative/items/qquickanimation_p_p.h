@@ -96,7 +96,7 @@ public:
         entryInterval(0), exitInterval(0) {}
     ~QQuickPathAnimationUpdater() {}
 
-        void setValue(qreal v);
+    void setValue(qreal v);
 
     QDeclarativePath *path;
 
