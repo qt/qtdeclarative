@@ -72,6 +72,7 @@ Q_GLOBAL_STATIC(QThread, globalCanvasThreadRenderInstance)
 QQuickContext2DTexture::QQuickContext2DTexture()
     : QSGDynamicTexture()
     , m_context(0)
+    , m_item(0)
     , m_canvasSize(QSize(1, 1))
     , m_tileSize(QSize(1, 1))
     , m_canvasWindow(QRect(0, 0, 1, 1))
@@ -239,7 +240,7 @@ void QQuickContext2DTexture::paintWithoutTiles()
         p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
                                  | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform, false);
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    m_state = ccb->replay(&p, m_state);
+    ccb->replay(&p, m_state);
 
     ccb->clear();
     markDirtyTexture();
@@ -263,9 +264,6 @@ void QQuickContext2DTexture::paint()
     if (!m_tiledCanvas) {
         paintWithoutTiles();
     } else {
-        QQuickContext2D::State oldState = m_state;
-        QQuickContext2DCommandBuffer* ccb = m_context->buffer();
-
         lock();
         QRect tiledRegion = createTiles(m_canvasWindow.intersected(QRect(QPoint(0, 0), m_canvasSize)));
         unlock();
@@ -295,6 +293,8 @@ void QQuickContext2DTexture::paint()
             }
 
             if (beginPainting()) {
+                QQuickContext2D::State oldState = m_state;
+                QQuickContext2DCommandBuffer* ccb = m_context->buffer();
                 foreach (QQuickContext2DTile* tile, m_tiles) {
                     bool dirtyTile = false, dirtyCanvas = false, smooth = false;
 
@@ -311,7 +311,7 @@ void QQuickContext2DTexture::paint()
                         endPainting();
                         return;
                     } else if (dirtyTile) {
-                        m_state = ccb->replay(tile->createPainter(smooth), oldState);
+                        ccb->replay(tile->createPainter(smooth), oldState);
                         tile->drawFinished();
                         lock();
                         tile->markDirty(false);
@@ -322,6 +322,7 @@ void QQuickContext2DTexture::paint()
                 }
                 ccb->clear();
                 endPainting();
+                m_state = oldState;
                 markDirtyTexture();
             }
         }

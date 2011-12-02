@@ -27,6 +27,7 @@
 
 /*!
 \page mouseevents.html
+\inqmlmodule QtQuick 1
 \title QML Mouse Events
 \ingroup QML Features
 \previouspage {Anchor-based Layout in QML}{Layouts using Anchors}

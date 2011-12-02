@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativedebugjs
-QT += network declarative-private testlib
+QT += declarative-private testlib
 macx:CONFIG -= app_bundle
 
 HEADERS += ../shared/debugutil_p.h
@@ -15,6 +15,7 @@ testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
 
-CONFIG += parallel_test insignificant_test
+CONFIG += parallel_test
 
-OTHER_FILES += data/test.qml data/test.js
+OTHER_FILES += data/test.qml data/test.js \
+    data/timer.qml

@@ -82,8 +82,10 @@ public:
     virtual bool isEqual(const QV8SequenceResource *v) = 0;
 
     virtual quint32 lengthGetter() = 0;
+    virtual void lengthSetter(v8::Handle<v8::Value> value) = 0;
     virtual v8::Handle<v8::Value> indexedSetter(quint32 index, v8::Handle<v8::Value> value) = 0;
     virtual v8::Handle<v8::Value> indexedGetter(quint32 index) = 0;
+    virtual v8::Handle<v8::Boolean> indexedDeleter(quint32 index) = 0;
     virtual v8::Handle<v8::Array> indexedEnumerator() = 0;
     virtual v8::Handle<v8::Value> toString() = 0;
 
@@ -220,7 +222,9 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
     F(QUrl, Url, QList<QUrl>, QUrl())
 
 #define QML_SEQUENCE_TYPE_RESOURCE(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue, ConversionToV8fn, ConversionFromV8fn, ToStringfn) \
+    QT_END_NAMESPACE \
     Q_DECLARE_METATYPE(SequenceType) \
+    QT_BEGIN_NAMESPACE \
     class QV8##SequenceElementTypeName##SequenceResource : public QV8SequenceResource { \
         public:\
             QV8##SequenceElementTypeName##SequenceResource(QV8Engine *engine, QObject *obj, int propIdx) \
@@ -284,6 +288,48 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 } \
                 return c.count(); \
             } \
+            void lengthSetter(v8::Handle<v8::Value> value) \
+            { \
+                /* Get the new required length */ \
+                if (value.IsEmpty() || !value->IsUint32()) \
+                    return; \
+                quint32 newLength = value->Uint32Value(); \
+                /* Read the sequence from the QObject property if we're a reference */ \
+                if (objectType == QV8SequenceResource::Reference) { \
+                    if (!object) \
+                        return; \
+                    void *a[] = { &c, 0 }; \
+                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                } \
+                /* Determine whether we need to modify the sequence */ \
+                quint32 count = c.count(); \
+                if (newLength == count) { \
+                    return; \
+                } else if (newLength > count) { \
+                    /* according to ECMA262r3 we need to insert */ \
+                    /* undefined values increasing length to newLength. */ \
+                    /* We cannot, so we insert default-values instead. */ \
+                    while (newLength > count++) { \
+                        c.append(DefaultValue); \
+                    } \
+                } else { \
+                    /* according to ECMA262r3 we need to remove */ \
+                    /* elements until the sequence is the required length. */ \
+                    while (newLength < count) { \
+                        count--; \
+                        c.removeAt(count); \
+                    } \
+                } \
+                /* write back if required. */ \
+                if (objectType == QV8SequenceResource::Reference) { \
+                    /* write back.  already checked that object is non-null, so skip that check here. */ \
+                    int status = -1; \
+                    QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::DontRemoveBinding; \
+                    void *a[] = { &c, 0, &status, &flags }; \
+                    QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
+                } \
+                return; \
+            } \
             v8::Handle<v8::Value> indexedSetter(quint32 index, v8::Handle<v8::Value> value) \
             { \
                 if (objectType == QV8SequenceResource::Reference) { \
@@ -329,6 +375,29 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     return ConversionToV8fn(engine, c.at(index)); \
                 return v8::Undefined(); \
             } \
+            v8::Handle<v8::Boolean> indexedDeleter(quint32 index) \
+            { \
+                if (objectType == QV8SequenceResource::Reference) { \
+                    if (!object) \
+                        return v8::Boolean::New(false); \
+                    void *a[] = { &c, 0 }; \
+                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                } \
+                if (index < c.count()) { \
+                    /* according to ECMA262r3 it should be Undefined, */ \
+                    /* but we cannot, so we insert a default-value instead. */ \
+                    c.replace(index, DefaultValue); \
+                    if (objectType == QV8SequenceResource::Reference) { \
+                        /* write back.  already checked that object is non-null, so skip that check here. */ \
+                        int status = -1; \
+                        QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::DontRemoveBinding; \
+                        void *a[] = { &c, 0, &status, &flags }; \
+                        QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
+                    } \
+                    return v8::Boolean::New(true); \
+                } \
+                return v8::Boolean::New(false); \
+            } \
             v8::Handle<v8::Array> indexedEnumerator() \
             { \
                 if (objectType == QV8SequenceResource::Reference) { \
@@ -372,5 +441,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
 FOREACH_QML_SEQUENCE_TYPE(GENERATE_QML_SEQUENCE_TYPE_RESOURCE)
 #undef GENERATE_QML_SEQUENCE_TYPE_RESOURCE
 #undef QML_SEQUENCE_TYPE_RESOURCE
+
+QT_END_NAMESPACE
 
 #endif // QV8SEQUENCEWRAPPER_P_P_H

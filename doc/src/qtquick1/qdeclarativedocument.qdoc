@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativedocuments.html
+\inqmlmodule QtQuick 1
 \title QML Documents
 \brief A description of QML documents and the kind of content they contain.
 

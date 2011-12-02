@@ -1894,4 +1894,27 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
     return false;
 }
 
+int QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()
+{
+    static int id = 0;
+    if (!id) {
+        id = QMetaType::type("QQuickAnchorLine");
+        Q_ASSERT(id != 0);
+    }
+    return id;
+}
+
+QDeclarativeMetaType::CompareFunction QDeclarativeMetaType::anchorLineCompareFunction = 0;
+
+void QDeclarativeMetaType::setQQuickAnchorLineCompareFunction(CompareFunction fun)
+{
+    anchorLineCompareFunction = fun;
+}
+
+bool QDeclarativeMetaType::QQuickAnchorLineCompare(const void *p1, const void *p2)
+{
+    Q_ASSERT(anchorLineCompareFunction != 0);
+    return anchorLineCompareFunction(p1, p2);
+}
+
 QT_END_NAMESPACE

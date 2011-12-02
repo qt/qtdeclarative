@@ -84,33 +84,28 @@ class QNetworkReply;
 class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;
 
-//### merge into private?
-class QQuickContents : public QObject, public QQuickItemChangeListener
+class QQuickContents : public QQuickItemChangeListener
 {
-    Q_OBJECT
 public:
     QQuickContents(QQuickItem *item);
     ~QQuickContents();
 
-    QRectF rectF() const;
+    QRectF rectF() const { return QRectF(m_x, m_y, m_width, m_height); }
 
-    void childRemoved(QQuickItem *item);
-    void childAdded(QQuickItem *item);
-
-    void calcGeometry() { calcWidth(); calcHeight(); }
+    inline void calcGeometry(QQuickItem *changed = 0);
     void complete();
-
-Q_SIGNALS:
-    void rectChanged(QRectF);
 
 protected:
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
     void itemDestroyed(QQuickItem *item);
+    void itemChildAdded(QQuickItem *, QQuickItem *);
+    void itemChildRemoved(QQuickItem *, QQuickItem *);
     //void itemVisibilityChanged(QQuickItem *item)
 
 private:
-    void calcHeight(QQuickItem *changed = 0);
-    void calcWidth(QQuickItem *changed = 0);
+    bool calcHeight(QQuickItem *changed = 0);
+    bool calcWidth(QQuickItem *changed = 0);
+    void updateRect();
 
     QQuickItem *m_item;
     qreal m_x;
@@ -118,6 +113,14 @@ private:
     qreal m_width;
     qreal m_height;
 };
+
+void QQuickContents::calcGeometry(QQuickItem *changed)
+{
+    bool wChanged = calcWidth(changed);
+    bool hChanged = calcHeight(changed);
+    if (wChanged || hChanged)
+        updateRect();
+}
 
 class QQuickTransformPrivate : public QObjectPrivate
 {
@@ -139,6 +142,7 @@ public:
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
 
     QQuickItemPrivate();
+    ~QQuickItemPrivate();
     void init(QQuickItem *parent);
 
     QDeclarativeListProperty<QObject> data();
@@ -215,10 +219,24 @@ public:
 
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
+    enum GeometryChangeType {
+        NoChange = 0,
+        XChange = 0x01,
+        YChange = 0x02,
+        WidthChange = 0x04,
+        HeightChange = 0x08,
+        SizeChange = WidthChange | HeightChange,
+        GeometryChange = XChange | YChange | SizeChange
+    };
+
+    Q_DECLARE_FLAGS(GeometryChangeTypes, GeometryChangeType)
+
     struct ChangeListener {
-        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::ChangeTypes t) : listener(l), types(t) {}
+        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::ChangeTypes t) : listener(l), types(t), gTypes(GeometryChange) {}
+        ChangeListener(QQuickItemChangeListener *l, QQuickItemPrivate::GeometryChangeTypes gt) : listener(l), types(Geometry), gTypes(gt) {}
         QQuickItemChangeListener *listener;
         QQuickItemPrivate::ChangeTypes types;
+        QQuickItemPrivate::GeometryChangeTypes gTypes;  //NOTE: not used for ==
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
 
@@ -226,6 +244,8 @@ public:
         changeListeners.append(ChangeListener(listener, types));
     }
     void removeItemChangeListener(QQuickItemChangeListener *, ChangeTypes types);
+    void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
+    void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
     QPODVector<ChangeListener,4> changeListeners;
 
     QDeclarativeStateGroup *_states();
@@ -262,10 +282,21 @@ public:
 
     QQuickItem *parentItem;
     QList<QQuickItem *> childItems;
+    mutable QList<QQuickItem *> *sortedChildItems;
     QList<QQuickItem *> paintOrderChildItems() const;
     void addChild(QQuickItem *);
     void removeChild(QQuickItem *);
     void siblingOrderChanged();
+
+    inline void markSortedChildrenDirty(QQuickItem *child) {
+        // If sortedChildItems == &childItems then all in childItems have z == 0
+        // and we don't need to invalidate if the changed item also has z == 0.
+        if (child->z() != 0. || sortedChildItems != &childItems) {
+            if (sortedChildItems != &childItems)
+                delete sortedChildItems;
+            sortedChildItems = 0;
+        }
+    }
 
     class InitializationState {
     public:
@@ -312,6 +343,11 @@ public:
     void setLayoutMirror(bool mirror);
     bool isMirrored() const {
         return effectiveLayoutMirror;
+    }
+
+    void emitChildrenRectChanged(const QRectF &rect) {
+        Q_Q(QQuickItem);
+        emit q->childrenRectChanged(rect);
     }
 
     QPointF computeTransformOrigin() const;

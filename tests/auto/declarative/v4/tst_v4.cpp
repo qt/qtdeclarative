@@ -78,6 +78,7 @@ private slots:
     void nestedObjectAccess();
     void subscriptionsInConditionalExpressions();
     void qtbug_21883();
+    void qtbug_22816();
 
 private:
     QDeclarativeEngine engine;
@@ -250,6 +251,17 @@ void tst_v4::qtbug_21883()
 
     QObject *o = component.create();
     QVERIFY(o != 0);
+    delete o;
+}
+
+void tst_v4::qtbug_22816()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22816.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test1").toBool(), false);
+    QCOMPARE(o->property("test2").toBool(), false);
     delete o;
 }
 

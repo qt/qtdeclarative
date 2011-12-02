@@ -46,6 +46,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 #include <QtDeclarative/private/qquickitem_p.h>
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
 #include <QtDeclarative/private/qquickgridview_p.h>
@@ -71,6 +72,8 @@ private slots:
     void inserted();
     void inserted_more();
     void inserted_more_data();
+    void insertBeforeVisible();
+    void insertBeforeVisible_data();
     void removed();
     void addOrRemoveBeforeVisible();
     void addOrRemoveBeforeVisible_data();
@@ -114,6 +117,9 @@ private slots:
     void creationContext();
     void snapToRow_data();
     void snapToRow();
+    void unaligned();
+    void cacheBuffer();
+    void asynchronous();
 
 private:
     QQuickView *createView();
@@ -596,6 +602,94 @@ void tst_QQuickGridView::inserted_more_data()
             << 0.0;
 }
 
+void tst_QQuickGridView::insertBeforeVisible()
+{
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(int, cacheBuffer);
+
+    QQuickText *name;
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(false));
+    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    gridview->setCacheBuffer(cacheBuffer);
+
+    // trigger a refill (not just setting contentY) so that the visibleItems grid is updated
+    int firstVisibleIndex = 20;     // move to an index where the top item is not visible
+    gridview->setContentY(firstVisibleIndex * 20.0);
+    gridview->setCurrentIndex(firstVisibleIndex);
+    qApp->processEvents();
+    QTRY_COMPARE(gridview->currentIndex(), firstVisibleIndex);
+    QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", firstVisibleIndex);
+    QVERIFY(item);
+    QCOMPARE(item->y(), gridview->contentY());
+
+    QList<QPair<QString, QString> > newData;
+    for (int i=0; i<insertCount; i++)
+        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+    model.insertItems(insertIndex, newData);
+    QTRY_COMPARE(gridview->property("count").toInt(), model.count());
+
+    // now, moving to the top of the view should position the inserted items correctly
+    int itemsOffsetAfterMove = (insertCount / 3) * -60.0;
+    gridview->setCurrentIndex(0);
+    QTRY_COMPARE(gridview->currentIndex(), 0);
+    QTRY_COMPARE(gridview->contentY(), 0.0 + itemsOffsetAfterMove);
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0 + itemsOffsetAfterMove);
+        name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::insertBeforeVisible_data()
+{
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<int>("cacheBuffer");
+
+    QTest::newRow("insert 1 at 0, 0 buffer") << 0 << 1 << 0;
+    QTest::newRow("insert 1 at 0, 100 buffer") << 0 << 1 << 100;
+    QTest::newRow("insert 1 at 0, 500 buffer") << 0 << 1 << 500;
+
+    QTest::newRow("insert 1 at 1, 0 buffer") << 1 << 1 << 0;
+    QTest::newRow("insert 1 at 1, 100 buffer") << 1 << 1 << 100;
+    QTest::newRow("insert 1 at 1, 500 buffer") << 1 << 1 << 500;
+
+    QTest::newRow("insert multiple at 0, 0 buffer") << 0 << 6 << 0;
+    QTest::newRow("insert multiple at 0, 100 buffer") << 0 << 6 << 100;
+    QTest::newRow("insert multiple at 0, 500 buffer") << 0 << 6 << 500;
+
+    QTest::newRow("insert multiple at 1, 0 buffer") << 1 << 6 << 0;
+    QTest::newRow("insert multiple at 1, 100 buffer") << 1 << 6 << 100;
+    QTest::newRow("insert multiple at 1, 500 buffer") << 1 << 6 << 500;
+}
+
 void tst_QQuickGridView::removed()
 {
     QQuickView *canvas = createView();
@@ -1005,6 +1099,11 @@ void tst_QQuickGridView::moved_data()
             << 0 << 5 << 3
             << 0.0;
 
+    QTest::newRow("move multiple backwards, within visible items (move first item)")
+            << 0.0
+            << 10 << 0 << 3
+            << 0.0;
+
     QTest::newRow("move multiple forwards, before visible items")
             << 120.0     // show 6-23
             << 3 << 4 << 3      // 3, 4, 5 move to after 6
@@ -1340,6 +1439,7 @@ void tst_QQuickGridView::currentIndex()
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QVERIFY(gridview != 0);
+    QTRY_VERIFY(!QQuickItemPrivate::get(gridview)->polishScheduled);
 
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -1358,6 +1458,9 @@ void tst_QQuickGridView::currentIndex()
     QCOMPARE(gridview->currentIndex(), 36);
     gridview->moveCurrentIndexLeft();
     QCOMPARE(gridview->currentIndex(), 35);
+
+    // wait until motion stops
+    QTRY_VERIFY(gridview->verticalVelocity() == 0.0);
 
     // no wrap
     gridview->setCurrentIndex(0);
@@ -3338,6 +3441,65 @@ void tst_QQuickGridView::snapToRow()
     delete canvas;
 }
 
+void tst_QQuickGridView::unaligned()
+{
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 10; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("unaligned.qml")));
+    qApp->processEvents();
+
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+    QVERIFY(gridview != 0);
+
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+
+    for (int i = 0; i < 10; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QVERIFY(item);
+        QCOMPARE(item->x(), qreal((i%9)*gridview->cellWidth()));
+        QCOMPARE(item->y(), qreal((i/9)*gridview->cellHeight()));
+    }
+
+    // appending
+    for (int i = 10; i < 18; ++i) {
+        model.addItem("Item" + QString::number(i), "");
+        QQuickItem *item = 0;
+        QTRY_VERIFY(item = findItem<QQuickItem>(contentItem, "wrapper", i));
+        QCOMPARE(item->x(), qreal((i%9)*gridview->cellWidth()));
+        QCOMPARE(item->y(), qreal((i/9)*gridview->cellHeight()));
+    }
+
+    // inserting
+    for (int i = 0; i < 10; ++i) {
+        model.insertItem(i, "Item" + QString::number(i), "");
+        QQuickItem *item = 0;
+        QTRY_VERIFY(item = findItem<QQuickItem>(contentItem, "wrapper", i));
+        QCOMPARE(item->x(), qreal((i%9)*gridview->cellWidth()));
+        QCOMPARE(item->y(), qreal((i/9)*gridview->cellHeight()));
+    }
+
+    // removing
+    model.removeItems(7, 10);
+    QTRY_COMPARE(model.count(), gridview->count());
+    for (int i = 0; i < 18; ++i) {
+        QQuickItem *item = 0;
+        QTRY_VERIFY(item = findItem<QQuickItem>(contentItem, "wrapper", i));
+        QCOMPARE(item->x(), qreal(i%9)*gridview->cellWidth());
+        QCOMPARE(item->y(), qreal(i/9)*gridview->cellHeight());
+    }
+
+    delete canvas;
+}
 
 QQuickView *tst_QQuickGridView::createView()
 {
@@ -3363,6 +3525,150 @@ void tst_QQuickGridView::flick(QQuickView *canvas, const QPoint &from, const QPo
     }
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
+}
+
+void tst_QQuickGridView::cacheBuffer()
+{
+    QQuickView *canvas = createView();
+
+    TestModel model;
+    for (int i = 0; i < 90; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(false));
+    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QVERIFY(gridview != 0);
+
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+    QVERIFY(gridview->delegate() != 0);
+    QVERIFY(gridview->model() != 0);
+
+    // Confirm items positioned correctly
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0);
+    }
+
+    QDeclarativeIncubationController controller;
+    canvas->engine()->setIncubationController(&controller);
+
+    canvas->rootObject()->setProperty("cacheBuffer", 200);
+    QTRY_VERIFY(gridview->cacheBuffer() == 200);
+
+    // items will be created one at a time
+    for (int i = itemCount; i < qMin(itemCount+9,model.count()); ++i) {
+        QVERIFY(findItem<QQuickItem>(gridview, "wrapper", i) == 0);
+        QQuickItem *item = 0;
+        while (!item) {
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(gridview, "wrapper", i);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    int newItemCount = 0;
+    newItemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < model.count() && i < newItemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY(item);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0);
+    }
+
+    // move view and confirm items in view are visible immediately and outside are created async
+    gridview->setContentY(300);
+
+    for (int i = 15; i < 34; ++i) { // 34 due to staggered item creation
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY(item);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0);
+    }
+
+    QVERIFY(findItem<QQuickItem>(gridview, "wrapper", 34) == 0);
+
+    // ensure buffered items are created
+    for (int i = 34; i < qMin(44,model.count()); ++i) {
+        QQuickItem *item = 0;
+        while (!item) {
+            qGuiApp->processEvents(); // allow refill to happen
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(gridview, "wrapper", i);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::asynchronous()
+{
+    QQuickView *canvas = createView();
+    canvas->show();
+    QDeclarativeIncubationController controller;
+    canvas->engine()->setIncubationController(&controller);
+
+    canvas->setSource(TESTDATA("asyncloader.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QVERIFY(rootObject);
+
+    QQuickGridView *gridview = 0;
+    while (!gridview) {
+        bool b = false;
+        controller.incubateWhile(&b);
+        gridview = rootObject->findChild<QQuickGridView*>("view");
+    }
+
+    // items will be created one at a time
+    for (int i = 0; i < 12; ++i) {
+        QVERIFY(findItem<QQuickItem>(gridview, "wrapper", i) == 0);
+        QQuickItem *item = 0;
+        while (!item) {
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(gridview, "wrapper", i);
+        }
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    // verify positioning
+    QQuickItem *contentItem = gridview->contentItem();
+    for (int i = 0; i < 12; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QVERIFY(item->x() == (i%3)*100);
+        QVERIFY(item->y() == (i/3)*100);
+    }
+
+    delete canvas;
 }
 
 /*

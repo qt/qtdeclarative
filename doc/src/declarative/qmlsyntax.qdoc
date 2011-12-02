@@ -27,6 +27,7 @@
 
 /*!
 \page qmlsyntax.html
+\inqmlmodule QtQuick 2
 \title QML Syntax
 \ingroup QML Reference
 \contentspage QML Reference

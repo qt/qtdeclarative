@@ -27,6 +27,7 @@
 
 /*!
 \page qml-behaviors-and-states.html
+\inqmlmodule QtQuick 2
 \title Using QML Behaviors with States
 
 \section1 Using Behaviors with States

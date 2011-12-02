@@ -64,6 +64,7 @@
 #include <private/qfinitestack_p.h>
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativescriptstring_p.h"
+#include "qdeclarativepropertyvalueinterceptor_p.h"
 
 #include <QStack>
 #include <QColor>
@@ -226,9 +227,11 @@ static void removeBindingOnProperty(QObject *o, int index)
     case QDeclarativeInstruction::I: \
     QML_BEGIN_INSTR_COMMON(I)
 
-#  define QML_NEXT_INSTR(I) \
+#  define QML_NEXT_INSTR(I) { \
     if (watcher.hasRecursed()) return 0; \
-    break;
+    break; \
+    }
+
 #  define QML_END_INSTR(I) \
     if (watcher.hasRecursed() || interrupt.shouldInterrupt()) return 0; \
     } break;
@@ -622,6 +625,27 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreString)
 
+        QML_BEGIN_INSTR(StoreStringList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QStringList stringlist(PRIMITIVES.at(instr.value));
+            void *a[] = { (void *)&stringlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreStringList)
+
+        QML_BEGIN_INSTR(StoreStringQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<QString> stringqlist;
+            stringqlist.append(PRIMITIVES.at(instr.value));
+            void *a[] = { (void *)&stringqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreStringQList)
+
         QML_BEGIN_INSTR(StoreByteArray)
             QObject *target = objects.top();
             void *a[] = { (void *)&DATAS.at(instr.value), 0, &status, &flags };
@@ -637,6 +661,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreUrl)
+
+        QML_BEGIN_INSTR(StoreUrlQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<QUrl> urlqlist;
+            urlqlist.append(URLS.at(instr.value));
+            void *a[] = { (void *)&urlqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreUrlQList)
 
         QML_BEGIN_INSTR(StoreFloat)
             QObject *target = objects.top();
@@ -658,6 +693,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreDouble)
 
+        QML_BEGIN_INSTR(StoreDoubleQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<double> doubleqlist;
+            doubleqlist.append(instr.value);
+            void *a[] = { (void *)&doubleqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreDoubleQList)
+
         QML_BEGIN_INSTR(StoreBool)
             QObject *target = objects.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
@@ -667,6 +713,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreBool)
 
+        QML_BEGIN_INSTR(StoreBoolQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<bool> boolqlist;
+            boolqlist.append(instr.value);
+            void *a[] = { (void *)&boolqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreBoolQList)
+
         QML_BEGIN_INSTR(StoreInteger)
             QObject *target = objects.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
@@ -675,6 +732,17 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreInteger)
+
+        QML_BEGIN_INSTR(StoreIntegerQList)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QList<int> intqlist;
+            intqlist.append(instr.value);
+            void *a[] = { (void *)&intqlist, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreIntegerQList)
 
         QML_BEGIN_INSTR(StoreColor)
             QObject *target = objects.top();
@@ -861,9 +929,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 
             QDeclarativeBoundSignal *bs = new QDeclarativeBoundSignal(target, signal, target);
             QDeclarativeExpression *expr = 
-                new QDeclarativeExpression(CTXT, context, PRIMITIVES.at(instr.value));
-            expr->setSourceLocation(COMP->name, instr.line);
-            static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr))->name = QString::fromUtf8(DATAS.at(instr.name));
+                new QDeclarativeExpression(CTXT, context, PRIMITIVES.at(instr.value), true, COMP->name, instr.line, *new QDeclarativeExpressionPrivate);
             bs->setExpression(expr);
         QML_END_INSTR(StoreSignal)
 
@@ -958,7 +1024,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 QML_NEXT_INSTR(StoreV4Binding);
 
             QDeclarativeAbstractBinding *binding = 
-                CTXT->v4bindings->configBinding(instr.value, target, scope, property);
+                CTXT->v4bindings->configBinding(instr.value, target, scope, property, instr.line);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
             binding->addToObject(target, property);
@@ -1239,8 +1305,11 @@ void QDeclarativeScriptData::initialize(QDeclarativeEngine *engine)
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
 
-    // XXX Handle errors during the script compile!
+    // If compilation throws an error, a surrounding v8::TryCatch will record it.
     v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_programSource, url.toString(), 1);
+    if (program.IsEmpty())
+        return;
+
     m_program = qPersistentNew<v8::Script>(program);
 
     addToEngine(engine);
@@ -1301,13 +1370,18 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(v8engine->context());
 
-    if (!script->isInitialized()) 
+    v8::TryCatch try_catch;
+    if (!script->isInitialized())
         script->initialize(parentCtxt->engine);
 
     v8::Local<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
 
-    v8::TryCatch try_catch;
-    script->m_program->Run(qmlglobal);
+    if (!script->m_program.IsEmpty()) {
+        script->m_program->Run(qmlglobal);
+    } else {
+        // Compilation failed.
+        Q_ASSERT(try_catch.HasCaught());
+    }
 
     v8::Persistent<v8::Object> rv;
     
@@ -1453,7 +1527,7 @@ void QDeclarativeVMEGuard::guard(QDeclarativeVME *vme)
     for (int ii = 0; ii < m_objectCount; ++ii)
         m_objects[ii] = vme->objects[ii];
 
-    m_contextCount = (vme->rootContext.isNull())?0:1 + vme->states.count();
+    m_contextCount = (vme->rootContext.isNull()?0:1) + vme->states.count();
     m_contexts = new QDeclarativeGuardedContextData[m_contextCount];
     for (int ii = 0; ii < vme->states.count(); ++ii) 
         m_contexts[ii] = vme->states.at(ii).context;

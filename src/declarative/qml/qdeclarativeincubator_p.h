@@ -83,7 +83,7 @@ public:
     enum Progress { Execute, Completing, Completed };
     Progress progress;
 
-    QObject *result;
+    QDeclarativeGuard<QObject> result;
     QDeclarativeGuardedContextData rootContext;
     QDeclarativeCompiledData *component;
     QDeclarativeVME vme;

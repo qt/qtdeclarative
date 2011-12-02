@@ -53,7 +53,6 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGDistanceFieldGlyphCache;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldTextMaterial;
 class QSGDistanceFieldGlyphNode: public QSGGlyphNode
@@ -73,9 +72,9 @@ public:
 
     virtual void update();
 
-private:
     void updateGeometry();
-    void updateFont();
+
+private:
     void updateMaterial();
 
     QColor m_color;
@@ -89,8 +88,14 @@ private:
     QQuickText::TextStyle m_style;
     QColor m_styleColor;
     AntialiasingMode m_antialiasingMode;
+    QRectF m_boundingRect;
 
-    uint m_dirtyFont: 1;
+    struct GlyphInfo {
+        quint32 glyphIndex;
+        QPointF position;
+    };
+    QLinkedList<GlyphInfo> m_glyphsToAdd;
+
     uint m_dirtyGeometry: 1;
     uint m_dirtyMaterial: 1;
 };

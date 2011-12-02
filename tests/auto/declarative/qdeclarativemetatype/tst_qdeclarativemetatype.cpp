@@ -54,6 +54,7 @@
 #include <QWidget>
 
 #include <private/qdeclarativemetatype_p.h>
+#include <private/qdeclarativepropertyvalueinterceptor_p.h>
 
 class tst_qdeclarativemetatype : public QObject
 {

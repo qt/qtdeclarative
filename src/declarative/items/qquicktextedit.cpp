@@ -56,7 +56,6 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qtextcontrol_p.h>
 #include <private/qtextengine_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
@@ -634,6 +633,25 @@ int QQuickTextEdit::lineCount() const
 {
     Q_D(const QQuickTextEdit);
     return d->lineCount;
+}
+
+/*!
+    \qmlproperty int QtQuick2::TextEdit::length
+
+    Returns the total number of plain text characters in the TextEdit item.
+
+    As this number doesn't include any formatting markup it may not be the same as the
+    length of the string returned by the \l text property.
+
+    This property can be faster than querying the length the \l text property as it doesn't
+    require any copying or conversion of the TextEdit's internal string data.
+*/
+
+int QQuickTextEdit::length() const
+{
+    Q_D(const QQuickTextEdit);
+    // QTextDocument::characterCount() includes the terminating null character.
+    return qMax(0, d->document->characterCount() - 1);
 }
 
 /*!
@@ -1786,12 +1804,16 @@ void QQuickTextEdit::updateSize()
         if (!widthValid() && d->document->textWidth() != newWidth)
             d->document->setTextWidth(newWidth); // ### Text does not align if width is not set (QTextDoc bug)
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
+        qreal iWidth = -1;
         if (!widthValid())
-            setImplicitWidth(newWidth);
+            iWidth = newWidth;
         else if (d->requireImplicitWidth)
-            setImplicitWidth(naturalWidth);
+            iWidth = naturalWidth;
         qreal newHeight = d->document->isEmpty() ? fm.height() : (int)d->document->size().height();
-        setImplicitHeight(newHeight);
+        if (iWidth > -1)
+            setImplicitSize(iWidth, newHeight);
+        else
+            setImplicitHeight(newHeight);
 
         d->paintedSize = QSize(newWidth, newHeight);
         emit paintedSizeChanged();
@@ -1974,6 +1996,96 @@ void QQuickTextEdit::q_canPasteChanged()
     d->canPaste = d->control->canPaste();
     if (old!=d->canPaste)
         emit canPasteChanged();
+}
+
+/*!
+    \qmlmethod string QtQuick2::TextEdit::getText(int start, int end)
+
+    Returns the section of text that is between the \a start and \a end positions.
+
+    The returned text does not include any rich text formatting.
+*/
+
+QString QQuickTextEdit::getText(int start, int end) const
+{
+    Q_D(const QQuickTextEdit);
+    start = qBound(0, start, d->document->characterCount() - 1);
+    end = qBound(0, end, d->document->characterCount() - 1);
+    QTextCursor cursor(d->document);
+    cursor.setPosition(start, QTextCursor::MoveAnchor);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    return cursor.selectedText();
+}
+
+/*!
+    \qmlmethod string QtQuick2::TextEdit::getFormattedText(int start, int end)
+
+    Returns the section of text that is between the \a start and \a end positions.
+
+    The returned text will be formatted according the \l textFormat property.
+*/
+
+QString QQuickTextEdit::getFormattedText(int start, int end) const
+{
+    Q_D(const QQuickTextEdit);
+
+    start = qBound(0, start, d->document->characterCount() - 1);
+    end = qBound(0, end, d->document->characterCount() - 1);
+
+    QTextCursor cursor(d->document);
+    cursor.setPosition(start, QTextCursor::MoveAnchor);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+
+    if (d->richText) {
+#ifndef QT_NO_TEXTHTMLPARSER
+        return cursor.selection().toHtml();
+#else
+        return cursor.selection().toPlainText();
+#endif
+    } else {
+        return cursor.selection().toPlainText();
+    }
+}
+
+/*!
+    \qmlmethod void QtQuick2::TextEdit::insert(int position, string text)
+
+    Inserts \a text into the TextEdit at position.
+*/
+void QQuickTextEdit::insert(int position, const QString &text)
+{
+    Q_D(QQuickTextEdit);
+    if (position < 0 || position >= d->document->characterCount())
+        return;
+    QTextCursor cursor(d->document);
+    cursor.setPosition(position);
+    d->richText = d->richText || (d->format == AutoText && Qt::mightBeRichText(text));
+    if (d->richText) {
+#ifndef QT_NO_TEXTHTMLPARSER
+        cursor.insertHtml(text);
+#else
+        cursor.insertText(text);
+#endif
+    } else {
+        cursor.insertText(text);
+    }
+}
+
+/*!
+    \qmlmethod string QtQuick2::TextEdit::getText(int start, int end)
+
+    Removes the section of text that is between the \a start and \a end positions from the TextEdit.
+*/
+
+void QQuickTextEdit::remove(int start, int end)
+{
+    Q_D(QQuickTextEdit);
+    start = qBound(0, start, d->document->characterCount() - 1);
+    end = qBound(0, end, d->document->characterCount() - 1);
+    QTextCursor cursor(d->document);
+    cursor.setPosition(start, QTextCursor::MoveAnchor);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
 }
 
 QT_END_NAMESPACE

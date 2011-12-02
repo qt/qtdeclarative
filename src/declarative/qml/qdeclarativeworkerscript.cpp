@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qdeclarativeworkerscript_p.h"
-#include <private/qdeclarativelistmodel_p.h>
-#include <private/qdeclarativelistmodelworkeragent_p.h>
+#include "qdeclarativelistmodel_p.h"
+#include "qdeclarativelistmodelworkeragent_p.h"
 #include "qdeclarativeengine_p.h"
 #include "qdeclarativeexpression_p.h"
 

@@ -80,7 +80,7 @@ class SingleRoleModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    SingleRoleModel(const QByteArray &role = "name", QObject *parent = 0) {
+    SingleRoleModel(const QByteArray &role = "name", QObject * /* parent */ = 0) {
         QHash<int, QByteArray> roles;
         roles.insert(Qt::DisplayRole , role);
         setRoleNames(roles);
@@ -101,7 +101,7 @@ public slots:
     }
 
 protected:
-    int rowCount(const QModelIndex &parent = QModelIndex()) const {
+    int rowCount(const QModelIndex & /* parent */ = QModelIndex()) const {
         return list.count();
     }
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const {
@@ -131,6 +131,8 @@ private slots:
     void modelProperties();
     void noDelegate_data();
     void noDelegate();
+    void itemsDestroyed_data();
+    void itemsDestroyed();
     void qaimRowsMoved();
     void qaimRowsMoved_data();
     void remove_data();
@@ -144,6 +146,7 @@ private slots:
     void onChanged_data();
     void onChanged();
     void create();
+    void incompleteModel();
 
 private:
     template <int N> void groups_verify(
@@ -561,7 +564,7 @@ void tst_qquickvisualdatamodel::modelProperties()
 
         QUrl source(QUrl::fromLocalFile(TESTDATA("modelproperties2.qml")));
 
-        //3 items, 3 warnings each
+        //3 items, 3 i each
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
@@ -628,6 +631,37 @@ void tst_qquickvisualdatamodel::noDelegate()
     QCOMPARE(vdm->count(), 0);
 }
 
+void tst_qquickvisualdatamodel::itemsDestroyed_data()
+{
+    QTest::addColumn<QUrl>("source");
+
+    QTest::newRow("listView") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_listView.qml"));
+    QTest::newRow("package") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_package.qml"));
+    QTest::newRow("pathView") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_pathView.qml"));
+    QTest::newRow("repeater") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_repeater.qml"));
+}
+
+void tst_qquickvisualdatamodel::itemsDestroyed()
+{
+    QFETCH(QUrl, source);
+
+    QDeclarativeGuard<QQuickItem> delegate;
+
+    {
+        QQuickView view;
+        QStandardItemModel model;
+        initStandardTreeModel(&model);
+        view.rootContext()->setContextProperty("myModel", &model);
+        view.setSource(source);
+
+        view.show();
+        QTest::qWaitForWindowShown(&view);
+
+        QVERIFY(delegate = findItem<QQuickItem>(view.rootItem(), "delegate", 1));
+    }
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QVERIFY(!delegate);
+}
 
 void tst_qquickvisualdatamodel::qaimRowsMoved()
 {
@@ -1754,6 +1788,49 @@ void tst_qquickvisualdatamodel::create()
     evaluate<void>(listview, "positionViewAtIndex(1, ListView.Beginning)");
     QCOMPARE(listview->count(), 20);
     QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+}
+
+
+void tst_qquickvisualdatamodel::incompleteModel()
+{
+    // VisualDataModel is first populated in componentComplete.  Verify various functions are
+    // harmlessly ignored until then.
+
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0\n VisualDataModel {}", QUrl::fromLocalFile(TESTDATA("")));
+
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+
+    QQuickVisualDataModel *model = qobject_cast<QQuickVisualDataModel *>(object.data());
+    QVERIFY(model);
+
+    QSignalSpy itemsSpy(model->items(), SIGNAL(countChanged()));
+    QSignalSpy persistedItemsSpy(model->items(), SIGNAL(countChanged()));
+
+    evaluate<void>(model, "items.removeGroups(0, items.count, \"items\")");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.setGroups(0, items.count, \"persistedItems\")");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.addGroups(0, items.count, \"persistedItems\")");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.remove(0, items.count)");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    evaluate<void>(model, "items.insert([ \"color\": \"blue\" ])");
+    QCOMPARE(itemsSpy.count(), 0);
+    QCOMPARE(persistedItemsSpy.count(), 0);
+
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML VisualDataGroup: get: index out of range");
+    QVERIFY(evaluate<bool>(model, "items.get(0) === undefined"));
+
+    component.completeCreate();
 }
 
 template<typename T>

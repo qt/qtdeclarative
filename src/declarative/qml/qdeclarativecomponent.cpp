@@ -1107,6 +1107,7 @@ void QDeclarativeComponent::incubateObject(QDeclarativeV8Function *args)
 {
     Q_D(QDeclarativeComponent);
     Q_ASSERT(d->engine);
+    Q_UNUSED(d);
     Q_ASSERT(args);
 
     QObject *parent = 0;
@@ -1277,6 +1278,7 @@ QDeclarativeComponentExtension::~QDeclarativeComponentExtension()
 {
     qPersistentDispose(incubationConstructor);
     qPersistentDispose(initialProperties);
+    qPersistentDispose(forceCompletion);
 }
 
 QV8IncubatorResource::QV8IncubatorResource(QV8Engine *engine, IncubationMode m)

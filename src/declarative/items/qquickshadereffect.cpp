@@ -88,14 +88,6 @@ const char *qtTexCoordAttributeName()
     return qt_texcoord_attribute_name;
 }
 
-// TODO: Remove after grace period.
-QQuickShaderEffectItem::QQuickShaderEffectItem(QQuickItem *parent)
-    : QQuickShaderEffect(parent)
-{
-    qWarning("ShaderEffectItem has been deprecated. Use ShaderEffect instead.");
-}
-
-
 /*!
     \qmlclass ShaderEffect QQuickShaderEffect
     \inqmlmodule QtQuick 2
@@ -474,15 +466,25 @@ void QQuickShaderEffect::reset()
 
 void QQuickShaderEffect::updateProperties()
 {
-    QByteArray vertexCode = m_source.vertexCode;
-    QByteArray fragmentCode = m_source.fragmentCode;
-    if (vertexCode.isEmpty())
-        vertexCode = qt_default_vertex_code;
-    if (fragmentCode.isEmpty())
-        fragmentCode = qt_default_fragment_code;
-
-    lookThroughShaderCode(vertexCode);
-    lookThroughShaderCode(fragmentCode);
+    if (m_source.vertexCode.isEmpty()) {
+        m_source.attributeNames.append(QByteArray(qt_position_attribute_name));
+        m_source.attributeNames.append(QByteArray(qt_texcoord_attribute_name));
+        m_source.respectsMatrix = true;
+    } else {
+        lookThroughShaderCode(m_source.vertexCode);
+    }
+    if (m_source.fragmentCode.isEmpty()) {
+        m_source.respectsOpacity = true;
+        QByteArray name("source");
+        m_source.uniformNames.insert(name);
+        SourceData d;
+        d.mapper = new QSignalMapper;
+        d.name = name;
+        d.sourceObject = 0;
+        m_sources.append(d);
+    } else {
+        lookThroughShaderCode(m_source.fragmentCode);
+    }
 
     if (!m_mesh && !m_source.attributeNames.contains(qt_position_attribute_name))
         qWarning("QQuickShaderEffect: Missing reference to \'%s\'.", qt_position_attribute_name);
@@ -501,38 +503,148 @@ void QQuickShaderEffect::updateProperties()
     connectPropertySignals();
 }
 
+namespace {
+
+    enum VariableQualifier {
+        AttributeQualifier,
+        UniformQualifier
+    };
+
+    inline bool qt_isalpha(char c)
+    {
+        char ch = c | 0x20;
+        return (ch >= 'a' && ch <= 'z') || c == '_';
+    }
+
+    inline bool qt_isalnum(char c)
+    {
+        return qt_isalpha(c) || (c >= '0' && c <= '9');
+    }
+
+    inline bool qt_isspace(char c)
+    {
+        return c == ' ' || (c >= 0x09 && c <= 0x0d);
+    }
+
+    // Returns -1 if not found, returns index to first character after the name if found.
+    int qt_search_for_variable(const char *s, int length, int index, VariableQualifier &decl,
+                               int &typeIndex, int &typeLength,
+                               int &nameIndex, int &nameLength)
+    {
+        enum Identifier {
+            QualifierIdentifier, // Base state
+            PrecisionIdentifier,
+            TypeIdentifier,
+            NameIdentifier
+        };
+        Identifier expected = QualifierIdentifier;
+        bool compilerDirectiveExpected = index == 0;
+
+        while (index < length) {
+            // Skip whitespace.
+            while (qt_isspace(s[index])) {
+                compilerDirectiveExpected |= s[index] == '\n';
+                ++index;
+            }
+
+            if (qt_isalpha(s[index])) {
+                // Read identifier.
+                int idIndex = index;
+                ++index;
+                while (qt_isalnum(s[index]))
+                    ++index;
+                int idLength = index - idIndex;
+
+                const int attrLen = sizeof("attribute") - 1;
+                const int uniLen = sizeof("uniform") - 1;
+                const int loLen = sizeof("lowp") - 1;
+                const int medLen = sizeof("mediump") - 1;
+                const int hiLen = sizeof("highp") - 1;
+
+                switch (expected) {
+                case QualifierIdentifier:
+                    if (idLength == attrLen && qstrncmp("attribute", s + idIndex, attrLen) == 0) {
+                        decl = AttributeQualifier;
+                        expected = PrecisionIdentifier;
+                    } else if (idLength == uniLen && qstrncmp("uniform", s + idIndex, uniLen) == 0) {
+                        decl = UniformQualifier;
+                        expected = PrecisionIdentifier;
+                    }
+                    break;
+                case PrecisionIdentifier:
+                    if ((idLength == loLen && qstrncmp("lowp", s + idIndex, loLen) == 0)
+                            || (idLength == medLen && qstrncmp("mediump", s + idIndex, medLen) == 0)
+                            || (idLength == hiLen && qstrncmp("highp", s + idIndex, hiLen) == 0))
+                    {
+                        expected = TypeIdentifier;
+                        break;
+                    }
+                    // Fall through.
+                case TypeIdentifier:
+                    typeIndex = idIndex;
+                    typeLength = idLength;
+                    expected = NameIdentifier;
+                    break;
+                case NameIdentifier:
+                    nameIndex = idIndex;
+                    nameLength = idLength;
+                    return index; // Attribute or uniform declaration found. Return result.
+                default:
+                    break;
+                }
+            } else if (s[index] == '#' && compilerDirectiveExpected) {
+                // Skip compiler directives.
+                ++index;
+                while (index < length && (s[index] != '\n' || s[index - 1] == '\\'))
+                    ++index;
+            } else if (s[index] == '/' && s[index + 1] == '/') {
+                // Skip comments.
+                index += 2;
+                while (index < length && s[index] != '\n')
+                    ++index;
+            } else if (s[index] == '/' && s[index + 1] == '*') {
+                // Skip comments.
+                index += 2;
+                while (index < length && (s[index] != '*' || s[index + 1] != '/'))
+                    ++index;
+                if (index < length)
+                    index += 2; // Skip star-slash.
+            } else {
+                expected = QualifierIdentifier;
+                ++index;
+            }
+            compilerDirectiveExpected = false;
+        }
+        return -1;
+    }
+}
+
 void QQuickShaderEffect::lookThroughShaderCode(const QByteArray &code)
 {
-    // Regexp for matching attributes and uniforms.
-    // In human readable form: attribute|uniform [lowp|mediump|highp] <type> <name>
-    static QRegExp re(QLatin1String("\\b(attribute|uniform)\\b\\s*\\b(?:lowp|mediump|highp)?\\b\\s*\\b(\\w+)\\b\\s*\\b(\\w+)"));
-    Q_ASSERT(re.isValid());
-
-    int pos = -1;
-
-    QString wideCode = QString::fromLatin1(code.constData(), code.size());
-
-    while ((pos = re.indexIn(wideCode, pos + 1)) != -1) {
-        QByteArray decl = re.cap(1).toLatin1(); // uniform or attribute
-        QByteArray type = re.cap(2).toLatin1(); // type
-        QByteArray name = re.cap(3).toLatin1(); // variable name
-
-        if (decl == "attribute") {
-            m_source.attributeNames.append(name);
+    int index = 0;
+    int typeIndex, typeLength, nameIndex, nameLength;
+    const char *s = code.constData();
+    VariableQualifier decl;
+    while ((index = qt_search_for_variable(s, code.size(), index, decl, typeIndex, typeLength,
+                                           nameIndex, nameLength)) != -1)
+    {
+        if (decl == AttributeQualifier) {
+            m_source.attributeNames.append(QByteArray(s + nameIndex, nameLength));
         } else {
-            Q_ASSERT(decl == "uniform");
+            Q_ASSERT(decl == UniformQualifier);
 
-            if (name == "qt_Matrix") {
+            const int matLen = sizeof("qt_Matrix") - 1;
+            const int opLen = sizeof("qt_Opacity") - 1;
+            const int sampLen = sizeof("sampler2D") - 1;
+
+            if (nameLength == matLen && qstrncmp("qt_Matrix", s + nameIndex, matLen) == 0) {
                 m_source.respectsMatrix = true;
-            } else if (name == "qt_ModelViewProjectionMatrix") {
-                // TODO: Remove after grace period.
-                qWarning("ShaderEffect: qt_ModelViewProjectionMatrix is deprecated. Use qt_Matrix instead.");
-                m_source.respectsMatrix = true;
-            } else if (name == "qt_Opacity") {
+            } else if (nameLength == opLen && qstrncmp("qt_Opacity", s + nameIndex, opLen) == 0) {
                 m_source.respectsOpacity = true;
             } else {
+                QByteArray name(s + nameIndex, nameLength);
                 m_source.uniformNames.insert(name);
-                if (type == "sampler2D") {
+                if (typeLength == sampLen && qstrncmp("sampler2D", s + typeIndex, sampLen) == 0) {
                     SourceData d;
                     d.mapper = new QSignalMapper;
                     d.name = name;

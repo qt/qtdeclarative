@@ -51,6 +51,9 @@
 #include <QtCore/qsharedpointer.h>
 #include <QtGui/qglyphrun.h>
 #include <QtCore/qurl.h>
+#include <private/qfontengine_p.h>
+#include <QtGui/private/qdatabuffer_p.h>
+#include <private/qopenglcontext_p.h>
 
 // ### remove
 #include <private/qquicktext_p.h>
@@ -64,6 +67,8 @@ QT_MODULE(Declarative)
 class QSGNode;
 class QImage;
 class TextureReference;
+class QSGDistanceFieldGlyphCacheManager;
+class QSGDistanceFieldGlyphNode;
 
 // TODO: Rename from XInterface to AbstractX.
 class Q_DECLARATIVE_EXPORT QSGRectangleNode : public QSGGeometryNode
@@ -122,6 +127,126 @@ public:
 
 protected:
     QRectF m_bounding_rect;
+};
+
+class Q_DECLARATIVE_EXPORT QSGDistanceFieldGlyphCache
+{
+public:
+    QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
+    virtual ~QSGDistanceFieldGlyphCache();
+
+    struct Metrics {
+        qreal width;
+        qreal height;
+        qreal baselineX;
+        qreal baselineY;
+
+        bool isNull() const { return width == 0 || height == 0; }
+    };
+
+    struct TexCoord {
+        qreal x;
+        qreal y;
+        qreal width;
+        qreal height;
+        qreal xMargin;
+        qreal yMargin;
+
+        TexCoord() : x(0), y(0), width(-1), height(-1), xMargin(0), yMargin(0) { }
+
+        bool isNull() const { return width <= 0 || height <= 0; }
+        bool isValid() const { return width >= 0 && height >= 0; }
+    };
+
+    struct Texture {
+        GLuint textureId;
+        QSize size;
+
+        Texture() : textureId(0), size(QSize()) { }
+        bool operator == (const Texture &other) const { return textureId == other.textureId; }
+    };
+
+    const QSGDistanceFieldGlyphCacheManager *manager() const { return m_manager; }
+
+    const QRawFont &font() const { return m_font; }
+
+    qreal fontScale() const;
+    int distanceFieldRadius() const;
+    int glyphCount() const { return m_glyphCount; }
+    bool doubleGlyphResolution() const { return m_cacheData->doubleGlyphResolution; }
+
+    Metrics glyphMetrics(glyph_t glyph);
+    TexCoord glyphTexCoord(glyph_t glyph) const;
+    const Texture *glyphTexture(glyph_t glyph) const;
+
+    void populate(const QVector<glyph_t> &glyphs);
+    void release(const QVector<glyph_t> &glyphs);
+
+    void update();
+
+    void registerGlyphNode(QSGDistanceFieldGlyphNode *node);
+    void unregisterGlyphNode(QSGDistanceFieldGlyphNode *node);
+
+protected:
+    struct GlyphPosition {
+        glyph_t glyph;
+        QPointF position;
+    };
+
+    virtual void requestGlyphs(const QVector<glyph_t> &glyphs) = 0;
+    virtual void storeGlyphs(const QHash<glyph_t, QImage> &glyphs) = 0;
+    virtual void releaseGlyphs(const QVector<glyph_t> &glyphs) = 0;
+
+    void addGlyphPositions(const QList<GlyphPosition> &glyphs);
+    void addGlyphTextures(const QVector<glyph_t> &glyphs, const Texture &tex);
+    void markGlyphsToRender(const QVector<glyph_t> &glyphs);
+    void removeGlyph(glyph_t glyph);
+
+    void updateTexture(GLuint oldTex, GLuint newTex, const QSize &newTexSize);
+
+    bool containsGlyph(glyph_t glyph) const;
+
+    QOpenGLContext *ctx;
+
+private:
+    struct GlyphCacheData : public QOpenGLSharedResource {
+        QList<Texture> textures;
+        QHash<glyph_t, Texture*> glyphTextures;
+        QHash<glyph_t, TexCoord> texCoords;
+        QDataBuffer<glyph_t> pendingGlyphs;
+        QHash<glyph_t, QPainterPath> glyphPaths;
+        bool doubleGlyphResolution;
+        QLinkedList<QSGDistanceFieldGlyphNode*> m_registeredNodes;
+
+        GlyphCacheData(QOpenGLContext *ctx)
+            : QOpenGLSharedResource(ctx->shareGroup())
+            , pendingGlyphs(64)
+            , doubleGlyphResolution(false)
+        {}
+
+        void invalidateResource()
+        {
+            textures.clear();
+            glyphTextures.clear();
+            texCoords.clear();
+        }
+
+        void freeResource(QOpenGLContext *)
+        {
+        }
+    };
+
+    QSGDistanceFieldGlyphCacheManager *m_manager;
+
+    QRawFont m_font;
+    QRawFont m_referenceFont;
+
+    int m_glyphCount;
+    QHash<glyph_t, Metrics> m_metrics;
+
+    GlyphCacheData *cacheData();
+    GlyphCacheData *m_cacheData;
+    static QHash<QString, QOpenGLMultiGroupSharedResource> m_caches_data;
 };
 
 

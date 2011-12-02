@@ -27,6 +27,7 @@
 
 /*!
 \page qmlevents.html
+\inqmlmodule QtQuick 1
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {Keyboard Focus in QML}{Keyboard Focus}

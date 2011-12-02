@@ -46,14 +46,12 @@ QT_BEGIN_NAMESPACE
 // #define QSG_UPDATER_DEBUG
 
 QSGNodeUpdater::QSGNodeUpdater()
-    : m_matrix_stack(64)
-    , m_combined_matrix_stack(64)
+    : m_combined_matrix_stack(64)
     , m_opacity_stack(64)
     , m_current_clip(0)
     , m_force_update(0)
 {
     m_opacity_stack.add(1);
-    m_matrix_stack.add(QMatrix4x4());
 }
 
 void QSGNodeUpdater::updateStates(QSGNode *n)
@@ -124,11 +122,19 @@ void QSGNodeUpdater::enterTransformNode(QSGTransformNode *t)
 #endif
 
     if (!t->matrix().isIdentity()) {
+        if (!m_combined_matrix_stack.isEmpty()) {
+            t->setCombinedMatrix(*m_combined_matrix_stack.last() * t->matrix());
+        } else {
+            t->setCombinedMatrix(t->matrix());
+        }
         m_combined_matrix_stack.add(&t->combinedMatrix());
-        m_matrix_stack.add(m_matrix_stack.last() * t->matrix());
+    } else {
+        if (!m_combined_matrix_stack.isEmpty()) {
+            t->setCombinedMatrix(*m_combined_matrix_stack.last());
+        } else {
+            t->setCombinedMatrix(QMatrix4x4());
+        }
     }
-
-    t->setCombinedMatrix(m_matrix_stack.last());
 }
 
 
@@ -142,7 +148,6 @@ void QSGNodeUpdater::leaveTransformNode(QSGTransformNode *t)
         --m_force_update;
 
     if (!t->matrix().isIdentity()) {
-        m_matrix_stack.pop_back();
         m_combined_matrix_stack.pop_back();
     }
 

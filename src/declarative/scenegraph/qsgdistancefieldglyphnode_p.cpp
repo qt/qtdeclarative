@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qsgdistancefieldglyphnode_p_p.h"
-#include "qsgdistancefieldglyphcache_p.h"
+#include <private/qsgdistancefieldutil_p.h>
 #include <private/qsgtexture_p.h>
 #include <QtGui/qopenglfunctions.h>
 #include <qmath.h>
@@ -138,9 +138,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     QSGDistanceFieldTextMaterial *material = static_cast<QSGDistanceFieldTextMaterial *>(newEffect);
     QSGDistanceFieldTextMaterial *oldMaterial = static_cast<QSGDistanceFieldTextMaterial *>(oldEffect);
 
-    bool updated = material->updateTexture();
-    if (updated && !material->glyphCache()->useWorkaroundBrokenFBOReadback())
-        activate();
+    bool updated = material->updateCache();
 
     if (oldMaterial == 0
            || material->color() != oldMaterial->color()
@@ -171,10 +169,10 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
 
     if (updated
             || oldMaterial == 0
-            || oldMaterial->glyphCache()->texture() != material->glyphCache()->texture()) {
-        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->glyphCache()->textureSize().width(),
-                                                               1.0 / material->glyphCache()->textureSize().height()));
-        glBindTexture(GL_TEXTURE_2D, material->glyphCache()->texture());
+            || oldMaterial->texture()->textureId != material->texture()->textureId) {
+        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->textureSize().width(),
+                                                                1.0 / material->textureSize().height()));
+        glBindTexture(GL_TEXTURE_2D, material->texture()->textureId);
 
         if (updated) {
             // Set the mag/min filters to be linear. We only need to do this when the texture
@@ -189,6 +187,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
 
 QSGDistanceFieldTextMaterial::QSGDistanceFieldTextMaterial()
     : m_glyph_cache(0)
+    , m_texture(0)
 {
    setFlag(Blending, true);
 }
@@ -208,10 +207,12 @@ QSGMaterialShader *QSGDistanceFieldTextMaterial::createShader() const
     return new QSGDistanceFieldTextMaterialShader;
 }
 
-bool QSGDistanceFieldTextMaterial::updateTexture()
+bool QSGDistanceFieldTextMaterial::updateCache()
 {
-    m_glyph_cache->updateCache();
-    QSize glyphCacheSize = m_glyph_cache->textureSize();
+    m_glyph_cache->update();
+    if (!m_texture)
+        m_texture = m_glyph_cache->glyphTexture(-1); // invalid texture
+    QSize glyphCacheSize = m_texture->size;
     if (glyphCacheSize != m_size) {
         m_size = glyphCacheSize;
 
@@ -433,7 +434,7 @@ void DistanceFieldShiftedStyleTextMaterialShader::updateState(const RenderState 
     if (oldMaterial == 0
             || oldMaterial->glyphCache()->fontScale() != material->glyphCache()->fontScale()
             || oldMaterial->shift() != material->shift()
-            || oldMaterial->glyphCache()->textureSize() != material->glyphCache()->textureSize()) {
+            || oldMaterial->textureSize() != material->textureSize()) {
         updateShift(material->glyphCache(), material->shift());
     }
 }

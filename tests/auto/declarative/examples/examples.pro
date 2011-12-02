@@ -7,5 +7,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 #temporary
-CONFIG += insignificant_test #QTBUG-22672
 QT += core-private gui-private declarative-private qtquick1-private widgets-private v8-private testlib

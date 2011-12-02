@@ -92,6 +92,9 @@ public:
 
 protected:
     QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd, const QString &, QObject *parent = 0);
+
+    Status registerService();
+
     virtual void statusChanged(Status);
     virtual void messageReceived(const QByteArray &);
 

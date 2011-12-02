@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QDeclarativeDebugTrace, traceInstance);
+Q_GLOBAL_STATIC(QDeclarativeDebugTrace, traceInstance)
 
 // convert to a QByteArray that can be sent to the debug client
 // use of QDataStream can skew results
@@ -78,7 +78,8 @@ QDeclarativeDebugTrace::QDeclarativeDebugTrace()
       m_enabled(false), m_messageReceived(false)
 {
     m_timer.start();
-    if (status() == Enabled) {
+
+    if (registerService() == Enabled) {
         // wait for first message indicating whether to trace or not
         while (!m_messageReceived)
             waitForMessage();
@@ -91,15 +92,10 @@ QDeclarativeDebugTrace::~QDeclarativeDebugTrace()
 {
 }
 
-void QDeclarativeDebugTrace::addEngine(QDeclarativeEngine *)
+void QDeclarativeDebugTrace::initialize()
 {
     // just make sure that the service is properly registered
     traceInstance();
-}
-
-void QDeclarativeDebugTrace::removeEngine(QDeclarativeEngine *)
-{
-
 }
 
 void QDeclarativeDebugTrace::addEvent(EventType t)

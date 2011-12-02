@@ -116,6 +116,8 @@ QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
 
 QQuickShaderEffectTexture::~QQuickShaderEffectTexture()
 {
+    if (m_renderer)
+        disconnect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     delete m_renderer;
     delete m_fbo;
     delete m_secondaryFbo;
@@ -498,8 +500,11 @@ QQuickShaderEffectSource::~QQuickShaderEffectSource()
     if (m_provider)
         m_provider->deleteLater();
 
-    if (m_sourceItem)
-        QQuickItemPrivate::get(m_sourceItem)->derefFromEffectItem(m_hideSource);
+    if (m_sourceItem) {
+        QQuickItemPrivate *sd = QQuickItemPrivate::get(m_sourceItem);
+        sd->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+        sd->derefFromEffectItem(m_hideSource);
+    }
 }
 
 void QQuickShaderEffectSource::ensureTexture()
@@ -578,12 +583,23 @@ QQuickItem *QQuickShaderEffectSource::sourceItem() const
     return m_sourceItem;
 }
 
+void QQuickShaderEffectSource::itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect)
+{
+    Q_ASSERT(item == m_sourceItem);
+    Q_UNUSED(item);
+    if (newRect.size() != oldRect.size())
+        update();
+}
+
 void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
 {
     if (item == m_sourceItem)
         return;
-    if (m_sourceItem)
-        QQuickItemPrivate::get(m_sourceItem)->derefFromEffectItem(m_hideSource);
+    if (m_sourceItem) {
+        QQuickItemPrivate *d = QQuickItemPrivate::get(m_sourceItem);
+        d->derefFromEffectItem(m_hideSource);
+        d->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+    }
     m_sourceItem = item;
     if (m_sourceItem) {
         // TODO: Find better solution.
@@ -594,7 +610,9 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
             m_sourceItem->setParentItem(this);
             m_sourceItem->setVisible(false);
         }
-        QQuickItemPrivate::get(m_sourceItem)->refFromEffectItem(m_hideSource);
+        QQuickItemPrivate *d = QQuickItemPrivate::get(m_sourceItem);
+        d->refFromEffectItem(m_hideSource);
+        d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
     }
     update();
     emit sourceItemChanged();

@@ -45,7 +45,6 @@
 #include <private/qquicktext_p.h>
 #include <private/qquicktext_p_p.h>
 #include <private/qdeclarativevaluetype_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <QFontMetrics>
 #include <QGraphicsSceneMouseEvent>
 #include <qmath.h>
@@ -71,6 +70,7 @@ private slots:
     void width();
     void wrap();
     void elide();
+    void multilineElide();
     void textFormat();
 
     void alignments_data();
@@ -447,6 +447,49 @@ void tst_qquicktext::elide()
             delete textObject;
         }
     }
+}
+
+void tst_qquicktext::multilineElide()
+{
+    QQuickView *canvas = createView(TESTDATA("multilineelide.qml"));
+
+    QQuickText *myText = qobject_cast<QQuickText*>(canvas->rootObject());
+    QVERIFY(myText != 0);
+
+    QCOMPARE(myText->lineCount(), 3);
+    QCOMPARE(myText->truncated(), true);
+
+    qreal lineHeight = myText->paintedHeight() / 3.;
+
+    // reduce size and ensure fewer lines are drawn
+    myText->setHeight(lineHeight * 2);
+    QCOMPARE(myText->lineCount(), 2);
+
+    myText->setHeight(lineHeight);
+    QCOMPARE(myText->lineCount(), 1);
+
+    myText->setHeight(5);
+    QCOMPARE(myText->lineCount(), 1);
+
+    myText->setHeight(lineHeight * 3);
+    QCOMPARE(myText->lineCount(), 3);
+
+    // remove max count and show all lines.
+    myText->setHeight(1000);
+    myText->resetMaximumLineCount();
+
+    QCOMPARE(myText->truncated(), false);
+
+    // reduce size again
+    myText->setHeight(lineHeight * 2);
+    QCOMPARE(myText->lineCount(), 2);
+    QCOMPARE(myText->truncated(), true);
+
+    // change line height
+    myText->setLineHeight(1.1);
+    QCOMPARE(myText->lineCount(), 1);
+
+    delete canvas;
 }
 
 void tst_qquicktext::textFormat()
@@ -1335,8 +1378,7 @@ void tst_qquicktext::lineHeight()
 
     qreal h = myText->height();
     myText->setLineHeight(1.5);
-    QEXPECT_FAIL("", "QTBUG-21009 fails", Continue);
-    QVERIFY(myText->height() == h * 1.5);
+    QVERIFY(myText->height() == qCeil(h * 1.5));
 
     myText->setLineHeightMode(QQuickText::FixedHeight);
     myText->setLineHeight(20);

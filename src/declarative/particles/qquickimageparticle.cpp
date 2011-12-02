@@ -1197,7 +1197,6 @@ static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 
 void QQuickImageParticle::clearShadows()
 {
-    m_shadowInit = false;
     foreach (const QVector<QQuickParticleData*> data, m_shadowData)
         qDeleteAll(data);
     m_shadowData.clear();
@@ -1441,11 +1440,11 @@ void QQuickImageParticle::prepareNextFrame()
         m_rootNode = buildParticleNodes();
         if (m_rootNode == 0)
             return;
-        if(m_debugMode){
+        if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";
             int count = 0;
-            foreach(int i, m_nodes.keys()){
+            foreach (int i, m_nodes.keys()) {
                 qDebug() << "Group " << i << " (" << m_system->groupData[i]->size() << " particles)";
                 count += m_system->groupData[i]->size();
             }

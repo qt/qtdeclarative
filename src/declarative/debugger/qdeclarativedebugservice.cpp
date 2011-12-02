@@ -61,15 +61,7 @@ QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, QObject 
     d->server = QDeclarativeDebugServer::instance();
     d->status = QDeclarativeDebugService::NotConnected;
 
-    if (!d->server)
-        return;
 
-    if (d->server->serviceNames().contains(name)) {
-        qWarning() << "QDeclarativeDebugService: Conflicting plugin name" << name;
-        d->server = 0;
-    } else {
-        d->server->addService(this);
-    }
 }
 
 QDeclarativeDebugService::QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd,
@@ -80,16 +72,25 @@ QDeclarativeDebugService::QDeclarativeDebugService(QDeclarativeDebugServicePriva
     d->name = name;
     d->server = QDeclarativeDebugServer::instance();
     d->status = QDeclarativeDebugService::NotConnected;
+}
 
+/**
+  Registers the service. This should be called in the constructor of the inherited class. From
+  then on the service might get asynchronous calls to messageReceived().
+  */
+QDeclarativeDebugService::Status QDeclarativeDebugService::registerService()
+{
+    Q_D(QDeclarativeDebugService);
     if (!d->server)
-        return;
+        return NotConnected;
 
-    if (d->server->serviceNames().contains(name)) {
-        qWarning() << "QDeclarativeDebugService: Conflicting plugin name" << name;
+    if (d->server->serviceNames().contains(d->name)) {
+        qWarning() << "QDeclarativeDebugService: Conflicting plugin name" << d->name;
         d->server = 0;
     } else {
         d->server->addService(this);
     }
+    return status();
 }
 
 QDeclarativeDebugService::~QDeclarativeDebugService()

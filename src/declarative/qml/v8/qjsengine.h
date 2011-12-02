@@ -45,6 +45,7 @@ class QRegExp;
 template <typename T>
 inline T qjsvalue_cast(const QJSValue &);
 
+class QJSEnginePrivate;
 class Q_DECLARATIVE_EXPORT QJSEngine
     : public QObject
 {
@@ -111,11 +112,12 @@ private:
     friend inline bool qjsvalue_cast_helper(const QJSValue &, int, void *);
 
 protected:
-    QJSEngine(QObjectPrivate &dd, QObject *parent = 0);
+    QJSEngine(QJSEnginePrivate &dd, QObject *parent = 0);
 
 private:
     QV8Engine *d;
     Q_DISABLE_COPY(QJSEngine)
+    Q_DECLARE_PRIVATE(QJSEngine)
     friend class QV8Engine;
 };
 

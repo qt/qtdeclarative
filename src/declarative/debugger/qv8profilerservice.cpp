@@ -41,7 +41,7 @@
 
 #include "qv8profilerservice_p.h"
 #include "qdeclarativedebugservice_p_p.h"
-#include <private/qdeclarativeengine_p.h>
+#include "private/qjsconverter_impl_p.h"
 #include <private/qv8profiler_p.h>
 
 #include <QtCore/QHash>
@@ -95,14 +95,14 @@ public:
     QList<QV8ProfilerData> m_data;
 
     bool initialized;
-    QList<QDeclarativeEngine *> engines;
 };
 
 QV8ProfilerService::QV8ProfilerService(QObject *parent)
     : QDeclarativeDebugService(*(new QV8ProfilerServicePrivate()), QLatin1String("V8Profiler"), parent)
 {
     Q_D(QV8ProfilerService);
-    if (status() == Enabled) {
+
+    if (registerService() == Enabled) {
         // ,block mode, client attached
         while (!d->initialized)
             waitForMessage();
@@ -118,22 +118,10 @@ QV8ProfilerService *QV8ProfilerService::instance()
     return v8ProfilerInstance();
 }
 
-void QV8ProfilerService::addEngine(QDeclarativeEngine *engine)
+void QV8ProfilerService::initialize()
 {
-    Q_D(QV8ProfilerService);
-    Q_ASSERT(engine);
-    Q_ASSERT(!d->engines.contains(engine));
-
-    d->engines.append(engine);
-}
-
-void QV8ProfilerService::removeEngine(QDeclarativeEngine *engine)
-{
-    Q_D(QV8ProfilerService);
-    Q_ASSERT(engine);
-    Q_ASSERT(d->engines.contains(engine));
-
-    d->engines.removeOne(engine);
+    // just make sure that the service is properly registered
+    v8ProfilerInstance();
 }
 
 void QV8ProfilerService::messageReceived(const QByteArray &message)
@@ -149,19 +137,19 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     if (command == "V8PROFILER") {
         ds >>  title;
         if (option == "start") {
-            startProfiling(QString::fromUtf8(title));
+            QMetaObject::invokeMethod(this, "startProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
         } else if (option == "stop") {
-            stopProfiling(QString::fromUtf8(title));
-            sendProfilingData();
+            QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
+            QMetaObject::invokeMethod(this, "sendProfilingData", Qt::QueuedConnection);
         }
         d->initialized = true;
     }
 
     if (command == "V8SNAPSHOT") {
         if (option == "full")
-            d->takeSnapshot(v8::HeapSnapshot::kFull);
+            QMetaObject::invokeMethod(this, "takeSnapshot", Qt::QueuedConnection);
         else if (option == "delete") {
-            v8::HeapProfiler::DeleteAllSnapshots();
+            QMetaObject::invokeMethod(this, "deleteSnapshots", Qt::QueuedConnection);
         }
     }
 
@@ -190,6 +178,17 @@ void QV8ProfilerService::stopProfiling(const QString &title)
     }
 }
 
+void QV8ProfilerService::takeSnapshot()
+{
+    Q_D(QV8ProfilerService);
+    d->takeSnapshot(v8::HeapSnapshot::kFull);
+}
+
+void QV8ProfilerService::deleteSnapshots()
+{
+    v8::HeapProfiler::DeleteAllSnapshots();
+}
+
 void QV8ProfilerService::sendProfilingData()
 {
     Q_D(QV8ProfilerService);
@@ -201,10 +200,11 @@ void QV8ProfilerServicePrivate::printProfileTree(const v8::CpuProfileNode *node,
 {
     for (int index = 0 ; index < node->GetChildrenCount() ; index++) {
         const v8::CpuProfileNode* childNode = node->GetChild(index);
-        if (QV8Engine::toStringStatic(childNode->GetScriptResourceName()).length() > 0) {
+        QString scriptResourceName = QJSConverter::toString(childNode->GetScriptResourceName());
+        if (scriptResourceName.length() > 0) {
 
-            QV8ProfilerData rd = {(int)QV8ProfilerService::V8Entry, QV8Engine::toStringStatic(childNode->GetScriptResourceName()),
-                QV8Engine::toStringStatic(childNode->GetFunctionName()),
+            QV8ProfilerData rd = {(int)QV8ProfilerService::V8Entry, scriptResourceName,
+                QJSConverter::toString(childNode->GetFunctionName()),
                 childNode->GetLineNumber(), childNode->GetTotalTime(), childNode->GetSelfTime(), level};
             m_data.append(rd);
 

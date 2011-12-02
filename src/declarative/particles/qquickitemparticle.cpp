@@ -134,6 +134,7 @@ void QQuickItemParticle::take(QQuickItem *item, bool prioritize)
 void QQuickItemParticle::give(QQuickItem *item)
 {
     //TODO: This
+    Q_UNUSED(item);
 }
 
 void QQuickItemParticle::initialize(int gIdx, int pIdx)

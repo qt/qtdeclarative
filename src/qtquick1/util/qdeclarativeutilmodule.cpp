@@ -72,6 +72,7 @@
 #include "QtQuick1/private/qdeclarativexmllistmodel_p.h"
 #endif
 
+QT_BEGIN_NAMESPACE
 
 void QDeclarative1UtilModule::defineModule(QDeclarativeQtQuick1Module::Module module)
 {
@@ -173,5 +174,5 @@ void QDeclarative1UtilModule::defineModule(QDeclarativeQtQuick1Module::Module mo
     }
 }
 
-
+QT_END_NAMESPACE
 

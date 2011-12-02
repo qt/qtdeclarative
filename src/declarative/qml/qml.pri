@@ -1,5 +1,9 @@
 SOURCES += \
+    $$PWD/qdeclarativeapplication.cpp \
     $$PWD/qdeclarativeinstruction.cpp \
+    $$PWD/qdeclarativelistmodel.cpp \
+    $$PWD/qdeclarativelistmodelworkeragent.cpp \
+    $$PWD/qdeclarativeopenmetaobject.cpp \
     $$PWD/qdeclarativevmemetaobject.cpp \
     $$PWD/qdeclarativeengine.cpp \
     $$PWD/qdeclarativeexpression.cpp \
@@ -43,12 +47,19 @@ SOURCES += \
     $$PWD/qdeclarativeextensionplugin.cpp \
     $$PWD/qdeclarativeimport.cpp \
     $$PWD/qdeclarativelist.cpp \
+    $$PWD/qdeclarativelocale.cpp \
+    $$PWD/qlistmodelinterface.cpp
 
 HEADERS += \
     $$PWD/qdeclarativeglobal_p.h \
     $$PWD/qdeclarativeinstruction_p.h \
+    $$PWD/qdeclarativelistmodel_p.h\
+    $$PWD/qdeclarativelistmodel_p_p.h\
+    $$PWD/qdeclarativelistmodelworkeragent_p.h \
+    $$PWD/qdeclarativeopenmetaobject_p.h \
     $$PWD/qdeclarativevmemetaobject_p.h \
     $$PWD/qdeclarative.h \
+    $$PWD/qdeclarativeapplication_p.h \
     $$PWD/qdeclarativebinding_p.h \
     $$PWD/qdeclarativebinding_p_p.h \
     $$PWD/qdeclarativeproperty.h \
@@ -59,7 +70,7 @@ HEADERS += \
     $$PWD/qdeclarativecustomparser_p.h \
     $$PWD/qdeclarativecustomparser_p_p.h \
     $$PWD/qdeclarativepropertyvaluesource.h \
-    $$PWD/qdeclarativepropertyvalueinterceptor.h \
+    $$PWD/qdeclarativepropertyvalueinterceptor_p.h \
     $$PWD/qdeclarativeboundsignal_p.h \
     $$PWD/qdeclarativeparserstatus.h \
     $$PWD/qdeclarativeproxymetaobject_p.h \
@@ -104,7 +115,9 @@ HEADERS += \
     $$PWD/qdeclarativeimport_p.h \
     $$PWD/qdeclarativeextensionplugin.h \
     $$PWD/qdeclarativenullablevalue_p_p.h \
-    $$PWD/qdeclarativescriptstring_p.h
+    $$PWD/qdeclarativescriptstring_p.h \
+    $$PWD/qdeclarativelocale_p.h \
+    $$PWD/qlistmodelinterface_p.h
 
 QT += sql
 include(parser/parser.pri)

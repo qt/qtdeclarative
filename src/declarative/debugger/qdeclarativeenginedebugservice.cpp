@@ -41,6 +41,7 @@
 
 #include "qdeclarativeenginedebugservice_p.h"
 
+#include "qdeclarativedebugstatesdelegate_p.h"
 #include <private/qdeclarativeboundsignal_p.h>
 #include <qdeclarativeengine.h>
 #include <private/qdeclarativemetatype_p.h>
@@ -52,7 +53,6 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include <private/qdeclarativevmemetaobject_p.h>
 #include <private/qdeclarativeexpression_p.h>
-#include <private/qdeclarativepropertychanges_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
@@ -68,10 +68,18 @@ QDeclarativeEngineDebugService *QDeclarativeEngineDebugService::instance()
 
 QDeclarativeEngineDebugService::QDeclarativeEngineDebugService(QObject *parent)
     : QDeclarativeDebugService(QLatin1String("QDeclarativeEngine"), parent),
-      m_watch(new QDeclarativeWatcher(this))
+      m_watch(new QDeclarativeWatcher(this)),
+      m_statesDelegate(0)
 {
     QObject::connect(m_watch, SIGNAL(propertyChanged(int,int,QMetaProperty,QVariant)),
                      this, SLOT(propertyChanged(int,int,QMetaProperty,QVariant)));
+
+    registerService();
+}
+
+QDeclarativeEngineDebugService::~QDeclarativeEngineDebugService()
+{
+    delete m_statesDelegate;
 }
 
 QDataStream &operator<<(QDataStream &ds, 
@@ -316,33 +324,10 @@ void QDeclarativeEngineDebugService::buildObjectList(QDataStream &message, QDecl
     }
 }
 
-void QDeclarativeEngineDebugService::buildStatesList(QDeclarativeContext *ctxt, bool cleanList=false)
+void QDeclarativeEngineDebugService::buildStatesList(QDeclarativeContext *ctxt, bool cleanList)
 {
-    if (cleanList)
-        m_allStates.clear();
-
-    QDeclarativeContextPrivate *ctxtPriv = QDeclarativeContextPrivate::get(ctxt);
-    for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-        buildStatesList(ctxtPriv->instances.at(ii));
-    }
-
-    QDeclarativeContextData *child = QDeclarativeContextData::get(ctxt)->childContexts;
-    while (child) {
-        buildStatesList(child->asQDeclarativeContext());
-        child = child->nextChild;
-    }
-}
-
-void QDeclarativeEngineDebugService::buildStatesList(QObject *obj)
-{
-    if (QDeclarativeState *state = qobject_cast<QDeclarativeState *>(obj)) {
-        m_allStates.append(state);
-    }
-
-    QObjectList children = obj->children();
-    for (int ii = 0; ii < children.count(); ++ii) {
-        buildStatesList(children.at(ii));
-    }
+    if (m_statesDelegate)
+        m_statesDelegate->buildStatesList(ctxt, cleanList);
 }
 
 QDeclarativeEngineDebugService::QDeclarativeObjectData
@@ -386,6 +371,11 @@ QDeclarativeEngineDebugService::objectData(QObject *object)
 }
 
 void QDeclarativeEngineDebugService::messageReceived(const QByteArray &message)
+{
+    QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+}
+
+void QDeclarativeEngineDebugService::processMessage(const QByteArray &message)
 {
     QDataStream ds(message);
 
@@ -560,27 +550,9 @@ void QDeclarativeEngineDebugService::setBinding(int objectId,
         if (property.isValid()) {
 
             bool inBaseState = true;
-
-            foreach(QWeakPointer<QDeclarativeState> statePointer, m_allStates) {
-                if (QDeclarativeState *state = statePointer.data()) {
-                    // here we assume that the revert list on itself defines the base state
-                    if (state->isStateActive() && state->containsPropertyInRevertList(object, propertyName)) {
-                        inBaseState = false;
-
-                        QDeclarativeBinding *newBinding = 0;
-                        if (!isLiteralValue) {
-                            newBinding = new QDeclarativeBinding(expression.toString(), object, context);
-                            newBinding->setTarget(property);
-                            newBinding->setNotifyOnValueChanged(true);
-                            newBinding->setSourceLocation(filename, line);
-                        }
-
-                        state->changeBindingInRevertList(object, propertyName, newBinding);
-
-                        if (isLiteralValue)
-                            state->changeValueInRevertList(object, propertyName, expression);
-                    }
-                }
+            if (m_statesDelegate) {
+                m_statesDelegate->updateBinding(context, property, expression, isLiteralValue,
+                                                filename, line, &inBaseState);
             }
 
             if (inBaseState) {
@@ -606,15 +578,11 @@ void QDeclarativeEngineDebugService::setBinding(int objectId,
 
         } else {
             // not a valid property
-            if (QDeclarativePropertyChanges *propertyChanges = qobject_cast<QDeclarativePropertyChanges *>(object)) {
-                if (isLiteralValue) {
-                    propertyChanges->changeValue(propertyName, expression);
-                } else {
-                    propertyChanges->changeExpression(propertyName, expression.toString());
-                }
-            } else {
+            bool ok = false;
+            if (m_statesDelegate)
+                ok = m_statesDelegate->setBindingForInvalidProperty(object, propertyName, expression, isLiteralValue);
+            if (!ok)
                 qWarning() << "QDeclarativeEngineDebugService::setBinding: unable to set property" << propertyName << "on object" << object;
-            }
         }
     }
 }
@@ -657,9 +625,8 @@ void QDeclarativeEngineDebugService::resetBinding(int objectId, const QString &p
             QDeclarativeProperty property(object, propertyName, context);
             QDeclarativePropertyPrivate::setSignalExpression(property, 0);
         } else {
-            if (QDeclarativePropertyChanges *propertyChanges = qobject_cast<QDeclarativePropertyChanges *>(object)) {
-                propertyChanges->removeProperty(propertyName);
-            }
+            if (m_statesDelegate)
+                m_statesDelegate->resetBindingForInvalidProperty(object, propertyName);
         }
     }
 }
@@ -742,6 +709,11 @@ void QDeclarativeEngineDebugService::objectCreated(QDeclarativeEngine *engine, Q
 
     rs << QByteArray("OBJECT_CREATED") << engineId << objectId;
     sendMessage(reply);
+}
+
+void QDeclarativeEngineDebugService::setStatesDelegate(QDeclarativeDebugStatesDelegate *delegate)
+{
+    m_statesDelegate = delegate;
 }
 
 QT_END_NAMESPACE

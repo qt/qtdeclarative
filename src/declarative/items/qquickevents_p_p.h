@@ -94,8 +94,8 @@ private:
 class Q_DECLARATIVE_EXPORT QQuickMouseEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int x READ x)
-    Q_PROPERTY(int y READ y)
+    Q_PROPERTY(qreal x READ x)
+    Q_PROPERTY(qreal y READ y)
     Q_PROPERTY(int button READ button)
     Q_PROPERTY(int buttons READ buttons)
     Q_PROPERTY(int modifiers READ modifiers)
@@ -104,13 +104,13 @@ class Q_DECLARATIVE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickMouseEvent(int x, int y, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers
+    QQuickMouseEvent(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers
                   , bool isClick=false, bool wasHeld=false)
         : _x(x), _y(y), _button(button), _buttons(buttons), _modifiers(modifiers)
           , _wasHeld(wasHeld), _isClick(isClick), _accepted(true) {}
 
-    int x() const { return _x; }
-    int y() const { return _y; }
+    qreal x() const { return _x; }
+    qreal y() const { return _y; }
     int button() const { return _button; }
     int buttons() const { return _buttons; }
     int modifiers() const { return _modifiers; }
@@ -118,16 +118,16 @@ public:
     bool isClick() const { return _isClick; }
 
     // only for internal usage
-    void setX(int x) { _x = x; }
-    void setY(int y) { _y = y; }
+    void setX(qreal x) { _x = x; }
+    void setY(qreal y) { _y = y; }
     void setPosition(const QPointF &point) { _x = point.x(); _y = point.y(); }
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
 
 private:
-    int _x;
-    int _y;
+    qreal _x;
+    qreal _y;
     Qt::MouseButton _button;
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;

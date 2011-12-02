@@ -27,6 +27,7 @@
 
 /*!
 \page qml-extending.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {Presenting Data with Views}
@@ -122,8 +123,8 @@ a type; see qmlRegisterModuleApi() for more information.
 
 \section1 QML Type Versioning
 
-In C++ adding a new method or property cannot break old applications.
-In QML, however, new methods and properties can change what a name previously
+In C++ adding a new class, method or property cannot break old applications.
+In QML, however, new elements, methods and properties can change what a name previously
 resolved to to within a scope chain.
 
 For example, consider these two QML files
@@ -188,6 +189,9 @@ qmlRegisterType<QCppItem,1>("MyModule", 1, 1, "CppItem")
 
 \c root is only available when MyModule 1.1 is imported.
 
+For the same reason, new elements introduced in later versions should use the minor version argument of qmlRegisterType.
+
+This feature of the language allows for behavioural changes to be made without breaking existing applications. Consequently QML module authors should always remember to document what changed between minor versions, and QML module users should check that their application still runs correctly before deploying an updated import statement.
 
 \section1 Object and List Property Types
 
@@ -248,7 +252,7 @@ In particular, QML currently supports:
   \o \c {QList<int>}
   \o \c {QList<qreal>}
   \o \c {QList<bool>}
-  \o \c {QList<QString>}
+  \o \c {QList<QString>} and \c{QStringList}
   \o \c {QList<QUrl>}
 \endlist
 
@@ -269,6 +273,27 @@ modified directly.
 
 Other sequence types are not supported transparently, and instead an instance of any other
 sequence type will be passed between QML and C++ as an opaque QVariantList.
+
+\bold {Important Note:} There are some minor differences between the semantics of such
+sequence Array types and default JavaScript Array types which result from the use of a
+C++ storage type in the implementation.  In particular, deleting an element from an Array
+will result in a default-constructed value replacing that element, rather than an
+Undefined value.  Similarly, setting the length property of the Array to a value larger
+than its current value will result in the Array being padded out to the specified length
+with default-constructed elements rather than Undefined elements.
+
+The default-constructed values for each sequence type are as follows:
+\table
+\row \o QList<int> \o integer value 0
+\row \o QList<qreal> \o real value 0.0
+\row \o QList<bool> \o boolean value \c {false}
+\row \o QList<QString> and QStringList \o empty QString
+\row \o QList<QUrl> \o empty QUrl
+\endtable
+
+If you wish to remove elements from a sequence rather than simply replace them with default
+constructed values, do not use the indexed delete operator ("delete sequence[i]") but instead
+use the \c {splice} function ("sequence.splice(startIndex, deleteCount)").
 
 \section1 Inheritance and Coercion
 

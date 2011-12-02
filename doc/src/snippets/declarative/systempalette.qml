@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 //![0]
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
     SystemPalette { id: myPalette; colorGroup: SystemPalette.Active }

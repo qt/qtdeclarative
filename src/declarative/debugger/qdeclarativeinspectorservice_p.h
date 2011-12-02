@@ -83,8 +83,11 @@ protected:
     virtual void statusChanged(Status status);
     virtual void messageReceived(const QByteArray &);
 
-private:
+private slots:
+    void processMessage(const QByteArray &message);
     void updateStatus();
+
+private:
     void loadInspectorPlugins();
 
     QList<QObject*> m_views;

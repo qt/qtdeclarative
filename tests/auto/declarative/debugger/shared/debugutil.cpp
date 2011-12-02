@@ -62,6 +62,7 @@ bool QDeclarativeDebugTest::waitForSignal(QObject *receiver, const char *member,
 QDeclarativeDebugTestService::QDeclarativeDebugTestService(const QString &s, QObject *parent)
     : QDeclarativeDebugService(s, parent)
 {
+    registerService();
 }
 
 void QDeclarativeDebugTestService::messageReceived(const QByteArray &ba)
@@ -130,7 +131,7 @@ void QDeclarativeDebugProcess::start(const QStringList &arguments)
 void QDeclarativeDebugProcess::stop()
 {
     if (m_process.state() != QProcess::NotRunning) {
-        m_process.terminate();
+        m_process.kill();
         m_process.waitForFinished(5000);
     }
 }

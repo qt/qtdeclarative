@@ -1,8 +1,7 @@
 TEMPLATE = subdirs
 
 METATYPETESTS += \
-    qdeclarativemetatype \
-    qmetaobjectbuilder
+    qdeclarativemetatype
 
 PUBLICTESTS += \
     examples \
@@ -10,6 +9,7 @@ PUBLICTESTS += \
     nodes \
     parserstress \
     qdeclarativecomponent \
+    qdeclarativeconsole \
     qdeclarativecontext \
     qdeclarativeengine \
     qdeclarativeerror \
@@ -17,14 +17,15 @@ PUBLICTESTS += \
     qdeclarativeincubator \
     qdeclarativeinfo \
     qdeclarativelistreference \
+    qdeclarativelocale \
     qdeclarativemoduleplugin \
     qdeclarativepixmapcache \
     qdeclarativeqt \
     qdeclarativetranslation \
     qdeclarativexmlhttprequest \
+    qjsengine \
     qjsvalue \
     qjsvalueiterator \
-    qjsengine \
     qmlmin \
     qmlplugindump
 
@@ -35,6 +36,7 @@ PRIVATETESTS += \
     qdeclarativebinding \
     qdeclarativechangeset \
     qdeclarativeconnection \
+    qdeclarativecpputils \
     qdeclarativeecmascript \
     qdeclarativeexpression \
     qdeclarativefontloader \
@@ -48,9 +50,9 @@ PRIVATETESTS += \
     qdeclarativepropertymap \
     qdeclarativesmoothedanimation \
     qdeclarativespringanimation \
-    qdeclarativestyledtext \
     qdeclarativesqldatabase \
     qdeclarativestates \
+    qdeclarativestyledtext \
     qdeclarativesystempalette \
     qdeclarativetimer \
     qdeclarativevaluetypes \
@@ -66,6 +68,7 @@ QUICKTESTS =  \
     qquickanimatedimage \
     qquickborderimage \
     qquickcanvas \
+    qquickcanvasitem \
     qquickdrag \
     qquickdroparea \
     qquickflickable \
@@ -83,13 +86,13 @@ QUICKTESTS =  \
     qquickpincharea \
     qquickpositioners \
     qquickrepeater \
+    qquickshadereffect \
     qquickspriteimage \
     qquicktext \
     qquicktextedit \
     qquicktextinput \
-    qquickvisualdatamodel \
     qquickview \
-    qquickcanvasitem \
+    qquickvisualdatamodel \
 
 
 SUBDIRS += $$PUBLICTESTS

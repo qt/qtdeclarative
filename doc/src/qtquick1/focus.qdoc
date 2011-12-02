@@ -28,6 +28,7 @@
 /*!
 \target qmlfocus
 \page qdeclarativefocus.html
+\inqmlmodule QtQuick 1
 \ingroup qml-features
 \contentspage QML Features
 \previouspage {QML Text Handling and Validators}{Text Handling and Validators}

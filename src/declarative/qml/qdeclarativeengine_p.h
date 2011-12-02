@@ -81,6 +81,7 @@
 #include <private/qobject_p.h>
 
 #include <private/qv8engine_p.h>
+#include <private/qjsengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -119,7 +120,7 @@ public:
     QDeclarativeJavaScriptExpressionGuard *next;
 };
 
-class Q_DECLARATIVE_EXPORT QDeclarativeEnginePrivate : public QObjectPrivate
+class Q_DECLARATIVE_EXPORT QDeclarativeEnginePrivate : public QJSEnginePrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativeEngine)
 public:

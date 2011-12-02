@@ -193,6 +193,8 @@ QQuickItem *QQuickVisualItemModel::item(int index, bool)
     Q_D(QQuickVisualItemModel);
     QQuickVisualItemModelPrivate::Item &item = d->children[index];
     item.addRef();
+    emit initItem(index, item.item);
+    emit createdItem(index, item.item);
     return item.item;
 }
 
@@ -208,16 +210,6 @@ QQuickVisualModel::ReleaseFlags QQuickVisualItemModel::release(QQuickItem *item)
         }
     }
     return 0;
-}
-
-bool QQuickVisualItemModel::completePending() const
-{
-    return false;
-}
-
-void QQuickVisualItemModel::completeItem()
-{
-    // Nothing to do
 }
 
 QString QQuickVisualItemModel::stringValue(int index, const QString &name)

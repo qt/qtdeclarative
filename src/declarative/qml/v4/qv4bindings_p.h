@@ -61,7 +61,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QV4Program;
+struct QV4Program;
 class QV4Bindings : public QDeclarativeAbstractExpression, 
                                public QDeclarativeRefCount
 {
@@ -72,7 +72,7 @@ public:
     virtual ~QV4Bindings();
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, 
-                                               QObject *scope, int property);
+                                               QObject *scope, int property, int line);
 
 #ifdef QML_THREADED_INTERPRETER
     static void **getDecodeInstrTable();
@@ -95,6 +95,7 @@ private:
         bool updating:1;
         int property;
         QObject *scope;
+        int line;
         QObject *target;
         quint32 executedBlocks;
 

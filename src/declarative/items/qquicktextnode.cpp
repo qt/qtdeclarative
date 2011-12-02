@@ -42,7 +42,6 @@
 #include "qquicktextnode_p.h"
 #include "qsgsimplerectnode.h"
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <private/qsgdistancefieldglyphnode_p.h>
 
 #include <private/qsgcontext_p.h>

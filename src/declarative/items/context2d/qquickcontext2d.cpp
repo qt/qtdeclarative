@@ -3307,6 +3307,7 @@ QQuickContext2D::QQuickContext2D(QQuickCanvasItem* item)
 
 QQuickContext2D::~QQuickContext2D()
 {
+    delete m_buffer;
 }
 
 v8::Handle<v8::Object> QQuickContext2D::v8value() const

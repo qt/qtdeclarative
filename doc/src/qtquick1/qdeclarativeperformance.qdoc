@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativeperformance.html
+\inqmlmodule QtQuick 1
 \title QML Performance - Qt Quick 1
 
 \section1 Opaque Items

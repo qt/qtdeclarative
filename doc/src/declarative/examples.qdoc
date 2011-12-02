@@ -27,6 +27,7 @@
 
 /*!
   \page qdeclarativeexamples.html
+\inqmlmodule QtQuick 2
   \title QML Examples
   \brief Building UIs with QML
   \ingroup all-examples

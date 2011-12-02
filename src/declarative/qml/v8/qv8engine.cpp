@@ -47,6 +47,7 @@
 #include "qv8gccallback_p.h"
 #include "qv8sequencewrapper_p.h"
 #include "qv8include_p.h"
+#include "qjsengine_p.h"
 #include "../../../3rdparty/javascriptcore/DateMath.h"
 
 #include <private/qdeclarativebuiltinfunctions_p.h>
@@ -55,6 +56,7 @@
 #include <private/qdeclarativeapplication_p.h>
 #include <private/qdeclarativexmlhttprequest_p.h>
 #include <private/qdeclarativesqldatabase_p.h>
+#include <private/qdeclarativelocale_p.h>
 
 #include "qscript_impl_p.h"
 #include "qv8domerrors_p.h"
@@ -113,6 +115,7 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
     return false;
 }
 
+
 QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     : q(qq)
     , m_engine(0)
@@ -127,8 +130,10 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     qMetaTypeId<QList<int> >();
 
     QByteArray v8args = qgetenv("V8ARGS");
-    if (!v8args.isEmpty())
-        v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
+    // change default v8 behaviour to not relocate breakpoints across lines
+    if (!v8args.contains("breakpoint_relocation"))
+        v8args.append(" --nobreakpoint_relocation");
+    v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
 
     v8::HandleScope handle_scope;
     qPersistentRegister(m_context);
@@ -226,6 +231,7 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             case QV8ObjectResource::ListModelType:
             case QV8ObjectResource::Context2DType:
             case QV8ObjectResource::ParticleDataType:
+            case QV8ObjectResource::LocaleDataType:
                 return QVariant();
             case QV8ObjectResource::TypeType:
                 return m_typeWrapper.toVariant(r);
@@ -565,6 +571,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("btoa"), V8FUNCTION(btoa, this));
     qt->Set(v8::String::New("atob"), V8FUNCTION(atob, this));
     qt->Set(v8::String::New("resolvedUrl"), V8FUNCTION(resolvedUrl, this));
+    qt->Set(v8::String::New("locale"), V8FUNCTION(locale, this));
 
     if (m_engine) {
         qt->Set(v8::String::New("application"), newQObject(new QDeclarativeApplication(m_engine)));
@@ -603,6 +610,9 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
         registerArgFunc->Call(v8::Local<v8::Object>::Cast(registerArgFunc), 1, &args);
 #undef STRING_ARG
     }
+
+    QDeclarativeDateExtension::registerExtension(this);
+    QDeclarativeNumberExtension::registerExtension(this);
 
     qt_add_domexceptions(this);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);

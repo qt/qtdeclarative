@@ -456,6 +456,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeEasingValueType : public QDeclara
     Q_PROPERTY(qreal amplitude READ amplitude WRITE setAmplitude)
     Q_PROPERTY(qreal overshoot READ overshoot WRITE setOvershoot)
     Q_PROPERTY(qreal period READ period WRITE setPeriod)
+    Q_PROPERTY(QVariantList bezierCurve READ bezierCurve WRITE setBezierCurve)
 public:
     enum Type {
         Linear = QEasingCurve::Linear,
@@ -480,7 +481,8 @@ public:
         InBounce = QEasingCurve::InBounce, OutBounce = QEasingCurve::OutBounce,
         InOutBounce = QEasingCurve::InOutBounce, OutInBounce = QEasingCurve::OutInBounce,
         InCurve = QEasingCurve::InCurve, OutCurve = QEasingCurve::OutCurve,
-        SineCurve = QEasingCurve::SineCurve, CosineCurve = QEasingCurve::CosineCurve
+        SineCurve = QEasingCurve::SineCurve, CosineCurve = QEasingCurve::CosineCurve,
+        Bezier = QEasingCurve::BezierSpline
     };
 
     QDeclarativeEasingValueType(QObject *parent = 0);
@@ -500,6 +502,9 @@ public:
     void setAmplitude(qreal);
     void setOvershoot(qreal);
     void setPeriod(qreal);
+    void setBezierCurve(const QVariantList &);
+    QVariantList bezierCurve() const;
+
 
 private:
     QEasingCurve easing;

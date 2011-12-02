@@ -148,6 +148,31 @@ QByteArray convertToId(const QByteArray &cppName)
     return cppToId.value(cppName, cppName);
 }
 
+QByteArray convertToId(const QMetaObject *mo)
+{
+    QByteArray className(mo->className());
+    if (!className.isEmpty())
+        return convertToId(className);
+
+    // likely a metaobject generated for an extended qml object
+    if (mo->superClass()) {
+        className = convertToId(mo->superClass());
+        className.append("_extended");
+        return className;
+    }
+
+    static QHash<const QMetaObject *, QByteArray> generatedNames;
+    className = generatedNames.value(mo);
+    if (!className.isEmpty())
+        return className;
+
+    qWarning() << "Found a QMetaObject without a className, generating a random name";
+    className = QByteArray("error-unknown-name-");
+    className.append(QByteArray::number(generatedNames.size()));
+    generatedNames.insert(mo, className);
+    return className;
+}
+
 /* All exported module APIs are collected into this list */
 class ModuleApi {
 public:
@@ -279,7 +304,7 @@ public:
     {
         qml->writeStartObject("Component");
 
-        QByteArray id = convertToId(meta->className());
+        QByteArray id = convertToId(meta);
         qml->writeScriptBinding(QLatin1String("name"), enquote(id));
 
         for (int index = meta->classInfoCount() - 1 ; index >= 0 ; --index) {
@@ -291,7 +316,7 @@ public:
         }
 
         if (meta->superClass())
-            qml->writeScriptBinding(QLatin1String("prototype"), enquote(convertToId(meta->superClass()->className())));
+            qml->writeScriptBinding(QLatin1String("prototype"), enquote(convertToId(meta->superClass())));
 
         QSet<const QDeclarativeType *> qmlTypes = qmlTypesByCppName.value(meta->className());
         if (!qmlTypes.isEmpty()) {
@@ -334,8 +359,12 @@ public:
                 qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjectRevisions);
 
             if (const QMetaObject *attachedType = (*qmlTypes.begin())->attachedPropertiesType()) {
-                qml->writeScriptBinding(QLatin1String("attachedType"), enquote(
-                                            convertToId(attachedType->className())));
+                // Can happen when a type is registered that returns itself as attachedPropertiesType()
+                // because there is no creatable type to attach to.
+                if (attachedType != meta) {
+                    qml->writeScriptBinding(QLatin1String("attachedType"), enquote(
+                                                convertToId(attachedType)));
+                }
             }
         }
 
@@ -349,8 +378,36 @@ public:
             implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
         }
 
-        for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
-            dump(meta->method(index), implicitSignals);
+        if (meta == &QObject::staticMetaObject) {
+            // for QObject, hide deleteLater() and onDestroyed
+            for (int index = meta->methodOffset(); index < meta->methodCount(); ++index) {
+                QMetaMethod method = meta->method(index);
+                const char *signature(method.signature());
+                if (signature == QLatin1String("destroyed(QObject*)")
+                        || signature == QLatin1String("destroyed()")
+                        || signature == QLatin1String("deleteLater()"))
+                    continue;
+                dump(method, implicitSignals);
+            }
+
+            // and add toString(), destroy() and destroy(int)
+            qml->writeStartObject(QLatin1String("Method"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("toString")));
+            qml->writeEndObject();
+            qml->writeStartObject(QLatin1String("Method"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
+            qml->writeEndObject();
+            qml->writeStartObject(QLatin1String("Method"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("destroy")));
+            qml->writeStartObject(QLatin1String("Parameter"));
+            qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("delay")));
+            qml->writeScriptBinding(QLatin1String("type"), enquote(QLatin1String("int")));
+            qml->writeEndObject();
+            qml->writeEndObject();
+        } else {
+            for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
+                dump(meta->method(index), implicitSignals);
+        }
 
         qml->writeEndObject();
     }
@@ -716,7 +773,7 @@ int main(int argc, char *argv[])
     // put the metaobjects into a map so they are always dumped in the same order
     QMap<QString, const QMetaObject *> nameToMeta;
     foreach (const QMetaObject *meta, metas)
-        nameToMeta.insert(convertToId(meta->className()), meta);
+        nameToMeta.insert(convertToId(meta), meta);
 
     Dumper dumper(&qml);
     if (relocatable)

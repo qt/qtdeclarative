@@ -47,8 +47,6 @@
 #include "qdeclarativeconnections_p.h"
 #include "qdeclarativesmoothedanimation_p.h"
 #include "qdeclarativefontloader_p.h"
-#include "qdeclarativelistaccessor_p.h"
-#include "qdeclarativelistmodel_p.h"
 #include "qdeclarativepackage_p.h"
 #include "qdeclarativepropertychanges_p.h"
 #include "qdeclarativespringanimation_p.h"
@@ -59,25 +57,14 @@
 #include "qdeclarativesystempalette_p.h"
 #include "qdeclarativetimer_p.h"
 #include "qdeclarativetransition_p.h"
-#include "qdeclarativeapplication_p.h"
 #include <qdeclarativeinfo.h>
 #include <private/qdeclarativetypenotavailable_p.h>
 #include <private/qdeclarativeanimationcontroller_p.h>
-#ifndef QT_NO_XMLPATTERNS
-#include "qdeclarativexmllistmodel_p.h"
-#endif
 #include <QtCore/qcoreapplication.h>
 #include <QtGui/QInputPanel>
 
-void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
-{
-    qmlRegisterType<QDeclarativeListElement>(uri, versionMajor, versionMinor,"ListElement");
-    qmlRegisterCustomType<QDeclarativeListModel>(uri, versionMajor, versionMinor,"ListModel", new QDeclarativeListModelParser);
-}
-
 void QDeclarativeUtilModule::defineModule()
 {
-    qmlRegisterUncreatableType<QDeclarativeApplication>("QtQuick",2,0,"Application", QDeclarativeApplication::tr("Application is an abstract class"));
     qmlRegisterUncreatableType<QInputPanel>("QtQuick",2,0,"InputPanel", QInputPanel::tr("InputPanel is an abstract class"));
     qmlRegisterUncreatableType<QDeclarativeAbstractAnimation>("QtQuick",2,0,"Animation",QDeclarativeAbstractAnimation::tr("Animation is an abstract class"));
 
@@ -105,19 +92,9 @@ void QDeclarativeUtilModule::defineModule()
     qmlRegisterType<QDeclarativeTimer>("QtQuick",2,0,"Timer");
     qmlRegisterType<QDeclarativeTransition>("QtQuick",2,0,"Transition");
     qmlRegisterType<QDeclarativeVector3dAnimation>("QtQuick",2,0,"Vector3dAnimation");
-#ifdef QT_NO_XMLPATTERNS
-    qmlRegisterTypeNotAvailable("QtQuick",2,0,"XmlListModel",
-        qApp->translate("QDeclarativeXmlListModel","Qt was built without support for xmlpatterns"));
-    qmlRegisterTypeNotAvailable("QtQuick",2,0,"XmlRole",
-        qApp->translate("QDeclarativeXmlListModel","Qt was built without support for xmlpatterns"));
-#else
-    qmlRegisterType<QDeclarativeXmlListModel>("QtQuick",2,0,"XmlListModel");
-    qmlRegisterType<QDeclarativeXmlListModelRole>("QtQuick",2,0,"XmlRole");
-#endif
 
     qmlRegisterType<QDeclarativeStateOperation>();
 
     qmlRegisterCustomType<QDeclarativePropertyChanges>("QtQuick",2,0,"PropertyChanges", new QDeclarativePropertyChangesParser);
     qmlRegisterCustomType<QDeclarativeConnections>("QtQuick",2,0,"Connections", new QDeclarativeConnectionsParser);
-    registerBaseTypes("QtQuick",2,0);
 }

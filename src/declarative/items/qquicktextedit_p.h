@@ -73,6 +73,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(VAlignment verticalAlignment READ vAlign WRITE setVAlign NOTIFY verticalAlignmentChanged)
     Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
     Q_PROPERTY(int lineCount READ lineCount NOTIFY lineCountChanged)
+    Q_PROPERTY(int length READ length NOTIFY textChanged)
     Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedSizeChanged)
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedSizeChanged)
     Q_PROPERTY(TextFormat textFormat READ textFormat WRITE setTextFormat NOTIFY textFormatChanged)
@@ -161,6 +162,8 @@ public:
 
     int lineCount() const;
 
+    int length() const;
+
     bool isCursorVisible() const;
     void setCursorVisible(bool on);
 
@@ -217,6 +220,9 @@ public:
 
     bool isInputMethodComposing() const;
 
+    Q_INVOKABLE QString getText(int start, int end) const;
+    Q_INVOKABLE QString getFormattedText(int start, int end) const;
+
 Q_SIGNALS:
     void textChanged(const QString &);
     void paintedSizeChanged();
@@ -258,6 +264,8 @@ public Q_SLOTS:
     void copy();
     void paste();
 #endif
+    void insert(int position, const QString &text);
+    void remove(int start, int end);
 
 private Q_SLOTS:
     void q_textChanged();

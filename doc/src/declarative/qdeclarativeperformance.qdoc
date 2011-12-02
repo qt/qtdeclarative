@@ -27,6 +27,7 @@
 
 /*!
 \page qtquick2-performance.html
+\inqmlmodule QtQuick 2
 \title QML Performance
 
 \section1 Opaque Items

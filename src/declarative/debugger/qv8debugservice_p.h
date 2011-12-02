@@ -54,6 +54,7 @@
 //
 
 #include "qdeclarativedebugservice_p.h"
+#include <private/qv8_p.h>
 
 QT_BEGIN_HEADER
 
@@ -72,18 +73,21 @@ public:
     ~QV8DebugService();
 
     static QV8DebugService *instance();
+    static void initialize();
 
-    void addEngine(QDeclarativeEngine *);
-    void removeEngine(QDeclarativeEngine *);
+    void debugMessageHandler(const QString &message, bool willStartRunning);
 
-    void debugMessageHandler(const QString &message);
-    void executionStopped();
-
-    void appendSourcePath(const QString &message);
+    void appendSourcePath(const v8::Handle<v8::Object> &eventData);
 
     void signalEmitted(const QString &signal);
 
+private slots:
+    void scheduledDebugBreak();
+    void cancelDebugBreak();
+    void initialize(bool);
+
 protected:
+    void statusChanged(Status newStatus);
     void messageReceived(const QByteArray &);
 
 private:

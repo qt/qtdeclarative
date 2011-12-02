@@ -133,7 +133,7 @@ public:
     void refill(qreal from, qreal to, bool doBuffer = false);
     void mirrorChange();
 
-    FxViewItem *createItem(int modelIndex);
+    FxViewItem *createItem(int modelIndex, bool asynchronous = false);
     virtual void releaseItem(FxViewItem *item);
 
     QQuickItem *createHighlightItem();
@@ -173,6 +173,7 @@ public:
     FxViewItem *trackedItem;
     QHash<QQuickItem*,int> unrequestedItems;
     int requestedIndex;
+    FxViewItem *requestedItem;
     QQuickItemViewChangeSet currentChanges;
 
     // XXX split into struct
@@ -193,7 +194,6 @@ public:
 
     bool ownModel : 1;
     bool wrap : 1;
-    bool lazyRelease : 1;
     bool deferredRelease : 1;
     bool inApplyModelChanges : 1;
     bool inViewportMoved : 1;
@@ -203,6 +203,9 @@ public:
     bool autoHighlight : 1;
     bool highlightRangeStartValid : 1;
     bool highlightRangeEndValid : 1;
+    bool fillCacheBuffer : 1;
+    bool inRequest : 1;
+    bool requestedAsync : 1;
 
 protected:
     virtual Qt::Orientation layoutOrientation() const = 0;

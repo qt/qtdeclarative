@@ -2950,9 +2950,10 @@ void QDeclarativeItemPrivate::setState(const QString &state)
 /*! \internal */
 QDeclarativeListProperty<QGraphicsTransform> QDeclarativeItem::transform()
 {
-    Q_D(QDeclarativeItem);
-    return QDeclarativeListProperty<QGraphicsTransform>(this, 0, d->transform_append, d->transform_count,
-                                               d->transform_at, d->transform_clear);
+    return QDeclarativeListProperty<QGraphicsTransform>(this, 0, QDeclarativeItemPrivate::transform_append,
+                                                        QDeclarativeItemPrivate::transform_count,
+                                                        QDeclarativeItemPrivate::transform_at,
+                                                        QDeclarativeItemPrivate::transform_clear);
 }
 
 /*!

@@ -5,6 +5,7 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/qjsengine.h \
+    $$PWD/qjsengine_p.h \
     $$PWD/qjsvalue.h \
     $$PWD/qjsvalue_p.h \
     $$PWD/qjsvalueiterator.h \

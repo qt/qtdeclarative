@@ -28,6 +28,7 @@
 /*!
 \title What's New in Qt Quick 1
 \page qtquick1-whatsnew.html
+\inqmlmodule QtQuick 1
 
 \section1 Qt 4.7.4 includes QtQuick 1.1
 

@@ -107,10 +107,8 @@ public:
 
     int count() const;
     bool isValid() const { return delegate() != 0; }
-    QQuickItem *item(int index, bool complete=true);
+    QQuickItem *item(int index, bool asynchronous=false);
     ReleaseFlags release(QQuickItem *item);
-    bool completePending() const;
-    void completeItem();
     virtual QString stringValue(int index, const QString &role);
     virtual void setWatchedRoles(QList<QByteArray> roles);
 

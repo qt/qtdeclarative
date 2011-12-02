@@ -238,6 +238,12 @@ void tst_qdeclarativefontloader::changeFontSourceViaState()
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
     canvas.rootObject()->setProperty("usename", true);
+
+    // This warning should probably not be printed once QTBUG-20268 is fixed
+    QString warning = QString(QUrl::fromLocalFile(TESTDATA("qtbug-20268.qml")).toString()) +
+                              QLatin1String(":13:5: QML FontLoader: Cannot load font: \"\"");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+
     QEXPECT_FAIL("", "QTBUG-20268", Abort);
     QTRY_VERIFY(fontObject->status() == QDeclarativeFontLoader::Ready);
     QCOMPARE(canvas.rootObject()->property("name").toString(), QString("Tahoma"));

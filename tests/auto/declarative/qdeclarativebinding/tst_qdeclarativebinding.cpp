@@ -165,6 +165,8 @@ void tst_qdeclarativebinding::restoreBindingWithLoop()
     QCOMPARE(myItem->x(), qreal(88));
 
     //original binding restored
+    QString warning = c.url().toString() + QLatin1String(":9:5: QML Rectangle: Binding loop detected for property \"x\"");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
     rect->setProperty("activateBinding", false);
     QCOMPARE(myItem->x(), qreal(88 + 100)); //if loop handling changes this could be 90 + 100
 

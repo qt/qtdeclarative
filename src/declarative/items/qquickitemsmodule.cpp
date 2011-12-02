@@ -81,6 +81,7 @@
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
+#include <private/qdeclarativemetatype_p.h>
 
 static QDeclarativePrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
@@ -94,6 +95,13 @@ static QDeclarativePrivate::AutoParentResult qquickitem_autoParent(QObject *obj,
 
     item->setParentItem(parentItem);
     return QDeclarativePrivate::Parented;
+}
+
+static bool compareQQuickAnchorLines(const void *p1, const void *p2)
+{
+    const QQuickAnchorLine &l1 = *static_cast<const QQuickAnchorLine*>(p1);
+    const QQuickAnchorLine &l2 = *static_cast<const QQuickAnchorLine*>(p2);
+    return l1 == l2;
 }
 
 static void qt_quickitems_defineModule(const char *uri, int major, int minor)
@@ -168,6 +176,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPen>();
     qmlRegisterType<QQuickFlickableVisibleArea>();
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
+    QDeclarativeMetaType::setQQuickAnchorLineCompareFunction(compareQQuickAnchorLines);
 
     qmlRegisterUncreatableType<QQuickKeyNavigationAttached>(uri,major,minor,"KeyNavigation",QQuickKeyNavigationAttached::tr("KeyNavigation is only available via attached properties"));
     qmlRegisterUncreatableType<QQuickKeysAttached>(uri,major,minor,"Keys",QQuickKeysAttached::tr("Keys is only available via attached properties"));
@@ -177,7 +186,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPinch>(uri,major,minor,"Pinch");
     qmlRegisterType<QQuickPinchEvent>();
 
-    qmlRegisterType<QQuickShaderEffectItem>("QtQuick", 2, 0, "ShaderEffectItem"); // TODO: Remove after grace period.
     qmlRegisterType<QQuickShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterType<QQuickShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
     qmlRegisterUncreatableType<QQuickShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QQuickShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));

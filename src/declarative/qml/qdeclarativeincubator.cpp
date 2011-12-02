@@ -97,6 +97,7 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
         incubatorList.insert(p);
         incubatorCount++;
 
+        p->vmeGuard.guard(&p->vme);
         p->changeStatus(QDeclarativeIncubator::Loading);
 
         if (incubationController)

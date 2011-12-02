@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 */
 QQuickParticlePainter::QQuickParticlePainter(QQuickItem *parent) :
     QQuickItem(parent),
-    m_system(0), m_count(0), m_pleaseReset(true), m_sentinel(new QQuickParticleData(0))
+    m_system(0), m_count(0), m_pleaseReset(true)
 {
 }
 

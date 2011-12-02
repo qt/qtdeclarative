@@ -42,7 +42,7 @@
 #include "qv4irbuilder_p.h"
 #include "qv4compiler_p_p.h"
 
-#include <private/qquickanchors_p_p.h> // For AnchorLine
+#include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativetypenamecache_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
@@ -72,7 +72,7 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
     default:
         if (t == qMetaTypeId<QDeclarative1AnchorLine>())
             return IR::AnchorLineType;
-        else if (t == qMetaTypeId<QQuickAnchorLine>())
+        else if (t == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId())
             return IR::SGAnchorLineType;
         else if (engine->metaObjectForType(t)) {
             return IR::ObjectType;
@@ -466,7 +466,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
                 if (data && !data->isFunction()) {
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                    _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::ScopeStorage, line, column);
+                    _expr.code = _block->SYMBOL(irType, name, metaObject, data, IR::Name::ScopeStorage, line, column);
                     found = true;
                 } 
             }
@@ -487,7 +487,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
                 if (data && !data->isFunction()) {
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                    _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::RootStorage, line, column);
+                    _expr.code = _block->SYMBOL(irType, name, metaObject, data, IR::Name::RootStorage, line, column);
                     found = true;
                 } 
             }
@@ -615,7 +615,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     }
 
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine, attachedMeta);
-                    _expr.code = _block->SYMBOL(baseName, irType, name, attachedMeta, data->coreIndex, line, column);
+                    _expr.code = _block->SYMBOL(baseName, irType, name, attachedMeta, data, line, column);
                 }
                 break;
 
@@ -638,18 +638,13 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                 IR::Type irType = irTypeFromVariantType(data->propType, m_engine, idObject->metaObject());
                 _expr.code = _block->SYMBOL(baseName, irType, name,
-                                            idObject->metaObject(), data->coreIndex, line, column);
+                                            idObject->metaObject(), data, line, column);
                 }
                 break;
 
             case IR::Name::Property: 
                 if (baseName->type == IR::ObjectType) {
-                    const QMetaObject *m = 
-                        m_engine->metaObjectForType(baseName->meta->property(baseName->index).userType());
-                    QDeclarativePropertyCache *cache = m_engine->cache(m);
-
-                    QDeclarativePropertyData *data = cache->property(name);
-
+                    QDeclarativePropertyData *data = baseName->property;
                     if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
 
@@ -662,7 +657,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine, baseName->meta);
                     _expr.code = _block->SYMBOL(baseName, irType, name,
-                                                baseName->meta, data->coreIndex, line, column);
+                                                baseName->meta, data, line, column);
                 }
                 break;
 

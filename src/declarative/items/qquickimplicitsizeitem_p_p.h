@@ -73,20 +73,6 @@ public:
     virtual void implicitHeightChanged();
 };
 
-
-class QQuickImplicitSizePaintedItemPrivate : public QQuickPaintedItemPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickImplicitSizePaintedItem)
-
-public:
-    QQuickImplicitSizePaintedItemPrivate()
-    {
-    }
-
-    virtual void implicitWidthChanged();
-    virtual void implicitHeightChanged();
-};
-
 QT_END_NAMESPACE
 
 #endif // QQUICKIMPLICITSIZEITEM_P_H

@@ -790,7 +790,10 @@ case $rule_number: {
 UiScriptStatement: Block ;
 UiScriptStatement: EmptyStatement ;
 UiScriptStatement: ExpressionStatement ;
-UiScriptStatement: IfStatement ;  --- ### do we really want if statement in a binding?
+UiScriptStatement: IfStatement ;
+UiScriptStatement: WithStatement ;
+UiScriptStatement: SwitchStatement ;
+UiScriptStatement: TryStatement ;
 
 UiObjectMember: UiQualifiedId T_COLON UiScriptStatement ;
 /.

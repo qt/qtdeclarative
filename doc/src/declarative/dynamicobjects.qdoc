@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativedynamicobjects.html
+\inqmlmodule QtQuick 2
 \ingroup qml-features
 \contentspage {QML Features}
 \previouspage {Integrating QML Code with Existing Qt UI Code}

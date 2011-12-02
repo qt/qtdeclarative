@@ -79,26 +79,67 @@ Item {
         if (msco.intListProperty[199] != 200) success = false;
         if (msco.intListProperty.length != 200) success = false;
 
+        // test indexed deleter
+        msco.intListProperty = [ 1, 2, 3, 4, 5 ];
+        delete msco.intListProperty[-1];
+        expected = [ 1, 2, 3, 4, 5 ];
+        if (msco.intListProperty.toString() != expected.toString()) success = false;
+        delete msco.intListProperty[0];
+        expected = [ 0, 2, 3, 4, 5 ];
+        if (msco.intListProperty.toString() != expected.toString()) success = false;
+        delete msco.intListProperty[2];
+        expected = [ 0, 2, 0, 4, 5 ];
+        if (msco.intListProperty.toString() != expected.toString()) success = false;
+        delete msco.intListProperty[7];
+        expected = [ 0, 2, 0, 4, 5 ];
+        if (msco.intListProperty.toString() != expected.toString()) success = false;
+
         // other operations are defined on the array prototype; see if they work.
+
+        // splice
         msco.intListProperty = [ 0, 1, 2, 3, 4, 5, 6, 7 ];
         msco.intListProperty.splice(1,3, 33, 44, 55, 66);
         expected = [ 0, 33, 44, 55, 66, 4, 5, 6, 7 ];
+        if (msco.intListProperty.toString() != expected.toString()) success = false;
+        msco.intListProperty = [ 0, 1, 2, 3, 4, 5, 6, 7 ];
+        msco.intListProperty.splice(1, 3);
+        expected = [ 0, 4, 5, 6, 7 ];
         if (msco.intListProperty.toString() != expected.toString()) success = false;
 
         msco.qrealListProperty = [ 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1 ];
         msco.qrealListProperty.splice(1,3, 33.33, 44.44, 55.55, 66.66);
         expected = [ 0.1, 33.33, 44.44, 55.55, 66.66, 4.1, 5.1, 6.1, 7.1 ];
         if (msco.qrealListProperty.toString() != expected.toString()) success = false;
+        msco.qrealListProperty = [ 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1 ];
+        msco.qrealListProperty.splice(1,3);
+        expected = [ 0.1, 4.1, 5.1, 6.1, 7.1 ];
+        if (msco.qrealListProperty.toString() != expected.toString()) success = false;
 
         msco.boolListProperty = [ false, true, true, false, false, true, false, true ];
         msco.boolListProperty.splice(1,3, false, true, false, false);
         expected = [ false, false, true, false, false, false, true, false, true ];
+        if (msco.boolListProperty.toString() != expected.toString()) success = false;
+        msco.boolListProperty = [ false, true, true, false, false, true, false, true ];
+        msco.boolListProperty.splice(1,3);
+        expected = [ false, false, true, false, true ];
         if (msco.boolListProperty.toString() != expected.toString()) success = false;
 
         msco.stringListProperty = [ "one", "two", "three", "four", "five", "six", "seven", "eight" ];
         msco.stringListProperty.splice(1,3, "nine", "ten", "eleven", "twelve");
         expected = [ "one", "nine", "ten", "eleven", "twelve", "five", "six", "seven", "eight" ];
         if (msco.stringListProperty.toString() != expected.toString()) success = false;
+        msco.stringListProperty = [ "one", "two", "three", "four", "five", "six", "seven", "eight" ];
+        msco.stringListProperty.splice(0,3);
+        expected = [ "four", "five", "six", "seven", "eight" ];
+        if (msco.stringListProperty.toString() != expected.toString()) success = false;
+
+        // pop
+        msco.intListProperty = [ 0, 1, 2, 3, 4, 5, 6, 7 ];
+        var poppedVal = msco.intListProperty.pop();
+        expected = [ 0, 1, 2, 3, 4, 5, 6 ];
+        if (msco.intListProperty.toString() != expected.toString()) success = false;
+        expected = 7;
+        if (poppedVal != expected) success = false;
     }
 
     property variant variantList: [ 1, 2, 3, 4, 5 ];

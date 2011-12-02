@@ -27,6 +27,7 @@
 
 /*!
     \page qdeclarativebasictypes.html
+\inqmlmodule QtQuick 2
     \ingroup qml-features
     \contentspage QML Features
     \previouspage {QML Basic Elements}
@@ -311,6 +312,10 @@
 
     To read a time value returned from a C++ extension class, use
     \l{QML:Qt::formatTime()}{Qt.formatTime()} and \l{QML:Qt::formatDateTime()}{Qt.formatDateTime()}.
+
+    Note that when converting historical times to and from javascript that QDateTime and the JS Date object
+    have different methods of calculating historical daylight savings time application. This can lead to variations of one hour
+    when converting to historical local time.
 
     \sa {QML Basic Types}
  */

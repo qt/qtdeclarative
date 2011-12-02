@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
     id: parentItem
@@ -48,7 +48,7 @@ Rectangle {
     
     function createIt() {
 //![0]
-var newObject = Qt.createQmlObject('import QtQuick 1.0; Rectangle {color: "red"; width: 20; height: 20}',
+var newObject = Qt.createQmlObject('import QtQuick 2.0; Rectangle {color: "red"; width: 20; height: 20}',
     parentItem, "dynamicSnippet1");
 //![0]
 

@@ -576,6 +576,7 @@ void QQuickLoaderPrivate::incubatorStateChanged(QDeclarativeIncubator::Status st
             itemContext = 0;
             delete obj;
         }
+        incubator->clear();
     } else if (status == QDeclarativeIncubator::Error) {
         if (!incubator->errors().isEmpty())
             QDeclarativeEnginePrivate::warning(qmlEngine(q), incubator->errors());
@@ -616,19 +617,12 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
     itemContext = new QDeclarativeContext(creationContext);
     itemContext->setContextObject(q);
 
-    if (incubator) {
-        bool async = incubator->incubationMode() == QDeclarativeIncubator::Asynchronous;
-        if (asynchronous != async) {
-            delete incubator;
-            incubator = 0;
-        }
-    }
-    if (!incubator)
-        incubator = new QQuickLoaderIncubator(this, asynchronous ? QDeclarativeIncubator::Asynchronous : QDeclarativeIncubator::AsynchronousIfNested);
+    delete incubator;
+    incubator = new QQuickLoaderIncubator(this, asynchronous ? QDeclarativeIncubator::Asynchronous : QDeclarativeIncubator::AsynchronousIfNested);
 
     component->create(*incubator, itemContext);
 
-    if (incubator->status() == QDeclarativeIncubator::Loading)
+    if (incubator && incubator->status() == QDeclarativeIncubator::Loading)
         emit q->statusChanged();
 }
 
@@ -756,6 +750,22 @@ qreal QQuickLoader::progress() const
 
 This property holds whether the component will be instantiated asynchronously.
 
+Loading asynchronously creates the objects declared by the component
+across multiple frames, and reduces the
+likelihood of glitches in animation.  When loading asynchronously the status
+will change to Loader.Loading.  Once the entire component has been created, the
+\l item will be available and the status will change to Loader.Ready.
+
+To avoid seeing the items loading progressively set \c visible appropriately, e.g.
+
+\code
+Loader {
+    source: "mycomponent.qml"
+    asynchronous: true
+    visible: status == Loader.Ready
+}
+\endcode
+
 Note that this property affects object instantiation only; it is unrelated to
 loading a component asynchronously via a network.
 */
@@ -783,17 +793,12 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
 
     updatingSize = true;
 
-    if (!itemWidthValid)
-        q->setImplicitWidth(item->implicitWidth());
-    else
-        q->setImplicitWidth(item->width());
+    qreal iWidth = !itemWidthValid ? item->implicitWidth() : item->width();
+    qreal iHeight = !itemHeightValid ? item->implicitHeight() : item->height();
+    q->setImplicitSize(iWidth, iHeight);
+
     if (loaderGeometryChanged && q->widthValid())
         item->setWidth(q->width());
-
-    if (!itemHeightValid)
-        q->setImplicitHeight(item->implicitHeight());
-    else
-        q->setImplicitHeight(item->height());
     if (loaderGeometryChanged && q->heightValid())
         item->setHeight(q->height());
 

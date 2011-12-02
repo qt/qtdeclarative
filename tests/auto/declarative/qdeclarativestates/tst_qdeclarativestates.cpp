@@ -74,7 +74,7 @@ public:
     MyRect() {}
 
     void doSomething() { emit didSomething(); }
-    
+
     int propertyWithNotify() const { return m_prop; }
     void setPropertyWithNotify(int i) { m_prop = i; emit oddlyNamedNotifySignal(); }
 
@@ -146,6 +146,7 @@ private slots:
     void editProperties();
     void QTBUG_14830();
     void avoidFastForward();
+    void revertListBug();
 };
 
 void tst_qdeclarativestates::initTestCase()
@@ -1228,9 +1229,8 @@ void tst_qdeclarativestates::tempState()
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
-    QString messageFormat = QString(QLatin1String("%1 (file://%2:%3)"));
-    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("entering placed")).arg(TESTDATA("legalTempState.qml")).arg(11).toLatin1());
-    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("entering idle")).arg(TESTDATA("legalTempState.qml")).arg(15).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, "entering placed");
+    QTest::ignoreMessage(QtDebugMsg, "entering idle");
     rectPrivate->setState("placed");
     QCOMPARE(rectPrivate->state(), QLatin1String("idle"));
 }
@@ -1278,6 +1278,8 @@ void tst_qdeclarativestates::reset()
 
     QCOMPARE(image->width(), 20.0);
     QCOMPARE(image->height(), qreal(20.));
+
+    delete rect;
 }
 
 void tst_qdeclarativestates::illegalObjectCreation()
@@ -1335,6 +1337,8 @@ void tst_qdeclarativestates::urlResolution()
     QCOMPARE(image1->source(), resolved);
     QCOMPARE(image2->source(), resolved);
     QCOMPARE(image3->source(), resolved);
+
+    delete rect;
 }
 
 void tst_qdeclarativestates::unnamedWhen()
@@ -1543,6 +1547,48 @@ void tst_qdeclarativestates::avoidFastForward()
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     rectPrivate->setState("a");
     QCOMPARE(rect->property("updateCount").toInt(), 1);
+}
+
+//QTBUG-22583
+void tst_qdeclarativestates::revertListBug()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, TESTDATA("revertListBug.qml"));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QQuickRectangle *rect1 = rect->findChild<QQuickRectangle*>("rect1");
+    QQuickRectangle *rect2 = rect->findChild<QQuickRectangle*>("rect2");
+    QQuickItem *origParent1 = rect->findChild<QQuickItem*>("originalParent1");
+    QQuickItem *origParent2 = rect->findChild<QQuickItem*>("originalParent2");
+    QQuickItem *newParent = rect->findChild<QQuickItem*>("newParent");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), origParent2);
+
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+    rectPrivate->setState("reparented");
+
+    QCOMPARE(rect1->parentItem(), newParent);
+    QCOMPARE(rect2->parentItem(), origParent2);
+
+    rectPrivate->setState("");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), origParent2);
+
+    QMetaObject::invokeMethod(rect, "switchTargetItem");
+
+    rectPrivate->setState("reparented");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), newParent);
+
+    rectPrivate->setState("");
+
+    QCOMPARE(rect1->parentItem(), origParent1);
+    QCOMPARE(rect2->parentItem(), origParent2); //QTBUG-22583 causes rect2's parent item to be origParent1
 }
 
 QTEST_MAIN(tst_qdeclarativestates)

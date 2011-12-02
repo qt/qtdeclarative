@@ -61,6 +61,12 @@
 
 #include <math.h>
 
+Q_DECLARE_METATYPE(QList<int>)
+Q_DECLARE_METATYPE(QList<qreal>)
+Q_DECLARE_METATYPE(QList<bool>)
+Q_DECLARE_METATYPE(QList<QString>)
+Q_DECLARE_METATYPE(QList<QUrl>)
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -1285,6 +1291,59 @@ bool QDeclarativePropertyPrivate::write(QObject *object,
                 }
             }
         }
+        if (!ok) {
+            // the only other option is that they are assigning a single value
+            // to a sequence type property (eg, an int to a QList<int> property).
+            if (variantType == QVariant::Int && propertyType == qMetaTypeId<QList<int> >()) {
+                QList<int> list;
+                list << value.toInt();
+                v = QVariant::fromValue<QList<int> >(list);
+                ok = true;
+            } else if (variantType == QVariant::Double && propertyType == qMetaTypeId<QList<qreal> >()) {
+                QList<qreal> list;
+                list << value.toReal();
+                v = QVariant::fromValue<QList<qreal> >(list);
+                ok = true;
+            } else if (variantType == QVariant::Bool && propertyType == qMetaTypeId<QList<bool> >()) {
+                QList<bool> list;
+                list << value.toBool();
+                v = QVariant::fromValue<QList<bool> >(list);
+                ok = true;
+            } else if ((variantType == QVariant::Url || variantType == QVariant::String || variantType == QVariant::ByteArray)
+                       && propertyType == qMetaTypeId<QList<QUrl> >()) {
+                QUrl u;
+                bool found = false;
+                if (variantType == QVariant::Url) {
+                    u = value.toUrl();
+                    found = true;
+                } else if (variantType == QVariant::ByteArray) {
+                    u = QUrl(QString::fromUtf8(value.toByteArray()));
+                    found = true;
+                } else if (variantType == QVariant::String) {
+                    u = QUrl(value.toString());
+                    found = true;
+                }
+                if (!found)
+                    return false;
+                if (context && u.isRelative() && !u.isEmpty())
+                    u = context->resolvedUrl(u);
+                QList<QUrl> list;
+                list << u;
+                v = QVariant::fromValue<QList<QUrl> >(list);
+                ok = true;
+            } else if (variantType == QVariant::String && propertyType == qMetaTypeId<QList<QString> >()) {
+                QList<QString> list;
+                list << value.toString();
+                v = QVariant::fromValue<QList<QString> >(list);
+                ok = true;
+            } else if (variantType == QVariant::String && propertyType == qMetaTypeId<QStringList>()) {
+                QStringList list;
+                list << value.toString();
+                v = QVariant::fromValue<QStringList>(list);
+                ok = true;
+            }
+        }
+
         if (ok) {
             void *a[] = { (void *)v.constData(), 0, &status, &flags};
             QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
@@ -1358,6 +1417,10 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
         value = v8engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
     } else if (result->IsNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)0);
+    } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
+        value = v8engine->toVariant(result, qMetaTypeId<QList<QUrl> >());
+        if (value.userType() == qMetaTypeId<QString>())
+            value = QVariant(QUrl(value.toString()));
     } else if (!isVmeProperty) {
         value = v8engine->toVariant(result, type);
     }

@@ -193,7 +193,7 @@ void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32
     this->id = id;
     this->symbol = symbol;
     this->ptr = 0;
-    this->index = -1;
+    this->property = 0;
     this->storage = MemberStorage;
     this->builtin = NoBuiltinSymbol;
     this->line = line;
@@ -465,34 +465,34 @@ Name *BasicBlock::NAME(Name *base, const QString &id, quint32 line, quint32 colu
     return e;
 }
 
-Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage,
+Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, QDeclarativePropertyData *property, Name::Storage storage,
                          quint32 line, quint32 column)
 {
-    Name *name = SYMBOL(/*base = */ 0, type, id, meta, index, line, column);
+    Name *name = SYMBOL(/*base = */ 0, type, id, meta, property, line, column);
     name->storage = storage;
     return name;
 }
 
-Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage,
+Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QDeclarativePropertyData *property, Name::Storage storage,
                          quint32 line, quint32 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(base, type, function->newString(id),
                Name::Property, line, column);
     name->meta = meta;
-    name->index = index;
+    name->property = property;
     name->storage = storage;
     return name;
 }
 
-Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index,
+Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QDeclarativePropertyData *property,
                          quint32 line, quint32 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(base, type, function->newString(id),
                Name::Property, line, column);
     name->meta = meta;
-    name->index = index;
+    name->property = property;
     return name;
 }
 
@@ -503,7 +503,7 @@ Name *BasicBlock::ID_OBJECT(const QString &id, const QDeclarativeScript::Object 
                function->newString(id),
                Name::IdObject, line, column);
     name->idObject = object;
-    name->index = object->idIndex;
+    name->property = 0;
     name->storage = Name::IdStorage;
     return name;
 }

@@ -1059,9 +1059,8 @@ void tst_qdeclarativevaluetypes::bindingConflict()
 // doesn't crash
 void tst_qdeclarativevaluetypes::deletedObject()
 {
-    QString messageFormat = QString(QLatin1String("%1 (%2:%3)"));
     QDeclarativeComponent component(&engine, TEST_FILE("deletedObject.qml"));
-    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("Test: 2")).arg(TEST_FILE("deletedObject.js").toString()).arg(6).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, "Test: 2");
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -1069,7 +1068,7 @@ void tst_qdeclarativevaluetypes::deletedObject()
     QVERIFY(dObject != 0);
     delete dObject;
 
-    QTest::ignoreMessage(QtDebugMsg, messageFormat.arg(QLatin1String("Test: undefined")).arg(TEST_FILE("deletedObject.js").toString()).arg(11).toLatin1());
+    QTest::ignoreMessage(QtDebugMsg, "Test: undefined");
     object->emitRunScript();
 
     delete object;

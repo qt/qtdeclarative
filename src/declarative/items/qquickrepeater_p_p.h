@@ -71,11 +71,17 @@ public:
     QQuickRepeaterPrivate();
     ~QQuickRepeaterPrivate();
 
+private:
+    void createItems();
+
     QQuickVisualModel *model;
     QVariant dataSource;
-    bool ownModel;
+    bool ownModel : 1;
+    bool inRequest : 1;
+    int itemCount;
+    int createFrom;
 
-    QList<QPointer<QQuickItem> > deletables;
+    QVector<QPointer<QQuickItem> > deletables;
 };
 
 QT_END_NAMESPACE

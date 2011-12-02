@@ -64,7 +64,7 @@ class QSGContext;
 class QSignalMapper;
 class QQuickCustomMaterialShader;
 
-class QQuickShaderEffect : public QQuickItem
+class Q_AUTOTEST_EXPORT QQuickShaderEffect : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QByteArray fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
@@ -149,13 +149,6 @@ private:
     uint m_programDirty : 1;
     uint m_dirtyMesh : 1;
     uint m_dirtyGeometry : 1;
-};
-
-// TODO: Remove after grace period.
-class QQuickShaderEffectItem : public QQuickShaderEffect
-{
-public:
-    QQuickShaderEffectItem(QQuickItem *parent = 0);
 };
 
 QT_END_NAMESPACE

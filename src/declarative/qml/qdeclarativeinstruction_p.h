@@ -79,12 +79,18 @@ QT_BEGIN_NAMESPACE
     F(StoreVarDouble, storeDouble) \
     F(StoreVarBool, storeBool) \
     F(StoreString, storeString) \
+    F(StoreStringList, storeString) \
+    F(StoreStringQList, storeString) \
     F(StoreByteArray, storeByteArray) \
     F(StoreUrl, storeUrl) \
+    F(StoreUrlQList, storeUrl) \
     F(StoreFloat, storeFloat) \
     F(StoreDouble, storeDouble) \
+    F(StoreDoubleQList, storeDouble) \
     F(StoreBool, storeBool) \
+    F(StoreBoolQList, storeBool) \
     F(StoreInteger, storeInteger) \
+    F(StoreIntegerQList, storeInteger) \
     F(StoreColor, storeColor) \
     F(StoreDate, storeDate) \
     F(StoreTime, storeTime) \
@@ -382,7 +388,6 @@ union QDeclarativeInstruction
         int signalIndex;
         int value;
         short context;
-        int name;
         ushort line;
     };
     struct instr_assignSignalObject {

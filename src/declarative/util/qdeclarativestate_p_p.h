@@ -177,6 +177,16 @@ private:
     bool m_reverseEvent;
 };
 
+class QDeclarativeRevertAction
+{
+public:
+    QDeclarativeRevertAction() : event(0) {}
+    QDeclarativeRevertAction(const QDeclarativeProperty &prop) : property(prop), event(0) {}
+    QDeclarativeRevertAction(QDeclarativeActionEvent *e) : event(e) {}
+    QDeclarativeProperty property;
+    QDeclarativeActionEvent *event;
+};
+
 class QDeclarativeStateOperationPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativeStateOperation)
@@ -240,7 +250,7 @@ public:
     QDeclarativeTransitionManager transitionManager;
 
     SimpleActionList revertList;
-    QList<QDeclarativeProperty> reverting;
+    QList<QDeclarativeRevertAction> reverting;
     QString extends;
     mutable bool inState;
     QDeclarativeStateGroup *group;

@@ -10,6 +10,7 @@ Item{
     MouseArea{
         z: 0
         anchors.fill: parent
+        propagateComposedEvents: true
         onPressed: presses++
         onClicked: clicks++
         onPressAndHold: pressAndHolds++
@@ -17,6 +18,7 @@ Item{
     }
     MouseArea{
         z: 1
+        propagateComposedEvents: true
         enabled: true
         anchors.fill: parent
     }

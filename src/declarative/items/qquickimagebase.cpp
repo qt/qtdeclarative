@@ -284,8 +284,7 @@ void QQuickImageBase::componentComplete()
 void QQuickImageBase::pixmapChange()
 {
     Q_D(QQuickImageBase);
-    setImplicitWidth(d->pix.width());
-    setImplicitHeight(d->pix.height());
+    setImplicitSize(d->pix.width(), d->pix.height());
 }
 
 QT_END_NAMESPACE

@@ -94,6 +94,8 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value);
 
 private Q_SLOTS:
+    void createdItem(int index, QQuickItem *item);
+    void initItem(int, QQuickItem *item);
     void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
 
 private:

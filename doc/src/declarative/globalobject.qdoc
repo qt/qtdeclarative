@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativeglobalobject.html
+\inqmlmodule QtQuick 2
 \title QML Global Object
 
 Contains all the properties of the JavaScript global object, plus:

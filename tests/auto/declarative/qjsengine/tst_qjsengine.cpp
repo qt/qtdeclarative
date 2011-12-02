@@ -793,7 +793,7 @@ void tst_QJSEngine::newVariant_promoteNonQScriptObject()
 
 void tst_QJSEngine::newRegExp()
 {
-    QSKIP("Test failing - QTBUG-22238", SkipAll);
+    QSKIP("Test failing - QTBUG-22238");
     QJSEngine eng;
     for (int x = 0; x < 2; ++x) {
         QJSValue rexp;
@@ -817,7 +817,7 @@ void tst_QJSEngine::newRegExp()
 
 void tst_QJSEngine::jsRegExp()
 {
-    QSKIP("Test failing - QTBUG-22238", SkipAll);
+    QSKIP("Test failing - QTBUG-22238");
 
     // See ECMA-262 Section 15.10, "RegExp Objects".
     // These should really be JS-only tests, as they test the implementation's
@@ -1463,7 +1463,7 @@ static QScriptValue getSetFoo(QScriptContext *ctx, QScriptEngine *)
 
 void tst_QJSEngine::globalObjectProperties()
 {
-    QSKIP("Test failing - QTBUG-22238", SkipAll);
+    QSKIP("Test failing - QTBUG-22238");
     // See ECMA-262 Section 15.1, "The Global Object".
 
     QJSEngine eng;
@@ -1552,7 +1552,7 @@ void tst_QJSEngine::globalObjectEquals()
 
 void tst_QJSEngine::globalObjectProperties_enumerate()
 {
-    QSKIP("Test failing - QTBUG-22238", SkipAll);
+    QSKIP("Test failing - QTBUG-22238");
     QJSEngine eng;
     QJSValue global = eng.globalObject();
 
@@ -3072,6 +3072,7 @@ class Klazz : public QWidget,
               public QStandardItem,
               public QGraphicsItem
 {
+    Q_INTERFACES(QGraphicsItem)
     Q_OBJECT
 public:
     Klazz(QWidget *parent = 0) : QWidget(parent) { }
@@ -6080,7 +6081,7 @@ void tst_QJSEngine::qRegExpInport_data()
 
 void tst_QJSEngine::qRegExpInport()
 {
-    QSKIP("Test failing - QTBUG-22238", SkipAll);
+    QSKIP("Test failing - QTBUG-22238");
     QFETCH(QRegExp, rx);
     QFETCH(QString, string);
 

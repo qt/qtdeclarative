@@ -62,6 +62,8 @@
 #define SERVER_PORT 14451
 #define SERVER_ADDR "http://127.0.0.1:14451"
 
+Q_DECLARE_METATYPE(QQuickImageBase::Status)
+
 class tst_qquickimage : public QObject
 {
     Q_OBJECT
@@ -88,6 +90,7 @@ private slots:
     void sourceSize_QTBUG_14303();
     void sourceSize_QTBUG_16389();
     void nullPixmapPaint();
+    void imageCrash_QTBUG_22125();
 
 private:
     template<typename T>
@@ -339,6 +342,8 @@ void tst_qquickimage::mirror()
             p_e.setTransform(transform);
             p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap);
             break;
+        case QQuickImage::Pad:
+            break;
         }
 
         QImage img = expected.toImage();
@@ -457,11 +462,24 @@ void tst_qquickimage::big()
     delete obj;
 }
 
+// As tiling_QTBUG_6716 doesn't complete, it doesn't delete the
+// canvas which causes leak warnings.  Use this delete on stack
+// destruction pattern to work around this.
+template<typename T>
+struct AutoDelete {
+    AutoDelete(T *t) : t(t) {}
+    ~AutoDelete() { delete t; }
+private:
+    T *t;
+};
+
 void tst_qquickimage::tiling_QTBUG_6716()
 {
     QFETCH(QString, source);
 
     QQuickView *canvas = new QQuickView(0);
+    AutoDelete<QQuickView> del(canvas);
+
     canvas->setSource(QUrl::fromLocalFile(TESTDATA(source)));
     canvas->show();
     qApp->processEvents();
@@ -476,7 +494,6 @@ void tst_qquickimage::tiling_QTBUG_6716()
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }
-    delete canvas;
 }
 
 void tst_qquickimage::tiling_QTBUG_6716_data()
@@ -488,6 +505,8 @@ void tst_qquickimage::tiling_QTBUG_6716_data()
 
 void tst_qquickimage::noLoading()
 {
+    qRegisterMetaType<QQuickImageBase::Status>();
+
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
     server.serveDirectory(TESTDATA(""));
@@ -622,6 +641,8 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
     QCOMPARE(image->sourceSize().height(), 200);
     QCOMPARE(image->paintedWidth(), 20.0);
     QCOMPARE(image->paintedHeight(), 20.0);
+
+    delete canvas;
 }
 
 static int numberOfWarnings = 0;
@@ -649,6 +670,27 @@ void tst_qquickimage::nullPixmapPaint()
     qInstallMsgHandler(previousMsgHandler);
     QVERIFY(numberOfWarnings == 0);
     delete image;
+}
+
+void tst_qquickimage::imageCrash_QTBUG_22125()
+{
+    TestHTTPServer server(SERVER_PORT);
+    QVERIFY(server.isValid());
+    server.serveDirectory(TESTDATA(""), TestHTTPServer::Delay);
+
+    {
+        QQuickView view(QUrl::fromLocalFile(TESTDATA("qtbug_22125.qml")));
+        view.show();
+        qApp->processEvents();
+        qApp->processEvents();
+        // shouldn't crash when the view drops out of scope due to
+        // QDeclarativePixmapData attempting to dereference a pointer to
+        // the destroyed reader.
+    }
+
+    // shouldn't crash when deleting cancelled QDeclarativePixmapReplys.
+    QTest::qWait(520); // Delay mode delays for 500 ms.
+    qApp->processEvents(QEventLoop::DeferredDeletion);
 }
 
 /*

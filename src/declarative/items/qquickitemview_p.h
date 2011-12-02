@@ -63,7 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
-    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentIndexChanged)
+    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged)
 
     Q_PROPERTY(bool keyNavigationWraps READ isWrapEnabled WRITE setWrapEnabled NOTIFY keyNavigationWrapsChanged)
     Q_PROPERTY(int cacheBuffer READ cacheBuffer WRITE setCacheBuffer NOTIFY cacheBufferChanged)
@@ -161,6 +161,7 @@ signals:
     void delegateChanged();
     void countChanged();
     void currentIndexChanged();
+    void currentItemChanged();
 
     void keyNavigationWrapsChanged();
     void cacheBufferChanged();
@@ -194,6 +195,7 @@ protected slots:
     virtual void updateSections() {}
     void destroyRemoved();
     void createdItem(int index, QQuickItem *item);
+    void initItem(int index, QQuickItem *item);
     void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
     void destroyingItem(QQuickItem *item);
     void animStopped();

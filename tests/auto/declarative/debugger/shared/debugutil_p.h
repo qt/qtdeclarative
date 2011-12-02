@@ -102,12 +102,10 @@ public:
     bool waitForSessionStart();
 
     QString output() const;
+    void stop();
 
 private slots:
     void processAppOutput();
-
-private:
-    void stop();
 
 private:
     QString m_executable;

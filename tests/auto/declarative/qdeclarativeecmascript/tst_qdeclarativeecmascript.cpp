@@ -177,6 +177,9 @@ private slots:
     void sequenceConversionThreads();
     void sequenceConversionBindings();
     void sequenceConversionCopy();
+    void assignSequenceTypes();
+    void qtbug_22464();
+    void qtbug_21580();
 
     void bug1();
     void bug2();
@@ -200,6 +203,7 @@ private slots:
     void qtbug_10696();
     void qtbug_11606();
     void qtbug_11600();
+    void qtbug_21864();
     void nonscriptable();
     void deleteLater();
     void in();
@@ -223,10 +227,17 @@ private slots:
     void invokableObjectArg();
     void invokableObjectRet();
     void qtbug_20344();
+    void qtbug_22679();
+    void qtbug_22843_data();
+    void qtbug_22843();
     void revisionErrors();
     void revision();
 
     void automaticSemicolon();
+    void unaryExpression();
+    void switchStatement();
+    void withStatement();
+    void tryStatement();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -1358,11 +1369,11 @@ void tst_qdeclarativeecmascript::scriptErrors()
     QString warning1 = url.left(url.length() - 3) + "js:2: Error: Invalid write to global property \"a\"";
     QString warning2 = url + ":5: ReferenceError: Can't find variable: a";
     QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
-    QString warning4 = url + ":10: ReferenceError: Can't find variable: a";
-    QString warning5 = url + ":8: ReferenceError: Can't find variable: a";
-    QString warning6 = url + ":7: Unable to assign [undefined] to int";
-    QString warning7 = url + ":12: Error: Cannot assign to read-only property \"trueProperty\"";
-    QString warning8 = url + ":13: Error: Cannot assign to non-existent property \"fakeProperty\"";
+    QString warning4 = url + ":13: ReferenceError: Can't find variable: a";
+    QString warning5 = url + ":11: ReferenceError: Can't find variable: a";
+    QString warning6 = url + ":10: Unable to assign [undefined] to int";
+    QString warning7 = url + ":15: Error: Cannot assign to read-only property \"trueProperty\"";
+    QString warning8 = url + ":16: Error: Cannot assign to non-existent property \"fakeProperty\"";
 
     QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, warning2.toLatin1().constData());
@@ -1590,8 +1601,8 @@ void tst_qdeclarativeecmascript::shutdownErrors()
 void tst_qdeclarativeecmascript::compositePropertyType()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("compositePropertyType.qml"));
-    QString messageFormat = QString(QLatin1String("hello world (%1:%2)")).arg(TEST_FILE("compositePropertyType.qml").toString()).arg(7);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(messageFormat));
+
+    QTest::ignoreMessage(QtDebugMsg, "hello world");
     QObject *object = qobject_cast<QObject *>(component.create());
     delete object;
 }
@@ -1640,6 +1651,30 @@ void tst_qdeclarativeecmascript::undefinedResetsProperty()
 
     delete object;
     }
+}
+
+// Aliases to variant properties should work
+void tst_qdeclarativeecmascript::qtbug_22464()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22464.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::qtbug_21580()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_21580.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
 }
 
 // QTBUG-6781
@@ -4196,14 +4231,14 @@ void tst_qdeclarativeecmascript::sequenceConversionArray()
     QDeclarativeComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != 0);
-    //QMetaObject::invokeMethod(object, "indexedAccess");
-    //QVERIFY(object->property("success").toBool());
-    //QMetaObject::invokeMethod(object, "arrayOperations");
-    //QVERIFY(object->property("success").toBool());
+    QMetaObject::invokeMethod(object, "indexedAccess");
+    QVERIFY(object->property("success").toBool());
+    QMetaObject::invokeMethod(object, "arrayOperations");
+    QVERIFY(object->property("success").toBool());
     QMetaObject::invokeMethod(object, "testEqualitySemantics");
     QVERIFY(object->property("success").toBool());
-    //QMetaObject::invokeMethod(object, "testReferenceDeletion");
-    //QCOMPARE(object->property("referenceDeletion").toBool(), true);
+    QMetaObject::invokeMethod(object, "testReferenceDeletion");
+    QCOMPARE(object->property("referenceDeletion").toBool(), true);
     delete object;
 }
 
@@ -4288,6 +4323,89 @@ void tst_qdeclarativeecmascript::sequenceConversionCopy()
     delete object;
 }
 
+void tst_qdeclarativeecmascript::assignSequenceTypes()
+{
+    // test binding array to sequence type property
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.1.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1 << 2));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false << true));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com") << QUrl("http://www.example2.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one") << QLatin1String("two")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("one") << QLatin1String("two")));
+    delete object;
+    }
+
+    // test binding literal to sequence type property
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.2.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("two")));
+    delete object;
+    }
+
+    // test binding single value to sequence type property
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.3.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html"))));
+    delete object;
+    }
+
+    // test assigning array to sequence type property in js function
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.4.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1 << 2));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1 << 2.2));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false << true));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com") << QUrl("http://www.example2.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one") << QLatin1String("two")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("one") << QLatin1String("two")));
+    delete object;
+    }
+
+    // test assigning literal to sequence type property in js function
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.5.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl("http://www.example1.com")));
+    QCOMPARE(object->stringListProperty(), (QList<QString>() << QLatin1String("one")));
+    QCOMPARE(object->qstringListProperty(), (QStringList() << QLatin1String("two")));
+    delete object;
+    }
+
+    // test assigning single value to sequence type property in js function
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.6.qml"));
+    MySequenceConversionObject *object = qobject_cast<MySequenceConversionObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->intListProperty(), (QList<int>() << 1));
+    QCOMPARE(object->qrealListProperty(), (QList<qreal>() << 1.1));
+    QCOMPARE(object->boolListProperty(), (QList<bool>() << false));
+    QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html"))));
+    delete object;
+    }
+}
+
 // Test that assigning a null object works 
 // Regressed with: df1788b4dbbb2826ae63f26bdf166342595343f4
 void tst_qdeclarativeecmascript::nullObjectBinding()
@@ -4363,8 +4481,7 @@ void tst_qdeclarativeecmascript::qtbug_9792()
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create(context));
     QVERIFY(object != 0);
 
-    QString message = QString(QLatin1String("Hello world! (%1:%2)")).arg(TEST_FILE("qtbug_9792.qml").toString()).arg(4);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(message));
+    QTest::ignoreMessage(QtDebugMsg, "Hello world!");
     object->basicSignal();
 
     delete context;
@@ -4735,6 +4852,15 @@ void tst_qdeclarativeecmascript::qtbug_11600()
     delete o;
 }
 
+void tst_qdeclarativeecmascript::qtbug_21864()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_21864.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test").toBool(), true);
+    delete o;
+}
+
 // Reading and writing non-scriptable properties should fail
 void tst_qdeclarativeecmascript::nonscriptable()
 {
@@ -4769,8 +4895,17 @@ void tst_qdeclarativeecmascript::in()
 void tst_qdeclarativeecmascript::typeOf()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("typeOf.qml"));
+
+    // These warnings should not happen once QTBUG-21864 is fixed
+    QString warning1 = component.url().toString() + QLatin1String(":16: Error: Cannot assign [undefined] to QString");
+    QString warning2 = component.url().resolved(QUrl("typeOf.js")).toString() + QLatin1String(":1: ReferenceError: Can't find variable: a");
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
     QObject *o = component.create();
     QVERIFY(o != 0);
+
     QEXPECT_FAIL("", "QTBUG-21864", Abort);
     QCOMPARE(o->property("test1").toString(), QLatin1String("undefined"));
     QCOMPARE(o->property("test2").toString(), QLatin1String("object"));
@@ -5050,6 +5185,13 @@ void tst_qdeclarativeecmascript::automaticSemicolon()
     QVERIFY(object != 0);
 }
 
+void tst_qdeclarativeecmascript::unaryExpression()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("unaryExpression.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
 // Makes sure that a binding isn't double re-evaluated when it depends on the same variable twice
 void tst_qdeclarativeecmascript::doubleEvaluate()
 {
@@ -5126,6 +5268,255 @@ void tst_qdeclarativeecmascript::deleteWhileBindingRunning()
     QObject *object = component.create();
     QVERIFY(object != 0);
     delete object;
+}
+
+void tst_qdeclarativeecmascript::qtbug_22679()
+{
+    MyQmlObject object;
+    object.setStringProperty(QLatin1String("Please work correctly"));
+    engine.rootContext()->setContextProperty("contextProp", &object);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22679.qml"));
+    qRegisterMetaType<QList<QDeclarativeError> >("QList<QDeclarativeError>");
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QDeclarativeError>)));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(warningsSpy.count(), 0);
+    delete o;
+}
+
+void tst_qdeclarativeecmascript::qtbug_22843_data()
+{
+    QTest::addColumn<bool>("library");
+
+    QTest::newRow("without .pragma library") << false;
+    QTest::newRow("with .pragma library") << true;
+}
+
+void tst_qdeclarativeecmascript::qtbug_22843()
+{
+    QFETCH(bool, library);
+
+    QString fileName("qtbug_22843");
+    if (library)
+        fileName += QLatin1String(".library");
+    fileName += QLatin1String(".qml");
+
+    QDeclarativeComponent component(&engine, TEST_FILE(fileName));
+    QString url = component.url().toString();
+    QString warning1 = url.left(url.length()-3) + QLatin1String("js:4: SyntaxError: Unexpected token )");
+    QString warning2 = url + QLatin1String(":5: TypeError: Object [object Object] has no method 'func'");
+
+    qRegisterMetaType<QList<QDeclarativeError> >("QList<QDeclarativeError>");
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QDeclarativeError>)));
+    for (int x = 0; x < 3; ++x) {
+        warningsSpy.clear();
+        // For libraries, only the first import attempt should produce a
+        // SyntaxError warning; subsequent component creation should not
+        // attempt to reload the script.
+        bool expectSyntaxError = !library || (x == 0);
+        if (expectSyntaxError)
+            QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(warningsSpy.count(), 1 + (expectSyntaxError?1:0));
+        delete object;
+    }
+}
+
+
+void tst_qdeclarativeecmascript::switchStatement()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.1.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 4);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 1);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.2.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 4);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.3.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 6);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.4.qml"));
+
+        QString warning = component.url().toString() + ":4: Unable to assign [undefined] to int";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 5);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 3);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 3);
+
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+
+        object->setStringProperty("something else");
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.5.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 1);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 1);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("switchStatement.6.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        // `object->value()' is the number of executed statements
+
+        object->setStringProperty("A");
+        QCOMPARE(object->value(), 123);
+
+        object->setStringProperty("S");
+        QCOMPARE(object->value(), 123);
+
+        object->setStringProperty("D");
+        QCOMPARE(object->value(), 321);
+
+        object->setStringProperty("F");
+        QCOMPARE(object->value(), 321);
+
+        object->setStringProperty("something else");
+        QCOMPARE(object->value(), 0);
+    }
+}
+
+void tst_qdeclarativeecmascript::withStatement()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("withStatement.1.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 123);
+    }
+}
+
+void tst_qdeclarativeecmascript::tryStatement()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.1.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 123);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.2.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 321);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.3.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 1);
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("tryStatement.4.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE(object->value(), 1);
+    }
 }
 
 QTEST_MAIN(tst_qdeclarativeecmascript)

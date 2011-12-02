@@ -59,6 +59,7 @@ QDeclarativeInspectorService::QDeclarativeInspectorService()
     : QDeclarativeDebugService(QLatin1String("QDeclarativeObserverMode"))
     , m_currentInspectorPlugin(0)
 {
+    registerService();
 }
 
 QDeclarativeInspectorService *QDeclarativeInspectorService::instance()
@@ -88,7 +89,7 @@ void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
 
 void QDeclarativeInspectorService::statusChanged(Status /*status*/)
 {
-    updateStatus();
+    QMetaObject::invokeMethod(this, "updateStatus", Qt::QueuedConnection);
 }
 
 void QDeclarativeInspectorService::updateStatus()
@@ -132,6 +133,11 @@ void QDeclarativeInspectorService::updateStatus()
 }
 
 void QDeclarativeInspectorService::messageReceived(const QByteArray &message)
+{
+    QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+}
+
+void QDeclarativeInspectorService::processMessage(const QByteArray &message)
 {
     if (m_currentInspectorPlugin)
         m_currentInspectorPlugin->clientMessage(message);

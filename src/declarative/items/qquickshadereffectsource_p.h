@@ -47,6 +47,7 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgcontext_p.h>
 #include <private/qsgdefaultimagenode_p.h>
+#include <private/qquickitemchangelistener_p.h>
 
 #include "qpointer.h"
 #include "qsize.h"
@@ -153,7 +154,7 @@ private:
     uint m_grab : 1;
 };
 
-class Q_DECLARATIVE_EXPORT QQuickShaderEffectSource : public QQuickItem
+class Q_DECLARATIVE_EXPORT QQuickShaderEffectSource : public QQuickItem, public QQuickItemChangeListener
 {
     Q_OBJECT
     Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
@@ -231,6 +232,8 @@ Q_SIGNALS:
 
 protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+
+    virtual void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect);
 
 private:
     void ensureTexture();

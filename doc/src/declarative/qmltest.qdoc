@@ -27,6 +27,7 @@
 
 /*!
     \page qmltest.html
+\inqmlmodule QtQuick 2
     \title QtQuickTest Reference Documentation
     \keyword QtQuickTest Reference Documentation
 

@@ -45,7 +45,7 @@
 #include "QtQuick1/private/qdeclarativestate_p.h"
 
 #include <QtDeclarative/qdeclarativepropertyvaluesource.h>
-#include <QtDeclarative/qdeclarativepropertyvalueinterceptor.h>
+#include <private/qdeclarativepropertyvalueinterceptor_p.h>
 #include <QtDeclarative/qdeclarative.h>
 #include <QtCore/QAbstractAnimation>
 

@@ -64,7 +64,7 @@ Rectangle {
                     x: 200
                     text: wrapper.y
                 }
-                color: ListView.isCurrentItem ? "lightsteelblue" : "white"
+                color: ListView.isCurrentItem ? "lightsteelblue" : "#EEEEEE"
             }
         },
         Component {

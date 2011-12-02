@@ -80,11 +80,16 @@ void tst_QDeclarativeDebugClient::initTestCase()
     QDeclarativeDebugTestClient client("tst_QDeclarativeDebugClient::handshake()", m_conn);
     QDeclarativeDebugTestService service("tst_QDeclarativeDebugClient::handshake()");
 
-    m_conn->connectToHost("127.0.0.1", PORT);
-
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Connection established");
-    bool ok = m_conn->waitForConnected();
-    QVERIFY(ok);
+    for (int i = 0; i < 50; ++i) {
+        // try for 5 seconds ...
+        m_conn->connectToHost("127.0.0.1", PORT);
+        if (m_conn->waitForConnected())
+            break;
+        QTest::qSleep(100);
+    }
+
+    QVERIFY(m_conn->isConnected());
 
     QTRY_VERIFY(QDeclarativeDebugService::hasDebuggingClient());
     QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Enabled);
@@ -143,9 +148,9 @@ void tst_QDeclarativeDebugClient::parallelConnect()
 {
     QDeclarativeDebugConnection connection2;
 
-    connection2.connectToHost("127.0.0.1", PORT);
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Another client is already connected");
     // will connect & immediately disconnect
+    connection2.connectToHost("127.0.0.1", PORT);
     QVERIFY(connection2.waitForConnected());
     QTRY_COMPARE(connection2.state(), QAbstractSocket::UnconnectedState);
     QVERIFY(m_conn->isConnected());

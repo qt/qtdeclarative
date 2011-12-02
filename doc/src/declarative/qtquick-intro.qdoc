@@ -27,6 +27,7 @@
 
 /*!
 \page qml-intro.html
+\inqmlmodule QtQuick 2
 \title Introduction to Qt Quick
 
 Qt Quick is a collection of technologies that are designed to help developers

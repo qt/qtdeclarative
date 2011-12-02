@@ -1402,7 +1402,6 @@ void tst_qquickpositioners::test_attachedproperties_data()
 
 void tst_qquickpositioners::test_attachedproperties_dynamic()
 {
-    QSKIP("QTBUG-21995 - Test crashes on exit");
     QQuickView *canvas = createView(TESTDATA("attachedproperties-dynamic.qml"));
     QVERIFY(canvas->rootObject() != 0);
 

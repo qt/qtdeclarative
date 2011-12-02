@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativepropertyvalueinterceptor.h"
+#include "qdeclarativepropertyvalueinterceptor_p.h"
 
 #include "qdeclarative.h"
 

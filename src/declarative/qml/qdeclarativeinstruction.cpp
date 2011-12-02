@@ -93,20 +93,38 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
     case QDeclarativeInstruction::StoreDouble:
         qWarning().nospace() << idx << "\t\t" << "STORE_DOUBLE\t\t" << instr->storeDouble.propertyIndex << "\t" << instr->storeDouble.value;
         break;
+    case QDeclarativeInstruction::StoreDoubleQList:
+        qWarning().nospace() << idx << "\t\t" << "STORE_DOUBLE_QLIST\t\t" << instr->storeDouble.propertyIndex << "\t" << instr->storeDouble.value;
+        break;
     case QDeclarativeInstruction::StoreInteger:
         qWarning().nospace() << idx << "\t\t" << "STORE_INTEGER\t\t" << instr->storeInteger.propertyIndex << "\t" << instr->storeInteger.value;
+        break;
+    case QDeclarativeInstruction::StoreIntegerQList:
+        qWarning().nospace() << idx << "\t\t" << "STORE_INTEGER_QLIST\t\t" << instr->storeInteger.propertyIndex << "\t" << instr->storeInteger.value;
         break;
     case QDeclarativeInstruction::StoreBool:
         qWarning().nospace() << idx << "\t\t" << "STORE_BOOL\t\t" << instr->storeBool.propertyIndex << "\t" << instr->storeBool.value;
         break;
+    case QDeclarativeInstruction::StoreBoolQList:
+        qWarning().nospace() << idx << "\t\t" << "STORE_BOOL_QLIST\t\t" << instr->storeBool.propertyIndex << "\t" << instr->storeBool.value;
+        break;
     case QDeclarativeInstruction::StoreString:
         qWarning().nospace() << idx << "\t\t" << "STORE_STRING\t\t" << instr->storeString.propertyIndex << "\t" << instr->storeString.value << "\t\t" << primitives.at(instr->storeString.value);
+        break;
+    case QDeclarativeInstruction::StoreStringList:
+        qWarning().nospace() << idx << "\t\t" << "STORE_STRINGLIST\t\t" << instr->storeString.propertyIndex << "\t" << instr->storeString.value << "\t\t" << primitives.at(instr->storeString.value);
+        break;
+    case QDeclarativeInstruction::StoreStringQList:
+        qWarning().nospace() << idx << "\t\t" << "STORE_STRING_QLIST\t\t" << instr->storeString.propertyIndex << "\t" << instr->storeString.value << "\t\t" << primitives.at(instr->storeString.value);
         break;
     case QDeclarativeInstruction::StoreByteArray:
         qWarning().nospace() << idx << "\t\t" << "STORE_BYTEARRAY" << instr->storeByteArray.propertyIndex << "\t" << instr->storeByteArray.value << "\t\t" << datas.at(instr->storeByteArray.value);
         break;
     case QDeclarativeInstruction::StoreUrl:
         qWarning().nospace() << idx << "\t\t" << "STORE_URL\t\t" << instr->storeUrl.propertyIndex << "\t" << instr->storeUrl.value << "\t\t" << urls.at(instr->storeUrl.value);
+        break;
+    case QDeclarativeInstruction::StoreUrlQList:
+        qWarning().nospace() << idx << "\t\t" << "STORE_URL_QLIST\t\t" << instr->storeUrl.propertyIndex << "\t" << instr->storeUrl.value << "\t\t" << urls.at(instr->storeUrl.value);
         break;
     case QDeclarativeInstruction::StoreColor:
         qWarning().nospace() << idx << "\t\t" << "STORE_COLOR\t\t" << instr->storeColor.propertyIndex << "\t\t\t" << QString::number(instr->storeColor.value, 16);

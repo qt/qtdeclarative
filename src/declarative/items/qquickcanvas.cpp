@@ -46,7 +46,9 @@
 #include "qquickitem_p.h"
 
 #include <private/qsgrenderer_p.h>
+#include <private/qsgtexture_p.h>
 #include <private/qsgflashnode_p.h>
+#include <qsgengine.h>
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputPanel>
@@ -132,13 +134,6 @@ public:
         : updatePending(false)
         , animationRunning(false)
     {
-        static bool warningMessage = false;
-        if (!warningMessage) {
-            warningMessage = true;
-            qWarning("QQuickCanvas: using non-threaded render loop. Be very sure to not access scene "
-                     "graph objects outside the QQuickItem::updatePaintNode() call. Failing to do so "
-                     "will cause your code to crash on other platforms!");
-        }
     }
 
     virtual void paint() {
@@ -171,7 +166,9 @@ public:
         maybeUpdate();
     }
 
-    virtual void stopRendering() { }
+    virtual void stopRendering() {
+        cleanupNodesOnShutdown();
+    }
 
     virtual void maybeUpdate() {
         if (!updatePending) {
@@ -266,8 +263,8 @@ have a scope focused item), and the other items will have their focus cleared.
   RenderThread::isRenderBlock: This variable is true when animations are not
   running and the render thread has gone to sleep, waiting for more to do.
 
-  RenderThread::isExternalUpdatePending: This variable is set to false during
-  the sync phase in the GUI thread and to true in maybeUpdate(). It is an
+  RenderThread::isExternalUpdatePending: This variable is set to false when
+  a new render pass is started and to true in maybeUpdate(). It is an
   indication to the render thread that another render pass needs to take
   place, rather than the render thread going to sleep after completing its swap.
 
@@ -412,12 +409,13 @@ void QQuickCanvasPrivate::initializeSceneGraph()
     context->initialize(glctx);
 
     Q_Q(QQuickCanvas);
-    QObject::connect(context->renderer(), SIGNAL(sceneGraphChanged()), q, SLOT(maybeUpdate()),
-                     Qt::DirectConnection);
 
     if (!QQuickItemPrivate::get(rootItem)->itemNode()->parent()) {
         context->rootNode()->appendChildNode(QQuickItemPrivate::get(rootItem)->itemNode());
     }
+
+    engine = new QSGEngine();
+    engine->setCanvas(q);
 
     emit q_func()->sceneGraphInitialized();
 }
@@ -438,16 +436,26 @@ void QQuickCanvasPrivate::polishItems()
 void QQuickCanvasPrivate::syncSceneGraph()
 {
     updateDirtyNodes();
+
+    // Copy the current state of clearing from canvas into renderer.
+    context->renderer()->setClearColor(clearColor);
+    QSGRenderer::ClearMode mode = QSGRenderer::ClearStencilBuffer | QSGRenderer::ClearDepthBuffer;
+    if (clearBeforeRendering)
+        mode |= QSGRenderer::ClearColorBuffer;
+    context->renderer()->setClearMode(mode);
 }
 
 
 void QQuickCanvasPrivate::renderSceneGraph(const QSize &size)
 {
+    Q_Q(QQuickCanvas);
     context->renderer()->setDeviceRect(QRect(QPoint(0, 0), size));
     context->renderer()->setViewportRect(QRect(QPoint(0, 0), renderTarget ? renderTarget->size() : size));
     context->renderer()->setProjectionMatrixToDeviceRect();
 
+    emit q->beforeRendering();
     context->renderNextFrame(renderTarget);
+    emit q->afterRendering();
 
 #ifdef FRAME_TIMING
     sceneGraphRenderTime = frameTimer.elapsed();
@@ -461,20 +469,15 @@ void QQuickCanvasPrivate::renderSceneGraph(const QSize &size)
 }
 
 
-// ### Do we need this?
-void QQuickCanvas::sceneGraphChanged()
-{
-//    Q_D(QQuickCanvas);
-//    d->needsRepaint = true;
-}
-
 QQuickCanvasPrivate::QQuickCanvasPrivate()
     : rootItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
     , dirtyItemList(0)
     , context(0)
+    , clearColor(Qt::white)
     , vsyncAnimations(false)
+    , clearBeforeRendering(true)
     , thread(0)
     , animationDriver(0)
     , renderTarget(0)
@@ -488,7 +491,9 @@ QQuickCanvasPrivate::~QQuickCanvasPrivate()
 
 void QQuickCanvasPrivate::init(QQuickCanvas *c)
 {
-    QUnifiedTimer2::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
+    QUnifiedTimer2* ut = QUnifiedTimer2::instance(true);
+    if (qmlFixedAnimationStep())
+        ut->setConsistentTiming(true);
 
     q_ptr = c;
 
@@ -525,6 +530,23 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
 
     q->setSurfaceType(QWindow::OpenGLSurface);
     q->setFormat(context->defaultSurfaceFormat());
+}
+
+QDeclarativeListProperty<QObject> QQuickCanvasPrivate::data()
+{
+    initRootItem();
+    return QQuickItemPrivate::get(rootItem)->data();
+}
+
+void QQuickCanvasPrivate::initRootItem()
+{
+    Q_Q(QQuickCanvas);
+    q->connect(q, SIGNAL(widthChanged(int)),
+            rootItem, SLOT(setWidth(int)));
+    q->connect(q, SIGNAL(heightChanged(int)),
+            rootItem, SLOT(setHeight(int)));
+    rootItem->setWidth(q->width());
+    rootItem->setHeight(q->height());
 }
 
 void QQuickCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
@@ -793,28 +815,6 @@ void QQuickCanvasPrivate::updateInputMethodData()
     qApp->inputPanel()->setInputItem(inputItem);
 }
 
-/*!
-  Queries the Input Method.
-*/
-QVariant QQuickCanvas::inputMethodQuery(Qt::InputMethodQuery query) const
-{
-    Q_D(const QQuickCanvas);
-    if (!d->activeFocusItem || !(QQuickItemPrivate::get(d->activeFocusItem)->flags & QQuickItem::ItemAcceptsInputMethod))
-        return QVariant();
-    QVariant value = d->activeFocusItem->inputMethodQuery(query);
-
-    //map geometry types
-    QVariant::Type type = value.type();
-    if (type == QVariant::RectF || type == QVariant::Rect) {
-        const QTransform transform = QQuickItemPrivate::get(d->activeFocusItem)->itemToCanvasTransform();
-        value = transform.mapRect(value.toRectF());
-    } else if (type == QVariant::PointF || type == QVariant::Point) {
-        const QTransform transform = QQuickItemPrivate::get(d->activeFocusItem)->itemToCanvasTransform();
-        value = transform.map(value.toPointF());
-    }
-    return value;
-}
-
 void QQuickCanvasPrivate::dirtyItem(QQuickItem *)
 {
     Q_Q(QQuickCanvas);
@@ -831,6 +831,14 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 }
 
 
+/*!
+    \qmlclass Window QQuickCanvas
+    \inqmlmodule QtQuick.Window 2
+    \brief The Window object creates a new top-level window.
+
+    The Window object creates a new top-level window for a QtQuick scene. It automatically sets up the
+    window for use with QtQuick 2.0 graphical elements.
+*/
 /*!
     \class QQuickCanvas
     \since QtQuick 2.0
@@ -862,11 +870,8 @@ QQuickCanvas::~QQuickCanvas()
 {
     Q_D(QQuickCanvas);
 
-    if (d->thread->isRunning()) {
+    if (d->thread->isRunning())
         d->thread->stopRendering();
-        delete d->thread;
-        d->thread = 0;
-    }
 
     // ### should we change ~QQuickItem to handle this better?
     // manually cleanup for the root item (item destructor only handles these when an item is parented)
@@ -876,7 +881,8 @@ QQuickCanvas::~QQuickCanvas()
     delete d->incubationController; d->incubationController = 0;
 
     delete d->rootItem; d->rootItem = 0;
-    d->cleanupNodes();
+
+    delete d->thread; d->thread = 0;
 }
 
 /*!
@@ -912,6 +918,14 @@ QQuickItem *QQuickCanvas::mouseGrabberItem() const
     return d->mouseGrabberItem;
 }
 
+
+/*!
+    \qmlproperty color QtQuick2.Window::Window::color
+
+    The background color for the window.
+
+    Setting this property is more efficient than using a separate Rectangle.
+*/
 
 bool QQuickCanvasPrivate::clearHover()
 {
@@ -974,14 +988,6 @@ void QQuickCanvas::keyPressEvent(QKeyEvent *e)
 }
 
 void QQuickCanvas::keyReleaseEvent(QKeyEvent *e)
-{
-    Q_D(QQuickCanvas);
-
-    if (d->activeFocusItem)
-        sendEvent(d->activeFocusItem, e);
-}
-
-void QQuickCanvas::inputMethodEvent(QInputMethodEvent *e)
 {
     Q_D(QQuickCanvas);
 
@@ -1574,14 +1580,6 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
             QQuickItemPrivate::get(item)->deliverKeyEvent(static_cast<QKeyEvent *>(e));
         }
         break;
-    case QEvent::InputMethod:
-        e->accept();
-        QQuickItemPrivate::get(item)->deliverInputMethodEvent(static_cast<QInputMethodEvent *>(e));
-        while (!e->isAccepted() && (item = item->parentItem())) {
-            e->accept();
-            QQuickItemPrivate::get(item)->deliverInputMethodEvent(static_cast<QInputMethodEvent *>(e));
-        }
-        break;
     case QEvent::FocusIn:
     case QEvent::FocusOut:
         QQuickItemPrivate::get(item)->deliverFocusEvent(static_cast<QFocusEvent *>(e));
@@ -1937,13 +1935,16 @@ void QQuickCanvas::maybeUpdate()
     The engine will only be available once the scene graph has been
     initialized. Register for the sceneGraphEngine() signal to get
     notification about this.
+
+    \deprecated
  */
 
 QSGEngine *QQuickCanvas::sceneGraphEngine() const
 {
     Q_D(const QQuickCanvas);
+    qWarning("QQuickCanvas::sceneGraphEngine() is deprecated, use members of QQuickCanvas instead");
     if (d->context && d->context->isReady())
-        return d->context->engine();
+        return d->engine;
     return 0;
 }
 
@@ -2017,6 +2018,169 @@ QDeclarativeIncubationController *QQuickCanvas::incubationController() const
         d->incubationController = new QQuickCanvasIncubationController(const_cast<QQuickCanvasPrivate *>(d));
     return d->incubationController;
 }
+
+
+
+/*!
+    \enum QQuickCanvas::CreateTextureOption
+
+    The CreateTextureOption enums are used to customize a texture is wrapped.
+
+    \value TextureHasAlphaChannel The texture has an alpha channel and should
+    be drawn using blending.
+
+    \value TextureHasMipmaps The texture has mipmaps and can be drawn with
+    mipmapping enabled.
+
+    \value TextureOwnsGLTexture The texture object owns the texture id and
+    will delete the GL texture when the texture object is deleted.
+ */
+
+/*!
+    \fn void QQuickCanvas::beforeRendering()
+
+    This signal is emitted before the scene starts rendering.
+
+    Combined with the modes for clearing the background, this option
+    can be used to paint using raw GL under QML content.
+
+    The GL context used for rendering the scene graph will be bound
+    at this point.
+
+    Since this signal is emitted from the scene graph rendering thread, the receiver should
+    be on the scene graph thread or the connection should be Qt::DirectConnection.
+
+*/
+
+/*!
+    \fn void QQuickCanvas::afterRendering()
+
+    This signal is emitted after the scene has completed rendering, before swapbuffers is called.
+
+    This signal can be used to paint using raw GL on top of QML content,
+    or to do screen scraping of the current frame buffer.
+
+    The GL context used for rendering the scene graph will be bound at this point.
+
+    Since this signal is emitted from the scene graph rendering thread, the receiver should
+    be on the scene graph thread or the connection should be Qt::DirectConnection.
+ */
+
+
+
+/*!
+    Sets weither the scene graph rendering of QML should clear the color buffer
+    before it starts rendering to \a enbled.
+
+    By disabling clearing of the color buffer, it is possible to do GL painting
+    under the scene graph.
+
+    The color buffer is cleared by default.
+
+    \sa beforeRendering()
+ */
+
+void QQuickCanvas::setClearBeforeRendering(bool enabled)
+{
+    Q_D(QQuickCanvas);
+    d->clearBeforeRendering = enabled;
+}
+
+
+
+/*!
+    Returns weither clearing of the color buffer is done before rendering or not.
+ */
+
+bool QQuickCanvas::clearBeforeRendering() const
+{
+    Q_D(const QQuickCanvas);
+    return d->clearBeforeRendering;
+}
+
+
+
+/*!
+    Creates a new QSGTexture from the supplied \a image. If the image has an
+    alpha channel, the corresponding texture will have an alpha channel.
+
+    The caller of the function is responsible for deleting the returned texture.
+    The actual GL texture will be deleted when the texture object is deleted.
+
+    \warning This function will return 0 if the scene graph has not yet been
+    initialized.
+
+    This function can be called both from the GUI thread and the rendering thread.
+
+    \sa sceneGraphInitialized()
+ */
+
+QSGTexture *QQuickCanvas::createTextureFromImage(const QImage &image) const
+{
+    Q_D(const QQuickCanvas);
+    if (d->context)
+        return d->context->createTexture(image);
+    else
+        return 0;
+}
+
+
+
+/*!
+    Creates a new QSGTexture object from an existing GL texture \a id.
+
+    The caller of the function is responsible for deleting the returned texture.
+
+    Use \a options to customize the texture attributes.
+
+    \warning This function will return 0 if the scenegraph has not yet been
+    initialized.
+
+    \sa sceneGraphInitialized()
+ */
+QSGTexture *QQuickCanvas::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
+{
+    Q_D(const QQuickCanvas);
+    if (d->context) {
+        QSGPlainTexture *texture = new QSGPlainTexture();
+        texture->setTextureId(id);
+        texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
+        texture->setHasMipmaps(options & TextureHasMipmaps);
+        texture->setOwnsTexture(options & TextureOwnsGLTexture);
+        texture->setTextureSize(size);
+        return texture;
+    }
+    return 0;
+}
+
+
+/*!
+    Sets the color used to clear the opengl context to \a color.
+
+    Setting the clear color has no effect when clearing is disabled.
+
+    \sa setClearBeforeRendering()
+ */
+
+void QQuickCanvas::setClearColor(const QColor &color)
+{
+    if (color == d_func()->clearColor)
+        return;
+    d_func()->clearColor = color;
+    emit clearColorChanged(color);
+}
+
+
+
+/*!
+    Returns the color used to clear the opengl context.
+ */
+
+QColor QQuickCanvas::clearColor() const
+{
+    return d_func()->clearColor;
+}
+
 
 
 void QQuickCanvasRenderLoop::createGLContext()
@@ -2156,8 +2320,10 @@ void QQuickCanvasRenderThread::run()
 
         unlock();
 
-        // Process any "deleteLater" objects...
         QCoreApplication::processEvents();
+
+        // Process any "deleteLater" objects...
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 
 #ifdef THREAD_DEBUG
@@ -2250,7 +2416,7 @@ void QQuickCanvasRenderThread::sync(bool guiAlreadyLocked)
 
 /*!
     Acquires the mutex for the GUI thread. The function uses the isGuiBlocked
-    variable to keep track of how many recursion levels the gui is locket with.
+    variable to keep track of how many recursion levels the gui is locked with.
     We only actually acquire the mutex for the first level to avoid deadlocking
     ourselves.
  */

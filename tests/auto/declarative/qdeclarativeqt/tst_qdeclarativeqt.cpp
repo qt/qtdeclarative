@@ -437,8 +437,7 @@ void tst_qdeclarativeqt::createQmlObject()
     QString warning3 = component.url().toString()+ ":11: Error: Qt.createQmlObject(): failed to create object: \n    " + TEST_FILE("main.qml").toString() + ":4:1: Duplicate property name";
     QString warning4 = component.url().toString()+ ":9: Error: Qt.createQmlObject(): Missing parent object";
     QString warning5 = component.url().toString()+ ":8: Error: Qt.createQmlObject(): Invalid arguments";
-    QString messageFormat = QString(QLatin1String("%1 (%2:%3)"));
-    QString warning6 = messageFormat.arg("RunTimeError:  Qt.createQmlObject(): failed to create object: \n    " + TEST_FILE("inline").toString() + ":3: Cannot assign object type QObject with no default method").arg(TEST_FILE("createQmlObject.qml").toString()).arg(23);
+    QString warning6 = "RunTimeError:  Qt.createQmlObject(): failed to create object: \n    " + TEST_FILE("inline").toString() + ":3: Cannot assign object type QObject with no default method";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning3));
@@ -461,29 +460,24 @@ void tst_qdeclarativeqt::createQmlObject()
 
 void tst_qdeclarativeqt::consoleLog()
 {
-    int startLineNumber = 15;
+    int startLineNumber = 30;
     QUrl testFileUrl = TEST_FILE("consoleLog.qml");
-    QString testString = QString(QLatin1String("completed ok (%1:%2)")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtCriticalMsg, qPrintable(testString.arg(startLineNumber++)));
+    QTest::ignoreMessage(QtDebugMsg, "completed ok");
+    QTest::ignoreMessage(QtDebugMsg, "completed ok");
+    QTest::ignoreMessage(QtDebugMsg, "completed ok");
+    QTest::ignoreMessage(QtWarningMsg, "completed ok");
+    QTest::ignoreMessage(QtCriticalMsg, "completed ok");
 
-    QString testArray = QString(QLatin1String("[1,2] (%1:%2)")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testArray.arg(startLineNumber++)));
-    QString testObject = QString(QLatin1String("Object (%1:%2)")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
-    QString testUndefined = QString(QLatin1String("undefined (%1:%2)")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testUndefined.arg(startLineNumber++)));
-    QString testNumber = QString(QLatin1String("12 (%1:%2)")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testNumber.arg(startLineNumber++)));
-    QString testFunction = QString(QLatin1String("function () { return 5;} (%1:%2)")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testFunction.arg(startLineNumber++)));
-    QString testBoolean = QString(QLatin1String("true (%1:%2)")).arg(testFileUrl.toString());
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testBoolean.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
+    QTest::ignoreMessage(QtDebugMsg, "[1,2]");
+    QTest::ignoreMessage(QtDebugMsg, "Object");
+    QTest::ignoreMessage(QtDebugMsg, "undefined");
+    QTest::ignoreMessage(QtDebugMsg, "12");
+    QTest::ignoreMessage(QtDebugMsg, "function () { return 5;}");
+    QTest::ignoreMessage(QtDebugMsg, "true");
+    QTest::ignoreMessage(QtDebugMsg, "Object");
+    QTest::ignoreMessage(QtDebugMsg, "Object");
+    QTest::ignoreMessage(QtDebugMsg, "1 pong! Object");
+    QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] Object 2");
 
     QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testFileUrl.toString());
     QTest::ignoreMessage(QtWarningMsg, qPrintable(testException.arg(startLineNumber++)));
@@ -499,11 +493,13 @@ void tst_qdeclarativeqt::dateTimeConversion()
     QDate date(2008,12,24);
     QTime time(14,15,38,200);
     QDateTime dateTime(date, time);
+    //Note that when converting Date to QDateTime they can argue over historical DST data when converting to local time.
+    //Tests should use UTC or recent dates.
     QDateTime dateTime2(QDate(2852,12,31), QTime(23,59,59,500));
-    QDateTime dateTime3(QDate(1970,1,1), QTime(0,0,0,0));
-    QDateTime dateTime4(QDate(1586,2,2), QTime(0,0,0,0));
-    QDateTime dateTime5(QDate(955,1,1), QTime(0,0,0,0));
-    QDateTime dateTime6(QDate(113,2,24), QTime(14,15,38,200));
+    QDateTime dateTime3(QDate(2000,1,1), QTime(0,0,0,0));
+    QDateTime dateTime4(QDate(2001,2,2), QTime(0,0,0,0));
+    QDateTime dateTime5(QDate(1999,1,1), QTime(2,3,4,0));
+    QDateTime dateTime6(QDate(2008,2,24), QTime(14,15,38,200));
 
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, TEST_FILE("dateTimeConversion.qml"));

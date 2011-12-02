@@ -72,6 +72,12 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qdatetime.h>
 
+Q_DECLARE_METATYPE(QList<int>)
+Q_DECLARE_METATYPE(QList<qreal>)
+Q_DECLARE_METATYPE(QList<bool>)
+Q_DECLARE_METATYPE(QList<QString>)
+Q_DECLARE_METATYPE(QList<QUrl>)
+
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(compilerDump, QML_COMPILER_DUMP);
@@ -235,6 +241,9 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
         case QVariant::String:
             if (!v->value.isString()) COMPILE_EXCEPTION(v, tr("Invalid property assignment: string expected"));
             break;
+        case QVariant::StringList: // we expect a string literal.  A string list is not a literal assignment.
+            if (!v->value.isString()) COMPILE_EXCEPTION(v, tr("Invalid property assignment: string or string list expected"));
+            break;
         case QVariant::ByteArray:
             if (!v->value.isString()) COMPILE_EXCEPTION(v, tr("Invalid property assignment: byte array expected"));
             break;
@@ -344,6 +353,41 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
             break;
         default:
             {
+            // check if assigning a literal value to a list property.
+            // in each case, check the singular, since an Array of the specified type
+            // will not go via this literal assignment codepath.
+            if (type == qMetaTypeId<QList<qreal> >()) {
+                if (!v->value.isNumber()) {
+                    COMPILE_EXCEPTION(v, tr("Invalid property assignment: real or array of reals expected"));
+                }
+                break;
+            } else if (type == qMetaTypeId<QList<int> >()) {
+                bool ok = v->value.isNumber();
+                if (ok) {
+                    double n = v->value.asNumber();
+                    if (double(int(n)) != n)
+                        ok = false;
+                }
+                if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: int or array of ints expected"));
+                break;
+            } else if (type == qMetaTypeId<QList<bool> >()) {
+                if (!v->value.isBoolean()) {
+                    COMPILE_EXCEPTION(v, tr("Invalid property assignment: bool or array of bools expected"));
+                }
+                break;
+            } else if (type == qMetaTypeId<QList<QString> >()) { // we expect a string literal.  A string list is not a literal assignment.
+                if (!v->value.isString()) {
+                    COMPILE_EXCEPTION(v, tr("Invalid property assignment: string or array of strings expected"));
+                }
+                break;
+            } else if (type == qMetaTypeId<QList<QUrl> >()) {
+                if (!v->value.isString()) {
+                    COMPILE_EXCEPTION(v, tr("Invalid property assignment: url or array of urls expected"));
+                }
+                break;
+            }
+
+            // otherwise, check for existence of string converter to custom type
             QDeclarativeMetaType::StringConverter converter = QDeclarativeMetaType::customStringConverter(type);
             if (!converter)
                 COMPILE_EXCEPTION(v, tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QVariant::typeToName((QVariant::Type)type))));
@@ -435,6 +479,14 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
         case QVariant::String:
             {
             Instruction::StoreString instr;
+            instr.propertyIndex = prop->index;
+            instr.value = output->indexForString(v->value.asString());
+            output->addInstruction(instr);
+            }
+            break;
+        case QVariant::StringList:
+            {
+            Instruction::StoreStringList instr;
             instr.propertyIndex = prop->index;
             instr.value = output->indexForString(v->value.asString());
             output->addInstruction(instr);
@@ -638,6 +690,43 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             break;
         default:
             {
+            // generate single literal value assignment to a list property if required
+            if (type == qMetaTypeId<QList<qreal> >()) {
+                Instruction::StoreDoubleQList instr;
+                instr.propertyIndex = prop->index;
+                instr.value = v->value.asNumber();
+                output->addInstruction(instr);
+                break;
+            } else if (type == qMetaTypeId<QList<int> >()) {
+                Instruction::StoreIntegerQList instr;
+                instr.propertyIndex = prop->index;
+                instr.value = int(v->value.asNumber());
+                output->addInstruction(instr);
+                break;
+            } else if (type == qMetaTypeId<QList<bool> >()) {
+                Instruction::StoreBoolQList instr;
+                bool b = v->value.asBoolean();
+                instr.propertyIndex = prop->index;
+                instr.value = b;
+                output->addInstruction(instr);
+                break;
+            } else if (type == qMetaTypeId<QList<QUrl> >()) {
+                Instruction::StoreUrlQList instr;
+                QString string = v->value.asString();
+                QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
+                instr.propertyIndex = prop->index;
+                instr.value = output->indexForUrl(u);
+                output->addInstruction(instr);
+                break;
+            } else if (type == qMetaTypeId<QList<QString> >()) {
+                Instruction::StoreStringQList instr;
+                instr.propertyIndex = prop->index;
+                instr.value = output->indexForString(v->value.asString());
+                output->addInstruction(instr);
+                break;
+            }
+
+            // otherwise, generate custom type literal assignment
             Instruction::AssignCustomType instr;
             instr.propertyIndex = prop->index;
             instr.primitive = output->indexForString(v->value.asString());
@@ -1170,7 +1259,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
         ss.value = output->indexForString(script);
         ss.scope = prop->scriptStringScope;
 //        ss.bindingId = rewriteBinding(script, prop->name());
-        ss.bindingId = rewriteBinding(script, QString()); // XXX
+        ss.bindingId = rewriteBinding(prop->values.first()->value, QString()); // XXX
         ss.line = prop->location.start.line;
         output->addInstruction(ss);
     }
@@ -1227,10 +1316,11 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 
             Instruction::StoreSignal store;
             store.signalIndex = prop->index;
-            store.value =
-                output->indexForString(v->value.asScript().trimmed());
+            QDeclarativeRewrite::RewriteSignalHandler rewriteSignalHandler;
+            const QString &rewrite =
+                    rewriteSignalHandler(v->value.asScript().trimmed(), prop->name().toString());
+            store.value = output->indexForString(rewrite);
             store.context = v->signalExpressionContextStack;
-            store.name = output->indexForByteArray(prop->name().toUtf8());
             store.line = v->location.start.line;
             output->addInstruction(store);
 
@@ -2483,14 +2573,20 @@ const QMetaObject *QDeclarativeCompiler::resolveType(const QString& name) const
 
 // similar to logic of completeComponentBuild, but also sticks data
 // into primitives at the end
-int QDeclarativeCompiler::rewriteBinding(const QString& expression, const QString& name)
+int QDeclarativeCompiler::rewriteBinding(const QDeclarativeScript::Variant& value, const QString& name)
 {
     QDeclarativeRewrite::RewriteBinding rewriteBinding;
     rewriteBinding.setName(QLatin1Char('$') + name.mid(name.lastIndexOf(QLatin1Char('.')) + 1));
 
-    QString rewrite = rewriteBinding(expression, 0, 0);
+    QString rewrite = rewriteBinding(value.asAST(), value.asScript(), 0);
 
     return output->indexForString(rewrite);
+}
+
+QString QDeclarativeCompiler::rewriteSignalHandler(const QString &handler, const QString &name)
+{
+    QDeclarativeRewrite::RewriteSignalHandler rewriteSignalHandler;
+    return rewriteSignalHandler(handler, name);
 }
 
 // Ensures that the dynamic meta specification on obj is valid
@@ -3112,7 +3208,8 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
         writable = aliasProperty.isWritable() && !prop.isReadOnly;
         resettable = aliasProperty.isResettable() && !prop.isReadOnly;
 
-        if (aliasProperty.type() < QVariant::UserType)
+        if (aliasProperty.type() < QVariant::UserType ||
+            aliasProperty.type() == QVariant::LastType /* for QVariant */ )
             type = aliasProperty.type();
 
         if (alias.count() == 3) {
@@ -3382,6 +3479,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
             }
 
             functionArray += expression;
+            lineNumber += expression.count(QLatin1Char('\n'));
             reference->compiledIndex = ii;
         }
         functionArray += QLatin1String("]");

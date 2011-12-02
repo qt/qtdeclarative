@@ -44,7 +44,7 @@
 
 #include <private/qdeclarativeglobal_p.h>
 
-#include <qdeclarativepropertyvalueinterceptor.h>
+#include <private/qdeclarativepropertyvalueinterceptor_p.h>
 #include <qdeclarative.h>
 #include "private/qabstractanimation2_p.h"
 

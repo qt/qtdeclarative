@@ -812,7 +812,7 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     hData.dragMaxBound = q->maxXExtent();
     vData.dragMaxBound = q->maxYExtent();
     fixupMode = Normal;
-    lastPos = QPoint();
+    lastPos = QPointF();
     QQuickItemPrivate::start(lastPosTime);
     pressPos = event->localPos();
     hData.pressPos = hData.move.value();
@@ -835,7 +835,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     bool stealX = stealMouse;
 
     if (q->yflick()) {
-        int dy = int(event->localPos().y() - pressPos.y());
+        qreal dy = event->localPos().y() - pressPos.y();
         if (qAbs(dy) > qApp->styleHints()->startDragDistance() || QQuickItemPrivate::elapsed(pressTime) > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
@@ -867,7 +867,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     }
 
     if (q->xflick()) {
-        int dx = int(event->localPos().x() - pressPos.x());
+        qreal dx = event->localPos().x() - pressPos.x();
         if (qAbs(dx) > qApp->styleHints()->startDragDistance() || QQuickItemPrivate::elapsed(pressTime) > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
@@ -1177,13 +1177,19 @@ void QQuickFlickable::viewportMoved()
             qreal horizontalVelocity = (prevX - d->hData.move.value()) * 1000 / elapsed;
             if (qAbs(horizontalVelocity) > 0) {
                 d->velocityTimeline.reset(d->hData.smoothVelocity);
-                d->velocityTimeline.move(d->hData.smoothVelocity, horizontalVelocity, d->reportedVelocitySmoothing);
+                if (d->calcVelocity)
+                    d->velocityTimeline.set(d->hData.smoothVelocity, horizontalVelocity);
+                else
+                    d->velocityTimeline.move(d->hData.smoothVelocity, horizontalVelocity, d->reportedVelocitySmoothing);
                 d->velocityTimeline.move(d->hData.smoothVelocity, 0, d->reportedVelocitySmoothing);
             }
             qreal verticalVelocity = (prevY - d->vData.move.value()) * 1000 / elapsed;
             if (qAbs(verticalVelocity) > 0) {
                 d->velocityTimeline.reset(d->vData.smoothVelocity);
-                d->velocityTimeline.move(d->vData.smoothVelocity, verticalVelocity, d->reportedVelocitySmoothing);
+                if (d->calcVelocity)
+                    d->velocityTimeline.set(d->vData.smoothVelocity, verticalVelocity);
+                else
+                    d->velocityTimeline.move(d->vData.smoothVelocity, verticalVelocity, d->reportedVelocitySmoothing);
                 d->velocityTimeline.move(d->vData.smoothVelocity, 0, d->reportedVelocitySmoothing);
             }
         }

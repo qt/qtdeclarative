@@ -41,6 +41,7 @@
 
 /*!
     \page qml-particlesystem.html
+\inqmlmodule QtQuick 2
     \title Using the Qt Quick Particle System
 
     \section1 The ParticleSystem
@@ -121,6 +122,7 @@
 
 /*!
     \page qml-particlesystem-performance.html
+\inqmlmodule QtQuick 2
     \title Qt Quick Particle System Performance Guide
 
     The performance of the particle system scales with the number of particles it is maintaining. After prototyping the desired

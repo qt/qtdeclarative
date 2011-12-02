@@ -38,12 +38,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <private/qdeclarativeengine_p.h>
 
 #include <QtTest/QtTest>
 #include <QtGlobal>
 #include <math.h>
-
+#include <QMetaObject>
 #include <qtest.h>
 #include <QtTest/qsignalspy.h>
 #include <QtDeclarative/qdeclarativenetworkaccessmanagerfactory.h>
@@ -53,17 +52,17 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qtemporaryfile.h>
 #include "../shared/util.h"
+#include <private/qdeclarativeengine_p.h>
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <private/qdeclarativexmllistmodel_p.h>
+#include <private/qlistmodelinterface_p.h>
 
 typedef QPair<int, int> QDeclarativeXmlListRange;
 typedef QList<QVariantList> QDeclarativeXmlModelData;
 
 Q_DECLARE_METATYPE(QList<QDeclarativeXmlListRange>)
 Q_DECLARE_METATYPE(QDeclarativeXmlModelData)
-Q_DECLARE_METATYPE(QDeclarativeXmlListModel::Status)
 
 class tst_qdeclarativexmllistmodel : public QObject
 
@@ -71,10 +70,11 @@ class tst_qdeclarativexmllistmodel : public QObject
     Q_OBJECT
 public:
     tst_qdeclarativexmllistmodel() {}
+    enum Status { Null, Ready, Loading, Error };
 
 private slots:
     void initTestCase() {
-        qRegisterMetaType<QDeclarativeXmlListModel::Status>("QDeclarativeXmlListModel::Status");
+        qRegisterMetaType<Status>("tst_qdeclarativexmllistmodel::Status");
     }
 
     void buildModel();
@@ -104,6 +104,12 @@ private slots:
     void roleCrash();
 
 private:
+    QString errorString(QListModelInterface* model) {
+        QString ret;
+        QMetaObject::invokeMethod(model, "errorString", Q_RETURN_ARG(QString, ret));
+        return ret;
+    }
+
     QString makeItemXmlAndData(const QString &data, QDeclarativeXmlModelData *modelData = 0) const
     {
         if (modelData)
@@ -146,7 +152,7 @@ private:
 
     QDeclarativeEngine engine;
 };
-
+Q_DECLARE_METATYPE(tst_qdeclarativexmllistmodel::Status)
 class CustomNetworkAccessManagerFactory : public QObject, public QDeclarativeNetworkAccessManagerFactory
 {
     Q_OBJECT
@@ -188,18 +194,14 @@ QNetworkAccessManager *CustomNetworkAccessManagerFactory::create(QObject *parent
 void tst_qdeclarativexmllistmodel::buildModel()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
 
-    QList<int> roles;
-    roles << Qt::UserRole << Qt::UserRole + 1 << Qt::UserRole + 2 << Qt::UserRole + 3;
-    QHash<int, QVariant> data = model->data(3, roles);
-    QVERIFY(data.count() == 4);
-    QCOMPARE(data.value(Qt::UserRole).toString(), QLatin1String("Spot"));
-    QCOMPARE(data.value(Qt::UserRole+1).toString(), QLatin1String("Dog"));
-    QCOMPARE(data.value(Qt::UserRole+2).toInt(), 9);
-    QCOMPARE(data.value(Qt::UserRole+3).toString(), QLatin1String("Medium"));
+    QCOMPARE(model->data(3, Qt::UserRole).toString(), QLatin1String("Spot"));
+    QCOMPARE(model->data(3, Qt::UserRole+1).toString(), QLatin1String("Dog"));
+    QCOMPARE(model->data(3, Qt::UserRole+2).toInt(), 9);
+    QCOMPARE(model->data(3, Qt::UserRole+3).toString(), QLatin1String("Medium"));
 
     delete model;
 }
@@ -211,10 +213,10 @@ void tst_qdeclarativexmllistmodel::testTypes()
     QFETCH(QVariant, expectedValue);
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("testtypes.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
-    model->setXml(xml.toUtf8());
-    model->reload();
+    model->setProperty("xml",xml.toUtf8());
+    QMetaObject::invokeMethod(model, "reload");
     QTRY_COMPARE(model->count(), 1);
 
     int role = -1;
@@ -271,15 +273,11 @@ void tst_qdeclarativexmllistmodel::testTypes_data()
 void tst_qdeclarativexmllistmodel::cdata()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("recipes.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 5);
 
-    QList<int> roles;
-    roles << Qt::UserRole + 2;
-    QHash<int, QVariant> data = model->data(2, roles);
-    QVERIFY(data.count() == 1);
-    QVERIFY(data.value(Qt::UserRole+2).toString().startsWith(QLatin1String("<html>")));
+    QVERIFY(model->data(2, Qt::UserRole+2).toString().startsWith(QLatin1String("<html>")));
 
     delete model;
 }
@@ -287,14 +285,10 @@ void tst_qdeclarativexmllistmodel::cdata()
 void tst_qdeclarativexmllistmodel::attributes()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("recipes.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 5);
-    QList<int> roles;
-    roles << Qt::UserRole;
-    QHash<int, QVariant> data = model->data(2, roles);
-    QVERIFY(data.count() == 1);
-    QCOMPARE(data.value(Qt::UserRole).toString(), QLatin1String("Vegetable Soup"));
+    QCOMPARE(model->data(2, Qt::UserRole).toString(), QLatin1String("Vegetable Soup"));
 
     delete model;
 }
@@ -302,7 +296,7 @@ void tst_qdeclarativexmllistmodel::attributes()
 void tst_qdeclarativexmllistmodel::roles()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
 
@@ -319,26 +313,22 @@ void tst_qdeclarativexmllistmodel::roles()
 void tst_qdeclarativexmllistmodel::roleErrors()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleErrors.qml")));
-    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("roleErrors.qml")).toString() + ":6:5: QML XmlRole: An XmlRole query must not start with '/'").toUtf8().constData());
-    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("roleErrors.qml")).toString() + ":9:5: QML XmlRole: invalid query: \"age/\"").toUtf8().constData());
+    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("roleErrors.qml")).toString() + ":7:5: QML XmlRole: An XmlRole query must not start with '/'").toUtf8().constData());
+    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("roleErrors.qml")).toString() + ":10:5: QML XmlRole: invalid query: \"age/\"").toUtf8().constData());
 
     //### make sure we receive all expected warning messages.
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
 
-    QList<int> roles;
-    roles << Qt::UserRole << Qt::UserRole + 1 << Qt::UserRole + 2 << Qt::UserRole + 3;
-    QHash<int, QVariant> data = model->data(3, roles);
-    QVERIFY(data.count() == 4);
 
     //### should any of these return valid values?
-    QCOMPARE(data.value(Qt::UserRole), QVariant());
-    QCOMPARE(data.value(Qt::UserRole+1), QVariant());
-    QCOMPARE(data.value(Qt::UserRole+2), QVariant());
+    QCOMPARE(model->data(3, Qt::UserRole), QVariant());
+    QCOMPARE(model->data(3, Qt::UserRole+1), QVariant());
+    QCOMPARE(model->data(3, Qt::UserRole+2), QVariant());
 
     QEXPECT_FAIL("", "QTBUG-10797", Continue);
-    QCOMPARE(data.value(Qt::UserRole+3), QVariant());
+    QCOMPARE(model->data(3, Qt::UserRole+3), QVariant());
 
     delete model;
 }
@@ -346,8 +336,8 @@ void tst_qdeclarativexmllistmodel::roleErrors()
 void tst_qdeclarativexmllistmodel::uniqueRoleNames()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("unique.qml")));
-    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("unique.qml")).toString() + ":7:5: QML XmlRole: \"name\" duplicates a previous role name and will be disabled.").toUtf8().constData());
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QTest::ignoreMessage(QtWarningMsg, (QUrl::fromLocalFile(TESTDATA("unique.qml")).toString() + ":8:5: QML XmlRole: \"name\" duplicates a previous role name and will be disabled.").toUtf8().constData());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
 
@@ -364,31 +354,32 @@ void tst_qdeclarativexmllistmodel::xml()
     QFETCH(int, count);
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
-    QSignalSpy spy(model, SIGNAL(statusChanged(QDeclarativeXmlListModel::Status)));
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
 
-    QVERIFY(model->errorString().isEmpty());
-    QCOMPARE(model->progress(), qreal(0.0));
-    QCOMPARE(model->status(), QDeclarativeXmlListModel::Loading);
+    QSignalSpy spy(model, SIGNAL(statusChanged(QDeclarativeXmlListModel::Status)));
+    QVERIFY(errorString(model).isEmpty());
+    QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
+    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->status(), QDeclarativeXmlListModel::Ready);
-    QVERIFY(model->errorString().isEmpty());
-    QCOMPARE(model->progress(), qreal(1.0));
+    QTest::qWait(50);
+    QCOMPARE(model->property("status").toInt(), static_cast<int>(Ready));
+    QVERIFY(errorString(model).isEmpty());
+    QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
     QCOMPARE(model->count(), 9);
 
     // if xml is empty (i.e. clearing) it won't have any effect if a source is set
     if (xml.isEmpty())
-        model->setSource(QUrl());
-    model->setXml(xml);
-    QCOMPARE(model->progress(), qreal(1.0));   // immediately goes to 1.0 if using setXml()
+        model->setProperty("source",QUrl());
+    model->setProperty("xml",xml);
+    QCOMPARE(model->property("progress").toDouble(), qreal(1.0));   // immediately goes to 1.0 if using setXml()
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->status(), QDeclarativeXmlListModel::Loading);
+    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
     QTRY_COMPARE(spy.count(), 1); spy.clear();
     if (xml.isEmpty())
-        QCOMPARE(model->status(), QDeclarativeXmlListModel::Null);
+        QCOMPARE(model->property("status").toInt(), static_cast<int>(Null));
     else
-        QCOMPARE(model->status(), QDeclarativeXmlListModel::Ready);
-    QVERIFY(model->errorString().isEmpty());
+        QCOMPARE(model->property("status").toInt(), static_cast<int>(Ready));
+    QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->count(), count);
 
     delete model;
@@ -413,9 +404,9 @@ void tst_qdeclarativexmllistmodel::headers()
     qmlEng.setNetworkAccessManagerFactory(&factory);
 
     QDeclarativeComponent component(&qmlEng, QUrl::fromLocalFile(TESTDATA("model.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->status(), QDeclarativeXmlListModel::Ready);
+    QTRY_COMPARE(model->property("status").toInt(), static_cast<int>(Ready));
 
     QVariantMap expectedHeaders;
     expectedHeaders["Accept"] = "application/xml,*/*";
@@ -433,28 +424,28 @@ void tst_qdeclarativexmllistmodel::source()
 {
     QFETCH(QUrl, source);
     QFETCH(int, count);
-    QFETCH(QDeclarativeXmlListModel::Status, status);
+    QFETCH(Status, status);
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QSignalSpy spy(model, SIGNAL(statusChanged(QDeclarativeXmlListModel::Status)));
 
-    QVERIFY(model->errorString().isEmpty());
-    QCOMPARE(model->progress(), qreal(0.0));
-    QCOMPARE(model->status(), QDeclarativeXmlListModel::Loading);
+    QVERIFY(errorString(model).isEmpty());
+    QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
+    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->status(), QDeclarativeXmlListModel::Ready);
-    QVERIFY(model->errorString().isEmpty());
-    QCOMPARE(model->progress(), qreal(1.0));
+    QCOMPARE(model->property("status").toInt(), static_cast<int>(Ready));
+    QVERIFY(errorString(model).isEmpty());
+    QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
     QCOMPARE(model->count(), 9);
 
-    model->setSource(source);
-    if (model->source().isEmpty())
-        QCOMPARE(model->status(), QDeclarativeXmlListModel::Null);
-    QCOMPARE(model->progress(), qreal(0.0));
+    model->setProperty("source",source);
+    if (model->property("source").toString().isEmpty())
+        QCOMPARE(model->property("status").toInt(), static_cast<int>(Null));
+    QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->status(), QDeclarativeXmlListModel::Loading);
-    QVERIFY(model->errorString().isEmpty());
+    QCOMPARE(model->property("status").toInt(), static_cast<int>(Loading));
+    QVERIFY(errorString(model).isEmpty());
 
     QEventLoop loop;
     QTimer timer;
@@ -464,19 +455,19 @@ void tst_qdeclarativexmllistmodel::source()
     timer.start(20000);
     loop.exec();
 
-    if (spy.count() == 0 && status != QDeclarativeXmlListModel::Ready) {
+    if (spy.count() == 0 && status != Ready) {
         qWarning("QDeclarativeXmlListModel invalid source test timed out");
     } else {
         QCOMPARE(spy.count(), 1); spy.clear();
     }
 
-    QCOMPARE(model->status(), status);
+    QCOMPARE(model->property("status").toInt(), static_cast<int>(status));
     QCOMPARE(model->count(), count);
 
-    if (status == QDeclarativeXmlListModel::Ready)
-        QCOMPARE(model->progress(), qreal(1.0));
+    if (status == Ready)
+        QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
 
-    QCOMPARE(model->errorString().isEmpty(), status == QDeclarativeXmlListModel::Ready);
+    QCOMPARE(errorString(model).isEmpty(), status == Ready);
 
     delete model;
 }
@@ -485,29 +476,25 @@ void tst_qdeclarativexmllistmodel::source_data()
 {
     QTest::addColumn<QUrl>("source");
     QTest::addColumn<int>("count");
-    QTest::addColumn<QDeclarativeXmlListModel::Status>("status");
+    QTest::addColumn<Status>("status");
 
-    QTest::newRow("valid") << QUrl::fromLocalFile(TESTDATA("model2.xml")) << 2 << QDeclarativeXmlListModel::Ready;
-    QTest::newRow("invalid") << QUrl("http://blah.blah/blah.xml") << 0 << QDeclarativeXmlListModel::Error;
+    QTest::newRow("valid") << QUrl::fromLocalFile(TESTDATA("model2.xml")) << 2 << Ready;
+    QTest::newRow("invalid") << QUrl("http://blah.blah/blah.xml") << 0 << Error;
 
     // empty file
     QTemporaryFile *temp = new QTemporaryFile(this);
     if (temp->open())
-        QTest::newRow("empty file") << QUrl::fromLocalFile(temp->fileName()) << 0 << QDeclarativeXmlListModel::Ready;
+        QTest::newRow("empty file") << QUrl::fromLocalFile(temp->fileName()) << 0 << Ready;
     temp->close();
 }
 
 void tst_qdeclarativexmllistmodel::data()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());    
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
 
-    QHash<int,QVariant> blank;
-    for (int i=0; i<model->roles().count(); i++)
-        blank.insert(model->roles()[i], QVariant());
     for (int i=0; i<9; i++)  {
-        QCOMPARE(model->data(i, model->roles()), blank);
         for (int j=0; j<model->roles().count(); j++) {
             QCOMPARE(model->data(i, j), QVariant());
         }
@@ -520,7 +507,7 @@ void tst_qdeclarativexmllistmodel::data()
 void tst_qdeclarativexmllistmodel::get()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("get.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
 
     QVERIFY(model != 0);
 
@@ -541,20 +528,19 @@ void tst_qdeclarativexmllistmodel::reload()
     // reload() is called.
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
 
     QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
     QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
-    QSignalSpy spyCount(model, SIGNAL(countChanged())); 
-
+    QSignalSpy spyCount(model, SIGNAL(countChanged()));
     //reload multiple times to test the xml query aborting
-    model->reload();
-    model->reload();
+    QMetaObject::invokeMethod(model, "reload");
+    QMetaObject::invokeMethod(model, "reload");
     QCoreApplication::processEvents();
-    model->reload();
-    model->reload();
+    QMetaObject::invokeMethod(model, "reload");
+    QMetaObject::invokeMethod(model, "reload");
     QTRY_COMPARE(spyCount.count(), 1);
     QTRY_COMPARE(spyInsert.count(), 1);
     QTRY_COMPARE(spyRemove.count(), 1);
@@ -582,17 +568,17 @@ void tst_qdeclarativexmllistmodel::useKeys()
     QFETCH(QList<QDeclarativeXmlListRange>, removeRanges);
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
 
-    model->setXml(oldXml);
+    model->setProperty("xml",oldXml);
     QTRY_COMPARE(model->count(), oldCount);
 
     QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
     QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
     QSignalSpy spyCount(model, SIGNAL(countChanged()));
 
-    model->setXml(newXml);
+    model->setProperty("xml",newXml);
 
     if (oldCount != newData.count()) {
         QTRY_COMPARE(model->count(), newData.count());
@@ -733,23 +719,23 @@ void tst_qdeclarativexmllistmodel::noKeysValueChanges()
     // since 'sport' is not marked as a key.
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     
     QString xml;
     
     xml = makeItemXmlAndData("name=A,age=25,sport=Football;name=B,age=35,sport=Athletics");
-    model->setXml(xml);
+    model->setProperty("xml",xml);
     QTRY_COMPARE(model->count(), 2);
 
-    model->setXml("");
+    model->setProperty("xml","");
 
     QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
     QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
     QSignalSpy spyCount(model, SIGNAL(countChanged()));
 
     xml = makeItemXmlAndData("name=A,age=25,sport=AussieRules;name=B,age=35,sport=Athletics");
-    model->setXml(xml);
+    model->setProperty("xml",xml);
 
     // wait for the new xml data to be set, and verify no signals were emitted
     QTRY_VERIFY(model->data(0, model->roles()[2]).toString() != QLatin1String("Football"));
@@ -771,21 +757,21 @@ void tst_qdeclarativexmllistmodel::keysChanged()
     // if no keys are set).
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
 
     QString xml = makeItemXmlAndData("name=A,age=25,sport=Football;name=B,age=35,sport=Athletics");
-    model->setXml(xml);
+    model->setProperty("xml",xml);
     QTRY_COMPARE(model->count(), 2);
 
-    model->setXml("");
+    model->setProperty("xml","");
 
     QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
     QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
     QSignalSpy spyCount(model, SIGNAL(countChanged()));
 
     QVERIFY(QMetaObject::invokeMethod(model, "disableNameKey"));
-    model->setXml(xml);
+    model->setProperty("xml",xml);
 
     QTRY_VERIFY(spyInsert.count() > 0 && spyRemove.count() > 0);
 
@@ -808,11 +794,11 @@ void tst_qdeclarativexmllistmodel::threading()
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleKeys.qml")));
 
-    QDeclarativeXmlListModel *m1 = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *m1 = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(m1 != 0); 
-    QDeclarativeXmlListModel *m2 = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *m2 = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(m2 != 0); 
-    QDeclarativeXmlListModel *m3 = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *m3 = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(m3 != 0); 
 
     for (int dataCount=0; dataCount<xmlDataCount; dataCount++) {
@@ -826,24 +812,24 @@ void tst_qdeclarativexmllistmodel::threading()
 
         //Set the xml data multiple times with randomized order and mixed with multiple event loops
         //to test the xml query reloading/aborting, the result should be stable.
-        m1->setXml(makeItemXmlAndData(data1));
-        m2->setXml(makeItemXmlAndData(data2));
-        m3->setXml(makeItemXmlAndData(data3));
+        m1->setProperty("xml",makeItemXmlAndData(data1));
+        m2->setProperty("xml",makeItemXmlAndData(data2));
+        m3->setProperty("xml",makeItemXmlAndData(data3));
         QCoreApplication::processEvents();
-        m2->setXml(makeItemXmlAndData(data2));
-        m1->setXml(makeItemXmlAndData(data1));
-        m2->setXml(makeItemXmlAndData(data2));
+        m2->setProperty("xml",makeItemXmlAndData(data2));
+        m1->setProperty("xml",makeItemXmlAndData(data1));
+        m2->setProperty("xml",makeItemXmlAndData(data2));
         QCoreApplication::processEvents();
-        m3->setXml(makeItemXmlAndData(data3));
+        m3->setProperty("xml",makeItemXmlAndData(data3));
         QCoreApplication::processEvents();
-        m2->setXml(makeItemXmlAndData(data2));
-        m1->setXml(makeItemXmlAndData(data1));
-        m2->setXml(makeItemXmlAndData(data2));
-        m3->setXml(makeItemXmlAndData(data3));
+        m2->setProperty("xml",makeItemXmlAndData(data2));
+        m1->setProperty("xml",makeItemXmlAndData(data1));
+        m2->setProperty("xml",makeItemXmlAndData(data2));
+        m3->setProperty("xml",makeItemXmlAndData(data3));
         QCoreApplication::processEvents();
-        m2->setXml(makeItemXmlAndData(data2));
-        m3->setXml(makeItemXmlAndData(data3));
-        m3->setXml(makeItemXmlAndData(data3));
+        m2->setProperty("xml",makeItemXmlAndData(data2));
+        m3->setProperty("xml",makeItemXmlAndData(data3));
+        m3->setProperty("xml",makeItemXmlAndData(data3));
         QCoreApplication::processEvents();
 
         QTRY_VERIFY(m1->count() == dataCount && m2->count() == dataCount && m3->count() == dataCount);
@@ -880,32 +866,32 @@ void tst_qdeclarativexmllistmodel::threading_data()
 void tst_qdeclarativexmllistmodel::propertyChanges()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(model->count(), 9);
 
-    QDeclarativeXmlListModelRole *role = model->findChild<QDeclarativeXmlListModelRole*>("role");
+    QObject *role = model->findChild<QObject*>("role");
     QVERIFY(role);
 
     QSignalSpy nameSpy(role, SIGNAL(nameChanged()));
     QSignalSpy querySpy(role, SIGNAL(queryChanged()));
     QSignalSpy isKeySpy(role, SIGNAL(isKeyChanged()));
 
-    role->setName("size");
-    role->setQuery("size/string()");
-    role->setIsKey(true);
+    role->setProperty("name","size");
+    role->setProperty("query","size/string()");
+    role->setProperty("isKey",true);
 
-    QCOMPARE(role->name(), QString("size"));
-    QCOMPARE(role->query(), QString("size/string()"));
-    QVERIFY(role->isKey());
+    QCOMPARE(role->property("name").toString(), QString("size"));
+    QCOMPARE(role->property("query").toString(), QString("size/string()"));
+    QVERIFY(role->property("isKey").toBool());
 
     QCOMPARE(nameSpy.count(),1);
     QCOMPARE(querySpy.count(),1);
     QCOMPARE(isKeySpy.count(),1);
 
-    role->setName("size");
-    role->setQuery("size/string()");
-    role->setIsKey(true);
+    role->setProperty("name","size");
+    role->setProperty("query","size/string()");
+    role->setProperty("isKey",true);
 
     QCOMPARE(nameSpy.count(),1);
     QCOMPARE(querySpy.count(),1);
@@ -916,15 +902,15 @@ void tst_qdeclarativexmllistmodel::propertyChanges()
     QSignalSpy modelQuerySpy(model, SIGNAL(queryChanged()));
     QSignalSpy namespaceDeclarationsSpy(model, SIGNAL(namespaceDeclarationsChanged()));
 
-    model->setSource(QUrl(""));
-    model->setXml("<Pets><Pet><name>Polly</name><type>Parrot</type><age>12</age><size>Small</size></Pet></Pets>");
-    model->setQuery("/Pets");
-    model->setNamespaceDeclarations("declare namespace media=\"http://search.yahoo.com/mrss/\";");
+    model->setProperty("source",QUrl(""));
+    model->setProperty("xml","<Pets><Pet><name>Polly</name><type>Parrot</type><age>12</age><size>Small</size></Pet></Pets>");
+    model->setProperty("query","/Pets");
+    model->setProperty("namespaceDeclarations","declare namespace media=\"http://search.yahoo.com/mrss/\";");
 
-    QCOMPARE(model->source(), QUrl(""));
-    QCOMPARE(model->xml(), QString("<Pets><Pet><name>Polly</name><type>Parrot</type><age>12</age><size>Small</size></Pet></Pets>"));
-    QCOMPARE(model->query(), QString("/Pets"));
-    QCOMPARE(model->namespaceDeclarations(), QString("declare namespace media=\"http://search.yahoo.com/mrss/\";"));
+    QCOMPARE(model->property("source").toUrl(), QUrl(""));
+    QCOMPARE(model->property("xml").toString(), QString("<Pets><Pet><name>Polly</name><type>Parrot</type><age>12</age><size>Small</size></Pet></Pets>"));
+    QCOMPARE(model->property("query").toString(), QString("/Pets"));
+    QCOMPARE(model->property("namespaceDeclarations").toString(), QString("declare namespace media=\"http://search.yahoo.com/mrss/\";"));
 
     QTRY_VERIFY(model->count() == 1);
 
@@ -933,10 +919,10 @@ void tst_qdeclarativexmllistmodel::propertyChanges()
     QCOMPARE(modelQuerySpy.count(),1);
     QCOMPARE(namespaceDeclarationsSpy.count(),1);
 
-    model->setSource(QUrl(""));
-    model->setXml("<Pets><Pet><name>Polly</name><type>Parrot</type><age>12</age><size>Small</size></Pet></Pets>");
-    model->setQuery("/Pets");
-    model->setNamespaceDeclarations("declare namespace media=\"http://search.yahoo.com/mrss/\";");
+    model->setProperty("source",QUrl(""));
+    model->setProperty("xml","<Pets><Pet><name>Polly</name><type>Parrot</type><age>12</age><size>Small</size></Pet></Pets>");
+    model->setProperty("query","/Pets");
+    model->setProperty("namespaceDeclarations","declare namespace media=\"http://search.yahoo.com/mrss/\";");
 
     QCOMPARE(sourceSpy.count(),1);
     QCOMPARE(xmlSpy.count(),1);
@@ -951,7 +937,7 @@ void tst_qdeclarativexmllistmodel::roleCrash()
 {
     // don't crash
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("roleCrash.qml")));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
     QVERIFY(model != 0);
     delete model;
 }

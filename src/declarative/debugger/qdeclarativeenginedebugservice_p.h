@@ -57,7 +57,6 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
-#include <QWeakPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,13 +64,14 @@ class QDeclarativeEngine;
 class QDeclarativeContext;
 class QDeclarativeWatcher;
 class QDataStream;
-class QDeclarativeState;
+class QDeclarativeDebugStatesDelegate;
 
 class QDeclarativeEngineDebugService : public QDeclarativeDebugService
 {
     Q_OBJECT
 public:
     QDeclarativeEngineDebugService(QObject * = 0);
+    ~QDeclarativeEngineDebugService();
 
     struct QDeclarativeObjectData {
         QUrl url;
@@ -98,12 +98,15 @@ public:
     void remEngine(QDeclarativeEngine *);
     void objectCreated(QDeclarativeEngine *, QObject *);
 
+    void setStatesDelegate(QDeclarativeDebugStatesDelegate *);
+
     static QDeclarativeEngineDebugService *instance();
 
 protected:
     virtual void messageReceived(const QByteArray &);
 
 private Q_SLOTS:
+    void processMessage(const QByteArray &msg);
     void propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value);
 
 private:
@@ -111,7 +114,6 @@ private:
     void buildObjectList(QDataStream &, QDeclarativeContext *);
     void buildObjectDump(QDataStream &, QObject *, bool, bool);
     void buildStatesList(QDeclarativeContext *, bool);
-    void buildStatesList(QObject *obj);
     QDeclarativeObjectData objectData(QObject *);
     QDeclarativeObjectProperty propertyData(QObject *, int);
     QVariant valueContents(const QVariant &defaultValue) const;
@@ -121,7 +123,7 @@ private:
 
     QList<QDeclarativeEngine *> m_engines;
     QDeclarativeWatcher *m_watch;
-    QList<QWeakPointer<QDeclarativeState> > m_allStates;
+    QDeclarativeDebugStatesDelegate *m_statesDelegate;
 };
 Q_DECLARATIVE_PRIVATE_EXPORT QDataStream &operator<<(QDataStream &, const QDeclarativeEngineDebugService::QDeclarativeObjectData &);
 Q_DECLARATIVE_PRIVATE_EXPORT QDataStream &operator>>(QDataStream &, QDeclarativeEngineDebugService::QDeclarativeObjectData &);

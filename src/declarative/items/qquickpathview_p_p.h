@@ -80,10 +80,10 @@ public:
         , lastElapsed(0), offset(0.0), offsetAdj(0.0), mappedRange(1.0)
         , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
         , autoHighlight(true), highlightUp(false), layoutScheduled(false)
-        , moving(false), flicking(false)
+        , moving(false), flicking(false), requestedOnPath(false), inRequest(false)
         , dragMargin(0), deceleration(100)
         , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset)
-        , firstIndex(-1), pathItems(-1), requestedIndex(-1)
+        , firstIndex(-1), pathItems(-1), requestedIndex(-1), requestedZ(0)
         , moveReason(Other), moveDirection(Shortest), attType(0), highlightComponent(0), highlightItem(0)
         , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
         , highlightPosition(0)
@@ -112,9 +112,10 @@ public:
         }
     }
 
-    QQuickItem *getItem(int modelIndex, bool onPath = true);
+    QQuickItem *getItem(int modelIndex, qreal z = 0, bool onPath=true);
     void releaseItem(QQuickItem *item);
     QQuickPathViewAttached *attached(QQuickItem *item);
+    QDeclarativeOpenMetaObjectType *attachedType();
     void clear();
     void updateMappedRange();
     qreal positionOfIndex(qreal index) const;
@@ -130,6 +131,7 @@ public:
     void handleMouseReleaseEvent(QMouseEvent *);
 
     int calcCurrentIndex();
+    void createCurrentItem();
     void updateCurrent();
     static void fixOffsetCallback(void*);
     void fixOffset();
@@ -160,6 +162,8 @@ public:
     bool layoutScheduled : 1;
     bool moving : 1;
     bool flicking : 1;
+    bool requestedOnPath : 1;
+    bool inRequest : 1;
     QElapsedTimer lastPosTime;
     QPointF lastPos;
     qreal dragMargin;
@@ -169,6 +173,7 @@ public:
     int firstIndex;
     int pathItems;
     int requestedIndex;
+    qreal requestedZ;
     QList<QQuickItem *> items;
     QList<QQuickItem *> itemCache;
     QDeclarativeGuard<QQuickVisualModel> model;

@@ -72,7 +72,6 @@ protected:
     void visitChildren(QSGNode *n);
 
 
-    QDataBuffer<QMatrix4x4> m_matrix_stack;
     QDataBuffer<const QMatrix4x4 *> m_combined_matrix_stack;
     QDataBuffer<qreal> m_opacity_stack;
     const QSGClipNode *m_current_clip;

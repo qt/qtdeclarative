@@ -64,10 +64,10 @@ int main(int argc, char *argv[])
 
     if (qtquick2) {
         QQuickView *view = new QQuickView();
-        view->setSource(QUrl::fromLocalFile("qtquick2.qml"));
+        view->setSource(QUrl::fromLocalFile("app/qtquick2.qml"));
     } else {
         QDeclarativeView *view = new QDeclarativeView();
-        view->setSource(QUrl::fromLocalFile("qtquick1.qml"));
+        view->setSource(QUrl::fromLocalFile("app/qtquick1.qml"));
     }
     return app.exec();
 }

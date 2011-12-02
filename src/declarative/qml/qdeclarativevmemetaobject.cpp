@@ -41,12 +41,14 @@
 
 #include "qdeclarativevmemetaobject_p.h"
 
+
 #include "qdeclarative.h"
 #include <private/qdeclarativerefcount_p.h>
 #include "qdeclarativeexpression.h"
 #include "qdeclarativeexpression_p.h"
 #include "qdeclarativecontext_p.h"
 #include "qdeclarativebinding_p.h"
+#include "qdeclarativepropertyvalueinterceptor_p.h"
 
 Q_DECLARE_METATYPE(QJSValue);
 
@@ -93,6 +95,17 @@ private:
 
     inline void cleanup();
 };
+
+class QDeclarativeVMEMetaObjectEndpoint : public QDeclarativeNotifierEndpoint
+{
+public:
+    QDeclarativeVMEMetaObjectEndpoint();
+    static void vmecallback(QDeclarativeNotifierEndpoint *);
+    void tryConnect();
+
+    QFlagPointer<QDeclarativeVMEMetaObject> metaObject;
+};
+
 
 QDeclarativeVMEVariant::QDeclarativeVMEVariant()
 : type(QVariant::Invalid)
@@ -378,13 +391,50 @@ void QDeclarativeVMEVariant::setValue(const QJSValue &v)
     }
 }
 
+QDeclarativeVMEMetaObjectEndpoint::QDeclarativeVMEMetaObjectEndpoint()
+{
+    callback = &vmecallback;
+}
+
+void QDeclarativeVMEMetaObjectEndpoint::vmecallback(QDeclarativeNotifierEndpoint *e)
+{
+    QDeclarativeVMEMetaObjectEndpoint *vmee = static_cast<QDeclarativeVMEMetaObjectEndpoint*>(e);
+    vmee->tryConnect();
+}
+
+void QDeclarativeVMEMetaObjectEndpoint::tryConnect()
+{
+    if (metaObject.flag())
+        return;
+
+    int aliasId = this - metaObject->aliasEndpoints;
+
+    QDeclarativeVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
+    if (!d->isObjectAlias()) {
+        QDeclarativeContextData *ctxt = metaObject->ctxt;
+        QObject *target = ctxt->idValues[d->contextIdx].data();
+        if (!target)
+            return;
+
+        QMetaProperty prop = target->metaObject()->property(d->propertyIndex());
+        if (prop.hasNotifySignal()) {
+            int sigIdx = metaObject->methodOffset + aliasId + metaObject->metaData->propertyCount;
+            QDeclarativePropertyPrivate::connect(target, prop.notifySignalIndex(),
+                                                 metaObject->object, sigIdx);
+        }
+    }
+
+    metaObject.setFlag();
+}
+
 QDeclarativeVMEMetaObject::QDeclarativeVMEMetaObject(QObject *obj,
                                                      const QMetaObject *other, 
                                                      const QDeclarativeVMEMetaData *meta,
                                                      QDeclarativeCompiledData *cdata)
 : QV8GCCallback::Node(GcPrologueCallback), object(obj), compiledData(cdata),
   ctxt(QDeclarativeData::get(obj, true)->outerContext), metaData(meta), data(0),
-  firstVarPropertyIndex(-1), varPropertiesInitialized(false), v8methods(0), parent(0)
+  aliasEndpoints(0), firstVarPropertyIndex(-1), varPropertiesInitialized(false),
+  v8methods(0), parent(0)
 {
     compiledData->addref();
 
@@ -423,6 +473,7 @@ QDeclarativeVMEMetaObject::~QDeclarativeVMEMetaObject()
     compiledData->release();
     delete parent;
     delete [] data;
+    delete [] aliasEndpoints;
 
     for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii) {
         qPersistentDispose(v8methods[ii]);
@@ -974,25 +1025,20 @@ bool QDeclarativeVMEMetaObject::aliasTarget(int index, QObject **target, int *co
 void QDeclarativeVMEMetaObject::connectAlias(int aliasId)
 {
     if (!aConnected.testBit(aliasId)) {
-        aConnected.setBit(aliasId);
 
-        QDeclarativeContext *context = ctxt->asQDeclarativeContext();
-        QDeclarativeContextPrivate *ctxtPriv = QDeclarativeContextPrivate::get(context);
+        if (!aliasEndpoints)
+            aliasEndpoints = new QDeclarativeVMEMetaObjectEndpoint[metaData->aliasCount];
+
+        aConnected.setBit(aliasId);
 
         QDeclarativeVMEMetaData::AliasData *d = metaData->aliasData() + aliasId;
 
-        QObject *target = ctxtPriv->data->idValues[d->contextIdx].data();
-        if (!target) 
-            return;
+        QDeclarativeVMEMetaObjectEndpoint *endpoint = aliasEndpoints + aliasId;
+        endpoint->metaObject = this;
 
-        int sigIdx = methodOffset + aliasId + metaData->propertyCount;
-        QMetaObject::connect(context, d->contextIdx + ctxtPriv->notifyIndex, object, sigIdx);
+        endpoint->connect(&ctxt->idValues[d->contextIdx].bindings);
 
-        if (!d->isObjectAlias()) {
-            QMetaProperty prop = target->metaObject()->property(d->propertyIndex());
-            if (prop.hasNotifySignal())
-                QDeclarativePropertyPrivate::connect(target, prop.notifySignalIndex(), object, sigIdx);
-        }
+        endpoint->tryConnect();
     }
 }
 

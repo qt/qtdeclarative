@@ -52,17 +52,31 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QQuickItem;
 class QSGEngine;
+class QQuickItem;
+class QSGTexture;
+class QInputMethodEvent;
 class QQuickCanvasPrivate;
 class QOpenGLFramebufferObject;
 class QDeclarativeIncubationController;
+class QInputMethodEvent;
 
 class Q_DECLARATIVE_EXPORT QQuickCanvas : public QWindow
 {
-Q_OBJECT
-Q_DECLARE_PRIVATE(QQuickCanvas)
+    Q_OBJECT
+    Q_PRIVATE_PROPERTY(QQuickCanvas::d_func(), QDeclarativeListProperty<QObject> data READ data DESIGNABLE false)
+    Q_PROPERTY(QColor color READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
+    Q_CLASSINFO("DefaultProperty", "data")
+    Q_DECLARE_PRIVATE(QQuickCanvas)
 public:
+    enum CreateTextureOption {
+        TextureHasAlphaChannel  = 0x0001,
+        TextureHasMipmaps       = 0x0002,
+        TextureOwnsGLTexture    = 0x0004
+    };
+
+    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+
     QQuickCanvas(QWindow *parent = 0);
 
     virtual ~QQuickCanvas();
@@ -73,8 +87,6 @@ public:
     QQuickItem *mouseGrabberItem() const;
 
     bool sendEvent(QQuickItem *, QEvent *);
-
-    QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 
     QSGEngine *sceneGraphEngine() const;
 
@@ -88,9 +100,24 @@ public:
 
     QDeclarativeIncubationController *incubationController() const;
 
+    // Scene graph specific functions
+    QSGTexture *createTextureFromImage(const QImage &image) const;
+    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption(0)) const;
+
+    void setClearBeforeRendering(bool enabled);
+    bool clearBeforeRendering() const;
+
+    void setClearColor(const QColor &color);
+    QColor clearColor() const;
+
+    QOpenGLContext *openglContext() const;
+
 Q_SIGNALS:
     void frameSwapped();
     void sceneGraphInitialized();
+    void beforeRendering();
+    void afterRendering();
+    void clearColorChanged(const QColor &);
 
 protected:
     QQuickCanvas(QQuickCanvasPrivate &dd, QWindow *parent = 0);
@@ -107,7 +134,6 @@ protected:
     virtual bool event(QEvent *);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void keyReleaseEvent(QKeyEvent *);
-    virtual void inputMethodEvent(QInputMethodEvent *);
     virtual void mousePressEvent(QMouseEvent *);
     virtual void mouseReleaseEvent(QMouseEvent *);
     virtual void mouseDoubleClickEvent(QMouseEvent *);
@@ -117,7 +143,6 @@ protected:
 #endif
 
 private Q_SLOTS:
-    void sceneGraphChanged();
     void maybeUpdate();
     void animationStarted();
     void animationStopped();

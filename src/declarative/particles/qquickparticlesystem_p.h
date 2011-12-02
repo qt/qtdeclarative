@@ -114,7 +114,7 @@ public:
     void setSize(int newSize);
 
     int index;
-    QSet<QQuickParticlePainter*> painters;
+    QSet<QQuickParticlePainter*> painters;//TODO: What if they are dynamically removed?
 
     //TODO: Refactor particle data list out into a separate class
     QVector<QQuickParticleData*> data;
@@ -147,6 +147,7 @@ class Q_AUTOTEST_EXPORT QQuickParticleData {
 public:
     //TODO: QObject like memory management (without the cost, just attached to system)
     QQuickParticleData(QQuickParticleSystem* sys);
+    ~QQuickParticleData();
 
     //Convenience functions for working backwards, because parameters are from the start of particle life
     //If setting multiple parameters at once, doing the conversion yourself will be faster.

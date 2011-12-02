@@ -66,7 +66,8 @@ HEADERS += \
     $$PWD/qquickdroparea_p.h \
     $$PWD/qquickmultipointtoucharea_p.h \
     $$PWD/qquickitemview_p.h \
-    $$PWD/qquickitemview_p_p.h
+    $$PWD/qquickitemview_p_p.h \
+    $$PWD/qquickwindowmodule_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -112,7 +113,8 @@ SOURCES += \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
-    $$PWD/qquickitemview.cpp
+    $$PWD/qquickitemview.cpp \
+    $$PWD/qquickwindowmodule.cpp
 
 SOURCES += \
     $$PWD/qquickshadereffect.cpp \

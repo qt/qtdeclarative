@@ -46,6 +46,8 @@
 
 #include <private/qdeclarativeengine_p.h>
 
+QT_BEGIN_NAMESPACE
+
 QQuickDropAreaDrag::QQuickDropAreaDrag(QQuickDropAreaPrivate *d, QObject *parent)
     : QObject(parent)
     , d(d)

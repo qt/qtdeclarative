@@ -51,7 +51,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickRepeaterPrivate::QQuickRepeaterPrivate()
-: model(0), ownModel(false)
+    : model(0), ownModel(false), inRequest(false), itemCount(0), createFrom(-1)
 {
 }
 
@@ -188,10 +188,9 @@ void QQuickRepeater::setModel(const QVariant &model)
     if (d->model) {
         disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
                 this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
-        /*
         disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
-        disconnect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
-    */
+        disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
+//        disconnect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
     }
     d->dataSource = model;
     QObject *object = qvariant_cast<QObject*>(model);
@@ -215,10 +214,9 @@ void QQuickRepeater::setModel(const QVariant &model)
     if (d->model) {
         connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
                 this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
-        /*
         connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
-        connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
-        */
+        connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
+//        connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
         regenerate();
     }
     emit modelChanged();
@@ -339,14 +337,15 @@ void QQuickRepeater::clear()
     bool complete = isComponentComplete();
 
     if (d->model) {
-        while (d->deletables.count() > 0) {
-            QQuickItem *item = d->deletables.takeLast();
+        for (int i = 0; i < d->deletables.count(); ++i) {
+            QQuickItem *item = d->deletables.at(i);
             if (complete)
-                emit itemRemoved(d->deletables.count()-1, item);
+                emit itemRemoved(i, item);
             d->model->release(item);
         }
     }
     d->deletables.clear();
+    d->itemCount = 0;
 }
 
 void QQuickRepeater::regenerate()
@@ -360,16 +359,57 @@ void QQuickRepeater::regenerate()
     if (!d->model || !d->model->count() || !d->model->isValid() || !parentItem() || !isComponentComplete())
         return;
 
-    for (int ii = 0; ii < count(); ++ii) {
-        QQuickItem *item = d->model->item(ii);
-        if (item) {
-            QDeclarative_setParent_noEvent(item, parentItem());
-            item->setParentItem(parentItem());
-            item->stackBefore(this);
-            d->deletables << item;
-            emit itemAdded(ii, item);
+    d->itemCount = count();
+    d->deletables.resize(d->itemCount);
+    d->createFrom = 0;
+    d->createItems();
+}
+
+void QQuickRepeaterPrivate::createItems()
+{
+    Q_Q(QQuickRepeater);
+    if (createFrom == -1)
+        return;
+    inRequest = true;
+    for (int ii = createFrom; ii < itemCount; ++ii) {
+        if (!deletables.at(ii)) {
+            QQuickItem *item = model->item(ii, false);
+            if (!item) {
+                createFrom = ii;
+                break;
+            }
+            deletables[ii] = item;
+            QDeclarative_setParent_noEvent(item, q->parentItem());
+            item->setParentItem(q->parentItem());
+            if (ii > 0 && deletables.at(ii-1)) {
+                item->stackAfter(deletables.at(ii-1));
+            } else {
+                QQuickItem *after = q;
+                for (int si = ii+1; si < itemCount; ++si) {
+                    if (deletables.at(si)) {
+                        after = deletables.at(si);
+                        break;
+                    }
+                }
+                item->stackBefore(after);
+            }
+            emit q->itemAdded(ii, item);
         }
     }
+    inRequest = false;
+}
+
+void QQuickRepeater::createdItem(int, QQuickItem *)
+{
+    Q_D(QQuickRepeater);
+    if (!d->inRequest)
+        d->createItems();
+}
+
+void QQuickRepeater::initItem(int, QQuickItem *item)
+{
+    QDeclarative_setParent_noEvent(item, parentItem());
+    item->setParentItem(parentItem());
 }
 
 void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
@@ -385,7 +425,7 @@ void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
     }
 
     int difference = 0;
-    QHash<int, QList<QPointer<QQuickItem> > > moved;
+    QHash<int, QVector<QPointer<QQuickItem> > > moved;
     foreach (const QDeclarativeChangeSet::Remove &remove, changeSet.removes()) {
         int index = qMin(remove.index, d->deletables.count());
         int count = qMin(remove.index + remove.count, d->deletables.count()) - index;
@@ -395,19 +435,22 @@ void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
                     d->deletables.begin() + index,
                     d->deletables.begin() + index + count);
         } else while (count--) {
-            QQuickItem *item = d->deletables.takeAt(index);
+            QQuickItem *item = d->deletables.at(index);
+            d->deletables.remove(index);
             emit itemRemoved(index, item);
             if (item)
                 d->model->release(item);
+            --d->itemCount;
         }
 
         difference -= remove.count;
     }
 
+    d->createFrom = -1;
     foreach (const QDeclarativeChangeSet::Insert &insert, changeSet.inserts()) {
         int index = qMin(insert.index, d->deletables.count());
         if (insert.isMove()) {
-            QList<QPointer<QQuickItem> > items = moved.value(insert.moveId);
+            QVector<QPointer<QQuickItem> > items = moved.value(insert.moveId);
             d->deletables = d->deletables.mid(0, index) + items + d->deletables.mid(index);
             QQuickItem *stackBefore = index + items.count() < d->deletables.count()
                     ? d->deletables.at(index + items.count())
@@ -416,20 +459,15 @@ void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
                 d->deletables.at(i)->stackBefore(stackBefore);
         } else for (int i = 0; i < insert.count; ++i) {
             int modelIndex = index + i;
-            QQuickItem *item = d->model->item(modelIndex);
-            if (item) {
-                QDeclarative_setParent_noEvent(item, parentItem());
-                item->setParentItem(parentItem());
-                if (modelIndex < d->deletables.count())
-                    item->stackBefore(d->deletables.at(modelIndex));
-                else
-                    item->stackBefore(this);
-                d->deletables.insert(modelIndex, item);
-                emit itemAdded(modelIndex, item);
-            }
+            ++d->itemCount;
+            d->deletables.insert(modelIndex, 0);
+            if (d->createFrom == -1)
+                d->createFrom = modelIndex;
         }
         difference += insert.count;
     }
+
+    d->createItems();
 
     if (difference != 0)
         emit countChanged();

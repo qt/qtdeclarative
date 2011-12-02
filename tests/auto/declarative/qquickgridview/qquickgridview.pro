@@ -9,4 +9,5 @@ testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
-QT += core-private gui-private v8-private declarative-private opengl-private testlib
+CONFIG += insignificant_test #QTBUG-22807
+QT += core-private gui-private v8-private declarative-private opengl-private testlib widgets

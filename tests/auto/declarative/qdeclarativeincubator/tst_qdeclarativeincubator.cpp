@@ -47,6 +47,7 @@
 #include <QPointer>
 #include <QFileInfo>
 #include <QDeclarativeEngine>
+#include <QDeclarativeContext>
 #include <QDeclarativeProperty>
 #include <QDeclarativeComponent>
 #include <QDeclarativeIncubator>
@@ -78,6 +79,7 @@ private slots:
     void forceCompletion();
     void setInitialState();
     void clearDuringCompletion();
+    void objectDeletionAfterInit();
     void recursiveClear();
     void statusChanged();
     void asynchronousIfNested();
@@ -85,6 +87,7 @@ private slots:
     void chainedAsynchronousIfNested();
     void chainedAsynchronousIfNestedOnCompleted();
     void selfDelete();
+    void contextDelete();
 
 private:
     QDeclarativeIncubationController controller;
@@ -430,6 +433,42 @@ void tst_qdeclarativeincubator::clearDuringCompletion()
     QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
     QVERIFY(incubator.isNull());
     QVERIFY(srt.isNull());
+}
+
+void tst_qdeclarativeincubator::objectDeletionAfterInit()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("clear.qml"));
+    QVERIFY(component.isReady());
+
+    struct MyIncubator : public QDeclarativeIncubator
+    {
+        MyIncubator(QDeclarativeIncubator::IncubationMode mode)
+        : QDeclarativeIncubator(mode), obj(0) {}
+
+        virtual void setInitialState(QObject *o) {
+            obj = o;
+        }
+
+        QObject *obj;
+    };
+
+    SelfRegisteringType::clearMe();
+    MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
+    component.create(incubator);
+
+    while (!incubator.obj && incubator.isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(SelfRegisteringType::me() != 0);
+
+    delete incubator.obj;
+
+    incubator.clear();
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QVERIFY(incubator.isNull());
 }
 
 class Switcher : public QObject
@@ -809,7 +848,7 @@ void tst_qdeclarativeincubator::chainedAsynchronousIfNestedOnCompleted()
         QDeclarativeComponent *component;
         MyIncubator *incubator;
         QDeclarativeContext *ctxt;
-        static void callback(CompletionCallbackType *o, void *data) {
+        static void callback(CompletionCallbackType *, void *data) {
             CallbackData *d = (CallbackData *)data;
             d->component->create(*d->incubator, 0, d->ctxt);
         }
@@ -972,6 +1011,24 @@ void tst_qdeclarativeincubator::selfDelete()
     }
 
     QVERIFY(done);
+    }
+}
+
+// Test that QML doesn't crash if the context is deleted prior to the incubator
+// first executing.
+void tst_qdeclarativeincubator::contextDelete()
+{
+    QDeclarativeContext *context = new QDeclarativeContext(engine.rootContext());
+    QDeclarativeComponent component(&engine, TEST_FILE("contextDelete.qml"));
+
+    QDeclarativeIncubator incubator;
+    component.create(incubator, context);
+
+    delete context;
+
+    {
+        bool b = false;
+        controller.incubateWhile(&b);
     }
 }
 

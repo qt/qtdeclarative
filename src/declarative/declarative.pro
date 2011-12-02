@@ -37,9 +37,5 @@ include(particles/particles.pri)
 include(designer/designer.pri)
 include(animations/animations.pri)
 
-linux-g++-maemo:DEFINES += QDECLARATIVEVIEW_NOBACKGROUND
-
-DEFINES += QT_NO_OPENTYPE
-INCLUDEPATH += $$QT_SOURCE_TREE/src/3rdparty/harfbuzz/src
-
-
+HEADERS += qtquick2_p.h
+SOURCES += qtquick2.cpp

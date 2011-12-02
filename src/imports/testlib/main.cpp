@@ -108,8 +108,8 @@ public Q_SLOTS:
     {
         v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
-        if (count >= frameIndex + 2) {
-            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 2);
+        if (count >= frameIndex + 1) {
+            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
             return QDeclarativeV8Handle::fromHandle(frame->GetScriptNameOrSourceURL());
         }
         return QDeclarativeV8Handle();
@@ -118,8 +118,8 @@ public Q_SLOTS:
     {
         v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
-        if (count >= frameIndex + 2) {
-            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 2);
+        if (count >= frameIndex + 1) {
+            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
             return frame->GetLineNumber();
         }
         return -1;

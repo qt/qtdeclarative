@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativeintroduction.html
+\inqmlmodule QtQuick 2
 \title Introduction to the QML Language
 
 \tableofcontents

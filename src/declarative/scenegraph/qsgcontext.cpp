@@ -45,15 +45,14 @@
 
 #include <private/qsgdefaultrenderer_p.h>
 
+#include <private/qsgdistancefieldutil_p.h>
+#include <private/qsgdefaultdistancefieldglyphcache_p.h>
 #include <private/qsgdefaultrectanglenode_p.h>
 #include <private/qsgdefaultimagenode_p.h>
 #include <private/qsgdefaultglyphnode_p.h>
 #include <private/qsgdistancefieldglyphnode_p.h>
-#include <private/qsgdistancefieldglyphcache_p.h>
 
 #include <private/qsgtexture_p.h>
-#include <qsgengine.h>
-
 #include <QGuiApplication>
 #include <QOpenGLContext>
 
@@ -107,8 +106,6 @@ public:
 
     QOpenGLContext *gl;
 
-    QSGEngine engine;
-
     QHash<QSGMaterialType *, QSGMaterialShader *> materials;
 
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
@@ -136,8 +133,6 @@ public:
 QSGContext::QSGContext(QObject *parent) :
     QObject(*(new QSGContextPrivate), parent)
 {
-    Q_D(QSGContext);
-    d->engine.setContext(this);
 }
 
 
@@ -149,18 +144,6 @@ QSGContext::~QSGContext()
     cleanupTextures();
     qDeleteAll(d->materials.values());
     delete d->distanceFieldCacheManager;
-}
-
-/*!
-    Returns the scene graph engine for this context.
-
-    The main purpose of the QSGEngine is to serve as a public API
-    to the QSGContext.
-
- */
-QSGEngine *QSGContext::engine() const
-{
-    return const_cast<QSGEngine *>(&d_func()->engine);
 }
 
 /*!
@@ -257,8 +240,6 @@ void QSGContext::renderNextFrame(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QSGContext);
 
-    emit d->engine.beforeRendering();
-
     cleanupTextures();
 
     if (fbo) {
@@ -267,8 +248,6 @@ void QSGContext::renderNextFrame(QOpenGLFramebufferObject *fbo)
     } else {
         d->renderer->renderScene();
     }
-
-    emit d->engine.afterRendering();
 
 }
 
@@ -289,6 +268,15 @@ QSGImageNode *QSGContext::createImageNode()
 }
 
 /*!
+    Factory function for scene graph backends of the distance-field glyph cache.
+ */
+QSGDistanceFieldGlyphCache *QSGContext::createDistanceFieldGlyphCache(const QRawFont &font)
+{
+    Q_D(QSGContext);
+    return new QSGDefaultDistanceFieldGlyphCache(d->distanceFieldCacheManager, glContext(), font);
+}
+
+/*!
     Factory function for scene graph backends of the Text elements;
  */
 QSGGlyphNode *QSGContext::createGlyphNode()
@@ -304,7 +292,7 @@ QSGGlyphNode *QSGContext::createGlyphNode()
         return new QSGDefaultGlyphNode;
     } else {
         if (!d->distanceFieldCacheManager) {
-            d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager(d->gl);
+            d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager(this);
             if (doSubpixel)
                 d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::HighQualitySubPixelAntialiasing);
             else if (doLowQualSubpixel)

@@ -42,7 +42,6 @@
 #include "qquicktext_p.h"
 #include "qquicktext_p_p.h"
 
-#include <private/qsgdistancefieldglyphcache_p.h>
 #include <private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include "qquicktextnode_p.h"
@@ -107,7 +106,7 @@ QQuickTextPrivate::QQuickTextPrivate()
   richText(false), styledText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), textHasChanged(true),
-  naturalWidth(0), doc(0), textLine(0), nodeType(NodeIsNull)
+  naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull)
 
 #if defined(Q_OS_MAC)
 , layoutThread(0), paintingThread(0)
@@ -203,6 +202,7 @@ QSet<QUrl> QQuickTextDocumentWithImageResources::errors;
 
 QQuickTextPrivate::~QQuickTextPrivate()
 {
+    delete elipsisLayout;
     delete textLine; textLine = 0;
 }
 
@@ -225,17 +225,21 @@ void QQuickTextPrivate::updateLayout()
         updateOnComponentComplete = true;
         return;
     }
-
+    updateOnComponentComplete = false;
     layoutTextElided = false;
     // Setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
+        if (elipsisLayout) {
+            delete elipsisLayout;
+            elipsisLayout = 0;
+        }
         layout.clearLayout();
         layout.setFont(font);
         if (!styledText) {
             QString tmp = text;
             tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
             singleline = !tmp.contains(QChar::LineSeparator);
-            if (singleline && !maximumLineCountValid && elideMode != QQuickText::ElideNone && q->widthValid()) {
+            if (singleline && !maximumLineCountValid && elideMode != QQuickText::ElideNone && q->widthValid() && wrapMode == QQuickText::NoWrap) {
                 QFontMetrics fm(font);
                 tmp = fm.elidedText(tmp,(Qt::TextElideMode)elideMode,q->width());
                 if (tmp != text) {
@@ -289,8 +293,7 @@ void QQuickTextPrivate::updateSize()
 
     QFontMetrics fm(font);
     if (text.isEmpty()) {
-        q->setImplicitWidth(0);
-        q->setImplicitHeight(fm.height());
+        q->setImplicitSize(0, fm.height());
         paintedSize = QSize(0, fm.height());
         emit q->paintedSizeChanged();
         q->update();
@@ -352,13 +355,17 @@ void QQuickTextPrivate::updateSize()
 
     //### need to comfirm cost of always setting these for richText
     internalWidthUpdate = true;
+    qreal iWidth = -1;
     if (!q->widthValid())
-        q->setImplicitWidth(size.width());
+        iWidth = size.width();
     else if (requireImplicitWidth)
-        q->setImplicitWidth(naturalWidth);
+        iWidth = naturalWidth;
+    if (iWidth > -1)
+        q->setImplicitSize(iWidth, size.height());
     internalWidthUpdate = false;
 
-    q->setImplicitHeight(size.height());
+    if (iWidth == -1)
+        q->setImplicitHeight(size.height());
     if (paintedSize != size) {
         paintedSize = size;
         emit q->paintedSizeChanged();
@@ -444,33 +451,6 @@ void QQuickText::doLayout()
     d->updateSize();
 }
 
-/*!
-    \qmlsignal QtQuick2::Text::onLineLaidOut(line)
-
-    This handler is called for every line during the layout process.
-    This gives the opportunity to position and resize a line as it is being laid out.
-    It can for example be used to create columns or lay out text around objects.
-
-    The properties of a line are:
-    \list
-    \o number (read-only)
-    \o x
-    \o y
-    \o width
-    \o height
-    \endlist
-
-    For example, this will move the first 5 lines of a text element by 100 pixels to the right:
-    \code
-    onLineLaidOut: {
-        if (line.number < 5) {
-            line.x = line.x + 100
-            line.width = line.width - 100
-        }
-    }
-    \endcode
-*/
-
 bool QQuickTextPrivate::isLineLaidOutConnected()
 {
     static int idx = this->signalIndex("lineLaidOut(QQuickTextLine*)");
@@ -544,9 +524,6 @@ QRect QQuickTextPrivate::setupTextLayout()
         textOption.setUseDesignMetrics(true);
     layout.setTextOption(textOption);
 
-    bool elideText = false;
-    bool truncate = false;
-
     QFontMetrics fm(layout.font());
     elidePos = QPointF();
 
@@ -576,86 +553,87 @@ QRect QQuickTextPrivate::setupTextLayout()
     }
 
     qreal height = 0;
-    bool customLayout = isLineLaidOutConnected();
-
-    if (maximumLineCountValid) {
-        layout.beginLayout();
-        if (!lineWidth)
-            lineWidth = INT_MAX;
-        int linesLeft = maximumLineCount;
-        int visibleTextLength = 0;
-        while (linesLeft > 0) {
-            QTextLine line = layout.createLine();
-            if (!line.isValid())
-                break;
-
-            visibleCount++;
-
-            if (customLayout)
-                setupCustomLineGeometry(line, height);
-            else if (lineWidth)
-                line.setLineWidth(lineWidth);
-            visibleTextLength += line.textLength();
-
-            if (--linesLeft == 0) {
-                if (visibleTextLength < text.length()) {
-                    truncate = true;
-                    if (elideMode == QQuickText::ElideRight && q->widthValid()) {
-                        qreal elideWidth = fm.width(elideChar);
-                        // Need to correct for alignment
-                        if (customLayout)
-                            setupCustomLineGeometry(line, height, elideWidth);
-                        else
-                            line.setLineWidth(lineWidth - elideWidth);
-                        if (layout.text().mid(line.textStart(), line.textLength()).isRightToLeft()) {
-                            line.setPosition(QPointF(line.position().x() + elideWidth, line.position().y()));
-                            elidePos.setX(line.naturalTextRect().left() - elideWidth);
-                        } else {
-                            elidePos.setX(line.naturalTextRect().right());
-                        }
-                        elideText = true;
-                    }
-                }
-            }
-        }
-        layout.endLayout();
-
-        //Update truncated
-        if (truncated != truncate) {
-            truncated = truncate;
-            emit q->truncatedChanged();
-        }
-    } else {
-        layout.beginLayout();
-        forever {
-            QTextLine line = layout.createLine();
-            if (!line.isValid())
-                break;
-            visibleCount++;
-            if (customLayout)
-                setupCustomLineGeometry(line, height);
-            else {
-                if (lineWidth)
-                    line.setLineWidth(lineWidth);
-            }
-        }
-        layout.endLayout();
-    }
-
-    height = 0;
     QRectF br;
-    for (int i = 0; i < layout.lineCount(); ++i) {
-        QTextLine line = layout.lineAt(i);
-        // set line spacing
-        if (!customLayout)
+
+    bool truncate = false;
+    bool customLayout = isLineLaidOutConnected();
+    bool elideEnabled = elideMode == QQuickText::ElideRight && q->widthValid();
+
+    layout.beginLayout();
+    if (!lineWidth)
+        lineWidth = INT_MAX;
+    int linesLeft = maximumLineCount;
+    int visibleTextLength = 0;
+    forever {
+        QTextLine line = layout.createLine();
+        if (!line.isValid())
+            break;
+
+        visibleCount++;
+
+        qreal preLayoutHeight = height;
+        if (customLayout) {
+            setupCustomLineGeometry(line, height);
+        } else if (lineWidth) {
+            line.setLineWidth(lineWidth);
             line.setPosition(QPointF(line.position().x(), height));
-        if (elideText && i == layout.lineCount()-1) {
-            elidePos.setY(height + fm.ascent());
-            br = br.united(QRectF(elidePos, QSizeF(fm.width(elideChar), fm.ascent())));
+            height += (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : line.height() * lineHeight;
+        }
+
+        bool elide = false;
+        if (elideEnabled && q->heightValid() && height > q->height()) {
+            // This line does not fit in the remaining area.
+            elide = true;
+            if (visibleCount > 1) {
+                --visibleCount;
+                height = preLayoutHeight;
+                line.setLineWidth(0.0);
+                line.setPosition(QPointF(FLT_MAX,FLT_MAX));
+                line = layout.lineAt(visibleCount-1);
+            }
+        } else {
+            visibleTextLength += line.textLength();
+        }
+
+        if (elide || (maximumLineCountValid && --linesLeft == 0)) {
+            if (visibleTextLength < text.length()) {
+                truncate = true;
+                if (elideEnabled) {
+                    qreal elideWidth = fm.width(elideChar);
+                    // Need to correct for alignment
+                    if (customLayout)
+                        setupCustomLineGeometry(line, height, elideWidth);
+                    else
+                        line.setLineWidth(lineWidth - elideWidth);
+                    if (layout.text().mid(line.textStart(), line.textLength()).isRightToLeft()) {
+                        line.setPosition(QPointF(line.position().x() + elideWidth, line.position().y()));
+                        elidePos.setX(line.naturalTextRect().left() - elideWidth);
+                    } else {
+                        elidePos.setX(line.naturalTextRect().right());
+                    }
+                    elidePos.setY(line.position().y());
+                    if (!elipsisLayout)
+                        elipsisLayout = new QTextLayout(elideChar, layout.font());
+                    elipsisLayout->beginLayout();
+                    QTextLine el = elipsisLayout->createLine();
+                    el.setPosition(elidePos);
+                    elipsisLayout->endLayout();
+                    br = br.united(el.naturalTextRect());
+                }
+                br = br.united(line.naturalTextRect());
+                break;
+            }
         }
         br = br.united(line.naturalTextRect());
-        height += (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : line.height() * lineHeight;
     }
+    layout.endLayout();
+
+    //Update truncated
+    if (truncated != truncate) {
+        truncated = truncate;
+        emit q->truncatedChanged();
+    }
+
     if (!customLayout)
         br.setHeight(height);
 
@@ -951,6 +929,33 @@ QQuickText::~QQuickText()
     \note Generally scaling artifacts are only visible if the item is stationary on
     the screen.  A common pattern when animating an item is to disable smooth
     filtering at the beginning of the animation and reenable it at the conclusion.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Text::onLineLaidOut(line)
+
+    This handler is called for every line during the layout process.
+    This gives the opportunity to position and resize a line as it is being laid out.
+    It can for example be used to create columns or lay out text around objects.
+
+    The properties of a line are:
+    \list
+    \o number (read-only)
+    \o x
+    \o y
+    \o width
+    \o height
+    \endlist
+
+    For example, this will move the first 5 lines of a text element by 100 pixels to the right:
+    \code
+    onLineLaidOut: {
+        if (line.number < 5) {
+            line.x = line.x + 100
+            line.width = line.width - 100
+        }
+    }
+    \endcode
 */
 
 /*!
@@ -1296,7 +1301,7 @@ void QQuickText::resetHAlign()
 {
     Q_D(QQuickText);
     d->hAlignImplicit = true;
-    if (d->determineHorizontalAlignment() && isComponentComplete())
+    if (isComponentComplete() && d->determineHorizontalAlignment())
         d->updateLayout();
 }
 
@@ -1336,8 +1341,7 @@ bool QQuickTextPrivate::setHAlign(QQuickText::HAlignment alignment, bool forceAl
 
 bool QQuickTextPrivate::determineHorizontalAlignment()
 {
-    Q_Q(QQuickText);
-    if (hAlignImplicit && q->isComponentComplete()) {
+    if (hAlignImplicit) {
         bool alignToRight = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
         return setHAlign(alignToRight ? QQuickText::AlignRight : QQuickText::AlignLeft);
     }
@@ -1554,15 +1558,17 @@ void QQuickText::setTextFormat(TextFormat format)
     d->richText = format == RichText;
     d->styledText = format == StyledText || (format == AutoText && Qt::mightBeRichText(d->text));
 
-    if (!wasRich && d->richText && isComponentComplete()) {
-        d->ensureDoc();
-        d->doc->setText(d->text);
-        d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
-        d->richTextAsImage = enableImageCache();
-    } else {
-        d->rightToLeftText = d->text.isRightToLeft();
+    if (isComponentComplete()) {
+        if (!wasRich && d->richText) {
+            d->ensureDoc();
+            d->doc->setText(d->text);
+            d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->richTextAsImage = enableImageCache();
+        } else {
+            d->rightToLeftText = d->text.isRightToLeft();
+        }
+        d->determineHorizontalAlignment();
     }
-    d->determineHorizontalAlignment();
     d->updateLayout();
 
     emit textFormatChanged(d->format);
@@ -1585,7 +1591,9 @@ void QQuickText::setTextFormat(TextFormat format)
     \endlist
 
     If this property is set to Text.ElideRight, it can be used with multiline
-    text. The text will only elide if maximumLineCount has been set.
+    text. The text will only elide if \c maximumLineCount, or \c height has been set.
+    If both \c maximumLineCount and \c height are set, \c maximumLineCount will
+    apply unless the lines do not fit in the height allowed.
 
     If the text is a multi-length string, and the mode is not \c Text.ElideNone,
     the first string that fits will be used, otherwise the last will be elided.
@@ -1641,11 +1649,13 @@ QRectF QQuickText::boundingRect() const
 void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickText);
-    if ((!d->internalWidthUpdate && newGeometry.width() != oldGeometry.width())
+    bool elide = d->elideMode != QQuickText::ElideNone && widthValid();
+    if ((!d->internalWidthUpdate
+         && (newGeometry.width() != oldGeometry.width() || (elide && newGeometry.height() != oldGeometry.height())))
             && (d->wrapMode != QQuickText::NoWrap
                 || d->elideMode != QQuickText::ElideNone
                 || d->hAlign != QQuickText::AlignLeft)) {
-        if ((d->singleline || d->maximumLineCountValid) && d->elideMode != QQuickText::ElideNone && widthValid()) {
+        if ((d->singleline || d->maximumLineCountValid || heightValid()) && elide) {
             // We need to re-elide
             d->updateLayout();
         } else {
@@ -1732,6 +1742,8 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
         } else {
             node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
+            if (d->elipsisLayout)
+                node->addTextLayout(QPoint(0, bounds.y()), d->elipsisLayout, d->color, d->style, d->styleColor);
         }
 
         return node;
@@ -1843,9 +1855,7 @@ int QQuickText::resourcesLoading() const
 void QQuickText::componentComplete()
 {
     Q_D(QQuickText);
-    QQuickItem::componentComplete();
     if (d->updateOnComponentComplete) {
-        d->updateOnComponentComplete = false;
         if (d->richText) {
             d->ensureDoc();
             d->doc->setText(d->text);
@@ -1855,8 +1865,10 @@ void QQuickText::componentComplete()
             d->rightToLeftText = d->text.isRightToLeft();
         }
         d->determineHorizontalAlignment();
-        d->updateLayout();
     }
+    QQuickItem::componentComplete();
+    if (d->updateOnComponentComplete)
+        d->updateLayout();
 }
 
 

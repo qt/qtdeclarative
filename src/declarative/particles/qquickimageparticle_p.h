@@ -227,8 +227,6 @@ public:
     qreal colorVariation() const { return m_color_variation; }
     void setColorVariation(qreal var);
 
-    qreal renderOpacity() const { return m_render_opacity; }
-
     qreal alphaVariation() const { return m_alphaVariation; }
 
     qreal alpha() const { return m_alpha; }
@@ -273,7 +271,6 @@ signals:
     void colorChanged();
     void colorVariationChanged();
 
-    void particleDurationChanged();
     void alphaVariationChanged(qreal arg);
 
     void alphaChanged(qreal arg);
@@ -358,7 +355,6 @@ private:
 
     QColor m_color;
     qreal m_color_variation;
-    qreal m_particleDuration;
 
     QSGGeometryNode *m_rootNode;
     QHash<int, QSGGeometryNode *> m_nodes;
@@ -370,7 +366,6 @@ private:
 
     // derived values...
 
-    qreal m_render_opacity;
     qreal m_alphaVariation;
     qreal m_alpha;
     qreal m_redVariation;
@@ -393,7 +388,6 @@ private:
     bool m_explicitDeformation;
     bool m_explicitAnimation;
     QHash<int, QVector<QQuickParticleData*> > m_shadowData;
-    bool m_shadowInit;
     void clearShadows();
     QQuickParticleData* getShadowDatum(QQuickParticleData* datum);
 

@@ -80,19 +80,21 @@ public:
     QList<QDeclarativeDebugService*> services() const;
     QStringList serviceNames() const;
 
+
     bool addService(QDeclarativeDebugService *service);
     bool removeService(QDeclarativeDebugService *service);
 
-    void sendMessage(QDeclarativeDebugService *service, const QByteArray &message);
     void receiveMessage(const QByteArray &message);
 
     bool waitForMessage(QDeclarativeDebugService *service);
+    void sendMessage(QDeclarativeDebugService *service, const QByteArray &message);
 
 private:
     friend class QDeclarativeDebugService;
     friend class QDeclarativeDebugServicePrivate;
+    friend class QDeclarativeDebugServerThread;
     QDeclarativeDebugServer();
-    Q_PRIVATE_SLOT(d_func(), void _q_deliverMessage(QString, QByteArray))
+    Q_PRIVATE_SLOT(d_func(), void _q_sendMessage(QByteArray))
 };
 
 QT_END_NAMESPACE

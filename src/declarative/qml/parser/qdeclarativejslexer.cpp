@@ -106,7 +106,7 @@ Lexer::Lexer(Engine *engine)
     , _restrictedKeyword(false)
     , _terminator(false)
     , _followsClosingBrace(false)
-    , _delimited(false)
+    , _delimited(true)
     , _qmlMode(true)
 {
     if (engine)
@@ -156,7 +156,7 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
     _restrictedKeyword = false;
     _terminator = false;
     _followsClosingBrace = false;
-    _delimited = false;
+    _delimited = true;
 }
 
 void Lexer::scanChar()
@@ -185,6 +185,7 @@ int Lexer::lex()
     switch (_tokenKind) {
     case T_LBRACE:
     case T_SEMICOLON:
+    case T_COLON:
         _delimited = true;
         break;
 

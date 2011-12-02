@@ -47,6 +47,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 #include <QtCore/QStringList>
+#include <QtCore/qwaitcondition.h>
 
 #include <private/qobject_p.h>
 #include <private/qcoreapplication_p.h>
@@ -80,6 +81,8 @@ const int protocolVersion = 1;
 // print detailed information about loading of plugins
 DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
 
+class QDeclarativeDebugServerThread;
+
 class QDeclarativeDebugServerPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativeDebugServer)
@@ -87,29 +90,56 @@ public:
     QDeclarativeDebugServerPrivate();
 
     void advertisePlugins();
+    QDeclarativeDebugServerConnection *loadConnectionPlugin(const QString &pluginName);
 
     QDeclarativeDebugServerConnection *connection;
     QHash<QString, QDeclarativeDebugService *> plugins;
+    mutable QReadWriteLock pluginsLock;
     QStringList clientPlugins;
     bool gotHello;
-    QString waitingForMsgFromService;
-    bool waitingForMsgSucceeded;
+
+    QMutex messageArrivedMutex;
+    QWaitCondition messageArrivedCondition;
+    QStringList waitingForMessageNames;
+    QDeclarativeDebugServerThread *thread;
+    QPluginLoader loader;
 
 private:
     // private slot
-    void _q_deliverMessage(const QString &serviceName, const QByteArray &message);
-    static QDeclarativeDebugServerConnection *loadConnectionPlugin(const QString &pluginName);
+    void _q_sendMessage(const QByteArray &message);
+};
+
+class QDeclarativeDebugServerThread : public QThread
+{
+public:
+    void setPluginName(const QString &pluginName) {
+        m_pluginName = pluginName;
+    }
+
+    void setPort(int port, bool block) {
+        m_port = port;
+        m_block = block;
+    }
+
+    void run();
+
+private:
+    QString m_pluginName;
+    int m_port;
+    bool m_block;
 };
 
 QDeclarativeDebugServerPrivate::QDeclarativeDebugServerPrivate() :
     connection(0),
     gotHello(false),
-    waitingForMsgSucceeded(false)
+    thread(0)
 {
 }
 
 void QDeclarativeDebugServerPrivate::advertisePlugins()
 {
+    Q_Q(QDeclarativeDebugServer);
+
     if (!gotHello)
         return;
 
@@ -118,7 +148,8 @@ void QDeclarativeDebugServerPrivate::advertisePlugins()
         QDataStream out(&message, QIODevice::WriteOnly);
         out << QString(QLatin1String("QDeclarativeDebugClient")) << 1 << plugins.keys();
     }
-    connection->send(message);
+
+    QMetaObject::invokeMethod(q, "_q_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
 }
 
 QDeclarativeDebugServerConnection *QDeclarativeDebugServerPrivate::loadConnectionPlugin(
@@ -142,13 +173,12 @@ QDeclarativeDebugServerConnection *QDeclarativeDebugServerPrivate::loadConnectio
         if (qmlDebugVerbose())
             qDebug() << "QDeclarativeDebugServer: Trying to load plugin " << pluginPath << "...";
 
-        QPluginLoader loader(pluginPath);
+        loader.setFileName(pluginPath);
         if (!loader.load()) {
             if (qmlDebugVerbose())
                 qDebug() << "QDeclarativeDebugServer: Error while loading: " << loader.errorString();
             continue;
         }
-        QDeclarativeDebugServerConnection *connection = 0;
         if (QObject *instance = loader.instance())
             connection = qobject_cast<QDeclarativeDebugServerConnection*>(instance);
 
@@ -168,6 +198,23 @@ QDeclarativeDebugServerConnection *QDeclarativeDebugServerPrivate::loadConnectio
     return 0;
 }
 
+void QDeclarativeDebugServerThread::run()
+{
+    QDeclarativeDebugServer *server = QDeclarativeDebugServer::instance();
+    QDeclarativeDebugServerConnection *connection
+            = server->d_func()->loadConnectionPlugin(m_pluginName);
+    if (connection) {
+        connection->setServer(QDeclarativeDebugServer::instance());
+        connection->setPort(m_port, m_block);
+    } else {
+        QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
+        qWarning() << QString::fromAscii("QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                                         "Remote debugger plugin has not been found.").arg(appD->qmljsDebugArgumentsString());
+    }
+
+    exec();
+}
+
 bool QDeclarativeDebugServer::hasDebuggingClient() const
 {
     Q_D(const QDeclarativeDebugServer);
@@ -176,10 +223,11 @@ bool QDeclarativeDebugServer::hasDebuggingClient() const
             && d->gotHello;
 }
 
+static QDeclarativeDebugServer *qDeclarativeDebugServer = 0;
+
 QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 {
     static bool commandLineTested = false;
-    static QDeclarativeDebugServer *server = 0;
 
     if (!commandLineTested) {
         commandLineTested = true;
@@ -214,20 +262,22 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
             block = appD->qmljsDebugArgumentsString().contains(QLatin1String("block"));
 
             if (ok) {
-                server = new QDeclarativeDebugServer();
+                qDeclarativeDebugServer = new QDeclarativeDebugServer();
 
-                QDeclarativeDebugServerConnection *connection
-                        = QDeclarativeDebugServerPrivate::loadConnectionPlugin(pluginName);
-                if (connection) {
-                    server->d_func()->connection = connection;
+                QDeclarativeDebugServerThread *thread = new QDeclarativeDebugServerThread;
 
-                    connection->setServer(server);
-                    connection->setPort(port, block);
-                } else {
-                    qWarning() << QString::fromLatin1(
-                                      "QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
-                                      "Remote debugger plugin has not been found.").arg(
-                                      appD->qmljsDebugArgumentsString());
+                qDeclarativeDebugServer = new QDeclarativeDebugServer();
+                qDeclarativeDebugServer->d_func()->thread = thread;
+                qDeclarativeDebugServer->moveToThread(thread);
+                thread->setPluginName(pluginName);
+                thread->setPort(port, block);
+                thread->start();
+
+                if (block) {
+                    QDeclarativeDebugServerPrivate *d = qDeclarativeDebugServer->d_func();
+                    d->messageArrivedMutex.lock();
+                    d->messageArrivedCondition.wait(&d->messageArrivedMutex);
+                    d->messageArrivedMutex.unlock();
                 }
 
             } else {
@@ -247,7 +297,7 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 #endif
     }
 
-    return server;
+    return qDeclarativeDebugServer;
 }
 
 QDeclarativeDebugServer::QDeclarativeDebugServer()
@@ -260,6 +310,7 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
     Q_D(QDeclarativeDebugServer);
 
     QDataStream in(message);
+
     QString name;
 
     in >> name;
@@ -281,8 +332,9 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
 
             d->gotHello = true;
 
-            QHash<QString, QDeclarativeDebugService*>::Iterator iter = d->plugins.begin();
-            for (; iter != d->plugins.end(); ++iter) {
+            QReadLocker(&d->pluginsLock);
+            QHash<QString, QDeclarativeDebugService*>::ConstIterator iter = d->plugins.constBegin();
+            for (; iter != d->plugins.constEnd(); ++iter) {
                 QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
                 if (d->clientPlugins.contains(iter.key()))
                     newStatus = QDeclarativeDebugService::Enabled;
@@ -291,6 +343,7 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
             }
 
             qWarning("QDeclarativeDebugServer: Connection established");
+            d->messageArrivedCondition.wakeAll();
 
         } else if (op == 1) {
 
@@ -298,8 +351,9 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
             QStringList oldClientPlugins = d->clientPlugins;
             in >> d->clientPlugins;
 
-            QHash<QString, QDeclarativeDebugService*>::Iterator iter = d->plugins.begin();
-            for (; iter != d->plugins.end(); ++iter) {
+            QReadLocker(&d->pluginsLock);
+            QHash<QString, QDeclarativeDebugService*>::ConstIterator iter = d->plugins.constBegin();
+            for (; iter != d->plugins.constEnd(); ++iter) {
                 const QString pluginName = iter.key();
                 QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
                 if (d->clientPlugins.contains(pluginName))
@@ -323,18 +377,15 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
             QByteArray message;
             in >> message;
 
-            if (d->waitingForMsgFromService == name) {
-                // deliver directly so that it is delivered before waitForMessage is returning.
-                d->_q_deliverMessage(name, message);
-                d->waitingForMsgSucceeded = true;
+            QReadLocker(&d->pluginsLock);
+            QHash<QString, QDeclarativeDebugService *>::Iterator iter = d->plugins.find(name);
+            if (iter == d->plugins.end()) {
+                qWarning() << "QDeclarativeDebugServer: Message received for missing plugin" << name;
             } else {
-                // deliver message in next event loop run.
-                // Fixes the case that the service does start it's own event loop ...,
-                // but the networking code doesn't deliver any new messages because readyRead
-                // hasn't returned.
-                QMetaObject::invokeMethod(this, "_q_deliverMessage", Qt::QueuedConnection,
-                                          Q_ARG(QString, name),
-                                          Q_ARG(QByteArray, message));
+                (*iter)->messageReceived(message);
+
+                if (d->waitingForMessageNames.removeOne(name))
+                    d->messageArrivedCondition.wakeAll();
             }
         } else {
             qWarning("QDeclarativeDebugServer: Invalid hello message");
@@ -343,89 +394,105 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
     }
 }
 
-void QDeclarativeDebugServerPrivate::_q_deliverMessage(const QString &serviceName, const QByteArray &message)
+void QDeclarativeDebugServerPrivate::_q_sendMessage(const QByteArray &message)
 {
-    QHash<QString, QDeclarativeDebugService *>::Iterator iter = plugins.find(serviceName);
-    if (iter == plugins.end()) {
-        qWarning() << "QDeclarativeDebugServer: Message received for missing plugin" << serviceName;
-    } else {
-        (*iter)->messageReceived(message);
-    }
+    if (connection)
+        connection->send(message);
 }
 
 QList<QDeclarativeDebugService*> QDeclarativeDebugServer::services() const
 {
     const Q_D(QDeclarativeDebugServer);
+    QReadLocker(&d->pluginsLock);
     return d->plugins.values();
 }
 
 QStringList QDeclarativeDebugServer::serviceNames() const
 {
     const Q_D(QDeclarativeDebugServer);
+    QReadLocker(&d->pluginsLock);
     return d->plugins.keys();
 }
 
 bool QDeclarativeDebugServer::addService(QDeclarativeDebugService *service)
 {
     Q_D(QDeclarativeDebugServer);
-    if (!service || d->plugins.contains(service->name()))
-        return false;
-
-    d->plugins.insert(service->name(), service);
-    d->advertisePlugins();
-
-    QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
-    if (d->clientPlugins.contains(service->name()))
-        newStatus = QDeclarativeDebugService::Enabled;
-    service->d_func()->status = newStatus;
-    service->statusChanged(newStatus);
+    {
+        QWriteLocker(&d->pluginsLock);
+        if (!service || d->plugins.contains(service->name()))
+            return false;
+        d->plugins.insert(service->name(), service);
+    }
+    {
+        QReadLocker(&d->pluginsLock);
+        d->advertisePlugins();
+        QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
+        if (d->clientPlugins.contains(service->name()))
+            newStatus = QDeclarativeDebugService::Enabled;
+        service->d_func()->status = newStatus;
+    }
     return true;
 }
 
 bool QDeclarativeDebugServer::removeService(QDeclarativeDebugService *service)
 {
     Q_D(QDeclarativeDebugServer);
-    if (!service || !d->plugins.contains(service->name()))
-        return false;
+    {
+        QWriteLocker(&d->pluginsLock);
+        if (!service || !d->plugins.contains(service->name()))
+            return false;
+        d->plugins.remove(service->name());
+    }
+    {
+        QReadLocker(&d->pluginsLock);
+        d->advertisePlugins();
+        QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::NotConnected;
+        service->d_func()->server = 0;
+        service->d_func()->status = newStatus;
+        service->statusChanged(newStatus);
 
-    d->plugins.remove(service->name());
-    d->advertisePlugins();
+        // Last service? Then stop thread & delete instance
+        if (d->plugins.isEmpty()) {
+            d->thread->exit();
+            d->thread->wait();
+            delete d->thread;
+            delete d->connection;
 
-    QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::NotConnected;
-    service->d_func()->server = 0;
-    service->d_func()->status = newStatus;
-    service->statusChanged(newStatus);
+            qDeclarativeDebugServer = 0;
+            deleteLater();
+        }
+    }
+
     return true;
 }
 
 void QDeclarativeDebugServer::sendMessage(QDeclarativeDebugService *service,
                                           const QByteArray &message)
 {
-    Q_D(QDeclarativeDebugServer);
     QByteArray msg;
     {
         QDataStream out(&msg, QIODevice::WriteOnly);
         out << service->name() << message;
     }
-    d->connection->send(msg);
+
+    QMetaObject::invokeMethod(this, "_q_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, msg));
 }
 
 bool QDeclarativeDebugServer::waitForMessage(QDeclarativeDebugService *service)
 {
     Q_D(QDeclarativeDebugServer);
+    QReadLocker(&d->pluginsLock);
 
     if (!service
-            || !d->plugins.contains(service->name())
-            || !d->waitingForMsgFromService.isEmpty())
+            || !d->plugins.contains(service->name()))
         return false;
 
-    d->waitingForMsgSucceeded = false;
-    d->waitingForMsgFromService = service->name();
-
+    d->messageArrivedMutex.lock();
+    d->waitingForMessageNames << service->name();
     do {
-        d->connection->waitForMessage();
-    } while (!d->waitingForMsgSucceeded);
-    d->waitingForMsgFromService.clear();
+        d->messageArrivedCondition.wait(&d->messageArrivedMutex);
+    } while (d->waitingForMessageNames.contains(service->name()));
+    d->messageArrivedMutex.unlock();
     return true;
 }
 

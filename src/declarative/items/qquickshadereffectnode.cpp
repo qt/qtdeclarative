@@ -196,9 +196,6 @@ void QQuickCustomMaterialShader::initialize()
 {
     m_opacityLoc = program()->uniformLocation("qt_Opacity");
     m_matrixLoc = program()->uniformLocation("qt_Matrix");
-    // TODO: Remove after grace period.
-    if (m_matrixLoc == -1)
-        m_matrixLoc = program()->uniformLocation("qt_ModelViewProjectionMatrix");
 }
 
 const char *QQuickCustomMaterialShader::vertexShader() const
@@ -296,6 +293,10 @@ QQuickShaderEffectNode::QQuickShaderEffectNode()
 {
     QSGNode::setFlag(UsePreprocess, true);
     setMaterial(&m_material);
+
+#ifdef QML_RUNTIME_TESTING
+    description = QLatin1String("shadereffect");
+#endif
 }
 
 QQuickShaderEffectNode::~QQuickShaderEffectNode()

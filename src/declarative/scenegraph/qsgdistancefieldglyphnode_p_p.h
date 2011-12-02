@@ -44,10 +44,9 @@
 
 #include <qsgmaterial.h>
 #include "qsgdistancefieldglyphnode_p.h"
+#include "qsgadaptationlayer_p.h"
 
 QT_BEGIN_NAMESPACE
-
-class QSGDistanceFieldGlyphCache;
 
 class QSGDistanceFieldTextMaterial: public QSGMaterial
 {
@@ -65,12 +64,18 @@ public:
     void setGlyphCache(QSGDistanceFieldGlyphCache *a) { m_glyph_cache = a; }
     QSGDistanceFieldGlyphCache *glyphCache() const { return m_glyph_cache; }
 
-    bool updateTexture();
+    void setTexture(const QSGDistanceFieldGlyphCache::Texture * tex) { m_texture = tex; }
+    const QSGDistanceFieldGlyphCache::Texture * texture() const { return m_texture; }
+
+    QSize textureSize() const { return m_size; }
+
+    bool updateCache();
 
 protected:
     QSize m_size;
     QColor m_color;
     QSGDistanceFieldGlyphCache *m_glyph_cache;
+    const QSGDistanceFieldGlyphCache::Texture *m_texture;
 };
 
 class QSGDistanceFieldStyledTextMaterial : public QSGDistanceFieldTextMaterial

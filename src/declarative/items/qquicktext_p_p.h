@@ -140,6 +140,7 @@ public:
     bool isLinkActivatedConnected();
     QString anchorAt(const QPointF &pos);
     QTextLayout layout;
+    QTextLayout *elipsisLayout;
     QList<QRectF> linesRects;
     QQuickTextLine *textLine;
 

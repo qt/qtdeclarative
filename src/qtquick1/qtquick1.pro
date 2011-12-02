@@ -39,9 +39,6 @@ include(graphicsitems/graphicsitems.pri)
 HEADERS += qtquick1_p.h
 SOURCES += qtquick1.cpp
 
-DEFINES += QT_NO_OPENTYPE
-INCLUDEPATH +=  $$QT.corelib.sources/../src/3rdparty/harfbuzz/src
-
 mac {
     # FIXME: this is a workaround for broken qmake logic in qtAddModule()
     # This function refuses to use frameworks unless the framework exists on

@@ -27,6 +27,7 @@
 
 /*!
 \page qdeclarativedebugging.html
+\inqmlmodule QtQuick 1
 \title Debugging QML
 
 \section1 Logging

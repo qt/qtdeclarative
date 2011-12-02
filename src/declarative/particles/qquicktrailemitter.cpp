@@ -181,12 +181,13 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
     int gId = m_system->groupIds[m_follow];
     int gId2 = m_system->groupIds[m_group];
-    foreach (QQuickParticleData *d, m_system->groupData[gId]->data){
-        if (!d || !d->stillAlive()){
-            m_lastEmission[d->index] = time; //Should only start emitting when it returns to life
+    for (int i=0; i<m_system->groupData[gId]->data.count(); i++) {
+        QQuickParticleData *d = m_system->groupData[gId]->data[i];
+        if (!d->stillAlive()){
+            m_lastEmission[i] = time; //Should only start emitting when it returns to life
             continue;
         }
-        pt = m_lastEmission[d->index];
+        pt = m_lastEmission[i];
         if (pt < d->t)
             pt = d->t;
         if (pt + maxLife < time)//We missed so much, that we should skip emiting particles that are dead by now

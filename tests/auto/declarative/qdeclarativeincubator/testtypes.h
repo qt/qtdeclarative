@@ -86,7 +86,8 @@ private:
 
 class CompletionRegisteringType : public QObject, public QDeclarativeParserStatus
 {
-Q_OBJECT
+    Q_OBJECT
+    Q_INTERFACES(QDeclarativeParserStatus)
 public:
     CompletionRegisteringType();
 
@@ -102,7 +103,8 @@ private:
 
 class CompletionCallbackType : public QObject, public QDeclarativeParserStatus
 {
-Q_OBJECT
+    Q_OBJECT
+    Q_INTERFACES(QDeclarativeParserStatus)
 public:
     CompletionCallbackType();
 

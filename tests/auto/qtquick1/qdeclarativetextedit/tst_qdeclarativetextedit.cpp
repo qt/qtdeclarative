@@ -57,7 +57,7 @@
 #include <QInputContext>
 #include <QClipboard>
 #include <QMimeData>
-#include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
+#include <private/qapplication_p.h>
 #include <private/qtextcontrol_p.h>
 
 Q_DECLARE_METATYPE(QDeclarative1TextEdit::SelectionMode)

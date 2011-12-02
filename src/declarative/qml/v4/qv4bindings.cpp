@@ -48,7 +48,7 @@
 
 #include <private/qdeclarativefastproperties_p.h>
 #include <private/qdeclarativedebugtrace_p.h>
-#include <private/qquickanchors_p_p.h> // For AnchorLine
+#include <private/qdeclarativemetatype_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qnumeric.h>
@@ -212,7 +212,7 @@ QV4Bindings::~QV4Bindings()
 }
 
 QDeclarativeAbstractBinding *QV4Bindings::configBinding(int index, QObject *target, 
-                                                                   QObject *scope, int property)
+                                                                   QObject *scope, int property, int line)
 {
     Binding *rv = bindings + index;
 
@@ -220,6 +220,7 @@ QDeclarativeAbstractBinding *QV4Bindings::configBinding(int index, QObject *targ
     rv->property = property;
     rv->target = target;
     rv->scope = scope;
+    rv->line = line;
     rv->parent = this;
 
     addref(); // This is decremented in Binding::destroy()
@@ -239,6 +240,9 @@ void QV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::Write
 void QV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
+    if (parent->context())
+        QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding,
+                                              parent->context()->url, line);
     parent->run(this, flags);
     QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
 }
@@ -338,6 +342,8 @@ void QV4Bindings::subscribeId(QDeclarativeContextData *p, int idIndex, int subIn
 void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
 {
     Subscription *sub = (subscriptions + subIndex);
+    if (sub->isConnected(o, notifyIndex))
+        return;
     sub->bindings = this;
     sub->method = subIndex; 
     if (o)
@@ -444,11 +450,8 @@ static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
         QDeclarative1AnchorLine ra = qvariant_cast<QDeclarative1AnchorLine>(v4);
 
         return la == ra;
-    } else if (type == qMetaTypeId<QQuickAnchorLine>()) {
-        QQuickAnchorLine la = qvariant_cast<QQuickAnchorLine>(qtscript);
-        QQuickAnchorLine ra = qvariant_cast<QQuickAnchorLine>(v4);
-
-        return la == ra;
+    } else if (type == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
+        return QDeclarativeMetaType::QQuickAnchorLineCompare(qtscript.constData(), v4.constData());
     } else if (type == QMetaType::Double) {
 
         double la = qvariant_cast<double>(qtscript);
@@ -529,8 +532,8 @@ static void testBindingResult(const QString &binding, int line, int column,
         default:
             if (resultType == qMetaTypeId<QDeclarative1AnchorLine>()) {
                 v4value = qVariantFromValue<QDeclarative1AnchorLine>(*(QDeclarative1AnchorLine *)result.typeDataPtr());
-            } else if (resultType == qMetaTypeId<QQuickAnchorLine>()) {
-                v4value = qVariantFromValue<QQuickAnchorLine>(*(QQuickAnchorLine *)result.typeDataPtr());
+            } else if (resultType == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
+                v4value = QVariant(QDeclarativeMetaType::QQuickAnchorLineMetaTypeId(), result.typeDataPtr());
             } else {
                 iserror = true;
                 v4Result = "Unknown V4 type";

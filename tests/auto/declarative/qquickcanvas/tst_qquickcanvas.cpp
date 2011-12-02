@@ -44,8 +44,11 @@
 #include <QTouchEvent>
 #include <QtDeclarative/QQuickItem>
 #include <QtDeclarative/QQuickCanvas>
+#include <QtDeclarative/QDeclarativeEngine>
+#include <QtDeclarative/QDeclarativeComponent>
 #include <QtDeclarative/private/qquickrectangle_p.h>
 #include <QtGui/QWindowSystemInterface>
+#include "../shared/util.h"
 
 struct TouchEventData {
     QEvent::Type type;
@@ -149,7 +152,7 @@ protected:
         event->accept();
     }
 
-    virtual void mousePressEvent(QMouseEvent *event) {
+    virtual void mousePressEvent(QMouseEvent *) {
         mousePressId = ++mousePressNum;
     }
 
@@ -197,6 +200,9 @@ private slots:
 
     void clearCanvas();
     void mouseFiltering();
+
+    void qmlCreation();
+    void clearColor();
 };
 
 tst_qquickcanvas::tst_qquickcanvas()
@@ -516,6 +522,35 @@ void tst_qquickcanvas::mouseFiltering()
     QCOMPARE(topItem->mousePressId, 3);
 }
 
+void tst_qquickcanvas::qmlCreation()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.loadUrl(TESTDATA("window.qml"));
+    QObject* created = component.create();
+    QVERIFY(created);
+
+    QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);
+    QVERIFY(canvas);
+    QCOMPARE(canvas->clearColor(), QColor(Qt::green));
+
+    QQuickItem* item = canvas->findChild<QQuickItem*>("item");
+    QVERIFY(item);
+    QCOMPARE(item->canvas(), canvas);
+}
+
+void tst_qquickcanvas::clearColor()
+{
+    //### Can we examine rendering to make sure it is really blue?
+    QQuickCanvas *canvas = new QQuickCanvas;
+    canvas->resize(250, 250);
+    canvas->move(100, 100);
+    canvas->setClearColor(Qt::blue);
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+    QCOMPARE(canvas->clearColor(), QColor(Qt::blue));
+    delete canvas;
+}
 
 QTEST_MAIN(tst_qquickcanvas)
 

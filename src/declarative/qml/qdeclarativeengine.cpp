@@ -56,6 +56,7 @@
 #include "qdeclarativesqldatabase_p.h"
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativeglobal_p.h"
+#include "qdeclarativelistmodel_p.h"
 #include "qdeclarativeworkerscript_p.h"
 #include "qdeclarativecomponent_p.h"
 #include "qdeclarativenetworkaccessmanagerfactory.h"
@@ -82,9 +83,8 @@
 
 #include <private/qobject_p.h>
 
-#include <private/qdeclarativeutilmodule_p.h>
-#include <private/qquickitemsmodule_p.h>
-#include <private/qquickparticlesmodule_p.h>
+#include <private/qtquick2_p.h>
+#include <private/qdeclarativelocale_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
@@ -102,7 +102,6 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
     QDeclarativeEnginePrivate::registerBaseTypes(uri, versionMajor, versionMinor);
     QDeclarativeValueTypeFactory::registerBaseTypes(uri, versionMajor, versionMinor);
-    QDeclarativeUtilModule::registerBaseTypes(uri, versionMajor, versionMinor);
 }
 
 /*!
@@ -167,6 +166,8 @@ void QDeclarativeEnginePrivate::registerBaseTypes(const char *uri, int versionMa
 {
     qmlRegisterType<QDeclarativeComponent>(uri,versionMajor,versionMinor,"Component");
     qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
+    qmlRegisterType<QDeclarativeListElement>(uri, versionMajor, versionMinor,"ListElement");
+    qmlRegisterCustomType<QDeclarativeListModel>(uri, versionMajor, versionMinor,"ListModel", new QDeclarativeListModelParser);
     qmlRegisterType<QDeclarativeWorkerScript>(uri,versionMajor,versionMinor,"WorkerScript");
 }
 
@@ -174,6 +175,8 @@ void QDeclarativeEnginePrivate::defineModule()
 {
     registerBaseTypes("QtQuick", 2, 0);
     qmlRegisterType<QDeclarativeBinding>();
+    qmlRegisterUncreatableType<QDeclarativeApplication>("QtQuick",2,0,"Application", QDeclarativeApplication::tr("Application is an abstract class"));
+    qmlRegisterUncreatableType<QDeclarativeLocale>("QtQuick",2,0,"Locale",QDeclarativeEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 }
 
 /*!
@@ -342,11 +345,7 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 {
     if (!qt_QmlQtModule_registered) {
         qt_QmlQtModule_registered = true;
-        QDeclarativeUtilModule::defineModule();
-        QDeclarativeEnginePrivate::defineModule();
-        QQuickItemsModule::defineModule();
-        QQuickParticlesModule::defineModule();
-        QDeclarativeValueTypeFactory::registerValueTypes();
+        QDeclarativeQtQuick2Module::defineModule();
     }
 }
 
@@ -452,9 +451,9 @@ void QDeclarativeEnginePrivate::init()
         QDeclarativeEngineDebugService::isDebuggingEnabled()) {
         isDebugging = true;
         QDeclarativeEngineDebugService::instance()->addEngine(q);
-        QV8DebugService::instance()->addEngine(q);
-        QV8ProfilerService::instance()->addEngine(q);
-        QDeclarativeDebugTrace::addEngine(q);
+        QV8DebugService::initialize();
+        QV8ProfilerService::initialize();
+        QDeclarativeDebugTrace::initialize();
     }
 }
 
@@ -519,9 +518,6 @@ QDeclarativeEngine::~QDeclarativeEngine()
     Q_D(QDeclarativeEngine);
     if (d->isDebugging) {
         QDeclarativeEngineDebugService::instance()->remEngine(this);
-        QV8DebugService::instance()->removeEngine(this);
-        QV8ProfilerService::instance()->removeEngine(this);
-        QDeclarativeDebugTrace::removeEngine(this);
     }
 
     // if we are the parent of any of the qobject module api instances,

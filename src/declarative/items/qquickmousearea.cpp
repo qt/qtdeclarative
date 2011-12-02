@@ -184,7 +184,7 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : absorb(true), hovered(false), pressed(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
-  drag(0)
+  propagateComposedEvents(false), drag(0)
 {
 }
 
@@ -233,6 +233,8 @@ bool QQuickMouseAreaPrivate::isClickConnected()
 void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)
 {
     Q_Q(QQuickMouseArea);
+    if (!propagateComposedEvents)
+        return;
     QPointF scenePos = q->mapToScene(QPointF(event->x(), event->y()));
     propagateHelper(event, canvas->rootItem(), scenePos, t);
 }
@@ -357,14 +359,11 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
   Behavioral Change in QtQuick 2.0
 
   From QtQuick 2.0, the signals clicked, doubleClicked and pressAndHold have a different interaction
-  model with regards to the delivery of events to multiple overlapping MouseAreas. These signals will now propagate
+  model with regards to the delivery of events to multiple overlapping MouseAreas. These signals can now propagate
   to all MouseAreas in the area, in painting order, until accepted by one of them. A signal is accepted by
   default if there is a signal handler for it, use mouse.accepted = false; to ignore. This propagation
   can send the signal to MouseAreas other than the one which accepted the press event, although that MouseArea
-  will receive the signal first.
-
-  Note that to get the same behavior as a QtQuick 1.0 MouseArea{} with regard to absorbing all mouse events, you will
-  now need to add empty signal handlers for these three signals.
+  will receive the signal first. This behavior can be enabled by setting propagateComposedEvents to true.
 
     \sa MouseEvent, {declarative/touchinteraction/mousearea}{MouseArea example}
 */
@@ -600,6 +599,44 @@ void QQuickMouseArea::setPreventStealing(bool prevent)
         d->preventStealing = prevent;
         setKeepMouseGrab(d->preventStealing && d->absorb);
         emit preventStealingChanged();
+    }
+}
+
+
+/*!
+    \qmlproperty bool QtQuick2::MouseArea::propagateComposedEvents
+    This property holds whether composed mouse events will automatically propagate to
+    other MouseAreas.
+
+    MouseArea contains several composed events, clicked, doubleClicked,
+    and pressAndHold. These can propagate via a separate mechanism to basic
+    mouse events, like pressed, which they are composed of.
+
+    If propagateComposedEvents is set to true, then composed events will be automatically
+    propagated to other MouseAreas in the same location in the scene. They are propagated
+    in painting order until an item accepts them. Unlike pressed handling, events will
+    not be automatically accepted if no handler is present.
+
+    This property greatly simplifies the usecase of when you want to have overlapping MouseAreas
+    handling the composed events together. For example: if you want one MouseArea to handle click
+    signals and the other to handle pressAndHold, or if you want one MouseArea to handle click most
+    of the time, but pass it through when certain conditions are met.
+
+    By default this property is false.
+*/
+bool QQuickMouseArea::propagateComposedEvents() const
+{
+    Q_D(const QQuickMouseArea);
+    return d->propagateComposedEvents;
+}
+
+void QQuickMouseArea::setPropagateComposedEvents(bool prevent)
+{
+    Q_D(QQuickMouseArea);
+    if (prevent != d->propagateComposedEvents) {
+        d->propagateComposedEvents = prevent;
+        setKeepMouseGrab(d->propagateComposedEvents && d->absorb);
+        emit propagateComposedEventsChanged();
     }
 }
 

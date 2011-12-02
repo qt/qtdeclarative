@@ -48,6 +48,8 @@
 #include <QtGui/QImage>
 #include <QtGui/QSurfaceFormat>
 
+#include <private/qrawfont_p.h>
+
 #include "qsgnode.h"
 
 QT_BEGIN_HEADER
@@ -61,6 +63,7 @@ class QSGRectangleNode;
 class QSGImageNode;
 class QSGGlyphNode;
 class QSGRenderer;
+class QSGDistanceFieldGlyphCache;
 
 class QSGTexture;
 class QSGMaterial;
@@ -86,7 +89,6 @@ public:
     void setRootNode(QSGRootNode *node);
     QSGRootNode *rootNode() const;
 
-    QSGEngine *engine() const;
     QOpenGLContext *glContext() const;
 
     bool isReady() const;
@@ -94,6 +96,8 @@ public:
     QSGMaterialShader *prepareMaterial(QSGMaterial *material);
 
     virtual void renderNextFrame(QOpenGLFramebufferObject *fbo = 0);
+
+    virtual QSGDistanceFieldGlyphCache *createDistanceFieldGlyphCache(const QRawFont &font);
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();

@@ -54,7 +54,8 @@ QT_MODULE(Declarative)
 
 class QSGEnginePrivate;
 
-class QSGContext;
+class QQuickCanvas;
+
 class Q_DECLARATIVE_EXPORT QSGEngine : public QObject
 {
     Q_OBJECT
@@ -89,7 +90,8 @@ private:
 
     friend class QSGContext;
     friend class QSGContextPrivate;
-    void setContext(QSGContext *context);
+    friend class QQuickCanvasPrivate;
+    void setCanvas(QQuickCanvas *canvas);
 
 };
 

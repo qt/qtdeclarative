@@ -45,6 +45,7 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativecomponent_p.h>
 #include <private/qdeclarativestringconverters_p.h>
+#include <private/qdeclarativelocale_p.h>
 #include <private/qv8engine_p.h>
 
 #include <QtCore/qstring.h>
@@ -64,6 +65,9 @@
 
 QT_BEGIN_NAMESPACE
 
+// send more information such as file, line etc for console APIs
+DEFINE_BOOL_CONFIG_OPTION(qmlConsoleExtended, QML_CONSOLE_EXTENDED)
+
 namespace QDeclarativeBuiltinFunctions {
 
 enum ConsoleLogTypes {
@@ -74,18 +78,7 @@ enum ConsoleLogTypes {
 
 v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args)
 {
-    int line = -1;
-    QString scriptName;
     v8::HandleScope handleScope;
-
-    {
-        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
-        if (stackTrace->GetFrameCount()) {
-            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
-            line = currentStackFrame->GetLineNumber();
-            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
-        }
-    }
 
     QString result;
     for (int i = 0; i < args.Length(); ++i) {
@@ -97,26 +90,40 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
         if (value->IsObject() && !value->IsFunction()
                 && !value->IsArray() && !value->IsDate()
                 && !value->IsRegExp()) {
-            result = QLatin1String("Object");
+            result.append(QLatin1String("Object"));
         } else {
             v8::Local<v8::String> jsstr = value->ToString();
-            result.append(V8ENGINE()->toString(jsstr));
+            QString tmp = V8ENGINE()->toString(jsstr);
             if (value->IsArray())
-                result = QString(QLatin1String("[%1]")).arg(result);
+                result.append(QString::fromLatin1("[%1]").arg(tmp));
+            else
+                result.append(tmp);
         }
     }
 
-    QString log = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
+    if (qmlConsoleExtended()) {
+        int line = -1;
+        QString scriptName;
+        //get only current frame
+        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
+        if (stackTrace->GetFrameCount()) {
+            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
+            line = currentStackFrame->GetLineNumber();
+            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
+        }
+
+        result = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
+    }
 
     switch (logType) {
     case Log:
-        qDebug("%s", qPrintable(log));
+        qDebug("%s", qPrintable(result));
         break;
     case Warn:
-        qWarning("%s", qPrintable(log));
+        qWarning("%s", qPrintable(result));
         break;
     case Error:
-        qCritical("%s", qPrintable(log));
+        qCritical("%s", qPrintable(result));
         break;
     default:
         break;
@@ -519,6 +526,8 @@ the possible format values as described for
 
 If \a format is not specified, \a date is formatted using
 \l {Qt::DefaultLocaleShortDate}{Qt.DefaultLocaleShortDate}.
+
+\sa Locale
 */
 v8::Handle<v8::Value> formatDate(const v8::Arguments &args)
 {
@@ -558,6 +567,8 @@ described for \l{QML:Qt::formatDateTime()}{Qt.formatDateTime()}.
 
 If \a format is not specified, \a time is formatted using
 \l {Qt::DefaultLocaleShortDate}{Qt.DefaultLocaleShortDate}.
+
+\sa Locale
 */
 v8::Handle<v8::Value> formatTime(const v8::Arguments &args)
 {
@@ -678,6 +689,8 @@ with the \a format values below to produce the following results:
     \row \i "hh:mm:ss.zzz"    \i 14:13:09.042
     \row \i "h:m:s ap"        \i 2:13:9 pm
     \endtable
+
+    \sa Locale
 */
 v8::Handle<v8::Value> formatDateTime(const v8::Arguments &args)
 {
@@ -1083,6 +1096,42 @@ v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
     if (args.Length() < 1)
         return v8::Undefined();
     return args[0];
+}
+
+
+/*!
+    \qmlmethod Qt::locale(name)
+
+    Returns a JS object representing the locale with the specified
+    name, which has the format "language[_territory][.codeset][@modifier]"
+    or "C", where:
+
+    \list
+    \o language is a lowercase, two-letter, ISO 639 language code,
+    \o territory is an uppercase, two-letter, ISO 3166 country code,
+    \o and codeset and modifier are ignored.
+    \endlist
+
+    If the string violates the locale format, or language is not a
+    valid ISO 369 code, the "C" locale is used instead. If country
+    is not present, or is not a valid ISO 3166 code, the most
+    appropriate country is chosen for the specified language.
+
+    \sa QtQuick2::Locale
+*/
+v8::Handle<v8::Value> locale(const v8::Arguments &args)
+{
+    QString code;
+    if (args.Length() > 1)
+        V8THROW_ERROR("locale() requires 0 or 1 argument");
+    if (args.Length() == 1 && !args[0]->IsString())
+        V8THROW_TYPE("locale(): argument (locale code) must be a string");
+
+    QV8Engine *v8engine = V8ENGINE();
+    if (args.Length() == 1)
+        code = v8engine->toString(args[0]);
+
+    return QDeclarativeLocale::locale(v8engine, code);
 }
 
 } // namespace QDeclarativeBuiltinFunctions

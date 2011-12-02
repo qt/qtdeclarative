@@ -197,7 +197,7 @@ static inline void drawRepeatPattern(QPainter* p, const QImage& image, const QRe
     }
 }
 
-QPen QQuickContext2DCommandBuffer::makePen(QQuickContext2D::State state)
+QPen QQuickContext2DCommandBuffer::makePen(const QQuickContext2D::State& state)
 {
     QPen pen;
     pen.setWidthF(state.lineWidth);
@@ -208,7 +208,7 @@ QPen QQuickContext2DCommandBuffer::makePen(QQuickContext2D::State state)
     return pen;
 }
 
-void QQuickContext2DCommandBuffer::setPainterState(QPainter* p, QQuickContext2D::State state, const QPen& pen)
+void QQuickContext2DCommandBuffer::setPainterState(QPainter* p, const QQuickContext2D::State& state, const QPen& pen)
 {
    p->setTransform(state.matrix * p->transform());
 
@@ -229,10 +229,10 @@ void QQuickContext2DCommandBuffer::setPainterState(QPainter* p, QQuickContext2D:
        p->setCompositionMode(state.globalCompositeOperation);
 }
 
-QQuickContext2D::State QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State state)
+void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& state)
 {
     if (!p)
-        return state;
+        return;
 
     reset();
 
@@ -418,7 +418,6 @@ QQuickContext2D::State QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickC
     }
 
     p->end();
-    return state;
 }
 
 QQuickContext2DCommandBuffer::QQuickContext2DCommandBuffer()

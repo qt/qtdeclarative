@@ -47,6 +47,8 @@
 #include <QtGui/qpixmap.h>
 #include <QtCore/qurl.h>
 
+#include <private/qintrusivelist_p.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -111,6 +113,8 @@ public:
 private:
     Q_DISABLE_COPY(QDeclarativePixmap)
     QDeclarativePixmapData *d;
+    QIntrusiveListNode dataListNode;
+    friend class QDeclarativePixmapData;
 };
 
 inline QDeclarativePixmap::operator const QPixmap &() const
