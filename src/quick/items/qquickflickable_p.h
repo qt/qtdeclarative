@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFlickablePrivate;
 class QQuickFlickableVisibleArea;
-class Q_DECLARATIVE_EXPORT QQuickFlickable : public QQuickItem
+class Q_QUICK_EXPORT QQuickFlickable : public QQuickItem
 {
     Q_OBJECT
 
