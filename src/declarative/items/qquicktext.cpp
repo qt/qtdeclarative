@@ -145,7 +145,7 @@ QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl
 
         if (iter == m_resources.end()) {
             QDeclarativePixmap *p = new QDeclarativePixmap(context->engine(), url);
-            iter = m_resources.insert(name, p);
+            iter = m_resources.insert(url, p);
 
             if (p->isLoading()) {
                 p->connectFinished(this, SLOT(requestFinished()));
