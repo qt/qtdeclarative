@@ -448,7 +448,7 @@ void QDeclarativeEnginePrivate::init()
         QDeclarativeEngineDebugService::isDebuggingEnabled()) {
         isDebugging = true;
         QDeclarativeEngineDebugService::instance()->addEngine(q);
-        QV8DebugService::initialize();
+        QV8DebugService::initialize(v8engine());
         QV8ProfilerService::initialize();
         QDeclarativeDebugTrace::initialize();
     }

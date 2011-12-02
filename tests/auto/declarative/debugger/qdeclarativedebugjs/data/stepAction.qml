@@ -42,11 +42,16 @@
 import QtQuick 2.0
 
 //DO NOT CHANGE
+
 Item {
-    Timer {
-        id: timer;  interval: 1; running: true; repeat: true; triggeredOnStart:  true
-        onTriggered: {
-            console.log("timer");
-        }
+    id: item
+    property int d: 0
+
+    function doSomething() {
+        var a = 5;
+        var b = 6;
     }
+
+    Component.onCompleted: doSomething()
+
 }

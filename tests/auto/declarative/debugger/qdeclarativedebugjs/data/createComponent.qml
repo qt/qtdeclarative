@@ -43,10 +43,12 @@ import QtQuick 2.0
 
 //DO NOT CHANGE
 Item {
-    Timer {
-        id: timer;  interval: 1; running: true; repeat: true; triggeredOnStart:  true
-        onTriggered: {
-            console.log("timer");
+    Component.onCompleted: {
+        var component = Qt.createComponent("oncompleted.qml")
+        if (component.status === Component.Ready) {
+            component.createObject();
         }
     }
 }
+
+
