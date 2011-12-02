@@ -552,7 +552,7 @@ QImage QQuickCanvasItem::loadedImage(const QUrl& url)
     if (pix->isLoading() || pix->isError()) {
         return QImage();
     }
-    return pix->pixmap().toImage();
+    return pix->image();
 }
 
 /*!

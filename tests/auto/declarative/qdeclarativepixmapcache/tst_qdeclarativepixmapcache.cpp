@@ -294,14 +294,14 @@ void tst_qdeclarativepixmapcache::massive()
     qint64 cachekey = 0;
     QDeclarativePixmap p(&engine, url);
     QVERIFY(p.isReady());
-    QVERIFY(p.pixmap().size() == QSize(10000, 1000));
-    cachekey = p.pixmap().cacheKey();
+    QVERIFY(p.image().size() == QSize(10000, 1000));
+    cachekey = p.image().cacheKey();
 
     QDeclarativePixmap p2(&engine, url);
     QVERIFY(p2.isReady());
-    QVERIFY(p2.pixmap().size() == QSize(10000, 1000));
+    QVERIFY(p2.image().size() == QSize(10000, 1000));
 
-    QVERIFY(p2.pixmap().cacheKey() == cachekey);
+    QVERIFY(p2.image().cacheKey() == cachekey);
     }
 
     // Confirm that massive images are removed from the cache when
@@ -311,15 +311,15 @@ void tst_qdeclarativepixmapcache::massive()
     {
         QDeclarativePixmap p(&engine, url);
         QVERIFY(p.isReady());
-        QVERIFY(p.pixmap().size() == QSize(10000, 1000));
-        cachekey = p.pixmap().cacheKey();
+        QVERIFY(p.image().size() == QSize(10000, 1000));
+        cachekey = p.image().cacheKey();
     }
 
     QDeclarativePixmap p2(&engine, url);
     QVERIFY(p2.isReady());
-    QVERIFY(p2.pixmap().size() == QSize(10000, 1000));
+    QVERIFY(p2.image().size() == QSize(10000, 1000));
 
-    QVERIFY(p2.pixmap().cacheKey() != cachekey);
+    QVERIFY(p2.image().cacheKey() != cachekey);
     }
 }
 

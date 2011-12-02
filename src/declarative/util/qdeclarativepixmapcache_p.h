@@ -48,6 +48,7 @@
 #include <QtCore/qurl.h>
 
 #include <private/qintrusivelist_p.h>
+#include <qdeclarativeimageprovider.h>
 
 QT_BEGIN_HEADER
 
@@ -57,8 +58,25 @@ QT_MODULE(Declarative)
 
 class QDeclarativeEngine;
 class QDeclarativePixmapData;
-class QSGTexture;
-class QSGContext;
+class QDeclarativeTextureFactory;
+
+class QDeclarativeDefaultTextureFactory : public QDeclarativeTextureFactory
+{
+    Q_OBJECT
+public:
+    QDeclarativeDefaultTextureFactory(const QImage &i)
+        : im(i)
+    {
+    }
+
+    QSGTexture *createTexture() const;
+    QSize textureSize() const { return im.size(); }
+    int textureByteCount() const { return im.byteCount(); }
+    QImage image() const { return im; }
+
+private:
+    QImage im;
+};
 
 class Q_DECLARATIVE_EXPORT QDeclarativePixmap
 {
@@ -87,15 +105,14 @@ public:
     const QUrl &url() const;
     const QSize &implicitSize() const;
     const QSize &requestSize() const;
-    const QPixmap &pixmap() const;
-    void setPixmap(const QPixmap &);
+    const QImage &image() const;
+    void setImage(const QImage &);
 
-    QSGTexture *texture(QSGContext *context) const;
+    QDeclarativeTextureFactory *textureFactory() const;
 
     QRect rect() const;
     int width() const;
     int height() const;
-    inline operator const QPixmap &() const;
 
     void load(QDeclarativeEngine *, const QUrl &);
     void load(QDeclarativeEngine *, const QUrl &, QDeclarativePixmap::Options options);
@@ -116,11 +133,6 @@ private:
     QIntrusiveListNode dataListNode;
     friend class QDeclarativePixmapData;
 };
-
-inline QDeclarativePixmap::operator const QPixmap &() const
-{
-    return pixmap();
-}
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativePixmap::Options)
 

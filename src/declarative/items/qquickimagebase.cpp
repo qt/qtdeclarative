@@ -163,10 +163,10 @@ void QQuickImageBase::setCache(bool cache)
         load();
 }
 
-QPixmap QQuickImageBase::pixmap() const
+QImage QQuickImageBase::image() const
 {
     Q_D(const QQuickImageBase);
-    return d->pix.pixmap();
+    return d->pix.image();
 }
 
 void QQuickImageBase::setMirror(bool mirror)

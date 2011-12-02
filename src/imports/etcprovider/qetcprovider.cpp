@@ -143,10 +143,37 @@ QSize EtcTexture::textureSize() const
     return m_size;
 }
 
-QSGTexture *QEtcProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)
+
+class QEtcTextureFactory : public QDeclarativeTextureFactory
+{
+public:
+    QByteArray m_data;
+    QSize m_size;
+    QSize m_paddedSize;
+
+    QSize textureSize() const {
+        return m_size;
+    }
+
+    int textureByteCount() const {
+        return m_data.size();
+    }
+
+    QSGTexture *createTexture() const {
+        EtcTexture *texture = new EtcTexture;
+        texture->m_data = m_data;
+        texture->m_size = m_size;
+        texture->m_paddedSize = m_paddedSize;
+        return texture;
+    }
+
+};
+
+
+QDeclarativeTextureFactory *QEtcProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)
 {
     Q_UNUSED(requestedSize);
-    EtcTexture *ret = 0;
+    QEtcTextureFactory *ret = 0;
 
     size->setHeight(0);
     size->setWidth(0);
@@ -156,7 +183,7 @@ QSGTexture *QEtcProvider::requestTexture(const QString &id, QSize *size, const Q
     qDebug() << "requestTexture opening file: " << id;
 #endif
     if (file.open(QIODevice::ReadOnly)) {
-        ret = new EtcTexture();
+        ret = new QEtcTextureFactory;
         ret->m_data = file.readAll();
         if (!ret->m_data.isEmpty()) {
             ETCHeader *pETCHeader = NULL;
@@ -168,7 +195,7 @@ QSGTexture *QEtcProvider::requestTexture(const QString &id, QSize *size, const Q
             ret->m_paddedSize.setWidth(getPaddedWidth(pETCHeader));
         }
         else {
-            free (ret);
+            delete ret;
             ret = 0;
         }
     }

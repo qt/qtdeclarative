@@ -50,6 +50,48 @@ public:
 };
 
 /*!
+    \class QDeclarativeTextureFactory
+    \since 5.0
+    \brief The QDeclarativeTextureFactory class provides an interface for loading custom textures from QML.
+
+    The purpose of the texture factory is to provide a placeholder for a image
+    data that can be converted into an OpenGL texture.
+
+    Creating a texture directly is not possible as there is rarely an OpenGL context
+    available in the thread that is responsible for loading the image data.
+ */
+
+QDeclarativeTextureFactory::QDeclarativeTextureFactory()
+{
+}
+
+QDeclarativeTextureFactory::~QDeclarativeTextureFactory()
+{
+}
+
+
+
+/*!
+    \fn QSGTexture *QDeclarativeTextureFactory::createTexture() const
+
+    This function is called on the scene graph rendering thread to create a QSGTexture
+    instance from the factory.
+
+    QML will internally cache the returned texture as needed. Each call to this
+    function should return a unique instance.
+
+    The OpenGL context used for rendering is bound when this function is called.
+ */
+
+/*!
+    \fn QSize QDeclarativeTextureFactory::textureSize() const
+
+    Returns the size of the texture. This function will be called from arbitrary threads
+    and should not rely on an OpenGL context bound.
+ */
+
+
+/*!
     \class QDeclarativeImageProvider
     \since 4.7
     \brief The QDeclarativeImageProvider class provides an interface for supporting pixmaps and threaded image requests in QML.
@@ -278,7 +320,7 @@ QPixmap QDeclarativeImageProvider::requestPixmap(const QString &id, QSize *size,
     implementation of this method is reentrant.
 */
 
-QSGTexture *QDeclarativeImageProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)
+QDeclarativeTextureFactory *QDeclarativeImageProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)
 {
     Q_UNUSED(id);
     Q_UNUSED(size);

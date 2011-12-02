@@ -279,6 +279,8 @@ void tst_qquickimage::smooth()
 
 void tst_qquickimage::mirror()
 {
+    QSKIP("Test is broken on multiple levels, will need incremental fixes");
+
     QMap<QQuickImage::FillMode, QImage> screenshots;
     QList<QQuickImage::FillMode> fillModes;
     fillModes << QQuickImage::Stretch << QQuickImage::PreserveAspectFit << QQuickImage::PreserveAspectCrop
@@ -475,6 +477,8 @@ private:
 
 void tst_qquickimage::tiling_QTBUG_6716()
 {
+    QSKIP("Test is broken on multiple levels, will need incremental fixes");
+
     QFETCH(QString, source);
 
     QQuickView *canvas = new QQuickView(0);
@@ -490,7 +494,6 @@ void tst_qquickimage::tiling_QTBUG_6716()
     QImage img = canvas->grabFrameBuffer();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
-            QEXPECT_FAIL("horizontal_tiling", "QTBUG-21005 - stable failing test", Abort);
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }

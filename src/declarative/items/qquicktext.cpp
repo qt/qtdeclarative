@@ -155,7 +155,7 @@ QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl
 
         QDeclarativePixmap *p = *iter;
         if (p->isReady()) {
-            return p->pixmap();
+            return p->image();
         } else if (p->isError()) {
             if (!errors.contains(url)) {
                 errors.insert(url);

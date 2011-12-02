@@ -79,7 +79,7 @@ public:
     bool cache() const;
     void setCache(bool);
 
-    QPixmap pixmap() const;
+    QImage image() const;
 
     virtual void setSourceSize(const QSize&);
     QSize sourceSize() const;

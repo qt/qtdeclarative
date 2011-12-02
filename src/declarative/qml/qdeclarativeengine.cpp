@@ -341,7 +341,7 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
   workerScriptEngine(0), activeVME(0),
   networkAccessManager(0), networkAccessManagerFactory(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
-  incubatorCount(0), incubationController(0), sgContext(0), mutex(QMutex::Recursive)
+  incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
     if (!qt_QmlQtModule_registered) {
         qt_QmlQtModule_registered = true;
@@ -714,7 +714,7 @@ QDeclarativeImageProvider::ImageType QDeclarativeEnginePrivate::getImageProvider
     return QDeclarativeImageProvider::Invalid;
 }
 
-QSGTexture *QDeclarativeEnginePrivate::getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
+QDeclarativeTextureFactory *QDeclarativeEnginePrivate::getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
 {
     QMutexLocker locker(&mutex);
     QSharedPointer<QDeclarativeImageProvider> provider = imageProviders.value(url.host());

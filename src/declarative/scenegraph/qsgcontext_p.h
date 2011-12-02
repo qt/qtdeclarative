@@ -73,6 +73,8 @@ class QSGEngine;
 class QOpenGLContext;
 class QOpenGLFramebufferObject;
 
+class QDeclarativeTextureFactory;
+
 class Q_DECLARATIVE_EXPORT QSGContext : public QObject
 {
     Q_OBJECT
@@ -113,10 +115,9 @@ public:
 
     virtual QSurfaceFormat defaultSurfaceFormat() const;
 
-    static QSGContext *createDefaultContext();
+    QSGTexture *textureForFactory(QDeclarativeTextureFactory *factory);
 
-    void scheduleTextureForCleanup(QSGTexture *texture);
-    void cleanupTextures();
+    static QSGContext *createDefaultContext();
 
     void setFlashModeEnabled(bool enabled);
     bool isFlashModeEnabled() const;
@@ -131,6 +132,9 @@ public:
 
 signals:
     void ready();
+
+public slots:
+    void textureFactoryDestroyed(QObject *o);
 };
 
 QT_END_NAMESPACE

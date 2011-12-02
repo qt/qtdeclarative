@@ -2455,7 +2455,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
         if (pix) {
             image = pix->image;
         } else if (imageItem) {
-            image = imageItem->pixmap().toImage();
+            image = imageItem->image();
         } else if (canvas) {
             image = canvas->toImage();
         } else {

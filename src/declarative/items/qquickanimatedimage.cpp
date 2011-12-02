@@ -256,7 +256,7 @@ void QQuickAnimatedImage::load()
 
     if (d->url.isEmpty()) {
         delete d->_movie;
-        d->setPixmap(QPixmap());
+        d->setImage(QImage());
         d->progress = 0;
         d->status = Null;
         if (d->status != oldStatus)
@@ -288,7 +288,7 @@ void QQuickAnimatedImage::load()
                 d->_movie->jumpToFrame(0);
             if (d->paused)
                 d->_movie->setPaused(true);
-            d->setPixmap(d->_movie->currentPixmap());
+            d->setImage(d->_movie->currentPixmap().toImage());
             d->status = Ready;
             d->progress = 1.0;
             if (d->status != oldStatus)
@@ -355,7 +355,7 @@ void QQuickAnimatedImage::movieRequestFinished()
     }
     if (d->paused)
         d->_movie->setPaused(true);
-    d->setPixmap(d->_movie->currentPixmap());
+    d->setImage(d->_movie->currentPixmap().toImage());
     d->status = Ready;
     emit statusChanged(d->status);
 }
@@ -363,7 +363,7 @@ void QQuickAnimatedImage::movieRequestFinished()
 void QQuickAnimatedImage::movieUpdate()
 {
     Q_D(QQuickAnimatedImage);
-    d->setPixmap(d->_movie->currentPixmap());
+    d->setImage(d->_movie->currentPixmap().toImage());
     emit frameChanged();
 }
 

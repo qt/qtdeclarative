@@ -71,7 +71,7 @@ public:
     QQuickImage::FillMode fillMode;
     qreal paintedWidth;
     qreal paintedHeight;
-    void setPixmap(const QPixmap &pix);
+    void setImage(const QImage &img);
 
     bool pixmapChanged : 1;
     QQuickImage::HAlignment hAlign;

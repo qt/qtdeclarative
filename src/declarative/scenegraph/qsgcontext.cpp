@@ -43,6 +43,8 @@
 #include <private/qsgrenderer_p.h>
 #include "qsgnode.h"
 
+#include <private/qdeclarativepixmapcache_p.h>
+
 #include <private/qsgdefaultrenderer_p.h>
 
 #include <private/qsgdistancefieldutil_p.h>
@@ -55,6 +57,8 @@
 #include <private/qsgtexture_p.h>
 #include <QGuiApplication>
 #include <QOpenGLContext>
+
+#include <QDeclarativeImageProvider>
 
 #include <private/qobject_p.h>
 #include <qmutex.h>
@@ -107,11 +111,9 @@ public:
     QOpenGLContext *gl;
 
     QHash<QSGMaterialType *, QSGMaterialShader *> materials;
+    QHash<QDeclarativeTextureFactory *, QSGTexture *> textures;
 
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
-
-    QMutex textureMutex;
-    QList<QSGTexture *> texturesToClean;
 
     bool flashMode;
     float renderAlpha;
@@ -139,42 +141,45 @@ QSGContext::QSGContext(QObject *parent) :
 QSGContext::~QSGContext()
 {
     Q_D(QSGContext);
+    qDeleteAll(d->textures.values());
+    d->textures.clear();
     delete d->renderer;
     delete d->rootNode;
-    cleanupTextures();
     qDeleteAll(d->materials.values());
     delete d->distanceFieldCacheManager;
 }
 
-/*!
-    Schedules the texture to be cleaned up on the rendering thread
-    at a later time.
 
-    The texture can be considered as deleted after this function has
-    been called.
-  */
-void QSGContext::scheduleTextureForCleanup(QSGTexture *texture)
+QSGTexture *QSGContext::textureForFactory(QDeclarativeTextureFactory *factory)
 {
     Q_D(QSGContext);
-    d->textureMutex.lock();
-    Q_ASSERT(!d->texturesToClean.contains(texture));
-    d->texturesToClean << texture;
-    d->textureMutex.unlock();
+    if (!factory)
+        return 0;
+
+    QSGTexture *texture = d->textures.value(factory);
+    if (!texture) {
+        if (QDeclarativeDefaultTextureFactory *dtf = qobject_cast<QDeclarativeDefaultTextureFactory *>(factory))
+            texture = createTexture(dtf->image());
+        else
+            texture = factory->createTexture();
+        d->textures.insert(factory, texture);
+        connect(factory, SIGNAL(destroyed(QObject *)), this, SLOT(textureFactoryDestroyed(QObject *)));
+    }
+    return texture;
 }
 
 
-
-/*!
-    Deletes all textures that have been scheduled for cleanup
- */
-void QSGContext::cleanupTextures()
+void QSGContext::textureFactoryDestroyed(QObject *o)
 {
     Q_D(QSGContext);
-    d->textureMutex.lock();
-    qDeleteAll(d->texturesToClean);
-    d->texturesToClean.clear();
-    d->textureMutex.unlock();
+    QDeclarativeTextureFactory *f = static_cast<QDeclarativeTextureFactory *>(o);
+
+    // This function will only be called on the scene graph thread, so it is
+    // safe to directly delete the texture here.
+    delete d->textures.take(f);
 }
+
+
 
 /*!
     Returns the renderer. The renderer instance is created through the adaptation layer.
@@ -239,8 +244,6 @@ bool QSGContext::isReady() const
 void QSGContext::renderNextFrame(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QSGContext);
-
-    cleanupTextures();
 
     if (fbo) {
         QSGBindableFbo bindable(fbo);

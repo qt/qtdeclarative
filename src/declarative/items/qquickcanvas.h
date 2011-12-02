@@ -45,6 +45,7 @@
 #include <QtCore/qmetatype.h>
 #include <QtGui/qopengl.h>
 #include <QtGui/qwindow.h>
+#include <QtGui/qevent.h>
 
 QT_BEGIN_HEADER
 

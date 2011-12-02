@@ -60,8 +60,6 @@ void QQuickViewPrivate::init()
 {
     Q_Q(QQuickView);
 
-    QDeclarativeEnginePrivate::get(&engine)->sgContext = QQuickCanvasPrivate::context;
-
     engine.setIncubationController(q->incubationController());
 
     if (QDeclarativeDebugService::isDebuggingEnabled())

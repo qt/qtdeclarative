@@ -102,6 +102,7 @@ public:
     QImage toImage(const QRectF& region = QRectF()) const;
 
     QImage loadedImage(const QUrl& url);
+
 Q_SIGNALS:
     void paint(QDeclarativeV8Handle context, const QRect &region);
     void painted();

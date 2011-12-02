@@ -54,6 +54,17 @@ QT_MODULE(Declarative)
 class QDeclarativeImageProviderPrivate;
 class QSGTexture;
 
+class Q_DECLARATIVE_EXPORT QDeclarativeTextureFactory : public QObject
+{
+public:
+    QDeclarativeTextureFactory();
+    ~QDeclarativeTextureFactory();
+
+    virtual QSGTexture *createTexture() const = 0;
+    virtual QSize textureSize() const = 0;
+    virtual int textureByteCount() const = 0;
+};
+
 class Q_DECLARATIVE_EXPORT QDeclarativeImageProvider
 {
 public:
@@ -71,7 +82,7 @@ public:
 
     virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize);
     virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize);
-    virtual QSGTexture *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
+    virtual QDeclarativeTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
 
 private:
     QDeclarativeImageProviderPrivate *d;
