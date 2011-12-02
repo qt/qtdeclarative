@@ -131,9 +131,6 @@ protected:
     virtual bool visit(QDeclarativeJS::AST::UiObjectMemberList *ast);
     virtual bool visit(QDeclarativeJS::AST::UiArrayMemberList *ast);
     virtual bool visit(QDeclarativeJS::AST::UiQualifiedId *ast);
-    virtual bool visit(QDeclarativeJS::AST::UiSignature *ast);
-    virtual bool visit(QDeclarativeJS::AST::UiFormalList *ast);
-    virtual bool visit(QDeclarativeJS::AST::UiFormal *ast);
 
     // JS
     virtual bool visit(QDeclarativeJS::AST::Program *ast);

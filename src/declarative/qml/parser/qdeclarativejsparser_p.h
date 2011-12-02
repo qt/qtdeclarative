@@ -117,9 +117,6 @@ public:
       AST::UiObjectMemberList *UiObjectMemberList;
       AST::UiArrayMemberList *UiArrayMemberList;
       AST::UiQualifiedId *UiQualifiedId;
-      AST::UiSignature *UiSignature;
-      AST::UiFormalList *UiFormalList;
-      AST::UiFormal *UiFormal;
     };
 
 public:

@@ -314,24 +314,6 @@ bool QV4IRBuilder::visit(AST::UiQualifiedId *)
     return false;
 }
 
-bool QV4IRBuilder::visit(AST::UiSignature *)
-{
-    Q_ASSERT(!"unreachable");
-    return false;
-}
-
-bool QV4IRBuilder::visit(AST::UiFormalList *)
-{
-    Q_ASSERT(!"unreachable");
-    return false;
-}
-
-bool QV4IRBuilder::visit(AST::UiFormal *)
-{
-    Q_ASSERT(!"unreachable");
-    return false;
-}
-
 
 // JS
 bool QV4IRBuilder::visit(AST::Program *)
