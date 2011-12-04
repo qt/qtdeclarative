@@ -46,6 +46,7 @@
 #include "qquickcanvas_p.h"
 
 #include "qquickevents_p_p.h"
+#include "qquickscreen_p.h"
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
@@ -2136,6 +2137,8 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
 
     dirty(Canvas);
 
+    if (screenAttached)
+        screenAttached->canvasChanged(c);
     itemChange(QQuickItem::ItemSceneChange, c);
 }
 
@@ -2264,6 +2267,7 @@ QQuickItemPrivate::QQuickItemPrivate()
 
   itemNodeInstance(0), opacityNode(0), clipNode(0), rootNode(0), groupNode(0), paintNode(0)
   , beforePaintNode(0), effectRefCount(0), hideRefCount(0)
+  , screenAttached(0)
 {
 }
 

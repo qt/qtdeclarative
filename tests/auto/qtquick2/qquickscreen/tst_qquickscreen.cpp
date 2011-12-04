@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,19 +39,57 @@
 **
 ****************************************************************************/
 
-#include "qquickwindowmodule_p.h"
-#include "qquickscreen_p.h"
-#include <QtQuick/QQuickCanvas>
+#include <qtest.h>
+#include <QDebug>
+#include <QtQuick/QQuickItem>
+#include <QtQuick/QQuickView>
+#include <QtGui/QScreen>
+#include "../../shared/util.h"
 
-QT_BEGIN_NAMESPACE
-
-void QQuickWindowModule::defineModule()
+class tst_qquickscreen : public QObject
 {
-    const char* uri = "QtQuick.Window";
+    Q_OBJECT
+public:
+    tst_qquickscreen ();
 
-    qmlRegisterType<QQuickCanvas>(uri, 2, 0, "Window");
-    qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", "Screen can only be used via the attached property.");
+private slots:
+    void initTestCase();
+    void cleanupTestCase();
+
+    void basicProperties();
+};
+
+tst_qquickscreen::tst_qquickscreen()
+{
 }
 
-QT_END_NAMESPACE
+void tst_qquickscreen::initTestCase()
+{
+}
 
+void tst_qquickscreen::cleanupTestCase()
+{
+}
+
+void tst_qquickscreen::basicProperties()
+{
+    QQuickView view;
+    view.setSource(TESTDATA("screen.qml"));
+    view.show();
+    QTest::qWaitForWindowShown(&view);
+
+    QQuickItem* root = view.rootObject();
+    QVERIFY(root);
+
+    QScreen* screen = view.screen();
+    QVERIFY(screen);
+
+    QCOMPARE(screen->size().width(), root->property("w").toInt());
+    QCOMPARE(screen->size().height(), root->property("h").toInt());
+    QCOMPARE(int(screen->currentOrientation()), root->property("curOrientation").toInt());
+    QCOMPARE(int(screen->primaryOrientation()), root->property("priOrientation").toInt());
+}
+
+QTEST_MAIN(tst_qquickscreen)
+
+#include "tst_qquickscreen.moc"

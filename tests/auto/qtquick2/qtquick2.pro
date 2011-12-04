@@ -53,6 +53,7 @@ QUICKTESTS =  \
     qquickvisualdatamodel \
     qquickview \
     qquickcanvasitem \
+    qquickscreen \
 
 
 SUBDIRS += $$PUBLICTESTS

@@ -83,6 +83,7 @@ QT_BEGIN_NAMESPACE
 class QNetworkReply;
 class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;
+class QQuickScreenAttached;
 
 class QQuickContents : public QQuickItemChangeListener
 {
@@ -444,6 +445,8 @@ public:
     void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &);
 
     virtual void mirrorChange() {}
+
+    QQuickScreenAttached *screenAttached;
 
     static qint64 consistentTime;
     static void setConsistentTime(qint64 t);

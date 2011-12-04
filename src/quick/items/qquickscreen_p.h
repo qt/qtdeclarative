@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,19 +39,67 @@
 **
 ****************************************************************************/
 
-#include "qquickwindowmodule_p.h"
-#include "qquickscreen_p.h"
-#include <QtQuick/QQuickCanvas>
+#ifndef QQUICKSCREEN_P_H
+#define QQUICKSCREEN_P_H
+
+#include <qdeclarative.h>
+#include <QRect>
+#include <QSize>
+#include <private/qdeclarativeglobal_p.h>
+
+QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-void QQuickWindowModule::defineModule()
-{
-    const char* uri = "QtQuick.Window";
+QT_MODULE(Declarative)
 
-    qmlRegisterType<QQuickCanvas>(uri, 2, 0, "Window");
-    qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", "Screen can only be used via the attached property.");
-}
+class QQuickItem;
+class QQuickCanvas;
+class QScreen;
+
+class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int width READ width NOTIFY widthChanged)
+    Q_PROPERTY(int height READ height NOTIFY heightChanged)
+    Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
+    Q_PROPERTY(Qt::ScreenOrientation currentOrientation READ currentOrientation NOTIFY currentOrientationChanged)
+
+public:
+    QQuickScreenAttached(QObject* attachee);
+
+    int width() const;
+    int height() const;
+    Qt::ScreenOrientation primaryOrientation() const;
+    Qt::ScreenOrientation currentOrientation() const;
+
+    Q_INVOKABLE int angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b);
+
+    void canvasChanged(QQuickCanvas*);
+
+Q_SIGNALS:
+    void widthChanged();
+    void heightChanged();
+    void primaryOrientationChanged();
+    void currentOrientationChanged();
+
+private:
+    QScreen* m_screen;
+    QQuickItem* m_attachee;
+};
+
+class Q_AUTOTEST_EXPORT QQuickScreen : public QObject
+{
+    Q_OBJECT
+public:
+    static QQuickScreenAttached *qmlAttachedProperties(QObject *object){ return new QQuickScreenAttached(object); }
+};
 
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPEINFO(QQuickScreen, QML_HAS_ATTACHED_PROPERTIES)
+
+QT_END_HEADER
+
+#endif
