@@ -211,10 +211,12 @@ void tst_examples::sgexamples_data()
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/declarative/";
+    QString tutorials = QLatin1String(SRCDIR) + "/../../../../examples/tutorials/"; //Only declarative tutorials since modularization
     QString snippets = QLatin1String(SRCDIR) + "/../../../../doc/src/snippets/declarative";
 
     QStringList files;
     files << findQmlFiles(QDir(examples));
+    files << findQmlFiles(QDir(tutorials));
     files << findQmlFiles(QDir(snippets));
 
     foreach (const QString &file, files)
