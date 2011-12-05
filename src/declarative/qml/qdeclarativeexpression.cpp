@@ -81,7 +81,8 @@ QDeclarativeJavaScriptExpression::~QDeclarativeJavaScriptExpression()
 }
 
 QDeclarativeExpressionPrivate::QDeclarativeExpressionPrivate()
-: expressionFunctionValid(true), extractExpressionFromFunction(false), line(-1), dataRef(0)
+: expressionFunctionValid(true), expressionFunctionRewritten(false),
+  extractExpressionFromFunction(false), line(-1), dataRef(0)
 {
 }
 
@@ -101,6 +102,7 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QS
     QDeclarativeAbstractExpression::setContext(ctxt);
     setScopeObject(me);
     expressionFunctionValid = false;
+    expressionFunctionRewritten = false;
 }
 
 void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, v8::Handle<v8::Function> func,
@@ -112,23 +114,21 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, v8::Hand
     v8function = qPersistentNew<v8::Function>(func);
     setUseSharedContext(false);
     expressionFunctionValid = true;
+    expressionFunctionRewritten = false;
     extractExpressionFromFunction = true;
 }
 
-void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QString &expr, bool isRewritten,
-                                         QObject *me, const QString &srcUrl, int lineNumber)
+void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QString &expr,
+                                         bool isRewritten, QObject *me, const QString &srcUrl,
+                                         int lineNumber)
 {
     url = srcUrl;
     line = lineNumber;
 
     expression = expr;
 
-    if (!isRewritten) {
-        expressionFunctionValid = false;
-    } else {
-        v8function = evalFunction(ctxt, me, expression, url, line, &v8qmlscope);
-        expressionFunctionValid = true;
-    }
+    expressionFunctionValid = false;
+    expressionFunctionRewritten = isRewritten;
 
     QDeclarativeAbstractExpression::setContext(ctxt);
     setScopeObject(me);
@@ -373,6 +373,7 @@ void QDeclarativeExpression::setExpression(const QString &expression)
     d->resetNotifyOnValueChanged();
     d->expression = expression;
     d->expressionFunctionValid = false;
+    d->expressionFunctionRewritten = false;
     qPersistentDispose(d->v8function);
     qPersistentDispose(d->v8qmlscope);
 }
@@ -571,10 +572,16 @@ void QDeclarativeJavaScriptExpression::clearGuards()
 v8::Local<v8::Value> QDeclarativeExpressionPrivate::v8value(QObject *secondaryScope, bool *isUndefined)
 {
     if (!expressionFunctionValid) {
+        bool ok = true;
+
         QDeclarativeRewrite::RewriteBinding rewriteBinding;
         rewriteBinding.setName(name);
-        bool ok = true;
-        const QString code = rewriteBinding(expression, &ok);
+        QString code;
+        if (expressionFunctionRewritten)
+            code = expression;
+        else
+            code = rewriteBinding(expression, &ok);
+
         if (ok) v8function = evalFunction(context(), scopeObject(), code, url, line, &v8qmlscope);
         setUseSharedContext(false);
         expressionFunctionValid = true;

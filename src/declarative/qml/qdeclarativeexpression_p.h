@@ -197,6 +197,7 @@ public:
                                           const QString &, int);
 
     bool expressionFunctionValid:1;
+    bool expressionFunctionRewritten:1;
     bool extractExpressionFromFunction:1;
 
     inline virtual QString expressionIdentifier();
