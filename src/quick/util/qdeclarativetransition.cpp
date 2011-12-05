@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
 class ParallelAnimationWrapper : public QParallelAnimationGroup2
 {
 public:
-    ParallelAnimationWrapper(QDeclarativeAbstractAnimation *animation = 0) : QParallelAnimationGroup2(animation) {}
+    ParallelAnimationWrapper() : QParallelAnimationGroup2() {}
     QDeclarativeTransitionPrivate *trans;
 protected:
     virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);

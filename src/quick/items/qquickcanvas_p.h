@@ -175,7 +175,7 @@ public:
     QSize widgetSize;
     QSize viewportSize;
 
-    QAnimationDriver *animationDriver;
+    QAnimationDriver2 *animationDriver;
 
     QOpenGLFramebufferObject *renderTarget;
 
@@ -222,7 +222,7 @@ protected:
     void cleanupNodesOnShutdown() { d->cleanupNodesOnShutdown(); }
     void renderSceneGraph(const QSize &size) { d->renderSceneGraph(size); }
     void polishItems() { d->polishItems(); }
-    QAnimationDriver *animationDriver() const { return d->animationDriver; }
+    QAnimationDriver2 *animationDriver() const { return d->animationDriver; }
 
     inline QOpenGLContext *glContext() const { return gl; }
     void createGLContext();

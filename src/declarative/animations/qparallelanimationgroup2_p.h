@@ -54,7 +54,7 @@ QT_MODULE(Declarative)
 class Q_DECLARATIVE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
 {
 public:
-    QParallelAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
+    QParallelAnimationGroup2();
     QParallelAnimationGroup2(const QParallelAnimationGroup2 &other);
     ~QParallelAnimationGroup2();
 

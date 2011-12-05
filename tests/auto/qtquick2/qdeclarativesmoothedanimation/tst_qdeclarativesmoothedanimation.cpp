@@ -41,7 +41,7 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <private/qdeclarativesmoothedanimation_p.h>
+#include <QtQuick/private/qdeclarativesmoothedanimation_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include "../../shared/util.h"

@@ -71,12 +71,11 @@ QSmoothedAnimationTimer::~QSmoothedAnimationTimer()
 
 void QSmoothedAnimationTimer::stopAnimation()
 {
-    m_animation->setAnimation(0);
     m_animation->stop();
 }
 
-QSmoothedAnimation::QSmoothedAnimation(QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
+QSmoothedAnimation::QSmoothedAnimation()
+    : QAbstractAnimation2(), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
       reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
       delayedStopTimer(new QSmoothedAnimationTimer(this))

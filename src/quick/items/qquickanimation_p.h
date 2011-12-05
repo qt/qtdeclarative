@@ -47,14 +47,12 @@
 
 #include <QtQuick/private/qdeclarativeanimation_p.h>
 
-#include <QtCore/qabstractanimation.h>
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QQuickParentAnimationPrivate;
-class QQuickParentAnimation : public QDeclarativeAnimationGroup
+class Q_QUICK_PRIVATE_EXPORT QQuickParentAnimation : public QDeclarativeAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentAnimation)
@@ -82,14 +80,13 @@ Q_SIGNALS:
     void viaChanged();
 
 protected:
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation *qtAnimation();
 };
 
 class QQuickAnchorAnimationPrivate;
-class QQuickAnchorAnimation : public QDeclarativeAbstractAnimation
+class Q_QUICK_PRIVATE_EXPORT QQuickAnchorAnimation : public QDeclarativeAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorAnimation)
@@ -114,16 +111,15 @@ Q_SIGNALS:
     void easingChanged(const QEasingCurve&);
 
 protected:
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation *qtAnimation();
 };
 
 class QQuickItem;
 class QDeclarativePath;
 class QQuickPathAnimationPrivate;
-class Q_AUTOTEST_EXPORT QQuickPathAnimation : public QDeclarativeAbstractAnimation
+class Q_QUICK_PRIVATE_EXPORT QQuickPathAnimation : public QDeclarativeAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPathAnimation)
@@ -179,11 +175,9 @@ public:
     void setEndRotation(qreal);
 
 protected:
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation *qtAnimation();
-
 Q_SIGNALS:
     void durationChanged(int);
     void easingChanged(const QEasingCurve &);

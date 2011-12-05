@@ -54,7 +54,7 @@ QT_MODULE(Declarative)
 class Q_DECLARATIVE_EXPORT QAnimationGroup2 : public QAbstractAnimation2
 {
 public:
-    QAnimationGroup2(QDeclarativeAbstractAnimation* animation = 0);
+    QAnimationGroup2();
     QAnimationGroup2(const QAnimationGroup2& other);
     ~QAnimationGroup2();
 

@@ -47,8 +47,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QAnimationGroup2::QAnimationGroup2(QDeclarativeAbstractAnimation *animation)
-  : QAbstractAnimation2(animation)
+QAnimationGroup2::QAnimationGroup2()
+  : QAbstractAnimation2()
 {
     m_isGroup = true;
 }

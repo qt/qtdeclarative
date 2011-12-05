@@ -99,10 +99,10 @@ private:
 class Q_AUTOTEST_EXPORT QActionAnimation : public QAbstractAnimation2
 {
 public:
-    QActionAnimation(QDeclarativeAbstractAnimation *animation = 0);
+    QActionAnimation();
     QActionAnimation(const QActionAnimation &other);
 
-    QActionAnimation(QAbstractAnimationAction *action, QDeclarativeAbstractAnimation *animation = 0);
+    QActionAnimation(QAbstractAnimationAction *action);
     ~QActionAnimation();
 
     virtual int duration() const;
@@ -127,7 +127,7 @@ public:
 class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QAbstractAnimation2
 {
 public:
-    QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation = 0);
+    QDeclarativeBulkValueAnimator();
     QDeclarativeBulkValueAnimator(const QDeclarativeBulkValueAnimator &other);
     ~QDeclarativeBulkValueAnimator();
 

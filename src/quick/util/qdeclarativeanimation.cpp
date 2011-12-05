@@ -162,7 +162,7 @@ void QDeclarativeAbstractAnimationPrivate::commence()
     QDeclarativeStateActions actions;
     QDeclarativeProperties properties;
     animationInstance = q->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
-    animationInstance->setAnimation(q);
+    animationInstance->registerFinished(q, "timelineComplete()");
     //TODO: set in the transition function
     animationInstance->setLoopCount(loopCount);
     animationInstance->start();
@@ -760,8 +760,8 @@ void QDeclarativeColorAnimation::setTo(const QColor &t)
     QDeclarativePropertyAnimation::setTo(t);
 }
 
-QActionAnimation::QActionAnimation(QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation), animAction(0)
+QActionAnimation::QActionAnimation()
+    : QAbstractAnimation2(), animAction(0)
 {
 }
 
@@ -771,8 +771,8 @@ QActionAnimation::QActionAnimation(const QActionAnimation &other)
 {
 }
 
-QActionAnimation::QActionAnimation(QAbstractAnimationAction *action, QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation), animAction(action)
+QActionAnimation::QActionAnimation(QAbstractAnimationAction *action)
+    : QAbstractAnimation2(), animAction(action)
 {
 }
 
@@ -1787,8 +1787,8 @@ void QDeclarativePropertyAnimationPrivate::convertVariant(QVariant &variant, int
     }
 }
 
-QDeclarativeBulkValueAnimator::QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation), animValue(0), fromSourced(0), m_duration(250)
+QDeclarativeBulkValueAnimator::QDeclarativeBulkValueAnimator()
+    : QAbstractAnimation2(), animValue(0), fromSourced(0), m_duration(250)
 {
 }
 

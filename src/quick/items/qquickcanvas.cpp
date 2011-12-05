@@ -59,7 +59,7 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
 #include <QtCore/qvarlengtharray.h>
-#include <QtCore/qabstractanimation.h>
+#include "private/qabstractanimation_p.h"
 #include <QtDeclarative/qdeclarativeincubator.h>
 
 #include <private/qdeclarativedebugtrace_p.h>
@@ -491,7 +491,7 @@ QQuickCanvasPrivate::~QQuickCanvasPrivate()
 
 void QQuickCanvasPrivate::init(QQuickCanvas *c)
 {
-    QUnifiedTimer* ut = QUnifiedTimer::instance(true);
+    QUnifiedTimer2* ut = QUnifiedTimer2::instance(true);
     if (qmlFixedAnimationStep())
         ut->setConsistentTiming(true);
 

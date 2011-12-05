@@ -47,7 +47,6 @@
 
 #include "private/qabstractanimation2_p.h"
 #include "private/qanimationgroup2_p.h"
-#include "private/qdeclarativeanimation_p.h"
 
 #define DEFAULT_TIMER_INTERVAL 16
 
@@ -378,7 +377,6 @@ QAnimationDriver2::~QAnimationDriver2()
 void QAnimationDriver2::advanceAnimation(qint64 timeStep)
 {
     QUnifiedTimer2 *instance = QUnifiedTimer2::instance();
-
     // update current time on all top level animations
     instance->updateAnimationsTime(timeStep);
     instance->restartAnimationTimer();
@@ -582,13 +580,12 @@ void QAbstractAnimation2::setState(QAbstractAnimation2::State newState)
 }
 
 
-QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation* animation)
+QAbstractAnimation2::QAbstractAnimation2()
     : QDeclarativeRefCount()
     , m_loopCount(1)
     , m_isPause(false)
     , m_isGroup(false)
     , m_group(0)
-    , m_animationGuard(animation)
     , m_direction(QAbstractAnimation2::Forward)
     , m_state(QAbstractAnimation2::Stopped)
     , m_totalCurrentTime(0)
@@ -603,7 +600,6 @@ QAbstractAnimation2::QAbstractAnimation2(const QAbstractAnimation2& other)
     : m_loopCount(other.m_loopCount)
     , m_isPause(other.m_isPause)
     , m_group(other.m_group)
-    , m_animationGuard(0)
     , m_direction(other.m_direction)
     , m_state(QAbstractAnimation2::Stopped)
     , m_totalCurrentTime(0)
@@ -611,16 +607,6 @@ QAbstractAnimation2::QAbstractAnimation2(const QAbstractAnimation2& other)
     , m_currentLoop(0)
     , m_hasRegisteredTimer(false)
 {
-}
-
-QDeclarativeAbstractAnimation* QAbstractAnimation2::animation() const
-{
-    return qobject_cast<QDeclarativeAbstractAnimation*>(m_animationGuard);
-}
-
-void QAbstractAnimation2::setAnimation(QObject *animation)
-{
-    m_animationGuard = animation;
 }
 
 QAbstractAnimation2::~QAbstractAnimation2()
@@ -686,7 +672,6 @@ int QAbstractAnimation2::totalDuration() const
 void QAbstractAnimation2::setCurrentTime(int msecs)
 {
     msecs = qMax(msecs, 0);
-
     // Calculate new time and loop.
     int dura = duration();
     int totalDura = dura <= 0 ? dura : ((m_loopCount < 0) ? -1 : dura * m_loopCount);
@@ -737,7 +722,6 @@ void QAbstractAnimation2::start()
 
 void QAbstractAnimation2::stop()
 {
-
     if (m_state == Stopped)
         return;
     setState(Stopped);
@@ -795,9 +779,6 @@ void QAbstractAnimation2::finished()
         }
     }
 
-    if (!m_animationGuard.isNull())
-        animation()->timelineComplete();
-
     if (group() && (duration() == -1 || loopCount() < 0)) {
         //this is an uncontrolled animation, need to notify the group animation we are finished
         group()->uncontrolledAnimationFinished(this);
@@ -846,33 +827,37 @@ void QAbstractAnimation2::directionChanged(QAbstractAnimation2::Direction direct
 
 void QAbstractAnimation2::registerFinished(QObject* object, const char* method)
 {
-    if (object && object != animation()) {
-        m_finishedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
-                              , object->metaObject()->indexOfSlot(method)));
+    QPair<QDeclarativeGuard<QObject>,int> slot = qMakePair(QDeclarativeGuard<QObject>(object)
+                                                         , object->metaObject()->indexOfSlot(method));
+    if (object && !m_finishedSlots.contains(slot)) {
+        m_finishedSlots.append(slot);
     }
 }
 
 void QAbstractAnimation2::registerStateChanged(QObject* object, const char* method)
 {
-    if (object) {
-        m_stateChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
-                                  , object->metaObject()->indexOfSlot(method)));
+    QPair<QDeclarativeGuard<QObject>,int> slot = qMakePair(QDeclarativeGuard<QObject>(object)
+                                                         , object->metaObject()->indexOfSlot(method));
+    if (object && !m_finishedSlots.contains(slot)) {
+        m_stateChangedSlots.append(slot);
     }
 }
 
 void QAbstractAnimation2::registerCurrentLoopChanged(QObject* object, const char* method)
 {
-    if (object) {
-        m_currentLoopChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
-                                        , object->metaObject()->indexOfSlot(method)));
+    QPair<QDeclarativeGuard<QObject>,int> slot = qMakePair(QDeclarativeGuard<QObject>(object)
+                                                         , object->metaObject()->indexOfSlot(method));
+    if (object && !m_finishedSlots.contains(slot)) {
+        m_currentLoopChangedSlots.append(slot);
     }
 }
 
 void QAbstractAnimation2::registerDirectionChanged(QObject* object, const char* method)
 {
-    if (object) {
-        m_directionChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
-                                      , object->metaObject()->indexOfSlot(method)));
+    QPair<QDeclarativeGuard<QObject>,int> slot = qMakePair(QDeclarativeGuard<QObject>(object)
+                                                         , object->metaObject()->indexOfSlot(method));
+    if (object && !m_finishedSlots.contains(slot)) {
+        m_directionChangedSlots.append(slot);
     }
 }
 

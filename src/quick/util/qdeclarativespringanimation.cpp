@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 class Q_AUTOTEST_EXPORT QSpringAnimation : public QAbstractAnimation2
 {
 public:
-    QSpringAnimation(QDeclarativeAbstractAnimation *animation=0);
+    QSpringAnimation();
     QSpringAnimation(const QSpringAnimation &other);
 
     ~QSpringAnimation();
@@ -98,8 +98,8 @@ protected:
     virtual void updateState(QAbstractAnimation2::State, QAbstractAnimation2::State);
 };
 
-QSpringAnimation::QSpringAnimation(QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation)
+QSpringAnimation::QSpringAnimation()
+    : QAbstractAnimation2()
     , currentValue(0)
     , to(0)
     , velocity(0)

@@ -81,7 +81,7 @@ private:
 class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation2
 {
 public:
-    QSmoothedAnimation(QDeclarativeAbstractAnimation *animation=0);
+    QSmoothedAnimation();
     QSmoothedAnimation(const QSmoothedAnimation &other);
 
     ~QSmoothedAnimation();

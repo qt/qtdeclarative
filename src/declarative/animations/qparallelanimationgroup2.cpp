@@ -43,8 +43,8 @@
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 
-QParallelAnimationGroup2::QParallelAnimationGroup2(QDeclarativeAbstractAnimation *animation)
-    : QAnimationGroup2(animation)
+QParallelAnimationGroup2::QParallelAnimationGroup2()
+    : QAnimationGroup2()
     , m_previousLoop(0)
     , m_previousCurrentTime(0)
 {

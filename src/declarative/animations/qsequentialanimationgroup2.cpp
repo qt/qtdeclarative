@@ -175,8 +175,8 @@ void QSequentialAnimationGroup2::rewindForwards(const AnimationIndex &newAnimati
     // setting the new current animation will happen later
 }
 
-QSequentialAnimationGroup2::QSequentialAnimationGroup2(QDeclarativeAbstractAnimation *animation)
-    : QAnimationGroup2(animation)
+QSequentialAnimationGroup2::QSequentialAnimationGroup2()
+    : QAnimationGroup2()
     , m_currentAnimation(0)
     , m_currentAnimationIndex(-1)
     , m_previousLoop(0)

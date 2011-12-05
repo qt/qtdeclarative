@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include <QtCore/qdebug.h>
-#include <QtCore/qabstractanimation.h>
 #include <QtWidgets/qapplication.h>
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qdeclarativeengine.h>

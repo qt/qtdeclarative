@@ -64,7 +64,6 @@ QT_MODULE(Declarative)
 class QAnimationGroup2;
 class QSequentialAnimationGroup2;
 class QAnimationDriver2;
-class QDeclarativeAbstractAnimation;
 
 class Q_DECLARATIVE_EXPORT QAbstractAnimation2 : public QDeclarativeRefCount
 {
@@ -80,7 +79,7 @@ public:
         Running
     };
 
-    QAbstractAnimation2(QDeclarativeAbstractAnimation* animation = 0);
+    QAbstractAnimation2();
     QAbstractAnimation2(const QAbstractAnimation2& other);
     ~QAbstractAnimation2();
 
@@ -88,8 +87,6 @@ public:
     inline QAnimationGroup2 *group() const {return m_group;}
     void setGroup(QAnimationGroup2* group) {m_group = group;}   //### remove from old group, add to new
 
-    inline QDeclarativeAbstractAnimation *animation() const;
-    void setAnimation(QObject *animation);
 
     inline int loopCount() const {return m_loopCount;}
     void setLoopCount(int loopCount);
@@ -137,7 +134,6 @@ protected:
     bool m_isPause;
     bool m_isGroup;
     QAnimationGroup2 *m_group;
-    QDeclarativeGuard<QObject> m_animationGuard;
     QAbstractAnimation2::Direction m_direction; //???
 
     //state
@@ -157,7 +153,7 @@ protected:
 };
 
 typedef QDeclarativeRefPointer<QAbstractAnimation2> QAbstractAnimation2Pointer;
-uint qHash(const QAbstractAnimation2Pointer& value);
+uint Q_DECLARATIVE_EXPORT qHash(const QAbstractAnimation2Pointer& value);
 
 class QAnimationDriver2Private;
 class Q_DECLARATIVE_EXPORT QAnimationDriver2 : public QObject

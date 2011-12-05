@@ -54,7 +54,7 @@ class QPauseAnimation2;
 class Q_DECLARATIVE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
 {
 public:
-    QSequentialAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
+    QSequentialAnimationGroup2();
     QSequentialAnimationGroup2(const QSequentialAnimationGroup2 &other);
     ~QSequentialAnimationGroup2();
 
