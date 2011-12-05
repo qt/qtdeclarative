@@ -383,7 +383,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            qApp->inputPanel()->commit();
+            qApp->inputPanel()->reset();
 #endif
 
             activeFocusItem = 0;
@@ -492,7 +492,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
-        qApp->inputPanel()->commit();
+        qApp->inputPanel()->reset();
 #endif
 
         activeFocusItem = 0;

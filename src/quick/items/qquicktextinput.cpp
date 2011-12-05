@@ -2004,8 +2004,11 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
 #endif
             d->updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
         }
-        if (!hasFocus)
+
+        if (!hasFocus) {
+            d->commitPreedit();
             d->deselect();
+        }
     }
     QQuickItem::itemChange(change, value);
 }
