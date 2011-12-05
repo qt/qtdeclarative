@@ -58,8 +58,8 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 
 // ### This should be private API
-#include <qquickitem.h>
-#include <qquickview.h>
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickview.h>
 
 #define QT_NO_SCENEGRAPHITEM
 

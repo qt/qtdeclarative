@@ -64,6 +64,64 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class DynamicRoleModelNode;
+
+class DynamicRoleModelNodeMetaObject : public QDeclarativeOpenMetaObject
+{
+public:
+    DynamicRoleModelNodeMetaObject(DynamicRoleModelNode *object);
+    ~DynamicRoleModelNodeMetaObject();
+
+    bool m_enabled;
+
+protected:
+    void propertyWrite(int index);
+    void propertyWritten(int index);
+
+private:
+    DynamicRoleModelNode *m_owner;
+};
+
+class DynamicRoleModelNode : public QObject
+{
+    Q_OBJECT
+public:
+    DynamicRoleModelNode(QDeclarativeListModel *owner, int uid);
+
+    static DynamicRoleModelNode *create(const QVariantMap &obj, QDeclarativeListModel *owner);
+
+    void updateValues(const QVariantMap &object, QList<int> &roles);
+
+    QVariant getValue(const QString &name)
+    {
+        return m_meta->value(name.toUtf8());
+    }
+
+    bool setValue(const QByteArray &name, const QVariant &val)
+    {
+        return m_meta->setValue(name, val);
+    }
+
+    void setNodeUpdatesEnabled(bool enable)
+    {
+        m_meta->m_enabled = enable;
+    }
+
+    int getUid() const
+    {
+        return m_uid;
+    }
+
+    static void sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QDeclarativeListModel *> *targetModelHash);
+
+private:
+    QDeclarativeListModel *m_owner;
+    int m_uid;
+    DynamicRoleModelNodeMetaObject *m_meta;
+
+    friend class DynamicRoleModelNodeMetaObject;
+};
+
 class ModelObject;
 
 class ModelNodeMetaObject : public QDeclarativeOpenMetaObject
@@ -284,8 +342,6 @@ public:
 
     int getUid() const { return m_uid; }
 
-    static int allocateUid();
-
     static void sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *srcModelHash);
 
     ModelObject *getOrCreateModelObject(QDeclarativeListModel *model, int elementIndex);
@@ -311,8 +367,6 @@ private:
 
     friend class ListElement;
     friend class QDeclarativeListModelWorkerAgent;
-
-    static QAtomicInt uidCounter;
 };
 
 QT_END_NAMESPACE

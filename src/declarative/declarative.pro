@@ -31,11 +31,4 @@ HEADERS += qtdeclarativeversion.h
 include(util/util.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)
-include(scenegraph/scenegraph.pri)
-include(items/items.pri)
-include(particles/particles.pri)
-include(designer/designer.pri)
 include(animations/animations.pri)
-
-HEADERS += qtquick2_p.h
-SOURCES += qtquick2.cpp

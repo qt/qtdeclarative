@@ -4,10 +4,10 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativeecmascript.cpp \
            testtypes.cpp \
-           ../shared/testhttpserver.cpp
+           ../../shared/testhttpserver.cpp
 HEADERS += testtypes.h \
-           ../shared/testhttpserver.h
-INCLUDEPATH += ../shared
+           ../../shared/testhttpserver.h
+INCLUDEPATH += ../../shared
 
 # QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
 # LIBS += -lgcov

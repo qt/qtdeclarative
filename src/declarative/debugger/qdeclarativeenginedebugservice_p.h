@@ -66,7 +66,7 @@ class QDeclarativeWatcher;
 class QDataStream;
 class QDeclarativeDebugStatesDelegate;
 
-class QDeclarativeEngineDebugService : public QDeclarativeDebugService
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeEngineDebugService : public QDeclarativeDebugService
 {
     Q_OBJECT
 public:

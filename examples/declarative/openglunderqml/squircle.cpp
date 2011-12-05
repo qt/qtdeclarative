@@ -41,8 +41,8 @@
 
 #include "squircle.h"
 
-#include <qsgengine.h>
-#include <qquickcanvas.h>
+#include <QtQuick/qsgengine.h>
+#include <QtQuick/qquickcanvas.h>
 #include <QOpenGLShaderProgram>
 
 Squircle::Squircle()

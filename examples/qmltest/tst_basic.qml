@@ -50,6 +50,7 @@ TestCase {
     }
 
     function test_fail() {
+        expectFail("", "this is the fail we wanted")
         compare(2 + 2, 5, "2 + 2")
     }
 
@@ -71,6 +72,8 @@ TestCase {
     }
 
     function test_table(data) {
+        if (data.answer === 5)
+          expectFail("", "this is the fail we wanted")
         compare(data.a + data.b, data.answer)
     }
 }

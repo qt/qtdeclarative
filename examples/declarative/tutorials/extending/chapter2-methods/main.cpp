@@ -39,7 +39,7 @@
 ****************************************************************************/
 //![0]
 #include "piechart.h"
-#include <QQuickView>
+#include <QtQuick/QQuickView>
 #include <QGuiApplication>
 
 int main(int argc, char *argv[])

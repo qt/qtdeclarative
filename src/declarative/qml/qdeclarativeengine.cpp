@@ -83,7 +83,6 @@
 
 #include <private/qobject_p.h>
 
-#include <private/qtquick2_p.h>
 #include <private/qdeclarativelocale_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -159,7 +158,6 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
     \endcode
 */
 
-static bool qt_QmlQtModule_registered = false;
 bool QDeclarativeEnginePrivate::qml_debugging_enabled = false;
 
 void QDeclarativeEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
@@ -341,12 +339,8 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
   workerScriptEngine(0), activeVME(0),
   networkAccessManager(0), networkAccessManagerFactory(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
-  incubatorCount(0), incubationController(0), sgContext(0), mutex(QMutex::Recursive)
+  incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
-    if (!qt_QmlQtModule_registered) {
-        qt_QmlQtModule_registered = true;
-        QDeclarativeQtQuick2Module::defineModule();
-    }
 }
 
 QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
@@ -714,7 +708,7 @@ QDeclarativeImageProvider::ImageType QDeclarativeEnginePrivate::getImageProvider
     return QDeclarativeImageProvider::Invalid;
 }
 
-QSGTexture *QDeclarativeEnginePrivate::getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
+QDeclarativeTextureFactory *QDeclarativeEnginePrivate::getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
 {
     QMutexLocker locker(&mutex);
     QSharedPointer<QDeclarativeImageProvider> provider = imageProviders.value(url.host());

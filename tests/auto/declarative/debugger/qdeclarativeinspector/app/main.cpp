@@ -41,7 +41,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QStringList>
-#include <QtDeclarative/QQuickView>
+#include <QtQuick/QQuickView>
 #include <QtGui/QGuiApplication>
 #include <QtQuick1/QDeclarativeView>
 

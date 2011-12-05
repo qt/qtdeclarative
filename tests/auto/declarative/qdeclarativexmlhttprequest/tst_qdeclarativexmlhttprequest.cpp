@@ -45,7 +45,7 @@
 #include <QDebug>
 #include <QNetworkCookieJar>
 #include "testhttpserver.h"
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 #define SERVER_PORT 14445
 

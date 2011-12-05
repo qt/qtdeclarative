@@ -41,7 +41,7 @@
 
 #include <QGuiApplication>
 
-#include <QQuickView>
+#include <QtQuick/QQuickView>
 
 #include "squircle.h"
 

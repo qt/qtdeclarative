@@ -50,9 +50,9 @@
 #include <QDir>
 #include <QVector3D>
 #include <QCryptographicHash>
-#include <QQuickItem>
+#include <QtQuick/QQuickItem>
 #include <QSignalSpy>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class tst_qdeclarativeqt : public QObject
 {

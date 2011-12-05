@@ -101,9 +101,7 @@ class QDeclarativeDelayedError;
 class QDeclarativeWorkerScriptEngine;
 class QDeclarativeVME;
 class QDir;
-class QSGTexture;
 class QDeclarativeIncubator;
-class QSGContext;
 
 // This needs to be declared here so that the pool for it can live in QDeclarativeEnginePrivate.
 // The inline method definitions are in qdeclarativeexpression_p.h
@@ -176,7 +174,7 @@ public:
 
     QHash<QString,QSharedPointer<QDeclarativeImageProvider> > imageProviders;
     QDeclarativeImageProvider::ImageType getImageProviderType(const QUrl &url);
-    QSGTexture *getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
+    QDeclarativeTextureFactory *getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
     QImage getImageFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
     QPixmap getPixmapFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
 
@@ -269,8 +267,6 @@ public:
     static void defineModule();
 
     static bool qml_debugging_enabled;
-
-    QSGContext *sgContext;
 
     mutable QMutex mutex;
 

@@ -43,10 +43,9 @@
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qquickitem.h>
 #include <QtCore/QDateTime>
 #include <qcolor.h>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class tst_qdeclarativelocale : public QObject
 {

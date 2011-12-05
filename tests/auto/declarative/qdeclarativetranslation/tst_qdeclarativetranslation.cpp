@@ -43,7 +43,7 @@
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
 #include <QTranslator>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class tst_qdeclarativetranslation : public QObject
 {

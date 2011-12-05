@@ -69,6 +69,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeListModel : public QListModelInte
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
 
 public:
     QDeclarativeListModel(QObject *parent=0);
@@ -91,6 +92,9 @@ public:
 
     QDeclarativeListModelWorkerAgent *agent();
 
+    bool dynamicRoles() const { return m_dynamicRoles; }
+    void setDynamicRoles(bool enableDynamicRoles);
+
 Q_SIGNALS:
     void countChanged();
 
@@ -101,6 +105,8 @@ private:
     friend class ModelNodeMetaObject;
     friend class ListModel;
     friend class ListElement;
+    friend class DynamicRoleModelNode;
+    friend class DynamicRoleModelNodeMetaObject;
 
     // Constructs a flat list model for a worker agent
     QDeclarativeListModel(QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *agent);
@@ -110,13 +116,32 @@ private:
 
     inline bool canMove(int from, int to, int n) const { return !(from+n > count() || to+n > count() || from < 0 || to < 0 || n < 0); }
 
+    QDeclarativeListModelWorkerAgent *m_agent;
+    mutable QV8Engine *m_engine;
+    bool m_mainThread;
+    bool m_primary;
+
+    bool m_dynamicRoles;
+
     ListLayout *m_layout;
     ListModel *m_listModel;
 
-    QDeclarativeListModelWorkerAgent *m_agent;
-    bool m_mainThread;
-    bool m_primary;
-    mutable QV8Engine *m_engine;
+    QVector<class DynamicRoleModelNode *> m_modelObjects;
+    QVector<QString> m_roles;
+    int m_uid;
+
+    struct ElementSync
+    {
+        ElementSync() : src(0), target(0) {}
+
+        DynamicRoleModelNode *src;
+        DynamicRoleModelNode *target;
+    };
+
+    int getUid() const { return m_uid; }
+
+    static void sync(QDeclarativeListModel *src, QDeclarativeListModel *target, QHash<int, QDeclarativeListModel *> *targetModelHash);
+    static QDeclarativeListModel *createWithOwner(QDeclarativeListModel *newOwner);
 
     void emitItemsChanged(int index, int count, const QList<int> &roles);
     void emitItemsRemoved(int index, int count);

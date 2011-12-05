@@ -44,7 +44,7 @@
 
 #include <qopengl.h>
 #include <QDeclarativeImageProvider>
-#include <QSGTexture>
+#include <QtQuick/QSGTexture>
 #include <QDeclarativeEngine>
 #include <QDeclarativeContext>
 #include <QFileInfo>
@@ -90,7 +90,7 @@ public:
         qDebug () << "Creating QEtcProvider.";
 #endif
     }
-    QSGTexture *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
+    QDeclarativeTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
 };
 
 QT_END_NAMESPACE

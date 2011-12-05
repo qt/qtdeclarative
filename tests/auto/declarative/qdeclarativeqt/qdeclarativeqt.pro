@@ -9,4 +9,4 @@ DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 
-QT += core-private gui-private v8-private declarative-private testlib
+QT += core-private gui-private v8-private declarative-private quick-private testlib

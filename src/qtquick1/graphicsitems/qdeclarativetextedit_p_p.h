@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 class QTextLayout;
 class QTextDocument;
-class QTextControl;
+class QWidgetTextControl;
 class QDeclarative1TextEditPrivate : public QDeclarative1ImplicitSizePaintedItemPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarative1TextEdit)
@@ -125,7 +125,7 @@ public:
     QDeclarativeItem* cursor;
     QDeclarative1TextEdit::TextFormat format;
     QTextDocument *document;
-    QTextControl *control;
+    QWidgetTextControl *control;
     QDeclarative1TextEdit::WrapMode wrapMode;
     QDeclarative1TextEdit::SelectionMode mouseSelectionMode;
     int lineCount;

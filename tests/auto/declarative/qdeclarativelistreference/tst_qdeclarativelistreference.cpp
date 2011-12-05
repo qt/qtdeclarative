@@ -49,7 +49,7 @@
 #include <QtDeclarative/qdeclarativeprivate.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
 #include <QDebug>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {

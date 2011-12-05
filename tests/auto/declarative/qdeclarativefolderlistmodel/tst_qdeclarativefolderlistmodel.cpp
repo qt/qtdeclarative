@@ -46,7 +46,7 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qabstractitemmodel.h>
 #include <QDebug>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 // From qdeclarastivefolderlistmodel.h
 const int FileNameRole = Qt::UserRole+1;

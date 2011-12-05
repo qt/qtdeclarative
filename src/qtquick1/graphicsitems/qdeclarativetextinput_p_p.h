@@ -50,7 +50,7 @@
 
 #include <QPointer>
 
-#include <private/qlinecontrol_p.h>
+#include <private/qwidgetlinecontrol_p.h>
 
 //
 //  W A R N I N G
@@ -70,7 +70,7 @@ class Q_AUTOTEST_EXPORT QDeclarative1TextInputPrivate : public QDeclarative1Impl
 {
     Q_DECLARE_PUBLIC(QDeclarative1TextInput)
 public:
-    QDeclarative1TextInputPrivate() : control(new QLineControl),
+    QDeclarative1TextInputPrivate() : control(new QWidgetLineControl),
                  color((QRgb)0), style(QDeclarative1Text::Normal),
                  styleColor((QRgb)0), hAlign(QDeclarative1TextInput::AlignLeft),
                  mouseSelectionMode(QDeclarative1TextInput::SelectCharacters), inputMethodHints(Qt::ImhNone),
@@ -109,7 +109,7 @@ public:
     bool sendMouseEventToInputContext(QGraphicsSceneMouseEvent *event, QEvent::Type eventType);
     void updateInputMethodHints();
 
-    QLineControl* control;
+    QWidgetLineControl* control;
 
     QFont font;
     QFont sourceFont;

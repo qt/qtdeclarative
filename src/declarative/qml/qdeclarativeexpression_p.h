@@ -168,7 +168,7 @@ private:
 
 class QDeclarativeExpression;
 class QString;
-class QDeclarativeExpressionPrivate : public QObjectPrivate, public QDeclarativeJavaScriptExpression
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeExpressionPrivate : public QObjectPrivate, public QDeclarativeJavaScriptExpression
 {
     Q_DECLARE_PUBLIC(QDeclarativeExpression)
 public:

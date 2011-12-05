@@ -78,7 +78,7 @@ class QDeclarativeEngine;
 class QDeclarativeCompiledData;
 
 class QDeclarativeComponentAttached;
-class Q_AUTOTEST_EXPORT QDeclarativeComponentPrivate : public QObjectPrivate, public QDeclarativeTypeData::TypeDataCallback
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeComponentPrivate : public QObjectPrivate, public QDeclarativeTypeData::TypeDataCallback
 {
     Q_DECLARE_PUBLIC(QDeclarativeComponent)
         

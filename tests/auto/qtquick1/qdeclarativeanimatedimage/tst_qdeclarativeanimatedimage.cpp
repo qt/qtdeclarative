@@ -48,7 +48,7 @@
 #include <QSignalSpy>
 #include <QtDeclarative/qdeclarativecontext.h>
 
-#include "../../declarative/shared/testhttpserver.h"
+#include "../../shared/testhttpserver.h"
 
 class tst_qdeclarativeanimatedimage : public QObject
 {

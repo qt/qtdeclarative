@@ -2,8 +2,8 @@ CONFIG += testcase
 TARGET = tst_qdeclarativetextedit
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativetextedit.cpp ../../declarative/shared/testhttpserver.cpp
-HEADERS += ../../declarative/shared/testhttpserver.h
+SOURCES += tst_qdeclarativetextedit.cpp ../../shared/testhttpserver.cpp
+HEADERS += ../../shared/testhttpserver.h
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 

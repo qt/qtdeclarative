@@ -44,7 +44,7 @@
 
 #include "QtDeclarative/private/qdeclarativedebugtrace_p.h"
 #include "../shared/debugutil_p.h"
-#include "../../shared/util.h"
+#include "../../../shared/util.h"
 
 #define PORT 13773
 #define STR_PORT "13773"

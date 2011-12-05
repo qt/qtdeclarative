@@ -1,6 +1,7 @@
 TEMPLATE=subdirs
 SUBDIRS=\
     declarative \
+    qtquick2 \
     particles
 
 # ### refactor: port properly

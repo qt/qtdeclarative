@@ -41,7 +41,7 @@
 #define PIECHART_H
 
 //![0]
-#include <QtDeclarative/QQuickPaintedItem>
+#include <QtQuick/QQuickPaintedItem>
 #include <QColor>
 
 class PieChart : public QQuickPaintedItem

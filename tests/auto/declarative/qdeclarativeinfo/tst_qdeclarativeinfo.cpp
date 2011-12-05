@@ -45,7 +45,7 @@
 #include <QTimer>
 #include <QDeclarativeContext>
 #include <qdeclarativeinfo.h>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class tst_qdeclarativeinfo : public QObject
 {

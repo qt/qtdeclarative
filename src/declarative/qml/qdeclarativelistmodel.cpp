@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 // Set to 1024 as a debugging aid - easier to distinguish uids from indices of elements/models.
 enum { MIN_LISTMODEL_UID = 1024 };
 
-QAtomicInt ListModel::uidCounter(MIN_LISTMODEL_UID);
+static QAtomicInt uidCounter(MIN_LISTMODEL_UID);
 
 template <typename T>
 static bool isMemoryUsed(const char *mem)
@@ -78,7 +78,7 @@ static bool isMemoryUsed(const char *mem)
 static QString roleTypeName(ListLayout::Role::DataType t)
 {
     QString result;
-    const char *roleTypeNames[] = { "String", "Number", "Bool", "List", "QObject" };
+    const char *roleTypeNames[] = { "String", "Number", "Bool", "List", "QObject", "VariantMap" };
 
     if (t > ListLayout::Role::Invalid && t < ListLayout::Role::MaxDataType)
         result = QString::fromLatin1(roleTypeNames[t]);
@@ -216,6 +216,7 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
         case QVariant::UserType:    type = Role::List;        break;
         case QVariant::Bool:        type = Role::Bool;        break;
         case QVariant::String:      type = Role::String;      break;
+        case QVariant::Map:         type = Role::VariantMap;  break;
         default:                    type = Role::Invalid;     break;
     }
 
@@ -326,15 +327,10 @@ void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> 
     }
 }
 
-int ListModel::allocateUid()
-{
-    return uidCounter.fetchAndAddOrdered(1);
-}
-
 ListModel::ListModel(ListLayout *layout, QDeclarativeListModel *modelCache, int uid) : m_layout(layout), m_modelCache(modelCache)
 {
     if (uid == -1)
-        uid = allocateUid();
+        uid = uidCounter.fetchAndAddOrdered(1);
     m_uid = uid;
 }
 
@@ -458,11 +454,11 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QList<int> 
                 QObject *o = QV8QObjectWrapper::toQObject(r);
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (role.type == ListLayout::Role::QObject)
-                    e->setQObjectProperty(role, o);
+                    roleIndex = e->setQObjectProperty(role, o);
             } else {
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
                 if (role.type == ListLayout::Role::VariantMap)
-                    e->setVariantMapProperty(role, propertyValue->ToObject(), eng);
+                    roleIndex = e->setVariantMapProperty(role, propertyValue->ToObject(), eng);
             }
         } else if (propertyValue.IsEmpty() || propertyValue->IsUndefined() || propertyValue->IsNull()) {
             const ListLayout::Role *r = m_layout->getExistingRole(propertyName);
@@ -583,6 +579,7 @@ int ListModel::setOrCreateProperty(int elementIndex, const QString &key, const Q
 
     if (elementIndex >= 0 && elementIndex < elements.count()) {
         ListElement *e = elements[elementIndex];
+
         const ListLayout::Role *r = m_layout->getRoleOrCreate(key, data);
         if (r) {
             roleIndex = e->setVariantProperty(*r, data);
@@ -953,7 +950,7 @@ void ListElement::clearProperty(const ListLayout::Role &role)
 ListElement::ListElement()
 {
     m_objectCache = 0;
-    uid = ListModel::allocateUid();
+    uid = uidCounter.fetchAndAddOrdered(1);
     next = 0;
     qMemSet(data, 0, sizeof(data));
 }
@@ -1086,6 +1083,11 @@ int ListElement::setVariantProperty(const ListLayout::Role &role, const QVariant
         case ListLayout::Role::List:
             roleIndex = setListProperty(role, d.value<ListModel *>());
             break;
+        case ListLayout::Role::VariantMap: {
+                QVariantMap map = d.toMap();
+                roleIndex = setVariantMapProperty(role, &map);
+            }
+            break;
         default:
             break;
     }
@@ -1195,6 +1197,153 @@ void ModelNodeMetaObject::propertyWritten(int index)
     }
 }
 
+DynamicRoleModelNode::DynamicRoleModelNode(QDeclarativeListModel *owner, int uid) : m_owner(owner), m_uid(uid), m_meta(new DynamicRoleModelNodeMetaObject(this))
+{
+    setNodeUpdatesEnabled(true);
+}
+
+DynamicRoleModelNode *DynamicRoleModelNode::create(const QVariantMap &obj, QDeclarativeListModel *owner)
+{
+    DynamicRoleModelNode *object = new DynamicRoleModelNode(owner, uidCounter.fetchAndAddOrdered(1));
+    QList<int> roles;
+    object->updateValues(obj, roles);
+    return object;
+}
+
+void DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QDeclarativeListModel *> *targetModelHash)
+{
+    for (int i=0 ; i < src->m_meta->count() ; ++i) {
+        const QByteArray &name = src->m_meta->name(i);
+        QVariant value = src->m_meta->value(i);
+
+        QDeclarativeListModel *srcModel = qobject_cast<QDeclarativeListModel *>(value.value<QObject *>());
+        QDeclarativeListModel *targetModel = qobject_cast<QDeclarativeListModel *>(target->m_meta->value(i).value<QObject *>());
+
+        if (srcModel) {
+            if (targetModel == 0)
+                targetModel = QDeclarativeListModel::createWithOwner(target->m_owner);
+
+            QDeclarativeListModel::sync(srcModel, targetModel, targetModelHash);
+
+            QObject *targetModelObject = targetModel;
+            value = QVariant::fromValue(targetModelObject);
+        } else if (targetModel) {
+            delete targetModel;
+        }
+
+        target->setValue(name, value);
+    }
+}
+
+void DynamicRoleModelNode::updateValues(const QVariantMap &object, QList<int> &roles)
+{
+    const QList<QString> &keys = object.keys();
+
+    QList<QString>::const_iterator it = keys.begin();
+    QList<QString>::const_iterator end = keys.end();
+
+    while (it != end) {
+        const QString &key = *it;
+
+        int roleIndex = m_owner->m_roles.indexOf(key);
+        if (roleIndex == -1) {
+            roleIndex = m_owner->m_roles.count();
+            m_owner->m_roles.append(key);
+        }
+
+        QVariant value = object[key];
+
+        if (value.type() == QVariant::List) {
+            QDeclarativeListModel *subModel = QDeclarativeListModel::createWithOwner(m_owner);
+
+            QVariantList subArray = value.toList();
+            QVariantList::const_iterator subIt = subArray.begin();
+            QVariantList::const_iterator subEnd = subArray.end();
+            while (subIt != subEnd) {
+                const QVariantMap &subObject = subIt->toMap();
+                subModel->m_modelObjects.append(DynamicRoleModelNode::create(subObject, subModel));
+                ++subIt;
+            }
+
+            QObject *subModelObject = subModel;
+            value = QVariant::fromValue(subModelObject);
+        }
+
+        const QByteArray &keyUtf8 = key.toUtf8();
+
+        QDeclarativeListModel *existingModel = qobject_cast<QDeclarativeListModel *>(m_meta->value(keyUtf8).value<QObject *>());
+        if (existingModel)
+            delete existingModel;
+
+        if (m_meta->setValue(keyUtf8, value))
+            roles << roleIndex;
+
+        ++it;
+    }
+}
+
+DynamicRoleModelNodeMetaObject::DynamicRoleModelNodeMetaObject(DynamicRoleModelNode *object)
+    : QDeclarativeOpenMetaObject(object), m_enabled(false), m_owner(object)
+{
+}
+
+DynamicRoleModelNodeMetaObject::~DynamicRoleModelNodeMetaObject()
+{
+    for (int i=0 ; i < count() ; ++i) {
+        QDeclarativeListModel *subModel = qobject_cast<QDeclarativeListModel *>(value(i).value<QObject *>());
+        if (subModel)
+            delete subModel;
+    }
+}
+
+void DynamicRoleModelNodeMetaObject::propertyWrite(int index)
+{
+    if (!m_enabled)
+        return;
+
+    QVariant v = value(index);
+    QDeclarativeListModel *model = qobject_cast<QDeclarativeListModel *>(v.value<QObject *>());
+    if (model)
+        delete model;
+}
+
+void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
+{
+    if (!m_enabled)
+        return;
+
+    QDeclarativeListModel *parentModel = m_owner->m_owner;
+
+    QVariant v = value(index);
+    if (v.type() == QVariant::List) {
+        QDeclarativeListModel *subModel = QDeclarativeListModel::createWithOwner(parentModel);
+
+        QVariantList subArray = v.toList();
+        QVariantList::const_iterator subIt = subArray.begin();
+        QVariantList::const_iterator subEnd = subArray.end();
+        while (subIt != subEnd) {
+            const QVariantMap &subObject = subIt->toMap();
+            subModel->m_modelObjects.append(DynamicRoleModelNode::create(subObject, subModel));
+            ++subIt;
+        }
+
+        QObject *subModelObject = subModel;
+        v = QVariant::fromValue(subModelObject);
+
+        setValue(index, v);
+    }
+
+    int elementIndex = parentModel->m_modelObjects.indexOf(m_owner);
+    int roleIndex = parentModel->m_roles.indexOf(QString::fromLatin1(name(index).constData()));
+
+    if (elementIndex != -1 && roleIndex != -1) {
+        QList<int> roles;
+        roles << roleIndex;
+
+        parentModel->emitItemsChanged(elementIndex, 1, roles);
+    }
+}
+
 QDeclarativeListModelParser::ListInstruction *QDeclarativeListModelParser::ListModelData::instructions() const
 {
     return (QDeclarativeListModelParser::ListInstruction *)((char *)this + sizeof(ListModelData));
@@ -1300,6 +1449,8 @@ QDeclarativeListModel::QDeclarativeListModel(QObject *parent)
     m_mainThread = true;
     m_primary = true;
     m_agent = 0;
+    m_uid = uidCounter.fetchAndAddOrdered(1);
+    m_dynamicRoles = false;
 
     m_layout = new ListLayout;
     m_listModel = new ListModel(m_layout, this, -1);
@@ -1314,6 +1465,8 @@ QDeclarativeListModel::QDeclarativeListModel(const QDeclarativeListModel *owner,
     m_primary = false;
     m_agent = owner->m_agent;
 
+    Q_ASSERT(owner->m_dynamicRoles == false);
+    m_dynamicRoles = false;
     m_layout = 0;
     m_listModel = data;
 
@@ -1326,16 +1479,24 @@ QDeclarativeListModel::QDeclarativeListModel(QDeclarativeListModel *orig, QDecla
     m_mainThread = false;
     m_primary = true;
     m_agent = agent;
+    m_dynamicRoles = orig->m_dynamicRoles;
 
     m_layout = new ListLayout(orig->m_layout);
     m_listModel = new ListModel(m_layout, this, orig->m_listModel->getUid());
-    ListModel::sync(orig->m_listModel, m_listModel, 0);
+
+    if (m_dynamicRoles)
+        sync(orig, this, 0);
+    else
+        ListModel::sync(orig->m_listModel, m_listModel, 0);
 
     m_engine = 0;
 }
 
 QDeclarativeListModel::~QDeclarativeListModel()
 {
+    for (int i=0 ; i < m_modelObjects.count() ; ++i)
+        delete m_modelObjects[i];
+
     if (m_primary) {
         m_listModel->destroy();
         delete m_listModel;
@@ -1350,6 +1511,20 @@ QDeclarativeListModel::~QDeclarativeListModel()
     m_layout = 0;
 }
 
+QDeclarativeListModel *QDeclarativeListModel::createWithOwner(QDeclarativeListModel *newOwner)
+{
+    QDeclarativeListModel *model = new QDeclarativeListModel;
+
+    model->m_mainThread = newOwner->m_mainThread;
+    model->m_engine = newOwner->m_engine;
+    model->m_agent = newOwner->m_agent;
+    model->m_dynamicRoles = newOwner->m_dynamicRoles;
+
+    QDeclarativeEngine::setContextForObject(model, QDeclarativeEngine::contextForObject(newOwner));
+
+    return model;
+}
+
 QV8Engine *QDeclarativeListModel::engine() const
 {
     if (m_engine == 0) {
@@ -1359,12 +1534,74 @@ QV8Engine *QDeclarativeListModel::engine() const
     return m_engine;
 }
 
+void QDeclarativeListModel::sync(QDeclarativeListModel *src, QDeclarativeListModel *target, QHash<int, QDeclarativeListModel *> *targetModelHash)
+{
+    Q_ASSERT(src->m_dynamicRoles && target->m_dynamicRoles);
+
+    target->m_uid = src->m_uid;
+    if (targetModelHash)
+        targetModelHash->insert(target->m_uid, target);
+    target->m_roles = src->m_roles;
+
+    // Build hash of elements <-> uid for each of the lists
+    QHash<int, ElementSync> elementHash;
+    for (int i=0 ; i < target->m_modelObjects.count() ; ++i) {
+        DynamicRoleModelNode *e = target->m_modelObjects.at(i);
+        int uid = e->getUid();
+        ElementSync sync;
+        sync.target = e;
+        elementHash.insert(uid, sync);
+    }
+    for (int i=0 ; i < src->m_modelObjects.count() ; ++i) {
+        DynamicRoleModelNode *e = src->m_modelObjects.at(i);
+        int uid = e->getUid();
+
+        QHash<int, ElementSync>::iterator it = elementHash.find(uid);
+        if (it == elementHash.end()) {
+            ElementSync sync;
+            sync.src = e;
+            elementHash.insert(uid, sync);
+        } else {
+            ElementSync &sync = it.value();
+            sync.src = e;
+        }
+    }
+
+    // Get list of elements that are in the target but no longer in the source. These get deleted first.
+    QHash<int, ElementSync>::iterator it = elementHash.begin();
+    QHash<int, ElementSync>::iterator end = elementHash.end();
+    while (it != end) {
+        const ElementSync &s = it.value();
+        if (s.src == 0) {
+            int targetIndex = target->m_modelObjects.indexOf(s.target);
+            target->m_modelObjects.remove(targetIndex, 1);
+            delete s.target;
+        }
+        ++it;
+    }
+
+    // Clear the target list, and append in correct order from the source
+    target->m_modelObjects.clear();
+    for (int i=0 ; i < src->m_modelObjects.count() ; ++i) {
+        DynamicRoleModelNode *srcElement = src->m_modelObjects.at(i);
+        it = elementHash.find(srcElement->getUid());
+        const ElementSync &s = it.value();
+        DynamicRoleModelNode *targetElement = s.target;
+        if (targetElement == 0) {
+            targetElement = new DynamicRoleModelNode(target, srcElement->getUid());
+        }
+        DynamicRoleModelNode::sync(srcElement, targetElement, targetModelHash);
+        target->m_modelObjects.append(targetElement);
+    }
+}
+
 void QDeclarativeListModel::emitItemsChanged(int index, int count, const QList<int> &roles)
 {
     if (m_mainThread) {
         emit itemsChanged(index, count, roles);
     } else {
-        m_agent->data.changedChange(this, index, count, roles);
+        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
+        m_agent->data.changedChange(uid, index, count, roles);
     }
 }
 
@@ -1374,9 +1611,10 @@ void QDeclarativeListModel::emitItemsRemoved(int index, int count)
         emit itemsRemoved(index, count);
         emit countChanged();
     } else {
+        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
         if (index == 0 && count == this->count())
-            m_agent->data.clearChange(this);
-        m_agent->data.removeChange(this, index, count);
+            m_agent->data.clearChange(uid);
+        m_agent->data.removeChange(uid, index, count);
     }
 }
 
@@ -1386,7 +1624,8 @@ void QDeclarativeListModel::emitItemsInserted(int index, int count)
         emit itemsInserted(index, count);
         emit countChanged();
     } else {
-        m_agent->data.insertChange(this, index, count);
+        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
+        m_agent->data.insertChange(uid, index, count);
     }
 }
 
@@ -1395,7 +1634,8 @@ void QDeclarativeListModel::emitItemsMoved(int from, int to, int n)
     if (m_mainThread) {
         emit itemsMoved(from, to, n);
     } else {
-        m_agent->data.moveChange(this, from, n, to);
+        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
+        m_agent->data.moveChange(uid, from, n, to);
     }
 }
 
@@ -1412,24 +1652,90 @@ QList<int> QDeclarativeListModel::roles() const
 {
     QList<int> rolesArray;
 
-    for (int i=0 ; i < m_listModel->roleCount() ; ++i)
-        rolesArray << i;
+    if (m_dynamicRoles) {
+        for (int i=0 ; i < m_roles.count() ; ++i)
+            rolesArray << i;
+    } else {
+        for (int i=0 ; i < m_listModel->roleCount() ; ++i)
+            rolesArray << i;
+    }
 
     return rolesArray;
 }
 
 QString QDeclarativeListModel::toString(int role) const
 {
-    const ListLayout::Role &r = m_listModel->getExistingRole(role);
-    return r.name;
+    QString roleName;
+
+    if (m_dynamicRoles) {
+        roleName = m_roles[role];
+    } else {
+        const ListLayout::Role &r = m_listModel->getExistingRole(role);
+        roleName = r.name;
+    }
+
+    return roleName;
 }
 
 QVariant QDeclarativeListModel::data(int index, int role) const
 {
-    if (index >= count() || index < 0)
-        return QVariant();
+    QVariant v;
 
-    return m_listModel->getProperty(index, role, this, engine());
+    if (index >= count() || index < 0)
+        return v;
+
+    if (m_dynamicRoles)
+        v = m_modelObjects[index]->getValue(m_roles[role]);
+    else
+        v = m_listModel->getProperty(index, role, this, engine());
+
+    return v;
+}
+
+/*!
+    \qmlproperty bool QtQuick2::ListModel::dynamicRoles
+
+    By default, the type of a role is fixed the first time
+    the role is used. For example, if you create a role called
+    "data" and assign a number to it, you can no longer assign
+    a string to the "data" role. However, when the dynamicRoles
+    property is enabled, the type of a given role is not fixed
+    and can be different between elements.
+
+    The dynamicRoles property must be set before any data is
+    added to the ListModel, and must be set from the main
+    thread.
+
+    A ListModel that has data statically defined (via the
+    ListElement QML syntax) cannot have the dynamicRoles
+    property enabled.
+
+    There is a significant performance cost to using a
+    ListModel with dynamic roles enabled. The cost varies
+    from platform to platform but is typically somewhere
+    between 4-6x slower than using static role types.
+
+    Due to the performance cost of using dynamic roles,
+    they are disabled by default.
+*/
+void QDeclarativeListModel::setDynamicRoles(bool enableDynamicRoles)
+{
+    if (m_mainThread && m_agent == 0) {
+        if (enableDynamicRoles) {
+            if (m_layout->roleCount())
+                qmlInfo(this) << tr("unable to enable dynamic roles as this model is not empty!");
+            else
+                m_dynamicRoles = true;
+        } else {
+            if (m_roles.count()) {
+                qmlInfo(this) << tr("unable to enable static roles as this model is not empty!");
+            } else {
+                m_dynamicRoles = false;
+            }
+        }
+    } else {
+        qmlInfo(this) << tr("dynamic role setting must be made from the main thread, before any worker scripts are created");
+    }
 }
 
 /*!
@@ -1438,7 +1744,15 @@ QVariant QDeclarativeListModel::data(int index, int role) const
 */
 int QDeclarativeListModel::count() const
 {
-    return m_listModel->elementCount();
+    int count;
+
+    if (m_dynamicRoles)
+        count = m_modelObjects.count();
+    else {
+        count = m_listModel->elementCount();
+    }
+
+    return count;
 }
 
 /*!
@@ -1452,7 +1766,14 @@ void QDeclarativeListModel::clear()
 {
     int cleared = count();
 
-    m_listModel->clear();
+    if (m_dynamicRoles) {
+        for (int i=0 ; i < m_modelObjects.count() ; ++i)
+            delete m_modelObjects[i];
+        m_modelObjects.clear();
+    } else {
+        m_listModel->clear();
+    }
+
     emitItemsRemoved(0, cleared);
 }
 
@@ -1476,7 +1797,14 @@ void QDeclarativeListModel::remove(QDeclarativeV8Function *args)
             return;
         }
 
-        m_listModel->remove(index, removeCount);
+        if (m_dynamicRoles) {
+            for (int i=0 ; i < removeCount ; ++i)
+                delete m_modelObjects[index+i];
+            m_modelObjects.remove(index, removeCount);
+        } else {
+            m_listModel->remove(index, removeCount);
+        }
+
         emitItemsRemoved(index, removeCount);
     } else {
         qmlInfo(this) << tr("remove: incorrect number of arguments");
@@ -1518,13 +1846,23 @@ void QDeclarativeListModel::insert(QDeclarativeV8Function *args)
             int objectArrayLength = objectArray->Length();
             for (int i=0 ; i < objectArrayLength ; ++i) {
                 v8::Handle<v8::Object> argObject = objectArray->Get(i)->ToObject();
-                m_listModel->insert(index+i, argObject, args->engine());
+
+                if (m_dynamicRoles) {
+                    m_modelObjects.insert(index+i, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                } else {
+                    m_listModel->insert(index+i, argObject, args->engine());
+                }
             }
             emitItemsInserted(index, objectArrayLength);
         } else if (arg1->IsObject()) {
             v8::Handle<v8::Object> argObject = arg1->ToObject();
 
-            m_listModel->insert(index, argObject, args->engine());
+            if (m_dynamicRoles) {
+                m_modelObjects.insert(index, DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+            } else {
+                m_listModel->insert(index, argObject, args->engine());
+            }
+
             emitItemsInserted(index, 1);
         } else {
             qmlInfo(this) << tr("insert: value is not an object");
@@ -1557,7 +1895,33 @@ void QDeclarativeListModel::move(int from, int to, int n)
         return;
     }
 
-    m_listModel->move(from, to, n);
+    if (m_dynamicRoles) {
+
+        int realFrom = from;
+        int realTo = to;
+        int realN = n;
+
+        if (from > to) {
+            // Only move forwards - flip if backwards moving
+            int tfrom = from;
+            int tto = to;
+            realFrom = tto;
+            realTo = tto+n;
+            realN = tfrom-tto;
+        }
+
+        QPODVector<DynamicRoleModelNode *, 4> store;
+        for (int i=0 ; i < (realTo-realFrom) ; ++i)
+            store.append(m_modelObjects[realFrom+realN+i]);
+        for (int i=0 ; i < realN ; ++i)
+            store.append(m_modelObjects[realFrom+i]);
+        for (int i=0 ; i < store.count() ; ++i)
+            m_modelObjects[realFrom+i] = store[i];
+
+    } else {
+        m_listModel->move(from, to, n);
+    }
+
     emitItemsMoved(from, to, n);
 }
 
@@ -1581,18 +1945,32 @@ void QDeclarativeListModel::append(QDeclarativeV8Function *args)
         if (arg->IsArray()) {
             v8::Handle<v8::Array> objectArray = v8::Handle<v8::Array>::Cast(arg);
             int objectArrayLength = objectArray->Length();
-            int index = m_listModel->elementCount();
+
+            int index = count();
             for (int i=0 ; i < objectArrayLength ; ++i) {
                 v8::Handle<v8::Object> argObject = objectArray->Get(i)->ToObject();
-                m_listModel->append(argObject, args->engine());
+
+                if (m_dynamicRoles) {
+                    m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+                } else {
+                    m_listModel->append(argObject, args->engine());
+                }
             }
+
             emitItemsInserted(index, objectArrayLength);
         } else if (arg->IsObject()) {
             v8::Handle<v8::Object> argObject = arg->ToObject();
 
-            int index = m_listModel->append(argObject, args->engine());
-            emitItemsInserted(index, 1);
+            int index;
 
+            if (m_dynamicRoles) {
+                index = m_modelObjects.count();
+                m_modelObjects.append(DynamicRoleModelNode::create(args->engine()->variantMapFromJS(argObject), this));
+            } else {
+                index = m_listModel->append(argObject, args->engine());
+            }
+
+            emitItemsInserted(index, 1);
         } else {
             qmlInfo(this) << tr("append: value is not an object");
         }
@@ -1636,11 +2014,16 @@ QDeclarativeV8Handle QDeclarativeListModel::get(int index) const
 {
     v8::Handle<v8::Value> result = v8::Undefined();
 
-    if (index >= 0 && index < m_listModel->elementCount()) {
+    if (index >= 0 && index < count()) {
         QV8Engine *v8engine = engine();
 
-        ModelObject *object = m_listModel->getOrCreateModelObject(const_cast<QDeclarativeListModel *>(this), index);
-        result = v8engine->newQObject(object);
+        if (m_dynamicRoles) {
+            DynamicRoleModelNode *object = m_modelObjects[index];
+            result = v8engine->newQObject(object);
+        } else {
+            ModelObject *object = m_listModel->getOrCreateModelObject(const_cast<QDeclarativeListModel *>(this), index);
+            result = v8engine->newQObject(object);
+        }
     }
 
     return QDeclarativeV8Handle::fromHandle(result);
@@ -1678,12 +2061,23 @@ void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &handle)
     v8::Handle<v8::Object> object = valuemap->ToObject();
 
     if (index == count()) {
-        m_listModel->insert(index, object, engine());
+
+        if (m_dynamicRoles) {
+            m_modelObjects.append(DynamicRoleModelNode::create(engine()->variantMapFromJS(object), this));
+        } else {
+            m_listModel->insert(index, object, engine());
+        }
+
         emitItemsInserted(index, 1);
     } else {
 
         QList<int> roles;
-        m_listModel->set(index, object, &roles, engine());
+
+        if (m_dynamicRoles) {
+            m_modelObjects[index]->updateValues(engine()->variantMapFromJS(object), roles);
+        } else {
+            m_listModel->set(index, object, &roles, engine());
+        }
 
         if (roles.count())
             emitItemsChanged(index, 1, roles);
@@ -1710,13 +2104,26 @@ void QDeclarativeListModel::setProperty(int index, const QString& property, cons
         return;
     }
 
-    int roleIndex = m_listModel->setOrCreateProperty(index, property, value);
-    if (roleIndex != -1) {
+    if (m_dynamicRoles) {
+        int roleIndex = m_roles.indexOf(property);
+        if (roleIndex == -1) {
+            roleIndex = m_roles.count();
+            m_roles.append(property);
+        }
+        if (m_modelObjects[index]->setValue(property.toUtf8(), value)) {
+            QList<int> roles;
+            roles << roleIndex;
+            emitItemsChanged(index, 1, roles);
+        }
+    } else {
+        int roleIndex = m_listModel->setOrCreateProperty(index, property, value);
+        if (roleIndex != -1) {
 
-        QList<int> roles;
-        roles << roleIndex;
+            QList<int> roles;
+            roles << roleIndex;
 
-        emitItemsChanged(index, 1, roles);
+            emitItemsChanged(index, 1, roles);
+        }
     }
 }
 
@@ -1920,6 +2327,8 @@ void QDeclarativeListModelParser::setCustomData(QObject *obj, const QByteArray &
         switch(instr.type) {
         case ListInstruction::Push:
             {
+                Q_ASSERT(!rv->m_dynamicRoles);
+
                 ListModel *subModel = 0;
 
                 if (stack.count() == 0) {

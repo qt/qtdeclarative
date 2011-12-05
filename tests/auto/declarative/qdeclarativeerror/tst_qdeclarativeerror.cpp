@@ -42,7 +42,7 @@
 #include <qtest.h>
 #include <QDeclarativeError>
 #include <QDebug>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 class tst_qdeclarativeerror : public QObject
 {

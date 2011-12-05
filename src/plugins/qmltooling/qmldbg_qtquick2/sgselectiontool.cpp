@@ -45,8 +45,8 @@
 #include "sgviewinspector.h"
 
 #include <QtGui/QMouseEvent>
-#include <QtDeclarative/QQuickView>
-#include <QtDeclarative/QQuickItem>
+#include <QtQuick/QQuickView>
+#include <QtQuick/QQuickItem>
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {

@@ -44,7 +44,7 @@
 #include <QDeclarativeComponent>
 #include <QDebug>
 #include <private/qdeclarativevaluetype_p.h>
-#include "../shared/util.h"
+#include "../../shared/util.h"
 #include "testtypes.h"
 
 QT_BEGIN_NAMESPACE

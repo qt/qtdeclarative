@@ -44,7 +44,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtQuick1/private/qdeclarativefontloader_p.h>
-#include "../../declarative/shared/testhttpserver.h"
+#include "../../shared/testhttpserver.h"
 
 #define SERVER_PORT 14448
 

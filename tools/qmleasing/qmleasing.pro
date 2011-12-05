@@ -3,7 +3,7 @@ TARGET =
 DEPENDPATH += .
 INCLUDEPATH += .
 
-QT += declarative widgets
+QT += declarative quick widgets
 CONFIG -= app_bundle
 
 # Input

@@ -1,4 +1,4 @@
-QT += declarative
+QT += declarative quick
 
 TEMPLATE = app
 DEPENDPATH += .

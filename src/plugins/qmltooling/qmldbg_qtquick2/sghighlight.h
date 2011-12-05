@@ -43,7 +43,7 @@
 #define SGHIGHLIGHT_H
 
 #include <QtCore/QWeakPointer>
-#include <QtDeclarative/QQuickPaintedItem>
+#include <QtQuick/QQuickPaintedItem>
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {

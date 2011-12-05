@@ -89,7 +89,7 @@ public:
     ~QDeclarativeOpenMetaObject();
 
     QVariant value(const QByteArray &) const;
-    void setValue(const QByteArray &, const QVariant &);
+    bool setValue(const QByteArray &, const QVariant &);
     QVariant value(int) const;
     void setValue(int, const QVariant &);
     QVariant &operator[](const QByteArray &);

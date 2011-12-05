@@ -4,9 +4,9 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativetext.cpp
 
-INCLUDEPATH += ../../declarative/shared/
-HEADERS += ../../declarative/shared/testhttpserver.h
-SOURCES += ../../declarative/shared/testhttpserver.cpp
+INCLUDEPATH += ../../shared/
+HEADERS += ../../shared/testhttpserver.h
+SOURCES += ../../shared/testhttpserver.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 

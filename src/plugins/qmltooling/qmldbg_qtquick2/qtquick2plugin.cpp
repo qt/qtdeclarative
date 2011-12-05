@@ -44,7 +44,7 @@
 
 #include <QtCore/qplugin.h>
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
-#include <QtDeclarative/QQuickView>
+#include <QtQuick/QQuickView>
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {

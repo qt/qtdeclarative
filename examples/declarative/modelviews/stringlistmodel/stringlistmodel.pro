@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = stringlistmodel
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += declarative
+QT += declarative quick
 
 # Input
 SOURCES += main.cpp 

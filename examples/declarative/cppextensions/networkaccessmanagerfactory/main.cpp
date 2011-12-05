@@ -44,7 +44,7 @@
 
 #include <QDeclarativeEngine>
 #include <QDeclarativeNetworkAccessManagerFactory>
-#include <QQuickView>
+#include <QtQuick/QQuickView>
 
 
 /*

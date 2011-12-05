@@ -6,9 +6,9 @@ SOURCES += tst_qdeclarativelanguage.cpp \
            testtypes.cpp
 HEADERS += testtypes.h
 
-INCLUDEPATH += ../shared/
-HEADERS += ../shared/testhttpserver.h
-SOURCES += ../shared/testhttpserver.cpp
+INCLUDEPATH += ../../shared/
+HEADERS += ../../shared/testhttpserver.h
+SOURCES += ../../shared/testhttpserver.cpp
 
 importFiles.files = data
 importFiles.path = .
