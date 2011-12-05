@@ -414,6 +414,7 @@ private:
     QDeclarativeEnginePrivate *enginePrivate;
     QDeclarativeScript::Object *unitRoot;
     QDeclarativeTypeData *unit;
+    int cachedComponentTypeRef;
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat

@@ -124,7 +124,7 @@ public:
     }
 };
 
-class QDeclarativeComponentAttached : public QObject
+class Q_AUTOTEST_EXPORT QDeclarativeComponentAttached : public QObject
 {
     Q_OBJECT
 public:

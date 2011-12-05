@@ -424,6 +424,8 @@ void QDeclarativeEnginePrivate::init()
         // is blocking on the thread that initialize the network access manager.
         QNetworkConfigurationManager man;
 
+        qmlRegisterType<QDeclarativeComponent>("QML", 1, 0, "Component");
+
         firstTime = false;
     }
 
