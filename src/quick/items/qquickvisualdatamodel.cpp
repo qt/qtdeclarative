@@ -1398,7 +1398,7 @@ void QQuickVisualDataModelPrivate::itemsRemoved(
         } else {
             for (; cacheIndex < remove.cacheIndex + remove.count - removedCache; ++cacheIndex) {
                 QQuickVisualDataModelCacheItem *cacheItem = m_cache.at(cacheIndex);
-                if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0) {
+                if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0 && cacheItem->object) {
                     destroy(cacheItem->object);
                     if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(cacheItem->object))
                         emitDestroyingPackage(package);
