@@ -52,6 +52,8 @@
 #include <qfuture.h>
 #endif
 
+#define PIXMAP_DATA_LEAK_TEST 0
+
 inline QUrl TEST_FILE(const QString &filename)
 {
     return QUrl::fromLocalFile(TESTDATA(filename));
@@ -79,7 +81,9 @@ private slots:
     void networkCrash();
 #endif
     void lockingCrash();
+#if PIXMAP_DATA_LEAK_TEST
     void dataLeak();
+#endif
 private:
     QDeclarativeEngine engine;
     TestHTTPServer server;
@@ -406,6 +410,10 @@ void tst_qdeclarativepixmapcache::lockingCrash()
     }
 }
 
+
+#if PIXMAP_DATA_LEAK_TEST
+// This test should not be enabled by default as it
+// produces spurious output in the expected case.
 #include <QtQuick/QQuickView>
 class DataLeakView : public QQuickView
 {
@@ -452,6 +460,8 @@ void tst_qdeclarativepixmapcache::dataLeak()
     // which has been deleted by the QDeclarativePixmapStore
     // destructor.
 }
+#endif
+#undef PIXMAP_DATA_LEAK_TEST
 
 QTEST_MAIN(tst_qdeclarativepixmapcache)
 
