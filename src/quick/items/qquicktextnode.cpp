@@ -1166,6 +1166,13 @@ void QQuickTextNode::addTextDocument(const QPointF &, QTextDocument *textDocumen
                     if (text.contains(QChar::ObjectReplacementCharacter)) {
                         QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
                         if (frame && frame->frameFormat().position() == QTextFrameFormat::InFlow) {
+                            int blockRelativePosition = textPos - block.position();
+                            QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
+                            if (!engine.currentLine().isValid()
+                                    || line.lineNumber() != engine.currentLine().lineNumber()) {
+                                engine.setCurrentLine(line);
+                            }
+
                             BinaryTreeNode::SelectionState selectionState =
                                     (selectionStart < textPos + text.length()
                                      && selectionEnd >= textPos)
