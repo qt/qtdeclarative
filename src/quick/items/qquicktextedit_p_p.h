@@ -62,7 +62,7 @@
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
-class QTextDocument;
+class QQuickTextDocumentWithImageResources;
 class QTextControl;
 class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
@@ -121,7 +121,7 @@ public:
     QDeclarativeComponent* cursorComponent;
     QQuickItem* cursor;
     QQuickTextEdit::TextFormat format;
-    QTextDocument *document;
+    QQuickTextDocumentWithImageResources *document;
     QTextControl *control;
     QQuickTextEdit::WrapMode wrapMode;
     QQuickTextEdit::SelectionMode mouseSelectionMode;

@@ -54,7 +54,7 @@
 // We mean it.
 //
 
-#include "qquickitem.h"
+#include "qquicktext_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
 
 #include <QtDeclarative/qdeclarative.h>
@@ -162,6 +162,34 @@ public:
     QThread *layoutThread;
     QThread *paintingThread;
 #endif
+};
+
+class QDeclarativePixmap;
+class QQuickTextDocumentWithImageResources : public QTextDocument {
+    Q_OBJECT
+
+public:
+    QQuickTextDocumentWithImageResources(QQuickItem *parent);
+    virtual ~QQuickTextDocumentWithImageResources();
+
+    void setText(const QString &);
+    int resourcesLoading() const { return outstanding; }
+
+    void clearResources();
+
+    void clear();
+
+protected:
+    QVariant loadResource(int type, const QUrl &name);
+
+private slots:
+    void requestFinished();
+
+private:
+    QHash<QUrl, QDeclarativePixmap *> m_resources;
+
+    int outstanding;
+    static QSet<QUrl> errors;
 };
 
 QT_END_NAMESPACE

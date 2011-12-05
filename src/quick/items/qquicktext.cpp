@@ -67,29 +67,6 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT bool qt_applefontsmoothing_enabled;
 
-class QQuickTextDocumentWithImageResources : public QTextDocument {
-    Q_OBJECT
-
-public:
-    QQuickTextDocumentWithImageResources(QQuickText *parent);
-    virtual ~QQuickTextDocumentWithImageResources();
-
-    void setText(const QString &);
-    int resourcesLoading() const { return outstanding; }
-
-protected:
-    QVariant loadResource(int type, const QUrl &name);
-
-private slots:
-    void requestFinished();
-
-private:
-    QHash<QUrl, QDeclarativePixmap *> m_resources;
-
-    int outstanding;
-    static QSet<QUrl> errors;
-};
-
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 DEFINE_BOOL_CONFIG_OPTION(enableImageCache, QML_ENABLE_TEXT_IMAGE_CACHE);
 
@@ -123,7 +100,7 @@ void QQuickTextPrivate::init()
     q->setFlag(QQuickItem::ItemHasContents);
 }
 
-QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickText *parent)
+QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickItem *parent)
 : QTextDocument(parent), outstanding(0)
 {
     setUndoRedoEnabled(false);
@@ -171,25 +148,32 @@ void QQuickTextDocumentWithImageResources::requestFinished()
 {
     outstanding--;
     if (outstanding == 0) {
-        QQuickText *textItem = static_cast<QQuickText*>(parent());
-        QString text = textItem->text();
-#ifndef QT_NO_TEXTHTMLPARSER
-        setHtml(text);
-#else
-        setPlainText(text);
-#endif
-        QQuickTextPrivate *d = QQuickTextPrivate::get(textItem);
-        d->updateLayout();
+        markContentsDirty(0, characterCount());
+
+        if (QQuickText *item = qobject_cast<QQuickText *>(parent()))
+            QQuickTextPrivate::get(item)->updateLayout();
     }
+}
+
+void QQuickTextDocumentWithImageResources::clear()
+{
+    clearResources();
+
+    QTextDocument::clear();
+}
+
+void QQuickTextDocumentWithImageResources::clearResources()
+{
+    foreach (QDeclarativePixmap *pixmap, m_resources)
+        pixmap->clear(this);
+    qDeleteAll(m_resources);
+    m_resources.clear();
+    outstanding = 0;
 }
 
 void QQuickTextDocumentWithImageResources::setText(const QString &text)
 {
-    if (!m_resources.isEmpty()) {
-        qDeleteAll(m_resources);
-        m_resources.clear();
-        outstanding = 0;
-    }
+    clearResources();
 
 #ifndef QT_NO_TEXTHTMLPARSER
     setHtml(text);
@@ -1946,5 +1930,3 @@ void QQuickText::mouseReleaseEvent(QMouseEvent *event)
 }
 
 QT_END_NAMESPACE
-
-#include "qquicktext.moc"

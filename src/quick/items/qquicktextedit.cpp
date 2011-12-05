@@ -41,6 +41,7 @@
 
 #include "qquicktextedit_p.h"
 #include "qquicktextedit_p_p.h"
+#include "qquicktext_p_p.h"
 #include "qquickevents_p_p.h"
 #include "qquickcanvas.h"
 #include "qquicktextnode_p.h"
@@ -253,6 +254,7 @@ void QQuickTextEdit::setText(const QString &text)
     if (QQuickTextEdit::text() == text)
         return;
 
+    d->document->clearResources();
     d->richText = d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text));
     if (d->richText) {
 #ifndef QT_NO_TEXTHTMLPARSER
@@ -1626,7 +1628,9 @@ void QQuickTextEditPrivate::init()
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
     q->setFlag(QQuickItem::ItemHasContents);
 
-    control = new QTextControl(q);
+    document = new QQuickTextDocumentWithImageResources(q);
+
+    control = new QTextControl(document, q);
     control->setIgnoreUnusedNavigationEvents(true);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
     control->setDragEnabled(false);
@@ -1664,7 +1668,6 @@ void QQuickTextEditPrivate::init()
     canPaste = control->canPaste();
 #endif
 
-    document = control->document();
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
     document->setUndoRedoEnabled(false); // flush undo buffer.
