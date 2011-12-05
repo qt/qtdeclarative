@@ -252,6 +252,9 @@ namespace {
             decorations |= (backgroundColor.isValid() ? QQuickTextNode::Background : QQuickTextNode::NoDecoration);
 
             qreal ascent = glyphRun.rawFont().ascent();
+            // ### QTBUG-22919 The bounding rect returned by QGlyphRun appears to start on the
+            // baseline, move it by the ascent so all bounding rects are at baseline - ascent.
+            searchRect.translate(0, -ascent);
             insert(binaryTree, BinaryTreeNode(glyphRun, selectionState, searchRect, decorations,
                                               textColor, backgroundColor, position, ascent));
         }
@@ -631,10 +634,10 @@ namespace {
                 const BinaryTreeNode *lastNode = m_currentLineTree.data() + m_currentLineTree.size() - 1;
                 if (lastNode->glyphRun.isRightToLeft()) {
                     QPointF lastPos = lastNode->boundingRect.topLeft();
-                    searchRect.moveTopRight(lastPos - QPointF(0, ascent));
+                    searchRect.moveTopRight(lastPos - QPointF(0, ascent - lastNode->ascent));
                 } else {
                     QPointF lastPos = lastNode->boundingRect.topRight();
-                    searchRect.moveTopLeft(lastPos - QPointF(0, ascent));
+                    searchRect.moveTopLeft(lastPos - QPointF(0, ascent - lastNode->ascent));
                 }
             }
         }
