@@ -115,6 +115,8 @@ private slots:
     void creationContext();
     void snapToRow_data();
     void snapToRow();
+    void snapOneRow_data();
+    void snapOneRow();
     void unaligned();
     void cacheBuffer();
     void asynchronous();
@@ -3399,6 +3401,118 @@ void tst_QQuickGridView::snapToRow()
 
     delete canvas;
 }
+
+void tst_QQuickGridView::snapOneRow_data()
+{
+    QTest::addColumn<QQuickGridView::Flow>("flow");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<int>("highlightRangeMode");
+    QTest::addColumn<QPoint>("flickStart");
+    QTest::addColumn<QPoint>("flickEnd");
+    QTest::addColumn<qreal>("snapAlignment");
+    QTest::addColumn<qreal>("endExtent");
+    QTest::addColumn<qreal>("startExtent");
+
+    QTest::newRow("vertical, left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 360.0 << 0.0;
+
+    QTest::newRow("horizontal, left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 360.0 << 0.0;
+
+    QTest::newRow("horizontal, right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -360.0 - 240.0 << -240.0;
+
+    QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 460.0 << -20.0;
+
+    QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 460.0 << -20.0;
+
+    QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -360.0 - 240.0 - 100.0 << -220.0;
+}
+
+void tst_QQuickGridView::snapOneRow()
+{
+    QFETCH(QQuickGridView::Flow, flow);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(int, highlightRangeMode);
+    QFETCH(QPoint, flickStart);
+    QFETCH(QPoint, flickEnd);
+    QFETCH(qreal, snapAlignment);
+    QFETCH(qreal, endExtent);
+    QFETCH(qreal, startExtent);
+
+    QQuickView *canvas = createView();
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapOneRow.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+
+    gridview->setFlow(flow);
+    gridview->setLayoutDirection(layoutDirection);
+    gridview->setHighlightRangeMode(QQuickItemView::HighlightRangeMode(highlightRangeMode));
+
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QSignalSpy currentIndexSpy(gridview, SIGNAL(currentIndexChanged()));
+
+    // confirm that a flick hits next row boundary
+    flick(canvas, flickStart, flickEnd, 180);
+    QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    if (flow == QQuickGridView::LeftToRight)
+        QCOMPARE(gridview->contentY(), snapAlignment);
+    else
+        QCOMPARE(gridview->contentX(), snapAlignment);
+
+    if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
+        QCOMPARE(gridview->currentIndex(), 2);
+        QCOMPARE(currentIndexSpy.count(), 1);
+    }
+
+    // flick to end
+    do {
+        flick(canvas, flickStart, flickEnd, 180);
+        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    } while (flow == QQuickGridView::LeftToRight
+           ? !gridview->isAtYEnd()
+           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
+
+    if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
+        QCOMPARE(gridview->currentIndex(), 8);
+        QCOMPARE(currentIndexSpy.count(), 4);
+    }
+
+    if (flow == QQuickGridView::LeftToRight)
+        QCOMPARE(gridview->contentY(), endExtent);
+    else
+        QCOMPARE(gridview->contentX(), endExtent);
+
+    // flick to start
+    do {
+        flick(canvas, flickEnd, flickStart, 180);
+        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    } while (flow == QQuickGridView::LeftToRight
+           ? !gridview->isAtYBeginning()
+           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
+
+    if (flow == QQuickGridView::LeftToRight)
+        QCOMPARE(gridview->contentY(), startExtent);
+    else
+        QCOMPARE(gridview->contentX(), startExtent);
+
+    if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
+        QCOMPARE(gridview->currentIndex(), 0);
+        QCOMPARE(currentIndexSpy.count(), 8);
+    }
+
+    delete canvas;
+}
+
 
 void tst_QQuickGridView::unaligned()
 {

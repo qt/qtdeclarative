@@ -143,6 +143,8 @@ private slots:
     void creationContext();
     void snapToItem_data();
     void snapToItem();
+    void snapOneItem_data();
+    void snapOneItem();
 
     void QTBUG_9791();
     void QTBUG_11105();
@@ -4294,6 +4296,117 @@ void tst_QQuickListView::asynchronous()
     for (int i = 0; i < 8; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QTRY_COMPARE(item->y(), i*50.0);
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickListView::snapOneItem_data()
+{
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<int>("highlightRangeMode");
+    QTest::addColumn<QPoint>("flickStart");
+    QTest::addColumn<QPoint>("flickEnd");
+    QTest::addColumn<qreal>("snapAlignment");
+    QTest::addColumn<qreal>("endExtent");
+    QTest::addColumn<qreal>("startExtent");
+
+    QTest::newRow("vertical, left to right") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 560.0 << 0.0;
+
+    QTest::newRow("horizontal, left to right") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 560.0 << 0.0;
+
+    QTest::newRow("horizontal, right to left") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -560.0 - 240.0 << -240.0;
+
+    QTest::newRow("vertical, left to right, enforce range") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 580.0 << -20.0;
+
+    QTest::newRow("horizontal, left to right, enforce range") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 580.0 << -20.0;
+
+    QTest::newRow("horizontal, right to left, enforce range") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -580.0 - 240.0 << -220.0;
+}
+
+void tst_QQuickListView::snapOneItem()
+{
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(int, highlightRangeMode);
+    QFETCH(QPoint, flickStart);
+    QFETCH(QPoint, flickEnd);
+    QFETCH(qreal, snapAlignment);
+    QFETCH(qreal, endExtent);
+    QFETCH(qreal, startExtent);
+
+    QQuickView *canvas = createView();
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapOneItem.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+    listview->setHighlightRangeMode(QQuickItemView::HighlightRangeMode(highlightRangeMode));
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QSignalSpy currentIndexSpy(listview, SIGNAL(currentIndexChanged()));
+
+    // confirm that a flick hits the next item boundary
+    flick(canvas, flickStart, flickEnd, 180);
+    QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentY(), snapAlignment);
+    else
+        QCOMPARE(listview->contentX(), snapAlignment);
+
+    if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
+        QCOMPARE(listview->currentIndex(), 1);
+        QCOMPARE(currentIndexSpy.count(), 1);
+    }
+
+    // flick to end
+    do {
+        flick(canvas, flickStart, flickEnd, 180);
+        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    } while (orientation == QQuickListView::Vertical
+           ? !listview->isAtYEnd()
+           : layoutDirection == Qt::LeftToRight ? !listview->isAtXEnd() : !listview->isAtXBeginning());
+
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentY(), endExtent);
+    else
+        QCOMPARE(listview->contentX(), endExtent);
+
+    if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
+        QCOMPARE(listview->currentIndex(), 3);
+        QCOMPARE(currentIndexSpy.count(), 3);
+    }
+
+    // flick to start
+    do {
+        flick(canvas, flickEnd, flickStart, 180);
+        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    } while (orientation == QQuickListView::Vertical
+           ? !listview->isAtYBeginning()
+           : layoutDirection == Qt::LeftToRight ? !listview->isAtXBeginning() : !listview->isAtXEnd());
+
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentY(), startExtent);
+    else
+        QCOMPARE(listview->contentX(), startExtent);
+
+    if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
+        QCOMPARE(listview->currentIndex(), 0);
+        QCOMPARE(currentIndexSpy.count(), 6);
     }
 
     delete canvas;
