@@ -38,15 +38,14 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QSignalSpy>
+
+#include "debugutil_p.h"
+
 #include <QEventLoop>
 #include <QTimer>
 
 #include <private/qdeclarativedebugclient_p.h>
 #include <private/qdeclarativedebugservice_p.h>
-
-#include "debugutil_p.h"
-
 
 bool QDeclarativeDebugTest::waitForSignal(QObject *receiver, const char *member, int timeout) {
     QEventLoop loop;

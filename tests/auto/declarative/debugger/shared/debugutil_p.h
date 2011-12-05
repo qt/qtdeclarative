@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -38,9 +39,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QSignalSpy>
+
+#ifndef DEBUGUTIL_H
+#define DEBUGUTIL_H
+
 #include <QEventLoop>
-#include <QPointer>
 #include <QTimer>
 #include <QThread>
 #include <QTest>
@@ -117,3 +120,5 @@ private:
     QMutex m_mutex;
     bool m_started;
 };
+
+#endif // DEBUGUTIL_H
