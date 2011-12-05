@@ -577,6 +577,7 @@ case 79: {
   }
 
   loc(1).length = lexer->tokenLength();
+  yylloc = loc(1); // adjust the location of the current token
 
   AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
     driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
@@ -592,6 +593,7 @@ case 80: {
   }
 
   loc(1).length = lexer->tokenLength();
+  yylloc = loc(1); // adjust the location of the current token
 
   AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
     driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
