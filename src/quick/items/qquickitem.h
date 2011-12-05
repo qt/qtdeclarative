@@ -116,6 +116,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QDeclarativeParserStatu
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QQuickItem> visibleChildren READ visibleChildren NOTIFY visibleChildrenChanged DESIGNABLE false)
 
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QDeclarativeState> states READ states DESIGNABLE false)
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QDeclarativeTransition> transitions READ transitions DESIGNABLE false)
@@ -341,6 +342,7 @@ Q_SIGNALS:
     void opacityChanged();
     void enabledChanged();
     void visibleChanged();
+    void visibleChildrenChanged();
     void rotationChanged();
     void scaleChanged();
 

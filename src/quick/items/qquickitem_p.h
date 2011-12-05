@@ -246,6 +246,7 @@ public:
     QDeclarativeListProperty<QObject> data();
     QDeclarativeListProperty<QObject> resources();
     QDeclarativeListProperty<QQuickItem> children();
+    QDeclarativeListProperty<QQuickItem> visibleChildren();
 
     QDeclarativeListProperty<QDeclarativeState> states();
     QDeclarativeListProperty<QDeclarativeTransition> transitions();
@@ -280,6 +281,11 @@ public:
     static int children_count(QDeclarativeListProperty<QQuickItem> *);
     static QQuickItem *children_at(QDeclarativeListProperty<QQuickItem> *, int);
     static void children_clear(QDeclarativeListProperty<QQuickItem> *);
+
+    // visibleChildren property
+    static void visibleChildren_append(QDeclarativeListProperty<QQuickItem> *prop, QQuickItem *o);
+    static int visibleChildren_count(QDeclarativeListProperty<QQuickItem> *prop);
+    static QQuickItem *visibleChildren_at(QDeclarativeListProperty<QQuickItem> *prop, int index);
 
     // transform property
     static int transform_count(QDeclarativeListProperty<QQuickTransform> *list);
@@ -471,7 +477,7 @@ public:
     void deliverDragEvent(QEvent *);
 
     bool calcEffectiveVisible() const;
-    void setEffectiveVisibleRecur(bool);
+    bool setEffectiveVisibleRecur(bool);
     bool calcEffectiveEnable() const;
     void setEffectiveEnableRecur(QQuickItem *scope, bool);
 

@@ -1904,7 +1904,11 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
                                                                 QQuickCanvasPrivate::DontChangeFocusProperty);
 
+        const bool wasVisible = isVisible();
         op->removeChild(this);
+        if (wasVisible) {
+            emit oldParentItem->visibleChildrenChanged();
+        }
     } else if (d->canvas) {
         QQuickCanvasPrivate::get(d->canvas)->parentlessItems.remove(this);
     }
@@ -1951,6 +1955,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     }
 
     emit parentChanged(d->parentItem);
+    if (isVisible() && d->parentItem)
+        emit d->parentItem->visibleChildrenChanged();
 }
 
 void QQuickItem::stackBefore(const QQuickItem *sibling)
@@ -2486,6 +2492,39 @@ void QQuickItemPrivate::children_clear(QDeclarativeListProperty<QQuickItem> *pro
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
     while (!p->childItems.isEmpty())
         p->childItems.at(0)->setParentItem(0);
+}
+
+void QQuickItemPrivate::visibleChildren_append(QDeclarativeListProperty<QQuickItem>*, QQuickItem *self)
+{
+    // do nothing
+    qmlInfo(self) << "QQuickItem: visibleChildren property is readonly and cannot be assigned to.";
+}
+
+int QQuickItemPrivate::visibleChildren_count(QDeclarativeListProperty<QQuickItem> *prop)
+{
+    QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
+    int visibleCount = 0;
+    int c = p->childItems.count();
+    while (c--) {
+        if (p->childItems.at(c)->isVisible()) visibleCount++;
+    }
+
+    return visibleCount;
+}
+
+QQuickItem *QQuickItemPrivate::visibleChildren_at(QDeclarativeListProperty<QQuickItem> *prop, int index)
+{
+    QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
+    const int childCount = p->childItems.count();
+    if (index >= childCount || index < 0)
+        return 0;
+
+    int visibleCount = -1;
+    for (int i = 0; i < childCount; i++) {
+        if (p->childItems.at(i)->isVisible()) visibleCount++;
+        if (visibleCount == index) return p->childItems.at(i);
+    }
+    return 0;
 }
 
 int QQuickItemPrivate::transform_count(QDeclarativeListProperty<QQuickTransform> *prop)
@@ -3321,6 +3360,20 @@ QDeclarativeListProperty<QQuickItem> QQuickItemPrivate::children()
 
 }
 
+/*!
+  \qmlproperty real QtQuick2::Item::visibleChildren
+  This read-only property lists all of the item's children that are currently visible.
+  Note that a child's visibility may have changed explicitly, or because the visibility
+  of this (it's parent) item or another grandparent changed.
+*/
+QDeclarativeListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
+{
+    return QDeclarativeListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::visibleChildren_append,
+                                             QQuickItemPrivate::visibleChildren_count,
+                                             QQuickItemPrivate::visibleChildren_at);
+
+}
+
 QDeclarativeListProperty<QDeclarativeState> QQuickItemPrivate::states()
 {
     return _states()->statesProperty();
@@ -3894,7 +3947,9 @@ void QQuickItem::setVisible(bool v)
 
     d->explicitVisible = v;
 
-    d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
+    const bool childVisibilityChanged = d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
+    if (childVisibilityChanged && d->parentItem)
+        emit d->parentItem->visibleChildrenChanged();   // signal the parent, not this!
 }
 
 bool QQuickItem::isEnabled() const
@@ -3926,18 +3981,18 @@ bool QQuickItemPrivate::calcEffectiveVisible() const
     return explicitVisible && (!parentItem || QQuickItemPrivate::get(parentItem)->effectiveVisible);
 }
 
-void QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
+bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
 {
     Q_Q(QQuickItem);
 
     if (newEffectiveVisible && !explicitVisible) {
         // This item locally overrides visibility
-        return;
+        return false;   // effective visibility didn't change
     }
 
     if (newEffectiveVisible == effectiveVisible) {
         // No change necessary
-        return;
+        return false;   // effective visibility didn't change
     }
 
     effectiveVisible = newEffectiveVisible;
@@ -3950,8 +4005,9 @@ void QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
             q->ungrabMouse();
     }
 
+    bool childVisibilityChanged = false;
     for (int ii = 0; ii < childItems.count(); ++ii)
-        QQuickItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
+        childVisibilityChanged |= QQuickItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
 
     for (int ii = 0; ii < changeListeners.count(); ++ii) {
         const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
@@ -3963,6 +4019,10 @@ void QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         QAccessible::updateAccessibility(QAccessibleEvent(effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide, q, 0));
 
     emit q->visibleChanged();
+    if (childVisibilityChanged)
+        emit q->visibleChildrenChanged();
+
+    return true;    // effective visibility DID change
 }
 
 bool QQuickItemPrivate::calcEffectiveEnable() const

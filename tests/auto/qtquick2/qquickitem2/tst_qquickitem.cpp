@@ -85,6 +85,7 @@ private slots:
     void transformCrash();
     void implicitSize();
     void qtbug_16871();
+    void visibleChildren();
 private:
     QDeclarativeEngine engine;
 };
@@ -1244,6 +1245,66 @@ void tst_QQuickItem::qtbug_16871()
     QObject *o = component.create();
     QVERIFY(o != 0);
     delete o;
+}
+
+
+void tst_QQuickItem::visibleChildren()
+{
+    QQuickView *canvas = new QQuickView(0);
+    canvas->setSource(testFileUrl("visiblechildren.qml"));
+    canvas->show();
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QVERIFY(root);
+
+    QCOMPARE(root->property("test1_1").toBool(), true);
+    QCOMPARE(root->property("test1_2").toBool(), true);
+    QCOMPARE(root->property("test1_3").toBool(), true);
+    QCOMPARE(root->property("test1_4").toBool(), true);
+
+    QMetaObject::invokeMethod(root, "hideFirstAndLastRowChild");
+    QCOMPARE(root->property("test2_1").toBool(), true);
+    QCOMPARE(root->property("test2_2").toBool(), true);
+    QCOMPARE(root->property("test2_3").toBool(), true);
+    QCOMPARE(root->property("test2_4").toBool(), true);
+
+    QMetaObject::invokeMethod(root, "showLastRowChildsLastChild");
+    QCOMPARE(root->property("test3_1").toBool(), true);
+    QCOMPARE(root->property("test3_2").toBool(), true);
+    QCOMPARE(root->property("test3_3").toBool(), true);
+    QCOMPARE(root->property("test3_4").toBool(), true);
+
+    QMetaObject::invokeMethod(root, "showLastRowChild");
+    QCOMPARE(root->property("test4_1").toBool(), true);
+    QCOMPARE(root->property("test4_2").toBool(), true);
+    QCOMPARE(root->property("test4_3").toBool(), true);
+    QCOMPARE(root->property("test4_4").toBool(), true);
+
+    QString warning1 = testFileUrl("visiblechildren.qml").toString() + ":96:32: QML Item: QQuickItem: visibleChildren property is readonly and cannot be assigned to.";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QMetaObject::invokeMethod(root, "tryWriteToReadonlyVisibleChildren");
+    QCOMPARE(root->property("test5_1").toBool(), true);
+
+    QMetaObject::invokeMethod(root, "reparentVisibleItem3");
+    QCOMPARE(root->property("test6_1").toBool(), true);
+    QCOMPARE(root->property("test6_2").toBool(), true);
+    QCOMPARE(root->property("test6_3").toBool(), true);
+    QCOMPARE(root->property("test6_4").toBool(), true);
+
+    QMetaObject::invokeMethod(root, "reparentImlicitlyInvisibleItem4_1");
+    QCOMPARE(root->property("test7_1").toBool(), true);
+    QCOMPARE(root->property("test7_2").toBool(), true);
+    QCOMPARE(root->property("test7_3").toBool(), true);
+    QCOMPARE(root->property("test7_4").toBool(), true);
+
+    // FINALLY TEST THAT EVERYTHING IS AS EXPECTED
+    QCOMPARE(root->property("test8_1").toBool(), true);
+    QCOMPARE(root->property("test8_2").toBool(), true);
+    QCOMPARE(root->property("test8_3").toBool(), true);
+    QCOMPARE(root->property("test8_4").toBool(), true);
+    QCOMPARE(root->property("test8_5").toBool(), true);
+
+    delete canvas;
 }
 
 QTEST_MAIN(tst_QQuickItem)
