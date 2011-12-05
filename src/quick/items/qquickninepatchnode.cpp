@@ -271,7 +271,7 @@ void QQuickNinePatchNode::fillRow(QSGGeometry::TexturedPoint2D *&v, float y, flo
                                const QRectF &tsr,   // texture sub rect, for atlasses
                                const QSize &ts)     // texture size in pixels
 {
-    ty = tsr.y() + ty * tsr.width();
+    ty = tsr.y() + ty * tsr.height();
 
     float tw = ts.width();
     float rightBorder = tw - m_innerRect.right();
