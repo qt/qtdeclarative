@@ -266,6 +266,8 @@ work
 #generated version headers
 src/qmltest/qtquicktestversion.h
 src/qtquick1/qtquick1version.h
+src/qmldevtools/qtqmldevtoolsversion.h
+src/quick/qtquickversion.h
 
 tests/auto/*/*.o
 tests/auto/*/*.moc
