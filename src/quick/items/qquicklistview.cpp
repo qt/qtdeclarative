@@ -2141,7 +2141,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     An instance of the footer component is created for each view.  The
     footer is positioned at the end of the view, after any items.
 
-    \sa header
+    \sa header, footerItem
 */
 
 
@@ -2152,7 +2152,27 @@ void QQuickListView::setSnapMode(SnapMode mode)
     An instance of the header component is created for each view.  The
     header is positioned at the beginning of the view, before any items.
 
-    \sa footer
+    \sa footer, headertem
+*/
+
+/*!
+    \qmlproperty Item QtQuick2::ListView::headerItem
+    This holds the header item created from the \l header component.
+
+    An instance of the header component is created for each view.  The
+    header is positioned at the beginning of the view, before any items.
+
+    \sa header, footerItem
+*/
+
+/*!
+    \qmlproperty Item QtQuick2::ListView::footerItem
+    This holds the footer item created from the \l footer component.
+
+    An instance of the footer component is created for each view.  The
+    footer is positioned at the end of the view, after any items.
+
+    \sa footer, headerItem
 */
 
 void QQuickListView::viewportMoved()
