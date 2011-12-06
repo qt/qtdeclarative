@@ -97,8 +97,9 @@ class QDeclarativeNotifier;
 
 #define QML_PROPERTY_NAME(name) #name, sizeof #name - 1
 
-struct QDeclarativeAccessors
+class QDeclarativeAccessors
 {
+public:
     void (*read)(QObject *object, intptr_t property, void *output);
     void (*notifier)(QObject *object, intptr_t property, QDeclarativeNotifier **notifier);
 };
