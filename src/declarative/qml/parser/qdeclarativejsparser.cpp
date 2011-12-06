@@ -1654,31 +1654,31 @@ case 337: {
   sym(1).Node = new (pool) AST::FunctionBody(sym(1).SourceElements->finish ());
 } break;
 
-case 338: {
+case 339: {
   sym(1).Node = new (pool) AST::Program(sym(1).SourceElements->finish ());
 } break;
 
-case 339: {
+case 340: {
   sym(1).Node = new (pool) AST::SourceElements(sym(1).SourceElement);
 } break;
 
-case 340: {
+case 341: {
   sym(1).Node = new (pool) AST::SourceElements(sym(1).SourceElements, sym(2).SourceElement);
 } break;
 
-case 341: {
+case 342: {
   sym(1).Node = new (pool) AST::StatementSourceElement(sym(1).Statement);
 } break;
 
-case 342: {
+case 343: {
   sym(1).Node = new (pool) AST::FunctionSourceElement(sym(1).FunctionDeclaration);
 } break;
 
-case 343: {
+case 344: {
   stringRef(1) = QStringRef();
 } break;
 
-case 345: {
+case 346: {
   sym(1).Node = 0;
 } break;
 

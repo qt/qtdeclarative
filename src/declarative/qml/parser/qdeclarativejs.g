@@ -2822,6 +2822,8 @@ case $rule_number: {
 } break;
 ./
 
+Program: Empty ;
+
 Program: SourceElements ;
 /.
 case $rule_number: {
