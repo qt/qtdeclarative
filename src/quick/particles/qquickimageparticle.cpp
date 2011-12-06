@@ -68,15 +68,18 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 #define UNIFORM_ARRAY_SIZE 64
 
 static const char vertexShaderCode[] =
+    "#if defined(DEFORM)\n"
+    "attribute highp vec4 vPosTex;\n"
+    "#else\n"
     "attribute highp vec2 vPos;\n"
+    "#endif\n"
     "attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize\n"
     "attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration\n"
     "uniform highp float entry;\n"
     "#if defined(COLOR)\n"
-    "attribute lowp vec4 vColor;\n"
+    "attribute highp vec4 vColor;\n"
     "#endif\n"
     "#if defined(DEFORM)\n"
-    "attribute highp vec2 vTex;\n"
     "attribute highp vec4 vDeformVec; //x,y x unit vector; z,w = y unit vector\n"
     "attribute highp vec3 vRotation; //x = radians of rotation, y=rotation speed, z= bool autoRotate\n"
     "#endif\n"
@@ -110,7 +113,7 @@ static const char vertexShaderCode[] =
     "    highp float t = (timestamp - vData.x) / vData.y;\n"
     "    if (t < 0. || t > 1.) {\n"
     "#if defined(DEFORM)\n"
-    "        gl_Position = qt_Matrix * vec4(vPos.x, vPos.y, 0., 1.);\n"
+    "        gl_Position = qt_Matrix * vec4(vPosTex.x, vPosTex.y, 0., 1.);\n"
     "#else\n"
     "        gl_PointSize = 0.;\n"
     "#endif\n"
@@ -121,15 +124,15 @@ static const char vertexShaderCode[] =
     "        tt.y = mod((timestamp - vAnimData.w)*1000., vAnimData.y) / vAnimData.y;\n"
     "\n"
     "        frameIndex = floor(frameIndex);\n"
-    "        fTexS.xy = vec2(((frameIndex + vTex.x) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vTex.y * vAnimPos.w) / animSheetSize.y));\n"
+    "        fTexS.xy = vec2(((frameIndex + vPosTex.z) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vPosTex.w * vAnimPos.w) / animSheetSize.y));\n"
     "\n"
     "        //Next frame is also passed, for interpolation\n"
     "        //### Should the next anim be precalculated to allow for interpolation there?\n"
     "        if (vAnimData.x == 1.0 && frameIndex != vAnimData.z - 1.)//Can't do it for the last frame though, this anim may not loop\n"
     "            frameIndex = mod(frameIndex+1., vAnimData.z);\n"
-    "        fTexS.zw = vec2(((frameIndex + vTex.x) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vTex.y * vAnimPos.w) / animSheetSize.y));\n"
+    "        fTexS.zw = vec2(((frameIndex + vPosTex.z) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vPosTex.w * vAnimPos.w) / animSheetSize.y));\n"
     "#elif defined(DEFORM)\n"
-    "        fTex = vTex;\n"
+    "        fTex = vPosTex.zw;\n"
     "#endif\n"
     "        highp float currentSize = mix(vData.z, vData.w, t * t);\n"
     "        lowp float fade = 1.;\n"
@@ -148,7 +151,7 @@ static const char vertexShaderCode[] =
     "\n"
     "        if (currentSize <= 0.) {\n"
     "#if defined(DEFORM)\n"
-    "            gl_Position = qt_Matrix * vec4(vPos.x, vPos.y, 0., 1.);\n"
+    "            gl_Position = qt_Matrix * vec4(vPosTex.x, vPosTex.y, 0., 1.);\n"
     "#else\n"
     "            gl_PointSize = 0.;\n"
     "#endif\n"
@@ -164,7 +167,7 @@ static const char vertexShaderCode[] =
     "                rotation += atan(curVel.y, curVel.x);\n"
     "            }\n"
     "            highp vec2 trigCalcs = vec2(cos(rotation), sin(rotation));\n"
-    "            highp vec4 deform = vDeformVec * currentSize * (vTex.xxyy - 0.5);\n"
+    "            highp vec4 deform = vDeformVec * currentSize * (vPosTex.zzww - 0.5);\n"
     "            highp vec4 rotatedDeform = deform.xxzz * trigCalcs.xyxy;\n"
     "            rotatedDeform = rotatedDeform + (deform.yyww * trigCalcs.yxyx * vec4(-1.,1.,-1.,1.));\n"
     "            /* The readable version:\n"
@@ -177,7 +180,7 @@ static const char vertexShaderCode[] =
     "            yRotatedDeform.x = trigCalcs.x*yDeform.x - trigCalcs.y*yDeform.y;\n"
     "            yRotatedDeform.y = trigCalcs.y*yDeform.x + trigCalcs.x*yDeform.y;\n"
     "            */\n"
-    "            pos = vPos\n"
+    "            pos = vPosTex.xy\n"
     "                  + rotatedDeform.xy\n"
     "                  + rotatedDeform.zw\n"
     "                  + vVec.xy * t * vData.y         // apply speed\n"
@@ -288,7 +291,7 @@ public:
     const char *fragmentShader() const { return m_fragment_code.constData(); }
 
     QList<QByteArray> attributes() const {
-        return QList<QByteArray>() << "vPos" << "vTex" << "vData" << "vVec"
+        return QList<QByteArray>() << "vPosTex" << "vData" << "vVec"
             << "vColor" << "vDeformVec" << "vRotation";
     };
 
@@ -350,7 +353,7 @@ public:
     const char *fragmentShader() const { return m_fragment_code.constData(); }
 
     QList<QByteArray> attributes() const {
-        return QList<QByteArray>() << "vPos" << "vTex" << "vData" << "vVec"
+        return QList<QByteArray>() << "vPosTex" << "vData" << "vVec"
             << "vColor" << "vDeformVec" << "vRotation";
     };
 
@@ -402,7 +405,7 @@ public:
     const char *fragmentShader() const { return m_fragment_code.constData(); }
 
     QList<QByteArray> attributes() const {
-        return QList<QByteArray>() << "vPos" << "vTex" << "vData" << "vVec"
+        return QList<QByteArray>() << "vPosTex" << "vData" << "vVec"
             << "vColor" << "vDeformVec" << "vRotation" << "vAnimData" << "vAnimPos";
     };
 
@@ -1149,38 +1152,36 @@ static QSGGeometry::AttributeSet ColoredParticle_AttributeSet =
 };
 
 static QSGGeometry::Attribute DeformableParticle_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),             // Position
-    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),             // TexCoord
-    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Data
-    QSGGeometry::Attribute::create(3, 4, GL_FLOAT),             // Vectors
-    QSGGeometry::Attribute::create(4, 4, GL_UNSIGNED_BYTE),     // Colors
-    QSGGeometry::Attribute::create(5, 4, GL_FLOAT),             // DeformationVectors
-    QSGGeometry::Attribute::create(6, 3, GL_FLOAT),             // Rotation
+    QSGGeometry::Attribute::create(0, 4, GL_FLOAT),             // Position & TexCoord
+    QSGGeometry::Attribute::create(1, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Vectors
+    QSGGeometry::Attribute::create(3, 4, GL_UNSIGNED_BYTE),     // Colors
+    QSGGeometry::Attribute::create(4, 4, GL_FLOAT),             // DeformationVectors
+    QSGGeometry::Attribute::create(5, 3, GL_FLOAT),             // Rotation
 };
 
 static QSGGeometry::AttributeSet DeformableParticle_AttributeSet =
 {
-    7, // Attribute Count
-    (2 + 2 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
+    6, // Attribute Count
+    (4 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
     DeformableParticle_Attributes
 };
 
 static QSGGeometry::Attribute SpriteParticle_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),             // Position
-    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),             // TexCoord
-    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Data
-    QSGGeometry::Attribute::create(3, 4, GL_FLOAT),             // Vectors
-    QSGGeometry::Attribute::create(4, 4, GL_UNSIGNED_BYTE),     // Colors
-    QSGGeometry::Attribute::create(5, 4, GL_FLOAT),             // DeformationVectors
-    QSGGeometry::Attribute::create(6, 3, GL_FLOAT),             // Rotation
-    QSGGeometry::Attribute::create(7, 4, GL_FLOAT),             // Anim Data
-    QSGGeometry::Attribute::create(8, 4, GL_FLOAT)              // Anim Pos
+    QSGGeometry::Attribute::create(0, 4, GL_FLOAT),       // Position & TexCoord
+    QSGGeometry::Attribute::create(1, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Vectors
+    QSGGeometry::Attribute::create(3, 4, GL_UNSIGNED_BYTE),     // Colors
+    QSGGeometry::Attribute::create(4, 4, GL_FLOAT),             // DeformationVectors
+    QSGGeometry::Attribute::create(5, 3, GL_FLOAT),             // Rotation
+    QSGGeometry::Attribute::create(6, 4, GL_FLOAT),             // Anim Data
+    QSGGeometry::Attribute::create(7, 4, GL_FLOAT)              // Anim Pos
 };
 
 static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 {
-    9, // Attribute Count
-    (2 + 2 + 4 + 4 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
+    8, // Attribute Count
+    (4 + 4 + 4 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
     SpriteParticle_Attributes
 };
 
