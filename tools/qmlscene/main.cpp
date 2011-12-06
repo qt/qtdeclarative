@@ -41,33 +41,20 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qabstractanimation.h>
-#include <QtWidgets/qapplication.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qmath.h>
+#include <QtCore/qdatetime.h>
+
+#include <QtGui/QGuiApplication>
+
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtQuick1/qdeclarativeview.h>
-#include <QtCore/qdir.h>
-#include <QtWidgets/QFormLayout>
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QCheckBox>
-#include <QtWidgets/QDialog>
-#include <QtWidgets/QDialogButtonBox>
-#include <QtWidgets/QFileDialog>
-#include <QtWidgets/QGraphicsView>
-
 #include <QtDeclarative/qdeclarativecontext.h>
 
-// ### This should be private API
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 
-#define QT_NO_SCENEGRAPHITEM
-
-#ifndef QT_NO_SCENEGRAPHITEM
-#include "scenegraphitem.h"
-#endif
-
-#include <QtCore/qmath.h>
 
 #ifdef QML_RUNTIME_TESTING
 class RenderStatistics
@@ -152,57 +139,6 @@ public:
     }
 };
 
-class MyDeclarativeView: public QDeclarativeView
-{
-public:
-    MyDeclarativeView(QWidget *parent = 0) : QDeclarativeView(parent)
-    {
-        setResizeMode(QDeclarativeView::SizeRootObjectToView);
-    }
-};
-
-#ifndef QT_NO_SCENEGRAPHITEM
-class MyGraphicsView: public QGraphicsView
-{
-public:
-    MyGraphicsView(bool clip, QWidget *parent = 0) : QGraphicsView(parent)
-    {
-        setViewport(new QGLWidget(getFormat()));
-        setScene(&scene);
-        scene.addItem(&item);
-        item.setFlag(QGraphicsItem::ItemClipsToShape, clip);
-        QGraphicsTextItem *text;
-        text = scene.addText(QLatin1String("Scene graph on graphics view."), QFont(QLatin1String("Times"), 10));
-        text->setX(5);
-        text->setY(5);
-        text->setDefaultTextColor(Qt::black);
-        text = scene.addText(QLatin1String("Scene graph on graphics view."), QFont(QLatin1String("Times"), 10));
-        text->setX(4);
-        text->setY(4);
-        text->setDefaultTextColor(Qt::yellow);
-    }
-
-    SceneGraphItem *sceneGraphItem() { return &item; }
-
-protected:
-    void paintEvent(QPaintEvent *event)
-    {
-        QGraphicsView::paintEvent(event);
-
-#ifdef QML_RUNTIME_TESTING
-        RenderStatistics::updateStats();
-#endif
-
-        static bool continuousUpdate = qApp->arguments().contains("--continuous-update");
-        if (continuousUpdate)
-            QGraphicsView::scene()->update();
-    }
-
-    QGraphicsScene scene;
-    SceneGraphItem item;
-};
-#endif
-
 struct Options
 {
     Options()
@@ -210,10 +146,8 @@ struct Options
         , originalQmlRaster(false)
         , maximized(false)
         , fullscreen(false)
-        , scenegraphOnGraphicsview(false)
         , clip(false)
         , versionDetection(true)
-        , vsync(true)
     {
     }
 
@@ -355,11 +289,16 @@ static void checkAndAdaptVersion(const QUrl &url)
 
 static void displayFileDialog(Options *options)
 {
+#ifdef QT_WIDGETS_LIB
     QString fileName = QFileDialog::getOpenFileName(0, "Open QML file", QString(), "QML Files (*.qml)");
     if (!fileName.isEmpty()) {
         QFileInfo fi(fileName);
         options->file = QUrl::fromLocalFile(fi.canonicalFilePath());
     }
+#else
+    Q_UNUSED(options);
+    qWarning("No filename specified...");
+#endif
 }
 
 static void loadDummyDataFiles(QDeclarativeEngine &engine, const QString& directory)
@@ -398,17 +337,8 @@ static void usage()
     qWarning(" options:");
     qWarning("  --maximized ............................... run maximized");
     qWarning("  --fullscreen .............................. run fullscreen");
-    qWarning("  --original-qml ............................ run using QGraphicsView instead of scenegraph (OpenGL engine)");
-    qWarning("  --original-qml-raster ..................... run using QGraphicsView instead of scenegraph (Raster engine)");
     qWarning("  --no-multisample .......................... Disable multisampling (anti-aliasing)");
-    qWarning("  --continuous-update ....................... Continuously render the scene");
-    qWarning("  --nonblocking-swap ........................ Do not wait for v-sync to swap buffers");
-    qWarning("  --stereo .................................. Enable stereo on the GL context");
-#ifndef QT_NO_SCENEGRAPHITEM
-    qWarning("  --sg-on-gv [--clip] ....................... Scenegraph on graphicsview (and clip to item)");
-#endif
     qWarning("  --no-version-detection .................... Do not try to detect the version of the .qml file");
-    qWarning("  --no-vsync-animations ..................... Do not use vsync based animations");
 
     qWarning(" ");
     exit(1);
@@ -416,10 +346,6 @@ static void usage()
 
 int main(int argc, char ** argv)
 {
-#ifdef Q_WS_X11
-    QApplication::setAttribute(Qt::AA_X11InitThreads);
-#endif
-
     Options options;
 
     QStringList imports;
@@ -428,16 +354,10 @@ int main(int argc, char ** argv)
             options.file = QUrl::fromLocalFile(argv[i]);
         } else {
             const QString lowerArgument = QString::fromLatin1(argv[i]).toLower();
-            if (lowerArgument == QLatin1String("--original-qml"))
-                options.originalQml = true;
-            else if (lowerArgument == QLatin1String("--original-qml-raster"))
-                options.originalQmlRaster = true;
-            else if (lowerArgument == QLatin1String("--maximized"))
+            if (lowerArgument == QLatin1String("--maximized"))
                 options.maximized = true;
             else if (lowerArgument == QLatin1String("--fullscreen"))
                 options.fullscreen = true;
-            else if (lowerArgument == QLatin1String("--sg-on-gv"))
-                options.scenegraphOnGraphicsview = true;
             else if (lowerArgument == QLatin1String("--clip"))
                 options.clip = true;
             else if (lowerArgument == QLatin1String("--no-version-detection"))
@@ -454,9 +374,7 @@ int main(int argc, char ** argv)
         }
     }
 
-    QApplication::setGraphicsSystem("raster");
-
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
     app.setApplicationName("QtQmlViewer");
     app.setOrganizationName("Nokia");
     app.setOrganizationDomain("nokia.com");
@@ -474,21 +392,6 @@ int main(int argc, char ** argv)
     int exitCode = 0;
 
     if (!options.file.isEmpty()) {
-#ifndef QT_NO_SCENEGRAPHITEM
-        if (options.scenegraphOnGraphicsview) {
-            MyGraphicsView *gvView = new MyGraphicsView(options.clip);
-            SceneGraphItem *item = gvView->sceneGraphItem();
-            engine = item->engine();
-            for (int i = 0; i < imports.size(); ++i)
-                engine->addImportPath(imports.at(i));
-            view = gvView;
-            if (options.file.isLocalFile()) {
-                QFileInfo fi(options.file.toLocalFile());
-                loadDummyDataFiles(*engine, fi.path());
-            }
-            item->setSource(options.file);
-        } else
-#endif
         if (options.versionDetection)
             checkAndAdaptVersion(options.file);
         QQuickView *qxView = new MyQQuickView();
@@ -512,11 +415,6 @@ int main(int argc, char ** argv)
             window->showMaximized();
         else
             window->show();
-
-
-#ifdef Q_OS_MAC
-        window->raise();
-#endif
 
         exitCode = app.exec();
 
