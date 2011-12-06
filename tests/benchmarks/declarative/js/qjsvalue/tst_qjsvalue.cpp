@@ -45,8 +45,6 @@
 
 Q_DECLARE_METATYPE(QJSValue)
 
-//TESTED_FILES=
-
 class tst_QJSValue : public QObject
 {
     Q_OBJECT

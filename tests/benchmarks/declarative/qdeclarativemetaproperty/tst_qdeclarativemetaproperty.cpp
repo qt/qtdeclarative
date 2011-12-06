@@ -46,8 +46,6 @@
 #include <QFile>
 #include <QDebug>
 
-//TESTED_FILES=
-
 class tst_qmlmetaproperty : public QObject
 {
     Q_OBJECT

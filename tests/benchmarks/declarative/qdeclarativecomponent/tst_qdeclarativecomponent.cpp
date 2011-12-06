@@ -46,8 +46,6 @@
 #include <QDebug>
 #include "testtypes.h"
 
-//TESTED_FILES=
-
 class tst_qmlcomponent : public QObject
 {
     Q_OBJECT

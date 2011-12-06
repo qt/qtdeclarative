@@ -42,9 +42,6 @@
 #include "tst_qjsvalue.h"
 #include <QtWidgets/QPushButton>
 
-//TESTED_CLASS=
-//TESTED_FILES=
-
 QT_BEGIN_NAMESPACE
 extern bool qt_script_isJITEnabled();
 QT_END_NAMESPACE

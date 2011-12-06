@@ -46,9 +46,6 @@
 #include <QJSValue>
 #include <QJSValueIterator>
 
-//TESTED_CLASS=
-//TESTED_FILES=
-
 Q_DECLARE_METATYPE(QJSValue);
 
 class tst_QJSValueIterator : public QObject
