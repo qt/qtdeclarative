@@ -1294,6 +1294,13 @@ void tst_QQuickPathView::visualDataModel()
 void tst_QQuickPathView::undefinedPath()
 {
     QDeclarativeEngine engine;
+
+    QString warning1("QPainterPath::moveTo: Adding point where x or y is NaN or Inf, ignoring call");
+    QTest::ignoreMessage(QtWarningMsg,qPrintable(warning1));
+
+    QString warning2("QPainterPath::lineTo: Adding point where x or y is NaN or Inf, ignoring call");
+    QTest::ignoreMessage(QtWarningMsg,qPrintable(warning2));
+
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("undefinedpath.qml")));
 
     QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
