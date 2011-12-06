@@ -124,34 +124,6 @@ public:
     }
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeComponentAttached : public QObject
-{
-    Q_OBJECT
-public:
-    QDeclarativeComponentAttached(QObject *parent = 0);
-    ~QDeclarativeComponentAttached();
-
-    void add(QDeclarativeComponentAttached **a) {
-        prev = a; next = *a; *a = this;
-        if (next) next->prev = &next;
-    }
-    void rem() {
-        if (next) next->prev = prev;
-        *prev = next;
-        next = 0; prev = 0;
-    }
-    QDeclarativeComponentAttached **prev;
-    QDeclarativeComponentAttached *next;
-
-Q_SIGNALS:
-    void completed();
-    void destruction();
-
-private:
-    friend class QDeclarativeVME;
-    friend class QDeclarativeContextData;
-};
-
 QT_END_NAMESPACE
 
 #endif // QDECLARATIVECOMPONENT_P_H

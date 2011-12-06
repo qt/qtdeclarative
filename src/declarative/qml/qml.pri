@@ -117,7 +117,8 @@ HEADERS += \
     $$PWD/qdeclarativenullablevalue_p_p.h \
     $$PWD/qdeclarativescriptstring_p.h \
     $$PWD/qdeclarativelocale_p.h \
-    $$PWD/qlistmodelinterface_p.h
+    $$PWD/qlistmodelinterface_p.h \
+    $$PWD/qdeclarativecomponentattached_p.h
 
 QT += sql
 include(parser/parser.pri)

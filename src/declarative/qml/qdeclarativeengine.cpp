@@ -41,6 +41,7 @@
 
 #include "qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
+#include "qdeclarativecomponentattached_p.h"
 
 #include "qdeclarativecontext_p.h"
 #include "qdeclarativecompiler_p.h"
