@@ -182,8 +182,8 @@ int main(int argc, char *argv[])
     char **_argv = new char*[_argc];
     for (int i = 0; i < argc; ++i)
         _argv[i] = argv[i];
-
-    _argv[_argc - 1] = "-qmljsdebugger=port:" STR_PORT;
+    char arg[] = "-qmljsdebugger=port:" STR_PORT;
+    _argv[_argc - 1] = arg;
 
     QGuiApplication app(_argc, _argv);
     tst_QDeclarativeDebugClient tc;
