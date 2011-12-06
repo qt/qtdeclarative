@@ -113,6 +113,11 @@ Lexer::Lexer(Engine *engine)
         engine->setLexer(this);
 }
 
+bool Lexer::qmlMode() const
+{
+    return _qmlMode;
+}
+
 QString Lexer::code() const
 {
     return _code;

@@ -107,6 +107,7 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.js";
     invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.library.js";
     invalidFiles << "tests/auto/declarative/qdeclarativeworkerscript/data/script_error_onLoad.js";
+    invalidFiles << "tests/auto/declarative/parserstress/tests/ecma_3/Unicode/regress-352044-02-n.js";
 }
 
 QStringList tst_qmlmin::findFiles(const QDir &d)
