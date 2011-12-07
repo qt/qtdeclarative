@@ -634,6 +634,8 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(text);
     QVERIFY(textPrivate != 0);
 
+    QTRY_VERIFY(textPrivate->layout.lineCount());
+
     // implicit alignment should follow the reading direction of RTL text
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
@@ -1453,6 +1455,8 @@ void tst_qquicktext::lineLaidOut()
             QVERIFY(r.height() == 20);
         }
     }
+
+    delete canvas;
 }
 
 QTEST_MAIN(tst_qquicktext)
