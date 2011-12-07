@@ -268,6 +268,8 @@ public:
     //useful for profiling/debugging
     int runningAnimationCount() { return animations.count(); }
 
+    int currentDelta() { return lastDelta; }
+
 protected:
     void timerEvent(QTimerEvent *);
 
@@ -286,6 +288,7 @@ private:
     ElapsedTimer time;
 
     qint64 lastTick;
+    int lastDelta;
     int timingInterval;
     int currentAnimationIdx;
     bool insideTick : 1;

@@ -126,6 +126,7 @@ private:
     qreal s;  // Total s
 
     int lastTime;
+    bool useDelta;
 
     bool recalc();
     void delayedStop();

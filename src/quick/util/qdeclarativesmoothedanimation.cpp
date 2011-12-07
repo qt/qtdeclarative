@@ -78,7 +78,7 @@ QSmoothedAnimation::QSmoothedAnimation()
     : QAbstractAnimation2(), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
       reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
-      delayedStopTimer(new QSmoothedAnimationTimer(this))
+      useDelta(false), delayedStopTimer(new QSmoothedAnimationTimer(this))
 {
     delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
     delayedStopTimer->setSingleShot(true);
@@ -97,6 +97,7 @@ QSmoothedAnimation::QSmoothedAnimation(const QSmoothedAnimation &other)
     , invert(other.invert)
     , finalDuration(other.finalDuration)
     , lastTime(other.lastTime)
+    , useDelta(other.useDelta)
     , delayedStopTimer(new QSmoothedAnimationTimer(this))
 {
     delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
@@ -111,10 +112,15 @@ QSmoothedAnimation::~QSmoothedAnimation()
 void QSmoothedAnimation::restart()
 {
     initialVelocity = trackVelocity;
-    if (state() != QAbstractAnimation2::Running)
+    if (state() != QAbstractAnimation2::Running) {
+        useDelta = false;
         start();
-    else
+    } else {
+        //we are joining a new wrapper group, our times need to be restarted
+        useDelta = true;
         init();
+        lastTime = 0;
+    }
 }
 
 void QSmoothedAnimation::updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State /*oldState*/)
@@ -230,7 +236,9 @@ qreal QSmoothedAnimation::easeFollow(qreal time_seconds)
 
 void QSmoothedAnimation::updateCurrentTime(int t)
 {
-    qreal time_seconds = qreal(t - lastTime) / 1000.;
+    qreal time_seconds = useDelta ? qreal(QUnifiedTimer2::instance()->currentDelta()) / 1000. : qreal(t - lastTime) / 1000.;
+    if (useDelta)
+        useDelta = false;
 
     qreal value = easeFollow(time_seconds);
     value *= (invert? -1.0: 1.0);

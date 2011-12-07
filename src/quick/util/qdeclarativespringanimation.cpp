@@ -89,7 +89,7 @@ public:
 
     bool useMass : 1;
     bool haveModulus : 1;
-
+    bool useDelta : 1;
     typedef QDeclarativeRefPointer<QSpringAnimation> Pointer;
     typedef QHash<QDeclarativeProperty, Pointer> ActiveAnimationHash;
 
@@ -116,6 +116,7 @@ QSpringAnimation::QSpringAnimation()
     , modulus(0.0)
     , useMass(false)
     , haveModulus(false)
+    , useDelta(false)
 {
 }
 
@@ -137,6 +138,7 @@ QSpringAnimation::QSpringAnimation(const QSpringAnimation &other)
     , modulus(other.modulus)
     , useMass(false)
     , haveModulus(false)
+    , useDelta(other.useDelta)
 {
 }
 
@@ -150,10 +152,13 @@ int QSpringAnimation::duration() const
 }
 void QSpringAnimation::restart()
 {
-    if (state() != QAbstractAnimation2::Running)
+    if (state() != QAbstractAnimation2::Running) {
+        useDelta = false;
         start();
-    else
+    } else {
+        useDelta = true;
         init();
+    }
 }
 
 void QSpringAnimation::init()
@@ -167,7 +172,11 @@ void QSpringAnimation::updateCurrentTime(int time)
         stop();
         return;
     }
-    int elapsed = time - lastTime;
+
+    int elapsed = useDelta ? QUnifiedTimer2::instance()->currentDelta() : time - lastTime;
+    if (useDelta)
+        useDelta = false;
+
     if (!elapsed)
         return;
 

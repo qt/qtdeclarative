@@ -57,7 +57,7 @@ Q_GLOBAL_STATIC(QThreadStorage<QUnifiedTimer2 *>, unifiedTimer)
 #endif
 
 QUnifiedTimer2::QUnifiedTimer2() :
-    QObject(), defaultDriver(this), lastTick(0), timingInterval(DEFAULT_TIMER_INTERVAL),
+    QObject(), defaultDriver(this), lastTick(0), lastDelta(0), timingInterval(DEFAULT_TIMER_INTERVAL),
     currentAnimationIdx(0), insideTick(false), consistentTiming(false), slowMode(false),
     startAnimationPending(false), stopAnimationPending(false),
     slowdownFactor(5.0f), isPauseTimerActive(false), runningLeafAnimations(0)
@@ -115,6 +115,7 @@ void QUnifiedTimer2::updateAnimationsTime(qint64 timeStep)
     }
 
     lastTick = totalElapsed;
+    lastDelta = delta;
 
     //we make sure we only call update time if the time has actually changed
     //it might happen in some cases that the time doesn't change because events are delayed
@@ -178,6 +179,7 @@ void QUnifiedTimer2::startAnimations()
         restartAnimationTimer();
         if (!time.isValid()) {
             lastTick = 0;
+            lastDelta = 0;
             time.start();
         }
     }

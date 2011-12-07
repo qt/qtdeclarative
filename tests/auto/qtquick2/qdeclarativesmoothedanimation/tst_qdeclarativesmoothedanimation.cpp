@@ -120,28 +120,39 @@ void tst_qdeclarativesmoothedanimation::disabled()
 
 void tst_qdeclarativesmoothedanimation::simpleAnimation()
 {
-    QQuickRectangle rect;
-    QDeclarativeSmoothedAnimation animation;
-    animation.setTarget(&rect);
-    animation.setProperty("x");
-    animation.setTo(200);
-    animation.setDuration(250);
-    QVERIFY(animation.target() == &rect);
-    QVERIFY(animation.property() == "x");
-    QVERIFY(animation.to() == 200);
-    animation.start();
-    QVERIFY(animation.isRunning());
-    QTest::qWait(animation.duration());
-    QTRY_COMPARE(rect.x(), qreal(200));
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("simpleanimation.qml")));
+    QObject *obj = c.create();
+    QVERIFY(obj);
 
-    rect.setX(0);
-    animation.start();
-    animation.pause();
-    QVERIFY(animation.isRunning());
-    QVERIFY(animation.isPaused());
-    animation.setCurrentTime(125);
-    QVERIFY(animation.currentTime() == 125);
-    QCOMPARE(rect.x(), qreal(100));
+    QQuickRectangle *rect = obj->findChild<QQuickRectangle*>("rect");
+    QVERIFY(rect);
+
+    QDeclarativeSmoothedAnimation *animation = obj->findChild<QDeclarativeSmoothedAnimation*>("anim");
+    QVERIFY(animation);
+
+    animation->setTarget(rect);
+    animation->setProperty("x");
+    animation->setTo(200);
+    animation->setDuration(250);
+    QVERIFY(animation->target() == rect);
+    QVERIFY(animation->property() == "x");
+    QVERIFY(animation->to() == 200);
+    animation->start();
+    QVERIFY(animation->isRunning());
+    QTest::qWait(animation->duration());
+    QTRY_COMPARE(rect->x(), qreal(200));
+
+    QVERIFY(!animation->isRunning());
+    rect->setX(0);
+    animation->start();
+    QVERIFY(animation->isRunning());
+    animation->pause();
+    QVERIFY(animation->isRunning());
+    QVERIFY(animation->isPaused());
+    animation->setCurrentTime(125);
+    QVERIFY(animation->currentTime() == 125);
+    QCOMPARE(rect->x(), qreal(100));
 }
 
 void tst_qdeclarativesmoothedanimation::valueSource()
