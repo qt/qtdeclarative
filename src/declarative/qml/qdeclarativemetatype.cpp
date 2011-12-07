@@ -429,8 +429,10 @@ void QDeclarativeTypePrivate::init() const
     // XXX - very inefficient
     const QMetaObject *mo = m_baseMetaObject;
     if (m_extFunc) {
-        QMetaObject *mmo = new QMetaObject;
-        *mmo = *m_extMetaObject;
+        QMetaObjectBuilder builder;
+        clone(builder, m_extMetaObject, m_extMetaObject, m_extMetaObject);
+        builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+        QMetaObject *mmo = builder.toMetaObject();
         mmo->d.superdata = mo;
         QDeclarativeProxyMetaObject::ProxyData data = { mmo, m_extFunc, 0, 0 };
         m_metaObjects << data;
@@ -443,6 +445,7 @@ void QDeclarativeTypePrivate::init() const
             if (t->d->m_extFunc) {
                 QMetaObjectBuilder builder;
                 clone(builder, t->d->m_extMetaObject, t->d->m_baseMetaObject, m_baseMetaObject);
+                builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
                 QMetaObject *mmo = builder.toMetaObject();
                 mmo->d.superdata = m_baseMetaObject;
                 if (!m_metaObjects.isEmpty())

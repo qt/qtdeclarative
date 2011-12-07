@@ -114,6 +114,7 @@ private slots:
     void objectHasOwnProperty();
     void selfDeletingBinding();
     void extendedObjectPropertyLookup();
+    void extendedObjectPropertyLookup2();
     void scriptErrors();
     void functionErrors();
     void propertyAssignmentErrors();
@@ -1360,6 +1361,21 @@ void tst_qdeclarativeecmascript::extendedObjectPropertyLookup()
     delete object;
 }
 
+/*
+Test that extended object properties can be accessed correctly.
+*/
+void tst_qdeclarativeecmascript::extendedObjectPropertyLookup2()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("extendedObjectPropertyLookup2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVariant returnValue;
+    QVERIFY(QMetaObject::invokeMethod(object, "getValue", Q_RETURN_ARG(QVariant, returnValue)));
+    QCOMPARE(returnValue.toInt(), 42);
+
+    delete object;
+}
 /*
 Test file/lineNumbers for binding/Script errors.
 */
