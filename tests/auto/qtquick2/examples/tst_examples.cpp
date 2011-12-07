@@ -50,6 +50,13 @@
 #include <QDeclarativeEngine>
 #include <QDeclarativeError>
 
+static QtMsgHandler testlibMsgHandler = 0;
+void msgHandlerFilter(QtMsgType type, const char *msg)
+{
+    if (type == QtCriticalMsg || type == QtFatalMsg)
+        (*testlibMsgHandler)(type, msg);
+}
+
 class tst_examples : public QObject
 {
     Q_OBJECT
@@ -57,8 +64,13 @@ public:
     tst_examples();
 
 private slots:
+    void init();
+    void cleanup();
+
     void sgexamples_data();
     void sgexamples();
+    void sgsnippets_data();
+    void sgsnippets();
 
     void namingConvention();
 private:
@@ -103,6 +115,18 @@ tst_examples::tst_examples()
     excludedDirs << "examples/declarative/flickr";
     excludedDirs << "examples/declarative/photoviewer";
 #endif
+}
+
+void tst_examples::init()
+{
+    if (!qstrcmp(QTest::currentTestFunction(), "sgsnippets"))
+        testlibMsgHandler = qInstallMsgHandler(msgHandlerFilter);
+}
+
+void tst_examples::cleanup()
+{
+    if (!qstrcmp(QTest::currentTestFunction(), "sgsnippets"))
+        qInstallMsgHandler(testlibMsgHandler);
 }
 
 /*
@@ -201,23 +225,16 @@ that they start and exit cleanly.
 Examples are any .qml files under the examples/ directory that start
 with a lower case letter.
 */
-static void silentErrorsMsgHandler(QtMsgType, const char *)
-{
-}
-
-
 void tst_examples::sgexamples_data()
 {
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/declarative/";
     QString tutorials = QLatin1String(SRCDIR) + "/../../../../examples/tutorials/"; //Only declarative tutorials since modularization
-    QString snippets = QLatin1String(SRCDIR) + "/../../../../doc/src/snippets/declarative";
 
     QStringList files;
     files << findQmlFiles(QDir(examples));
     files << findQmlFiles(QDir(tutorials));
-    files << findQmlFiles(QDir(snippets));
 
     foreach (const QString &file, files)
         QTest::newRow(qPrintable(file)) << file;
@@ -227,8 +244,42 @@ void tst_examples::sgexamples()
 {
     QFETCH(QString, file);
 
-    QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
-    qInstallMsgHandler(old);
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(file));
+    if (component.status() == QDeclarativeComponent::Error)
+        qWarning() << component.errors();
+    QCOMPARE(component.status(), QDeclarativeComponent::Ready);
+
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QQuickItem *root = qobject_cast<QQuickItem *>(object.data());
+    if (!root)
+        component.completeCreate();
+    QVERIFY(root);
+
+    QQuickCanvas canvas;
+    root->setParentItem(canvas.rootItem());
+    component.completeCreate();
+    canvas.show();
+
+    QTest::qWaitForWindowShown(&canvas);
+
+}
+
+void tst_examples::sgsnippets_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QString snippets = QLatin1String(SRCDIR) + "/../../../../doc/src/snippets/declarative";
+
+    QStringList files;
+    files << findQmlFiles(QDir(snippets));
+
+    foreach (const QString &file, files)
+        QTest::newRow(qPrintable(file)) << file;
+}
+
+void tst_examples::sgsnippets()
+{
+    QFETCH(QString, file);
 
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(file));
     if (component.status() == QDeclarativeComponent::Error)
