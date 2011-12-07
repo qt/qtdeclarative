@@ -107,7 +107,6 @@ can be used to produce sophisticated interfaces and applications:
 
 \endtable
 
-
 \section1 Code Snippets
 
 These QML examples are small, simple applications that show how to use a particular
@@ -239,6 +238,15 @@ to QML, you may also find the \l{QML Tutorial}{Hello World} and
 
 \list
 \o \l{src/imports/folderlistmodel}{Folder List Model} - a C++ model plugin
+\endlist
+
+\section1 Tutorials
+
+\list
+\o \l {QML Tutorial}{Hello World}
+\o \l {QML Advanced Tutorial}{Same Game}
+\o \l {Tutorial: Writing QML Extensions with C++}{Writing QML Extensions with C++}
+\o \l {QML Dynamic View Ordering Tutorial}{Dynamic View Ordering}
 \endlist
 
 */
