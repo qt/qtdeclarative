@@ -67,7 +67,8 @@ HEADERS += \
     $$PWD/qquickmultipointtoucharea_p.h \
     $$PWD/qquickitemview_p.h \
     $$PWD/qquickitemview_p_p.h \
-    $$PWD/qquickwindowmodule_p.h
+    $$PWD/qquickwindowmodule_p.h \
+    $$PWD/qquickwindowmanager_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -114,7 +115,8 @@ SOURCES += \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
     $$PWD/qquickitemview.cpp \
-    $$PWD/qquickwindowmodule.cpp
+    $$PWD/qquickwindowmodule.cpp \
+    $$PWD/qquickwindowmanager.cpp
 
 SOURCES += \
     $$PWD/qquickshadereffect.cpp \
@@ -129,3 +131,5 @@ HEADERS += \
     $$PWD/qquickshadereffectsource_p.h \
 
 include(context2d/context2d.pri)
+
+

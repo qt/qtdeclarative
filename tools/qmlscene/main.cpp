@@ -159,7 +159,6 @@ struct Options
     bool scenegraphOnGraphicsview;
     bool clip;
     bool versionDetection;
-    bool vsync;
 };
 
 #if defined(QMLSCENE_BUNDLE)
@@ -364,8 +363,6 @@ int main(int argc, char ** argv)
                 options.versionDetection = false;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
                 imports.append(QString::fromLatin1(argv[++i]));
-            else if (lowerArgument == QLatin1String("--no-vsync-animations"))
-                options.vsync = false;
             else if (lowerArgument == QLatin1String("--help")
                      || lowerArgument == QLatin1String("-help")
                      || lowerArgument == QLatin1String("--h")
@@ -395,7 +392,6 @@ int main(int argc, char ** argv)
         if (options.versionDetection)
             checkAndAdaptVersion(options.file);
         QQuickView *qxView = new MyQQuickView();
-        qxView->setVSyncAnimations(options.vsync);
         engine = qxView->engine();
         for (int i = 0; i < imports.size(); ++i)
             engine->addImportPath(imports.at(i));

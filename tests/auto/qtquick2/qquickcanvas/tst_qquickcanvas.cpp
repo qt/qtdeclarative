@@ -203,6 +203,11 @@ private slots:
 
     void qmlCreation();
     void clearColor();
+
+    void grab();
+    void multipleWindows();
+
+    void animationsWhileHidden();
 };
 
 tst_qquickcanvas::tst_qquickcanvas()
@@ -221,6 +226,7 @@ void tst_qquickcanvas::cleanupTestCase()
 void tst_qquickcanvas::constantUpdates()
 {
     QQuickCanvas canvas;
+    canvas.resize(250, 250);
     ConstantUpdateItem item(canvas.rootItem());
     canvas.show();
     QTRY_VERIFY(item.iterations > 60);
@@ -520,6 +526,8 @@ void tst_qquickcanvas::mouseFiltering()
     QCOMPARE(middleItem->mousePressId, 1);
     QCOMPARE(bottomItem->mousePressId, 2);
     QCOMPARE(topItem->mousePressId, 3);
+
+    delete canvas;
 }
 
 void tst_qquickcanvas::qmlCreation()
@@ -550,6 +558,68 @@ void tst_qquickcanvas::clearColor()
     QTest::qWaitForWindowShown(canvas);
     QCOMPARE(canvas->clearColor(), QColor(Qt::blue));
     delete canvas;
+}
+
+void tst_qquickcanvas::grab()
+{
+    QQuickCanvas canvas;
+    canvas.setClearColor(Qt::red);
+
+    canvas.resize(250, 250);
+    canvas.show();
+
+    QImage content = canvas.grabFrameBuffer();
+    QCOMPARE(content.width(), canvas.width());
+    QCOMPARE(content.height(), canvas.height());
+    QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
+}
+
+void tst_qquickcanvas::multipleWindows()
+{
+    QList<QQuickCanvas *> windows;
+    for (int i=0; i<6; ++i) {
+        QQuickCanvas *c = new QQuickCanvas();
+        c->setClearColor(Qt::GlobalColor(Qt::red + i));
+        c->resize(300, 200);
+        c->setPos(100 + i * 30, 100 + i * 20);
+        c->show();
+        windows << c;
+        QVERIFY(c->visible());
+    }
+
+    // move them
+    for (int i=0; i<windows.size(); ++i) {
+        QQuickCanvas *c = windows.at(i);
+        c->setPos(c->x() - 10, c->y() - 10);
+    }
+
+    // resize them
+    for (int i=0; i<windows.size(); ++i) {
+        QQuickCanvas *c = windows.at(i);
+        c->resize(200, 150);
+    }
+
+    qDeleteAll(windows);
+}
+
+void tst_qquickcanvas::animationsWhileHidden()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.loadUrl(TESTDATA("AnimationsWhileHidden.qml"));
+    QObject* created = component.create();
+
+    QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);
+    QVERIFY(canvas);
+    QVERIFY(canvas->visible());
+
+    // Now hide the window and verify that it went off screen
+    canvas->hide();
+    QTest::qWait(10);
+    QVERIFY(!canvas->visible());
+
+    // Running animaiton should cause it to become visible again shortly.
+    QTRY_VERIFY(canvas->visible());
 }
 
 QTEST_MAIN(tst_qquickcanvas)

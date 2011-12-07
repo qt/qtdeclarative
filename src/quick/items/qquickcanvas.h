@@ -90,9 +90,6 @@ public:
 
     QSGEngine *sceneGraphEngine() const;
 
-    void setVSyncAnimations(bool enabled);
-    bool vsyncAnimations() const;
-
     QImage grabFrameBuffer();
 
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
@@ -115,6 +112,7 @@ public:
 Q_SIGNALS:
     void frameSwapped();
     void sceneGraphInitialized();
+    void sceneGraphInvalidated();
     void beforeRendering();
     void afterRendering();
     void clearColorChanged(const QColor &);
@@ -144,8 +142,7 @@ protected:
 
 private Q_SLOTS:
     void maybeUpdate();
-    void animationStarted();
-    void animationStopped();
+    void cleanupSceneGraph();
 
 private:
     friend class QQuickItem;
