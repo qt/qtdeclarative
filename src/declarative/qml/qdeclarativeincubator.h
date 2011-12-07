@@ -55,7 +55,7 @@ class QDeclarativeEngine;
 class QDeclarativeIncubatorPrivate;
 class Q_DECLARATIVE_EXPORT QDeclarativeIncubator
 {
-    Q_DISABLE_COPY(QDeclarativeIncubator);
+    Q_DISABLE_COPY(QDeclarativeIncubator)
 public:
     enum IncubationMode {
         Asynchronous,
@@ -102,7 +102,7 @@ private:
 class QDeclarativeEnginePrivate;
 class Q_DECLARATIVE_EXPORT QDeclarativeIncubationController
 {
-    Q_DISABLE_COPY(QDeclarativeIncubationController);
+    Q_DISABLE_COPY(QDeclarativeIncubationController)
 public:
     QDeclarativeIncubationController();
     virtual ~QDeclarativeIncubationController();

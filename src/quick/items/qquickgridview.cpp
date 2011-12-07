@@ -495,7 +495,6 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 
 bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
-    Q_Q(QQuickGridView);
     FxGridItemSG *item = 0;
     bool changed = false;
 
