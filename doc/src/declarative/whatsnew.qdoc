@@ -62,10 +62,17 @@ Arbitrary functionality may be provided in a namespace through a Module API.  Se
 
 JavaScript (.js) files may now import QML modules and other JavaScript files.  See \l{Importing One JavaScript File From Another} for more information.
 
-QML properties of type \c variant can now hold pixmaps.  See \l{Scarce Resources in JavaScript} for more information
+A new property type "var" has been added which obsoletes the old "variant" property type.
+Properties of the "var" type may hold JavaScript references.  See \l{QML Basic Types} for more information.
+
+QML properties of type \c var and \c variant can now hold pixmaps.  See \l{Scarce Resources in JavaScript} for more information
 
 QDeclarativeExpression can now be directly (and more efficiently) constructed from a
 QDeclarativeScriptString.
+
+Support for certain sequence types (QList<int>, QList<qreal>, QList<bool>, QList<QUrl>, QList<QString> and QStringList) has been improved.
+QObjects can define Q_PROPERTYs of these types which can be accessed transparently from JavaScript.  See the section on
+sequences in \l{Extending QML Functionalities using C++} for more information.
 
 \section2 Canvas Item
 
