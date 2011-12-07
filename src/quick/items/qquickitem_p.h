@@ -280,6 +280,7 @@ public:
     bool inheritMirrorFromItem:1;
     bool childrenDoNotOverlap:1;
     bool staticSubtreeGeometry:1;
+    bool isAccessible:1;
 
     QQuickCanvas *canvas;
     QSGContext *sceneGraphContext() const { Q_ASSERT(canvas); return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
@@ -336,6 +337,8 @@ public:
 
     Qt::MouseButtons acceptedMouseButtons;
     Qt::InputMethodHints imHints;
+
+    void setAccessibleFlagAndListener();
 
     QPointF transformOriginPoint;
 

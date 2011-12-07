@@ -66,6 +66,7 @@
 #include <private/qlistmodelinterface_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qdeclarativeaccessors_p.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 
 #include <float.h>
 
@@ -1603,6 +1604,22 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
     }
 }
 
+void QQuickItemPrivate::setAccessibleFlagAndListener()
+{
+    Q_Q(QQuickItem);
+    QQuickItem *item = q;
+    while (item) {
+        if (item->d_func()->isAccessible)
+            break; // already set - grandparents should have the flag set as well.
+
+        if (item->canvas() && item->canvas()->rootItem() == item)
+            break; // don't add a listener to the canvas root item
+
+        item->d_func()->isAccessible = true;
+        item = item->d_func()->parentItem;
+    }
+}
+
 /*!
     \class QQuickItem
     \brief The QQuickItem class provides the most basic of all visual items in QML.
@@ -1804,6 +1821,7 @@ QQuickItem::~QQuickItem()
         if (change.types & QQuickItemPrivate::Destroyed)
             change.listener->itemDestroyed(this);
     }
+
     d->changeListeners.clear();
     delete d->_anchorLines; d->_anchorLines = 0;
     delete d->_anchors; d->_anchors = 0;
@@ -1913,6 +1931,10 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
     d->parentNotifier.notify();
+    if (d->isAccessible && d->parentItem) {
+        d->parentItem->d_func()->setAccessibleFlagAndListener();
+    }
+
     emit parentChanged(d->parentItem);
 }
 
@@ -2251,6 +2273,7 @@ QQuickItemPrivate::QQuickItemPrivate()
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
   inheritMirrorFromParent(false), inheritMirrorFromItem(false), childrenDoNotOverlap(false),
   staticSubtreeGeometry(false),
+  isAccessible(false),
 
   canvas(0), parentItem(0), sortedChildItems(&childItems),
 
@@ -2886,6 +2909,11 @@ void QQuickItem::updatePolish()
 {
 }
 
+void QQuickItem::sendAccessibilityUpdate()
+{
+    Q_D(QQuickItem);
+}
+
 void QQuickItemPrivate::removeItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
 {
     ChangeListener change(listener, types);
@@ -2931,6 +2959,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 void QQuickItem::focusInEvent(QFocusEvent *)
 {
+    QAccessible::updateAccessibility(this, 0, QAccessible::Focus);
 }
 
 void QQuickItem::focusOutEvent(QFocusEvent *)
@@ -3894,6 +3923,9 @@ void QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         if (change.types & QQuickItemPrivate::Visibility)
             change.listener->itemVisibilityChanged(q);
     }
+
+    if (isAccessible)
+        QAccessible::updateAccessibility(q, 0, effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide );
 
     emit q->visibleChanged();
 }

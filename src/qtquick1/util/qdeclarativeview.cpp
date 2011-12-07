@@ -743,4 +743,10 @@ void QDeclarativeView::paintEvent(QPaintEvent *event)
 
 }
 
+QDeclarativeItem * QDeclarativeView::accessibleRootItem() const
+{
+    Q_D(const QDeclarativeView);
+    return d->declarativeItemRoot;
+}
+
 QT_END_NAMESPACE

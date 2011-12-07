@@ -57,6 +57,7 @@ class QGraphicsObject;
 class QDeclarativeEngine;
 class QDeclarativeContext;
 class QDeclarativeError;
+class QDeclarativeItem;
 
 QT_MODULE(Declarative)
 
@@ -113,6 +114,9 @@ protected:
 private:
     Q_DISABLE_COPY(QDeclarativeView)
     Q_DECLARE_PRIVATE(QDeclarativeView)
+// Accessibility support:
+    friend class QAccessibleDeclarativeView;
+    QDeclarativeItem *accessibleRootItem() const;
 };
 
 QT_END_NAMESPACE

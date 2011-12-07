@@ -39,46 +39,60 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
 
-BorderImage {
-    id: button
+#include "qdeclarativeaccessible.h"
+#include "qaccessiblequickview.h"
+#include "qaccessiblequickitem.h"
 
-    property alias operation: buttonText.text
-    property string color: ""
+#include <QtQuick/QQuickView>
+#include <QtQuick/QQuickItem>
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
+#include <qaccessibleplugin.h>
+#include <qvariant.h>
+#include <qplugin.h>
+#include <qaccessible.h>
 
-    signal clicked
+#ifndef QT_NO_ACCESSIBILITY
 
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
+QT_BEGIN_NAMESPACE
 
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
+class AccessibleQuickFactory : public QAccessiblePlugin
+{
+public:
+    AccessibleQuickFactory();
 
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
+    QStringList keys() const;
+    QAccessibleInterface *create(const QString &classname, QObject *object);
+};
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
-        }
-    }
-
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
-    }
+AccessibleQuickFactory::AccessibleQuickFactory()
+{
 }
+
+QStringList AccessibleQuickFactory::keys() const
+{
+    QStringList list;
+    list << QLatin1String("QQuickView");
+    list << QLatin1String("QQuickItem");
+    return list;
+}
+
+QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, QObject *object)
+{
+    if (classname == QLatin1String("QQuickView")) {
+        return new QAccessibleQuickView(qobject_cast<QQuickView *>(object)); // FIXME
+    } else if (classname == QLatin1String("QQuickItem")) {
+            QQuickItem * item = qobject_cast<QQuickItem *>(object);
+            Q_ASSERT(item);
+            return new QAccessibleQuickItem(item);
+    }
+
+    return 0;
+}
+
+Q_EXPORT_STATIC_PLUGIN(AccessibleQuickFactory)
+Q_EXPORT_PLUGIN2(qtaccessiblequick, AccessibleQuickFactory)
+
+QT_END_NAMESPACE
+
+#endif // QT_NO_ACCESSIBILITY

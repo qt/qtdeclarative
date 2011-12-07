@@ -76,6 +76,7 @@
 #include "QtQuick1/private/qdeclarativegraphicswidget_p.h"
 #include "QtQuick1/private/qdeclarativeanchors_p.h"
 #include "QtQuick1/private/qdeclarativepincharea_p.h"
+#include "QtQuick1/private/qdeclarativeaccessibleattached_p.h"
 
 static QDeclarativePrivate::AutoParentResult qgraphicsobject_autoParent(QObject *obj, QObject *parent)
 {
@@ -199,6 +200,11 @@ void QDeclarative1ItemModule::defineModule(QDeclarativeQtQuick1Module::Module mo
         qmlRegisterRevision<QDeclarative1ImplicitSizePaintedItem,0>("QtQuick",1,0);
         qmlRegisterRevision<QDeclarative1ImplicitSizePaintedItem,1>("QtQuick",1,1);
         qmlRegisterUncreatableType<QDeclarative1LayoutMirroringAttached>("QtQuick",1,1,"LayoutMirroring", QDeclarative1LayoutMirroringAttached::tr("LayoutMirroring is only available via attached properties"));
+#ifndef QT_NO_ACCESSIBILITY
+        qmlRegisterUncreatableType<QDeclarativeAccessibleAttached>("QtQuick",1,0,"Accessible",QDeclarativeAccessibleAttached::tr("Accessible is only available via attached properties"));
+        qmlRegisterUncreatableType<QDeclarativeAccessibleAttached>("QtQuick",1,1,"Accessible",QDeclarativeAccessibleAttached::tr("Accessible is only available via attached properties"));
+#endif
+
     } else if (module == QDeclarativeQtQuick1Module::Qt47) {
 #ifdef QT_NO_MOVIE
         qmlRegisterTypeNotAvailable("Qt",4,7,"AnimatedImage",

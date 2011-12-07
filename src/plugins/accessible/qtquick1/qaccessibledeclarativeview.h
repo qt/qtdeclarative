@@ -39,46 +39,37 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+#ifndef QACCESSIBLEDECLARATIVEVIEW_H
+#define QACCESSIBLEDECLARATIVEVIEW_H
 
-BorderImage {
-    id: button
+#include <QtGui/qaccessible2.h>
+#include <QtWidgets/qaccessiblewidget.h>
 
-    property alias operation: buttonText.text
-    property string color: ""
+#include <QtQuick1/qdeclarativeview.h>
+#include <QtQuick1/qdeclarativeitem.h>
+#include <QtWidgets/qwidget.h>
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
+QT_BEGIN_NAMESPACE
 
-    signal clicked
+#ifndef QT_NO_ACCESSIBILITY
 
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
+class QAccessibleDeclarativeView: public QAccessibleWidget
+{
+public:
+    explicit QAccessibleDeclarativeView(QWidget *widget);
 
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
+    QAccessibleInterface *child(int index) const;
+    int childCount() const;
+    int navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const;
+    QAccessibleInterface *childAt(int x, int y) const;
+    int indexOfChild(const QAccessibleInterface *iface) const;
 
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
+private:
+    QDeclarativeView *m_view;
+};
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
-        }
-    }
+#endif // QT_NO_ACCESSIBILITY
 
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
-    }
-}
+QT_END_NAMESPACE
+
+#endif // QACCESSIBLEDECLARATIVEVIEW_H

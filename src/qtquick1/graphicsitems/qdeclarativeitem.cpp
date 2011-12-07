@@ -53,6 +53,8 @@
 #include <QtQuick1/private/qdeclarativestategroup_p.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeinfo.h>
+// ### Due to the workaround mentioned in accessibleRole()
+#include <QtQuick1/private/qdeclarativetext_p.h>
 
 #include <QDebug>
 #include <QPen>
@@ -64,6 +66,8 @@
 #include <private/qv8engine_p.h>
 #include <QtWidgets/qgraphicstransform.h>
 #include <private/qlistmodelinterface_p.h>
+#include <QAccessible>
+#include <QtQuick1/private/qdeclarativeaccessibleattached_p.h>
 
 #include <float.h>
 
@@ -1779,7 +1783,11 @@ QDeclarativeItem::~QDeclarativeItem()
 */
 void QDeclarativeItem::setParentItem(QDeclarativeItem *parent)
 {
+    Q_D(QDeclarativeItem);
     QGraphicsObject::setParentItem(parent);
+    if (d->isAccessible && parentItem()) {
+        parentItem()->d_func()->setAccessibleFlagAndListener();
+    }
 }
 
 /*!
@@ -3020,6 +3028,25 @@ QDeclarativeItemPrivate::AnchorLines::AnchorLines(QGraphicsObject *q)
     vCenter.anchorLine = QDeclarative1AnchorLine::VCenter;
     baseline.item = q;
     baseline.anchorLine = QDeclarative1AnchorLine::Baseline;
+}
+
+void QDeclarativeItemPrivate::setAccessibleFlagAndListener()
+{
+    Q_Q(QDeclarativeItem);
+    QDeclarativeItem *item = q;
+    while (item) {
+        if (item->d_func()->isAccessible)
+            break; // already set - grandparents should have the flag set as well.
+
+//        if (qmlEngine(item) != 0) {
+//            item->d_func()->addItemChangeListener(QDeclarativeEnginePrivate::getAccessibilityUpdateManager(qmlEngine(item)),
+//                QDeclarativeItemPrivate::Geometry | QDeclarativeItemPrivate::Visibility |
+//                QDeclarativeItemPrivate::Opacity | QDeclarativeItemPrivate::Destroyed);
+//        }
+
+        item->d_func()->isAccessible = true;
+        item = item->parentItem();
+    }
 }
 
 QPointF QDeclarativeItemPrivate::computeTransformOrigin() const

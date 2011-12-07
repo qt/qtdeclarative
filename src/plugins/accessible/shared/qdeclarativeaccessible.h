@@ -39,46 +39,60 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+#ifndef QDECLARATIVEACCESSIBLE_H
+#define QDECLARATIVEACCESSIBLE_H
 
-BorderImage {
-    id: button
+#include <QtGui/qaccessibleobject.h>
+#include <QtGui/qaccessible2.h>
+//#include <QtQuick1/qdeclarativeview.h>
+//#include <QtQuick1/qdeclarativeitem.h>
+#include <QtDeclarative/qdeclarativeproperty.h>
 
-    property alias operation: buttonText.text
-    property string color: ""
+//#include <private/qdeclarativeaccessible_p.h>
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
+QT_BEGIN_NAMESPACE
 
-    signal clicked
+#ifndef QT_NO_ACCESSIBILITY
 
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
+/*
+    -- Declarative Accessibility Overview. --
 
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
+    * Item interface classes:
+    QAccessibleDeclarativeItem for QtQuick1
+    QAccessibleQuickItem for for QtQuick2
+    Common base class: QDeclarativeAccessible
 
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
+    * View interface classes.
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
-        }
-    }
+    These are the root of the QML accessible tree and connects it to the widget hierarchy.
 
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
-    }
-}
+    QAccessbileDeclarativeView is the root for the QGraphicsView implementation
+    QAccessbileQuickView is the root for the SceneGraph implementation
+
+*/
+class QDeclarativeAccessible: public QAccessibleObject, public QAccessibleActionInterface
+{
+public:
+    ~QDeclarativeAccessible();
+
+    virtual QRect viewRect() const = 0;
+    QFlags<QAccessible::RelationFlag> relationTo(const QAccessibleInterface*) const;
+    QAccessibleInterface *childAt(int, int) const;
+    QFlags<QAccessible::StateFlag> state() const;
+    QVariant invokeMethod(QAccessible::Method, const QVariantList &);
+
+    QStringList actionNames() const;
+    void doAction(const QString &actionName);
+    QStringList keyBindingsForAction(const QString &actionName) const;
+
+protected:
+    virtual bool clipsChildren() const = 0;
+    // For subclasses, use instantiateObject factory method outside the class.
+    QDeclarativeAccessible(QObject *object);
+};
+
+#endif // QT_NO_ACCESSIBILITY
+
+QT_END_NAMESPACE
+
+#endif // QDECLARATIVEACCESSIBLE_H

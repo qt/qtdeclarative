@@ -1920,6 +1920,9 @@ void QQuickText::componentComplete()
     QQuickItem::componentComplete();
     if (d->updateOnComponentComplete)
         d->updateLayout();
+
+    // Enable accessibility for text items.
+    d->setAccessibleFlagAndListener();
 }
 
 

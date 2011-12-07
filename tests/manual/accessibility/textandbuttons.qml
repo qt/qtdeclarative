@@ -41,44 +41,54 @@
 
 import QtQuick 2.0
 
-BorderImage {
-    id: button
-
-    property alias operation: buttonText.text
-    property string color: ""
-
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
-
-    signal clicked
-
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
+Rectangle {
+    id : rect
+    width: 300
+    height: 200
 
     Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
+        width : 200
+        height : 20
 
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
+        id: button
+        anchors.top : rect.top
+        anchors.topMargin: 30
+        property string text : "Click to activate"
+        property int counter : 0
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
+        Accessible.role : Accessible.Button
+
+        function accessibleAction(action) {
+            if (action == Qt.Press)
+                buttonAction()
+        }
+
+        function buttonAction() {
+            ++counter
+            text = "clicked " + counter
+
+            text2.x += 20
+        }
+
+        Text {
+            id : text1
+            anchors.fill: parent
+            text : parent.text
+        }
+
+        MouseArea {
+            id : mouseArea
+            anchors.fill: parent
+            onClicked: parent.buttonAction()
         }
     }
 
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
+    Text {
+        id : text2
+        anchors.top: button.bottom
+        anchors.topMargin: 50
+        text : "Hello World " + x
+
+        Behavior on x { PropertyAnimation { duration: 500 } }
     }
 }

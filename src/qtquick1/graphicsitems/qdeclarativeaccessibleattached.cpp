@@ -39,46 +39,38 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+#include "qdeclarativeaccessibleattached_p.h"
 
-BorderImage {
-    id: button
+#ifndef QT_NO_ACCESSIBILITY
 
-    property alias operation: buttonText.text
-    property string color: ""
+#include "private/qdeclarativeitem_p.h"
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
+QT_BEGIN_NAMESPACE
 
-    signal clicked
 
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
+QDeclarativeAccessibleAttached::QDeclarativeAccessibleAttached(QObject *parent)
+    : QObject(parent)
+{
+    Q_ASSERT(parent);
+    QDeclarativeItem *item = qobject_cast<QDeclarativeItem*>(parent);
+    if (!item)
+        return;
 
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
-
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
-        }
-    }
-
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
-    }
+    // Enable accessibility for items with accessible content. This also
+    // enables accessibility for the ancestors of such items.
+    item->d_func()->setAccessibleFlagAndListener();
+    QAccessible::updateAccessibility(item, 0, QAccessible::ObjectCreated);
 }
+
+QDeclarativeAccessibleAttached::~QDeclarativeAccessibleAttached()
+{
+}
+
+QDeclarativeAccessibleAttached *QDeclarativeAccessibleAttached::qmlAttachedProperties(QObject *obj)
+{
+    return new QDeclarativeAccessibleAttached(obj);
+}
+
+QT_END_NAMESPACE
+
+#endif

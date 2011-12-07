@@ -51,6 +51,7 @@
 #include <QtCore/QList>
 #include <QtGui/qevent.h>
 #include <QtGui/qfont.h>
+#include <QtGui/qaccessible.h>
 
 QT_BEGIN_HEADER
 
@@ -393,6 +394,9 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     virtual void updatePolish();
 
+protected Q_SLOTS:
+    void sendAccessibilityUpdate();
+
 protected:
     QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = 0);
 
@@ -400,6 +404,8 @@ private:
     friend class QQuickCanvas;
     friend class QQuickCanvasPrivate;
     friend class QSGRenderer;
+    friend class QAccessibleQuickItem;
+    friend class QQuickAccessibleAttached;
     Q_DISABLE_COPY(QQuickItem)
     Q_DECLARE_PRIVATE(QQuickItem)
 };

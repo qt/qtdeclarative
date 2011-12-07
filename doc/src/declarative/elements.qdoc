@@ -179,6 +179,11 @@ Elements that animate properties based on data types
 \o The \l{QtQuick.Particles 2} module provides a set of Particle System elements for QtQuick 2
 \endlist
 
+\section1 Accessibility
+\list
+\o \l {Accessible} - Attached property to make components accessible
+\endlist
+
 */
 
 

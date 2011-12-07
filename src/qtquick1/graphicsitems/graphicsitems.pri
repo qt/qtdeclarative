@@ -2,6 +2,7 @@ INCLUDEPATH += $$PWD
 
 HEADERS += \
     $$PWD/qdeclarativeitemsmodule_p.h \
+    $$PWD/qdeclarativeaccessibleattached_p.h \
     $$PWD/qdeclarativeanchors_p.h \
     $$PWD/qdeclarativeanchors_p_p.h \
     $$PWD/qdeclarativeevents_p_p.h \
@@ -59,6 +60,7 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/qdeclarativeitemsmodule.cpp \
+    $$PWD/qdeclarativeaccessibleattached.cpp \
     $$PWD/qdeclarativeanchors.cpp \
     $$PWD/qdeclarativeevents.cpp \
     $$PWD/qdeclarativeflickable.cpp \

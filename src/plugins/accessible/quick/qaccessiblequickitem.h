@@ -39,46 +39,45 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+#ifndef QACCESSIBLEQUICKITEM_H
+#define QACCESSIBLEQUICKITEM_H
 
-BorderImage {
-    id: button
+#include <QtQuick/QQuickItem>
+#include <QtQuick/QQuickView>
+#include "qdeclarativeaccessible.h"
 
-    property alias operation: buttonText.text
-    property string color: ""
+QT_BEGIN_NAMESPACE
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
+#ifndef QT_NO_ACCESSIBILITY
 
-    signal clicked
+class QAccessibleQuickItem : public QDeclarativeAccessible
+{
+public:
+    QAccessibleQuickItem(QQuickItem *item);
 
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
+    QRect rect() const;
+    QRect viewRect() const;
 
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
+    bool clipsChildren() const;
 
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
+    QAccessibleInterface *parent() const;
+    QAccessibleInterface *child(int index) const;
+    int childCount() const;
+    int navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const;
+    int indexOfChild(const QAccessibleInterface *iface) const;
+    QList<QQuickItem *> childItems() const;
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
-        }
-    }
+    QFlags<QAccessible::StateFlag> state() const;
+    QAccessible::Role role() const;
+    QString text(QAccessible::Text) const;
 
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
-    }
-}
+    bool isAccessible() const;
+private:
+   QQuickItem *m_item;
+};
+
+#endif // QT_NO_ACCESSIBILITY
+
+QT_END_NAMESPACE
+
+#endif // QACCESSIBLEQUICKITEM_H

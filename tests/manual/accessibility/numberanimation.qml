@@ -41,44 +41,36 @@
 
 import QtQuick 2.0
 
-BorderImage {
-    id: button
-
-    property alias operation: buttonText.text
-    property string color: ""
-
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
-
-    signal clicked
-
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
-
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
-
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
+Rectangle {
+    id: flashingblob
+    width: 300; height: 300
 
     MouseArea {
-        id: mouseArea
         anchors.fill: parent
         onClicked: {
-            doOp(operation)
-            button.clicked()
+            animatePosition.start()
         }
     }
 
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
+    Rectangle {
+        id : animatee
+        width: 100; height: 100
+        y : 100
+        color: "blue"
+        opacity: 0.5
+        Text {
+            anchors.centerIn: parent
+            text : "Be Well"
+        }
+    }
+
+    NumberAnimation {
+        id: animatePosition
+        target: animatee
+        properties: "x"
+        from: animatee.x
+        to: animatee.x + 50
+        loops: 1
+        easing {type: Easing.Linear;}
     }
 }

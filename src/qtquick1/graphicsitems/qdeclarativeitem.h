@@ -50,6 +50,7 @@
 #include <QtGui/qfont.h>
 #include <QtWidgets/qgraphicsitem.h>
 #include <QtWidgets/qgraphicstransform.h>
+#include <QtGui/qaccessible.h>
 #include <QtWidgets/qaction.h>
 
 QT_BEGIN_HEADER
@@ -198,6 +199,8 @@ protected:
 private:
     Q_DISABLE_COPY(QDeclarativeItem)
     Q_DECLARE_PRIVATE_D(QGraphicsItem::d_ptr.data(), QDeclarativeItem)
+
+    friend class QDeclarativeAccessibleAttached;
 };
 
 template<typename T>

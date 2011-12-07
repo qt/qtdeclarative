@@ -1,10 +1,11 @@
 HEADERS += \
     $$PWD/qquickevents_p_p.h \
-    $$PWD/qquickitemchangelistener_p.h \
     $$PWD/qquickanchors_p.h \
     $$PWD/qquickanchors_p_p.h \
+    $$PWD/qquickaccessibleattached_p.h \
     $$PWD/qquickitem.h \
     $$PWD/qquickitem_p.h \
+    $$PWD/qquickitemchangelistener_p.h \
     $$PWD/qquickrectangle_p.h \
     $$PWD/qquickrectangle_p_p.h \
     $$PWD/qquickcanvas.h \
@@ -116,6 +117,7 @@ SOURCES += \
     $$PWD/qquickspriteengine.cpp \
     $$PWD/qquicksprite.cpp \
     $$PWD/qquickspriteimage.cpp \
+    $$PWD/qquickaccessibleattached.cpp \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \

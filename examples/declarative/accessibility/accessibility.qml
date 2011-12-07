@@ -40,45 +40,66 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Window 2.0
+import "widgets"
 
-BorderImage {
-    id: button
+Rectangle {
+    id: window
 
-    property alias operation: buttonText.text
-    property string color: ""
+    width: 360; height: 300
+    color: "white"
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
-
-    signal clicked
-
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
-
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
-
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
-
-    MouseArea {
-        id: mouseArea
+    Column {
+        id: column
+        spacing: 6
         anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
+        width: parent.width
+        Row {
+            spacing: 6
+            width: column.width
+            Button { width: 100; height: column.h + 20; text: "Send" }
+            Button { width: 100; height: column.h + 20; text: "Discard" }
         }
-    }
 
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
+        Row {
+            spacing: 6
+            width: column.width
+            height: column.h
+            Text {
+                id: subjectLabel
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
+                text: "Subject:"
+                width: 50
+            }
+            Rectangle {
+                id: subjectBorder
+                Accessible.role: Accessible.EditableText
+                Accessible.name: subjectEdit.text
+                border.width: 1
+                border.color: "black"
+                height: subjectEdit.height
+                width: 304
+                TextInput {
+                    id: subjectEdit
+                    text: "Vacation plans"
+                }
+            }
+        }
+        Rectangle {
+            id: textBorder
+            Accessible.role: Accessible.EditableText
+            property alias text : textEdit.text
+            border.width: 1
+            border.color: "black"
+            width: parent.width
+            height: textEdit.height
+            TextEdit {
+                id: textEdit
+                text: "Hi, we're going to the Dolomites this summer. Weren't you also going to northern Italy? \n\nbest wishes, your friend Luke"
+                width: parent.width
+                wrapMode: TextEdit.WordWrap
+            }
+        }
     }
 }

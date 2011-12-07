@@ -71,6 +71,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qdebug.h>
+#include <QtGui/qaccessible.h>
 
 #include <QtWidgets/private/qgraphicsitem_p.h>
 
@@ -287,6 +288,7 @@ public:
     bool isMirrorImplicit:1;
     bool inheritMirrorFromParent:1;
     bool inheritMirrorFromItem:1;
+    bool isAccessible:1;
 
     QDeclarativeItemKeyFilter *keyHandler;
 
@@ -298,6 +300,7 @@ public:
     QDeclarative1LayoutMirroringAttached* attachedLayoutDirection;
 
     bool hadSubFocusItem;
+    void setAccessibleFlagAndListener();
 
     QPointF computeTransformOrigin() const;
 
@@ -616,6 +619,7 @@ private:
 
     static const SigMap sigMap[];
 };
+
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativeItemPrivate::ChangeTypes);
 

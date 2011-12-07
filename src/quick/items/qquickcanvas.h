@@ -97,6 +97,8 @@ public:
 
     QDeclarativeIncubationController *incubationController() const;
 
+    virtual QAccessibleInterface *accessibleRoot() const;
+
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;
     QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption(0)) const;

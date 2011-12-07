@@ -41,30 +41,31 @@
 
 import QtQuick 2.0
 
-BorderImage {
+Rectangle {
     id: button
 
-    property alias operation: buttonText.text
-    property string color: ""
-
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
+    property alias text : buttonText.text
+    Accessible.name: text
+    Accessible.description: "This button does " + text
     Accessible.role: Accessible.Button
 
     signal clicked
 
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
-
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
+    width: buttonText.width + 20
+    height: 30
+    gradient: Gradient {
+        GradientStop { position: 0.0; color: "lightsteelblue" }
+        GradientStop { position: 1.0; color: "blue" }
     }
+    border.width: 2
+    border.color: "black";
+    radius: 10
 
     Text {
         id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
+        text: parent.description
+        anchors.centerIn: parent
+        font.pixelSize: parent.height * .5
         style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
     }
 
@@ -72,13 +73,7 @@ BorderImage {
         id: mouseArea
         anchors.fill: parent
         onClicked: {
-            doOp(operation)
-            button.clicked()
+            checked = !checked;
         }
-    }
-
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
     }
 }

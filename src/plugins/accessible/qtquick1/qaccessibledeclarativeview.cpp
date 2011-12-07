@@ -39,46 +39,59 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+#include "qaccessibledeclarativeview.h"
+#include "qdeclarativeaccessible.h"
+#include "qaccessibledeclarativeitem.h"
 
-BorderImage {
-    id: button
 
-    property alias operation: buttonText.text
-    property string color: ""
+#ifndef QT_NO_ACCESSIBILITY
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
+QT_BEGIN_NAMESPACE
 
-    signal clicked
-
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
-
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
-
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
-        }
-    }
-
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
-    }
+QAccessibleDeclarativeView::QAccessibleDeclarativeView(QWidget *widget)
+    :QAccessibleWidget(widget)
+{
+    m_view = static_cast<QDeclarativeView *>(widget);
 }
+
+int QAccessibleDeclarativeView::childCount() const
+{
+    return 1;
+}
+
+QAccessibleInterface *QAccessibleDeclarativeView::child(int index) const
+{
+    if (index == 0) {
+        QDeclarativeItem *declarativeRoot = m_view->accessibleRootItem();
+        return new QAccessibleDeclarativeItem(declarativeRoot, m_view);
+    }
+    return 0;
+}
+
+int QAccessibleDeclarativeView::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
+{
+    if (rel == QAccessible::Child) {
+        *target = child(entry - 1);
+        return *target ? 0 : -1;
+    }
+    return QAccessibleWidget::navigate(rel, entry, target);
+}
+
+QAccessibleInterface *QAccessibleDeclarativeView::childAt(int x, int y) const
+{
+    return child(0); // return the top-level QML item
+}
+
+int QAccessibleDeclarativeView::indexOfChild(const QAccessibleInterface *iface) const
+{
+    if (iface) {
+        QDeclarativeItem *declarativeRoot = m_view->accessibleRootItem();
+        if (declarativeRoot == iface->object())
+            return 1;
+    }
+    return -1;
+}
+
+QT_END_NAMESPACE
+
+#endif // QT_NO_ACCESSIBILITY

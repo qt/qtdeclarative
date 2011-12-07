@@ -27,6 +27,7 @@ PUBLICTESTS += \
     qmlplugindump
 
 PRIVATETESTS += \
+    qdeclarativeaccessibility \
     qdeclarativebinding \
     qdeclarativechangeset \
     qdeclarativeconnection \

@@ -39,46 +39,40 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+#ifndef QAccessibleQuickView_H
+#define QAccessibleQuickView_H
 
-BorderImage {
-    id: button
+#include <QtGui/qaccessible2.h>
+#include <QtGui/qaccessibleobject.h>
+#include <QtQuick/qquickview.h>
 
-    property alias operation: buttonText.text
-    property string color: ""
+QT_BEGIN_NAMESPACE
 
-    Accessible.name: operation
-    Accessible.description: "This button does " + operation
-    Accessible.role: Accessible.Button
+#ifndef QT_NO_ACCESSIBILITY
 
-    signal clicked
+class QAccessibleQuickView : public QAccessibleObject
+{
+public:
+    QAccessibleQuickView(QQuickView *object);
 
-    source: "images/button-" + color + ".png"; clip: true
-    border { left: 10; top: 10; right: 10; bottom: 10 }
+    QAccessibleInterface *parent() const;
+    QAccessibleInterface *child(int index) const;
 
-    Rectangle {
-        id: shade
-        anchors.fill: button; radius: 10; color: "black"; opacity: 0
-    }
+    QAccessible::Role role() const;
+    QAccessible::State state() const;
+    QRect rect() const;
 
-    Text {
-        id: buttonText
-        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
-        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
+    int childCount() const;
+    int navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const;
+    int indexOfChild(const QAccessibleInterface *iface) const;
+    QString text(QAccessible::Text text) const;
+    QAccessibleInterface *childAt(int x, int y) const;
+private:
+    QQuickView *m_view;
+};
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            doOp(operation)
-            button.clicked()
-        }
-    }
+#endif // QT_NO_ACCESSIBILITY
 
-    states: State {
-        name: "pressed"; when: mouseArea.pressed == true
-        PropertyChanges { target: shade; opacity: .4 }
-    }
-}
+QT_END_NAMESPACE
+
+#endif // QAccessibleQuickView_H

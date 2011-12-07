@@ -82,6 +82,7 @@
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
 #include <private/qdeclarativemetatype_p.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 
 static QDeclarativePrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
@@ -215,6 +216,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickMultiPointTouchArea>("QtQuick", 2, 0, "MultiPointTouchArea");
     qmlRegisterType<QQuickTouchPoint>("QtQuick", 2, 0, "TouchPoint");
     qmlRegisterType<QQuickGrabGestureEvent>();
+
+#ifndef QT_NO_ACCESSIBILITY
+    qmlRegisterUncreatableType<QQuickAccessibleAttached>("QtQuick", 2, 0, "Accessible",QQuickAccessibleAttached::tr("Accessible is only available via attached properties"));
+#endif
 }
 
 void QQuickItemsModule::defineModule()
