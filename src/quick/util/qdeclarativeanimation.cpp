@@ -1916,6 +1916,7 @@ void QDeclarativePropertyAnimation::setTo(const QVariant &t)
     \qmlproperty real QtQuick2::PropertyAnimation::easing.amplitude
     \qmlproperty real QtQuick2::PropertyAnimation::easing.overshoot
     \qmlproperty real QtQuick2::PropertyAnimation::easing.period
+    \qmlproperty list<real> QtQuick2::PropertyAnimation::easing.bezierCurve
     \brief the easing curve used for the animation.
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
@@ -2095,6 +2096,10 @@ void QDeclarativePropertyAnimation::setTo(const QVariant &t)
         \o \c Easing.OutInBounce
         \o Easing curve for a bounce (exponentially decaying parabolic bounce) function easing out/in: deceleration until halfway, then acceleration.
         \o \inlineimage qeasingcurve-outinbounce.png
+    \row
+        \o \c Easing.Bezier
+        \o Custom easing curve defined by the easing.bezierCurve property.
+        \o
     \endtable
 
     \c easing.amplitude is only applicable for bounce and elastic curves (curves of type
@@ -2106,6 +2111,10 @@ void QDeclarativePropertyAnimation::setTo(const QVariant &t)
 
     \c easing.period is only applicable if easing.type is: \c Easing.InElastic, \c Easing.OutElastic,
     \c Easing.InOutElastic or \c Easing.OutInElastic.
+
+    \c easing.bezierCurve is only applicable if easing.type is: \c Easing.Bezier.  This property is a list<real> containing
+    groups of three points defining a curve from 0,0 to 1,1 - control1, control2,
+    end point: [cx1, cy1, cx2, cy2, endx, endy, ...].  The last point must be 1,1.
 
     See the \l {declarative/animation/easing}{easing} example for a demonstration of
     the different easing settings.

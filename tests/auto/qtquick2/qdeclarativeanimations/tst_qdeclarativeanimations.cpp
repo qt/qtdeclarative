@@ -938,6 +938,22 @@ void tst_qdeclarativeanimations::easingProperties()
         QCOMPARE(animObject->easing().type(), QEasingCurve::InOutBack);
         QCOMPARE(animObject->easing().overshoot(), 2.0);
     }
+
+    {
+        QDeclarativeEngine engine;
+        QString componentStr = "import QtQuick 2.0\nPropertyAnimation { easing.type: \"Bezier\"; easing.bezierCurve: [0.5, 0.2, 0.13, 0.65, 1.0, 1.0] }";
+        QDeclarativeComponent animationComponent(&engine);
+        animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QDeclarativePropertyAnimation *animObject = qobject_cast<QDeclarativePropertyAnimation*>(animationComponent.create());
+
+        QVERIFY(animObject != 0);
+        QCOMPARE(animObject->easing().type(), QEasingCurve::BezierSpline);
+        QList<QPointF> points = animObject->easing().cubicBezierSpline();
+        QCOMPARE(points.count(), 3);
+        QCOMPARE(points.at(0), QPointF(0.5, 0.2));
+        QCOMPARE(points.at(1), QPointF(0.13, 0.65));
+        QCOMPARE(points.at(2), QPointF(1.0, 1.0));
+    }
 }
 
 void tst_qdeclarativeanimations::rotation()
