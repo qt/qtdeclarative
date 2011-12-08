@@ -84,7 +84,8 @@ public:
     enum MessageType {
         V8Entry,
         V8Complete,
-        V8Snapshot,
+        V8SnapshotChunk,
+        V8SnapshotComplete,
 
         V8MaximumMessage
     };

@@ -88,9 +88,11 @@ public:
     }
 
     QList<QV8ProfilerData> traceMessages;
+    QList<QByteArray> snapshotMessages;
 
 signals:
     void complete();
+    void snapshot();
 
 protected:
     void messageReceived(const QByteArray &message);
@@ -121,6 +123,7 @@ private slots:
     void blockingConnectWithTraceEnabled();
     void blockingConnectWithTraceDisabled();
     void nonBlockingConnect();
+    void snapshot();
 };
 
 void QV8ProfilerClient::messageReceived(const QByteArray &message)
@@ -144,7 +147,14 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
     case QV8ProfilerService::V8Complete:
         emit complete();
         break;
-    case QV8ProfilerService::V8Snapshot:
+    case QV8ProfilerService::V8SnapshotChunk: {
+        QByteArray json;
+        stream >> json;
+        snapshotMessages.append(json);
+        break;
+    }
+    case QV8ProfilerService::V8SnapshotComplete:
+        emit snapshot();
         break;
     default:
         QString failMessage = QString("Unknown message type: %1").arg(messageType);
@@ -226,6 +236,19 @@ void tst_QV8ProfilerService::nonBlockingConnect()
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
                 = QString("No trace received in time. App output: %1\n\n").arg(m_process->output());
+        QFAIL(qPrintable(failMsg));
+    }
+}
+
+void tst_QV8ProfilerService::snapshot()
+{
+    connect(false);
+    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+
+    m_client->takeSnapshot();
+    if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(snapshot()))) {
+        QString failMsg
+                = QString("No snapshot received in time. App output: %1\n\n").arg(m_process->output());
         QFAIL(qPrintable(failMsg));
     }
 }
