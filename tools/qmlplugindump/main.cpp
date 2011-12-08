@@ -45,8 +45,11 @@
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickpincharea_p.h>
 
+#ifdef QT_WIDGETS_LIB
 #include <QtWidgets/QApplication>
+#endif
 
+#include <QtGui/QGuiApplication>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QSet>
@@ -607,7 +610,12 @@ int main(int argc, char *argv[])
     // Running this application would bring up the Qt Simulator (since it links QtGui), avoid that!
     QtSimulatorPrivate::SimulatorConnection::createStubInstance();
 #endif
+
+#ifdef QT_WIDGETS_LIB
     QApplication app(argc, argv);
+#else
+    QGuiApplication app(argc, argv);
+#endif
     const QStringList args = app.arguments();
     const QString appName = QFileInfo(app.applicationFilePath()).baseName();
     if (args.size() < 2) {
@@ -679,11 +687,26 @@ int main(int argc, char *argv[])
         engine.addImportPath(pluginImportPath);
     }
 
-    // load the QtQuick 1 & 2 plugins
+#ifdef QT_WIDGETS_LIB
+    // load the QtQuick 1 plugin
     {
-        QByteArray code("import QtQuick 1.0 as Q1\nimport QtQuick 2.0 as Q2\nQ2.QtObject {}");
+        QByteArray code("import QtQuick 1.0\nQtObject {}");
         QDeclarativeComponent c(&engine);
-        c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick.qml"));
+        c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick1.qml"));
+        c.create();
+        if (!c.errors().isEmpty()) {
+            foreach (const QDeclarativeError &error, c.errors())
+                qWarning() << error.toString();
+            return EXIT_IMPORTERROR;
+        }
+    }
+#endif
+
+    // load the QtQuick 2 plugin
+    {
+        QByteArray code("import QtQuick 2.0\nQtObject {}");
+        QDeclarativeComponent c(&engine);
+        c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick2.qml"));
         c.create();
         if (!c.errors().isEmpty()) {
             foreach (const QDeclarativeError &error, c.errors())
