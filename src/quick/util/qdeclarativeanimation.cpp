@@ -162,8 +162,9 @@ void QDeclarativeAbstractAnimationPrivate::commence()
     QDeclarativeStateActions actions;
     QDeclarativeProperties properties;
     animationInstance = q->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
+    //TODO: optimize
     animationInstance->registerFinished(q, "timelineComplete()");
-    //TODO: set in the transition function
+    //TODO: set loopCount in the transition function
     animationInstance->setLoopCount(loopCount);
     animationInstance->start();
     if (animationInstance->state() == QAbstractAnimation2::Stopped) {

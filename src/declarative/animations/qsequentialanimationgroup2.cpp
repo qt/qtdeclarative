@@ -199,7 +199,6 @@ QAbstractAnimation2Pointer QSequentialAnimationGroup2::currentAnimation() const
     return m_currentAnimation;
 }
 
-//only calculate once
 int QSequentialAnimationGroup2::duration() const
 {
     int ret = 0;

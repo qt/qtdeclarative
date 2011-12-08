@@ -58,13 +58,11 @@ public:
     QAnimationGroup2(const QAnimationGroup2& other);
     ~QAnimationGroup2();
 
-    //unused
     int animationCount() const;
     void clear();
     QAbstractAnimation2Pointer animationAt(int index) const;
     int indexOfAnimation(QAbstractAnimation2Pointer animation) const;
 
-    //can be removed after refactor
     //the parameter needs to be "QAbstractAnimation2 *" here, as it will be
     //called in the QAbstractAnimation2's dtor
     void removeAnimation(QAbstractAnimation2 *animation);
@@ -78,7 +76,6 @@ protected:
     void topLevelAnimationLoopChanged();
 
 private:
-    //can likely be removed after refactor
     virtual void animationInsertedAt(int) { }
     virtual void animationRemoved(int, QAbstractAnimation2*);
 

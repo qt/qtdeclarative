@@ -43,8 +43,6 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 
-
-
 QT_BEGIN_NAMESPACE
 
 QAnimationGroup2::QAnimationGroup2()
@@ -176,6 +174,7 @@ void QAnimationGroup2::connectUncontrolledAnimations()
         }
     }
 }
+
 void QAnimationGroup2::connectUncontrolledAnimation(QAbstractAnimation2 *anim)
 {
     m_uncontrolledFinishTime[anim] = -1;

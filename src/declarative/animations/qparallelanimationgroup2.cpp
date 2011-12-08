@@ -62,7 +62,6 @@ QParallelAnimationGroup2::~QParallelAnimationGroup2()
 
 }
 
-//only calculate once
 int QParallelAnimationGroup2::duration() const
 {
     int ret = 0;

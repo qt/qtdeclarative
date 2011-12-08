@@ -87,7 +87,6 @@ public:
     inline QAnimationGroup2 *group() const {return m_group;}
     void setGroup(QAnimationGroup2* group) {m_group = group;}   //### remove from old group, add to new
 
-
     inline int loopCount() const {return m_loopCount;}
     void setLoopCount(int loopCount);
 
@@ -134,7 +133,7 @@ protected:
     bool m_isPause;
     bool m_isGroup;
     QAnimationGroup2 *m_group;
-    QAbstractAnimation2::Direction m_direction; //???
+    QAbstractAnimation2::Direction m_direction;
 
     //state
     QAbstractAnimation2::State m_state;
@@ -223,7 +222,6 @@ private:
     QUnifiedTimer2();
 
 public:
-    //XXX this is needed by dui
     static QUnifiedTimer2 *instance();
     static QUnifiedTimer2 *instance(bool create);
 
