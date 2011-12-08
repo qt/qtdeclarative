@@ -76,14 +76,15 @@ bool verbose = false;
 QString currentProperty;
 QString inObjectInstantiation;
 
-void collectReachableMetaObjects(const QMetaObject *meta, QSet<const QMetaObject *> *metas)
+void collectReachableMetaObjects(const QMetaObject *meta, QSet<const QMetaObject *> *metas, bool extended = false)
 {
     if (! meta || metas->contains(meta))
         return;
 
-    // dynamic meta objects break things badly, so just ignore them
+    // dynamic meta objects can break things badly (like QDeclarative1VisualDataModelParts)
+    // but extended types are usually fine (like QDeclarative1GraphicsWidget)
     const QMetaObjectPrivate *mop = reinterpret_cast<const QMetaObjectPrivate *>(meta->d.data);
-    if (!(mop->flags & DynamicMetaObject))
+    if (extended || !(mop->flags & DynamicMetaObject))
         metas->insert(meta);
 
     collectReachableMetaObjects(meta->superClass(), metas);
@@ -118,7 +119,7 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
 
 void collectReachableMetaObjects(const QDeclarativeType *ty, QSet<const QMetaObject *> *metas)
 {
-    collectReachableMetaObjects(ty->metaObject(), metas);
+    collectReachableMetaObjects(ty->metaObject(), metas, ty->isExtendedType());
     if (ty->attachedPropertiesType())
         collectReachableMetaObjects(ty->attachedPropertiesType(), metas);
 }
