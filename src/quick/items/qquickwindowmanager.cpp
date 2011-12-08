@@ -452,7 +452,7 @@ void QQuickRenderThreadSingleContextWindowManager::handleRemovedWindows()
     while (m_removed_windows.size()) {
         QQuickCanvas *canvas = m_removed_windows.takeLast();
 #ifdef THREAD_DEBUG
-    printf("            RenderThread: removing %p\n", canvas);
+    printf("                RenderThread: removing %p\n", canvas);
 #endif
 
         QQuickCanvasPrivate::get(canvas)->cleanupNodesOnShutdown();
@@ -527,8 +527,13 @@ void QQuickRenderThreadSingleContextWindowManager::run()
     printf("QML Rendering Thread Started\n");
 #endif
 
-    if (!gl)
-        initialize();
+    lock();
+    Q_ASSERT(!gl);
+    initialize();
+    // Wake GUI as it is waiting for the GL context to have appeared, as
+    // an indication that the render thread is now running.
+    wake();
+    unlock();
 
     while (!shouldExit) {
         lock();
@@ -895,10 +900,6 @@ void QQuickRenderThreadSingleContextWindowManager::paint(QQuickCanvas *canvas)
     printf("GUI: paint called: %p\n", canvas);
 #endif
 
-    return;
-
-
-
     lockInGui();
     exhaustSyncEvent();
 
@@ -963,7 +964,10 @@ void QQuickRenderThreadSingleContextWindowManager::startRendering()
     renderThreadAwakened = false;
     inSync = false;
 
+    lockInGui();
     start(); // Start the render thread...
+    wait();
+    unlockInGui();
 
     // Animations will now be driven from the rendering thread.
     if (animationTimer >= 0) {

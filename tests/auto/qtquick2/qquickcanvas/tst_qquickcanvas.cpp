@@ -196,6 +196,8 @@ private slots:
     void multipleWindows();
 
     void animationsWhileHidden();
+
+    void headless();
 };
 
 tst_qquickcanvas::tst_qquickcanvas()
@@ -541,6 +543,8 @@ void tst_qquickcanvas::qmlCreation()
     QQuickItem* item = canvas->findChild<QQuickItem*>("item");
     QVERIFY(item);
     QCOMPARE(item->canvas(), canvas);
+
+    delete canvas;
 }
 
 void tst_qquickcanvas::clearColor()
@@ -616,6 +620,75 @@ void tst_qquickcanvas::animationsWhileHidden()
 
     // Running animaiton should cause it to become visible again shortly.
     QTRY_VERIFY(canvas->visible());
+
+    delete canvas;
+}
+
+
+class SceneGraphListener : public QObject
+{
+    Q_OBJECT
+
+public:
+    SceneGraphListener()
+        : wasInitialized(false)
+        , wasInvalidated(false)
+    {
+    }
+
+    bool wasInitialized;
+    bool wasInvalidated;
+
+public slots:
+    void initialized() { wasInitialized = true; }
+    void invalidated() { wasInvalidated = true; }
+};
+
+void tst_qquickcanvas::headless()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.loadUrl(TESTDATA("Headless.qml"));
+    QObject* created = component.create();
+
+    QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);
+    QVERIFY(canvas);
+
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(canvas->visible());
+
+    SceneGraphListener listener;
+    connect(canvas, SIGNAL(sceneGraphInitialized()), &listener, SLOT(initialized()), Qt::DirectConnection);
+    connect(canvas, SIGNAL(sceneGraphInvalidated()), &listener, SLOT(invalidated()), Qt::DirectConnection);
+
+    // Verify that the canvas is alive and kicking
+    QVERIFY(canvas->openglContext() != 0);
+
+    // Store the visual result
+    QImage originalContent = canvas->grabFrameBuffer();
+
+    // Hide the canvas and verify signal emittion and GL context deletion
+    canvas->hide();
+    QVERIFY(listener.wasInvalidated);
+    QVERIFY(canvas->openglContext() == 0);
+
+    // Destroy the native windowing system buffers
+    canvas->destroy();
+    QVERIFY(canvas->handle() == 0);
+
+    // Show and verify that we are back and running
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QVERIFY(listener.wasInitialized);
+    QVERIFY(canvas->openglContext() != 0);
+
+    // Verify that the visual output is the same
+    QImage newContent = canvas->grabFrameBuffer();
+
+    QCOMPARE(originalContent, newContent);
+
+
 }
 
 QTEST_MAIN(tst_qquickcanvas)

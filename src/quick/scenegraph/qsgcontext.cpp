@@ -87,9 +87,7 @@ class QSGContextPrivate : public QObjectPrivate
 {
 public:
     QSGContextPrivate()
-        : rootNode(0)
-        , renderer(0)
-        , gl(0)
+        : gl(0)
         , distanceFieldCacheManager(0)
         , flashMode(qmlFlashMode())
         , distanceFieldDisabled(qmlDisableDistanceField())
@@ -100,9 +98,6 @@ public:
     ~QSGContextPrivate()
     {
     }
-
-    QSGRootNode *rootNode;
-    QSGRenderer *renderer;
 
     QOpenGLContext *gl;
 

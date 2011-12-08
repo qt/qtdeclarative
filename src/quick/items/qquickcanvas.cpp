@@ -199,10 +199,22 @@ void QQuickCanvasPrivate::polishItems()
     updateFocusItemTransform();
 }
 
+void forceUpdate(QQuickItem *item)
+{
+    if (item->flags() & QQuickItem::ItemHasContents)
+        item->update();
+    QQuickItemPrivate::get(item)->dirty(QQuickItemPrivate::ChildrenUpdateMask);
+
+    QList <QQuickItem *> items = item->childItems();
+    for (int i=0; i<items.size(); ++i)
+        forceUpdate(items.at(i));
+}
 
 void QQuickCanvasPrivate::syncSceneGraph()
 {
     if (!renderer) {
+        forceUpdate(rootItem);
+
         QSGRootNode *rootNode = new QSGRootNode;
         rootNode->appendChildNode(QQuickItemPrivate::get(rootItem)->itemNode());
         renderer = context->createRenderer();
@@ -273,9 +285,9 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     q->setSurfaceType(QWindow::OpenGLSurface);
     q->setFormat(context->defaultSurfaceFormat());
 
-    QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()));
-    QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()));
-    QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()));
+    QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
+    QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
+    QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
 
     // ### TODO: remove QSGEngine
     engine = new QSGEngine();
@@ -1686,9 +1698,40 @@ void QQuickCanvas::cleanupSceneGraph()
 }
 
 /*!
-    \fn void QSGEngine::sceneGraphInitialized();
+    Returns the opengl context used for rendering.
+
+    If the scene graph is not ready, this function will return 0.
+
+    \sa sceneGraphInitialized(), sceneGraphInvalidated()
+ */
+
+QOpenGLContext *QQuickCanvas::openglContext() const
+{
+    Q_D(const QQuickCanvas);
+    if (d->context->isReady())
+        return d->context->glContext();
+    return 0;
+}
+
+
+/*!
+    \fn void QSGContext::sceneGraphInitialized()
 
     This signal is emitted when the scene graph has been initialized.
+
+    This signal will be emitted from the scene graph rendering thread.
+
+ */
+
+
+/*!
+    \fn void QSGContext::sceneGraphInvalidated()
+
+    This signal is emitted when the scene graph has been invalidated.
+
+    This signal implies that the opengl rendering context used
+    has been invalidated and all user resources tied to that context
+    should be released.
 
     This signal will be emitted from the scene graph rendering thread.
  */
