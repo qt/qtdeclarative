@@ -50,6 +50,8 @@
 class tst_QQuickPinchArea: public QObject
 {
     Q_OBJECT
+public:
+    tst_QQuickPinchArea() : device(0) { }
 private slots:
     void initTestCase();
     void cleanupTestCase();
@@ -60,9 +62,15 @@ private slots:
 
 private:
     QQuickView *createView();
+    QTouchDevice *device;
 };
 void tst_QQuickPinchArea::initTestCase()
 {
+    if (!device) {
+        device = new QTouchDevice;
+        device->setType(QTouchDevice::TouchScreen);
+        QWindowSystemInterface::registerTouchDevice(device);
+    }
 }
 
 void tst_QQuickPinchArea::cleanupTestCase()
@@ -220,17 +228,17 @@ void tst_QQuickPinchArea::scale()
     QPoint p1(80, 80);
     QPoint p2(100, 100);
 
-    QTest::touchEvent(canvas).press(0, p1, canvas);
-    QTest::touchEvent(canvas).stationary(0).press(1, p2, canvas);
+    QTest::touchEvent(canvas, device).press(0, p1, canvas);
+    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
     p1 -= QPoint(10,10);
     p2 += QPoint(10,10);
-    QTest::touchEvent(canvas).move(0, p1,canvas).move(1, p2,canvas);
+    QTest::touchEvent(canvas, device).move(0, p1,canvas).move(1, p2,canvas);
 
     QCOMPARE(root->property("scale").toReal(), 1.0);
 
     p1 -= QPoint(10,10);
     p2 += QPoint(10,10);
-    QTest::touchEvent(canvas).move(0, p1,canvas).move(1, p2,canvas);
+    QTest::touchEvent(canvas, device).move(0, p1,canvas).move(1, p2,canvas);
 
     QCOMPARE(root->property("scale").toReal(), 1.5);
     QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
@@ -239,11 +247,11 @@ void tst_QQuickPinchArea::scale()
     // scale beyond bound
     p1 -= QPoint(50,50);
     p2 += QPoint(50,50);
-    QTest::touchEvent(canvas).move(0, p1, canvas).move(1, p2, canvas);
+    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
 
     QCOMPARE(blackRect->scale(), 2.0);
 
-    QTest::touchEvent(canvas).release(0, p1, canvas).release(1, p2, canvas);
+    QTest::touchEvent(canvas, device).release(0, p1, canvas).release(1, p2, canvas);
 
     delete canvas;
 }
@@ -273,17 +281,17 @@ void tst_QQuickPinchArea::pan()
     QPoint p1(80, 80);
     QPoint p2(100, 100);
 
-    QTest::touchEvent(canvas).press(0, p1, canvas);
-    QTest::touchEvent(canvas).stationary(0).press(1, p2, canvas);
+    QTest::touchEvent(canvas, device).press(0, p1, canvas);
+    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
     p1 += QPoint(10,10);
     p2 += QPoint(10,10);
-    QTest::touchEvent(canvas).move(0, p1, canvas).move(1, p2, canvas);
+    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
 
     QCOMPARE(root->property("scale").toReal(), 1.0);
 
     p1 += QPoint(10,10);
     p2 += QPoint(10,10);
-    QTest::touchEvent(canvas).move(0, p1, canvas).move(1, p2, canvas);
+    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
 
     QCOMPARE(root->property("center").toPointF(), QPointF(60, 60)); // blackrect is at 50,50
 
@@ -293,12 +301,12 @@ void tst_QQuickPinchArea::pan()
     // pan x beyond bound
     p1 += QPoint(100,100);
     p2 += QPoint(100,100);
-    QTest::touchEvent(canvas).move(0, p1, canvas).move(1, p2, canvas);
+    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
 
     QCOMPARE(blackRect->x(), 140.0);
     QCOMPARE(blackRect->y(), 160.0);
 
-    QTest::touchEvent(canvas).release(0, p1, canvas).release(1, p2, canvas);
+    QTest::touchEvent(canvas, device).release(0, p1, canvas).release(1, p2, canvas);
 
     delete canvas;
 }
@@ -332,17 +340,17 @@ void tst_QQuickPinchArea::retouch()
     QPoint p1(80, 80);
     QPoint p2(100, 100);
 
-    QTest::touchEvent(canvas).press(0, p1, canvas);
-    QTest::touchEvent(canvas).stationary(0).press(1, p2, canvas);
+    QTest::touchEvent(canvas, device).press(0, p1, canvas);
+    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
     p1 -= QPoint(10,10);
     p2 += QPoint(10,10);
-    QTest::touchEvent(canvas).move(0, p1, canvas).move(1, p2, canvas);
+    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
 
     QCOMPARE(root->property("scale").toReal(), 1.0);
 
     p1 -= QPoint(10,10);
     p2 += QPoint(10,10);
-    QTest::touchEvent(canvas).move(0, p1, canvas).move(1, p2, canvas);
+    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
 
     QCOMPARE(startedSpy.count(), 1);
 
@@ -355,17 +363,17 @@ void tst_QQuickPinchArea::retouch()
     QCOMPARE(startedSpy.count(), 1);
     QCOMPARE(finishedSpy.count(), 0);
 
-    QTest::touchEvent(canvas).stationary(0).release(1, p2, canvas);
+    QTest::touchEvent(canvas, device).stationary(0).release(1, p2, canvas);
 
     QCOMPARE(startedSpy.count(), 1);
     QCOMPARE(finishedSpy.count(), 0);
 
     QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 1);
 
-    QTest::touchEvent(canvas).stationary(0).press(1, p2, canvas);
+    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
     p1 -= QPoint(10,10);
     p2 += QPoint(10,10);
-    QTest::touchEvent(canvas).move(0, p1, canvas).move(1, p2, canvas);
+    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
 
     // Lifting and retouching results in onPinchStarted being called again
     QCOMPARE(startedSpy.count(), 2);
@@ -373,7 +381,7 @@ void tst_QQuickPinchArea::retouch()
 
     QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 2);
 
-    QTest::touchEvent(canvas).release(0, p1, canvas).release(1, p2, canvas);
+    QTest::touchEvent(canvas, device).release(0, p1, canvas).release(1, p2, canvas);
 
     QCOMPARE(startedSpy.count(), 2);
     QCOMPARE(finishedSpy.count(), 1);

@@ -1141,8 +1141,9 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
 
         if (eventStates != Qt::TouchPointStationary) {
             QTouchEvent touchEvent(eventType);
-            // touchEvent.setWidget(q); // ### refactor: what is the consequence of not setting the widget?
-            touchEvent.setDeviceType(event->deviceType());
+            touchEvent.setWindow(event->window());
+            touchEvent.setTarget(item);
+            touchEvent.setDevice(event->device());
             touchEvent.setModifiers(event->modifiers());
             touchEvent.setTouchPointStates(eventStates);
             touchEvent.setTouchPoints(eventPoints);
