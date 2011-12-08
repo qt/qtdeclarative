@@ -2602,10 +2602,8 @@ QQuickVisualModel::ReleaseFlags QQuickVisualPartsModel::release(QQuickItem *item
         m_packaged.erase(it);
         if (!m_packaged.contains(item))
             flags &= ~Referenced;
-        if (flags & Destroyed) {
+        if (flags & Destroyed)
             QQuickVisualDataModelPrivate::get(m_model)->emitDestroyingPackage(package);
-            item->setParentItem(0);
-        }
     }
     return flags;
 }
@@ -2652,6 +2650,8 @@ void QQuickVisualPartsModel::destroyingPackage(QDeclarativePackage *package)
     if (QQuickItem *item = qobject_cast<QQuickItem *>(package->part(m_part))) {
         Q_ASSERT(!m_packaged.contains(item));
         emit destroyingItem(item);
+        item->setParentItem(0);
+        QDeclarative_setParent_noEvent(item, package);
     }
 }
 

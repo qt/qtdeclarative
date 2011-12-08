@@ -133,6 +133,7 @@ private slots:
     void noDelegate();
     void itemsDestroyed_data();
     void itemsDestroyed();
+    void packagesDestroyed();
     void qaimRowsMoved();
     void qaimRowsMoved_data();
     void remove_data();
@@ -174,7 +175,7 @@ private:
     bool failed;
     QDeclarativeEngine engine;
     template<typename T>
-    T *findItem(QQuickItem *parent, const QString &objectName, int index);
+    T *findItem(QQuickItem *parent, const QString &objectName, int index = -1);
 };
 
 Q_DECLARE_METATYPE(QDeclarativeChangeSet)
@@ -661,6 +662,73 @@ void tst_qquickvisualdatamodel::itemsDestroyed()
     }
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QVERIFY(!delegate);
+}
+
+void tst_qquickvisualdatamodel::packagesDestroyed()
+{
+    SingleRoleModel model;
+    model.list.clear();
+    for (int i=0; i<30; i++)
+        model.list << ("item " + i);
+
+    QQuickView view;
+    view.rootContext()->setContextProperty("testModel", &model);
+
+    QString filename(TESTDATA("packageView.qml"));
+    view.setSource(QUrl::fromLocalFile(filename));
+
+    qApp->processEvents();
+
+    QQuickListView *leftview = findItem<QQuickListView>(view.rootObject(), "leftList");
+    QTRY_VERIFY(leftview != 0);
+
+    QQuickListView *rightview = findItem<QQuickListView>(view.rootObject(), "rightList");
+    QTRY_VERIFY(rightview != 0);
+
+    QQuickItem *leftContent = leftview->contentItem();
+    QTRY_VERIFY(leftContent != 0);
+
+    QQuickItem *rightContent = rightview->contentItem();
+    QTRY_VERIFY(rightContent != 0);
+
+    QCOMPARE(leftview->currentIndex(), 0);
+    QCOMPARE(rightview->currentIndex(), 20);
+
+    QDeclarativeGuard<QQuickItem> left;
+    QDeclarativeGuard<QQuickItem> right;
+
+    QVERIFY(findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(findItem<QQuickItem>(rightContent, "wrapper", 1));
+
+    QVERIFY(left = findItem<QQuickItem>(leftContent, "wrapper", 19));
+    QVERIFY(right = findItem<QQuickItem>(rightContent, "wrapper", 19));
+
+    rightview->setCurrentIndex(0);
+    QCOMPARE(rightview->currentIndex(), 0);
+
+    QTRY_COMPARE(rightview->contentY(), 0.0);
+    QCoreApplication::sendPostedEvents();
+
+    QVERIFY(!left);
+    QVERIFY(!right);
+
+    QVERIFY(left = findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(right = findItem<QQuickItem>(rightContent, "wrapper", 1));
+
+    rightview->setCurrentIndex(20);
+    QTRY_COMPARE(rightview->contentY(), 100.0);
+
+    QVERIFY(left);
+    QVERIFY(right);
+
+    QVERIFY(findItem<QQuickItem>(leftContent, "wrapper", 19));
+    QVERIFY(findItem<QQuickItem>(rightContent, "wrapper", 19));
+
+    leftview->setCurrentIndex(20);
+    QTRY_COMPARE(leftview->contentY(), 100.0);
+
+    QVERIFY(!left);
+    QVERIFY(!right);
 }
 
 void tst_qquickvisualdatamodel::qaimRowsMoved()
