@@ -827,6 +827,7 @@ QTextDocument *QQuickTextControl::document() const
 void QQuickTextControl::setTextCursor(const QTextCursor &cursor)
 {
     Q_D(QQuickTextControl);
+    d->commitPreedit();
     d->cursorIsFocusIndicator = false;
     const bool posChanged = cursor.position() != d->cursor.position();
     const QTextCursor oldSelection = d->cursor;
