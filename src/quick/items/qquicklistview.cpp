@@ -692,12 +692,18 @@ void QQuickListViewPrivate::visibleItemsChanged()
 void QQuickListViewPrivate::layoutVisibleItems()
 {
     if (!visibleItems.isEmpty()) {
-        bool fixedCurrent = currentItem && (*visibleItems.constBegin())->item == currentItem->item;
-        qreal sum = (*visibleItems.constBegin())->size();
-        qreal pos = (*visibleItems.constBegin())->position() + (*visibleItems.constBegin())->size() + spacing;
+        const qreal from = isContentFlowReversed() ? -position() - size() : position();
+        const qreal to = isContentFlowReversed() ? -position() : position() + size();
+
+        FxViewItem *firstItem = *visibleItems.constBegin();
+        bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
+        qreal sum = firstItem->size();
+        qreal pos = firstItem->position() + firstItem->size() + spacing;
+        firstItem->item->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
         for (int i=1; i < visibleItems.count(); ++i) {
             FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.at(i));
             item->setPosition(pos);
+            item->item->setVisible(item->endPosition() >= from && item->position() <= to);
             pos += item->size() + spacing;
             sum += item->size();
             fixedCurrent = fixedCurrent || (currentItem && item->item == currentItem->item);
@@ -2372,7 +2378,6 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 {
     int modelIndex = change.index;
     int count = change.count;
-
 
     qreal tempPos = isRightToLeft() ? -position()-size() : position();
     int index = visibleItems.count() ? mapFromModel(modelIndex) : 0;

@@ -542,6 +542,9 @@ void QQuickGridViewPrivate::updateViewport()
 void QQuickGridViewPrivate::layoutVisibleItems()
 {
     if (visibleItems.count()) {
+        const qreal from = isContentFlowReversed() ? -position() - size() : position();
+        const qreal to = isContentFlowReversed() ? -position() : position() + size();
+
         FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
         qreal rowPos = firstItem->rowPos();
         qreal colPos = firstItem->colPos();
@@ -549,6 +552,7 @@ void QQuickGridViewPrivate::layoutVisibleItems()
         if (colPos != col * colSize()) {
             colPos = col * colSize();
             firstItem->setPosition(colPos, rowPos);
+            firstItem->item->setVisible(rowPos + rowSize() >= from && rowPos <= to);
         }
         for (int i = 1; i < visibleItems.count(); ++i) {
             FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.at(i));
@@ -558,6 +562,7 @@ void QQuickGridViewPrivate::layoutVisibleItems()
             }
             colPos = col * colSize();
             item->setPosition(colPos, rowPos);
+            item->item->setVisible(rowPos + rowSize() >= from && rowPos <= to);
         }
     }
 }

@@ -1651,6 +1651,7 @@ void QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     if (model->release(item->item) == 0) {
         // item was not destroyed, and we no longer reference it.
+        item->item->setVisible(false);
         unrequestedItems.insert(item->item, model->indexOf(item->item, q));
     }
     delete item;
