@@ -85,7 +85,6 @@ public:
 
     void updateDefaultTextOption();
     void relayoutDocument();
-    void updateSelection();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);
     void mirrorChange();

@@ -1700,23 +1700,6 @@ void QQuickTextEdit::moveCursorDelegate()
     d->cursor->setY(cursorRect.y());
 }
 
-void QQuickTextEditPrivate::updateSelection()
-{
-    Q_Q(QQuickTextEdit);
-    QTextCursor cursor = control->textCursor();
-    bool startChange = (lastSelectionStart != cursor.selectionStart());
-    bool endChange = (lastSelectionEnd != cursor.selectionEnd());
-    cursor.beginEditBlock();
-    cursor.setPosition(lastSelectionStart, QTextCursor::MoveAnchor);
-    cursor.setPosition(lastSelectionEnd, QTextCursor::KeepAnchor);
-    cursor.endEditBlock();
-    control->setTextCursor(cursor);
-    if (startChange)
-        q->selectionStartChanged();
-    if (endChange)
-        q->selectionEndChanged();
-}
-
 void QQuickTextEdit::updateSelectionMarkers()
 {
     Q_D(QQuickTextEdit);

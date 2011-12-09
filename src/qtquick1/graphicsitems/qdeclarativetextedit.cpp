@@ -1610,23 +1610,6 @@ void QDeclarative1TextEdit::moveCursorDelegate()
     d->cursor->setY(cursorRect.y());
 }
 
-void QDeclarative1TextEditPrivate::updateSelection()
-{
-    Q_Q(QDeclarative1TextEdit);
-    QTextCursor cursor = control->textCursor();
-    bool startChange = (lastSelectionStart != cursor.selectionStart());
-    bool endChange = (lastSelectionEnd != cursor.selectionEnd());
-    cursor.beginEditBlock();
-    cursor.setPosition(lastSelectionStart, QTextCursor::MoveAnchor);
-    cursor.setPosition(lastSelectionEnd, QTextCursor::KeepAnchor);
-    cursor.endEditBlock();
-    control->setTextCursor(cursor);
-    if(startChange)
-        q->selectionStartChanged();
-    if(endChange)
-        q->selectionEndChanged();
-}
-
 void QDeclarative1TextEdit::updateSelectionMarkers()
 {
     Q_D(QDeclarative1TextEdit);
