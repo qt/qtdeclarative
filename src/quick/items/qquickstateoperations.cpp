@@ -315,9 +315,10 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
             actions << xa;
         } else {
             QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            newBinding->setTarget(QDeclarativeProperty(d->target, QLatin1String("x")));
+            QDeclarativeProperty property(d->target, QLatin1String("x"));
+            newBinding->setTarget(property);
             QDeclarativeAction xa;
-            xa.property = newBinding->property();
+            xa.property = property;
             xa.toBinding = newBinding;
             xa.fromValue = xa.property.read();
             xa.deletableToBinding = true;
@@ -334,9 +335,10 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
             actions << ya;
         } else {
             QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            newBinding->setTarget(QDeclarativeProperty(d->target, QLatin1String("y")));
+            QDeclarativeProperty property(d->target, QLatin1String("y"));
+            newBinding->setTarget(property);
             QDeclarativeAction ya;
-            ya.property = newBinding->property();
+            ya.property = property;
             ya.toBinding = newBinding;
             ya.fromValue = ya.property.read();
             ya.deletableToBinding = true;
@@ -353,9 +355,10 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
             actions << sa;
         } else {
             QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            newBinding->setTarget(QDeclarativeProperty(d->target, QLatin1String("scale")));
+            QDeclarativeProperty property(d->target, QLatin1String("scale"));
+            newBinding->setTarget(property);
             QDeclarativeAction sa;
-            sa.property = newBinding->property();
+            sa.property = property;
             sa.toBinding = newBinding;
             sa.fromValue = sa.property.read();
             sa.deletableToBinding = true;
@@ -372,9 +375,10 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
             actions << ra;
         } else {
             QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            newBinding->setTarget(QDeclarativeProperty(d->target, QLatin1String("rotation")));
+            QDeclarativeProperty property(d->target, QLatin1String("rotation"));
+            newBinding->setTarget(property);
             QDeclarativeAction ra;
-            ra.property = newBinding->property();
+            ra.property = property;
             ra.toBinding = newBinding;
             ra.fromValue = ra.property.read();
             ra.deletableToBinding = true;
@@ -391,9 +395,10 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
             actions << wa;
         } else {
             QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            newBinding->setTarget(QDeclarativeProperty(d->target, QLatin1String("width")));
+            QDeclarativeProperty property(d->target, QLatin1String("width"));
+            newBinding->setTarget(property);
             QDeclarativeAction wa;
-            wa.property = newBinding->property();
+            wa.property = property;
             wa.toBinding = newBinding;
             wa.fromValue = wa.property.read();
             wa.deletableToBinding = true;
@@ -410,9 +415,10 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
             actions << ha;
         } else {
             QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            newBinding->setTarget(QDeclarativeProperty(d->target, QLatin1String("height")));
+            QDeclarativeProperty property(d->target, QLatin1String("height"));
+            newBinding->setTarget(property);
             QDeclarativeAction ha;
-            ha.property = newBinding->property();
+            ha.property = property;
             ha.toBinding = newBinding;
             ha.fromValue = ha.property.read();
             ha.deletableToBinding = true;
