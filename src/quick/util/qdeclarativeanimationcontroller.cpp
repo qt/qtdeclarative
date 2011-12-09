@@ -181,7 +181,7 @@ void QDeclarativeAnimationController::updateProgress()
         return;
 
     d->animationInstance->start();
-    QUnifiedTimer2::unregisterAnimation(d->animationInstance);
+    QDeclarativeAnimationTimer::unregisterAnimation(d->animationInstance);
     d->animationInstance->setCurrentTime(d->progress * d->animationInstance->duration());
 }
 

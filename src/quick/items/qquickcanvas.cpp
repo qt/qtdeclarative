@@ -55,7 +55,7 @@
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputPanel>
 
-#include <private/qabstractanimation_p.h>
+#include <QtCore/private/qabstractanimation_p.h>
 
 #include <QtGui/qpainter.h>
 #include <QtGui/qevent.h>

@@ -236,7 +236,7 @@ qreal QSmoothedAnimation::easeFollow(qreal time_seconds)
 
 void QSmoothedAnimation::updateCurrentTime(int t)
 {
-    qreal time_seconds = useDelta ? qreal(QUnifiedTimer2::instance()->currentDelta()) / 1000. : qreal(t - lastTime) / 1000.;
+    qreal time_seconds = useDelta ? qreal(QDeclarativeAnimationTimer::instance()->currentDelta()) / 1000. : qreal(t - lastTime) / 1000.;
     if (useDelta)
         useDelta = false;
 

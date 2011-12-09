@@ -49,6 +49,7 @@
 #include <QtCore/qelapsedtimer.h>
 #include <private/qobject_p.h>
 #include <QtCore/QObject>
+#include <QtCore/private/qabstractanimation_p.h>
 #include "private/qdeclarativerefcount_p.h"
 #include "private/qdeclarativeguard_p.h"
 #ifdef Q_OS_WIN
@@ -147,102 +148,25 @@ protected:
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_currentLoopChangedSlots;
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_directionChangedSlots;
 
-    friend class QUnifiedTimer2;
+    friend class QDeclarativeAnimationTimer;
     friend class QAnimationGroup2;
 };
 
 typedef QDeclarativeRefPointer<QAbstractAnimation2> QAbstractAnimation2Pointer;
 uint Q_DECLARATIVE_EXPORT qHash(const QAbstractAnimation2Pointer& value);
 
-class QAnimationDriver2Private;
-class Q_DECLARATIVE_EXPORT QAnimationDriver2 : public QObject
+class Q_DECLARATIVE_EXPORT QDeclarativeAnimationTimer : public QAbstractAnimationTimer
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QAnimationDriver2)
-
-public:
-    QAnimationDriver2(QObject *parent = 0);
-    ~QAnimationDriver2();
-
-    virtual void advance();
-
-    void install();
-    void uninstall();
-
-    bool isRunning() const;
-
-    qint64 elapsed() const;
-
-Q_SIGNALS:
-    void started();
-    void stopped();
-
-protected:
-    void advanceAnimation(qint64 timeStep = -1);
-    virtual void start();
-    virtual void stop();
-
-    QAnimationDriver2(QAnimationDriver2Private &dd, QObject *parent = 0);
 private:
-    friend class QUnifiedTimer2;
-
-};
-
-class Q_DECLARATIVE_EXPORT QAnimationDriver2Private : public QObjectPrivate
-{
-public:
-    QAnimationDriver2Private() : running(false) {}
-    bool running;
-};
-
-class QUnifiedTimer2;
-class QDefaultAnimationDriver2 : public QAnimationDriver2
-{
-    Q_OBJECT
-public:
-    QDefaultAnimationDriver2(QUnifiedTimer2 *timer);
-    void timerEvent(QTimerEvent *e);
-
-private Q_SLOTS:
-    void startTimer();
-    void stopTimer();
-
-private:
-    QBasicTimer m_timer;
-    QUnifiedTimer2 *m_unified_timer;
-};
-
-typedef QElapsedTimer ElapsedTimer;
-
-class Q_DECLARATIVE_EXPORT QUnifiedTimer2 : public QObject
-{
-    Q_OBJECT
-
-private:
-    QUnifiedTimer2();
+    QDeclarativeAnimationTimer();
 
 public:
-    static QUnifiedTimer2 *instance();
-    static QUnifiedTimer2 *instance(bool create);
+    static QDeclarativeAnimationTimer *instance();
+    static QDeclarativeAnimationTimer *instance(bool create);
 
-    static void registerAnimation(QAbstractAnimation2* animation, bool isTopLevel);
-
-    //the parameter needs to be "QAbstractAnimation2 *" here, as it will be
-    //called in the QAbstractAnimation2's dtor
+    static void registerAnimation(QAbstractAnimation2 *animation, bool isTopLevel);
     static void unregisterAnimation(QAbstractAnimation2 *animation);
-
-    //defines the timing interval. Default is DEFAULT_TIMER_INTERVAL
-    void setTimingInterval(int interval);
-
-    /*
-       this allows to have a consistent timer interval at each tick from the timer
-       not taking the real time that passed into account.
-    */
-    void setConsistentTiming(bool consistent) { consistentTiming = consistent; }
-
-    //these facilitate fine-tuning of complex animations
-    void setSlowModeEnabled(bool enabled) { slowMode = enabled; }
-    void setSlowdownFactor(qreal factor) { slowdownFactor = factor; }
 
     /*
         this is used for updating the currentTime of all animations in case the pause
@@ -256,52 +180,25 @@ public:
     */
     static void updateAnimationTimer();
 
-    void installAnimationDriver(QAnimationDriver2 *driver);
-    void uninstallAnimationDriver(QAnimationDriver2 *driver);
-    bool canUninstallAnimationDriver(QAnimationDriver2 *driver);
-
     void restartAnimationTimer();
     void updateAnimationsTime(qint64 timeStep);
+
+    int currentDelta() { return lastDelta; }
 
     //useful for profiling/debugging
     int runningAnimationCount() { return animations.count(); }
 
-    int currentDelta() { return lastDelta; }
-
-protected:
-    void timerEvent(QTimerEvent *);
-
-private slots:
+private Q_SLOTS:
     void startAnimations();
-    void stopAnimations();
+    void stopTimer();
+
 private:
-    friend class QDefaultAnimationDriver2;
-    friend class QAnimationDriver2;
-
-    QAnimationDriver2 *driver;
-    QDefaultAnimationDriver2 defaultDriver;
-
-    QBasicTimer pauseTimer;
-
-    ElapsedTimer time;
-
     qint64 lastTick;
     int lastDelta;
-    int timingInterval;
     int currentAnimationIdx;
-    bool insideTick : 1;
-    bool consistentTiming : 1;
-    bool slowMode : 1;
-    bool startAnimationPending : 1;
-    bool stopAnimationPending : 1;
-
-    // This factor will be used to divide the DEFAULT_TIMER_INTERVAL at each tick
-    // when slowMode is enabled. Setting it to 0 or higher than DEFAULT_TIMER_INTERVAL (16)
-    // stops all animations.
-    qreal slowdownFactor;
-
-    // bool to indicate that only pause animations are active
-    bool isPauseTimerActive;
+    bool insideTick;
+    bool startAnimationPending;
+    bool stopTimerPending;
 
     QList<QAbstractAnimation2*> animations, animationsToStart;
 
@@ -309,7 +206,7 @@ private:
     int runningLeafAnimations;
     QList<QAbstractAnimation2*> runningPauseAnimations;
 
-    void registerRunningAnimation(QAbstractAnimation2* animation);
+    void registerRunningAnimation(QAbstractAnimation2 *animation);
     void unregisterRunningAnimation(QAbstractAnimation2 *animation);
 
     int closestPauseAnimationTimeToFinish();

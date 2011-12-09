@@ -43,7 +43,7 @@
 #define QSGCONTEXT_H
 
 #include <QtCore/QObject>
-#include "private/qabstractanimation2_p.h"
+#include <QtCore/private/qabstractanimation_p.h>
 
 #include <QtGui/QImage>
 #include <QtGui/QSurfaceFormat>
@@ -125,7 +125,7 @@ public:
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
 
-    virtual QAnimationDriver2 *createAnimationDriver(QObject *parent);
+    virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
 
 public slots:

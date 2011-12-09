@@ -44,7 +44,7 @@
 #include <QtDeclarative/QJSEngine>
 
 #include <private/qdeclarativeengine_p.h>
-#include "private/qabstractanimation2_p.h"
+#include <QtCore/private/qabstractanimation_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <QtDeclarative/QJSEngine>
 
@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 void QDeclarativeDebugHelper::setAnimationSlowDownFactor(qreal factor)
 {
-    QUnifiedTimer2 *timer = QUnifiedTimer2::instance();
+    QUnifiedTimer *timer = QUnifiedTimer::instance();
     timer->setSlowModeEnabled(factor != 1.0);
     timer->setSlowdownFactor(factor);
 }

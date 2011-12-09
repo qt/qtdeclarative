@@ -479,9 +479,9 @@ bool QSGContext::isDistanceFieldEnabled() const
     Creates a new animation driver.
  */
 
-QAnimationDriver2 *QSGContext::createAnimationDriver(QObject *parent)
+QAnimationDriver *QSGContext::createAnimationDriver(QObject *parent)
 {
-    return new QAnimationDriver2(parent);
+    return new QAnimationDriver(parent);
 }
 
 

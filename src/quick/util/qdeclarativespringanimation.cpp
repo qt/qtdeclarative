@@ -173,7 +173,7 @@ void QSpringAnimation::updateCurrentTime(int time)
         return;
     }
 
-    int elapsed = useDelta ? QUnifiedTimer2::instance()->currentDelta() : time - lastTime;
+    int elapsed = useDelta ? QDeclarativeAnimationTimer::instance()->currentDelta() : time - lastTime;
     if (useDelta)
         useDelta = false;
 
