@@ -1296,13 +1296,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (!d->textLayoutDirty) {
         QSGSimpleRectNode *cursorNode = node->cursorNode();
         if (cursorNode != 0 && !isReadOnly()) {
-            QFontMetrics fm = QFontMetrics(d->font);
-            // the y offset is there to keep the baseline constant in case we have script changes in the text.
-            QPoint offset(-d->hscroll, fm.ascent() - d->control->ascent());
-            offset.rx() += d->control->cursorToX();
-
-            QRect br(boundingRect().toRect());
-            cursorNode->setRect(QRectF(offset, QSizeF(d->control->cursorWidth(), br.height())));
+            cursorNode->setRect(cursorRectangle());
 
             if (!d->cursorVisible
                     || (!d->control->cursorBlinkStatus() && d->control->cursorBlinkPeriod() > 0)) {
@@ -1336,8 +1330,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         }
 
         if (!isReadOnly() && d->cursorItem == 0) {
-            offset.rx() += d->control->cursorToX();
-            node->setCursor(QRectF(offset, QSizeF(d->control->cursorWidth(), br.height())), d->color);
+            node->setCursor(cursorRectangle(), d->color);
             if (!d->cursorVisible
                     || (!d->control->cursorBlinkStatus() && d->control->cursorBlinkPeriod() > 0)) {
                 d->hideCursor();
