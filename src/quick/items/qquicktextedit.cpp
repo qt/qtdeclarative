@@ -129,10 +129,10 @@ QString QQuickTextEdit::text() const
 
 #ifndef QT_NO_TEXTHTMLPARSER
     if (d->richText)
-        return d->document->toHtml();
+        return d->control->toHtml();
     else
 #endif
-        return d->document->toPlainText();
+        return d->control->toPlainText();
 }
 
 /*!

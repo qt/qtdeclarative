@@ -1869,7 +1869,10 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
         }
     }
     layout->setAdditionalFormats(overrides);
+    tentativeCommit = e->tentativeCommitString();
+
     cursor.endEditBlock();
+
     QTextCursorPrivate *cursor_d = QTextCursorPrivate::getPrivate(&cursor);
     if (cursor_d)
         cursor_d->setX();
@@ -2696,6 +2699,22 @@ void QQuickTextControl::appendPlainText(const QString &text)
     d->append(text, Qt::PlainText);
 }
 
+QString QQuickTextControl::toPlainText() const
+{
+    Q_D(const QQuickTextControl);
+    QString plainText = document()->toPlainText();
+    if (!d->tentativeCommit.isEmpty())
+        plainText.insert(textCursor().position(), d->tentativeCommit);
+    return plainText;
+}
+
+#ifndef QT_NO_TEXTHTMLPARSER
+QString QQuickTextControl::toHtml() const
+{
+    // note: currently not including tentative commit
+    return document()->toHtml();
+}
+#endif
 
 void QQuickTextControl::ensureCursorVisible()
 {

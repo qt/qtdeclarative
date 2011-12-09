@@ -1984,16 +1984,28 @@ void tst_qquicktextedit::textInput()
     QVERIFY(edit);
     QVERIFY(edit->hasActiveFocus() == true);
 
-    // test that input method event is committed
+    // test that input method event is committed and change signal is emitted
+    QSignalSpy spy(edit, SIGNAL(textChanged(QString)));
     QInputMethodEvent event;
     event.setCommitString( "Hello world!", 0, 0);
     QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(edit->text(), QString("Hello world!"));
+    QCOMPARE(spy.count(), 1);
 
     // QTBUG-12339
     // test that document and internal text attribute are in sync
     QQuickTextEditPrivate *editPrivate = static_cast<QQuickTextEditPrivate*>(QQuickItemPrivate::get(edit));
     QCOMPARE(editPrivate->text, QString("Hello world!"));
+
+    // test that tentative commit is included in text property
+    edit->setText("");
+    spy.clear();
+    QList<QInputMethodEvent::Attribute> attributes;
+    QInputMethodEvent event2("preedit", attributes);
+    event2.setTentativeCommitString("string");
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event2);
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(edit->text(), QString("string"));
 }
 
 class PlatformInputContext : public QPlatformInputContext
