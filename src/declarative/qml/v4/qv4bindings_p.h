@@ -72,7 +72,8 @@ public:
     virtual ~QV4Bindings();
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, 
-                                               QObject *scope, int property, int line);
+                                               QObject *scope, int property,
+                                               int line, int column);
 
 #ifdef QML_THREADED_INTERPRETER
     static void **getDecodeInstrTable();
@@ -96,6 +97,7 @@ private:
         int property;
         QObject *scope;
         int line;
+        int column;
         QObject *target;
         quint32 executedBlocks;
 

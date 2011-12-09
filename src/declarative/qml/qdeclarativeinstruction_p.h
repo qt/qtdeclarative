@@ -241,6 +241,7 @@ union QDeclarativeInstruction
         short owner;
         bool isRoot;
         ushort line;
+        ushort column;
     };
     struct instr_assignBinding {
         QML_INSTR_HEADER
@@ -250,6 +251,7 @@ union QDeclarativeInstruction
         short owner;
         bool isRoot;
         ushort line;
+        ushort column;
     };
     struct instr_fetch {
         QML_INSTR_HEADER

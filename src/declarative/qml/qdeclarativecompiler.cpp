@@ -3328,6 +3328,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
             store.isRoot = (compileState->root == obj);
         }
         store.line = binding->location.start.line;
+        store.column = binding->location.start.column;
         output->addInstruction(store);
     } else if (ref.dataType == BindingReference::V8) {
         Instruction::StoreV8Binding store;
@@ -3340,6 +3341,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
             store.isRoot = (compileState->root == obj);
         }
         store.line = binding->location.start.line;
+        store.column = binding->location.start.column;
 
         Q_ASSERT(ref.bindingContext.owner == 0 ||
                  (ref.bindingContext.owner != 0 && valueTypeProperty));
@@ -3356,6 +3358,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         store.assignBinding.context = ref.bindingContext.stack;
         store.assignBinding.owner = ref.bindingContext.owner;
         store.assignBinding.line = binding->location.start.line;
+        store.assignBinding.column = binding->location.start.column;
 
         if (valueTypeProperty) {
             store.assignBinding.isRoot = (compileState->root == valueTypeProperty->parent);

@@ -14,6 +14,7 @@ HEADERS +=  \
     $$PWD/qdeletewatcher_p.h \
     $$PWD/qrecyclepool_p.h \
     $$PWD/qflagpointer_p.h \
+    $$PWD/qdeclarativetrace_p.h \
 
 SOURCES += \
     $$PWD/qintrusivelist.cpp \
@@ -21,4 +22,5 @@ SOURCES += \
     $$PWD/qdeclarativepool.cpp \
     $$PWD/qfastmetabuilder.cpp \
     $$PWD/qdeclarativethread.cpp \
+    $$PWD/qdeclarativetrace.cpp \
 

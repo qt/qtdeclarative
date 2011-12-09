@@ -814,6 +814,7 @@ void QDeclarativeComponentPrivate::complete(QDeclarativeEnginePrivate *enginePri
 void QDeclarativeComponent::completeCreate()
 {
     Q_D(QDeclarativeComponent);
+
     d->completeCreate();
 }
 

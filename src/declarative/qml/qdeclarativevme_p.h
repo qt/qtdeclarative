@@ -67,6 +67,8 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qfinitestack_p.h>
 
+#include <private/qdeclarativetrace_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QObject;
@@ -145,11 +147,19 @@ private:
     QDeclarativeEngine *engine;
     QRecursionNode recursion;
 
+#ifdef QML_ENABLE_TRACE
+    QDeclarativeCompiledData *rootComponent;
+#endif
+
     QFiniteStack<QObject *> objects;
     QFiniteStack<QDeclarativeVMETypes::List> lists;
 
     QFiniteStack<QDeclarativeAbstractBinding *> bindValues;
     QFiniteStack<QDeclarativeParserStatus *> parserStatus;
+#ifdef QML_ENABLE_TRACE
+    QFiniteStack<QDeclarativeData *> parserStatusData;
+#endif
+
     QDeclarativeGuardedContextData rootContext;
     QDeclarativeGuardedContextData creationContext;
 

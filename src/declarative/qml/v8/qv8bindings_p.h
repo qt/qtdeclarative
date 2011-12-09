@@ -75,7 +75,7 @@ public:
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, 
                                                const QDeclarativePropertyData &prop,
-                                               int line);
+                                               int line, int column);
 
 private:
     Q_DISABLE_COPY(QV8Bindings)
@@ -100,6 +100,7 @@ private:
         bool enabled:1;
         bool updating:1;
         int line;
+        int column;
         QObject *object;
         QDeclarativePropertyData property;
         QV8Bindings *parent;

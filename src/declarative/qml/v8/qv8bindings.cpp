@@ -48,11 +48,12 @@
 #include <private/qdeclarativebinding_p_p.h>
 #include <private/qdeclarativeexpression_p.h>
 #include <private/qobject_p.h>
+#include <private/qdeclarativetrace_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QV8Bindings::Binding::Binding()
-: index(-1), enabled(false), updating(false), line(-1), object(0), parent(0)
+: index(-1), enabled(false), updating(false), line(-1), column(-1), object(0), parent(0)
 {
 }
 
@@ -75,6 +76,11 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     if (!enabled)
         return;
 
+    QDeclarativeTrace trace("V8 Binding Update");
+    trace.addDetail("URL", parent->url);
+    trace.addDetail("Line", line);
+    trace.addDetail("Column", column);
+
     QDeclarativeContextData *context = QDeclarativeAbstractExpression::context();
     if (!context || !context->isValid())
         return;
@@ -93,6 +99,7 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         v8::Local<v8::Value> result = evaluate(v8::Handle<v8::Function>::Cast(parent->functions->Get(index)), 
                                                &isUndefined);
 
+        trace.event("writing V8 result");
         bool needsErrorData = false;
         if (!watcher.wasDeleted() && !error.isValid()) {
             typedef QDeclarativePropertyPrivate PP;
@@ -183,11 +190,12 @@ QV8Bindings::~QV8Bindings()
 
 QDeclarativeAbstractBinding *QV8Bindings::configBinding(int index, QObject *target, QObject *scope, 
                                                         const QDeclarativePropertyData &p,
-                                                        int line)
+                                                        int line, int column)
 {
     QV8Bindings::Binding *rv = bindings + index;
 
     rv->line = line;
+    rv->column = column;
     rv->index = index;
     rv->object = target;
     rv->property = p;

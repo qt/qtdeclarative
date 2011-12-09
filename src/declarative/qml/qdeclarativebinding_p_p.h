@@ -77,6 +77,7 @@ protected:
 private:
     bool updating:1;
     bool enabled:1;
+    int columnNumber;
     QDeclarativeProperty property; 
 };
 
