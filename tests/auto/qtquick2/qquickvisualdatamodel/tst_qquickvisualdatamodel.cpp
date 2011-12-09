@@ -688,26 +688,18 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
 
     QSignalSpy spy(obj, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)));
     model.emitMove(sourceFirst, sourceLast, destinationChild);
-    // QAbstractItemModel also emits the changed signal when items are moved.
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.count(), 1);
 
-    bool move = false;
-    for (int i = 0; i < 2; ++i) {
-        QCOMPARE(spy[1].count(), 2);
-        QDeclarativeChangeSet changeSet = spy[i][0].value<QDeclarativeChangeSet>();
-        if (!changeSet.changes().isEmpty())
-            continue;
-        move = true;
-        QCOMPARE(changeSet.removes().count(), 1);
-        QCOMPARE(changeSet.removes().at(0).index, expectFrom);
-        QCOMPARE(changeSet.removes().at(0).count, expectCount);
-        QCOMPARE(changeSet.inserts().count(), 1);
-        QCOMPARE(changeSet.inserts().at(0).index, expectTo);
-        QCOMPARE(changeSet.inserts().at(0).count, expectCount);
-        QCOMPARE(changeSet.removes().at(0).moveId, changeSet.inserts().at(0).moveId);
-        QCOMPARE(spy[i][1].toBool(), false);
-    }
-    QVERIFY(move);
+    QCOMPARE(spy[0].count(), 2);
+    QDeclarativeChangeSet changeSet = spy[0][0].value<QDeclarativeChangeSet>();
+    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().at(0).index, expectFrom);
+    QCOMPARE(changeSet.removes().at(0).count, expectCount);
+    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.inserts().at(0).index, expectTo);
+    QCOMPARE(changeSet.inserts().at(0).count, expectCount);
+    QCOMPARE(changeSet.removes().at(0).moveId, changeSet.inserts().at(0).moveId);
+    QCOMPARE(spy[0][1].toBool(), false);
 
     delete obj;
 }

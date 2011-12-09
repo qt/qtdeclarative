@@ -134,23 +134,28 @@ private:
 template<typename T>
 void tst_qquickgridview_move(int from, int to, int n, T *items)
 {
-    if (n == 1) {
-        items->move(from, to);
-    } else {
-        T replaced;
-        int i=0;
-        typename T::ConstIterator it=items->begin(); it += from+n;
-        for (; i<to-from; ++i,++it)
-            replaced.append(*it);
-        i=0;
-        it=items->begin(); it += from;
-        for (; i<n; ++i,++it)
-            replaced.append(*it);
-        typename T::ConstIterator f=replaced.begin();
-        typename T::Iterator t=items->begin(); t += from;
-        for (; f != replaced.end(); ++f, ++t)
-            *t = *f;
+    if (from > to) {
+        // Only move forwards - flip if backwards moving
+        int tfrom = from;
+        int tto = to;
+        from = tto;
+        to = tto+n;
+        n = tfrom-tto;
     }
+
+    T replaced;
+    int i=0;
+    typename T::ConstIterator it=items->begin(); it += from+n;
+    for (; i<to-from; ++i,++it)
+        replaced.append(*it);
+    i=0;
+    it=items->begin(); it += from;
+    for (; i<n; ++i,++it)
+        replaced.append(*it);
+    typename T::ConstIterator f=replaced.begin();
+    typename T::Iterator t=items->begin(); t += from;
+    for (; f != replaced.end(); ++f, ++t)
+        *t = *f;
 }
 
 void tst_QQuickGridView::initTestCase()
@@ -969,7 +974,7 @@ void tst_QQuickGridView::moved()
 
     QQuickText *name;
     QQuickText *number;
-    QQuickView *canvas = createView();
+    QScopedPointer<QQuickView> canvas(createView());
     canvas->show();
 
     TestModel model;
@@ -997,7 +1002,7 @@ void tst_QQuickGridView::moved()
     model.moveItems(from, to, count);
 
     // wait for items to move
-    QTest::qWait(300);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // Confirm items positioned correctly and indexes correct
     int firstVisibleIndex = qCeil(contentY / 60.0) * 3;
@@ -1022,8 +1027,6 @@ void tst_QQuickGridView::moved()
         if (item == currentItem)
             QTRY_COMPARE(gridview->currentIndex(), i);
     }
-
-    delete canvas;
 }
 
 void tst_QQuickGridView::moved_data()
