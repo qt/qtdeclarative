@@ -65,7 +65,6 @@ QT_BEGIN_NAMESPACE
 
 class QMimeData;
 class QAbstractScrollArea;
-class QInputContext;
 
 class QQuickTextControlPrivate : public QObjectPrivate
 {
@@ -164,9 +163,10 @@ public:
 
     void activateLinkUnderCursor(QString href = QString());
 
-    void append(const QString &text, Qt::TextFormat format = Qt::AutoText);
+    bool isPreediting() const;
+    void commitPreedit();
 
-    QInputContext *inputContext();
+    void append(const QString &text, Qt::TextFormat format = Qt::AutoText);
 
     QTextDocument *doc;
     bool cursorOn;
@@ -187,7 +187,7 @@ public:
     bool mousePressed;
 
     bool mightStartDrag;
-    QPoint dragStartPos;
+    QPoint mousePressPos;
     QPointer<QObject> contextObject;
 
     bool lastSelectionState;
