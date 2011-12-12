@@ -57,7 +57,6 @@
 #include <QtDeclarative/qdeclarativescriptstring.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 
-#include <private/qv8gccallback_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <private/qv8engine_p.h>
 

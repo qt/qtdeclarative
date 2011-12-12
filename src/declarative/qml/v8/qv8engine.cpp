@@ -41,10 +41,8 @@
 
 #include "qv8engine_p.h"
 
-#include "qv8gccallback_p.h"
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
-#include "qv8gccallback_p.h"
 #include "qv8sequencewrapper_p.h"
 #include "qv8include_p.h"
 #include "qjsengine_p.h"

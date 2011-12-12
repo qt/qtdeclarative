@@ -60,6 +60,7 @@
 #include <QtCore/qstack.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QThreadStorage>
 
 #include <private/qv8_p.h>
 #include <qjsengine.h>
@@ -221,6 +222,55 @@ class QDeclarativeEngine;
 class QDeclarativeValueType;
 class QNetworkAccessManager;
 class QDeclarativeContextData;
+
+class Q_AUTOTEST_EXPORT QV8GCCallback
+{
+private:
+    class ThreadData;
+public:
+    static void garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags);
+    static void registerGcPrologueCallback();
+    static void releaseWorkerThreadGcPrologueCallbackData();
+
+    class Q_AUTOTEST_EXPORT Referencer {
+    public:
+        ~Referencer();
+        void addRelationship(QObject *object, v8::Persistent<v8::Value> handle);
+        void addRelationship(QObject *object, QObject *other);
+        void dispose();
+    private:
+        Referencer();
+        static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *qobjectOwner, bool *shouldBeStrong);
+        v8::Persistent<v8::Object> strongReferencer;
+        v8::Persistent<v8::Context> context;
+        friend class QV8GCCallback::ThreadData;
+    };
+
+    class Q_AUTOTEST_EXPORT Node {
+    public:
+        typedef void (*PrologueCallback)(Referencer *r, Node *node);
+        Node(PrologueCallback callback);
+        ~Node();
+
+        QIntrusiveListNode node;
+        PrologueCallback prologueCallback;
+    };
+
+    static void addGcCallbackNode(Node *node);
+
+private:
+    class ThreadData {
+    public:
+        ThreadData() : gcPrologueCallbackRegistered(false) { }
+        ~ThreadData();
+        Referencer referencer;
+        bool gcPrologueCallbackRegistered;
+        QIntrusiveList<Node, &Node::node> gcCallbackNodes;
+    };
+
+    static void initializeThreadData();
+    static QThreadStorage<ThreadData *> threadData;
+};
 
 class Q_DECLARATIVE_EXPORT QV8Engine
 {

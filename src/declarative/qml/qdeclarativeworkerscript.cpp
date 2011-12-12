@@ -59,7 +59,6 @@
 
 #include <private/qv8engine_p.h>
 #include <private/qv8worker_p.h>
-#include <private/qv8gccallback_p.h>
 
 QT_BEGIN_NAMESPACE
 

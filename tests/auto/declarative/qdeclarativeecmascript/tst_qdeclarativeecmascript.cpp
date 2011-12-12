@@ -49,7 +49,6 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qnumeric.h>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qv8gccallback_p.h>
 #include <private/qdeclarativevmemetaobject_p.h>
 #include <private/qv4compiler_p.h>
 #include "testtypes.h"

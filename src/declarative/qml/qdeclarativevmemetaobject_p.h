@@ -69,7 +69,7 @@
 #include "qdeclarativecompiler_p.h"
 #include "qdeclarativecontext_p.h"
 
-#include <private/qv8gccallback_p.h>
+#include <private/qv8engine_p.h>
 
 #include <private/qv8_p.h>
 
