@@ -259,6 +259,7 @@ void QQuickTextInput::setColor(const QColor &c)
     Q_D(QQuickTextInput);
     if (c != d->color) {
         d->color = c;
+        d->textLayoutDirty = true;
         update();
         emit colorChanged(c);
     }
@@ -286,8 +287,10 @@ void QQuickTextInput::setSelectionColor(const QColor &color)
     QPalette p = d->control->palette();
     p.setColor(QPalette::Highlight, d->selectionColor);
     d->control->setPalette(p);
-    if (d->control->hasSelectedText())
+    if (d->control->hasSelectedText()) {
+        d->textLayoutDirty = true;
         update();
+    }
     emit selectionColorChanged(color);
 }
 /*!
@@ -311,8 +314,10 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
     QPalette p = d->control->palette();
     p.setColor(QPalette::HighlightedText, d->selectedTextColor);
     d->control->setPalette(p);
-    if (d->control->hasSelectedText())
+    if (d->control->hasSelectedText()) {
+        d->textLayoutDirty = true;
         update();
+    }
     emit selectedTextColorChanged(color);
 }
 
