@@ -55,6 +55,10 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 
+#ifdef QT_WIDGETS_LIB
+#include <QtWidgets/QFileDialog>
+#endif
+
 
 #ifdef QML_RUNTIME_TESTING
 class RenderStatistics
