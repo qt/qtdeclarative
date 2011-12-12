@@ -1098,6 +1098,7 @@ void QQuickTrivialWindowManager::show(QQuickCanvas *canvas)
 {
     CanvasData data;
     data.updatePending = false;
+    data.grabOnly = false;
     m_windows[canvas] = data;
 
     maybeUpdate(canvas);
