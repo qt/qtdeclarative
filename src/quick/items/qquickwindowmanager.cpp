@@ -1071,7 +1071,6 @@ void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickCanvas *can
         printf("GUI: doing update...\n");
 #endif
         renderThreadAwakened = true;
-        bool locked = false;
 
         // If we are getting here from the renderer's sync event, the renderer is about
         // to go to sleep anyway.

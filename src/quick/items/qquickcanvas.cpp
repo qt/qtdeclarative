@@ -45,10 +45,10 @@
 #include "qquickitem.h"
 #include "qquickitem_p.h"
 
-#include <private/qsgrenderer_p.h>
-#include <private/qsgtexture_p.h>
-#include <private/qsgflashnode_p.h>
-#include <qsgengine.h>
+#include <QtQuick/private/qsgrenderer_p.h>
+#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgflashnode_p.h>
+#include <QtQuick/qsgengine.h>
 
 #include <private/qquickwindowmanager_p.h>
 
