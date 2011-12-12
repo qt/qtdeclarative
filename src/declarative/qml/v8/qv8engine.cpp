@@ -1451,14 +1451,6 @@ void QV8GCCallback::registerGcPrologueCallback()
     }
 }
 
-void QV8GCCallback::ThreadData::releaseStrongReferencer()
-{
-    // NOTE: must be called with a valid current isolate
-    if (!referencer.strongReferencer.IsEmpty()) {
-        qPersistentDispose(referencer.strongReferencer);
-    }
-}
-
 void QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()
 {
     // Note that only worker-thread implementations with their
@@ -1467,7 +1459,7 @@ void QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()
     Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()", "called after v8::Isolate has exited");
     if (threadData.hasLocalData()) {
         QV8GCCallback::ThreadData *td = threadData.localData();
-        td->releaseStrongReferencer();
+        td->referencer.dispose();
     }
 }
 
@@ -1483,18 +1475,14 @@ QV8GCCallback::Node::~Node()
 
 QV8GCCallback::Referencer::~Referencer()
 {
-    if (!strongReferencer.IsEmpty()) {
-        Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::Referencer::~Referencer()", "called after v8::Isolate has exited");
-        // automatically release the strongReferencer if it hasn't
-        // been explicitly released already.
-        qPersistentDispose(strongReferencer);
-    }
+    dispose();
 }
 
 QV8GCCallback::Referencer::Referencer()
 {
     v8::HandleScope handleScope;
-    v8::Handle<v8::Context> context = v8::Context::New();
+    context = v8::Context::New();
+    qPersistentRegister(context);
     v8::Context::Scope contextScope(context);
     strongReferencer = qPersistentNew(v8::Object::New());
 }
@@ -1509,6 +1497,18 @@ void QV8GCCallback::Referencer::addRelationship(QObject *object, QObject *other)
     } else if (!implicitOwner->IsEmpty()) {
         v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
     }
+}
+
+void QV8GCCallback::Referencer::dispose()
+{
+    if (!strongReferencer.IsEmpty()) {
+        Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::Referencer::~Referencer()", "called after v8::Isolate has exited");
+        // automatically release the strongReferencer if it hasn't
+        // been explicitly released already.
+        qPersistentDispose(strongReferencer);
+    }
+    if (!context.IsEmpty())
+        qPersistentDispose(context);
 }
 
 void QV8GCCallback::Referencer::addRelationship(QObject *object, v8::Persistent<v8::Value> handle)

@@ -74,10 +74,12 @@ public:
         ~Referencer();
         void addRelationship(QObject *object, v8::Persistent<v8::Value> handle);
         void addRelationship(QObject *object, QObject *other);
+        void dispose();
     private:
         Referencer();
         static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *qobjectOwner, bool *shouldBeStrong);
         v8::Persistent<v8::Object> strongReferencer;
+        v8::Persistent<v8::Context> context;
         friend class QV8GCCallback::ThreadData;
     };
 
@@ -101,7 +103,6 @@ private:
         Referencer referencer;
         bool gcPrologueCallbackRegistered;
         QIntrusiveList<Node, &Node::node> gcCallbackNodes;
-        void releaseStrongReferencer();
     };
 
     static void initializeThreadData();
