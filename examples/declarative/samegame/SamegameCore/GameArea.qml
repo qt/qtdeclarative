@@ -63,6 +63,7 @@ Item {
     }
     ParticleSystem{ 
         id: particleSystem;
+        onEmptyChanged: if (empty) paused = true;
         z:2
         ImageParticle {
             groups: ["red"]
