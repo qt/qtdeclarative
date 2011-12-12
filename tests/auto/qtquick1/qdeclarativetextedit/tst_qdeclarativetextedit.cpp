@@ -1623,20 +1623,23 @@ void tst_qdeclarativetextedit::positionAt()
     QDeclarative1TextEdit *texteditObject = qobject_cast<QDeclarative1TextEdit *>(canvas->rootObject());
     QVERIFY(texteditObject != 0);
 
-    QFontMetrics fm(texteditObject->font());
-    const int y0 = fm.height() / 2;
-    const int y1 = fm.height() * 3 / 2;
+    QTextLayout layout(texteditObject->text());
+    layout.setFont(texteditObject->font());
+
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    const int y0 = line.height() / 2;
+    const int y1 = line.height() * 3 / 2;
 
     int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
-    int diff = abs(int(fm.width(texteditObject->text().left(pos))-texteditObject->width()/2));
 
-    QEXPECT_FAIL("", "QTBUG-21016 fails", Continue);
-    // some tolerance for different fonts.
-#ifdef Q_OS_LINUX
-    QVERIFY(diff < 2);
-#else
-    QVERIFY(diff < 5);
-#endif
+    int widthBegin = floor(line.cursorToX(pos - 1));
+    int widthEnd = ceil(line.cursorToX(pos + 1));
+
+    QVERIFY(widthBegin <= texteditObject->width() / 2);
+    QVERIFY(widthEnd >= texteditObject->width() / 2);
 
     const qreal x0 = texteditObject->positionToRectangle(pos).x();
     const qreal x1 = texteditObject->positionToRectangle(pos + 1).x();

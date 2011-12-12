@@ -49,6 +49,7 @@
 #include <QDir>
 #include <QStyle>
 #include <QInputContext>
+#include <QtCore/qmath.h>
 #include <private/qapplication_p.h>
 #include <private/qinputpanel_p.h>
 
@@ -1318,6 +1319,10 @@ void tst_qdeclarativetextinput::horizontalAlignment_RightToLeft()
     { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QApplication::sendEvent(canvas, &ev); }
     QCOMPARE(textInput->hAlign(), QDeclarative1TextInput::AlignLeft);
 
+    // Clear pre-edit text.  TextInput should maybe do this itself on setText, but that may be
+    // redundant as an actual input method may take care of it.
+    { QInputMethodEvent ev; QApplication::sendEvent(canvas, &ev); }
+
 #ifndef Q_OS_MAC    // QTBUG-18040
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QApplication::keyboardInputDirection
@@ -1360,17 +1365,21 @@ void tst_qdeclarativetextinput::positionAt()
     QVERIFY(textinputObject != 0);
 
     // Check autoscrolled...
-    QFontMetrics fm(textinputObject->font());
 
     int pos = textinputObject->positionAt(textinputObject->width()/2);
-    int diff = abs(int(fm.width(textinputObject->text()) - (fm.width(textinputObject->text().left(pos))+textinputObject->width()/2)));
 
-    // some tollerance for different fonts.
-#ifdef Q_OS_LINUX
-    QVERIFY(diff < 2);
-#else
-    QVERIFY(diff < 5);
-#endif
+    QTextLayout layout(textinputObject->text());
+    layout.setFont(textinputObject->font());
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    int textLeftWidthBegin = qFloor(line.cursorToX(pos - 1));
+    int textLeftWidthEnd = qCeil(line.cursorToX(pos + 1));
+    int textWidth = floor(line.horizontalAdvance());
+
+    QVERIFY(textLeftWidthBegin <= textWidth - textinputObject->width() / 2);
+    QVERIFY(textLeftWidthEnd >= textWidth - textinputObject->width() / 2);
 
     int x = textinputObject->positionToRectangle(pos + 1).x() - 1;
     QCOMPARE(textinputObject->positionAt(x, QDeclarative1TextInput::CursorBetweenCharacters), pos + 1);
@@ -1379,15 +1388,12 @@ void tst_qdeclarativetextinput::positionAt()
     // Check without autoscroll...
     textinputObject->setAutoScroll(false);
     pos = textinputObject->positionAt(textinputObject->width()/2);
-    diff = abs(int(fm.width(textinputObject->text().left(pos))-textinputObject->width()/2));
 
-    QEXPECT_FAIL("", "QTBUG-21017 fails", Continue);
-    // some tolerance for different fonts.
-#ifdef Q_OS_LINUX
-    QVERIFY(diff < 2);
-#else
-    QVERIFY(diff < 5);
-#endif
+    textLeftWidthBegin = qFloor(line.cursorToX(pos - 1));
+    textLeftWidthEnd = qCeil(line.cursorToX(pos + 1));
+
+    QVERIFY(textLeftWidthBegin <= textinputObject->width() / 2);
+    QVERIFY(textLeftWidthEnd >= textinputObject->width() / 2);
 
     x = textinputObject->positionToRectangle(pos + 1).x() - 1;
     QCOMPARE(textinputObject->positionAt(x, QDeclarative1TextInput::CursorBetweenCharacters), pos + 1);
@@ -2472,12 +2478,12 @@ void tst_qdeclarativetextinput::setHAlignClearCache()
     view.show();
     QApplication::setActiveWindow(&view);
     QTest::qWaitForWindowShown(&view);
-    QEXPECT_FAIL("", "QTBUG-21017 fails", Abort);
-    QTRY_COMPARE(input.nbPaint, 1);
+    QTRY_VERIFY(input.nbPaint >= 1);
+    input.nbPaint = 0;
     input.setHAlign(QDeclarative1TextInput::AlignRight);
     QApplication::processEvents();
     //Changing the alignment should trigger a repaint
-    QCOMPARE(input.nbPaint, 2);
+    QTRY_VERIFY(input.nbPaint >= 1);
 }
 
 void tst_qdeclarativetextinput::focusOutClearSelection()
@@ -2581,7 +2587,6 @@ void tst_qdeclarativetextinput::preeditAutoScroll()
 
     // test the text is scrolled so the preedit is visible.
     ic->sendPreeditText(preeditText.mid(0, 3), 1);
-    QEXPECT_FAIL("", "QTBUG-21017 fails", Abort);
     QVERIFY(input.positionAt(0) != 0);
     QVERIFY(input.cursorRectangle().left() < input.boundingRect().width());
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
