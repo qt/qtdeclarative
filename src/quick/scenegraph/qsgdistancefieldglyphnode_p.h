@@ -82,6 +82,7 @@ private:
     QColor m_color;
     QPointF m_baseLine;
     QSGDistanceFieldTextMaterial *m_material;
+    QPointF m_originalPosition;
     QPointF m_position;
     QGlyphRun m_glyphs;
     QSGDistanceFieldGlyphCacheManager *m_glyph_cacheManager;
@@ -91,10 +92,16 @@ private:
     QColor m_styleColor;
     AntialiasingMode m_antialiasingMode;
     QRectF m_boundingRect;
+    const QSGDistanceFieldGlyphCache::Texture *m_texture;
+    QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *> m_subNodes;
+    QList<QSGDistanceFieldGlyphNode *> m_nodesToDelete;
 
-    QVector<quint32> m_allGlyphIndexes;
+    struct GlyphInfo {
+        quint32 glyphIndex;
+        QPointF position;
+    };
     QSet<quint32> m_allGlyphIndexesLookup;
-    QVector<QPointF> m_allGlyphPositions;
+    QList<GlyphInfo> m_allGlyphs;
 
     uint m_dirtyGeometry: 1;
     uint m_dirtyMaterial: 1;
