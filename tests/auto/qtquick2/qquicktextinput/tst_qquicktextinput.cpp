@@ -1659,6 +1659,14 @@ void tst_qquicktextinput::inputMethods()
     QCOMPARE(input->text(), QString(""));
     input->setValidator(0);
     delete validator;
+
+    // input should reset selection even if replacement parameters are out of bounds
+    input->setText("text");
+    input->setCursorPosition(0);
+    input->moveCursorSelection(input->text().length());
+    event.setCommitString("replacement", -input->text().length(), input->text().length());
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QCOMPARE(input->selectionStart(), input->selectionEnd());
 }
 
 /*

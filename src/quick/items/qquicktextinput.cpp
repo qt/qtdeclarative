@@ -2570,6 +2570,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     if (event->replacementLength()) {
         m_selstart = m_cursor;
         m_selend = m_selstart + event->replacementLength();
+        m_selend = qMin(m_selend, m_text.length());
         removeSelectedText();
     }
     if (!event->commitString().isEmpty()) {
