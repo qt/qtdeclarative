@@ -231,23 +231,9 @@ public:
     static void garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags);
     static void registerGcPrologueCallback();
 
-    class Q_AUTOTEST_EXPORT Referencer {
-    public:
-        ~Referencer();
-        void addRelationship(QObject *object, v8::Persistent<v8::Value> handle);
-        void addRelationship(QObject *object, QObject *other);
-        void dispose();
-    private:
-        Referencer();
-        static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *qobjectOwner, bool *shouldBeStrong);
-        v8::Persistent<v8::Object> strongReferencer;
-        v8::Persistent<v8::Context> context;
-        friend class QV8GCCallback;
-    };
-
     class Q_AUTOTEST_EXPORT Node {
     public:
-        typedef void (*PrologueCallback)(Referencer *r, Node *node);
+        typedef void (*PrologueCallback)(Node *node);
         Node(PrologueCallback callback);
         ~Node();
 
@@ -451,11 +437,13 @@ public:
 
     static QDateTime qtDateTimeFromJsDate(double jsDate);
 
+    void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
+    void addRelationshipForGC(QObject *object, QObject *other);
+
     struct ThreadData {
         ThreadData();
         ~ThreadData();
         v8::Isolate* isolate;
-        QV8GCCallback::Referencer* referencer;
         bool gcPrologueCallbackRegistered;
         QIntrusiveList<QV8GCCallback::Node, &QV8GCCallback::Node::node> gcCallbackNodes;
     };
@@ -463,6 +451,8 @@ public:
     static bool hasThreadData();
     static ThreadData* threadData();
     static void ensurePerThreadIsolate();
+
+    v8::Persistent<v8::Object> m_strongReferencer;
 
 protected:
     QJSEngine* q;
@@ -503,6 +493,8 @@ protected:
     double qtDateTimeToJsDate(const QDateTime &dt);
 
 private:
+    static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
+
     typedef QScriptIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
     ValueList m_values;
     typedef QScriptIntrusiveList<QJSValueIteratorPrivate, &QJSValueIteratorPrivate::m_node> ValueIteratorList;

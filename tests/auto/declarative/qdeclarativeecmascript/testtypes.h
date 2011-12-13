@@ -1031,6 +1031,7 @@ public:
     {
         CircularReferenceObject *retn = new CircularReferenceObject(parent);
         retn->m_dtorCount = m_dtorCount;
+        retn->m_engine = m_engine;
         return retn;
     }
 
@@ -1039,17 +1040,23 @@ public:
         m_referenced = other;
     }
 
-    static void callback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *n)
+    static void callback(QV8GCCallback::Node *n)
     {
         CircularReferenceObject *cro = static_cast<CircularReferenceObject*>(n);
         if (cro->m_referenced) {
-            r->addRelationship(cro, cro->m_referenced);
+            cro->m_engine->addRelationshipForGC(cro, cro->m_referenced);
         }
+    }
+
+    void setEngine(QDeclarativeEngine* declarativeEngine)
+    {
+        m_engine = QDeclarativeEnginePrivate::get(declarativeEngine)->v8engine();
     }
 
 private:
     QObject *m_referenced;
     int *m_dtorCount;
+    QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceObject*)
 
@@ -1060,7 +1067,7 @@ class CircularReferenceHandle : public QObject,
 
 public:
     CircularReferenceHandle(QObject *parent = 0)
-        : QObject(parent), QV8GCCallback::Node(gccallback), m_dtorCount(0)
+        : QObject(parent), QV8GCCallback::Node(gccallback), m_dtorCount(0), m_engine(0)
     {
         QV8GCCallback::addGcCallbackNode(this);
     }
@@ -1079,6 +1086,7 @@ public:
     {
         CircularReferenceHandle *retn = new CircularReferenceHandle(parent);
         retn->m_dtorCount = m_dtorCount;
+        retn->m_engine = m_engine;
         return retn;
     }
 
@@ -1095,15 +1103,21 @@ public:
         crh->m_referenced.Clear();
     }
 
-    static void gccallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *n)
+    static void gccallback(QV8GCCallback::Node *n)
     {
         CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(n);
-        r->addRelationship(crh, crh->m_referenced);
+        crh->m_engine->addRelationshipForGC(crh, crh->m_referenced);
+    }
+
+    void setEngine(QDeclarativeEngine* declarativeEngine)
+    {
+        m_engine = QDeclarativeEnginePrivate::get(declarativeEngine)->v8engine();
     }
 
 private:
     v8::Persistent<v8::Value> m_referenced;
     int *m_dtorCount;
+    QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceHandle*)
 

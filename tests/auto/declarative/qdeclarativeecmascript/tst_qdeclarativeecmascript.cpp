@@ -4129,6 +4129,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QObject *object = component.create();
         QVERIFY(object != 0);
         CircularReferenceObject *cro = object->findChild<CircularReferenceObject*>("cro");
+        cro->setEngine(&hrmEngine);
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "createReference");
         gc(engine);
@@ -4147,6 +4148,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QObject *object = component.create();
         QVERIFY(object != 0);
         CircularReferenceObject *cro = object->findChild<CircularReferenceObject*>("cro");
+        cro->setEngine(&hrmEngine);
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "circularReference");
         gc(engine);
@@ -4166,6 +4168,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QVERIFY(object != 0);
         CircularReferenceHandle *crh = object->findChild<CircularReferenceHandle*>("crh");
         QVERIFY(crh != 0);
+        crh->setEngine(&hrmEngine);
         crh->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "createReference");
         CircularReferenceHandle *first = object->property("first").value<CircularReferenceHandle*>();
@@ -4193,6 +4196,7 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QVERIFY(object != 0);
         CircularReferenceHandle *crh = object->findChild<CircularReferenceHandle*>("crh");
         QVERIFY(crh != 0);
+        crh->setEngine(&hrmEngine);
         crh->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "circularReference");
         CircularReferenceHandle *first = object->property("first").value<CircularReferenceHandle*>();
@@ -4229,6 +4233,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         CircularReferenceHandle *crh2 = object2->findChild<CircularReferenceHandle*>("crh");
         QVERIFY(crh1 != 0);
         QVERIFY(crh2 != 0);
+        crh1->setEngine(&hrmEngine1);
+        crh2->setEngine(&hrmEngine2);
         crh1->setDtorCount(&dtorCount);
         crh2->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object1, "createReference");
@@ -4271,6 +4277,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         CircularReferenceHandle *crh2 = object2->findChild<CircularReferenceHandle*>("crh");
         QVERIFY(crh1 != 0);
         QVERIFY(crh2 != 0);
+        crh1->setEngine(&hrmEngine1);
+        crh2->setEngine(&hrmEngine2);
         crh1->setDtorCount(&dtorCount);
         crh2->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object1, "createReference");
@@ -4322,6 +4330,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         CircularReferenceHandle *crh2 = object2->findChild<CircularReferenceHandle*>("crh");
         QVERIFY(crh1 != 0);
         QVERIFY(crh2 != 0);
+        crh1->setEngine(hrmEngine1);
+        crh2->setEngine(hrmEngine2);
         crh1->setDtorCount(&dtorCount);
         crh2->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object1, "createReference");

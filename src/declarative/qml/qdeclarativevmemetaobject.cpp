@@ -1027,13 +1027,14 @@ void QDeclarativeVMEMetaObject::VarPropertiesWeakReferenceCallback(v8::Persisten
     vmemo->varProperties.Clear();
 }
 
-void QDeclarativeVMEMetaObject::GcPrologueCallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *node)
+void QDeclarativeVMEMetaObject::GcPrologueCallback(QV8GCCallback::Node *node)
 {
     QDeclarativeVMEMetaObject *vmemo = static_cast<QDeclarativeVMEMetaObject*>(node);
     Q_ASSERT(vmemo);
-    if (!vmemo->varPropertiesInitialized || vmemo->varProperties.IsEmpty())
+    if (!vmemo->varPropertiesInitialized || vmemo->varProperties.IsEmpty() || !vmemo->ctxt || !vmemo->ctxt->engine)
         return;
-    r->addRelationship(vmemo->object, vmemo->varProperties);
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(vmemo->ctxt->engine);
+    ep->v8engine()->addRelationshipForGC(vmemo->object, vmemo->varProperties);
 }
 
 bool QDeclarativeVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const

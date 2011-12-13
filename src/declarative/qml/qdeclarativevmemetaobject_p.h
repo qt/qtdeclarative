@@ -179,7 +179,7 @@ private:
     int firstVarPropertyIndex;
     bool varPropertiesInitialized;
     static void VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter);
-    static void GcPrologueCallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *node);
+    static void GcPrologueCallback(QV8GCCallback::Node *node);
     inline void allocateVarPropertiesArray();
     inline void ensureVarPropertiesAllocated();
 
