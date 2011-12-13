@@ -675,6 +675,8 @@ void QQuickParticleSystem::initGroups()
 
 void QQuickParticleSystem::registerParticlePainter(QQuickParticlePainter* p)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Painter" << p << "to" << this;
     //TODO: a way to Unregister emitters, painters and affectors
     m_painters << QPointer<QQuickParticlePainter>(p);//###Set or uniqueness checking?
     connect(p, SIGNAL(groupsChanged(QStringList)),
@@ -684,6 +686,8 @@ void QQuickParticleSystem::registerParticlePainter(QQuickParticlePainter* p)
 
 void QQuickParticleSystem::registerParticleEmitter(QQuickParticleEmitter* e)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Emitter" << e << "to" << this;
     m_emitters << QPointer<QQuickParticleEmitter>(e);//###How to get them out?
     connect(e, SIGNAL(particleCountChanged()),
             this, SLOT(emittersChanged()));
@@ -695,11 +699,15 @@ void QQuickParticleSystem::registerParticleEmitter(QQuickParticleEmitter* e)
 
 void QQuickParticleSystem::registerParticleAffector(QQuickParticleAffector* a)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Affector" << a << "to" << this;
     m_affectors << QPointer<QQuickParticleAffector>(a);
 }
 
 void QQuickParticleSystem::registerParticleGroup(QQuickParticleGroup* g)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Group" << g << "to" << this;
     m_groups << QPointer<QQuickParticleGroup>(g);
     createEngine();
 }
