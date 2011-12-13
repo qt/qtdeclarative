@@ -56,6 +56,7 @@
 #include <QtQuick/qquickview.h>
 
 #ifdef QT_WIDGETS_LIB
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
 #endif
 
@@ -375,7 +376,11 @@ int main(int argc, char ** argv)
         }
     }
 
+#ifdef QT_WIDGETS_LIB
+    QApplication app(argc, argv);
+#else
     QGuiApplication app(argc, argv);
+#endif
     app.setApplicationName("QtQmlViewer");
     app.setOrganizationName("Nokia");
     app.setOrganizationDomain("nokia.com");
