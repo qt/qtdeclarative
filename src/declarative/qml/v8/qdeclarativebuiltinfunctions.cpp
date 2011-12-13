@@ -227,7 +227,7 @@ v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
         v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kOverview);
     int stackCount = stackTrace->GetFrameCount();
 
-    for (uint i = 0; i < stackCount; i++) {
+    for (int i = 0; i < stackCount; i++) {
         v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(i);
         v8::String::Utf8Value func_name(frame->GetFunctionName());
         v8::String::Utf8Value script_name(frame->GetScriptName());
