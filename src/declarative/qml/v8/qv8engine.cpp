@@ -151,8 +151,6 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     m_valueTypeWrapper.init(this);
     m_sequenceWrapper.init(this);
 
-    QV8GCCallback::registerGcPrologueCallback();
-
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
     m_getOwnPropertyNames = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(v));
