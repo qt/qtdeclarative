@@ -70,6 +70,10 @@ public:
 
     virtual void update();
 
+    void preprocess();
+
+    void invalidateGlyphs(const QVector<quint32> &glyphs);
+
     void updateGeometry();
 
 private:
@@ -88,11 +92,9 @@ private:
     AntialiasingMode m_antialiasingMode;
     QRectF m_boundingRect;
 
-    struct GlyphInfo {
-        quint32 glyphIndex;
-        QPointF position;
-    };
-    QLinkedList<GlyphInfo> m_glyphsToAdd;
+    QVector<quint32> m_allGlyphIndexes;
+    QSet<quint32> m_allGlyphIndexesLookup;
+    QVector<QPointF> m_allGlyphPositions;
 
     uint m_dirtyGeometry: 1;
     uint m_dirtyMaterial: 1;

@@ -117,7 +117,7 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QVector<glyph_t> &gl
         }
     }
 
-    addGlyphPositions(glyphPositions);
+    setGlyphsPosition(glyphPositions);
     markGlyphsToRender(glyphsToRender);
 }
 
@@ -159,7 +159,7 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
     Texture t;
     t.textureId = m_textureData->texture;
     t.size = m_textureData->size;
-    addGlyphTextures(glyphTextures, t);
+    setGlyphsTexture(glyphTextures, t);
 }
 
 void QSGDefaultDistanceFieldGlyphCache::releaseGlyphs(const QVector<glyph_t> &glyphs)
@@ -300,6 +300,9 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(int width, int height)
         glEnable(GL_BLEND);
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     ctx->functions()->glUseProgram(oldProgram);
+
+    m_textureData->blitProgram->disableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
+    m_textureData->blitProgram->disableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
 }
 
 bool QSGDefaultDistanceFieldGlyphCache::useWorkaroundBrokenFBOReadback() const

@@ -195,8 +195,8 @@ protected:
     virtual void storeGlyphs(const QHash<glyph_t, QImage> &glyphs) = 0;
     virtual void releaseGlyphs(const QVector<glyph_t> &glyphs) = 0;
 
-    void addGlyphPositions(const QList<GlyphPosition> &glyphs);
-    void addGlyphTextures(const QVector<glyph_t> &glyphs, const Texture &tex);
+    void setGlyphsPosition(const QList<GlyphPosition> &glyphs);
+    void setGlyphsTexture(const QVector<glyph_t> &glyphs, const Texture &tex);
     void markGlyphsToRender(const QVector<glyph_t> &glyphs);
     void removeGlyph(glyph_t glyph);
 

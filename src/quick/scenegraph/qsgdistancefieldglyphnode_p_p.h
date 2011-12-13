@@ -69,7 +69,7 @@ public:
 
     QSize textureSize() const { return m_size; }
 
-    bool updateCache();
+    bool updateTextureSize();
 
 protected:
     QSize m_size;

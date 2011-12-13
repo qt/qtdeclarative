@@ -228,8 +228,10 @@ void QSGDistanceFieldGlyphCache::update()
     storeGlyphs(distanceFields);
 }
 
-void QSGDistanceFieldGlyphCache::addGlyphPositions(const QList<GlyphPosition> &glyphs)
+void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &glyphs)
 {
+    QVector<quint32> invalidatedGlyphs;
+
     int count = glyphs.count();
     for (int i = 0; i < count; ++i) {
         GlyphPosition glyph = glyphs.at(i);
@@ -244,11 +246,22 @@ void QSGDistanceFieldGlyphCache::addGlyphPositions(const QList<GlyphPosition> &g
         c.width = br.width();
         c.height = br.height();
 
+        if (m_cacheData->texCoords.contains(glyph.glyph))
+            invalidatedGlyphs.append(glyph.glyph);
+
         m_cacheData->texCoords.insert(glyph.glyph, c);
+    }
+
+    if (!invalidatedGlyphs.isEmpty()) {
+        QLinkedList<QSGDistanceFieldGlyphNode *>::iterator it = m_cacheData->m_registeredNodes.begin();
+        while (it != m_cacheData->m_registeredNodes.end()) {
+            (*it)->invalidateGlyphs(invalidatedGlyphs);
+            ++it;
+        }
     }
 }
 
-void QSGDistanceFieldGlyphCache::addGlyphTextures(const QVector<glyph_t> &glyphs, const Texture &tex)
+void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs, const Texture &tex)
 {
     int i = m_cacheData->textures.indexOf(tex);
     if (i == -1) {
@@ -259,14 +272,22 @@ void QSGDistanceFieldGlyphCache::addGlyphTextures(const QVector<glyph_t> &glyphs
     }
     Texture *texture = &(m_cacheData->textures[i]);
 
-    int count = glyphs.count();
-    for (int j = 0; j < count; ++j)
-        m_cacheData->glyphTextures.insert(glyphs.at(j), texture);
+    QVector<quint32> invalidatedGlyphs;
 
-    QLinkedList<QSGDistanceFieldGlyphNode *>::iterator it = m_cacheData->m_registeredNodes.begin();
-    while (it != m_cacheData->m_registeredNodes.end()) {
-        (*it)->updateGeometry();
-        ++it;
+    int count = glyphs.count();
+    for (int j = 0; j < count; ++j) {
+        glyph_t glyphIndex = glyphs.at(j);
+        if (m_cacheData->glyphTextures.contains(glyphIndex))
+            invalidatedGlyphs.append(glyphIndex);
+        m_cacheData->glyphTextures.insert(glyphIndex, texture);
+    }
+
+    if (!invalidatedGlyphs.isEmpty()) {
+        QLinkedList<QSGDistanceFieldGlyphNode *>::iterator it = m_cacheData->m_registeredNodes.begin();
+        while (it != m_cacheData->m_registeredNodes.end()) {
+            (*it)->invalidateGlyphs(invalidatedGlyphs);
+            ++it;
+        }
     }
 }
 
