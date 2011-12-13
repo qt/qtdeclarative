@@ -639,6 +639,7 @@ void QQuickParticleData::extendLife(float time)
 QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
     QQuickItem(parent),
     stateEngine(0),
+    m_animation(0),
     m_running(true),
     particleCount(0),
     m_nextIndex(0),
