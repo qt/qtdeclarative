@@ -95,6 +95,7 @@ Rectangle {
                 height: flick.height
                 focus: true
                 wrapMode: TextEdit.Wrap
+                textFormat: TextEdit.RichText
 
                 onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)
 

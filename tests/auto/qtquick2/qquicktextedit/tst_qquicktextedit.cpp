@@ -336,6 +336,71 @@ void tst_qquicktextedit::text()
         QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + richText.at(i) + "\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
+
+        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
+
+        QVERIFY(textEditObject != 0);
+
+        QString expected = richText.at(i);
+        expected.replace(QRegExp("\\\\(.)"),"\\1");
+        QCOMPARE(textEditObject->text(), expected);
+        QCOMPARE(textEditObject->length(), expected.length());
+    }
+
+    for (int i = 0; i < standard.size(); i++)
+    {
+        QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.RichText; text: \"" + standard.at(i) + "\" }";
+        QDeclarativeComponent texteditComponent(&engine);
+        texteditComponent.setData(componentStr.toLatin1(), QUrl());
+        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
+
+        QVERIFY(textEditObject != 0);
+
+        QString actual = textEditObject->text();
+        QString expected = standard.at(i);
+        actual.remove(QRegExp(".*<body[^>]*>"));
+        actual.remove(QRegExp("(<[^>]*>)+"));
+        expected.remove("\n");
+        QCOMPARE(actual.simplified(), expected);
+        QCOMPARE(textEditObject->length(), expected.length());
+    }
+
+    for (int i = 0; i < richText.size(); i++)
+    {
+        QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.RichText; text: \"" + richText.at(i) + "\" }";
+        QDeclarativeComponent texteditComponent(&engine);
+        texteditComponent.setData(componentStr.toLatin1(), QUrl());
+        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
+
+        QVERIFY(textEditObject != 0);
+        QString actual = textEditObject->text();
+        QString expected = richText.at(i);
+        actual.replace(QRegExp(".*<body[^>]*>"),"");
+        actual.replace(QRegExp("(<[^>]*>)+"),"<>");
+        expected.replace(QRegExp("(<[^>]*>)+"),"<>");
+        QCOMPARE(actual.simplified(),expected.simplified());
+
+        expected.replace("<>", " ");
+        QCOMPARE(textEditObject->length(), expected.simplified().length());
+    }
+
+    for (int i = 0; i < standard.size(); i++)
+    {
+        QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.AutoText; text: \"" + standard.at(i) + "\" }";
+        QDeclarativeComponent texteditComponent(&engine);
+        texteditComponent.setData(componentStr.toLatin1(), QUrl());
+        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
+
+        QVERIFY(textEditObject != 0);
+        QCOMPARE(textEditObject->text(), standard.at(i));
+        QCOMPARE(textEditObject->length(), standard.at(i).length());
+    }
+
+    for (int i = 0; i < richText.size(); i++)
+    {
+        QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.AutoText; text: \"" + richText.at(i) + "\" }";
+        QDeclarativeComponent texteditComponent(&engine);
+        texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
         QVERIFY(textEditObject != 0);
@@ -409,7 +474,7 @@ void tst_qquicktextedit::width()
 
         int documentWidth = ceil(document.idealWidth());
 
-        QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + richText.at(i) + "\" }";
+        QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.RichText; text: \"" + richText.at(i) + "\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
@@ -2467,7 +2532,7 @@ void tst_qquicktextedit::getText()
     QFETCH(int, end);
     QFETCH(QString, expectedText);
 
-    QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\" }";
+    QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.AutoText; text: \"" + text + "\" }";
     QDeclarativeComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());

@@ -280,7 +280,7 @@ void QQuickTextEdit::setText(const QString &text)
     \o TextEdit.RichText
     \endlist
 
-    The default is TextEdit.AutoText.  If the text format is TextEdit.AutoText the text edit
+    The default is TextEdit.PlainText.  If the text format is TextEdit.AutoText the text edit
     will automatically determine whether the text should be treated as
     rich text.  This determination is made using Qt::mightBeRichText().
 
@@ -1633,6 +1633,7 @@ void QQuickTextEditPrivate::init()
     control = new QQuickTextControl(document, q);
     control->setView(q);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
+    control->setAcceptRichText(false);
 
     // QQuickTextControl follows the default text color
     // defined by the platform, declarative text

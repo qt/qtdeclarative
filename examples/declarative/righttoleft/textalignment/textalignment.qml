@@ -361,6 +361,7 @@ Rectangle {
             font.pixelSize: 24
             cursorVisible: true
             wrapMode: TextEdit.WordWrap
+            textFormat: TextEdit.RichText
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
             Rectangle {

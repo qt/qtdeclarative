@@ -124,6 +124,9 @@ Text improvements:
  - a \c doLayout method was added to trigger the layout from Javascript.
  - now automatically switch to StyledText instead of RichText if textFormat is set to AutoText.
 
+TextEdit:
+ - the default value of the textFormat property is now PlainText instead of AutoText.
+
 PathView now has a \c currentItem property
 
 ListView and GridView:
