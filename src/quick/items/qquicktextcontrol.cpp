@@ -1187,10 +1187,13 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
             cursor.clearSelection();
         }
     }
-    if (!(e->button() & Qt::LeftButton) ||
-        !((interactionFlags & Qt::TextSelectableByMouse) || (interactionFlags & Qt::TextEditable))) {
+    if (!(e->button() & Qt::LeftButton)) {
+        e->ignore();
+        return;
+    } else if (!(interactionFlags & (Qt::TextSelectableByMouse | Qt::TextEditable))) {
+        if (!(interactionFlags & Qt::LinksAccessibleByMouse))
             e->ignore();
-            return;
+        return;
     }
 
     cursorIsFocusIndicator = false;

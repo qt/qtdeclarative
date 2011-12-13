@@ -132,6 +132,8 @@ private slots:
 
     void positionAt();
 
+    void linkActivated();
+
     void cursorDelegate();
     void cursorVisible();
     void delegateLoading_data();
@@ -1640,6 +1642,43 @@ void tst_qquicktextedit::positionAt()
     QCOMPARE(texteditObject->positionToRectangle(1).x(), x1);
 
     QVERIFY(texteditObject->positionAt(x0 / 2, y1) > 0);
+}
+
+void tst_qquicktextedit::linkActivated()
+{
+    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("linkActivated.qml")));
+    QVERIFY(canvas.rootObject() != 0);
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+
+    QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
+    QVERIFY(texteditObject != 0);
+
+    QSignalSpy spy(texteditObject, SIGNAL(linkActivated(QString)));
+
+    const QString link("http://example.com/");
+
+    const QPointF linkPos = texteditObject->positionToRectangle(7).center();
+    const QPointF textPos = texteditObject->positionToRectangle(2).center();
+
+    QTest::mouseClick(&canvas, Qt::LeftButton, 0, linkPos.toPoint());
+    QTRY_COMPARE(spy.count(), 1);
+    QCOMPARE(spy.last()[0].toString(), link);
+
+    QTest::mouseClick(&canvas, Qt::LeftButton, 0, textPos.toPoint());
+    QTest::qWait(50);
+    QCOMPARE(spy.count(), 1);
+
+    texteditObject->setReadOnly(true);
+
+    QTest::mouseClick(&canvas, Qt::LeftButton, 0, linkPos.toPoint());
+    QTRY_COMPARE(spy.count(), 2);
+    QCOMPARE(spy.last()[0].toString(), link);
+
+    QTest::mouseClick(&canvas, Qt::LeftButton, 0, textPos.toPoint());
+    QTest::qWait(50);
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextedit::cursorDelegate()
