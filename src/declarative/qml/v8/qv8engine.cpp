@@ -131,6 +131,8 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
         v8args.append(" --nobreakpoint_relocation");
     v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
 
+    ensurePerThreadIsolate();
+
     v8::HandleScope handle_scope;
     m_context = (ownership == QJSEngine::CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
     qPersistentRegister(m_context);
@@ -765,6 +767,25 @@ QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
     QDateTime convertedUTC = QDateTime(QDate(tm.year + 1900, tm.month + 1, tm.monthDay),
                                        QTime(tm.hour, tm.minute, tm.second, ms), Qt::UTC);
     return convertedUTC.toLocalTime();
+}
+
+static QThreadStorage<QV8Engine::ThreadData*> perThreadEngineData;
+
+bool QV8Engine::hasThreadData()
+{
+    return perThreadEngineData.hasLocalData();
+}
+
+QV8Engine::ThreadData *QV8Engine::threadData()
+{
+    Q_ASSERT(perThreadEngineData.hasLocalData());
+    return perThreadEngineData.localData();
+}
+
+void QV8Engine::ensurePerThreadIsolate()
+{
+    if (!perThreadEngineData.hasLocalData())
+        perThreadEngineData.setLocalData(new ThreadData);
 }
 
 void QV8Engine::initDeclarativeGlobalObject()
@@ -1430,34 +1451,14 @@ qint64 QV8Engine::stopTimer(const QString &timerName, bool *wasRunning)
     return m_time.elapsed() - startedAt;
 }
 
-QThreadStorage<QV8GCCallback::ThreadData *> QV8GCCallback::threadData;
-void QV8GCCallback::initializeThreadData()
-{
-    QV8GCCallback::ThreadData *newThreadData = new QV8GCCallback::ThreadData;
-    threadData.setLocalData(newThreadData);
-}
-
 void QV8GCCallback::registerGcPrologueCallback()
 {
-    if (!threadData.hasLocalData())
-        initializeThreadData();
-
-    QV8GCCallback::ThreadData *td = threadData.localData();
+    QV8Engine::ThreadData *td = QV8Engine::threadData();
     if (!td->gcPrologueCallbackRegistered) {
         td->gcPrologueCallbackRegistered = true;
+        if (!td->referencer)
+            td->referencer = new QV8GCCallback::Referencer;
         v8::V8::AddGCPrologueCallback(QV8GCCallback::garbageCollectorPrologueCallback, v8::kGCTypeMarkSweepCompact);
-    }
-}
-
-void QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()
-{
-    // Note that only worker-thread implementations with their
-    // own QV8Engine should explicitly release the Referencer
-    // by calling this functions.
-    Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()", "called after v8::Isolate has exited");
-    if (threadData.hasLocalData()) {
-        QV8GCCallback::ThreadData *td = threadData.localData();
-        td->referencer.dispose();
     }
 }
 
@@ -1569,32 +1570,49 @@ v8::Persistent<v8::Object> *QV8GCCallback::Referencer::findOwnerAndStrength(QObj
  */
 void QV8GCCallback::garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags)
 {
-    if (!threadData.hasLocalData())
+    if (!QV8Engine::hasThreadData())
         return;
 
-    QV8GCCallback::ThreadData *td = threadData.localData();
+    QV8Engine::ThreadData *td = QV8Engine::threadData();
+    Q_ASSERT(td->referencer);
     QV8GCCallback::Node *currNode = td->gcCallbackNodes.first();
 
     while (currNode) {
         // The client which adds itself to the list is responsible
         // for maintaining the correct implicit references in the
         // specified callback.
-        currNode->prologueCallback(&td->referencer, currNode);
+        currNode->prologueCallback(td->referencer, currNode);
         currNode = td->gcCallbackNodes.next(currNode);
     }
 }
 
 void QV8GCCallback::addGcCallbackNode(QV8GCCallback::Node *node)
 {
-    if (!threadData.hasLocalData())
-        initializeThreadData();
-
-    QV8GCCallback::ThreadData *td = threadData.localData();
+    QV8Engine::ThreadData *td = QV8Engine::threadData();
     td->gcCallbackNodes.insert(node);
 }
 
-QV8GCCallback::ThreadData::~ThreadData()
+QV8Engine::ThreadData::ThreadData()
+    : referencer(0)
+    , gcPrologueCallbackRegistered(false)
 {
+    if (!v8::Isolate::GetCurrent()) {
+        isolate = v8::Isolate::New();
+        isolate->Enter();
+    } else {
+        isolate = 0;
+    }
+}
+
+QV8Engine::ThreadData::~ThreadData()
+{
+    delete referencer;
+    referencer = 0;
+    if (isolate) {
+        isolate->Exit();
+        isolate->Dispose();
+        isolate = 0;
+    }
 }
 
 QT_END_NAMESPACE

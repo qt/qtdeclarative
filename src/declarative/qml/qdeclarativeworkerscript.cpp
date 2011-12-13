@@ -526,9 +526,6 @@ void QDeclarativeWorkerScriptEngine::run()
 {
     d->m_lock.lock();
 
-    v8::Isolate *isolate = v8::Isolate::New(); 
-    isolate->Enter();
-
     d->workerEngine = new QDeclarativeWorkerScriptEnginePrivate::WorkerEngine(d);
     d->workerEngine->init();
 
@@ -542,9 +539,6 @@ void QDeclarativeWorkerScriptEngine::run()
     d->workers.clear();
 
     delete d->workerEngine; d->workerEngine = 0;
-    QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData();
-    isolate->Exit();
-    isolate->Dispose();
 }
 
 

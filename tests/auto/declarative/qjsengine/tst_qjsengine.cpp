@@ -315,6 +315,7 @@ private slots:
     void dateConversionJSQt();
     void dateConversionQtJS();
     void functionPrototypeExtensions();
+    void threadedEngine();
 };
 
 tst_QJSEngine::tst_QJSEngine()
@@ -6486,6 +6487,35 @@ void tst_QJSEngine::functionPrototypeExtensions()
     QVERIFY(!eng.hasUncaughtException());
     QVERIFY(props.isArray());
     QCOMPARE(props.property("length").toInt32(), 0);
+}
+
+class ThreadedTestEngine : public QThread {
+    Q_OBJECT;
+
+public:
+    int result;
+
+    ThreadedTestEngine()
+        : result(0) {}
+
+    void run() {
+        QJSEngine firstEngine;
+        QJSEngine secondEngine;
+        QJSValue value = firstEngine.evaluate("1");
+        result = secondEngine.evaluate("1 + " + QString::number(value.toInteger())).toInteger();
+    }
+};
+
+void tst_QJSEngine::threadedEngine()
+{
+    ThreadedTestEngine thread1;
+    ThreadedTestEngine thread2;
+    thread1.start();
+    thread2.start();
+    thread1.wait();
+    thread2.wait();
+    QCOMPARE(thread1.result, 2);
+    QCOMPARE(thread2.result, 2);
 }
 
 QTEST_MAIN(tst_QJSEngine)

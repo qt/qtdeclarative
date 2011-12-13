@@ -230,7 +230,6 @@ private:
 public:
     static void garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags);
     static void registerGcPrologueCallback();
-    static void releaseWorkerThreadGcPrologueCallbackData();
 
     class Q_AUTOTEST_EXPORT Referencer {
     public:
@@ -243,7 +242,7 @@ public:
         static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *qobjectOwner, bool *shouldBeStrong);
         v8::Persistent<v8::Object> strongReferencer;
         v8::Persistent<v8::Context> context;
-        friend class QV8GCCallback::ThreadData;
+        friend class QV8GCCallback;
     };
 
     class Q_AUTOTEST_EXPORT Node {
@@ -257,19 +256,6 @@ public:
     };
 
     static void addGcCallbackNode(Node *node);
-
-private:
-    class ThreadData {
-    public:
-        ThreadData() : gcPrologueCallbackRegistered(false) { }
-        ~ThreadData();
-        Referencer referencer;
-        bool gcPrologueCallbackRegistered;
-        QIntrusiveList<Node, &Node::node> gcCallbackNodes;
-    };
-
-    static void initializeThreadData();
-    static QThreadStorage<ThreadData *> threadData;
 };
 
 class Q_DECLARATIVE_EXPORT QV8Engine
@@ -464,6 +450,19 @@ public:
     QSet<int> visitedConversionObjects;
 
     static QDateTime qtDateTimeFromJsDate(double jsDate);
+
+    struct ThreadData {
+        ThreadData();
+        ~ThreadData();
+        v8::Isolate* isolate;
+        QV8GCCallback::Referencer* referencer;
+        bool gcPrologueCallbackRegistered;
+        QIntrusiveList<QV8GCCallback::Node, &QV8GCCallback::Node::node> gcCallbackNodes;
+    };
+
+    static bool hasThreadData();
+    static ThreadData* threadData();
+    static void ensurePerThreadIsolate();
 
 protected:
     QJSEngine* q;
