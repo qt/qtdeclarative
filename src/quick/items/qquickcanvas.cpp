@@ -1415,8 +1415,10 @@ void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
 void QQuickCanvasPrivate::cleanupNodesOnShutdown()
 {
     cleanupNodes();
-
     cleanupNodesOnShutdown(rootItem);
+    QSet<QQuickItem *>::const_iterator it = parentlessItems.begin();
+    for (; it != parentlessItems.end(); ++it)
+        cleanupNodesOnShutdown(*it);
 }
 
 void QQuickCanvasPrivate::updateDirtyNodes()

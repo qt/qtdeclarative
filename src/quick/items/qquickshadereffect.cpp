@@ -388,14 +388,17 @@ void QQuickShaderEffect::setSource(const QVariant &var, int index)
 
     source.sourceObject = item;
 
-
-    // TODO: Find better solution.
-    // 'item' needs a canvas to get a scenegraph node.
-    // The easiest way to make sure it gets a canvas is to
-    // make it a part of the same item tree as 'this'.
-    if (item && item->parentItem() == 0) {
-        item->setParentItem(this);
-        item->setVisible(false);
+    if (item) {
+        QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+        // 'item' needs a canvas to get a scene graph node. It usually gets one through its
+        // parent, but if the source item is "inline" rather than a reference -- i.e.
+        // "property variant source: Image { }" instead of "property variant source: foo" -- it
+        // will not get a parent. In those cases, 'item' should get the canvas from 'this'.
+        if (!d->parentItem && canvas() && !d->canvas) {
+            QQuickItemPrivate::InitializationState initState;
+            initState.clear();
+            d->initCanvas(&initState, canvas());
+        }
     }
 }
 
@@ -454,9 +457,6 @@ void QQuickShaderEffect::reset()
     for (int i = 0; i < m_sources.size(); ++i) {
         const SourceData &source = m_sources.at(i);
         delete source.mapper;
-        QQuickItem *item = qobject_cast<QQuickItem *>(source.sourceObject);
-        if (item && item->parentItem() == this)
-            item->setParentItem(0);
     }
     m_sources.clear();
 
@@ -759,5 +759,22 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
 
     return node;
 }
+
+void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    if (change == QQuickItem::ItemSceneChange) {
+        // See comment in QQuickShaderEffect::setSource().
+        for (int i = 0; i < m_sources.size(); ++i) {
+            QQuickItemPrivate *d = QQuickItemPrivate::get(m_sources.at(i).sourceObject);
+            if (!d->parentItem && value.canvas != d->canvas) {
+                QQuickItemPrivate::InitializationState initState;
+                initState.clear();
+                d->initCanvas(&initState, value.canvas);
+            }
+        }
+    }
+    QQuickItem::itemChange(change, value);
+}
+
 
 QT_END_NAMESPACE

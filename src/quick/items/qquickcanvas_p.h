@@ -107,6 +107,7 @@ public:
     void initRootItem();//Currently only used if items added in QML
 
     QQuickRootItem *rootItem;
+    QSet<QQuickItem *> parentlessItems;
     QDeclarativeListProperty<QObject> data();
 
     QQuickItem *activeFocusItem;

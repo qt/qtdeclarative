@@ -110,6 +110,7 @@ Q_SIGNALS:
 protected:
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    virtual void itemChange(ItemChange change, const ItemChangeData &value);
 
 private Q_SLOTS:
     void changeSource(int index);

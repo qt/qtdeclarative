@@ -1892,6 +1892,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
                                                                 QQuickCanvasPrivate::DontChangeFocusProperty);
 
         op->removeChild(this);
+    } else if (d->canvas) {
+        QQuickCanvasPrivate::get(d->canvas)->parentlessItems.remove(this);
     }
 
     d->parentItem = parentItem;
@@ -2119,6 +2121,8 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
             c->hoverItems.removeAll(q);
         if (itemNodeInstance)
             c->cleanup(itemNodeInstance);
+        if (!parentItem)
+            c->parentlessItems.remove(q);
     }
 
     canvas = c;
@@ -2141,6 +2145,9 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
         _dummy.clear(q);
         childState = &_dummy;
     }
+
+    if (!parentItem && canvas)
+        QQuickCanvasPrivate::get(canvas)->parentlessItems.insert(q);
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItem *child = childItems.at(ii);

@@ -601,16 +601,18 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
         d->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     }
     m_sourceItem = item;
-    if (m_sourceItem) {
-        // TODO: Find better solution.
-        // 'm_sourceItem' needs a canvas to get a scenegraph node.
-        // The easiest way to make sure it gets a canvas is to
-        // make it a part of the same item tree as 'this'.
-        if (m_sourceItem->parentItem() == 0) {
-            m_sourceItem->setParentItem(this);
-            m_sourceItem->setVisible(false);
+
+    if (item) {
+        QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+        // 'item' needs a canvas to get a scene graph node. It usually gets one through its
+        // parent, but if the source item is "inline" rather than a reference -- i.e.
+        // "sourceItem: Item { }" instead of "sourceItem: foo" -- it will not get a parent.
+        // In those cases, 'item' should get the canvas from 'this'.
+        if (!d->parentItem && canvas() && !d->canvas) {
+            QQuickItemPrivate::InitializationState initState;
+            initState.clear();
+            d->initCanvas(&initState, canvas());
         }
-        QQuickItemPrivate *d = QQuickItemPrivate::get(m_sourceItem);
         d->refFromEffectItem(m_hideSource);
         d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
     }
@@ -916,6 +918,20 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     node->update();
 
     return node;
+}
+
+void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    if (change == QQuickItem::ItemSceneChange && m_sourceItem) {
+        // See comment in QQuickShaderEffectSource::setSourceItem().
+        QQuickItemPrivate *d = QQuickItemPrivate::get(m_sourceItem);
+        if (!d->parentItem && value.canvas != d->canvas) {
+            QQuickItemPrivate::InitializationState initState;
+            initState.clear();
+            d->initCanvas(&initState, value.canvas);
+        }
+    }
+    QQuickItem::itemChange(change, value);
 }
 
 QT_END_NAMESPACE
