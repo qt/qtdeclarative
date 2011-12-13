@@ -872,9 +872,7 @@ void QDeclarativeListCompositor::listItemsRemoved(
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< list << *removals)
 
-    for (iterator it(m_ranges.next, 0, Default, m_groupCount);
-            *it != &m_ranges && !removals->isEmpty();
-            *it = it->next) {
+    for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
         if (it->list != list || it->flags == CacheFlag) {
             it.incrementIndexes(it->count);
             continue;
@@ -920,21 +918,20 @@ void QDeclarativeListCompositor::listItemsRemoved(
                         translatedRemoval.moveId = ++moveId;
                         movedFlags->append(MovedFlags(moveId, it->flags & ~AppendFlag));
 
-                        removal = removals->insert(removal, QDeclarativeChangeSet::Remove(
-                                removal->index, removeCount, translatedRemoval.moveId));
-                        ++removal;
-                        insertion = insertions->insert(insertion, QDeclarativeChangeSet::Insert(
-                                insertion->index, removeCount, translatedRemoval.moveId));
-                        ++insertion;
+                        if (removeCount < removal->count) {
+                            removal = removals->insert(removal, QDeclarativeChangeSet::Remove(
+                                    removal->index, removeCount, translatedRemoval.moveId));
+                            ++removal;
+                            insertion = insertions->insert(insertion, QDeclarativeChangeSet::Insert(
+                                    insertion->index, removeCount, translatedRemoval.moveId));
+                            ++insertion;
 
-                        removal->count -= removeCount;
-                        insertion->index += removeCount;
-                        insertion->count -= removeCount;
-                        if (removal->count == 0) {
-                            removal = removals->erase(removal);
-                            insertion = insertions->erase(insertion);
-                            --removal;
-                            --insertion;
+                            removal->count -= removeCount;
+                            insertion->index += removeCount;
+                            insertion->count -= removeCount;
+                        } else {
+                            removal->moveId = translatedRemoval.moveId;
+                            insertion->moveId = translatedRemoval.moveId;
                         }
                     } else {
                         if (offset > 0) {
@@ -989,7 +986,7 @@ void QDeclarativeListCompositor::listItemsRemoved(
                     it->previous->count += it->count;
                     it->previous->flags = it->flags;
                     it.incrementIndexes(it->count);
-                    *it = erase(*it);
+                    *it = erase(*it)->previous;
                     removed = true;
                 }
             }

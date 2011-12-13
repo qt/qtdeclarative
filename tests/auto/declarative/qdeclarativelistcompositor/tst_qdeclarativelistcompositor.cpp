@@ -1490,6 +1490,23 @@ void tst_qdeclarativelistcompositor::listItemsMoved_data()
                 << IndexArray(defaultIndexes)
                 << IndexArray()
                 << IndexArray();
+    } { static const int cacheIndexes[] = {/*A*/0,1,2,3};
+        static const int defaultIndexes[] = {/*A*/0,1,2,3};
+        static const int selectionIndexes[] = {/*A*/3};
+        QTest::newRow("Move selection")
+                << (RangeList()
+                    << Range(a, 0, 2, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 2, 1, C::PrependFlag | SelectionFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 3, 1, C::AppendFlag | C::PrependFlag | C::DefaultFlag | C::CacheFlag))
+                << a << 2 << 3 << 1
+                << (RemoveList()
+                    << Remove(0, 0, 2, 2, 1, C::PrependFlag | SelectionFlag | C::DefaultFlag | C::CacheFlag, 0))
+                << (InsertList()
+                    << Insert(0, 0, 3, 3, 1, C::PrependFlag | SelectionFlag | C::DefaultFlag | C::CacheFlag, 0))
+                << IndexArray(cacheIndexes)
+                << IndexArray(defaultIndexes)
+                << IndexArray()
+                << IndexArray(selectionIndexes);
     }
 }
 
