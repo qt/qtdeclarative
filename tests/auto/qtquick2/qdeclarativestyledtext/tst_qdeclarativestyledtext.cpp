@@ -65,6 +65,7 @@ void tst_qdeclarativestyledtext::textOutput_data()
 
     QTest::newRow("bold") << "<b>bold</b>" << "bold";
     QTest::newRow("italic") << "<b>italic</b>" << "italic";
+    QTest::newRow("strong") << "<strong>strong</strong>" << "strong";
     QTest::newRow("missing >") << "<b>text</b" << "text";
     QTest::newRow("missing b>") << "<b>text</" << "text";
     QTest::newRow("missing /b>") << "<b>text<" << "text";

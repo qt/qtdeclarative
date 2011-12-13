@@ -253,6 +253,9 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
                 }
+            } else if (char0 == QLatin1Char('s')) {
+                if (tag == QLatin1String("strong"))
+                    format.setFontWeight(QFont::Bold);
             } else if (char0 == QLatin1Char('u')) {
                 if (tagLength == 1)
                     format.setFontUnderline(true);
@@ -383,6 +386,8 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
                 hasNewLine = true;
                 return true;
             } else if (tag == QLatin1String("font")) {
+                return true;
+            } else if (tag == QLatin1String("strong")) {
                 return true;
             } else if (tag == QLatin1String("ol")) {
                 if (!listStack.isEmpty()) {
