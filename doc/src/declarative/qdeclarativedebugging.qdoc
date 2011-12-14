@@ -30,19 +30,26 @@
 \inqmlmodule QtQuick 2
 \title Debugging QML
 
-\section1 Logging
+\section1 Console API
 
-\c console.log can be used to print debugging information to the console. For example:
+\section2 Log
+
+\c console.log, console.debug, console.warn and console.error can be used to print
+debugging information to the console. For example:
 
 \qml
-Rectangle {
-    width: 200; height: 200
-    MouseArea {
-        anchors.fill: parent
-        onClicked: console.log("clicked")
-    }
+function f(a, b) {
+  console.log("a is ", a, "b is ", b);
 }
 \endqml
+
+The output is generated using the qDebug, qWarning, qCritical methods in C++
+(see also http://doc.qt.nokia.com/latest/debug.html#warning-and-debugging-messages).
+
+\hint Setting the environment variable QML_CONSOLE_EXTENDED also prints the source
+code location of the call.
+
+\section2 Timer
 
 \c console.time and console.timeEnd log the time (in milliseconds) that was spent between
 the calls. Both take a string argument that identifies the measurement. For example:
@@ -55,6 +62,32 @@ function f() {
     console.timeEnd("firstPart");
     // second part
     console.timeEnd("wholeFunction");
+}
+\endqml
+
+\section2 Trace
+
+\c console.trace prints the stack trace of JavaScript execution at the point where
+it was called. The stack trace info contains function name, file name, line number
+and column number. The stack trace is limited to last 10 stack frames.
+
+\section2 Profile
+
+\c console.profile turns on the QML and JavaScript profilers. Nested calls are not
+supported and a warning will be printed to the console.
+
+\c console.profileEnd turns off the QML and JavaScript profilers. Calling this function
+without a previous call to console.profile will print a warning to the console. A
+profiling client should have been attached before this call to receive and store the
+profiling data. For example:
+
+\qml
+function f() {
+    console.profile();
+    //Call some function that needs to be profiled.
+    //Ensure that a client is attached before ending
+    //the profiling session.
+    console.profileEnd();
 }
 \endqml
 
