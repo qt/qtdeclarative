@@ -41,7 +41,6 @@
 
 #include "qv8debugservice_p.h"
 #include "qdeclarativedebugservice_p_p.h"
-#include <private/qv8debug_p.h>
 #include <private/qjsconverter_impl_p.h>
 #include <private/qv8engine_p.h>
 
@@ -55,6 +54,7 @@ const char *V8_DEBUGGER_KEY_DISCONNECT = "disconnect";
 const char *V8_DEBUGGER_KEY_REQUEST = "v8request";
 const char *V8_DEBUGGER_KEY_V8MESSAGE = "v8message";
 const char *V8_DEBUGGER_KEY_BREAK_ON_SIGNAL = "breakonsignal";
+const char *V8_DEBUGGER_KEY_BREAK_AFTER_COMPILE = "breakaftercompile";
 
 QT_BEGIN_NAMESPACE
 
@@ -82,7 +82,7 @@ void DebugMessageHandler(const v8::Debug::Message& message)
     if (event != v8::Break && event != v8::Exception &&
             event != v8::AfterCompile && event != v8::BeforeCompile)
             return;
-    v8ServiceInstancePtr->debugMessageHandler(QJSConverter::toString(message.GetJSON()));
+    v8ServiceInstancePtr->debugMessageHandler(QJSConverter::toString(message.GetJSON()), event);
 }
 
 class QV8DebugServicePrivate : public QDeclarativeDebugServicePrivate
@@ -90,6 +90,7 @@ class QV8DebugServicePrivate : public QDeclarativeDebugServicePrivate
 public:
     QV8DebugServicePrivate()
         : connectReceived(false)
+        , breakAfterCompile(false)
         , engine(0)
     {
     }
@@ -99,7 +100,7 @@ public:
     static QByteArray packMessage(const QString &type, const QString &message = QString());
 
     bool connectReceived;
-
+    bool breakAfterCompile;
     QMutex initializeMutex;
     QStringList breakOnSignals;
     const QV8Engine *engine;
@@ -149,13 +150,18 @@ void QV8DebugService::setEngine(const QV8Engine *engine)
 //V8 DEBUG SERVICE PROTOCOL
 // <HEADER><TYPE><DATA>
 // <HEADER> : "V8DEBUG"
-// <TYPE> : ("connect", "disconnect", "interrupt", "v8request", "v8message", "breakonsignal")
+// <TYPE> : ("connect", "disconnect", "interrupt", "v8request", "v8message",
+//           "breakonsignal", "breakaftercompile")
 // <DATA> : For _v8request_ and _v8message_ it is the JSON request string.
 //          For _breakonsignal_ it is <signalname_string><enabled_bool>
+//          For _breakaftercompile_ it is <enabled_bool>
 //          Empty string for the other types
-void QV8DebugService::debugMessageHandler(const QString &message)
+void QV8DebugService::debugMessageHandler(const QString &message, const v8::DebugEvent &event)
 {
+    Q_D(QV8DebugService);
     sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_V8MESSAGE), message));
+    if (event == v8::AfterCompile && d->breakAfterCompile)
+        scheduledDebugBreak(true);
 }
 
 
@@ -211,9 +217,11 @@ void QV8DebugService::statusChanged(QDeclarativeDebugService::Status newStatus)
 //V8 DEBUG SERVICE PROTOCOL
 // <HEADER><TYPE><DATA>
 // <HEADER> : "V8DEBUG"
-// <TYPE> : ("connect", "disconnect", "interrupt", "v8request", "v8message", "breakonsignal")
+// <TYPE> : ("connect", "disconnect", "interrupt", "v8request", "v8message",
+//           "breakonsignal", "breakaftercompile")
 // <DATA> : For _v8request_ and _v8message_ it is the JSON request string.
 //          For _breakonsignal_ it is <signalname_string><enabled_bool>
+//          For _breakaftercompile_ it is <enabled_bool>
 //          Empty string for the other types
 // executed in the debugger thread
 void QV8DebugService::messageReceived(const QByteArray &message)
@@ -259,6 +267,11 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             else
                 d->breakOnSignals.removeOne(signalName);
             sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_BREAK_ON_SIGNAL)));
+
+        } else if (type == V8_DEBUGGER_KEY_BREAK_AFTER_COMPILE) {
+            QDataStream rs(data);
+            rs >> d->breakAfterCompile;
+            sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_BREAK_AFTER_COMPILE)));
         }
     }
 }

@@ -54,6 +54,7 @@
 //
 
 #include "qdeclarativedebugservice_p.h"
+#include <private/qv8debug_p.h>
 
 QT_BEGIN_HEADER
 
@@ -74,7 +75,7 @@ public:
     static QV8DebugService *instance();
     static void initialize(const QV8Engine *engine);
 
-    void debugMessageHandler(const QString &message);
+    void debugMessageHandler(const QString &message, const v8::DebugEvent &event);
 
     void signalEmitted(const QString &signal);
 
