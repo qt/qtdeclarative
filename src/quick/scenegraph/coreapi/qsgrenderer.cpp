@@ -701,6 +701,10 @@ void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
         indexData = g->indexData();
     }
 
+    // Set the line width if applicable
+    if (g->drawingMode() == GL_LINES || g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP) {
+        glLineWidth(g->lineWidth());
+    }
 
     // draw the stuff...
     if (g->indexCount()) {

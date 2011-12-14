@@ -138,6 +138,7 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     , m_owns_data(false)
     , m_index_usage_pattern(AlwaysUploadPattern)
     , m_vertex_usage_pattern(AlwaysUploadPattern)
+    , m_line_width(1.0)
 {
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
@@ -250,6 +251,30 @@ const void *QSGGeometry::indexData() const
 void QSGGeometry::setDrawingMode(GLenum mode)
 {
     m_drawing_mode = mode;
+}
+
+/*!
+    Gets the current line width to be used for this geometry. This property only
+    applies where the drawingMode is GL_LINES or a related value.
+
+    The default value is 1.0
+
+    \sa setLineWidth(), drawingMode()
+*/
+float QSGGeometry::lineWidth() const
+{
+    return m_line_width;
+}
+
+/*!
+    Sets the line width to be used for this geometry. This property only applies
+    where the drawingMode is GL_LINES or a related value.
+
+    \sa lineWidth(), drawingMode()
+*/
+void QSGGeometry::setLineWidth(float w)
+{
+    m_line_width = w;
 }
 
 /*!

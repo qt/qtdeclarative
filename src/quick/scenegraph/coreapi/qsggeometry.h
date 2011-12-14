@@ -160,6 +160,9 @@ public:
     void markIndexDataDirty();
     void markVertexDataDirty();
 
+    float lineWidth() const;
+    void setLineWidth(float w);
+
 private:
     friend class QSGGeometryData;
 
@@ -181,6 +184,8 @@ private:
     uint m_reserved_bits : 27;
 
     float m_prealloc[16];
+
+    float m_line_width;
 };
 
 inline uint *QSGGeometry::indexDataAsUInt()
