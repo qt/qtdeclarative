@@ -999,6 +999,80 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertStringToReal, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertStringToUrl, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QString tmp(*src.getstringptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupString();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.geturlptr()) QUrl(tmp);
+            URL_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertStringToUrl, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertUrlToBool, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupUrl();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            output.setbool(!tmp.isEmpty());
+        }
+    }
+    QML_V4_END_INSTR(ConvertUrlToBool, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertUrlToString, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupUrl();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.getstringptr()) QString(tmp.toString());
+            STRING_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertUrlToString, unaryop)
+
+    QML_V4_BEGIN_INSTR(ResolveUrl, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                *output.geturlptr() = context->resolvedUrl(tmp);
+            } else {
+                new (output.geturlptr()) QUrl(context->resolvedUrl(tmp));
+                URL_REGISTER(instr->unaryop.output);
+            }
+        }
+    }
+    QML_V4_END_INSTR(ResolveUrl, unaryop)
+
     QML_V4_BEGIN_INSTR(MathSinReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];

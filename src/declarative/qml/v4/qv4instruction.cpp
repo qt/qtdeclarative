@@ -168,6 +168,18 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertStringToReal:
         INSTR_DUMP << "\t" << "ConvertStringToReal" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::ConvertStringToUrl:
+        INSTR_DUMP << "\t" << "ConvertStringToUrl" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::ConvertUrlToBool:
+        INSTR_DUMP << "\t" << "ConvertUrlToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::ConvertUrlToString:
+        INSTR_DUMP << "\t" << "ConvertUrlToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::ResolveUrl:
+        INSTR_DUMP << "\t" << "ResolveUrl" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::MathSinReal:
         INSTR_DUMP << "\t" << "MathSinReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;

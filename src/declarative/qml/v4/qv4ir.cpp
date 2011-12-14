@@ -71,14 +71,30 @@ inline const char *typeName(Type t)
     }
 }
 
+inline bool isNumberType(IR::Type ty)
+{
+    return ty >= IR::FirstNumberType;
+}
+
+inline bool isStringType(IR::Type ty)
+{
+    return ty == IR::StringType || ty == IR::UrlType;
+}
+
 IR::Type maxType(IR::Type left, IR::Type right)
 {
-    if (left == right)
+    if (isStringType(left) && isStringType(right)) {
+        // String promotions (url to string) are more specific than
+        // identity conversions (AKA left == right). That's because
+        // we want to ensure we convert urls to strings in binary
+        // expressions.
+        return IR::StringType;
+    } else if (left == right)
         return left;
-    else if (left >= IR::FirstNumberType && right >= IR::FirstNumberType)
+    else if (isNumberType(left) && isNumberType(right))
         return qMax(left, right);
-    else if ((left >= IR::FirstNumberType && right == IR::StringType) ||
-             (right >= IR::FirstNumberType && left == IR::StringType))
+    else if ((isNumberType(left) && isStringType(right)) ||
+             (isNumberType(right) && isStringType(left)))
         return IR::StringType;
     else
         return IR::InvalidType;

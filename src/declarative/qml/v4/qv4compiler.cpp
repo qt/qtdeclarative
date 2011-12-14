@@ -340,6 +340,9 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         case QMetaType::QString:
             regType = QStringType;
             break;
+        case QMetaType::QUrl:
+            regType = QUrlType;
+            break;
 
         default:
             if (propTy == qMetaTypeId<QDeclarative1AnchorLine>()) {
@@ -848,15 +851,40 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             traceExpression(s->source, dest);
 
         V4Instr::Type opcode = V4Instr::Noop;
-        if (target->type == IR::BoolType) {
-            switch (s->source->type) {
+        IR::Type targetTy = s->target->type;
+        IR::Type sourceTy = s->source->type;
+
+        if (sourceTy == IR::UrlType) {
+            switch (targetTy) {
+            case IR::BoolType:
+            case IR::StringType:
+                // nothing to do. V4 will generate optimized
+                // url-to-xxx conversions.
+                break;
+            default: {
+                // generate a UrlToString conversion and fix
+                // the type of the source expression.
+                V4Instr conv;
+                conv.unaryop.output = V4Instr::ConvertUrlToString;
+                conv.unaryop.src = src;
+                gen(opcode, conv);
+
+                sourceTy = IR::StringType;
+                break;
+            }
+            } // switch
+        }
+
+        if (targetTy == IR::BoolType) {
+            switch (sourceTy) {
             case IR::IntType: opcode = V4Instr::ConvertIntToBool; break;
             case IR::RealType: opcode = V4Instr::ConvertRealToBool; break;
             case IR::StringType: opcode = V4Instr::ConvertStringToBool; break;
+            case IR::UrlType: opcode = V4Instr::ConvertUrlToBool; break;
             default: break;
             } // switch
-        } else if (target->type == IR::IntType) {
-            switch (s->source->type) {
+        } else if (targetTy == IR::IntType) {
+            switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToInt; break;
             case IR::RealType: {
                 if (s->isMoveForReturn)
@@ -868,26 +896,49 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::StringType: opcode = V4Instr::ConvertStringToInt; break;
             default: break;
             } // switch
-        } else if (target->type == IR::RealType) {
-            switch (s->source->type) {
+        } else if (targetTy == IR::RealType) {
+            switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToReal; break;
             case IR::IntType: opcode = V4Instr::ConvertIntToReal; break;
             case IR::StringType: opcode = V4Instr::ConvertStringToReal; break;
             default: break;
             } // switch
-        } else if (target->type == IR::StringType) {
-            switch (s->source->type) {
+        } else if (targetTy == IR::StringType) {
+            switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToString; break;
             case IR::IntType:  opcode = V4Instr::ConvertIntToString; break;
             case IR::RealType: opcode = V4Instr::ConvertRealToString; break;
+            case IR::UrlType: opcode = V4Instr::ConvertUrlToString; break;
             default: break;
             } // switch
+        } else if (targetTy == IR::UrlType) {
+            V4Instr convToString;
+            convToString.unaryop.output = dest;
+            convToString.unaryop.src = src;
+
+            // try to convert the source expression to a string.
+            switch (sourceTy) {
+            case IR::BoolType: gen(V4Instr::ConvertBoolToString, convToString); sourceTy = IR::StringType; break;
+            case IR::IntType:  gen(V4Instr::ConvertIntToString,  convToString); sourceTy = IR::StringType; break;
+            case IR::RealType: gen(V4Instr::ConvertRealToString, convToString); sourceTy = IR::StringType; break;
+            default: break;
+            } // switch
+
+            if (sourceTy == IR::StringType)
+                opcode = V4Instr::ConvertStringToUrl;
         }
         if (opcode != V4Instr::Noop) {
             V4Instr conv;
             conv.unaryop.output = dest;
             conv.unaryop.src = src;
             gen(opcode, conv);
+
+            if (s->isMoveForReturn && opcode == V4Instr::ConvertStringToUrl) {
+                V4Instr resolveUrl;
+                resolveUrl.unaryop.output = dest;
+                resolveUrl.unaryop.src = dest;
+                gen(V4Instr::ResolveUrl, resolveUrl);
+            }
         } else {
             discard();
         }

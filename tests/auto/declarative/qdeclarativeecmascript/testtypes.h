@@ -93,6 +93,7 @@ class MyQmlObject : public QObject
     Q_PROPERTY(int value READ value WRITE setValue)
     Q_PROPERTY(int console READ console CONSTANT)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringChanged)
+    Q_PROPERTY(QUrl urlProperty READ urlProperty WRITE setUrlProperty NOTIFY urlChanged)
     Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty NOTIFY objectChanged)
     Q_PROPERTY(QDeclarativeListProperty<QObject> objectListProperty READ objectListProperty CONSTANT)
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
@@ -116,6 +117,15 @@ public:
             return;
         m_string = s;
         emit stringChanged();
+    }
+
+    QUrl urlProperty() const { return m_url; }
+    void setUrlProperty(const QUrl &url)
+    {
+        if (url == m_url)
+            return;
+        m_url = url;
+        emit urlChanged();
     }
 
     QObject *objectProperty() const { return m_object; }
@@ -171,6 +181,7 @@ signals:
     void basicSignal();
     void argumentSignal(int a, QString b, qreal c, MyEnum2 d, Qt::MouseButtons e);
     void stringChanged();
+    void urlChanged();
     void objectChanged();
     void anotherBasicSignal();
     void thirdBasicSignal();
@@ -196,6 +207,7 @@ private:
 
     QObject *m_object;
     QString m_string;
+    QUrl m_url;
     QList<QObject *> m_objectQList;
     int m_value;
     int m_resetProperty;

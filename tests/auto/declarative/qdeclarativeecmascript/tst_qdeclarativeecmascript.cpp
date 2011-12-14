@@ -220,6 +220,7 @@ private slots:
     void aliasWritesOverrideBindings();
     void aliasToCompositeElement();
     void realToInt();
+    void urlProperty();
     void dynamicString();
     void include();
     void signalHandlers();
@@ -5462,6 +5463,21 @@ void tst_qdeclarativeecmascript::realToInt()
     QMetaObject::invokeMethod(object, "test2");
     QCOMPARE(object->value(), int(8));
 }
+
+void tst_qdeclarativeecmascript::urlProperty()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("urlProperty.1.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+        QVERIFY(object != 0);
+        object->setStringProperty("http://qt-project.org");
+        QCOMPARE(object->urlProperty(), QUrl("http://qt-project.org/index.html"));
+        QCOMPARE(object->intProperty(), 123);
+        QCOMPARE(object->value(), 1);
+        QCOMPARE(object->property("result").toBool(), true);
+    }
+}
+
 void tst_qdeclarativeecmascript::dynamicString()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("dynamicString.qml"));
