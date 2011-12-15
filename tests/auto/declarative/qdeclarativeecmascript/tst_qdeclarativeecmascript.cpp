@@ -4709,6 +4709,25 @@ void tst_qdeclarativeecmascript::assignSequenceTypes()
     QCOMPARE(object->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html"))));
     delete object;
     }
+
+    // test QList<QUrl> literal assignment and binding assignment causes url resolution when required
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("assignSequenceTypes.7.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    MySequenceConversionObject *msco1 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco1"));
+    MySequenceConversionObject *msco2 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco2"));
+    MySequenceConversionObject *msco3 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco3"));
+    MySequenceConversionObject *msco4 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco4"));
+    MySequenceConversionObject *msco5 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco5"));
+    QVERIFY(msco1 != 0 && msco2 != 0 && msco3 != 0 && msco4 != 0 && msco5 != 0);
+    QCOMPARE(msco1->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html"))));
+    QCOMPARE(msco2->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html"))));
+    QCOMPARE(msco3->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html")) << QUrl(TEST_FILE("example2.html"))));
+    QCOMPARE(msco4->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html")) << QUrl(TEST_FILE("example2.html"))));
+    QCOMPARE(msco5->urlListProperty(), (QList<QUrl>() << QUrl(TEST_FILE("example.html")) << QUrl(TEST_FILE("example2.html"))));
+    delete object;
+    }
 }
 
 // Test that assigning a null object works 

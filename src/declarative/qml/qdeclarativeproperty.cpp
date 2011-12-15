@@ -1052,6 +1052,39 @@ QVariant QDeclarativePropertyPrivate::readValueProperty()
     }
 }
 
+// helper function to allow assignment / binding to QList<QUrl> properties.
+static QVariant resolvedUrlSequence(const QVariant &value, QDeclarativeContextData *context)
+{
+    QList<QUrl> urls;
+    if (value.userType() == qMetaTypeId<QUrl>()) {
+        urls.append(value.toUrl());
+    } else if (value.userType() == qMetaTypeId<QString>()) {
+        urls.append(QUrl(value.toString()));
+    } else if (value.userType() == qMetaTypeId<QByteArray>()) {
+        urls.append(QUrl(QString::fromUtf8(value.toByteArray())));
+    } else if (value.userType() == qMetaTypeId<QList<QUrl> >()) {
+        urls = value.value<QList<QUrl> >();
+    } else if (value.userType() == qMetaTypeId<QStringList>()) {
+        QStringList urlStrings = value.value<QStringList>();
+        for (int i = 0; i < urlStrings.size(); ++i)
+            urls.append(QUrl(urlStrings.at(i)));
+    } else if (value.userType() == qMetaTypeId<QList<QString> >()) {
+        QList<QString> urlStrings = value.value<QList<QString> >();
+        for (int i = 0; i < urlStrings.size(); ++i)
+            urls.append(QUrl(urlStrings.at(i)));
+    } // note: QList<QByteArray> is not currently supported.
+
+    QList<QUrl> resolvedUrls;
+    for (int i = 0; i < urls.size(); ++i) {
+        QUrl u = urls.at(i);
+        if (context && u.isRelative() && !u.isEmpty())
+            u = context->resolvedUrl(u);
+        resolvedUrls.append(u);
+    }
+
+    return QVariant::fromValue<QList<QUrl> >(resolvedUrls);
+}
+
 //writeEnumProperty MIRRORS the relelvant bit of QMetaProperty::write AND MUST BE KEPT IN SYNC!
 bool QDeclarativePropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object, const QVariant &value, int flags)
 {
@@ -1194,6 +1227,11 @@ bool QDeclarativePropertyPrivate::write(QObject *object,
         void *argv[] = { &u, 0, &status, &flags };
         QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, argv);
 
+    } else if (propertyType == qMetaTypeId<QList<QUrl> >()) {
+        QList<QUrl> urlSeq = resolvedUrlSequence(value, context).value<QList<QUrl> >();
+        int status = -1;
+        void *argv[] = { &urlSeq, 0, &status, &flags };
+        QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, argv);
     } else if (variantType == propertyType) {
 
         void *a[] = { (void *)value.constData(), 0, &status, &flags };
@@ -1299,6 +1337,7 @@ bool QDeclarativePropertyPrivate::write(QObject *object,
         if (!ok) {
             // the only other option is that they are assigning a single value
             // to a sequence type property (eg, an int to a QList<int> property).
+            // Note that we've already handled single-value assignment to QList<QUrl> properties.
             if (variantType == QVariant::Int && propertyType == qMetaTypeId<QList<int> >()) {
                 QList<int> list;
                 list << value.toInt();
@@ -1313,28 +1352,6 @@ bool QDeclarativePropertyPrivate::write(QObject *object,
                 QList<bool> list;
                 list << value.toBool();
                 v = QVariant::fromValue<QList<bool> >(list);
-                ok = true;
-            } else if ((variantType == QVariant::Url || variantType == QVariant::String || variantType == QVariant::ByteArray)
-                       && propertyType == qMetaTypeId<QList<QUrl> >()) {
-                QUrl u;
-                bool found = false;
-                if (variantType == QVariant::Url) {
-                    u = value.toUrl();
-                    found = true;
-                } else if (variantType == QVariant::ByteArray) {
-                    u = QUrl(QString::fromUtf8(value.toByteArray()));
-                    found = true;
-                } else if (variantType == QVariant::String) {
-                    u = QUrl(value.toString());
-                    found = true;
-                }
-                if (!found)
-                    return false;
-                if (context && u.isRelative() && !u.isEmpty())
-                    u = context->resolvedUrl(u);
-                QList<QUrl> list;
-                list << u;
-                v = QVariant::fromValue<QList<QUrl> >(list);
                 ok = true;
             } else if (variantType == QVariant::String && propertyType == qMetaTypeId<QList<QString> >()) {
                 QList<QString> list;
@@ -1423,9 +1440,7 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
     } else if (result->IsNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)0);
     } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
-        value = v8engine->toVariant(result, qMetaTypeId<QList<QUrl> >());
-        if (value.userType() == qMetaTypeId<QString>())
-            value = QVariant(QUrl(value.toString()));
+        value = resolvedUrlSequence(v8engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context);
     } else if (!isVmeProperty) {
         value = v8engine->toVariant(result, type);
     }
