@@ -625,21 +625,23 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 break;
 
             case IR::Name::Property: 
-                if (baseName->type == IR::ObjectType) {
-                    QDeclarativePropertyData *data = baseName->property;
-                    if (!data || data->isFunction())
-                        return false; // Don't support methods (or non-existing properties ;)
+                if (baseName->type == IR::ObjectType && baseName->meta && baseName->property->isFinal()) {
+                    QDeclarativePropertyCache *cache = m_engine->cache(baseName->meta);
+                    if (!cache)
+                        return false;
 
-                    if(!data->isFinal()) {
-                        if (qmlVerboseCompiler())
-                            qWarning() << "*** non-final property access:"
-                                << (*baseName->id + QLatin1String(".") + ast->name.toString());
-                        return false; // We don't know enough about this property
+                    if (QDeclarativePropertyData *data = cache->property(name)) {
+                        if (!data->isFinal()) {
+                            if (qmlVerboseCompiler())
+                                qWarning() << "*** non-final property access:"
+                                           << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                            return false; // We don't know enough about this property
+                        }
+
+                        IR::Type irType = irTypeFromVariantType(data->propType, m_engine, baseName->meta);
+                        _expr.code = _block->SYMBOL(baseName, irType, name,
+                                                    baseName->meta, data, line, column);
                     }
-
-                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, baseName->meta);
-                    _expr.code = _block->SYMBOL(baseName, irType, name,
-                                                baseName->meta, data, line, column);
                 }
                 break;
 
