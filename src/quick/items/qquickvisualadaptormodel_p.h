@@ -61,8 +61,7 @@ class QQuickVisualAdaptorModel : public QObject
 public:
     enum Flag
     {
-        MetaObjectCacheable = 0x01,
-        ProxiedObject       = 0x02
+        ProxiedObject       = 0x01
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

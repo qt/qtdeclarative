@@ -451,7 +451,6 @@ QQuickVisualAdaptorModelData *QQuickVisualAdaptorModelPrivate::createMetaObject(
             && m_listAccessor->type() != QDeclarativeListAccessor::ListProperty
             && m_listAccessor->type() != QDeclarativeListAccessor::Instance) {
         createModelData = &QQuickVDMListAccessorData::create;
-        m_flags = QQuickVisualAdaptorModel::MetaObjectCacheable;
         return QQuickVDMListAccessorData::create(index, model);
     }
 
@@ -467,7 +466,6 @@ QQuickVisualAdaptorModelData *QQuickVisualAdaptorModelPrivate::createMetaObject(
         }
         if (m_propertyData.count() == 1)
             addProperty(roles.first(), 1, "modelData", "QVariant", true);
-        m_flags = QQuickVisualAdaptorModel::MetaObjectCacheable;
     } else if (m_abstractItemModel) {
         setModelDataType<QQuickVDMAbstractItemModelData>();
         QHash<int, QByteArray> roleNames = m_abstractItemModel->roleNames();
@@ -477,7 +475,6 @@ QQuickVisualAdaptorModelData *QQuickVisualAdaptorModelPrivate::createMetaObject(
         }
         if (m_propertyData.count() == 1)
             addProperty(roleNames.begin().key(), 1, "modelData", "QVariant", true);
-        m_flags = QQuickVisualAdaptorModel::MetaObjectCacheable;
     } else if (m_listAccessor) {
         setModelDataType<QQuickVDMObjectData>();
         m_objectList = true;
@@ -498,6 +495,12 @@ QQuickVisualAdaptorModelData::QQuickVisualAdaptorModelData(int index, QQuickVisu
     : m_index(index)
     , m_model(model)
 {
+    QQuickVisualAdaptorModelPrivate *m = QQuickVisualAdaptorModelPrivate::get(model);
+    if (m->m_delegateDataType && m->m_delegateDataType->propertyCache) {
+        QDeclarativeData *qmldata = QDeclarativeData::get(this, true);
+        qmldata->propertyCache = m->m_delegateDataType->propertyCache;
+        qmldata->propertyCache->addref();
+    }
 }
 
 QQuickVisualAdaptorModelData::~QQuickVisualAdaptorModelData()
