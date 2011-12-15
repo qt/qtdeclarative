@@ -1632,18 +1632,7 @@ void QQuickTextEditPrivate::init()
 
     control = new QQuickTextControl(document, q);
     control->setView(q);
-    control->setIgnoreUnusedNavigationEvents(true);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
-    control->setDragEnabled(false);
-
-    // By default, QQuickTextControl will issue both a updateCursorRequest() and an updateRequest()
-    // when the cursor needs to be repainted. We need the signals to be separate to be able to
-    // distinguish the cursor updates so that we can avoid updating the whole subtree when the
-    // cursor blinks.
-    if (!QObject::disconnect(control, SIGNAL(updateCursorRequest(QRectF)),
-                             control, SIGNAL(updateRequest(QRectF)))) {
-        qWarning("QQuickTextEditPrivate::init: Failed to disconnect updateCursorRequest and updateRequest");
-    }
 
     // QQuickTextControl follows the default text color
     // defined by the platform, declarative text

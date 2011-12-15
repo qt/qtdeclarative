@@ -76,19 +76,10 @@ public:
 
     void updateCurrentCharFormat();
 
-    void indent();
-    void outdent();
-
-    void gotoNextTableCell();
-    void gotoPreviousTableCell();
-
-    void createAutoBulletList();
-
     void init(Qt::TextFormat format = Qt::RichText, const QString &text = QString(),
               QTextDocument *document = 0);
     void setContent(Qt::TextFormat format = Qt::RichText, const QString &text = QString(),
                     QTextDocument *document = 0);
-    void startDrag();
 
     void paste(const QMimeData *source);
 
@@ -128,37 +119,12 @@ public:
     QString anchorForCursor(const QTextCursor &anchor) const;
 
     void keyPressEvent(QKeyEvent *e);
-    void mousePressEvent(QEvent *e, Qt::MouseButton button, const QPointF &pos,
-                         Qt::KeyboardModifiers modifiers,
-                         Qt::MouseButtons buttons,
-                         const QPoint &globalPos);
-    void mouseMoveEvent(QEvent *e, Qt::MouseButton button, const QPointF &pos,
-                        Qt::KeyboardModifiers modifiers,
-                        Qt::MouseButtons buttons,
-                        const QPoint &globalPos);
-    void mouseReleaseEvent(QEvent *e, Qt::MouseButton button, const QPointF &pos,
-                           Qt::KeyboardModifiers modifiers,
-                           Qt::MouseButtons buttons,
-                           const QPoint &globalPos);
-    void mouseDoubleClickEvent(QEvent *e, Qt::MouseButton button, const QPointF &pos,
-                               Qt::KeyboardModifiers modifiers,
-                               Qt::MouseButtons buttons,
-                               const QPoint &globalPos);
-    bool sendMouseEventToInputContext(QEvent *e,  QEvent::Type eventType, Qt::MouseButton button,
-                                      const QPointF &pos,
-                                      Qt::KeyboardModifiers modifiers,
-                                      Qt::MouseButtons buttons,
-                                      const QPoint &globalPos);
-    void contextMenuEvent(const QPoint &screenPos, const QPointF &docPos, QWidget *contextWidget);
+    void mousePressEvent(QMouseEvent *event, const QPointF &pos);
+    void mouseMoveEvent(QMouseEvent *event, const QPointF &pos);
+    void mouseReleaseEvent(QMouseEvent *event, const QPointF &pos);
+    void mouseDoubleClickEvent(QMouseEvent *event, const QPointF &pos);
+    bool sendMouseEventToInputContext(QMouseEvent *event, const QPointF &pos);
     void focusEvent(QFocusEvent *e);
-#ifdef QT_KEYPAD_NAVIGATION
-    void editFocusEvent(QEvent *e);
-#endif
-    bool dragEnterEvent(QEvent *e, const QMimeData *mimeData);
-    void dragLeaveEvent();
-    bool dragMoveEvent(QEvent *e, const QMimeData *mimeData, const QPointF &pos);
-    bool dropEvent(const QMimeData *mimeData, const QPointF &pos, Qt::DropAction dropAction, QObject *source);
-
     void inputMethodEvent(QInputMethodEvent *);
 
     void activateLinkUnderCursor(QString href = QString());
@@ -166,15 +132,11 @@ public:
     bool isPreediting() const;
     void commitPreedit();
 
-    void append(const QString &text, Qt::TextFormat format = Qt::AutoText);
-
     QTextDocument *doc;
     bool cursorOn;
     QTextCursor cursor;
     bool cursorIsFocusIndicator;
     QTextCharFormat lastCharFormat;
-
-    QTextCursor dndFeedbackCursor;
 
     Qt::TextInteractionFlags interactionFlags;
 
@@ -182,12 +144,10 @@ public:
     QBasicTimer trippleClickTimer;
     QPointF trippleClickPoint;
 
-    bool dragEnabled;
-
     bool mousePressed;
 
-    bool mightStartDrag;
     QPoint mousePressPos;
+
     QPointer<QObject> contextObject;
 
     bool lastSelectionState;
@@ -204,21 +164,13 @@ public:
     bool hideCursor; // used to hide the cursor in the preedit area
     QString tentativeCommit;
 
-    QVector<QAbstractTextDocumentLayout::Selection> extraSelections;
-
     QPalette palette;
     bool hasFocus;
-#ifdef QT_KEYPAD_NAVIGATION
-    bool hasEditFocus;
-#endif
     bool isEnabled;
 
     QString highlightedAnchor; // Anchor below cursor
     QString anchorOnMousePress;
     bool hadSelectionOnMousePress;
-
-    bool ignoreUnusedNavigationEvents;
-    bool openExternalLinks;
 
     bool wordSelectionEnabled;
 

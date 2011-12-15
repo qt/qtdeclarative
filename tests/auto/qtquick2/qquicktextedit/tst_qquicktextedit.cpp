@@ -1913,7 +1913,7 @@ void tst_qquicktextedit::canPaste() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QQuickTextControl tc;
+    QQuickTextControl tc(0);
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif
@@ -1931,7 +1931,7 @@ void tst_qquicktextedit::canPasteEmpty() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QQuickTextControl tc;
+    QQuickTextControl tc(0);
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif

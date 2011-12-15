@@ -84,22 +84,16 @@ class Q_AUTOTEST_EXPORT QQuickTextControl : public QObject
 #ifndef QT_NO_TEXTHTMLPARSER
     Q_PROPERTY(QString html READ toHtml WRITE setHtml NOTIFY textChanged USER true)
 #endif
-    Q_PROPERTY(bool overwriteMode READ overwriteMode WRITE setOverwriteMode)
     Q_PROPERTY(bool acceptRichText READ acceptRichText WRITE setAcceptRichText)
     Q_PROPERTY(int cursorWidth READ cursorWidth WRITE setCursorWidth)
     Q_PROPERTY(Qt::TextInteractionFlags textInteractionFlags READ textInteractionFlags WRITE setTextInteractionFlags)
-    Q_PROPERTY(bool openExternalLinks READ openExternalLinks WRITE setOpenExternalLinks)
-    Q_PROPERTY(bool ignoreUnusedNavigationEvents READ ignoreUnusedNavigationEvents WRITE setIgnoreUnusedNavigationEvents)
 public:
-    explicit QQuickTextControl(QObject *parent = 0);
-    explicit QQuickTextControl(const QString &text, QObject *parent = 0);
     explicit QQuickTextControl(QTextDocument *doc, QObject *parent = 0);
     virtual ~QQuickTextControl();
 
     void setView(QObject *view);
     QObject *view() const;
 
-    void setDocument(QTextDocument *document);
     QTextDocument *document() const;
 
     void setTextCursor(const QTextCursor &cursor);
@@ -108,21 +102,13 @@ public:
     void setTextInteractionFlags(Qt::TextInteractionFlags flags);
     Qt::TextInteractionFlags textInteractionFlags() const;
 
-    void mergeCurrentCharFormat(const QTextCharFormat &modifier);
-
-    void setCurrentCharFormat(const QTextCharFormat &format);
-    QTextCharFormat currentCharFormat() const;
-
-    bool find(const QString &exp, QTextDocument::FindFlags options = 0);
-
     QString toPlainText() const;
+
 #ifndef QT_NO_TEXTHTMLPARSER
     QString toHtml() const;
 #endif
 
     virtual void ensureCursorVisible();
-
-    virtual QVariant loadResource(int type, const QUrl &name);
 
     QTextCursor cursorForPosition(const QPointF &pos) const;
     QRectF cursorRect(const QTextCursor &cursor) const;
@@ -131,12 +117,8 @@ public:
     QRectF selectionRect() const;
 
     QString anchorAt(const QPointF &pos) const;
-    QPointF anchorPosition(const QString &name) const;
 
     QString anchorAtCursor() const;
-
-    bool overwriteMode() const;
-    void setOverwriteMode(bool overwrite);
 
     int cursorWidth() const;
     void setCursorWidth(int width);
@@ -144,15 +126,9 @@ public:
     bool acceptRichText() const;
     void setAcceptRichText(bool accept);
 
-    void setExtraSelections(const QVector<QAbstractTextDocumentLayout::Selection> &selections);
-    QVector<QAbstractTextDocumentLayout::Selection> extraSelections() const;
-
     void setTextWidth(qreal width);
     qreal textWidth() const;
     QSizeF size() const;
-
-    void setOpenExternalLinks(bool open);
-    bool openExternalLinks() const;
 
     void setIgnoreUnusedNavigationEvents(bool ignore);
     bool ignoreUnusedNavigationEvents() const;
@@ -163,9 +139,6 @@ public:
 
     void setCursorIsFocusIndicator(bool b);
     bool cursorIsFocusIndicator() const;
-
-    void setDragEnabled(bool enabled);
-    bool isDragEnabled() const;
 
     bool isWordSelectionEnabled() const;
     void setWordSelectionEnabled(bool enabled);
@@ -189,17 +162,6 @@ public Q_SLOTS:
 
     void clear();
     void selectAll();
-
-    void insertPlainText(const QString &text);
-#ifndef QT_NO_TEXTHTMLPARSER
-    void insertHtml(const QString &text);
-#endif
-
-    void append(const QString &text);
-    void appendHtml(const QString &html);
-    void appendPlainText(const QString &text);
-
-    void adjustSize();
 
 Q_SIGNALS:
     void textChanged();
@@ -240,10 +202,6 @@ public:
     virtual bool canInsertFromMimeData(const QMimeData *source) const;
     virtual void insertFromMimeData(const QMimeData *source);
 
-    bool setFocusToAnchor(const QTextCursor &newCursor);
-    bool setFocusToNextOrPreviousAnchor(bool next);
-    bool findNextPrevAnchor(const QTextCursor& from, bool next, QTextCursor& newAnchor);
-
     bool cursorOn() const;
 
 protected:
@@ -256,7 +214,6 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrentCharFormatAndSelection())
     Q_PRIVATE_SLOT(d_func(), void _q_emitCursorPosChanged(const QTextCursor &))
     Q_PRIVATE_SLOT(d_func(), void _q_deleteSelected())
-    Q_PRIVATE_SLOT(d_func(), void _q_copyLink())
     Q_PRIVATE_SLOT(d_func(), void _q_updateBlock(const QTextBlock &))
     Q_PRIVATE_SLOT(d_func(), void _q_documentLayoutChanged())
 };
