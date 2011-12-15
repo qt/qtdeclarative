@@ -10,10 +10,11 @@ Rectangle {
     Rectangle {
         anchors.centerIn: parent
         width: 60
-        height: 20
+        height: 60
         color: "green"
 
         TextInput {
+            objectName: "text"
             id: text
             anchors.fill: parent
             text: top.text

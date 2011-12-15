@@ -73,6 +73,8 @@ Rectangle {
             font.pointSize: { pointvalue.model.get(pointvalue.currentIndex).value }
             font.pixelSize: { pixelvalue.model.get(pixelvalue.currentIndex).value }
             horizontalAlignment: { halignvalue.model.get(halignvalue.currentIndex).value }
+            verticalAlignment: { valignvalue.model.get(valignvalue.currentIndex).value }
+            wrapMode: { wrapvalue.model.get(wrapvalue.currentIndex).value }
             smooth: { smoothvalue.model.get(smoothvalue.currentIndex).value }
             selectByMouse: { mousevalue.model.get(mousevalue.currentIndex).value }
             echoMode: { echovalue.model.get(echovalue.currentIndex).value }

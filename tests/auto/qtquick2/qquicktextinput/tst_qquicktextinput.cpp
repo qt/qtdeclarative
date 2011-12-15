@@ -43,6 +43,7 @@
 #include "../../shared/util.h"
 #include <private/qinputpanel_p.h>
 #include <QtDeclarative/qdeclarativeengine.h>
+#include <QtDeclarative/qdeclarativeexpression.h>
 #include <QFile>
 #include <QtQuick/qquickview.h>
 #include <QtGui/qguiapplication.h>
@@ -83,6 +84,15 @@ QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& 
     return expectfile;
 }
 
+template <typename T> static T evaluate(QObject *scope, const QString &expression)
+{
+    QDeclarativeExpression expr(qmlContext(scope), scope, expression);
+    T result = expr.evaluate().value<T>();
+    if (expr.hasError())
+        qWarning() << expr.error().toString();
+    return result;
+}
+
 typedef QPair<int, QChar> Key;
 
 class tst_qquicktextinput : public QObject
@@ -100,6 +110,7 @@ private slots:
     void width();
     void font();
     void color();
+    void wrap();
     void selection();
     void isRightToLeft_data();
     void isRightToLeft();
@@ -115,6 +126,7 @@ private slots:
     void horizontalAlignment_data();
     void horizontalAlignment();
     void horizontalAlignment_RightToLeft();
+    void verticalAlignment();
 
     void positionAt();
 
@@ -476,6 +488,41 @@ void tst_qquicktextinput::color()
         QCOMPARE(textinputObject->color(), testColor);
 
         delete textinputObject;
+    }
+}
+
+void tst_qquicktextinput::wrap()
+{
+    int textHeight = 0;
+    // for specified width and wrap set true
+    {
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData("import QtQuick 2.0\nTextInput { text: \"Hello\"; wrapMode: Text.WrapAnywhere; width: 300 }", QUrl::fromLocalFile(""));
+        QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
+        textHeight = textObject->height();
+
+        QVERIFY(textObject != 0);
+        QVERIFY(textObject->wrapMode() == QQuickTextInput::WrapAnywhere);
+        QCOMPARE(textObject->width(), 300.);
+
+        delete textObject;
+    }
+
+    for (int i = 0; i < standard.count(); i++) {
+        QString componentStr = "import QtQuick 2.0\nTextInput { wrapMode: Text.WrapAnywhere; width: 30; text: \"" + standard.at(i) + "\" }";
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
+
+        QVERIFY(textObject != 0);
+        QCOMPARE(textObject->width(), 30.);
+        QVERIFY(textObject->height() > textHeight);
+
+        int oldHeight = textObject->height();
+        textObject->setWidth(100);
+        QVERIFY(textObject->height() < oldHeight);
+
+        delete textObject;
     }
 }
 
@@ -1178,37 +1225,37 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 
     QQuickTextInputPrivate *textInputPrivate = QQuickTextInputPrivate::get(textInput);
     QVERIFY(textInputPrivate != 0);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
 
     // implicit alignment should follow the reading direction of RTL text
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
 
     // explicitly left aligned
     textInput->setHAlign(QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() < canvas.width()/2);
 
     // explicitly right aligned
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
 
     // explicitly center aligned
     textInput->setHAlign(QQuickTextInput::AlignHCenter);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignHCenter);
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
-    QVERIFY(-textInputPrivate->hscroll + textInputPrivate->width > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() < canvas.width()/2);
+    QVERIFY(textInput->boundingRect().right() > canvas.width()/2);
 
     // reseted alignment should go back to following the text reading direction
     textInput->resetHAlign();
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
 
     // mirror the text item
     QQuickItemPrivate::get(textInput)->setLayoutMirror(true);
@@ -1216,19 +1263,19 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // mirrored implicit alignment should continue to follow the reading direction of the text
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
 
     // explicitly right aligned behaves as left aligned
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignLeft);
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() < canvas.width()/2);
 
     // mirrored explicitly left aligned behaves as right aligned
     textInput->setHAlign(QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
 
     // disable mirroring
     QQuickItemPrivate::get(textInput)->setLayoutMirror(false);
@@ -1238,7 +1285,7 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // English text should be implicitly left aligned
     textInput->setText("Hello world!");
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() < canvas.width()/2);
 
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1261,12 +1308,12 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textInput->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
     if (QGuiApplication::keyboardInputDirection() == Qt::LeftToRight)
-        QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
+        QVERIFY(textInput->boundingRect().left() < canvas.width()/2);
     else
-        QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+        QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
 
     QString componentStr = "import QtQuick 2.0\nTextInput {}";
     QDeclarativeComponent textComponent(&engine);
@@ -1275,6 +1322,31 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textObject->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
     delete textObject;
+}
+
+void tst_qquicktextinput::verticalAlignment()
+{
+    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("horizontalAlignment.qml")));
+    QQuickTextInput *textInput = canvas.rootObject()->findChild<QQuickTextInput*>("text");
+    QVERIFY(textInput != 0);
+    canvas.show();
+
+    QQuickTextInputPrivate *textInputPrivate = QQuickTextInputPrivate::get(textInput);
+    QVERIFY(textInputPrivate != 0);
+
+    QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignTop);
+    QVERIFY(textInput->boundingRect().bottom() < canvas.height() / 2);
+
+    // bottom aligned
+    textInput->setVAlign(QQuickTextInput::AlignBottom);
+    QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignBottom);
+    QVERIFY(textInput->boundingRect().top () > canvas.height() / 2);
+
+    // explicitly center aligned
+    textInput->setVAlign(QQuickTextInput::AlignVCenter);
+    QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignVCenter);
+    QVERIFY(textInput->boundingRect().top() < canvas.height() / 2);
+    QVERIFY(textInput->boundingRect().bottom() > canvas.height() / 2);
 }
 
 void tst_qquicktextinput::positionAt()
@@ -1290,7 +1362,7 @@ void tst_qquicktextinput::positionAt()
 
     // Check autoscrolled...
 
-    int pos = textinputObject->positionAt(textinputObject->width()/2);
+    int pos = evaluate<int>(textinputObject, QString("positionAt(%1)").arg(textinputObject->width()/2));
 
     QTextLayout layout(textinputObject->text());
     layout.setFont(textinputObject->font());
@@ -1312,12 +1384,12 @@ void tst_qquicktextinput::positionAt()
     QVERIFY(textLeftWidthEnd >= textWidth - textinputObject->width() / 2);
 
     int x = textinputObject->positionToRectangle(pos + 1).x() - 1;
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorBetweenCharacters), pos + 1);
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorOnCharacter), pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorBetweenCharacters)").arg(x)), pos + 1);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorOnCharacter)").arg(x)), pos);
 
     // Check without autoscroll...
     textinputObject->setAutoScroll(false);
-    pos = textinputObject->positionAt(textinputObject->width()/2);
+    pos = evaluate<int>(textinputObject, QString("positionAt(%1)").arg(textinputObject->width() / 2));
 
     textLeftWidthBegin = floor(line.cursorToX(pos - 1));
     textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
@@ -1326,8 +1398,8 @@ void tst_qquicktextinput::positionAt()
     QVERIFY(textLeftWidthEnd >= textinputObject->width() / 2);
 
     x = textinputObject->positionToRectangle(pos + 1).x() - 1;
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorBetweenCharacters), pos + 1);
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorOnCharacter), pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorBetweenCharacters)").arg(x)), pos + 1);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorOnCharacter)").arg(x)), pos);
 
     const qreal x0 = textinputObject->positionToRectangle(pos).x();
     const qreal x1 = textinputObject->positionToRectangle(pos + 1).x();
@@ -1336,17 +1408,33 @@ void tst_qquicktextinput::positionAt()
     textinputObject->setText(textinputObject->text().mid(pos));
     textinputObject->setCursorPosition(0);
 
-    QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent);
+    {   QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
+        QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent); }
 
     // Check all points within the preedit text return the same position.
-    QCOMPARE(textinputObject->positionAt(0), 0);
-    QCOMPARE(textinputObject->positionAt(x0 / 2), 0);
-    QCOMPARE(textinputObject->positionAt(x0), 0);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(0)), 0);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(x0 / 2)), 0);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(x0)), 0);
 
     // Verify positioning returns to normal after the preedit text.
-    QCOMPARE(textinputObject->positionAt(x1), 1);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(x1)), 1);
     QCOMPARE(textinputObject->positionToRectangle(1).x(), x1);
+
+    {   QInputMethodEvent inputEvent;
+        QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent); }
+
+    // With wrapping.
+    textinputObject->setWrapMode(QQuickTextInput::WrapAnywhere);
+
+    const qreal y0 = line.height() / 2;
+    const qreal y1 = line.height() * 3 / 2;
+
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x0).arg(y0)), pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x1).arg(y0)), pos + 1);
+
+    int newLinePos = evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x0).arg(y1));
+    QVERIFY(newLinePos > pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x1).arg(y1)), newLinePos + 1);
 }
 
 void tst_qquicktextinput::maxLength()
@@ -1962,6 +2050,7 @@ void tst_qquicktextinput::cursorRectangle()
     layout.endLayout();
 
     input.setWidth(line.cursorToX(5, QTextLine::Leading));
+    input.setHeight(qCeil(line.height() * 3 / 2));
 
     QRect r;
 
@@ -1982,7 +2071,7 @@ void tst_qquicktextinput::cursorRectangle()
     }
 
     // Check the cursor rectangle remains within the input bounding rect when auto scrolling.
-    QVERIFY(r.left() < input.boundingRect().width());
+    QVERIFY(r.left() < input.width());
     QVERIFY(r.right() >= input.width() - error);
 
     for (int i = 6; i < text.length(); ++i) {
@@ -1994,14 +2083,50 @@ void tst_qquicktextinput::cursorRectangle()
     for (int i = text.length() - 2; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
+        QCOMPARE(r.top(), 0);
         QVERIFY(r.right() >= 0);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+    }
+
+    // Check vertical scrolling with word wrap.
+    input.setWrapMode(QQuickTextInput::WordWrap);
+    for (int i = 0; i <= 5; ++i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+
+        QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
+        QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
+        QCOMPARE(r.top(), 0);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+    }
+
+    input.setCursorPosition(6);
+    r = input.cursorRectangle();
+    QCOMPARE(r.left(), 0);
+    QVERIFY(r.bottom() >= input.height() - error);
+
+    for (int i = 7; i < text.length(); ++i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+        QVERIFY(r.bottom() >= input.height() - error);
+    }
+
+    for (int i = text.length() - 2; i >= 6; --i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+        QVERIFY(r.bottom() >= input.height() - error);
+    }
+
+    for (int i = 5; i >= 0; --i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+        QCOMPARE(r.top(), 0);
     }
 
     input.setText("Hi!");
     input.setHAlign(QQuickTextInput::AlignRight);
     r = input.cursorRectangle();
-    QVERIFY(r.left() < input.boundingRect().width());
+    QVERIFY(r.left() < input.width() + error);
     QVERIFY(r.right() >= input.width() - error);
 }
 
@@ -2215,7 +2340,6 @@ void tst_qquicktextinput::openInputPanel()
     // check default values
     QVERIFY(input->focusOnPress());
     QVERIFY(!input->hasActiveFocus());
-    qDebug() << &input << qApp->inputPanel()->inputItem();
     QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
@@ -2419,15 +2543,15 @@ void tst_qquicktextinput::preeditAutoScroll()
 
     // test the text is scrolled so the preedit is visible.
     sendPreeditText(preeditText.mid(0, 3), 1);
-    QVERIFY(input->positionAt(0) != 0);
+    QVERIFY(evaluate<int>(input, QString("positionAt(0)")) != 0);
     QVERIFY(input->cursorRectangle().left() < input->boundingRect().width());
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
 
     // test the text is scrolled back when the preedit is removed.
     QInputMethodEvent imEvent;
     QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
-    QCOMPARE(input->positionAt(0), 0);
-    QCOMPARE(input->positionAt(input->width()), 5);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(0)), 0);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(input->width())), 5);
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
 
     QTextLayout layout(preeditText);
@@ -2482,8 +2606,8 @@ void tst_qquicktextinput::preeditAutoScroll()
 
     input->setAutoScroll(false);
     sendPreeditText(preeditText.mid(0, 3), 1);
-    QCOMPARE(input->positionAt(0), 0);
-    QCOMPARE(input->positionAt(input->width()), 5);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(0)), 0);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(input->width())), 5);
 }
 
 void tst_qquicktextinput::preeditCursorRectangle()

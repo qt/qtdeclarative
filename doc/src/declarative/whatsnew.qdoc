@@ -127,6 +127,9 @@ Text improvements:
 TextEdit:
  - the default value of the textFormat property is now PlainText instead of AutoText.
 
+TextInput has new wrapMode and verticalAlignment properties, and the positionAt function now takes
+a y parameter.
+
 PathView now has a \c currentItem property
 
 ListView and GridView:

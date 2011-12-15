@@ -92,6 +92,18 @@ QQuickTextInput::~QQuickTextInput()
 {
 }
 
+void QQuickTextInput::componentComplete()
+{
+    Q_D(QQuickTextInput);
+
+    QQuickImplicitSizeItem::componentComplete();
+
+    d->updateLayout();
+    updateCursorRectangle();
+    if (d->cursorComponent && d->cursorComponent->isReady())
+        createCursor();
+}
+
 /*!
     \qmlproperty string QtQuick2::TextInput::text
 
@@ -251,12 +263,8 @@ void QQuickTextInput::setFont(const QFont &font)
         d->font.setPointSizeF(size/2.0);
     }
     if (oldFont != d->font) {
-        d->updateDisplayText();
-        updateSize();
+        d->updateLayout();
         updateCursorRectangle();
-        if (d->cursorItem) {
-            d->cursorItem->setHeight(QFontMetrics(d->font).height());
-        }
     }
     emit fontChanged(d->sourceFont);
 }
@@ -338,6 +346,7 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
 /*!
     \qmlproperty enumeration QtQuick2::TextInput::horizontalAlignment
     \qmlproperty enumeration QtQuick2::TextInput::effectiveHorizontalAlignment
+    \qmlproperty enumeration QtQuick2::TextInput::verticalAlignment
 
     Sets the horizontal alignment of the text within the TextInput item's
     width and height. By default, the text alignment follows the natural alignment
@@ -352,6 +361,9 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
 
     The valid values for \c horizontalAlignment are \c TextInput.AlignLeft, \c TextInput.AlignRight and
     \c TextInput.AlignHCenter.
+
+    Valid values for \c verticalAlignment are \c TextEdit.AlignTop (default),
+    \c TextEdit.AlignBottom \c TextEdit.AlignVCenter.
 
     When using the attached property LayoutMirroring::enabled to mirror application
     layouts, the horizontal alignment of text will also be mirrored. However, the property
@@ -370,6 +382,7 @@ void QQuickTextInput::setHAlign(HAlignment align)
     bool forceAlign = d->hAlignImplicit && d->effectiveLayoutMirror;
     d->hAlignImplicit = false;
     if (d->setHAlign(align, forceAlign) && isComponentComplete()) {
+        d->updateLayout();
         updateCursorRectangle();
     }
 }
@@ -379,6 +392,7 @@ void QQuickTextInput::resetHAlign()
     Q_D(QQuickTextInput);
     d->hAlignImplicit = true;
     if (d->determineHorizontalAlignment() && isComponentComplete()) {
+        d->updateLayout();
         updateCursorRectangle();
     }
 }
@@ -427,6 +441,56 @@ bool QQuickTextInputPrivate::determineHorizontalAlignment()
         return setHAlign(isRightToLeft ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
     }
     return false;
+}
+
+QQuickTextInput::VAlignment QQuickTextInput::vAlign() const
+{
+    Q_D(const QQuickTextInput);
+    return d->vAlign;
+}
+
+void QQuickTextInput::setVAlign(QQuickTextInput::VAlignment alignment)
+{
+    Q_D(QQuickTextInput);
+    if (alignment == d->vAlign)
+        return;
+    d->vAlign = alignment;
+    emit verticalAlignmentChanged(d->vAlign);
+    if (isComponentComplete()) {
+        updateCursorRectangle();
+    }
+}
+
+/*!
+    \qmlproperty enumeration QtQuick2::TextInput::wrapMode
+
+    Set this property to wrap the text to the TextEdit item's width.
+    The text will only wrap if an explicit width has been set.
+
+    \list
+    \o TextInput.NoWrap - no wrapping will be performed. If the text contains insufficient newlines, then implicitWidth will exceed a set width.
+    \o TextInput.WordWrap - wrapping is done on word boundaries only. If a word is too long, implicitWidth will exceed a set width.
+    \o TextInput.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \o TextInput.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
+    \endlist
+
+    The default is TextInput.NoWrap. If you set a width, consider using TextInput.Wrap.
+*/
+QQuickTextInput::WrapMode QQuickTextInput::wrapMode() const
+{
+    Q_D(const QQuickTextInput);
+    return d->wrapMode;
+}
+
+void QQuickTextInput::setWrapMode(WrapMode mode)
+{
+    Q_D(QQuickTextInput);
+    if (mode == d->wrapMode)
+        return;
+    d->wrapMode = mode;
+    d->updateLayout();
+    updateCursorRectangle();
+    emit wrapModeChanged();
 }
 
 void QQuickTextInputPrivate::mirrorChange()
@@ -567,12 +631,20 @@ void QQuickTextInput::setCursorPosition(int cp)
 QRect QQuickTextInput::cursorRectangle() const
 {
     Q_D(const QQuickTextInput);
-    QTextLine l = d->m_textLayout.lineAt(0);
+
     int c = d->m_cursor;
     if (d->m_preeditCursor != -1)
         c += d->m_preeditCursor;
-    return QRect(qRound(l.cursorToX(c)) - d->hscroll, 0, d->m_cursorWidth, l.height());
+    if (d->m_echoMode == NoEcho || !isComponentComplete())
+        c = 0;
+    QTextLine l = d->m_textLayout.lineForTextPosition(c);
+    return QRect(
+            qRound(l.cursorToX(c) - d->hscroll),
+            qRound(l.y() - d->vscroll),
+            d->m_cursorWidth,
+            qCeil(l.height()));
 }
+
 /*!
     \qmlproperty int QtQuick2::TextInput::selectionStart
 
@@ -686,7 +758,6 @@ void QQuickTextInput::setAutoScroll(bool b)
 
     d->autoScroll = b;
     //We need to repaint so that the scrolling is taking into account.
-    updateSize(true);
     updateCursorRectangle();
     emit autoScrollChanged(d->autoScroll);
 }
@@ -908,9 +979,8 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     d->m_echoMode = echo;
     d->m_passwordEchoEditing = false;
     d->updateInputMethodHints();
-
     d->updateDisplayText();
-    q_textChanged();
+    updateCursorRectangle();
 
     emit echoModeChanged(echoMode());
 }
@@ -982,6 +1052,9 @@ void QQuickTextInputPrivate::startCreatingCursor()
 void QQuickTextInput::createCursor()
 {
     Q_D(QQuickTextInput);
+    if (!isComponentComplete())
+        return;
+
     if (d->cursorComponent->isError()) {
         qmlInfo(this, d->cursorComponent->errors()) << tr("Could not load cursor delegate");
         return;
@@ -1001,10 +1074,12 @@ void QQuickTextInput::createCursor()
         return;
     }
 
+    QRectF r = cursorRectangle();
+
     QDeclarative_setParent_noEvent(d->cursorItem, this);
     d->cursorItem->setParentItem(this);
-    d->cursorItem->setX(d->cursorToX());
-    d->cursorItem->setHeight(d->calculateTextHeight());
+    d->cursorItem->setPos(r.topLeft());
+    d->cursorItem->setHeight(r.height());
 }
 
 /*!
@@ -1022,19 +1097,22 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     if (pos > d->m_cursor)
         pos += d->preeditAreaText().length();
     QTextLine l = d->m_textLayout.lineAt(0);
-    return QRectF( l.cursorToX(pos) - d->hscroll, 0.0, d->m_cursorWidth, l.height());
+    return QRectF(l.cursorToX(pos) - d->hscroll, 0.0, d->m_cursorWidth, l.height());
 }
 
 /*!
-    \qmlmethod int QtQuick2::TextInput::positionAt(int x, CursorPosition position = CursorBetweenCharacters)
+    \qmlmethod int QtQuick2::TextInput::positionAt(real x, real y, CursorPosition position = CursorBetweenCharacters)
 
     This function returns the character position at
-    x pixels from the left of the textInput. Position 0 is before the
+    x and y pixels from the top left  of the textInput. Position 0 is before the
     first character, position 1 is after the first character but before the second,
     and so on until position text.length, which is after all characters.
 
     This means that for all x values before the first character this function returns 0,
-    and for all x values after the last character this function returns text.length.
+    and for all x values after the last character this function returns text.length.  If
+    the y value is above the text the position will be that of the nearest character on
+    the first line line and if it is below the text the position of the nearest character
+    on the last line will be returned.
 
     The cursor position type specifies how the cursor position should be resolved.
 
@@ -1043,15 +1121,33 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     \o TextInput.CursorOnCharacter - Returns the position before the character that is nearest x.
     \endlist
 */
-int QQuickTextInput::positionAt(int x) const
-{
-    return positionAt(x, CursorBetweenCharacters);
-}
 
-int QQuickTextInput::positionAt(int x, CursorPosition position) const
+void QQuickTextInput::positionAt(QDeclarativeV8Function *args) const
 {
     Q_D(const QQuickTextInput);
-    int pos = d->m_textLayout.lineAt(0).xToCursor(x + d->hscroll, QTextLine::CursorPosition(position));
+
+    qreal x = 0;
+    qreal y = 0;
+    QTextLine::CursorPosition position = QTextLine::CursorBetweenCharacters;
+
+    if (args->Length() < 1)
+        return;
+
+    int i = 0;
+    v8::Local<v8::Value> arg = (*args)[i];
+    x = arg->NumberValue();
+
+    if (++i < args->Length()) {
+        arg = (*args)[i];
+        y = arg->NumberValue();
+    }
+
+    if (++i < args->Length()) {
+        arg = (*args)[i];
+        position = QTextLine::CursorPosition(arg->Int32Value());
+    }
+
+    int pos = d->positionAt(x, y, position);
     const int cursor = d->m_cursor;
     if (pos > cursor) {
         const int preeditLength = d->preeditAreaText().length();
@@ -1059,7 +1155,22 @@ int QQuickTextInput::positionAt(int x, CursorPosition position) const
                 ? pos - preeditLength
                 : cursor;
     }
-    return pos;
+    args->returnValue(v8::Int32::New(pos));
+}
+
+int QQuickTextInputPrivate::positionAt(int x, int y, QTextLine::CursorPosition position) const
+{
+    x += hscroll;
+    y += vscroll;
+    QTextLine line = m_textLayout.lineAt(0);
+    for (int i = 1; i < m_textLayout.lineCount(); ++i) {
+        QTextLine nextLine = m_textLayout.lineAt(i);
+
+        if (y < (line.rect().bottom() + nextLine.y()) / 2)
+            break;
+        line = nextLine;
+    }
+    return line.xToCursor(x, position);
 }
 
 void QQuickTextInput::keyPressEvent(QKeyEvent* ev)
@@ -1107,7 +1218,7 @@ void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
 
     if (d->selectByMouse && event->button() == Qt::LeftButton) {
         d->commitPreedit();
-        int cursor = d->xToPos(event->localPos().x());
+        int cursor = d->positionAt(event->localPos());
         d->selectWordAtPos(cursor);
         event->setAccepted(true);
         if (!d->hasPendingTripleClick()) {
@@ -1150,7 +1261,7 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
         return;
 
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
-    int cursor = d->xToPos(event->localPos().x());
+    int cursor = d->positionAt(event->localPos());
     d->moveCursor(cursor, mark);
     event->setAccepted(true);
 }
@@ -1165,12 +1276,12 @@ void QQuickTextInput::mouseMoveEvent(QMouseEvent *event)
 
         if (d->composeMode()) {
             // start selection
-            int startPos = d->xToPos(d->pressPos.x());
-            int currentPos = d->xToPos(event->localPos().x());
+            int startPos = d->positionAt(d->pressPos);
+            int currentPos = d->positionAt(event->localPos());
             if (startPos != currentPos)
                 d->setSelection(startPos, currentPos - startPos);
         } else {
-            moveCursorSelection(d->xToPos(event->localPos().x()), d->mouseSelectionMode);
+            moveCursorSelection(d->positionAt(event->localPos()), d->mouseSelectionMode);
         }
         event->setAccepted(true);
     } else {
@@ -1205,7 +1316,7 @@ bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if !defined QT_NO_IM
     if (composeMode()) {
-        int tmp_cursor = xToPos(event->localPos().x());
+        int tmp_cursor = positionAt(event->localPos());
         int mousePos = tmp_cursor - m_cursor;
         if (mousePos >= 0 && mousePos <= m_textLayout.preeditAreaText().length()) {
             if (event->type() == QEvent::MouseButtonRelease) {
@@ -1284,37 +1395,26 @@ bool QQuickTextInput::event(QEvent* ev)
 void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
-    if (newGeometry.width() != oldGeometry.width()) {
-        updateSize();
-        updateCursorRectangle();
-    }
+    Q_D(QQuickTextInput);
+    if (newGeometry.width() != oldGeometry.width())
+        d->updateLayout();
+    updateCursorRectangle();
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
 }
 
 void QQuickTextInputPrivate::updateHorizontalScroll()
 {
     Q_Q(QQuickTextInput);
+    QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + m_preeditCursor);
     const int preeditLength = m_textLayout.preeditAreaText().length();
     const int width = q->width();
-    int widthUsed = calculateTextWidth();
+    int widthUsed = currentLine.isValid() ? qRound(currentLine.naturalTextWidth()) : 0;
+    int previousScroll = hscroll;
 
-    if (!autoScroll || widthUsed <=  width) {
-        QQuickTextInput::HAlignment effectiveHAlign = q->effectiveHAlign();
-        // text fits in br; use hscroll for alignment
-        switch (effectiveHAlign & ~(Qt::AlignAbsolute|Qt::AlignVertical_Mask)) {
-        case Qt::AlignRight:
-            hscroll = widthUsed - width;
-            break;
-        case Qt::AlignHCenter:
-            hscroll = (widthUsed - width) / 2;
-            break;
-        default:
-            // Left
-            hscroll = 0;
-            break;
-        }
+    if (!autoScroll || widthUsed <=  width || m_echoMode == QQuickTextInput::NoEcho) {
+        hscroll = 0;
     } else {
-        int cix = qRound(cursorToX(m_cursor + preeditLength));
+        int cix = qRound(currentLine.cursorToX(m_cursor + preeditLength));
         if (cix - hscroll >= width) {
             // text doesn't fit, cursor is to the right of br (scroll right)
             hscroll = cix - width;
@@ -1329,12 +1429,64 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
             // off to the left
-             cix = qRound(cursorToX(
-                     m_cursor + qMax(0, m_preeditCursor - 1)));
+             cix = qRound(currentLine.cursorToX(m_cursor + qMax(0, m_preeditCursor - 1)));
              if (cix < hscroll)
                  hscroll = cix;
         }
     }
+    if (previousScroll != hscroll)
+        textLayoutDirty = true;
+}
+
+void QQuickTextInputPrivate::updateVerticalScroll()
+{
+    Q_Q(QQuickTextInput);
+    const int preeditLength = m_textLayout.preeditAreaText().length();
+    const int height = q->height();
+    int heightUsed = boundingRect.height();
+    int previousScroll = vscroll;
+
+    if (!autoScroll || heightUsed <=  height) {
+        // text fits in br; use vscroll for alignment
+        switch (vAlign & ~(Qt::AlignAbsolute|Qt::AlignHorizontal_Mask)) {
+        case Qt::AlignBottom:
+            vscroll = heightUsed - height;
+            break;
+        case Qt::AlignVCenter:
+            vscroll = (heightUsed - height) / 2;
+            break;
+        default:
+            // Top
+            vscroll = 0;
+            break;
+        }
+    } else {
+        QRectF r = m_textLayout.lineForTextPosition(m_cursor + preeditLength).rect();
+        int top = qFloor(r.top());
+        int bottom = qCeil(r.bottom());
+
+        if (bottom - vscroll >= height) {
+            // text doesn't fit, cursor is to the below the br (scroll down)
+            vscroll = bottom - height;
+        } else if (top - vscroll < 0 && vscroll < heightUsed) {
+            // text doesn't fit, cursor is above br (scroll up)
+            vscroll = top;
+        } else if (heightUsed - vscroll < height) {
+            // text doesn't fit, text document is to the left of br; align
+            // right
+            vscroll = heightUsed - height;
+        }
+        if (preeditLength > 0) {
+            // check to ensure long pre-edit text doesn't push the cursor
+            // off the top
+             top = qRound(m_textLayout.lineForTextPosition(
+                    m_cursor + qMax(0, m_preeditCursor - 1)).rect().top());
+             if (top < vscroll)
+                 vscroll = top;
+        }
+    }
+    if (previousScroll != vscroll)
+        textLayoutDirty = true;
 }
 
 QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
@@ -1364,12 +1516,11 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
         QPoint offset = QPoint(0,0);
         QFontMetrics fm = QFontMetrics(d->font);
-        QRect br(boundingRect().toRect());
         if (d->autoScroll) {
             // the y offset is there to keep the baseline constant in case we have script changes in the text.
-            offset = br.topLeft() - QPoint(d->hscroll, d->ascent() - fm.ascent());
+            offset = -QPoint(d->hscroll, d->vscroll + d->m_ascent - fm.ascent());
         } else {
-            offset = QPoint(d->hscroll, 0);
+            offset = -QPoint(d->hscroll, d->vscroll);
         }
 
         if (!d->m_textLayout.text().isEmpty()) {
@@ -1554,10 +1705,8 @@ void QQuickTextInput::setPasswordCharacter(const QString &str)
     if (str.length() < 1)
         return;
     d->m_passwordCharacter = str.constData()[0];
-    d->updateDisplayText();
-    if (d->m_echoMode == Password || d->m_echoMode == PasswordEchoOnEdit) {
-        updateSize();
-    }
+    if (d->m_echoMode == Password || d->m_echoMode == PasswordEchoOnEdit)
+        d->updateDisplayText();
     emit passwordCharacterChanged();
 }
 
@@ -1883,8 +2032,10 @@ void QQuickTextInputPrivate::init()
             q, SLOT(q_canPasteChanged()));
     canPaste = !m_readOnly && QGuiApplication::clipboard()->text().length() != 0;
 #endif // QT_NO_CLIPBOARD
-    updateDisplayText();
-    q->updateSize();
+    m_textLayout.beginLayout();
+    m_textLayout.createLine();
+    m_textLayout.endLayout();
+
     imHints &= ~Qt::ImhMultiLine;
     oldValidity = hasAcceptableInput(m_text);
     lastSelectionStart = 0;
@@ -1903,13 +2054,19 @@ void QQuickTextInputPrivate::init()
 void QQuickTextInput::updateCursorRectangle()
 {
     Q_D(QQuickTextInput);
-    d->determineHorizontalAlignment();
+    if (!isComponentComplete())
+        return;
+
     d->updateHorizontalScroll();
-    updateRect();//TODO: Only update rect between pos's
+    d->updateVerticalScroll();
+    update();
     updateMicroFocus();
     emit cursorRectangleChanged();
-    if (d->cursorItem)
-        d->cursorItem->setX(d->cursorToX() - d->hscroll);
+    if (d->cursorItem) {
+        QRectF r = cursorRectangle();
+        d->cursorItem->setPos(r.topLeft());
+        d->cursorItem->setHeight(r.height());
+    }
 }
 
 void QQuickTextInput::selectionChanged()
@@ -1929,21 +2086,6 @@ void QQuickTextInput::selectionChanged()
         if (d->lastSelectionEnd == -1)
             d->lastSelectionEnd = d->m_cursor;
         emit selectionEndChanged();
-    }
-}
-
-void QQuickTextInput::q_textChanged()
-{
-    Q_D(QQuickTextInput);
-    emit textChanged();
-    emit displayTextChanged();
-    updateSize();
-    d->determineHorizontalAlignment();
-    d->updateHorizontalScroll();
-    updateMicroFocus();
-    if (hasAcceptableInput() != d->oldValidity) {
-        d->oldValidity = hasAcceptableInput();
-        emit acceptableInputChanged();
     }
 }
 
@@ -1975,24 +2117,15 @@ void QQuickTextInput::updateRect(const QRect &r)
 QRectF QQuickTextInput::boundingRect() const
 {
     Q_D(const QQuickTextInput);
-    QRectF r = QQuickImplicitSizeItem::boundingRect();
 
+    QRectF r = d->boundingRect;
     int cursorWidth = d->cursorItem ? d->cursorItem->width() : d->m_cursorWidth;
 
     // Could include font max left/right bearings to either side of rectangle.
 
     r.setRight(r.right() + cursorWidth);
+    r.translate(-d->hscroll, -d->vscroll);
     return r;
-}
-
-void QQuickTextInput::updateSize(bool needsRedraw)
-{
-    Q_D(QQuickTextInput);
-    int w = width();
-    int h = height();
-    setImplicitSize(d->calculateTextWidth(), d->calculateTextHeight());
-    if (w==width() && h==height() && needsRedraw)
-        update();
 }
 
 void QQuickTextInput::q_canPasteChanged()
@@ -2041,20 +2174,53 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
             uc[i] = QChar(0x0020);
     }
 
-    m_textLayout.setText(str);
+    if (str != orig || forceUpdate) {
+        m_textLayout.setText(str);
+        updateLayout(); // polish?
+        emit q_func()->displayTextChanged();
+    }
+}
+
+void QQuickTextInputPrivate::updateLayout()
+{
+    Q_Q(QQuickTextInput);
+
+    if (!q->isComponentComplete())
+        return;
 
     QTextOption option = m_textLayout.textOption();
     option.setTextDirection(m_layoutDirection);
     option.setFlags(QTextOption::IncludeTrailingSpaces);
+    option.setWrapMode(QTextOption::WrapMode(wrapMode));
+    option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
+    m_textLayout.setTextOption(option);
+    m_textLayout.setFont(font);
+
+    boundingRect = QRectF();
+    m_textLayout.beginLayout();
+    QTextLine line = m_textLayout.createLine();
+    qreal lineWidth = q->widthValid() ? q->width() : INT_MAX;
+    qreal height = 0;
+    QTextLine firstLine = line;
+    do {
+        line.setLineWidth(lineWidth);
+        line.setPosition(QPointF(line.position().x(), height));
+        boundingRect = boundingRect.united(line.naturalTextRect());
+
+        height += line.height();
+        line = m_textLayout.createLine();
+    } while (line.isValid());
+    m_textLayout.endLayout();
+
+    option.setWrapMode(QTextOption::NoWrap);
     m_textLayout.setTextOption(option);
 
-    m_textLayout.beginLayout();
-    QTextLine l = m_textLayout.createLine();
-    m_textLayout.endLayout();
-    m_ascent = qRound(l.ascent());
+    m_ascent = qRound(firstLine.ascent());
+    textLayoutDirty = true;
 
-    if (str != orig || forceUpdate)
-        emit q_func()->displayTextChanged();
+    q->update();
+    q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
+
 }
 
 #ifndef QT_NO_CLIPBOARD
@@ -2117,7 +2283,7 @@ void QQuickTextInputPrivate::commitPreedit()
     m_preeditCursor = 0;
     m_textLayout.setPreeditArea(-1, QString());
     m_textLayout.clearAdditionalFormats();
-    updateDisplayText(/*force*/ true);
+    updateLayout();
 }
 
 /*!
@@ -2278,21 +2444,6 @@ void QQuickTextInputPrivate::updatePasswordEchoEditing(bool editing)
 /*!
     \internal
 
-    Returns the cursor position of the given \a x pixel value in relation
-    to the displayed text.  The given \a betweenOrOn specified what kind
-    of cursor position is requested.
-*/
-int QQuickTextInputPrivate::xToPos(int x, QTextLine::CursorPosition betweenOrOn) const
-{
-    Q_Q(const QQuickTextInput);
-    QRect cr = q->boundingRect().toRect();
-    x-= cr.x() - hscroll;
-    return m_textLayout.lineAt(0).xToCursor(x, betweenOrOn);
-}
-
-/*!
-    \internal
-
     Fixes the current text so that it is valid given any set validators.
 
     Returns true if the text was changed.  Otherwise returns false.
@@ -2340,7 +2491,6 @@ void QQuickTextInputPrivate::moveCursor(int pos, bool mark)
             anchor = m_cursor;
         m_selstart = qMin(anchor, pos);
         m_selend = qMax(anchor, pos);
-        updateDisplayText();
     } else {
         internalDeselect();
     }
@@ -2368,6 +2518,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
             || event->replacementLength() > 0;
     bool cursorPositionChanged = false;
     bool selectionChange = false;
+    m_preeditDirty = event->preeditString() != preeditAreaText();
 
     if (isGettingInput) {
         // If any text is being input, remove selected text.
@@ -2442,6 +2593,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
         }
     }
     m_textLayout.setAdditionalFormats(formats);
+
     updateDisplayText(/*force*/ true);
     if (cursorPositionChanged)
         emitCursorPositionChanged();
@@ -2542,8 +2694,17 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 
         if (m_textDirty) {
             m_textDirty = false;
-            q_func()->q_textChanged();
+            m_preeditDirty = false;
+            determineHorizontalAlignment();
+            emit q->textChanged();
         }
+
+        if (m_validInput != wasValidInput)
+            emit q->acceptableInputChanged();
+    }
+    if (m_preeditDirty) {
+        m_preeditDirty = false;
+        determineHorizontalAlignment();
     }
     if (m_selDirty) {
         m_selDirty = false;

@@ -44,6 +44,7 @@
 #define QQUICKTEXTINPUT_P_H
 
 #include "qquickimplicitsizeitem_p.h"
+#include <QtGui/qtextoption.h>
 #include <QtGui/qvalidator.h>
 
 QT_BEGIN_HEADER
@@ -56,8 +57,11 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(HAlignment)
+    Q_ENUMS(VAlignment)
+    Q_ENUMS(WrapMode)
     Q_ENUMS(EchoMode)
     Q_ENUMS(SelectionMode)
+    Q_ENUMS(CursorPosition)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
@@ -66,6 +70,8 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
     Q_PROPERTY(HAlignment horizontalAlignment READ hAlign WRITE setHAlign RESET resetHAlign NOTIFY horizontalAlignmentChanged)
     Q_PROPERTY(HAlignment effectiveHorizontalAlignment READ effectiveHAlign NOTIFY effectiveHorizontalAlignmentChanged)
+    Q_PROPERTY(VAlignment verticalAlignment READ vAlign WRITE setVAlign NOTIFY verticalAlignmentChanged)
+    Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
 
     Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly NOTIFY readOnlyChanged)
     Q_PROPERTY(bool cursorVisible READ isCursorVisible WRITE setCursorVisible NOTIFY cursorVisibleChanged)
@@ -98,6 +104,8 @@ public:
     QQuickTextInput(QQuickItem * parent=0);
     ~QQuickTextInput();
 
+    void componentComplete();
+
     enum EchoMode {//To match QLineEdit::EchoMode
         Normal,
         NoEcho,
@@ -111,6 +119,20 @@ public:
         AlignHCenter = Qt::AlignHCenter
     };
 
+    enum VAlignment {
+        AlignTop = Qt::AlignTop,
+        AlignBottom = Qt::AlignBottom,
+        AlignVCenter = Qt::AlignVCenter
+    };
+
+    enum WrapMode {
+        NoWrap = QTextOption::NoWrap,
+        WordWrap = QTextOption::WordWrap,
+        WrapAnywhere = QTextOption::WrapAnywhere,
+        WrapAtWordBoundaryOrAnywhere = QTextOption::WrapAtWordBoundaryOrAnywhere, // COMPAT
+        Wrap = QTextOption::WrapAtWordBoundaryOrAnywhere
+    };
+
     enum SelectionMode {
         SelectCharacters,
         SelectWords
@@ -121,9 +143,9 @@ public:
         CursorOnCharacter
     };
 
+
     //Auxilliary functions needed to control the TextInput from QML
-    Q_INVOKABLE int positionAt(int x) const;
-    Q_INVOKABLE int positionAt(int x, CursorPosition position) const;
+    Q_INVOKABLE void positionAt(QDeclarativeV8Function *args) const;
     Q_INVOKABLE QRectF positionToRectangle(int pos) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
@@ -150,6 +172,12 @@ public:
     void setHAlign(HAlignment align);
     void resetHAlign();
     HAlignment effectiveHAlign() const;
+
+    VAlignment vAlign() const;
+    void setVAlign(VAlignment align);
+
+    WrapMode wrapMode() const;
+    void setWrapMode(WrapMode w);
 
     bool isReadOnly() const;
     void setReadOnly(bool);
@@ -226,6 +254,8 @@ Q_SIGNALS:
     void selectedTextColorChanged(const QColor &color);
     void fontChanged(const QFont &font);
     void horizontalAlignmentChanged(HAlignment alignment);
+    void verticalAlignmentChanged(VAlignment alignment);
+    void wrapModeChanged();
     void readOnlyChanged(bool isReadOnly);
     void cursorVisibleChanged(bool isCursorVisible);
     void cursorDelegateChanged();
@@ -273,8 +303,6 @@ public Q_SLOTS:
 #endif
 
 private Q_SLOTS:
-    void updateSize(bool needsRedraw = true);
-    void q_textChanged();
     void selectionChanged();
     void createCursor();
     void updateCursorRectangle();

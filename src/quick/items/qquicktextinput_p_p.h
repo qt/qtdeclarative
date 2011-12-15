@@ -81,7 +81,7 @@ public:
         , textNode(0)
         , m_maskData(0)
         , hscroll(0)
-        , oldScroll(0)
+        , vscroll(0)
         , m_cursor(0)
         , m_preeditCursor(0)
         , m_cursorWidth(1)
@@ -97,6 +97,8 @@ public:
         , m_selend(0)
         , style(QQuickText::Normal)
         , hAlign(QQuickTextInput::AlignLeft)
+        , vAlign(QQuickTextInput::AlignTop)
+        , wrapMode(QQuickTextInput::NoWrap)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , inputMethodHints(Qt::ImhNone)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
@@ -116,6 +118,7 @@ public:
         , m_readOnly(0)
         , m_echoMode(QQuickTextInput::Normal)
         , m_textDirty(0)
+        , m_preeditDirty(0)
         , m_selDirty(0)
         , m_validInput(1)
         , m_blinkStatus(0)
@@ -130,6 +133,7 @@ public:
     void init();
     void startCreatingCursor();
     void updateHorizontalScroll();
+    void updateVerticalScroll();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextInput::HAlignment, bool forceAlign = false);
     void mirrorChange();
@@ -186,13 +190,14 @@ public:
     QPoint tripleClickStartPoint;
     QList<int> m_transactions;
     QVector<Command> m_history;
+    QRectF boundingRect;
 
     int lastSelectionStart;
     int lastSelectionEnd;
     int oldHeight;
     int oldWidth;
     int hscroll;
-    int oldScroll;
+    int vscroll;
     int m_cursor;
     int m_preeditCursor;
     int m_cursorWidth;
@@ -209,6 +214,8 @@ public:
 
     QQuickText::TextStyle style;
     QQuickTextInput::HAlignment hAlign;
+    QQuickTextInput::VAlignment vAlign;
+    QQuickTextInput::WrapMode wrapMode;
     QQuickTextInput::SelectionMode mouseSelectionMode;
     Qt::InputMethodHints inputMethodHints;
     Qt::LayoutDirection m_layoutDirection;
@@ -232,6 +239,7 @@ public:
     uint m_readOnly : 1;
     uint m_echoMode : 2;
     uint m_textDirty : 1;
+    uint m_preeditDirty : 1;
     uint m_selDirty : 1;
     uint m_validInput : 1;
     uint m_blinkStatus : 1;
@@ -269,10 +277,6 @@ public:
     bool allSelected() const { return !m_text.isEmpty() && m_selstart == 0 && m_selend == (int)m_text.length(); }
     bool hasSelectedText() const { return !m_text.isEmpty() && m_selend > m_selstart; }
 
-    int calculateTextHeight() const { return qRound(m_textLayout.lineAt(0).height()); }
-    int calculateTextWidth() const { return qRound(m_textLayout.lineAt(0).naturalTextWidth()); }
-    int ascent() const { return m_ascent; }
-
     void setSelection(int start, int length);
 
     inline QString selectedText() const { return hasSelectedText() ? m_text.mid(m_selstart, m_selend - m_selstart) : QString(); }
@@ -281,12 +285,10 @@ public:
 
     int selectionStart() const { return hasSelectedText() ? m_selstart : -1; }
     int selectionEnd() const { return hasSelectedText() ? m_selend : -1; }
-    bool inSelection(int x) const
-    {
-        if (m_selstart >= m_selend)
-            return false;
-        int pos = xToPos(x, QTextLine::CursorOnCharacter);
-        return pos >= m_selstart && pos < m_selend;
+
+    int positionAt(int x, int y, QTextLine::CursorPosition position) const;
+    int positionAt(const QPointF &point, QTextLine::CursorPosition position = QTextLine::CursorBetweenCharacters) const {
+        return positionAt(point.x(), point.y(), position);
     }
 
     void removeSelection()
@@ -332,17 +334,6 @@ public:
 
     void home(bool mark) { moveCursor(0, mark); }
     void end(bool mark) { moveCursor(q_func()->text().length(), mark); }
-
-    int xToPos(int x, QTextLine::CursorPosition = QTextLine::CursorBetweenCharacters) const;
-
-    qreal cursorToX(int cursor) const { return m_textLayout.lineAt(0).cursorToX(cursor); }
-    qreal cursorToX() const
-    {
-        int cursor = m_cursor;
-        if (m_preeditCursor != -1)
-            cursor += m_preeditCursor;
-        return cursorToX(cursor);
-    }
 
     void backspace();
     void del();
@@ -398,6 +389,8 @@ public:
     void setCursorBlinkPeriod(int msec);
     void resetCursorBlinkTimer();
 
+    void updateLayout();
+
 private:
     void init(const QString &txt);
     void removeSelectedText();
@@ -424,7 +417,6 @@ private:
     void addCommand(const Command& cmd);
 
     inline void separate() { m_separator = true; }
-
 
     // masking
     void parseInputMask(const QString &maskFields);
