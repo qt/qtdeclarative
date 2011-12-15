@@ -69,20 +69,20 @@ class QSmoothedAnimationTimer : public QTimer
 {
     Q_OBJECT
 public:
-    explicit QSmoothedAnimationTimer(QDeclarativeRefPointer<QSmoothedAnimation> animation, QObject *parent = 0);
+    explicit QSmoothedAnimationTimer(QSmoothedAnimation *animation, QObject *parent = 0);
     ~QSmoothedAnimationTimer();
 public Q_SLOTS:
     void stopAnimation();
 private:
-    QDeclarativeRefPointer<QSmoothedAnimation> m_animation;
+    QSmoothedAnimation *m_animation;
 };
 
 
 class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation2
 {
+    Q_DISABLE_COPY(QSmoothedAnimation)
 public:
     QSmoothedAnimation();
-    QSmoothedAnimation(const QSmoothedAnimation &other);
 
     ~QSmoothedAnimation();
     qreal to;
@@ -141,8 +141,8 @@ public:
     ~QDeclarativeSmoothedAnimationPrivate();
     void updateRunningAnimations();
 
-    QDeclarativeRefPointer<QSmoothedAnimation> anim;
-    QHash<QDeclarativeProperty, QDeclarativeRefPointer<QSmoothedAnimation> > activeAnimations;
+    QSmoothedAnimation *anim;
+    QHash<QDeclarativeProperty, QSmoothedAnimation* > activeAnimations;
 };
 
 QT_END_NAMESPACE

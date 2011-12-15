@@ -46,7 +46,7 @@
 
 #include <private/qdeclarativepropertyvalueinterceptor_p.h>
 #include <qdeclarative.h>
-#include "private/qabstractanimation2_p.h"
+#include <private/qabstractanimation2_p.h>
 
 QT_BEGIN_HEADER
 
@@ -83,7 +83,6 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void componentFinalized();
-    void qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State);
 };
 
 QT_END_NAMESPACE

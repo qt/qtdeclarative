@@ -51,13 +51,17 @@ QT_BEGIN_NAMESPACE
 
 
 
-class QDeclarativeTimerPrivate : public QObjectPrivate
+class QDeclarativeTimerPrivate : public QObjectPrivate, public QAnimation2ChangeListener
 {
     Q_DECLARE_PUBLIC(QDeclarativeTimer)
 public:
     QDeclarativeTimerPrivate()
         : interval(1000), running(false), repeating(false), triggeredOnStart(false)
         , classBegun(false), componentComplete(false), firstTick(true) {}
+
+    virtual void animationFinished(QAbstractAnimation2 *);
+    virtual void animationCurrentLoopChanged(QAbstractAnimation2 *)  { Q_Q(QDeclarativeTimer); q->ticked(); }
+
     int interval;
     QPauseAnimation2 pause;
     bool running : 1;
@@ -111,8 +115,7 @@ QDeclarativeTimer::QDeclarativeTimer(QObject *parent)
     : QObject(*(new QDeclarativeTimerPrivate), parent)
 {
     Q_D(QDeclarativeTimer);
-    d->pause.registerCurrentLoopChanged(this, "ticked()");
-    d->pause.registerFinished(this, "finished()");
+    d->pause.addAnimationChangeListener(d, QAbstractAnimation2::Completion | QAbstractAnimation2::CurrentLoop);
     d->pause.setLoopCount(1);
     d->pause.setDuration(d->interval);
 }
@@ -310,15 +313,15 @@ void QDeclarativeTimer::ticked()
     d->firstTick = false;
 }
 
-void QDeclarativeTimer::finished()
+void QDeclarativeTimerPrivate::animationFinished(QAbstractAnimation2 *)
 {
-    Q_D(QDeclarativeTimer);
-    if (d->repeating || !d->running)
+    Q_Q(QDeclarativeTimer);
+    if (repeating || !running)
         return;
-    emit triggered();
-    d->running = false;
-    d->firstTick = false;
-    emit runningChanged();
+    emit q->triggered();
+    running = false;
+    firstTick = false;
+    emit q->runningChanged();
 }
 
 QT_END_NAMESPACE

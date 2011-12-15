@@ -54,7 +54,7 @@ public:
 
     qreal progress;
     QDeclarativeAbstractAnimation *animation;
-    QAbstractAnimation2Pointer animationInstance;
+    QAbstractAnimation2 *animationInstance;
     bool finalized:1;
 
 };
@@ -77,6 +77,8 @@ QDeclarativeAnimationController::QDeclarativeAnimationController(QObject *parent
 
 QDeclarativeAnimationController::~QDeclarativeAnimationController()
 {
+    Q_D(QDeclarativeAnimationController);
+    delete d->animationInstance;
 }
 
 /*!
@@ -166,7 +168,10 @@ void QDeclarativeAnimationController::reload()
     } else {
         QDeclarativeStateActions actions;
         QDeclarativeProperties properties;
+        QAbstractAnimation2 *oldInstance = d->animationInstance;
         d->animationInstance = d->animation->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
+        if (oldInstance && oldInstance != d->animationInstance)
+            delete oldInstance;
         d->animationInstance->setLoopCount(1);
         d->animationInstance->start();
         d->animationInstance->pause();

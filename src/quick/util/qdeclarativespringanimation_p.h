@@ -87,7 +87,7 @@ public:
     qreal modulus() const;
     void setModulus(qreal modulus);
 
-    virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 

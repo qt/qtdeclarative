@@ -149,7 +149,7 @@ public:
     QDeclarativeNullableValue<qreal> endRotation;
     int duration;
     QEasingCurve easingCurve;
-    QHash<QQuickItem*, QDeclarativeRefPointer<QDeclarativeBulkValueAnimator> > activeAnimations;
+    QHash<QQuickItem*, QDeclarativeBulkValueAnimator* > activeAnimations;
 };
 
 

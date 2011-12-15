@@ -101,7 +101,6 @@ private:
 
 private Q_SLOTS:
     void ticked();
-    void finished();
 };
 
 QT_END_NAMESPACE

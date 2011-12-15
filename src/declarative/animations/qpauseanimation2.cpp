@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,13 +48,6 @@ QPauseAnimation2::QPauseAnimation2(int duration)
     , m_duration(duration)
 {
     m_isPause = true;
-}
-
-QPauseAnimation2::QPauseAnimation2(const QPauseAnimation2& other)
-    : QAbstractAnimation2(other)
-    , m_duration(other.m_duration)
-{
-    m_isPause = other.m_isPause;
 }
 
 QPauseAnimation2::~QPauseAnimation2()

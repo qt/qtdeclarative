@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,12 +53,11 @@ QT_MODULE(Declarative)
 class QPauseAnimation2;
 class Q_DECLARATIVE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
 {
+    Q_DISABLE_COPY(QSequentialAnimationGroup2)
 public:
     QSequentialAnimationGroup2();
-    QSequentialAnimationGroup2(const QSequentialAnimationGroup2 &other);
     ~QSequentialAnimationGroup2();
 
-    QAbstractAnimation2Pointer currentAnimation() const;
     int duration() const;
 
 protected:
@@ -70,37 +69,34 @@ protected:
 private:
     struct AnimationIndex
     {
-        AnimationIndex() : index(0), timeOffset(0) {}
-        // index points to the animation at timeOffset, skipping 0 duration animations.
+        AnimationIndex() : afterCurrent(false), timeOffset(0), animation(0) {}
+        // AnimationIndex points to the animation at timeOffset, skipping 0 duration animations.
         // Note that the index semantic is slightly different depending on the direction.
-        int index; // the index of the animation in timeOffset
+        bool afterCurrent;  //whether animation is before or after m_currentAnimation   //TODO: make enum Before/After/Same
         int timeOffset; // time offset when the animation at index starts.
+        QAbstractAnimation2 *animation; //points to the animation at timeOffset
     };
 
-    int animationActualTotalDuration(int index) const;
+    int animationActualTotalDuration(QAbstractAnimation2 *anim) const;
     AnimationIndex indexForCurrentTime() const;
 
-    void setCurrentAnimation(int index, bool intermediate = false);
+    void setCurrentAnimation(QAbstractAnimation2 *anim, bool intermediate = false);
     void activateCurrentAnimation(bool intermediate = false);
 
-    void animationInsertedAt(int index);
-    void animationRemoved(int index, QAbstractAnimation2 *anim);
+    void animationInserted(QAbstractAnimation2 *anim);
+    void animationRemoved(QAbstractAnimation2 *anim,QAbstractAnimation2*,QAbstractAnimation2*);
 
     bool atEnd() const;
-
-    //state
-    QAbstractAnimation2Pointer m_currentAnimation;
-    int m_currentAnimationIndex;
-    // this is the actual duration of uncontrolled animations
-    // it helps seeking and even going forward
-    QList<int> m_actualDuration;
-    int m_previousLoop;
 
     void restart();
 
     // handle time changes
     void rewindForwards(const AnimationIndex &newAnimationIndex);
     void advanceForwards(const AnimationIndex &newAnimationIndex);
+
+    //state
+    QAbstractAnimation2 *m_currentAnimation;
+    int m_previousLoop;
 };
 
 QT_END_NAMESPACE

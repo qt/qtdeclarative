@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,46 +53,38 @@ QT_MODULE(Declarative)
 
 class Q_DECLARATIVE_EXPORT QAnimationGroup2 : public QAbstractAnimation2
 {
+    Q_DISABLE_COPY(QAnimationGroup2)
 public:
     QAnimationGroup2();
-    QAnimationGroup2(const QAnimationGroup2& other);
     ~QAnimationGroup2();
 
-    int animationCount() const;
-    void clear();
-    QAbstractAnimation2Pointer animationAt(int index) const;
-    int indexOfAnimation(QAbstractAnimation2Pointer animation) const;
-
-    //the parameter needs to be "QAbstractAnimation2 *" here, as it will be
-    //called in the QAbstractAnimation2's dtor
+    void appendAnimation(QAbstractAnimation2 *animation);
+    void prependAnimation(QAbstractAnimation2 *animation);
     void removeAnimation(QAbstractAnimation2 *animation);
-    QAbstractAnimation2Pointer takeAnimation(int index);
 
-    void addAnimation(QAbstractAnimation2Pointer animation);
-    void insertAnimation(int index, QAbstractAnimation2Pointer animation);
+    void clear();
+
+    //called by QAbstractAnimation2
     virtual void uncontrolledAnimationFinished(QAbstractAnimation2 *animation);
-
 protected:
     void topLevelAnimationLoopChanged();
 
-private:
-    virtual void animationInsertedAt(int) { }
-    virtual void animationRemoved(int, QAbstractAnimation2*);
+    virtual void animationInserted(QAbstractAnimation2*) { }
+    virtual void animationRemoved(QAbstractAnimation2*, QAbstractAnimation2*, QAbstractAnimation2*);
 
-    void connectUncontrolledAnimations();
-    void disconnectUncontrolledAnimations();
-    void connectUncontrolledAnimation(QAbstractAnimation2 *anim);
-    void disconnectUncontrolledAnimation(QAbstractAnimation2 *anim);
-    bool isAnimationConnected(QAbstractAnimation2 *anim) const;
-    bool isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const;
+    //TODO: confirm location of these (should any be moved into QAbstractAnimation2?)
+    void resetUncontrolledAnimationsFinishTime();
+    void resetUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim);
+    int uncontrolledAnimationFinishTime(QAbstractAnimation2 *anim) const { return anim->m_uncontrolledFinishTime; }
+    void setUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim, int time);
 
-    friend class QParallelAnimationGroup2;
-    friend class QSequentialAnimationGroup2;
+    QAbstractAnimation2 *firstChild() const { return m_firstChild; }
+    QAbstractAnimation2 *lastChild() const { return m_lastChild; }
+
 private:
     //definition
-    QList<QAbstractAnimation2Pointer> m_animations;
-    //state
-    QHash<QAbstractAnimation2Pointer, int> m_uncontrolledFinishTime;
+    QAbstractAnimation2 *m_firstChild;
+    QAbstractAnimation2 *m_lastChild;
 };
 
 QT_END_NAMESPACE

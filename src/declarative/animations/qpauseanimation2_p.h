@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -52,9 +52,9 @@ QT_MODULE(Declarative)
 
 class Q_DECLARATIVE_EXPORT QPauseAnimation2 : public QAbstractAnimation2
 {
+    Q_DISABLE_COPY(QPauseAnimation2)
 public:
-    QPauseAnimation2(int duration = 250);
-    QPauseAnimation2(const QPauseAnimation2& other);
+    explicit QPauseAnimation2(int duration = 250);
     ~QPauseAnimation2();
 
     int duration() const;

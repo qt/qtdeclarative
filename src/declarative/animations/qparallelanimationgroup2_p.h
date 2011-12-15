@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,9 +53,9 @@ QT_MODULE(Declarative)
 
 class Q_DECLARATIVE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
 {
+    Q_DISABLE_COPY(QParallelAnimationGroup2)
 public:
     QParallelAnimationGroup2();
-    QParallelAnimationGroup2(const QParallelAnimationGroup2 &other);
     ~QParallelAnimationGroup2();
 
     int duration() const;
@@ -67,12 +67,12 @@ protected:
     void uncontrolledAnimationFinished(QAbstractAnimation2 *animation);
 
 private:
+    bool shouldAnimationStart(QAbstractAnimation2 *animation, bool startIfAtEnd) const;
+    void applyGroupState(QAbstractAnimation2 *animation);
+
     //state
     int m_previousLoop;
     int m_previousCurrentTime;
-    bool shouldAnimationStart(QAbstractAnimation2Pointer animation, bool startIfAtEnd) const;
-    void applyGroupState(QAbstractAnimation2Pointer animation);
-    void animationRemoved(int index, QAbstractAnimation2* );
 };
 
 QT_END_NAMESPACE

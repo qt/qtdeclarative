@@ -98,9 +98,9 @@ private:
 //performs an action of type QAbstractAnimationAction
 class Q_AUTOTEST_EXPORT QActionAnimation : public QAbstractAnimation2
 {
+    Q_DISABLE_COPY(QActionAnimation)
 public:
     QActionAnimation();
-    QActionAnimation(const QActionAnimation &other);
 
     QActionAnimation(QAbstractAnimationAction *action);
     ~QActionAnimation();
@@ -126,9 +126,9 @@ public:
 //animates QDeclarativeBulkValueUpdater (assumes start and end values will be reals or compatible)
 class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QAbstractAnimation2
 {
+    Q_DISABLE_COPY(QDeclarativeBulkValueAnimator)
 public:
     QDeclarativeBulkValueAnimator();
-    QDeclarativeBulkValueAnimator(const QDeclarativeBulkValueAnimator &other);
     ~QDeclarativeBulkValueAnimator();
 
     void setAnimValue(QDeclarativeBulkValueUpdater *value);
@@ -157,11 +157,9 @@ private:
 template<class T, void (T::*method)(int)>
 class QTickAnimationProxy : public QAbstractAnimation2
 {
+    Q_DISABLE_COPY(QTickAnimationProxy)
 public:
     QTickAnimationProxy(T *instance, QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), m_instance(instance) {}
-    QTickAnimationProxy(const QTickAnimationProxy<T, method> &other)
-        : QAbstractAnimation2(other)
-        , m_instance(other.m_instance) {}
     virtual int duration() const { return -1; }
 protected:
     virtual void updateCurrentTime(int msec) { (m_instance->*method)(msec); }
@@ -170,7 +168,7 @@ private:
     T *m_instance;
 };
 
-class QDeclarativeAbstractAnimationPrivate : public QObjectPrivate
+class QDeclarativeAbstractAnimationPrivate : public QObjectPrivate, public QAnimation2ChangeListener
 {
     Q_DECLARE_PUBLIC(QDeclarativeAbstractAnimation)
 public:
@@ -192,11 +190,12 @@ public:
     int loopCount;
 
     void commence();
+    virtual void animationFinished(QAbstractAnimation2 *);
 
     QDeclarativeProperty defaultProperty;
 
     QDeclarativeAnimationGroup *group;
-    QAbstractAnimation2Pointer animationInstance;
+    QAbstractAnimation2* animationInstance;
 
     static QDeclarativeProperty createProperty(QObject *obj, const QString &str, QObject *infoObj);
 };

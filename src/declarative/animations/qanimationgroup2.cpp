@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,148 +41,111 @@
 
 #include "private/qanimationgroup2_p.h"
 #include <QtCore/qdebug.h>
-#include <QtCore/qcoreevent.h>
 
 QT_BEGIN_NAMESPACE
 
 QAnimationGroup2::QAnimationGroup2()
-  : QAbstractAnimation2()
+    : QAbstractAnimation2(), m_firstChild(0), m_lastChild(0)
 {
     m_isGroup = true;
 }
 
-QAnimationGroup2::QAnimationGroup2(const QAnimationGroup2& other)
-    : QAbstractAnimation2(other)
-    , m_animations(other.m_animations)
-    , m_uncontrolledFinishTime(other.m_uncontrolledFinishTime)
-{
-    m_isGroup = other.m_isGroup;
-}
-
 QAnimationGroup2::~QAnimationGroup2()
 {
-    foreach (QAbstractAnimation2Pointer child, m_animations) {
-        child->setGroup(0);
-    }
-    m_animations.clear();   //### can remove if setGroup handles this
+    while (firstChild() != 0)
+        delete firstChild();
 }
 
 void QAnimationGroup2::topLevelAnimationLoopChanged()
 {
-    for (int i = 0; i < m_animations.size(); ++i)
-        m_animations.at(i)->topLevelAnimationLoopChanged();
+    for (QAbstractAnimation2 *animation = firstChild(); animation; animation = animation->nextSibling())
+        animation->topLevelAnimationLoopChanged();
 }
 
-QAbstractAnimation2Pointer QAnimationGroup2::animationAt(int index) const
+void QAnimationGroup2::appendAnimation(QAbstractAnimation2 *animation)
 {
-    if (index < 0 || index >= m_animations.size()) {
-        qWarning("QAnimationGroup2::animationAt: index is out of bounds");
-        return 0;
-    }
-
-    return m_animations.at(index);
-}
-
-int QAnimationGroup2::animationCount() const
-{
-    return m_animations.size();
-}
-
-int QAnimationGroup2::indexOfAnimation(QAbstractAnimation2Pointer animation) const
-{
-    return m_animations.indexOf(animation);
-}
-
-void QAnimationGroup2::addAnimation(QAbstractAnimation2Pointer animation)
-{
-    insertAnimation(m_animations.count(), animation);
-}
-
-void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2Pointer animation)
-{
-    if (index < 0 || index > m_animations.size()) {
-        qWarning("QAnimationGroup2::insertAnimation: index is out of bounds");
-        return;
-    }
-
-    if (QAnimationGroup2 *oldGroup = animation->group())
+    if (QAnimationGroup2 *oldGroup = animation->m_group)
         oldGroup->removeAnimation(animation);
 
-    m_animations.insert(index, animation);
-    animation->setGroup(this);
-    animationInsertedAt(index);
+    Q_ASSERT(!previousSibling() && !nextSibling());
+
+    if (m_lastChild)
+        m_lastChild->m_nextSibling = animation;
+    else
+        m_firstChild = animation;
+    animation->m_previousSibling = m_lastChild;
+    m_lastChild = animation;
+
+    animation->m_group = this;
+    animationInserted(animation);
+}
+
+void QAnimationGroup2::prependAnimation(QAbstractAnimation2 *animation)
+{
+    if (QAnimationGroup2 *oldGroup = animation->m_group)
+        oldGroup->removeAnimation(animation);
+
+    Q_ASSERT(!previousSibling() && !nextSibling());
+
+    if (m_firstChild)
+        m_firstChild->m_previousSibling = animation;
+    else
+        m_lastChild = animation;
+    animation->m_nextSibling = m_firstChild;
+    m_firstChild = animation;
+
+    animation->m_group = this;
+    animationInserted(animation);
 }
 
 void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
 {
-    if (!animation) {
-        qWarning("QAnimationGroup2::remove: cannot remove null animation");
-        return;
-    }
-    int index = m_animations.indexOf(animation);
-    if (index == -1) {
-        qWarning("QAnimationGroup2::remove: animation is not part of this group");
-        return;
-    }
+    Q_ASSERT(animation);
+    Q_ASSERT(animation->m_group == this);
+    QAbstractAnimation2 *prev = animation->previousSibling();
+    QAbstractAnimation2 *next = animation->nextSibling();
 
-    takeAnimation(index);
-}
+    if (prev)
+        prev->m_nextSibling = next;
+    else
+        m_firstChild = next;
 
-QAbstractAnimation2Pointer QAnimationGroup2::takeAnimation(int index)
-{
-    if (index < 0 || index >= m_animations.size()) {
-        qWarning("QAnimationGroup2::takeAnimation: no animation at index %d", index);
-        return 0;
-    }
-    QAbstractAnimation2Pointer animation = m_animations.at(index);
-    animation->setGroup(0);
-    m_animations.removeAt(index);
-    animationRemoved(index, animation);
-    return animation;
+    if (next)
+        next->m_previousSibling = prev;
+    else
+        m_lastChild = prev;
+
+    animation->m_previousSibling = 0;
+    animation->m_nextSibling = 0;
+
+    animation->m_group = 0;
+    animationRemoved(animation, prev, next);
 }
 
 void QAnimationGroup2::clear()
 {
-    //qDeleteAll(m_animations);
-    foreach (QAbstractAnimation2Pointer child, m_animations) {
-        child->setGroup(0);
-    }
-    m_animations.clear();
-    //TODO: other cleanup
+    //### should this remove and delete, or just remove?
+    while (firstChild() != 0)
+        delete firstChild(); //removeAnimation(firstChild());
 }
 
-bool QAnimationGroup2::isAnimationConnected(QAbstractAnimation2* anim) const
+void QAnimationGroup2::resetUncontrolledAnimationsFinishTime()
 {
-    return m_uncontrolledFinishTime.contains(anim);
-}
-bool QAnimationGroup2::isUncontrolledAnimationFinished(QAbstractAnimation2* anim) const
-{
-    return m_uncontrolledFinishTime.value(anim, -1) >= 0;
-}
-
-void QAnimationGroup2::disconnectUncontrolledAnimations()
-{
-    m_uncontrolledFinishTime.clear();
-}
-
-void QAnimationGroup2::connectUncontrolledAnimations()
-{
-    for (int i = 0; i < m_animations.size(); ++i) {
-        QAbstractAnimation2Pointer animation = m_animations.at(i);
+    for (QAbstractAnimation2 *animation = firstChild(); animation; animation = animation->nextSibling()) {
         if (animation->duration() == -1 || animation->loopCount() < 0) {
-            m_uncontrolledFinishTime[animation] = -1;
+            resetUncontrolledAnimationFinishTime(animation);
         }
     }
 }
 
-void QAnimationGroup2::connectUncontrolledAnimation(QAbstractAnimation2 *anim)
+void QAnimationGroup2::resetUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim)
 {
-    m_uncontrolledFinishTime[anim] = -1;
+    setUncontrolledAnimationFinishTime(anim, -1);
 }
 
-void QAnimationGroup2::disconnectUncontrolledAnimation(QAbstractAnimation2 *anim)
+void QAnimationGroup2::setUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim, int time)
 {
-    m_uncontrolledFinishTime.remove(anim);
+    anim->m_uncontrolledFinishTime = time;
 }
 
 void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2 *animation)
@@ -190,10 +153,11 @@ void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2 *animat
     Q_UNUSED(animation);
 }
 
-void QAnimationGroup2::animationRemoved(int index, QAbstractAnimation2* )
+void QAnimationGroup2::animationRemoved(QAbstractAnimation2* anim, QAbstractAnimation2* , QAbstractAnimation2* )
 {
     Q_UNUSED(index);
-    if (m_animations.isEmpty()) {
+    resetUncontrolledAnimationFinishTime(anim);
+    if (!firstChild()) {
         m_currentTime = 0;
         stop();
     }

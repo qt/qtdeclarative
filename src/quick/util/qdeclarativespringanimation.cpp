@@ -56,9 +56,9 @@ QT_BEGIN_NAMESPACE
 
 class Q_AUTOTEST_EXPORT QSpringAnimation : public QAbstractAnimation2
 {
+    Q_DISABLE_COPY(QSpringAnimation)
 public:
     QSpringAnimation();
-    QSpringAnimation(const QSpringAnimation &other);
 
     ~QSpringAnimation();
     int duration() const;
@@ -90,8 +90,7 @@ public:
     bool useMass : 1;
     bool haveModulus : 1;
     bool useDelta : 1;
-    typedef QDeclarativeRefPointer<QSpringAnimation> Pointer;
-    typedef QHash<QDeclarativeProperty, Pointer> ActiveAnimationHash;
+    typedef QHash<QDeclarativeProperty, QSpringAnimation*> ActiveAnimationHash;
 
 protected:
     virtual void updateCurrentTime(int time);
@@ -117,28 +116,6 @@ QSpringAnimation::QSpringAnimation()
     , useMass(false)
     , haveModulus(false)
     , useDelta(false)
-{
-}
-
-QSpringAnimation::QSpringAnimation(const QSpringAnimation &other)
-    : QAbstractAnimation2(other)
-    , currentValue(other.currentValue)
-    , to(other.to)
-    , velocity(other.velocity)
-    , startTime(other.startTime)
-    , dura(other.dura)
-    , lastTime(other.lastTime)
-    , mode(other.mode)
-    , velocityms(other.velocityms)
-    , maxVelocity(other.maxVelocity)
-    , mass(other.mass)
-    , spring(other.spring)
-    , damping(other.damping)
-    , epsilon(other.epsilon)
-    , modulus(other.modulus)
-    , useMass(false)
-    , haveModulus(false)
-    , useDelta(other.useDelta)
 {
 }
 
@@ -317,7 +294,7 @@ void QDeclarativeSpringAnimationPrivate::updateMode()
         mode = QSpringAnimation::Velocity;
         QSpringAnimation::ActiveAnimationHash::iterator it;
         for (it = activeAnimations.begin(); it != activeAnimations.end(); ++it) {
-            QSpringAnimation::Pointer &animation = *it;
+            QSpringAnimation *animation = *it;
             animation->startTime = 0;
             qreal dist = qAbs(animation->currentValue - animation->to);
             if (haveModulus && dist > modulus / 2)
@@ -507,32 +484,31 @@ void QDeclarativeSpringAnimation::setMass(qreal mass)
     }
 }
 
-QAbstractAnimation2Pointer QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
                                                                    QDeclarativeProperties &modified,
                                                                    TransitionDirection direction)
 {
     Q_D(QDeclarativeSpringAnimation);
     Q_UNUSED(direction);
 
-    QDeclarativeRefPointer<QParallelAnimationGroup2> wrapperGroup;
-    wrapperGroup.take(new QParallelAnimationGroup2());
+    QParallelAnimationGroup2 *wrapperGroup = new QParallelAnimationGroup2();
 
     QDeclarativeStateActions dataActions = QDeclarativeNumberAnimation::createTransitionActions(actions, modified);
     if (!dataActions.isEmpty()) {
-        QSet<QAbstractAnimation2Pointer> anims;
+        QSet<QAbstractAnimation2*> anims;
         for (int i = 0; i < dataActions.size(); ++i) {
-            QSpringAnimation::Pointer animation;
+            QSpringAnimation *animation;
             bool needsRestart = false;
             const QDeclarativeProperty &property = dataActions.at(i).property;
             if (d->activeAnimations.contains(property)) {
                 animation = d->activeAnimations[property];
                 needsRestart = true;
             } else {
-                animation.take(new QSpringAnimation());
+                animation = new QSpringAnimation();
                 d->activeAnimations.insert(property, animation);
                 animation->target = property;
             }
-            wrapperGroup->addAnimation(QAbstractAnimation2Pointer(animation));
+            wrapperGroup->appendAnimation(animation);
 
             animation->to = dataActions.at(i).toValue.toReal();
             animation->startTime = 0;
@@ -561,14 +537,14 @@ QAbstractAnimation2Pointer QDeclarativeSpringAnimation::transition(QDeclarativeS
 
             if (needsRestart)
                 animation->restart();
-            anims.insert(QAbstractAnimation2Pointer(animation));
+            anims.insert(animation);
         }
-        foreach (const QSpringAnimation::Pointer &anim, d->activeAnimations.values()){
-            if (!anims.contains(anim.data()))
+        foreach (QSpringAnimation *anim, d->activeAnimations.values()){
+            if (!anims.contains(anim))
                 d->activeAnimations.remove(anim->target);
         }
     }
-    return QAbstractAnimation2Pointer(wrapperGroup);
+    return wrapperGroup;
 }
 
 QT_END_NAMESPACE

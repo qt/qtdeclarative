@@ -58,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 
-QSmoothedAnimationTimer::QSmoothedAnimationTimer(QDeclarativeRefPointer<QSmoothedAnimation> animation, QObject *parent)
+QSmoothedAnimationTimer::QSmoothedAnimationTimer(QSmoothedAnimation *animation, QObject *parent)
     : QTimer(parent)
     , m_animation(animation)
 {
@@ -79,26 +79,6 @@ QSmoothedAnimation::QSmoothedAnimation()
       reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
       useDelta(false), delayedStopTimer(new QSmoothedAnimationTimer(this))
-{
-    delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
-    delayedStopTimer->setSingleShot(true);
-}
-
-QSmoothedAnimation::QSmoothedAnimation(const QSmoothedAnimation &other)
-    : QAbstractAnimation2(other)
-    , to(other.to)
-    , velocity(other.velocity)
-    , userDuration(other.userDuration)
-    , maximumEasingTime(other.maximumEasingTime)
-    , reversingMode(other.reversingMode)
-    , initialVelocity(other.initialVelocity)
-    , trackVelocity(other.trackVelocity)
-    , initialValue(other.initialValue)
-    , invert(other.invert)
-    , finalDuration(other.finalDuration)
-    , lastTime(other.lastTime)
-    , useDelta(other.useDelta)
-    , delayedStopTimer(new QSmoothedAnimationTimer(this))
 {
     delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
     delayedStopTimer->setSingleShot(true);
@@ -360,16 +340,17 @@ QDeclarativeSmoothedAnimation::~QDeclarativeSmoothedAnimation()
 QDeclarativeSmoothedAnimationPrivate::QDeclarativeSmoothedAnimationPrivate()
     : anim(0)
 {
-    anim.take(new QSmoothedAnimation);
+    anim = new QSmoothedAnimation;
 }
 
 QDeclarativeSmoothedAnimationPrivate::~QDeclarativeSmoothedAnimationPrivate()
 {
+    delete anim;
 }
 
 void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
 {
-    foreach (const QDeclarativeRefPointer<QSmoothedAnimation> &ease, activeAnimations.values()){
+    foreach (QSmoothedAnimation *ease, activeAnimations.values()){
         ease->maximumEasingTime = anim->maximumEasingTime;
         ease->reversingMode = anim->reversingMode;
         ease->velocity = anim->velocity;
@@ -378,7 +359,7 @@ void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
     }
 }
 
-QAbstractAnimation2Pointer QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
                                                QDeclarativeProperties &modified,
                                                TransitionDirection direction)
 {
@@ -387,16 +368,15 @@ QAbstractAnimation2Pointer QDeclarativeSmoothedAnimation::transition(QDeclarativ
 
     QDeclarativeStateActions dataActions = QDeclarativePropertyAnimation::createTransitionActions(actions, modified);
 
-    QDeclarativeRefPointer<QParallelAnimationGroup2> wrapperGroup;
-    wrapperGroup.take(new QParallelAnimationGroup2());
+    QParallelAnimationGroup2 *wrapperGroup = new QParallelAnimationGroup2();
 
     if (!dataActions.isEmpty()) {
-        QSet<QAbstractAnimation2Pointer> anims;
+        QSet<QAbstractAnimation2*> anims;
         for (int i = 0; i < dataActions.size(); i++) {
-            QDeclarativeRefPointer<QSmoothedAnimation> ease;
+            QSmoothedAnimation *ease;
             bool needsRestart;
             if (!d->activeAnimations.contains(dataActions[i].property)) {
-                ease.take(new QSmoothedAnimation());
+                ease = new QSmoothedAnimation();
                 d->activeAnimations.insert(dataActions[i].property, ease);
                 ease->target = dataActions[i].property;
                 needsRestart = false;
@@ -404,7 +384,7 @@ QAbstractAnimation2Pointer QDeclarativeSmoothedAnimation::transition(QDeclarativ
                 ease = d->activeAnimations.value(dataActions[i].property);
                 needsRestart = true;
             }
-            wrapperGroup->addAnimation(QAbstractAnimation2Pointer(ease));
+            wrapperGroup->appendAnimation(ease);
 
             ease->to = dataActions[i].toValue.toReal();
 
@@ -418,15 +398,15 @@ QAbstractAnimation2Pointer QDeclarativeSmoothedAnimation::transition(QDeclarativ
 
             if (needsRestart)
                 ease->restart();
-            anims.insert(QAbstractAnimation2Pointer(ease));
+            anims.insert(ease);
         }
 
-        foreach (const QDeclarativeRefPointer<QSmoothedAnimation> &ease, d->activeAnimations.values()){
-            if (!anims.contains(ease.data()))
+        foreach (QSmoothedAnimation *ease, d->activeAnimations.values()){
+            if (!anims.contains(ease))
                 d->activeAnimations.remove(ease->target);
         }
     }
-    return QAbstractAnimation2Pointer(wrapperGroup);
+    return wrapperGroup;
 }
 
 /*!

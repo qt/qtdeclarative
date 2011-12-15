@@ -137,7 +137,7 @@ QPointF QQuickParentAnimationPrivate::computeTransformOrigin(QQuickItem::Transfo
     }
 }
 
-QAbstractAnimation2Pointer QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -316,34 +316,33 @@ QAbstractAnimation2Pointer QQuickParentAnimation::transition(QDeclarativeStateAc
 
         //take care of any child animations
         bool valid = d->defaultProperty.isValid();
-        QAbstractAnimation2Pointer anim;
+        QAbstractAnimation2* anim;
         for (int ii = 0; ii < d->animations.count(); ++ii) {
             if (valid)
                 d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
             anim = d->animations.at(ii)->transition(actions, modified, direction);
-            ag->addAnimation(anim);
+            ag->appendAnimation(anim);
         }
 
         //TODO: simplify/clarify logic
         bool forwards = direction == QDeclarativeAbstractAnimation::Forward;
         if (forwards) {
-            topLevelGroup->addAnimation(d->via ? viaAction : targetAction);
-            topLevelGroup->addAnimation(ag);
+            topLevelGroup->appendAnimation(d->via ? viaAction : targetAction);
+            topLevelGroup->appendAnimation(ag);
             if (d->via)
-                topLevelGroup->addAnimation(targetAction);
+                topLevelGroup->appendAnimation(targetAction);
         } else {
             if (d->via)
-                topLevelGroup->addAnimation(targetAction);
-            topLevelGroup->addAnimation(ag);
-            topLevelGroup->addAnimation(d->via ? viaAction : targetAction);
+                topLevelGroup->appendAnimation(targetAction);
+            topLevelGroup->appendAnimation(ag);
+            topLevelGroup->appendAnimation(d->via ? viaAction : targetAction);
         }
     } else {
         delete data;
         delete viaData;
     }
 
-    QAbstractAnimation2Pointer animationInstance;
-    return animationInstance.take(topLevelGroup);
+    return topLevelGroup;
 }
 
 QQuickAnchorAnimation::QQuickAnchorAnimation(QObject *parent)
@@ -397,7 +396,7 @@ void QQuickAnchorAnimation::setEasing(const QEasingCurve &e)
     emit easingChanged(e);
 }
 
-QAbstractAnimation2Pointer QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -426,19 +425,16 @@ QAbstractAnimation2Pointer QQuickAnchorAnimation::transition(QDeclarativeStateAc
         delete data;
     }
 
-    QAbstractAnimation2Pointer animationInstance;
-    return animationInstance.take(animator);
+    return animator;
 }
 
 QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QQuickPathAnimationPrivate), parent)
 {
-    Q_D(QQuickPathAnimation);
 }
 
 QQuickPathAnimation::~QQuickPathAnimation()
 {
-    Q_D(QQuickPathAnimation);
 }
 
 int QQuickPathAnimation::duration() const
@@ -587,7 +583,7 @@ void QQuickPathAnimation::setEndRotation(qreal rotation)
     emit endRotationChanged(d->endRotation);
 }
 
-QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
                                            QDeclarativeProperties &modified,
                                            TransitionDirection direction)
 {
@@ -607,8 +603,7 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
     }
 
     QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater();
-    QDeclarativeRefPointer<QDeclarativeBulkValueAnimator> pa;
-    pa.take(new QDeclarativeBulkValueAnimator());
+    QDeclarativeBulkValueAnimator *pa = new QDeclarativeBulkValueAnimator();
 
     d->activeAnimations[d->target] = pa;
 
@@ -671,12 +666,13 @@ QAbstractAnimation2Pointer QQuickPathAnimation::transition(QDeclarativeStateActi
     } else {
         pa->setFromSourcedValue(0);
         pa->setAnimValue(0);
+        delete pa;
         delete data;
     }
 
     pa->setDuration(d->duration);
     pa->setEasingCurve(d->easingCurve);
-    return QAbstractAnimation2Pointer(pa);
+    return pa;
 }
 
 void QQuickPathAnimationUpdater::setValue(qreal v)
