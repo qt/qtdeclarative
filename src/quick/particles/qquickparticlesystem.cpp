@@ -835,7 +835,7 @@ void QQuickParticleSystem::reset()
 
 void QQuickParticleSystem::loadPainter(QObject *p)
 {
-    if (!m_componentComplete)
+    if (!m_componentComplete || !p)
         return;
 
     QQuickParticlePainter* painter = qobject_cast<QQuickParticlePainter*>(p);
