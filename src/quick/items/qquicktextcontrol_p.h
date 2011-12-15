@@ -108,8 +108,6 @@ public:
     QString toHtml() const;
 #endif
 
-    virtual void ensureCursorVisible();
-
     QTextCursor cursorForPosition(const QPointF &pos) const;
     QRectF cursorRect(const QTextCursor &cursor) const;
     QRectF cursorRect() const;
@@ -177,8 +175,7 @@ Q_SIGNALS:
     void updateRequest(const QRectF &rect = QRectF());
     void documentSizeChanged(const QSizeF &);
     void blockCountChanged(int newBlockCount);
-    void visibilityRequest(const QRectF &rect);
-    void microFocusChanged();
+    void cursorRectangleChanged();
     void linkActivated(const QString &link);
     void linkHovered(const QString &);
     void modificationChanged(bool m);

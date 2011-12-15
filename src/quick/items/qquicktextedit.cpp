@@ -1650,7 +1650,7 @@ void QQuickTextEditPrivate::init()
     QObject::connect(control, SIGNAL(selectionChanged()), q, SLOT(updateSelectionMarkers()));
     QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SLOT(updateSelectionMarkers()));
     QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SIGNAL(cursorPositionChanged()));
-    QObject::connect(control, SIGNAL(microFocusChanged()), q, SLOT(moveCursorDelegate()));
+    QObject::connect(control, SIGNAL(cursorRectangleChanged()), q, SLOT(moveCursorDelegate()));
     QObject::connect(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
     QObject::connect(q, SIGNAL(readOnlyChanged(bool)), q, SLOT(q_canPasteChanged()));

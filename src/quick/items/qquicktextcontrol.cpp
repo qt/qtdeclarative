@@ -240,7 +240,6 @@ bool QQuickTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
     cursor.setVisualNavigation(true);
     const bool moved = cursor.movePosition(op, mode);
     cursor.setVisualNavigation(visualNavigation);
-    q->ensureCursorVisible();
 
     bool isNavigationEvent
             =  e->key() == Qt::Key_Up
@@ -251,7 +250,7 @@ bool QQuickTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
     if (moved) {
         if (cursor.position() != oldCursorPos)
             emit q->cursorPositionChanged();
-        emit q->microFocusChanged();
+        emit q->cursorRectangleChanged();
     } else if (isNavigationEvent && oldSelection.anchor() == cursor.anchor()) {
         return false;
     }
@@ -273,7 +272,7 @@ void QQuickTextControlPrivate::updateCurrentCharFormat()
     lastCharFormat = fmt;
 
     emit q->currentCharFormatChanged(fmt);
-    emit q->microFocusChanged();
+    emit q->cursorRectangleChanged();
 }
 
 void QQuickTextControlPrivate::init(Qt::TextFormat format, const QString &text, QTextDocument *document)
@@ -369,7 +368,7 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
     if (!document)
         doc->setModified(false);
 
-    q->ensureCursorVisible();
+    emit q->cursorRectangleChanged();
     emit q->cursorPositionChanged();
 }
 
@@ -440,7 +439,7 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
     emit q->copyAvailable(current);
     if (!forceEmitSelectionChanged)
         emit q->selectionChanged();
-    emit q->microFocusChanged();
+    emit q->cursorRectangleChanged();
 }
 
 void QQuickTextControlPrivate::_q_updateCurrentCharFormatAndSelection()
@@ -466,7 +465,7 @@ void QQuickTextControlPrivate::_q_emitCursorPosChanged(const QTextCursor &someCu
     Q_Q(QQuickTextControl);
     if (someCursor.isCopyOf(cursor)) {
         emit q->cursorPositionChanged();
-        emit q->microFocusChanged();
+        emit q->cursorRectangleChanged();
     }
 }
 
@@ -613,8 +612,7 @@ void QQuickTextControl::undo()
     d->doc->undo(&d->cursor);
     if (d->cursor.position() != oldCursorPos)
         emit cursorPositionChanged();
-    emit microFocusChanged();
-    ensureCursorVisible();
+    emit cursorRectangleChanged();
 }
 
 void QQuickTextControl::redo()
@@ -625,8 +623,7 @@ void QQuickTextControl::redo()
     d->doc->redo(&d->cursor);
         if (d->cursor.position() != oldCursorPos)
         emit cursorPositionChanged();
-    emit microFocusChanged();
-    ensureCursorVisible();
+    emit cursorRectangleChanged();
 }
 
 QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
@@ -668,7 +665,7 @@ void QQuickTextControl::setTextCursor(const QTextCursor &cursor)
     d->cursor = cursor;
     d->cursorOn = d->hasFocus && (d->interactionFlags & Qt::TextEditable);
     d->_q_updateCurrentCharFormatAndSelection();
-    ensureCursorVisible();
+    emit cursorRectangleChanged();
     d->repaintOldAndNewSelection(oldSelection);
     if (posChanged)
         emit cursorPositionChanged();
@@ -999,7 +996,7 @@ process:
     e->accept();
     cursorOn = true;
 
-    q->ensureCursorVisible();
+    emit q->cursorRectangleChanged();
 
     updateCurrentCharFormat();
 }
@@ -1238,14 +1235,14 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
     }
 
     if (interactionFlags & Qt::TextEditable) {
-        q->ensureCursorVisible();
+        emit q->cursorRectangleChanged();
         if (cursor.position() != oldCursorPos)
             emit q->cursorPositionChanged();
         _q_updateCurrentCharFormatAndSelection();
     } else {
         if (cursor.position() != oldCursorPos) {
             emit q->cursorPositionChanged();
-            emit q->microFocusChanged();
+            emit q->cursorRectangleChanged();
         }
         selectionChanged();
     }
@@ -1317,11 +1314,8 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
             _q_updateCurrentCharFormatAndSelection();
             if (qGuiApp)
                 qGuiApp->inputPanel()->update(Qt::ImQueryInput);
-        } else {
-            if (cursor.position() != oldCursorPos) {
-                emit q->cursorPositionChanged();
-                emit q->microFocusChanged();
-            }
+        } else if (cursor.position() != oldCursorPos) {
+            emit q->cursorPositionChanged();
         }
         selectionChanged(true);
         repaintOldAndNewSelection(oldSelection);
@@ -1359,7 +1353,7 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
 
     if (cursor.position() != oldCursorPos) {
         emit q->cursorPositionChanged();
-        emit q->microFocusChanged();
+        emit q->cursorRectangleChanged();
     }
 
     if (interactionFlags & Qt::LinksAccessibleByMouse) {
@@ -1478,7 +1472,7 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
             int blockStart = a.start + cursor.block().position();
             cursor.setPosition(blockStart, QTextCursor::MoveAnchor);
             cursor.setPosition(blockStart + a.length, QTextCursor::KeepAnchor);
-            q->ensureCursorVisible();
+            emit q->cursorRectangleChanged();
             repaintOldAndNewSelection(oldCursor);
             forceSelectionChanged = true;
         }
@@ -1517,7 +1511,7 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
     if (cursor_d)
         cursor_d->setX();
     if (oldPreeditCursor != preeditCursor)
-        emit q->microFocusChanged();
+        emit q->cursorRectangleChanged();
     selectionChanged(forceSelectionChanged);
 }
 
@@ -1692,7 +1686,7 @@ void QQuickTextControl::moveCursor(QTextCursor::MoveOperation op, QTextCursor::M
     const QTextCursor oldSelection = d->cursor;
     const bool moved = d->cursor.movePosition(op, mode);
     d->_q_updateCurrentCharFormatAndSelection();
-    ensureCursorVisible();
+    emit cursorRectangleChanged();
     d->repaintOldAndNewSelection(oldSelection);
     if (moved)
         emit cursorPositionChanged();
@@ -1785,7 +1779,7 @@ void QQuickTextControl::insertFromMimeData(const QMimeData *source)
 
     if (hasData)
         d->cursor.insertFragment(fragment);
-    ensureCursorVisible();
+    emit cursorRectangleChanged();
 }
 
 void QQuickTextControlPrivate::activateLinkUnderCursor(QString href)
@@ -1915,14 +1909,6 @@ QString QQuickTextControl::toHtml() const
     return document()->toHtml();
 }
 #endif
-
-void QQuickTextControl::ensureCursorVisible()
-{
-    Q_D(QQuickTextControl);
-    QRectF crect = d->rectForPosition(d->cursor.position()).adjusted(-5, 0, 5, 0);
-    emit visibilityRequest(crect);
-    emit microFocusChanged();
-}
 
 QPalette QQuickTextControl::palette() const
 {
