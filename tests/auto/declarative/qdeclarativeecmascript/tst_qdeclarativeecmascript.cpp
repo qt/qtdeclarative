@@ -4002,8 +4002,8 @@ void tst_qdeclarativeecmascript::propertyVarInheritance()
         v8::HandleScope hs;
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
-        icoCanaryHandle = qPersistentNew(icovmemo->vmeProperty(41));
-        ccoCanaryHandle = qPersistentNew(ccovmemo->vmeProperty(41));
+        icoCanaryHandle = qPersistentNew(icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ")));
+        ccoCanaryHandle = qPersistentNew(ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ")));
         // we make them weak and invoke the gc, but we should not hit the weak-callback yet
         // as the varproperties array of each vmemo still references the resource.
         icoCanaryHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
