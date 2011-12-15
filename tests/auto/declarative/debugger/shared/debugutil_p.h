@@ -64,7 +64,7 @@ class QDeclarativeDebugTestService : public QDeclarativeDebugService
 {
     Q_OBJECT
 public:
-    QDeclarativeDebugTestService(const QString &s, QObject *parent = 0);
+    QDeclarativeDebugTestService(const QString &s, float version = 1, QObject *parent = 0);
 
 signals:
     void statusHasChanged();

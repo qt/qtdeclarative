@@ -71,10 +71,11 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDebugService : public QObject
     Q_DISABLE_COPY(QDeclarativeDebugService)
 
 public:
-    explicit QDeclarativeDebugService(const QString &, QObject *parent = 0);
+    explicit QDeclarativeDebugService(const QString &, float version, QObject *parent = 0);
     ~QDeclarativeDebugService();
 
     QString name() const;
+    float version() const;
 
     enum Status { NotConnected, Unavailable, Enabled };
     Status status() const;
@@ -91,7 +92,7 @@ public:
     static bool hasDebuggingClient();
 
 protected:
-    QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd, const QString &, QObject *parent = 0);
+    QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd, const QString &name, float version, QObject *parent = 0);
 
     Status registerService();
 

@@ -71,6 +71,7 @@ public:
     QDeclarativeDebugServicePrivate();
 
     QString name;
+    float version;
     QDeclarativeDebugServer *server;
     QDeclarativeDebugService::Status status;
 };

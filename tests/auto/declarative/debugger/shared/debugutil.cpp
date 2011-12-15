@@ -58,8 +58,8 @@ bool QDeclarativeDebugTest::waitForSignal(QObject *receiver, const char *member,
     return timer.isActive();
 }
 
-QDeclarativeDebugTestService::QDeclarativeDebugTestService(const QString &s, QObject *parent)
-    : QDeclarativeDebugService(s, parent)
+QDeclarativeDebugTestService::QDeclarativeDebugTestService(const QString &s, float version, QObject *parent)
+    : QDeclarativeDebugService(s, version, parent)
 {
     registerService();
 }

@@ -174,7 +174,6 @@ private slots:
     void connect();
     void interrupt();
     void breakAfterCompile();
-    void getDebuggerVersion();
     void getVersion();
     void getVersionWhenAttaching();
 
@@ -271,7 +270,6 @@ public:
     void connect();
     void interrupt();
     void breakAfterCompile(bool enabled);
-    void debuggerVersion();
 
     void continueDebugging(StepAction stepAction, int stepCount = 1);
     void evaluate(QString expr, bool global = false, bool disableBreak = false, int frame = -1, const QVariantMap &addContext = QVariantMap());
@@ -303,7 +301,6 @@ signals:
     void connected();
     void interruptRequested();
     void breakAfterCompileRequested();
-    void gotVersion();
     void result();
     void stopped();
 
@@ -340,11 +337,6 @@ void QJSDebugClient::breakAfterCompile(bool enabled)
     QDataStream rs(&request, QIODevice::WriteOnly);
     rs << enabled;
     sendMessage(packMessage(BREAKAFTERCOMPILE, request));
-}
-
-void QJSDebugClient::debuggerVersion()
-{
-    sendMessage(packMessage(VERSION));
 }
 
 void QJSDebugClient::continueDebugging(StepAction action, int count)
@@ -959,8 +951,6 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
         } else if (type == BREAKAFTERCOMPILE) {
             emit breakAfterCompileRequested();
 
-        } else if (type == VERSION) {
-            emit gotVersion();
         }
     }
 }
@@ -1087,17 +1077,6 @@ void tst_QDeclarativeDebugJS::breakAfterCompile()
 
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(breakAfterCompileRequested())));
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
-}
-
-void tst_QDeclarativeDebugJS::getDebuggerVersion()
-{
-    QVERIFY(init());
-    client->debuggerVersion();
-
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(gotVersion())));
-
-    QString version(client->response);
-    QCOMPARE(version, QLatin1String("1.1"));
 }
 
 void tst_QDeclarativeDebugJS::getVersion()

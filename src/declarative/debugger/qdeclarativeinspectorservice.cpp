@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 Q_GLOBAL_STATIC(QDeclarativeInspectorService, serviceInstance)
 
 QDeclarativeInspectorService::QDeclarativeInspectorService()
-    : QDeclarativeDebugService(QLatin1String("QDeclarativeObserverMode"))
+    : QDeclarativeDebugService(QLatin1String("QDeclarativeObserverMode"), 1)
     , m_currentInspectorPlugin(0)
 {
     registerService();

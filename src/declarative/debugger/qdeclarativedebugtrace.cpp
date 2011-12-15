@@ -74,7 +74,7 @@ QByteArray QDeclarativeDebugData::toByteArray() const
 }
 
 QDeclarativeDebugTrace::QDeclarativeDebugTrace()
-    : QDeclarativeDebugService(QLatin1String("CanvasFrameRate")),
+    : QDeclarativeDebugService(QLatin1String("CanvasFrameRate"), 1),
       m_enabled(false), m_messageReceived(false)
 {
     m_timer.start();

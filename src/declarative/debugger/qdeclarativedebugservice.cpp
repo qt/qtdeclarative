@@ -53,11 +53,12 @@ QDeclarativeDebugServicePrivate::QDeclarativeDebugServicePrivate()
 {
 }
 
-QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, QObject *parent)
+QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, float version, QObject *parent)
     : QObject(*(new QDeclarativeDebugServicePrivate), parent)
 {
     Q_D(QDeclarativeDebugService);
     d->name = name;
+    d->version = version;
     d->server = QDeclarativeDebugServer::instance();
     d->status = QDeclarativeDebugService::NotConnected;
 
@@ -65,11 +66,12 @@ QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, QObject 
 }
 
 QDeclarativeDebugService::QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd,
-                                                   const QString &name, QObject *parent)
+                                                   const QString &name, float version, QObject *parent)
     : QObject(dd, parent)
 {
     Q_D(QDeclarativeDebugService);
     d->name = name;
+    d->version = version;
     d->server = QDeclarativeDebugServer::instance();
     d->status = QDeclarativeDebugService::NotConnected;
 }
@@ -105,6 +107,12 @@ QString QDeclarativeDebugService::name() const
 {
     Q_D(const QDeclarativeDebugService);
     return d->name;
+}
+
+float QDeclarativeDebugService::version() const
+{
+    Q_D(const QDeclarativeDebugService);
+    return d->version;
 }
 
 QDeclarativeDebugService::Status QDeclarativeDebugService::status() const

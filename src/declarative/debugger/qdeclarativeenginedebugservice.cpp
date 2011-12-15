@@ -67,7 +67,7 @@ QDeclarativeEngineDebugService *QDeclarativeEngineDebugService::instance()
 }
 
 QDeclarativeEngineDebugService::QDeclarativeEngineDebugService(QObject *parent)
-    : QDeclarativeDebugService(QLatin1String("QDeclarativeEngine"), parent),
+    : QDeclarativeDebugService(QLatin1String("QDeclarativeEngine"), 1, parent),
       m_watch(new QDeclarativeWatcher(this)),
       m_statesDelegate(0)
 {

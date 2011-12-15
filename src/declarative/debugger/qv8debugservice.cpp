@@ -51,16 +51,14 @@
 //V8 DEBUG SERVICE PROTOCOL
 // <HEADER><COMMAND><DATA>
 // <HEADER> : "V8DEBUG"
-// <COMMAND> : ["connect", "disconnect", "interrupt", "version",
+// <COMMAND> : ["connect", "disconnect", "interrupt",
 //              "v8request", "v8message", "breakonsignal",
 //              "breakaftercompile"]
 // <DATA> : connect, disconnect, interrupt: empty
-//          version: <version_string>
 //          v8request, v8message: <JSONrequest_string>
 //          breakonsignal: <signalname_string><enabled_bool>
 //          breakaftercompile: <enabled_bool>
 
-const char *V8_DEBUGGER_KEY_VERSION_NUMBER = "1.1";
 const char *V8_DEBUGGER_KEY_VERSION = "version";
 const char *V8_DEBUGGER_KEY_CONNECT = "connect";
 const char *V8_DEBUGGER_KEY_INTERRUPT = "interrupt";
@@ -122,7 +120,7 @@ public:
 
 QV8DebugService::QV8DebugService(QObject *parent)
     : QDeclarativeDebugService(*(new QV8DebugServicePrivate()),
-                               QLatin1String("V8Debugger"), parent)
+                               QLatin1String("V8Debugger"), 2, parent)
 {
     Q_D(QV8DebugService);
     v8ServiceInstancePtr = this;
@@ -266,12 +264,6 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             QDataStream rs(data);
             rs >> d->breakAfterCompile;
             sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_BREAK_AFTER_COMPILE)));
-
-        } else if (command == V8_DEBUGGER_KEY_VERSION) {
-            //We dont check the client version
-            //just send the debugger version
-            sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_VERSION),
-                                                            QLatin1String(V8_DEBUGGER_KEY_VERSION_NUMBER)));
 
         }
     }
