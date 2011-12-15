@@ -191,9 +191,10 @@ protected:
         QPointF position;
     };
 
-    virtual void requestGlyphs(const QVector<glyph_t> &glyphs) = 0;
+    virtual void requestGlyphs(const QSet<glyph_t> &glyphs) = 0;
     virtual void storeGlyphs(const QHash<glyph_t, QImage> &glyphs) = 0;
-    virtual void releaseGlyphs(const QVector<glyph_t> &glyphs) = 0;
+    virtual void referenceGlyphs(const QSet<glyph_t> &glyphs) = 0;
+    virtual void releaseGlyphs(const QSet<glyph_t> &glyphs) = 0;
 
     void setGlyphsPosition(const QList<GlyphPosition> &glyphs);
     void setGlyphsTexture(const QVector<glyph_t> &glyphs, const Texture &tex);
@@ -215,6 +216,7 @@ private:
         QHash<glyph_t, QPainterPath> glyphPaths;
         bool doubleGlyphResolution;
         QLinkedList<QSGDistanceFieldGlyphNode*> m_registeredNodes;
+        QHash<glyph_t, quint32> glyphRefCount;
 
         GlyphCacheData(QOpenGLContext *ctx)
             : QOpenGLSharedResource(ctx->shareGroup())

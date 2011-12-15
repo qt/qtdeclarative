@@ -65,30 +65,18 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistance
     m_textureData = textureData(c);
 }
 
-void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QVector<glyph_t> &glyphs)
+void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 {
-    int count = glyphs.count();
-
-    // Avoid useless and costly glyph re-generation
-    if (cacheIsFull() && !m_textureData->unusedGlyphs.isEmpty()) {
-        for (int i = 0; i < count; ++i) {
-            glyph_t glyphIndex = glyphs.at(i);
-            if (containsGlyph(glyphIndex) && m_textureData->unusedGlyphs.contains(glyphIndex))
-                m_textureData->unusedGlyphs.remove(glyphIndex);
-        }
-    }
-
     QList<GlyphPosition> glyphPositions;
     QVector<glyph_t> glyphsToRender;
 
-    for (int i = 0; i < count; ++i) {
-        glyph_t glyphIndex = glyphs.at(i);
-
-        if (++m_textureData->glyphRefCount[glyphIndex] == 1)
-            m_textureData->unusedGlyphs.remove(glyphIndex);
+    for (QSet<glyph_t>::const_iterator it = glyphs.constBegin(); it != glyphs.constEnd() ; ++it) {
+        glyph_t glyphIndex = *it;
 
         if (cacheIsFull() && m_textureData->unusedGlyphs.isEmpty())
             continue;
+
+        m_textureData->unusedGlyphs.remove(glyphIndex);
 
         GlyphPosition p;
         p.glyph = glyphIndex;
@@ -162,14 +150,14 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
     setGlyphsTexture(glyphTextures, t);
 }
 
-void QSGDefaultDistanceFieldGlyphCache::releaseGlyphs(const QVector<glyph_t> &glyphs)
+void QSGDefaultDistanceFieldGlyphCache::referenceGlyphs(const QSet<glyph_t> &glyphs)
 {
-    int count = glyphs.count();
-    for (int i = 0; i < count; ++i) {
-        glyph_t glyphIndex = glyphs.at(i);
-        if (--m_textureData->glyphRefCount[glyphIndex] == 0 && !glyphTexCoord(glyphIndex).isNull())
-            m_textureData->unusedGlyphs.insert(glyphIndex);
-    }
+    m_textureData->unusedGlyphs -= glyphs;
+}
+
+void QSGDefaultDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs)
+{
+    m_textureData->unusedGlyphs += glyphs;
 }
 
 void QSGDefaultDistanceFieldGlyphCache::createTexture(int width, int height)

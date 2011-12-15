@@ -71,7 +71,10 @@ QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
     delete m_material;
 
     if (m_glyph_cache) {
-        m_glyph_cache->release(m_glyphs.glyphIndexes());
+        QVector<quint32> glyphIndexes;
+        for (int i = 0; i < m_allGlyphs.count(); ++i)
+            glyphIndexes.append(m_allGlyphs.at(i).glyphIndex);
+        m_glyph_cache->release(glyphIndexes);
         m_glyph_cache->unregisterGlyphNode(this);
     }
 
