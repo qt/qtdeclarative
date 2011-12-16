@@ -62,6 +62,10 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+static const int qt_passwordEchoDelay = QT_GUI_PASSWORD_ECHO_DELAY;
+#endif
+
 /*!
     \qmlclass TextInput QQuickTextInput
     \inqmlmodule QtQuick 2
@@ -976,6 +980,7 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     Q_D(QQuickTextInput);
     if (echoMode() == echo)
         return;
+    d->cancelPasswordEchoTimer();
     d->m_echoMode = echo;
     d->m_passwordEchoEditing = false;
     d->updateInputMethodHints();
@@ -1992,8 +1997,13 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
         bool hasFocus = value.boolValue;
         d->focused = hasFocus;
         setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
-        if (echoMode() == QQuickTextInput::PasswordEchoOnEdit && !hasFocus)
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+        if (!hasFocus && (d->m_passwordEchoEditing || d->m_passwordEchoTimer.isActive())) {
+#else
+        if (!hasFocus && d->m_passwordEchoEditing) {
+#endif
             d->updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
+        }
         if (!hasFocus)
             d->deselect();
     }
@@ -2158,9 +2168,25 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
     else
         str = m_text;
 
-    if (m_echoMode == QQuickTextInput::Password
-            || (m_echoMode == QQuickTextInput::PasswordEchoOnEdit && !m_passwordEchoEditing))
+    if (m_echoMode == QQuickTextInput::Password) {
+         str.fill(m_passwordCharacter);
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+        if (m_passwordEchoTimer.isActive() && m_cursor > 0 && m_cursor <= m_text.length()) {
+            int cursor = m_cursor - 1;
+            QChar uc = m_text.at(cursor);
+            str[cursor] = uc;
+            if (cursor > 0 && uc.unicode() >= 0xdc00 && uc.unicode() < 0xe000) {
+                // second half of a surrogate, check if we have the first half as well,
+                // if yes restore both at once
+                uc = m_text.at(cursor - 1);
+                if (uc.unicode() >= 0xd800 && uc.unicode() < 0xdc00)
+                    str[cursor - 1] = uc;
+            }
+        }
+#endif
+    } else if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit && !m_passwordEchoEditing) {
         str.fill(m_passwordCharacter);
+    }
 
     // replace certain non-printable characters with spaces (to avoid
     // drawing boxes when using fonts that don't have glyphs for such
@@ -2437,6 +2463,7 @@ void QQuickTextInputPrivate::init(const QString &txt)
 */
 void QQuickTextInputPrivate::updatePasswordEchoEditing(bool editing)
 {
+    cancelPasswordEchoTimer();
     m_passwordEchoEditing = editing;
     updateDisplayText();
 }
@@ -2775,6 +2802,11 @@ void QQuickTextInputPrivate::addCommand(const Command &cmd)
 */
 void QQuickTextInputPrivate::internalInsert(const QString &s)
 {
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+    Q_Q(QQuickTextInput);
+    if (m_echoMode == QQuickTextInput::Password)
+        m_passwordEchoTimer.start(qt_passwordEchoDelay, q);
+#endif
     if (hasSelectedText())
         addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
     if (m_maskData) {
@@ -2812,6 +2844,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
 void QQuickTextInputPrivate::internalDelete(bool wasBackspace)
 {
     if (m_cursor < (int) m_text.length()) {
+        cancelPasswordEchoTimer();
         if (hasSelectedText())
             addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
         addCommand(Command((CommandType)((m_maskData ? 2 : 0) + (wasBackspace ? Remove : Delete)),
@@ -2838,6 +2871,7 @@ void QQuickTextInputPrivate::internalDelete(bool wasBackspace)
 void QQuickTextInputPrivate::removeSelectedText()
 {
     if (m_selstart < m_selend && m_selend <= (int) m_text.length()) {
+        cancelPasswordEchoTimer();
         separate();
         int i ;
         addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
@@ -3236,6 +3270,7 @@ void QQuickTextInputPrivate::internalUndo(int until)
 {
     if (!isUndoAvailable())
         return;
+    cancelPasswordEchoTimer();
     internalDeselect();
     while (m_undoState && m_undoState > until) {
         Command& cmd = m_history[--m_undoState];
@@ -3392,6 +3427,11 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
         killTimer(d->m_deleteAllTimer);
         d->m_deleteAllTimer = 0;
         d->clear();
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+    } else if (event->timerId() == d->m_passwordEchoTimer.timerId()) {
+        d->m_passwordEchoTimer.stop();
+        d->updateDisplayText();
+#endif
     }
 }
 

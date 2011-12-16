@@ -2227,12 +2227,11 @@ void tst_qquicktextinput::echoMode()
 }
 
 #ifdef QT_GUI_PASSWORD_ECHO_DELAY
-void tst_qdeclarativetextinput::passwordEchoDelay()
+void tst_qquicktextinput::passwordEchoDelay()
 {
     QQuickView canvas(QUrl::fromLocalFile(TESTDATA("echoMode.qml")));
     canvas.show();
-    canvas.setFocus();
-    QGuiApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
@@ -2242,7 +2241,7 @@ void tst_qdeclarativetextinput::passwordEchoDelay()
 
     QChar fillChar = QLatin1Char('*');
 
-    input->setEchoMode(QDeclarativeTextInput::Password);
+    input->setEchoMode(QQuickTextInput::Password);
     QCOMPARE(input->displayText(), QString(8, fillChar));
     input->setText(QString());
     QCOMPARE(input->displayText(), QString());
@@ -2273,8 +2272,15 @@ void tst_qdeclarativetextinput::passwordEchoDelay()
 
     QInputMethodEvent ev;
     ev.setCommitString(QLatin1String("7"));
-    QGuiApplication::sendEvent(&canvas, &ev);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev);
     QCOMPARE(input->displayText(), QString(7, fillChar) + QLatin1Char('7'));
+
+    input->setCursorPosition(3);
+    QCOMPARE(input->displayText(), QString(7, fillChar) + QLatin1Char('7'));
+    QTest::keyPress(&canvas, 'a');
+    QCOMPARE(input->displayText(), QString(3, fillChar) + QLatin1Char('a') + QString(5, fillChar));
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QCOMPARE(input->displayText(), QString(8, fillChar));
 }
 #endif
 

@@ -50,12 +50,14 @@
 #include <QtDeclarative/qdeclarative.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qbasictimer.h>
 #include <QtGui/qclipboard.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpalette.h>
 #include <QtGui/qtextlayout.h>
 #include <QtGui/qstylehints.h>
 
+#include "qplatformdefs.h"
 
 //
 //  W A R N I N G
@@ -204,6 +206,9 @@ public:
     int m_blinkPeriod; // 0 for non-blinking cursor
     int m_blinkTimer;
     int m_deleteAllTimer;
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+    QBasicTimer m_passwordEchoTimer;
+#endif
     int m_ascent;
     int m_maxLength;
     int m_lastCursorPos;
@@ -366,6 +371,12 @@ public:
     QString preeditAreaText() const { return m_textLayout.preeditAreaText(); }
 
     void updatePasswordEchoEditing(bool editing);
+
+    void cancelPasswordEchoTimer() {
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+        m_passwordEchoTimer.stop();
+#endif
+    }
 
     Qt::LayoutDirection layoutDirection() const {
         if (m_layoutDirection == Qt::LayoutDirectionAuto) {
