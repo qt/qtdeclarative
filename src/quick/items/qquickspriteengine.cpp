@@ -234,14 +234,14 @@ QImage QQuickSpriteEngine::assembledImage()
             struct helper{
                 static int divRoundUp(int a, int b){return (a+b-1)/b;}
             };
-            int rowsNeeded = helper::divRoundUp(state->frames(), helper::divRoundUp(maxSize, state->frameWidth()));
+            int rowsNeeded = helper::divRoundUp(state->frames(), (maxSize / state->frameWidth()));
             if (rowsNeeded * state->frameHeight() > maxSize){
                 qWarning() << "SpriteEngine: Animation too large to fit in one texture..." << state->source().toLocalFile();
                 qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
             }
             state->m_generatedCount = rowsNeeded;
             h += state->frameHeight() * rowsNeeded;
-            w = qMax(w, helper::divRoundUp(maxSize, state->frameWidth()));
+            w = qMax(w, ((int)(maxSize / state->frameWidth())) * state->frameWidth());
             m_imageStateCount += rowsNeeded;
         }else{
             h += state->frameHeight();
