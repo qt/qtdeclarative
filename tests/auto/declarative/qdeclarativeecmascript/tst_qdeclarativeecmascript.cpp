@@ -4044,10 +4044,11 @@ void tst_qdeclarativeecmascript::propertyVarInheritance2()
     {
         v8::HandleScope hs;
         propertyVarWeakRefCallbackCount = 0;                           // reset callback count.
-        childObjectVarArrayValueHandle = qPersistentNew(((QDeclarativeVMEMetaObject *)(childObject->metaObject()))->vmeProperty(58));
+        childObjectVarArrayValueHandle = qPersistentNew(((QDeclarativeVMEMetaObject *)(childObject->metaObject()))->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         childObjectVarArrayValueHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
         gc(engine);
         QVERIFY(propertyVarWeakRefCallbackCount == 0);                 // should not have been collected yet.
+        QCOMPARE(childObject->property("vp").value<QObject*>(), rootObject);
         QCOMPARE(childObject->property("textCanary").toInt(), 10);
     }
     QMetaObject::invokeMethod(object, "deassignCircular");
