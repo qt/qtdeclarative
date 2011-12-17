@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtCore/QFileInfo>
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include <QtDeclarative/QDeclarativeView>
 #include <QtDeclarative/QDeclarativeEngine>
 

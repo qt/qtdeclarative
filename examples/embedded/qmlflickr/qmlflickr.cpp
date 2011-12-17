@@ -41,7 +41,7 @@
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QSettings>
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include <QtDeclarative/QDeclarativeView>
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QtDeclarative/QDeclarativeNetworkAccessManagerFactory>

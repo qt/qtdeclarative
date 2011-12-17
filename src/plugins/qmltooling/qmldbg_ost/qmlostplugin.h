@@ -42,7 +42,7 @@
 #ifndef QMLOSTPLUGIN_H
 #define QMLOSTPLUGIN_H
 
-#include <QtGui/QStylePlugin>
+#include <QtWidgets/QStylePlugin>
 #include <QtDeclarative/private/qdeclarativedebugserverconnection_p.h>
 
 QT_BEGIN_NAMESPACE
