@@ -561,7 +561,7 @@ QRect QQuickTextPrivate::setupTextLayout()
 
     bool truncate = layoutTextElided;
     bool customLayout = isLineLaidOutConnected();
-    bool elideEnabled = elideMode == QQuickText::ElideRight && q->widthValid();
+    bool multilineElideEnabled = elideMode == QQuickText::ElideRight && q->widthValid() && wrapMode != QQuickText::NoWrap;
 
     layout.beginLayout();
     if (!lineWidth)
@@ -585,7 +585,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         }
 
         bool elide = false;
-        if (elideEnabled && q->heightValid() && height > q->height()) {
+        if (multilineElideEnabled && q->heightValid() && height > q->height()) {
             // This line does not fit in the remaining area.
             elide = true;
             if (visibleCount > 1) {
@@ -602,7 +602,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         if (elide || (maximumLineCountValid && --linesLeft == 0)) {
             if (visibleTextLength < text.length()) {
                 truncate = true;
-                if (elideEnabled) {
+                if (multilineElideEnabled) {
                     qreal elideWidth = fm.width(elideChar);
                     // Need to correct for alignment
                     if (customLayout)
@@ -1594,7 +1594,7 @@ void QQuickText::setTextFormat(TextFormat format)
     \o Text.ElideRight
     \endlist
 
-    If this property is set to Text.ElideRight, it can be used with multiline
+    If this property is set to Text.ElideRight, it can be used with \l {wrapMode}{wrapped}
     text. The text will only elide if \c maximumLineCount, or \c height has been set.
     If both \c maximumLineCount and \c height are set, \c maximumLineCount will
     apply unless the lines do not fit in the height allowed.
