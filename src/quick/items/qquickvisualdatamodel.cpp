@@ -1057,7 +1057,7 @@ void QQuickVisualDataModelPrivate::setInitialState(QVDMIncubationTask *incubatio
     incubationTask->incubatingContext = 0;
 
     cacheItem->attached = QQuickVisualDataModelAttached::properties(cacheItem->object);
-    cacheItem->attached->m_cacheItem = cacheItem;
+    cacheItem->attached->setCacheItem(cacheItem);
     new QQuickVisualDataModelAttachedMetaObject(cacheItem->attached, m_cacheMetaType);
     cacheItem->attached->emitChanges();
 
