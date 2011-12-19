@@ -117,6 +117,14 @@ static QDeclarativePropertyData::Flags flagsForPropertyType(int propType, QDecla
     return flags;
 }
 
+static int metaObjectSignalCount(const QMetaObject *metaObject)
+{
+    int signalCount = 0;
+    for (const QMetaObject *obj = metaObject; obj; obj = obj->superClass())
+        signalCount += QMetaObjectPrivate::get(obj)->signalCount;
+    return signalCount;
+}
+
 QDeclarativePropertyData::Flags
 QDeclarativePropertyData::flagsForProperty(const QMetaProperty &p, QDeclarativeEngine *engine)
 {
@@ -220,8 +228,8 @@ void QDeclarativePropertyData::lazyLoad(const QMetaMethod &m)
 Creates a new empty QDeclarativePropertyCache.
 */
 QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e)
-: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0), metaObject(0), 
-  argumentsCache(0)
+: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
+  signalHanderIndexCacheStart(0), metaObject(0), argumentsCache(0)
 {
     Q_ASSERT(engine);
 }
@@ -230,8 +238,8 @@ QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e)
 Creates a new QDeclarativePropertyCache of \a metaObject.
 */
 QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e, const QMetaObject *metaObject)
-: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0), metaObject(0),
-  argumentsCache(0)
+: engine(e), parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
+  signalHanderIndexCacheStart(0), metaObject(0), argumentsCache(0)
 {
     Q_ASSERT(engine);
     Q_ASSERT(metaObject);
@@ -279,6 +287,7 @@ QDeclarativePropertyCache *QDeclarativePropertyCache::copy(int reserve)
     cache->parent->addref();
     cache->propertyIndexCacheStart = propertyIndexCache.count() + propertyIndexCacheStart;
     cache->methodIndexCacheStart = methodIndexCache.count() + methodIndexCacheStart;
+    cache->signalHanderIndexCacheStart = signalHandlerIndexCache.count() + signalHanderIndexCacheStart;
     cache->stringCache.copyAndReserve(stringCache, reserve);
     cache->allowedRevisionCache = allowedRevisionCache;
     cache->metaObject = metaObject;
@@ -313,7 +322,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
     int methodCount = metaObject->methodCount();
     Q_ASSERT(QMetaObjectPrivate::get(metaObject)->revision >= 4);
-    int signalCount = QMetaObjectPrivate::get(metaObject)->signalCount;
+    int signalCount = metaObjectSignalCount(metaObject);
     int classInfoCount = QMetaObjectPrivate::get(metaObject)->classInfoCount;
 
     QDeclarativeAccessorProperties::Properties accessorProperties;
@@ -350,10 +359,13 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
     // 3 to block the destroyed signal and the deleteLater() slot
     int methodOffset = qMax(3, metaObject->methodOffset()); 
+    int signalOffset = signalCount - QMetaObjectPrivate::get(metaObject)->signalCount;
 
+    // update() should have reserved enough space in the vector that this doesn't cause a realloc
+    // and invalidate the stringCache.
     methodIndexCache.resize(methodCount - methodIndexCacheStart);
-    signalHandlerIndexCache.resize(signalCount);
-    int signalHandlerIndex = 0;
+    signalHandlerIndexCache.resize(signalCount - signalHanderIndexCacheStart);
+    int signalHandlerIndex = signalOffset;
     for (int ii = methodOffset; ii < methodCount; ++ii) {
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private) 
@@ -386,7 +398,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
         if (data->isSignal()) {
-            sigdata = &signalHandlerIndexCache[signalHandlerIndex];
+            sigdata = &signalHandlerIndexCache[signalHandlerIndex - signalHanderIndexCacheStart];
             *sigdata = *data;
             sigdata->flags |= QDeclarativePropertyData::IsSignalHandler;
         }
@@ -439,6 +451,8 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
     int propCount = metaObject->propertyCount();
     int propOffset = metaObject->propertyOffset();
 
+    // update() should have reserved enough space in the vector that this doesn't cause a realloc
+    // and invalidate the stringCache.
     propertyIndexCache.resize(propCount - propertyIndexCacheStart);
     for (int ii = propOffset; ii < propCount; ++ii) {
         QMetaProperty p = metaObject->property(ii);
@@ -524,13 +538,19 @@ void QDeclarativePropertyCache::update(QDeclarativeEngine *engine, const QMetaOb
     Q_ASSERT(metaObject);
     Q_ASSERT(stringCache.isEmpty());
 
-    // Optimization to prevent unnecessary reallocation of lists
+    // Preallocate enough space in the index caches for all the properties/methods/signals that
+    // are not cached in a parent cache so that the caches never need to be reallocated as this
+    // would invalidate pointers stored in the stringCache.
     int pc = metaObject->propertyCount();
     int mc = metaObject->methodCount();
-    propertyIndexCache.reserve(pc);
-    methodIndexCache.reserve(mc);
+    int sc = metaObjectSignalCount(metaObject);
+    propertyIndexCache.reserve(pc - propertyIndexCacheStart);
+    methodIndexCache.reserve(mc - methodIndexCacheStart);
+    signalHandlerIndexCache.reserve(sc - signalHanderIndexCacheStart);
 
-    stringCache.reserve(pc + mc);
+    // Reserve enough space in the stringCache for all properties/methods/signals including those
+    // cached in a parent cache.
+    stringCache.reserve(pc + mc + sc);
 
     updateRecur(engine,metaObject);
 }

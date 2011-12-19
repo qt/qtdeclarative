@@ -272,6 +272,7 @@ private:
     QDeclarativePropertyCache *parent;
     int propertyIndexCacheStart;
     int methodIndexCacheStart;
+    int signalHanderIndexCacheStart;
 
     IndexCache propertyIndexCache;
     IndexCache methodIndexCache;
