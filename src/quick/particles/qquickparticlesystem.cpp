@@ -908,6 +908,9 @@ void QQuickParticleSystem::emittersChanged()
     if (particleCount > bySysIdx.size())//New datum requests haven't updated it
         bySysIdx.resize(particleCount);
 
+    foreach (QQuickParticleAffector *a, m_affectors)//Groups may have changed
+        a->m_updateIntSet = true;
+
     foreach (QQuickParticlePainter *p, m_painters)
         loadPainter(p);
 
