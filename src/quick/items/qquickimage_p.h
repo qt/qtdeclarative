@@ -44,7 +44,7 @@
 #define QQUICKIMAGE_P_H
 
 #include "qquickimagebase_p.h"
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 
 QT_BEGIN_HEADER
 

@@ -81,6 +81,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickTransform)
 };
 
+class QQuickItemLayer;
 class QDeclarativeV8Function;
 class QDeclarativeState;
 class QQuickAnchorLine;
@@ -144,6 +145,8 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QDeclarativeParserStatu
     Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
+
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
     Q_ENUMS(TransformOrigin)
     Q_CLASSINFO("DefaultProperty", "data")
@@ -316,8 +319,8 @@ public:
        UpdatePaintNodeData();
     };
 
-    virtual bool isTextureProvider() const { return false; }
-    virtual QSGTextureProvider *textureProvider() const { return 0; }
+    virtual bool isTextureProvider() const;
+    virtual QSGTextureProvider *textureProvider() const;
 
 public Q_SLOTS:
     void update();

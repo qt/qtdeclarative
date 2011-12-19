@@ -44,7 +44,7 @@
 
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgmaterial.h>
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/qquickitem.h>
 
 #include <QtCore/qsharedpointer.h>

@@ -163,6 +163,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickVisualDataGroup>(uri,major,minor,"VisualDataGroup");
     qmlRegisterType<QQuickVisualItemModel>(uri,major,minor,"VisualItemModel");
 
+    qmlRegisterType<QQuickItemLayer>();
     qmlRegisterType<QQuickAnchors>();
     qmlRegisterType<QQuickKeyEvent>();
     qmlRegisterType<QQuickMouseEvent>();

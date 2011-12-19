@@ -78,6 +78,9 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qelapsedtimer.h>
 
+#include <QtQuick/private/qquickshadereffectsource_p.h>
+#include <QtQuick/private/qquickshadereffect_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QNetworkReply;
@@ -134,6 +137,101 @@ public:
     QList<QQuickItem *> items;
 };
 
+
+class QQuickItemLayer : public QObject, public QQuickItemChangeListener
+{
+    Q_OBJECT
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(QSize textureSize READ size WRITE setSize NOTIFY sizeChanged)
+    Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged)
+    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
+    Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
+    Q_PROPERTY(QQuickShaderEffectSource::WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
+    Q_PROPERTY(QQuickShaderEffectSource::Format format READ format WRITE setFormat NOTIFY formatChanged)
+    Q_PROPERTY(QString samplerName READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QDeclarativeComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
+public:
+    QQuickItemLayer(QQuickItem *item);
+    ~QQuickItemLayer();
+
+    void classBegin();
+    void componentComplete();
+
+    bool enabled() const { return m_effectSource != 0; }
+    void setEnabled(bool enabled);
+
+    bool mipmap() const { return m_mipmap; }
+    void setMipmap(bool mipmap);
+
+    bool smooth() const { return m_smooth; }
+    void setSmooth(bool s);
+
+    QSize size() const { return m_size; }
+    void setSize(const QSize &size);
+
+    QQuickShaderEffectSource::Format format() const { return m_format; }
+    void setFormat(QQuickShaderEffectSource::Format f);
+
+    QRectF sourceRect() const { return m_sourceRect; }
+    void setSourceRect(const QRectF &sourceRect);
+
+    QQuickShaderEffectSource::WrapMode wrapMode() const { return m_wrapMode; }
+    void setWrapMode(QQuickShaderEffectSource::WrapMode mode);
+
+    QString name() const { return m_name; }
+    void setName(const QString &name) {
+        if (m_name == name)
+            return;
+        m_name = name;
+        emit nameChanged(name);
+    }
+
+    QDeclarativeComponent *effect() const { return m_effectComponent; }
+    void setEffect(QDeclarativeComponent *effect);
+
+    QQuickShaderEffectSource *effectSource() const { return m_effectSource; }
+
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
+    void itemOpacityChanged(QQuickItem *);
+    void itemParentChanged(QQuickItem *, QQuickItem *);
+    void itemSiblingOrderChanged(QQuickItem *);
+    void itemVisibilityChanged(QQuickItem *);
+
+    void updateMatrix();
+    void updateGeometry();
+    void updateOpacity();
+    void updateZ();
+
+signals:
+    void enabledChanged(bool enabled);
+    void sizeChanged(const QSize &size);
+    void mipmapChanged(bool mipmap);
+    void wrapModeChanged(QQuickShaderEffectSource::WrapMode mode);
+    void nameChanged(const QString &name);
+    void effectChanged(QDeclarativeComponent *component);
+    void smoothChanged(bool smooth);
+    void formatChanged(QQuickShaderEffectSource::Format format);
+    void sourceRectChanged(const QRectF &sourceRect);
+
+private:
+    void activate();
+    void deactivate();
+
+    QQuickItem *m_item;
+    bool m_enabled;
+    bool m_mipmap;
+    bool m_smooth;
+    bool m_componentComplete;
+    QQuickShaderEffectSource::WrapMode m_wrapMode;
+    QQuickShaderEffectSource::Format m_format;
+    QSize m_size;
+    QRectF m_sourceRect;
+    QString m_name;
+    QDeclarativeComponent *m_effectComponent;
+    QQuickShaderEffect *m_effect;
+    QQuickShaderEffectSource *m_effectSource;
+};
+
 class Q_QUICK_EXPORT QQuickItemPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickItem)
@@ -165,6 +263,8 @@ public:
     QQuickAnchorLine bottom() const;
     QQuickAnchorLine verticalCenter() const;
     QQuickAnchorLine baseline() const;
+
+    QQuickItemLayer *layer() const;
 
     // data property
     static void data_append(QDeclarativeListProperty<QObject> *, QObject *);
@@ -407,7 +507,7 @@ public:
         TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position | Size | Canvas,
         ComplexTransformUpdateMask     = Transform | Canvas,
         ContentUpdateMask       = Size | Content | Smooth | Canvas,
-        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Canvas,
+        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Canvas
 
     };
     quint32 dirtyAttributes;
@@ -452,6 +552,8 @@ public:
     virtual void mirrorChange() {}
 
     QQuickScreenAttached *screenAttached;
+
+    mutable QQuickItemLayer *_layer;
 
     static qint64 consistentTime;
     static void setConsistentTime(qint64 t);
@@ -755,6 +857,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ChangeTypes);
 
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPE(QQuickItemLayer)
 QML_DECLARE_TYPE(QQuickKeysAttached)
 QML_DECLARE_TYPEINFO(QQuickKeysAttached, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickKeyNavigationAttached)

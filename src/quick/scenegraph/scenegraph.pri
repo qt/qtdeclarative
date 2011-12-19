@@ -32,7 +32,7 @@ HEADERS += \
     $$PWD/util/qsgvertexcolormaterial.h \
     $$PWD/util/qsgtexture.h \
     $$PWD/util/qsgtexture_p.h \
-    $$PWD/util/qsgtextureprovider_p.h \
+    $$PWD/util/qsgtextureprovider.h \
     $$PWD/util/qsgpainternode_p.h \
     $$PWD/util/qsgdistancefieldutil_p.h
 

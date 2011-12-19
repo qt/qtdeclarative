@@ -46,7 +46,7 @@
 #include "qquickitem_p.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 #include "qquickcanvas.h"
 
 #include "qquickimage_p.h"
@@ -190,6 +190,7 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     , m_programDirty(true)
     , m_dirtyMesh(true)
     , m_dirtyGeometry(true)
+    , m_complete(false)
 {
     setFlag(QQuickItem::ItemHasContents);
 }
@@ -197,12 +198,6 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
 QQuickShaderEffect::~QQuickShaderEffect()
 {
     reset();
-}
-
-void QQuickShaderEffect::componentComplete()
-{
-    updateProperties();
-    QQuickItem::componentComplete();
 }
 
 /*!
@@ -218,11 +213,8 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
     if (m_source.fragmentCode.constData() == code.constData())
         return;
     m_source.fragmentCode = code;
-    if (isComponentComplete()) {
-        reset();
-        updateProperties();
-        update();
-    }
+    update();
+    m_complete = false;
     emit fragmentShaderChanged();
 }
 
@@ -240,11 +232,8 @@ void QQuickShaderEffect::setVertexShader(const QByteArray &code)
     if (m_source.vertexCode.constData() == code.constData())
         return;
     m_source.vertexCode = code;
-    if (isComponentComplete()) {
-        reset();
-        updateProperties();
-        update();
-    }
+    update();
+    m_complete = false;
     emit vertexShaderChanged();
 }
 
@@ -425,6 +414,10 @@ void QQuickShaderEffect::connectPropertySignals()
             signalName.append(mp.notifySignal().signature());
             connect(this, signalName, this, SLOT(updateData()));
         } else {
+            // If the source is set via a dynamic property, like the layer is, then we need this check
+            // to disable the warning.
+            if (property(it->constData()).isValid())
+                continue;
             qWarning("QQuickShaderEffect: '%s' does not have a matching property!", it->constData());
         }
     }
@@ -439,10 +432,25 @@ void QQuickShaderEffect::connectPropertySignals()
             source.mapper->setMapping(this, i);
             connect(source.mapper, SIGNAL(mapped(int)), this, SLOT(changeSource(int)));
         } else {
+            // If the source is set via a dynamic property, like the layer is, then we need this check
+            // to disable the warning.
+            if (property(source.name.constData()).isValid())
+                continue;
             qWarning("QQuickShaderEffect: '%s' does not have a matching source!", source.name.constData());
         }
     }
 }
+
+
+void QQuickShaderEffect::ensureCompleted()
+{
+    if (!m_complete) {
+        reset();
+        updateProperties();
+        m_complete = true;
+    }
+}
+
 
 void QQuickShaderEffect::reset()
 {
@@ -665,6 +673,8 @@ void QQuickShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF
 QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     QQuickShaderEffectNode *node = static_cast<QQuickShaderEffectNode *>(oldNode);
+
+    ensureCompleted();
 
     // In the case of a bad vertex shader, don't try to create a node...
     if (m_source.attributeNames.isEmpty()) {

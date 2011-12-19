@@ -1827,6 +1827,7 @@ QQuickItem::~QQuickItem()
     delete d->_anchors; d->_anchors = 0;
     delete d->_stateGroup; d->_stateGroup = 0;
     delete d->_contents; d->_contents = 0;
+    delete d->_layer;
 }
 
 /*!
@@ -2298,7 +2299,7 @@ QQuickItemPrivate::QQuickItemPrivate()
 
   itemNodeInstance(0), opacityNode(0), clipNode(0), rootNode(0), groupNode(0), paintNode(0)
   , beforePaintNode(0), effectRefCount(0), hideRefCount(0)
-  , screenAttached(0)
+  , screenAttached(0), _layer(0)
 {
 }
 
@@ -3368,6 +3369,8 @@ void QQuickItem::classBegin()
         d->_stateGroup->classBegin();
     if (d->_anchors)
         d->_anchors->classBegin();
+    if (d->_layer)
+        d->_layer->classBegin();
 }
 
 void QQuickItem::componentComplete()
@@ -3380,6 +3383,10 @@ void QQuickItem::componentComplete()
         d->_anchors->componentComplete();
         QQuickAnchorsPrivate::get(d->_anchors)->updateOnComplete();
     }
+
+    if (d->_layer)
+        d->_layer->componentComplete();
+
     if (d->keyHandler)
         d->keyHandler->componentComplete();
     if (d->_contents)
@@ -3445,6 +3452,8 @@ QPointF QQuickItemPrivate::computeTransformOrigin() const
 
 void QQuickItemPrivate::transformChanged()
 {
+    if (_layer)
+        _layer->updateMatrix();
 }
 
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
@@ -3666,6 +3675,9 @@ void QQuickItem::setZ(qreal v)
     }
 
     emit zChanged();
+
+    if (d->_layer)
+        d->_layer->updateZ();
 }
 
 
@@ -5304,6 +5316,12 @@ qint64 QQuickItemPrivate::restart(QElapsedTimer &t)
     This function can be called from any thread.
  */
 
+bool QQuickItem::isTextureProvider() const
+{
+    Q_D(const QQuickItem);
+    return d->_layer && d->_layer->effectSource() ? d->_layer->effectSource()->isTextureProvider() : false;
+}
+
 /*!
     \fn QSGTextureProvider *QQuickItem::textureProvider() const
 
@@ -5312,6 +5330,403 @@ qint64 QQuickItemPrivate::restart(QElapsedTimer &t)
 
     This function may only be called on the rendering thread.
  */
+
+QSGTextureProvider *QQuickItem::textureProvider() const
+{
+    Q_D(const QQuickItem);
+    return d->_layer && d->_layer->effectSource() ? d->_layer->effectSource()->textureProvider() : 0;
+}
+
+
+
+QQuickItemLayer *QQuickItemPrivate::layer() const
+{
+    if (!_layer)
+        _layer = new QQuickItemLayer(const_cast<QQuickItem *>(q_func()));
+    return _layer;
+}
+
+
+
+QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
+    : m_item(item)
+    , m_enabled(false)
+    , m_mipmap(false)
+    , m_smooth(false)
+    , m_componentComplete(true)
+    , m_wrapMode(QQuickShaderEffectSource::ClampToEdge)
+    , m_format(QQuickShaderEffectSource::RGBA)
+    , m_effectComponent(0)
+    , m_effect(0)
+    , m_effectSource(0)
+{
+    m_name = QLatin1String("source");
+}
+
+QQuickItemLayer::~QQuickItemLayer()
+{
+    delete m_effectSource;
+    delete m_effect;
+}
+
+
+
+/*!
+    \qmlproperty bool QtQuick2::Item::layer.enabled
+
+    Holds wether the item is layered or not. Layering is disabled by default.
+
+    A layered item is rendered into an offscreen surface and cached until
+    it is changed. Enabling layering for complex QML item hierarchies can
+    some times be an optimization.
+
+    None of the other layer properties have any effect when the layer
+    is disabled.
+ */
+
+void QQuickItemLayer::setEnabled(bool e)
+{
+    if (e == m_enabled)
+        return;
+    m_enabled = e;
+    if (m_componentComplete) {
+        if (m_enabled)
+            activate();
+        else
+            deactivate();
+    }
+
+    emit enabledChanged(e);
+}
+
+void QQuickItemLayer::classBegin()
+{
+    m_componentComplete = false;
+}
+
+void QQuickItemLayer::componentComplete()
+{
+    m_componentComplete = true;
+    if (m_enabled)
+        activate();
+}
+
+void QQuickItemLayer::activate()
+{
+    QQuickItem *parentItem = m_item->parentItem();
+    if (!m_effectSource)
+        m_effectSource = new QQuickShaderEffectSource();
+
+    if (parentItem) {
+        m_effectSource->setParentItem(parentItem);
+        m_effectSource->stackAfter(m_item);
+    }
+
+    m_effectSource->setVisible(!m_effectComponent && m_item->isVisible());
+    m_effectSource->setSourceItem(m_item);
+    m_effectSource->setHideSource(true);
+    m_effectSource->setSmooth(m_smooth);
+    m_effectSource->setTextureSize(m_size);
+    m_effectSource->setSourceRect(m_sourceRect);
+    m_effectSource->setMipmap(m_mipmap);
+    m_effectSource->setWrapMode(m_wrapMode);
+    m_effectSource->setFormat(m_format);
+
+    if (m_effectComponent) {
+        if (!m_effect) {
+            QObject *created = m_effectComponent->create();
+            m_effect = qobject_cast<QQuickShaderEffect *>(created);
+            if (!m_effect) {
+                qWarning("Item: layer.effect is not a shader effect");
+                delete created;
+            }
+        }
+        if (m_effect) {
+            if (parentItem) {
+                m_effect->setParentItem(parentItem);
+                m_effect->stackAfter(m_effectSource);
+            }
+            m_effect->setVisible(m_item->isVisible());
+            m_effect->setProperty(m_name.toLatin1(), qVariantFromValue<QObject *>(m_effectSource));
+            m_effect->update();
+        }
+    }
+
+    updateZ();
+    updateGeometry();
+    updateOpacity();
+    updateMatrix();
+
+    QQuickItemPrivate *id = QQuickItemPrivate::get(m_item);
+    id->addItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Opacity | QQuickItemPrivate::Parent | QQuickItemPrivate::Visibility | QQuickItemPrivate::SiblingOrder);
+}
+
+void QQuickItemLayer::deactivate()
+{
+    delete m_effectSource;
+    m_effectSource = 0;
+
+    delete m_effect;
+    m_effect = 0;
+
+    QQuickItemPrivate *id = QQuickItemPrivate::get(m_item);
+    id->removeItemChangeListener(this,  QQuickItemPrivate::Geometry | QQuickItemPrivate::Opacity | QQuickItemPrivate::Parent | QQuickItemPrivate::Visibility | QQuickItemPrivate::SiblingOrder);
+}
+
+
+
+/*!
+    \qmlproperty Component QtQuick2::Item::layer.effect
+
+    Holds the effect that is applied to this layer.
+
+    The effect must be a \l ShaderEffect.
+ */
+
+void QQuickItemLayer::setEffect(QDeclarativeComponent *component)
+{
+    if (component == m_effectComponent)
+        return;
+    m_effectComponent = component;
+
+    if (m_effect) {
+        delete m_effect;
+        m_effect = 0;
+    }
+
+    if (m_effectSource)
+        activate();
+
+    emit effectChanged(component);
+}
+
+
+/*!
+    \qmlproperty bool QtQuick2::Item::layer.mipmap
+
+    If this property is true, mipmaps are generated for the texture.
+
+    \note Some OpenGL ES 2 implementations do not support mipmapping of
+    non-power-of-two textures.
+ */
+
+void QQuickItemLayer::setMipmap(bool mipmap)
+{
+    if (mipmap == m_mipmap)
+        return;
+    m_mipmap = mipmap;
+
+    if (m_effectSource)
+        m_effectSource->setMipmap(m_mipmap);
+
+    emit mipmapChanged(mipmap);
+}
+
+
+/*!
+    \qmlproperty enumeration QtQuick2::Item::layer.format
+
+    This property defines the internal OpenGL format of the texture.
+    Modifying this property makes most sense when the \a layer.effect is also
+    specified. Depending on the OpenGL implementation, this property might
+    allow you to save some texture memory.
+
+    \list
+    \o ShaderEffectSource.Alpha - GL_ALPHA
+    \o ShaderEffectSource.RGB - GL_RGB
+    \o ShaderEffectSource.RGBA - GL_RGBA
+    \endlist
+
+    \note Some OpenGL implementations do not support the GL_ALPHA format.
+ */
+
+void QQuickItemLayer::setFormat(QQuickShaderEffectSource::Format f)
+{
+    if (f == m_format)
+        return;
+    m_format = f;
+
+    if (m_effectSource)
+        m_effectSource->setFormat(m_format);
+
+    emit formatChanged(m_format);
+}
+
+
+/*!
+    \qmlproperty enumeration QtQuick2::Item::layer.sourceRect
+
+    This property defines which rectangular area of the \l sourceItem to
+    render into the texture. The source rectangle can be larger than
+    \l sourceItem itself. If the rectangle is null, which is the default,
+    the whole \l sourceItem is rendered to texture.
+ */
+
+void QQuickItemLayer::setSourceRect(const QRectF &sourceRect)
+{
+    if (sourceRect == m_sourceRect)
+        return;
+    m_sourceRect = sourceRect;
+
+    if (m_effectSource)
+        m_effectSource->setSourceRect(m_sourceRect);
+
+    emit sourceRectChanged(sourceRect);
+}
+
+
+
+/*!
+    \qmlproperty bool QtQuick2::Item::layer.smooth
+
+    Holds whether the layer is smoothly transformed.
+ */
+
+void QQuickItemLayer::setSmooth(bool s)
+{
+    if (m_smooth == s)
+        return;
+    m_smooth = s;
+
+    if (m_effectSource)
+        m_effectSource->setSmooth(m_smooth);
+
+    emit smoothChanged(s);
+}
+
+
+
+/*!
+    \qmlproperty size QtQuick2::Item::layer.textureSize
+
+    This property holds the requested pixel size of the layers texture. If it is empty,
+    which is the default, the size of the item is used.
+
+    \note Some platforms have a limit on how small framebuffer objects can be,
+    which means the actual texture size might be larger than the requested
+    size.
+ */
+
+void QQuickItemLayer::setSize(const QSize &size)
+{
+    if (size == m_size)
+        return;
+    m_size = size;
+
+    if (m_effectSource)
+        m_effectSource->setTextureSize(size);
+
+    emit sizeChanged(size);
+}
+
+
+
+/*!
+    \qmlproperty enumeration QtQuick2::Item::layer.wrapMode
+
+    This property defines the OpenGL wrap modes associated with the texture.
+    Modifying this property makes most sense when the \a layer.effect is
+    specified.
+
+    \list
+    \o ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
+    \o ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
+    \o ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
+    \o ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
+    \endlist
+
+    \note Some OpenGL ES 2 implementations do not support the GL_REPEAT
+    wrap mode with non-power-of-two textures.
+ */
+
+void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
+{
+    if (mode != m_wrapMode)
+        return;
+    m_wrapMode = mode;
+
+    if (m_effectSource)
+        m_effectSource->setWrapMode(m_wrapMode);
+
+    emit wrapModeChanged(mode);
+}
+
+
+void QQuickItemLayer::itemOpacityChanged(QQuickItem *item)
+{
+    updateOpacity();
+}
+
+void QQuickItemLayer::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+{
+    updateGeometry();
+}
+
+void QQuickItemLayer::itemParentChanged(QQuickItem *item, QQuickItem *parent)
+{
+    if (parent == m_effectSource || parent == m_effect)
+        return;
+
+    m_effectSource->setParentItem(parent);
+    if (parent)
+        m_effectSource->stackAfter(m_item);
+
+    if (m_effect) {
+        m_effect->setParentItem(parent);
+        if (parent)
+            m_effect->stackAfter(m_effectSource);
+    }
+}
+
+void QQuickItemLayer::itemSiblingOrderChanged(QQuickItem *)
+{
+    m_effectSource->stackAfter(m_item);
+    if (m_effect)
+        m_effect->stackAfter(m_effectSource);
+}
+
+void QQuickItemLayer::itemVisibilityChanged(QQuickItem *)
+{
+    QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
+    l->setVisible(m_item->isVisible());
+}
+
+void QQuickItemLayer::updateZ()
+{
+    QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
+    l->setZ(m_item->z());
+}
+
+void QQuickItemLayer::updateOpacity()
+{
+    QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
+    l->setOpacity(m_item->opacity());
+}
+
+void QQuickItemLayer::updateGeometry()
+{
+    QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
+    QRectF bounds = m_item->boundingRect();
+    l->setWidth(bounds.width());
+    l->setHeight(bounds.height());
+    l->setX(bounds.x() + m_item->x());
+    l->setY(bounds.y() + m_item->y());
+}
+
+void QQuickItemLayer::updateMatrix()
+{
+    // Called directly from transformChanged(), so needs some extra
+    // checks.
+    if (!m_componentComplete || !m_enabled)
+        return;
+    QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
+    QQuickItemPrivate *ld = QQuickItemPrivate::get(l);
+    l->setScale(m_item->scale());
+    l->setRotation(m_item->rotation());
+    ld->transforms = QQuickItemPrivate::get(m_item)->transforms;
+    ld->origin = QQuickItemPrivate::get(m_item)->origin;
+    ld->dirty(QQuickItemPrivate::Transform);
+}
 
 QT_END_NAMESPACE
 

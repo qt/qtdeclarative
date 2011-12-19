@@ -305,10 +305,10 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     if ((presenceFlags & OpacityPresent) == 0)
         expectWarning("QQuickShaderEffect: Missing reference to \'qt_Opacity\'.");
 
-    static_cast<QDeclarativeParserStatus &>(item).classBegin();
     item.setVertexShader(vertexShader);
     item.setFragmentShader(fragmentShader);
-    static_cast<QDeclarativeParserStatus &>(item).componentComplete();
+    item.ensureCompleted();
+
     uninstallMsgHandler();
 
     // If the uniform was successfully parsed, the notify signal has been connected to an update slot.

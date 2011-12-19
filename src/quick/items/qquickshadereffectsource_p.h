@@ -43,7 +43,7 @@
 #define QQUICKSHADEREFFECTSOURCE_P_H
 
 #include "qquickitem.h"
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgdefaultimagenode_p.h>

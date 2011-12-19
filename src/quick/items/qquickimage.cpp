@@ -42,7 +42,7 @@
 #include "qquickimage_p.h"
 #include "qquickimage_p_p.h"
 
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
