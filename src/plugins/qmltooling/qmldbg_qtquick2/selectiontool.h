@@ -39,61 +39,48 @@
 **
 ****************************************************************************/
 
-#ifndef SGHIGHLIGHT_H
-#define SGHIGHLIGHT_H
+#ifndef SELECTIONTOOL_H
+#define SELECTIONTOOL_H
 
-#include <QtCore/QWeakPointer>
-#include <QtQuick/QQuickPaintedItem>
+#include "abstracttool.h"
+
+#include <QtCore/QList>
+#include <QtCore/QPoint>
+
+QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
-class SGHighlight : public QQuickPaintedItem
+class QQuickViewInspector;
+class HoverHighlight;
+
+class SelectionTool : public AbstractTool
 {
     Q_OBJECT
-
 public:
-    SGHighlight(QQuickItem *parent) : QQuickPaintedItem(parent) {}
-    SGHighlight(QQuickItem *item, QQuickItem *parent);
+    explicit SelectionTool(QQuickViewInspector *inspector);
 
-    void setItem(QQuickItem *item);
+    void leaveEvent(QEvent *);
 
-private slots:
-    void adjust();
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *) {}
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *) {}
+
+    void hoverMoveEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *) {}
+
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *) {}
 
 private:
-    QWeakPointer<QQuickItem> m_item;
-};
+    QQuickViewInspector *inspector() const;
 
-/**
- * A highlight suitable for indicating selection.
- */
-class SGSelectionHighlight : public SGHighlight
-{
-public:
-    SGSelectionHighlight(QQuickItem *item, QQuickItem *parent)
-        : SGHighlight(item, parent)
-    {}
-
-    void paint(QPainter *painter);
-};
-
-/**
- * A highlight suitable for indicating hover.
- */
-class SGHoverHighlight : public SGHighlight
-{
-public:
-    SGHoverHighlight(QQuickItem *parent)
-        : SGHighlight(parent)
-    {
-        setZ(1); // hover highlight on top of selection highlight
-    }
-
-    void paint(QPainter *painter);
+    HoverHighlight *m_hoverHighlight;
 };
 
 } // namespace QtQuick2
 } // namespace QmlJSDebugger
 
-#endif // SGHIGHLIGHT_H
+#endif // SELECTIONTOOL_H

@@ -39,48 +39,61 @@
 **
 ****************************************************************************/
 
-#ifndef SGSELECTIONTOOL_H
-#define SGSELECTIONTOOL_H
+#ifndef HIGHLIGHT_H
+#define HIGHLIGHT_H
 
-#include "abstracttool.h"
-
-#include <QtCore/QList>
-#include <QtCore/QPoint>
-
-QT_FORWARD_DECLARE_CLASS(QQuickItem)
+#include <QtCore/QWeakPointer>
+#include <QtQuick/QQuickPaintedItem>
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
-class SGViewInspector;
-class SGHoverHighlight;
-
-class SGSelectionTool : public AbstractTool
+class Highlight : public QQuickPaintedItem
 {
     Q_OBJECT
+
 public:
-    explicit SGSelectionTool(SGViewInspector *inspector);
+    Highlight(QQuickItem *parent) : QQuickPaintedItem(parent) {}
+    Highlight(QQuickItem *item, QQuickItem *parent);
 
-    void leaveEvent(QEvent *);
+    void setItem(QQuickItem *item);
 
-    void mousePressEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *) {}
-    void mouseReleaseEvent(QMouseEvent *) {}
-    void mouseDoubleClickEvent(QMouseEvent *) {}
-
-    void hoverMoveEvent(QMouseEvent *);
-    void wheelEvent(QWheelEvent *) {}
-
-    void keyPressEvent(QKeyEvent *) {}
-    void keyReleaseEvent(QKeyEvent *) {}
+private slots:
+    void adjust();
 
 private:
-    SGViewInspector *inspector() const;
+    QWeakPointer<QQuickItem> m_item;
+};
 
-    SGHoverHighlight *m_hoverHighlight;
+/**
+ * A highlight suitable for indicating selection.
+ */
+class SelectionHighlight : public Highlight
+{
+public:
+    SelectionHighlight(QQuickItem *item, QQuickItem *parent)
+        : Highlight(item, parent)
+    {}
+
+    void paint(QPainter *painter);
+};
+
+/**
+ * A highlight suitable for indicating hover.
+ */
+class HoverHighlight : public Highlight
+{
+public:
+    HoverHighlight(QQuickItem *parent)
+        : Highlight(parent)
+    {
+        setZ(1); // hover highlight on top of selection highlight
+    }
+
+    void paint(QPainter *painter);
 };
 
 } // namespace QtQuick2
 } // namespace QmlJSDebugger
 
-#endif // SGSELECTIONTOOL_H
+#endif // HIGHLIGHT_H

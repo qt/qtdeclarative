@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 
-#include "sgviewinspector.h"
+#include "qquickviewinspector.h"
 
 #include "qdeclarativeinspectorprotocol.h"
-#include "sghighlight.h"
-#include "sgselectiontool.h"
+#include "highlight.h"
+#include "selectiontool.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -115,11 +115,11 @@ static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos, QQuickItem *over
 }
 
 
-SGViewInspector::SGViewInspector(QQuickView *view, QObject *parent) :
+QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
     AbstractViewInspector(parent),
     m_view(view),
     m_overlay(new QQuickItem),
-    m_selectionTool(new SGSelectionTool(this)),
+    m_selectionTool(new SelectionTool(this)),
     m_designMode(true)
 {
     // Try to make sure the overlay is always on top
@@ -132,7 +132,7 @@ SGViewInspector::SGViewInspector(QQuickView *view, QObject *parent) :
     setCurrentTool(m_selectionTool);
 }
 
-void SGViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
+void QQuickViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
 {
     QList<QQuickItem*> items;
     foreach (QObject *obj, objects)
@@ -142,13 +142,13 @@ void SGViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
     syncSelectedItems(items);
 }
 
-void SGViewInspector::reloadView()
+void QQuickViewInspector::reloadView()
 {
     // TODO
     emit reloadRequested();
 }
 
-void SGViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
+void QQuickViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
 {
     if (!newParent)
         return;
@@ -160,7 +160,7 @@ void SGViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
         item->setParentItem(newParentItem);
 }
 
-void SGViewInspector::changeTool(InspectorProtocol::Tool tool)
+void QQuickViewInspector::changeTool(InspectorProtocol::Tool tool)
 {
     switch (tool) {
     case InspectorProtocol::ColorPickerTool:
@@ -192,12 +192,12 @@ QWindow *getMasterWindow(QWindow *w)
     return w;
 }
 
-Qt::WindowFlags SGViewInspector::windowFlags() const
+Qt::WindowFlags QQuickViewInspector::windowFlags() const
 {
     return getMasterWindow(m_view)->windowFlags();
 }
 
-void SGViewInspector::setWindowFlags(Qt::WindowFlags flags)
+void QQuickViewInspector::setWindowFlags(Qt::WindowFlags flags)
 {
     QWindow *w = getMasterWindow(m_view);
     w->setWindowFlags(flags);
@@ -206,18 +206,18 @@ void SGViewInspector::setWindowFlags(Qt::WindowFlags flags)
     w->setVisible(true);
 }
 
-QDeclarativeEngine *SGViewInspector::declarativeEngine() const
+QDeclarativeEngine *QQuickViewInspector::declarativeEngine() const
 {
     return m_view->engine();
 }
 
-QQuickItem *SGViewInspector::topVisibleItemAt(const QPointF &pos) const
+QQuickItem *QQuickViewInspector::topVisibleItemAt(const QPointF &pos) const
 {
     QQuickItem *root = m_view->rootItem();
     return itemAt(root, root->mapFromScene(pos), m_overlay);
 }
 
-QList<QQuickItem *> SGViewInspector::itemsAt(const QPointF &pos) const
+QList<QQuickItem *> QQuickViewInspector::itemsAt(const QPointF &pos) const
 {
     QQuickItem *root = m_view->rootItem();
     QList<QQuickItem *> resultList;
@@ -225,7 +225,7 @@ QList<QQuickItem *> SGViewInspector::itemsAt(const QPointF &pos) const
     return resultList;
 }
 
-QList<QQuickItem*> SGViewInspector::selectedItems() const
+QList<QQuickItem*> QQuickViewInspector::selectedItems() const
 {
     QList<QQuickItem *> selection;
     foreach (const QWeakPointer<QQuickItem> &selectedItem, m_selectedItems) {
@@ -235,7 +235,7 @@ QList<QQuickItem*> SGViewInspector::selectedItems() const
     return selection;
 }
 
-void SGViewInspector::setSelectedItems(const QList<QQuickItem *> &items)
+void QQuickViewInspector::setSelectedItems(const QList<QQuickItem *> &items)
 {
     if (!syncSelectedItems(items))
         return;
@@ -247,7 +247,7 @@ void SGViewInspector::setSelectedItems(const QList<QQuickItem *> &items)
     sendCurrentObjects(objectList);
 }
 
-bool SGViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
+bool QQuickViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
 {
     bool selectionChanged = false;
 
@@ -272,13 +272,13 @@ bool SGViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
         selectionChanged = true;
         connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(removeFromSelectedItems(QObject*)));
         m_selectedItems.append(item);
-        m_highlightItems.insert(item, new SGSelectionHighlight(item, m_overlay));
+        m_highlightItems.insert(item, new SelectionHighlight(item, m_overlay));
     }
 
     return selectionChanged;
 }
 
-void SGViewInspector::removeFromSelectedItems(QObject *object)
+void QQuickViewInspector::removeFromSelectedItems(QObject *object)
 {
     if (QQuickItem *item = qobject_cast<QQuickItem*>(object)) {
         if (m_selectedItems.removeOne(item))
@@ -286,7 +286,7 @@ void SGViewInspector::removeFromSelectedItems(QObject *object)
     }
 }
 
-bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)
+bool QQuickViewInspector::eventFilter(QObject *obj, QEvent *event)
 {
     if (obj != m_view)
         return QObject::eventFilter(obj, event);
@@ -294,7 +294,7 @@ bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)
     return AbstractViewInspector::eventFilter(obj, event);
 }
 
-bool SGViewInspector::mouseMoveEvent(QMouseEvent *event)
+bool QQuickViewInspector::mouseMoveEvent(QMouseEvent *event)
 {
     // TODO
 //    if (QQuickItem *item = topVisibleItemAt(event->pos()))
@@ -305,7 +305,7 @@ bool SGViewInspector::mouseMoveEvent(QMouseEvent *event)
     return AbstractViewInspector::mouseMoveEvent(event);
 }
 
-QString SGViewInspector::titleForItem(QQuickItem *item) const
+QString QQuickViewInspector::titleForItem(QQuickItem *item) const
 {
     QString className = QLatin1String(item->metaObject()->className());
     QString objectStringId = idStringForObject(item);

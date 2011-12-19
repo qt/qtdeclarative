@@ -39,54 +39,74 @@
 **
 ****************************************************************************/
 
-#include "sgselectiontool.h"
+#ifndef QQUICKVIEWINSPECTOR_H
+#define QQUICKVIEWINSPECTOR_H
 
-#include "sghighlight.h"
-#include "sgviewinspector.h"
+#include "abstractviewinspector.h"
 
-#include <QtGui/QMouseEvent>
-#include <QtQuick/QQuickView>
-#include <QtQuick/QQuickItem>
+#include <QtCore/QWeakPointer>
+#include <QtCore/QHash>
+
+QT_BEGIN_NAMESPACE
+class QQuickView;
+class QQuickItem;
+QT_END_NAMESPACE
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
-SGSelectionTool::SGSelectionTool(SGViewInspector *inspector) :
-    AbstractTool(inspector),
-    m_hoverHighlight(new SGHoverHighlight(inspector->overlay()))
-{
-}
+class SelectionTool;
+class SelectionHighlight;
 
-void SGSelectionTool::leaveEvent(QEvent *)
+class QQuickViewInspector : public AbstractViewInspector
 {
-    m_hoverHighlight->setVisible(false);
-}
+    Q_OBJECT
+public:
+    explicit QQuickViewInspector(QQuickView *view, QObject *parent = 0);
 
-void SGSelectionTool::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        if (QQuickItem *item = inspector()->topVisibleItemAt(event->pos()))
-            inspector()->setSelectedItems(QList<QQuickItem*>() << item);
-    } else if (event->button() == Qt::RightButton) {
-        // todo: Show context menu
-    }
-}
+    // AbstractViewInspector
+    void changeCurrentObjects(const QList<QObject*> &objects);
+    void reloadView();
+    void reparentQmlObject(QObject *object, QObject *newParent);
+    void changeTool(InspectorProtocol::Tool tool);
+    Qt::WindowFlags windowFlags() const;
+    void setWindowFlags(Qt::WindowFlags flags);
+    QDeclarativeEngine *declarativeEngine() const;
 
-void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
-{
-    QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
-    if (!item) {
-        m_hoverHighlight->setVisible(false);
-    } else {
-        m_hoverHighlight->setItem(item);
-        m_hoverHighlight->setVisible(true);
-    }
-}
+    QQuickView *view() const { return m_view; }
+    QQuickItem *overlay() const { return m_overlay; }
 
-SGViewInspector *SGSelectionTool::inspector() const
-{
-    return static_cast<SGViewInspector*>(AbstractTool::inspector());
-}
+    QQuickItem *topVisibleItemAt(const QPointF &pos) const;
+    QList<QQuickItem *> itemsAt(const QPointF &pos) const;
+
+    QList<QQuickItem *> selectedItems() const;
+    void setSelectedItems(const QList<QQuickItem*> &items);
+
+    QString titleForItem(QQuickItem *item) const;
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
+    bool mouseMoveEvent(QMouseEvent *);
+
+private slots:
+    void removeFromSelectedItems(QObject *);
+
+private:
+    bool syncSelectedItems(const QList<QQuickItem*> &items);
+
+    QQuickView *m_view;
+    QQuickItem *m_overlay;
+
+    SelectionTool *m_selectionTool;
+
+    QList<QWeakPointer<QQuickItem> > m_selectedItems;
+    QHash<QQuickItem*, SelectionHighlight*> m_highlightItems;
+
+    bool m_designMode;
+};
 
 } // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+#endif // QQUICKVIEWINSPECTOR_H

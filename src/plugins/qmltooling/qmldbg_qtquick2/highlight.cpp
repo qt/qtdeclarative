@@ -39,20 +39,20 @@
 **
 ****************************************************************************/
 
-#include "sghighlight.h"
+#include "highlight.h"
 
 #include <QtGui/QPainter>
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
-SGHighlight::SGHighlight(QQuickItem *item, QQuickItem *parent)
+Highlight::Highlight(QQuickItem *item, QQuickItem *parent)
     : QQuickPaintedItem(parent)
 {
     setItem(item);
 }
 
-void SGHighlight::setItem(QQuickItem *item)
+void Highlight::setItem(QQuickItem *item)
 {
     if (m_item)
         m_item.data()->disconnect(this);
@@ -71,7 +71,7 @@ void SGHighlight::setItem(QQuickItem *item)
     adjust();
 }
 
-void SGHighlight::adjust()
+void Highlight::adjust()
 {
     const QQuickItem *item = m_item.data();
     setSize(QSizeF(item->width(), item->height()));
@@ -81,14 +81,14 @@ void SGHighlight::adjust()
 }
 
 
-void SGSelectionHighlight::paint(QPainter *painter)
+void SelectionHighlight::paint(QPainter *painter)
 {
     painter->setPen(QColor(108, 141, 221));
     painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
 }
 
 
-void SGHoverHighlight::paint(QPainter *painter)
+void HoverHighlight::paint(QPainter *painter)
 {
     painter->setPen(QPen(QColor(0, 22, 159)));
     painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
