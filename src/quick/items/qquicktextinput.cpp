@@ -1793,6 +1793,11 @@ void QQuickTextInput::setMouseSelectionMode(SelectionMode mode)
 bool QQuickTextInput::canPaste() const
 {
     Q_D(const QQuickTextInput);
+    if (!d->canPasteValid) {
+        if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
+            const_cast<QQuickTextInputPrivate *>(d)->canPaste = !d->m_readOnly && mimeData->hasText();
+        const_cast<QQuickTextInputPrivate *>(d)->canPasteValid = true;
+    }
     return d->canPaste;
 }
 
@@ -2043,7 +2048,6 @@ void QQuickTextInputPrivate::init()
             q, SLOT(q_canPasteChanged()));
     q->connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
             q, SLOT(q_canPasteChanged()));
-    canPaste = !m_readOnly && QGuiApplication::clipboard()->text().length() != 0;
 #endif // QT_NO_CLIPBOARD
     m_textLayout.beginLayout();
     m_textLayout.createLine();
@@ -2146,10 +2150,17 @@ void QQuickTextInput::q_canPasteChanged()
     Q_D(QQuickTextInput);
     bool old = d->canPaste;
 #ifndef QT_NO_CLIPBOARD
-    d->canPaste = !d->m_readOnly && QGuiApplication::clipboard()->text().length() != 0;
+    if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
+        d->canPaste = !d->m_readOnly && mimeData->hasText();
+    else
+        d->canPaste = false;
 #endif
-    if (d->canPaste != old)
+
+    bool changed = d->canPaste != old || !d->canPasteValid;
+    d->canPasteValid = true;
+    if (changed)
         emit canPasteChanged();
+
 }
 
 // ### these should come from QStyleHints

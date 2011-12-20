@@ -112,6 +112,7 @@ public:
         , autoScroll(true)
         , selectByMouse(false)
         , canPaste(false)
+        , canPasteValid(false)
         , hAlignImplicit(true)
         , selectPressed(false)
         , textLayoutDirty(true)
@@ -235,6 +236,7 @@ public:
     bool autoScroll:1;
     bool selectByMouse:1;
     bool canPaste:1;
+    bool canPasteValid:1;
     bool hAlignImplicit:1;
     bool selectPressed:1;
     bool textLayoutDirty:1;

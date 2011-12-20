@@ -1743,12 +1743,12 @@ bool QQuickTextControl::canInsertFromMimeData(const QMimeData *source) const
 {
     Q_D(const QQuickTextControl);
     if (d->acceptRichText)
-        return (source->hasText() && !source->text().isEmpty())
+        return source->hasText()
             || source->hasHtml()
             || source->hasFormat(QLatin1String("application/x-qrichtext"))
             || source->hasFormat(QLatin1String("application/x-qt-richtext"));
     else
-        return source->hasText() && !source->text().isEmpty();
+        return source->hasText();
 }
 
 void QQuickTextControl::insertFromMimeData(const QMimeData *source)

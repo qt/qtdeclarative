@@ -73,7 +73,7 @@ public:
       : color("black"), hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop),
       documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
       persistentSelection(true), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
-      hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
+      canPasteValid(false), hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QQuickTextEdit::PlainText), document(0), wrapMode(QQuickTextEdit::NoWrap),
       mouseSelectionMode(QQuickTextEdit::SelectCharacters),
@@ -110,6 +110,7 @@ public:
     bool requireImplicitWidth:1;
     bool selectByMouse:1;
     bool canPaste:1;
+    bool canPasteValid:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
     bool useImageFallback:1;

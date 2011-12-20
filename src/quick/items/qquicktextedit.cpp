@@ -1596,6 +1596,10 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 bool QQuickTextEdit::canPaste() const
 {
     Q_D(const QQuickTextEdit);
+    if (!d->canPasteValid) {
+        const_cast<QQuickTextEditPrivate *>(d)->canPaste = d->control->canPaste();
+        const_cast<QQuickTextEditPrivate *>(d)->canPasteValid = true;
+    }
     return d->canPaste;
 }
 
@@ -1656,7 +1660,6 @@ void QQuickTextEditPrivate::init()
 #ifndef QT_NO_CLIPBOARD
     QObject::connect(q, SIGNAL(readOnlyChanged(bool)), q, SLOT(q_canPasteChanged()));
     QObject::connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
-    canPaste = control->canPaste();
 #endif
 
     document->setDefaultFont(font);
@@ -1971,7 +1974,9 @@ void QQuickTextEdit::q_canPasteChanged()
     Q_D(QQuickTextEdit);
     bool old = d->canPaste;
     d->canPaste = d->control->canPaste();
-    if (old!=d->canPaste)
+    bool changed = old!=d->canPaste || !d->canPasteValid;
+    d->canPasteValid = true;
+    if (changed)
         emit canPasteChanged();
 }
 
