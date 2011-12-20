@@ -357,8 +357,9 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         }
     }
 
-    // 3 to block the destroyed signal and the deleteLater() slot
-    int methodOffset = qMax(3, metaObject->methodOffset()); 
+    // qMax(defaultMethods, methodOffset) to block the signals and slots of QObject::staticMetaObject
+    // incl. destroyed signals, objectNameChanged signal, deleteLater slot, _q_reregisterTimers slot.
+    int methodOffset = qMax(QObject::staticMetaObject.methodCount(), metaObject->methodOffset());
     int signalOffset = signalCount - QMetaObjectPrivate::get(metaObject)->signalCount;
 
     // update() should have reserved enough space in the vector that this doesn't cause a realloc
@@ -757,8 +758,10 @@ QDeclarativePropertyData qDeclarativePropertyCacheCreate(const QMetaObject *meta
     }
 
     int methodCount = metaObject->methodCount();
-    for (int ii = methodCount - 1; ii >= 3; --ii) {
-        // >=3 to block the destroyed signal and deleteLater() slot
+    int defaultMethods = QObject::staticMetaObject.methodCount();
+    for (int ii = methodCount - 1; ii >= defaultMethods; --ii) {
+        // >=defaultMethods to block the signals and slots of QObject::staticMetaObject
+        // incl. destroyed signals, objectNameChanged signal, deleteLater slot, _q_reregisterTimers slot.
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)
             continue;
