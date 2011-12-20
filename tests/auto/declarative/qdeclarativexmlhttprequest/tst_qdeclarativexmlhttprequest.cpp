@@ -43,6 +43,7 @@
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
 #include <QDebug>
+#include <QScopedPointer>
 #include <QNetworkCookieJar>
 #include "testhttpserver.h"
 #include "../../shared/util.h"
@@ -254,9 +255,9 @@ void tst_qdeclarativexmlhttprequest::open()
     QFETCH(QString, url);
     QFETCH(bool, remote);
 
-    TestHTTPServer *server = 0;
+    QScopedPointer<TestHTTPServer> server; // ensure deletion in case test fails
     if (remote) {
-        server = new TestHTTPServer(SERVER_PORT);
+        server.reset(new TestHTTPServer(SERVER_PORT));
         QVERIFY(server->isValid());
         QVERIFY(server->wait(TEST_FILE("open_network.expect"), 
                              TEST_FILE("open_network.reply"), 
@@ -278,7 +279,6 @@ void tst_qdeclarativexmlhttprequest::open()
 
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
 
-    delete server;
     delete object;
 }
 
