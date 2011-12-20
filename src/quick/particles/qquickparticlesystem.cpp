@@ -641,10 +641,12 @@ QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
     stateEngine(0),
     m_animation(0),
     m_running(true),
+    initialized(0),
     particleCount(0),
     m_nextIndex(0),
     m_componentComplete(false),
-    m_paused(false)
+    m_paused(false),
+    m_empty(true)
 {
     connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
             this, SLOT(loadPainter(QObject*)));
