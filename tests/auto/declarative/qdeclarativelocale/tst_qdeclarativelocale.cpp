@@ -54,6 +54,8 @@ public:
     tst_qdeclarativelocale() { }
 
 private slots:
+    void defaultLocale();
+
     void properties_data();
     void properties();
     void currencySymbol_data();
@@ -113,6 +115,16 @@ private:
     void addTimeFormatData(const QString &l);
     QDeclarativeEngine engine;
 };
+
+void tst_qdeclarativelocale::defaultLocale()
+{
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties.qml")));
+
+    QObject *obj = c.create();
+    QVERIFY(obj);
+
+    QCOMPARE(obj->property("name").toString(), QLocale().name());
+}
 
 #define LOCALE_PROP(type,prop) { #prop, QVariant(type(qlocale.prop())) }
 
