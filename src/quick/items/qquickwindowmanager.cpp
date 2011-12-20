@@ -655,6 +655,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 #endif
 
             gl->swapBuffers(canvas);
+            canvasPrivate->fireFrameSwapped();
 #ifdef THREAD_DEBUG
             printf("                RenderThread: --- swap complete...\n");
 #endif
@@ -1159,8 +1160,10 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         data.grabOnly = false;
     }
 
-    if (alsoSwap)
+    if (alsoSwap) {
         gl->swapBuffers(canvas);
+        cd->fireFrameSwapped();
+    }
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)
