@@ -221,6 +221,10 @@ void QDeclarativeDebugServerThread::run()
     }
 
     exec();
+
+    // make sure events still waiting are processed
+    QEventLoop eventLoop;
+    eventLoop.processEvents(QEventLoop::AllEvents);
 }
 
 bool QDeclarativeDebugServer::hasDebuggingClient() const
@@ -325,6 +329,7 @@ QDeclarativeDebugServer::~QDeclarativeDebugServer()
     QReadLocker(&d->pluginsLock);
     {
         foreach (QDeclarativeDebugService *service, d->plugins.values()) {
+            service->statusAboutToBeChanged(QDeclarativeDebugService::NotConnected);
             service->d_func()->server = 0;
             service->d_func()->status = QDeclarativeDebugService::NotConnected;
             service->statusChanged(QDeclarativeDebugService::NotConnected);
@@ -333,8 +338,7 @@ QDeclarativeDebugServer::~QDeclarativeDebugServer()
 
     if (d->thread) {
         d->thread->exit();
-        if (!d->thread->wait(1000))
-            d->thread->terminate();
+        d->thread->wait();
         delete d->thread;
     }
     delete d->connection;
@@ -487,8 +491,9 @@ bool QDeclarativeDebugServer::removeService(QDeclarativeDebugService *service)
     }
     {
         QReadLocker(&d->pluginsLock);
-        d->advertisePlugins();
         QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::NotConnected;
+        service->statusAboutToBeChanged(newStatus);
+        d->advertisePlugins();
         service->d_func()->server = 0;
         service->d_func()->status = newStatus;
         service->statusChanged(newStatus);

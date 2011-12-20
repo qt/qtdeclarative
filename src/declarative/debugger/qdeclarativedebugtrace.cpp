@@ -299,14 +299,27 @@ void QDeclarativeDebugTrace::sendMessages()
     QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
         messages << m_data.at(i).toByteArray();
-    QDeclarativeDebugService::sendMessages(messages);
     m_data.clear();
 
     //indicate completion
     QByteArray data;
     QDataStream ds(&data, QIODevice::WriteOnly);
     ds << (qint64)-1 << (int)Complete;
-    sendMessage(data);
+    messages << data;
+
+    QDeclarativeDebugService::sendMessages(messages);
+}
+
+void QDeclarativeDebugTrace::statusAboutToBeChanged(QDeclarativeDebugService::Status newStatus)
+{
+    if (status() == newStatus)
+        return;
+
+    if (status() == Enabled
+            && m_enabled) {
+        stopProfilingImpl();
+        sendMessages();
+    }
 }
 
 void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)

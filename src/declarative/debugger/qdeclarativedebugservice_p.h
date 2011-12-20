@@ -96,6 +96,7 @@ protected:
 
     Status registerService();
 
+    virtual void statusAboutToBeChanged(Status);
     virtual void statusChanged(Status);
     virtual void messageReceived(const QByteArray &);
 

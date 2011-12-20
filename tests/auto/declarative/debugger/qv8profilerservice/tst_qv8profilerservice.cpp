@@ -115,7 +115,7 @@ private:
     QDeclarativeDebugConnection *m_connection;
     QV8ProfilerClient *m_client;
 
-    void connect(bool block);
+    void connect(bool block, const QString &testFile);
 
 private slots:
     void cleanup();
@@ -124,6 +124,7 @@ private slots:
     void blockingConnectWithTraceDisabled();
     void nonBlockingConnect();
     void snapshot();
+    void profileOnExit();
 };
 
 void QV8ProfilerClient::messageReceived(const QByteArray &message)
@@ -164,7 +165,7 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
     QVERIFY(stream.atEnd());
 }
 
-void tst_QV8ProfilerService::connect(bool block)
+void tst_QV8ProfilerService::connect(bool block, const QString &testFile)
 {
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
@@ -174,7 +175,7 @@ void tst_QV8ProfilerService::connect(bool block)
     else
         arguments << QString("-qmljsdebugger=port:"STR_PORT);
 
-    arguments << QDeclarativeDataTest::instance()->testFile("test.qml");
+    arguments << QDeclarativeDataTest::instance()->testFile(testFile);
 
     m_process = new QDeclarativeDebugProcess(executable);
     m_process->start(QStringList() << arguments);
@@ -199,7 +200,7 @@ void tst_QV8ProfilerService::cleanup()
 
 void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
 {
-    connect(true);
+    connect(true, "test.qml");
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
@@ -213,7 +214,7 @@ void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
 
 void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
 {
-    connect(true);
+    connect(true, "test.qml");
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
     m_client->stopProfiling("");
@@ -233,7 +234,7 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
 
 void tst_QV8ProfilerService::nonBlockingConnect()
 {
-    connect(false);
+    connect(false, "test.qml");
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
@@ -247,13 +248,27 @@ void tst_QV8ProfilerService::nonBlockingConnect()
 
 void tst_QV8ProfilerService::snapshot()
 {
-    connect(false);
+    connect(false, "test.qml");
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
     m_client->takeSnapshot();
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(snapshot()))) {
         QString failMsg
                 = QString("No snapshot received in time. App output: %1\n\n").arg(m_process->output());
+        QFAIL(qPrintable(failMsg));
+    }
+}
+
+void tst_QV8ProfilerService::profileOnExit()
+{
+    connect(true, "exit.qml");
+    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+
+    m_client->startProfiling("");
+
+    if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
+        QString failMsg
+                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
         QFAIL(qPrintable(failMsg));
     }
 }

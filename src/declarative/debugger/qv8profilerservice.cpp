@@ -97,15 +97,13 @@ public:
     QList<QV8ProfilerData> m_data;
 
     bool initialized;
-    bool m_enabled;
+    QList<QString> m_ongoing;
 };
 
 QV8ProfilerService::QV8ProfilerService(QObject *parent)
     : QDeclarativeDebugService(*(new QV8ProfilerServicePrivate()), QLatin1String("V8Profiler"), 1, parent)
 {
     Q_D(QV8ProfilerService);
-
-    d->m_enabled = false;
 
     if (registerService() == Enabled) {
         // ,block mode, client attached
@@ -129,6 +127,20 @@ void QV8ProfilerService::initialize()
     v8ProfilerInstance();
 }
 
+void QV8ProfilerService::statusAboutToBeChanged(QDeclarativeDebugService::Status newStatus)
+{
+    Q_D(QV8ProfilerService);
+
+    if (status() == newStatus)
+        return;
+
+    if (status() == Enabled) {
+        foreach (const QString &title, d->m_ongoing)
+            QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, title));
+        sendProfilingData();
+    }
+}
+
 void QV8ProfilerService::messageReceived(const QByteArray &message)
 {
     Q_D(QV8ProfilerService);
@@ -141,13 +153,12 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
 
     if (command == "V8PROFILER") {
         ds >>  title;
-        if (option == "start" && !d->m_enabled) {
-            QMetaObject::invokeMethod(this, "startProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
-            d->m_enabled = true;
-        } else if (option == "stop" && d->m_enabled) {
-            QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
+        QString titleStr = QString::fromUtf8(title);
+        if (option == "start") {
+            QMetaObject::invokeMethod(this, "startProfiling", Qt::QueuedConnection, Q_ARG(QString, titleStr));
+        } else if (option == "stop" && d->initialized) {
+            QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, titleStr));
             QMetaObject::invokeMethod(this, "sendProfilingData", Qt::QueuedConnection);
-            d->m_enabled = false;
         }
         d->initialized = true;
     }
@@ -165,7 +176,12 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
 
 void QV8ProfilerService::startProfiling(const QString &title)
 {
+    Q_D(QV8ProfilerService);
     // Start Profiling
+
+    if (d->m_ongoing.contains(title))
+        return;
+
     v8::HandleScope handle_scope;
     v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     v8::CpuProfiler::StartProfiling(v8title);
@@ -175,6 +191,11 @@ void QV8ProfilerService::stopProfiling(const QString &title)
 {
     Q_D(QV8ProfilerService);
     // Stop profiling
+
+    if (!d->m_ongoing.contains(title))
+        return;
+    d->m_ongoing.removeOne(title);
+
     v8::HandleScope handle_scope;
     v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     const v8::CpuProfile *cpuProfile = v8::CpuProfiler::StopProfiling(v8title);

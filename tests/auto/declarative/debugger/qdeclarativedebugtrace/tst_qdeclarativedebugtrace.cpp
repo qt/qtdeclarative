@@ -92,7 +92,7 @@ private:
     QDeclarativeDebugConnection *m_connection;
     QDeclarativeDebugTraceClient *m_client;
 
-    void connect(bool block);
+    void connect(bool block, const QString &testFile);
 
 private slots:
     void cleanup();
@@ -100,6 +100,7 @@ private slots:
     void blockingConnectWithTraceEnabled();
     void blockingConnectWithTraceDisabled();
     void nonBlockingConnect();
+    void profileOnExit();
 };
 
 void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
@@ -147,7 +148,6 @@ void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
     }
     case QDeclarativeDebugTrace::Complete: {
         emit complete();
-        QVERIFY(stream.atEnd());
         return;
     }
     case QDeclarativeDebugTrace::RangeStart: {
@@ -166,7 +166,7 @@ void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
         break;
     }
     case QDeclarativeDebugTrace::RangeLocation: {
-        stream >> data.detailType >> data.detailData >> data.line;
+        stream >> data.detailType >> data.detailData >> data.line >> data.column;
         QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeDebugTrace::MaximumRangeType);
         QVERIFY(data.line >= -2);
         break;
@@ -180,7 +180,7 @@ void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
     traceMessages.append(data);
 }
 
-void tst_QDeclarativeDebugTrace::connect(bool block)
+void tst_QDeclarativeDebugTrace::connect(bool block, const QString &testFile)
 {
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
@@ -190,7 +190,7 @@ void tst_QDeclarativeDebugTrace::connect(bool block)
     else
         arguments << QString("-qmljsdebugger=port:"STR_PORT);
 
-    arguments << testFile("test.qml");
+    arguments << QDeclarativeDataTest::instance()->testFile(testFile);
 
     m_process = new QDeclarativeDebugProcess(executable);
     m_process->start(QStringList() << arguments);
@@ -215,7 +215,7 @@ void tst_QDeclarativeDebugTrace::cleanup()
 
 void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
 {
-    connect(true);
+    connect(true, "test.qml");
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
     m_client->setTraceStatus(true);
@@ -238,7 +238,7 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
 
 void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
 {
-    connect(true);
+    connect(true, "test.qml");
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
     m_client->setTraceStatus(false);
@@ -263,11 +263,33 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
 
 void tst_QDeclarativeDebugTrace::nonBlockingConnect()
 {
-    connect(false);
+    connect(false, "test.qml");
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
     m_client->setTraceStatus(true);
     m_client->setTraceStatus(false);
+    if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
+        QString failMsg
+                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
+        QFAIL(qPrintable(failMsg));
+    }
+
+    // must start with "StartTrace"
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
+
+    // must end with "EndTrace"
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeDebugTrace::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeDebugTrace::EndTrace);
+}
+
+void tst_QDeclarativeDebugTrace::profileOnExit()
+{
+    connect(true, "exit.qml");
+    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+
+    m_client->setTraceStatus(true);
+
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
                 = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());

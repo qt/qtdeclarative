@@ -253,6 +253,10 @@ bool QDeclarativeDebugService::waitForMessage()
     return d->server->waitForMessage(this);
 }
 
+void QDeclarativeDebugService::statusAboutToBeChanged(Status)
+{
+}
+
 void QDeclarativeDebugService::statusChanged(Status)
 {
 }

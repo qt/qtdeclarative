@@ -100,7 +100,7 @@ public:
         RangeData,
         RangeLocation,
         RangeEnd,
-        Complete,
+        Complete, // end of transmission
 
         MaximumMessage
     };
@@ -145,6 +145,7 @@ public:
     ~QDeclarativeDebugTrace();
 
 protected:
+    virtual void statusAboutToBeChanged(Status status);
     virtual void messageReceived(const QByteArray &);
 
 private:
