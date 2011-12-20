@@ -1443,10 +1443,12 @@ void tst_qquicktext::lineLaidOut()
     QTextDocument *doc = textPrivate->textDocument();
     QVERIFY(doc == 0);
 
+#if defined(Q_OS_MAC)
     QVERIFY(myText->lineCount() == textPrivate->linesRects.count());
+#endif
 
-    for (int i = 0; i < textPrivate->linesRects.count(); ++i) {
-        QRectF r = textPrivate->linesRects.at(i);
+    for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {
+        QRectF r = textPrivate->layout.lineAt(i).rect();
         QVERIFY(r.width() == i * 15);
         if (i >= 30)
             QVERIFY(r.x() == r.width() + 30);

@@ -103,9 +103,10 @@ public:
 
     static QString elideChar;
 
-    void invalidateImageCache();
+    void markDirty();
+    bool invalidateImageCache();
     void checkImageCache();
-    QPixmap imageCache;
+    QPixmap *imageCache;
     QSGTexture *texture;
 
     bool imageCacheDirty:1;
@@ -114,6 +115,7 @@ public:
     bool styledText:1;
     bool singleline:1;
     bool cacheAllTextAsImage:1;
+    bool disableDistanceField:1;
     bool internalWidthUpdate:1;
     bool requireImplicitWidth:1;
     bool truncated:1;
@@ -141,7 +143,6 @@ public:
     QString anchorAt(const QPointF &pos);
     QTextLayout layout;
     QTextLayout *elipsisLayout;
-    QList<QRectF> linesRects;
     QQuickTextLine *textLine;
 
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource);
@@ -159,6 +160,7 @@ public:
     NodeType nodeType;
 
 #if defined(Q_OS_MAC)
+    QList<QRectF> linesRects;
     QThread *layoutThread;
     QThread *paintingThread;
 #endif
