@@ -89,6 +89,7 @@ public slots:
     {
         if (m_groups != arg) {
             m_groups = arg;
+            //Note: The system watches this as it has to recalc things when groups change. It will request a reset if necessary
             emit groupsChanged(arg);
         }
     }

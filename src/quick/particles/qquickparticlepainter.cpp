@@ -106,6 +106,8 @@ void QQuickParticlePainter::reload(QQuickParticleData* d)
 
 void QQuickParticlePainter::reset()
 {
+    m_pendingCommits.clear();
+    m_pleaseReset = true;
 }
 
 void QQuickParticlePainter::setCount(int c)//### TODO: some resizeing so that particles can reallocate on size change instead of recreate

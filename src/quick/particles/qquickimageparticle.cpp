@@ -1434,8 +1434,6 @@ void QQuickImageParticle::prepareNextFrame()
 {
     if (m_rootNode == 0){//TODO: Staggered loading (as emitted)
         m_rootNode = buildParticleNodes();
-        if (m_rootNode == 0)
-            return;
         if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";
@@ -1446,6 +1444,8 @@ void QQuickImageParticle::prepareNextFrame()
             }
             qDebug() << "Total count: " << count;
         }
+        if (m_rootNode == 0)
+            return;
     }
     qint64 timeStamp = m_system->systemSync(this);
 
