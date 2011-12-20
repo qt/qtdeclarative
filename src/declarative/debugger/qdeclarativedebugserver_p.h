@@ -71,6 +71,8 @@ class Q_DECLARATIVE_EXPORT QDeclarativeDebugServer : public QObject
     Q_DECLARE_PRIVATE(QDeclarativeDebugServer)
     Q_DISABLE_COPY(QDeclarativeDebugServer)
 public:
+    ~QDeclarativeDebugServer();
+
     static QDeclarativeDebugServer *instance();
 
     void setConnection(QDeclarativeDebugServerConnection *connection);

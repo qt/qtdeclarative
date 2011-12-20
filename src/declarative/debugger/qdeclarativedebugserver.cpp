@@ -231,6 +231,13 @@ bool QDeclarativeDebugServer::hasDebuggingClient() const
 
 static QDeclarativeDebugServer *qDeclarativeDebugServer = 0;
 
+
+static void cleanup()
+{
+    delete qDeclarativeDebugServer;
+    qDeclarativeDebugServer = 0;
+}
+
 QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 {
     static bool commandLineTested = false;
@@ -269,10 +276,7 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 
             if (ok) {
                 qDeclarativeDebugServer = new QDeclarativeDebugServer();
-
                 QDeclarativeDebugServerThread *thread = new QDeclarativeDebugServerThread;
-
-                qDeclarativeDebugServer = new QDeclarativeDebugServer();
                 qDeclarativeDebugServer->d_func()->thread = thread;
                 qDeclarativeDebugServer->moveToThread(thread);
                 thread->setPluginName(pluginName);
@@ -309,6 +313,29 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 QDeclarativeDebugServer::QDeclarativeDebugServer()
     : QObject(*(new QDeclarativeDebugServerPrivate))
 {
+    qAddPostRoutine(cleanup);
+}
+
+QDeclarativeDebugServer::~QDeclarativeDebugServer()
+{
+    Q_D(QDeclarativeDebugServer);
+
+    QReadLocker(&d->pluginsLock);
+    {
+        foreach (QDeclarativeDebugService *service, d->plugins.values()) {
+            service->d_func()->server = 0;
+            service->d_func()->status = QDeclarativeDebugService::NotConnected;
+            service->statusChanged(QDeclarativeDebugService::NotConnected);
+        }
+    }
+
+    if (d->thread) {
+        d->thread->exit();
+        if (!d->thread->wait(1000))
+            d->thread->terminate();
+        delete d->thread;
+    }
+    delete d->connection;
 }
 
 void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
@@ -463,17 +490,6 @@ bool QDeclarativeDebugServer::removeService(QDeclarativeDebugService *service)
         service->d_func()->server = 0;
         service->d_func()->status = newStatus;
         service->statusChanged(newStatus);
-
-        // Last service? Then stop thread & delete instance
-        if (d->plugins.isEmpty()) {
-            d->thread->exit();
-            d->thread->wait();
-            delete d->thread;
-            delete d->connection;
-
-            qDeclarativeDebugServer = 0;
-            deleteLater();
-        }
     }
 
     return true;
