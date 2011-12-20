@@ -230,12 +230,17 @@ QString QDeclarativeDebugService::objectToString(QObject *obj)
 
 void QDeclarativeDebugService::sendMessage(const QByteArray &message)
 {
+    sendMessages(QList<QByteArray>() << message);
+}
+
+void QDeclarativeDebugService::sendMessages(const QList<QByteArray> &messages)
+{
     Q_D(QDeclarativeDebugService);
 
     if (status() != Enabled)
         return;
 
-    d->server->sendMessage(this, message);
+    d->server->sendMessages(this, messages);
 }
 
 bool QDeclarativeDebugService::waitForMessage()

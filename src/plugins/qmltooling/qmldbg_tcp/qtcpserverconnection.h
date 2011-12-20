@@ -65,7 +65,7 @@ public:
     void setPort(int port, bool bock);
 
     bool isConnected() const;
-    void send(const QByteArray &message);
+    void send(const QList<QByteArray> &messages);
     void disconnect();
     bool waitForMessage();
 

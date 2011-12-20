@@ -106,7 +106,7 @@ public:
 
 private:
     // private slot
-    void _q_sendMessage(const QByteArray &message);
+    void _q_sendMessages(const QList<QByteArray> &messages);
 };
 
 class QDeclarativeDebugServerThread : public QThread
@@ -134,6 +134,8 @@ QDeclarativeDebugServerPrivate::QDeclarativeDebugServerPrivate() :
     gotHello(false),
     thread(0)
 {
+    // used in _q_sendMessages
+    qRegisterMetaType<QList<QByteArray> >("QList<QByteArray>");
 }
 
 void QDeclarativeDebugServerPrivate::advertisePlugins()
@@ -155,7 +157,7 @@ void QDeclarativeDebugServerPrivate::advertisePlugins()
         out << QString(QLatin1String("QDeclarativeDebugClient")) << 1 << pluginNames << pluginVersions;
     }
 
-    QMetaObject::invokeMethod(q, "_q_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+    QMetaObject::invokeMethod(q, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, QList<QByteArray>() << message));
 }
 
 QDeclarativeDebugServerConnection *QDeclarativeDebugServerPrivate::loadConnectionPlugin(
@@ -368,7 +370,7 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
 
                 out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
             }
-            d->connection->send(helloAnswer);
+            d->connection->send(QList<QByteArray>() << helloAnswer);
 
             d->gotHello = true;
 
@@ -434,10 +436,10 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
     }
 }
 
-void QDeclarativeDebugServerPrivate::_q_sendMessage(const QByteArray &message)
+void QDeclarativeDebugServerPrivate::_q_sendMessages(const QList<QByteArray> &messages)
 {
     if (connection)
-        connection->send(message);
+        connection->send(messages);
 }
 
 QList<QDeclarativeDebugService*> QDeclarativeDebugServer::services() const
@@ -495,16 +497,18 @@ bool QDeclarativeDebugServer::removeService(QDeclarativeDebugService *service)
     return true;
 }
 
-void QDeclarativeDebugServer::sendMessage(QDeclarativeDebugService *service,
-                                          const QByteArray &message)
+void QDeclarativeDebugServer::sendMessages(QDeclarativeDebugService *service,
+                                          const QList<QByteArray> &messages)
 {
-    QByteArray msg;
-    {
-        QDataStream out(&msg, QIODevice::WriteOnly);
+    QList<QByteArray> prefixedMessages;
+    foreach (const QByteArray &message, messages) {
+        QByteArray prefixed;
+        QDataStream out(&prefixed, QIODevice::WriteOnly);
         out << service->name() << message;
+        prefixedMessages << prefixed;
     }
 
-    QMetaObject::invokeMethod(this, "_q_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, msg));
+    QMetaObject::invokeMethod(this, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, prefixedMessages));
 }
 
 bool QDeclarativeDebugServer::waitForMessage(QDeclarativeDebugService *service)

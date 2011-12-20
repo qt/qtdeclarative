@@ -96,7 +96,7 @@ bool QTcpServerConnection::isConnected() const
     return d->socket && d->socket->state() == QTcpSocket::ConnectedState;
 }
 
-void QTcpServerConnection::send(const QByteArray &message)
+void QTcpServerConnection::send(const QList<QByteArray> &messages)
 {
     Q_D(QTcpServerConnection);
 
@@ -104,10 +104,11 @@ void QTcpServerConnection::send(const QByteArray &message)
             || !d->protocol || !d->socket)
         return;
 
-    QPacket pack;
-    pack.writeRawData(message.data(), message.length());
-
-    d->protocol->send(pack);
+    foreach (const QByteArray &message, messages) {
+        QPacket pack;
+        pack.writeRawData(message.data(), message.length());
+        d->protocol->send(pack);
+    }
     d->socket->flush();
 }
 

@@ -81,6 +81,7 @@ public:
     Status status() const;
 
     void sendMessage(const QByteArray &);
+    void sendMessages(const QList<QByteArray> &);
     bool waitForMessage();
 
     static int idForObject(QObject *);

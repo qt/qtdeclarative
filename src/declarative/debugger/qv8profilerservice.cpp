@@ -241,8 +241,10 @@ void QV8ProfilerServicePrivate::sendMessages()
 {
     Q_Q(QV8ProfilerService);
 
+    QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
-        q->sendMessage(m_data.at(i).toByteArray());
+        messages << m_data.at(i).toByteArray();
+    q->sendMessages(messages);
     m_data.clear();
 
     //indicate completion

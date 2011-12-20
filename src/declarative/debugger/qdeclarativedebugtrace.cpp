@@ -280,9 +280,10 @@ void QDeclarativeDebugTrace::setProfilingEnabled(bool enable)
 void QDeclarativeDebugTrace::sendMessages()
 {
     QMutexLocker locker(&m_mutex);
-    //### this is a suboptimal way to send batched messages
+    QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
-        sendMessage(m_data.at(i).toByteArray());
+        messages << m_data.at(i).toByteArray();
+    QDeclarativeDebugService::sendMessages(messages);
     m_data.clear();
 
     //indicate completion
