@@ -102,6 +102,7 @@ class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
+    Q_PROPERTY(QObject *model READ modelObject CONSTANT)
     V8_RESOURCE_TYPE(VisualDataItemType)
 public:
     QQuickVisualDataModelItem(
@@ -119,6 +120,8 @@ public:
     }
 
     void Dispose();
+
+    QObject *modelObject() { return this; }
 
     int modelIndex() const { return index[0]; }
     void setModelIndex(int idx) { index[0] = idx; emit modelIndexChanged(); }
@@ -231,7 +234,6 @@ public:
     void destroy(QObject *object);
     QQuickVisualDataModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
-    int cacheIndexOf(QObject *object) const;
     void emitCreatedPackage(QQuickVisualDataModelItem *cacheItem, QDeclarativePackage *package);
     void emitInitPackage(QQuickVisualDataModelItem *cacheItem, QDeclarativePackage *package);
     void emitCreatedItem(QQuickVisualDataModelItem *cacheItem, QQuickItem *item) {

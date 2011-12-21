@@ -418,9 +418,8 @@ QQuickVisualDataModel::ReleaseFlags QQuickVisualDataModelPrivate::release(QObjec
     if (!object)
         return stat;
 
-    int cacheIndex = cacheIndexOf(object);
-    if (cacheIndex != -1) {
-        QQuickVisualDataModelItem *cacheItem = m_cache.at(cacheIndex);
+    if (QQuickVisualDataModelAttached *attached = QQuickVisualDataModelAttached::properties(object)) {
+        QQuickVisualDataModelItem *cacheItem = attached->m_cacheItem;
         if (cacheItem->releaseObject()) {
             destroy(object);
             if (QQuickItem *item = qobject_cast<QQuickItem *>(object))
@@ -782,7 +781,6 @@ QObject *QQuickVisualDataModelPrivate::object(Compositor::Group group, int index
             }
         }
 
-        ctxt->setContextProperty(QLatin1String("model"), cacheItem);
         ctxt->setContextObject(cacheItem);
 
         incubator->incubating = cacheItem;
@@ -844,22 +842,12 @@ QString QQuickVisualDataModel::stringValue(int index, const QString &name)
     return d->stringValue(d->m_compositorGroup, index, name);
 }
 
-int QQuickVisualDataModelPrivate::cacheIndexOf(QObject *object) const
-{
-    for (int cacheIndex = 0; cacheIndex < m_cache.count(); ++cacheIndex) {
-        if (m_cache.at(cacheIndex)->object == object)
-            return cacheIndex;
-    }
-    return -1;
-}
-
 int QQuickVisualDataModel::indexOf(QQuickItem *item, QObject *) const
 {
     Q_D(const QQuickVisualDataModel);
-    const int cacheIndex = d->cacheIndexOf(item);
-    return cacheIndex != -1
-            ? d->m_cache.at(cacheIndex)->index[d->m_compositorGroup]
-            : -1;
+    if (QQuickVisualDataModelAttached *attached = QQuickVisualDataModelAttached::properties(item))
+        return attached->m_cacheItem->index[d->m_compositorGroup];
+    return -1;
 }
 
 void QQuickVisualDataModel::setWatchedRoles(QList<QByteArray> roles)
@@ -2555,11 +2543,8 @@ int QQuickVisualPartsModel::indexOf(QQuickItem *item, QObject *) const
 {
     QHash<QObject *, QDeclarativePackage *>::const_iterator it = m_packaged.find(item);
     if (it != m_packaged.end()) {
-        const QQuickVisualDataModelPrivate *model = QQuickVisualDataModelPrivate::get(m_model);
-        const int cacheIndex = model->cacheIndexOf(*it);
-        return cacheIndex != -1
-                ? model->m_cache.at(cacheIndex)->index[m_compositorGroup]
-                : -1;
+        if (QQuickVisualDataModelAttached *attached = QQuickVisualDataModelAttached::properties(*it))
+            return attached->m_cacheItem->index[m_compositorGroup];
     }
     return -1;
 }

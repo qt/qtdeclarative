@@ -46,11 +46,12 @@
 #include <private/qdeclarativelistcompositor_p.h>
 #include <private/qquickvisualitemmodel_p.h>
 
-
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
 
+
 #include <private/qv8engine_p.h>
+#include <private/qdeclarativeglobal_p.h>
 
 QT_BEGIN_HEADER
 
@@ -190,11 +191,12 @@ class QQuickVisualDataModelAttached : public QObject
     Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged)
 public:
     QQuickVisualDataModelAttached(QObject *parent)
-        : QObject(parent)
-        , m_cacheItem(0)
+        : m_cacheItem(0)
         , m_previousGroups(0)
         , m_modelChanged(false)
-    {}
+    {
+        QDeclarative_setParent_noEvent(this, parent);
+    }
     ~QQuickVisualDataModelAttached() { attachedProperties.remove(parent()); }
 
     void setCacheItem(QQuickVisualDataModelItem *item);
