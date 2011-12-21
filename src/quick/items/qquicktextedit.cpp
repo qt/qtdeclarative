@@ -41,6 +41,8 @@
 
 #include "qquicktextedit_p.h"
 #include "qquicktextedit_p_p.h"
+#include "qquicktextcontrol_p.h"
+#include "qquicktext_p_p.h"
 #include "qquickevents_p_p.h"
 #include "qquickcanvas.h"
 #include "qquicktextnode_p.h"
@@ -54,7 +56,6 @@
 #include <QtCore/qmath.h>
 
 #include <private/qdeclarativeglobal_p.h>
-#include <private/qtextcontrol_p.h>
 #include <private/qtextengine_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -253,6 +254,7 @@ void QQuickTextEdit::setText(const QString &text)
     if (QQuickTextEdit::text() == text)
         return;
 
+    d->document->clearResources();
     d->richText = d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text));
     if (d->richText) {
 #ifndef QT_NO_TEXTHTMLPARSER
@@ -1626,12 +1628,15 @@ void QQuickTextEditPrivate::init()
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
     q->setFlag(QQuickItem::ItemHasContents);
 
-    control = new QTextControl(q);
+    document = new QQuickTextDocumentWithImageResources(q);
+
+    control = new QQuickTextControl(document, q);
+    control->setView(q);
     control->setIgnoreUnusedNavigationEvents(true);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
     control->setDragEnabled(false);
 
-    // By default, QTextControl will issue both a updateCursorRequest() and an updateRequest()
+    // By default, QQuickTextControl will issue both a updateCursorRequest() and an updateRequest()
     // when the cursor needs to be repainted. We need the signals to be separate to be able to
     // distinguish the cursor updates so that we can avoid updating the whole subtree when the
     // cursor blinks.
@@ -1640,7 +1645,7 @@ void QQuickTextEditPrivate::init()
         qWarning("QQuickTextEditPrivate::init: Failed to disconnect updateCursorRequest and updateRequest");
     }
 
-    // QTextControl follows the default text color
+    // QQuickTextControl follows the default text color
     // defined by the platform, declarative text
     // should be black by default
     QPalette pal = control->palette();
@@ -1664,7 +1669,6 @@ void QQuickTextEditPrivate::init()
     canPaste = control->canPaste();
 #endif
 
-    document = control->document();
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
     document->setUndoRedoEnabled(false); // flush undo buffer.
@@ -1695,23 +1699,6 @@ void QQuickTextEdit::moveCursorDelegate()
     QRectF cursorRect = cursorRectangle();
     d->cursor->setX(cursorRect.x());
     d->cursor->setY(cursorRect.y());
-}
-
-void QQuickTextEditPrivate::updateSelection()
-{
-    Q_Q(QQuickTextEdit);
-    QTextCursor cursor = control->textCursor();
-    bool startChange = (lastSelectionStart != cursor.selectionStart());
-    bool endChange = (lastSelectionEnd != cursor.selectionEnd());
-    cursor.beginEditBlock();
-    cursor.setPosition(lastSelectionStart, QTextCursor::MoveAnchor);
-    cursor.setPosition(lastSelectionEnd, QTextCursor::KeepAnchor);
-    cursor.endEditBlock();
-    control->setTextCursor(cursor);
-    if (startChange)
-        q->selectionStartChanged();
-    if (endChange)
-        q->selectionEndChanged();
 }
 
 void QQuickTextEdit::updateSelectionMarkers()

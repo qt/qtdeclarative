@@ -1398,7 +1398,7 @@ void QQuickVisualDataModelPrivate::itemsRemoved(
         } else {
             for (; cacheIndex < remove.cacheIndex + remove.count - removedCache; ++cacheIndex) {
                 QQuickVisualDataModelCacheItem *cacheItem = m_cache.at(cacheIndex);
-                if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0) {
+                if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0 && cacheItem->object) {
                     destroy(cacheItem->object);
                     if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(cacheItem->object))
                         emitDestroyingPackage(package);
@@ -2602,10 +2602,8 @@ QQuickVisualModel::ReleaseFlags QQuickVisualPartsModel::release(QQuickItem *item
         m_packaged.erase(it);
         if (!m_packaged.contains(item))
             flags &= ~Referenced;
-        if (flags & Destroyed) {
+        if (flags & Destroyed)
             QQuickVisualDataModelPrivate::get(m_model)->emitDestroyingPackage(package);
-            item->setParentItem(0);
-        }
     }
     return flags;
 }
@@ -2652,6 +2650,8 @@ void QQuickVisualPartsModel::destroyingPackage(QDeclarativePackage *package)
     if (QQuickItem *item = qobject_cast<QQuickItem *>(package->part(m_part))) {
         Q_ASSERT(!m_packaged.contains(item));
         emit destroyingItem(item);
+        item->setParentItem(0);
+        QDeclarative_setParent_noEvent(item, package);
     }
 }
 

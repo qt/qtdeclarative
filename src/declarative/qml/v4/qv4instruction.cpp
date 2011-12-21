@@ -103,7 +103,7 @@ void Bytecode::dump(const V4Instr *i, int address) const
         INSTR_DUMP << "\t" << "SubscribeId" << "\t\t" << "Id_Offset(" << i->subscribeop.index << ") -> Subscribe_Slot(" << i->subscribeop.offset << ")";
         break;
     case V4Instr::FetchAndSubscribe:
-        INSTR_DUMP << "\t" << "FetchAndSubscribe" << "\t" << "Object_Reg(" << i->fetchAndSubscribe.reg << ") Fast_Accessor(" << i->fetchAndSubscribe.function << ") -> Output_Reg(" << i->fetchAndSubscribe.reg << ") Subscription_Slot(" <<  i->fetchAndSubscribe.subscription << ")";
+        INSTR_DUMP << "\t" << "FetchAndSubscribe" << "\t" << "Object_Reg(" << i->fetchAndSubscribe.reg << ") Fast_Accessor(" << i->fetchAndSubscribe.property.accessors << ") -> Output_Reg(" << i->fetchAndSubscribe.reg << ") Subscription_Slot(" <<  i->fetchAndSubscribe.subscription << ")";
         break;
     case V4Instr::LoadId:
         INSTR_DUMP << "\t" << "LoadId" << "\t\t\t" << "Id_Offset(" << i->load.index << ") -> Output_Reg(" << i->load.reg << ")";

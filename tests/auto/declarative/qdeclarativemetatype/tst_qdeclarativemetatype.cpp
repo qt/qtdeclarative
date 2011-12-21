@@ -40,18 +40,7 @@
 ****************************************************************************/
 
 #include <qtest.h>
-#include <QLocale>
-#include <QPixmap>
-#include <QBitmap>
-#include <QPen>
-#include <QTextLength>
-#include <QMatrix4x4>
-#include <QVector2D>
-#include <QVector3D>
-#include <QVector4D>
-#include <QQuaternion>
 #include <qdeclarative.h>
-#include <QWidget>
 
 #include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativepropertyvalueinterceptor_p.h>
@@ -64,8 +53,6 @@ public:
 
 private slots:
     void initTestCase();
-
-    void copy();
 
     void qmlParserStatusCast();
     void qmlPropertyValueSourceCast();
@@ -116,166 +103,12 @@ public:
 };
 QML_DECLARE_TYPE(ValueInterceptorTestType);
 
-
-#define COPY_TEST(cpptype, metatype, value, defaultvalue) \
-{ \
-    cpptype v = (value); cpptype v2 = (value); \
-    QVERIFY(QDeclarativeMetaType::copy(QMetaType:: metatype, &v, 0)); \
-    QCOMPARE((cpptype)(v),(cpptype)(defaultvalue)); \
-    QVERIFY(v == (defaultvalue)); \
-    QVERIFY(QDeclarativeMetaType::copy(QMetaType:: metatype, &v, &v2)); \
-    QVERIFY(v == (value)); \
-}
-
-#define QT_COPY_TEST(type, value) \
-{ \
-    type v = (value); type v2 = (value); \
-    QVERIFY(QDeclarativeMetaType::copy(QMetaType:: type, &v, 0)); \
-    QVERIFY(v == (type ())); \
-    QVERIFY(QDeclarativeMetaType::copy(QMetaType:: type, &v, &v2)); \
-    QVERIFY(v == (value)); \
-}
-
 void tst_qdeclarativemetatype::initTestCase()
 {
     qmlRegisterType<TestType>("Test", 1, 0, "TestType");
     qmlRegisterType<ParserStatusTestType>("Test", 1, 0, "ParserStatusTestType");
     qmlRegisterType<ValueSourceTestType>("Test", 1, 0, "ValueSourceTestType");
     qmlRegisterType<ValueInterceptorTestType>("Test", 1, 0, "ValueInterceptorTestType");
-}
-
-void tst_qdeclarativemetatype::copy()
-{
-    QVERIFY(QDeclarativeMetaType::copy(QMetaType::Void, 0, 0));
-
-    COPY_TEST(bool, Bool, true, false);
-    COPY_TEST(int, Int, 10, 0);
-    COPY_TEST(unsigned int, UInt, 10, 0);
-    COPY_TEST(long long, LongLong, 10, 0);
-    COPY_TEST(unsigned long long, ULongLong, 10, 0);
-    COPY_TEST(double, Double, 19.2, 0);
-
-    QT_COPY_TEST(QChar, QChar('a'));
-
-    QVariantMap variantMap;
-    variantMap.insert("Hello World!", QVariant(10));
-    QT_COPY_TEST(QVariantMap, variantMap);
-
-    QT_COPY_TEST(QVariantList, QVariantList() << QVariant(19.2));
-    QT_COPY_TEST(QString, QString("QML Rocks!"));
-    QT_COPY_TEST(QStringList, QStringList() << "QML" << "Rocks");
-    QT_COPY_TEST(QByteArray, QByteArray("0x1102DDD"));
-    QT_COPY_TEST(QBitArray, QBitArray(102, true));
-    QDate cd = QDate::currentDate();
-    QT_COPY_TEST(QDate, cd);
-    QTime ct = QTime::currentTime();
-    QT_COPY_TEST(QTime, ct);
-    QDateTime cdt = QDateTime::currentDateTime();
-    QT_COPY_TEST(QDateTime, cdt);
-    QT_COPY_TEST(QUrl, QUrl("http://www.nokia.com"));
-    QT_COPY_TEST(QLocale, QLocale(QLocale::English, QLocale::Australia));
-    QT_COPY_TEST(QRect, QRect(-10, 10, 102, 99));
-    QT_COPY_TEST(QRectF, QRectF(-10.2, 1.2, 102, 99.6));
-    QT_COPY_TEST(QSize, QSize(100, 2));
-    QT_COPY_TEST(QSizeF, QSizeF(20.2, -100234.2)); 
-    QT_COPY_TEST(QLine, QLine(0, 0, 100, 100));
-    QT_COPY_TEST(QLineF, QLineF(-10.2, 0, 103, 1));
-    QT_COPY_TEST(QPoint, QPoint(-1912, 1613));
-    QT_COPY_TEST(QPointF, QPointF(-908.1, 1612));
-    QT_COPY_TEST(QRegExp, QRegExp("(\\d+)(?:\\s*)(cm|inch)"));
-
-    QVariantHash variantHash;
-    variantHash.insert("Hello World!", QVariant(19));
-    QT_COPY_TEST(QVariantHash, variantHash);
-
-    QT_COPY_TEST(QFont, QFont("Helvetica", 1024));
-
-    {
-        QPixmap v = QPixmap(100, 100); QPixmap v2 = QPixmap(100, 100);
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QPixmap, &v, 0)); 
-        QVERIFY(v.size() == QPixmap().size());
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QPixmap , &v, &v2)); 
-        QVERIFY(v.size() == QPixmap(100,100).size());
-    }
-
-    QT_COPY_TEST(QBrush, QBrush(Qt::blue));
-    QT_COPY_TEST(QColor, QColor("lightsteelblue"));
-    QT_COPY_TEST(QPalette, QPalette(Qt::green));
-    
-    {
-        QImage v = QImage(100, 100, QImage::Format_RGB32); 
-        QImage v2 = QImage(100, 100, QImage::Format_RGB32);
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QImage, &v, 0)); 
-        QVERIFY(v.size() == QImage().size());
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QImage , &v, &v2)); 
-        QVERIFY(v.size() == QImage(100,100, QImage::Format_RGB32).size());
-    }
-
-    QT_COPY_TEST(QPolygon, QPolygon(QRect(100, 100, 200, 103)));
-    QT_COPY_TEST(QRegion, QRegion(QRect(0, 10, 99, 87)));
-
-    {
-        QBitmap v = QBitmap(100, 100); QBitmap v2 = QBitmap(100, 100);
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QBitmap, &v, 0)); 
-        QVERIFY(v.size() == QBitmap().size());
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QBitmap , &v, &v2)); 
-        QVERIFY(v.size() == QBitmap(100,100).size());
-    }
-
-    {
-        QCursor v = QCursor(Qt::SizeFDiagCursor); QCursor v2 = QCursor(Qt::SizeFDiagCursor);
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QCursor, &v, 0)); 
-        QVERIFY(v.shape() == QCursor().shape());
-        QVERIFY(QDeclarativeMetaType::copy(QMetaType::QCursor , &v, &v2)); 
-        QVERIFY(v.shape() == QCursor(Qt::SizeFDiagCursor).shape());
-    }
-
-    QT_COPY_TEST(QKeySequence, QKeySequence("Ctrl+O"));
-    QT_COPY_TEST(QPen, QPen(Qt::red));
-    QT_COPY_TEST(QTextLength, QTextLength(QTextLength::FixedLength, 10.2));
-    QT_COPY_TEST(QTextFormat, QTextFormat(QTextFormat::ListFormat));
-    QT_COPY_TEST(QMatrix, QMatrix().translate(10, 10));
-    QT_COPY_TEST(QTransform, QTransform().translate(10, 10));
-    QT_COPY_TEST(QMatrix4x4, QMatrix4x4(1,0,2,3,0,1,0,0,9,0,1,0,0,0,10,1));
-    QT_COPY_TEST(QVector2D, QVector2D(10.2, 1));
-    QT_COPY_TEST(QVector3D, QVector3D(10.2, 1, -2));
-    QT_COPY_TEST(QVector4D, QVector4D(10.2, 1, -2, 1.2));
-    QT_COPY_TEST(QQuaternion, QQuaternion(1.0, 10.2, 1, -2));
-
-    int voidValue;
-    COPY_TEST(void *, VoidStar, (void *)&voidValue, (void *)0);
-    COPY_TEST(long, Long, 10, 0);
-    COPY_TEST(short, Short, 10, 0);
-    COPY_TEST(char, Char, 'a', 0);
-    COPY_TEST(unsigned long, ULong, 10, 0);
-    COPY_TEST(unsigned short, UShort, 10, 0);
-    COPY_TEST(unsigned char, UChar, 'a', 0);
-    COPY_TEST(float, Float, 10.5, 0);
-
-    QObject objectValue;
-    QWidget widgetValue;
-    COPY_TEST(QObject *, QObjectStar, &objectValue, 0);
-    COPY_TEST(QWidget *, QWidgetStar, &widgetValue, 0);
-    COPY_TEST(qreal, QReal, 10.5, 0);
-
-    {
-        QVariant tv = QVariant::fromValue(QVariant(10));
-        QVariant v(tv); QVariant v2(tv);
-        QVERIFY(QDeclarativeMetaType::copy(qMetaTypeId<QVariant>(), &v, 0)); 
-        QVERIFY(v == QVariant());
-        QVERIFY(QDeclarativeMetaType::copy(qMetaTypeId<QVariant>(), &v, &v2)); 
-        QVERIFY(v == tv);
-    }
-
-    {
-        TestType t;  QVariant tv = QVariant::fromValue(&t);
-
-        QVariant v(tv); QVariant v2(tv);
-        QVERIFY(QDeclarativeMetaType::copy(qMetaTypeId<TestType *>(), &v, 0)); 
-        QVERIFY(v == QVariant::fromValue((TestType *)0));
-        QVERIFY(QDeclarativeMetaType::copy(qMetaTypeId<TestType *>(), &v, &v2)); 
-        QVERIFY(v == tv);
-    }
 }
 
 void tst_qdeclarativemetatype::qmlParserStatusCast()

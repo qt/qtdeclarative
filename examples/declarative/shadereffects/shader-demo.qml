@@ -111,6 +111,7 @@ Image {
             property real time: 0
             NumberAnimation on time { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 600 }
             fragmentShader:
+                "uniform lowp float qt_Opacity;" +
                 "uniform highp float amplitude;" +
                 "uniform highp float frequency;" +
                 "uniform highp float time;" +
@@ -118,7 +119,7 @@ Image {
                 "varying highp vec2 qt_TexCoord0;" +
                 "void main() {" +
                 "    highp vec2 p = sin(time + frequency * qt_TexCoord0);" +
-                "    gl_FragColor = texture2D(source, qt_TexCoord0 + amplitude * vec2(p.y, -p.x));" +
+                "    gl_FragColor = texture2D(source, qt_TexCoord0 + amplitude * vec2(p.y, -p.x)) * qt_Opacity;" +
                 "}"
             Slider {
                 id: wobbleSlider
@@ -146,28 +147,30 @@ Image {
                             property variant delta: Qt.size(1.0 / width, 0.0)
                             property variant source: theSource
                             fragmentShader: "
+                                uniform lowp float qt_Opacity;
                                 uniform sampler2D source;
                                 uniform highp vec2 delta;
                                 varying highp vec2 qt_TexCoord0;
                                 void main() {
-                                    gl_FragColor = 0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
+                                    gl_FragColor =(0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
                                                  + 0.3229 * texture2D(source, qt_TexCoord0 - 1.364 * delta)
                                                  + 0.2466 * texture2D(source, qt_TexCoord0)
                                                  + 0.3229 * texture2D(source, qt_TexCoord0 + 1.364 * delta)
-                                                 + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta);
+                                                 + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta)) * qt_Opacity;
                                 }"
                         }
                     }
                     fragmentShader: "
+                        uniform lowp float qt_Opacity;
                         uniform sampler2D source;
                         uniform highp vec2 delta;
                         varying highp vec2 qt_TexCoord0;
                         void main() {
-                            gl_FragColor = 0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
+                            gl_FragColor =(0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
                                          + 0.3229 * texture2D(source, qt_TexCoord0 - 1.364 * delta)
                                          + 0.2466 * texture2D(source, qt_TexCoord0)
                                          + 0.3229 * texture2D(source, qt_TexCoord0 + 1.364 * delta)
-                                         + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta);
+                                         + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta)) * qt_Opacity;
                         }"
                 }
             }
@@ -177,6 +180,7 @@ Image {
             property variant delta: Qt.size(offset.x / width, offset.y / height)
             property real darkness: shadowSlider.value
             fragmentShader: "
+                uniform lowp float qt_Opacity;
                 uniform highp vec2 offset;
                 uniform sampler2D source;
                 uniform sampler2D shadow;
@@ -186,7 +190,7 @@ Image {
                 void main() {
                     lowp vec4 fg = texture2D(source, qt_TexCoord0);
                     lowp vec4 bg = texture2D(shadow, qt_TexCoord0 + delta);
-                    gl_FragColor = fg + vec4(0., 0., 0., darkness * bg.a) * (1. - fg.a);
+                    gl_FragColor = (fg + vec4(0., 0., 0., darkness * bg.a) * (1. - fg.a)) * qt_Opacity;
                 }"
             Slider {
                 id: shadowSlider

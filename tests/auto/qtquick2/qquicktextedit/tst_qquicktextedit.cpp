@@ -58,7 +58,7 @@
 #include <QInputPanel>
 #include <QClipboard>
 #include <QMimeData>
-#include <private/qtextcontrol_p.h>
+#include <private/qquicktextcontrol_p.h>
 #include "../../shared/util.h"
 #include <qplatforminputcontext_qpa.h>
 #include <private/qinputpanel_p.h>
@@ -365,41 +365,33 @@ void tst_qquicktextedit::width()
 
     for (int i = 0; i < standard.size(); i++)
     {
-        QFont f;
-        qreal metricWidth = 0.0;
-
-        if (requiresUnhintedMetrics) {
-            QString s = standard.at(i);
-            s.replace(QLatin1Char('\n'), QChar::LineSeparator);
-
-            QTextLayout layout(s);
-            layout.setFlags(Qt::TextExpandTabs | Qt::TextShowMnemonic);
-            {
-                QTextOption option;
-                option.setUseDesignMetrics(true);
-                layout.setTextOption(option);
-            }
-
-            layout.beginLayout();
-            forever {
-                QTextLine line = layout.createLine();
-                if (!line.isValid())
-                    break;
-            }
-
-            layout.endLayout();
-
-            metricWidth = ceil(layout.boundingRect().width());
-        } else {
-            QFontMetricsF fm(f);
-            metricWidth = fm.size(Qt::TextExpandTabs | Qt::TextShowMnemonic, standard.at(i)).width();
-            metricWidth = ceil(metricWidth);
-        }
-
         QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + standard.at(i) + "\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
+
+        QString s = standard.at(i);
+        s.replace(QLatin1Char('\n'), QChar::LineSeparator);
+
+        QTextLayout layout(s);
+        layout.setFont(textEditObject->font());
+        layout.setFlags(Qt::TextExpandTabs | Qt::TextShowMnemonic);
+        if (requiresUnhintedMetrics) {
+            QTextOption option;
+            option.setUseDesignMetrics(true);
+            layout.setTextOption(option);
+        }
+
+        layout.beginLayout();
+        forever {
+            QTextLine line = layout.createLine();
+            if (!line.isValid())
+                break;
+        }
+
+        layout.endLayout();
+
+        qreal metricWidth = ceil(layout.boundingRect().width());
 
         QVERIFY(textEditObject != 0);
         QCOMPARE(textEditObject->width(), qreal(metricWidth));
@@ -1604,30 +1596,26 @@ void tst_qquicktextedit::positionAt()
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(texteditObject != 0);
 
-    QFontMetrics fm(texteditObject->font());
-    const int y0 = fm.height() / 2;
-    const int y1 = fm.height() * 3 / 2;
+    QTextLayout layout(texteditObject->text());
+    layout.setFont(texteditObject->font());
 
-    int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
-    int widthBegin = 0;
-    int widthEnd = 0;
     if (!qmlDisableDistanceField()) {
-        QTextLayout layout(texteditObject->text());
-
         QTextOption option;
         option.setUseDesignMetrics(true);
         layout.setTextOption(option);
-
-        layout.beginLayout();
-        QTextLine line = layout.createLine();
-        layout.endLayout();
-
-        widthBegin = floor(line.cursorToX(pos - 1));
-        widthEnd = ceil(line.cursorToX(pos + 1));
-    } else {
-        widthBegin = fm.width(texteditObject->text().left(pos - 1));
-        widthEnd = fm.width(texteditObject->text().left(pos + 1));
     }
+
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    const int y0 = line.height() / 2;
+    const int y1 = line.height() * 3 / 2;
+
+    int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
+
+    int widthBegin = floor(line.cursorToX(pos - 1));
+    int widthEnd = ceil(line.cursorToX(pos + 1));
 
     QVERIFY(widthBegin <= texteditObject->width() / 2);
     QVERIFY(widthEnd >= texteditObject->width() / 2);
@@ -1925,7 +1913,7 @@ void tst_qquicktextedit::canPaste() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QTextControl tc;
+    QQuickTextControl tc;
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif
@@ -1943,7 +1931,7 @@ void tst_qquicktextedit::canPasteEmpty() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QTextControl tc;
+    QQuickTextControl tc;
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif

@@ -46,6 +46,7 @@
 #include "qquickcanvas_p.h"
 
 #include "qquickevents_p_p.h"
+#include "qquickscreen_p.h"
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
@@ -64,13 +65,44 @@
 #include <QtQuick/private/qdeclarativestate_p.h>
 #include <private/qlistmodelinterface_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qdeclarativeaccessors_p.h>
 
 #include <float.h>
 
-// XXX todo Readd parentNotifier for faster parent bindings
 // XXX todo Check that elements that create items handle memory correctly after visual ownership change
 
 QT_BEGIN_NAMESPACE
+
+static void QQuickItem_parentNotifier(QObject *o, intptr_t, QDeclarativeNotifier **n)
+{
+    QQuickItemPrivate *d = QQuickItemPrivate::get(static_cast<QQuickItem *>(o));
+    *n = &d->parentNotifier;
+}
+
+QML_PRIVATE_ACCESSOR(QQuickItem, QQuickItem *, parent, parentItem)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, x, x)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, y, y)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, width, width)
+QML_PRIVATE_ACCESSOR(QQuickItem, qreal, height, height)
+
+static QDeclarativeAccessors QQuickItem_parent = { QQuickItem_parentRead, QQuickItem_parentNotifier };
+static QDeclarativeAccessors QQuickItem_x = { QQuickItem_xRead, 0 };
+static QDeclarativeAccessors QQuickItem_y = { QQuickItem_yRead, 0 };
+static QDeclarativeAccessors QQuickItem_width = { QQuickItem_widthRead, 0 };
+static QDeclarativeAccessors QQuickItem_height = { QQuickItem_heightRead, 0 };
+
+QML_DECLARE_PROPERTIES(QQuickItem) {
+    { QML_PROPERTY_NAME(parent), 0, &QQuickItem_parent },
+    { QML_PROPERTY_NAME(x), 0, &QQuickItem_x },
+    { QML_PROPERTY_NAME(y), 0, &QQuickItem_y },
+    { QML_PROPERTY_NAME(width), 0, &QQuickItem_width },
+    { QML_PROPERTY_NAME(height), 0, &QQuickItem_height }
+};
+
+void QQuickItemPrivate::registerAccessorProperties()
+{
+    QML_DEFINE_PROPERTIES(QQuickItem);
+}
 
 /*!
     \qmlclass Transform QQuickTransform
@@ -1880,6 +1912,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
+    d->parentNotifier.notify();
     emit parentChanged(d->parentItem);
 }
 
@@ -2104,6 +2137,8 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
 
     dirty(Canvas);
 
+    if (screenAttached)
+        screenAttached->canvasChanged(c);
     itemChange(QQuickItem::ItemSceneChange, c);
 }
 
@@ -2232,6 +2267,7 @@ QQuickItemPrivate::QQuickItemPrivate()
 
   itemNodeInstance(0), opacityNode(0), clipNode(0), rootNode(0), groupNode(0), paintNode(0)
   , beforePaintNode(0), effectRefCount(0), hideRefCount(0)
+  , screenAttached(0)
 {
 }
 

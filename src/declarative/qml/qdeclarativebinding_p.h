@@ -157,6 +157,7 @@ public:
     QDeclarativeBinding(void *, QObject *, QDeclarativeContextData *, QObject *parent=0);
 
     void setTarget(const QDeclarativeProperty &);
+    void setTarget(QObject *, const QDeclarativePropertyData &, QDeclarativeContextData *);
     QDeclarativeProperty property() const;
 
     void setEvaluateFlags(EvaluateFlags flags);

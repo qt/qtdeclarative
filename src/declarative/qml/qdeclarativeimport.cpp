@@ -480,7 +480,11 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
             if (fi.isFile()) {
                 found = true;
 
-                url = QUrl::fromLocalFile(fi.absolutePath()).toString();
+                const QString absolutePath = fi.absolutePath();
+                if (absolutePath.at(0) == QLatin1Char(':'))
+                    url = QLatin1String("qrc://") + absolutePath.mid(1);
+                else
+                    url = QUrl::fromLocalFile(fi.absolutePath()).toString();
                 uri = resolvedUri(dir, database);
                 if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
                     return false;
@@ -498,7 +502,11 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
             if (fi.isFile()) {
                 found = true;
 
-                url = QUrl::fromLocalFile(fi.absolutePath()).toString();
+                const QString absolutePath = fi.absolutePath();
+                if (absolutePath.at(0) == QLatin1Char(':'))
+                    url = QLatin1String("qrc://") + absolutePath.mid(1);
+                else
+                    url = QUrl::fromLocalFile(fi.absolutePath()).toString();
                 uri = resolvedUri(dir, database);
                 if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
                     return false;
@@ -517,7 +525,10 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
                 if (!absoluteFilePath.isEmpty()) {
                     found = true;
                     QString absolutePath = absoluteFilePath.left(absoluteFilePath.lastIndexOf(Slash)+1);
-                    url = QLatin1String("file://") + absolutePath;
+                    if (absolutePath.at(0) == QLatin1Char(':'))
+                        url = QLatin1String("qrc://") + absolutePath.mid(1);
+                    else
+                        url = QLatin1String("file://") + absolutePath;
                     uri = resolvedUri(dir, database);
                     if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
                         return false;

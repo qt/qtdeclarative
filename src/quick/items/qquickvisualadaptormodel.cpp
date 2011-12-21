@@ -332,12 +332,13 @@ public:
 
     int metaCall(QMetaObject::Call call, int id, void **arguments)
     {
+        static const int objectPropertyOffset = QObject::staticMetaObject.propertyCount();
         if (id >= m_type->propertyOffset
                 && (call == QMetaObject::ReadProperty
                 || call == QMetaObject::WriteProperty
                 || call == QMetaObject::ResetProperty)) {
             if (m_object)
-                QMetaObject::metacall(m_object, call, id - m_type->propertyOffset + 1, arguments);
+                QMetaObject::metacall(m_object, call, id - m_type->propertyOffset + objectPropertyOffset, arguments);
             return -1;
         } else if (id >= m_type->signalOffset && call == QMetaObject::InvokeMetaMethod) {
             QMetaObject::activate(m_data, this, id, 0);
@@ -352,13 +353,14 @@ public:
         if (!m_object)
             return -1;
         const QMetaObject *metaObject = m_object->metaObject();
+        static const int objectPropertyOffset = QObject::staticMetaObject.propertyCount();
 
         const int previousPropertyCount = propertyCount() - propertyOffset();
         int propertyIndex = metaObject->indexOfProperty(name);
         if (propertyIndex == -1)
             return -1;
-        if (previousPropertyCount + 1 == metaObject->propertyCount())
-            return propertyIndex + m_type->propertyOffset - 1;
+        if (previousPropertyCount + objectPropertyOffset == metaObject->propertyCount())
+            return propertyIndex + m_type->propertyOffset - objectPropertyOffset;
 
         if (m_type->shared) {
             VDMDelegateDataType *type = m_type;
@@ -368,8 +370,8 @@ public:
 
         const int previousMethodCount = methodCount();
         int notifierId = previousMethodCount;
-        for (int propertyId = previousPropertyCount; propertyId < metaObject->propertyCount() - 1; ++propertyId) {
-            QMetaProperty property = metaObject->property(propertyId + 1);
+        for (int propertyId = previousPropertyCount; propertyId < metaObject->propertyCount() - objectPropertyOffset; ++propertyId) {
+            QMetaProperty property = metaObject->property(propertyId + objectPropertyOffset);
             QMetaPropertyBuilder propertyBuilder;
             if (property.hasNotifySignal()) {
                 m_type->builder.addSignal("__" + QByteArray::number(propertyId) + "()");
@@ -389,15 +391,15 @@ public:
         *static_cast<QMetaObject *>(this) = *m_type->metaObject;
 
         notifierId = previousMethodCount;
-        for (int i = previousPropertyCount; i < metaObject->propertyCount(); ++i) {
-            QMetaProperty property = metaObject->property(i);
+        for (int i = previousPropertyCount; i < metaObject->propertyCount() - objectPropertyOffset; ++i) {
+            QMetaProperty property = metaObject->property(i + objectPropertyOffset);
             if (property.hasNotifySignal()) {
                 QDeclarativePropertyPrivate::connect(
                         m_object, property.notifySignalIndex(), m_data, notifierId);
                 ++notifierId;
             }
         }
-        return propertyIndex + m_type->propertyOffset - 1;
+        return propertyIndex + m_type->propertyOffset - objectPropertyOffset;
     }
 
     QDeclarativeGuard<QObject> m_object;

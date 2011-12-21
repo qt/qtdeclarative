@@ -112,8 +112,9 @@ public:
     Qt::LayoutDirection layoutDirection;
 
     void mirrorChange() {
+        Q_Q(QQuickBasePositioner);
         if (type != QQuickBasePositioner::Vertical)
-            setPositioningDirty();
+            q->prePositioning(); //Don't postpone, as it might be the only trigger for visible changes.
     }
     bool isLeftToRight() const {
         if (type == QQuickBasePositioner::Vertical)

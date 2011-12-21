@@ -500,7 +500,6 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 
 bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
-    Q_Q(QQuickGridView);
     FxGridItemSG *item = 0;
     bool changed = false;
 
@@ -1501,7 +1500,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     An instance of the footer component is created for each view.  The
     footer is positioned at the end of the view, after any items.
 
-    \sa header
+    \sa header, footerItem
 */
 /*!
     \qmlproperty Component QtQuick2::GridView::header
@@ -1510,8 +1509,29 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     An instance of the header component is created for each view.  The
     header is positioned at the beginning of the view, before any items.
 
-    \sa footer
+    \sa footer, headerItem
 */
+
+/*!
+    \qmlproperty Item QtQuick2::GridView::headerItem
+    This holds the header item created from the \l header component.
+
+    An instance of the header component is created for each view.  The
+    header is positioned at the beginning of the view, before any items.
+
+    \sa header, footerItem
+*/
+
+/*!
+    \qmlproperty Item QtQuick2::GridView::footerItem
+    This holds the footer item created from the \l footer component.
+
+    An instance of the footer component is created for each view.  The
+    footer is positioned at the end of the view, after any items.
+
+    \sa footer, headerItem
+*/
+
 void QQuickGridView::viewportMoved()
 {
     Q_D(QQuickGridView);

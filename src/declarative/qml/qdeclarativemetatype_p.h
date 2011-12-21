@@ -71,9 +71,6 @@ class QDeclarativeTypeModule;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeMetaType
 {
 public:
-    static bool canCopy(int type);
-    static bool copy(int type, void *data, const void *copy = 0);
-
     static QList<QString> qmlTypeNames();
     static QList<QDeclarativeType*> qmlTypes();
 

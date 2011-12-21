@@ -4,6 +4,8 @@ ListView {
     width: 200
     height: 200
 
+    property var persistentHandle
+
     model: VisualDataModel {
         id: visualModel
 
@@ -15,11 +17,6 @@ ListView {
             objectName: "delegate"
             width: 200
             height: 20
-
-            property bool destroyed: false
-
-
-            Component.onDestruction: destroyed = true
         }
     }
 }

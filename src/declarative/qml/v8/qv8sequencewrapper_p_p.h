@@ -254,8 +254,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return QVariant(); \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
                 return QVariant::fromValue<SequenceType>(c); \
             } \
@@ -283,8 +282,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return 0; \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
                 return c.count(); \
             } \
@@ -335,8 +333,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return v8::Undefined(); \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
                 /* modify the sequence */ \
                 SequenceElementType elementValue = ConversionFromV8fn(engine, value); \
@@ -353,13 +350,9 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     } \
                     c.append(elementValue); \
                 } \
-                if (objectType == QV8SequenceResource::Reference) { \
-                    /* write back.  already checked that object is non-null, so skip that check here. */ \
-                    int status = -1; \
-                    QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::DontRemoveBinding; \
-                    void *a[] = { &c, 0, &status, &flags }; \
-                    QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
-                } \
+                /* write back.  already checked that object is non-null, so skip that check here. */ \
+                if (objectType == QV8SequenceResource::Reference) \
+                    storeReference(); \
                 return value; \
             } \
             v8::Handle<v8::Value> indexedGetter(quint32 index) \
@@ -367,8 +360,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return v8::Undefined(); \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
                 quint32 count = c.count(); \
                 if (index < count) \
@@ -403,8 +395,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return v8::Handle<v8::Array>(); \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
                 quint32 count = c.count(); \
                 v8::Local<v8::Array> retn = v8::Array::New(count); \
@@ -418,8 +409,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return v8::Undefined(); \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
                 QString str; \
                 quint32 count = c.count(); \
@@ -428,6 +418,23 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 } \
                 str.chop(1); \
                 return engine->toString(str); \
+            } \
+            void loadReference() \
+            { \
+                Q_ASSERT(object); \
+                Q_ASSERT(objectType == QV8SequenceResource::Reference); \
+                void *a[] = { &c, 0 }; \
+                QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+            } \
+            void storeReference() \
+            { \
+                Q_ASSERT(object); \
+                Q_ASSERT(objectType == QV8SequenceResource::Reference); \
+                int status = -1; \
+                QDeclarativePropertyPrivate::WriteFlags flags = \
+                    QDeclarativePropertyPrivate::DontRemoveBinding; \
+                void *a[] = { &c, 0, &status, &flags }; \
+                QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
             } \
         private: \
             QDeclarativeGuard<QObject> object; \

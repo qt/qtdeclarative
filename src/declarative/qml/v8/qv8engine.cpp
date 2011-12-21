@@ -120,8 +120,6 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     : q(qq)
     , m_engine(0)
     , m_ownsV8Context(ownership == QJSEngine::CreateNewContext)
-    , m_context((ownership == QJSEngine::CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent()))
-    , m_originalGlobalObject(m_context)
     , m_xmlHttpRequestData(0)
     , m_sqlDatabaseData(0)
     , m_listModelData(0)
@@ -136,7 +134,9 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
 
     v8::HandleScope handle_scope;
+    m_context = (ownership == QJSEngine::CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
     qPersistentRegister(m_context);
+    m_originalGlobalObject.init(m_context);
     v8::Context::Scope context_scope(m_context);
 
     v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);

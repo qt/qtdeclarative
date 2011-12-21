@@ -133,6 +133,7 @@ private slots:
     void noDelegate();
     void itemsDestroyed_data();
     void itemsDestroyed();
+    void packagesDestroyed();
     void qaimRowsMoved();
     void qaimRowsMoved_data();
     void remove_data();
@@ -174,7 +175,7 @@ private:
     bool failed;
     QDeclarativeEngine engine;
     template<typename T>
-    T *findItem(QQuickItem *parent, const QString &objectName, int index);
+    T *findItem(QQuickItem *parent, const QString &objectName, int index = -1);
 };
 
 Q_DECLARE_METATYPE(QDeclarativeChangeSet)
@@ -663,6 +664,73 @@ void tst_qquickvisualdatamodel::itemsDestroyed()
     QVERIFY(!delegate);
 }
 
+void tst_qquickvisualdatamodel::packagesDestroyed()
+{
+    SingleRoleModel model;
+    model.list.clear();
+    for (int i=0; i<30; i++)
+        model.list << ("item " + i);
+
+    QQuickView view;
+    view.rootContext()->setContextProperty("testModel", &model);
+
+    QString filename(TESTDATA("packageView.qml"));
+    view.setSource(QUrl::fromLocalFile(filename));
+
+    qApp->processEvents();
+
+    QQuickListView *leftview = findItem<QQuickListView>(view.rootObject(), "leftList");
+    QTRY_VERIFY(leftview != 0);
+
+    QQuickListView *rightview = findItem<QQuickListView>(view.rootObject(), "rightList");
+    QTRY_VERIFY(rightview != 0);
+
+    QQuickItem *leftContent = leftview->contentItem();
+    QTRY_VERIFY(leftContent != 0);
+
+    QQuickItem *rightContent = rightview->contentItem();
+    QTRY_VERIFY(rightContent != 0);
+
+    QCOMPARE(leftview->currentIndex(), 0);
+    QCOMPARE(rightview->currentIndex(), 20);
+
+    QDeclarativeGuard<QQuickItem> left;
+    QDeclarativeGuard<QQuickItem> right;
+
+    QVERIFY(findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(findItem<QQuickItem>(rightContent, "wrapper", 1));
+
+    QVERIFY(left = findItem<QQuickItem>(leftContent, "wrapper", 19));
+    QVERIFY(right = findItem<QQuickItem>(rightContent, "wrapper", 19));
+
+    rightview->setCurrentIndex(0);
+    QCOMPARE(rightview->currentIndex(), 0);
+
+    QTRY_COMPARE(rightview->contentY(), 0.0);
+    QCoreApplication::sendPostedEvents();
+
+    QVERIFY(!left);
+    QVERIFY(!right);
+
+    QVERIFY(left = findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(right = findItem<QQuickItem>(rightContent, "wrapper", 1));
+
+    rightview->setCurrentIndex(20);
+    QTRY_COMPARE(rightview->contentY(), 100.0);
+
+    QVERIFY(left);
+    QVERIFY(right);
+
+    QVERIFY(findItem<QQuickItem>(leftContent, "wrapper", 19));
+    QVERIFY(findItem<QQuickItem>(rightContent, "wrapper", 19));
+
+    leftview->setCurrentIndex(20);
+    QTRY_COMPARE(leftview->contentY(), 100.0);
+
+    QVERIFY(!left);
+    QVERIFY(!right);
+}
+
 void tst_qquickvisualdatamodel::qaimRowsMoved()
 {
     // Test parameters passed in QAIM::rowsMoved() signal are converted correctly
@@ -688,26 +756,18 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
 
     QSignalSpy spy(obj, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)));
     model.emitMove(sourceFirst, sourceLast, destinationChild);
-    // QAbstractItemModel also emits the changed signal when items are moved.
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.count(), 1);
 
-    bool move = false;
-    for (int i = 0; i < 2; ++i) {
-        QCOMPARE(spy[1].count(), 2);
-        QDeclarativeChangeSet changeSet = spy[i][0].value<QDeclarativeChangeSet>();
-        if (!changeSet.changes().isEmpty())
-            continue;
-        move = true;
-        QCOMPARE(changeSet.removes().count(), 1);
-        QCOMPARE(changeSet.removes().at(0).index, expectFrom);
-        QCOMPARE(changeSet.removes().at(0).count, expectCount);
-        QCOMPARE(changeSet.inserts().count(), 1);
-        QCOMPARE(changeSet.inserts().at(0).index, expectTo);
-        QCOMPARE(changeSet.inserts().at(0).count, expectCount);
-        QCOMPARE(changeSet.removes().at(0).moveId, changeSet.inserts().at(0).moveId);
-        QCOMPARE(spy[i][1].toBool(), false);
-    }
-    QVERIFY(move);
+    QCOMPARE(spy[0].count(), 2);
+    QDeclarativeChangeSet changeSet = spy[0][0].value<QDeclarativeChangeSet>();
+    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().at(0).index, expectFrom);
+    QCOMPARE(changeSet.removes().at(0).count, expectCount);
+    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.inserts().at(0).index, expectTo);
+    QCOMPARE(changeSet.inserts().at(0).count, expectCount);
+    QCOMPARE(changeSet.removes().at(0).moveId, changeSet.inserts().at(0).moveId);
+    QCOMPARE(spy[0][1].toBool(), false);
 
     delete obj;
 }
@@ -1708,7 +1768,7 @@ void tst_qquickvisualdatamodel::create()
 
     QCOMPARE(listview->count(), 20);
 
-    QQuickItem *delegate;
+    QDeclarativeGuard<QQuickItem> delegate;
 
     // persistedItems.includeByDefault is true, so all items belong to persistedItems initially.
     QVERIFY(delegate = findItem<QQuickItem>(contentItem, "delegate", 1));
@@ -1725,55 +1785,60 @@ void tst_qquickvisualdatamodel::create()
 
     // Request an item instantiated by the view.
     QVERIFY(delegate = qobject_cast<QQuickItem *>(evaluate<QObject *>(visualModel, "items.create(1)")));
-    QCOMPARE(delegate, findItem<QQuickItem>(contentItem, "delegate", 1));
+    QCOMPARE(delegate.data(), findItem<QQuickItem>(contentItem, "delegate", 1));
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
 
     evaluate<void>(delegate, "VisualDataModel.inPersistedItems = false");
     QCOMPARE(listview->count(), 20);
-    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    QCoreApplication::sendPostedEvents(delegate, QEvent::DeferredDelete);
+    QVERIFY(delegate);
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), false);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
 
     // Request an item not instantiated by the view.
     QVERIFY(!findItem<QQuickItem>(contentItem, "delegate", 15));
     QVERIFY(delegate = qobject_cast<QQuickItem *>(evaluate<QObject *>(visualModel, "items.create(15)")));
-    QCOMPARE(delegate, findItem<QQuickItem>(contentItem, "delegate", 15));
+    QCOMPARE(delegate.data(), findItem<QQuickItem>(contentItem, "delegate", 15));
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
 
     evaluate<void>(visualModel, "persistedItems.remove(0)");
-    QCOMPARE(evaluate<bool>(delegate, "destroyed"), true);
+    QCoreApplication::sendPostedEvents(delegate, QEvent::DeferredDelete);
+    QVERIFY(!delegate);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
 
     // Request an item not instantiated by the view, then scroll the view so it will request it.
     QVERIFY(!findItem<QQuickItem>(contentItem, "delegate", 16));
     QVERIFY(delegate = qobject_cast<QQuickItem *>(evaluate<QObject *>(visualModel, "items.create(16)")));
-    QCOMPARE(delegate, findItem<QQuickItem>(contentItem, "delegate", 16));
+    QCOMPARE(delegate.data(), findItem<QQuickItem>(contentItem, "delegate", 16));
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
 
     evaluate<void>(listview, "positionViewAtIndex(19, ListView.End)");
     QCOMPARE(listview->count(), 20);
     evaluate<void>(delegate, "VisualDataModel.groups = [\"items\"]");
-    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    QCoreApplication::sendPostedEvents(delegate, QEvent::DeferredDelete);
+    QVERIFY(delegate);
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), false);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
 
     // Request and release an item instantiated by the view, then scroll the view so it releases it.
     QVERIFY(findItem<QQuickItem>(contentItem, "delegate", 17));
     QVERIFY(delegate = qobject_cast<QQuickItem *>(evaluate<QObject *>(visualModel, "items.create(17)")));
-    QCOMPARE(delegate, findItem<QQuickItem>(contentItem, "delegate", 17));
+    QCOMPARE(delegate.data(), findItem<QQuickItem>(contentItem, "delegate", 17));
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
 
     evaluate<void>(visualModel, "items.removeGroups(17, \"persistedItems\")");
-    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    QCoreApplication::sendPostedEvents(delegate, QEvent::DeferredDelete);
+    QVERIFY(delegate);
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), false);
     QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
     evaluate<void>(listview, "positionViewAtIndex(1, ListView.Beginning)");
     QCOMPARE(listview->count(), 20);
-    QCOMPARE(evaluate<bool>(delegate, "destroyed"), true);
+    QCoreApplication::sendPostedEvents(delegate, QEvent::DeferredDelete);
+    QVERIFY(!delegate);
 
     // Adding an item to the persistedItems group won't instantiate it, but if later requested by
     // the view it will be persisted.
@@ -1784,12 +1849,23 @@ void tst_qquickvisualdatamodel::create()
     QCOMPARE(listview->count(), 20);
     QVERIFY(delegate = findItem<QQuickItem>(contentItem, "delegate", 18));
     QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
-    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    QCoreApplication::sendPostedEvents(delegate, QEvent::DeferredDelete);
+    QVERIFY(delegate);
     evaluate<void>(listview, "positionViewAtIndex(1, ListView.Beginning)");
     QCOMPARE(listview->count(), 20);
-    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
-}
+    QCoreApplication::sendPostedEvents(delegate, QEvent::DeferredDelete);
+    QVERIFY(delegate);
 
+    // Remove an uninstantiated but cached item from the persistedItems group.
+    evaluate<void>(visualModel, "items.addGroups(19, \"persistedItems\")");
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 2);
+    QVERIFY(!findItem<QQuickItem>(contentItem, "delegate", 19));
+     // Store a reference to the item so it is retained in the cache.
+    evaluate<void>(visualModel, "persistentHandle = items.get(19)");
+    QCOMPARE(evaluate<bool>(visualModel, "persistentHandle.inPersistedItems"), true);
+    evaluate<void>(visualModel, "items.removeGroups(19, \"persistedItems\")");
+    QCOMPARE(evaluate<bool>(visualModel, "persistentHandle.inPersistedItems"), false);
+}
 
 void tst_qquickvisualdatamodel::incompleteModel()
 {

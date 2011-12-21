@@ -577,7 +577,8 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
         pix->load(qmlEngine(this)
                 , fullPathUrl
                 , QDeclarativePixmap::Cache | QDeclarativePixmap::Asynchronous);
-        pix->connectFinished(this, SIGNAL(imageLoaded()));
+        if (pix->isLoading())
+            pix->connectFinished(this, SIGNAL(imageLoaded()));
     }
 }
 /*!

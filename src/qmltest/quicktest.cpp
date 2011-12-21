@@ -68,6 +68,35 @@
 #include <QtCore/QTranslator>
 QT_BEGIN_NAMESPACE
 
+static void installCoverageTool(const char * appname, const char * testname)
+{
+#ifdef __COVERAGESCANNER__
+    // Install Coverage Tool
+    __coveragescanner_install(appname);
+    __coveragescanner_testname(testname);
+    __coveragescanner_clear();
+#else
+    Q_UNUSED(appname);
+    Q_UNUSED(testname);
+#endif
+}
+
+static void saveCoverageTool(const char * appname, bool testfailed)
+{
+#ifdef __COVERAGESCANNER__
+    // install again to make sure the filename is correct.
+    // without this, a plugin or similar may have changed the filename.
+    __coveragescanner_install(appname);
+    __coveragescanner_teststate(testfailed ? "FAILED" : "PASSED");
+    __coveragescanner_save();
+    __coveragescanner_testname("");
+    __coveragescanner_clear();
+#else
+    Q_UNUSED(appname);
+    Q_UNUSED(testfailed);
+#endif
+}
+
 
 class QTestRootObject : public QObject
 {
@@ -151,6 +180,8 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // Parse the command-line arguments.
     QuickTestResult::parseArgs(argc, argv);
     QuickTestResult::setProgramName(name);
+
+    installCoverageTool(argv[0], name);
 
     QTranslator translator;
     if (!translationFile.isEmpty()) {
@@ -312,6 +343,8 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
 
     // Flush the current logging stream.
     QuickTestResult::setProgramName(0);
+
+    saveCoverageTool(argv[0], QuickTestResult::exitCode());
 
     delete app;
     // Return the number of failures as the exit code.

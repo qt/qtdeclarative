@@ -44,8 +44,6 @@
 #include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qjsvalueiterator.h>
 
-//TESTED_FILES=
-
 class tst_QJSValueIterator : public QObject
 {
     Q_OBJECT

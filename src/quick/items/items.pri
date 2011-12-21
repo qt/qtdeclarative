@@ -16,8 +16,11 @@ HEADERS += \
     $$PWD/qquicktext_p.h \
     $$PWD/qquicktext_p_p.h \
     $$PWD/qquicktextnode_p.h \
+    $$PWD/qquicklinecontrol_p.h \
     $$PWD/qquicktextinput_p.h \
     $$PWD/qquicktextinput_p_p.h \
+    $$PWD/qquicktextcontrol_p.h \
+    $$PWD/qquicktextcontrol_p_p.h \
     $$PWD/qquicktextedit_p.h \
     $$PWD/qquicktextedit_p_p.h \
     $$PWD/qquickimagebase_p.h \
@@ -67,7 +70,9 @@ HEADERS += \
     $$PWD/qquickmultipointtoucharea_p.h \
     $$PWD/qquickitemview_p.h \
     $$PWD/qquickitemview_p_p.h \
-    $$PWD/qquickwindowmodule_p.h
+    $$PWD/qquickscreen_p.h \
+    $$PWD/qquickwindowmodule_p.h \
+    $$PWD/qquickwindowmanager_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -80,7 +85,9 @@ SOURCES += \
     $$PWD/qquickpainteditem.cpp \
     $$PWD/qquicktext.cpp \
     $$PWD/qquicktextnode.cpp \
+    $$PWD/qquicklinecontrol.cpp \
     $$PWD/qquicktextinput.cpp \
+    $$PWD/qquicktextcontrol.cpp \
     $$PWD/qquicktextedit.cpp \
     $$PWD/qquickimagebase.cpp \
     $$PWD/qquickimage.cpp \
@@ -114,7 +121,9 @@ SOURCES += \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
     $$PWD/qquickitemview.cpp \
-    $$PWD/qquickwindowmodule.cpp
+    $$PWD/qquickwindowmodule.cpp \
+    $$PWD/qquickscreen.cpp \
+    $$PWD/qquickwindowmanager.cpp
 
 SOURCES += \
     $$PWD/qquickshadereffect.cpp \
@@ -129,3 +138,5 @@ HEADERS += \
     $$PWD/qquickshadereffectsource_p.h \
 
 include(context2d/context2d.pri)
+
+

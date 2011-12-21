@@ -163,6 +163,7 @@ public:
         int value;
     };
     QVariant variant() const { return m_variant; }
+    QJSValue qjsvalue() const { return m_qjsvalue; }
 
     int intProperty() const { return m_intProperty; }
     void setIntProperty(int i) { m_intProperty = i; emit intChanged(); }
@@ -176,6 +177,7 @@ signals:
     void thirdBasicSignal();
     void signalWithUnknownType(const MyQmlObject::MyType &arg);
     void signalWithVariant(const QVariant &arg);
+    void signalWithQJSValue(const QJSValue &arg);
     void intChanged();
 
 public slots:
@@ -185,6 +187,7 @@ public slots:
     void setString(const QString &s) { m_string = s; }
     void myinvokable(MyQmlObject *o) { myinvokableObject = o; }
     void variantMethod(const QVariant &v) { m_variant = v; }
+    void qjsvalueMethod(const QJSValue &v) { m_qjsvalue = v; }
     void v8function(QDeclarativeV8Function*);
 
 private:
@@ -199,6 +202,7 @@ private:
     int m_resetProperty;
     QRegExp m_regExp;
     QVariant m_variant;
+    QJSValue m_qjsvalue;
     int m_intProperty;
 };
 

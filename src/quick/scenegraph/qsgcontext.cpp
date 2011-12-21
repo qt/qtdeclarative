@@ -39,30 +39,25 @@
 **
 ****************************************************************************/
 
-#include "qsgcontext_p.h"
-#include <QtQuick/private/qsgrenderer_p.h>
-#include <QtQuick/qsgnode.h>
-
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
-
-#include <private/qsgdefaultrenderer_p.h>
-
+#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgdefaultrenderer_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
-#include <private/qsgdefaultrectanglenode_p.h>
-#include <private/qsgdefaultimagenode_p.h>
-#include <private/qsgdefaultglyphnode_p.h>
-#include <private/qsgdistancefieldglyphnode_p.h>
-
+#include <QtQuick/private/qsgdefaultrectanglenode_p.h>
+#include <QtQuick/private/qsgdefaultimagenode_p.h>
+#include <QtQuick/private/qsgdefaultglyphnode_p.h>
+#include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+
 #include <QGuiApplication>
 #include <QOpenGLContext>
 
 #include <QDeclarativeImageProvider>
+#include <private/qdeclarativeglobal_p.h>
 
 #include <private/qobject_p.h>
 #include <qmutex.h>
-#include <private/qdeclarativeglobal_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFlashMode, QML_FLASH_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlTranslucentMode, QML_TRANSLUCENT_MODE)
@@ -141,13 +136,24 @@ QSGContext::QSGContext(QObject *parent) :
 
 QSGContext::~QSGContext()
 {
+    invalidate();
+}
+
+
+
+void QSGContext::invalidate()
+{
     Q_D(QSGContext);
     qDeleteAll(d->textures.values());
     d->textures.clear();
-    delete d->renderer;
-    delete d->rootNode;
     qDeleteAll(d->materials.values());
+    d->materials.clear();
     delete d->distanceFieldCacheManager;
+    d->distanceFieldCacheManager = 0;
+
+    d->gl = 0;
+
+    emit invalidated();
 }
 
 
@@ -181,28 +187,6 @@ void QSGContext::textureFactoryDestroyed(QObject *o)
 }
 
 
-
-/*!
-    Returns the renderer. The renderer instance is created through the adaptation layer.
- */
-QSGRenderer *QSGContext::renderer() const
-{
-    Q_D(const QSGContext);
-    return d->renderer;
-}
-
-
-/*!
-    Returns the root node. The root node instance is only created once the scene graph
-    context becomes ready.
- */
-QSGRootNode *QSGContext::rootNode() const
-{
-    Q_D(const QSGContext);
-    return d->rootNode;
-}
-
-
 QOpenGLContext *QSGContext::glContext() const
 {
     Q_D(const QSGContext);
@@ -218,16 +202,9 @@ void QSGContext::initialize(QOpenGLContext *context)
     Q_D(QSGContext);
 
     Q_ASSERT(!d->gl);
-
     d->gl = context;
 
-    d->renderer = createRenderer();
-    d->renderer->setClearColor(Qt::white);
-
-    d->rootNode = new QSGRootNode();
-    d->renderer->setRootNode(d->rootNode);
-
-    emit ready();
+    emit initialized();
 }
 
 
@@ -242,15 +219,13 @@ bool QSGContext::isReady() const
 }
 
 
-void QSGContext::renderNextFrame(QOpenGLFramebufferObject *fbo)
+void QSGContext::renderNextFrame(QSGRenderer *renderer, QOpenGLFramebufferObject *fbo)
 {
-    Q_D(QSGContext);
-
     if (fbo) {
         QSGBindableFbo bindable(fbo);
-        d->renderer->renderScene(bindable);
+        renderer->renderScene(bindable);
     } else {
-        d->renderer->renderScene();
+        renderer->renderScene();
     }
 
 }
@@ -344,7 +319,7 @@ QSGRenderer *QSGContext::createRenderer()
 
 bool QSGContext::canDecodeImageToTexture() const
 {
-    return true;
+    return false;
 }
 
 

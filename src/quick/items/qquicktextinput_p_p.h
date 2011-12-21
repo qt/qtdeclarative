@@ -47,7 +47,7 @@
 #include "qquicktext_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
 
-#include <private/qlinecontrol_p.h>
+#include "qquicklinecontrol_p.h"
 
 #include <QtDeclarative/qdeclarative.h>
 #include <QtCore/qelapsedtimer.h>
@@ -75,7 +75,7 @@ class Q_AUTOTEST_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPr
     Q_DECLARE_PUBLIC(QQuickTextInput)
 public:
     QQuickTextInputPrivate()
-                 : control(new QLineControl(QString()))
+                 : control(new QQuickLineControl(QString()))
                  , color((QRgb)0)
                  , style(QQuickText::Normal)
                  , styleColor((QRgb)0)
@@ -122,7 +122,7 @@ public:
     void hideCursor();
     void showCursor();
 
-    QLineControl* control;
+    QQuickLineControl* control;
 
     QFont font;
     QFont sourceFont;

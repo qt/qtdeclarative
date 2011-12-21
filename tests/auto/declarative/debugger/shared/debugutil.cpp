@@ -38,15 +38,14 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QSignalSpy>
+
+#include "debugutil_p.h"
+
 #include <QEventLoop>
 #include <QTimer>
 
 #include <private/qdeclarativedebugclient_p.h>
 #include <private/qdeclarativedebugservice_p.h>
-
-#include "debugutil_p.h"
-
 
 bool QDeclarativeDebugTest::waitForSignal(QObject *receiver, const char *member, int timeout) {
     QEventLoop loop;
@@ -122,6 +121,7 @@ QDeclarativeDebugProcess::~QDeclarativeDebugProcess()
 void QDeclarativeDebugProcess::start(const QStringList &arguments)
 {
     m_mutex.lock();
+    m_process.setEnvironment(m_environment);
     m_process.start(m_executable, arguments);
     m_process.waitForStarted();
     m_timer.start();
@@ -145,6 +145,11 @@ bool QDeclarativeDebugProcess::waitForSessionStart()
     m_eventLoop.exec(QEventLoop::ExcludeUserInputEvents);
 
     return m_started;
+}
+
+void QDeclarativeDebugProcess::setEnvironment(const QStringList &environment)
+{
+    m_environment = environment;
 }
 
 QString QDeclarativeDebugProcess::output() const

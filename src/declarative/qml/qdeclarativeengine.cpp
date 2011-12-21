@@ -41,6 +41,7 @@
 
 #include "qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
+#include "qdeclarativecomponentattached_p.h"
 
 #include "qdeclarativecontext_p.h"
 #include "qdeclarativecompiler_p.h"
@@ -423,6 +424,8 @@ void QDeclarativeEnginePrivate::init()
         // first time on a non-main thread.  This can cause a lockup if the main thread
         // is blocking on the thread that initialize the network access manager.
         QNetworkConfigurationManager man;
+
+        qmlRegisterType<QDeclarativeComponent>("QML", 1, 0, "Component");
 
         firstTime = false;
     }

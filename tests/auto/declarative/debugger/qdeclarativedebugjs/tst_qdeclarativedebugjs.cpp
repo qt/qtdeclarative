@@ -972,6 +972,9 @@ bool tst_QDeclarativeDebugJS::init(const QString &qmlFile, bool blockMode)
     process = new QDeclarativeDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     client = new QJSDebugClient(connection);
 
+    QStringList systemEnvironment = QProcess::systemEnvironment();
+    systemEnvironment << "QML_DISABLE_OPTIMIZER=1";
+    process->setEnvironment(systemEnvironment);
     if (blockMode)
         process->start(QStringList() << QLatin1String(BLOCKMODE) << TESTDATA(qmlFile));
     else

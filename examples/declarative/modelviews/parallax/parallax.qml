@@ -57,7 +57,7 @@ Rectangle {
         }
 
         Item {
-            property url icon: "content/pics/home-page.svg"
+            property url icon: "content/pics/home-page.png"
             width: 320; height: 480
             Smiley { }
         }
@@ -71,7 +71,6 @@ Rectangle {
                 width: 300; height: 400
                 clip: true; 
                 source: "../../samegame/samegame.qml"
-                Component.onCompleted: item.inAnotherDemo = true;
             }
         }
     }

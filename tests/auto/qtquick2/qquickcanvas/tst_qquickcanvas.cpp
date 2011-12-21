@@ -73,18 +73,6 @@ static QTouchEvent::TouchPoint makeTouchPoint(QQuickItem *item, const QPointF &p
     return tp;
 }
 
-static TouchEventData makeTouchData(QEvent::Type type, QWidget *w, Qt::TouchPointStates states, const QList<QTouchEvent::TouchPoint> &touchPoints)
-{
-    TouchEventData d = { type, w, 0, states, touchPoints };
-    return d;
-}
-
-static TouchEventData makeTouchData(QEvent::Type type, QWidget *w, Qt::TouchPointStates states, const QTouchEvent::TouchPoint &touchPoint)
-{
-    QList<QTouchEvent::TouchPoint> points;
-    points << touchPoint;
-    return makeTouchData(type, w, states, points);
-}
 static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states, const QList<QTouchEvent::TouchPoint>& touchPoints)
 {
     TouchEventData d = { type, 0, w, states, touchPoints };
@@ -148,7 +136,7 @@ protected:
             event->ignore();
             return;
         }
-        lastEvent = makeTouchData(event->type(), event->widget(), event->touchPointStates(), event->touchPoints());
+        lastEvent = makeTouchData(event->type(), event->window(), event->touchPointStates(), event->touchPoints());
         event->accept();
     }
 
@@ -203,6 +191,11 @@ private slots:
 
     void qmlCreation();
     void clearColor();
+
+    void grab();
+    void multipleWindows();
+
+    void animationsWhileHidden();
 };
 
 tst_qquickcanvas::tst_qquickcanvas()
@@ -221,6 +214,7 @@ void tst_qquickcanvas::cleanupTestCase()
 void tst_qquickcanvas::constantUpdates()
 {
     QQuickCanvas canvas;
+    canvas.resize(250, 250);
     ConstantUpdateItem item(canvas.rootItem());
     canvas.show();
     QTRY_VERIFY(item.iterations > 60);
@@ -249,8 +243,12 @@ void tst_qquickcanvas::touchEvent_basic()
 
     QPointF pos(10, 10);
 
+    QTouchDevice *device = new QTouchDevice;
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device);
+
     // press single point
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas);
+    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas);
     QTest::qWait(50);
 
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
@@ -262,7 +260,7 @@ void tst_qquickcanvas::touchEvent_basic()
     topItem->reset();
 
     // press multiple points
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas)
+    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas)
             .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
@@ -274,9 +272,9 @@ void tst_qquickcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // touch point on top item moves to bottom item, but top item should still receive the event
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, device).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, canvas, Qt::TouchPointMoved,
@@ -284,9 +282,9 @@ void tst_qquickcanvas::touchEvent_basic()
     topItem->reset();
 
     // touch point on bottom item moves to top item, but bottom item should still receive the event
-    QTest::touchEvent(canvas).press(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, device).press(0, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas).move(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, device).move(0, topItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchUpdate, canvas, Qt::TouchPointMoved,
@@ -294,9 +292,9 @@ void tst_qquickcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // a single stationary press on an item shouldn't cause an event
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas).stationary(0)
+    QTest::touchEvent(canvas, device).stationary(0)
             .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);    // received press only, not stationary
@@ -308,9 +306,9 @@ void tst_qquickcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // move touch point from top item to bottom, and release
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas);
+    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas).release(0, bottomItem->mapToScene(pos).toPoint(),canvas);
+    QTest::touchEvent(canvas, device).release(0, bottomItem->mapToScene(pos).toPoint(),canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchEnd, canvas, Qt::TouchPointReleased,
@@ -318,12 +316,12 @@ void tst_qquickcanvas::touchEvent_basic()
     topItem->reset();
 
     // release while another point is pressed
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas)
+    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas)
             .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, device).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas).release(0, bottomItem->mapToScene(pos).toPoint(), canvas)
+    QTest::touchEvent(canvas, device).release(0, bottomItem->mapToScene(pos).toPoint(), canvas)
                              .stationary(1);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
@@ -346,6 +344,10 @@ void tst_qquickcanvas::touchEvent_propagation()
     QFETCH(bool, acceptEvents);
     QFETCH(bool, enableItem);
     QFETCH(qreal, itemOpacity);
+
+    QTouchDevice *device = new QTouchDevice;
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device);
 
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
@@ -377,7 +379,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     topItem->setOpacity(itemOpacity);
 
     // single touch to top item, should be received by middle item
-    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas);
+    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas);
     QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(middleItem->lastEvent.touchPoints.count(), 1);
@@ -386,7 +388,7 @@ void tst_qquickcanvas::touchEvent_propagation()
             makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))));
 
     // touch top and middle items, middle item should get both events
-    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas)
+    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas)
             .press(1, pointInMiddleItem, canvas);
     QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
@@ -403,7 +405,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     middleItem->setOpacity(itemOpacity);
 
     // touch top and middle items, bottom item should get all events
-    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas)
+    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas)
             .press(1, pointInMiddleItem, canvas);
     QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
@@ -420,7 +422,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     bottomItem->setOpacity(itemOpacity);
 
     // no events should be received
-    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas)
+    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas)
             .press(1, pointInMiddleItem, canvas)
             .press(2, pointInBottomItem, canvas);
     QTest::qWait(50);
@@ -436,7 +438,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     middleItem->acceptEvents = acceptEvents;
     middleItem->setEnabled(enableItem);
     middleItem->setOpacity(itemOpacity);
-    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas);
+    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas);
     QTest::qWait(50);
     if (!enableItem || itemOpacity == 0) {
         // middle item is disabled or has 0 opacity, bottom item receives the event
@@ -520,6 +522,8 @@ void tst_qquickcanvas::mouseFiltering()
     QCOMPARE(middleItem->mousePressId, 1);
     QCOMPARE(bottomItem->mousePressId, 2);
     QCOMPARE(topItem->mousePressId, 3);
+
+    delete canvas;
 }
 
 void tst_qquickcanvas::qmlCreation()
@@ -550,6 +554,68 @@ void tst_qquickcanvas::clearColor()
     QTest::qWaitForWindowShown(canvas);
     QCOMPARE(canvas->clearColor(), QColor(Qt::blue));
     delete canvas;
+}
+
+void tst_qquickcanvas::grab()
+{
+    QQuickCanvas canvas;
+    canvas.setClearColor(Qt::red);
+
+    canvas.resize(250, 250);
+    canvas.show();
+
+    QImage content = canvas.grabFrameBuffer();
+    QCOMPARE(content.width(), canvas.width());
+    QCOMPARE(content.height(), canvas.height());
+    QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
+}
+
+void tst_qquickcanvas::multipleWindows()
+{
+    QList<QQuickCanvas *> windows;
+    for (int i=0; i<6; ++i) {
+        QQuickCanvas *c = new QQuickCanvas();
+        c->setClearColor(Qt::GlobalColor(Qt::red + i));
+        c->resize(300, 200);
+        c->setPos(100 + i * 30, 100 + i * 20);
+        c->show();
+        windows << c;
+        QVERIFY(c->visible());
+    }
+
+    // move them
+    for (int i=0; i<windows.size(); ++i) {
+        QQuickCanvas *c = windows.at(i);
+        c->setPos(c->x() - 10, c->y() - 10);
+    }
+
+    // resize them
+    for (int i=0; i<windows.size(); ++i) {
+        QQuickCanvas *c = windows.at(i);
+        c->resize(200, 150);
+    }
+
+    qDeleteAll(windows);
+}
+
+void tst_qquickcanvas::animationsWhileHidden()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.loadUrl(TESTDATA("AnimationsWhileHidden.qml"));
+    QObject* created = component.create();
+
+    QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);
+    QVERIFY(canvas);
+    QVERIFY(canvas->visible());
+
+    // Now hide the window and verify that it went off screen
+    canvas->hide();
+    QTest::qWait(10);
+    QVERIFY(!canvas->visible());
+
+    // Running animaiton should cause it to become visible again shortly.
+    QTRY_VERIFY(canvas->visible());
 }
 
 QTEST_MAIN(tst_qquickcanvas)

@@ -1156,6 +1156,11 @@ void tst_QQuickItem::childrenRect()
 void tst_QQuickItem::childrenRectBug()
 {
     QQuickView *canvas = new QQuickView(0);
+
+    QString warning = QUrl::fromLocalFile(TESTDATA("childrenRectBug.qml")).toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug.qml")));
     canvas->show();
 
@@ -1172,6 +1177,17 @@ void tst_QQuickItem::childrenRectBug()
 void tst_QQuickItem::childrenRectBug2()
 {
     QQuickView *canvas = new QQuickView(0);
+
+    QString warning1 = QUrl::fromLocalFile(TESTDATA("childrenRectBug2.qml")).toString() + ":7:5: QML Item: Binding loop detected for property \"width\"";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+
+    QString warning2 = QUrl::fromLocalFile(TESTDATA("childrenRectBug2.qml")).toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug2.qml")));
     canvas->show();
 

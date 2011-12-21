@@ -300,6 +300,16 @@ void QDeclarativeBinding::setTarget(const QDeclarativeProperty &prop)
     update();
 }
 
+void QDeclarativeBinding::setTarget(QObject *object,
+                                    const QDeclarativePropertyData &core,
+                                    QDeclarativeContextData *ctxt)
+{
+    Q_D(QDeclarativeBinding);
+    d->property = QDeclarativePropertyPrivate::restore(object, core, ctxt);
+
+    update();
+}
+
 QDeclarativeProperty QDeclarativeBinding::property() const 
 {
    Q_D(const QDeclarativeBinding);

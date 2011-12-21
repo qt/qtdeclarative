@@ -40,15 +40,17 @@
 ****************************************************************************/
 
 #include "qquickwindowmodule_p.h"
+#include "qquickscreen_p.h"
 #include <QtQuick/QQuickCanvas>
 
 QT_BEGIN_NAMESPACE
 
 void QQuickWindowModule::defineModule()
 {
-    const char* uri = "QtQuick.Window";
+    const char uri[] = "QtQuick.Window";
 
     qmlRegisterType<QQuickCanvas>(uri, 2, 0, "Window");
+    qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", QStringLiteral("Screen can only be used via the attached property."));
 }
 
 QT_END_NAMESPACE

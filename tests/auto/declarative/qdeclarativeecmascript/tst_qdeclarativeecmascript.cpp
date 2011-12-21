@@ -114,6 +114,7 @@ private slots:
     void objectHasOwnProperty();
     void selfDeletingBinding();
     void extendedObjectPropertyLookup();
+    void extendedObjectPropertyLookup2();
     void scriptErrors();
     void functionErrors();
     void propertyAssignmentErrors();
@@ -147,11 +148,15 @@ private slots:
     void signalWithJSValueInVariant();
     void signalWithJSValueInVariant_twoEngines_data();
     void signalWithJSValueInVariant_twoEngines();
+    void signalWithQJSValue_data();
+    void signalWithQJSValue();
     void moduleApi_data();
     void moduleApi();
     void importScripts_data();
     void importScripts();
     void scarceResources();
+    void scarceResources_data();
+    void scarceResources_other();
     void propertyChangeSlots();
     void propertyVar_data();
     void propertyVar();
@@ -1359,6 +1364,21 @@ void tst_qdeclarativeecmascript::extendedObjectPropertyLookup()
 }
 
 /*
+Test that extended object properties can be accessed correctly.
+*/
+void tst_qdeclarativeecmascript::extendedObjectPropertyLookup2()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("extendedObjectPropertyLookup2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVariant returnValue;
+    QVERIFY(QMetaObject::invokeMethod(object, "getValue", Q_RETURN_ARG(QVariant, returnValue)));
+    QCOMPARE(returnValue.toInt(), 42);
+
+    delete object;
+}
+/*
 Test file/lineNumbers for binding/Script errors.
 */
 void tst_qdeclarativeecmascript::scriptErrors()
@@ -1412,15 +1432,15 @@ void tst_qdeclarativeecmascript::functionErrors()
     delete object;
 
     // test that if an exception occurs while invoking js function from cpp, it is reported as expected.
-    QDeclarativeComponent componentTwo(&engine, TEST_FILE("scarceresources/scarceResourceFunctionFail.qml"));
+    QDeclarativeComponent componentTwo(&engine, TEST_FILE("scarceResourceFunctionFail.var.qml"));
     url = componentTwo.url().toString();
     object = componentTwo.create();
     QVERIFY(object != 0);
 
     QString srpname = object->property("srp_name").toString();
     
-    warning = url + QLatin1String(":17: TypeError: Property 'scarceResource' of object ") + srpname + 
-              QLatin1String(" is not a function");
+    warning = url + QLatin1String(":16: TypeError: Property 'scarceResource' of object ") + srpname
+                  + QLatin1String(" is not a function");
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData()); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     delete object;
@@ -2927,6 +2947,32 @@ void tst_qdeclarativeecmascript::signalWithJSValueInVariant_twoEngines()
     QVERIFY(!object->property("pass").toBool());
 }
 
+void tst_qdeclarativeecmascript::signalWithQJSValue_data()
+{
+    signalWithJSValueInVariant_data();
+}
+
+void tst_qdeclarativeecmascript::signalWithQJSValue()
+{
+    QFETCH(QString, expression);
+    QFETCH(QString, compare);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("signalWithQJSValue.qml"));
+    QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject *>(component.create()));
+    QVERIFY(object != 0);
+
+    QJSValue value = engine.evaluate(expression);
+    QVERIFY(!engine.hasUncaughtException());
+    object->setProperty("expression", expression);
+    object->setProperty("compare", compare);
+    object->setProperty("pass", false);
+
+    emit object->signalWithQJSValue(value);
+
+    QVERIFY(object->property("pass").toBool());
+    QVERIFY(object->qjsvalue().strictlyEquals(value));
+}
+
 void tst_qdeclarativeecmascript::moduleApi_data()
 {
     QTest::addColumn<QUrl>("testfile");
@@ -3197,110 +3243,25 @@ void tst_qdeclarativeecmascript::importScripts()
     }
 }
 
-void tst_qdeclarativeecmascript::scarceResources()
+void tst_qdeclarativeecmascript::scarceResources_other()
 {
+    /* These tests require knowledge of state, since we test values after
+       performing signal or function invocation. */
+
     QPixmap origPixmap(100, 100);
     origPixmap.fill(Qt::blue);
-
+    QString srp_name, expectedWarning;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(&engine);
     ScarceResourceObject *eo = 0;
+    QObject *srsc = 0;
     QObject *object = 0;
 
-    // in the following three cases, the instance created from the component
-    // has a property which is a copy of the scarce resource; hence, the
-    // resource should NOT be detached prior to deletion of the object instance,
-    // unless the resource is destroyed explicitly.
-    QDeclarativeComponent component(&engine, TEST_FILE("scarceresources/scarceResourceCopy.qml"));
-    object = component.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("scarceResourceCopy").isValid());
-    QCOMPARE(object->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
-    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
-    QVERIFY(!eo->scarceResourceIsDetached()); // there are two copies of it in existence: the property of object, and the property of eo.
-    delete object;
-
-    QDeclarativeComponent componentTwo(&engine, TEST_FILE("scarceresources/scarceResourceCopyFromJs.qml"));
-    object = componentTwo.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("scarceResourceCopy").isValid());
-    QCOMPARE(object->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
-    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
-    QVERIFY(!eo->scarceResourceIsDetached()); // there are two copies of it in existence: the property of object, and the property of eo.
-    delete object;
-
-    QDeclarativeComponent componentThree(&engine, TEST_FILE("scarceresources/scarceResourceDestroyedCopy.qml"));
-    object = componentThree.create();
-    QVERIFY(object != 0);
-    QVERIFY(!(object->property("scarceResourceCopy").isValid())); // was manually released prior to being returned.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
-    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
-    QVERIFY(eo->scarceResourceIsDetached()); // should have explicitly been released during the evaluation of the binding.
-    delete object;
-
-    // in the following three cases, no other copy should exist in memory,
-    // and so it should be detached (unless explicitly preserved).
-    QDeclarativeComponent componentFour(&engine, TEST_FILE("scarceresources/scarceResourceTest.qml"));
-    object = componentFour.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("scarceResourceTest").isValid());
-    QCOMPARE(object->property("scarceResourceTest").toInt(), 100);
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
-    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
-    QVERIFY(eo->scarceResourceIsDetached()); // the resource should have been released after the binding was evaluated.
-    delete object;
-
-    QDeclarativeComponent componentFive(&engine, TEST_FILE("scarceresources/scarceResourceTestPreserve.qml"));
-    object = componentFive.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("scarceResourceTest").isValid());
-    QCOMPARE(object->property("scarceResourceTest").toInt(), 100);
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
-    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
-    QVERIFY(!eo->scarceResourceIsDetached()); // this won't be detached since we explicitly preserved it.
-    delete object;
-
-    QDeclarativeComponent componentSix(&engine, TEST_FILE("scarceresources/scarceResourceTestMultiple.qml"));
-    object = componentSix.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("scarceResourceTest").isValid());
-    QCOMPARE(object->property("scarceResourceTest").toInt(), 100);
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
-    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
-    QVERIFY(eo->scarceResourceIsDetached()); // all resources were released manually or automatically released.
-    delete object;
-
-    // test that scarce resources are handled correctly for imports
-    QDeclarativeComponent componentSeven(&engine, TEST_FILE("scarceresources/scarceResourceCopyImportNoBinding.qml"));
-    object = componentSeven.create();
-    QVERIFY(object != 0); // the import should have caused the addition of a resource to the ScarceResources list
-    QVERIFY(ep->scarceResources.isEmpty()); // but they should have been released by this point.
-    delete object;
-
-    QDeclarativeComponent componentEight(&engine, TEST_FILE("scarceresources/scarceResourceCopyImportFail.qml"));
-    object = componentEight.create();
-    QVERIFY(object != 0);
-    QVERIFY(!object->property("scarceResourceCopy").isValid()); // wasn't preserved, so shouldn't be valid.
-    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
-    delete object;
-
-    QDeclarativeComponent componentNine(&engine, TEST_FILE("scarceresources/scarceResourceCopyImport.qml"));
-    object = componentNine.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("scarceResourceCopy").isValid()); // preserved, so should be valid.
-    QCOMPARE(object->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
-    QVERIFY(object->property("scarceResourceAssignedCopyOne").isValid()); // assigned before destroy(), so should be valid.
-    QCOMPARE(object->property("scarceResourceAssignedCopyOne").value<QPixmap>(), origPixmap);
-    QVERIFY(!object->property("scarceResourceAssignedCopyTwo").isValid()); // assigned after destroy(), so should be invalid.
-    QVERIFY(ep->scarceResources.isEmpty()); // this will still be zero, because "preserve()" REMOVES it from this list.
-    delete object;
+    /* property var semantics */
 
     // test that scarce resources are handled properly in signal invocation
-    QDeclarativeComponent componentTen(&engine, TEST_FILE("scarceresources/scarceResourceSignal.qml"));
-    object = componentTen.create();
-    QVERIFY(object != 0);
-    QObject *srsc = object->findChild<QObject*>("srsc");
+    QDeclarativeComponent varComponentTen(&engine, TEST_FILE("scarceResourceSignal.var.qml"));
+    object = varComponentTen.create();
+    srsc = object->findChild<QObject*>("srsc");
     QVERIFY(srsc);
     QVERIFY(!srsc->property("scarceResourceCopy").isValid()); // hasn't been instantiated yet.
     QCOMPARE(srsc->property("width"), QVariant(5)); // default value is 5.
@@ -3320,8 +3281,8 @@ void tst_qdeclarativeecmascript::scarceResources()
     delete object;
 
     // test that scarce resources are handled properly from js functions in qml files
-    QDeclarativeComponent componentEleven(&engine, TEST_FILE("scarceresources/scarceResourceFunction.qml"));
-    object = componentEleven.create();
+    QDeclarativeComponent varComponentEleven(&engine, TEST_FILE("scarceResourceFunction.var.qml"));
+    object = varComponentEleven.create();
     QVERIFY(object != 0);
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // not yet assigned, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
@@ -3339,20 +3300,353 @@ void tst_qdeclarativeecmascript::scarceResources()
     delete object;
 
     // test that if an exception occurs while invoking js function from cpp, that the resources are released.
-    QDeclarativeComponent componentTwelve(&engine, TEST_FILE("scarceresources/scarceResourceFunctionFail.qml"));
-    object = componentTwelve.create();
+    QDeclarativeComponent varComponentTwelve(&engine, TEST_FILE("scarceResourceFunctionFail.var.qml"));
+    object = varComponentTwelve.create();
     QVERIFY(object != 0);
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // not yet assigned, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QString srp_name = object->property("srp_name").toString();
-    QString expectedWarning = componentTwelve.url().toString() + QLatin1String(":17: TypeError: Property 'scarceResource' of object ") + srp_name + QLatin1String(" is not a function");
+    srp_name = object->property("srp_name").toString();
+    expectedWarning = varComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object ") + srp_name + QLatin1String(" is not a function");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
     QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    delete object;
+
+    // test that if an Item which has JS ownership but has a scarce resource property is garbage collected,
+    // that the scarce resource is removed from the engine's list of scarce resources to clean up.
+    QDeclarativeComponent varComponentThirteen(&engine, TEST_FILE("scarceResourceObjectGc.var.qml"));
+    object = varComponentThirteen.create();
+    QVERIFY(object != 0);
+    QVERIFY(!object->property("varProperty").isValid()); // not assigned yet
+    QMetaObject::invokeMethod(object, "assignVarProperty");
+    QVERIFY(ep->scarceResources.isEmpty());             // the scarce resource is a VME property.
+    QMetaObject::invokeMethod(object, "deassignVarProperty");
+    QVERIFY(ep->scarceResources.isEmpty());             // should still be empty; the resource should have been released on gc.
+    delete object;
+
+    /* property variant semantics */
+
+    // test that scarce resources are handled properly in signal invocation
+    QDeclarativeComponent variantComponentTen(&engine, TEST_FILE("scarceResourceSignal.variant.qml"));
+    object = variantComponentTen.create();
+    QVERIFY(object != 0);
+    srsc = object->findChild<QObject*>("srsc");
+    QVERIFY(srsc);
+    QVERIFY(!srsc->property("scarceResourceCopy").isValid()); // hasn't been instantiated yet.
+    QCOMPARE(srsc->property("width"), QVariant(5)); // default value is 5.
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
+    QMetaObject::invokeMethod(srsc, "testSignal");
+    QVERIFY(!srsc->property("scarceResourceCopy").isValid()); // still hasn't been instantiated
+    QCOMPARE(srsc->property("width"), QVariant(10)); // but width was assigned to 10.
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(eo->scarceResourceIsDetached()); // should still be no other copies of it at this stage.
+    QMetaObject::invokeMethod(srsc, "testSignal2"); // assigns scarceResourceCopy to the scarce pixmap.
+    QVERIFY(srsc->property("scarceResourceCopy").isValid());
+    QCOMPARE(srsc->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(!(eo->scarceResourceIsDetached())); // should be another copy of the resource now.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    delete object;
+
+    // test that scarce resources are handled properly from js functions in qml files
+    QDeclarativeComponent variantComponentEleven(&engine, TEST_FILE("scarceResourceFunction.variant.qml"));
+    object = variantComponentEleven.create();
+    QVERIFY(object != 0);
+    QVERIFY(!object->property("scarceResourceCopy").isValid()); // not yet assigned, so should not be valid
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
+    QMetaObject::invokeMethod(object, "retrieveScarceResource");
+    QVERIFY(object->property("scarceResourceCopy").isValid()); // assigned, so should be valid.
+    QCOMPARE(object->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(!eo->scarceResourceIsDetached()); // should be a copy of the resource at this stage.
+    QMetaObject::invokeMethod(object, "releaseScarceResource");
+    QVERIFY(!object->property("scarceResourceCopy").isValid()); // just released, so should not be valid
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    delete object;
+
+    // test that if an exception occurs while invoking js function from cpp, that the resources are released.
+    QDeclarativeComponent variantComponentTwelve(&engine, TEST_FILE("scarceResourceFunctionFail.variant.qml"));
+    object = variantComponentTwelve.create();
+    QVERIFY(object != 0);
+    QVERIFY(!object->property("scarceResourceCopy").isValid()); // not yet assigned, so should not be valid
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
+    srp_name = object->property("srp_name").toString();
+    expectedWarning = variantComponentTwelve.url().toString() + QLatin1String(":16: TypeError: Property 'scarceResource' of object ") + srp_name + QLatin1String(" is not a function");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+    QMetaObject::invokeMethod(object, "retrieveScarceResource");
+    QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
+    eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+    QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::scarceResources_data()
+{
+    QTest::addColumn<QUrl>("qmlFile");
+    QTest::addColumn<bool>("readDetachStatus");
+    QTest::addColumn<bool>("expectedDetachStatus");
+    QTest::addColumn<QStringList>("propertyNames");
+    QTest::addColumn<QVariantList>("expectedValidity");
+    QTest::addColumn<QVariantList>("expectedValues");
+    QTest::addColumn<QStringList>("expectedErrors");
+
+    QPixmap origPixmap(100, 100);
+    origPixmap.fill(Qt::blue);
+
+    /* property var semantics */
+
+    // in the following three cases, the instance created from the component
+    // has a property which is a copy of the scarce resource; hence, the
+    // resource should NOT be detached prior to deletion of the object instance,
+    // unless the resource is destroyed explicitly.
+    QTest::newRow("var: import scarce resource copy directly")
+        << TEST_FILE("scarceResourceCopy.var.qml")
+        << true
+        << false // won't be detached, because assigned to property and not explicitly released
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << origPixmap)
+        << QStringList();
+
+    QTest::newRow("var: import scarce resource copy from JS")
+        << TEST_FILE("scarceResourceCopyFromJs.var.qml")
+        << true
+        << false // won't be detached, because assigned to property and not explicitly released
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << origPixmap)
+        << QStringList();
+
+    QTest::newRow("var: import released scarce resource copy from JS")
+        << TEST_FILE("scarceResourceDestroyedCopy.var.qml")
+        << true
+        << true // explicitly released, so it will be detached
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << false)
+        << (QList<QVariant>() << QVariant())
+        << QStringList();
+
+    // in the following three cases, no other copy should exist in memory,
+    // and so it should be detached (unless explicitly preserved).
+    QTest::newRow("var: import auto-release SR from JS in binding side-effect")
+        << TEST_FILE("scarceResourceTest.var.qml")
+        << true
+        << true // auto released, so it will be detached
+        << (QStringList() << QLatin1String("scarceResourceTest"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << QVariant(100))
+        << QStringList();
+    QTest::newRow("var: import explicit-preserve SR from JS in binding side-effect")
+        << TEST_FILE("scarceResourceTestPreserve.var.qml")
+        << true
+        << false // won't be detached because we explicitly preserve it
+        << (QStringList() << QLatin1String("scarceResourceTest"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << QVariant(100))
+        << QStringList();
+    QTest::newRow("var: import explicit-preserve SR from JS in binding side-effect")
+        << TEST_FILE("scarceResourceTestMultiple.var.qml")
+        << true
+        << true // will be detached because all resources were released manually or automatically.
+        << (QStringList() << QLatin1String("scarceResourceTest"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << QVariant(100))
+        << QStringList();
+
+    // In the following three cases, test that scarce resources are handled
+    // correctly for imports.
+    QTest::newRow("var: import with no binding")
+        << TEST_FILE("scarceResourceCopyImportNoBinding.var.qml")
+        << false // cannot check detach status.
+        << false
+        << QStringList()
+        << QList<QVariant>()
+        << QList<QVariant>()
+        << QStringList();
+    QTest::newRow("var: import with binding without explicit preserve")
+        << TEST_FILE("scarceResourceCopyImportNoBinding.var.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << false) // will have been released prior to evaluation of binding.
+        << (QList<QVariant>() << QVariant())
+        << QStringList();
+    QTest::newRow("var: import with explicit release after binding evaluation")
+        << TEST_FILE("scarceResourceCopyImport.var.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("scarceResourceImportedCopy") << QLatin1String("scarceResourceAssignedCopyOne") << QLatin1String("scarceResourceAssignedCopyTwo") << QLatin1String("arePropertiesEqual"))
+        << (QList<QVariant>() << false << false << false << true) // since property var = JS object reference, by releasing the provider's resource, all handles are invalidated.
+        << (QList<QVariant>() << QVariant() << QVariant() << QVariant() << QVariant(true))
+        << QStringList();
+    QTest::newRow("var: import with different js objects")
+        << TEST_FILE("scarceResourceCopyImportDifferent.var.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("scarceResourceAssignedCopyOne") << QLatin1String("scarceResourceAssignedCopyTwo") << QLatin1String("arePropertiesEqual"))
+        << (QList<QVariant>() << false << true << true) // invalidating one shouldn't invalidate the other, because they're not references to the same JS object.
+        << (QList<QVariant>() << QVariant() << QVariant(origPixmap) << QVariant(false))
+        << QStringList();
+    QTest::newRow("var: import with different js objects and explicit release")
+        << TEST_FILE("scarceResourceMultipleDifferentNoBinding.var.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("resourceOne") << QLatin1String("resourceTwo"))
+        << (QList<QVariant>() << true << false) // invalidating one shouldn't invalidate the other, because they're not references to the same JS object.
+        << (QList<QVariant>() << QVariant(origPixmap) << QVariant())
+        << QStringList();
+    QTest::newRow("var: import with same js objects and explicit release")
+        << TEST_FILE("scarceResourceMultipleSameNoBinding.var.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("resourceOne") << QLatin1String("resourceTwo"))
+        << (QList<QVariant>() << false << false) // invalidating one should invalidate the other, because they're references to the same JS object.
+        << (QList<QVariant>() << QVariant() << QVariant())
+        << QStringList();
+    QTest::newRow("var: binding with same js objects and explicit release")
+        << TEST_FILE("scarceResourceMultipleSameWithBinding.var.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("resourceOne") << QLatin1String("resourceTwo"))
+        << (QList<QVariant>() << false << false) // invalidating one should invalidate the other, because they're references to the same JS object.
+        << (QList<QVariant>() << QVariant() << QVariant())
+        << QStringList();
+
+
+    /* property variant semantics */
+
+    // in the following three cases, the instance created from the component
+    // has a property which is a copy of the scarce resource; hence, the
+    // resource should NOT be detached prior to deletion of the object instance,
+    // unless the resource is destroyed explicitly.
+    QTest::newRow("variant: import scarce resource copy directly")
+        << TEST_FILE("scarceResourceCopy.variant.qml")
+        << true
+        << false // won't be detached, because assigned to property and not explicitly released
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << origPixmap)
+        << QStringList();
+
+    QTest::newRow("variant: import scarce resource copy from JS")
+        << TEST_FILE("scarceResourceCopyFromJs.variant.qml")
+        << true
+        << false // won't be detached, because assigned to property and not explicitly released
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << origPixmap)
+        << QStringList();
+
+    QTest::newRow("variant: import released scarce resource copy from JS")
+        << TEST_FILE("scarceResourceDestroyedCopy.variant.qml")
+        << true
+        << true // explicitly released, so it will be detached
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << false)
+        << (QList<QVariant>() << QVariant())
+        << QStringList();
+
+    // in the following three cases, no other copy should exist in memory,
+    // and so it should be detached (unless explicitly preserved).
+    QTest::newRow("variant: import auto-release SR from JS in binding side-effect")
+        << TEST_FILE("scarceResourceTest.variant.qml")
+        << true
+        << true // auto released, so it will be detached
+        << (QStringList() << QLatin1String("scarceResourceTest"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << QVariant(100))
+        << QStringList();
+    QTest::newRow("variant: import explicit-preserve SR from JS in binding side-effect")
+        << TEST_FILE("scarceResourceTestPreserve.variant.qml")
+        << true
+        << false // won't be detached because we explicitly preserve it
+        << (QStringList() << QLatin1String("scarceResourceTest"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << QVariant(100))
+        << QStringList();
+    QTest::newRow("variant: import multiple scarce resources")
+        << TEST_FILE("scarceResourceTestMultiple.variant.qml")
+        << true
+        << true // will be detached because all resources were released manually or automatically.
+        << (QStringList() << QLatin1String("scarceResourceTest"))
+        << (QList<QVariant>() << true)
+        << (QList<QVariant>() << QVariant(100))
+        << QStringList();
+
+    // In the following three cases, test that scarce resources are handled
+    // correctly for imports.
+    QTest::newRow("variant: import with no binding")
+        << TEST_FILE("scarceResourceCopyImportNoBinding.variant.qml")
+        << false // cannot check detach status.
+        << false
+        << QStringList()
+        << QList<QVariant>()
+        << QList<QVariant>()
+        << QStringList();
+    QTest::newRow("variant: import with binding without explicit preserve")
+        << TEST_FILE("scarceResourceCopyImportNoBinding.variant.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("scarceResourceCopy"))
+        << (QList<QVariant>() << false) // will have been released prior to evaluation of binding.
+        << (QList<QVariant>() << QVariant())
+        << QStringList();
+    QTest::newRow("variant: import with explicit release after binding evaluation")
+        << TEST_FILE("scarceResourceCopyImport.variant.qml")
+        << false
+        << false
+        << (QStringList() << QLatin1String("scarceResourceImportedCopy") << QLatin1String("scarceResourceAssignedCopyOne") << QLatin1String("scarceResourceAssignedCopyTwo"))
+        << (QList<QVariant>() << true << true << false) // since property variant = variant copy, releasing the provider's resource does not invalidate previously assigned copies.
+        << (QList<QVariant>() << origPixmap << origPixmap << QVariant())
+        << QStringList();
+}
+
+void tst_qdeclarativeecmascript::scarceResources()
+{
+    QFETCH(QUrl, qmlFile);
+    QFETCH(bool, readDetachStatus);
+    QFETCH(bool, expectedDetachStatus);
+    QFETCH(QStringList, propertyNames);
+    QFETCH(QVariantList, expectedValidity);
+    QFETCH(QVariantList, expectedValues);
+    QFETCH(QStringList, expectedErrors);
+
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(&engine);
+    ScarceResourceObject *eo = 0;
+    QObject *object = 0;
+
+    QDeclarativeComponent c(&engine, qmlFile);
+    object = c.create();
+    QVERIFY(object != 0);
+    for (int i = 0; i < propertyNames.size(); ++i) {
+        QString prop = propertyNames.at(i);
+        bool validity = expectedValidity.at(i).toBool();
+        QVariant value = expectedValues.at(i);
+
+        QCOMPARE(object->property(prop.toLatin1().constData()).isValid(), validity);
+        if (value.type() == QVariant::Int) {
+            QCOMPARE(object->property(prop.toLatin1().constData()).toInt(), value.toInt());
+        } else if (value.type() == QVariant::Pixmap) {
+            QCOMPARE(object->property(prop.toLatin1().constData()).value<QPixmap>(), value.value<QPixmap>());
+        }
+    }
+
+    if (readDetachStatus) {
+        eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
+        QCOMPARE(eo->scarceResourceIsDetached(), expectedDetachStatus);
+    }
+
+    QVERIFY(ep->scarceResources.isEmpty());
     delete object;
 }
 

@@ -50,18 +50,20 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QV8ProfilerService, v8ProfilerInstance)
 
-class ByteArrayOutputStream : public v8::OutputStream
+class DebugServiceOutputStream : public v8::OutputStream
 {
-    QByteArray *_buffer;
+    QDeclarativeDebugService &_service;
 public:
-    ByteArrayOutputStream(QByteArray *buffer)
+    DebugServiceOutputStream(QDeclarativeDebugService &service)
         : v8::OutputStream(),
-          _buffer(buffer) {}
+          _service(service) {}
     void EndOfStream() {}
-    WriteResult WriteAsciiChunk(char *data, int size)
+    WriteResult WriteAsciiChunk(char *rawData, int size)
     {
-        QByteArray b(data, size);
-        _buffer->append(b);
+        QByteArray data;
+        QDataStream ds(&data, QIODevice::WriteOnly);
+        ds << QV8ProfilerService::V8SnapshotChunk << QByteArray(rawData, size);
+        _service.sendMessage(data);
         return kContinue;
     }
 };
@@ -223,14 +225,14 @@ void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType
     v8::HandleScope scope;
     v8::Local<v8::String> title = v8::String::New("");
 
-    QByteArray jsonSnapshot;
-    ByteArrayOutputStream bos(&jsonSnapshot);
+    DebugServiceOutputStream outputStream(*q);
     const v8::HeapSnapshot *snapshot = v8::HeapProfiler::TakeSnapshot(title, snapshotType);
-    snapshot->Serialize(&bos, v8::HeapSnapshot::kJSON);
+    snapshot->Serialize(&outputStream, v8::HeapSnapshot::kJSON);
 
+    //indicate completion
     QByteArray data;
     QDataStream ds(&data, QIODevice::WriteOnly);
-    ds << (int)QV8ProfilerService::V8Snapshot << jsonSnapshot;
+    ds << (int)QV8ProfilerService::V8SnapshotComplete;
 
     q->sendMessage(data);
 }

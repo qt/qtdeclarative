@@ -47,8 +47,6 @@
 #include <QDebug>
 #include "testtypes.h"
 
-//TESTED_FILES=
-
 class tst_binding : public QObject
 {
     Q_OBJECT

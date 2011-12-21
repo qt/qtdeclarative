@@ -255,9 +255,6 @@ public:
       AST::UiObjectMemberList *UiObjectMemberList;
       AST::UiArrayMemberList *UiArrayMemberList;
       AST::UiQualifiedId *UiQualifiedId;
-      AST::UiSignature *UiSignature;
-      AST::UiFormalList *UiFormalList;
-      AST::UiFormal *UiFormal;
     };
 
 public:
@@ -828,6 +825,7 @@ UiParameterList: UiPropertyType JsIdentifier ;
 /.
 case $rule_number: {
   AST::UiParameterList *node = new (pool) AST::UiParameterList(stringRef(1), stringRef(2));
+  node->propertyTypeToken = loc(1);
   node->identifierToken = loc(2);
   sym(1).Node = node;
 } break;
@@ -1112,6 +1110,7 @@ case $rule_number: {
   }
 
   loc(1).length = lexer->tokenLength();
+  yylloc = loc(1); // adjust the location of the current token
 
   AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
     driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
@@ -1133,6 +1132,7 @@ case $rule_number: {
   }
 
   loc(1).length = lexer->tokenLength();
+  yylloc = loc(1); // adjust the location of the current token
 
   AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
     driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
@@ -2821,6 +2821,8 @@ case $rule_number: {
   sym(1).Node = new (pool) AST::FunctionBody(sym(1).SourceElements->finish ());
 } break;
 ./
+
+Program: Empty ;
 
 Program: SourceElements ;
 /.

@@ -252,15 +252,9 @@ QDeclarativeBoundSignalParameters::QDeclarativeBoundSignalParameters(const QMeta
                     }
                 }
             }
-            if (QDeclarativeMetaType::canCopy(t)) {
-                types[ii] = t;
-                QMetaPropertyBuilder prop = mob.addProperty(name, propType);
-                prop.setWritable(false);
-            } else {
-                types[ii] = 0x80000000 | t;
-                QMetaPropertyBuilder prop = mob.addProperty(name, "QVariant");
-                prop.setWritable(false);
-            }
+            types[ii] = t;
+            QMetaPropertyBuilder prop = mob.addProperty(name, propType);
+            prop.setWritable(false);
         }
     }
     myMetaObject = mob.toMetaObject();
@@ -291,11 +285,10 @@ int QDeclarativeBoundSignalParameters::metaCall(QMetaObject::Call c, int id, voi
         return -1;
 
     if (c == QMetaObject::ReadProperty && id >= 1) {
-        if (types[id - 1] & 0x80000000) {
-            *((QVariant *)a[0]) = QVariant(types[id - 1] & 0x7FFFFFFF, values[id]);
-        } else {
-            QDeclarativeMetaType::copy(types[id - 1], a[0], values[id]);
-        }
+        int t = types[id - 1];
+        void *p = a[0];
+        QMetaType::destruct(t, p);
+        QMetaType::construct(t, p, values[id]);
         return -1;
     } else {
         return qt_metacall(c, id, a);

@@ -315,39 +315,33 @@ void tst_qquicktextinput::width()
 
     for (int i = 0; i < standard.size(); i++)
     {
-        QFont f;
-        qreal metricWidth = 0.0;
-        if (requiresUnhintedMetrics) {
-            QString s = standard.at(i);
-            s.replace(QLatin1Char('\n'), QChar::LineSeparator);
-
-            QTextLayout layout(s);
-            layout.setFlags(Qt::TextExpandTabs | Qt::TextShowMnemonic);
-            {
-                QTextOption option;
-                option.setUseDesignMetrics(true);
-                layout.setTextOption(option);
-            }
-
-            layout.beginLayout();
-            forever {
-                QTextLine line = layout.createLine();
-                if (!line.isValid())
-                    break;
-            }
-
-            layout.endLayout();
-
-            metricWidth = ceil(layout.boundingRect().width());
-        } else {
-            QFontMetricsF fm(f);
-            metricWidth = fm.width(standard.at(i));
-        }
-
         QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + standard.at(i) + "\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput*>(textinputComponent.create());
+
+        QString s = standard.at(i);
+        s.replace(QLatin1Char('\n'), QChar::LineSeparator);
+
+        QTextLayout layout(s);
+        layout.setFont(textinputObject->font());
+        layout.setFlags(Qt::TextExpandTabs | Qt::TextShowMnemonic);
+        if (requiresUnhintedMetrics) {
+            QTextOption option;
+            option.setUseDesignMetrics(true);
+            layout.setTextOption(option);
+        }
+
+        layout.beginLayout();
+        forever {
+            QTextLine line = layout.createLine();
+            if (!line.isValid())
+                break;
+        }
+
+        layout.endLayout();
+
+        qreal metricWidth = ceil(layout.boundingRect().width());
 
         QVERIFY(textinputObject != 0);
         int delta = abs(int(int(textinputObject->width()) - metricWidth));
@@ -1261,11 +1255,8 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // redundant as an actual input method may take care of it.
     { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
 
-#ifdef Q_OS_MAC
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QGuiApplication::keyboardInputDirection
-    QEXPECT_FAIL("", "QTBUG-18040", Abort);
-#endif
     textInput->setText("");
     QCOMPARE(textInput->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
@@ -1277,10 +1268,6 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
 
-
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("", "QTBUG-18040", Abort); // alignment of TextInput with no text set to it
-#endif
     QString componentStr = "import QtQuick 2.0\nTextInput {}";
     QDeclarativeComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -1302,31 +1289,24 @@ void tst_qquicktextinput::positionAt()
     QVERIFY(textinputObject != 0);
 
     // Check autoscrolled...
-    QFontMetrics fm(textinputObject->font());
 
     int pos = textinputObject->positionAt(textinputObject->width()/2);
-    int textWidth = 0;
-    int textLeftWidthBegin = 0;
-    int textLeftWidthEnd = 0;
-    if (!qmlDisableDistanceField()) {
-        QTextLayout layout(textinputObject->text());
 
+    QTextLayout layout(textinputObject->text());
+    layout.setFont(textinputObject->font());
+
+    if (!qmlDisableDistanceField()) {
         QTextOption option;
         option.setUseDesignMetrics(true);
         layout.setTextOption(option);
-
-        layout.beginLayout();
-        QTextLine line = layout.createLine();
-        layout.endLayout();
-
-        textLeftWidthBegin = floor(line.cursorToX(pos - 1));
-        textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
-        textWidth = floor(line.horizontalAdvance());
-    } else {
-        textWidth = fm.width(textinputObject->text());
-        textLeftWidthBegin = fm.width(textinputObject->text().left(pos - 1));
-        textLeftWidthEnd = fm.width(textinputObject->text().left(pos + 1));
     }
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    int textLeftWidthBegin = floor(line.cursorToX(pos - 1));
+    int textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
+    int textWidth = floor(line.horizontalAdvance());
 
     QVERIFY(textLeftWidthBegin <= textWidth - textinputObject->width() / 2);
     QVERIFY(textLeftWidthEnd >= textWidth - textinputObject->width() / 2);
@@ -1339,23 +1319,8 @@ void tst_qquicktextinput::positionAt()
     textinputObject->setAutoScroll(false);
     pos = textinputObject->positionAt(textinputObject->width()/2);
 
-    if (!qmlDisableDistanceField()) {
-        QTextLayout layout(textinputObject->text());
-
-        QTextOption option;
-        option.setUseDesignMetrics(true);
-        layout.setTextOption(option);
-
-        layout.beginLayout();
-        QTextLine line = layout.createLine();
-        layout.endLayout();
-
-        textLeftWidthBegin = floor(line.cursorToX(pos - 1));
-        textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
-    } else {
-        textLeftWidthBegin = fm.width(textinputObject->text().left(pos - 1));
-        textLeftWidthEnd = fm.width(textinputObject->text().left(pos + 1));
-    }
+    textLeftWidthBegin = floor(line.cursorToX(pos - 1));
+    textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
 
     QVERIFY(textLeftWidthBegin <= textinputObject->width() / 2);
     QVERIFY(textLeftWidthEnd >= textinputObject->width() / 2);
@@ -1858,7 +1823,7 @@ void tst_qquicktextinput::canPasteEmpty() {
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QLineControl lc;
+    QQuickLineControl lc;
     bool cp = !lc.isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 
@@ -1876,7 +1841,7 @@ void tst_qquicktextinput::canPaste() {
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QLineControl lc;
+    QQuickLineControl lc;
     bool cp = !lc.isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 
@@ -1981,14 +1946,24 @@ void tst_qquicktextinput::cursorVisible()
 
 void tst_qquicktextinput::cursorRectangle()
 {
-    QSKIP("QTBUG-21689");
 
     QString text = "Hello World!";
 
     QQuickTextInput input;
     input.setText(text);
-    QFontMetricsF fm(input.font());
-    input.setWidth(fm.width(text.mid(0, 5)));
+
+    QTextLayout layout(text);
+    layout.setFont(input.font());
+    if (!qmlDisableDistanceField()) {
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
+    }
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    input.setWidth(line.cursorToX(5, QTextLine::Leading));
 
     QRect r;
 
@@ -1999,14 +1974,12 @@ void tst_qquicktextinput::cursorRectangle()
     const int error = 5;
 #endif
 
-
     for (int i = 0; i <= 5; ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
-        int textWidth = fm.width(text.mid(0, i));
 
-        QVERIFY(r.left() < textWidth + error);
-        QVERIFY(r.right() > textWidth - error);
+        QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
+        QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
     }
 
@@ -2460,6 +2433,7 @@ void tst_qquicktextinput::preeditAutoScroll()
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
 
     QTextLayout layout(preeditText);
+    layout.setFont(input->font());
     if (!qmlDisableDistanceField()) {
         QTextOption option;
         option.setUseDesignMetrics(true);
@@ -2585,9 +2559,20 @@ void tst_qquicktextinput::inputContextMouseHandler()
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(&view, qGuiApp->focusWindow());
 
-    QFontMetricsF fm(input->font());
-    const qreal y = fm.height() / 2;
-    QPoint position = QPointF(fm.width(text.mid(0, 2)), y).toPoint();
+    QTextLayout layout(text);
+    layout.setFont(input->font());
+    if (!qmlDisableDistanceField()) {
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
+    }
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    const qreal x = line.cursorToX(2, QTextLine::Leading);
+    const qreal y = line.height() / 2;
+    QPoint position = QPointF(x, y).toPoint();
 
     QInputMethodEvent inputEvent(text.mid(0, 5), QList<QInputMethodEvent::Attribute>());
     QApplication::sendEvent(input, &inputEvent);
@@ -2666,6 +2651,9 @@ void tst_qquicktextinput::cursorRectangleSize()
     QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
 
     // item-canvas transform and input item transform match
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("","QTBUG-22966", Abort);
+#endif
     QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputPanel()->inputItemTransform());
 
     // input panel cursorRectangle property and tranformed item cursor rectangle match
@@ -3084,14 +3072,14 @@ void tst_qquicktextinput::undo_keypressevents_data()
         QStringList expectedString;
 
         keys << "AFRAID"
-                << Qt::Key_Home
+                << QKeySequence::MoveToStartOfLine
                 << "VERY"
                 << Qt::Key_Left
                 << Qt::Key_Left
                 << Qt::Key_Left
                 << Qt::Key_Left
                 << "BE"
-                << Qt::Key_End
+                << QKeySequence::MoveToEndOfLine
                 << "!";
 
         expectedString << "BEVERYAFRAID!";
@@ -3105,7 +3093,7 @@ void tst_qquicktextinput::undo_keypressevents_data()
         QStringList expectedString;
 
         // inserting '1234'
-        keys << "1234" << Qt::Key_Home
+        keys << "1234" << QKeySequence::MoveToStartOfLine
                 // skipping '12'
                 << Qt::Key_Right << Qt::Key_Right
                 // selecting '34'
@@ -3123,7 +3111,7 @@ void tst_qquicktextinput::undo_keypressevents_data()
 
         // inserting 'AB12'
         keys << "AB12"
-                << Qt::Key_Home
+                << QKeySequence::MoveToStartOfLine
                 // selecting 'AB'
                 << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
                 << Qt::Key_Delete
@@ -3197,9 +3185,9 @@ void tst_qquicktextinput::undo_keypressevents_data()
         QStringList expectedString;
 
         // inserting '123'
-        keys << "123" << Qt::Key_Home
+        keys << "123" << QKeySequence::MoveToStartOfLine
             // selecting '123'
-             << (Qt::Key_End | Qt::ShiftModifier)
+             << QKeySequence::SelectEndOfLine
             // overwriting '123' with 'ABC'
              << "ABC";
 

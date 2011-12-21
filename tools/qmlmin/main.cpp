@@ -182,6 +182,13 @@ protected:
             *restOfRegExp += QLatin1Char('i');
         if (flags & Multiline)
             *restOfRegExp += QLatin1Char('m');
+
+        if (regExpFlags() == 0) {
+            // Add an extra space after the regexp literal delimiter (aka '/').
+            // This will avoid possible problems when pasting tokens like `instanceof'
+            // after the regexp literal.
+            *restOfRegExp += QLatin1Char(' ');
+        }
         return true;
     }
 };
@@ -201,6 +208,7 @@ public:
 
 protected:
     bool parse(int startToken);
+    void escape(const QChar &ch, QString *out);
 };
 
 Minify::Minify()
@@ -211,6 +219,20 @@ Minify::Minify()
 QString Minify::minifiedCode() const
 {
     return _minifiedCode;
+}
+
+void Minify::escape(const QChar &ch, QString *out)
+{
+    out->append(QLatin1String("\\u"));
+    const QString hx = QString::number(ch.unicode(), 16);
+    switch (hx.length()) {
+    case 1: out->append(QLatin1String("000")); break;
+    case 2: out->append(QLatin1String("00")); break;
+    case 3: out->append(QLatin1String("0")); break;
+    case 4: break;
+    default: Q_ASSERT(!"unreachable");
+    }
+    out->append(hx);
 }
 
 bool Minify::parse(int startToken)
@@ -288,25 +310,24 @@ bool Minify::parse(int startToken)
                     _minifiedCode += QLatin1Char('0');
 
             } else if (yytoken == T_IDENTIFIER) {
+                QString identifier = yytokentext;
+
+                if (classify(identifier.constData(), identifier.size(), qmlMode()) != T_IDENTIFIER) {
+                    // the unescaped identifier is a keyword. In this case just replace
+                    // the last character of the identifier with it escape sequence.
+                    const QChar ch = identifier.at(identifier.length() - 1);
+                    identifier.chop(1);
+                    escape(ch, &identifier);
+                }
+
                 if (isIdentChar(lastChar))
                     _minifiedCode += QLatin1Char(' ');
 
-                foreach (const QChar &ch, yytokentext) {
+                foreach (const QChar &ch, identifier) {
                     if (isIdentChar(ch))
                         _minifiedCode += ch;
                     else {
-                        _minifiedCode += QLatin1String("\\u");
-                        const QString hx = QString::number(ch.unicode(), 16);
-                        switch (hx.length()) {
-                        case 1: _minifiedCode += QLatin1String("000"); break;
-                        case 2: _minifiedCode += QLatin1String("00"); break;
-                        case 3: _minifiedCode += QLatin1String("0"); break;
-                        case 4: break;
-                        default:
-                            std::cerr << "qmlmin: invalid unicode sequence" << std::endl;
-                            return false;
-                        }
-                        _minifiedCode += hx;
+                        escape(ch, &_minifiedCode);
                     }
                 }
 

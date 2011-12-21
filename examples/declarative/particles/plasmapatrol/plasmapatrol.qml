@@ -100,7 +100,7 @@ Rectangle {
                         group: "default"
                         emitRate: 1200
                         lifeSpan: 1200
-                        shape: MaskShape {source:"../images/pics/TitleText.png"}
+                        shape: MaskShape {source:"content/pics/TitleText.png"}
                         size: 16
                         endSize: 0
                         sizeVariation: 8

@@ -168,42 +168,56 @@ QDeclarativeValueType::QDeclarativeValueType(QObject *parent)
 {
 }
 
-QDeclarativePointFValueType::QDeclarativePointFValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
+#define QML_VALUETYPE_READWRITE(name, cpptype, var) \
+    QDeclarative ## name ## ValueType::QDeclarative ## name ## ValueType(QObject *parent) \
+    : QDeclarativeValueType(parent) \
+    { \
+    } \
+    void QDeclarative ## name ## ValueType::read(QObject *obj, int idx) \
+    { \
+        void *a[] = { &var, 0 }; \
+        QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a); \
+        onLoad(); \
+    } \
+    void QDeclarative ## name ## ValueType::write(QObject *obj, int idx, \
+                                                  QDeclarativePropertyPrivate::WriteFlags flags) \
+    { \
+        int status = -1; \
+        void *a[] = { &var, 0, &status, &flags }; \
+        QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a); \
+    } \
+    bool QDeclarative ## name ## ValueType::isEqual(const QVariant &value) const \
+    { \
+        return QVariant(var) == value; \
+    } \
+    QVariant QDeclarative ## name ## ValueType::value() \
+    { \
+        return QVariant(var); \
+    } \
+    void QDeclarative ## name ## ValueType::setValue(const QVariant &value) \
+    { \
+        var = qvariant_cast<cpptype>(value); \
+        onLoad(); \
+    }
 
-void QDeclarativePointFValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &point, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativePointFValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &point, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativePointFValueType::value()
-{
-    return QVariant(point);
-}
-
-void QDeclarativePointFValueType::setValue(QVariant value)
-{
-    point = qvariant_cast<QPointF>(value);
-}
+QML_VALUETYPE_READWRITE(PointF, QPointF, point);
+QML_VALUETYPE_READWRITE(Point, QPoint, point);
+QML_VALUETYPE_READWRITE(SizeF, QSizeF, size);
+QML_VALUETYPE_READWRITE(Size, QSize, size);
+QML_VALUETYPE_READWRITE(RectF, QRectF, rect);
+QML_VALUETYPE_READWRITE(Rect, QRect, rect);
+QML_VALUETYPE_READWRITE(Vector2D, QVector2D, vector);
+QML_VALUETYPE_READWRITE(Vector3D, QVector3D, vector);
+QML_VALUETYPE_READWRITE(Vector4D, QVector4D, vector);
+QML_VALUETYPE_READWRITE(Quaternion, QQuaternion, quaternion);
+QML_VALUETYPE_READWRITE(Matrix4x4, QMatrix4x4, matrix);
+QML_VALUETYPE_READWRITE(Easing, QEasingCurve, easing);
+QML_VALUETYPE_READWRITE(Font, QFont, font);
+QML_VALUETYPE_READWRITE(Color, QColor, color);
 
 QString QDeclarativePointFValueType::toString() const
 {
     return QString(QLatin1String("QPointF(%1, %2)")).arg(point.x()).arg(point.y());
-}
-
-bool QDeclarativePointFValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(point) == value);
 }
 
 qreal QDeclarativePointFValueType::x() const
@@ -226,42 +240,9 @@ void QDeclarativePointFValueType::setY(qreal y)
     point.setY(y);
 }
 
-QDeclarativePointValueType::QDeclarativePointValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativePointValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &point, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativePointValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &point, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativePointValueType::value()
-{
-    return QVariant(point);
-}
-
-void QDeclarativePointValueType::setValue(QVariant value)
-{
-    point = qvariant_cast<QPoint>(value);
-}
-
 QString QDeclarativePointValueType::toString() const
 {
     return QString(QLatin1String("QPoint(%1, %2)")).arg(point.x()).arg(point.y());
-}
-
-bool QDeclarativePointValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(point) == value);
 }
 
 int QDeclarativePointValueType::x() const
@@ -284,42 +265,9 @@ void QDeclarativePointValueType::setY(int y)
     point.setY(y);
 }
 
-QDeclarativeSizeFValueType::QDeclarativeSizeFValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeSizeFValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &size, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeSizeFValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &size, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativeSizeFValueType::value()
-{
-    return QVariant(size);
-}
-
-void QDeclarativeSizeFValueType::setValue(QVariant value)
-{
-    size = qvariant_cast<QSizeF>(value);
-}
-
 QString QDeclarativeSizeFValueType::toString() const
 {
     return QString(QLatin1String("QSizeF(%1, %2)")).arg(size.width()).arg(size.height());
-}
-
-bool QDeclarativeSizeFValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(size) == value);
 }
 
 qreal QDeclarativeSizeFValueType::width() const
@@ -342,42 +290,9 @@ void QDeclarativeSizeFValueType::setHeight(qreal h)
     size.setHeight(h);
 }
 
-QDeclarativeSizeValueType::QDeclarativeSizeValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeSizeValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &size, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeSizeValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &size, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativeSizeValueType::value()
-{
-    return QVariant(size);
-}
-
-void QDeclarativeSizeValueType::setValue(QVariant value)
-{
-    size = qvariant_cast<QSize>(value);
-}
-
 QString QDeclarativeSizeValueType::toString() const
 {
     return QString(QLatin1String("QSize(%1, %2)")).arg(size.width()).arg(size.height());
-}
-
-bool QDeclarativeSizeValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(size) == value);
 }
 
 int QDeclarativeSizeValueType::width() const
@@ -400,42 +315,9 @@ void QDeclarativeSizeValueType::setHeight(int h)
     size.setHeight(h);
 }
 
-QDeclarativeRectFValueType::QDeclarativeRectFValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeRectFValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &rect, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeRectFValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &rect, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativeRectFValueType::value()
-{
-    return QVariant(rect);
-}
-
-void QDeclarativeRectFValueType::setValue(QVariant value)
-{
-    rect = qvariant_cast<QRectF>(value);
-}
-
 QString QDeclarativeRectFValueType::toString() const
 {
     return QString(QLatin1String("QRectF(%1, %2, %3, %4)")).arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
-}
-
-bool QDeclarativeRectFValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(rect) == value);
 }
 
 qreal QDeclarativeRectFValueType::x() const
@@ -478,42 +360,9 @@ void QDeclarativeRectFValueType::setHeight(qreal h)
     rect.setHeight(h);
 }
 
-QDeclarativeRectValueType::QDeclarativeRectValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeRectValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &rect, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeRectValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &rect, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativeRectValueType::value()
-{
-    return QVariant(rect);
-}
-
-void QDeclarativeRectValueType::setValue(QVariant value)
-{
-    rect = qvariant_cast<QRect>(value);
-}
-
 QString QDeclarativeRectValueType::toString() const
 {
     return QString(QLatin1String("QRect(%1, %2, %3, %4)")).arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
-}
-
-bool QDeclarativeRectValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(rect) == value);
 }
 
 int QDeclarativeRectValueType::x() const
@@ -556,42 +405,9 @@ void QDeclarativeRectValueType::setHeight(int h)
     rect.setHeight(h);
 }
 
-QDeclarativeVector2DValueType::QDeclarativeVector2DValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeVector2DValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &vector, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeVector2DValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &vector, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant  QDeclarativeVector2DValueType::value()
-{
-    return QVariant(vector);
-}
-
-void QDeclarativeVector2DValueType::setValue(QVariant value)
-{
-    vector = qvariant_cast<QVector2D>(value);
-}
-
 QString QDeclarativeVector2DValueType::toString() const
 {
     return QString(QLatin1String("QVector2D(%1, %2)")).arg(vector.x()).arg(vector.y());
-}
-
-bool QDeclarativeVector2DValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(vector) == value);
 }
 
 qreal QDeclarativeVector2DValueType::x() const
@@ -614,42 +430,9 @@ void QDeclarativeVector2DValueType::setY(qreal y)
     vector.setY(y);
 }
 
-QDeclarativeVector3DValueType::QDeclarativeVector3DValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeVector3DValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &vector, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeVector3DValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &vector, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant  QDeclarativeVector3DValueType::value()
-{
-    return QVariant(vector);
-}
-
-void QDeclarativeVector3DValueType::setValue(QVariant value)
-{
-    vector = qvariant_cast<QVector3D>(value);
-}
-
 QString QDeclarativeVector3DValueType::toString() const
 {
     return QString(QLatin1String("QVector3D(%1, %2, %3)")).arg(vector.x()).arg(vector.y()).arg(vector.z());
-}
-
-bool QDeclarativeVector3DValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(vector) == value);
 }
 
 qreal QDeclarativeVector3DValueType::x() const
@@ -682,42 +465,9 @@ void QDeclarativeVector3DValueType::setZ(qreal z)
     vector.setZ(z);
 }
 
-QDeclarativeVector4DValueType::QDeclarativeVector4DValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeVector4DValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &vector, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeVector4DValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &vector, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant  QDeclarativeVector4DValueType::value()
-{
-    return QVariant(vector);
-}
-
-void QDeclarativeVector4DValueType::setValue(QVariant value)
-{
-    vector = qvariant_cast<QVector4D>(value);
-}
-
 QString QDeclarativeVector4DValueType::toString() const
 {
     return QString(QLatin1String("QVector4D(%1, %2, %3, %4)")).arg(vector.x()).arg(vector.y()).arg(vector.z()).arg(vector.w());
-}
-
-bool QDeclarativeVector4DValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(vector) == value);
 }
 
 qreal QDeclarativeVector4DValueType::x() const
@@ -760,42 +510,9 @@ void QDeclarativeVector4DValueType::setW(qreal w)
     vector.setW(w);
 }
 
-QDeclarativeQuaternionValueType::QDeclarativeQuaternionValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeQuaternionValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &quaternion, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeQuaternionValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &quaternion, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant  QDeclarativeQuaternionValueType::value()
-{
-    return QVariant(quaternion);
-}
-
-void QDeclarativeQuaternionValueType::setValue(QVariant value)
-{
-    quaternion = qvariant_cast<QQuaternion>(value);
-}
-
 QString QDeclarativeQuaternionValueType::toString() const
 {
     return QString(QLatin1String("QQuaternion(%1, %2, %3, %4)")).arg(quaternion.scalar()).arg(quaternion.x()).arg(quaternion.y()).arg(quaternion.z());
-}
-
-bool QDeclarativeQuaternionValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(quaternion) == value);
 }
 
 qreal QDeclarativeQuaternionValueType::scalar() const
@@ -838,34 +555,6 @@ void QDeclarativeQuaternionValueType::setZ(qreal z)
     quaternion.setZ(z);
 }
 
-QDeclarativeMatrix4x4ValueType::QDeclarativeMatrix4x4ValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeMatrix4x4ValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &matrix, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeMatrix4x4ValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &matrix, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant  QDeclarativeMatrix4x4ValueType::value()
-{
-    return QVariant(matrix);
-}
-
-void QDeclarativeMatrix4x4ValueType::setValue(QVariant value)
-{
-    matrix = qvariant_cast<QMatrix4x4>(value);
-}
-
 QString QDeclarativeMatrix4x4ValueType::toString() const
 {
     return QString(QLatin1String("QMatrix4x4(%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13, %14, %15, %16)"))
@@ -875,47 +564,9 @@ QString QDeclarativeMatrix4x4ValueType::toString() const
             .arg(matrix(3, 0)).arg(matrix(3, 1)).arg(matrix(3, 2)).arg(matrix(3, 3));
 }
 
-bool QDeclarativeMatrix4x4ValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(matrix) == value);
-}
-
-QDeclarativeEasingValueType::QDeclarativeEasingValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeEasingValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &easing, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeEasingValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &easing, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativeEasingValueType::value()
-{
-    return QVariant(easing);
-}
-
-void QDeclarativeEasingValueType::setValue(QVariant value)
-{
-    easing = qvariant_cast<QEasingCurve>(value);
-}
-
 QString QDeclarativeEasingValueType::toString() const
 {
     return QString(QLatin1String("QEasingCurve(%1, %2, %3, %4)")).arg(easing.type()).arg(easing.amplitude()).arg(easing.overshoot()).arg(easing.period());
-}
-
-bool QDeclarativeEasingValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(easing) == value);
 }
 
 QDeclarativeEasingValueType::Type QDeclarativeEasingValueType::type() const
@@ -1004,46 +655,16 @@ QVariantList QDeclarativeEasingValueType::bezierCurve() const
     return rv;
 }
 
-QDeclarativeFontValueType::QDeclarativeFontValueType(QObject *parent)
-: QDeclarativeValueType(parent), pixelSizeSet(false), pointSizeSet(false)
+void QDeclarativeFontValueType::onLoad()
 {
-}
-
-void QDeclarativeFontValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &font, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
     pixelSizeSet = false;
     pointSizeSet = false;
-}
-
-void QDeclarativeFontValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &font, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant  QDeclarativeFontValueType::value()
-{
-    return QVariant(font);
-}
-
-void QDeclarativeFontValueType::setValue(QVariant value)
-{
-    font = qvariant_cast<QFont>(value);
 }
 
 QString QDeclarativeFontValueType::toString() const
 {
     return QString(QLatin1String("QFont(%1)")).arg(font.toString());
 }
-
-bool QDeclarativeFontValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(font) == value);
-}
-
 
 QString QDeclarativeFontValueType::family() const
 {
@@ -1192,43 +813,10 @@ void QDeclarativeFontValueType::setWordSpacing(qreal size)
     font.setWordSpacing(size);
 }
 
-QDeclarativeColorValueType::QDeclarativeColorValueType(QObject *parent)
-: QDeclarativeValueType(parent)
-{
-}
-
-void QDeclarativeColorValueType::read(QObject *obj, int idx)
-{
-    void *a[] = { &color, 0 };
-    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-}
-
-void QDeclarativeColorValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    int status = -1;
-    void *a[] = { &color, 0, &status, &flags };
-    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-}
-
-QVariant QDeclarativeColorValueType::value()
-{
-    return QVariant(color);
-}
-
-void QDeclarativeColorValueType::setValue(QVariant value)
-{
-    color = qvariant_cast<QColor>(value);
-}
-
 QString QDeclarativeColorValueType::toString() const
 {
     // special case - to maintain behaviour with QtQuick 1.0, we just output normal toString() value.
     return QVariant(color).toString();
-}
-
-bool QDeclarativeColorValueType::isEqual(const QVariant &value) const
-{
-    return (QVariant(color) == value);
 }
 
 qreal QDeclarativeColorValueType::r() const

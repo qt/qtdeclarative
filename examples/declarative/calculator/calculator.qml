@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Window 2.0
 import "Core"
 import "Core/calculator.js" as CalcEngine
 
@@ -61,7 +62,7 @@ Rectangle {
 
     Item {
         id: main
-        state: "orientation " + runtime.orientation
+        state: "orientation " + Screen.currentOrientation
 
         property bool landscapeWindow: window.width > window.height 
         property real baseWidth: landscapeWindow ? window.height : window.width
@@ -139,15 +140,15 @@ Rectangle {
 
         states: [
             State {
-                name: "orientation " + Orientation.Landscape
+                name: "orientation " + Qt.LandscapeOrientation
                 PropertyChanges { target: main; rotation: 90 + rotationDelta; width: main.baseHeight; height: main.baseWidth }
             },
             State {
-                name: "orientation " + Orientation.PortraitInverted
+                name: "orientation " + Qt.InvertedPortraitOrientation
                 PropertyChanges { target: main; rotation: 180 + rotationDelta; }
             },
             State {
-                name: "orientation " + Orientation.LandscapeInverted
+                name: "orientation " + Qt.InvertedLandscapeOrientation
                 PropertyChanges { target: main; rotation: 270 + rotationDelta; width: main.baseHeight; height: main.baseWidth }
             }
         ]

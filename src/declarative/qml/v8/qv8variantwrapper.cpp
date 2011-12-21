@@ -40,22 +40,35 @@
 ****************************************************************************/
 
 #include "qv8variantwrapper_p.h"
+#include "qv8variantresource_p.h"
 #include "qv8engine_p.h"
 #include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QV8VariantResource : public QV8ObjectResource, 
-                           public QDeclarativeEnginePrivate::ScarceResourceData
-{
-    V8_RESOURCE_TYPE(VariantType);
-public:
-    QV8VariantResource(QV8Engine *engine, const QVariant &data);
-};
-
 QV8VariantResource::QV8VariantResource(QV8Engine *engine, const QVariant &data)
-: QV8ObjectResource(engine), QDeclarativeEnginePrivate::ScarceResourceData(data)
+: QV8ObjectResource(engine), QDeclarativeEnginePrivate::ScarceResourceData(data), m_isScarceResource(false), m_vmePropertyReferenceCount(0)
 {
+}
+
+void QV8VariantResource::addVmePropertyReference()
+{
+    if (m_isScarceResource && ++m_vmePropertyReferenceCount == 1) {
+        // remove from the ep->scarceResources list
+        // since it is now no longer eligible to be
+        // released automatically by the engine.
+        node.remove();
+    }
+}
+
+void QV8VariantResource::removeVmePropertyReference()
+{
+    if (m_isScarceResource && --m_vmePropertyReferenceCount == 0) {
+        // and add to the ep->scarceResources list
+        // since it is now eligible to be released
+        // automatically by the engine.
+        QDeclarativeEnginePrivate::get(engine->engine())->scarceResources.insert(this);
+    }
 }
 
 QV8VariantWrapper::QV8VariantWrapper()
@@ -133,6 +146,7 @@ v8::Local<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(m_engine->engine());
         Q_ASSERT(ep->scarceResourcesRefCount);
         rv = m_scarceConstructor->NewInstance();
+        r->m_isScarceResource = true;
         ep->scarceResources.insert(r);
     } else {
         rv = m_constructor->NewInstance();

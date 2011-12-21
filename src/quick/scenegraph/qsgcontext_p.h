@@ -56,6 +56,8 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+QT_MODULE(Declarative)
+
 class QSGContextPrivate;
 class QSGRectangleNode;
 class QSGImageNode;
@@ -83,11 +85,7 @@ public:
     ~QSGContext();
 
     virtual void initialize(QOpenGLContext *context);
-
-    QSGRenderer *renderer() const;
-
-    void setRootNode(QSGRootNode *node);
-    QSGRootNode *rootNode() const;
+    virtual void invalidate();
 
     QOpenGLContext *glContext() const;
 
@@ -95,7 +93,7 @@ public:
 
     QSGMaterialShader *prepareMaterial(QSGMaterial *material);
 
-    virtual void renderNextFrame(QOpenGLFramebufferObject *fbo = 0);
+    virtual void renderNextFrame(QSGRenderer *renderer, QOpenGLFramebufferObject *fbo = 0);
 
     virtual QSGDistanceFieldGlyphCache *createDistanceFieldGlyphCache(const QRawFont &font);
 
@@ -106,8 +104,9 @@ public:
 
     virtual bool canDecodeImageToTexture() const;
     virtual QSGTexture *decodeImageToTexture(QIODevice *dev,
-                                                     QSize *size,
-                                                     const QSize &requestSize);
+                                             QSize *size,
+                                             const QSize &requestSize);
+
     virtual QSGTexture *createTexture(const QImage &image = QImage()) const;
     virtual QSize minimumFBOSize() const;
 
@@ -128,11 +127,13 @@ public:
 
     virtual QAnimationDriver2 *createAnimationDriver(QObject *parent);
 
-signals:
-    void ready();
 
 public slots:
     void textureFactoryDestroyed(QObject *o);
+
+signals:
+    void initialized();
+    void invalidated();
 };
 
 QT_END_NAMESPACE

@@ -48,8 +48,16 @@
 class tst_QQuickMultiPointTouchArea: public QObject
 {
     Q_OBJECT
+public:
+    tst_QQuickMultiPointTouchArea() : device(0) { }
 private slots:
-    void initTestCase() {}
+    void initTestCase() {
+        if (!device) {
+            device = new QTouchDevice;
+            device->setType(QTouchDevice::TouchScreen);
+            QWindowSystemInterface::registerTouchDevice(device);
+        }
+    }
     void cleanupTestCase() {}
 
     void properties();
@@ -60,6 +68,7 @@ private slots:
 
 private:
     QQuickView *createAndShowView(const QString &file);
+    QTouchDevice *device;
 };
 
 void tst_QQuickMultiPointTouchArea::properties()
@@ -93,7 +102,7 @@ void tst_QQuickMultiPointTouchArea::signalTest()
     QPoint p4(80,100);
     QPoint p5(100,100);
 
-    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas);
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas, device);
 
     sequence.press(0, p1).press(1, p2).commit();
 
@@ -165,7 +174,7 @@ void tst_QQuickMultiPointTouchArea::nonOverlapping()
     QPoint p4(80,180);
     QPoint p5(100,180);
 
-    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas);
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas, device);
 
     sequence.press(0, p1).commit();
 
@@ -273,7 +282,7 @@ void tst_QQuickMultiPointTouchArea::nested()
     QPoint p2(40,100);
     QPoint p3(60,180);
 
-    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas);
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas, device);
 
     sequence.press(0, p1).commit();
 
@@ -455,30 +464,30 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     QPoint p2(40,100);
 
     //moving one point vertically
-    QTest::touchEvent(canvas).press(0, p1);
+    QTest::touchEvent(canvas, device).press(0, p1);
     QTest::mousePress(canvas, Qt::LeftButton, 0, p1);
 
     p1 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1);
+    QTest::touchEvent(canvas, device).move(0, p1);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1);
+    QTest::touchEvent(canvas, device).move(0, p1);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1);
+    QTest::touchEvent(canvas, device).move(0, p1);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1);
+    QTest::touchEvent(canvas, device).move(0, p1);
     QTest::mouseMove(canvas, p1);
 
     QVERIFY(flickable->contentY() < 0);
     QCOMPARE(point11->isValid(), false);
     QCOMPARE(point12->isValid(), false);
 
-    QTest::touchEvent(canvas).release(0, p1);
+    QTest::touchEvent(canvas, device).release(0, p1);
     QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
     QTest::qWait(50);
 
@@ -486,33 +495,33 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
 
     //moving two points vertically
     p1 = QPoint(20,100);
-    QTest::touchEvent(canvas).press(0, p1).press(1, p2);
+    QTest::touchEvent(canvas, device).press(0, p1).press(1, p2);
     QTest::mousePress(canvas, Qt::LeftButton, 0, p1);
 
     QCOMPARE(point11->isValid(), true);
     QCOMPARE(point12->isValid(), true);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     QVERIFY(flickable->contentY() < 0);
     QCOMPARE(point11->isValid(), false);
     QCOMPARE(point12->isValid(), false);
 
-    QTest::touchEvent(canvas).release(0, p1).release(1, p2);
+    QTest::touchEvent(canvas, device).release(0, p1).release(1, p2);
     QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
     QTest::qWait(50);
 
@@ -521,49 +530,49 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     //moving two points horizontally, then one point vertically
     p1 = QPoint(20,100);
     p2 = QPoint(40,100);
-    QTest::touchEvent(canvas).press(0, p1).press(1, p2);
+    QTest::touchEvent(canvas, device).press(0, p1).press(1, p2);
     QTest::mousePress(canvas, Qt::LeftButton, 0, p1);
 
     QCOMPARE(point11->isValid(), true);
     QCOMPARE(point12->isValid(), true);
 
     p1 += QPoint(15,0); p2 += QPoint(15,0);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(15,0); p2 += QPoint(15,0);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(15,0); p2 += QPoint(15,0);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(15,0); p2 += QPoint(15,0);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
-    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+    QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
     QTest::mouseMove(canvas, p1);
 
     QVERIFY(flickable->contentY() == 0);
     QCOMPARE(point11->isValid(), true);
     QCOMPARE(point12->isValid(), true);
 
-    QTest::touchEvent(canvas).release(0, p1).release(1, p2);
+    QTest::touchEvent(canvas, device).release(0, p1).release(1, p2);
     QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
     QTest::qWait(50);
 

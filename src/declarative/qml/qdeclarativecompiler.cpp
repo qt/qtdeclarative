@@ -90,12 +90,14 @@ static QString id_string(QLatin1String("id"));
 static QString on_string(QLatin1String("on"));
 static QString Changed_string(QLatin1String("Changed"));
 static QString Component_string(QLatin1String("Component"));
+static QString Component_import_string(QLatin1String("QML/Component"));
 
 /*!
     Instantiate a new QDeclarativeCompiler.
 */
 QDeclarativeCompiler::QDeclarativeCompiler(QDeclarativePool *pool)
-: pool(pool), output(0), engine(0), unitRoot(0), unit(0), componentStats(0)
+: pool(pool), output(0), engine(0), unitRoot(0), unit(0), cachedComponentTypeRef(-1),
+  componentStats(0)
 {
     if (compilerStatDump()) 
         componentStats = pool->New<ComponentStats>();
@@ -829,6 +831,7 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
     this->engine = 0;
     this->enginePrivate = 0;
     this->unit = 0;
+    this->cachedComponentTypeRef = -1;
     this->unitRoot = 0;
 
     return !isError();
@@ -1586,16 +1589,21 @@ bool QDeclarativeCompiler::buildSubObject(QDeclarativeScript::Object *obj, const
 
 int QDeclarativeCompiler::componentTypeRef()
 {
-    QDeclarativeType *t = QDeclarativeMetaType::qmlType(QLatin1String("QtQuick/Component"),2,0);
-    for (int ii = output->types.count() - 1; ii >= 0; --ii) {
-        if (output->types.at(ii).type == t)
-            return ii;
+    if (cachedComponentTypeRef == -1) {
+        QDeclarativeType *t = QDeclarativeMetaType::qmlType(Component_import_string,1,0);
+        for (int ii = output->types.count() - 1; ii >= 0; --ii) {
+            if (output->types.at(ii).type == t) {
+                cachedComponentTypeRef = ii;
+                return ii;
+            }
+        }
+        QDeclarativeCompiledData::TypeReference ref;
+        ref.className = Component_string;
+        ref.type = t;
+        output->types << ref;
+        cachedComponentTypeRef = output->types.count() - 1;
     }
-    QDeclarativeCompiledData::TypeReference ref;
-    ref.className = Component_string;
-    ref.type = t;
-    output->types << ref;
-    return output->types.count() - 1;
+    return cachedComponentTypeRef;
 }
 
 bool QDeclarativeCompiler::buildSignal(QDeclarativeScript::Property *prop, QDeclarativeScript::Object *obj,

@@ -52,6 +52,7 @@
 #include "qdeclarativeengine.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarativecomponent.h"
+#include "qdeclarativecomponentattached_p.h"
 #include "qdeclarativebinding_p.h"
 #include "qdeclarativeengine_p.h"
 #include "qdeclarativecomponent_p.h"
@@ -199,6 +200,11 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
+static QVariant variantFromString(const QString &string)
+{
+    return QDeclarativeStringConverters::variantFromString(string);
+}
+
 // XXX we probably need some form of "work count" here to prevent us checking this 
 // for every instruction.
 #define QML_BEGIN_INSTR_COMMON(I) { \
@@ -237,7 +243,46 @@ static void removeBindingOnProperty(QObject *o, int index)
     } break;
 #endif
 
-#define CLEAN_PROPERTY(o, index) if (fastHasBinding(o, index)) removeBindingOnProperty(o, index)
+#define QML_STORE_VALUE(name, cpptype, value) \
+    QML_BEGIN_INSTR(name) \
+        cpptype v = value; \
+        void *a[] = { (void *)&v, 0, &status, &flags }; \
+        QObject *target = objects.top(); \
+        CLEAN_PROPERTY(target, instr.propertyIndex); \
+        QMetaObject::metacall(target, QMetaObject::WriteProperty, instr.propertyIndex, a); \
+    QML_END_INSTR(name)
+
+#define QML_STORE_LIST(name, cpptype, value) \
+    QML_BEGIN_INSTR(name) \
+        cpptype v; \
+        v.append(value); \
+        void *a[] = { (void *)&v, 0, &status, &flags }; \
+        QObject *target = objects.top(); \
+        CLEAN_PROPERTY(target, instr.propertyIndex); \
+        QMetaObject::metacall(target, QMetaObject::WriteProperty, instr.propertyIndex, a); \
+    QML_END_INSTR(name)
+
+#define QML_STORE_VAR(name, value) \
+    QML_BEGIN_INSTR(name) \
+        v8::Handle<v8::Value> v8value = value; \
+        QObject *target = objects.top(); \
+        CLEAN_PROPERTY(target, instr.propertyIndex); \
+        QMetaObject *mo = const_cast<QMetaObject *>(target->metaObject()); \
+        QDeclarativeVMEMetaObject *vmemo = static_cast<QDeclarativeVMEMetaObject *>(mo); \
+        vmemo->setVMEProperty(instr.propertyIndex, v8value); \
+    QML_END_INSTR(name)
+
+#define QML_STORE_POINTER(name, value) \
+    QML_BEGIN_INSTR(name) \
+        void *a[] = { (void *)value, 0, &status, &flags }; \
+        QObject *target = objects.top(); \
+        CLEAN_PROPERTY(target, instr.propertyIndex); \
+        QMetaObject::metacall(target, QMetaObject::WriteProperty, instr.propertyIndex, a); \
+    QML_END_INSTR(name)
+
+#define CLEAN_PROPERTY(o, index) \
+    if (fastHasBinding(o, index)) \
+        removeBindingOnProperty(o, index)
 
 QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                               const Interrupt &interrupt
@@ -294,6 +339,55 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 
         switch (genericInstr->common.instructionType) {
 #endif
+
+        // Store a created object in a property.  These all pop from the objects stack.
+        QML_STORE_VALUE(StoreObject, QObject *, objects.pop());
+        QML_STORE_VALUE(StoreVariantObject, QVariant, QVariant::fromValue(objects.pop()));
+        QML_STORE_VAR(StoreVarObject, ep->v8engine()->newQObject(objects.pop()));
+
+        // Store a literal value in a corresponding property
+        QML_STORE_VALUE(StoreFloat, float, instr.value);
+        QML_STORE_VALUE(StoreDouble, double, instr.value);
+        QML_STORE_VALUE(StoreBool, bool, instr.value);
+        QML_STORE_VALUE(StoreInteger, int, instr.value);
+        QML_STORE_VALUE(StoreColor, QColor, QColor::fromRgba(instr.value));
+        QML_STORE_VALUE(StoreDate, QDate, QDate::fromJulianDay(instr.value));
+        QML_STORE_VALUE(StoreDateTime, QDateTime,
+                        QDateTime(QDate::fromJulianDay(instr.date), *(QTime *)&instr.time));
+        QML_STORE_POINTER(StoreTime, (QTime *)&instr.time);
+        QML_STORE_POINTER(StorePoint, (QPoint *)&instr.point);
+        QML_STORE_POINTER(StorePointF, (QPointF *)&instr.point);
+        QML_STORE_POINTER(StoreSize, (QSize *)&instr.size);
+        QML_STORE_POINTER(StoreSizeF, (QSizeF *)&instr.size);
+        QML_STORE_POINTER(StoreRect, (QRect *)&instr.rect);
+        QML_STORE_POINTER(StoreRectF, (QRectF *)&instr.rect);
+        QML_STORE_POINTER(StoreVector3D, (QVector3D *)&instr.vector);
+        QML_STORE_POINTER(StoreVector4D, (QVector4D *)&instr.vector);
+        QML_STORE_POINTER(StoreString, &PRIMITIVES.at(instr.value));
+        QML_STORE_POINTER(StoreByteArray, &DATAS.at(instr.value));
+        QML_STORE_POINTER(StoreUrl, &URLS.at(instr.value));
+
+        // Store a literal value in a QList
+        QML_STORE_LIST(StoreStringList, QStringList, PRIMITIVES.at(instr.value));
+        QML_STORE_LIST(StoreStringQList, QList<QString>, PRIMITIVES.at(instr.value));
+        QML_STORE_LIST(StoreUrlQList, QList<QUrl>, URLS.at(instr.value));
+        QML_STORE_LIST(StoreDoubleQList, QList<double>, instr.value);
+        QML_STORE_LIST(StoreBoolQList, QList<bool>, instr.value);
+        QML_STORE_LIST(StoreIntegerQList, QList<int>, instr.value);
+
+        // Store a literal value in a QVariant property
+        QML_STORE_VALUE(StoreVariant, QVariant, variantFromString(PRIMITIVES.at(instr.value)));
+        QML_STORE_VALUE(StoreVariantInteger, QVariant, QVariant(instr.value));
+        QML_STORE_VALUE(StoreVariantDouble, QVariant, QVariant(instr.value));
+        QML_STORE_VALUE(StoreVariantBool, QVariant, QVariant(instr.value));
+
+        // Store a literal value in a var property.
+        // We deliberately do not use string converters here
+        QML_STORE_VAR(StoreVar, ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value)));
+        QML_STORE_VAR(StoreVarInteger, v8::Integer::New(instr.value));
+        QML_STORE_VAR(StoreVarDouble, v8::Number::New(instr.value));
+        QML_STORE_VAR(StoreVarBool, v8::Boolean::New(instr.value));
+
         QML_BEGIN_INSTR(Init)
             // Ensure that the compiled data has been initialized
             if (!COMP->isInitialized()) COMP->initialize(engine);
@@ -540,341 +634,6 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             }
         QML_END_INSTR(StoreMetaObject)
 
-        QML_BEGIN_INSTR(StoreVariant)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            // XXX - can be more efficient
-            QVariant v = QDeclarativeStringConverters::variantFromString(PRIMITIVES.at(instr.value));
-            void *a[] = { &v, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreVariant)
-
-        QML_BEGIN_INSTR(StoreVariantInteger)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QVariant v(instr.value);
-            void *a[] = { &v, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreVariantInteger)
-
-        QML_BEGIN_INSTR(StoreVariantDouble)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QVariant v(instr.value);
-            void *a[] = { &v, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreVariantDouble)
-
-        QML_BEGIN_INSTR(StoreVariantBool)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QVariant v(instr.value);
-            void *a[] = { &v, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreVariantBool)
-
-        QML_BEGIN_INSTR(StoreVar)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            // Note that we don't use QDeclarativeStringConverters::variantFromString() here, which
-            // means that automatic generation of value types from strings doesn't occur.
-            // This is a deliberate behaviour difference to variant properties.
-            v8::Handle<v8::Value> v8Value = ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value));
-            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
-        QML_END_INSTR(StoreVar)
-
-        QML_BEGIN_INSTR(StoreVarInteger)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            v8::Handle<v8::Value> v8Value = v8::Integer::New(instr.value);
-            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
-        QML_END_INSTR(StoreVarInteger)
-
-        QML_BEGIN_INSTR(StoreVarDouble)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            v8::Handle<v8::Value> v8Value = v8::Number::New(instr.value);
-            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
-        QML_END_INSTR(StoreVarDouble)
-
-        QML_BEGIN_INSTR(StoreVarBool)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            v8::Handle<v8::Value> v8Value = v8::Boolean::New(instr.value);
-            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
-        QML_END_INSTR(StoreVarBool)
-
-        QML_BEGIN_INSTR(StoreString)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            void *a[] = { (void *)&PRIMITIVES.at(instr.value), 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreString)
-
-        QML_BEGIN_INSTR(StoreStringList)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QStringList stringlist(PRIMITIVES.at(instr.value));
-            void *a[] = { (void *)&stringlist, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreStringList)
-
-        QML_BEGIN_INSTR(StoreStringQList)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QList<QString> stringqlist;
-            stringqlist.append(PRIMITIVES.at(instr.value));
-            void *a[] = { (void *)&stringqlist, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreStringQList)
-
-        QML_BEGIN_INSTR(StoreByteArray)
-            QObject *target = objects.top();
-            void *a[] = { (void *)&DATAS.at(instr.value), 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreByteArray)
-
-        QML_BEGIN_INSTR(StoreUrl)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            void *a[] = { (void *)&URLS.at(instr.value), 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreUrl)
-
-        QML_BEGIN_INSTR(StoreUrlQList)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QList<QUrl> urlqlist;
-            urlqlist.append(URLS.at(instr.value));
-            void *a[] = { (void *)&urlqlist, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreUrlQList)
-
-        QML_BEGIN_INSTR(StoreFloat)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            float f = instr.value;
-            void *a[] = { &f, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreFloat)
-
-        QML_BEGIN_INSTR(StoreDouble)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            double d = instr.value;
-            void *a[] = { &d, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreDouble)
-
-        QML_BEGIN_INSTR(StoreDoubleQList)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QList<double> doubleqlist;
-            doubleqlist.append(instr.value);
-            void *a[] = { (void *)&doubleqlist, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreDoubleQList)
-
-        QML_BEGIN_INSTR(StoreBool)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            void *a[] = { (void *)&instr.value, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreBool)
-
-        QML_BEGIN_INSTR(StoreBoolQList)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QList<bool> boolqlist;
-            boolqlist.append(instr.value);
-            void *a[] = { (void *)&boolqlist, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreBoolQList)
-
-        QML_BEGIN_INSTR(StoreInteger)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            void *a[] = { (void *)&instr.value, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreInteger)
-
-        QML_BEGIN_INSTR(StoreIntegerQList)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QList<int> intqlist;
-            intqlist.append(instr.value);
-            void *a[] = { (void *)&intqlist, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreIntegerQList)
-
-        QML_BEGIN_INSTR(StoreColor)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QColor c = QColor::fromRgba(instr.value);
-            void *a[] = { &c, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreColor)
-
-        QML_BEGIN_INSTR(StoreDate)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QDate d = QDate::fromJulianDay(instr.value);
-            void *a[] = { &d, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreDate)
-
-        QML_BEGIN_INSTR(StoreTime)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QTime *t = (QTime *)&instr.time;
-            void *a[] = { t, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreTime)
-
-        QML_BEGIN_INSTR(StoreDateTime)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QTime *t = (QTime *)&instr.time;
-            QDateTime dt(QDate::fromJulianDay(instr.date), *t);
-            void *a[] = { &dt, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreDateTime)
-
-        QML_BEGIN_INSTR(StorePoint)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QPoint *p = (QPoint *)&instr.point;
-            void *a[] = { p, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StorePoint)
-
-        QML_BEGIN_INSTR(StorePointF)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QPointF *p = (QPointF *)&instr.point;
-            void *a[] = { p, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StorePointF)
-
-        QML_BEGIN_INSTR(StoreSize)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QSize *s = (QSize *)&instr.size;
-            void *a[] = { s, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreSize)
-
-        QML_BEGIN_INSTR(StoreSizeF)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QSizeF *s = (QSizeF *)&instr.size;
-            void *a[] = { s, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreSizeF)
-
-        QML_BEGIN_INSTR(StoreRect)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QRect *r = (QRect *)&instr.rect;
-            void *a[] = { r, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreRect)
-
-        QML_BEGIN_INSTR(StoreRectF)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QRectF *r = (QRectF *)&instr.rect;
-            void *a[] = { r, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreRectF)
-
-        QML_BEGIN_INSTR(StoreVector3D)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QVector3D *v = (QVector3D *)&instr.vector;
-            void *a[] = { v, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreVector3D)
-
-        QML_BEGIN_INSTR(StoreVector4D)
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QVector4D *v = (QVector4D *)&instr.vector;
-            void *a[] = { v, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreVector4D)
-
-        QML_BEGIN_INSTR(StoreObject)
-            QObject *assignObj = objects.pop();
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            void *a[] = { (void *)&assignObj, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreObject)
-
         QML_BEGIN_INSTR(AssignCustomType)
             QObject *target = objects.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
@@ -972,21 +731,16 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QObject *context = 
                 objects.at(objects.count() - 1 - instr.context);
 
-            QDeclarativeProperty mp = 
-                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
-
-            int coreIndex = mp.index();
-
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(coreIndex)) 
+            if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
                 QML_NEXT_INSTR(StoreBinding);
 
             QDeclarativeBinding *bind = new QDeclarativeBinding(PRIMITIVES.at(instr.value), true, 
                                                                 context, CTXT, COMP->name, instr.line);
             bindValues.push(bind);
             bind->m_mePtr = &bindValues.top();
-            bind->setTarget(mp);
+            bind->setTarget(target, instr.property, CTXT);
 
-            bind->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(mp));
+            bind->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(instr.property));
         QML_END_INSTR(StoreBinding)
 
         QML_BEGIN_INSTR(StoreBindingOnAlias)
@@ -995,21 +749,19 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QObject *context = 
                 objects.at(objects.count() - 1 - instr.context);
 
-            QDeclarativeProperty mp = 
-                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
-
-            int coreIndex = mp.index();
-
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(coreIndex)) 
+            if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
                 QML_NEXT_INSTR(StoreBindingOnAlias);
 
             QDeclarativeBinding *bind = new QDeclarativeBinding(PRIMITIVES.at(instr.value), true,
                                                                 context, CTXT, COMP->name, instr.line);
             bindValues.push(bind);
             bind->m_mePtr = &bindValues.top();
-            bind->setTarget(mp);
+            bind->setTarget(target, instr.property, CTXT);
 
-            QDeclarativeAbstractBinding *old = QDeclarativePropertyPrivate::setBindingNoEnable(target, coreIndex, QDeclarativePropertyPrivate::valueTypeCoreIndex(mp), bind);
+            QDeclarativeAbstractBinding *old =
+                QDeclarativePropertyPrivate::setBindingNoEnable(target, instr.property.coreIndex,
+                                                                instr.property.getValueTypeCoreIndex(),
+                                                                bind);
             if (old) { old->destroy(); }
         QML_END_INSTR(StoreBindingOnAlias)
 
@@ -1052,10 +804,8 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QDeclarativePropertyValueSource *vs = reinterpret_cast<QDeclarativePropertyValueSource *>(reinterpret_cast<char *>(obj) + instr.castValue);
             QObject *target = objects.at(objects.count() - 1 - instr.owner);
 
-            QDeclarativeProperty prop = 
-                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
             obj->setParent(target);
-            vs->setTarget(prop);
+            vs->setTarget(QDeclarativePropertyPrivate::restore(target, instr.property, CTXT));
         QML_END_INSTR(StoreValueSource)
 
         QML_BEGIN_INSTR(StoreValueInterceptor)
@@ -1063,7 +813,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QDeclarativePropertyValueInterceptor *vi = reinterpret_cast<QDeclarativePropertyValueInterceptor *>(reinterpret_cast<char *>(obj) + instr.castValue);
             QObject *target = objects.at(objects.count() - 1 - instr.owner);
             QDeclarativeProperty prop = 
-                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
+                QDeclarativePropertyPrivate::restore(target, instr.property, CTXT);
             obj->setParent(target);
             vi->setTarget(prop);
             QDeclarativeVMEMetaObject *mo = static_cast<QDeclarativeVMEMetaObject *>((QMetaObject*)target->metaObject());
@@ -1095,26 +845,6 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 
             list.qListProperty.append((QDeclarativeListProperty<void>*)&list.qListProperty, ptr);
         QML_END_INSTR(AssignObjectList)
-
-        QML_BEGIN_INSTR(StoreVariantObject)
-            QObject *assign = objects.pop();
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            QVariant v = QVariant::fromValue(assign);
-            void *a[] = { &v, 0, &status, &flags };
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                  instr.propertyIndex, a);
-        QML_END_INSTR(StoreVariantObject)
-
-        QML_BEGIN_INSTR(StoreVarObject)
-            QObject *assign = objects.pop();
-            QObject *target = objects.top();
-            CLEAN_PROPERTY(target, instr.propertyIndex);
-
-            v8::Handle<v8::Value> v8Value = ep->v8engine()->newQObject(assign);
-            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
-        QML_END_INSTR(StoreVarObject)
 
         QML_BEGIN_INSTR(StoreInterface)
             QObject *assign = objects.pop();

@@ -74,6 +74,8 @@ QT_BEGIN_NAMESPACE
 
 //Make it easy to identify and customize the root item if needed
 
+class QQuickWindowManager;
+
 class QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
@@ -145,7 +147,6 @@ public:
     void dirtyItem(QQuickItem *);
     void cleanup(QSGNode *);
 
-    void initializeSceneGraph();
     void polishItems();
     void syncSceneGraph();
     void renderSceneGraph(const QSize &size);
@@ -166,16 +167,13 @@ public:
 
     QSGEngine *engine;
     QSGContext *context;
+    QSGRenderer *renderer;
+
+    QQuickWindowManager *windowManager;
+
     QColor clearColor;
 
-    uint vsyncAnimations : 1;
     uint clearBeforeRendering : 1;
-
-    QQuickCanvasRenderLoop *thread;
-    QSize widgetSize;
-    QSize viewportSize;
-
-    QAnimationDriver2 *animationDriver;
 
     QOpenGLFramebufferObject *renderTarget;
 
@@ -185,135 +183,6 @@ public:
 
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
-};
-
-class QQuickCanvasRenderLoop
-{
-public:
-    QQuickCanvasRenderLoop()
-        : d(0)
-        , renderer(0)
-        , gl(0)
-    {
-    }
-    virtual ~QQuickCanvasRenderLoop()
-    {
-        delete gl;
-    }
-
-    friend class QQuickCanvasPrivate;
-
-    virtual void paint() = 0;
-    virtual void resize(const QSize &size) = 0;
-    virtual void startRendering() = 0;
-    virtual void stopRendering() = 0;
-    virtual QImage grab() = 0;
-    virtual void setWindowSize(const QSize &size) = 0;
-    virtual void maybeUpdate() = 0;
-    virtual bool isRunning() const = 0;
-    virtual void animationStarted() = 0;
-    virtual void animationStopped() = 0;
-    virtual void moveContextToThread(QSGContext *) { }
-    virtual bool *allowMainThreadProcessing() { return 0; }
-
-protected:
-    void initializeSceneGraph() { d->initializeSceneGraph(); }
-    void syncSceneGraph() { d->syncSceneGraph(); }
-    void cleanupNodesOnShutdown() { d->cleanupNodesOnShutdown(); }
-    void renderSceneGraph(const QSize &size) { d->renderSceneGraph(size); }
-    void polishItems() { d->polishItems(); }
-    QAnimationDriver2 *animationDriver() const { return d->animationDriver; }
-
-    inline QOpenGLContext *glContext() const { return gl; }
-    void createGLContext();
-    void makeCurrent() { gl->makeCurrent(renderer); }
-    void doneCurrent() { gl->doneCurrent(); }
-    void swapBuffers() {
-        gl->swapBuffers(renderer);
-        emit renderer->frameSwapped();
-    }
-
-private:
-    QQuickCanvasPrivate *d;
-    QQuickCanvas *renderer;
-
-    QOpenGLContext *gl;
-};
-
-class QQuickCanvasRenderThread : public QThread, public QQuickCanvasRenderLoop
-{
-    Q_OBJECT
-public:
-    QQuickCanvasRenderThread()
-        : mutex(QMutex::NonRecursive)
-        , allowMainThreadProcessingFlag(true)
-        , animationRunning(false)
-        , isGuiBlocked(0)
-        , isPaintCompleted(false)
-        , isGuiBlockPending(false)
-        , isRenderBlocked(false)
-        , isExternalUpdatePending(false)
-        , syncAlreadyHappened(false)
-        , inSync(false)
-        , doGrab(false)
-        , shouldExit(false)
-        , hasExited(false)
-        , renderThreadAwakened(false)
-    {}
-
-    inline void lock() { mutex.lock(); }
-    inline void unlock() { mutex.unlock(); }
-    inline void wait() { condition.wait(&mutex); }
-    inline void wake() { condition.wakeOne(); }
-
-    void lockInGui();
-    void unlockInGui();
-
-    void paint();
-    void resize(const QSize &size);
-    void startRendering();
-    void stopRendering();
-    void exhaustSyncEvent();
-    void sync(bool guiAlreadyLocked);
-    bool isRunning() const { return QThread::isRunning(); }
-    void setWindowSize(const QSize &size) { windowSize = size; }
-    void maybeUpdate();
-    void moveContextToThread(QSGContext *c) { c->moveToThread(this); }
-    bool *allowMainThreadProcessing() { return &allowMainThreadProcessingFlag; }
-
-    bool event(QEvent *);
-
-    QImage grab();
-
-public slots:
-    void animationStarted();
-    void animationStopped();
-
-public:
-    QMutex mutex;
-    QWaitCondition condition;
-
-    bool allowMainThreadProcessingFlag;
-
-    QSize windowSize;
-    QSize renderedSize;
-
-    uint animationRunning: 1;
-    int isGuiBlocked;
-    uint isPaintCompleted : 1;
-    uint isGuiBlockPending : 1;
-    uint isRenderBlocked : 1;
-    uint isExternalUpdatePending : 1;
-    uint syncAlreadyHappened : 1;
-    uint inSync : 1;
-    uint doGrab : 1;
-    uint shouldExit : 1;
-    uint hasExited : 1;
-    uint renderThreadAwakened : 1;
-
-    QImage grabContent;
-
-    void run();
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickCanvasPrivate::FocusOptions)

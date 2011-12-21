@@ -50,6 +50,8 @@
 #include "qdeclarativebinding_p.h"
 #include "qdeclarativepropertyvalueinterceptor_p.h"
 
+#include <private/qv8variantresource_p.h>
+
 Q_DECLARE_METATYPE(QJSValue);
 
 QT_BEGIN_NAMESPACE
@@ -819,8 +821,28 @@ QVariant QDeclarativeVMEMetaObject::readPropertyAsVariant(int id)
 void QDeclarativeVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
-
     ensureVarPropertiesAllocated();
+
+    // Importantly, if the current value is a scarce resource, we need to ensure that it
+    // gets automatically released by the engine if no other references to it exist.
+    v8::Local<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
+    if (oldv->IsObject()) {
+        QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
+        if (r) {
+            r->removeVmePropertyReference();
+        }
+    }
+
+    // And, if the new value is a scarce resource, we need to ensure that it does not get
+    // automatically released by the engine until no other references to it exist.
+    if (value->IsObject()) {
+        QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(value));
+        if (r) {
+            r->addVmePropertyReference();
+        }
+    }
+
+    // Write the value and emit change signal as appropriate.
     varProperties->Set(id - firstVarPropertyIndex, value);
     activate(object, methodOffset + id, 0);
 }
@@ -829,8 +851,30 @@ void QDeclarativeVMEMetaObject::writeProperty(int id, const QVariant &value)
 {
     if (id >= firstVarPropertyIndex) {
         ensureVarPropertiesAllocated();
+
+        // Importantly, if the current value is a scarce resource, we need to ensure that it
+        // gets automatically released by the engine if no other references to it exist.
+        v8::Local<v8::Value> oldv = varProperties->Get(id - firstVarPropertyIndex);
+        if (oldv->IsObject()) {
+            QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(oldv));
+            if (r) {
+                r->removeVmePropertyReference();
+            }
+        }
+
+        // And, if the new value is a scarce resource, we need to ensure that it does not get
+        // automatically released by the engine until no other references to it exist.
+        v8::Handle<v8::Value> newv = QDeclarativeEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value);
+        if (newv->IsObject()) {
+            QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(newv));
+            if (r) {
+                r->addVmePropertyReference();
+            }
+        }
+
+        // Write the value and emit change signal as appropriate.
         QVariant currentValue = readPropertyAsVariant(id);
-        varProperties->Set(id - firstVarPropertyIndex, QDeclarativeEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value));
+        varProperties->Set(id - firstVarPropertyIndex, newv);
         if ((currentValue.userType() != value.userType() || currentValue != value))
             activate(object, methodOffset + id, 0);
     } else {

@@ -378,6 +378,7 @@ case 46: {
 
 case 47: {
   AST::UiParameterList *node = new (pool) AST::UiParameterList(stringRef(1), stringRef(2));
+  node->propertyTypeToken = loc(1);
   node->identifierToken = loc(2);
   sym(1).Node = node;
 } break;
@@ -577,6 +578,7 @@ case 79: {
   }
 
   loc(1).length = lexer->tokenLength();
+  yylloc = loc(1); // adjust the location of the current token
 
   AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
     driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
@@ -592,6 +594,7 @@ case 80: {
   }
 
   loc(1).length = lexer->tokenLength();
+  yylloc = loc(1); // adjust the location of the current token
 
   AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
     driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
@@ -1651,31 +1654,31 @@ case 337: {
   sym(1).Node = new (pool) AST::FunctionBody(sym(1).SourceElements->finish ());
 } break;
 
-case 338: {
+case 339: {
   sym(1).Node = new (pool) AST::Program(sym(1).SourceElements->finish ());
 } break;
 
-case 339: {
+case 340: {
   sym(1).Node = new (pool) AST::SourceElements(sym(1).SourceElement);
 } break;
 
-case 340: {
+case 341: {
   sym(1).Node = new (pool) AST::SourceElements(sym(1).SourceElements, sym(2).SourceElement);
 } break;
 
-case 341: {
+case 342: {
   sym(1).Node = new (pool) AST::StatementSourceElement(sym(1).Statement);
 } break;
 
-case 342: {
+case 343: {
   sym(1).Node = new (pool) AST::FunctionSourceElement(sym(1).FunctionDeclaration);
 } break;
 
-case 343: {
+case 344: {
   stringRef(1) = QStringRef();
 } break;
 
-case 345: {
+case 346: {
   sym(1).Node = 0;
 } break;
 

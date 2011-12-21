@@ -46,7 +46,7 @@
 #include "qv4compiler_p.h"
 #include "qv4compiler_p_p.h"
 
-#include <private/qdeclarativefastproperties_p.h>
+#include <private/qdeclarativeaccessors_p.h>
 #include <private/qdeclarativedebugtrace_p.h>
 #include <private/qdeclarativemetatype_p.h>
 
@@ -760,7 +760,17 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             reg.init((Register::Type)instr->fetchAndSubscribe.valueType);
             if (instr->fetchAndSubscribe.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetchAndSubscribe.reg);
-            QDeclarativeFastProperties::instance()->accessor(instr->fetchAndSubscribe.function)(object, reg.typeDataPtr(), sub);
+            QDeclarativeAccessors *accessors = instr->fetchAndSubscribe.property.accessors;
+            accessors->read(object, instr->fetchAndSubscribe.property.accessorData,
+                            reg.typeDataPtr());
+
+            if (accessors->notifier) {
+                QDeclarativeNotifier *notifier = 0;
+                accessors->notifier(object, instr->fetchAndSubscribe.property.accessorData, &notifier);
+                if (notifier) sub->connect(notifier);
+            } else if (instr->fetchAndSubscribe.property.notifyIndex != -1) {
+                sub->connect(object, instr->fetchAndSubscribe.property.notifyIndex);
+            }
         }
     }
     QML_V4_END_INSTR(FetchAndSubscribe, fetchAndSubscribe)

@@ -346,9 +346,9 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
 
             newBinding = new QDeclarativeBinding(&function, reference->object, context);
             newBinding->setSourceLocation(url, lineNumber);
-            newBinding->setTarget(QDeclarativePropertyPrivate::restore(cacheData, reference->object, 
-                                                                       context));
-            newBinding->setEvaluateFlags(newBinding->evaluateFlags() | QDeclarativeBinding::RequiresThisObject);
+            newBinding->setTarget(reference->object, cacheData, context);
+            newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
+                                         QDeclarativeBinding::RequiresThisObject);
         }
 
         QDeclarativeAbstractBinding *oldBinding = 

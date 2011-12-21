@@ -67,29 +67,6 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT bool qt_applefontsmoothing_enabled;
 
-class QQuickTextDocumentWithImageResources : public QTextDocument {
-    Q_OBJECT
-
-public:
-    QQuickTextDocumentWithImageResources(QQuickText *parent);
-    virtual ~QQuickTextDocumentWithImageResources();
-
-    void setText(const QString &);
-    int resourcesLoading() const { return outstanding; }
-
-protected:
-    QVariant loadResource(int type, const QUrl &name);
-
-private slots:
-    void requestFinished();
-
-private:
-    QHash<QUrl, QDeclarativePixmap *> m_resources;
-
-    int outstanding;
-    static QSet<QUrl> errors;
-};
-
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 DEFINE_BOOL_CONFIG_OPTION(enableImageCache, QML_ENABLE_TEXT_IMAGE_CACHE);
 
@@ -123,7 +100,7 @@ void QQuickTextPrivate::init()
     q->setFlag(QQuickItem::ItemHasContents);
 }
 
-QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickText *parent)
+QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickItem *parent)
 : QTextDocument(parent), outstanding(0)
 {
     setUndoRedoEnabled(false);
@@ -171,25 +148,32 @@ void QQuickTextDocumentWithImageResources::requestFinished()
 {
     outstanding--;
     if (outstanding == 0) {
-        QQuickText *textItem = static_cast<QQuickText*>(parent());
-        QString text = textItem->text();
-#ifndef QT_NO_TEXTHTMLPARSER
-        setHtml(text);
-#else
-        setPlainText(text);
-#endif
-        QQuickTextPrivate *d = QQuickTextPrivate::get(textItem);
-        d->updateLayout();
+        markContentsDirty(0, characterCount());
+
+        if (QQuickText *item = qobject_cast<QQuickText *>(parent()))
+            QQuickTextPrivate::get(item)->updateLayout();
     }
+}
+
+void QQuickTextDocumentWithImageResources::clear()
+{
+    clearResources();
+
+    QTextDocument::clear();
+}
+
+void QQuickTextDocumentWithImageResources::clearResources()
+{
+    foreach (QDeclarativePixmap *pixmap, m_resources)
+        pixmap->clear(this);
+    qDeleteAll(m_resources);
+    m_resources.clear();
+    outstanding = 0;
 }
 
 void QQuickTextDocumentWithImageResources::setText(const QString &text)
 {
-    if (!m_resources.isEmpty()) {
-        qDeleteAll(m_resources);
-        m_resources.clear();
-        outstanding = 0;
-    }
+    clearResources();
 
 #ifndef QT_NO_TEXTHTMLPARSER
     setHtml(text);
@@ -240,8 +224,12 @@ void QQuickTextPrivate::updateLayout()
             tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
             singleline = !tmp.contains(QChar::LineSeparator);
             if (singleline && !maximumLineCountValid && elideMode != QQuickText::ElideNone && q->widthValid() && wrapMode == QQuickText::NoWrap) {
-                QFontMetrics fm(font);
-                tmp = fm.elidedText(tmp,(Qt::TextElideMode)elideMode,q->width());
+                if (q->width() <= 0) {
+                    tmp = QString();
+                } else {
+                    QFontMetrics fm(font);
+                    tmp = fm.elidedText(tmp,(Qt::TextElideMode)elideMode,q->width());
+                }
                 if (tmp != text) {
                     layoutTextElided = true;
                     if (!truncated) {
@@ -552,10 +540,26 @@ QRect QQuickTextPrivate::setupTextLayout()
             layout.setText(elidedText);
     }
 
+    if ((q->widthValid() && q->width() <= 0. && elideMode != QQuickText::ElideNone)
+            || (q->heightValid() && q->height() <= 0. && wrapMode != QQuickText::NoWrap && elideMode == QQuickText::ElideRight)) {
+        // we are elided and we have a zero width or height
+        if (!truncated) {
+            truncated = true;
+            emit q->truncatedChanged();
+        }
+        if (lineCount) {
+            lineCount = 0;
+            emit q->lineCountChanged();
+        }
+
+        qreal height = (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : fm.height() * lineHeight;
+        return QRect(0, 0, 0, height);
+    }
+
     qreal height = 0;
     QRectF br;
 
-    bool truncate = false;
+    bool truncate = layoutTextElided;
     bool customLayout = isLineLaidOutConnected();
     bool elideEnabled = elideMode == QQuickText::ElideRight && q->widthValid();
 
@@ -1649,21 +1653,44 @@ QRectF QQuickText::boundingRect() const
 void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickText);
-    bool elide = d->elideMode != QQuickText::ElideNone && widthValid();
-    if ((!d->internalWidthUpdate
-         && (newGeometry.width() != oldGeometry.width() || (elide && newGeometry.height() != oldGeometry.height())))
-            && (d->wrapMode != QQuickText::NoWrap
-                || d->elideMode != QQuickText::ElideNone
-                || d->hAlign != QQuickText::AlignLeft)) {
-        if ((d->singleline || d->maximumLineCountValid || heightValid()) && elide) {
-            // We need to re-elide
-            d->updateLayout();
-        } else {
-            // We just need to re-layout
-            d->updateSize();
-        }
+    bool widthChanged = newGeometry.width() != oldGeometry.width();
+    bool heightChanged = newGeometry.height() != oldGeometry.height();
+    bool leftAligned = effectiveHAlign() == QQuickText::AlignLeft;
+    bool wrapped = d->wrapMode != QQuickText::NoWrap;
+    bool elide = d->elideMode != QQuickText::ElideNone;
+
+    if ((!widthChanged && !heightChanged) || d->internalWidthUpdate)
+        goto geomChangeDone;
+
+    if (leftAligned && !wrapped && !elide)
+        goto geomChangeDone; // left aligned unwrapped text without eliding never needs relayout
+
+    if (!widthChanged && !wrapped && d->singleline)
+        goto geomChangeDone; // only height has changed which doesn't affect single line unwrapped text
+
+    if (!widthChanged && wrapped && d->elideMode != QQuickText::ElideRight)
+        goto geomChangeDone; // only height changed and no multiline eliding.
+
+    if (leftAligned && d->elideMode == QQuickText::ElideRight && !d->truncated && d->singleline
+            && !wrapped && newGeometry.width() > oldGeometry.width())
+        goto geomChangeDone; // Eliding not affected if we're not currently truncated and we get wider.
+
+    if (d->elideMode == QQuickText::ElideRight && wrapped && newGeometry.height() > oldGeometry.height()) {
+        if (!d->truncated)
+            goto geomChangeDone; // Multiline eliding not affected if we're not currently truncated and we get higher.
+        if (d->maximumLineCountValid && d->lineCount == d->maximumLineCount)
+            goto geomChangeDone; // Multiline eliding not affected if we're already at max line count and we get higher.
     }
 
+    if (d->updateOnComponentComplete || (elide && widthValid())) {
+        // We need to re-elide
+        d->updateLayout();
+    } else {
+        // We just need to re-layout
+        d->updateSize();
+    }
+
+geomChangeDone:
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -1740,7 +1767,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             d->ensureDoc();
             node->addTextDocument(bounds.topLeft(), d->doc, d->color, d->style, d->styleColor);
 
-        } else {
+        } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
             node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
             if (d->elipsisLayout)
                 node->addTextLayout(QPoint(0, bounds.y()), d->elipsisLayout, d->color, d->style, d->styleColor);
@@ -1946,5 +1973,3 @@ void QQuickText::mouseReleaseEvent(QMouseEvent *event)
 }
 
 QT_END_NAMESPACE
-
-#include "qquicktext.moc"

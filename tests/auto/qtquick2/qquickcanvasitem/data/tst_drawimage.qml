@@ -129,6 +129,8 @@ Canvas {
        function test_self() {
            var ctx = canvas.getContext('2d');
            ctx.reset();
+           ignoreWarning("QImage::scaled: Image is a null image");
+           ignoreWarning("QImage::scaled: Image is a null image");
 
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 50, 50);
@@ -258,7 +260,10 @@ Canvas {
        function test_nonfinite() {
            var ctx = canvas.getContext('2d');
            ctx.reset();
-
+           ignoreWarning("QImage::scaled: Image is a null image");
+           ignoreWarning("QImage::scaled: Image is a null image");
+           ignoreWarning("QImage::scaled: Image is a null image");
+           ignoreWarning("QImage::scaled: Image is a null image");
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
            var red = 'red.png';

@@ -52,9 +52,6 @@
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QObjectList)
 
-//TESTED_CLASS=
-//TESTED_FILES=
-
 // The JavaScriptCore GC marks the C stack. To try to ensure that there is
 // no JSObject* left in stack memory by the compiler, we call this function
 // to zap some bytes of memory before calling collectGarbage().

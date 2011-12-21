@@ -219,6 +219,11 @@ QDeclarativeProperty::QDeclarativeProperty(QObject *obj, const QString &name, QD
 
 Q_GLOBAL_STATIC(QDeclarativeValueTypeFactory, qmlValueTypes);
 
+QDeclarativePropertyPrivate::QDeclarativePropertyPrivate()
+: context(0), engine(0), object(0), isNameCached(false)
+{
+}
+
 QDeclarativeContextData *QDeclarativePropertyPrivate::effectiveContext() const 
 {
     if (context) return context;
@@ -1695,8 +1700,8 @@ QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObject, int in
 }
 
 QDeclarativeProperty
-QDeclarativePropertyPrivate::restore(const QDeclarativePropertyData &data,
-                                     QObject *object, QDeclarativeContextData *ctxt)
+QDeclarativePropertyPrivate::restore(QObject *object, const QDeclarativePropertyData &data,
+                                     QDeclarativeContextData *ctxt)
 {
     QDeclarativeProperty prop;
 

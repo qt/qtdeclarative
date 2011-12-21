@@ -83,6 +83,7 @@ QT_BEGIN_NAMESPACE
 class QNetworkReply;
 class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;
+class QQuickScreenAttached;
 
 class QQuickContents : public QQuickItemChangeListener
 {
@@ -140,6 +141,8 @@ class Q_QUICK_EXPORT QQuickItemPrivate : public QObjectPrivate
 public:
     static QQuickItemPrivate* get(QQuickItem *item) { return item->d_func(); }
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
+
+    static void registerAccessorProperties();
 
     QQuickItemPrivate();
     ~QQuickItemPrivate();
@@ -281,6 +284,8 @@ public:
     QSGContext *sceneGraphContext() const { Q_ASSERT(canvas); return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
 
     QQuickItem *parentItem;
+    QDeclarativeNotifier parentNotifier;
+
     QList<QQuickItem *> childItems;
     mutable QList<QQuickItem *> *sortedChildItems;
     QList<QQuickItem *> paintOrderChildItems() const;
@@ -440,6 +445,8 @@ public:
     void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &);
 
     virtual void mirrorChange() {}
+
+    QQuickScreenAttached *screenAttached;
 
     static qint64 consistentTime;
     static void setConsistentTime(qint64 t);

@@ -62,8 +62,8 @@
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
-class QTextDocument;
-class QTextControl;
+class QQuickTextDocumentWithImageResources;
+class QQuickTextControl;
 class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextEdit)
@@ -85,7 +85,6 @@ public:
 
     void updateDefaultTextOption();
     void relayoutDocument();
-    void updateSelection();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);
     void mirrorChange();
@@ -121,8 +120,8 @@ public:
     QDeclarativeComponent* cursorComponent;
     QQuickItem* cursor;
     QQuickTextEdit::TextFormat format;
-    QTextDocument *document;
-    QTextControl *control;
+    QQuickTextDocumentWithImageResources *document;
+    QQuickTextControl *control;
     QQuickTextEdit::WrapMode wrapMode;
     QQuickTextEdit::SelectionMode mouseSelectionMode;
     int lineCount;
