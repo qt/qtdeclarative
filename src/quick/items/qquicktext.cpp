@@ -1528,6 +1528,7 @@ void QQuickText::resetMaximumLineCount()
 
     \code
     <b></b> - bold
+    <strong></strong> - bold
     <i></i> - italic
     <br> - new line
     <p> - paragraph
@@ -1536,6 +1537,7 @@ void QQuickText::resetMaximumLineCount()
     <h1> to <h6> - headers
     <a href=""> - anchor
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
+    <pre></pre> - preformatted
     &gt; &lt; &amp;
     \endcode
 

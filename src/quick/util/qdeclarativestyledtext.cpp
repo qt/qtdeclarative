@@ -51,6 +51,7 @@
     QDeclarativeStyledText supports few tags:
 
     <b></b> - bold
+    <strong></strong> - bold
     <i></i> - italic
     <br> - new line
     <p> - paragraph
@@ -59,6 +60,7 @@
     <h1> to <h6> - headers
     <a href=""> - anchor
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
+    <pre></pre> - preformated
 
     The opening and closing tags must be correctly nested.
 */
@@ -79,6 +81,7 @@ public:
 
     QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l)
         : text(t), layout(l), baseFont(layout.font()), hasNewLine(false)
+        , preFormat(false)
     {
     }
 
@@ -106,6 +109,7 @@ public:
     QFont baseFont;
     QStack<List> listStack;
     bool hasNewLine;
+    bool preFormat;
 
     static const QChar lessThan;
     static const QChar greaterThan;
@@ -216,6 +220,11 @@ void QDeclarativeStyledTextPrivate::parse()
             parseEntity(ch, text, drawText);
             textStart = ch - text.constData() + 1;
             textLength = 0;
+        } else if (preFormat && ch->isSpace()) {
+            drawText.append(QStringRef(&text, textStart, textLength));
+            drawText.append(QChar(QChar::Nbsp));
+            textStart = ch - text.constData() + 1;
+            textLength = 0;
         } else {
             ++textLength;
         }
@@ -269,6 +278,13 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
                 if (tagLength == 1) {
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
+                } else if (tag == QLatin1String("pre")) {
+                    preFormat = true;
+                    if (!hasNewLine)
+                        textOut.append(QChar::LineSeparator);
+                    format.setFontFamily(QString::fromLatin1("Courier New,courier"));
+                    format.setFontFixedPitch(true);
+                    return true;
                 }
             } else if (char0 == QLatin1Char('u')) {
                 if (tagLength == 1) {
@@ -392,6 +408,12 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
                     textOut.append(QChar::LineSeparator);
                     hasNewLine = true;
                     return false;
+                } else if (tag == QLatin1String("pre")) {
+                    preFormat = false;
+                    if (!hasNewLine)
+                        textOut.append(QChar::LineSeparator);
+                    hasNewLine = true;
+                    return true;
                 }
             } else if (char0 == QLatin1Char('u')) {
                 if (tagLength == 1)

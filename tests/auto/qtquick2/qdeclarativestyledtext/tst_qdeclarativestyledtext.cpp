@@ -114,6 +114,7 @@ void tst_qdeclarativestyledtext::textOutput_data()
     QTest::newRow("h5") << "<h5>head" << QChar(QChar::LineSeparator) + QLatin1String("head") << (FormatList() << Format(Format::Bold, 0, 5));
     QTest::newRow("h6") << "<h6>head" << QChar(QChar::LineSeparator) + QLatin1String("head") << (FormatList() << Format(Format::Bold, 0, 5));
     QTest::newRow("h7") << "<h7>head" << "head" << FormatList();
+    QTest::newRow("pre") << "normal<pre>pre text</pre>normal" << QLatin1String("normal") + QChar(QChar::LineSeparator) + QLatin1String("pre") + QChar(QChar::Nbsp) + QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("normal") << (FormatList() << Format(0, 6, 9));
 }
 
 void tst_qdeclarativestyledtext::textOutput()
