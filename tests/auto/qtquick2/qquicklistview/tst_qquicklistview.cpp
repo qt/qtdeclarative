@@ -60,15 +60,13 @@
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickListView::Orientation)
 
-class tst_QQuickListView : public QObject
+class tst_QQuickListView : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_QQuickListView();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     // Test both QListModelInterface and QAbstractItemModel model types
     void qListModelInterface_items();
     void qListModelInterface_package_items();
@@ -184,14 +182,6 @@ private:
     void moved_data();
 };
 
-void tst_QQuickListView::initTestCase()
-{
-}
-
-void tst_QQuickListView::cleanupTestCase()
-{
-
-}
 class TestObject : public QObject
 {
     Q_OBJECT
@@ -611,7 +601,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
     ctxt->setContextProperty("testObject", testObject);
 
     canvas->setSource(source);
-    //canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    //canvas->setSource(testFileUrl("listviewtest.qml")));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -715,7 +705,7 @@ void tst_QQuickListView::inserted_more()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -865,7 +855,7 @@ void tst_QQuickListView::insertBeforeVisible()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -1396,7 +1386,7 @@ void tst_QQuickListView::multipleChanges()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -1613,7 +1603,7 @@ void tst_QQuickListView::swapWithFirstItem()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -1639,7 +1629,7 @@ void tst_QQuickListView::enforceRange()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-enforcerange.qml")));
+    canvas->setSource(testFileUrl("listview-enforcerange.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -1700,7 +1690,7 @@ void tst_QQuickListView::enforceRange_withoutHighlight()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-enforcerange-nohighlight.qml")));
+    canvas->setSource(testFileUrl("listview-enforcerange-nohighlight.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -1742,7 +1732,7 @@ void tst_QQuickListView::spacing()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -1894,7 +1884,7 @@ void tst_QQuickListView::sectionsDelegate()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-sections_delegate.qml")));
+    canvas->setSource(testFileUrl("listview-sections_delegate.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -2007,7 +1997,7 @@ void tst_QQuickListView::sectionsPositioning()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listview-sections_delegate.qml")));
+    canvas->setSource(testFileUrl("listview-sections_delegate.qml"));
     qApp->processEvents();
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart | QQuickViewSection::NextLabelAtEnd)));
 
@@ -2136,7 +2126,7 @@ void tst_QQuickListView::currentIndex_delayedItemCreation()
     // (since the currentItem will have changed and that shares the same index)
     canvas->rootContext()->setContextProperty("setCurrentToZero", setCurrentToZero);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("fillModelOnComponentCompleted.qml")));
+    canvas->setSource(testFileUrl("fillModelOnComponentCompleted.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -2173,7 +2163,7 @@ void tst_QQuickListView::currentIndex()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testWrap", QVariant(false));
 
-    QString filename(TESTDATA("listview-initCurrent.qml"));
+    QString filename(testFile("listview-initCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -2309,7 +2299,7 @@ void tst_QQuickListView::noCurrentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QString filename(TESTDATA("listview-noCurrent.qml"));
+    QString filename(testFile("listview-noCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -2339,7 +2329,7 @@ void tst_QQuickListView::itemList()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("itemlist.qml")));
+    canvas->setSource(testFileUrl("itemlist.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "view");
@@ -2390,7 +2380,7 @@ void tst_QQuickListView::cacheBuffer()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -2491,7 +2481,7 @@ void tst_QQuickListView::positionViewAtIndex()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -2656,7 +2646,7 @@ void tst_QQuickListView::resetModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaylist.qml")));
+    canvas->setSource(testFileUrl("displaylist.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -2692,7 +2682,7 @@ void tst_QQuickListView::propertyChanges()
 {
     QQuickView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
+    canvas->setSource(testFileUrl("propertychangestest.qml"));
 
     QQuickListView *listView = canvas->rootObject()->findChild<QQuickListView*>("listView");
     QTRY_VERIFY(listView);
@@ -2760,7 +2750,7 @@ void tst_QQuickListView::componentChanges()
 {
     QQuickView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
+    canvas->setSource(testFileUrl("propertychangestest.qml"));
 
     QQuickListView *listView = canvas->rootObject()->findChild<QQuickListView*>("listView");
     QTRY_VERIFY(listView);
@@ -2808,7 +2798,7 @@ void tst_QQuickListView::modelChanges()
 {
     QQuickView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
+    canvas->setSource(testFileUrl("propertychangestest.qml"));
 
     QQuickListView *listView = canvas->rootObject()->findChild<QQuickListView*>("listView");
     QTRY_VERIFY(listView);
@@ -2835,7 +2825,7 @@ void tst_QQuickListView::QTBUG_9791()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("strictlyenforcerange.qml")));
+    canvas->setSource(testFileUrl("strictlyenforcerange.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
@@ -2871,7 +2861,7 @@ void tst_QQuickListView::manualHighlight()
     QQuickView *canvas = new QQuickView(0);
     canvas->setGeometry(0,0,240,320);
 
-    QString filename(TESTDATA("manual-highlight.qml"));
+    QString filename(testFile("manual-highlight.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -2916,7 +2906,7 @@ void tst_QQuickListView::QTBUG_11105()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -2969,7 +2959,7 @@ void tst_QQuickListView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 240);
     canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
+    canvas->setSource(testFileUrl("header.qml"));
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3026,7 +3016,7 @@ void tst_QQuickListView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 0.0);
     canvas->rootContext()->setContextProperty("initialViewHeight", 0.0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
+    canvas->setSource(testFileUrl("header.qml"));
 
     listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -3102,7 +3092,7 @@ void tst_QQuickListView::header_delayItemCreation()
     TestModel model;
 
     canvas->rootContext()->setContextProperty("setCurrentToZero", QVariant(false));
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("fillModelOnComponentCompleted.qml")));
+    canvas->setSource(testFileUrl("fillModelOnComponentCompleted.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3143,7 +3133,7 @@ void tst_QQuickListView::footer()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("footer.qml")));
+    canvas->setSource(testFileUrl("footer.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -3298,7 +3288,7 @@ void tst_QQuickListView::headerFooter()
         QDeclarativeContext *ctxt = canvas->rootContext();
         ctxt->setContextProperty("testModel", &model);
 
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("headerfooter.qml")));
+        canvas->setSource(testFileUrl("headerfooter.qml"));
         qApp->processEvents();
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
@@ -3328,7 +3318,7 @@ void tst_QQuickListView::headerFooter()
         QDeclarativeContext *ctxt = canvas->rootContext();
         ctxt->setContextProperty("testModel", &model);
 
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("headerfooter.qml")));
+        canvas->setSource(testFileUrl("headerfooter.qml"));
         canvas->rootObject()->setProperty("horizontal", true);
         qApp->processEvents();
 
@@ -3359,7 +3349,7 @@ void tst_QQuickListView::headerFooter()
         QDeclarativeContext *ctxt = canvas->rootContext();
         ctxt->setContextProperty("testModel", &model);
 
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("headerfooter.qml")));
+        canvas->setSource(testFileUrl("headerfooter.qml"));
         canvas->rootObject()->setProperty("horizontal", true);
         canvas->rootObject()->setProperty("rtl", true);
         qApp->processEvents();
@@ -3399,7 +3389,7 @@ void tst_QQuickListView::resizeView()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3443,7 +3433,7 @@ void tst_QQuickListView::resizeViewAndRepaint()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("initialHeight", 100);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizeview.qml")));
+    canvas->setSource(testFileUrl("resizeview.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3477,7 +3467,7 @@ void tst_QQuickListView::sizeLessThan1()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("sizelessthan1.qml")));
+    canvas->setSource(testFileUrl("sizelessthan1.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3503,7 +3493,7 @@ void tst_QQuickListView::QTBUG_14821()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("qtbug14821.qml")));
+    canvas->setSource(testFileUrl("qtbug14821.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
@@ -3534,7 +3524,7 @@ void tst_QQuickListView::resizeDelegate()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaylist.qml")));
+    canvas->setSource(testFileUrl("displaylist.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3619,7 +3609,7 @@ void tst_QQuickListView::resizeFirstDelegate()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3678,7 +3668,7 @@ void tst_QQuickListView::QTBUG_16037()
     QQuickView *canvas = createView();
     canvas->show();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("qtbug16037.qml")));
+    canvas->setSource(testFileUrl("qtbug16037.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "listview");
@@ -3707,7 +3697,7 @@ void tst_QQuickListView::indexAt()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    canvas->setSource(testFileUrl("listviewtest.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3734,7 +3724,7 @@ void tst_QQuickListView::incrementalModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaylist.qml")));
+    canvas->setSource(testFileUrl("displaylist.qml"));
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3769,7 +3759,7 @@ void tst_QQuickListView::onAdd()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
+    canvas->setSource(testFileUrl("attachedSignals.qml"));
 
     QObject *object = canvas->rootObject();
     object->setProperty("width", canvas->width());
@@ -3823,7 +3813,7 @@ void tst_QQuickListView::onRemove()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
+    canvas->setSource(testFileUrl("attachedSignals.qml"));
     QObject *object = canvas->rootObject();
 
     model.removeItems(indexToRemove, removeCount);
@@ -3861,7 +3851,7 @@ void tst_QQuickListView::rightToLeft()
 {
     QQuickView *canvas = createView();
     canvas->setGeometry(0,0,640,320);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("rightToLeft.qml")));
+    canvas->setSource(testFileUrl("rightToLeft.qml"));
     qApp->processEvents();
 
     QVERIFY(canvas->rootObject() != 0);
@@ -3911,12 +3901,12 @@ void tst_QQuickListView::rightToLeft()
 void tst_QQuickListView::test_mirroring()
 {
     QQuickView *canvasA = createView();
-    canvasA->setSource(QUrl::fromLocalFile(TESTDATA("rightToLeft.qml")));
+    canvasA->setSource(testFileUrl("rightToLeft.qml"));
     QQuickListView *listviewA = findItem<QQuickListView>(canvasA->rootObject(), "view");
     QTRY_VERIFY(listviewA != 0);
 
     QQuickView *canvasB = createView();
-    canvasB->setSource(QUrl::fromLocalFile(TESTDATA("rightToLeft.qml")));
+    canvasB->setSource(testFileUrl("rightToLeft.qml"));
     QQuickListView *listviewB = findItem<QQuickListView>(canvasB->rootObject(), "view");
     QTRY_VERIFY(listviewA != 0);
     qApp->processEvents();
@@ -3980,7 +3970,7 @@ void tst_QQuickListView::margins()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+    canvas->setSource(testFileUrl("margins.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -4074,7 +4064,7 @@ void tst_QQuickListView::snapToItem()
 
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapToItem.qml")));
+    canvas->setSource(testFileUrl("snapToItem.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -4127,42 +4117,42 @@ void tst_QQuickListView::snapToItem()
 
 void tst_QQuickListView::qListModelInterface_items()
 {
-    items<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), false);
+    items<TestModel>(testFileUrl("listviewtest.qml"), false);
 }
 
 void tst_QQuickListView::qListModelInterface_package_items()
 {
-    items<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest-package.qml")), true);
+    items<TestModel>(testFileUrl("listviewtest-package.qml"), true);
 }
 
 void tst_QQuickListView::qAbstractItemModel_items()
 {
-    items<TestModel2>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), false);
+    items<TestModel2>(testFileUrl("listviewtest.qml"), false);
 }
 
 void tst_QQuickListView::qListModelInterface_changed()
 {
-    changed<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), false);
+    changed<TestModel>(testFileUrl("listviewtest.qml"), false);
 }
 
 void tst_QQuickListView::qListModelInterface_package_changed()
 {
-    changed<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest-package.qml")), true);
+    changed<TestModel>(testFileUrl("listviewtest-package.qml"), true);
 }
 
 void tst_QQuickListView::qAbstractItemModel_changed()
 {
-    changed<TestModel2>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), false);
+    changed<TestModel2>(testFileUrl("listviewtest.qml"), false);
 }
 
 void tst_QQuickListView::qListModelInterface_inserted()
 {
-    inserted<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    inserted<TestModel>(testFileUrl("listviewtest.qml"));
 }
 
 void tst_QQuickListView::qListModelInterface_package_inserted()
 {
-    inserted<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest-package.qml")));
+    inserted<TestModel>(testFileUrl("listviewtest-package.qml"));
 }
 
 void tst_QQuickListView::qListModelInterface_inserted_more()
@@ -4177,7 +4167,7 @@ void tst_QQuickListView::qListModelInterface_inserted_more_data()
 
 void tst_QQuickListView::qAbstractItemModel_inserted()
 {
-    inserted<TestModel2>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    inserted<TestModel2>(testFileUrl("listviewtest.qml"));
 }
 
 void tst_QQuickListView::qAbstractItemModel_inserted_more()
@@ -4192,25 +4182,25 @@ void tst_QQuickListView::qAbstractItemModel_inserted_more_data()
 
 void tst_QQuickListView::qListModelInterface_removed()
 {
-    removed<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), false);
-    removed<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), true);
+    removed<TestModel>(testFileUrl("listviewtest.qml"), false);
+    removed<TestModel>(testFileUrl("listviewtest.qml"), true);
 }
 
 void tst_QQuickListView::qListModelInterface_package_removed()
 {
-    removed<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest-package.qml")), false);
-    removed<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest-package.qml")), true);
+    removed<TestModel>(testFileUrl("listviewtest-package.qml"), false);
+    removed<TestModel>(testFileUrl("listviewtest-package.qml"), true);
 }
 
 void tst_QQuickListView::qAbstractItemModel_removed()
 {
-    removed<TestModel2>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), false);
-    removed<TestModel2>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")), true);
+    removed<TestModel2>(testFileUrl("listviewtest.qml"), false);
+    removed<TestModel2>(testFileUrl("listviewtest.qml"), true);
 }
 
 void tst_QQuickListView::qListModelInterface_moved()
 {
-    moved<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    moved<TestModel>(testFileUrl("listviewtest.qml"));
 }
 
 void tst_QQuickListView::qListModelInterface_moved_data()
@@ -4220,7 +4210,7 @@ void tst_QQuickListView::qListModelInterface_moved_data()
 
 void tst_QQuickListView::qListModelInterface_package_moved()
 {
-    moved<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest-package.qml")));
+    moved<TestModel>(testFileUrl("listviewtest-package.qml"));
 }
 
 void tst_QQuickListView::qListModelInterface_package_moved_data()
@@ -4230,7 +4220,7 @@ void tst_QQuickListView::qListModelInterface_package_moved_data()
 
 void tst_QQuickListView::qAbstractItemModel_moved()
 {
-    moved<TestModel2>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    moved<TestModel2>(testFileUrl("listviewtest.qml"));
 }
 
 void tst_QQuickListView::qAbstractItemModel_moved_data()
@@ -4240,39 +4230,39 @@ void tst_QQuickListView::qAbstractItemModel_moved_data()
 
 void tst_QQuickListView::qListModelInterface_clear()
 {
-    clear<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    clear<TestModel>(testFileUrl("listviewtest.qml"));
 }
 
 void tst_QQuickListView::qListModelInterface_package_clear()
 {
-    clear<TestModel>(QUrl::fromLocalFile(TESTDATA("listviewtest-package.qml")));
+    clear<TestModel>(testFileUrl("listviewtest-package.qml"));
 }
 
 void tst_QQuickListView::qAbstractItemModel_clear()
 {
-    clear<TestModel2>(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
+    clear<TestModel2>(testFileUrl("listviewtest.qml"));
 }
 
 void tst_QQuickListView::qListModelInterface_sections()
 {
-    sections<TestModel>(QUrl::fromLocalFile(TESTDATA("listview-sections.qml")));
+    sections<TestModel>(testFileUrl("listview-sections.qml"));
 }
 
 void tst_QQuickListView::qListModelInterface_package_sections()
 {
-    sections<TestModel>(QUrl::fromLocalFile(TESTDATA("listview-sections-package.qml")));
+    sections<TestModel>(testFileUrl("listview-sections-package.qml"));
 }
 
 void tst_QQuickListView::qAbstractItemModel_sections()
 {
-    sections<TestModel2>(QUrl::fromLocalFile(TESTDATA("listview-sections.qml")));
+    sections<TestModel2>(testFileUrl("listview-sections.qml"));
 }
 
 void tst_QQuickListView::creationContext()
 {
     QQuickView canvas;
     canvas.setGeometry(0,0,240,320);
-    canvas.setSource(QUrl::fromLocalFile(TESTDATA("creationContext.qml")));
+    canvas.setSource(testFileUrl("creationContext.qml"));
     qApp->processEvents();
 
     QQuickItem *rootItem = qobject_cast<QQuickItem *>(canvas.rootObject());
@@ -4294,7 +4284,7 @@ void tst_QQuickListView::QTBUG_21742()
 {
     QQuickView canvas;
     canvas.setGeometry(0,0,200,200);
-    canvas.setSource(QUrl::fromLocalFile(TESTDATA("qtbug-21742.qml")));
+    canvas.setSource(testFileUrl("qtbug-21742.qml"));
     qApp->processEvents();
 
     QQuickItem *rootItem = qobject_cast<QQuickItem *>(canvas.rootObject());
@@ -4335,7 +4325,7 @@ void tst_QQuickListView::asynchronous()
     QDeclarativeIncubationController controller;
     canvas->engine()->setIncubationController(&controller);
 
-    canvas->setSource(TESTDATA("asyncloader.qml"));
+    canvas->setSource(testFileUrl("asyncloader.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(rootObject);
@@ -4416,7 +4406,7 @@ void tst_QQuickListView::snapOneItem()
 
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapOneItem.qml")));
+    canvas->setSource(testFileUrl("snapOneItem.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -4497,8 +4487,7 @@ void tst_QQuickListView::unrequestedVisibility()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testWrap", QVariant(false));
 
-    QString filename(TESTDATA("unrequestedItems.qml"));
-    canvas->setSource(QUrl::fromLocalFile(filename));
+    canvas->setSource(testFileUrl("unrequestedItems.qml"));
 
     canvas->show();
 

@@ -49,7 +49,7 @@
 #include <qdeclarativeexpression.h>
 #include "../../shared/util.h"
 
-class tst_qquickpositioners : public QObject
+class tst_qquickpositioners : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -99,7 +99,7 @@ tst_qquickpositioners::tst_qquickpositioners()
 
 void tst_qquickpositioners::test_horizontal()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontal.qml"));
+    QQuickView *canvas = createView(testFile("horizontal.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -128,7 +128,7 @@ void tst_qquickpositioners::test_horizontal()
 
 void tst_qquickpositioners::test_horizontal_rtl()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontal.qml"));
+    QQuickView *canvas = createView(testFile("horizontal.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -166,7 +166,7 @@ void tst_qquickpositioners::test_horizontal_rtl()
 
 void tst_qquickpositioners::test_horizontal_spacing()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontal-spacing.qml"));
+    QQuickView *canvas = createView(testFile("horizontal-spacing.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -195,7 +195,7 @@ void tst_qquickpositioners::test_horizontal_spacing()
 
 void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontal-spacing.qml"));
+    QQuickView *canvas = createView(testFile("horizontal-spacing.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -224,7 +224,7 @@ void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
 
 void tst_qquickpositioners::test_horizontal_animated()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontal-animated.qml"), false);
+    QQuickView *canvas = createView(testFile("horizontal-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -278,7 +278,7 @@ void tst_qquickpositioners::test_horizontal_animated()
 
 void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontal-animated.qml"), false);
+    QQuickView *canvas = createView(testFile("horizontal-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -334,7 +334,7 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
 
 void tst_qquickpositioners::test_horizontal_animated_disabled()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontal-animated-disabled.qml"));
+    QQuickView *canvas = createView(testFile("horizontal-animated-disabled.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -372,7 +372,7 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
 
 void tst_qquickpositioners::test_vertical()
 {
-    QQuickView *canvas = createView(TESTDATA("vertical.qml"));
+    QQuickView *canvas = createView(testFile("vertical.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -400,7 +400,7 @@ void tst_qquickpositioners::test_vertical()
 
 void tst_qquickpositioners::test_vertical_spacing()
 {
-    QQuickView *canvas = createView(TESTDATA("vertical-spacing.qml"));
+    QQuickView *canvas = createView(testFile("vertical-spacing.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -427,7 +427,7 @@ void tst_qquickpositioners::test_vertical_spacing()
 
 void tst_qquickpositioners::test_vertical_animated()
 {
-    QQuickView *canvas = createView(TESTDATA("vertical-animated.qml"), false);
+    QQuickView *canvas = createView(testFile("vertical-animated.qml"), false);
 
     //Note that they animate in
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
@@ -477,7 +477,7 @@ void tst_qquickpositioners::test_vertical_animated()
 
 void tst_qquickpositioners::test_grid()
 {
-    QQuickView *canvas = createView(TESTDATA("gridtest.qml"));
+    QQuickView *canvas = createView(testFile("gridtest.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -511,7 +511,7 @@ void tst_qquickpositioners::test_grid()
 
 void tst_qquickpositioners::test_grid_topToBottom()
 {
-    QQuickView *canvas = createView(TESTDATA("grid-toptobottom.qml"));
+    QQuickView *canvas = createView(testFile("grid-toptobottom.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -545,7 +545,7 @@ void tst_qquickpositioners::test_grid_topToBottom()
 
 void tst_qquickpositioners::test_grid_rightToLeft()
 {
-    QQuickView *canvas = createView(TESTDATA("gridtest.qml"));
+    QQuickView *canvas = createView(testFile("gridtest.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -594,7 +594,7 @@ void tst_qquickpositioners::test_grid_rightToLeft()
 
 void tst_qquickpositioners::test_grid_spacing()
 {
-    QQuickView *canvas = createView(TESTDATA("grid-spacing.qml"));
+    QQuickView *canvas = createView(testFile("grid-spacing.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -627,7 +627,7 @@ void tst_qquickpositioners::test_grid_spacing()
 
 void tst_qquickpositioners::test_grid_row_column_spacing()
 {
-    QQuickView *canvas = createView(TESTDATA("grid-row-column-spacing.qml"));
+    QQuickView *canvas = createView(testFile("grid-row-column-spacing.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -660,7 +660,7 @@ void tst_qquickpositioners::test_grid_row_column_spacing()
 
 void tst_qquickpositioners::test_grid_animated()
 {
-    QQuickView *canvas = createView(TESTDATA("grid-animated.qml"), false);
+    QQuickView *canvas = createView(testFile("grid-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -745,7 +745,7 @@ void tst_qquickpositioners::test_grid_animated()
 
 void tst_qquickpositioners::test_grid_animated_rightToLeft()
 {
-    QQuickView *canvas = createView(TESTDATA("grid-animated.qml"), false);
+    QQuickView *canvas = createView(testFile("grid-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -830,7 +830,7 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft()
 
 void tst_qquickpositioners::test_grid_zero_columns()
 {
-    QQuickView *canvas = createView(TESTDATA("gridzerocolumns.qml"));
+    QQuickView *canvas = createView(testFile("gridzerocolumns.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -863,7 +863,7 @@ void tst_qquickpositioners::test_grid_zero_columns()
 
 void tst_qquickpositioners::test_propertychanges()
 {
-    QQuickView *canvas = createView(TESTDATA("propertychangestest.qml"));
+    QQuickView *canvas = createView(testFile("propertychangestest.qml"));
 
     QQuickGrid *grid = qobject_cast<QQuickGrid*>(canvas->rootObject());
     QVERIFY(grid != 0);
@@ -922,7 +922,7 @@ void tst_qquickpositioners::test_propertychanges()
 
 void tst_qquickpositioners::test_repeater()
 {
-    QQuickView *canvas = createView(TESTDATA("repeatertest.qml"));
+    QQuickView *canvas = createView(testFile("repeatertest.qml"));
 
     QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
@@ -945,7 +945,7 @@ void tst_qquickpositioners::test_repeater()
 
 void tst_qquickpositioners::test_flow()
 {
-    QQuickView *canvas = createView(TESTDATA("flowtest.qml"));
+    QQuickView *canvas = createView(testFile("flowtest.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -981,7 +981,7 @@ void tst_qquickpositioners::test_flow()
 
 void tst_qquickpositioners::test_flow_rightToLeft()
 {
-    QQuickView *canvas = createView(TESTDATA("flowtest.qml"));
+    QQuickView *canvas = createView(testFile("flowtest.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -1017,7 +1017,7 @@ void tst_qquickpositioners::test_flow_rightToLeft()
 
 void tst_qquickpositioners::test_flow_topToBottom()
 {
-    QQuickView *canvas = createView(TESTDATA("flowtest-toptobottom.qml"));
+    QQuickView *canvas = createView(testFile("flowtest-toptobottom.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -1070,7 +1070,7 @@ void tst_qquickpositioners::test_flow_topToBottom()
 
 void tst_qquickpositioners::test_flow_resize()
 {
-    QQuickView *canvas = createView(TESTDATA("flowtest.qml"));
+    QQuickView *canvas = createView(testFile("flowtest.qml"));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(root);
@@ -1104,7 +1104,7 @@ void tst_qquickpositioners::test_flow_resize()
 
 void tst_qquickpositioners::test_flow_resize_rightToLeft()
 {
-    QQuickView *canvas = createView(TESTDATA("flowtest.qml"));
+    QQuickView *canvas = createView(testFile("flowtest.qml"));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(root);
@@ -1138,7 +1138,7 @@ void tst_qquickpositioners::test_flow_resize_rightToLeft()
 
 void tst_qquickpositioners::test_flow_implicit_resize()
 {
-    QQuickView *canvas = createView(TESTDATA("flow-testimplicitsize.qml"));
+    QQuickView *canvas = createView(testFile("flow-testimplicitsize.qml"));
     QVERIFY(canvas->rootObject() != 0);
 
     QQuickFlow *flow = canvas->rootObject()->findChild<QQuickFlow*>("flow");
@@ -1281,10 +1281,10 @@ void tst_qquickpositioners::test_mirroring()
     objectNames << "one" << "two" << "three" << "four" << "five";
 
     foreach (const QString qmlFile, qmlFiles) {
-        QQuickView *canvasA = createView(TESTDATA(qmlFile));
+        QQuickView *canvasA = createView(testFile(qmlFile));
         QQuickItem *rootA = qobject_cast<QQuickItem*>(canvasA->rootObject());
 
-        QQuickView *canvasB = createView(TESTDATA(qmlFile));
+        QQuickView *canvasB = createView(testFile(qmlFile));
         QQuickItem *rootB = qobject_cast<QQuickItem*>(canvasB->rootObject());
 
         rootA->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
@@ -1334,7 +1334,7 @@ void tst_qquickpositioners::test_mirroring()
 void tst_qquickpositioners::test_allInvisible()
 {
     //QTBUG-19361
-    QQuickView *canvas = createView(TESTDATA("allInvisible.qml"));
+    QQuickView *canvas = createView(testFile("allInvisible.qml"));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(root);
@@ -1392,15 +1392,15 @@ void tst_qquickpositioners::test_attachedproperties_data()
 {
     QTest::addColumn<QString>("filename");
 
-    QTest::newRow("column") << TESTDATA("attachedproperties-column.qml");
-    QTest::newRow("row") << TESTDATA("attachedproperties-row.qml");
-    QTest::newRow("grid") << TESTDATA("attachedproperties-grid.qml");
-    QTest::newRow("flow") << TESTDATA("attachedproperties-flow.qml");
+    QTest::newRow("column") << testFile("attachedproperties-column.qml");
+    QTest::newRow("row") << testFile("attachedproperties-row.qml");
+    QTest::newRow("grid") << testFile("attachedproperties-grid.qml");
+    QTest::newRow("flow") << testFile("attachedproperties-flow.qml");
 }
 
 void tst_qquickpositioners::test_attachedproperties_dynamic()
 {
-    QQuickView *canvas = createView(TESTDATA("attachedproperties-dynamic.qml"));
+    QQuickView *canvas = createView(testFile("attachedproperties-dynamic.qml"));
     QVERIFY(canvas->rootObject() != 0);
 
     QQuickRow *row = canvas->rootObject()->findChild<QQuickRow *>("pos");

@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 extern int qt_defaultDpi();
 QT_END_NAMESPACE
 
-class tst_qdeclarativevaluetypes : public QObject
+class tst_qdeclarativevaluetypes : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -100,18 +100,14 @@ private:
 
 void tst_qdeclarativevaluetypes::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     registerTypes();
-}
-
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 void tst_qdeclarativevaluetypes::point()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("point_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("point_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -123,7 +119,7 @@ void tst_qdeclarativevaluetypes::point()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("point_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("point_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -133,7 +129,7 @@ void tst_qdeclarativevaluetypes::point()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("point_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("point_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -156,7 +152,7 @@ void tst_qdeclarativevaluetypes::point()
 void tst_qdeclarativevaluetypes::pointf()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("pointf_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("pointf_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -168,7 +164,7 @@ void tst_qdeclarativevaluetypes::pointf()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("pointf_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("pointf_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -178,7 +174,7 @@ void tst_qdeclarativevaluetypes::pointf()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("pointf_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("pointf_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -201,7 +197,7 @@ void tst_qdeclarativevaluetypes::pointf()
 void tst_qdeclarativevaluetypes::size()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("size_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("size_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -213,7 +209,7 @@ void tst_qdeclarativevaluetypes::size()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("size_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("size_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -223,7 +219,7 @@ void tst_qdeclarativevaluetypes::size()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("size_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("size_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -246,7 +242,7 @@ void tst_qdeclarativevaluetypes::size()
 void tst_qdeclarativevaluetypes::sizef()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizef_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizef_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -258,7 +254,7 @@ void tst_qdeclarativevaluetypes::sizef()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizef_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizef_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -268,7 +264,7 @@ void tst_qdeclarativevaluetypes::sizef()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizef_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizef_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -290,7 +286,7 @@ void tst_qdeclarativevaluetypes::sizef()
 
 void tst_qdeclarativevaluetypes::variant()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("variant_read.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("variant_read.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -304,7 +300,7 @@ void tst_qdeclarativevaluetypes::variant()
 void tst_qdeclarativevaluetypes::sizereadonly()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizereadonly_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizereadonly_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -316,25 +312,25 @@ void tst_qdeclarativevaluetypes::sizereadonly()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizereadonly_writeerror.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizereadonly_writeerror.qml"));
         QVERIFY(component.isError());
         QCOMPARE(component.errors().at(0).description(), QLatin1String("Invalid property assignment: \"sizereadonly\" is a read-only property"));
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizereadonly_writeerror2.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizereadonly_writeerror2.qml"));
         QVERIFY(component.isError());
         QCOMPARE(component.errors().at(0).description(), QLatin1String("Invalid property assignment: \"sizereadonly\" is a read-only property"));
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizereadonly_writeerror3.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizereadonly_writeerror3.qml"));
         QVERIFY(component.isError());
         QCOMPARE(component.errors().at(0).description(), QLatin1String("Invalid property assignment: \"sizereadonly\" is a read-only property"));
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("sizereadonly_writeerror4.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("sizereadonly_writeerror4.qml"));
 
         QObject *object = component.create();
         QVERIFY(object);
@@ -348,7 +344,7 @@ void tst_qdeclarativevaluetypes::sizereadonly()
 void tst_qdeclarativevaluetypes::rect()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("rect_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("rect_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -362,7 +358,7 @@ void tst_qdeclarativevaluetypes::rect()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("rect_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("rect_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -372,7 +368,7 @@ void tst_qdeclarativevaluetypes::rect()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("rect_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("rect_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -395,7 +391,7 @@ void tst_qdeclarativevaluetypes::rect()
 void tst_qdeclarativevaluetypes::rectf()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("rectf_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("rectf_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -409,7 +405,7 @@ void tst_qdeclarativevaluetypes::rectf()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("rectf_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("rectf_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -419,7 +415,7 @@ void tst_qdeclarativevaluetypes::rectf()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("rectf_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("rectf_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -442,7 +438,7 @@ void tst_qdeclarativevaluetypes::rectf()
 void tst_qdeclarativevaluetypes::vector2d()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector2d_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector2d_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -454,7 +450,7 @@ void tst_qdeclarativevaluetypes::vector2d()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector2d_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector2d_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -464,7 +460,7 @@ void tst_qdeclarativevaluetypes::vector2d()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector2d_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector2d_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -485,7 +481,7 @@ void tst_qdeclarativevaluetypes::vector2d()
 void tst_qdeclarativevaluetypes::vector3d()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector3d_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector3d_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -498,7 +494,7 @@ void tst_qdeclarativevaluetypes::vector3d()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector3d_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector3d_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -508,7 +504,7 @@ void tst_qdeclarativevaluetypes::vector3d()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector3d_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector3d_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -530,7 +526,7 @@ void tst_qdeclarativevaluetypes::vector3d()
 void tst_qdeclarativevaluetypes::vector4d()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector4d_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector4d_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -544,7 +540,7 @@ void tst_qdeclarativevaluetypes::vector4d()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector4d_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector4d_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -554,7 +550,7 @@ void tst_qdeclarativevaluetypes::vector4d()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("vector4d_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("vector4d_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -575,7 +571,7 @@ void tst_qdeclarativevaluetypes::vector4d()
 void tst_qdeclarativevaluetypes::quaternion()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("quaternion_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("quaternion_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -589,7 +585,7 @@ void tst_qdeclarativevaluetypes::quaternion()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("quaternion_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("quaternion_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -599,7 +595,7 @@ void tst_qdeclarativevaluetypes::quaternion()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("quaternion_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("quaternion_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -620,7 +616,7 @@ void tst_qdeclarativevaluetypes::quaternion()
 void tst_qdeclarativevaluetypes::matrix4x4()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("matrix4x4_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("matrix4x4_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -650,7 +646,7 @@ void tst_qdeclarativevaluetypes::matrix4x4()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("matrix4x4_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("matrix4x4_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -663,7 +659,7 @@ void tst_qdeclarativevaluetypes::matrix4x4()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("matrix4x4_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("matrix4x4_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -684,7 +680,7 @@ void tst_qdeclarativevaluetypes::matrix4x4()
 void tst_qdeclarativevaluetypes::font()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("font_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("font_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -707,7 +703,7 @@ void tst_qdeclarativevaluetypes::font()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("font_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("font_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -740,7 +736,7 @@ void tst_qdeclarativevaluetypes::font()
 
     // Test pixelSize
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("font_write.2.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("font_write.2.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -751,7 +747,7 @@ void tst_qdeclarativevaluetypes::font()
 
     // Test pixelSize and pointSize
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("font_write.3.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("font_write.3.qml"));
         QTest::ignoreMessage(QtWarningMsg, "Both point size and pixel size set. Using pixel size. ");
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
@@ -761,7 +757,7 @@ void tst_qdeclarativevaluetypes::font()
         delete object;
     }
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("font_write.4.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("font_write.4.qml"));
         QTest::ignoreMessage(QtWarningMsg, "Both point size and pixel size set. Using pixel size. ");
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
@@ -771,7 +767,7 @@ void tst_qdeclarativevaluetypes::font()
         delete object;
     }
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("font_write.5.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("font_write.5.qml"));
         QObject *object = qobject_cast<QObject *>(component.create());
         QVERIFY(object != 0);
         MyTypeObject *object1 = object->findChild<MyTypeObject *>("object1");
@@ -786,7 +782,7 @@ void tst_qdeclarativevaluetypes::font()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("font_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("font_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -807,7 +803,7 @@ void tst_qdeclarativevaluetypes::font()
 void tst_qdeclarativevaluetypes::color()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("color_read.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("color_read.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -826,7 +822,7 @@ void tst_qdeclarativevaluetypes::color()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("color_write.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("color_write.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -841,7 +837,7 @@ void tst_qdeclarativevaluetypes::color()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("color_compare.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("color_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
         QString colorString("#33e199");
@@ -874,7 +870,7 @@ void tst_qdeclarativevaluetypes::color()
 // Test bindings can write to value types
 void tst_qdeclarativevaluetypes::bindingAssignment()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingAssignment.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingAssignment.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -890,7 +886,7 @@ void tst_qdeclarativevaluetypes::bindingAssignment()
 // Test bindings can read from value types
 void tst_qdeclarativevaluetypes::bindingRead()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingRead.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingRead.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -906,7 +902,7 @@ void tst_qdeclarativevaluetypes::bindingRead()
 // Test static values can assign to value types
 void tst_qdeclarativevaluetypes::staticAssignment()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("staticAssignment.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("staticAssignment.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -918,7 +914,7 @@ void tst_qdeclarativevaluetypes::staticAssignment()
 // Test scripts can read/write value types
 void tst_qdeclarativevaluetypes::scriptAccess()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("scriptAccess.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("scriptAccess.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -933,7 +929,7 @@ void tst_qdeclarativevaluetypes::scriptAccess()
 void tst_qdeclarativevaluetypes::autoBindingRemoval()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("autoBindingRemoval.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("autoBindingRemoval.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -956,7 +952,7 @@ void tst_qdeclarativevaluetypes::autoBindingRemoval()
 
     /*
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("autoBindingRemoval.2.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("autoBindingRemoval.2.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -978,7 +974,7 @@ void tst_qdeclarativevaluetypes::autoBindingRemoval()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("autoBindingRemoval.3.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("autoBindingRemoval.3.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -1002,7 +998,7 @@ void tst_qdeclarativevaluetypes::autoBindingRemoval()
 // Test that property value sources assign to value types
 void tst_qdeclarativevaluetypes::valueSources()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("valueSources.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("valueSources.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -1025,7 +1021,7 @@ static void checkNoErrors(QDeclarativeComponent& component)
 // Test that property value interceptors can be applied to value types
 void tst_qdeclarativevaluetypes::valueInterceptors()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("valueInterceptors.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("valueInterceptors.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     checkNoErrors(component);
     QVERIFY(object != 0);
@@ -1042,7 +1038,7 @@ void tst_qdeclarativevaluetypes::valueInterceptors()
 // Test that you can't assign a binding to the "root" value type, and a sub-property
 void tst_qdeclarativevaluetypes::bindingConflict()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingConflict.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingConflict.qml"));
     QCOMPARE(component.isError(), true);
 }
 
@@ -1059,7 +1055,7 @@ void tst_qdeclarativevaluetypes::bindingConflict()
 // doesn't crash
 void tst_qdeclarativevaluetypes::deletedObject()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("deletedObject.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("deletedObject.qml"));
     QTest::ignoreMessage(QtDebugMsg, "Test: 2");
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -1077,7 +1073,7 @@ void tst_qdeclarativevaluetypes::deletedObject()
 // Test that value types can be assigned to another value type property in a binding
 void tst_qdeclarativevaluetypes::bindingVariantCopy()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingVariantCopy.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingVariantCopy.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -1089,7 +1085,7 @@ void tst_qdeclarativevaluetypes::bindingVariantCopy()
 // Test that value types can be assigned to another value type property in script
 void tst_qdeclarativevaluetypes::scriptVariantCopy()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("scriptVariantCopy.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("scriptVariantCopy.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -1125,7 +1121,7 @@ void tst_qdeclarativevaluetypes::cppClasses()
 void tst_qdeclarativevaluetypes::enums()
 {
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("enums.1.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("enums.1.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
     QVERIFY(object->font().capitalization() == QFont::AllUppercase);
@@ -1133,7 +1129,7 @@ void tst_qdeclarativevaluetypes::enums()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("enums.2.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("enums.2.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
     QVERIFY(object->font().capitalization() == QFont::AllUppercase);
@@ -1141,7 +1137,7 @@ void tst_qdeclarativevaluetypes::enums()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("enums.3.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("enums.3.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
     QVERIFY(object->font().capitalization() == QFont::AllUppercase);
@@ -1149,7 +1145,7 @@ void tst_qdeclarativevaluetypes::enums()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("enums.4.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("enums.4.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
     QVERIFY(object->font().capitalization() == QFont::AllUppercase);
@@ -1157,7 +1153,7 @@ void tst_qdeclarativevaluetypes::enums()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("enums.5.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("enums.5.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
     QVERIFY(object->font().capitalization() == QFont::AllUppercase);
@@ -1170,7 +1166,7 @@ void tst_qdeclarativevaluetypes::enums()
 void tst_qdeclarativevaluetypes::conflictingBindings()
 {
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("conflicting.1.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("conflicting.1.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1188,7 +1184,7 @@ void tst_qdeclarativevaluetypes::conflictingBindings()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("conflicting.2.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("conflicting.2.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1206,7 +1202,7 @@ void tst_qdeclarativevaluetypes::conflictingBindings()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("conflicting.3.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("conflicting.3.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1226,7 +1222,7 @@ void tst_qdeclarativevaluetypes::conflictingBindings()
 
 void tst_qdeclarativevaluetypes::returnValues()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("returnValues.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("returnValues.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1239,7 +1235,7 @@ void tst_qdeclarativevaluetypes::returnValues()
 
 void tst_qdeclarativevaluetypes::varAssignment()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("varAssignment.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("varAssignment.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1254,7 +1250,7 @@ void tst_qdeclarativevaluetypes::varAssignment()
 void tst_qdeclarativevaluetypes::bindingsSpliceCorrectly()
 {
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingsSpliceCorrectly.1.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingsSpliceCorrectly.1.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1264,7 +1260,7 @@ void tst_qdeclarativevaluetypes::bindingsSpliceCorrectly()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingsSpliceCorrectly.2.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingsSpliceCorrectly.2.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1275,7 +1271,7 @@ void tst_qdeclarativevaluetypes::bindingsSpliceCorrectly()
 
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingsSpliceCorrectly.3.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingsSpliceCorrectly.3.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1285,7 +1281,7 @@ void tst_qdeclarativevaluetypes::bindingsSpliceCorrectly()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingsSpliceCorrectly.4.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingsSpliceCorrectly.4.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -1295,7 +1291,7 @@ void tst_qdeclarativevaluetypes::bindingsSpliceCorrectly()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("bindingsSpliceCorrectly.5.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("bindingsSpliceCorrectly.5.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 

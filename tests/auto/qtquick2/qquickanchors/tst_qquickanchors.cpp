@@ -53,7 +53,7 @@
 Q_DECLARE_METATYPE(QQuickAnchors::Anchor)
 Q_DECLARE_METATYPE(QQuickAnchorLine::AnchorLine)
 
-class tst_qquickanchors : public QObject
+class tst_qquickanchors : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -111,7 +111,7 @@ T *findItem(QQuickItem *parent, const QString &objectName)
 void tst_qquickanchors::basicAnchors()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("anchors.qml")));
+    view->setSource(testFileUrl("anchors.qml"));
 
     qApp->processEvents();
 
@@ -196,7 +196,7 @@ void mirrorAnchors(QQuickItem *item) {
 void tst_qquickanchors::basicAnchorsRTL()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("anchors.qml")));
+    view->setSource(testFileUrl("anchors.qml"));
 
     qApp->processEvents();
 
@@ -278,7 +278,7 @@ void tst_qquickanchors::basicAnchorsRTL()
 void tst_qquickanchors::loops()
 {
     {
-        QUrl source(QUrl::fromLocalFile(TESTDATA("loop1.qml")));
+        QUrl source(testFileUrl("loop1.qml"));
 
         QString expect = source.toString() + ":6:5: QML Text: Possible anchor loop detected on horizontal anchor.";
         QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
@@ -292,7 +292,7 @@ void tst_qquickanchors::loops()
     }
 
     {
-        QUrl source(QUrl::fromLocalFile(TESTDATA("loop2.qml")));
+        QUrl source(testFileUrl("loop2.qml"));
 
         QString expect = source.toString() + ":8:3: QML Image: Possible anchor loop detected on horizontal anchor.";
         QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
@@ -480,7 +480,7 @@ void tst_qquickanchors::nullItem_data()
 //QTBUG-5428
 void tst_qquickanchors::crash1()
 {
-    QUrl source(QUrl::fromLocalFile(TESTDATA("crash1.qml")));
+    QUrl source(testFileUrl("crash1.qml"));
 
     QString expect = source.toString() + ":3:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column";
 
@@ -494,7 +494,7 @@ void tst_qquickanchors::crash1()
 
 void tst_qquickanchors::fill()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("fill.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("fill.qml"));
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
@@ -518,7 +518,7 @@ void tst_qquickanchors::fill()
 
 void tst_qquickanchors::fillRTL()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("fill.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("fill.qml"));
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
@@ -544,7 +544,7 @@ void tst_qquickanchors::fillRTL()
 
 void tst_qquickanchors::centerIn()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("centerin.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("centerin.qml"));
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered"));
@@ -563,7 +563,7 @@ void tst_qquickanchors::centerIn()
 
 void tst_qquickanchors::centerInRTL()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("centerin.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("centerin.qml"));
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered"));
@@ -584,7 +584,7 @@ void tst_qquickanchors::centerInRTL()
 //QTBUG-12441
 void tst_qquickanchors::centerInRotation()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("centerinRotation.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("centerinRotation.qml"));
 
     qApp->processEvents();
     QQuickRectangle* outer = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("outer"));
@@ -601,7 +601,7 @@ void tst_qquickanchors::centerInRotation()
 
 void tst_qquickanchors::hvCenter()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("hvCenter.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("hvCenter.qml"));
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered"));
@@ -621,7 +621,7 @@ void tst_qquickanchors::hvCenter()
 
 void tst_qquickanchors::hvCenterRTL()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("hvCenter.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("hvCenter.qml"));
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered"));
@@ -641,7 +641,7 @@ void tst_qquickanchors::hvCenterRTL()
 }
 void tst_qquickanchors::margins()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("margins.qml"));
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
@@ -664,7 +664,7 @@ void tst_qquickanchors::margins()
 
 void tst_qquickanchors::marginsRTL()
 {
-    QQuickView *view = new QQuickView(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+    QQuickView *view = new QQuickView(testFileUrl("margins.qml"));
 
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);

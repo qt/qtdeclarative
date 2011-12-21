@@ -49,7 +49,7 @@
 #include <QtQuick/private/qquickfocusscope_p.h>
 #include "../../shared/util.h"
 
-class tst_qquickfocusscope : public QObject
+class tst_qquickfocusscope : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -59,8 +59,6 @@ public:
     T *findItem(QQuickItem *parent, const QString &id);
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void basic();
     void nested();
     void noFocus();
@@ -72,14 +70,6 @@ private slots:
     void forceActiveFocus();
     void canvasFocus();
 };
-void tst_qquickfocusscope::initTestCase()
-{
-}
-
-void tst_qquickfocusscope::cleanupTestCase()
-{
-
-}
 
 /*
    Find an item with the specified id.
@@ -106,7 +96,7 @@ T *tst_qquickfocusscope::findItem(QQuickItem *parent, const QString &objectName)
 void tst_qquickfocusscope::basic()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("test.qml")));
+    view->setSource(testFileUrl("test.qml"));
 
     QQuickFocusScope *item0 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item0"));
     QQuickRectangle *item1 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item1"));
@@ -149,7 +139,7 @@ void tst_qquickfocusscope::basic()
 void tst_qquickfocusscope::nested()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("test2.qml")));
+    view->setSource(testFileUrl("test2.qml"));
 
     QQuickFocusScope *item1 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item1"));
     QQuickFocusScope *item2 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item2"));
@@ -179,7 +169,7 @@ void tst_qquickfocusscope::nested()
 void tst_qquickfocusscope::noFocus()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("test4.qml")));
+    view->setSource(testFileUrl("test4.qml"));
 
     QQuickRectangle *item0 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item0"));
     QQuickRectangle *item1 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item1"));
@@ -218,7 +208,7 @@ void tst_qquickfocusscope::noFocus()
 void tst_qquickfocusscope::textEdit()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("test5.qml")));
+    view->setSource(testFileUrl("test5.qml"));
 
     QQuickFocusScope *item0 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item0"));
     QQuickTextEdit *item1 = findItem<QQuickTextEdit>(view->rootObject(), QLatin1String("item1"));
@@ -268,7 +258,7 @@ void tst_qquickfocusscope::textEdit()
 void tst_qquickfocusscope::forceFocus()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("forcefocus.qml")));
+    view->setSource(testFileUrl("forcefocus.qml"));
 
     QQuickFocusScope *item0 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item0"));
     QQuickRectangle *item1 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item1"));
@@ -317,7 +307,7 @@ void tst_qquickfocusscope::forceFocus()
 void tst_qquickfocusscope::noParentFocus()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("chain.qml")));
+    view->setSource(testFileUrl("chain.qml"));
     QVERIFY(view->rootObject());
 
     view->show();
@@ -337,7 +327,7 @@ void tst_qquickfocusscope::noParentFocus()
 void tst_qquickfocusscope::signalEmission()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("signalEmission.qml")));
+    view->setSource(testFileUrl("signalEmission.qml"));
 
     QQuickRectangle *item1 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item1"));
     QQuickRectangle *item2 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item2"));
@@ -393,7 +383,7 @@ void tst_qquickfocusscope::signalEmission()
 void tst_qquickfocusscope::qtBug13380()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("qtBug13380.qml")));
+    view->setSource(testFileUrl("qtBug13380.qml"));
 
     view->show();
     QVERIFY(view->rootObject());
@@ -414,7 +404,7 @@ void tst_qquickfocusscope::qtBug13380()
 void tst_qquickfocusscope::forceActiveFocus()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("forceActiveFocus.qml")));
+    view->setSource(testFileUrl("forceActiveFocus.qml"));
 
     view->show();
     view->requestActivateWindow();
@@ -528,7 +518,7 @@ void tst_qquickfocusscope::forceActiveFocus()
 void tst_qquickfocusscope::canvasFocus()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("canvasFocus.qml")));
+    view->setSource(testFileUrl("canvasFocus.qml"));
 
     QQuickView alternateView;
 

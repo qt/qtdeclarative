@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativeconnection
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativeconnection.cpp
+SOURCES += tst_qdeclarativeconnection.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

@@ -55,7 +55,7 @@
 #include <QtCore/qfile.h>
 #include "../../shared/util.h"
 
-class tst_qdeclarativesqldatabase : public QObject
+class tst_qdeclarativesqldatabase : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -104,6 +104,7 @@ void removeRecursive(const QString& dirname)
 
 void tst_qdeclarativesqldatabase::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     removeRecursive(dbDir());
     QDir().mkpath(dbDir());
 }
@@ -204,7 +205,7 @@ void tst_qdeclarativesqldatabase::testQml()
 
     engine->setOfflineStoragePath(dbDir());
     QDeclarativeComponent component(engine);
-    component.setData(qml.toUtf8(), QUrl::fromLocalFile(TESTDATA("empty.qml"))); // just a file for relative local imports
+    component.setData(qml.toUtf8(), testFileUrl("empty.qml")); // just a file for relative local imports
     QVERIFY(!component.isError());
     QQuickText *text = qobject_cast<QQuickText*>(component.create());
     QVERIFY(text != 0);

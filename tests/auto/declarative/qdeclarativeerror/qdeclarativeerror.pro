@@ -1,6 +1,8 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativeerror
-SOURCES += tst_qdeclarativeerror.cpp
+SOURCES += tst_qdeclarativeerror.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 macx:CONFIG -= app_bundle
 
 CONFIG += parallel_test

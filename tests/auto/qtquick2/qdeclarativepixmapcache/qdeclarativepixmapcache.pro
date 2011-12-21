@@ -2,11 +2,12 @@ CONFIG += testcase
 TARGET = tst_qdeclarativepixmapcache
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativepixmapcache.cpp
-
+SOURCES += tst_qdeclarativepixmapcache.cpp \
+           ../../shared/testhttpserver.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/testhttpserver.h \
+           ../../shared/util.h
 INCLUDEPATH += ../../shared/
-HEADERS += ../../shared/testhttpserver.h
-SOURCES += ../../shared/testhttpserver.cpp
 
 importFiles.files = data
 importFiles.path = .

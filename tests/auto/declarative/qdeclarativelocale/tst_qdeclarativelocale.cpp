@@ -47,7 +47,7 @@
 #include <qcolor.h>
 #include "../../shared/util.h"
 
-class tst_qdeclarativelocale : public QObject
+class tst_qdeclarativelocale : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -118,7 +118,7 @@ private:
 
 void tst_qdeclarativelocale::defaultLocale()
 {
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("properties.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -183,7 +183,7 @@ void tst_qdeclarativelocale::properties()
     QFETCH(QByteArray, property);
     QFETCH(QVariant, value);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("properties.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -227,7 +227,7 @@ void tst_qdeclarativelocale::currencySymbol()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -287,7 +287,7 @@ void tst_qdeclarativelocale::monthName()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -324,7 +324,7 @@ void tst_qdeclarativelocale::standaloneMonthName()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -361,7 +361,7 @@ void tst_qdeclarativelocale::dayName()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -397,7 +397,7 @@ void tst_qdeclarativelocale::standaloneDayName()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -437,7 +437,7 @@ void tst_qdeclarativelocale::weekDays()
 {
     QFETCH(QString, locale);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("properties.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -474,7 +474,7 @@ void tst_qdeclarativelocale::dateTimeFormat()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -503,7 +503,7 @@ void tst_qdeclarativelocale::dateFormat()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -532,7 +532,7 @@ void tst_qdeclarativelocale::timeFormat()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("functions.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("functions.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -561,7 +561,7 @@ void tst_qdeclarativelocale::dateToLocaleString()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -622,7 +622,7 @@ void tst_qdeclarativelocale::dateToLocaleStringFormatted()
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -653,7 +653,7 @@ void tst_qdeclarativelocale::dateToLocaleDateString()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -714,7 +714,7 @@ void tst_qdeclarativelocale::dateToLocaleDateStringFormatted()
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -745,7 +745,7 @@ void tst_qdeclarativelocale::dateToLocaleTimeString()
     QFETCH(QString, locale);
     QFETCH(int, param);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -806,7 +806,7 @@ void tst_qdeclarativelocale::dateToLocaleTimeStringFormatted()
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -848,7 +848,7 @@ void tst_qdeclarativelocale::dateFromLocaleString()
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -892,7 +892,7 @@ void tst_qdeclarativelocale::dateFromLocaleDateString()
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -936,7 +936,7 @@ void tst_qdeclarativelocale::dateFromLocaleTimeString()
     QFETCH(QString, locale);
     QFETCH(QString, format);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("date.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("date.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -981,7 +981,7 @@ void tst_qdeclarativelocale::numberToLocaleString()
     QFETCH(char, format);
     QFETCH(int, prec);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("number.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("number.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -1022,7 +1022,7 @@ void tst_qdeclarativelocale::numberToLocaleCurrencyString()
     QFETCH(QString, locale);
     QFETCH(QString, symbol);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("number.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("number.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -1062,7 +1062,7 @@ void tst_qdeclarativelocale::numberFromLocaleString()
     QFETCH(QString, locale);
     QFETCH(double, number);
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("number.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("number.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);
@@ -1083,7 +1083,7 @@ void tst_qdeclarativelocale::numberFromLocaleString()
 
 void tst_qdeclarativelocale::numberConstToLocaleString()
 {
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("number.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("number.qml"));
 
     QObject *obj = c.create();
     QVERIFY(obj);

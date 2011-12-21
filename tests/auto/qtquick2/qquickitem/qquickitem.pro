@@ -1,6 +1,8 @@
 CONFIG += testcase
 TARGET = tst_qquickitem
-SOURCES += tst_qquickitem.cpp
+SOURCES += tst_qquickitem.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 macx:CONFIG -= app_bundle
 

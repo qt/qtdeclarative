@@ -50,15 +50,12 @@
 #include <QtOpenGL/QGLShaderProgram>
 #include "../../shared/util.h"
 
-class tst_qquickflipable : public QObject
+class tst_qquickflipable : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickflipable();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void create();
     void checkFrontAndBack();
     void setFrontAndBack();
@@ -71,22 +68,10 @@ private:
     QDeclarativeEngine engine;
 };
 
-tst_qquickflipable::tst_qquickflipable()
-{
-}
-void tst_qquickflipable::initTestCase()
-{
-}
-
-void tst_qquickflipable::cleanupTestCase()
-{
-
-}
-
 void tst_qquickflipable::create()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-flipable.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("test-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -96,7 +81,7 @@ void tst_qquickflipable::create()
 void tst_qquickflipable::checkFrontAndBack()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-flipable.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("test-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -108,7 +93,7 @@ void tst_qquickflipable::checkFrontAndBack()
 void tst_qquickflipable::setFrontAndBack()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-flipable.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("test-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -128,7 +113,7 @@ void tst_qquickflipable::setFrontAndBack()
 void tst_qquickflipable::QTBUG_9161_crash()
 {
     QQuickView *canvas = new QQuickView;
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("crash.qml")));
+    canvas->setSource(testFileUrl("crash.qml"));
     QQuickItem *root = canvas->rootObject();
     QVERIFY(root != 0);
     canvas->show();
@@ -138,7 +123,7 @@ void tst_qquickflipable::QTBUG_9161_crash()
 void tst_qquickflipable::QTBUG_8474_qgv_abort()
 {
     QQuickView *canvas = new QQuickView;
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("flipable-abort.qml")));
+    canvas->setSource(testFileUrl("flipable-abort.qml"));
     QQuickItem *root = canvas->rootObject();
     QVERIFY(root != 0);
     canvas->show();

@@ -112,7 +112,7 @@ protected:
 };
 
 
-class tst_qquickvisualdatamodel : public QObject
+class tst_qquickvisualdatamodel : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -182,6 +182,7 @@ Q_DECLARE_METATYPE(QDeclarativeChangeSet)
 
 void tst_qquickvisualdatamodel::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     qRegisterMetaType<QDeclarativeChangeSet>();
 }
 
@@ -251,7 +252,7 @@ tst_qquickvisualdatamodel::tst_qquickvisualdatamodel()
 void tst_qquickvisualdatamodel::rootIndex()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("visualdatamodel.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
     QStandardItemModel model;
     initStandardTreeModel(&model);
@@ -279,8 +280,8 @@ void tst_qquickvisualdatamodel::updateLayout_data()
 {
     QTest::addColumn<QUrl>("source");
 
-    QTest::newRow("item delegate") << QUrl::fromLocalFile(TESTDATA("datalist.qml"));
-    QTest::newRow("package delegate") << QUrl::fromLocalFile(TESTDATA("datalist-package.qml"));
+    QTest::newRow("item delegate") << testFileUrl("datalist.qml");
+    QTest::newRow("package delegate") << testFileUrl("datalist-package.qml");
 }
 
 void tst_qquickvisualdatamodel::updateLayout()
@@ -329,8 +330,8 @@ void tst_qquickvisualdatamodel::childChanged_data()
 {
     QTest::addColumn<QUrl>("source");
 
-    QTest::newRow("item delegate") << QUrl::fromLocalFile(TESTDATA("datalist.qml"));
-    QTest::newRow("package delegate") << QUrl::fromLocalFile(TESTDATA("datalist-package.qml"));
+    QTest::newRow("item delegate") << testFileUrl("datalist.qml");
+    QTest::newRow("package delegate") << testFileUrl("datalist-package.qml");
 }
 
 void tst_qquickvisualdatamodel::childChanged()
@@ -403,7 +404,7 @@ void tst_qquickvisualdatamodel::objectListModel()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("objectlist.qml")));
+    view.setSource(testFileUrl("objectlist.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -431,7 +432,7 @@ void tst_qquickvisualdatamodel::singleRole()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(TESTDATA("singlerole1.qml")));
+        view.setSource(testFileUrl("singlerole1.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -453,7 +454,7 @@ void tst_qquickvisualdatamodel::singleRole()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(TESTDATA("singlerole2.qml")));
+        view.setSource(testFileUrl("singlerole2.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -475,7 +476,7 @@ void tst_qquickvisualdatamodel::singleRole()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(TESTDATA("singlerole2.qml")));
+        view.setSource(testFileUrl("singlerole2.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -501,7 +502,7 @@ void tst_qquickvisualdatamodel::modelProperties()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(TESTDATA("modelproperties.qml")));
+        view.setSource(testFileUrl("modelproperties.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -534,7 +535,7 @@ void tst_qquickvisualdatamodel::modelProperties()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
 
-        view.setSource(QUrl::fromLocalFile(TESTDATA("modelproperties.qml")));
+        view.setSource(testFileUrl("modelproperties.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -563,7 +564,7 @@ void tst_qquickvisualdatamodel::modelProperties()
 
         view.rootContext()->setContextProperty("myModel", &model);
 
-        QUrl source(QUrl::fromLocalFile(TESTDATA("modelproperties2.qml")));
+        QUrl source(testFileUrl("modelproperties2.qml"));
 
         //3 items, 3 i each
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
@@ -604,8 +605,8 @@ void tst_qquickvisualdatamodel::noDelegate_data()
 {
     QTest::addColumn<QUrl>("source");
 
-    QTest::newRow("item delegate") << QUrl::fromLocalFile(TESTDATA("datalist.qml"));
-    QTest::newRow("package delegate") << QUrl::fromLocalFile(TESTDATA("datalist-package.qml"));
+    QTest::newRow("item delegate") << testFileUrl("datalist.qml");
+    QTest::newRow("package delegate") << testFileUrl("datalist-package.qml");
 }
 
 void tst_qquickvisualdatamodel::noDelegate()
@@ -636,10 +637,10 @@ void tst_qquickvisualdatamodel::itemsDestroyed_data()
 {
     QTest::addColumn<QUrl>("source");
 
-    QTest::newRow("listView") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_listView.qml"));
-    QTest::newRow("package") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_package.qml"));
-    QTest::newRow("pathView") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_pathView.qml"));
-    QTest::newRow("repeater") << QUrl::fromLocalFile(TESTDATA("itemsDestroyed_repeater.qml"));
+    QTest::newRow("listView") << testFileUrl("itemsDestroyed_listView.qml");
+    QTest::newRow("package") << testFileUrl("itemsDestroyed_package.qml");
+    QTest::newRow("pathView") << testFileUrl("itemsDestroyed_pathView.qml");
+    QTest::newRow("repeater") << testFileUrl("itemsDestroyed_repeater.qml");
 }
 
 void tst_qquickvisualdatamodel::itemsDestroyed()
@@ -674,7 +675,7 @@ void tst_qquickvisualdatamodel::packagesDestroyed()
     QQuickView view;
     view.rootContext()->setContextProperty("testModel", &model);
 
-    QString filename(TESTDATA("packageView.qml"));
+    QString filename(testFile("packageView.qml"));
     view.setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -746,7 +747,7 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
     QFETCH(int, expectCount);
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("visualdatamodel.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
     SingleRoleModel model;
     model.list.clear();
@@ -811,10 +812,10 @@ void tst_qquickvisualdatamodel::remove_data()
     QTest::addColumn<QString>("package delegate");
 
     QTest::newRow("item delegate")
-            << QUrl::fromLocalFile(TESTDATA("groups.qml"))
+            << testFileUrl("groups.qml")
             << QString();
     QTest::newRow("package")
-            << QUrl::fromLocalFile(TESTDATA("groups-package.qml"))
+            << testFileUrl("groups-package.qml")
             << QString("package.");
 }
 
@@ -840,7 +841,7 @@ void tst_qquickvisualdatamodel::remove()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
+    view.setSource(testFileUrl("groups.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -921,10 +922,10 @@ void tst_qquickvisualdatamodel::move_data()
     QTest::addColumn<QString>("package delegate");
 
     QTest::newRow("item delegate")
-            << QUrl::fromLocalFile(TESTDATA("groups.qml"))
+            << testFileUrl("groups.qml")
             << QString();
     QTest::newRow("package")
-            << QUrl::fromLocalFile(TESTDATA("groups-package.qml"))
+            << testFileUrl("groups-package.qml")
             << QString("package.");
 }
 
@@ -950,7 +951,7 @@ void tst_qquickvisualdatamodel::move()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
+    view.setSource(testFileUrl("groups.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -1074,10 +1075,10 @@ void tst_qquickvisualdatamodel::groups_data()
     QTest::addColumn<QString>("part");
 
     QTest::newRow("item delegate")
-            << QUrl::fromLocalFile(TESTDATA("groups.qml"))
+            << testFileUrl("groups.qml")
             << QString();
     QTest::newRow("package")
-            << QUrl::fromLocalFile(TESTDATA("groups-package.qml"))
+            << testFileUrl("groups-package.qml")
             << QString("visualModel.parts.package.");
 }
 
@@ -1461,7 +1462,7 @@ void tst_qquickvisualdatamodel::get()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
+    view.setSource(testFileUrl("groups.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -1592,7 +1593,7 @@ void tst_qquickvisualdatamodel::get()
 
 void tst_qquickvisualdatamodel::invalidGroups()
 {
-    QUrl source = QUrl::fromLocalFile(TESTDATA("groups-invalid.qml"));
+    QUrl source = testFileUrl("groups-invalid.qml");
     QTest::ignoreMessage(QtWarningMsg, (source.toString() + ":12:9: QML VisualDataGroup: " + QQuickVisualDataGroup::tr("Group names must start with a lower case letter")).toUtf8());
 
     QDeclarativeComponent component(&engine, source);
@@ -1714,7 +1715,7 @@ void tst_qquickvisualdatamodel::onChanged()
     QFETCH(QString, expression);
     QFETCH(QStringList, tests);
 
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("onChanged.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("onChanged.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object);
 
@@ -1758,7 +1759,7 @@ void tst_qquickvisualdatamodel::create()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(TESTDATA("create.qml")));
+    view.setSource(testFileUrl("create.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -1876,7 +1877,7 @@ void tst_qquickvisualdatamodel::incompleteModel()
     // harmlessly ignored until then.
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 2.0\n VisualDataModel {}", QUrl::fromLocalFile(TESTDATA("")));
+    component.setData("import QtQuick 2.0\n VisualDataModel {}", testFileUrl(""));
 
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
 

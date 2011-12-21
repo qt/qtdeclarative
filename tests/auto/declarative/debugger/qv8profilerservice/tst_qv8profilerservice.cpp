@@ -98,7 +98,7 @@ protected:
     void messageReceived(const QByteArray &message);
 };
 
-class tst_QV8ProfilerService : public QObject
+class tst_QV8ProfilerService : public QDeclarativeDataTest
 {
     Q_OBJECT
 
@@ -174,7 +174,7 @@ void tst_QV8ProfilerService::connect(bool block)
     else
         arguments << QString("-qmljsdebugger=port:"STR_PORT);
 
-    arguments << QString(TESTDATA(QLatin1String("test.qml")));
+    arguments << QDeclarativeDataTest::instance()->testFile("test.qml");
 
     m_process = new QDeclarativeDebugProcess(executable);
     m_process->start(QStringList() << arguments);

@@ -2,8 +2,12 @@ CONFIG += testcase
 TARGET = tst_qquicktextedit
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquicktextedit.cpp ../../shared/testhttpserver.cpp
-HEADERS += ../../shared/testhttpserver.h
+SOURCES += tst_qquicktextedit.cpp \
+           ../../shared/testhttpserver.cpp \
+           ../../shared/util.cpp
+
+HEADERS += ../../shared/testhttpserver.h \
+           ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

@@ -1,6 +1,9 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativeanimations
-SOURCES += tst_qdeclarativeanimations.cpp
+SOURCES += tst_qdeclarativeanimations.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
+
 macx:CONFIG -= app_bundle
 
 testDataFiles.files = data

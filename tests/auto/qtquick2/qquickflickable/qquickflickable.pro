@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qquickflickable
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquickflickable.cpp
+SOURCES += tst_qquickflickable.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

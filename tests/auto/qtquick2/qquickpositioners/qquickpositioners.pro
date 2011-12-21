@@ -1,6 +1,9 @@
 CONFIG += testcase
 TARGET = tst_qquickpositioners
-SOURCES += tst_qquickpositioners.cpp
+SOURCES += tst_qquickpositioners.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
+
 macx:CONFIG -= app_bundle
 
 testDataFiles.files = data

@@ -1,6 +1,9 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativeqt
-SOURCES += tst_qdeclarativeqt.cpp
+SOURCES += tst_qdeclarativeqt.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
+
 macx:CONFIG -= app_bundle
 
 testDataFiles.files = data

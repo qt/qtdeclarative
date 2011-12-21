@@ -1,6 +1,8 @@
 CONFIG += testcase
 TARGET = tst_qquickcanvas
-SOURCES += tst_qquickcanvas.cpp
+SOURCES += tst_qquickcanvas.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 macx:CONFIG -= app_bundle
 

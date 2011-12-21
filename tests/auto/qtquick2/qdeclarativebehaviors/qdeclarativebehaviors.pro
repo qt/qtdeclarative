@@ -1,6 +1,9 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativebehaviors
-SOURCES += tst_qdeclarativebehaviors.cpp
+SOURCES += tst_qdeclarativebehaviors.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
+
 macx:CONFIG -= app_bundle
 
 testDataFiles.files = data

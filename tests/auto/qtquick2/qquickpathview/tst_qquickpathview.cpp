@@ -78,15 +78,13 @@ static void initStandardTreeModel(QStandardItemModel *model)
 }
 
 
-class tst_QQuickPathView : public QObject
+class tst_QQuickPathView : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_QQuickPathView();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void initValues();
     void items();
     void dataModel();
@@ -128,15 +126,6 @@ private:
     template<typename T>
     QList<T*> findItems(QQuickItem *parent, const QString &objectName);
 };
-
-void tst_QQuickPathView::initTestCase()
-{
-}
-
-void tst_QQuickPathView::cleanupTestCase()
-{
-
-}
 
 class TestObject : public QObject
 {
@@ -285,7 +274,7 @@ tst_QQuickPathView::tst_QQuickPathView()
 void tst_QQuickPathView::initValues()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathview1.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathview1.qml"));
     QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
 
     QVERIFY(obj != 0);
@@ -315,7 +304,7 @@ void tst_QQuickPathView::items()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    canvas->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -350,7 +339,7 @@ void tst_QQuickPathView::items()
 void tst_QQuickPathView::pathview2()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathview2.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathview2.qml"));
     QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
 
     QVERIFY(obj != 0);
@@ -370,7 +359,7 @@ void tst_QQuickPathView::pathview2()
 void tst_QQuickPathView::pathview3()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathview3.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathview3.qml"));
     QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
 
     QVERIFY(obj != 0);
@@ -449,7 +438,7 @@ void tst_QQuickPathView::insertModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    canvas->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -535,7 +524,7 @@ void tst_QQuickPathView::removeModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    canvas->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -626,7 +615,7 @@ void tst_QQuickPathView::moveModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    canvas->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -649,7 +638,7 @@ void tst_QQuickPathView::moveModel()
 void tst_QQuickPathView::path()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathtest.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathtest.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
 
     QVERIFY(obj != 0);
@@ -719,7 +708,7 @@ void tst_QQuickPathView::dataModel()
 
     ctxt->setContextProperty("testData", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("datamodel.qml")));
+    canvas->setSource(testFileUrl("datamodel.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
@@ -821,7 +810,7 @@ void tst_QQuickPathView::pathMoved()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    canvas->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -878,7 +867,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview0.qml")));
+    canvas->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -1005,7 +994,7 @@ void tst_QQuickPathView::resetModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaypath.qml")));
+    canvas->setSource(testFileUrl("displaypath.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -1038,7 +1027,7 @@ void tst_QQuickPathView::propertyChanges()
 {
     QQuickView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
+    canvas->setSource(testFileUrl("propertychanges.qml"));
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
@@ -1073,7 +1062,7 @@ void tst_QQuickPathView::pathChanges()
 {
     QQuickView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
+    canvas->setSource(testFileUrl("propertychanges.qml"));
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
@@ -1135,7 +1124,7 @@ void tst_QQuickPathView::componentChanges()
 {
     QQuickView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
+    canvas->setSource(testFileUrl("propertychanges.qml"));
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
@@ -1158,7 +1147,7 @@ void tst_QQuickPathView::modelChanges()
 {
     QQuickView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
+    canvas->setSource(testFileUrl("propertychanges.qml"));
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
@@ -1185,7 +1174,7 @@ void tst_QQuickPathView::pathUpdateOnStartChanged()
 {
     QQuickView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathUpdateOnStartChanged.qml")));
+    canvas->setSource(testFileUrl("pathUpdateOnStartChanged.qml"));
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
@@ -1207,7 +1196,7 @@ void tst_QQuickPathView::package()
 {
     QQuickView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathview_package.qml")));
+    canvas->setSource(testFileUrl("pathview_package.qml"));
     canvas->show();
     QTest::qWaitForWindowShown(canvas);
 
@@ -1231,7 +1220,7 @@ void tst_QQuickPathView::emptyModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("emptyModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("emptymodel.qml")));
+    canvas->setSource(testFileUrl("emptymodel.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
@@ -1247,7 +1236,7 @@ void tst_QQuickPathView::closed()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("openPath.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("openPath.qml"));
         QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
         QVERIFY(obj);
         QCOMPARE(obj->isClosed(), false);
@@ -1255,7 +1244,7 @@ void tst_QQuickPathView::closed()
     }
 
     {
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("closedPath.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("closedPath.qml"));
         QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
         QVERIFY(obj);
         QCOMPARE(obj->isClosed(), true);
@@ -1268,7 +1257,7 @@ void tst_QQuickPathView::pathUpdate()
 {
     QQuickView *canvas = createView();
     QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathUpdate.qml")));
+    canvas->setSource(testFileUrl("pathUpdate.qml"));
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
@@ -1283,7 +1272,7 @@ void tst_QQuickPathView::pathUpdate()
 void tst_QQuickPathView::visualDataModel()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("vdm.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("vdm.qml"));
 
     QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
     QVERIFY(obj != 0);
@@ -1303,7 +1292,7 @@ void tst_QQuickPathView::undefinedPath()
     QString warning2("QPainterPath::lineTo: Adding point where x or y is NaN or Inf, ignoring call");
     QTest::ignoreMessage(QtWarningMsg,qPrintable(warning2));
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("undefinedpath.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("undefinedpath.qml"));
 
     QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
     QVERIFY(obj != 0);
@@ -1316,7 +1305,7 @@ void tst_QQuickPathView::undefinedPath()
 void tst_QQuickPathView::mouseDrag()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragpath.qml")));
+    canvas->setSource(testFileUrl("dragpath.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -1355,7 +1344,7 @@ void tst_QQuickPathView::treeModel()
     initStandardTreeModel(&model);
     canvas->engine()->rootContext()->setContextProperty("myModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("treemodel.qml")));
+    canvas->setSource(testFileUrl("treemodel.qml"));
 
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
@@ -1378,7 +1367,7 @@ void tst_QQuickPathView::changePreferredHighlight()
 {
     QQuickView *canvas = createView();
     canvas->setGeometry(0,0,400,200);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragpath.qml")));
+    canvas->setSource(testFileUrl("dragpath.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -1417,7 +1406,7 @@ void tst_QQuickPathView::creationContext()
 {
     QQuickView canvas;
     canvas.setGeometry(0,0,240,320);
-    canvas.setSource(QUrl::fromLocalFile(TESTDATA("creationContext.qml")));
+    canvas.setSource(testFileUrl("creationContext.qml"));
 
     QQuickItem *rootItem = qobject_cast<QQuickItem *>(canvas.rootObject());
     QVERIFY(rootItem);
@@ -1439,7 +1428,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pathline.qml")));
+    canvas->setSource(testFileUrl("pathline.qml"));
     qApp->processEvents();
 
     QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
@@ -1515,7 +1504,7 @@ void tst_QQuickPathView::asynchronous()
     QDeclarativeIncubationController controller;
     canvas->engine()->setIncubationController(&controller);
 
-    canvas->setSource(TESTDATA("asyncloader.qml"));
+    canvas->setSource(testFileUrl("asyncloader.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(rootObject);
@@ -1625,7 +1614,7 @@ QList<T*> tst_QQuickPathView::findItems(QQuickItem *parent, const QString &objec
 void tst_QQuickPathView::missingPercent()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("missingPercent.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("missingPercent.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj);
     QCOMPARE(obj->attributeAt("_qfx_percent", 1.0), qreal(1.0));

@@ -48,7 +48,7 @@
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
 
-class tst_QQuickItem : public QObject
+class tst_QQuickItem : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -197,6 +197,7 @@ tst_QQuickItem::tst_QQuickItem()
 
 void tst_QQuickItem::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     qmlRegisterType<KeyTestItem>("Test",1,0,"KeyTestItem");
 }
 
@@ -211,7 +212,7 @@ void tst_QQuickItem::keys()
     canvas->rootContext()->setContextProperty("enableKeyHanding", QVariant(true));
     canvas->rootContext()->setContextProperty("forwardeeVisible", QVariant(true));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keystest.qml")));
+    canvas->setSource(testFileUrl("keystest.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -329,7 +330,7 @@ void tst_QQuickItem::keysProcessingOrder()
     KeysTestObject *testObject = new KeysTestObject;
     canvas->rootContext()->setContextProperty("keysTestObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keyspriority.qml")));
+    canvas->setSource(testFileUrl("keyspriority.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -397,7 +398,7 @@ bool anchorsMirrored(QQuickItem *rootItem, const char * itemString)
 void tst_QQuickItem::layoutMirroring()
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("layoutmirroring.qml")));
+    canvas->setSource(testFileUrl("layoutmirroring.qml"));
     canvas->show();
 
     QQuickItem *rootItem = qobject_cast<QQuickItem*>(canvas->rootObject());
@@ -538,7 +539,7 @@ void tst_QQuickItem::keyNavigation()
     QQuickView *canvas = new QQuickView(0);
     canvas->setBaseSize(QSize(240,320));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
+    canvas->setSource(testFileUrl("keynavigationtest.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -615,7 +616,7 @@ void tst_QQuickItem::keyNavigation_RightToLeft()
     QQuickView *canvas = new QQuickView(0);
     canvas->setBaseSize(QSize(240,320));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
+    canvas->setSource(testFileUrl("keynavigationtest.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -670,7 +671,7 @@ void tst_QQuickItem::keyNavigation_skipNotVisible()
     QQuickView *canvas = new QQuickView(0);
     canvas->setBaseSize(QSize(240,320));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
+    canvas->setSource(testFileUrl("keynavigationtest.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -745,7 +746,7 @@ void tst_QQuickItem::keyNavigation_implicitSetting()
     QQuickView *canvas = new QQuickView(0);
     canvas->setBaseSize(QSize(240,320));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest_implicit.qml")));
+    canvas->setSource(testFileUrl("keynavigationtest_implicit.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -933,7 +934,7 @@ void tst_QQuickItem::mapCoordinates()
 
     QQuickView *canvas = new QQuickView(0);
     canvas->setBaseSize(QSize(300, 300));
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")));
+    canvas->setSource(testFileUrl("mapCoordinates.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -962,8 +963,8 @@ void tst_QQuickItem::mapCoordinates()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QCOMPARE(result.value<QPointF>(), qobject_cast<QQuickItem*>(a)->mapFromScene(QPointF(x, y)));
 
-    QString warning1 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":48:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
-    QString warning2 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":48:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
+    QString warning1 = testFileUrl("mapCoordinates.qml").toString() + ":48:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
+    QString warning2 = testFileUrl("mapCoordinates.qml").toString() + ":48:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QVERIFY(QMetaObject::invokeMethod(root, "checkMapAToInvalid",
@@ -1014,7 +1015,7 @@ void tst_QQuickItem::transforms()
 
 void tst_QQuickItem::childrenProperty()
 {
-    QDeclarativeComponent component(&engine, TESTDATA("childrenProperty.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("childrenProperty.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -1029,7 +1030,7 @@ void tst_QQuickItem::childrenProperty()
 
 void tst_QQuickItem::resourcesProperty()
 {
-    QDeclarativeComponent component(&engine, TESTDATA("resourcesProperty.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("resourcesProperty.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -1046,7 +1047,7 @@ void tst_QQuickItem::propertyChanges()
 {
     QQuickView *canvas = new QQuickView(0);
     canvas->setBaseSize(QSize(300, 300));
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
+    canvas->setSource(testFileUrl("propertychanges.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -1127,7 +1128,7 @@ void tst_QQuickItem::propertyChanges()
 void tst_QQuickItem::childrenRect()
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRect.qml")));
+    canvas->setSource(testFileUrl("childrenRect.qml"));
     canvas->setBaseSize(QSize(240,320));
     canvas->show();
 
@@ -1157,11 +1158,11 @@ void tst_QQuickItem::childrenRectBug()
 {
     QQuickView *canvas = new QQuickView(0);
 
-    QString warning = QUrl::fromLocalFile(TESTDATA("childrenRectBug.qml")).toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
+    QString warning = testFileUrl("childrenRectBug.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug.qml")));
+    canvas->setSource(testFileUrl("childrenRectBug.qml"));
     canvas->show();
 
     QQuickItem *o = canvas->rootObject();
@@ -1178,17 +1179,17 @@ void tst_QQuickItem::childrenRectBug2()
 {
     QQuickView *canvas = new QQuickView(0);
 
-    QString warning1 = QUrl::fromLocalFile(TESTDATA("childrenRectBug2.qml")).toString() + ":7:5: QML Item: Binding loop detected for property \"width\"";
+    QString warning1 = testFileUrl("childrenRectBug2.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"width\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
-    QString warning2 = QUrl::fromLocalFile(TESTDATA("childrenRectBug2.qml")).toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
+    QString warning2 = testFileUrl("childrenRectBug2.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug2.qml")));
+    canvas->setSource(testFileUrl("childrenRectBug2.qml"));
     canvas->show();
 
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(canvas->rootObject());
@@ -1211,7 +1212,7 @@ void tst_QQuickItem::childrenRectBug2()
 void tst_QQuickItem::childrenRectBug3()
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug3.qml")));
+    canvas->setSource(testFileUrl("childrenRectBug3.qml"));
     canvas->show();
 
     //don't crash on delete
@@ -1222,7 +1223,7 @@ void tst_QQuickItem::childrenRectBug3()
 void tst_QQuickItem::transformCrash()
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("transformCrash.qml")));
+    canvas->setSource(testFileUrl("transformCrash.qml"));
     canvas->show();
 
     delete canvas;
@@ -1231,7 +1232,7 @@ void tst_QQuickItem::transformCrash()
 void tst_QQuickItem::implicitSize()
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("implicitsize.qml")));
+    canvas->setSource(testFileUrl("implicitsize.qml"));
     canvas->show();
 
     QQuickItem *item = qobject_cast<QQuickItem*>(canvas->rootObject());
@@ -1259,7 +1260,7 @@ void tst_QQuickItem::implicitSize()
 
 void tst_QQuickItem::qtbug_16871()
 {
-    QDeclarativeComponent component(&engine, TESTDATA("qtbug_16871.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("qtbug_16871.qml"));
     QObject *o = component.create();
     QVERIFY(o != 0);
     delete o;

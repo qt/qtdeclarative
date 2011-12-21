@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativespringanimation
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativespringanimation.cpp
+SOURCES += tst_qdeclarativespringanimation.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

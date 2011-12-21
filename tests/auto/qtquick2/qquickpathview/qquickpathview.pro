@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qquickpathview
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquickpathview.cpp
+SOURCES += tst_qquickpathview.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

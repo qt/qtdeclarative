@@ -46,7 +46,7 @@
 
 #include "../../shared/util.h"
 
-class tst_QDeclarativePath : public QObject
+class tst_QDeclarativePath : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -61,7 +61,7 @@ private slots:
 void tst_QDeclarativePath::arc()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("arc.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("arc.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 
@@ -96,7 +96,7 @@ void tst_QDeclarativePath::arc()
 void tst_QDeclarativePath::catmullromCurve()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("curve.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("curve.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 
@@ -131,7 +131,7 @@ void tst_QDeclarativePath::catmullromCurve()
 void tst_QDeclarativePath::svg()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("svg.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("svg.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 

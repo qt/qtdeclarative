@@ -5,8 +5,10 @@ macx:CONFIG -= app_bundle
 SOURCES += tst_qquicktext.cpp
 
 INCLUDEPATH += ../../shared/
-HEADERS += ../../shared/testhttpserver.h
-SOURCES += ../../shared/testhttpserver.cpp
+HEADERS += ../../shared/testhttpserver.h \
+           ../../shared/util.h
+SOURCES += ../../shared/testhttpserver.cpp \
+           ../../shared/util.cpp
 
 testDataFiles.files = data
 testDataFiles.path = .

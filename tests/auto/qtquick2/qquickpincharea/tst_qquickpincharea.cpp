@@ -47,7 +47,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include "../../shared/util.h"
 
-class tst_QQuickPinchArea: public QObject
+class tst_QQuickPinchArea: public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -66,6 +66,7 @@ private:
 };
 void tst_QQuickPinchArea::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     if (!device) {
         device = new QTouchDevice;
         device->setType(QTouchDevice::TouchScreen);
@@ -80,7 +81,7 @@ void tst_QQuickPinchArea::cleanupTestCase()
 void tst_QQuickPinchArea::pinchProperties()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
+    canvas->setSource(testFileUrl("pinchproperties.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -206,7 +207,7 @@ QTouchEvent::TouchPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickIt
 void tst_QQuickPinchArea::scale()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
+    canvas->setSource(testFileUrl("pinchproperties.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -259,7 +260,7 @@ void tst_QQuickPinchArea::scale()
 void tst_QQuickPinchArea::pan()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
+    canvas->setSource(testFileUrl("pinchproperties.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -315,7 +316,7 @@ void tst_QQuickPinchArea::pan()
 void tst_QQuickPinchArea::retouch()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pinchproperties.qml")));
+    canvas->setSource(testFileUrl("pinchproperties.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);

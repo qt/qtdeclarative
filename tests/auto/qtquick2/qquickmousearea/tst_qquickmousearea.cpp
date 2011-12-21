@@ -52,12 +52,10 @@
 
 //#define OLDWAY
 
-class tst_QQuickMouseArea: public QObject
+class tst_QQuickMouseArea: public QDeclarativeDataTest
 {
     Q_OBJECT
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void dragProperties();
     void resetDrag();
     void dragging();
@@ -80,21 +78,11 @@ private:
     QQuickView *createView();
 };
 
-void tst_QQuickMouseArea::initTestCase()
-{
-
-}
-
-void tst_QQuickMouseArea::cleanupTestCase()
-{
-
-}
-
 void tst_QQuickMouseArea::dragProperties()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragproperties.qml")));
+    canvas->setSource(testFileUrl("dragproperties.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -180,7 +168,7 @@ void tst_QQuickMouseArea::resetDrag()
     QQuickView *canvas = createView();
 
     canvas->rootContext()->setContextProperty("haveTarget", QVariant(true));
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragreset.qml")));
+    canvas->setSource(testFileUrl("dragreset.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -210,7 +198,7 @@ void tst_QQuickMouseArea::dragging()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragging.qml")));
+    canvas->setSource(testFileUrl("dragging.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWait(20);
@@ -277,7 +265,7 @@ QQuickView *tst_QQuickMouseArea::createView()
 void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("updateMousePosOnClick.qml")));
+    canvas->setSource(testFileUrl("updateMousePosOnClick.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -306,7 +294,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
 void tst_QQuickMouseArea::updateMouseAreaPosOnResize()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("updateMousePosOnResize.qml")));
+    canvas->setSource(testFileUrl("updateMousePosOnResize.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -343,7 +331,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
     {
         // We handle onPressAndHold, therefore no onClicked
         QQuickView *canvas = createView();
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("clickandhold.qml")));
+        canvas->setSource(testFileUrl("clickandhold.qml"));
         canvas->show();
         canvas->requestActivateWindow();
         QVERIFY(canvas->rootObject() != 0);
@@ -368,7 +356,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
     {
         // We do not handle onPressAndHold, therefore we get onClicked
         QQuickView *canvas = createView();
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("noclickandhold.qml")));
+        canvas->setSource(testFileUrl("noclickandhold.qml"));
         canvas->show();
         canvas->requestActivateWindow();
         QVERIFY(canvas->rootObject() != 0);
@@ -392,7 +380,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
 void tst_QQuickMouseArea::onMousePressRejected()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("rejectEvent.qml")));
+    canvas->setSource(testFileUrl("rejectEvent.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -429,7 +417,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
 void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pressedCanceled.qml")));
+    canvas->setSource(testFileUrl("pressedCanceled.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -474,7 +462,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 void tst_QQuickMouseArea::doubleClick()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("doubleclick.qml")));
+    canvas->setSource(testFileUrl("doubleclick.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -503,7 +491,7 @@ void tst_QQuickMouseArea::doubleClick()
 void tst_QQuickMouseArea::clickTwice()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("clicktwice.qml")));
+    canvas->setSource(testFileUrl("clicktwice.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -534,7 +522,7 @@ void tst_QQuickMouseArea::clickTwice()
 void tst_QQuickMouseArea::pressedOrdering()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pressedOrdering.qml")));
+    canvas->setSource(testFileUrl("pressedOrdering.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -562,7 +550,7 @@ void tst_QQuickMouseArea::preventStealing()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("preventstealing.qml")));
+    canvas->setSource(testFileUrl("preventstealing.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -625,7 +613,7 @@ void tst_QQuickMouseArea::clickThrough()
 {
     //With no handlers defined click, doubleClick and PressAndHold should propagate to those with handlers
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("clickThrough.qml")));
+    canvas->setSource(testFileUrl("clickThrough.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -658,7 +646,7 @@ void tst_QQuickMouseArea::clickThrough()
 
     //With handlers defined click, doubleClick and PressAndHold should propagate only when explicitly ignored
     canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("clickThrough2.qml")));
+    canvas->setSource(testFileUrl("clickThrough2.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -776,7 +764,7 @@ void tst_QQuickMouseArea::testQtQuick11Attributes_data()
 void tst_QQuickMouseArea::hoverPosition()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("hoverPosition.qml")));
+    canvas->setSource(testFileUrl("hoverPosition.qml"));
 
     QQuickItem *root = canvas->rootObject();
     QVERIFY(root != 0);
@@ -797,7 +785,7 @@ void tst_QQuickMouseArea::hoverPropagation()
 {
     //QTBUG-18175, to behave like GV did.
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("hoverPropagation.qml")));
+    canvas->setSource(testFileUrl("hoverPropagation.qml"));
 
     QQuickItem *root = canvas->rootObject();
     QVERIFY(root != 0);

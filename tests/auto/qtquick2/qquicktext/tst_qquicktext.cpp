@@ -57,15 +57,13 @@
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-class tst_qquicktext : public QObject
+class tst_qquicktext : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_qquicktext();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void text();
     void width();
     void wrap();
@@ -127,14 +125,7 @@ private:
 
     QQuickView *createView(const QString &filename);
 };
-void tst_qquicktext::initTestCase()
-{
-}
 
-void tst_qquicktext::cleanupTestCase()
-{
-
-}
 tst_qquicktext::tst_qquicktext()
 {
     standard << "the quick brown fox jumped over the lazy dog"
@@ -451,7 +442,7 @@ void tst_qquicktext::elide()
 
 void tst_qquicktext::multilineElide()
 {
-    QQuickView *canvas = createView(TESTDATA("multilineelide.qml"));
+    QQuickView *canvas = createView(testFile("multilineelide.qml"));
 
     QQuickText *myText = qobject_cast<QQuickText*>(canvas->rootObject());
     QVERIFY(myText != 0);
@@ -541,17 +532,17 @@ void tst_qquicktext::alignments_data()
     QTest::addColumn<int>("vAlign");
     QTest::addColumn<QString>("expectfile");
 
-    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << TESTDATA("alignments_lt.png");
-    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << TESTDATA("alignments_rt.png");
-    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << TESTDATA("alignments_ct.png");
+    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << testFile("alignments_lt.png");
+    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << testFile("alignments_rt.png");
+    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << testFile("alignments_ct.png");
 
-    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << TESTDATA("alignments_lb.png");
-    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << TESTDATA("alignments_rb.png");
-    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << TESTDATA("alignments_cb.png");
+    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << testFile("alignments_lb.png");
+    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << testFile("alignments_rb.png");
+    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << testFile("alignments_cb.png");
 
-    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << TESTDATA("alignments_lc.png");
-    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << TESTDATA("alignments_rc.png");
-    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << TESTDATA("alignments_cc.png");
+    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << testFile("alignments_lc.png");
+    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << testFile("alignments_rc.png");
+    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << testFile("alignments_cc.png");
 }
 
 
@@ -563,7 +554,7 @@ void tst_qquicktext::alignments()
     QFETCH(int, vAlign);
     QFETCH(QString, expectfile);
 
-    QQuickView *canvas = createView(TESTDATA("alignments.qml"));
+    QQuickView *canvas = createView(testFile("alignments.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWait(50);
@@ -626,7 +617,7 @@ void tst_qquicktext::horizontalAlignment()
 
 void tst_qquicktext::horizontalAlignment_RightToLeft()
 {
-    QQuickView *canvas = createView(TESTDATA("horizontalAlignment_RightToLeft.qml"));
+    QQuickView *canvas = createView(testFile("horizontalAlignment_RightToLeft.qml"));
     QQuickText *text = canvas->rootObject()->findChild<QQuickText*>("text");
     QVERIFY(text != 0);
     canvas->show();
@@ -1298,12 +1289,12 @@ void tst_qquicktext::embeddedImages_data()
 {
     QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<QString>("error");
-    QTest::newRow("local") << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocal.qml")) << "";
-    QTest::newRow("local-error") << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocalError.qml"))
-        << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocalError.qml")).toString()+":3:1: QML Text: Cannot open: " + QUrl::fromLocalFile(TESTDATA("http/notexists.png")).toString();
-    QTest::newRow("remote") << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemote.qml")) << "";
-    QTest::newRow("remote-error") << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemoteError.qml"))
-        << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemoteError.qml")).toString()+":3:1: QML Text: Error downloading http://127.0.0.1:14453/notexists.png - server replied: Not found";
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
+    QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
+        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + testFileUrl("http/notexists.png").toString();
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
+    QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
+        << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading http://127.0.0.1:14453/notexists.png - server replied: Not found";
 }
 
 void tst_qquicktext::embeddedImages()
@@ -1314,7 +1305,7 @@ void tst_qquicktext::embeddedImages()
     QFETCH(QString, error);
 
     TestHTTPServer server(14453);
-    server.serveDirectory(TESTDATA("http"));
+    server.serveDirectory(testFile("http"));
 
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
@@ -1326,7 +1317,7 @@ void tst_qquicktext::embeddedImages()
 
     QTRY_COMPARE(textObject->resourcesLoading(), 0);
 
-    QPixmap pm(TESTDATA("http/exists.png"));
+    QPixmap pm(testFile("http/exists.png"));
     if (error.isEmpty()) {
         QCOMPARE(textObject->width(), double(pm.width()));
         QCOMPARE(textObject->height(), double(pm.height()));
@@ -1341,7 +1332,7 @@ void tst_qquicktext::embeddedImages()
 
 void tst_qquicktext::lineCount()
 {
-    QQuickView *canvas = createView(TESTDATA("lineCount.qml"));
+    QQuickView *canvas = createView(testFile("lineCount.qml"));
 
     QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -1370,7 +1361,7 @@ void tst_qquicktext::lineCount()
 
 void tst_qquicktext::lineHeight()
 {
-    QQuickView *canvas = createView(TESTDATA("lineHeight.qml"));
+    QQuickView *canvas = createView(testFile("lineHeight.qml"));
 
     QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -1432,7 +1423,7 @@ void tst_qquicktext::implicitSize()
 
 void tst_qquicktext::lineLaidOut()
 {
-    QQuickView *canvas = createView(TESTDATA("lineLayout.qml"));
+    QQuickView *canvas = createView(testFile("lineLayout.qml"));
 
     QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);

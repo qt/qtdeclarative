@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativetranslation
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativetranslation.cpp
+SOURCES += tst_qdeclarativetranslation.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 RESOURCES += data/translation.qrc
 
 testDataFiles.files = data

@@ -3,10 +3,12 @@ TARGET = tst_qdeclarativexmlhttprequest
 macx:CONFIG -= app_bundle
 
 INCLUDEPATH += ../../shared/
-HEADERS += ../../shared/testhttpserver.h
+HEADERS += ../../shared/testhttpserver.h \
+           ../../shared/util.h
 
 SOURCES += tst_qdeclarativexmlhttprequest.cpp \
-           ../../shared/testhttpserver.cpp
+           ../../shared/testhttpserver.cpp \
+           ../../shared/util.cpp
 
 testDataFiles.files = data
 testDataFiles.path = .

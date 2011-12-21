@@ -51,17 +51,7 @@
 #include <QDebug>
 #include "../../shared/util.h"
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
-inline QUrl TEST_FILE(const char *filename)
-{
-    return TEST_FILE(QLatin1String(filename));
-}
-
-class tst_qdeclarativelistreference : public QObject
+class tst_qdeclarativelistreference : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -105,6 +95,7 @@ public:
 
 void tst_qdeclarativelistreference::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     qmlRegisterType<TestType>();
 }
 
@@ -540,7 +531,7 @@ void tst_qdeclarativelistreference::qmlmetaproperty()
 void tst_qdeclarativelistreference::engineTypes()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("engineTypes.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("engineTypes.qml"));
 
     QObject *o = component.create();
     QVERIFY(o);
@@ -563,7 +554,7 @@ void tst_qdeclarativelistreference::engineTypes()
 void tst_qdeclarativelistreference::variantToList()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("variantToList.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("variantToList.qml"));
 
     QObject *o = component.create();
     QVERIFY(o);

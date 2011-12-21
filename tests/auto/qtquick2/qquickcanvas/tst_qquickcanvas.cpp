@@ -170,16 +170,12 @@ protected:
     }
 };
 
-class tst_qquickcanvas : public QObject
+class tst_qquickcanvas : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickcanvas();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
     void constantUpdates();
 
     void touchEvent_basic();
@@ -199,18 +195,6 @@ private slots:
 
     void headless();
 };
-
-tst_qquickcanvas::tst_qquickcanvas()
-{
-}
-
-void tst_qquickcanvas::initTestCase()
-{
-}
-
-void tst_qquickcanvas::cleanupTestCase()
-{
-}
 
 //If the item calls update inside updatePaintNode, it should schedule another update
 void tst_qquickcanvas::constantUpdates()
@@ -532,7 +516,7 @@ void tst_qquickcanvas::qmlCreation()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
-    component.loadUrl(TESTDATA("window.qml"));
+    component.loadUrl(testFileUrl("window.qml"));
     QObject* created = component.create();
     QVERIFY(created);
 
@@ -606,7 +590,7 @@ void tst_qquickcanvas::animationsWhileHidden()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
-    component.loadUrl(TESTDATA("AnimationsWhileHidden.qml"));
+    component.loadUrl(testFileUrl("AnimationsWhileHidden.qml"));
     QObject* created = component.create();
 
     QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);
@@ -648,7 +632,7 @@ void tst_qquickcanvas::headless()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
-    component.loadUrl(TESTDATA("Headless.qml"));
+    component.loadUrl(testFileUrl("Headless.qml"));
     QObject* created = component.create();
 
     QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);

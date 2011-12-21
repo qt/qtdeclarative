@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativelocale
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativelocale.cpp
+SOURCES += tst_qdeclarativelocale.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

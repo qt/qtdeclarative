@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativeproperty
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativeproperty.cpp
+SOURCES += tst_qdeclarativeproperty.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

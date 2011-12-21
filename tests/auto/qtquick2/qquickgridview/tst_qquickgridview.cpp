@@ -58,15 +58,13 @@
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickGridView::Flow)
 
-class tst_QQuickGridView : public QObject
+class tst_QQuickGridView : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_QQuickGridView();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void items();
     void changed();
     void inserted();
@@ -158,16 +156,6 @@ void tst_qquickgridview_move(int from, int to, int n, T *items)
     for (; f != replaced.end(); ++f, ++t)
         *t = *f;
 }
-
-void tst_QQuickGridView::initTestCase()
-{
-}
-
-void tst_QQuickGridView::cleanupTestCase()
-{
-
-}
-
 
 class TestModel : public QAbstractListModel
 {
@@ -286,7 +274,7 @@ void tst_QQuickGridView::items()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -336,7 +324,7 @@ void tst_QQuickGridView::changed()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickFlickable *gridview = findItem<QQuickFlickable>(canvas->rootObject(), "grid");
@@ -371,7 +359,7 @@ void tst_QQuickGridView::inserted()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -457,7 +445,7 @@ void tst_QQuickGridView::inserted_more()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -626,7 +614,7 @@ void tst_QQuickGridView::insertBeforeVisible()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -710,7 +698,7 @@ void tst_QQuickGridView::removed()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -861,7 +849,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -940,7 +928,7 @@ void tst_QQuickGridView::clear()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -987,7 +975,7 @@ void tst_QQuickGridView::moved()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -1192,7 +1180,7 @@ void tst_QQuickGridView::multipleChanges()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -1409,7 +1397,7 @@ void tst_QQuickGridView::swapWithFirstItem()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -1436,7 +1424,7 @@ void tst_QQuickGridView::currentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QString filename(TESTDATA("gridview-initCurrent.qml"));
+    QString filename(testFile("gridview-initCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -1681,7 +1669,7 @@ void tst_QQuickGridView::noCurrentIndex()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QString filename(TESTDATA("gridview-noCurrent.qml"));
+    QString filename(testFile("gridview-noCurrent.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -1719,7 +1707,7 @@ void tst_QQuickGridView::changeFlow()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -1806,7 +1794,7 @@ void tst_QQuickGridView::changeFlow()
 void tst_QQuickGridView::defaultValues()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("gridview3.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("gridview3.qml"));
     QQuickGridView *obj = qobject_cast<QQuickGridView*>(c.create());
 
     QTRY_VERIFY(obj != 0);
@@ -1829,7 +1817,7 @@ void tst_QQuickGridView::defaultValues()
 void tst_QQuickGridView::properties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("gridview2.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("gridview2.qml"));
     QQuickGridView *obj = qobject_cast<QQuickGridView*>(c.create());
 
     QTRY_VERIFY(obj != 0);
@@ -1853,7 +1841,7 @@ void tst_QQuickGridView::propertyChanges()
 {
     QQuickView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
+    canvas->setSource(testFileUrl("propertychangestest.qml"));
 
     QQuickGridView *gridView = canvas->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
@@ -1926,7 +1914,7 @@ void tst_QQuickGridView::componentChanges()
 {
     QQuickView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
+    canvas->setSource(testFileUrl("propertychangestest.qml"));
 
     QQuickGridView *gridView = canvas->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
@@ -1974,7 +1962,7 @@ void tst_QQuickGridView::modelChanges()
 {
     QQuickView *canvas = createView();
     QTRY_VERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychangestest.qml")));
+    canvas->setSource(testFileUrl("propertychangestest.qml"));
 
     QQuickGridView *gridView = canvas->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
@@ -2009,7 +1997,7 @@ void tst_QQuickGridView::positionViewAtIndex()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2210,7 +2198,7 @@ void tst_QQuickGridView::snapping()
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2241,12 +2229,12 @@ void tst_QQuickGridView::snapping()
 void tst_QQuickGridView::mirroring()
 {
     QQuickView *canvasA = createView();
-    canvasA->setSource(QUrl::fromLocalFile(TESTDATA("mirroring.qml")));
+    canvasA->setSource(testFileUrl("mirroring.qml"));
     QQuickGridView *gridviewA = findItem<QQuickGridView>(canvasA->rootObject(), "view");
     QTRY_VERIFY(gridviewA != 0);
 
     QQuickView *canvasB = createView();
-    canvasB->setSource(QUrl::fromLocalFile(TESTDATA("mirroring.qml")));
+    canvasB->setSource(testFileUrl("mirroring.qml"));
     QQuickGridView *gridviewB = findItem<QQuickGridView>(canvasB->rootObject(), "view");
     QTRY_VERIFY(gridviewA != 0);
     qApp->processEvents();
@@ -2312,7 +2300,7 @@ void tst_QQuickGridView::positionViewAtIndex_rightToLeft()
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2442,7 +2430,7 @@ void tst_QQuickGridView::resetModel()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("displaygrid.qml")));
+    canvas->setSource(testFileUrl("displaygrid.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2487,7 +2475,7 @@ void tst_QQuickGridView::enforceRange()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview-enforcerange.qml")));
+    canvas->setSource(testFileUrl("gridview-enforcerange.qml"));
     qApp->processEvents();
     QVERIFY(canvas->rootObject() != 0);
 
@@ -2543,7 +2531,7 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview-enforcerange.qml")));
+    canvas->setSource(testFileUrl("gridview-enforcerange.qml"));
     qApp->processEvents();
     QVERIFY(canvas->rootObject() != 0);
 
@@ -2592,7 +2580,7 @@ void tst_QQuickGridView::QTBUG_8456()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("setindex.qml")));
+    canvas->setSource(testFileUrl("setindex.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2607,7 +2595,7 @@ void tst_QQuickGridView::manualHighlight()
 {
     QQuickView *canvas = createView();
 
-    QString filename(TESTDATA("manual-highlight.qml"));
+    QString filename(testFile("manual-highlight.qml"));
     canvas->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
@@ -2671,7 +2659,7 @@ void tst_QQuickGridView::footer()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("footer.qml")));
+    canvas->setSource(testFileUrl("footer.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2830,7 +2818,7 @@ void tst_QQuickGridView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 240);
     canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
+    canvas->setSource(testFileUrl("header.qml"));
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -2894,7 +2882,7 @@ void tst_QQuickGridView::header()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->rootContext()->setContextProperty("initialViewWidth", 240);
     canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("header.qml")));
+    canvas->setSource(testFileUrl("header.qml"));
 
     gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -2975,7 +2963,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("initialHeight", 100);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizeview.qml")));
+    canvas->setSource(testFileUrl("resizeview.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -3013,7 +3001,7 @@ void tst_QQuickGridView::indexAt()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -3052,7 +3040,7 @@ void tst_QQuickGridView::onAdd()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateWidth", delegateWidth);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
+    canvas->setSource(testFileUrl("attachedSignals.qml"));
 
     QObject *object = canvas->rootObject();
     object->setProperty("width", canvas->width());
@@ -3110,7 +3098,7 @@ void tst_QQuickGridView::onRemove()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateWidth", delegateWidth);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("attachedSignals.qml")));
+    canvas->setSource(testFileUrl("attachedSignals.qml"));
     QObject *object = canvas->rootObject();
 
     model.removeItems(indexToRemove, removeCount);
@@ -3146,7 +3134,7 @@ void tst_QQuickGridView::onRemove_data()
 void tst_QQuickGridView::columnCount()
 {
     QQuickView canvas;
-    canvas.setSource(QUrl::fromLocalFile(TESTDATA("gridview4.qml")));
+    canvas.setSource(testFileUrl("gridview4.qml"));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -3176,7 +3164,7 @@ void tst_QQuickGridView::margins()
         ctxt->setContextProperty("testModel", &model);
         ctxt->setContextProperty("testRightToLeft", QVariant(false));
 
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+        canvas->setSource(testFileUrl("margins.qml"));
         qApp->processEvents();
 
         QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -3239,7 +3227,7 @@ void tst_QQuickGridView::margins()
         ctxt->setContextProperty("testModel", &model);
         ctxt->setContextProperty("testRightToLeft", QVariant(true));
 
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("margins.qml")));
+        canvas->setSource(testFileUrl("margins.qml"));
         qApp->processEvents();
 
         QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -3296,7 +3284,7 @@ void tst_QQuickGridView::creationContext()
 {
     QQuickView canvas;
     canvas.setGeometry(0,0,240,320);
-    canvas.setSource(QUrl::fromLocalFile(TESTDATA("creationContext.qml")));
+    canvas.setSource(testFileUrl("creationContext.qml"));
     qApp->processEvents();
 
     QQuickItem *rootItem = qobject_cast<QQuickItem *>(canvas.rootObject());
@@ -3355,7 +3343,7 @@ void tst_QQuickGridView::snapToRow()
 
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapToRow.qml")));
+    canvas->setSource(testFileUrl("snapToRow.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -3449,7 +3437,7 @@ void tst_QQuickGridView::snapOneRow()
 
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapOneRow.qml")));
+    canvas->setSource(testFileUrl("snapOneRow.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -3530,7 +3518,7 @@ void tst_QQuickGridView::unaligned()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("unaligned.qml")));
+    canvas->setSource(testFileUrl("unaligned.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
@@ -3617,7 +3605,7 @@ void tst_QQuickGridView::cacheBuffer()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
+    canvas->setSource(testFileUrl("gridview1.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -3708,7 +3696,7 @@ void tst_QQuickGridView::asynchronous()
     QDeclarativeIncubationController controller;
     canvas->engine()->setIncubationController(&controller);
 
-    canvas->setSource(TESTDATA("asyncloader.qml"));
+    canvas->setSource(testFile("asyncloader.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(rootObject);
@@ -3761,8 +3749,7 @@ void tst_QQuickGridView::unrequestedVisibility()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testWrap", QVariant(false));
 
-    QString filename(TESTDATA("unrequestedItems.qml"));
-    canvas->setSource(QUrl::fromLocalFile(filename));
+    canvas->setSource(testFileUrl("unrequestedItems.qml"));
 
     canvas->show();
 

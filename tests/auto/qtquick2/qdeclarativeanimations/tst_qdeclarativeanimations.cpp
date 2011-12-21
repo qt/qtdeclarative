@@ -56,14 +56,18 @@
 
 #include "../../shared/util.h"
 
-class tst_qdeclarativeanimations : public QObject
+class tst_qdeclarativeanimations : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_qdeclarativeanimations() {}
 
 private slots:
-    void initTestCase() { QDeclarativeEngine engine; } // ensure types are registered
+    void initTestCase()
+    {
+        QDeclarativeEngine engine;  // ensure types are registered
+        QDeclarativeDataTest::initTestCase();
+    }
 
     void simpleProperty();
     void simpleNumber();
@@ -223,7 +227,7 @@ void tst_qdeclarativeanimations::simplePath()
 {
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathAnimation.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("pathAnimation.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -259,7 +263,7 @@ void tst_qdeclarativeanimations::simplePath()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathAnimation2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("pathAnimation2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -291,7 +295,7 @@ void tst_qdeclarativeanimations::simplePath()
 void tst_qdeclarativeanimations::pathInterpolator()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathInterpolator.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathInterpolator.qml"));
     QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
     QVERIFY(interpolator);
 
@@ -316,7 +320,7 @@ void tst_qdeclarativeanimations::pathInterpolator()
 void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathInterpolatorBack.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathInterpolatorBack.qml"));
     QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
     QVERIFY(interpolator);
 
@@ -348,7 +352,7 @@ void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
 void tst_qdeclarativeanimations::pathWithNoStart()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathAnimationNoStart.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathAnimationNoStart.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -471,7 +475,7 @@ void tst_qdeclarativeanimations::badTypes()
     //don't crash
     {
         QQuickView *view = new QQuickView;
-        view->setSource(QUrl::fromLocalFile(TESTDATA("badtype1.qml")));
+        view->setSource(testFileUrl("badtype1.qml"));
 
         qApp->processEvents();
 
@@ -481,7 +485,7 @@ void tst_qdeclarativeanimations::badTypes()
     //make sure we get a compiler error
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("badtype2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("badtype2.qml"));
         QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
         c.create();
 
@@ -492,7 +496,7 @@ void tst_qdeclarativeanimations::badTypes()
     //make sure we get a compiler error
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("badtype3.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("badtype3.qml"));
         QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
         c.create();
 
@@ -503,7 +507,7 @@ void tst_qdeclarativeanimations::badTypes()
     //don't crash
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("badtype4.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("badtype4.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -521,14 +525,14 @@ void tst_qdeclarativeanimations::badProperties()
     {
         QDeclarativeEngine engine;
 
-        QDeclarativeComponent c1(&engine, QUrl::fromLocalFile(TESTDATA("badproperty1.qml")));
-        QByteArray message = QUrl::fromLocalFile(TESTDATA("badproperty1.qml")).toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate non-existent property \"border.colr\"";
+        QDeclarativeComponent c1(&engine, testFileUrl("badproperty1.qml"));
+        QByteArray message = testFileUrl("badproperty1.qml").toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate non-existent property \"border.colr\"";
         QTest::ignoreMessage(QtWarningMsg, message);
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c1.create());
         QVERIFY(rect);
 
-        QDeclarativeComponent c2(&engine, QUrl::fromLocalFile(TESTDATA("badproperty2.qml")));
-        message = QUrl::fromLocalFile(TESTDATA("badproperty2.qml")).toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate read-only property \"border\"";
+        QDeclarativeComponent c2(&engine, testFileUrl("badproperty2.qml"));
+        message = testFileUrl("badproperty2.qml").toString().toUtf8() + ":18:9: QML ColorAnimation: Cannot animate read-only property \"border\"";
         QTest::ignoreMessage(QtWarningMsg, message);
         rect = qobject_cast<QQuickRectangle*>(c2.create());
         QVERIFY(rect);
@@ -545,7 +549,7 @@ void tst_qdeclarativeanimations::mixedTypes()
     //assumes border.width stays a real -- not real robust
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("mixedtype1.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("mixedtype1.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -561,7 +565,7 @@ void tst_qdeclarativeanimations::mixedTypes()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("mixedtype2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("mixedtype2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -581,7 +585,7 @@ void tst_qdeclarativeanimations::properties()
     const int waitDuration = 300;
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("properties.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -593,7 +597,7 @@ void tst_qdeclarativeanimations::properties()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("properties2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -605,7 +609,7 @@ void tst_qdeclarativeanimations::properties()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties3.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("properties3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -617,7 +621,7 @@ void tst_qdeclarativeanimations::properties()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties4.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("properties4.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -630,7 +634,7 @@ void tst_qdeclarativeanimations::properties()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("properties5.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("properties5.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -647,7 +651,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
     const int waitDuration = 300;
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("propertiesTransition.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -660,7 +664,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("propertiesTransition2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -675,7 +679,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition3.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("propertiesTransition3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -688,7 +692,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition4.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("propertiesTransition4.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -702,7 +706,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition5.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("propertiesTransition5.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -716,7 +720,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
 
     /*{
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition6.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("propertiesTransition6.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -730,7 +734,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("propertiesTransition7.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("propertiesTransition7.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -746,7 +750,7 @@ void tst_qdeclarativeanimations::propertiesTransition()
 void tst_qdeclarativeanimations::pathTransition()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathTransition.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pathTransition.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -766,7 +770,7 @@ void tst_qdeclarativeanimations::pathTransition()
 void tst_qdeclarativeanimations::disabledTransition()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("disabledTransition.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("disabledTransition.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -806,7 +810,7 @@ void tst_qdeclarativeanimations::attached()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("attached.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("attached.qml"));
     QTest::ignoreMessage(QtDebugMsg, "off");
     QTest::ignoreMessage(QtDebugMsg, "on");
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
@@ -818,7 +822,7 @@ void tst_qdeclarativeanimations::propertyValueSourceDefaultStart()
     {
         QDeclarativeEngine engine;
 
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("valuesource.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("valuesource.qml"));
 
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
@@ -831,7 +835,7 @@ void tst_qdeclarativeanimations::propertyValueSourceDefaultStart()
     {
         QDeclarativeEngine engine;
 
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("valuesource2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("valuesource2.qml"));
 
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
@@ -844,7 +848,7 @@ void tst_qdeclarativeanimations::propertyValueSourceDefaultStart()
     {
         QDeclarativeEngine engine;
 
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("dontAutoStart.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("dontAutoStart.qml"));
 
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
@@ -861,7 +865,7 @@ void tst_qdeclarativeanimations::dontStart()
     {
         QDeclarativeEngine engine;
 
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("dontStart.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("dontStart.qml"));
 
         QString warning = c.url().toString() + ":14:13: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -876,7 +880,7 @@ void tst_qdeclarativeanimations::dontStart()
     {
         QDeclarativeEngine engine;
 
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("dontStart2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("dontStart2.qml"));
 
         QString warning = c.url().toString() + ":15:17: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -959,7 +963,7 @@ void tst_qdeclarativeanimations::easingProperties()
 void tst_qdeclarativeanimations::rotation()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("rotation.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("rotation.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -990,7 +994,7 @@ void tst_qdeclarativeanimations::runningTrueBug()
 {
     //ensure we start correctly when "running: true" is explicitly set
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("runningTrueBug.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("runningTrueBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -1007,7 +1011,7 @@ void tst_qdeclarativeanimations::nonTransitionBug()
     //in the case where an animation in the transition doesn't match anything (but previously did)
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("nonTransitionBug.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("nonTransitionBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1033,7 +1037,7 @@ void tst_qdeclarativeanimations::registrationBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("registrationBug.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("registrationBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QTRY_COMPARE(rect->property("value"), QVariant(int(100)));
@@ -1043,7 +1047,7 @@ void tst_qdeclarativeanimations::doubleRegistrationBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("doubleRegistrationBug.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("doubleRegistrationBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -1081,7 +1085,7 @@ void tst_qdeclarativeanimations::transitionAssignmentBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("transitionAssignmentBug.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("transitionAssignmentBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -1093,7 +1097,7 @@ void tst_qdeclarativeanimations::pauseBindingBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pauseBindingBug.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pauseBindingBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
@@ -1107,7 +1111,7 @@ void tst_qdeclarativeanimations::pauseBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pauseBug.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("pauseBug.qml"));
     QDeclarativeAbstractAnimation *anim = qobject_cast<QDeclarativeAbstractAnimation*>(c.create());
     QVERIFY(anim != 0);
     QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimation::Paused);

@@ -2,8 +2,11 @@ CONFIG += testcase
 TARGET = tst_qdeclarativefontloader
 macx:CONFIG -= app_bundle
 
-HEADERS += ../../shared/testhttpserver.h
-SOURCES += tst_qdeclarativefontloader.cpp ../../shared/testhttpserver.cpp
+HEADERS += ../../shared/testhttpserver.h \
+           ../../shared/util.h
+SOURCES += tst_qdeclarativefontloader.cpp \
+           ../../shared/testhttpserver.cpp \
+           ../../shared/util.cpp
 
 testDataFiles.files = data
 testDataFiles.path = .

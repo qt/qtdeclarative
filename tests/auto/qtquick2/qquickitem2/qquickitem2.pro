@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qquickitem2
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquickitem.cpp
+SOURCES += tst_qquickitem.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

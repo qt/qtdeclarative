@@ -74,7 +74,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
     // XXX This will be replaced by some clever persistent platform image store.
-    QString persistent_dir = TESTDATA("");
+    QString persistent_dir = QDeclarativeDataTest::instance()->dataDirectory();
     QString arch = "unknown-architecture"; // QTest needs to help with this.
 
     QString expectfile = persistent_dir + QDir::separator() + filebasename + "-" + arch + ".png";
@@ -89,7 +89,7 @@ QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& 
 
 typedef QPair<int, QChar> Key;
 
-class tst_qquicktextedit : public QObject
+class tst_qquicktextedit : public QDeclarativeDataTest
 
 {
     Q_OBJECT
@@ -97,8 +97,6 @@ public:
     tst_qquicktextedit();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void text();
     void width();
     void wrap();
@@ -253,15 +251,6 @@ QList<Key> &operator <<(QList<Key> &keys, Qt::Key key)
     return keys;
 }
 
-
-void tst_qquicktextedit::initTestCase()
-{
-}
-
-void tst_qquicktextedit::cleanupTestCase()
-{
-
-}
 tst_qquicktextedit::tst_qquicktextedit()
 {
     standard << "the quick brown fox jumped over the lazy dog"
@@ -568,7 +557,7 @@ void tst_qquicktextedit::alignments()
     QFETCH(int, vAlign);
     QFETCH(QString, expectfile);
 
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("alignments.qml")));
+    QQuickView canvas(testFileUrl("alignments.qml"));
 
     canvas.show();
     canvas.requestActivateWindow();
@@ -627,7 +616,7 @@ void tst_qquicktextedit::hAlign()
 
 void tst_qquicktextedit::hAlign_RightToLeft()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("horizontalAlignment_RightToLeft.qml")));
+    QQuickView canvas(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextEdit *textEdit = canvas.rootObject()->findChild<QQuickTextEdit*>("text");
     QVERIFY(textEdit != 0);
     canvas.show();
@@ -1110,7 +1099,7 @@ void tst_qquicktextedit::isRightToLeft()
 
 void tst_qquicktextedit::keySelection()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
+    QQuickView canvas(testFileUrl("navigation.qml"));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1500,19 +1489,19 @@ void tst_qquicktextedit::mouseSelection_data()
     QTest::addColumn<QString>("selectedText");
 
     // import installed
-    QTest::newRow("on") << TESTDATA("mouseselection_true.qml") << 4 << 9 << "45678";
-    QTest::newRow("off") << TESTDATA("mouseselection_false.qml") << 4 << 9 << QString();
-    QTest::newRow("default") << TESTDATA("mouseselection_default.qml") << 4 << 9 << QString();
-    QTest::newRow("off word selection") << TESTDATA("mouseselection_false_words.qml") << 4 << 9 << QString();
-    QTest::newRow("on word selection (4,9)") << TESTDATA("mouseselection_true_words.qml") << 4 << 9 << "0123456789";
-    QTest::newRow("on word selection (2,13)") << TESTDATA("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (2,30)") << TESTDATA("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (9,13)") << TESTDATA("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (9,30)") << TESTDATA("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (13,2)") << TESTDATA("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (20,2)") << TESTDATA("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (12,9)") << TESTDATA("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (30,9)") << TESTDATA("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678";
+    QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString();
+    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString();
+    QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString();
+    QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789";
+    QTest::newRow("on word selection (2,13)") << testFile("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (2,30)") << testFile("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (9,13)") << testFile("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (9,30)") << testFile("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (13,2)") << testFile("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (20,2)") << testFile("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (12,9)") << testFile("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (30,9)") << testFile("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 }
 
 void tst_qquicktextedit::mouseSelection()
@@ -1552,7 +1541,7 @@ void tst_qquicktextedit::mouseSelection()
 
 void tst_qquicktextedit::dragMouseSelection()
 {
-    QString qmlfile = TESTDATA("mouseselection_true.qml");
+    QString qmlfile = testFile("mouseselection_true.qml");
 
     QQuickView canvas(QUrl::fromLocalFile(qmlfile));
 
@@ -1595,9 +1584,9 @@ void tst_qquicktextedit::mouseSelectionMode_data()
     QTest::addColumn<bool>("selectWords");
 
     // import installed
-    QTest::newRow("SelectWords") << TESTDATA("mouseselectionmode_words.qml") << true;
-    QTest::newRow("SelectCharacters") << TESTDATA("mouseselectionmode_characters.qml") << false;
-    QTest::newRow("default") << TESTDATA("mouseselectionmode_default.qml") << false;
+    QTest::newRow("SelectWords") << testFile("mouseselectionmode_words.qml") << true;
+    QTest::newRow("SelectCharacters") << testFile("mouseselectionmode_characters.qml") << false;
+    QTest::newRow("default") << testFile("mouseselectionmode_default.qml") << false;
 }
 
 void tst_qquicktextedit::mouseSelectionMode()
@@ -1639,7 +1628,7 @@ void tst_qquicktextedit::mouseSelectionMode()
 
 void tst_qquicktextedit::inputMethodHints()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("inputmethodhints.qml")));
+    QQuickView canvas(testFileUrl("inputmethodhints.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1653,7 +1642,7 @@ void tst_qquicktextedit::inputMethodHints()
 
 void tst_qquicktextedit::positionAt()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
+    QQuickView canvas(testFileUrl("positionAt.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
@@ -1711,7 +1700,7 @@ void tst_qquicktextedit::positionAt()
 
 void tst_qquicktextedit::linkActivated()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("linkActivated.qml")));
+    QQuickView canvas(testFileUrl("linkActivated.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
@@ -1748,7 +1737,7 @@ void tst_qquicktextedit::linkActivated()
 
 void tst_qquicktextedit::cursorDelegate()
 {
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("cursorTest.qml")));
+    QQuickView view(testFileUrl("cursorTest.qml"));
     view.show();
     view.requestActivateWindow();
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
@@ -1816,7 +1805,7 @@ void tst_qquicktextedit::cursorDelegate()
 
 void tst_qquicktextedit::cursorVisible()
 {
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("cursorVisible.qml")));
+    QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -1882,9 +1871,9 @@ void tst_qquicktextedit::delegateLoading()
     QFETCH(QString, error);
 
     TestHTTPServer server(42332);
-    server.serveDirectory(TESTDATA("httpfail"), TestHTTPServer::Disconnect);
-    server.serveDirectory(TESTDATA("httpslow"), TestHTTPServer::Delay);
-    server.serveDirectory(TESTDATA("http"));
+    server.serveDirectory(testFile("httpfail"), TestHTTPServer::Disconnect);
+    server.serveDirectory(testFile("httpslow"), TestHTTPServer::Delay);
+    server.serveDirectory(testFile("http"));
 
     QQuickView view(QUrl(QLatin1String("http://localhost:42332/") + qmlfile));
     view.show();
@@ -1923,7 +1912,7 @@ the extent of the text, then they should ignore the keys.
 */
 void tst_qquicktextedit::navigation()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
+    QQuickView canvas(testFileUrl("navigation.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -2043,7 +2032,7 @@ void tst_qquicktextedit::canPasteEmpty() {
 
 void tst_qquicktextedit::readOnly()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("readOnly.qml")));
+    QQuickView canvas(testFileUrl("readOnly.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -2079,7 +2068,7 @@ void tst_qquicktextedit::simulateKey(QQuickView *view, int key, Qt::KeyboardModi
 
 void tst_qquicktextedit::textInput()
 {
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
+    QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2139,7 +2128,7 @@ void tst_qquicktextedit::openInputPanel()
     QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
     inputPanelPrivate->testContext = &platformInputContext;
 
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("openInputPanel.qml")));
+    QQuickView view(testFileUrl("openInputPanel.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2229,7 +2218,7 @@ void tst_qquicktextedit::openInputPanel()
 
 void tst_qquicktextedit::geometrySignals()
 {
-    QDeclarativeComponent component(&engine, TESTDATA("geometrySignals.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("geometrySignals.qml"));
     QObject *o = component.create();
     QVERIFY(o);
     QCOMPARE(o->property("bindingWidth").toInt(), 400);
@@ -2340,7 +2329,7 @@ void tst_qquicktextedit::preeditCursorRectangle()
 {
     QString preeditText = "super";
 
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
+    QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2401,7 +2390,7 @@ void tst_qquicktextedit::inputMethodComposing()
 {
     QString text = "supercalifragisiticexpialidocious!";
 
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
+    QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2437,7 +2426,7 @@ void tst_qquicktextedit::inputMethodComposing()
 
 void tst_qquicktextedit::cursorRectangleSize()
 {
-    QQuickView *canvas = new QQuickView(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
+    QQuickView *canvas = new QQuickView(testFileUrl("positionAt.qml"));
     QVERIFY(canvas->rootObject() != 0);
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit *>(canvas->rootObject());
 
@@ -3634,7 +3623,7 @@ void tst_qquicktextedit::undo_keypressevents()
 
 void tst_qquicktextedit::emptytags_QTBUG_22058()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("qtbug-22058.qml")));
+    QQuickView canvas(testFileUrl("qtbug-22058.qml"));
     QVERIFY(canvas.rootObject() != 0);
 
     canvas.show();

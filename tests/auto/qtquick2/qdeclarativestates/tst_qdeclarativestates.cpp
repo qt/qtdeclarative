@@ -92,14 +92,14 @@ private:
 QML_DECLARE_TYPE(MyRect)
 QML_DECLARE_TYPEINFO(MyRect, QML_HAS_ATTACHED_PROPERTIES)
 
-class tst_qdeclarativestates : public QObject
+class tst_qdeclarativestates : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_qdeclarativestates() {}
 
 private:
-    static QByteArray fullDataPath(const QString &path);
+    QByteArray fullDataPath(const QString &path) const;
 
 private slots:
     void initTestCase();
@@ -151,12 +151,13 @@ private slots:
 
 void tst_qdeclarativestates::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     qmlRegisterType<MyRect>("Qt.test", 1, 0, "MyRectangle");
 }
 
-QByteArray tst_qdeclarativestates::fullDataPath(const QString &path)
+QByteArray tst_qdeclarativestates::fullDataPath(const QString &path) const
 {
-    return QUrl::fromLocalFile(TESTDATA(path)).toString().toUtf8();
+    return testFileUrl(path).toString().toUtf8();
 }
 
 void tst_qdeclarativestates::basicChanges()
@@ -164,7 +165,7 @@ void tst_qdeclarativestates::basicChanges()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicChanges.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -179,7 +180,7 @@ void tst_qdeclarativestates::basicChanges()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges2.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicChanges2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -200,7 +201,7 @@ void tst_qdeclarativestates::basicChanges()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges3.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicChanges3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -236,7 +237,7 @@ void tst_qdeclarativestates::basicChanges()
         // signal using 'onPropertyWithNotifyChanged' even though the signal name is
         // actually 'oddlyNamedNotifySignal'
 
-        QDeclarativeComponent component(&engine, TESTDATA("basicChanges4.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("basicChanges4.qml"));
         QVERIFY(component.isReady());
 
         MyRect *rect = qobject_cast<MyRect*>(component.create());
@@ -258,7 +259,7 @@ void tst_qdeclarativestates::attachedPropertyChanges()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent component(&engine, TESTDATA("attachedPropertyChanges.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("attachedPropertyChanges.qml"));
     QVERIFY(component.isReady());
 
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
@@ -280,7 +281,7 @@ void tst_qdeclarativestates::basicExtension()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicExtension.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicExtension.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -314,7 +315,7 @@ void tst_qdeclarativestates::basicExtension()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("fakeExtension.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("fakeExtension.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -346,7 +347,7 @@ void tst_qdeclarativestates::basicBinding()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicBinding.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -374,7 +375,7 @@ void tst_qdeclarativestates::basicBinding()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding2.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicBinding2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -405,7 +406,7 @@ void tst_qdeclarativestates::basicBinding()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding3.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicBinding3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -430,7 +431,7 @@ void tst_qdeclarativestates::basicBinding()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("basicBinding4.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("basicBinding4.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
         QVERIFY(rect != 0);
@@ -463,7 +464,7 @@ void tst_qdeclarativestates::signalOverride()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("signalOverride.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("signalOverride.qml"));
         MyRect *rect = qobject_cast<MyRect*>(rectComponent.create());
         QVERIFY(rect != 0);
 
@@ -477,7 +478,7 @@ void tst_qdeclarativestates::signalOverride()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("signalOverride2.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("signalOverride2.qml"));
         MyRect *rect = qobject_cast<MyRect*>(rectComponent.create());
         QVERIFY(rect != 0);
 
@@ -498,7 +499,7 @@ void tst_qdeclarativestates::signalOverrideCrash()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("signalOverrideCrash.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("signalOverrideCrash.qml"));
     MyRect *rect = qobject_cast<MyRect*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -510,7 +511,7 @@ void tst_qdeclarativestates::signalOverrideCrash2()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("signalOverrideCrash2.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("signalOverrideCrash2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -525,7 +526,7 @@ void tst_qdeclarativestates::signalOverrideCrash3()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("signalOverrideCrash3.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("signalOverrideCrash3.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -542,7 +543,7 @@ void tst_qdeclarativestates::parentChange()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange1.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("parentChange1.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
@@ -569,7 +570,7 @@ void tst_qdeclarativestates::parentChange()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange2.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("parentChange2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -584,7 +585,7 @@ void tst_qdeclarativestates::parentChange()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange3.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("parentChange3.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -606,7 +607,7 @@ void tst_qdeclarativestates::parentChange()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange6.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("parentChange6.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
@@ -626,7 +627,7 @@ void tst_qdeclarativestates::parentChangeErrors()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange4.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("parentChange4.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
@@ -642,7 +643,7 @@ void tst_qdeclarativestates::parentChangeErrors()
     }
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("parentChange5.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("parentChange5.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
 
@@ -662,7 +663,7 @@ void tst_qdeclarativestates::anchorChanges()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges1.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges1.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -695,7 +696,7 @@ void tst_qdeclarativestates::anchorChanges2()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges2.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -716,7 +717,7 @@ void tst_qdeclarativestates::anchorChanges3()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges3.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges3.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -767,7 +768,7 @@ void tst_qdeclarativestates::anchorChanges4()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges4.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges4.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -802,7 +803,7 @@ void tst_qdeclarativestates::anchorChanges5()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges5.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges5.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -846,7 +847,7 @@ void tst_qdeclarativestates::anchorChangesRTL()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges1.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges1.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -880,7 +881,7 @@ void tst_qdeclarativestates::anchorChangesRTL2()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges2.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -902,7 +903,7 @@ void tst_qdeclarativestates::anchorChangesRTL3()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChanges3.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChanges3.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -957,7 +958,7 @@ void tst_qdeclarativestates::anchorChangesCrash()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorChangesCrash.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorChangesCrash.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -970,7 +971,7 @@ void tst_qdeclarativestates::anchorChangesCrash()
 void tst_qdeclarativestates::anchorRewindBug()
 {
     QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile(TESTDATA("anchorRewindBug.qml")));
+    view->setSource(testFileUrl("anchorRewindBug.qml"));
 
     view->show();
     view->requestActivateWindow();
@@ -1010,7 +1011,7 @@ void tst_qdeclarativestates::anchorRewindBug2()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("anchorRewindBug2.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("anchorRewindBug2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -1036,7 +1037,7 @@ void tst_qdeclarativestates::script()
     QDeclarativeEngine engine;
 
     {
-        QDeclarativeComponent rectComponent(&engine, TESTDATA("script.qml"));
+        QDeclarativeComponent rectComponent(&engine, testFileUrl("script.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
         QVERIFY(rect != 0);
         QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1054,7 +1055,7 @@ void tst_qdeclarativestates::restoreEntryValues()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("restoreEntryValues.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("restoreEntryValues.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1071,7 +1072,7 @@ void tst_qdeclarativestates::explicitChanges()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("explicit.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("explicit.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1104,7 +1105,7 @@ void tst_qdeclarativestates::explicitChanges()
 void tst_qdeclarativestates::propertyErrors()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("propertyErrors.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("propertyErrors.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -1119,7 +1120,7 @@ void tst_qdeclarativestates::incorrectRestoreBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("basicChanges.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("basicChanges.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1145,7 +1146,7 @@ void tst_qdeclarativestates::autoStateAtStartupRestoreBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent component(&engine, TESTDATA("autoStateAtStartupRestoreBug.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("autoStateAtStartupRestoreBug.qml"));
     QObject *obj = component.create();
 
     QVERIFY(obj != 0);
@@ -1162,7 +1163,7 @@ void tst_qdeclarativestates::deletingChange()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("deleting.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("deleting.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1194,7 +1195,7 @@ void tst_qdeclarativestates::deletingState()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("deletingState.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("deletingState.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
 
@@ -1225,7 +1226,7 @@ void tst_qdeclarativestates::tempState()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("legalTempState.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("legalTempState.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1239,7 +1240,7 @@ void tst_qdeclarativestates::illegalTempState()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("illegalTempState.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("illegalTempState.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1252,7 +1253,7 @@ void tst_qdeclarativestates::nonExistantProperty()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent rectComponent(&engine, TESTDATA("nonExistantProp.qml"));
+    QDeclarativeComponent rectComponent(&engine, testFileUrl("nonExistantProp.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(rectComponent.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1265,7 +1266,7 @@ void tst_qdeclarativestates::reset()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("reset.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("reset.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -1286,7 +1287,7 @@ void tst_qdeclarativestates::illegalObjectCreation()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent component(&engine, TESTDATA("illegalObj.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("illegalObj.qml"));
     QList<QDeclarativeError> errors = component.errors();
     QVERIFY(errors.count() == 1);
     const QDeclarativeError &error = errors.at(0);
@@ -1299,7 +1300,7 @@ void tst_qdeclarativestates::whenOrdering()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("whenOrdering.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("whenOrdering.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1322,7 +1323,7 @@ void tst_qdeclarativestates::urlResolution()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("urlResolution.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("urlResolution.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -1333,7 +1334,7 @@ void tst_qdeclarativestates::urlResolution()
     QVERIFY(myType != 0 && image1 != 0 && image2 != 0 && image3 != 0);
 
     QQuickItemPrivate::get(myType)->setState("SetImageState");
-    QUrl resolved = QUrl::fromLocalFile(TESTDATA("Implementation/images/qt-logo.png"));
+    QUrl resolved = testFileUrl("Implementation/images/qt-logo.png");
     QCOMPARE(image1->source(), resolved);
     QCOMPARE(image2->source(), resolved);
     QCOMPARE(image3->source(), resolved);
@@ -1345,7 +1346,7 @@ void tst_qdeclarativestates::unnamedWhen()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("unnamedWhen.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("unnamedWhen.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1364,7 +1365,7 @@ void tst_qdeclarativestates::returnToBase()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("returnToBase.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("returnToBase.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1384,7 +1385,7 @@ void tst_qdeclarativestates::extendsBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("extendsBug.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("extendsBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -1399,7 +1400,7 @@ void tst_qdeclarativestates::editProperties()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("editProperties.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("editProperties.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -1527,7 +1528,7 @@ void tst_qdeclarativestates::QTBUG_14830()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("QTBUG-14830.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("QTBUG-14830.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QQuickItem *item = rect->findChild<QQuickItem*>("area");
@@ -1540,7 +1541,7 @@ void tst_qdeclarativestates::avoidFastForward()
     QDeclarativeEngine engine;
 
     //shouldn't fast forward if there isn't a transition
-    QDeclarativeComponent c(&engine, TESTDATA("avoidFastForward.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("avoidFastForward.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -1554,7 +1555,7 @@ void tst_qdeclarativestates::revertListBug()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, TESTDATA("revertListBug.qml"));
+    QDeclarativeComponent c(&engine, testFileUrl("revertListBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 

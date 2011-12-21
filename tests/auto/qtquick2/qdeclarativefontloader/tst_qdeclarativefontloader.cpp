@@ -51,14 +51,14 @@
 
 #define SERVER_PORT 14448
 
-class tst_qdeclarativefontloader : public QObject
+class tst_qdeclarativefontloader : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_qdeclarativefontloader();
 
 private slots:
-    void init();
+    void initTestCase();
     void noFont();
     void namedFont();
     void localFont();
@@ -77,11 +77,12 @@ private:
 tst_qdeclarativefontloader::tst_qdeclarativefontloader() :
     server(SERVER_PORT)
 {
-    server.serveDirectory(TESTDATA(""));
 }
 
-void tst_qdeclarativefontloader::init()
+void tst_qdeclarativefontloader::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
+    server.serveDirectory(dataDirectory());
     QVERIFY(server.isValid());
 }
 
@@ -115,7 +116,7 @@ void tst_qdeclarativefontloader::namedFont()
 
 void tst_qdeclarativefontloader::localFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + TESTDATA("tarzeau_ocr_a.ttf") + "\" }";
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + testFile("tarzeau_ocr_a.ttf") + "\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QDeclarativeFontLoader *fontObject = qobject_cast<QDeclarativeFontLoader*>(component.create());
@@ -128,8 +129,8 @@ void tst_qdeclarativefontloader::localFont()
 
 void tst_qdeclarativefontloader::failLocalFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + QUrl::fromLocalFile(TESTDATA("dummy.ttf")).toString() + "\" }";
-    QTest::ignoreMessage(QtWarningMsg, QString("file::2:1: QML FontLoader: Cannot load font: \"" + QUrl::fromLocalFile(TESTDATA("dummy.ttf")).toString() + "\"").toUtf8().constData());
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + testFileUrl("dummy.ttf").toString() + "\" }";
+    QTest::ignoreMessage(QtWarningMsg, QString("file::2:1: QML FontLoader: Cannot load font: \"" + testFileUrl("dummy.ttf").toString() + "\"").toUtf8().constData());
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QDeclarativeFontLoader *fontObject = qobject_cast<QDeclarativeFontLoader*>(component.create());
@@ -188,7 +189,7 @@ void tst_qdeclarativefontloader::changeFont()
 {
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: font }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("font", QUrl::fromLocalFile(TESTDATA("tarzeau_ocr_a.ttf")));
+    ctxt->setContextProperty("font", testFileUrl("tarzeau_ocr_a.ttf"));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QDeclarativeFontLoader *fontObject = qobject_cast<QDeclarativeFontLoader*>(component.create());
@@ -210,7 +211,7 @@ void tst_qdeclarativefontloader::changeFont()
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
 
-    ctxt->setContextProperty("font", QUrl::fromLocalFile(TESTDATA("tarzeau_ocr_a.ttf")));
+    ctxt->setContextProperty("font", testFileUrl("tarzeau_ocr_a.ttf"));
     QTRY_VERIFY(fontObject->status() == QDeclarativeFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 2);
     QCOMPARE(statusSpy.count(), 2);
@@ -225,7 +226,7 @@ void tst_qdeclarativefontloader::changeFont()
 
 void tst_qdeclarativefontloader::changeFontSourceViaState()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("qtbug-20268.qml")));
+    QQuickView canvas(testFileUrl("qtbug-20268.qml"));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -240,7 +241,7 @@ void tst_qdeclarativefontloader::changeFontSourceViaState()
     canvas.rootObject()->setProperty("usename", true);
 
     // This warning should probably not be printed once QTBUG-20268 is fixed
-    QString warning = QString(QUrl::fromLocalFile(TESTDATA("qtbug-20268.qml")).toString()) +
+    QString warning = QString(testFileUrl("qtbug-20268.qml").toString()) +
                               QLatin1String(":13:5: QML FontLoader: Cannot load font: \"\"");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 

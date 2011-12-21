@@ -45,7 +45,7 @@
 #include <QTranslator>
 #include "../../shared/util.h"
 
-class tst_qdeclarativetranslation : public QObject
+class tst_qdeclarativetranslation : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -57,19 +57,14 @@ private slots:
     void translationInQrc();
 };
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
 void tst_qdeclarativetranslation::translation()
 {
     QTranslator translator;
-    translator.load(QLatin1String("qml_fr"), TESTDATA(""));
+    translator.load(QLatin1String("qml_fr"), dataDirectory());
     QCoreApplication::installTranslator(&translator);
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("translation.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("translation.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -89,11 +84,11 @@ void tst_qdeclarativetranslation::translation()
 void tst_qdeclarativetranslation::idTranslation()
 {
     QTranslator translator;
-    translator.load(QLatin1String("qmlid_fr"),TESTDATA(""));
+    translator.load(QLatin1String("qmlid_fr"), dataDirectory());
     QCoreApplication::installTranslator(&translator);
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("idtranslation.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("idtranslation.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 

@@ -42,44 +42,49 @@
 #ifndef QDECLARATIVETESTUTILS_H
 #define QDECLARATIVETESTUTILS_H
 
-#include <QtCore/qdir.h>
-#include <QtCore/qcoreapplication.h>
+#include <QtCore/QDir>
+#include <QtCore/QUrl>
+#include <QtCore/QCoreApplication>
+#include <QtTest/QTest>
 
-namespace QDeclarativeTestUtils
+QT_FORWARD_DECLARE_CLASS(QDeclarativeComponent)
+QT_FORWARD_DECLARE_CLASS(QDeclarativeEngine)
+
+/* Base class for tests with data that are located in a "data" subfolder. */
+
+class QDeclarativeDataTest : public QObject
 {
-    /*
-        Returns the path to some testdata file.
+    Q_OBJECT
+public:
+    QDeclarativeDataTest();
+    virtual ~QDeclarativeDataTest();
 
-        We first check relative to the binary, and then look in the source tree.
+    QString testFile(const QString &fileName) const;
+    inline QString testFile(const char *fileName) const
+        { return testFile(QLatin1String(fileName)); }
+    inline QUrl testFileUrl(const QString &fileName) const
+        { return QUrl::fromLocalFile(testFile(fileName)); }
+    inline QUrl testFileUrl(const char *fileName) const
+        { return testFileUrl(QLatin1String(fileName)); }
 
-        Note we are looking for a _directory_ which exists, but the _file_ itself need not exist,
-        to support the case of finding a path to a testdata file which doesn't exist yet (i.e.
-        a file we are about to create).
-    */
-    QString testdata(QString const& name, const char *sourceFile)
-    {
-        // Try to find it relative to the binary.
-        QFileInfo relative = QDir(QCoreApplication::applicationDirPath()).filePath(QLatin1String("data/") + name);
-        if (relative.dir().exists()) {
-            return relative.absoluteFilePath();
-        }
+    inline QString dataDirectory() const { return m_dataDirectory; }
+    inline QUrl dataDirectoryUrl() const { return m_dataDirectoryUrl; }
+    inline QString directory() const  { return m_directory; }
 
-        // Else try to find it in the source tree
-        QFileInfo from_source = QFileInfo(sourceFile).absoluteDir().filePath(QLatin1String("data/") + name);
-        if (from_source.dir().exists()) {
-            return from_source.absoluteFilePath();
-        }
+    static inline QDeclarativeDataTest *instance() { return m_instance; }
 
-        qWarning("requested testdata %s could not be found (looked at: %s, %s)",
-                 qPrintable(name),
-                 qPrintable(relative.filePath()),
-                 qPrintable(from_source.filePath())
-                 );
+    static QByteArray msgComponentError(const QDeclarativeComponent &,
+                                        const QDeclarativeEngine *engine = 0);
 
-        return QString();
-    }
-}
+public slots:
+    virtual void initTestCase();
 
-#define TESTDATA(name) QDeclarativeTestUtils::testdata(name, __FILE__)
+private:
+    static QDeclarativeDataTest *m_instance;
+
+    const QString m_dataDirectory;
+    const QUrl m_dataDirectoryUrl;
+    QString m_directory;
+};
 
 #endif // QDECLARATIVETESTUTILS_H

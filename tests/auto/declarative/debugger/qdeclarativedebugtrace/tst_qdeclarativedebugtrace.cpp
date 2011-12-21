@@ -75,7 +75,7 @@ protected:
     void messageReceived(const QByteArray &message);
 };
 
-class tst_QDeclarativeDebugTrace : public QObject
+class tst_QDeclarativeDebugTrace : public QDeclarativeDataTest
 {
     Q_OBJECT
 
@@ -190,7 +190,7 @@ void tst_QDeclarativeDebugTrace::connect(bool block)
     else
         arguments << QString("-qmljsdebugger=port:"STR_PORT);
 
-    arguments << QString(TESTDATA(QLatin1String("test.qml")));
+    arguments << testFile("test.qml");
 
     m_process = new QDeclarativeDebugProcess(executable);
     m_process->start(QStringList() << arguments);

@@ -103,16 +103,12 @@ protected:
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
 };
 
-class tst_qquickitem : public QObject
+class tst_qquickitem : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickitem();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
     void noCanvas();
     void simpleFocus();
     void scopedFocus();
@@ -149,18 +145,6 @@ private:
         qApp->processEvents();
     }
 };
-
-tst_qquickitem::tst_qquickitem()
-{
-}
-
-void tst_qquickitem::initTestCase()
-{
-}
-
-void tst_qquickitem::cleanupTestCase()
-{
-}
 
 // Focus has no effect when outside a canvas
 void tst_qquickitem::noCanvas()
@@ -1075,56 +1059,59 @@ void tst_qquickitem::hoverEventInParent()
 
 void tst_qquickitem::paintOrder_data()
 {
+    const QUrl order1Url = testFileUrl("order.1.qml");
+    const QUrl order2Url = testFileUrl("order.2.qml");
+
     QTest::addColumn<QUrl>("source");
     QTest::addColumn<int>("op");
     QTest::addColumn<QVariant>("param1");
     QTest::addColumn<QVariant>("param2");
     QTest::addColumn<QStringList>("expected");
 
-    QTest::newRow("test 1 noop") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 noop") << order1Url
         << int(NoOp) << QVariant() << QVariant()
         << (QStringList() << "1" << "2" << "3");
-    QTest::newRow("test 1 add") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 add") << order1Url
         << int(Append) << QVariant("new") << QVariant()
         << (QStringList() << "1" << "2" << "3" << "new");
-    QTest::newRow("test 1 remove") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 remove") << order1Url
         << int(Remove) << QVariant(1) << QVariant()
         << (QStringList() << "1" << "3");
-    QTest::newRow("test 1 stack before") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 stack before") << order1Url
         << int(StackBefore) << QVariant(2) << QVariant(1)
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 1 stack after") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 stack after") << order1Url
         << int(StackAfter) << QVariant(0) << QVariant(1)
         << (QStringList() << "2" << "1" << "3");
-    QTest::newRow("test 1 set z") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 set z") << order1Url
         << int(SetZ) << QVariant(1) << QVariant(qreal(1.))
         << (QStringList() << "1" << "3" << "2");
 
-    QTest::newRow("test 2 noop") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 noop") << order2Url
         << int(NoOp) << QVariant() << QVariant()
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 2 add") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 add") << order2Url
         << int(Append) << QVariant("new") << QVariant()
         << (QStringList() << "1" << "3" << "new" << "2");
-    QTest::newRow("test 2 remove 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 remove 1") << order2Url
         << int(Remove) << QVariant(1) << QVariant()
         << (QStringList() << "1" << "3");
-    QTest::newRow("test 2 remove 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 remove 2") << order2Url
         << int(Remove) << QVariant(2) << QVariant()
         << (QStringList() << "1" << "2");
-    QTest::newRow("test 2 stack before 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack before 1") << order2Url
         << int(StackBefore) << QVariant(1) << QVariant(0)
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 2 stack before 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack before 2") << order2Url
         << int(StackBefore) << QVariant(2) << QVariant(0)
         << (QStringList() << "3" << "1" << "2");
-    QTest::newRow("test 2 stack after 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack after 1") << order2Url
         << int(StackAfter) << QVariant(0) << QVariant(1)
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 2 stack after 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack after 2") << order2Url
         << int(StackAfter) << QVariant(0) << QVariant(2)
         << (QStringList() << "3" << "1" << "2");
-    QTest::newRow("test 1 set z") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 set z") << order1Url
         << int(SetZ) << QVariant(2) << QVariant(qreal(2.))
         << (QStringList() << "1" << "2" << "3");
 }

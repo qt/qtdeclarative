@@ -1,6 +1,9 @@
 CONFIG += testcase
 TARGET = tst_qquickspriteimage
-SOURCES += tst_qquickspriteimage.cpp
+SOURCES += tst_qquickspriteimage.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
+
 macx:CONFIG -= app_bundle
 
 testDataFiles.files = data

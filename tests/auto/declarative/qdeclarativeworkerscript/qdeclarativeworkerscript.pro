@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativeworkerscript
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativeworkerscript.cpp
+SOURCES += tst_qdeclarativeworkerscript.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 testDataFiles.files = data
 testDataFiles.path = .

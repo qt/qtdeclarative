@@ -2,7 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativesqldatabase
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativesqldatabase.cpp
+SOURCES += tst_qdeclarativesqldatabase.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
 
 CONFIG += parallel_test
 

@@ -45,7 +45,7 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include "../../shared/util.h"
 
-class tst_qdeclarativespringanimation : public QObject
+class tst_qdeclarativespringanimation : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -67,7 +67,7 @@ tst_qdeclarativespringanimation::tst_qdeclarativespringanimation()
 void tst_qdeclarativespringanimation::defaultValues()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("springanimation1.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("springanimation1.qml"));
     QDeclarativeSpringAnimation *obj = qobject_cast<QDeclarativeSpringAnimation*>(c.create());
 
     QVERIFY(obj != 0);
@@ -87,7 +87,7 @@ void tst_qdeclarativespringanimation::defaultValues()
 void tst_qdeclarativespringanimation::values()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("springanimation2.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("springanimation2.qml"));
     QDeclarativeSpringAnimation *obj = qobject_cast<QDeclarativeSpringAnimation*>(c.create());
 
     QVERIFY(obj != 0);
@@ -109,7 +109,7 @@ void tst_qdeclarativespringanimation::values()
 void tst_qdeclarativespringanimation::disabled()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("springanimation3.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("springanimation3.qml"));
     QDeclarativeSpringAnimation *obj = qobject_cast<QDeclarativeSpringAnimation*>(c.create());
 
     QVERIFY(obj != 0);

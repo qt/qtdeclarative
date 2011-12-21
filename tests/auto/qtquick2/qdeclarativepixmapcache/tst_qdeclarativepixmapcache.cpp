@@ -54,22 +54,14 @@
 
 #define PIXMAP_DATA_LEAK_TEST 0
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
-class tst_qdeclarativepixmapcache : public QObject
+class tst_qdeclarativepixmapcache : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
-    tst_qdeclarativepixmapcache() :
-        server(14452)
-    {
-        server.serveDirectory(TESTDATA("http"));
-    }
+    tst_qdeclarativepixmapcache() : server(14452) {}
 
 private slots:
+    void initTestCase();
     void single();
     void single_data();
     void parallel();
@@ -118,6 +110,13 @@ static const bool localfile_optimized = true;
 static const bool localfile_optimized = false;
 #endif
 
+
+void tst_qdeclarativepixmapcache::initTestCase()
+{
+    QDeclarativeDataTest::initTestCase();
+    server.serveDirectory(testFile("http"));
+}
+
 void tst_qdeclarativepixmapcache::single_data()
 {
     // Note, since QDeclarativePixmapCache is shared, tests affect each other!
@@ -129,8 +128,8 @@ void tst_qdeclarativepixmapcache::single_data()
     QTest::addColumn<bool>("neterror");
 
     // File URLs are optimized
-    QTest::newRow("local") << TEST_FILE("exists.png") << localfile_optimized << true << false;
-    QTest::newRow("local") << TEST_FILE("notexists.png") << localfile_optimized << false << false;
+    QTest::newRow("local") << testFileUrl("exists.png") << localfile_optimized << true << false;
+    QTest::newRow("local") << testFileUrl("notexists.png") << localfile_optimized << false << false;
     QTest::newRow("remote") << QUrl("http://127.0.0.1:14452/exists.png") << false << true << false;
     QTest::newRow("remote") << QUrl("http://127.0.0.1:14452/notexists.png") << false << false << true;
 }
@@ -193,8 +192,8 @@ void tst_qdeclarativepixmapcache::parallel_data()
     QTest::addColumn<int>("cancel"); // which one to cancel
 
     QTest::newRow("local")
-            << TEST_FILE("exists1.png")
-            << TEST_FILE("exists2.png")
+            << testFileUrl("exists1.png")
+            << testFileUrl("exists2.png")
             << (localfile_optimized ? 2 : 0)
             << -1;
 
@@ -290,7 +289,7 @@ void tst_qdeclarativepixmapcache::parallel()
 void tst_qdeclarativepixmapcache::massive()
 {
     QDeclarativeEngine engine;
-    QUrl url = TEST_FILE("massive.png");
+    QUrl url = testFileUrl("massive.png");
 
     // Confirm that massive images remain in the cache while they are
     // in use by the application.
@@ -368,7 +367,7 @@ void createNetworkServer()
 {
    QEventLoop eventLoop;
    TestHTTPServer server(14453);
-   server.serveDirectory(TESTDATA("http"));
+   server.serveDirectory(QDeclarativeDataTest::instance()->testFile("http"));
    QTimer::singleShot(100, &eventLoop, SLOT(quit()));
    eventLoop.exec();
 }
@@ -396,7 +395,7 @@ void tst_qdeclarativepixmapcache::networkCrash()
 void tst_qdeclarativepixmapcache::lockingCrash()
 {
     TestHTTPServer server(14453);
-    server.serveDirectory(TESTDATA("http"), TestHTTPServer::Delay);
+    server.serveDirectory(testFile("http"), TestHTTPServer::Delay);
 
     {
         QDeclarativePixmap* p = new QDeclarativePixmap;
@@ -422,7 +421,7 @@ class DataLeakView : public QQuickView
 public:
     explicit DataLeakView() : QQuickView()
     {
-        setSource(TEST_FILE("dataLeak.qml"));
+        setSource(testFileUrl("dataLeak.qml"));
     }
 
     void showFor2Seconds()
@@ -449,9 +448,9 @@ void tst_qdeclarativepixmapcache::dataLeak()
     {
         QScopedPointer<DataLeakView> test(new DataLeakView);
         test->showFor2Seconds();
-        dataLeakPixmap()->load(test->engine(), TEST_FILE("exists.png"));
-        p1->load(test->engine(), TEST_FILE("exists.png"));
-        p2->load(test->engine(), TEST_FILE("exists2.png"));
+        dataLeakPixmap()->load(test->engine(), testFileUrl("exists.png"));
+        p1->load(test->engine(), testFileUrl("exists.png"));
+        p2->load(test->engine(), testFileUrl("exists2.png"));
         QTest::qWait(2005); // 2 seconds + a few more millis.
     }
 

@@ -1,6 +1,9 @@
 TARGET = tst_qquickanchors
 CONFIG += testcase
-SOURCES += tst_qquickanchors.cpp
+SOURCES += tst_qquickanchors.cpp \
+           ../../shared/util.cpp
+HEADERS += ../../shared/util.h
+
 macx:CONFIG -= app_bundle
 
 testDataFiles.files = data

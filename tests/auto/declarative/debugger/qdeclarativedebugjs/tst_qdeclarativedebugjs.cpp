@@ -159,7 +159,7 @@ do {\
 
 class QJSDebugClient;
 
-class tst_QDeclarativeDebugJS : public QObject
+class tst_QDeclarativeDebugJS : public QDeclarativeDataTest
 {
     Q_OBJECT
 
@@ -982,6 +982,7 @@ QByteArray QJSDebugClient::packMessage(const QByteArray &type, const QByteArray 
 
 void tst_QDeclarativeDebugJS::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     t.start();
     process = 0;
     client = 0;
@@ -1014,9 +1015,9 @@ bool tst_QDeclarativeDebugJS::init(const QString &qmlFile, bool blockMode)
     systemEnvironment << "QML_DISABLE_OPTIMIZER=1";
     process->setEnvironment(systemEnvironment);
     if (blockMode)
-        process->start(QStringList() << QLatin1String(BLOCKMODE) << TESTDATA(qmlFile));
+        process->start(QStringList() << QLatin1String(BLOCKMODE) << testFile(qmlFile));
     else
-        process->start(QStringList() << QLatin1String(NORMALMODE) << TESTDATA(qmlFile));
+        process->start(QStringList() << QLatin1String(NORMALMODE) << testFile(qmlFile));
 
     if (!process->waitForSessionStart()) {
         return false;

@@ -53,17 +53,7 @@
 #include <QDeclarativeIncubator>
 #include "../../shared/util.h"
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
-inline QUrl TEST_FILE(const char *filename)
-{
-    return TEST_FILE(QLatin1String(filename));
-}
-
-class tst_qdeclarativeincubator : public QObject
+class tst_qdeclarativeincubator : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -101,7 +91,7 @@ private:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        QFile file(TESTDATA(errorfile)); \
+        QFile file(QDeclarativeDataTest::instance()->testFile(errorfile)); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \
@@ -123,6 +113,7 @@ private:
 
 void tst_qdeclarativeincubator::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     registerTypes();
     engine.setIncubationController(&controller);
 }
@@ -151,7 +142,7 @@ void tst_qdeclarativeincubator::objectDeleted()
 {
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("objectDeleted.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("objectDeleted.qml"));
     QVERIFY(component.isReady());
 
     QDeclarativeIncubator incubator;
@@ -184,7 +175,7 @@ void tst_qdeclarativeincubator::clear()
 {
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("clear.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("clear.qml"));
     QVERIFY(component.isReady());
 
     // Clear in null state
@@ -252,7 +243,7 @@ void tst_qdeclarativeincubator::noIncubationController()
     // All incubators should behave synchronously when there is no controller
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("noIncubationController.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("noIncubationController.qml"));
 
     QVERIFY(component.isReady());
 
@@ -286,7 +277,7 @@ void tst_qdeclarativeincubator::noIncubationController()
 
 void tst_qdeclarativeincubator::forceCompletion()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("forceCompletion.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("forceCompletion.qml"));
     QVERIFY(component.isReady());
 
     {
@@ -364,7 +355,7 @@ void tst_qdeclarativeincubator::forceCompletion()
 
 void tst_qdeclarativeincubator::setInitialState()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("setInitialState.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("setInitialState.qml"));
     QVERIFY(component.isReady());
 
     struct MyIncubator : public QDeclarativeIncubator
@@ -409,7 +400,7 @@ void tst_qdeclarativeincubator::clearDuringCompletion()
     CompletionRegisteringType::clearMe();
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("clearDuringCompletion.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("clearDuringCompletion.qml"));
     QVERIFY(component.isReady());
 
     QDeclarativeIncubator incubator;
@@ -437,7 +428,7 @@ void tst_qdeclarativeincubator::clearDuringCompletion()
 
 void tst_qdeclarativeincubator::objectDeletionAfterInit()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("clear.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("clear.qml"));
     QVERIFY(component.isReady());
 
     struct MyIncubator : public QDeclarativeIncubator
@@ -493,7 +484,7 @@ public:
     void start()
     {
         incubator = new MyIncubator(QDeclarativeIncubator::Synchronous, this);
-        component = new QDeclarativeComponent(engine,  TEST_FILE("recursiveClear.1.qml"));
+        component = new QDeclarativeComponent(engine, QDeclarativeDataTest::instance()->testFileUrl("recursiveClear.1.qml"));
         component->create(*incubator);
     }
 
@@ -505,7 +496,7 @@ public slots:
     void switchIt() {
         component->deleteLater();
         incubator->clear();
-        component = new QDeclarativeComponent(engine,  TEST_FILE("recursiveClear.2.qml"));
+        component = new QDeclarativeComponent(engine, QDeclarativeDataTest::instance()->testFileUrl("recursiveClear.2.qml"));
         component->create(*incubator);
     }
 };
@@ -531,7 +522,7 @@ void tst_qdeclarativeincubator::statusChanged()
     };
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("statusChanged.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("statusChanged.qml"));
     QVERIFY(component.isReady());
 
     MyIncubator incubator(QDeclarativeIncubator::Synchronous);
@@ -545,7 +536,7 @@ void tst_qdeclarativeincubator::statusChanged()
     }
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("statusChanged.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("statusChanged.qml"));
     QVERIFY(component.isReady());
 
     MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
@@ -567,7 +558,7 @@ void tst_qdeclarativeincubator::statusChanged()
     }
 
     {
-    QDeclarativeComponent component2(&engine, TEST_FILE("statusChanged.nested.qml"));
+    QDeclarativeComponent component2(&engine, testFileUrl("statusChanged.nested.qml"));
     QVERIFY(component2.isReady());
 
     MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
@@ -594,7 +585,7 @@ void tst_qdeclarativeincubator::asynchronousIfNested()
 {
     // Asynchronous if nested within a finalized context behaves synchronously
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("asynchronousIfNested.1.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("asynchronousIfNested.1.qml"));
     QVERIFY(component.isReady());
 
     QObject *object = component.create();
@@ -616,7 +607,7 @@ void tst_qdeclarativeincubator::asynchronousIfNested()
     {
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("asynchronousIfNested.2.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("asynchronousIfNested.2.qml"));
     QVERIFY(component.isReady());
 
     QDeclarativeIncubator incubator;
@@ -661,7 +652,7 @@ void tst_qdeclarativeincubator::asynchronousIfNested()
     {
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("asynchronousIfNested.3.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("asynchronousIfNested.3.qml"));
     QVERIFY(component.isReady());
 
     struct CallbackData {
@@ -671,7 +662,7 @@ void tst_qdeclarativeincubator::asynchronousIfNested()
         static void callback(CallbackRegisteringType *o, void *data) {
             CallbackData *d = (CallbackData *)data;
 
-            QDeclarativeComponent c(d->engine, TEST_FILE("asynchronousIfNested.1.qml"));
+            QDeclarativeComponent c(d->engine, QDeclarativeDataTest::instance()->testFileUrl("asynchronousIfNested.1.qml"));
             if (!c.isReady()) return;
 
             QDeclarativeIncubator incubator(QDeclarativeIncubator::AsynchronousIfNested);
@@ -700,7 +691,7 @@ void tst_qdeclarativeincubator::asynchronousIfNested()
 
 void tst_qdeclarativeincubator::nestedComponent()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("nestedComponent.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("nestedComponent.qml"));
     QVERIFY(component.isReady());
 
     QObject *object = component.create();
@@ -735,7 +726,7 @@ void tst_qdeclarativeincubator::chainedAsynchronousIfNested()
 {
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("chainedAsynchronousIfNested.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("chainedAsynchronousIfNested.qml"));
     QVERIFY(component.isReady());
 
     QDeclarativeIncubator incubator(QDeclarativeIncubator::Asynchronous);
@@ -819,10 +810,10 @@ void tst_qdeclarativeincubator::chainedAsynchronousIfNestedOnCompleted()
 {
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("chainInCompletion.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("chainInCompletion.qml"));
     QVERIFY(component.isReady());
 
-    QDeclarativeComponent c1(&engine, TEST_FILE("chainedAsynchronousIfNested.qml"));
+    QDeclarativeComponent c1(&engine, testFileUrl("chainedAsynchronousIfNested.qml"));
     QVERIFY(c1.isReady());
 
     struct MyIncubator : public QDeclarativeIncubator {
@@ -962,7 +953,7 @@ void tst_qdeclarativeincubator::selfDelete()
     };
 
     {
-    QDeclarativeComponent component(&engine, TEST_FILE("selfDelete.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("selfDelete.qml"));
 
 #define DELETE_TEST(status, mode) { \
     bool done = false; \
@@ -984,7 +975,7 @@ void tst_qdeclarativeincubator::selfDelete()
     {
     SelfRegisteringType::clearMe();
 
-    QDeclarativeComponent component(&engine, TEST_FILE("objectDeleted.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("objectDeleted.qml"));
     QVERIFY(component.isReady());
 
     bool done = false;
@@ -1019,7 +1010,7 @@ void tst_qdeclarativeincubator::selfDelete()
 void tst_qdeclarativeincubator::contextDelete()
 {
     QDeclarativeContext *context = new QDeclarativeContext(engine.rootContext());
-    QDeclarativeComponent component(&engine, TEST_FILE("contextDelete.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("contextDelete.qml"));
 
     QDeclarativeIncubator incubator;
     component.create(incubator, context);
