@@ -3121,11 +3121,12 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
     }
 
     if (obj->type != -1) {
-        QDeclarativePropertyCache *cache = output->types[obj->type].createPropertyCache(engine)->copy();
-        cache->append(engine, &obj->extObject,
-                      QDeclarativePropertyData::NoFlags,
-                      QDeclarativePropertyData::IsVMEFunction,
-                      QDeclarativePropertyData::IsVMESignal);
+        QDeclarativePropertyCache *superCache = output->types[obj->type].createPropertyCache(engine);
+        QDeclarativePropertyCache *cache =
+            superCache->copyAndAppend(engine, &obj->extObject,
+                                      QDeclarativePropertyData::NoFlags,
+                                      QDeclarativePropertyData::IsVMEFunction,
+                                      QDeclarativePropertyData::IsVMESignal);
 
         // now we modify the flags appropriately for var properties.
         int propertyOffset = obj->extObject.propertyOffset();

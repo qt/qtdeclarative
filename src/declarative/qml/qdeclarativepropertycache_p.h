@@ -219,7 +219,17 @@ public:
 
     void update(QDeclarativeEngine *, const QMetaObject *);
 
-    QDeclarativePropertyCache *copy(int reserve = 0);
+    QDeclarativePropertyCache *copy();
+
+    QDeclarativePropertyCache *copyAndAppend(QDeclarativeEngine *, const QMetaObject *,
+                QDeclarativePropertyData::Flag propertyFlags = QDeclarativePropertyData::NoFlags,
+                QDeclarativePropertyData::Flag methodFlags = QDeclarativePropertyData::NoFlags,
+                QDeclarativePropertyData::Flag signalFlags = QDeclarativePropertyData::NoFlags);
+    QDeclarativePropertyCache *copyAndAppend(QDeclarativeEngine *, const QMetaObject *, int revision,
+                QDeclarativePropertyData::Flag propertyFlags = QDeclarativePropertyData::NoFlags,
+                QDeclarativePropertyData::Flag methodFlags = QDeclarativePropertyData::NoFlags,
+                QDeclarativePropertyData::Flag signalFlags = QDeclarativePropertyData::NoFlags);
+
     void append(QDeclarativeEngine *, const QMetaObject *,
                 QDeclarativePropertyData::Flag propertyFlags = QDeclarativePropertyData::NoFlags,
                 QDeclarativePropertyData::Flag methodFlags = QDeclarativePropertyData::NoFlags,
@@ -256,6 +266,8 @@ protected:
 private:
     friend class QDeclarativeEnginePrivate;
     friend class QV8QObjectWrapper;
+
+    inline QDeclarativePropertyCache *copy(int reserve);
 
     // Implemented in v8/qv8qobjectwrapper.cpp
     v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);

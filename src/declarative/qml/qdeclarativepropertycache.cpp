@@ -280,7 +280,7 @@ void QDeclarativePropertyCache::clear()
     engine = 0;
 }
 
-QDeclarativePropertyCache *QDeclarativePropertyCache::copy(int reserve) 
+QDeclarativePropertyCache *QDeclarativePropertyCache::copy(int reserve)
 {
     QDeclarativePropertyCache *cache = new QDeclarativePropertyCache(engine);
     cache->parent = this;
@@ -295,6 +295,41 @@ QDeclarativePropertyCache *QDeclarativePropertyCache::copy(int reserve)
     // We specifically do *NOT* copy the constructor
 
     return cache;
+}
+
+QDeclarativePropertyCache *QDeclarativePropertyCache::copy()
+{
+    return copy(0);
+}
+
+QDeclarativePropertyCache *
+QDeclarativePropertyCache::copyAndAppend(QDeclarativeEngine *engine, const QMetaObject *metaObject,
+                                         QDeclarativePropertyData::Flag propertyFlags,
+                                         QDeclarativePropertyData::Flag methodFlags,
+                                         QDeclarativePropertyData::Flag signalFlags)
+{
+    return copyAndAppend(engine, metaObject, -1, propertyFlags, methodFlags, signalFlags);
+}
+
+QDeclarativePropertyCache *
+QDeclarativePropertyCache::copyAndAppend(QDeclarativeEngine *engine, const QMetaObject *metaObject,
+                                         int revision,
+                                         QDeclarativePropertyData::Flag propertyFlags,
+                                         QDeclarativePropertyData::Flag methodFlags,
+                                         QDeclarativePropertyData::Flag signalFlags)
+{
+    Q_ASSERT(QMetaObjectPrivate::get(metaObject)->revision >= 4);
+
+    // Reserve enough space in the name hash for all the methods (including signals), all the
+    // signal handlers and all the properties.  This assumes no name clashes, but this is the
+    // common case.
+    QDeclarativePropertyCache *rv = copy(QMetaObjectPrivate::get(metaObject)->methodCount +
+                                         QMetaObjectPrivate::get(metaObject)->signalCount +
+                                         QMetaObjectPrivate::get(metaObject)->propertyCount);
+
+    rv->append(engine, metaObject, revision, propertyFlags, methodFlags, signalFlags);
+
+    return rv;
 }
 
 void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaObject *metaObject, 
