@@ -2290,6 +2290,9 @@ void QQuickItemPrivate::init(QQuickItem *parent)
 #endif
 
     Q_Q(QQuickItem);
+
+    registerAccessorProperties();
+
     baselineOffset.invalidate();
 
     if (parent) {
