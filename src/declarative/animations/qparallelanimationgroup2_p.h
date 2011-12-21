@@ -43,7 +43,6 @@
 #define QPARALLELANIMATIONGROUP2_P_H
 
 #include "private/qanimationgroup2_p.h"
-#include <QtCore/qhash.h>
 
 QT_BEGIN_HEADER
 

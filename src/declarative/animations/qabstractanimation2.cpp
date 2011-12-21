@@ -39,13 +39,8 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qmath.h>
 #include <QtCore/qthreadstorage.h>
-#include <QtCore/qcoreevent.h>
-#include <QtCore/qpointer.h>
 
-#include <QtCore/private/qabstractanimation_p.h>
 #include "private/qabstractanimation2_p.h"
 #include "private/qanimationgroup2_p.h"
 

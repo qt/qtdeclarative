@@ -41,7 +41,6 @@
 
 #include "private/qsequentialanimationgroup2_p.h"
 #include "private/qpauseanimation2_p.h"
-#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 

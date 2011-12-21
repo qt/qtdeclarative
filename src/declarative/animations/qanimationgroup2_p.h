@@ -42,7 +42,6 @@
 #ifndef QANIMATIONGROUP2_P_H
 #define QANIMATIONGROUP2_P_H
 
-#include <QtCore/qlist.h>
 #include "private/qabstractanimation2_p.h"
 
 QT_BEGIN_HEADER
