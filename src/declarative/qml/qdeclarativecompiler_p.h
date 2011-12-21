@@ -179,23 +179,36 @@ namespace QDeclarativeCompilerTypes {
         QDeclarativeScript::Object *object;
     };
 
-    struct BindingReference : public QDeclarativePool::Class 
+    struct BindingReference
     {
-        BindingReference() : nextReference(0) {}
+        enum DataType { QtScript, V4, V8,
+                        Tr, TrId };
+        DataType dataType;
+    };
+
+    struct JSBindingReference : public QDeclarativePool::Class,
+                                public BindingReference
+    {
+        JSBindingReference() : nextReference(0) {}
 
         QDeclarativeScript::Variant expression;
         QDeclarativeScript::Property *property;
         QDeclarativeScript::Value *value;
-
-        enum DataType { QtScript, V4, V8 };
-        DataType dataType;
 
         int compiledIndex;
 
         QString rewrittenExpression;
         BindingContext bindingContext;
 
-        BindingReference *nextReference;
+        JSBindingReference *nextReference;
+    };
+
+    struct TrBindingReference : public QDeclarativePool::POD,
+                                public BindingReference
+    {
+        QStringRef text;
+        QStringRef comment;
+        int n;
     };
 
     struct IdList : public QFieldList<QDeclarativeScript::Object, 
@@ -250,9 +263,9 @@ namespace QDeclarativeCompilerTypes {
         DepthStack objectDepth;
         DepthStack listDepth;
 
-        typedef QDeclarativeCompilerTypes::BindingReference B;
-        typedef QFieldList<B, &B::nextReference> BindingReferenceList;
-        BindingReferenceList bindings;
+        typedef QDeclarativeCompilerTypes::JSBindingReference B;
+        typedef QFieldList<B, &B::nextReference> JSBindingReferenceList;
+        JSBindingReferenceList bindings;
         typedef QDeclarativeScript::Object O;
         typedef QFieldList<O, &O::nextAliasingObject> AliasingObjectsList;
         AliasingObjectsList aliasingObjects;
@@ -347,6 +360,8 @@ private:
     bool checkDynamicMeta(QDeclarativeScript::Object *obj);
     bool buildBinding(QDeclarativeScript::Value *, QDeclarativeScript::Property *prop,
                       const QDeclarativeCompilerTypes::BindingContext &ctxt);
+    bool buildLiteralBinding(QDeclarativeScript::Value *, QDeclarativeScript::Property *prop,
+                             const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildComponentFromRoot(QDeclarativeScript::Object *obj, const QDeclarativeCompilerTypes::BindingContext &);
     bool compileAlias(QFastMetaBuilder &, 
                       QByteArray &data,
@@ -378,6 +393,7 @@ private:
                                               QDeclarativeScript::Property *valueTypeProp);
 
     int componentTypeRef();
+    int translationContextIndex();
 
     static QDeclarativeType *toQmlType(QDeclarativeScript::Object *from);
     bool canCoerce(int to, QDeclarativeScript::Object *from);
@@ -399,7 +415,7 @@ private:
 
     void dumpStats();
 
-    void addBindingReference(QDeclarativeCompilerTypes::BindingReference *);
+    void addBindingReference(QDeclarativeCompilerTypes::JSBindingReference *);
 
     QDeclarativeCompilerTypes::ComponentCompileState *compileState;
 
@@ -415,6 +431,7 @@ private:
     QDeclarativeScript::Object *unitRoot;
     QDeclarativeTypeData *unit;
     int cachedComponentTypeRef;
+    int cachedTranslationContextIndex;
 
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat

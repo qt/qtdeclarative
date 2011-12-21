@@ -252,7 +252,7 @@ bool QDeclarativeScript::Property::isEmpty() const
 }
 
 QDeclarativeScript::Value::Value()
-: type(Unknown), object(0), bindingReference(0), signalExpressionContextStack(0), nextValue(0)
+: type(Unknown), object(0), bindingReference(0), nextValue(0)
 {
 }
 

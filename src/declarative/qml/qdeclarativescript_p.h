@@ -223,8 +223,10 @@ public:
     LocationSpan location;
 
     // Used by compiler
-    QDeclarativeCompilerTypes::BindingReference *bindingReference;
-    int signalExpressionContextStack;
+    union {
+        QDeclarativeCompilerTypes::BindingReference *bindingReference;
+        int signalExpressionContextStack;
+    };
 
     // Used in Property::ValueList lists
     Value *nextValue;

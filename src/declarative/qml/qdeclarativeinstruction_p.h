@@ -81,6 +81,8 @@ QT_BEGIN_NAMESPACE
     F(StoreString, storeString) \
     F(StoreStringList, storeString) \
     F(StoreStringQList, storeString) \
+    F(StoreTrString, storeTrString) \
+    F(StoreTrIdString, storeTrIdString) \
     F(StoreByteArray, storeByteArray) \
     F(StoreUrl, storeUrl) \
     F(StoreUrlQList, storeUrl) \
@@ -298,6 +300,20 @@ union QDeclarativeInstruction
         int propertyIndex;
         int value;
     };
+    struct instr_storeTrString {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        int context;
+        int text;
+        int comment;
+        int n;
+    };
+    struct instr_storeTrIdString {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        int text;
+        int n;
+    };
     struct instr_storeByteArray {
         QML_INSTR_HEADER
         int propertyIndex;
@@ -494,6 +510,8 @@ union QDeclarativeInstruction
     instr_storeInteger storeInteger;
     instr_storeBool storeBool;
     instr_storeString storeString;
+    instr_storeTrString storeTrString;
+    instr_storeTrIdString storeTrIdString;
     instr_storeByteArray storeByteArray;
     instr_storeScriptString storeScriptString;
     instr_storeScript storeScript;

@@ -381,6 +381,13 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
         QML_STORE_POINTER(StoreString, &PRIMITIVES.at(instr.value));
         QML_STORE_POINTER(StoreByteArray, &DATAS.at(instr.value));
         QML_STORE_POINTER(StoreUrl, &URLS.at(instr.value));
+        QML_STORE_VALUE(StoreTrString, QString,
+                        QCoreApplication::translate(DATAS.at(instr.context).constData(),
+                                                    DATAS.at(instr.text).constData(),
+                                                    DATAS.at(instr.comment).constData(),
+                                                    QCoreApplication::UnicodeUTF8,
+                                                    instr.n));
+        QML_STORE_VALUE(StoreTrIdString, QString, qtTrId(DATAS.at(instr.text).constData(), instr.n));
 
         // Store a literal value in a QList
         QML_STORE_LIST(StoreStringList, QStringList, PRIMITIVES.at(instr.value));
@@ -402,6 +409,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
         QML_STORE_VAR(StoreVarInteger, v8::Integer::New(instr.value));
         QML_STORE_VAR(StoreVarDouble, v8::Number::New(instr.value));
         QML_STORE_VAR(StoreVarBool, v8::Boolean::New(instr.value));
+
 
         QML_BEGIN_INSTR(Init)
             // Ensure that the compiled data has been initialized
