@@ -1996,6 +1996,7 @@ void tst_qquicktextinput::cursorVisible()
     QTRY_COMPARE(&view, qGuiApp->focusWindow());
 
     QQuickTextInput input;
+    input.componentComplete();
     QSignalSpy spy(&input, SIGNAL(cursorVisibleChanged(bool)));
 
     QCOMPARE(input.isCursorVisible(), false);
@@ -2045,6 +2046,7 @@ void tst_qquicktextinput::cursorRectangle()
 
     QQuickTextInput input;
     input.setText(text);
+    input.componentComplete();
 
     QTextLayout layout(text);
     layout.setFont(input.font());
@@ -2379,6 +2381,7 @@ void tst_qquicktextinput::openInputPanel()
     // input panel should stay visible if focus is lost to another text inputor
     QSignalSpy inputPanelVisibilitySpy(qApp->inputPanel(), SIGNAL(visibleChanged()));
     QQuickTextInput anotherInput;
+    anotherInput.componentComplete();
     anotherInput.setParentItem(view.rootObject());
     anotherInput.setFocus(true);
     QCOMPARE(qApp->inputPanel()->visible(), true);
@@ -2465,6 +2468,8 @@ void tst_qquicktextinput::focusOutClearSelection()
     input.setFocus(true);
     input2.setParentItem(view.rootItem());
     input.setParentItem(view.rootItem());
+    input.componentComplete();
+    input2.componentComplete();
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);

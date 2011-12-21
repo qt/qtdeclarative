@@ -602,11 +602,7 @@ void QQuickTextInput::setCursorVisible(bool on)
         return;
     d->cursorVisible = on;
     d->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
-    QRect r = cursorRectangle();
-    if (d->inputMask().isEmpty())
-        updateRect(r);
-    else
-        updateRect();
+    update();
     emit cursorVisibleChanged(d->cursorVisible);
 }
 
@@ -639,9 +635,11 @@ QRect QQuickTextInput::cursorRectangle() const
     int c = d->m_cursor;
     if (d->m_preeditCursor != -1)
         c += d->m_preeditCursor;
-    if (d->m_echoMode == NoEcho || !isComponentComplete())
+    if (d->m_echoMode == NoEcho)
         c = 0;
     QTextLine l = d->m_textLayout.lineForTextPosition(c);
+    if (!l.isValid())
+        return QRect();
     return QRect(
             qRound(l.cursorToX(c) - d->hscroll),
             qRound(l.y() - d->vscroll),
@@ -1102,7 +1100,9 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     if (pos > d->m_cursor)
         pos += d->preeditAreaText().length();
     QTextLine l = d->m_textLayout.lineAt(0);
-    return QRectF(l.cursorToX(pos) - d->hscroll, 0.0, d->m_cursorWidth, l.height());
+    return l.isValid()
+            ? QRectF(l.cursorToX(pos) - d->hscroll, 0.0, d->m_cursorWidth, l.height())
+            : QRectF();
 }
 
 /*!
@@ -1175,7 +1175,7 @@ int QQuickTextInputPrivate::positionAt(int x, int y, QTextLine::CursorPosition p
             break;
         line = nextLine;
     }
-    return line.xToCursor(x, position);
+    return line.isValid() ? line.xToCursor(x, position) : 0;
 }
 
 void QQuickTextInput::keyPressEvent(QKeyEvent* ev)
@@ -2049,9 +2049,6 @@ void QQuickTextInputPrivate::init()
     q->connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
             q, SLOT(q_canPasteChanged()));
 #endif // QT_NO_CLIPBOARD
-    m_textLayout.beginLayout();
-    m_textLayout.createLine();
-    m_textLayout.endLayout();
 
     imHints &= ~Qt::ImhMultiLine;
     oldValidity = hasAcceptableInput(m_text);
@@ -2089,7 +2086,8 @@ void QQuickTextInput::updateCursorRectangle()
 void QQuickTextInput::selectionChanged()
 {
     Q_D(QQuickTextInput);
-    updateRect();//TODO: Only update rect in selection
+    d->textLayoutDirty = true; //TODO: Only update rect in selection
+    update();
     emit selectedTextChanged();
 
     if (d->lastSelectionStart != d->selectionStart()) {
@@ -2116,19 +2114,6 @@ void QQuickTextInputPrivate::hideCursor()
 {
     if (textNode != 0 && textNode->cursorNode() != 0)
         textNode->cursorNode()->setColor(QColor(0, 0, 0, 0));
-}
-
-void QQuickTextInput::updateRect(const QRect &r)
-{
-    Q_D(QQuickTextInput);
-    if (!isComponentComplete())
-        return;
-
-    if (r.isEmpty()) {
-        d->textLayoutDirty = true;
-    }
-
-    update();
 }
 
 QRectF QQuickTextInput::boundingRect() const
@@ -3417,7 +3402,7 @@ void QQuickTextInputPrivate::setCursorBlinkPeriod(int msec)
     } else {
         m_blinkTimer = 0;
         if (m_blinkStatus == 1)
-            emit q->updateRect(inputMask().isEmpty() ? q->cursorRectangle() : QRect());
+            q->update();
     }
     m_blinkPeriod = msec;
 }
@@ -3437,7 +3422,7 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
     Q_D(QQuickTextInput);
     if (event->timerId() == d->m_blinkTimer) {
         d->m_blinkStatus = !d->m_blinkStatus;
-        updateRect(inputMask().isEmpty() ? cursorRectangle() : QRect());
+        update();
     } else if (event->timerId() == d->m_deleteAllTimer) {
         killTimer(d->m_deleteAllTimer);
         d->m_deleteAllTimer = 0;

@@ -306,7 +306,6 @@ private Q_SLOTS:
     void selectionChanged();
     void createCursor();
     void updateCursorRectangle();
-    void updateRect(const QRect &r = QRect());
     void q_canPasteChanged();
 
 private:
