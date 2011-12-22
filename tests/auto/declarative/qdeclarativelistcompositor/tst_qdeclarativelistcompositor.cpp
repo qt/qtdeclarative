@@ -182,7 +182,7 @@ void tst_qdeclarativelistcompositor::find_data()
     QTest::addColumn<int>("visibleIndex");
     QTest::addColumn<int>("defaultIndex");
     QTest::addColumn<int>("cacheIndex");
-    QTest::addColumn<int>("rangeFlags");
+    QTest::addColumn<uint>("rangeFlags");
     QTest::addColumn<int>("rangeIndex");
 
     int listA; void *a = &listA;
@@ -195,7 +195,7 @@ void tst_qdeclarativelistcompositor::find_data()
             << C::Cache << 2
             << Selection << 0
             << 0 << 0 << 0 << 0
-            << int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
+            << uint(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
 }
 
 void tst_qdeclarativelistcompositor::find()
@@ -209,7 +209,7 @@ void tst_qdeclarativelistcompositor::find()
     QFETCH(int, defaultIndex);
     QFETCH(int, visibleIndex);
     QFETCH(int, selectionIndex);
-    QFETCH(int, rangeFlags);
+    QFETCH(uint, rangeFlags);
     QFETCH(int, rangeIndex);
 
     QDeclarativeListCompositor compositor;
@@ -239,7 +239,7 @@ void tst_qdeclarativelistcompositor::findInsertPosition_data()
     QTest::addColumn<int>("visibleIndex");
     QTest::addColumn<int>("defaultIndex");
     QTest::addColumn<int>("cacheIndex");
-    QTest::addColumn<int>("rangeFlags");
+    QTest::addColumn<uint>("rangeFlags");
     QTest::addColumn<int>("rangeIndex");
 
     int listA; void *a = &listA;
@@ -251,7 +251,7 @@ void tst_qdeclarativelistcompositor::findInsertPosition_data()
                 << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
             << Selection << 0
             << 0 << 0 << 0 << 0
-            << int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
+            << uint(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
     QTest::newRow("1")
             << (RangeList()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
@@ -259,7 +259,7 @@ void tst_qdeclarativelistcompositor::findInsertPosition_data()
                 << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
             << Selection << 1
             << 1 << 0 << 1 << 1
-            << int(C::AppendFlag | C::PrependFlag | C::CacheFlag) << 1;
+            << uint(C::AppendFlag | C::PrependFlag | C::CacheFlag) << 1;
 }
 
 void tst_qdeclarativelistcompositor::findInsertPosition()
@@ -271,7 +271,7 @@ void tst_qdeclarativelistcompositor::findInsertPosition()
     QFETCH(int, defaultIndex);
     QFETCH(int, visibleIndex);
     QFETCH(int, selectionIndex);
-    QFETCH(int, rangeFlags);
+    QFETCH(uint, rangeFlags);
     QFETCH(int, rangeIndex);
 
     QDeclarativeListCompositor compositor;

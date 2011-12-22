@@ -108,6 +108,7 @@ public:
         , stringValue(&initializeStringValue)
         , m_ref(0)
         , m_count(0)
+        , m_roleCount(0)
         , m_objectList(false)
     {
     }
@@ -142,14 +143,13 @@ public:
         return d->createItem(metaType, model, index);
     }
 
-    static QString initializeStringValue(QQuickVisualAdaptorModel *model, int index, const QString &name) {
-        QQuickVisualAdaptorModelPrivate *d = get(model);
-        d->createMetaObject();
-        return d->stringValue(model, index, name);
+    static QString initializeStringValue(QQuickVisualAdaptorModelPrivate *model, int index, const QString &name) {
+        model->createMetaObject();
+        return model->stringValue(model, index, name);
     }
 
     typedef QQuickVisualDataModelItem *(*CreateModelData)(QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index);
-    typedef QString (*StringValue)(QQuickVisualAdaptorModel *model, int index, const QString &name);
+    typedef QString (*StringValue)(QQuickVisualAdaptorModelPrivate *model, int index, const QString &name);
 
     struct PropertyData {
         int role;
@@ -177,6 +177,7 @@ public:
 
     int m_ref;
     int m_count;
+    int m_roleCount;
     QQuickVisualAdaptorModel::Flags m_flags;
     bool m_objectList : 1;
 
@@ -189,6 +190,109 @@ public:
     QHash<QByteArray,int> m_roleNames;
     QVector<PropertyData> m_propertyData;
     QQuickVisualDataModelItemCache m_cache;
+};
+
+class QQuickVDMCachedModelData : public QQuickVisualDataModelItem
+{
+public:
+    virtual QVariant value(QQuickVisualAdaptorModelPrivate *model, int role) const = 0;
+    virtual void setValue(QQuickVisualAdaptorModelPrivate *model, int role, const QVariant &value) = 0;
+
+    void setValue(const QString &role, const QVariant &value)
+    {
+        QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
+        QHash<QByteArray, int>::iterator it = d->m_roleNames.find(role.toUtf8());
+        if (it != d->m_roleNames.end()) {
+            for (int i = 0; i < d->m_propertyData.count(); ++i) {
+                if (d->m_propertyData.at(i).role == *it) {
+                    cachedData[i] = value;
+                    return;
+                }
+            }
+        }
+    }
+
+    bool resolveIndex(int idx)
+    {
+        if (index[0] == -1) {
+            Q_ASSERT(idx >= 0);
+            QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
+            index[0] = idx;
+            cachedData.clear();
+            emit modelIndexChanged();
+            const QMetaObject *meta = metaObject();
+            const int propertyCount = d->m_propertyData.count();
+            for (int i = 0; i < propertyCount; ++i)
+                QMetaObject::activate(this, meta, i, 0);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    static v8::Handle<v8::Value> get_property(v8::Local<v8::String>, const v8::AccessorInfo &info)
+    {
+        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+        if (!data)
+            V8THROW_ERROR("Not a valid VisualData object");
+
+        QQuickVisualAdaptorModelPrivate *model = QQuickVisualAdaptorModelPrivate::get(data->model);
+        QQuickVDMCachedModelData *modelData = static_cast<QQuickVDMCachedModelData *>(data);
+        const int propertyId = info.Data()->Int32Value();
+        if (data->index[0] == -1) {
+            if (!modelData->cachedData.isEmpty()) {
+                return data->engine->fromVariant(
+                        modelData->cachedData.at(modelData->cachedData.count() > 1 ? propertyId : 0));
+            }
+        } else {
+            return data->engine->fromVariant(
+                    modelData->value(model, model->m_propertyData.at(propertyId).role));
+        }
+        return v8::Undefined();
+    }
+
+    static void set_property(
+            v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+    {
+        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+        if (!data)
+            V8THROW_ERROR_SETTER("Not a valid VisualData object");
+
+        const int propertyId = info.Data()->Int32Value();
+        if (data->index[0] == -1) {
+            QQuickVDMCachedModelData *modelData = static_cast<QQuickVDMCachedModelData *>(data);
+            if (!modelData->cachedData.isEmpty()) {
+                if (modelData->cachedData.count() > 1) {
+                    modelData->cachedData[propertyId] = data->engine->toVariant(value, QVariant::Invalid);
+                    QMetaObject::activate(data, data->metaObject(), propertyId, 0);
+                } else if (modelData->cachedData.count() == 1) {
+                    modelData->cachedData[0] = data->engine->toVariant(value, QVariant::Invalid);
+                    QMetaObject::activate(data, data->metaObject(), 0, 0);
+                    QMetaObject::activate(data, data->metaObject(), 1, 0);
+                }
+            }
+        }
+    }
+
+    v8::Handle<v8::Value> get()
+    {
+        QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
+
+        v8::Local<v8::Object> data = d->m_constructor->NewInstance();
+        data->SetExternalResource(this);
+        return data;
+    }
+
+
+    QQuickVDMCachedModelData(
+            QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index)
+        : QQuickVisualDataModelItem(metaType, model, index)
+    {
+        if (index == -1)
+            cachedData.resize(QQuickVisualAdaptorModelPrivate::get(model)->m_roleCount);
+    }
+
+    QVector<QVariant> cachedData;
 };
 
 class QQuickVisualDataModelItemMetaObject : public QAbstractDynamicMetaObject
@@ -219,20 +323,48 @@ public:
     VDMDelegateDataType *m_type;
 };
 
-class QQuickVDMAbstractItemModelDataMetaObject : public QQuickVisualDataModelItemMetaObject
+class QQuickVDMCachedModelDataMetaObject : public QQuickVisualDataModelItemMetaObject
 {
 public:
-    QQuickVDMAbstractItemModelDataMetaObject(QQuickVisualDataModelItem *object, VDMDelegateDataType *type)
+    QQuickVDMCachedModelDataMetaObject(QQuickVisualDataModelItem *object, VDMDelegateDataType *type)
         : QQuickVisualDataModelItemMetaObject(object, type) {}
 
     int metaCall(QMetaObject::Call call, int id, void **arguments)
     {
         if (call == QMetaObject::ReadProperty && id >= m_type->propertyOffset) {
             QQuickVisualAdaptorModelPrivate *model = QQuickVisualAdaptorModelPrivate::get(m_data->model);
-            if (m_data->index[0] == -1 || !model->m_abstractItemModel)
-                return -1;
-            *static_cast<QVariant *>(arguments[0]) = model->m_abstractItemModel->index(
-                    m_data->index[0], 0, model->m_root).data(model->m_propertyData.at(id - m_type->propertyOffset).role);
+            const int propertyIndex = id - m_type->propertyOffset;
+            if (m_data->index[0] == -1) {
+                QQuickVDMCachedModelData *data = static_cast<QQuickVDMCachedModelData *>(m_data);
+                if (!data->cachedData.isEmpty()) {
+                    *static_cast<QVariant *>(arguments[0]) = data->cachedData.count() > 1
+                            ? data->cachedData.at(propertyIndex)
+                            : data->cachedData.at(0);
+                }
+            } else {
+                *static_cast<QVariant *>(arguments[0]) = static_cast<QQuickVDMCachedModelData *>(
+                        m_data)->value(model, model->m_propertyData.at(propertyIndex).role);
+            }
+            return -1;
+        } else if (call == QMetaObject::WriteProperty && id >= m_type->propertyOffset) {
+            QQuickVisualAdaptorModelPrivate *model = QQuickVisualAdaptorModelPrivate::get(m_data->model);
+            const int propertyIndex = id - m_type->propertyOffset;
+            if (m_data->index[0] == -1) {
+                QQuickVDMCachedModelData *data = static_cast<QQuickVDMCachedModelData *>(m_data);
+                if (data->cachedData.count() > 1) {
+                    data->cachedData[propertyIndex] = *static_cast<QVariant *>(arguments[0]);
+                    activate(data, this, propertyIndex, 0);
+                } else if (data->cachedData.count() == 1) {
+                    data->cachedData[0] = *static_cast<QVariant *>(arguments[0]);
+                    activate(data, this, 0, 0);
+                    activate(data, this, 1, 0);
+                }
+            } else {
+                static_cast<QQuickVDMCachedModelData *>(m_data)->setValue(
+                        model,
+                        model->m_propertyData.at(propertyIndex).role,
+                        *static_cast<QVariant *>(arguments[0]));
+            }
             return -1;
         } else {
             return m_data->qt_metacall(call, id, arguments);
@@ -240,7 +372,7 @@ public:
     }
 };
 
-class QQuickVDMAbstractItemModelData : public QQuickVisualDataModelItem
+class QQuickVDMAbstractItemModelData : public QQuickVDMCachedModelData
 {
     Q_OBJECT
     Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT)
@@ -255,32 +387,30 @@ public:
             QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index) {
         return new QQuickVDMAbstractItemModelData(metaType, model, index); }
 
-    static QString stringValue(QQuickVisualAdaptorModel *model, int index, const QString &name)
+    static QString stringValue(QQuickVisualAdaptorModelPrivate *model, int index, const QString &role)
     {
-        QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
-        const int role = d->m_roleNames.value(name.toUtf8(), -1);
-
-        if (role != -1)
-            return d->m_abstractItemModel->index(index, 0, d->m_root).data(role).toString();
-        else if (name == QLatin1String("hasModelChildren"))
-            return QVariant(d->m_abstractItemModel->hasChildren(d->m_abstractItemModel->index(index, 0, d->m_root))).toString();
-        else
+        QHash<QByteArray, int>::const_iterator it = model->m_roleNames.find(role.toUtf8());
+        if (it != model->m_roleNames.end()) {
+            return model->m_abstractItemModel->index(index, 0, model->m_root).data(*it).toString();
+        } else if (role == QLatin1String("hasModelChildren")) {
+            return QVariant(model->m_abstractItemModel->hasChildren(
+                    model->m_abstractItemModel->index(index, 0, model->m_root))).toString();
+        } else {
             return QString();
+        }
     }
 
-    static v8::Handle<v8::Value> get_property(v8::Local<v8::String>, const v8::AccessorInfo &info)
+    QVariant value(QQuickVisualAdaptorModelPrivate *model, int role) const
     {
-        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-        if (!data)
-            V8THROW_ERROR("Not a valid VisualData object");
+        return model->m_abstractItemModel
+                ? model->m_abstractItemModel->index(index[0], 0, model->m_root).data(role)
+                : 0;
+    }
 
-        QQuickVisualAdaptorModelPrivate *model = QQuickVisualAdaptorModelPrivate::get(data->model);
-        if (data->index[0] == -1 || !model->m_abstractItemModel)
-            return v8::Undefined();
-
-        const int role = info.Data()->Int32Value();
-        const QVariant value = model->m_abstractItemModel->index(data->index[0], 0, model->m_root).data(role);
-        return data->engine->fromVariant(value);
+    void setValue(QQuickVisualAdaptorModelPrivate *model, int role, const QVariant &value)
+    {
+        model->m_abstractItemModel->setData(
+                model->m_abstractItemModel->index(index[0], 0, model->m_root), value, role);
     }
 
     static v8::Handle<v8::Value> get_hasModelChildren(v8::Local<v8::String>, const v8::AccessorInfo &info)
@@ -295,21 +425,12 @@ public:
                 model->m_abstractItemModel->index(data->index[0], 0, model->m_root)));
     }
 
-    v8::Handle<v8::Value> get()
-    {
-        QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
-
-        v8::Local<v8::Object> data = d->m_constructor->NewInstance();
-        data->SetExternalResource(this);
-        return data;
-    }
-
 private:
     QQuickVDMAbstractItemModelData(
             QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index)
-        : QQuickVisualDataModelItem(metaType, model, index)
+        : QQuickVDMCachedModelData(metaType, model, index)
     {
-        new QQuickVDMAbstractItemModelDataMetaObject(
+        new QQuickVDMCachedModelDataMetaObject(
                 this, QQuickVisualAdaptorModelPrivate::get(model)->m_delegateDataType);
     }
 };
@@ -336,51 +457,35 @@ public:
 
 };
 
-class QQuickVDMListModelInterfaceData : public QQuickVisualDataModelItem
+class QQuickVDMListModelInterfaceData : public QQuickVDMCachedModelData
 {
 public:
     static QQuickVisualDataModelItem *create(
             QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index) {
         return new QQuickVDMListModelInterfaceData(metaType, model, index); }
 
-    static QString stringValue(QQuickVisualAdaptorModel *model, int index, const QString &name)
+    static QString stringValue(QQuickVisualAdaptorModelPrivate *model, int index, const QString &role)
     {
-        QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
-        const int role = d->m_roleNames.value(name.toUtf8(), -1);
-        return role != -1
-                ? d->m_listModelInterface->data(index, role).toString()
+        QHash<QByteArray, int>::const_iterator it = model->m_roleNames.find(role.toUtf8());
+        return it != model->m_roleNames.end()
+                ? model->m_listModelInterface->data(index, *it).toString()
                 : QString();
     }
 
-    static v8::Handle<v8::Value> get_property(v8::Local<v8::String>, const v8::AccessorInfo &info)
+    QVariant value(QQuickVisualAdaptorModelPrivate *model, int role) const
     {
-        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-        if (!data)
-            V8THROW_ERROR("Not a valid VisualData object");
-
-        QQuickVisualAdaptorModelPrivate *model = QQuickVisualAdaptorModelPrivate::get(data->model);
-        if (data->index[0] == -1 || !model->m_listModelInterface)
-            return v8::Undefined();
-
-        const int role = info.Data()->Int32Value();
-        const QVariant value = model->m_listModelInterface->data(data->index[0], role);
-        return data->engine->fromVariant(value);
+        return model->m_listModelInterface
+                ? model->m_listModelInterface->data(index[0], role)
+                : 0;
     }
 
-    v8::Handle<v8::Value> get()
-    {
-        QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
-
-        v8::Local<v8::Object> data = d->m_constructor->NewInstance();
-        data->SetExternalResource(this);
-        return data;
-    }
+    void setValue(QQuickVisualAdaptorModelPrivate *, int, const QVariant &) {}
 
 private:
     QQuickVDMListModelInterfaceData(QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index)
-        : QQuickVisualDataModelItem(metaType, model, index)
+        : QQuickVDMCachedModelData(metaType, model, index)
     {
-        new QQuickVDMListModelInterfaceDataMetaObject(
+        new QQuickVDMCachedModelDataMetaObject(
                 this, QQuickVisualAdaptorModelPrivate::get(model)->m_delegateDataType);
     }
 };
@@ -388,19 +493,32 @@ private:
 class QQuickVDMListAccessorData : public QQuickVisualDataModelItem
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant modelData READ modelData CONSTANT)
+    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
-    QVariant modelData() const {
-        return QQuickVisualAdaptorModelPrivate::get(model)->m_listAccessor->at(index[0]); }
+    QVariant modelData() const
+    {
+        QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(model);
+        return index[0] != -1 && d->m_listAccessor
+                ? d->m_listAccessor->at(index[0])
+                : cachedData;
+    }
+
+    void setModelData(const QVariant &data)
+    {
+        if (index[0] == -1 && data != cachedData) {
+            cachedData = data;
+            emit modelDataChanged();
+        }
+    }
 
     static QQuickVisualDataModelItem *create(
             QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index) {
         return new QQuickVDMListAccessorData(metaType, model, index); }
 
-    static QString stringValue(QQuickVisualAdaptorModel *model, int index, const QString &name)
+    static QString stringValue(QQuickVisualAdaptorModelPrivate *model, int index, const QString &role)
     {
-        return name == QLatin1String("modelData")
-                ? QQuickVisualAdaptorModelPrivate::get(model)->m_listAccessor->at(index).toString()
+        return role == QLatin1String("modelData")
+                ? model->m_listAccessor->at(index).toString()
                 : QString();
     }
 
@@ -412,15 +530,52 @@ public:
 
         QQuickVisualAdaptorModelPrivate *d = QQuickVisualAdaptorModelPrivate::get(data->model);
         if (data->index[0] == -1 || !d->m_listAccessor)
-            return v8::Undefined();
+            return data->engine->fromVariant(static_cast<QQuickVDMListAccessorData *>(data)->cachedData);
 
         return data->engine->fromVariant(d->m_listAccessor->at(data->index[0]));
     }
+
+    static void set_modelData(v8::Local<v8::String>, const v8::Handle<v8::Value> &value, const v8::AccessorInfo &info)
+    {
+        QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+        if (!data)
+            V8THROW_ERROR_SETTER("Not a valid VisualData object");
+
+        if (data->index[0] == -1) {
+            static_cast<QQuickVDMListAccessorData *>(data)->setModelData(
+                    data->engine->toVariant(value, QVariant::Invalid));
+        }
+    }
+
+    void setValue(const QString &role, const QVariant &value)
+    {
+        if (role == QLatin1String("modelData"))
+            cachedData = value;
+    }
+
+    bool resolveIndex(int idx)
+    {
+        if (index[0] == -1) {
+            index[0] = idx;
+            cachedData.clear();
+            emit modelIndexChanged();
+            emit modelDataChanged();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+Q_SIGNALS:
+    void modelDataChanged();
+
 private:
     QQuickVDMListAccessorData(QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index)
         : QQuickVisualDataModelItem(metaType, model, index)
     {
     }
+
+    QVariant cachedData;
 };
 
 class QQuickVDMObjectDataMetaObject : public QQuickVisualDataModelItemMetaObject
@@ -517,11 +672,11 @@ public:
 
     static QQuickVisualDataModelItem *create(
             QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int index) {
-        return new QQuickVDMObjectData(metaType, model, index); }
+        return index >= 0 ? new QQuickVDMObjectData(metaType, model, index) : 0; }
 
-    static QString stringValue(QQuickVisualAdaptorModel *model, int index, const QString &name)
+    static QString stringValue(QQuickVisualAdaptorModelPrivate *model, int index, const QString &name)
     {
-        if (QObject *object = QQuickVisualAdaptorModelPrivate::get(model)->m_listAccessor->at(index).value<QObject *>())
+        if (QObject *object = model->m_listAccessor->at(index).value<QObject *>())
             return object->property(name.toUtf8()).toString();
         return QString();
     }
@@ -545,7 +700,7 @@ void QQuickVisualAdaptorModelPrivate::addProperty(
     m_delegateDataType->builder.addSignal("__" + QByteArray::number(propertyId) + "()");
     QMetaPropertyBuilder property = m_delegateDataType->builder.addProperty(
             propertyName, propertyType, propertyId);
-    property.setWritable(false);
+    property.setWritable(true); // No, yes, yes no?
 
     m_propertyData.append(propertyData);
 }
@@ -589,37 +744,42 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
             ft->PrototypeTemplate()->SetAccessor(
                     v8Engine->toString(roleName),
                     QQuickVDMListModelInterfaceData::get_property,
-                    0,
-                    v8::Int32::New(role));
+                    QQuickVDMListModelInterfaceData::set_property,
+                    v8::Int32::New(propertyId));
             m_roleNames.insert(propertyName, role);
         }
+        m_roleCount = m_propertyData.count();
         if (m_propertyData.count() == 1) {
             addProperty(roles.first(), 1, "modelData", "QVariant", true);
             ft->PrototypeTemplate()->SetAccessor(
                     v8::String::New("modelData"),
                     QQuickVDMListModelInterfaceData::get_property,
-                    0,
-                    v8::Int32::New(roles.first()));
+                    QQuickVDMListModelInterfaceData::set_property,
+                    v8::Int32::New(0));
+            m_roleNames.insert("modelData", roles.first());
         }
     } else if (m_abstractItemModel) {
         setModelDataType<QQuickVDMAbstractItemModelData>();
         QHash<int, QByteArray> roleNames = m_abstractItemModel->roleNames();
         for (QHash<int, QByteArray>::const_iterator it = roleNames.begin(); it != roleNames.end(); ++it) {
-            addProperty(it.key(), m_propertyData.count(), it.value(), "QVariant");
+            const int propertyId = m_propertyData.count();
+            addProperty(it.key(), propertyId, it.value(), "QVariant");
             ft->PrototypeTemplate()->SetAccessor(
                     v8::String::New(it.value().constData(), it.value().length()),
                     QQuickVDMAbstractItemModelData::get_property,
-                    0,
-                    v8::Int32::New(it.key()));
+                    QQuickVDMAbstractItemModelData::set_property,
+                    v8::Int32::New(propertyId));
             m_roleNames.insert(it.value(), it.key());
         }
+        m_roleCount = m_propertyData.count();
         if (m_propertyData.count() == 1) {
             addProperty(roleNames.begin().key(), 1, "modelData", "QVariant", true);
             ft->PrototypeTemplate()->SetAccessor(
                     v8::String::New("modelData"),
                     QQuickVDMAbstractItemModelData::get_property,
-                    0,
-                    v8::Int32::New(roleNames.begin().key()));
+                    QQuickVDMAbstractItemModelData::set_property,
+                    v8::Int32::New(0));
+            m_roleNames.insert("modelData", roleNames.begin().key());
         }
         ft->PrototypeTemplate()->SetAccessor(
                 v8::String::New("hasModelChildren"),
@@ -702,6 +862,7 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &model, QDeclarativeEngin
 
     d->m_roles.clear();
     d->m_roleNames.clear();
+    d->m_roleCount = 0;
     d->m_flags = QQuickVisualAdaptorModel::Flags();
     if (d->m_delegateDataType)
         d->m_delegateDataType->release();
@@ -798,22 +959,24 @@ int QQuickVisualAdaptorModel::count() const
 QQuickVisualDataModelItem *QQuickVisualAdaptorModel::createItem(QQuickVisualDataModelItemMetaType *metaType, int index)
 {
     Q_D(QQuickVisualAdaptorModel);
-    QQuickVisualDataModelItem *data = d->createItem(metaType, this, index);
-    d->m_cache.insert(data);
 
-    if (d->m_delegateDataType && d->m_delegateDataType->propertyCache) {
-        QDeclarativeData *qmldata = QDeclarativeData::get(data, true);
-        qmldata->propertyCache = d->m_delegateDataType->propertyCache;
-        qmldata->propertyCache->addref();
+    if (QQuickVisualDataModelItem *item = d->createItem(metaType, this, index)) {
+        d->m_cache.insert(item);
+
+        if (d->m_delegateDataType && d->m_delegateDataType->propertyCache) {
+            QDeclarativeData *qmldata = QDeclarativeData::get(item, true);
+            qmldata->propertyCache = d->m_delegateDataType->propertyCache;
+            qmldata->propertyCache->addref();
+        }
+        return item;
     }
-
-    return data;
+    return 0;
 }
 
 QString QQuickVisualAdaptorModel::stringValue(int index, const QString &name)
 {
     Q_D(QQuickVisualAdaptorModel);
-    return d->stringValue(this, index, name);
+    return d->stringValue(d, index, name);
 }
 
 bool QQuickVisualAdaptorModel::canFetchMore() const

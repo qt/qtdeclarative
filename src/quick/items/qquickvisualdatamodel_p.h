@@ -162,7 +162,9 @@ public:
     Q_INVOKABLE QDeclarativeV8Handle get(int index);
 
 public Q_SLOTS:
+    void insert(QDeclarativeV8Function *);
     void create(QDeclarativeV8Function *);
+    void resolve(QDeclarativeV8Function *);
     void remove(QDeclarativeV8Function *);
     void addGroups(QDeclarativeV8Function *);
     void removeGroups(QDeclarativeV8Function *);
@@ -185,6 +187,7 @@ class QQuickVisualDataModelAttached : public QObject
     Q_OBJECT
     Q_PROPERTY(QQuickVisualDataModel *model READ model NOTIFY modelChanged)
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
+    Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged)
 public:
     QQuickVisualDataModelAttached(QObject *parent)
         : QObject(parent)
@@ -201,7 +204,11 @@ public:
     QStringList groups() const;
     void setGroups(const QStringList &groups);
 
+    bool isUnresolved() const;
+
     void emitChanges();
+
+    void emitUnresolvedChanged() { emit unresolvedChanged(); }
 
     static QQuickVisualDataModelAttached *properties(QObject *obj)
     {
@@ -216,6 +223,7 @@ public:
 Q_SIGNALS:
     void modelChanged();
     void groupsChanged();
+    void unresolvedChanged();
 
 public:
     QQuickVisualDataModelItem *m_cacheItem;

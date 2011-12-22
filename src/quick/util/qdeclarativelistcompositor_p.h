@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 class Q_AUTOTEST_EXPORT QDeclarativeListCompositor
 {
 public:
-    enum { MaximumGroupCount = 11 };
+    enum { MinimumGroupCount = 3, MaximumGroupCount = 11 };
 
     enum Group
     {
@@ -76,13 +76,14 @@ public:
 
     enum Flag
     {
-        CacheFlag   = 0x000001,
-        DefaultFlag = 0x000002,
-        PersistedFlag = 0x000004,
-        GroupMask   = 0x00FFFE,
-        PrependFlag = 0x100000,
-        AppendFlag  = 0x200000,
-        MovedFlag   = 0x400000
+        CacheFlag       = 1 << Cache,
+        DefaultFlag     = 1 << Default,
+        PersistedFlag   = 1 << Persisted,
+        PrependFlag     = 0x10000000,
+        AppendFlag      = 0x20000000,
+        UnresolvedFlag  = 0x40000000,
+        MovedFlag       = 0x80000000,
+        GroupMask       = ~(PrependFlag | AppendFlag | UnresolvedFlag | MovedFlag | CacheFlag)
     };
 
     class Range
@@ -98,7 +99,7 @@ public:
         void *list;
         int index;
         int count;
-        int flags;
+        uint flags;
 
         inline int start() const { return index; }
         inline int end() const { return index + count; }
@@ -108,6 +109,7 @@ public:
         inline bool inGroup() const { return flags & GroupMask; }
         inline bool inCache() const { return flags & CacheFlag; }
         inline bool inGroup(int group) const { return flags & (1 << group); }
+        inline bool isUnresolved() const { return flags & UnresolvedFlag; }
 
         inline bool prepend() const { return flags & PrependFlag; }
         inline bool append() const { return flags & AppendFlag; }
@@ -141,8 +143,8 @@ public:
         void incrementIndexes(int difference) { incrementIndexes(difference, range->flags); }
         void decrementIndexes(int difference) { decrementIndexes(difference, range->flags); }
 
-        inline void incrementIndexes(int difference, int flags);
-        inline void decrementIndexes(int difference, int flags);
+        inline void incrementIndexes(int difference, uint flags);
+        inline void decrementIndexes(int difference, uint flags);
 
         void setGroup(Group g) { group = g; groupFlag = 1 << g; }
 
@@ -174,9 +176,9 @@ public:
     struct Change
     {
         inline Change() {}
-        inline Change(iterator it, int count, int flags, int moveId = -1);
+        inline Change(iterator it, int count, uint flags, int moveId = -1);
         int count;
-        int flags;
+        uint flags;
         int moveId;
         union {
             struct {
@@ -196,14 +198,14 @@ public:
     struct Insert : public Change
     {
         Insert() {}
-        Insert(iterator it, int count, int flags, int moveId = -1)
+        Insert(iterator it, int count, uint flags, int moveId = -1)
             : Change(it, count, flags, moveId) {}
     };
 
     struct Remove : public Change
     {
         Remove() {}
-        Remove(iterator it, int count, int flags, int moveId = -1)
+        Remove(iterator it, int count, uint flags, int moveId = -1)
             : Change(it, count, flags, moveId) {}
     };
 
@@ -225,22 +227,22 @@ public:
     iterator begin(Group group);
     const iterator &end() { return m_end; }
 
-    void append(void *list, int index, int count, int flags, QVector<Insert> *inserts = 0);
-    void insert(Group group, int before, void *list, int index, int count, int flags, QVector<Insert> *inserts = 0);
-    iterator insert(iterator before, void *list, int index, int count, int flags, QVector<Insert> *inserts = 0);
+    void append(void *list, int index, int count, uint flags, QVector<Insert> *inserts = 0);
+    void insert(Group group, int before, void *list, int index, int count, uint flags, QVector<Insert> *inserts = 0);
+    iterator insert(iterator before, void *list, int index, int count, uint flags, QVector<Insert> *inserts = 0);
 
     void setFlags(Group fromGroup, int from, int count, Group group, int flags, QVector<Insert> *inserts = 0);
-    void setFlags(iterator from, int count, Group group, int flags, QVector<Insert> *inserts = 0);
-    void setFlags(Group fromGroup, int from, int count, int flags, QVector<Insert> *inserts = 0) {
+    void setFlags(iterator from, int count, Group group, uint flags, QVector<Insert> *inserts = 0);
+    void setFlags(Group fromGroup, int from, int count, uint flags, QVector<Insert> *inserts = 0) {
         setFlags(fromGroup, from, count, fromGroup, flags, inserts); }
-    void setFlags(iterator from, int count, int flags, QVector<Insert> *inserts = 0) {
+    void setFlags(iterator from, int count, uint flags, QVector<Insert> *inserts = 0) {
         setFlags(from, count, from.group, flags, inserts); }
 
-    void clearFlags(Group fromGroup, int from, int count, Group group, int flags, QVector<Remove> *removals = 0);
-    void clearFlags(iterator from, int count, Group group, int flags, QVector<Remove> *removals = 0);
-    void clearFlags(Group fromGroup, int from, int count, int flags, QVector<Remove> *removals = 0) {
+    void clearFlags(Group fromGroup, int from, int count, Group group, uint flags, QVector<Remove> *removals = 0);
+    void clearFlags(iterator from, int count, Group group, uint flags, QVector<Remove> *removals = 0);
+    void clearFlags(Group fromGroup, int from, int count, uint flags, QVector<Remove> *removals = 0) {
         clearFlags(fromGroup, from, count, fromGroup, flags, removals); }
-    void clearFlags(iterator from, int count, int flags, QVector<Remove> *removals = 0) {
+    void clearFlags(iterator from, int count, uint flags, QVector<Remove> *removals = 0) {
         clearFlags(from, count, from.group, flags, removals); }
 
     void removeList(void *list, QVector<Remove> *removals, bool destroyed);
@@ -283,16 +285,16 @@ private:
     int m_defaultFlags;
     int m_removeFlags;
 
-    inline Range *insert(Range *before, void *list, int index, int count, int flags);
+    inline Range *insert(Range *before, void *list, int index, int count, uint flags);
     inline Range *erase(Range *range);
 
     struct MovedFlags
     {
         MovedFlags() {}
-        MovedFlags(int moveId, int flags) : moveId(moveId), flags(flags) {}
+        MovedFlags(int moveId, uint flags) : moveId(moveId), flags(flags) {}
 
         int moveId;
-        int flags;
+        uint flags;
     };
 
     void listItemsRemoved(
@@ -340,7 +342,7 @@ inline QDeclarativeListCompositor::iterator::iterator(
         index[i] = 0;
 }
 
-inline void QDeclarativeListCompositor::iterator::incrementIndexes(int difference, int flags)
+inline void QDeclarativeListCompositor::iterator::incrementIndexes(int difference, uint flags)
 {
     for (int i = 0; i < groupCount; ++i) {
         if (flags & (1 << i))
@@ -348,7 +350,7 @@ inline void QDeclarativeListCompositor::iterator::incrementIndexes(int differenc
     }
 }
 
-inline void QDeclarativeListCompositor::iterator::decrementIndexes(int difference, int flags)
+inline void QDeclarativeListCompositor::iterator::decrementIndexes(int difference, uint flags)
 {
     for (int i = 0; i < groupCount; ++i) {
         if (flags & (1 << i))
@@ -360,7 +362,7 @@ inline QDeclarativeListCompositor::insert_iterator::insert_iterator(
         Range *range, int offset, Group group, int groupCount)
     : iterator(range, offset, group, groupCount) {}
 
-inline QDeclarativeListCompositor::Change::Change(iterator it, int count, int flags, int moveId)
+inline QDeclarativeListCompositor::Change::Change(iterator it, int count, uint flags, int moveId)
     : count(count), flags(flags), moveId(moveId)
 {
     for (int i = 0; i < MaximumGroupCount; ++i)

@@ -209,6 +209,7 @@ QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_
     while (offset > range->count
             || (offset == range->count && !range->append() && offset > 0)
             || (!(range->flags & groupFlag) && offset > 0)) {
+        Q_ASSERT(range->flags);
         if (range->flags & groupFlag)
             offset -= range->count;
         incrementIndexes(range->count);
@@ -265,7 +266,7 @@ QDeclarativeListCompositor::~QDeclarativeListCompositor()
 }
 
 inline QDeclarativeListCompositor::Range *QDeclarativeListCompositor::insert(
-        Range *before, void *list, int index, int count, int flags)
+        Range *before, void *list, int index, int count, uint flags)
 {
     return new Range(before, list, index, count, flags);
 }
@@ -356,21 +357,21 @@ QDeclarativeListCompositor::iterator QDeclarativeListCompositor::begin(Group gro
 }
 
 void QDeclarativeListCompositor::append(
-        void *list, int index, int count, int flags, QVector<Insert> *inserts)
+        void *list, int index, int count, uint flags, QVector<Insert> *inserts)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< list << index << count << flags)
     insert(m_end, list, index, count, flags, inserts);
 }
 
 void QDeclarativeListCompositor::insert(
-        Group group, int before, void *list, int index, int count, int flags, QVector<Insert> *inserts)
+        Group group, int before, void *list, int index, int count, uint flags, QVector<Insert> *inserts)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< group << before << list << index << count << flags)
     insert(findInsertPosition(group, before), list, index, count, flags, inserts);
 }
 
 QDeclarativeListCompositor::iterator QDeclarativeListCompositor::insert(
-        iterator before, void *list, int index, int count, int flags, QVector<Insert> *inserts)
+        iterator before, void *list, int index, int count, uint flags, QVector<Insert> *inserts)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< before << list << index << count << flags)
     if (inserts) {
@@ -418,7 +419,7 @@ void QDeclarativeListCompositor::setFlags(
 }
 
 void QDeclarativeListCompositor::setFlags(
-        iterator from, int count, Group group, int flags, QVector<Insert> *inserts)
+        iterator from, int count, Group group, uint flags, QVector<Insert> *inserts)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< from << count << flags)
     if (!flags || !count)
@@ -443,8 +444,8 @@ void QDeclarativeListCompositor::setFlags(
         const int difference = qMin(count, from->count);
         count -= difference;
 
-        const int insertFlags = ~from->flags & flags;
-        const int setFlags = (from->flags | flags) & ~AppendFlag;
+        const uint insertFlags = ~from->flags & flags;
+        const uint setFlags = (from->flags | flags) & ~AppendFlag;
         if (insertFlags && inserts)
             inserts->append(Insert(from, difference, insertFlags | (from->flags & CacheFlag)));
         m_end.incrementIndexes(difference, insertFlags);
@@ -493,14 +494,14 @@ void QDeclarativeListCompositor::setFlags(
 }
 
 void QDeclarativeListCompositor::clearFlags(
-        Group fromGroup, int from, int count, Group group, int flags, QVector<Remove> *removes)
+        Group fromGroup, int from, int count, Group group, uint flags, QVector<Remove> *removes)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< group << index << count << flags)
     clearFlags(find(fromGroup, from), count, group, flags, removes);
 }
 
 void QDeclarativeListCompositor::clearFlags(
-        iterator from, int count, Group group, int flags, QVector<Remove> *removes)
+        iterator from, int count, Group group, uint flags, QVector<Remove> *removes)
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< from << count << flags)
     if (!flags || !count)
@@ -527,8 +528,8 @@ void QDeclarativeListCompositor::clearFlags(
         const int difference = qMin(count, from->count);
         count -= difference;
 
-        const int removeFlags = from->flags & flags & ~(AppendFlag | PrependFlag);
-        const int clearedFlags = from->flags & ~(flags | AppendFlag);
+        const uint removeFlags = from->flags & flags & ~(AppendFlag | PrependFlag);
+        const uint clearedFlags = from->flags & ~(flags | AppendFlag | UnresolvedFlag);
         if (removeFlags && removes) {
             const int maskedFlags = clearCache
                     ? (removeFlags & ~CacheFlag)
@@ -806,7 +807,7 @@ void QDeclarativeListCompositor::listItemsInserted(
                     || (offset == 0 && it->prepend())
                     || (offset == it->count && it->append())) {
                 if (it->prepend()) {
-                    int flags = m_defaultFlags;
+                    uint flags = m_defaultFlags;
                     if (insertion.isMove()) {
                         for (QVector<MovedFlags>::const_iterator move = movedFlags->begin();
                                 move != movedFlags->end();
@@ -1139,6 +1140,7 @@ QDebug operator <<(QDebug debug, const QDeclarativeListCompositor::Range &range)
             << range.list) << " "
             << range.index << " "
             << range.count << " "
+            << (range.isUnresolved() ? "U" : "0")
             << (range.append() ? "A" : "0")
             << (range.prepend() ? "P" : "0");
     for (int i = QDeclarativeListCompositor::MaximumGroupCount - 1; i >= 2; --i)

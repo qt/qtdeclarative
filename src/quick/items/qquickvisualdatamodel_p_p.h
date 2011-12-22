@@ -62,6 +62,8 @@
 
 QT_BEGIN_NAMESPACE
 
+typedef QDeclarativeListCompositor Compositor;
+
 class QQuickVisualDataModelItemMetaType : public QDeclarativeRefCount
 {
 public:
@@ -107,10 +109,14 @@ public:
     ~QQuickVisualDataModelItem();
 
     void referenceObject() { ++objectRef; }
-    bool releaseObject() { return --objectRef == 0 && !(groups & QDeclarativeListCompositor::PersistedFlag); }
-    bool isObjectReferenced() const { return objectRef == 0 && !(groups & QDeclarativeListCompositor::PersistedFlag); }
+    bool releaseObject() { return --objectRef == 0 && !(groups & Compositor::PersistedFlag); }
+    bool isObjectReferenced() const { return objectRef != 0 || (groups & Compositor::PersistedFlag); }
 
-    bool isReferenced() const { return scriptRef || incubationTask || (groups & QDeclarativeListCompositor::PersistedFlag); }
+    bool isReferenced() const {
+        return scriptRef
+                || incubationTask
+                || ((groups & Compositor::UnresolvedFlag) && (groups & Compositor::GroupMask));
+    }
 
     void Dispose();
 
@@ -118,6 +124,9 @@ public:
     void setModelIndex(int idx) { index[0] = idx; emit modelIndexChanged(); }
 
     virtual v8::Handle<v8::Value> get() { return engine->newQObject(this); }
+
+    virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
+    virtual bool resolveIndex(int) { return false; }
 
 Q_SIGNALS:
     void modelIndexChanged();
@@ -137,7 +146,6 @@ public:
     QVDMIncubationTask *incubationTask;
 };
 
-typedef QDeclarativeListCompositor Compositor;
 
 class QQuickVisualDataModelPrivate;
 class QVDMIncubationTask : public QDeclarativeIncubator
@@ -256,6 +264,7 @@ public:
     void emitChanges();
     void emitModelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
 
+    bool insert(Compositor::insert_iterator &before, const v8::Local<v8::Object> &object, int groups);
 
     static void group_append(QDeclarativeListProperty<QQuickVisualDataGroup> *property, QQuickVisualDataGroup *group);
     static int group_count(QDeclarativeListProperty<QQuickVisualDataGroup> *property);
