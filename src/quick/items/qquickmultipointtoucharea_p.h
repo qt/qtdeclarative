@@ -58,8 +58,8 @@ class QQuickMultiPointTouchArea;
 class Q_AUTOTEST_EXPORT QQuickTouchPoint : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool valid READ isValid NOTIFY validityChanged)
     Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged)
+    Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged)
     Q_PROPERTY(qreal x READ x NOTIFY xChanged)
     Q_PROPERTY(qreal y READ y NOTIFY yChanged)
     Q_PROPERTY(qreal pressure READ pressure NOTIFY pressureChanged)
@@ -78,7 +78,8 @@ public:
           _x(0.0), _y(0.0),
           _pressure(0.0),
           _qmlDefined(qmlDefined),
-          _valid(!qmlDefined),
+          _inUse(false),
+          _pressed(false),
           _previousX(0.0), _previousY(0.0),
           _sceneX(0.0), _sceneY(0.0)
     {}
@@ -98,10 +99,13 @@ public:
     QRectF area() const { return _area; }
     void setArea(const QRectF &area);
 
-    bool isQmlDefined() { return _qmlDefined; }
+    bool isQmlDefined() const { return _qmlDefined; }
 
-    bool isValid() { return _valid; }
-    void setValid(bool valid);
+    bool inUse() const { return _inUse; }
+    void setInUse(bool inUse) { _inUse = inUse; }
+
+    bool pressed() const { return _pressed; }
+    void setPressed(bool pressed);
 
     qreal startX() const { return _startX; }
     void setStartX(qreal startX);
@@ -121,14 +125,13 @@ public:
     qreal sceneY() const { return _sceneY; }
     void setSceneY(qreal sceneY);
 
-
 Q_SIGNALS:
+    void pressedChanged();
     void pointIdChanged();
     void xChanged();
     void yChanged();
     void pressureChanged();
     void areaChanged();
-    void validityChanged();
     void startXChanged();
     void startYChanged();
     void previousXChanged();
@@ -144,7 +147,8 @@ private:
     qreal _pressure;
     QRectF _area;
     bool _qmlDefined;
-    bool _valid;
+    bool _inUse;    //whether the point is currently in use (only valid when _qmlDefined == true)
+    bool _pressed;
     qreal _startX;
     qreal _startY;
     qreal _previousX;
