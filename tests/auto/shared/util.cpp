@@ -50,7 +50,12 @@
 QDeclarativeDataTest *QDeclarativeDataTest::m_instance = 0;
 
 QDeclarativeDataTest::QDeclarativeDataTest() :
-    m_dataDirectory(QFINDTESTDATA("data")),
+#ifdef QT_TESTCASE_BUILDDIR
+    m_dataDirectory(QTest::qFindTestData("data", QT_DECLARATIVETEST_DATADIR, 0, QT_TESTCASE_BUILDDIR)),
+#else
+    m_dataDirectory(QTest::qFindTestData("data", QT_DECLARATIVETEST_DATADIR, 0)),
+#endif
+
     m_dataDirectoryUrl(QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/')))
 {
     m_instance = this;

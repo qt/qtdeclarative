@@ -3,18 +3,17 @@ TARGET = tst_qdeclarativedebugjs
 QT += declarative-private testlib
 macx:CONFIG -= app_bundle
 
-HEADERS += ../shared/debugutil_p.h \
-           ../../../shared/util.h
+HEADERS += ../shared/debugutil_p.h
 SOURCES +=     tst_qdeclarativedebugjs.cpp \
-            ../shared/debugutil.cpp \
-            ../../../shared/util.cpp
+            ../shared/debugutil.cpp
 
 INCLUDEPATH += ../shared
+
+include (../../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles
-
 
 CONFIG += parallel_test
 

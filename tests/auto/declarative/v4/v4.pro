@@ -3,10 +3,10 @@ TARGET = tst_qdeclarativev4
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_v4.cpp \
-           testtypes.cpp \
-           ../../shared/util.cpp
-HEADERS += testtypes.h \
-           ../../shared/util.h
+           testtypes.cpp
+HEADERS += testtypes.h
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

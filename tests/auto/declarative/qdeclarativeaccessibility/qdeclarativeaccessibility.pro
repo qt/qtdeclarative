@@ -2,11 +2,9 @@ load(qttest_p4)
 contains(QT_CONFIG,declarative): QT += declarative-private gui network qtquick1-private
 macx:CONFIG -= app_bundle
 
-HEADERS +=  ../../shared/util.h
+SOURCES  += tst_qdeclarativeaccessibility.cpp
 
-SOURCES  += tst_qdeclarativeaccessibility.cpp \
-            ../../shared/util.cpp
-
+include (../../shared/util.pri)
 
 OTHER_FILES += data/pushbutton.qml
 OTHER_FILES += data/statictext.qml

@@ -1,8 +1,8 @@
 CONFIG += testcase
 TARGET = tst_qquickscreen
-SOURCES += tst_qquickscreen.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qquickscreen.cpp
+
+include (../../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 

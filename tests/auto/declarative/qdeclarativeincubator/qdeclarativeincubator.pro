@@ -3,11 +3,11 @@ TARGET = tst_qdeclarativeincubator
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativeincubator.cpp \
-           testtypes.cpp \
-           ../../shared/util.cpp
+           testtypes.cpp
 
-HEADERS += testtypes.h \
-           ../../shared/util.h
+HEADERS += testtypes.h
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

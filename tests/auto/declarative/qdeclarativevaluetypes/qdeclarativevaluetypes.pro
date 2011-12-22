@@ -2,12 +2,12 @@ CONFIG += testcase
 TARGET = tst_qdeclarativevaluetypes
 macx:CONFIG -= app_bundle
 
-HEADERS += testtypes.h \
-           ../../shared/util.h
+HEADERS += testtypes.h
 
 SOURCES += tst_qdeclarativevaluetypes.cpp \
-           testtypes.cpp \
-           ../../shared/util.cpp
+           testtypes.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

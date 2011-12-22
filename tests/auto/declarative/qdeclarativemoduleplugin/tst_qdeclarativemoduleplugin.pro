@@ -1,12 +1,12 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativemoduleplugin
 
-HEADERS = ../../shared/testhttpserver.h \
-          ../../shared/util.h
+HEADERS = ../../shared/testhttpserver.h
 SOURCES = tst_qdeclarativemoduleplugin.cpp \
-          ../../shared/testhttpserver.cpp \
-          ../../shared/util.cpp
+          ../../shared/testhttpserver.cpp
 CONFIG -= app_bundle
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

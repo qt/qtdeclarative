@@ -2,9 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativexmllistmodel
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativexmllistmodel.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qdeclarativexmllistmodel.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

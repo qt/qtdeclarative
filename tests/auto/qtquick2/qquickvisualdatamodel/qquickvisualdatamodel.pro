@@ -2,9 +2,9 @@ CONFIG += testcase
 TARGET = tst_qquickvisualdatamodel
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquickvisualdatamodel.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qquickvisualdatamodel.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

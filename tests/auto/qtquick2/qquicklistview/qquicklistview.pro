@@ -2,11 +2,11 @@ CONFIG += testcase
 TARGET = tst_qquicklistview
 macx:CONFIG -= app_bundle
 
-HEADERS += incrementalmodel.h \
-           ../../shared/util.h
+HEADERS += incrementalmodel.h
 SOURCES += tst_qquicklistview.cpp \
-           incrementalmodel.cpp \
-           ../../shared/util.cpp
+           incrementalmodel.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

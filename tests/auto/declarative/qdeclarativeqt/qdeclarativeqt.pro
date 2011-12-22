@@ -1,8 +1,8 @@
 CONFIG += testcase
 TARGET = tst_qdeclarativeqt
-SOURCES += tst_qdeclarativeqt.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qdeclarativeqt.cpp
+
+include (../../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 

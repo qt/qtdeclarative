@@ -2,9 +2,9 @@ CONFIG += testcase
 TARGET = tst_qdeclarativebinding
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qdeclarativebinding.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qdeclarativebinding.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

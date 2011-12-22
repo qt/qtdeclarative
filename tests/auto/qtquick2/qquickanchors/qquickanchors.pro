@@ -1,8 +1,8 @@
 TARGET = tst_qquickanchors
 CONFIG += testcase
-SOURCES += tst_qquickanchors.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qquickanchors.cpp
+
+include (../../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 

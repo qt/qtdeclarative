@@ -2,9 +2,9 @@ CONFIG += testcase
 TARGET = tst_qquicktextinput
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquicktextinput.cpp \
-          ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qquicktextinput.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

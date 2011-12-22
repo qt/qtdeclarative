@@ -3,11 +3,11 @@ TARGET = tst_qdeclarativepixmapcache
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativepixmapcache.cpp \
-           ../../shared/testhttpserver.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/testhttpserver.h \
-           ../../shared/util.h
+           ../../shared/testhttpserver.cpp
+HEADERS += ../../shared/testhttpserver.h
 INCLUDEPATH += ../../shared/
+
+include (../../shared/util.pri)
 
 importFiles.files = data
 importFiles.path = .

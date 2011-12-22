@@ -2,9 +2,9 @@ CONFIG += testcase
 TARGET = tst_qquickrepeater
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquickrepeater.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qquickrepeater.cpp
+
+include (../../shared/util.pri)
 
 testFiles.files = data
 testFiles.path = .

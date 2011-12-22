@@ -1,8 +1,8 @@
 CONFIG += testcase
 TARGET = tst_qquickpositioners
-SOURCES += tst_qquickpositioners.cpp \
-           ../../shared/util.cpp
-HEADERS += ../../shared/util.h
+SOURCES += tst_qquickpositioners.cpp
+
+include (../../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 
