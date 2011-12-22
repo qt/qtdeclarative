@@ -48,9 +48,9 @@ Item {
     }
     SequentialAnimation {
         id: anim
-        ScriptAction { script: image.goalState = "falling"; }
+        ScriptAction { script: image.goalSprite = "falling"; }
         NumberAnimation { target: image; property: "y"; to: 1480; duration: 12000; }
-        ScriptAction { script: {image.goalState = ""; image.jumpTo("still");} }
+        ScriptAction { script: {image.goalSprite = ""; image.jumpTo("still");} }
         PropertyAction { target: image; property: "y"; value: 0 }
     }
     SpriteImage {
@@ -59,7 +59,7 @@ Item {
         height: 256
         anchors.horizontalCenter: parent.horizontalCenter
         interpolate: false
-        goalState: ""
+        goalSprite: ""
         Sprite{
             name: "still"
             source: "content/Bear0.png"
