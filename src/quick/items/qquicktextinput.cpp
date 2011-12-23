@@ -1412,13 +1412,14 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
     Q_Q(QQuickTextInput);
     QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + m_preeditCursor);
     const int preeditLength = m_textLayout.preeditAreaText().length();
-    const int width = q->width();
+    const int width = qMax(0, qFloor(q->width()));
     int widthUsed = currentLine.isValid() ? qRound(currentLine.naturalTextWidth()) : 0;
     int previousScroll = hscroll;
 
     if (!autoScroll || widthUsed <=  width || m_echoMode == QQuickTextInput::NoEcho) {
         hscroll = 0;
     } else {
+        Q_ASSERT(currentLine.isValid());
         int cix = qRound(currentLine.cursorToX(m_cursor + preeditLength));
         if (cix - hscroll >= width) {
             // text doesn't fit, cursor is to the right of br (scroll right)
@@ -1447,7 +1448,7 @@ void QQuickTextInputPrivate::updateVerticalScroll()
 {
     Q_Q(QQuickTextInput);
     const int preeditLength = m_textLayout.preeditAreaText().length();
-    const int height = q->height();
+    const int height = qMax(0, qFloor(q->height()));
     int heightUsed = boundingRect.height();
     int previousScroll = vscroll;
 
@@ -1466,7 +1467,8 @@ void QQuickTextInputPrivate::updateVerticalScroll()
             break;
         }
     } else {
-        QRectF r = m_textLayout.lineForTextPosition(m_cursor + preeditLength).rect();
+        QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + preeditLength);
+        QRectF r = currentLine.isValid() ? currentLine.rect() : QRectF();
         int top = qFloor(r.top());
         int bottom = qCeil(r.bottom());
 
@@ -1484,10 +1486,10 @@ void QQuickTextInputPrivate::updateVerticalScroll()
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
             // off the top
-             top = qRound(m_textLayout.lineForTextPosition(
-                    m_cursor + qMax(0, m_preeditCursor - 1)).rect().top());
-             if (top < vscroll)
-                 vscroll = top;
+            currentLine = m_textLayout.lineForTextPosition(m_cursor + qMax(0, m_preeditCursor - 1));
+            top = currentLine.isValid() ? qRound(currentLine.rect().top()) : 0;
+            if (top < vscroll)
+                vscroll = top;
         }
     }
     if (previousScroll != vscroll)

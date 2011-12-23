@@ -176,6 +176,8 @@ private slots:
     void QTBUG_19956_data();
     void QTBUG_19956_regexp();
 
+    void negativeDimensions();
+
 private:
     void simulateKey(QQuickView *, int key);
 
@@ -3388,6 +3390,19 @@ void tst_qquicktextinput::QTBUG_19956_regexp()
     canvas.rootObject()->setProperty("regexvalue", QRegExp("abc"));
     QCOMPARE(canvas.rootObject()->property("regexvalue").toRegExp(), QRegExp("abc"));
     QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
+}
+
+
+void tst_qquicktextinput::negativeDimensions()
+{
+    // Verify this doesn't assert during initialization.
+    QDeclarativeComponent component(&engine, testFileUrl("negativeDimensions.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
+    QQuickTextInput *input = o->findChild<QQuickTextInput *>("input");
+    QVERIFY(input);
+    QCOMPARE(input->width(), qreal(-1));
+    QCOMPARE(input->height(), qreal(-1));
 }
 
 QTEST_MAIN(tst_qquicktextinput)
