@@ -3701,6 +3701,7 @@ void tst_qdeclarativeecmascript::propertyVar_data()
     QTest::newRow("javascript map assignment") << testFileUrl("propertyVar.7.qml");
     QTest::newRow("literal property assignment") << testFileUrl("propertyVar.8.qml");
     QTest::newRow("qobject property assignment") << testFileUrl("propertyVar.9.qml");
+    QTest::newRow("base class var property assignment") << testFileUrl("propertyVar.10.qml");
 }
 
 void tst_qdeclarativeecmascript::propertyVar()

@@ -992,6 +992,7 @@ void QDeclarativeVMEMetaObject::setVMEProperty(int index, v8::Handle<v8::Value> 
     if (index < propOffset) {
         Q_ASSERT(parent);
         static_cast<QDeclarativeVMEMetaObject *>(parent)->setVMEProperty(index, v);
+        return;
     }
     return writeVarProperty(index - propOffset, v);
 }
