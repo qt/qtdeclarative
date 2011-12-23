@@ -104,9 +104,9 @@ Item { id:link
             anchors.fill: parent
             group: "star"
             emitRate: 50
-            emitting: false
+            enabled: false
             lifeSpan: 700
-            acceleration: AngledDirection { angleVariation: 360; magnitude: 200 }
+            acceleration: AngleDirection { angleVariation: 360; magnitude: 200 }
         }
     }
 
