@@ -477,9 +477,9 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
             }
         }
 
-        if (ended) emit(touchPointsReleased(_releasedTouchPoints));
-        if (moved) emit(touchPointsUpdated(_movedTouchPoints));
-        if (started) emit(touchPointsPressed(_pressedTouchPoints));
+        if (ended) emit touchPointsReleased(_releasedTouchPoints);
+        if (moved) emit touchPointsUpdated(_movedTouchPoints);
+        if (started) emit touchPointsPressed(_pressedTouchPoints);
         if (!_touchPoints.isEmpty()) emit touchUpdated(_touchPoints.values());
     }
 }
