@@ -1111,7 +1111,7 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
-        if (!child->isEnabled())
+        if (!child->isEnabled() || !child->isVisible())
             continue;
         if (deliverTouchPoints(child, event, newPoints, acceptedNewPoints, updatedPoints))
             return true;

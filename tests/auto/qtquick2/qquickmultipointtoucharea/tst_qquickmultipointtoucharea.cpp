@@ -67,6 +67,7 @@ private slots:
     void nonOverlapping();
     void nested();
     void inFlickable();
+    void invisible();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -677,6 +678,33 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
 
     delete canvas;
 }
+
+// QTBUG-23327
+void tst_QQuickMultiPointTouchArea::invisible()
+{
+    QQuickView *canvas = createAndShowView("signalTest.qml");
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMultiPointTouchArea *area = qobject_cast<QQuickMultiPointTouchArea *>(canvas->rootObject());
+    QVERIFY(area != 0);
+
+    area->setVisible(false);
+
+    QPoint p1(20,100);
+    QPoint p2(40,100);
+
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas, device);
+
+    sequence.press(0, p1).press(1, p2).commit();
+
+    QCOMPARE(area->property("touchPointPressCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
+    QCOMPARE(area->property("touchCount").toInt(), 0);
+
+    delete canvas;
+}
+
 
 QQuickView *tst_QQuickMultiPointTouchArea::createAndShowView(const QString &file)
 {
