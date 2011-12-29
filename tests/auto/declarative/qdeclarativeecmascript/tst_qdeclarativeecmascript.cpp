@@ -199,6 +199,7 @@ private slots:
     void qtbug_11606();
     void qtbug_11600();
     void qtbug_21864();
+    void qobjectConnectionListExceptionHandling();
     void nonscriptable();
     void deleteLater();
     void in();
@@ -5175,6 +5176,20 @@ void tst_qdeclarativeecmascript::qtbug_11600()
 void tst_qdeclarativeecmascript::qtbug_21864()
 {
     QDeclarativeComponent component(&engine, testFileUrl("qtbug_21864.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test").toBool(), true);
+    delete o;
+}
+
+void tst_qdeclarativeecmascript::qobjectConnectionListExceptionHandling()
+{
+    // QTBUG-23375
+    QDeclarativeComponent component(&engine, testFileUrl("qobjectConnectionListExceptionHandling.qml"));
+    QString warning = component.url().toString() + QLatin1String(":13: TypeError: Cannot read property 'undefined' of undefined");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
     QObject *o = component.create();
     QVERIFY(o != 0);
     QCOMPARE(o->property("test").toBool(), true);

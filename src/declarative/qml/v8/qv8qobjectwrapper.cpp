@@ -51,6 +51,7 @@
 #include <private/qjsvalue_p.h>
 #include <private/qscript_impl_p.h>
 #include <private/qdeclarativeaccessors_p.h>
+#include <private/qdeclarativeexpression_p.h>
 
 #include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qvarlengtharray.h>
@@ -1229,10 +1230,21 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
             Connection &connection = connections[ii];
             if (connection.needsDestroy)
                 continue;
+
+            v8::TryCatch try_catch;
             if (connection.thisObject.IsEmpty()) {
                 connection.function->Call(engine->global(), argCount, args.data());
             } else {
                 connection.function->Call(connection.thisObject, argCount, args.data());
+            }
+
+            if (try_catch.HasCaught()) {
+                QDeclarativeError error;
+                error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(engine->toString(connection.function->GetName())));
+                v8::Local<v8::Message> message = try_catch.Message();
+                if (!message.IsEmpty())
+                    QDeclarativeExpressionPrivate::exceptionToError(message, error);
+                QDeclarativeEnginePrivate::get(engine->engine())->warning(error);
             }
         }
 
