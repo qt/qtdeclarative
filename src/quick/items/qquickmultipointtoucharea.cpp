@@ -281,7 +281,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
     \qmlsignal QtQuick2::MultiPointTouchArea::touchUpdated(list<TouchPoint> touchPoints)
 
     This handler is called when the touch points handled by the MultiPointTouchArea change. This includes adding new touch points,
-    removing previous touch points, as well as updating current touch point data. \a touchPoints is the list of all current touch
+    removing or canceling previous touch points, as well as updating current touch point data. \a touchPoints is the list of all current touch
     points.
 */
 
@@ -480,7 +480,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         if (ended) emit touchPointsReleased(_releasedTouchPoints);
         if (moved) emit touchPointsUpdated(_movedTouchPoints);
         if (started) emit touchPointsPressed(_pressedTouchPoints);
-        if (!_touchPoints.isEmpty()) emit touchUpdated(_touchPoints.values());
+        if (ended || moved || started) emit touchUpdated(_touchPoints.values());
     }
 }
 
@@ -597,6 +597,7 @@ void QQuickMultiPointTouchArea::ungrab()
                 dtp->setInUse(false);
         }
         _touchPoints.clear();
+        emit touchUpdated(QList<QObject*>());
     }
 }
 

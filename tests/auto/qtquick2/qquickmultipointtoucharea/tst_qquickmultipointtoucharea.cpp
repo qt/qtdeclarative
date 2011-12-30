@@ -149,6 +149,7 @@ void tst_QQuickMultiPointTouchArea::signalTest()
     QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
     QCOMPARE(area->property("touchPointReleaseCount").toInt(), 3);
     QCOMPARE(area->property("touchCount").toInt(), 0);
+    QCOMPARE(area->property("touchUpdatedHandled").toBool(), true);
     QMetaObject::invokeMethod(area, "clearCounts");
 
     delete canvas;
@@ -600,6 +601,8 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
 
     QCOMPARE(point11->pressed(), true);
     QCOMPARE(point12->pressed(), true);
+    QCOMPARE(flickable->property("cancelCount").toInt(), 0);
+    QCOMPARE(flickable->property("touchCount").toInt(), 2);
 
     p1 += QPoint(0,15); p2 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1).move(1, p2);
@@ -620,6 +623,8 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     QVERIFY(flickable->contentY() < 0);
     QCOMPARE(point11->pressed(), false);
     QCOMPARE(point12->pressed(), false);
+    QCOMPARE(flickable->property("cancelCount").toInt(), 2);
+    QCOMPARE(flickable->property("touchCount").toInt(), 0);
 
     QTest::touchEvent(canvas, device).release(0, p1).release(1, p2);
     QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
