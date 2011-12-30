@@ -217,14 +217,20 @@ public:
     }
 
 Q_SIGNALS:
-    void touchPointsPressed(const QList<QObject*> &touchPoints);
-    void touchPointsUpdated(const QList<QObject*> &touchPoints);
-    void touchPointsReleased(const QList<QObject*> &touchPoints);
-    void touchPointsCanceled(const QList<QObject*> &touchPoints);
+    void pressed(const QList<QObject*> &touchPoints);
+    void updated(const QList<QObject*> &touchPoints);
+    void released(const QList<QObject*> &touchPoints);
+    void canceled(const QList<QObject*> &touchPoints);
     void gestureStarted(QQuickGrabGestureEvent *gesture);
     void touchUpdated(const QList<QObject*> &touchPoints);
     void minimumTouchPointsChanged();
     void maximumTouchPointsChanged();
+
+    //### deprecated, will be removed for 5.0
+    void touchPointsPressed(const QList<QObject*> &touchPoints);
+    void touchPointsUpdated(const QList<QObject*> &touchPoints);
+    void touchPointsReleased(const QList<QObject*> &touchPoints);
+    void touchPointsCanceled(const QList<QObject*> &touchPoints);
 
 protected:
     void touchEvent(QTouchEvent *);

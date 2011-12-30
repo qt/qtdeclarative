@@ -24,7 +24,7 @@ Flickable {
             TouchPoint { id: point2; objectName: "point2" }
         ]
 
-        onTouchPointsCanceled: cancelCount = touchPoints.length
+        onCanceled: cancelCount = touchPoints.length
         onTouchUpdated: touchCount = touchPoints.length
     }
 }

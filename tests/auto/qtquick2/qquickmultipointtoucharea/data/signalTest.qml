@@ -20,9 +20,9 @@ MultiPointTouchArea {
 
     maximumTouchPoints: 5
 
-    onTouchPointsPressed: { touchPointPressCount = touchPoints.length }
-    onTouchPointsUpdated: { touchPointUpdateCount = touchPoints.length }
-    onTouchPointsReleased: { touchPointReleaseCount = touchPoints.length }
+    onPressed: { touchPointPressCount = touchPoints.length }
+    onUpdated: { touchPointUpdateCount = touchPoints.length }
+    onReleased: { touchPointReleaseCount = touchPoints.length }
     onTouchUpdated: {
         touchCount = touchPoints.length
         touchUpdatedHandled = true
