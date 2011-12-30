@@ -113,6 +113,7 @@ private slots:
     void exceptionClearsOnReeval();
     void exceptionSlotProducesWarning();
     void exceptionBindingProducesWarning();
+    void compileInvalidBinding();
     void transientErrors();
     void shutdownErrors();
     void compositePropertyType();
@@ -1558,6 +1559,17 @@ void tst_qdeclarativeecmascript::exceptionBindingProducesWarning()
 
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+    QVERIFY(object != 0);
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::compileInvalidBinding()
+{
+    // QTBUG-23387: ensure that invalid bindings don't cause a crash.
+    QDeclarativeComponent component(&engine, testFileUrl("v8bindingException.qml"));
+    QString warning = component.url().toString() + ":16: SyntaxError: Unexpected token ILLEGAL";
+    QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+    QObject *object = component.create();
     QVERIFY(object != 0);
     delete object;
 }

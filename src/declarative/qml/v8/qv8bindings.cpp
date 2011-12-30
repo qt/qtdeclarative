@@ -167,18 +167,41 @@ QV8Bindings::QV8Bindings(const QString &program, int index, int line,
         v8::HandleScope handle_scope;
         v8::Context::Scope scope(engine->context());
 
-        v8::Local<v8::Script> script = engine->qmlModeCompile(program, compiled->name, line);
-        v8::Local<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
+        v8::Local<v8::Script> script;
+        bool compileFailed = false;
+        {
+            v8::TryCatch try_catch;
+            script = engine->qmlModeCompile(program, compiled->name, line);
+            if (try_catch.HasCaught()) {
+                // The binding was not compiled.  There are some exceptional cases which the
+                // expression rewriter does not rewrite properly (e.g., \r-terminated lines
+                // are not rewritten correctly but this bug is demed out-of-scope to fix for
+                // performance reasons; see QTBUG-24064).
+                compileFailed = true;
+                QDeclarativeError error;
+                error.setDescription(QString(QLatin1String("Exception occurred during compilation of binding at line: %1")).arg(line));
+                v8::Local<v8::Message> message = try_catch.Message();
+                if (!message.IsEmpty())
+                    QDeclarativeExpressionPrivate::exceptionToError(message, error);
+                QDeclarativeEnginePrivate::get(engine->engine())->warning(error);
+                compiled->v8bindings[index] = qPersistentNew(v8::Array::New());
+            }
+        }
 
-        if (result->IsArray()) 
-            compiled->v8bindings[index] = qPersistentNew(v8::Local<v8::Array>::Cast(result));
+        if (!compileFailed) {
+            v8::Local<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
+            if (result->IsArray()) {
+                compiled->v8bindings[index] = qPersistentNew(v8::Local<v8::Array>::Cast(result));
+            }
+        }
     }
 
     url = compiled->url;
     functions = qPersistentNew(compiled->v8bindings[index]);
     bindingsCount = functions->Length();
-    bindings = new QV8Bindings::Binding[bindingsCount];
-    
+    if (bindingsCount)
+        bindings = new QV8Bindings::Binding[bindingsCount];
+
     setContext(context);
 }
 
@@ -195,6 +218,9 @@ QDeclarativeAbstractBinding *QV8Bindings::configBinding(int index, QObject *targ
                                                         const QDeclarativePropertyData &p,
                                                         int line, int column)
 {
+    if (bindingsCount <= index) // initialization failed.
+        return 0;
+
     QV8Bindings::Binding *rv = bindings + index;
 
     rv->line = line;

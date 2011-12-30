@@ -826,9 +826,11 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 CTXT->v8bindings->configBinding(instr.value, target, scope, 
                                                 instr.property, instr.line,
                                                 instr.column);
-            bindValues.push(binding);
-            binding->m_mePtr = &bindValues.top();
-            binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(instr.property));
+            if (binding) {
+                bindValues.push(binding);
+                binding->m_mePtr = &bindValues.top();
+                binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(instr.property));
+            }
         QML_END_INSTR(StoreV8Binding)
 
         QML_BEGIN_INSTR(StoreValueSource)
