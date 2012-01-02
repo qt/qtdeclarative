@@ -2050,7 +2050,6 @@ void QQuickTextInputPrivate::init()
             q, SLOT(q_canPasteChanged()));
 #endif // QT_NO_CLIPBOARD
 
-    imHints &= ~Qt::ImhMultiLine;
     oldValidity = hasAcceptableInput(m_text);
     lastSelectionStart = 0;
     lastSelectionEnd = 0;

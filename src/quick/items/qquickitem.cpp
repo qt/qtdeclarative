@@ -2290,7 +2290,7 @@ QQuickItemPrivate::QQuickItemPrivate()
   z(0), scale(1), rotation(0), opacity(1),
 
   attachedLayoutDirection(0), acceptedMouseButtons(0),
-  imHints(Qt::ImhMultiLine),
+  imHints(Qt::ImhNone),
 
   keyHandler(0),
 
