@@ -17,7 +17,4 @@ Project {
         filter: "*.ts"
         directory: "i18n"
     }
-
-    /* List of plugin directories passed to QML runtime */
-    // importPaths: [ " ../exampleplugin " ]
 }

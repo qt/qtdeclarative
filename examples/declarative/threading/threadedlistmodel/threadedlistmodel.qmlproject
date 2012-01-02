@@ -53,6 +53,4 @@ Project {
     ImageFiles {
         directory: "."
     }
-    /* List of plugin directories passed to QML runtime */
-    // importPaths: [ " ../exampleplugin " ]
 }
