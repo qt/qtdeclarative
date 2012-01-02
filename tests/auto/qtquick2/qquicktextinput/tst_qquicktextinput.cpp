@@ -2178,7 +2178,7 @@ void tst_qquicktextinput::echoMode()
     QCOMPARE(input->displayText(), input->text());
     //Normal
     ref &= ~Qt::ImhHiddenText;
-    ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->inputMethodHints(), ref);
     input->setEchoMode(QQuickTextInput::NoEcho);
     QCOMPARE(input->text(), initial);
@@ -2186,12 +2186,12 @@ void tst_qquicktextinput::echoMode()
     QCOMPARE(input->passwordCharacter(), QLatin1String("*"));
     //NoEcho
     ref |= Qt::ImhHiddenText;
-    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->inputMethodHints(), ref);
     input->setEchoMode(QQuickTextInput::Password);
     //Password
     ref |= Qt::ImhHiddenText;
-    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String("********"));
     QCOMPARE(input->inputMethodHints(), ref);
@@ -2202,7 +2202,7 @@ void tst_qquicktextinput::echoMode()
     input->setEchoMode(QQuickTextInput::PasswordEchoOnEdit);
     //PasswordEchoOnEdit
     ref &= ~Qt::ImhHiddenText;
-    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->inputMethodHints(), ref);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String("QQQQQQQQ"));

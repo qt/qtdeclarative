@@ -952,7 +952,7 @@ void QQuickTextInputPrivate::updateInputMethodHints()
     else if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit)
         hints &= ~Qt::ImhHiddenText;
     if (m_echoMode != QQuickTextInput::Normal)
-        hints |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+        hints |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     q->setInputMethodHints(hints);
 }
 /*!
