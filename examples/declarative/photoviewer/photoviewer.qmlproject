@@ -1,6 +1,8 @@
-import QmlProject 1.0
+import QmlProject 1.1
 
 Project {
+    mainFile: "photoviewer.qml"
+
     /* Include .qml, .js, and image files from current directory and subdirectories */
     QmlFiles {
         directory: "."
@@ -11,6 +13,11 @@ Project {
     ImageFiles {
         directory: "."
     }
+    Files {
+        filter: "*.ts"
+        directory: "i18n"
+    }
+
     /* List of plugin directories passed to QML runtime */
     // importPaths: [ " ../exampleplugin " ]
 }

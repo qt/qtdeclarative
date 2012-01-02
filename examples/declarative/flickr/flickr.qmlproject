@@ -1,6 +1,9 @@
-import QmlProject 1.0
+import QmlProject 1.1
 
 Project {
+    mainFile: "flickr.qml"
+    //mainFile: "flickr-90.qml"
+
     /* Include .qml, .js, and image files from current directory and subdirectories */
     QmlFiles {
         directory: "."
