@@ -1536,6 +1536,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                     m_spriteEngine->start(spriteIdx);
                     writeTo->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
                     writeTo->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                    writeTo->animIdx = 0;//Always starts at 0
                     writeTo->animX = m_spriteEngine->spriteX(spriteIdx);
                     writeTo->animY = m_spriteEngine->spriteY(spriteIdx);
                     writeTo->animWidth = m_spriteEngine->spriteWidth(spriteIdx);
@@ -1546,6 +1547,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 writeTo->animT = datum->t;
                 writeTo->frameCount = 1;
                 writeTo->frameDuration = 60000000.0;
+                writeTo->animIdx = 0;
                 writeTo->animT = 0;
                 writeTo->animX = writeTo->animY = 0;
                 writeTo->animWidth = getState<ImageMaterialData>(m_material)->animSheetSize.width();
