@@ -1030,6 +1030,7 @@ v8::Handle<v8::Value> QDeclarativeLocale::locale(QV8Engine *v8engine, const QStr
     \o Locale.CurrencySymbol a currency symbol.
     \o Locale.CurrencyDisplayName a user readable name of the currency.
     \endlist
+    \sa Number::toLocaleCurrencyString()
 */
 
 /*!
