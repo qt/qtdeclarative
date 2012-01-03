@@ -533,7 +533,7 @@ void QQuickTextInput::setReadOnly(bool ro)
     d->m_readOnly = ro;
     if (!ro)
         d->setCursorPosition(d->end());
-
+    q_canPasteChanged();
     emit readOnlyChanged(ro);
 }
 
@@ -2044,8 +2044,6 @@ void QQuickTextInputPrivate::init()
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
     q->setFlag(QQuickItem::ItemHasContents);
 #ifndef QT_NO_CLIPBOARD
-    q->connect(q, SIGNAL(readOnlyChanged(bool)),
-            q, SLOT(q_canPasteChanged()));
     q->connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
             q, SLOT(q_canPasteChanged()));
 #endif // QT_NO_CLIPBOARD

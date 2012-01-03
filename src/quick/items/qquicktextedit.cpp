@@ -1160,6 +1160,7 @@ void QQuickTextEdit::setReadOnly(bool r)
     if (!r)
         d->control->moveCursor(QTextCursor::End);
 
+    q_canPasteChanged();
     emit readOnlyChanged(r);
 }
 
@@ -1658,7 +1659,6 @@ void QQuickTextEditPrivate::init()
     QObject::connect(control, SIGNAL(cursorRectangleChanged()), q, SLOT(moveCursorDelegate()));
     QObject::connect(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
-    QObject::connect(q, SIGNAL(readOnlyChanged(bool)), q, SLOT(q_canPasteChanged()));
     QObject::connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
 #endif
 
