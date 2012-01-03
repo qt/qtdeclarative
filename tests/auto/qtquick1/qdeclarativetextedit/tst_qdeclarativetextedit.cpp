@@ -59,6 +59,7 @@
 #include <private/qapplication_p.h>
 #include <private/qwidgettextcontrol_p.h>
 #include <private/qinputpanel_p.h>
+#include "../../shared/platforminputcontext.h"
 
 
 Q_DECLARE_METATYPE(QDeclarative1TextEdit::SelectionMode)
@@ -87,59 +88,6 @@ void sendPreeditText(const QString &text, int cursor)
     QInputMethodEvent event(text, attributes);
     QApplication::sendEvent(qApp->inputPanel()->inputItem(), &event);
 }
-
-class PlatformInputContext : public QPlatformInputContext
-{
-public:
-    PlatformInputContext()
-        : m_visible(false), m_action(QInputPanel::Click), m_cursorPosition(0),
-          m_invokeActionCallCount(0), m_showInputPanelCallCount(0), m_hideInputPanelCallCount(0),
-          m_updateCallCount(0)
-    {
-    }
-
-    virtual void showInputPanel()
-    {
-        m_visible = true;
-        m_showInputPanelCallCount++;
-    }
-    virtual void hideInputPanel()
-    {
-        m_visible = false;
-        m_hideInputPanelCallCount++;
-    }
-    virtual bool isInputPanelVisible() const
-    {
-        return m_visible;
-    }
-    virtual void invokeAction(QInputPanel::Action action, int cursorPosition)
-    {
-        m_invokeActionCallCount++;
-        m_action = action;
-        m_cursorPosition = cursorPosition;
-    }
-    virtual void update(Qt::InputMethodQueries)
-    {
-        m_updateCallCount++;
-    }
-
-    void clear() {
-        m_cursorPosition = 0;
-        m_invokeActionCallCount = 0;
-        m_visible = false;
-        m_showInputPanelCallCount = 0;
-        m_hideInputPanelCallCount = 0;
-        m_updateCallCount = 0;
-    }
-
-    bool m_visible;
-    QInputPanel::Action m_action;
-    int m_cursorPosition;
-    int m_invokeActionCallCount;
-    int m_showInputPanelCallCount;
-    int m_hideInputPanelCallCount;
-    int m_updateCallCount;
-};
 
 
 class tst_qdeclarativetextedit : public QObject

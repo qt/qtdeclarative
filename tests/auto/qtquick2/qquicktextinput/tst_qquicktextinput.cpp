@@ -56,14 +56,13 @@
 #include <QStyle>
 #include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
-#include <qplatforminputcontext_qpa.h>
-#include <private/qinputpanel_p.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>
 #endif
 
 #include "qplatformdefs.h"
+#include "../../shared/platforminputcontext.h"
 
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
@@ -2294,39 +2293,6 @@ void tst_qquicktextinput::simulateKey(QQuickView *view, int key)
     QGuiApplication::sendEvent(view, &release);
 }
 
-class PlatformInputContext : public QPlatformInputContext
-{
-public:
-    PlatformInputContext()
-        : m_visible(false), m_action(QInputPanel::Click), m_cursorPosition(0),
-          m_invokeActionCallCount(0)
-    {
-    }
-
-    virtual void showInputPanel()
-    {
-        m_visible = true;
-    }
-    virtual void hideInputPanel()
-    {
-        m_visible = false;
-    }
-    virtual bool isInputPanelVisible() const
-    {
-        return m_visible;
-    }
-    virtual void invokeAction(QInputPanel::Action action, int cursorPosition)
-    {
-        m_invokeActionCallCount++;
-        m_action = action;
-        m_cursorPosition = cursorPosition;
-    }
-
-    bool m_visible;
-    QInputPanel::Action m_action;
-    int m_cursorPosition;
-    int m_invokeActionCallCount;
-};
 
 void tst_qquicktextinput::openInputPanel()
 {

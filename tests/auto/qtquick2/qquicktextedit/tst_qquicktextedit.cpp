@@ -60,7 +60,7 @@
 #include <QMimeData>
 #include <private/qquicktextcontrol_p.h>
 #include "../../shared/util.h"
-#include <qplatforminputcontext_qpa.h>
+#include "../../shared/platforminputcontext.h"
 #include <private/qinputpanel_p.h>
 
 #ifdef Q_OS_MAC
@@ -2100,27 +2100,6 @@ void tst_qquicktextedit::textInput()
     QCOMPARE(spy.count(), 1);
     QCOMPARE(edit->text(), QString("string"));
 }
-
-class PlatformInputContext : public QPlatformInputContext
-{
-public:
-    PlatformInputContext() : m_visible(false) {}
-
-    virtual void showInputPanel()
-    {
-        m_visible = true;
-    }
-    virtual void hideInputPanel()
-    {
-        m_visible = false;
-    }
-    virtual bool isInputPanelVisible() const
-    {
-        return m_visible;
-    }
-
-    bool m_visible;
-};
 
 void tst_qquicktextedit::openInputPanel()
 {
