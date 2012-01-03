@@ -79,7 +79,6 @@ Rectangle {
     Rectangle {
         clip: chkClip.checked
         z: 2
-        Accessible.role: Accessible.Button
         id: rect1
         width: 100
         height: 100
