@@ -131,7 +131,7 @@ public:
       componentComplete(true), keepMouse(false),
       smooth(false), transformOriginDirty(true), doneEventPreHandler(false),
       inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
-      inheritMirrorFromParent(false), inheritMirrorFromItem(false), keyHandler(0),
+      inheritMirrorFromParent(false), inheritMirrorFromItem(false), isAccessible(0), keyHandler(0),
       mWidth(0), mHeight(0), mImplicitWidth(0), mImplicitHeight(0), attachedLayoutDirection(0), hadSubFocusItem(false)
     {
         QGraphicsItemPrivate::acceptedMouseButtons = 0;
