@@ -342,7 +342,7 @@ QAbstractAnimation2* QQuickParentAnimation::transition(QDeclarativeStateActions 
         delete viaData;
     }
 
-    return topLevelGroup;
+    return initInstance(topLevelGroup);
 }
 
 QQuickAnchorAnimation::QQuickAnchorAnimation(QObject *parent)
@@ -425,7 +425,7 @@ QAbstractAnimation2* QQuickAnchorAnimation::transition(QDeclarativeStateActions 
         delete data;
     }
 
-    return animator;
+    return initInstance(animator);
 }
 
 QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
@@ -672,7 +672,7 @@ QAbstractAnimation2* QQuickPathAnimation::transition(QDeclarativeStateActions &a
 
     pa->setDuration(d->duration);
     pa->setEasingCurve(d->easingCurve);
-    return pa;
+    return initInstance(pa);
 }
 
 void QQuickPathAnimationUpdater::setValue(qreal v)

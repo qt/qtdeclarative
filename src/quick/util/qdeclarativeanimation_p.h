@@ -122,6 +122,7 @@ public Q_SLOTS:
 
 protected:
     QDeclarativeAbstractAnimation(QDeclarativeAbstractAnimationPrivate &dd, QObject *parent);
+    QAbstractAnimation2* initInstance(QAbstractAnimation2 *animation);
 
 public:
     enum TransitionDirection { Forward, Backward };

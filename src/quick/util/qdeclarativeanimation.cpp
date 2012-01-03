@@ -169,9 +169,6 @@ void QDeclarativeAbstractAnimationPrivate::commence()
         if (oldInstance)
             delete oldInstance;
     }
-
-    //TODO: set loopCount in the transition function
-    animationInstance->setLoopCount(loopCount);
     animationInstance->start();
     if (animationInstance->isStopped()) {
         running = false;
@@ -576,6 +573,13 @@ bool QDeclarativeAbstractAnimation::userControlDisabled() const
     return d->disableUserControl;
 }
 
+QAbstractAnimation2* QDeclarativeAbstractAnimation::initInstance(QAbstractAnimation2 *animation)
+{
+    Q_D(QDeclarativeAbstractAnimation);
+    animation->setLoopCount(d->loopCount);
+    return animation;
+}
+
 QAbstractAnimation2* QDeclarativeAbstractAnimation::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
                                       TransitionDirection direction)
@@ -661,7 +665,7 @@ QAbstractAnimation2* QDeclarativePauseAnimation::transition(QDeclarativeStateAct
     Q_UNUSED(modified);
     Q_UNUSED(direction);
 
-    return new QPauseAnimation2(d->duration);
+    return initInstance(new QPauseAnimation2(d->duration));
 }
 
 /*!
@@ -927,7 +931,7 @@ QAbstractAnimation2* QDeclarativeScriptAction::transition(QDeclarativeStateActio
             break;  //only match one (names should be unique)
         }
     }
-    return new QActionAnimation(d->createAction());
+    return initInstance(new QActionAnimation(d->createAction()));
 }
 
 /*!
@@ -1175,7 +1179,7 @@ QAbstractAnimation2* QDeclarativePropertyAction::transition(QDeclarativeStateAct
     } else {
         delete data;
     }
-    return action;
+    return initInstance(action);
 }
 
 /*!
@@ -1670,7 +1674,7 @@ QAbstractAnimation2* QDeclarativeSequentialAnimation::transition(QDeclarativeSta
         inc == -1 ? ag->prependAnimation(anim) : ag->appendAnimation(anim);
     }
 
-    return ag;
+    return initInstance(ag);
 }
 
 
@@ -1727,7 +1731,7 @@ QAbstractAnimation2* QDeclarativeParallelAnimation::transition(QDeclarativeState
         anim = d->animations.at(ii)->transition(actions, modified, direction);
         ag->appendAnimation(anim);
     }
-    return ag;
+    return initInstance(ag);
 }
 
 //convert a variant from string type to another animatable type
@@ -2503,7 +2507,7 @@ QAbstractAnimation2* QDeclarativePropertyAnimation::transition(QDeclarativeState
         d->actions = &data->actions; //remove this?
     }
 
-    return animator;
+    return initInstance(animator);
 }
 
 QT_END_NAMESPACE

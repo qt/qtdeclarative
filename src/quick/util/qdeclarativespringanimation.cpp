@@ -508,7 +508,7 @@ QAbstractAnimation2* QDeclarativeSpringAnimation::transition(QDeclarativeStateAc
                 d->activeAnimations.insert(property, animation);
                 animation->target = property;
             }
-            wrapperGroup->appendAnimation(animation);
+            wrapperGroup->appendAnimation(initInstance(animation));
 
             animation->to = dataActions.at(i).toValue.toReal();
             animation->startTime = 0;

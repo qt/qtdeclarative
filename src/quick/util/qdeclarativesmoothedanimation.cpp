@@ -384,7 +384,7 @@ QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeState
                 ease = d->activeAnimations.value(dataActions[i].property);
                 needsRestart = true;
             }
-            wrapperGroup->appendAnimation(ease);
+            wrapperGroup->appendAnimation(initInstance(ease));
 
             ease->to = dataActions[i].toValue.toReal();
 
