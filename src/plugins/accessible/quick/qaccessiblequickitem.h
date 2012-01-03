@@ -77,6 +77,9 @@ protected:
     QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }
 };
 
+QRect itemScreenRect(QQuickItem *item);
+
+
 class QAccessibleQuickItemValueInterface: public QAccessibleQuickItem, public QAccessibleValueInterface
 {
 public:

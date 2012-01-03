@@ -70,9 +70,8 @@ QFlags<QAccessible::RelationFlag> QDeclarativeAccessible::relationTo(const QAcce
 
 QAccessibleInterface *QDeclarativeAccessible::childAt(int x, int y) const
 {
-    // Look for children first.
-    // Start with the last child first, because children are ordered in paint order
-    // (which is opposite of hit test order)
+    // Note that this function will disregard stacking order.
+    // (QAccessibleQuickView::childAt() does this correctly and more efficient)
 
     // If the item clips its children, we can return early if the coordinate is outside its rect
     if (clipsChildren()) {

@@ -58,26 +58,7 @@ int QAccessibleQuickItem::childCount() const
 
 QRect QAccessibleQuickItem::rect() const
 {
-    // ### no canvas in some cases.
-    // ### Should we really check for 0 opacity?
-    if (!item()->canvas() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity())) {
-        return QRect();
-    }
-
-    QSizeF size = QSizeF(item()->width(), item()->height());
-    // ### If the bounding rect fails, we first try the implicit size, then we go for the
-    // parent size. WE MIGHT HAVE TO REVISIT THESE FALLBACKS.
-    if (size.isEmpty()) {
-        size = QSizeF(item()->implicitWidth(), item()->implicitHeight());
-        if (size.isEmpty())
-            // ### Seems that the above fallback is not enough, fallback to use the parent size...
-            size = QSizeF(item()->parentItem()->width(), item()->parentItem()->height());
-    }
-
-    QRectF sceneRect = item()->mapRectToScene(QRectF(QPointF(0, 0), size));
-    QPoint screenPos = item()->canvas()->mapToGlobal(sceneRect.topLeft().toPoint());
-
-    QRect r = QRect(screenPos, sceneRect.size().toSize());
+    const QRect r = itemScreenRect(item());
 
     if (!r.isValid()) {
         qWarning() << item()->metaObject()->className() << item()->property("accessibleText") << r;
@@ -296,6 +277,34 @@ QVariant QAccessibleQuickItemValueInterface::minimumValue() const
 {
     return item()->property("minimumValue");
 }
+
+/*!
+  \internal
+  Shared between QAccessibleQuickItem and QAccessibleQuickView
+*/
+QRect itemScreenRect(QQuickItem *item)
+{
+    // ### no canvas in some cases.
+    // ### Should we really check for 0 opacity?
+    if (!item->canvas() ||!item->isVisible() || qFuzzyIsNull(item->opacity())) {
+        return QRect();
+    }
+
+    QSize itemSize((int)item->width(), (int)item->height());
+    // ### If the bounding rect fails, we first try the implicit size, then we go for the
+    // parent size. WE MIGHT HAVE TO REVISIT THESE FALLBACKS.
+    if (itemSize.isEmpty()) {
+        itemSize = QSize((int)item->implicitWidth(), (int)item->implicitHeight());
+        if (itemSize.isEmpty())
+            // ### Seems that the above fallback is not enough, fallback to use the parent size...
+            itemSize = QSize((int)item->parentItem()->width(), (int)item->parentItem()->height());
+    }
+
+    QPointF scenePoint = item->mapToScene(QPointF(0, 0));
+    QPoint screenPos = item->canvas()->mapToGlobal(scenePoint.toPoint());
+    return QRect(screenPos, itemSize);
+}
+
 
 
 QT_END_NAMESPACE

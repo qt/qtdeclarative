@@ -42,6 +42,7 @@
 #include "qaccessiblequickview.h"
 
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 #include "qaccessiblequickitem.h"
 #include "qdeclarativeaccessible.h"
@@ -69,8 +70,8 @@ QAccessibleInterface *QAccessibleQuickView::parent() const
 QAccessibleInterface *QAccessibleQuickView::child(int index) const
 {
     if (index == 0) {
-        QQuickItem *declarativeRoot = view()->rootObject();
-        return new QAccessibleQuickItem(declarativeRoot);
+        if (QQuickItem *declarativeRoot = view()->rootObject())
+            return new QAccessibleQuickItem(declarativeRoot);
     }
     return 0;
 }
@@ -108,11 +109,48 @@ QString QAccessibleQuickView::text(QAccessible::Text text) const
     return view()->windowTitle();
 }
 
+
+/*!
+  \internal
+
+  Can also return \a item itself
+  */
+static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
+{
+    if (item->opacity() == 0.0 || !item->isVisible() || !item->isEnabled())
+        return 0;
+
+    if (item->flags() & QQuickItem::ItemClipsChildrenToShape) {
+        if (!itemScreenRect(item).contains(x, y))
+            return 0;
+    }
+
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+
+    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+    for (int i = children.count() - 1; i >= 0; --i) {
+        QQuickItem *child = children.at(i);
+        if (QQuickItem *childChild = childAt_helper(child, x, y))
+            return childChild;
+    }
+
+    QRect screenRect = itemScreenRect(item);
+
+    if (screenRect.contains(x, y))
+        return item;
+
+    return 0;
+}
+
 QAccessibleInterface *QAccessibleQuickView::childAt(int x, int y) const
 {
-    Q_UNUSED(x);
-    Q_UNUSED(y);
-    return child(0); // return the top-level QML item
+    Q_ASSERT(view());
+    QQuickItem *root = view()->rootItem();
+    if (root) {
+        if (QQuickItem *item = childAt_helper(root, x, y))
+            return QAccessible::queryAccessibleInterface(item);
+    }
+    return 0;
 }
 
 int QAccessibleQuickView::indexOfChild(const QAccessibleInterface *iface) const
