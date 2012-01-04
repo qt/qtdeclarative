@@ -162,6 +162,7 @@ private slots:
     void preeditCursorRectangle();
     void inputContextMouseHandler();
     void inputMethodComposing();
+    void inputPanelUpdate();
     void cursorRectangleSize();
 
     void getText_data();
@@ -2767,6 +2768,73 @@ void tst_qquicktextinput::inputMethodComposing()
     }
     QCOMPARE(input->isInputMethodComposing(), false);
     QCOMPARE(spy.count(), 2);
+}
+
+void tst_qquicktextinput::inputPanelUpdate()
+{
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
+    QQuickView view(testFileUrl("inputContext.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
+    QVERIFY(input);
+
+    // text change even without cursor position change needs to trigger update
+    input->setText("test");
+    platformInputContext.clear();
+    input->setText("xxxx");
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // input method event replacing text
+    platformInputContext.clear();
+    {
+        QInputMethodEvent inputMethodEvent;
+        inputMethodEvent.setCommitString("y", -1, 1);
+        QGuiApplication::sendEvent(input, &inputMethodEvent);
+    }
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // input method changing selection
+    platformInputContext.clear();
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        attributes << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 0, 2, QVariant());
+        QInputMethodEvent inputMethodEvent("", attributes);
+        QGuiApplication::sendEvent(input, &inputMethodEvent);
+    }
+    QVERIFY(input->selectionStart() != input->selectionEnd());
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // programmatical selections trigger update
+    platformInputContext.clear();
+    input->selectAll();
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // font changes
+    platformInputContext.clear();
+    QFont font = input->font();
+    font.setBold(!font.bold());
+    input->setFont(font);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // normal input
+    platformInputContext.clear();
+    {
+        QInputMethodEvent inputMethodEvent;
+        inputMethodEvent.setCommitString("y");
+        QGuiApplication::sendEvent(input, &inputMethodEvent);
+    }
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // changing cursor position
+    platformInputContext.clear();
+    input->setCursorPosition(0);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
 }
 
 void tst_qquicktextinput::cursorRectangleSize()
