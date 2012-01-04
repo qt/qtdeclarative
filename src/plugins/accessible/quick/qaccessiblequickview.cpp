@@ -82,7 +82,7 @@ QAccessible::Role QAccessibleQuickView::role() const
 
 QAccessible::State QAccessibleQuickView::state() const
 {
-    return QAccessible::Normal; // FIXME
+    return QAccessible::State(); // FIXME
 }
 
 QRect QAccessibleQuickView::rect() const

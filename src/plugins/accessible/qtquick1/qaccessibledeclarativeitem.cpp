@@ -171,13 +171,10 @@ int QAccessibleDeclarativeItem::indexOfChild(const QAccessibleInterface *iface) 
     return index;
 }
 
-QFlags<QAccessible::StateFlag> QAccessibleDeclarativeItem::state() const
+QAccessible::State QAccessibleDeclarativeItem::state() const
 {
-    QAccessible::State state = QAccessible::Normal;
-
-    if (m_item->hasFocus()) {
-        state |= QAccessible::Focused;
-    }
+    QAccessible::State state;
+    state.focused = m_item->hasFocus();
     return state;
 }
 

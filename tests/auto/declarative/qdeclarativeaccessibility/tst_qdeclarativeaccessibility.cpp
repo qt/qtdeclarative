@@ -203,6 +203,7 @@ private slots:
     void declarativeAttachedProperties();
     void basicPropertiesTest();
     void hitTest();
+    void checkableTest();
 };
 
 tst_QDeclarativeAccessibility::tst_QDeclarativeAccessibility()
@@ -285,48 +286,6 @@ QString eventName(const int ev)
     case 0x80C0: return "AcceleratorChanged";
     default: return "Unknown Event";
     }
-}
-
-static QString stateNames(int state)
-{
-    QString stateString;
-    if (state == 0x00000000) stateString += " Normal";
-    if (state & 0x00000001) stateString += " Unavailable";
-    if (state & 0x00000002) stateString += " Selected";
-    if (state & 0x00000004) stateString += " Focused";
-    if (state & 0x00000008) stateString += " Pressed";
-    if (state & 0x00000010) stateString += " Checked";
-    if (state & 0x00000020) stateString += " Mixed";
-    if (state & 0x00000040) stateString += " ReadOnly";
-    if (state & 0x00000080) stateString += " HotTracked";
-    if (state & 0x00000100) stateString += " DefaultButton";
-    if (state & 0x00000200) stateString += " Expanded";
-    if (state & 0x00000400) stateString += " Collapsed";
-    if (state & 0x00000800) stateString += " Busy";
-    if (state & 0x00001000) stateString += " Floating";
-    if (state & 0x00002000) stateString += " Marqueed";
-    if (state & 0x00004000) stateString += " Animated";
-    if (state & 0x00008000) stateString += " Invisible";
-    if (state & 0x00010000) stateString += " Offscreen";
-    if (state & 0x00020000) stateString += " Sizeable";
-    if (state & 0x00040000) stateString += " Moveable";
-    if (state & 0x00080000) stateString += " SelfVoicing";
-    if (state & 0x00100000) stateString += " Focusable";
-    if (state & 0x00200000) stateString += " Selectable";
-    if (state & 0x00400000) stateString += " Linked";
-    if (state & 0x00800000) stateString += " Traversed";
-    if (state & 0x01000000) stateString += " MultiSelectable";
-    if (state & 0x02000000) stateString += " ExtSelectable";
-    if (state & 0x04000000) stateString += " AlertLow";
-    if (state & 0x08000000) stateString += " AlertMedium";
-    if (state & 0x10000000) stateString += " AlertHigh";
-    if (state & 0x20000000) stateString += " Protected";
-    if (state & 0x3fffffff) stateString += " Valid";
-
-    if (stateString.isEmpty())
-        stateString = "Unknown state " + QString::number(state);
-
-    return stateString;
 }
 
 void tst_QDeclarativeAccessibility::declarativeAttachedProperties()
@@ -492,6 +451,32 @@ void tst_QDeclarativeAccessibility::hitTest()
 
     delete canvas;
 }
+
+void tst_QDeclarativeAccessibility::checkableTest()
+{
+    QQuickView *canvas = new QQuickView();
+    canvas->setSource(testFileUrl("checkbuttons.qml"));
+    canvas->show();
+
+    QAI iface = QAI(QAccessible::queryAccessibleInterface(canvas));
+    QVERIFY(iface.data());
+    QAI root = QAI(iface->child(0));
+
+    QAI button1 = QAI(root->child(0));
+    QCOMPARE(button1->role(), QAccessible::Button);
+    QVERIFY(!(button1->state().checked));
+    QAI button2 = QAI(root->child(1));
+    QVERIFY(!(button2->state().checked));
+    QAI button3 = QAI(root->child(2));
+    QVERIFY(button3->state().checked);
+
+    QAI checkBox1 = QAI(root->child(3));
+    QCOMPARE(checkBox1->role(), QAccessible::CheckBox);
+    QVERIFY((checkBox1->state().checked));
+    QAI checkBox2 = QAI(root->child(4));
+    QVERIFY(!(checkBox2->state().checked));
+}
+
 QTEST_MAIN(tst_QDeclarativeAccessibility)
 
 #include "tst_qdeclarativeaccessibility.moc"

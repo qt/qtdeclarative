@@ -67,7 +67,7 @@ public:
     int indexOfChild(const QAccessibleInterface *iface) const;
     QList<QQuickItem *> childItems() const;
 
-    QFlags<QAccessible::StateFlag> state() const;
+    QAccessible::State state() const;
     QAccessible::Role role() const;
     QString text(QAccessible::Text) const;
 

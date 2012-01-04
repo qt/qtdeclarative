@@ -78,7 +78,7 @@ public:
     virtual QRect viewRect() const = 0;
     QFlags<QAccessible::RelationFlag> relationTo(const QAccessibleInterface*) const;
     QAccessibleInterface *childAt(int, int) const;
-    QFlags<QAccessible::StateFlag> state() const;
+    QAccessible::State state() const;
     QVariant invokeMethod(QAccessible::Method, const QVariantList &);
 
     QStringList actionNames() const;

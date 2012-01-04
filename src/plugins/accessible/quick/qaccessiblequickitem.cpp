@@ -174,16 +174,33 @@ QList<QQuickItem *> QAccessibleQuickItem::childItems() const
     return item()->childItems();
 }
 
-QFlags<QAccessible::StateFlag> QAccessibleQuickItem::state() const
+QAccessible::State QAccessibleQuickItem::state() const
 {
-    QAccessible::State state = QAccessible::Normal;
+    QAccessible::State state;
 
-    if (item()->hasActiveFocus()) {
-        state |= QAccessible::Focused;
+    if (item()->hasActiveFocus())
+        state.focused = true;
+
+    QAccessible::Role r = role();
+    switch (r) {
+    case QAccessible::Button: {
+        QVariant checkable = item()->property("checkable");
+        if (!checkable.toBool())
+            break;
+        // fall through
     }
+    case QAccessible::CheckBox:
+    case QAccessible::RadioButton: {
+        // FIXME when states are extended: state.checkable = true;
+        state.checked = item()->property("checked").toBool();
+        break;
+    }
+    default:
+        break;
+    }
+
     return state;
 }
-
 
 QAccessible::Role QAccessibleQuickItem::role() const
 {

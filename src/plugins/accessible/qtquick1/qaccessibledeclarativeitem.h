@@ -65,7 +65,7 @@ public:
     int navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const;
     int indexOfChild(const QAccessibleInterface *iface) const;
 
-    QFlags<QAccessible::StateFlag> state() const;
+    QAccessible::State state() const;
     QAccessible::Role role() const;
     QString text(QAccessible::Text) const;
 

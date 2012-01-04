@@ -102,6 +102,35 @@ QT_BEGIN_NAMESPACE
         Accessible.role: Accessible.Button
     }
     \endqml
+
+    Some roles have special semantics.
+    In order to implement check boxes for example a "checked" property is expected.
+
+    \table
+    \header
+        \o \bold {Role}
+        \o \bold {Expected property}
+        \o
+
+    \row
+       \o CheckBox
+       \o checked
+       \o The check state of the check box.
+    \row
+       \o RadioButton
+       \o checked
+       \o The selected state of the radio button.
+    \row
+       \o Button
+       \o checkable
+       \o Whether the button is checkable.
+    \row
+       \o Button
+       \o checked
+       \o Whether the button is checked (only if checkable is true).
+
+    \endtable
+
 */
 
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)

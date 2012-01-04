@@ -82,7 +82,7 @@ QAccessibleInterface *QDeclarativeAccessible::childAt(int x, int y) const
 
     for (int i = childCount() - 1; i >= 0; --i) {
         QAccessibleInterface *childIface = child(i);
-        if (childIface && !(childIface->state() & QAccessible::Invisible)) {
+        if (childIface && !childIface->state().invisible) {
             if (childIface->rect().contains(x, y))
                 return childIface;
         }
@@ -91,9 +91,9 @@ QAccessibleInterface *QDeclarativeAccessible::childAt(int x, int y) const
     return 0;
 }
 
-QFlags<QAccessible::StateFlag> QDeclarativeAccessible::state() const
+QAccessible::State QDeclarativeAccessible::state() const
 {
-    QAccessible::State state;// = state();
+    QAccessible::State state;
 
     //QRect viewRect(QPoint(0, 0), m_implementation->size());
     //QRect itemRect(m_item->scenePos().toPoint(), m_item->boundingRect().size().toSize());
@@ -104,24 +104,24 @@ QFlags<QAccessible::StateFlag> QDeclarativeAccessible::state() const
    // qDebug() << "viewRect" << viewRect << "itemRect" << itemRect;
     // error case:
     if (viewRect_.isNull() || itemRect.isNull()) {
-        state |= QAccessible::Invisible;
+        state.invisible = true;
     }
 
     if (!viewRect_.intersects(itemRect)) {
-        state |= QAccessible::Offscreen;
-        // state |= QAccessible::Invisible; // no set at this point to ease development
+        state.offscreen = true;
+        // state.invisible = true; // no set at this point to ease development
     }
 
     if (!object()->property("visible").toBool() || qFuzzyIsNull(object()->property("opacity").toDouble())) {
-        state |= QAccessible::Invisible;
+        state.invisible = true;
     }
 
     if ((role() == QAccessible::CheckBox || role() == QAccessible::RadioButton) && object()->property("checked").toBool()) {
-        state |= QAccessible::Checked;
+        state.checked = true;
     }
 
     if (role() == QAccessible::EditableText)
-        state |= QAccessible::Focusable;
+        state.focusable = true;
 
     //qDebug() << "state?" << m_item->property("state").toString() << m_item->property("status").toString() << m_item->property("visible").toString();
 
