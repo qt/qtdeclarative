@@ -143,6 +143,8 @@ A new property type ("var") has been introduced which obsoletes "variant" proper
 Properties of this type are equivalent to regular JavaScript variables.  See the documentation
 on \l{QML Basic Types} for more information about "var" properties.
 
+New elements have been added for contructing paths: PathArc, PathCurve, PathSvg.
+
 \section2 QtQuick 1 is now a separate library and module
 
 Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem

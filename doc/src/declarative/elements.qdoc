@@ -158,6 +158,9 @@ Elements that animate properties based on data types
 \o \l {PathLine} - Defines a line in \l {Path}
 \o \l {PathQuad} - Defines a quadratic Bezier curve in a \l {Path}
 \o \l {PathCubic} - Defines a cubic Bezier curve in a \l {Path}
+\o \l {PathArc} - Defines an arc in a \l {Path}
+\o \l {PathCurve} - Defines a point on a Catmull-Rom curve in a \l {Path}
+\o \l {PathSvg} - Defines a sub-path specified as a SVG path data string in a \l {Path}
 \o \l {PathAttribute} - Allows the setting of attributes along a \l {Path}
 \o \l {PathPercent} - Modifies the item distribution along a \l {Path}
 \endlist

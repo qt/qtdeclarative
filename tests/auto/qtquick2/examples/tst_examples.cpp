@@ -90,6 +90,7 @@ tst_examples::tst_examples()
 
     // Add directories you want excluded here
     excludedDirs << "examples/declarative/text/fonts"; // QTBUG-21415
+    excludedDirs << "doc/src/snippets/declarative/path"; //No root QQuickItem
 
     // Not run in QQuickView
     excludedDirs << "examples/declarative/qtquick1";

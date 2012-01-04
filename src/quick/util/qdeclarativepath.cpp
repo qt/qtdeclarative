@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     This type is the base for all path types.  It cannot
     be instantiated.
 
-    \sa Path, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic
+    \sa Path, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 
 /*!
@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
     \brief A Path object defines a path for use by \l PathView.
 
     A Path is composed of one or more path segments - PathLine, PathQuad,
-    PathCubic.
+    PathCubic, PathArc, PathCurve, PathSvg.
 
     The spacing of the items along the Path can be adjusted via a
     PathPercent object.
@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
     PathAttribute allows named attributes with values to be defined
     along the path.
 
-    \sa PathView, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic
+    \sa PathView, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 QDeclarativePath::QDeclarativePath(QObject *parent)
  : QObject(*(new QDeclarativePathPrivate), parent)
@@ -174,6 +174,9 @@ bool QDeclarativePath::hasEnd() const
         \i \l PathLine - a straight line to a given position.
         \i \l PathQuad - a quadratic Bezier curve to a given position with a control point.
         \i \l PathCubic - a cubic Bezier curve to a given position with two control points.
+        \i \l PathArc - an arc to a given position with a radius.
+        \i \l PathSvg - a path specified as an SVG path data string.
+        \i \l PathCurve - a point on a Catmull-Rom curve.
         \i \l PathAttribute - an attribute at a given position in the path.
         \i \l PathPercent - a way to spread out items along various segments of the path.
     \endlist
@@ -889,7 +892,7 @@ void QDeclarativePathAttribute::setValue(qreal value)
     }
     \endqml
 
-    \sa Path, PathQuad, PathCubic
+    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 
 /*!
@@ -897,6 +900,23 @@ void QDeclarativePathAttribute::setValue(qreal value)
     \qmlproperty real QtQuick2::PathLine::y
 
     Defines the end point of the line.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathLine::relativeX
+    \qmlproperty real QtQuick2::PathLine::relativeY
+
+    Defines the end point of the line relative to its start.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
 */
 
 inline QPointF positionForCurve(const QDeclarativePathData &data, const QPointF &prevPoint)
@@ -933,7 +953,7 @@ void QDeclarativePathLine::addToPath(QPainterPath &path, const QDeclarativePathD
     \endqml
     \endtable
 
-    \sa Path, PathCubic, PathLine
+    \sa Path, PathCubic, PathLine, PathArc, PathCurve, PathSvg
 */
 
 /*!
@@ -941,6 +961,23 @@ void QDeclarativePathLine::addToPath(QPainterPath &path, const QDeclarativePathD
     \qmlproperty real QtQuick2::PathQuad::y
 
     Defines the end point of the curve.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathQuad::relativeX
+    \qmlproperty real QtQuick2::PathQuad::relativeY
+
+    Defines the end point of the curve relative to its start.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
 */
 
 /*!
@@ -984,6 +1021,21 @@ void QDeclarativePathQuad::setControlY(qreal y)
         emit changed();
     }
 }
+
+/*!
+   \qmlproperty real QtQuick2::PathCubic::relativeControlX
+   \qmlproperty real QtQuick2::PathCubic::relativeControlY
+
+    Defines the position of the control point relative to the curve's start.
+
+    If both a relative and absolute control position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative control x
+    and an absolute control y.
+
+    \sa controlX, controlY
+*/
 
 qreal QDeclarativePathQuad::relativeControlX() const
 {
@@ -1056,7 +1108,7 @@ void QDeclarativePathQuad::addToPath(QPainterPath &path, const QDeclarativePathD
     \endqml
     \endtable
 
-    \sa Path, PathQuad, PathLine
+    \sa Path, PathQuad, PathLine, PathArc, PathCurve, PathSvg
 */
 
 /*!
@@ -1064,6 +1116,23 @@ void QDeclarativePathQuad::addToPath(QPainterPath &path, const QDeclarativePathD
     \qmlproperty real QtQuick2::PathCubic::y
 
     Defines the end point of the curve.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathCubic::relativeX
+    \qmlproperty real QtQuick2::PathCubic::relativeY
+
+    Defines the end point of the curve relative to its start.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
 */
 
 /*!
@@ -1133,6 +1202,23 @@ void QDeclarativePathCubic::setControl2Y(qreal y)
         emit changed();
     }
 }
+
+/*!
+   \qmlproperty real QtQuick2::PathCubic::relativeControl1X
+   \qmlproperty real QtQuick2::PathCubic::relativeControl1Y
+   \qmlproperty real QtQuick2::PathCubic::relativeControl2X
+   \qmlproperty real QtQuick2::PathCubic::relativeControl2Y
+
+    Defines the positions of the control points relative to the curve's start.
+
+    If both a relative and absolute control position are specified for a control point's axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative control1 x
+    and an absolute control1 y.
+
+    \sa control1X, control1Y, control2X, control2Y
+*/
 
 qreal QDeclarativePathCubic::relativeControl1X() const
 {
@@ -1222,6 +1308,49 @@ void QDeclarativePathCubic::addToPath(QPainterPath &path, const QDeclarativePath
 
 /****************************************************************************/
 
+/*!
+    \qmlclass PathCurve QDeclarativePathCurve
+    \inqmlmodule QtQuick 2
+    \ingroup qml-view-elements
+    \brief The PathCurve defines a point on a Catmull-Rom curve.
+
+    PathCurve provides an easy way to specify a curve passing directly through a set of points.
+    Typically multiple PathCurves are used in a series, as the following example demonstrates:
+
+    \snippet doc/src/snippets/declarative/path/basiccurve.qml 0
+
+    This example produces the following path (with the starting point and PathCurve points
+    highlighted in red):
+
+    \image declarative-pathcurve.png
+
+    \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathSvg
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathCurve::x
+    \qmlproperty real QtQuick2::PathCurve::y
+
+    Defines the end point of the curve.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathCurve::relativeX
+    \qmlproperty real QtQuick2::PathCurve::relativeY
+
+    Defines the end point of the curve relative to its start.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
+*/
+
 inline QPointF previousPathPosition(const QPainterPath &path)
 {
     int count = path.elementCount();
@@ -1294,6 +1423,67 @@ void QDeclarativePathCatmullRomCurve::addToPath(QPainterPath &path, const QDecla
 
 /****************************************************************************/
 
+/*!
+    \qmlclass PathArc QDeclarativePathArc
+    \inqmlmodule QtQuick 2
+    \ingroup qml-view-elements
+    \brief The PathArc defines an arc with the given radius.
+
+    PathArc provides a simple way of specifying an arc that ends at a given position
+    and uses the specified radius. It is modeled after the SVG elliptical arc command.
+
+    The following QML produces the path shown below:
+    \table
+    \row
+    \o \image declarative-patharc.png
+    \o \snippet doc/src/snippets/declarative/path/basicarc.qml 0
+    \endtable
+
+    Note that a single PathArc cannot be used to specify a circle. Instead, you can
+    use two PathArc elements, each specifying half of the circle.
+
+    \sa Path, PathLine, PathQuad, PathCubic, PathCurve, PathSvg
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathArc::x
+    \qmlproperty real QtQuick2::PathArc::y
+
+    Defines the end point of the arc.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathArc::relativeX
+    \qmlproperty real QtQuick2::PathArc::relativeY
+
+    Defines the end point of the arc relative to its start.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PathArc::radiusX
+    \qmlproperty real QtQuick2::PathArc::radiusY
+
+    Defines the radius of the arc.
+
+    The following QML demonstrates how different radius values can be used to change
+    the shape of the arc:
+    \table
+    \row
+    \o \image declarative-arcradius.png
+    \o \snippet doc/src/snippets/declarative/path/arcradius.qml 0
+    \endtable
+*/
+
 qreal QDeclarativePathArc::radiusX() const
 {
     return _radiusX;
@@ -1322,6 +1512,25 @@ void QDeclarativePathArc::setRadiusY(qreal radius)
     emit radiusYChanged();
 }
 
+/*!
+    \qmlproperty bool QtQuick2::PathArc::useLargeArc
+    Whether to use a large arc as defined by the arc points.
+
+    Given fixed start and end positions, radius, and direction,
+    there are two possible arcs that can fit the data. useLargeArc
+    is used to distinguish between these. For example, the following
+    QML can produce either of the two illustrated arcs below by
+    changing the value of useLargeArc.
+
+    \table
+    \row
+    \o \image declarative-largearc.png
+    \o \snippet doc/src/snippets/declarative/path/largearc.qml 0
+    \endtable
+
+    The default value is false.
+*/
+
 bool QDeclarativePathArc::useLargeArc() const
 {
     return _useLargeArc;
@@ -1335,6 +1544,23 @@ void QDeclarativePathArc::setUseLargeArc(bool largeArc)
     _useLargeArc = largeArc;
     emit useLargeArcChanged();
 }
+
+/*!
+    \qmlproperty enum QtQuick2::PathArc::direction
+
+    Defines the direction of the arc. Possible values are
+    PathArc.Clockwise (default) and PathArc.Counterclockwise.
+
+    The following QML can produce either of the two illustrated arcs below
+    by changing the value of direction.
+    \table
+    \row
+    \o \image declarative-arcdirection.png
+    \o \snippet doc/src/snippets/declarative/path/arcdirection.qml 0
+    \endtable
+
+    \sa useLargeArc
+*/
 
 QDeclarativePathArc::ArcDirection QDeclarativePathArc::direction() const
 {
@@ -1366,6 +1592,37 @@ void QDeclarativePathArc::addToPath(QPainterPath &path, const QDeclarativePathDa
 }
 
 /****************************************************************************/
+
+/*!
+    \qmlclass PathSvg QDeclarativePathSvg
+    \inqmlmodule QtQuick 2
+    \ingroup qml-view-elements
+    \brief The PathSvg defines a path using an SVG path data string.
+
+    The following QML produces the path shown below:
+    \table
+    \row
+    \o \image declarative-pathsvg.png
+    \o
+    \qml
+    Path {
+        startX: 50; startY: 50
+        PathSvg { path: "L 150 50 L 100 150 z" }
+    }
+    \endqml
+    \endtable
+
+    \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathCurve
+*/
+
+/*!
+    \qmlproperty string QtQuick2::PathSvg::path
+
+    The SVG path data string specifying the path.
+
+    See \l {http://www.w3.org/TR/SVG/paths.html#PathData}{W3C SVG Path Data}
+    for more details on this format.
+*/
 
 QString QDeclarativePathSvg::path() const
 {
