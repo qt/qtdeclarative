@@ -49,6 +49,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtGui/QWindowSystemInterface>
 #include "../../shared/util.h"
+#include <QSignalSpy>
 
 struct TouchEventData {
     QEvent::Type type;
@@ -609,25 +610,6 @@ void tst_qquickcanvas::animationsWhileHidden()
 }
 
 
-class SceneGraphListener : public QObject
-{
-    Q_OBJECT
-
-public:
-    SceneGraphListener()
-        : wasInitialized(false)
-        , wasInvalidated(false)
-    {
-    }
-
-    bool wasInitialized;
-    bool wasInvalidated;
-
-public slots:
-    void initialized() { wasInitialized = true; }
-    void invalidated() { wasInvalidated = true; }
-};
-
 void tst_qquickcanvas::headless()
 {
     QDeclarativeEngine engine;
@@ -641,9 +623,8 @@ void tst_qquickcanvas::headless()
     QTest::qWaitForWindowShown(canvas);
     QVERIFY(canvas->visible());
 
-    SceneGraphListener listener;
-    connect(canvas, SIGNAL(sceneGraphInitialized()), &listener, SLOT(initialized()), Qt::DirectConnection);
-    connect(canvas, SIGNAL(sceneGraphInvalidated()), &listener, SLOT(invalidated()), Qt::DirectConnection);
+    QSignalSpy initialized(canvas, SIGNAL(sceneGraphInitialized()));
+    QSignalSpy invalidated(canvas, SIGNAL(sceneGraphInvalidated()));
 
     // Verify that the canvas is alive and kicking
     QVERIFY(canvas->openglContext() != 0);
@@ -653,7 +634,7 @@ void tst_qquickcanvas::headless()
 
     // Hide the canvas and verify signal emittion and GL context deletion
     canvas->hide();
-    QVERIFY(listener.wasInvalidated);
+    QCOMPARE(invalidated.size(), 1);
     QVERIFY(canvas->openglContext() == 0);
 
     // Destroy the native windowing system buffers
@@ -664,7 +645,7 @@ void tst_qquickcanvas::headless()
     canvas->show();
     QTest::qWaitForWindowShown(canvas);
 
-    QVERIFY(listener.wasInitialized);
+    QCOMPARE(initialized.size(), 1);
     QVERIFY(canvas->openglContext() != 0);
 
     // Verify that the visual output is the same
