@@ -64,6 +64,7 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_ENUMS(CursorPosition)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
+    Q_PROPERTY(int length READ length NOTIFY textChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
     Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor NOTIFY selectionColorChanged)
     Q_PROPERTY(QColor selectedTextColor READ selectedTextColor WRITE setSelectedTextColor NOTIFY selectedTextColorChanged)
@@ -156,6 +157,8 @@ public:
     QString text() const;
     void setText(const QString &);
 
+    int length() const;
+
     QFont font() const;
     void setFont(const QFont &font);
 
@@ -240,6 +243,8 @@ public:
     Qt::InputMethodHints imHints() const;
     void setIMHints(Qt::InputMethodHints hints);
 
+    Q_INVOKABLE QString getText(int start, int end) const;
+
 Q_SIGNALS:
     void textChanged();
     void cursorPositionChanged();
@@ -301,6 +306,8 @@ public Q_SLOTS:
     void copy();
     void paste();
 #endif
+    void insert(int position, const QString &text);
+    void remove(int start, int end);
 
 private Q_SLOTS:
     void selectionChanged();

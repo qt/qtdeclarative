@@ -162,6 +162,13 @@ private slots:
     void inputMethodComposing();
     void cursorRectangleSize();
 
+    void getText_data();
+    void getText();
+    void insert_data();
+    void insert();
+    void remove_data();
+    void remove();
+
     void keySequence_data();
     void keySequence();
 
@@ -281,6 +288,7 @@ void tst_qquicktextinput::text()
 
         QVERIFY(textinputObject != 0);
         QCOMPARE(textinputObject->text(), QString(""));
+        QCOMPARE(textinputObject->length(), 0);
 
         delete textinputObject;
     }
@@ -294,6 +302,7 @@ void tst_qquicktextinput::text()
 
         QVERIFY(textinputObject != 0);
         QCOMPARE(textinputObject->text(), standard.at(i));
+        QCOMPARE(textinputObject->length(), standard.at(i).length());
 
         delete textinputObject;
     }
@@ -1470,8 +1479,12 @@ void tst_qquicktextinput::masks()
     QTRY_VERIFY(textinputObject->hasActiveFocus() == true);
     QVERIFY(textinputObject->text().length() == 0);
     QCOMPARE(textinputObject->inputMask(), QString("HHHHhhhh; "));
+    QCOMPARE(textinputObject->length(), 8);
     for (int i=0; i<10; i++) {
         QTRY_COMPARE(qMin(i,8), textinputObject->text().length());
+        QCOMPARE(textinputObject->length(), 8);
+        QCOMPARE(textinputObject->getText(0, qMin(i, 8)), QString(qMin(i, 8), 'a'));
+        QCOMPARE(textinputObject->getText(qMin(i, 8), 8), QString(8 - qMin(i, 8), ' '));
         QCOMPARE(i>=4, textinputObject->hasAcceptableInput());
         //simulateKey(&canvas, Qt::Key_A);
         QTest::keyPress(&canvas, Qt::Key_A);
@@ -2809,6 +2822,790 @@ void tst_qquicktextinput::QTBUG_19956_data()
     QTest::addColumn<QString>("url");
     QTest::newRow("intvalidator") << "qtbug-19956int.qml";
     QTest::newRow("doublevalidator") << "qtbug-19956double.qml";
+}
+
+
+void tst_qquicktextinput::getText_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("inputMask");
+    QTest::addColumn<int>("start");
+    QTest::addColumn<int>("end");
+    QTest::addColumn<QString>("expectedText");
+
+    QTest::newRow("all plain text")
+            << standard.at(0)
+            << QString()
+            << 0 << standard.at(0).length()
+            << standard.at(0);
+
+    QTest::newRow("plain text sub string")
+            << standard.at(0)
+            << QString()
+            << 0 << 12
+            << standard.at(0).mid(0, 12);
+
+    QTest::newRow("plain text sub string reversed")
+            << standard.at(0)
+            << QString()
+            << 12 << 0
+            << standard.at(0).mid(0, 12);
+
+    QTest::newRow("plain text cropped beginning")
+            << standard.at(0)
+            << QString()
+            << -3 << 4
+            << standard.at(0).mid(0, 4);
+
+    QTest::newRow("plain text cropped end")
+            << standard.at(0)
+            << QString()
+            << 23 << standard.at(0).length() + 8
+            << standard.at(0).mid(23);
+
+    QTest::newRow("plain text cropped beginning and end")
+            << standard.at(0)
+            << QString()
+            << -9 << standard.at(0).length() + 4
+            << standard.at(0);
+}
+
+void tst_qquicktextinput::getText()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, inputMask);
+    QFETCH(int, start);
+    QFETCH(int, end);
+    QFETCH(QString, expectedText);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; inputMask: \"" + inputMask + "\" }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QCOMPARE(textInput->getText(start, end), expectedText);
+}
+
+void tst_qquicktextinput::insert_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("inputMask");
+    QTest::addColumn<int>("selectionStart");
+    QTest::addColumn<int>("selectionEnd");
+    QTest::addColumn<int>("insertPosition");
+    QTest::addColumn<QString>("insertText");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<int>("expectedSelectionStart");
+    QTest::addColumn<int>("expectedSelectionEnd");
+    QTest::addColumn<int>("expectedCursorPosition");
+    QTest::addColumn<bool>("selectionChanged");
+    QTest::addColumn<bool>("cursorPositionChanged");
+
+    QTest::newRow("at cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 5 << 5 << 5
+            << false << true;
+
+    QTest::newRow("at cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length() << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << standard.at(0).length() + 5 << standard.at(0).length() + 5 << standard.at(0).length() + 5
+            << false << true;
+
+    QTest::newRow("at cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 23 << 23 << 23
+            << false << true;
+
+    QTest::newRow("after cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("before cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length() << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << standard.at(0).length() + 5 << standard.at(0).length() + 5 << standard.at(0).length() + 5
+            << false << true;
+
+    QTest::newRow("before cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 23 << 23 << 23
+            << false << true;
+
+    QTest::newRow("after cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18 << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << 18 << 18 << 18
+            << false << false;
+
+    QTest::newRow("before selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 19 << 24 << 24
+            << false << true;
+
+    QTest::newRow("before reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 19 << 24 << 19
+            << false << true;
+
+    QTest::newRow("after selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19 << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << 14 << 19 << 19
+            << false << false;
+
+    QTest::newRow("after reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14 << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << 14 << 19 << 14
+            << false << false;
+
+    QTest::newRow("into selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 14 << 24 << 24
+            << true << true;
+
+    QTest::newRow("into reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 14 << 24 << 14
+            << true << false;
+
+    QTest::newRow("rich text into plain text")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << 0
+            << QString("<b>Hello</b>")
+            << QString("<b>Hello</b>") + standard.at(0)
+            << 12 << 12 << 12
+            << false << true;
+
+    QTest::newRow("before start")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << -3
+            << QString("Hello")
+            << standard.at(0)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("past end")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << standard.at(0).length() + 3
+            << QString("Hello")
+            << standard.at(0)
+            << 0 << 0 << 0
+            << false << false;
+
+    const QString inputMask = "009.009.009.009";
+    const QString ip = "192.168.2.14";
+
+    QTest::newRow("mask: at cursor position (beginning)")
+            << ip
+            << inputMask
+            << 0 << 0 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: at cursor position (end)")
+            << ip
+            << inputMask
+            << inputMask.length() << inputMask.length() << inputMask.length()
+            << QString("8")
+            << ip
+            << inputMask.length() << inputMask.length() << inputMask.length()
+            << false << false;
+
+    QTest::newRow("mask: at cursor position (middle)")
+            << ip
+            << inputMask
+            << 6 << 6 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: after cursor position (beginning)")
+            << ip
+            << inputMask
+            << 0 << 0 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: before cursor position (end)")
+            << ip
+            << inputMask
+            << inputMask.length() << inputMask.length() << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << inputMask.length() << inputMask.length() << inputMask.length()
+            << false << false;
+
+    QTest::newRow("mask: before cursor position (middle)")
+            << ip
+            << inputMask
+            << 6 << 6 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: after cursor position (middle)")
+            << ip
+            << inputMask
+            << 6 << 6 << 13
+            << QString("8")
+            << "192.168.2.18"
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: before selection")
+            << ip
+            << inputMask
+            << 6 << 8 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: before reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: after selection")
+            << ip
+            << inputMask
+            << 6 << 8 << 13
+            << QString("8")
+            << "192.168.2.18"
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: after reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6 << 13
+            << QString("8")
+            << "192.168.2.18"
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: into selection")
+            << ip
+            << inputMask
+            << 5 << 8 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 5 << 8 << 8
+            << true << false;
+
+    QTest::newRow("mask: into reversed selection")
+            << ip
+            << inputMask
+            << 8 << 5 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 5 << 8 << 5
+            << true << false;
+
+    QTest::newRow("mask: before start")
+            << ip
+            << inputMask
+            << 0 << 0 << -3
+            << QString("4")
+            << ip
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: past end")
+            << ip
+            << inputMask
+            << 0 << 0 << ip.length() + 3
+            << QString("4")
+            << ip
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: invalid characters")
+            << ip
+            << inputMask
+            << 0 << 0 << 0
+            << QString("abc")
+            << QString("192.168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: mixed validity")
+            << ip
+            << inputMask
+            << 0 << 0 << 0
+            << QString("a1b2c5")
+            << QString("125.168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+}
+
+void tst_qquicktextinput::insert()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, inputMask);
+    QFETCH(int, selectionStart);
+    QFETCH(int, selectionEnd);
+    QFETCH(int, insertPosition);
+    QFETCH(QString, insertText);
+    QFETCH(QString, expectedText);
+    QFETCH(int, expectedSelectionStart);
+    QFETCH(int, expectedSelectionEnd);
+    QFETCH(int, expectedCursorPosition);
+    QFETCH(bool, selectionChanged);
+    QFETCH(bool, cursorPositionChanged);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; inputMask: \"" + inputMask + "\" }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    textInput->select(selectionStart, selectionEnd);
+
+    QSignalSpy selectionSpy(textInput, SIGNAL(selectedTextChanged()));
+    QSignalSpy selectionStartSpy(textInput, SIGNAL(selectionStartChanged()));
+    QSignalSpy selectionEndSpy(textInput, SIGNAL(selectionEndChanged()));
+    QSignalSpy textSpy(textInput, SIGNAL(textChanged()));
+    QSignalSpy cursorPositionSpy(textInput, SIGNAL(cursorPositionChanged()));
+
+    textInput->insert(insertPosition, insertText);
+
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.length() : inputMask.length());
+
+    QCOMPARE(textInput->selectionStart(), expectedSelectionStart);
+    QCOMPARE(textInput->selectionEnd(), expectedSelectionEnd);
+    QCOMPARE(textInput->cursorPosition(), expectedCursorPosition);
+
+    if (selectionStart > selectionEnd)
+        qSwap(selectionStart, selectionEnd);
+
+    QCOMPARE(selectionSpy.count() > 0, selectionChanged);
+    QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
+    QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
+    QCOMPARE(textSpy.count() > 0, text != expectedText);
+    QCOMPARE(cursorPositionSpy.count() > 0, cursorPositionChanged);
+}
+
+void tst_qquicktextinput::remove_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("inputMask");
+    QTest::addColumn<int>("selectionStart");
+    QTest::addColumn<int>("selectionEnd");
+    QTest::addColumn<int>("removeStart");
+    QTest::addColumn<int>("removeEnd");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<int>("expectedSelectionStart");
+    QTest::addColumn<int>("expectedSelectionEnd");
+    QTest::addColumn<int>("expectedCursorPosition");
+    QTest::addColumn<bool>("selectionChanged");
+    QTest::addColumn<bool>("cursorPositionChanged");
+
+    QTest::newRow("from cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("to cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 5 << 0
+            << standard.at(0).mid(5)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("to cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length()
+            << standard.at(0).length() << standard.at(0).length() - 5
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << false << true;
+
+    QTest::newRow("to cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length()
+            << standard.at(0).length() - 5 << standard.at(0).length()
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << false << true;
+
+    QTest::newRow("from cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 18 << 18 << 18
+            << false << false;
+
+    QTest::newRow("to cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 23 << 23
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 18 << 18 << 18
+            << false << true;
+
+    QTest::newRow("after cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("before cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length()
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << false << true;
+
+    QTest::newRow("before cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 23 << 23
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 18 << 18 << 18
+            << false << true;
+
+    QTest::newRow("after cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 18 << 18 << 18
+            << false << false;
+
+    QTest::newRow("before selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 9 << 14 << 14
+            << false << true;
+
+    QTest::newRow("before reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 9 << 14 << 9
+            << false << true;
+
+    QTest::newRow("after selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19
+            << standard.at(0).length() - 5 << standard.at(0).length()
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << 14 << 19 << 19
+            << false << false;
+
+    QTest::newRow("after reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14
+            << standard.at(0).length() - 5 << standard.at(0).length()
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << 14 << 19 << 14
+            << false << false;
+
+    QTest::newRow("from selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 24
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 14 << 19 << 19
+            << true << true;
+
+    QTest::newRow("from reversed selection")
+            << standard.at(0)
+            << QString()
+            << 24 << 14
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 14 << 19 << 14
+            << true << false;
+
+    QTest::newRow("cropped beginning")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << -3 << 4
+            << standard.at(0).mid(4)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("cropped end")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 23 << standard.at(0).length() + 8
+            << standard.at(0).mid(0, 23)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("cropped beginning and end")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << -9 << standard.at(0).length() + 4
+            << QString()
+            << 0 << 0 << 0
+            << false << false;
+
+    const QString inputMask = "009.009.009.009";
+    const QString ip = "192.168.2.14";
+
+    QTest::newRow("mask: from cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 6 << 9
+            << QString("192.16..14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: to cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 2 << 6
+            << QString("19.8.2.14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: before cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 0 << 2
+            << QString("2.168.2.14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: after cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 12 << 16
+            << QString("192.168.2.")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: before selection")
+            << ip
+            << inputMask
+            << 6 << 8
+            << 0 << 2
+            << QString("2.168.2.14")
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: before reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6
+            << 0 << 2
+            << QString("2.168.2.14")
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: after selection")
+            << ip
+            << inputMask
+            << 6 << 8
+            << 12 << 16
+            << QString("192.168.2.")
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: after reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6
+            << 12 << 16
+            << QString("192.168.2.")
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: from selection")
+            << ip
+            << inputMask
+            << 6 << 13
+            << 8 << 10
+            << QString("192.168..14")
+            << 6 << 13 << 13
+            << true << false;
+
+    QTest::newRow("mask: from reversed selection")
+            << ip
+            << inputMask
+            << 13 << 6
+            << 8 << 10
+            << QString("192.168..14")
+            << 6 << 13 << 6
+            << true << false;
+
+    QTest::newRow("mask: cropped beginning")
+            << ip
+            << inputMask
+            << 0 << 0
+            << -3 << 4
+            << QString(".168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: cropped end")
+            << ip
+            << inputMask
+            << 0 << 0
+            << 13 << 28
+            << QString("192.168.2.1")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: cropped beginning and end")
+            << ip
+            << inputMask
+            << 0 << 0
+            << -9 << 28
+            << QString("...")
+            << 0 << 0 << 0
+            << false << false;
+}
+
+void tst_qquicktextinput::remove()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, inputMask);
+    QFETCH(int, selectionStart);
+    QFETCH(int, selectionEnd);
+    QFETCH(int, removeStart);
+    QFETCH(int, removeEnd);
+    QFETCH(QString, expectedText);
+    QFETCH(int, expectedSelectionStart);
+    QFETCH(int, expectedSelectionEnd);
+    QFETCH(int, expectedCursorPosition);
+    QFETCH(bool, selectionChanged);
+    QFETCH(bool, cursorPositionChanged);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; inputMask: \"" + inputMask + "\" }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    textInput->select(selectionStart, selectionEnd);
+
+    QSignalSpy selectionSpy(textInput, SIGNAL(selectedTextChanged()));
+    QSignalSpy selectionStartSpy(textInput, SIGNAL(selectionStartChanged()));
+    QSignalSpy selectionEndSpy(textInput, SIGNAL(selectionEndChanged()));
+    QSignalSpy textSpy(textInput, SIGNAL(textChanged()));
+    QSignalSpy cursorPositionSpy(textInput, SIGNAL(cursorPositionChanged()));
+
+    textInput->remove(removeStart, removeEnd);
+
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.length() : inputMask.length());
+
+    if (selectionStart > selectionEnd)  //
+        qSwap(selectionStart, selectionEnd);
+
+    QCOMPARE(textInput->selectionStart(), expectedSelectionStart);
+    QCOMPARE(textInput->selectionEnd(), expectedSelectionEnd);
+    QCOMPARE(textInput->cursorPosition(), expectedCursorPosition);
+
+    QCOMPARE(selectionSpy.count() > 0, selectionChanged);
+    QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
+    QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
+    QCOMPARE(textSpy.count() > 0, text != expectedText);
+
+    if (cursorPositionChanged)  //
+        QVERIFY(cursorPositionSpy.count() > 0);
 }
 
 void tst_qquicktextinput::keySequence_data()

@@ -135,6 +135,42 @@ void QQuickTextInput::setText(const QString &s)
     d->internalSetText(s, -1, false);
 }
 
+/*!
+    \qmlproperty int QtQuick2::TextInput::length
+
+    Returns the total number of characters in the TextInput item.
+
+    If the TextInput has an inputMask the length will include mask characters and may differ
+    from the length of the string returned by the \l text property.
+
+    This property can be faster than querying the length the \l text property as it doesn't
+    require any copying or conversion of the TextInput's internal string data.
+*/
+
+int QQuickTextInput::length() const
+{
+    Q_D(const QQuickTextInput);
+    return d->m_text.length();
+}
+
+/*!
+    \qmlmethod string QtQuick2::TextInput::getText(int start, int end)
+
+    Returns the section of text that is between the \a start and \a end positions.
+
+    If the TextInput has an inputMask the length will include mask characters.
+*/
+
+QString QQuickTextInput::getText(int start, int end) const
+{
+    Q_D(const QQuickTextInput);
+
+    if (start > end)
+        qSwap(start, end);
+
+    return d->m_text.mid(start, end - start);
+}
+
 QString QQuickTextInputPrivate::realText() const
 {
     QString res = m_maskData ? stripString(m_text) : m_text;
@@ -693,7 +729,7 @@ int QQuickTextInput::selectionEnd() const
 void QQuickTextInput::select(int start, int end)
 {
     Q_D(QQuickTextInput);
-    if (start < 0 || end < 0 || start > text().length() || end > text().length())
+    if (start < 0 || end < 0 || start > d->m_text.length() || end > d->m_text.length())
         return;
     d->setSelection(start, end-start);
 }
@@ -1664,6 +1700,158 @@ void QQuickTextInput::paste()
         d->paste();
 }
 #endif // QT_NO_CLIPBOARD
+
+/*!
+    \qmlmethod void QtQuick2::TextInput::insert(int position, string text)
+
+    Inserts \a text into the TextInput at position.
+*/
+
+void QQuickTextInput::insert(int position, const QString &text)
+{
+    Q_D(QQuickTextInput);
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+    if (d->m_echoMode == QQuickTextInput::Password)
+        d->m_passwordEchoTimer.start(qt_passwordEchoDelay, this);
+#endif
+
+    if (position < 0 || position > d->m_text.length())
+        return;
+
+    const int priorState = d->m_undoState;
+
+    QString insertText = text;
+
+    if (d->hasSelectedText()) {
+        d->addCommand(QQuickTextInputPrivate::Command(
+                QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+    }
+    if (d->m_maskData) {
+        insertText = d->maskString(position, insertText);
+        for (int i = 0; i < insertText.length(); ++i) {
+            d->addCommand(QQuickTextInputPrivate::Command(
+                    QQuickTextInputPrivate::DeleteSelection, position + i, d->m_text.at(position + i), -1, -1));
+            d->addCommand(QQuickTextInputPrivate::Command(
+                    QQuickTextInputPrivate::Insert, position + i, insertText.at(i), -1, -1));
+        }
+        d->m_text.replace(position, insertText.length(), insertText);
+        if (!insertText.isEmpty())
+            d->m_textDirty = true;
+        if (position < d->m_selend && position + insertText.length() > d->m_selstart)
+            d->m_selDirty = true;
+    } else {
+        int remaining = d->m_maxLength - d->m_text.length();
+        if (remaining != 0) {
+            insertText = insertText.left(remaining);
+            d->m_text.insert(position, insertText);
+            for (int i = 0; i < insertText.length(); ++i)
+               d->addCommand(QQuickTextInputPrivate::Command(
+                    QQuickTextInputPrivate::Insert, position + i, insertText.at(i), -1, -1));
+            if (d->m_cursor >= position)
+                d->m_cursor += insertText.length();
+            if (d->m_selstart >= position)
+                d->m_selstart += insertText.length();
+            if (d->m_selend >= position)
+                d->m_selend += insertText.length();
+            d->m_textDirty = true;
+            if (position >= d->m_selstart && position <= d->m_selend)
+                d->m_selDirty = true;
+        }
+    }
+
+    d->addCommand(QQuickTextInputPrivate::Command(
+            QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+    d->finishChange(priorState);
+
+    if (d->lastSelectionStart != d->lastSelectionEnd) {
+        if (d->m_selstart != d->lastSelectionStart) {
+            d->lastSelectionStart = d->m_selstart;
+            emit selectionStartChanged();
+        }
+        if (d->m_selend != d->lastSelectionEnd) {
+            d->lastSelectionEnd = d->m_selend;
+            emit selectionEndChanged();
+        }
+    }
+}
+
+/*!
+    \qmlmethod string QtQuick2::TextInput::getText(int start, int end)
+
+    Removes the section of text that is between the \a start and \a end positions from the TextInput.
+*/
+
+void QQuickTextInput::remove(int start, int end)
+{
+    Q_D(QQuickTextInput);
+
+    start = qBound(0, start, d->m_text.length());
+    end = qBound(0, end, d->m_text.length());
+
+    if (start > end)
+        qSwap(start, end);
+    else if (start == end)
+        return;
+
+    if (start < d->m_selend && end > d->m_selstart)
+        d->m_selDirty = true;
+
+    const int priorState = d->m_undoState;
+
+    d->addCommand(QQuickTextInputPrivate::Command(
+            QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+
+    if (start <= d->m_cursor && d->m_cursor < end) {
+        // cursor is within the selection. Split up the commands
+        // to be able to restore the correct cursor position
+        for (int i = d->m_cursor; i >= start; --i) {
+            d->addCommand(QQuickTextInputPrivate::Command(
+                    QQuickTextInputPrivate::DeleteSelection, i, d->m_text.at(i), -1, 1));
+        }
+        for (int i = end - 1; i > d->m_cursor; --i) {
+            d->addCommand(QQuickTextInputPrivate::Command(
+                    QQuickTextInputPrivate::DeleteSelection, i - d->m_cursor + start - 1, d->m_text.at(i), -1, -1));
+        }
+    } else {
+        for (int i = end - 1; i >= start; --i) {
+            d->addCommand(QQuickTextInputPrivate::Command(
+                    QQuickTextInputPrivate::RemoveSelection, i, d->m_text.at(i), -1, -1));
+        }
+    }
+    if (d->m_maskData) {
+        d->m_text.replace(start, end - start,  d->clearString(start, end - start));
+        for (int i = 0; i < end - start; ++i) {
+            d->addCommand(QQuickTextInputPrivate::Command(
+                    QQuickTextInputPrivate::Insert, start + i, d->m_text.at(start + i), -1, -1));
+        }
+    } else {
+        d->m_text.remove(start, end - start);
+
+        if (d->m_cursor > start)
+            d->m_cursor -= qMin(d->m_cursor, end) - start;
+        if (d->m_selstart > start)
+            d->m_selstart -= qMin(d->m_selstart, end) - start;
+        if (d->m_selend > end)
+            d->m_selend -= qMin(d->m_selend, end) - start;
+    }
+    d->addCommand(QQuickTextInputPrivate::Command(
+            QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+
+    d->m_textDirty = true;
+    d->finishChange(priorState);
+
+    if (d->lastSelectionStart != d->lastSelectionEnd) {
+        if (d->m_selstart != d->lastSelectionStart) {
+            d->lastSelectionStart = d->m_selstart;
+            emit selectionStartChanged();
+        }
+        if (d->m_selend != d->lastSelectionEnd) {
+            d->lastSelectionEnd = d->m_selend;
+            emit selectionEndChanged();
+        }
+    }
+}
+
 
 /*!
     \qmlmethod void QtQuick2::TextInput::selectWord()
@@ -2732,11 +2920,13 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         m_preeditDirty = false;
         determineHorizontalAlignment();
     }
+
     if (m_selDirty) {
         m_selDirty = false;
         emit q->selectionChanged();
     }
     emitCursorPositionChanged();
+
     return true;
 }
 
@@ -3225,12 +3415,12 @@ QString QQuickTextInputPrivate::stripString(const QString &str) const
 
     QString s;
     int end = qMin(m_maxLength, (int)str.length());
-    for (int i = 0; i < end; ++i)
+    for (int i = 0; i < end; ++i) {
         if (m_maskData[i].separator)
             s += m_maskData[i].maskChar;
-        else
-            if (str[i] != m_blank)
-                s += str[i];
+        else if (str[i] != m_blank)
+            s += str[i];
+    }
 
     return s;
 }
