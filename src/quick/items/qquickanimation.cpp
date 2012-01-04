@@ -645,6 +645,7 @@ void QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
         (modified.count() > origModifiedSize || data->toDefined)) {
         data->target = d->target;
         data->path = d->path;
+        data->path->invalidateSequentialHistory();
         if (!d->rangeIsSet) {
             d->pa->setStartValue(qreal(0));
             d->pa->setEndValue(qreal(1));

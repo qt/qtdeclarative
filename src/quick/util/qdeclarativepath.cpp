@@ -513,6 +513,12 @@ void QDeclarativePath::createPointCache() const
     }
 }
 
+void QDeclarativePath::invalidateSequentialHistory() const
+{
+    Q_D(const QDeclarativePath);
+    d->prevBez.isValid = false;
+}
+
 QPointF QDeclarativePath::sequentialPointAt(qreal p, qreal *angle) const
 {
     Q_D(const QDeclarativePath);
@@ -590,7 +596,7 @@ QPointF QDeclarativePath::backwardsPointAt(const QPainterPath &path, const qreal
     if (pathLength <= 0 || qIsNaN(pathLength))
         return path.pointAtPercent(0);
 
-    const int firstElement = 0;
+    const int firstElement = 1; //element 0 is always a MoveTo, which we ignore
     bool haveCachedBez = prevBez.isValid;
     int currElement = haveCachedBez ? prevBez.element : path.elementCount();
     qreal bezLength = haveCachedBez ? prevBez.bezLength : 0;
@@ -612,7 +618,9 @@ QPointF QDeclarativePath::backwardsPointAt(const QPainterPath &path, const qreal
                 Q_ASSERT(!(currElement < firstElement));
                 Q_UNUSED(firstElement);
                 currBez = nextBezier(path, &currElement, &bezLength, true /*reverse*/);
-                currLength = prevLength;
+                //special case for first element is to avoid floating point math
+                //causing an epc that never hits 0.
+                currLength = (currElement == firstElement) ? bezLength : prevLength;
                 prevLength = currLength - bezLength;
                 epc = prevLength / pathLength;
             }

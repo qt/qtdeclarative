@@ -322,34 +322,61 @@ void tst_qdeclarativeanimations::pathInterpolator()
 
 void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
 {
-    QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, testFileUrl("pathInterpolatorBack.qml"));
-    QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
-    QVERIFY(interpolator);
+    {
+        QDeclarativeEngine engine;
+        QDeclarativeComponent c(&engine, testFileUrl("pathInterpolatorBack.qml"));
+        QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
+        QVERIFY(interpolator);
 
-    QCOMPARE(interpolator->progress(), qreal(0));
-    QCOMPARE(interpolator->x(), qreal(50));
-    QCOMPARE(interpolator->y(), qreal(50));
-    QCOMPARE(interpolator->angle(), qreal(270));
+        QCOMPARE(interpolator->progress(), qreal(0));
+        QCOMPARE(interpolator->x(), qreal(50));
+        QCOMPARE(interpolator->y(), qreal(50));
+        QCOMPARE(interpolator->angle(), qreal(270));
 
-    interpolator->setProgress(.5);
-    QCOMPARE(interpolator->progress(), qreal(.5));
-    QCOMPARE(interpolator->x(), qreal(100));
-    QCOMPARE(interpolator->y(), qreal(75));
-    QCOMPARE(interpolator->angle(), qreal(90));
+        interpolator->setProgress(.5);
+        QCOMPARE(interpolator->progress(), qreal(.5));
+        QCOMPARE(interpolator->x(), qreal(100));
+        QCOMPARE(interpolator->y(), qreal(75));
+        QCOMPARE(interpolator->angle(), qreal(90));
 
-    interpolator->setProgress(1);
-    QCOMPARE(interpolator->progress(), qreal(1));
-    QCOMPARE(interpolator->x(), qreal(200));
-    QCOMPARE(interpolator->y(), qreal(50));
-    QCOMPARE(interpolator->angle(), qreal(0));
+        interpolator->setProgress(1);
+        QCOMPARE(interpolator->progress(), qreal(1));
+        QCOMPARE(interpolator->x(), qreal(200));
+        QCOMPARE(interpolator->y(), qreal(50));
+        QCOMPARE(interpolator->angle(), qreal(0));
 
-    //make sure we don't get caught in infinite loop here
-    interpolator->setProgress(0);
-    QCOMPARE(interpolator->progress(), qreal(0));
-    QCOMPARE(interpolator->x(), qreal(50));
-    QCOMPARE(interpolator->y(), qreal(50));
-    QCOMPARE(interpolator->angle(), qreal(270));
+        //make sure we don't get caught in infinite loop here
+        interpolator->setProgress(0);
+        QCOMPARE(interpolator->progress(), qreal(0));
+        QCOMPARE(interpolator->x(), qreal(50));
+        QCOMPARE(interpolator->y(), qreal(50));
+        QCOMPARE(interpolator->angle(), qreal(270));
+    }
+
+    {
+        QDeclarativeEngine engine;
+        QDeclarativeComponent c(&engine, testFileUrl("pathInterpolatorBack2.qml"));
+        QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
+        QVERIFY(interpolator);
+
+        QCOMPARE(interpolator->progress(), qreal(0));
+        QCOMPARE(interpolator->x(), qreal(200));
+        QCOMPARE(interpolator->y(), qreal(280));
+        QCOMPARE(interpolator->angle(), qreal(180));
+
+        interpolator->setProgress(1);
+        QCOMPARE(interpolator->progress(), qreal(1));
+        QCOMPARE(interpolator->x(), qreal(0));
+        QCOMPARE(interpolator->y(), qreal(80));
+        QCOMPARE(interpolator->angle(), qreal(180));
+
+        //make sure we don't get caught in infinite loop here
+        interpolator->setProgress(0);
+        QCOMPARE(interpolator->progress(), qreal(0));
+        QCOMPARE(interpolator->x(), qreal(200));
+        QCOMPARE(interpolator->y(), qreal(280));
+        QCOMPARE(interpolator->angle(), qreal(180));
+    }
 }
 
 void tst_qdeclarativeanimations::pathWithNoStart()
