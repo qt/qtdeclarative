@@ -163,7 +163,14 @@ int QAccessibleQuickItem::indexOfChild(const QAccessibleInterface *iface) const
 
 QList<QQuickItem *> QAccessibleQuickItem::childItems() const
 {
-    if (role() == QAccessible::Button)
+    if (    role() == QAccessible::Button ||
+            role() == QAccessible::CheckBox ||
+            role() == QAccessible::RadioButton ||
+            role() == QAccessible::SpinBox ||
+            role() == QAccessible::EditableText ||
+            role() == QAccessible::Slider ||
+            role() == QAccessible::PageTab ||
+            role() == QAccessible::ProgressBar)
         return QList<QQuickItem *>();
     return m_item->childItems();
 }
