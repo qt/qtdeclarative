@@ -2307,13 +2307,11 @@ QRectF QQuickTextInput::boundingRect() const
 {
     Q_D(const QQuickTextInput);
 
-    QRectF r = d->boundingRect;
     int cursorWidth = d->cursorItem ? d->cursorItem->width() : d->m_cursorWidth;
 
     // Could include font max left/right bearings to either side of rectangle.
-
+    QRectF r = QQuickImplicitSizeItem::boundingRect();
     r.setRight(r.right() + cursorWidth);
-    r.translate(-d->hscroll, -d->vscroll);
     return r;
 }
 
