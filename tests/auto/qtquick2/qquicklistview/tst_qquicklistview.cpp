@@ -85,8 +85,12 @@ private slots:
     void qAbstractItemModel_inserted_more_data();
 
     void qListModelInterface_removed();
+    void qListModelInterface_removed_more();
+    void qListModelInterface_removed_more_data();
     void qListModelInterface_package_removed();
     void qAbstractItemModel_removed();
+    void qAbstractItemModel_removed_more();
+    void qAbstractItemModel_removed_more_data();
 
     void qListModelInterface_moved();
     void qListModelInterface_moved_data();
@@ -167,6 +171,7 @@ private:
     template <class T> void inserted(const QUrl &source);
     template <class T> void inserted_more();
     template <class T> void removed(const QUrl &source, bool animated);
+    template <class T> void removed_more(const QUrl &source);
     template <class T> void moved(const QUrl &source);
     template <class T> void clear(const QUrl &source);
     template <class T> void sections(const QUrl &source);
@@ -180,6 +185,7 @@ private:
     void dumpTree(QQuickItem *parent, int depth = 0);
 
     void inserted_more_data();
+    void removed_more_data();
     void moved_data();
 };
 
@@ -677,7 +683,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
     QCOMPARE(item->y(), 0.);
-    QVERIFY(listview->contentY() == 0);
+    QTRY_VERIFY(listview->contentY() == 0);
 
     delete canvas;
     delete testObject;
@@ -870,6 +876,7 @@ void tst_QQuickListView::insertBeforeVisible()
     int firstVisibleIndex = 20;     // move to an index where the top item is not visible
     listview->setContentY(firstVisibleIndex * 20.0);
     listview->setCurrentIndex(firstVisibleIndex);
+
     qApp->processEvents();
     QTRY_COMPARE(listview->currentIndex(), firstVisibleIndex);
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", firstVisibleIndex);
@@ -971,7 +978,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     }
 
     // Remove first item (which is the current item);
-    model.removeItem(0);  // post: top item starts at 20
+    model.removeItem(0);
     QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     name = findItem<QQuickText>(contentItem, "textName", 0);
@@ -987,7 +994,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(),i*20.0 + 20.0);
+        QTRY_COMPARE(item->y(),i*20.0);
     }
 
     // Remove items not visible
@@ -1000,14 +1007,14 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(),i*20.0+20.0);
+        QTRY_COMPARE(item->y(),i*20.0);
     }
 
     // Remove items before visible
     listview->setContentY(80);
     listview->setCurrentIndex(10);
 
-    model.removeItem(1); // post: top item will be at 40
+    model.removeItem(1); // post: top item will be at 20
     QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     // Confirm items positioned correctly
@@ -1015,7 +1022,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(),40+i*20.0);
+        QTRY_COMPARE(item->y(),20+i*20.0);
     }
 
     // Remove current index
@@ -1026,7 +1033,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     QTRY_COMPARE(listview->currentIndex(), 9);
     QTRY_VERIFY(listview->currentItem() != oldCurrent);
 
-    listview->setContentY(40); // That's the top now
+    listview->setContentY(20); // That's the top now
     // let transitions settle.
     QTest::qWait(300);
 
@@ -1036,7 +1043,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(),40+i*20.0);
+        QTRY_COMPARE(item->y(),20+i*20.0);
     }
 
     // remove current item beyond visible items.
@@ -1102,6 +1109,184 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
 
     delete canvas;
     delete testObject;
+}
+
+template <class T>
+void tst_QQuickListView::removed_more(const QUrl &source)
+{
+    QFETCH(qreal, contentY);
+    QFETCH(int, removeIndex);
+    QFETCH(int, removeCount);
+    QFETCH(qreal, itemsOffsetAfterMove);
+
+    QQuickText *name;
+    QQuickText *number;
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    T model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+
+    canvas->setSource(source);
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    listview->setContentY(contentY);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // wait for refill (after refill, items above the firstVisibleIndex-1 should not be rendered)
+    int firstVisibleIndex = contentY / 20;
+    if (firstVisibleIndex - 2 >= 0)
+        QTRY_VERIFY(!findItem<QQuickText>(contentItem, "textName", firstVisibleIndex - 2));
+
+    model.removeItems(removeIndex, removeCount);
+    QTRY_COMPARE(listview->property("count").toInt(), model.count());
+
+    // check visibleItems.first() is in correct position
+    QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
+    QVERIFY(item0);
+    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
+        name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+        number = findItem<QQuickText>(contentItem, "textNumber", i);
+        QVERIFY(number != 0);
+        QTRY_COMPARE(number->text(), model.number(i));
+    }
+
+    delete canvas;
+    delete testObject;
+}
+
+void tst_QQuickListView::removed_more_data()
+{
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<int>("removeIndex");
+    QTest::addColumn<int>("removeCount");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+
+    QTest::newRow("remove 1, before visible items")
+            << 80.0     // show 4-19
+            << 3 << 1
+            << 20.0;   // visible items slide down by 1 item so that first visible does not move
+
+    QTest::newRow("remove multiple, all before visible items")
+            << 80.0
+            << 1 << 3
+            << 20.0 * 3;
+
+    QTest::newRow("remove multiple, all before visible items, remove item 0")
+            << 80.0
+            << 0 << 4
+            << 20.0 * 4;
+
+    // remove 1,2,3 before the visible pos, 0 moves down to just before the visible pos,
+    // items 4,5 are removed from view, item 6 slides up to original pos of item 4 (80px)
+    QTest::newRow("remove multiple, mix of items from before and within visible items")
+            << 80.0
+            << 1 << 5
+            << 20.0 * 3;    // adjust for the 3 items removed before the visible
+
+    QTest::newRow("remove multiple, mix of items from before and within visible items, remove item 0")
+            << 80.0
+            << 0 << 6
+            << 20.0 * 4;    // adjust for the 3 items removed before the visible
+
+
+    QTest::newRow("remove 1, from start of visible, content at start")
+            << 0.0
+            << 0 << 1
+            << 0.0;
+
+    QTest::newRow("remove multiple, from start of visible, content at start")
+            << 0.0
+            << 0 << 3
+            << 0.0;
+
+    QTest::newRow("remove 1, from start of visible, content not at start")
+            << 80.0     // show 4-19
+            << 4 << 1
+            << 0.0;
+
+    QTest::newRow("remove multiple, from start of visible, content not at start")
+            << 80.0     // show 4-19
+            << 4 << 3
+            << 0.0;
+
+
+    QTest::newRow("remove 1, from middle of visible, content at start")
+            << 0.0
+            << 10 << 1
+            << 0.0;
+
+    QTest::newRow("remove multiple, from middle of visible, content at start")
+            << 0.0
+            << 10 << 5
+            << 0.0;
+
+    QTest::newRow("remove 1, from middle of visible, content not at start")
+            << 80.0     // show 4-19
+            << 10 << 1
+            << 0.0;
+
+    QTest::newRow("remove multiple, from middle of visible, content not at start")
+            << 80.0     // show 4-19
+            << 10 << 5
+            << 0.0;
+
+
+    QTest::newRow("remove 1, after visible, content at start")
+            << 0.0
+            << 16 << 1
+            << 0.0;
+
+    QTest::newRow("remove multiple, after visible, content at start")
+            << 0.0
+            << 16 << 5
+            << 0.0;
+
+    QTest::newRow("remove 1, after visible, content not at middle")
+            << 80.0     // show 4-19
+            << 16+4 << 1
+            << 0.0;
+
+    QTest::newRow("remove multiple, after visible, content not at start")
+            << 80.0     // show 4-19
+            << 16+4 << 5
+            << 0.0;
+
+    QTest::newRow("remove multiple, mix of items from within and after visible items")
+            << 80.0
+            << 18 << 5
+            << 0.0;
 }
 
 template <class T>
@@ -1182,10 +1367,10 @@ void tst_QQuickListView::moved(const QUrl &source)
     QTRY_VERIFY(currentItem != 0);
 
     listview->setContentY(contentY);
-    model.moveItems(from, to, count);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-    // wait for items to move
-    QTest::qWait(100);
+    model.moveItems(from, to, count);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
@@ -4210,6 +4395,16 @@ void tst_QQuickListView::qListModelInterface_removed()
     removed<TestModel>(testFileUrl("listviewtest.qml"), true);
 }
 
+void tst_QQuickListView::qListModelInterface_removed_more()
+{
+    removed_more<TestModel>(testFileUrl("listviewtest.qml"));
+}
+
+void tst_QQuickListView::qListModelInterface_removed_more_data()
+{
+    removed_more_data();
+}
+
 void tst_QQuickListView::qListModelInterface_package_removed()
 {
     removed<TestModel>(testFileUrl("listviewtest-package.qml"), false);
@@ -4220,6 +4415,16 @@ void tst_QQuickListView::qAbstractItemModel_removed()
 {
     removed<TestModel2>(testFileUrl("listviewtest.qml"), false);
     removed<TestModel2>(testFileUrl("listviewtest.qml"), true);
+}
+
+void tst_QQuickListView::qAbstractItemModel_removed_more()
+{
+    removed_more<TestModel2>(testFileUrl("listviewtest.qml"));
+}
+
+void tst_QQuickListView::qAbstractItemModel_removed_more_data()
+{
+    removed_more_data();
 }
 
 void tst_QQuickListView::qListModelInterface_moved()
@@ -4659,9 +4864,9 @@ void tst_QQuickListView::unrequestedVisibility()
     model.moveItems(17, 16, 1);
     QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
 
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 4));
     QCOMPARE(item->isVisible(), false);
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 6));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 16));
     QCOMPARE(item->isVisible(), true);
