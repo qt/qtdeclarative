@@ -997,11 +997,10 @@ void QDeclarativeListCompositor::listItemsRemoved(
                         && it->previous->list == it->list
                         && it->previous->end() == it->index
                         && it->previous->flags == (it->flags & ~AppendFlag)) {
+                    it.decrementIndexes(it->previous->count);
                     it->previous->count += it->count;
                     it->previous->flags = it->flags;
-                    it.incrementIndexes(it->count);
                     *it = erase(*it)->previous;
-                    removed = true;
                 }
             }
         }
