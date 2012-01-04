@@ -251,8 +251,35 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
         }
     }
 
-
     return QString();
 }
+
+void *QAccessibleQuickItemValueInterface::interface_cast(QAccessible::InterfaceType t)
+{
+    if (t == QAccessible::ValueInterface)
+       return static_cast<QAccessibleValueInterface*>(this);
+    return QAccessibleQuickItem::interface_cast(t);
+}
+
+QVariant QAccessibleQuickItemValueInterface::currentValue()
+{
+    return m_item->property("value");
+}
+
+void QAccessibleQuickItemValueInterface::setCurrentValue(const QVariant &value)
+{
+    m_item->setProperty("value", value);
+}
+
+QVariant QAccessibleQuickItemValueInterface::maximumValue()
+{
+    return m_item->property("maximumValue");
+}
+
+QVariant QAccessibleQuickItemValueInterface::minimumValue()
+{
+    return m_item->property("minimumValue");
+}
+
 
 QT_END_NAMESPACE

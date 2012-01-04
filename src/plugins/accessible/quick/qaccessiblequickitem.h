@@ -72,8 +72,23 @@ public:
     QString text(QAccessible::Text) const;
 
     bool isAccessible() const;
-private:
+
+protected:
    QQuickItem *m_item;
+};
+
+class QAccessibleQuickItemValueInterface: public QAccessibleQuickItem, public QAccessibleValueInterface
+{
+public:
+    QAccessibleQuickItemValueInterface(QQuickItem *item) : QAccessibleQuickItem(item)
+    {}
+
+    void *interface_cast(QAccessible::InterfaceType t);
+
+    QVariant currentValue();
+    void setCurrentValue(const QVariant &value);
+    QVariant maximumValue();
+    QVariant minimumValue();
 };
 
 #endif // QT_NO_ACCESSIBILITY

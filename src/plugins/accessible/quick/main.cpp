@@ -46,6 +46,7 @@
 
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 
 #include <qaccessibleplugin.h>
 #include <qvariant.h>
@@ -82,9 +83,23 @@ QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, Q
     if (classname == QLatin1String("QQuickView")) {
         return new QAccessibleQuickView(qobject_cast<QQuickView *>(object)); // FIXME
     } else if (classname == QLatin1String("QQuickItem")) {
-            QQuickItem * item = qobject_cast<QQuickItem *>(object);
-            Q_ASSERT(item);
+        QQuickItem * item = qobject_cast<QQuickItem *>(object);
+        Q_ASSERT(item);
+
+        QVariant v = QQuickAccessibleAttached::property(item, "role");
+        bool ok;
+        QAccessible::Role role = (QAccessible::Role)v.toInt(&ok);
+        if (!ok)    // Not sure if this check is needed.
             return new QAccessibleQuickItem(item);
+
+        switch (role) {
+        case QAccessible::Slider:
+        case QAccessible::SpinBox:
+        case QAccessible::Dial:
+            return new QAccessibleQuickItemValueInterface(item);
+        default:
+            return new QAccessibleQuickItem(item);
+        }
     }
 
     return 0;
