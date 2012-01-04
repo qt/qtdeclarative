@@ -3994,8 +3994,9 @@ void tst_QQuickListView::margins()
     // and yOrigin is updated
     listview->setContentY(100);
     model.removeItem(1);
-    QTest::qWait(100);
+    QTRY_COMPARE(listview->count(), model.count());
     listview->setContentY(-50);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     listview->returnToBounds();
     QCOMPARE(listview->yOrigin(), 20.);
     QTRY_COMPARE(listview->contentY(), -10.);
