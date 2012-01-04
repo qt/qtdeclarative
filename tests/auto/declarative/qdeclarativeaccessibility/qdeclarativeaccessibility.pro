@@ -1,5 +1,7 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative-private gui network qtquick1-private
+CONFIG += testcase
+
+TARGET = tst_qdeclarativeaccessibility
+QT += declarative-private network qtquick1-private testlib
 macx:CONFIG -= app_bundle
 
 SOURCES  += tst_qdeclarativeaccessibility.cpp
