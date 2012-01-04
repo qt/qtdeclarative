@@ -638,6 +638,7 @@ QAbstractAnimation2* QQuickPathAnimation::transition(QDeclarativeStateActions &a
         (modified.count() > origModifiedSize || data->toDefined)) {
         data->target = d->target;
         data->path = d->path;
+        data->path->invalidateSequentialHistory();
 
         if (havePrevData) {
             // get the original start angle that was used (so we can exactly reverse).

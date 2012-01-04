@@ -385,6 +385,7 @@ public:
     qreal attributeAt(const QString &, qreal) const;
     QPointF pointAt(qreal) const;
     QPointF sequentialPointAt(qreal p, qreal *angle = 0) const;
+    void invalidateSequentialHistory() const;
 
 Q_SIGNALS:
     void changed();
