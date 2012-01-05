@@ -60,7 +60,6 @@ public:
 
     QAccessibleInterface *child(int index) const;
     int childCount() const;
-    int navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const;
     QAccessibleInterface *childAt(int x, int y) const;
     int indexOfChild(const QAccessibleInterface *iface) const;
 

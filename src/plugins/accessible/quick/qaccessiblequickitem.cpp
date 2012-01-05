@@ -141,55 +141,14 @@ QAccessibleInterface *QAccessibleQuickItem::child(int index) const
 
 int QAccessibleQuickItem::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
 {
+    Q_UNUSED(rel);
+    Q_UNUSED(entry);
+    Q_UNUSED(target);
     *target = 0;
     if (entry == 0) {
         *target = new QAccessibleQuickItem(m_item);
         return 0;
     }
-
-    switch (rel) {
-    case QAccessible::Child: { // FIMXE
-        QList<QQuickItem *> children = childItems();
-        const int childIndex = entry - 1;
-
-        if (childIndex >= children.count())
-            return -1;
-
-        QQuickItem *child = children.at(childIndex);
-        if (!child)
-            return -1;
-
-        *target = new QAccessibleQuickItem(child);
-        return 0;
-        break;}
-    case QAccessible::Ancestor: { // FIMXE
-        QQuickItem *parent = m_item->parentItem();
-        if (parent) {
-            QDeclarativeAccessible *ancestor = new QAccessibleQuickItem(parent);
-            if (entry == 1) {
-                QQuickCanvas *canvas = m_item->canvas();
-                // Jump out to the scene widget if the parent is the root item.
-                // There are two root items, QQuickCanvas::rootItem and
-                // QQuickView::declarativeRoot. The former is the true root item,
-                // but is not a part of the accessibility tree. Check if we hit
-                // it here and return an interface for the scene instead.
-                if (parent == canvas->rootItem()) {
-                    *target = QAccessible::queryAccessibleInterface(canvas);
-                } else {
-                    *target = ancestor;
-                }
-                return 0;
-            } else if (entry > 1) {
-                int ret = ancestor->navigate(QAccessible::Ancestor, entry - 1, target);
-                delete ancestor;
-                return ret;
-            }
-        }
-        return -1;
-    break;}
-    default: break;
-    }
-
     return -1;
 }
 

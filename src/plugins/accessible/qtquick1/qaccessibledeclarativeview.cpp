@@ -68,17 +68,10 @@ QAccessibleInterface *QAccessibleDeclarativeView::child(int index) const
     return 0;
 }
 
-int QAccessibleDeclarativeView::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
-{
-    if (rel == QAccessible::Child) {
-        *target = child(entry - 1);
-        return *target ? 0 : -1;
-    }
-    return QAccessibleWidget::navigate(rel, entry, target);
-}
-
 QAccessibleInterface *QAccessibleDeclarativeView::childAt(int x, int y) const
 {
+    Q_UNUSED(x);
+    Q_UNUSED(y);
     return child(0); // return the top-level QML item
 }
 

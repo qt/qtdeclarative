@@ -93,15 +93,10 @@ QRect QAccessibleQuickView::rect() const
 
 int QAccessibleQuickView::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
 {
-    switch (rel) {
-    case QAccessible::Child:
-        *target = child(entry - 1);
-    case QAccessible::Ancestor:
-        *target = parent();
-    default:
-        *target = 0;
-    }
-    return *target ? 0 : -1;
+    Q_UNUSED(rel);
+    Q_UNUSED(entry);
+    Q_UNUSED(target);
+    return -1;
 }
 
 QString QAccessibleQuickView::text(QAccessible::Text text) const

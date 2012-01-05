@@ -129,50 +129,6 @@ int QAccessibleDeclarativeItem::navigate(QAccessible::RelationFlag rel, int entr
     }
 
     switch (rel) {
-    case QAccessible::Child: {
-        QList<QGraphicsItem *> children = m_item->childItems();
-        const int childIndex = entry - 1;
-
-        if (childIndex >= children.count())
-            return -1;
-
-        QGraphicsItem *child = children.at(childIndex);
-        QGraphicsObject *childObject = qobject_cast<QGraphicsObject *>(child);
-        if (!childObject)
-            return -1;
-
-        *target = new QAccessibleDeclarativeItem(childObject, m_view);
-        return 0;
-        break;}
-    case QAccessible::Ancestor: {
-        Q_ASSERT(entry >= 1);
-        QGraphicsItem *parent = m_item->parentItem();
-        QGraphicsObject *parentObj = parent ? parent->toGraphicsObject() : 0;
-        if (parent && !parentObj)
-            qWarning("Can not make QGraphicsItems accessible");
-        QAccessibleInterface *ancestor = (parentObj
-                 ? new QAccessibleDeclarativeItem(parentObj, m_view)
-                 : QAccessible::queryAccessibleInterface(m_view));
-        if (entry == 1) {
-            *target = ancestor;
-            return 0;
-        } else if (entry > 1) {
-            int ret = ancestor->navigate(QAccessible::Ancestor, entry - 1, target);
-            delete ancestor;
-            return ret;
-        }
-        break;}
-    case QAccessible::Sibling: {
-        QAccessibleInterface *iface = 0;
-        if (navigate(QAccessible::Ancestor, 1, &iface) == 0) {
-            if (iface) {
-                int ret = iface->navigate(QAccessible::Child, entry, target);
-                delete iface;
-                return ret;
-            }
-        }
-        return -1;
-        break;}
     case QAccessible::FocusChild: {
         QGraphicsObject *focusObject = 0;
         if (m_item->hasFocus()) {
@@ -194,7 +150,6 @@ int QAccessibleDeclarativeItem::navigate(QAccessible::RelationFlag rel, int entr
     }
 
     return -1;
-
 }
 
 int QAccessibleDeclarativeItem::indexOfChild(const QAccessibleInterface *iface) const
