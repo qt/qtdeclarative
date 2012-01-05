@@ -2975,6 +2975,9 @@ void tst_QQuickGridView::resizeViewAndRepaint()
     QVERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     gridview->setHeight(320);
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-23480", Abort);
+#endif
     QTRY_VERIFY(findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     gridview->setHeight(100);
