@@ -236,4 +236,108 @@ Item {
 */
 
 
+/*!
+    \qmlclass WheelEvent QQuickWheelEvent
+    \inqmlmodule QtQuick 2
+    \ingroup qml-event-elements
+
+    \brief The WheelEvent object provides information about a mouse wheel event.
+
+    The position of the mouse can be found via the \l x and \l y properties.
+
+    \sa MouseArea
+*/
+
+/*!
+    \internal
+    \class QQuickWheelEvent
+*/
+
+/*!
+    \qmlproperty int QtQuick2::WheelEvent::x
+    \qmlproperty int QtQuick2::WheelEvent::y
+
+    These properties hold the coordinates of the position supplied by the wheel event.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::WheelEvent::accepted
+
+    Setting \a accepted to true prevents the wheel event from being
+    propagated to items below this item.
+
+    Generally, if the item acts on the wheel event then it should be accepted
+    so that items lower in the stacking order do not also respond to the same event.
+*/
+
+/*!
+    \qmlproperty int QtQuick2::WheelEvent::buttons
+
+    This property holds the mouse buttons pressed when the wheel event was generated.
+
+    It contains a bitwise combination of:
+    \list
+    \o Qt.LeftButton
+    \o Qt.RightButton
+    \o Qt.MiddleButton
+    \endlist
+*/
+
+/*!
+    \qmlproperty point QtQuick2::WheelEvent::angleDelta
+
+    This property holds the distance that the wheel is rotated in wheel degrees.
+    The x and y cordinate of this property holds the delta in horizontal and
+    vertical orientation.
+
+    A positive value indicates that the wheel was rotated up/right;
+    a negative value indicates that the wheel was rotated down/left.
+
+    Most mouse types work in steps of 15 degrees, in which case the delta value is a
+    multiple of 120; i.e., 120 units * 1/8 = 15 degrees.
+*/
+
+/*!
+    \qmlproperty point QtQuick2::WheelEvent::pixelDelta
+
+    This property holds the delta in screen pixels and is available in plataforms that
+    have high-resolution trackpads, such as Mac OS X.
+    The x and y cordinate of this property holds the delta in horizontal and
+    vertical orientation. The value should be used directly to scroll content on screen.
+
+    For platforms without high-resolution trackpad support, pixelDelta will always be (0,0),
+    and angleDelta should be used instead.
+*/
+
+/*!
+    \qmlproperty int QtQuick2::WheelEvent::modifiers
+
+    This property holds the keyboard modifier flags that existed immediately
+    before the event occurred.
+
+    It contains a bitwise combination of:
+    \list
+    \o Qt.NoModifier - No modifier key is pressed.
+    \o Qt.ShiftModifier - A Shift key on the keyboard is pressed.
+    \o Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
+    \o Qt.AltModifier - An Alt key on the keyboard is pressed.
+    \o Qt.MetaModifier - A Meta key on the keyboard is pressed.
+    \o Qt.KeypadModifier - A keypad button is pressed.
+    \endlist
+
+    For example, to react to a Control key pressed during the wheel event:
+    \qml
+    MouseArea {
+        onWheel: {
+            if (wheel.modifiers & Qt.ControlModifier) {
+                if (wheel.angleDelta.y > 0)
+                    zoomIn();
+                else
+                    zoomOut();
+            }
+        }
+    }
+    \endqml
+*/
+
 QT_END_NAMESPACE

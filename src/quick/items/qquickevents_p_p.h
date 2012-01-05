@@ -201,9 +201,47 @@ private:
 };
 
 
+class QQuickWheelEvent : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal x READ x)
+    Q_PROPERTY(qreal y READ y)
+    Q_PROPERTY(QPoint angleDelta READ angleDelta)
+    Q_PROPERTY(QPoint pixelDelta READ pixelDelta)
+    Q_PROPERTY(int buttons READ buttons)
+    Q_PROPERTY(int modifiers READ modifiers)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+
+public:
+    QQuickWheelEvent(qreal x, qreal y, const QPoint& angleDelta, const QPoint& pixelDelta,
+                     Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers)
+        : _x(x), _y(y), _angleDelta(angleDelta), _pixelDelta(pixelDelta), _buttons(buttons),
+          _modifiers(modifiers), _accepted(true) {}
+
+    qreal x() const { return _x; }
+    qreal y() const { return _y; }
+    QPoint angleDelta() const { return _angleDelta; }
+    QPoint pixelDelta() const { return _pixelDelta; }
+    int buttons() const { return _buttons; }
+    int modifiers() const { return _modifiers; }
+
+    bool isAccepted() { return _accepted; }
+    void setAccepted(bool accepted) { _accepted = accepted; }
+
+private:
+    qreal _x;
+    qreal _y;
+    QPoint _angleDelta;
+    QPoint _pixelDelta;
+    Qt::MouseButtons _buttons;
+    Qt::KeyboardModifiers _modifiers;
+    bool _accepted;
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickKeyEvent)
 QML_DECLARE_TYPE(QQuickMouseEvent)
+QML_DECLARE_TYPE(QQuickWheelEvent)
 
 #endif // QQUICKEVENTS_P_P_H

@@ -83,6 +83,7 @@ public:
     bool isPressAndHoldConnected();
     bool isDoubleClickConnected();
     bool isClickConnected();
+    bool isWheelConnected();
 
     bool absorb : 1;
     bool hovered : 1;

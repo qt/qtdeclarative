@@ -1185,7 +1185,8 @@ bool QQuickCanvasPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 
     QPointF p = item->mapFromScene(event->posF());
     if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-        QWheelEvent wheel(p, event->delta(), event->buttons(), event->modifiers(), event->orientation());
+        QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
+                          event->orientation(), event->buttons(), event->modifiers());
         wheel.accept();
         q->sendEvent(item, &wheel);
         if (wheel.isAccepted()) {

@@ -236,6 +236,13 @@ bool QQuickMouseAreaPrivate::isClickConnected()
     return QObjectPrivate::get(q)->isSignalConnected(idx);
 }
 
+bool QQuickMouseAreaPrivate::isWheelConnected()
+{
+    Q_Q(QQuickMouseArea);
+    static int idx = QObjectPrivate::get(q)->signalIndex("wheel(QQuickWheelEvent*)");
+    return QObjectPrivate::get(q)->isSignalConnected(idx);
+}
+
 void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)
 {
     Q_Q(QQuickMouseArea);
@@ -331,7 +338,8 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     Information about the mouse position and button clicks are provided via
     signals for which event handler properties are defined. The most commonly
     used involved handling mouse presses and clicks: onClicked, onDoubleClicked,
-    onPressed, onReleased and onPressAndHold.
+    onPressed, onReleased and onPressAndHold. It's also possible to handle mouse
+    wheel events via the onWheel signal.
 
     By default, MouseArea items only report mouse clicks and not changes to the
     position of the mouse cursor. Setting the hoverEnabled property ensures that
@@ -513,6 +521,17 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     the logic when the MouseArea has lost the mouse handling to the \l Flickable,
     \c onCanceled should be used in addition to onReleased.
 */
+
+/*!
+    \qmlsignal QtQuick2::MouseArea::onWheel(WheelEvent mouse)
+
+    This handler is called in response to both mouse wheel and trackpad scroll gestures.
+
+    The \l {WheelEvent}{wheel} parameter provides information about the event, including the x and y
+    position, any buttons currently pressed, and information about the wheel movement, including
+    angleDelta and pixelDelta.
+*/
+
 QQuickMouseArea::QQuickMouseArea(QQuickItem *parent)
   : QQuickItem(*(new QQuickMouseAreaPrivate), parent)
 {
@@ -858,6 +877,22 @@ void QQuickMouseArea::hoverLeaveEvent(QHoverEvent *event)
         QQuickItem::hoverLeaveEvent(event);
     else
         setHovered(false);
+}
+
+void QQuickMouseArea::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickMouseArea);
+    if (!d->absorb) {
+        QQuickItem::wheelEvent(event);
+        return;
+    }
+
+    QQuickWheelEvent we(event->posF().x(), event->posF().y(), event->angleDelta(),
+                        event->pixelDelta(), event->buttons(), event->modifiers());
+    we.setAccepted(d->isWheelConnected());
+    emit wheel(&we);
+    if (!we.isAccepted())
+        QQuickItem::wheelEvent(event);
 }
 
 void QQuickMouseArea::ungrabMouse()

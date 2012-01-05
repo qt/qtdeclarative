@@ -73,6 +73,7 @@ private slots:
     void hoverPropagation();
     void hoverVisible();
     void disableAfterPress();
+    void onWheel();
 
 private:
     QQuickView *createView();
@@ -902,6 +903,26 @@ void tst_QQuickMouseArea::disableAfterPress()
     QTest::qWait(50);
 
     QCOMPARE(mouseReleaseSpy.count(), 0);
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::onWheel()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("wheel.qml"));
+
+    QQuickItem *root = canvas->rootObject();
+    QVERIFY(root != 0);
+
+    QWheelEvent wheelEvent(QPoint(10, 32), QPoint(10, 32), QPoint(60, 20), QPoint(0, 120),
+                           0, Qt::Vertical,Qt::NoButton, Qt::ControlModifier);
+    QGuiApplication::sendEvent(canvas, &wheelEvent);
+
+    QCOMPARE(root->property("angleDeltaY").toInt(), 120);
+    QCOMPARE(root->property("mouseX").toReal(), qreal(10));
+    QCOMPARE(root->property("mouseY").toReal(), qreal(32));
+    QCOMPARE(root->property("controlPressed").toBool(), true);
 
     delete canvas;
 }
