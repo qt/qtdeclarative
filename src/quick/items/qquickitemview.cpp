@@ -700,6 +700,18 @@ int QQuickItemView::indexAt(qreal x, qreal y) const
     return -1;
 }
 
+QQuickItem *QQuickItemView::itemAt(qreal x, qreal y) const
+{
+    Q_D(const QQuickItemView);
+    for (int i = 0; i < d->visibleItems.count(); ++i) {
+        const FxViewItem *item = d->visibleItems.at(i);
+        if (item->contains(x, y))
+            return item->item;
+    }
+
+    return 0;
+}
+
 void QQuickItemViewPrivate::applyPendingChanges()
 {
     Q_Q(QQuickItemView);

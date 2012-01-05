@@ -103,7 +103,8 @@ private slots:
     void header();
     void header_data();
     void resizeViewAndRepaint();
-    void indexAt();
+    void indexAt_itemAt_data();
+    void indexAt_itemAt();
     void onAdd();
     void onAdd_data();
     void onRemove();
@@ -2986,8 +2987,25 @@ void tst_QQuickGridView::resizeViewAndRepaint()
     delete canvas;
 }
 
-void tst_QQuickGridView::indexAt()
+void tst_QQuickGridView::indexAt_itemAt_data()
 {
+    QTest::addColumn<qreal>("x");
+    QTest::addColumn<qreal>("y");
+    QTest::addColumn<int>("index");
+
+    QTest::newRow("Item 0 - 0, 0") << 0. << 0. << 0;
+    QTest::newRow("Item 0 - 79, 59") << 79. << 59. << 0;
+    QTest::newRow("Item 1 - 80, 0") << 80. << 0. << 1;
+    QTest::newRow("Item 3 - 0, 60") << 0. << 60. << 3;
+    QTest::newRow("No Item - 240, 0") << 240. << 0. << -1;
+}
+
+void tst_QQuickGridView::indexAt_itemAt()
+{
+    QFETCH(qreal, x);
+    QFETCH(qreal, y);
+    QFETCH(int, index);
+
     QQuickView *canvas = createView();
 
     TestModel model;
@@ -3015,11 +3033,13 @@ void tst_QQuickGridView::indexAt()
 
     QTRY_COMPARE(gridview->count(), model.count());
 
-    QCOMPARE(gridview->indexAt(0, 0), 0);
-    QCOMPARE(gridview->indexAt(79, 59), 0);
-    QCOMPARE(gridview->indexAt(80, 0), 1);
-    QCOMPARE(gridview->indexAt(0, 60), 3);
-    QCOMPARE(gridview->indexAt(240, 0), -1);
+    QQuickItem *item = 0;
+    if (index >= 0) {
+        item = findItem<QQuickItem>(contentItem, "wrapper", index);
+        QVERIFY(item);
+    }
+    QCOMPARE(gridview->indexAt(x, y), index);
+    QVERIFY(gridview->itemAt(x, y) == item);
 
     delete canvas;
 }

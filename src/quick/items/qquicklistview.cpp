@@ -2550,6 +2550,19 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
     \bold Note: methods should only be called after the Component has completed.
 */
 
+/*!
+    \qmlmethod Item QtQuick2::ListView::itemAt(int x, int y)
+
+    Returns the visible item containing the point \a x, \a y in content
+    coordinates.  If there is no item at the point specified, or the item is
+    not visible null is returned.
+
+    If the item is outside the visible area, null is returned, regardless of
+    whether an item will exist at that point when scrolled into view.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
+
 QQuickListViewAttached *QQuickListView::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickListViewAttached(obj);

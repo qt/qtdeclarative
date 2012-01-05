@@ -138,7 +138,8 @@ private slots:
     void resizeDelegate();
     void resizeFirstDelegate();
     void QTBUG_16037();
-    void indexAt();
+    void indexAt_itemAt_data();
+    void indexAt_itemAt();
     void incrementalModel();
     void onAdd();
     void onAdd_data();
@@ -3686,8 +3687,25 @@ void tst_QQuickListView::QTBUG_16037()
     delete canvas;
 }
 
-void tst_QQuickListView::indexAt()
+void tst_QQuickListView::indexAt_itemAt_data()
 {
+    QTest::addColumn<qreal>("x");
+    QTest::addColumn<qreal>("y");
+    QTest::addColumn<int>("index");
+
+    QTest::newRow("Item 0 - 0, 0") << 0. << 0. << 0;
+    QTest::newRow("Item 0 - 0, 19") << 0. << 19. << 0;
+    QTest::newRow("Item 0 - 239, 19") << 239. << 19. << 0;
+    QTest::newRow("Item 1 - 0, 20") << 0. << 20. << 1;
+    QTest::newRow("No Item - 240, 20") << 240. << 20. << -1;
+}
+
+void tst_QQuickListView::indexAt_itemAt()
+{
+    QFETCH(qreal, x);
+    QFETCH(qreal, y);
+    QFETCH(int, index);
+
     QQuickView *canvas = createView();
 
     TestModel model;
@@ -3709,11 +3727,13 @@ void tst_QQuickListView::indexAt()
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    QCOMPARE(listview->indexAt(0,0), 0);
-    QCOMPARE(listview->indexAt(0,19), 0);
-    QCOMPARE(listview->indexAt(239,19), 0);
-    QCOMPARE(listview->indexAt(0,20), 1);
-    QCOMPARE(listview->indexAt(240,20), -1);
+    QQuickItem *item = 0;
+    if (index >= 0) {
+        item = findItem<QQuickItem>(contentItem, "wrapper", index);
+        QVERIFY(item);
+    }
+    QCOMPARE(listview->indexAt(x,y), index);
+    QVERIFY(listview->itemAt(x,y) == item);
 
     delete canvas;
     delete testObject;
