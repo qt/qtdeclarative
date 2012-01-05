@@ -661,9 +661,15 @@ void QQuickTextInput::setCursorPosition(int cp)
 }
 
 /*!
-  Returns a Rect which encompasses the cursor, but which may be larger than is
-  required. Ignores custom cursor delegates.
+    \qmlproperty rectangle QtQuick2::TextInput::cursorRectangle
+
+    The rectangle where the standard text cursor is rendered within the text input.  Read only.
+
+    The position and height of a custom cursorDelegate are updated to follow the cursorRectangle
+    automatically when it changes.  The width of the delegate is unaffected by changes in the
+    cursor rectangle.
 */
+
 QRect QQuickTextInput::cursorRectangle() const
 {
     Q_D(const QQuickTextInput);
@@ -1023,6 +1029,51 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
 
     emit echoModeChanged(echoMode());
 }
+
+/*!
+    \qmlproperty enumeration QtQuick2::TextInput::inputMethodHints
+
+    Provides hints to the input method about the expected content of the text input and how it
+    should operate.
+
+    The value is a bit-wise combination of flags, or Qt.ImhNone if no hints are set.
+
+    Flags that alter behaviour are:
+
+    \list
+    \o Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
+            This is automatically set when setting echoMode to \c TextInput.Password.
+    \o Qt.ImhSensitiveData - Typed text should not be stored by the active input method
+            in any persistent storage like predictive user dictionary.
+    \o Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
+            when a sentence ends.
+    \o Qt.ImhPreferNumbers - Numbers are preferred (but not required).
+    \o Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
+    \o Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
+    \o Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
+
+    \o Qt.ImhDate - The text editor functions as a date field.
+    \o Qt.ImhTime - The text editor functions as a time field.
+    \endlist
+
+    Flags that restrict input (exclusive flags) are:
+
+    \list
+    \o Qt.ImhDigitsOnly - Only digits are allowed.
+    \o Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
+    \o Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
+    \o Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
+    \o Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
+    \o Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
+    \o Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
+    \endlist
+
+    Masks:
+
+    \list
+    \o Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
+    \endlist
+*/
 
 Qt::InputMethodHints QQuickTextInput::imHints() const
 {
