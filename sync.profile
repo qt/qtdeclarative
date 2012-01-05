@@ -112,6 +112,6 @@
 #   - any git symbolic ref resolvable from the module's repository (e.g. "refs/heads/master" to track master branch)
 #
 %dependencies = (
-        "qtbase" => "refs/heads/master",
+        "qtbase" => "7aeccb183a827e8504d7dd8614d1ca555caf61d9",
         "qtxmlpatterns" => "refs/heads/master",
 );
