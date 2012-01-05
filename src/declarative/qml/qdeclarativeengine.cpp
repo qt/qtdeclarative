@@ -1790,14 +1790,13 @@ void QDeclarativeEnginePrivate::registerCompositeType(QDeclarativeCompiledData *
 
 bool QDeclarative_isFileCaseCorrect(const QString &fileName)
 {
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
+#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
     QFileInfo info(fileName);
-
-    QString absolute = info.absoluteFilePath();
+    const QString absolute = info.absoluteFilePath();
 
 #if defined(Q_OS_MAC)
-    QString canonical = info.canonicalFilePath();
-#elif defined(Q_OS_WIN32)
+    const QString canonical = info.canonicalFilePath();
+#elif defined(Q_OS_WIN)
     wchar_t buffer[1024];
 
     DWORD rv = ::GetShortPathName((wchar_t*)absolute.utf16(), buffer, 1024);
@@ -1805,13 +1804,13 @@ bool QDeclarative_isFileCaseCorrect(const QString &fileName)
     rv = ::GetLongPathName(buffer, buffer, 1024);
     if (rv == 0 || rv >= 1024) return true;
 
-    QString canonical((QChar *)buffer);
+    const QString canonical = QString::fromWCharArray(buffer);
 #endif
 
-    int absoluteLength = absolute.length();
-    int canonicalLength = canonical.length();
+    const int absoluteLength = absolute.length();
+    const int canonicalLength = canonical.length();
 
-    int length = qMin(absoluteLength, canonicalLength);
+    const int length = qMin(absoluteLength, canonicalLength);
     for (int ii = 0; ii < length; ++ii) {
         const QChar &a = absolute.at(absoluteLength - 1 - ii);
         const QChar &c = canonical.at(canonicalLength - 1 - ii);
