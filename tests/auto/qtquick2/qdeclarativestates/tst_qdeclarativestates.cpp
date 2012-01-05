@@ -1001,6 +1001,9 @@ void tst_qdeclarativestates::anchorRewindBug()
     // and column's implicit resizing should still work
     QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
     QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-23478", Abort);
+#endif
     QTRY_COMPARE(column->height(), 200.0);
 
     delete view;
