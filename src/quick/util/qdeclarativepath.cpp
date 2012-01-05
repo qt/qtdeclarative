@@ -1377,8 +1377,32 @@ void QDeclarativePathCatmullRomCurve::addToPath(QPainterPath &path, const QDecla
     if (qobject_cast<QDeclarativePathCatmullRomCurve*>(curve)) {
         prev = path.currentPosition();
         prevFar = previousPathPosition(path);
-    } else
-        prevFar = prev = path.currentPosition();
+    } else {
+        prev = path.currentPosition();
+        bool prevFarSet = false;
+        if (index == -1 && data.curves.count() > 1) {
+            if (qobject_cast<QDeclarativePathCatmullRomCurve*>(data.curves.at(data.curves.count()-1))) {
+                //TODO: profile and optimize
+                QPointF pos = prev;
+                QDeclarativePathData loopData;
+                loopData.endPoint = data.endPoint;
+                loopData.curves = data.curves;
+                for (int i = data.index; i < data.curves.count(); ++i) {
+                    loopData.index = i;
+                    pos = positionForCurve(loopData, pos);
+                    if (i == data.curves.count()-2)
+                        prevFar = pos;
+                }
+                if (pos == QPointF(path.elementAt(0))) {
+                    //this is a closed path starting and ending with catmull-rom segments.
+                    //we try to smooth the join point
+                    prevFarSet = true;
+                }
+            }
+        }
+        if (!prevFarSet)
+            prevFar = prev;
+    }
 
     //get current point
     point = positionForCurve(data, path.currentPosition());
@@ -1391,8 +1415,14 @@ void QDeclarativePathCatmullRomCurve::addToPath(QPainterPath &path, const QDecla
         nextData.endPoint = data.endPoint;
         nextData.curves = data.curves;
         next = positionForCurve(nextData, point);
-    } else
-        next = point;
+    } else {
+        if (point == QPointF(path.elementAt(0)) && qobject_cast<QDeclarativePathCatmullRomCurve*>(data.curves.at(0))) {
+            //this is a closed path starting and ending with catmull-rom segments.
+            //we try to smooth the join point
+            next = QPointF(path.elementAt(3));  //the first catmull-rom point
+        } else
+            next = point;
+    }
 
     /*
         full conversion matrix (inverse bezier * catmull-rom):
