@@ -1288,6 +1288,9 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // English text should be implicitly left aligned
     textInput->setText("Hello world!");
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-23485", Abort);
+#endif
     QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll < canvas.width()/2);
 
     canvas.requestActivateWindow();
@@ -2461,6 +2464,9 @@ void tst_qquicktextinput::setHAlignClearCache()
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-23485", Abort);
+#endif
     QTRY_COMPARE(input.nbPaint, 1);
     input.setHAlign(QQuickTextInput::AlignRight);
     //Changing the alignment should trigger a repaint
@@ -2867,9 +2873,6 @@ void tst_qquicktextinput::cursorRectangleSize()
     QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
 
     // item-canvas transform and input item transform match
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("","QTBUG-22966", Abort);
-#endif
     QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputPanel()->inputItemTransform());
 
     // input panel cursorRectangle property and tranformed item cursor rectangle match
