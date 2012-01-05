@@ -56,6 +56,7 @@
 #include <QtGui/qtextobject.h>
 #include <QtGui/qtextcursor.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qinputpanel.h>
 
 #include <private/qdeclarativestyledtext_p.h>
 #include <QtQuick/private/qdeclarativepixmapcache_p.h>
@@ -1365,7 +1366,7 @@ bool QQuickTextPrivate::setHAlign(QQuickText::HAlignment alignment, bool forceAl
 bool QQuickTextPrivate::determineHorizontalAlignment()
 {
     if (hAlignImplicit) {
-        bool alignToRight = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
+        bool alignToRight = text.isEmpty() ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft : rightToLeftText;
         return setHAlign(alignToRight ? QQuickText::AlignRight : QQuickText::AlignLeft);
     }
     return false;

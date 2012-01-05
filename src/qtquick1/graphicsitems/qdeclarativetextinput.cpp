@@ -417,7 +417,7 @@ bool QDeclarative1TextInputPrivate::determineHorizontalAlignment()
         if (text.isEmpty())
             text = control->preeditAreaText();
         bool isRightToLeft = text.isEmpty()
-                ? QApplication::keyboardInputDirection() == Qt::RightToLeft
+                ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
                 : text.isRightToLeft();
         return setHAlign(isRightToLeft ? QDeclarative1TextInput::AlignRight : QDeclarative1TextInput::AlignLeft);
     }

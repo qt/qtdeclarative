@@ -714,11 +714,11 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
 
     // empty text with implicit alignment follows the system locale-based
-    // keyboard input direction from QGuiApplication::keyboardInputDirection
+    // keyboard input direction from qApp->inputPanel()->inputDirection
     textEdit->setText("");
-    QCOMPARE(textEdit->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(textEdit->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QQuickTextEdit::AlignLeft : QQuickTextEdit::AlignRight);
-    if (QGuiApplication::keyboardInputDirection() == Qt::LeftToRight)
+    if (qApp->inputPanel()->inputDirection() == Qt::LeftToRight)
         QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
     else
         QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
@@ -731,7 +731,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QDeclarativeComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QQuickTextEdit::AlignLeft : QQuickTextEdit::AlignRight);
     delete textObject;
 }

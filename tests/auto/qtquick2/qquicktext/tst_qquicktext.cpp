@@ -712,9 +712,9 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < canvas->width()/2);
 
     // empty text with implicit alignment follows the system locale-based
-    // keyboard input direction from QApplication::keyboardInputDirection
+    // keyboard input direction from QInputPanel::inputDirection()
     text->setText("");
-    QCOMPARE(text->hAlign(), QApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(text->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QQuickText::AlignLeft : QQuickText::AlignRight);
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
@@ -726,7 +726,7 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     QDeclarativeComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), QApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QQuickText::AlignLeft : QQuickText::AlignRight);
     delete textObject;
 }

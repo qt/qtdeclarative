@@ -1300,11 +1300,11 @@ void tst_qdeclarativetextinput::horizontalAlignment_RightToLeft()
 
 #ifndef Q_OS_MAC    // QTBUG-18040
     // empty text with implicit alignment follows the system locale-based
-    // keyboard input direction from QApplication::keyboardInputDirection
+    // keyboard input direction from QInputPanel::inputDirection
     textInput->setText("");
-    QCOMPARE(textInput->hAlign(), QApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(textInput->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QDeclarative1TextInput::AlignLeft : QDeclarative1TextInput::AlignRight);
-    if (QApplication::keyboardInputDirection() == Qt::LeftToRight)
+    if (qApp->inputPanel()->inputDirection() == Qt::LeftToRight)
         QVERIFY(-textInputPrivate->hscroll < canvas->width()/2);
     else
         QVERIFY(-textInputPrivate->hscroll > canvas->width()/2);
@@ -1321,7 +1321,7 @@ void tst_qdeclarativetextinput::horizontalAlignment_RightToLeft()
     QDeclarativeComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QDeclarative1TextInput *textObject = qobject_cast<QDeclarative1TextInput*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), QApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QDeclarative1TextInput::AlignLeft : QDeclarative1TextInput::AlignRight);
     delete textObject;
 #endif

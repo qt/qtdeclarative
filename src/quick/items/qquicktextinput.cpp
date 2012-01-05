@@ -478,7 +478,8 @@ bool QQuickTextInputPrivate::determineHorizontalAlignment()
         QString text = q_func()->text();
         if (text.isEmpty())
             text = m_textLayout.preeditAreaText();
-        bool isRightToLeft = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : text.isRightToLeft();
+        bool isRightToLeft = text.isEmpty() ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
+                                            : text.isRightToLeft();
         return setHAlign(isRightToLeft ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
     }
     return false;

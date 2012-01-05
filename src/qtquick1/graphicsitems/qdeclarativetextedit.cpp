@@ -560,7 +560,7 @@ bool QDeclarative1TextEditPrivate::determineHorizontalAlignment()
                     ? control->textCursor().block().layout()->preeditAreaText()
                     : QString();
             alignToRight = preeditText.isEmpty()
-                    ? QApplication::keyboardInputDirection() == Qt::RightToLeft
+                    ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
                     : preeditText.isRightToLeft();
         } else {
             alignToRight = rightToLeftText;

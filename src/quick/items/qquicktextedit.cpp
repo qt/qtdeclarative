@@ -556,7 +556,7 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
         if (text.isEmpty()) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
             alignToRight = preeditText.isEmpty()
-                    ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft
+                    ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
                     : preeditText.isRightToLeft();
         } else {
             alignToRight = rightToLeftText;

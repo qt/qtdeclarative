@@ -52,6 +52,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
+#include <QtGui/QInputPanel>
 #include <qmath.h>
 #include <limits.h>
 
@@ -1126,7 +1127,7 @@ bool QDeclarative1TextPrivate::determineHorizontalAlignment()
 {
     Q_Q(QDeclarative1Text);
     if (hAlignImplicit && q->isComponentComplete()) {
-        bool alignToRight = text.isEmpty() ? QApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
+        bool alignToRight = text.isEmpty() ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft : rightToLeftText;
         return setHAlign(alignToRight ? QDeclarative1Text::AlignRight : QDeclarative1Text::AlignLeft);
     }
     return false;
