@@ -1194,6 +1194,10 @@ void tst_QQuickPathView::pathUpdateOnStartChanged()
 
 void tst_QQuickPathView::package()
 {
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-23482");
+#endif
+
     QQuickView *canvas = createView();
     QVERIFY(canvas);
     canvas->setSource(testFileUrl("pathview_package.qml"));
@@ -1284,6 +1288,10 @@ void tst_QQuickPathView::visualDataModel()
 
 void tst_QQuickPathView::undefinedPath()
 {
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-23482");
+#endif
+
     QDeclarativeEngine engine;
 
     QString warning1("QPainterPath::moveTo: Adding point where x or y is NaN or Inf, ignoring call");
