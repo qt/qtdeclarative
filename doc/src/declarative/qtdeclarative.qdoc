@@ -130,6 +130,25 @@
 */
 
 /*!
+  \fn int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
+  \relates QDeclarativeEngine
+
+  This template function registers the specified revision of a C++ type in the QML system with
+  the library imported from \a uri having the version number composed
+  from \a versionMajor and \a versionMinor.
+
+  Returns the QML type id.
+
+  \code
+  template<typename T, int metaObjectRevision>
+  int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor);
+  \endcode
+
+  This function is typically used to register the revision of a base class to
+  use for the specified module version (see \l {QML Type Versioning}).
+*/
+
+/*!
   \fn int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
   \relates QDeclarativeEngine
 

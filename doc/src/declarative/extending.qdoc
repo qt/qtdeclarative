@@ -141,17 +141,17 @@ Item {
 \code
 // MyComponent.qml
 import MyModule 1.0
-CppItem {
+CppElement {
     value: root.x
 }
 \endcode
 
-where CppItem maps to the C++ class QCppItem.
+where CppElement maps to the C++ class QCppElement.
 
-If the author of QCppItem adds a "root" property to QCppItem in a new version of the module, 
+If the author of QCppElement adds a "root" property to QCppElement in a new version of the module,
 it will break the above program as \c root.x now resolves to a different value.
-The solution is to allow the author of QCppItem to state that the new \c root property is 
-only available from a particular version of QCppItem onwards. This permits new properties
+The solution is to allow the author of QCppElement to state that the new \c root property is
+only available from a particular version of QCppElement onwards. This permits new properties
 and features to be added to existing elements without breaking existing programs. 
 
 QML enables this by allowing the properties, methods and signals of a class to be tagged with
@@ -164,7 +164,7 @@ Methods such as Q_INVOKABLE's, signals and slots can also be tagged for a
 revision using the \c Q_REVISION(x) macro:
 
 \code
-class CppItem : public QObject
+class CppElement : public BaseObject
 {
     Q_OBJECT
     Q_PROPERTY(int root READ root WRITE setRoot NOTIFY rootChanged REVISION 1)
@@ -181,10 +181,10 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 \endcode
 
-To register \c CppItem version 1 for \c {MyModule 1.1}:
+To register \c CppElement version 1 for \c {MyModule 1.1}:
 
 \code
-qmlRegisterType<QCppItem,1>("MyModule", 1, 1, "CppItem")
+qmlRegisterType<QCppElement,1>("MyModule", 1, 1, "CppElement")
 \endcode
 
 \c root is only available when MyModule 1.1 is imported.
@@ -192,6 +192,25 @@ qmlRegisterType<QCppItem,1>("MyModule", 1, 1, "CppItem")
 For the same reason, new elements introduced in later versions should use the minor version argument of qmlRegisterType.
 
 This feature of the language allows for behavioural changes to be made without breaking existing applications. Consequently QML module authors should always remember to document what changed between minor versions, and QML module users should check that their application still runs correctly before deploying an updated import statement.
+
+You may also register the revision of a base class that your module depends upon
+using the qmlRegisterRevision() function:
+
+\code
+template<typename T, int metaObjectRevision>
+int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
+\endcode
+
+For example, if \c BaseObject is changed and now has a revision 1, you can specify that
+your module uses the new revision:
+
+\code
+qmlRegisterRevision<BaseObject,1>("MyModule", 1, 1);
+\endcode
+
+This is useful when deriving from base classes not declared as part of your module, e.g.
+when extending classes from the QtQuick library.
+
 
 \section1 Object and List Property Types
 
@@ -547,7 +566,7 @@ value will not be accessible from script.
 \l {Extending QML - Signal Support Example} shows the complete code used to
 implement the onPartyStarted signal property.
 
-If you want to use signals from items not created in QML, you can access their
+If you want to use signals from objects not created in QML, you can access their
 signals with the \l {Connections} element.
 
 Additionally, if a property is added to a C++ class, all QML elements
