@@ -143,6 +143,10 @@ void tst_qdeclarativefontloader::failLocalFont()
 
 void tst_qdeclarativefontloader::webFont()
 {
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-23477");
+#endif
+
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"http://localhost:14448/tarzeau_ocr_a.ttf\" }";
     QDeclarativeComponent component(&engine);
 
@@ -157,6 +161,10 @@ void tst_qdeclarativefontloader::webFont()
 
 void tst_qdeclarativefontloader::redirWebFont()
 {
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-23477");
+#endif
+
     server.addRedirect("olddir/oldname.ttf","../tarzeau_ocr_a.ttf");
 
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"http://localhost:14448/olddir/oldname.ttf\" }";
@@ -173,6 +181,10 @@ void tst_qdeclarativefontloader::redirWebFont()
 
 void tst_qdeclarativefontloader::failWebFont()
 {
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-23477");
+#endif
+
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"http://localhost:14448/nonexist.ttf\" }";
     QTest::ignoreMessage(QtWarningMsg, "file::2:1: QML FontLoader: Cannot load font: \"http://localhost:14448/nonexist.ttf\"");
     QDeclarativeComponent component(&engine);
@@ -187,6 +199,10 @@ void tst_qdeclarativefontloader::failWebFont()
 
 void tst_qdeclarativefontloader::changeFont()
 {
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-23477");
+#endif
+
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: font }";
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("font", testFileUrl("tarzeau_ocr_a.ttf"));
