@@ -3445,6 +3445,9 @@ void tst_QQuickListView::resizeViewAndRepaint()
     QVERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     listview->setHeight(320);
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-23481", Abort);
+#endif
     QTRY_VERIFY(findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     listview->setHeight(100);
@@ -4404,6 +4407,11 @@ void tst_QQuickListView::snapOneItem()
     QFETCH(qreal, snapAlignment);
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
+
+#ifdef Q_OS_MAC
+    // This test seems to be unreliable - different test data fails on different runs
+    QSKIP("QTBUG-23481");
+#endif
 
     QQuickView *canvas = createView();
 
