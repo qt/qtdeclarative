@@ -1032,6 +1032,8 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         property->isDefaultProperty = node->isDefaultMember;
         property->isReadOnly = node->isReadonlyMember;
         property->type = type;
+        property->nameLocation.line = node->identifierToken.startLine;
+        property->nameLocation.column = node->identifierToken.startColumn;
         if (type >= Object::DynamicProperty::Custom) {
             QDeclarativeScript::TypeReference *typeRef =
                 _parser->findOrCreateType(memberType.toString());
@@ -1218,7 +1220,7 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
     if (AST::FunctionDeclaration *funDecl = AST::cast<AST::FunctionDeclaration *>(node->sourceElement)) {
 
         Object::DynamicSlot *slot = _parser->_pool.New<Object::DynamicSlot>();
-        slot->location = location(funDecl->firstSourceLocation(), funDecl->lastSourceLocation());
+        slot->location = location(funDecl->identifierToken, funDecl->lastSourceLocation());
 
         AST::FormalParameterList *f = funDecl->formals;
         while (f) {

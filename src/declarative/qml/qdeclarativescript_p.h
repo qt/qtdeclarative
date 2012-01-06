@@ -401,6 +401,7 @@ public:
         QHashedStringRef name;
         QDeclarativeScript::Property *defaultValue;
         LocationSpan location;
+        Location nameLocation;
 
         // Used by Object::DynamicPropertyList
         DynamicProperty *nextProperty;

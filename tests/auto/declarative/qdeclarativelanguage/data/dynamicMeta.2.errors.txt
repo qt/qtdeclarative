@@ -1,1 +1,1 @@
-5:5:Duplicate property name
+5:19:Duplicate property name

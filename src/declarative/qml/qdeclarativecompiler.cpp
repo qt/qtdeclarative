@@ -185,17 +185,19 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QHashedStringRef &name)
     COMPILE_EXCEPTION(property, tr("Error for property \"%1\"").arg(property->name));
     \endcode
 */
-#define COMPILE_EXCEPTION(token, desc) \
+#define COMPILE_EXCEPTION_LOCATION(line, column, desc) \
     {  \
-        QString exceptionDescription; \
         QDeclarativeError error; \
         error.setUrl(output->url); \
-        error.setLine((token)->location.start.line); \
-        error.setColumn((token)->location.start.column); \
+        error.setLine(line); \
+        error.setColumn(column); \
         error.setDescription(desc.trimmed()); \
         exceptions << error; \
         return false; \
     }
+
+#define COMPILE_EXCEPTION(token, desc) \
+    COMPILE_EXCEPTION_LOCATION((token)->location.start.line, (token)->location.start.column, desc)
 
 /*!
     \macro COMPILE_CHECK
@@ -2641,16 +2643,25 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeScript::Object *obj)
         if (propNames.testAndSet(prop.name.hash())) {
             for (Object::DynamicProperty *p2 = obj->dynamicProperties.first(); p2 != p; 
                  p2 = obj->dynamicProperties.next(p2)) {
-                if (p2->name == prop.name)
-                    COMPILE_EXCEPTION(&prop, tr("Duplicate property name"));
+                if (p2->name == prop.name) {
+                    COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
+                                               prop.nameLocation.column,
+                                               tr("Duplicate property name"));
+                }
             }
         }
 
-        if (prop.name.at(0).isUpper())
-            COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));
+        if (prop.name.at(0).isUpper()) {
+            COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
+                                       prop.nameLocation.column,
+                                       tr("Property names cannot begin with an upper case letter"));
+        }
 
-        if (enginePrivate->v8engine()->illegalNames().contains(prop.name))
-            COMPILE_EXCEPTION(&prop, tr("Illegal property name"));
+        if (enginePrivate->v8engine()->illegalNames().contains(prop.name)) {
+            COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
+                                       prop.nameLocation.column,
+                                       tr("Illegal property name"));
+        }
     }
 
     for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
