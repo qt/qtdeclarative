@@ -233,7 +233,6 @@ protected:
     QQuickFlickableVisibleArea *visibleArea();
 
 protected Q_SLOTS:
-    virtual void ticked();
     void movementStarting();
     void movementEnding();
 

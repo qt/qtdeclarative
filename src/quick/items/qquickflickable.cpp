@@ -190,7 +190,6 @@ void QQuickFlickablePrivate::init()
     Q_Q(QQuickFlickable);
     QDeclarative_setParent_noEvent(contentItem, q);
     contentItem->setParentItem(q);
-    FAST_CONNECT(&timeline, SIGNAL(updated()), q, SLOT(ticked()))
     FAST_CONNECT(&timeline, SIGNAL(completed()), q, SLOT(movementEnding()))
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFiltersChildMouseEvents(true);
@@ -238,9 +237,13 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, const QRectF 
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
-        if (newGeom.x() != oldGeom.x())
+        bool xChanged = newGeom.x() != oldGeom.x();
+        bool yChanged = newGeom.y() != oldGeom.y();
+        if (xChanged || yChanged)
+            q->viewportMoved();
+        if (xChanged)
             emit q->contentXChanged();
-        if (newGeom.y() != oldGeom.y())
+        if (yChanged)
             emit q->contentYChanged();
     }
 }
@@ -595,10 +598,8 @@ void QQuickFlickable::setContentX(qreal pos)
     d->timeline.reset(d->hData.move);
     d->vTime = d->timeline.time();
     movementXEnding();
-    if (-pos != d->hData.move.value()) {
+    if (-pos != d->hData.move.value())
         d->hData.move.setValue(-pos);
-        viewportMoved();
-    }
 }
 
 qreal QQuickFlickable::contentY() const
@@ -614,10 +615,8 @@ void QQuickFlickable::setContentY(qreal pos)
     d->timeline.reset(d->vData.move);
     d->vTime = d->timeline.time();
     movementYEnding();
-    if (-pos != d->vData.move.value()) {
+    if (-pos != d->vData.move.value())
         d->vData.move.setValue(-pos);
-        viewportMoved();
-    }
 }
 
 /*!
@@ -709,11 +708,6 @@ bool QQuickFlickable::isAtYBeginning() const
 {
     Q_D(const QQuickFlickable);
     return d->vData.atBeginning;
-}
-
-void QQuickFlickable::ticked()
-{
-    viewportMoved();
 }
 
 /*!
@@ -927,7 +921,6 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (hMoved || vMoved) {
         draggingStarting();
         q->movementStarting();
-        q->viewportMoved();
     }
 
     if (!lastPos.isNull()) {
