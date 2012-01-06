@@ -254,7 +254,7 @@ QDeclarativePropertyCache::~QDeclarativePropertyCache()
     QDeclarativePropertyCacheMethodArguments *args = argumentsCache;
     while (args) {
         QDeclarativePropertyCacheMethodArguments *next = args->next;
-        qFree(args);
+        free(args);
         args = next;
     }
 
@@ -725,7 +725,7 @@ int *QDeclarativePropertyCache::methodParameterTypes(QObject *object, int index,
         QMetaMethod m = metaObject->method(index);
         QList<QByteArray> argTypeNames = m.parameterTypes();
 
-        A *args = static_cast<A *>(qMalloc(sizeof(A) + (argTypeNames.count() + 1) * sizeof(int)));
+        A *args = static_cast<A *>(malloc(sizeof(A) + (argTypeNames.count() + 1) * sizeof(int)));
         args->arguments[0] = argTypeNames.count();
 
         for (int ii = 0; ii < argTypeNames.count(); ++ii) {
@@ -734,7 +734,7 @@ int *QDeclarativePropertyCache::methodParameterTypes(QObject *object, int index,
                 type = EnumType(object->metaObject(), argTypeNames.at(ii));
             if (type == QVariant::Invalid) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
-                qFree(args);
+                free(args);
                 return 0;
             }
             args->arguments[ii + 1] = type;

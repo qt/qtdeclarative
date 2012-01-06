@@ -1301,7 +1301,7 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
 
 QQuickVisualDataModelItemMetaType::~QQuickVisualDataModelItemMetaType()
 {
-    qFree(metaObject);
+    free(metaObject);
     qPersistentDispose(constructor);
 }
 

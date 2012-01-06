@@ -82,7 +82,7 @@ public:
     {
         if (propertyCache)
             propertyCache->release();
-        qFree(metaObject);
+        free(metaObject);
     }
 
     QMetaObject *metaObject;
@@ -642,7 +642,7 @@ public:
         }
 
         if (m_type->metaObject)
-            qFree(m_type->metaObject);
+            free(m_type->metaObject);
         m_type->metaObject = m_type->builder.toMetaObject();
         *static_cast<QMetaObject *>(this) = *m_type->metaObject;
 

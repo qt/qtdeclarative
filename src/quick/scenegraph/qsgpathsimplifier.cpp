@@ -440,7 +440,7 @@ inline PathSimplifier::ElementAllocator::~ElementAllocator()
     while (blocks) {
         ElementBlock *block = blocks;
         blocks = blocks->next;
-        qFree(block);
+        free(block);
     }
 }
 
@@ -448,7 +448,7 @@ inline void PathSimplifier::ElementAllocator::allocate(int count)
 {
     Q_ASSERT(blocks == 0);
     Q_ASSERT(count > 0);
-    blocks = (ElementBlock *)qMalloc(sizeof(ElementBlock) + (count - 1) * sizeof(Element));
+    blocks = (ElementBlock *)malloc(sizeof(ElementBlock) + (count - 1) * sizeof(Element));
     blocks->blockSize = count;
     blocks->next = 0;
     blocks->firstFree = 0;
@@ -460,7 +460,7 @@ inline PathSimplifier::Element *PathSimplifier::ElementAllocator::newElement()
     if (blocks->firstFree < blocks->blockSize)
         return &blocks->elements[blocks->firstFree++];
     ElementBlock *oldBlock = blocks;
-    blocks = (ElementBlock *)qMalloc(sizeof(ElementBlock) + (oldBlock->blockSize - 1) * sizeof(Element));
+    blocks = (ElementBlock *)malloc(sizeof(ElementBlock) + (oldBlock->blockSize - 1) * sizeof(Element));
     blocks->blockSize = oldBlock->blockSize;
     blocks->next = oldBlock;
     blocks->firstFree = 0;

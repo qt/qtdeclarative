@@ -77,7 +77,7 @@ QDeclarative1OpenMetaObjectType::QDeclarative1OpenMetaObjectType(const QMetaObje
 QDeclarative1OpenMetaObjectType::~QDeclarative1OpenMetaObjectType()
 {
     if (d->mem)
-        qFree(d->mem);
+        free(d->mem);
     if (d->cache)
         d->cache->release();
     delete d;
@@ -100,7 +100,7 @@ int QDeclarative1OpenMetaObjectType::createProperty(const QByteArray &name)
     d->mob.addSignal("__" + QByteArray::number(id) + "()");
     QMetaPropertyBuilder build = d->mob.addProperty(name, "QVariant", id);
     propertyCreated(id, build);
-    qFree(d->mem);
+    free(d->mem);
     d->mem = d->mob.toMetaObject();
     d->names.insert(name, id);
     QSet<QDeclarative1OpenMetaObject*>::iterator it = d->referers.begin();
