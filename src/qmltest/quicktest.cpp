@@ -62,6 +62,7 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qeventloop.h>
+#include <QtCore/qtextstream.h>
 #include <QtGui/qtextdocument.h>
 #include <stdio.h>
 #include <QtGui/QGuiApplication>
@@ -134,6 +135,51 @@ static inline QString stripQuotes(const QString &s)
         return s;
 }
 
+template <class View> void handleCompileErrors(const QFileInfo &fi, const View &view)
+{
+    // Error compiling the test - flag failure in the log and continue.
+    const QList<QDeclarativeError> errors = view.errors();
+    QuickTestResult results;
+    results.setTestCaseName(fi.baseName());
+    results.startLogging();
+    results.setFunctionName(QLatin1String("compile"));
+    results.setFunctionType(QuickTestResult::Func);
+    // Verbose warning output of all messages and relevant parameters
+    QString message;
+    QTextStream str(&message);
+    str << "\n  " << QDir::toNativeSeparators(fi.absoluteFilePath()) << " produced "
+        << errors.size() << " error(s):\n";
+    foreach (const QDeclarativeError &e, errors) {
+        str << "    ";
+        if (e.url().isLocalFile()) {
+            str << e.url().toLocalFile();
+        } else {
+            str << e.url().toString();
+        }
+        if (e.line() > 0)
+            str << ':' << e.line() << ',' << e.column();
+        str << ": " << e.description() << '\n';
+    }
+    str << "  Working directory: " << QDir::toNativeSeparators(QDir::current().absolutePath()) << '\n';
+    if (QDeclarativeEngine *engine = view.engine()) {
+        str << "  View: " << view.metaObject()->className() << ", import paths:\n";
+        foreach (const QString &i, engine->importPathList())
+            str << "    '" << QDir::toNativeSeparators(i) << "'\n";
+        const QStringList pluginPaths = engine->pluginPathList();
+        str << "  Plugin paths:\n";
+        foreach (const QString &p, pluginPaths)
+            str << "    '" << QDir::toNativeSeparators(p) << "'\n";
+    }
+    qWarning("%s", qPrintable(message));
+    // Fail with error 0.
+    results.fail(errors.at(0).description(),
+                 errors.at(0).url(), errors.at(0).line());
+    results.finishTestFunction();
+    results.setFunctionName(QString());
+    results.setFunctionType(QuickTestResult::NoWhere);
+    results.stopLogging();
+}
+
 int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport_create createViewport, const char *sourceDir)
 {
     QGuiApplication* app = 0;
@@ -188,39 +234,51 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
         if (translator.load(translationFile)) {
             app->installTranslator(&translator);
         } else {
-            qWarning() << "Could not load the translation file" << translationFile;
+            qWarning("Could not load the translation file '%s'.", qPrintable(translationFile));
         }
     }
 
     // Determine where to look for the test data.
     if (testPath.isEmpty() && sourceDir)
         testPath = QString::fromLocal8Bit(sourceDir);
-    if (testPath.isEmpty())
-        testPath = QLatin1String(".");
-
+    if (testPath.isEmpty()) {
+        QDir current = QDir::current();
+#ifdef Q_OS_WIN
+        // Skip release/debug subfolders
+        if (!current.dirName().compare(QLatin1String("Release"), Qt::CaseInsensitive)
+            || !current.dirName().compare(QLatin1String("Debug"), Qt::CaseInsensitive))
+            current.cdUp();
+#endif // Q_OS_WIN
+        testPath = current.absolutePath();
+    }
     QStringList files;
 
-    if (testPath.endsWith(QLatin1String(".qml")) && QFileInfo(testPath).isFile()) {
+    const QFileInfo testPathInfo(testPath);
+    if (testPathInfo.isFile()) {
+        if (!testPath.endsWith(QStringLiteral(".qml"))) {
+            qWarning("'%s' does not have the suffix '.qml'.", qPrintable(testPath));
+            return 1;
+        }
         files << testPath;
-    } else {
+    } else if (testPathInfo.isDir()) {
         // Scan the test data directory recursively, looking for "tst_*.qml" files.
-        QStringList filters;
-        filters += QLatin1String("tst_*.qml");
-        QDirIterator iter(testPath, filters, QDir::Files,
+        const QStringList filters(QStringLiteral("tst_*.qml"));
+        QDirIterator iter(testPathInfo.absoluteFilePath(), filters, QDir::Files,
                           QDirIterator::Subdirectories |
                           QDirIterator::FollowSymlinks);
         while (iter.hasNext())
             files += iter.next();
         files.sort();
-    }
-
-    // Bail out if we didn't find any test cases.
-    if (files.isEmpty()) {
-        qWarning() << argv[0] << ": could not find any test cases under"
-                   << testPath;
+        if (files.isEmpty()) {
+            qWarning("The directory '%s' does not contain any test files matching '%s'",
+                     qPrintable(testPath), qPrintable(filters.front()));
+            return 1;
+        }
+    } else {
+        qWarning("'%s' does not exist under '%s'.",
+                 qPrintable(testPath), qPrintable(QDir::currentPath()));
         return 1;
     }
-
 
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a QDeclarativeView.
@@ -235,7 +293,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                          &eventLoop, SLOT(quit()));
         view.rootContext()->setContextProperty
             (QLatin1String("qtest"), &rootobj);
-        foreach (QString path, imports)
+        foreach (const QString &path, imports)
             view.engine()->addImportPath(path);
 
         foreach (QString file, files) {
@@ -255,20 +313,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
             if (QTest::printAvailableFunctions)
                 continue;
             if (view.status() == QQuickView::Error) {
-                // Error compiling the test - flag failure in the log and continue.
-                QList<QDeclarativeError> errors = view.errors();
-                QuickTestResult results;
-                results.setTestCaseName(fi.baseName());
-                results.startLogging();
-                results.setFunctionName(QLatin1String("compile"));
-                results.setFunctionType(QuickTestResult::Func);
-                results.fail(errors.at(0).description(),
-                             errors.at(0).url().toString(),
-                             errors.at(0).line());
-                results.finishTestFunction();
-                results.setFunctionName(QString());
-                results.setFunctionType(QuickTestResult::NoWhere);
-                results.stopLogging();
+                handleCompileErrors(fi, view);
                 continue;
             }
             if (!rootobj.hasQuit) {
@@ -312,19 +357,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                 continue;
             if (view.status() == QDeclarativeView::Error) {
                 // Error compiling the test - flag failure in the log and continue.
-                QList<QDeclarativeError> errors = view.errors();
-                QuickTestResult results;
-                results.setTestCaseName(fi.baseName());
-                results.startLogging();
-                results.setFunctionName(QLatin1String("compile"));
-                results.setFunctionType(QuickTestResult::Func);
-                results.fail(errors.at(0).description(),
-                             errors.at(0).url().toString(),
-                             errors.at(0).line());
-                results.finishTestFunction();
-                results.setFunctionName(QString());
-                results.setFunctionType(QuickTestResult::NoWhere);
-                results.stopLogging();
+                handleCompileErrors(fi, view);
                 continue;
             }
             if (!rootobj.hasQuit) {
