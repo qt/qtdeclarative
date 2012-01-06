@@ -415,11 +415,7 @@ static void swizzleBGRAToRGBA(QImage *image)
 
 void QSGPlainTexture::setImage(const QImage &image)
 {
-    m_image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-#ifdef QT_OPENGL_ES
-    swizzleBGRAToRGBA(&m_image);
-#endif
-
+    m_image = image;
     m_texture_size = image.size();
     m_has_alpha = image.hasAlphaChannel();
     m_dirty_texture = true;
@@ -496,10 +492,15 @@ void QSGPlainTexture::bind()
     int w = m_image.width();
     int h = m_image.height();
 
+    QImage tmp = (m_image.format() == QImage::Format_RGB32 || m_image.format() == QImage::Format_ARGB32_Premultiplied)
+                 ? m_image
+                 : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+
 #ifdef QT_OPENGL_ES
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image.constBits());
+        swizzleBGRAToRGBA(&tmp);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.constBits());
 #else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, m_image.constBits());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp.constBits());
 #endif
 
     if (m_has_mipmaps) {
