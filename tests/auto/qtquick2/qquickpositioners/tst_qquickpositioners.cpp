@@ -1448,9 +1448,6 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
 
     QTRY_VERIFY(rect1->property("index").toInt() == 1);
     QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("", "QTBUG-23483", Abort);
-#endif
     QTRY_VERIFY(rect1->property("lastItem").toBool() == true);
 
     delete canvas;
