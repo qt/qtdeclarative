@@ -3631,9 +3631,11 @@ void tst_QQuickListView::resizeViewAndRepaint()
     QVERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     listview->setHeight(320);
+
 #ifdef Q_OS_MAC
-    QEXPECT_FAIL("", "QTBUG-23481", Abort);
+    QSKIP("QTBUG-21590 view does not reliably receive polish without a running animation");
 #endif
+
     QTRY_VERIFY(findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     listview->setHeight(100);

@@ -3165,9 +3165,11 @@ void tst_QQuickGridView::resizeViewAndRepaint()
     QVERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     gridview->setHeight(320);
+
 #ifdef Q_OS_MAC
-    QEXPECT_FAIL("", "QTBUG-23480", Abort);
+    QSKIP("QTBUG-21590 view does not reliably receive polish without a running animation");
 #endif
+
     QTRY_VERIFY(findItem<QQuickItem>(contentItem, "wrapper", 10));
 
     gridview->setHeight(100);

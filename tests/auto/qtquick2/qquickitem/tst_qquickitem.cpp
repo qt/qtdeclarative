@@ -73,9 +73,9 @@ class TestPolishItem : public QQuickItem
 {
 Q_OBJECT
 public:
-    TestPolishItem(QQuickItem *parent)
+    TestPolishItem(QQuickItem *parent = 0)
     : QQuickItem(parent), wasPolished(false) {
-        QTimer::singleShot(10, this, SLOT(doPolish()));
+
     }
 
     bool wasPolished;
@@ -109,6 +109,8 @@ class tst_qquickitem : public QDeclarativeDataTest
 public:
 
 private slots:
+    void initTestCase();
+
     void noCanvas();
     void simpleFocus();
     void scopedFocus();
@@ -123,6 +125,7 @@ private slots:
 
     void mouseGrab();
     void polishOutsideAnimation();
+    void polishOnCompleted();
 
     void wheelEvent_data();
     void wheelEvent();
@@ -145,6 +148,12 @@ private:
         qApp->processEvents();
     }
 };
+
+void tst_qquickitem::initTestCase()
+{
+    QDeclarativeDataTest::initTestCase();
+    qmlRegisterType<TestPolishItem>("Qt.test", 1, 0, "TestPolishItem");
+}
 
 // Focus has no effect when outside a canvas
 void tst_qquickitem::noCanvas()
@@ -862,10 +871,30 @@ void tst_qquickitem::polishOutsideAnimation()
     TestPolishItem *item = new TestPolishItem(canvas->rootItem());
     item->setSize(QSizeF(200, 100));
     QTest::qWait(50);
+
+    QTimer::singleShot(10, item, SLOT(doPolish()));
     QTRY_VERIFY(item->wasPolished);
 
     delete item;
     delete canvas;
+}
+
+void tst_qquickitem::polishOnCompleted()
+{
+    QQuickView *view = new QQuickView;
+    view->setSource(testFileUrl("polishOnCompleted.qml"));
+    view->show();
+
+    TestPolishItem *item = qobject_cast<TestPolishItem*>(view->rootObject());
+    QVERIFY(item);
+
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-21590 view does not reliably receive polish without a running animation");
+#endif
+
+    QTRY_VERIFY(item->wasPolished);
+
+    delete view;
 }
 
 void tst_qquickitem::wheelEvent_data()

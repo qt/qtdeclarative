@@ -1194,10 +1194,6 @@ void tst_QQuickPathView::pathUpdateOnStartChanged()
 
 void tst_QQuickPathView::package()
 {
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-23482");
-#endif
-
     QQuickView *canvas = createView();
     QVERIFY(canvas);
     canvas->setSource(testFileUrl("pathview_package.qml"));
@@ -1206,6 +1202,10 @@ void tst_QQuickPathView::package()
 
     QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("photoPathView");
     QVERIFY(pathView);
+
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-21590 view does not reliably receive polish without a running animation");
+#endif
 
     QQuickItem *item = findItem<QQuickItem>(pathView, "pathItem");
     QVERIFY(item);
