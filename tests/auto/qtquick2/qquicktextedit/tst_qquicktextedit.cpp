@@ -1870,10 +1870,6 @@ void tst_qquicktextedit::delegateLoading()
     QFETCH(QString, qmlfile);
     QFETCH(QString, error);
 
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-23484");
-#endif
-
     TestHTTPServer server(42332);
     server.serveDirectory(testFile("httpfail"), TestHTTPServer::Disconnect);
     server.serveDirectory(testFile("httpslow"), TestHTTPServer::Delay);
