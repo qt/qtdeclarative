@@ -74,7 +74,7 @@ public:
     bool isAccessible() const;
 
 protected:
-   QQuickItem *m_item;
+    QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }
 };
 
 class QAccessibleQuickItemValueInterface: public QAccessibleQuickItem, public QAccessibleValueInterface

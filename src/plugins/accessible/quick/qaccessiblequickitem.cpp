@@ -48,7 +48,6 @@ QT_BEGIN_NAMESPACE
 
 QAccessibleQuickItem::QAccessibleQuickItem(QQuickItem *item)
     : QDeclarativeAccessible(item)
-    , m_item(item)
 {
 }
 
@@ -61,27 +60,27 @@ QRect QAccessibleQuickItem::rect() const
 {
     // ### no canvas in some cases.
     // ### Should we really check for 0 opacity?
-    if (!m_item->canvas() ||!m_item->isVisible() || qFuzzyIsNull(m_item->opacity())) {
+    if (!item()->canvas() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity())) {
         return QRect();
     }
 
-    QSizeF size = QSizeF(m_item->width(), m_item->height());
+    QSizeF size = QSizeF(item()->width(), item()->height());
     // ### If the bounding rect fails, we first try the implicit size, then we go for the
     // parent size. WE MIGHT HAVE TO REVISIT THESE FALLBACKS.
     if (size.isEmpty()) {
-        size = QSizeF(m_item->implicitWidth(), m_item->implicitHeight());
+        size = QSizeF(item()->implicitWidth(), item()->implicitHeight());
         if (size.isEmpty())
             // ### Seems that the above fallback is not enough, fallback to use the parent size...
-            size = QSizeF(m_item->parentItem()->width(), m_item->parentItem()->height());
+            size = QSizeF(item()->parentItem()->width(), item()->parentItem()->height());
     }
 
-    QRectF sceneRect = m_item->mapRectToScene(QRectF(QPointF(0, 0), size));
-    QPoint screenPos = m_item->canvas()->mapToGlobal(sceneRect.topLeft().toPoint());
+    QRectF sceneRect = item()->mapRectToScene(QRectF(QPointF(0, 0), size));
+    QPoint screenPos = item()->canvas()->mapToGlobal(sceneRect.topLeft().toPoint());
 
     QRect r = QRect(screenPos, sceneRect.size().toSize());
 
     if (!r.isValid()) {
-        qWarning() << m_item->metaObject()->className() << m_item->property("accessibleText") << r;
+        qWarning() << item()->metaObject()->className() << item()->property("accessibleText") << r;
     }
     return r;
 }
@@ -89,11 +88,11 @@ QRect QAccessibleQuickItem::rect() const
 QRect QAccessibleQuickItem::viewRect() const
 {
     // ### no canvas in some cases.
-    if (!m_item->canvas()) {
+    if (!item()->canvas()) {
         return QRect();
     }
 
-    QQuickCanvas *canvas = m_item->canvas();
+    QQuickCanvas *canvas = item()->canvas();
     QPoint screenPos = canvas->mapToGlobal(QPoint(0,0));
     return QRect(screenPos, canvas->size());
 }
@@ -101,15 +100,15 @@ QRect QAccessibleQuickItem::viewRect() const
 
 bool QAccessibleQuickItem::clipsChildren() const
 {
-    return static_cast<QQuickItem *>(m_item)->clip();
+    return static_cast<QQuickItem *>(item())->clip();
 }
 
 
 QAccessibleInterface *QAccessibleQuickItem::parent() const
 {
-    QQuickItem *parent = m_item->parentItem();
+    QQuickItem *parent = item()->parentItem();
     if (parent) {
-        QQuickCanvas *canvas = m_item->canvas();
+        QQuickCanvas *canvas = item()->canvas();
         // Jump out to the scene widget if the parent is the root item.
         // There are two root items, QQuickCanvas::rootItem and
         // QQuickView::declarativeRoot. The former is the true root item,
@@ -146,7 +145,7 @@ int QAccessibleQuickItem::navigate(QAccessible::RelationFlag rel, int entry, QAc
     Q_UNUSED(target);
     *target = 0;
     if (entry == 0) {
-        *target = new QAccessibleQuickItem(m_item);
+        *target = new QAccessibleQuickItem(item());
         return 0;
     }
     return -1;
@@ -172,14 +171,14 @@ QList<QQuickItem *> QAccessibleQuickItem::childItems() const
             role() == QAccessible::PageTab ||
             role() == QAccessible::ProgressBar)
         return QList<QQuickItem *>();
-    return m_item->childItems();
+    return item()->childItems();
 }
 
 QFlags<QAccessible::StateFlag> QAccessibleQuickItem::state() const
 {
     QAccessible::State state = QAccessible::Normal;
 
-    if (m_item->hasActiveFocus()) {
+    if (item()->hasActiveFocus()) {
         state |= QAccessible::Focused;
     }
     return state;
@@ -191,10 +190,10 @@ QAccessible::Role QAccessibleQuickItem::role() const
     // Workaround for setAccessibleRole() not working for
     // Text items. Text items are special since they are defined
     // entirely from C++ (setting the role from QML works.)
-    if (qobject_cast<QQuickText*>(const_cast<QQuickItem *>(m_item)))
+    if (qobject_cast<QQuickText*>(const_cast<QQuickItem *>(item())))
         return QAccessible::StaticText;
 
-    QVariant v = QQuickAccessibleAttached::property(m_item, "role");
+    QVariant v = QQuickAccessibleAttached::property(item(), "role");
     bool ok;
     QAccessible::Role role = (QAccessible::Role)v.toInt(&ok);
     if (!ok)    // Not sure if this check is needed.
@@ -204,7 +203,7 @@ QAccessible::Role QAccessibleQuickItem::role() const
 
 bool QAccessibleQuickItem::isAccessible() const
 {
-    return m_item->d_func()->isAccessible;
+    return item()->d_func()->isAccessible;
 }
 
 QString QAccessibleQuickItem::text(QAccessible::Text textType) const
@@ -263,22 +262,22 @@ void *QAccessibleQuickItemValueInterface::interface_cast(QAccessible::InterfaceT
 
 QVariant QAccessibleQuickItemValueInterface::currentValue()
 {
-    return m_item->property("value");
+    return item()->property("value");
 }
 
 void QAccessibleQuickItemValueInterface::setCurrentValue(const QVariant &value)
 {
-    m_item->setProperty("value", value);
+    item()->setProperty("value", value);
 }
 
 QVariant QAccessibleQuickItemValueInterface::maximumValue()
 {
-    return m_item->property("maximumValue");
+    return item()->property("maximumValue");
 }
 
 QVariant QAccessibleQuickItemValueInterface::minimumValue()
 {
-    return m_item->property("minimumValue");
+    return item()->property("minimumValue");
 }
 
 

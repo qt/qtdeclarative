@@ -53,12 +53,11 @@ QT_BEGIN_NAMESPACE
 QAccessibleQuickView::QAccessibleQuickView(QQuickView *object)
     :QAccessibleObject(object)
 {
-    m_view = static_cast<QQuickView *>(object);
 }
 
 int QAccessibleQuickView::childCount() const
 {
-    return m_view->rootItem() ? 1 : 0;
+    return view()->rootItem() ? 1 : 0;
 }
 
 QAccessibleInterface *QAccessibleQuickView::parent() const
@@ -70,7 +69,7 @@ QAccessibleInterface *QAccessibleQuickView::parent() const
 QAccessibleInterface *QAccessibleQuickView::child(int index) const
 {
     if (index == 0) {
-        QQuickItem *declarativeRoot = m_view->rootObject();
+        QQuickItem *declarativeRoot = view()->rootObject();
         return new QAccessibleQuickItem(declarativeRoot);
     }
     return 0;
@@ -88,7 +87,7 @@ QAccessible::State QAccessibleQuickView::state() const
 
 QRect QAccessibleQuickView::rect() const
 {
-    return QRect(m_view->x(), m_view->y(), m_view->width(), m_view->height());
+    return QRect(view()->x(), view()->y(), view()->width(), view()->height());
 }
 
 int QAccessibleQuickView::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
@@ -106,7 +105,7 @@ QString QAccessibleQuickView::text(QAccessible::Text text) const
         return QString::fromAscii(object()->metaObject()->className()) ;
     }
 #endif
-    return m_view->windowTitle();
+    return view()->windowTitle();
 }
 
 QAccessibleInterface *QAccessibleQuickView::childAt(int x, int y) const
@@ -119,7 +118,7 @@ QAccessibleInterface *QAccessibleQuickView::childAt(int x, int y) const
 int QAccessibleQuickView::indexOfChild(const QAccessibleInterface *iface) const
 {
     if (iface) {
-        QQuickItem *declarativeRoot = m_view->rootObject();
+        QQuickItem *declarativeRoot = view()->rootObject();
         if (declarativeRoot == iface->object())
             return 1;
     }

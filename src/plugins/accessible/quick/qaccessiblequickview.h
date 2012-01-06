@@ -68,7 +68,7 @@ public:
     QString text(QAccessible::Text text) const;
     QAccessibleInterface *childAt(int x, int y) const;
 private:
-    QQuickView *m_view;
+    QQuickView *view() const { return static_cast<QQuickView*>(object()); }
 };
 
 #endif // QT_NO_ACCESSIBILITY
