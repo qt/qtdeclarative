@@ -2962,7 +2962,6 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             m_validInput = true;
             m_textDirty = false;
         }
-        updateDisplayText();
 
         if (m_textDirty) {
             m_textDirty = false;
@@ -2970,6 +2969,8 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             determineHorizontalAlignment();
             emit q->textChanged();
         }
+
+        updateDisplayText();
 
         if (m_validInput != wasValidInput)
             emit q->acceptableInputChanged();

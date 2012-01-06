@@ -1228,37 +1228,41 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 
     QQuickTextInputPrivate *textInputPrivate = QQuickTextInputPrivate::get(textInput);
     QVERIFY(textInputPrivate != 0);
-    QVERIFY(textInputPrivate->boundingRect.left() > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // implicit alignment should follow the reading direction of RTL text
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // explicitly left aligned
     textInput->setHAlign(QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll < canvas.width()/2);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
 
     // explicitly right aligned
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // explicitly center aligned
     textInput->setHAlign(QQuickTextInput::AlignHCenter);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignHCenter);
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll < canvas.width()/2);
-    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > 0);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll < textInput->width());
 
     // reseted alignment should go back to following the text reading direction
     textInput->resetHAlign();
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // mirror the text item
     QQuickItemPrivate::get(textInput)->setLayoutMirror(true);
@@ -1266,19 +1270,21 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // mirrored implicit alignment should continue to follow the reading direction of the text
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // explicitly right aligned behaves as left aligned
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignLeft);
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll < canvas.width()/2);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
 
     // mirrored explicitly left aligned behaves as right aligned
     textInput->setHAlign(QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // disable mirroring
     QQuickItemPrivate::get(textInput)->setLayoutMirror(false);
@@ -1288,10 +1294,7 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // English text should be implicitly left aligned
     textInput->setText("Hello world!");
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("", "QTBUG-23485", Abort);
-#endif
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll < canvas.width()/2);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
 
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1313,13 +1316,16 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     textInput->setText("");
     QCOMPARE(textInput->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
-    if (QGuiApplication::keyboardInputDirection() == Qt::LeftToRight)
-        QVERIFY(textInput->boundingRect().left() < canvas.width()/2);
-    else
-        QVERIFY(textInput->boundingRect().left() > canvas.width()/2);
+    if (QGuiApplication::keyboardInputDirection() == Qt::LeftToRight) {
+        QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
+    } else {
+        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
+    }
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     QString componentStr = "import QtQuick 2.0\nTextInput {}";
     QDeclarativeComponent textComponent(&engine);
