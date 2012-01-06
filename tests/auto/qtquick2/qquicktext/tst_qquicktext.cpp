@@ -711,7 +711,6 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     QCOMPARE(text->hAlign(), QQuickText::AlignLeft);
     QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < canvas->width()/2);
 
-#ifndef Q_OS_MAC    // QTBUG-18040
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QApplication::keyboardInputDirection
     text->setText("");
@@ -719,11 +718,9 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
                                   QQuickText::AlignLeft : QQuickText::AlignRight);
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
-#endif
 
     delete canvas;
 
-#ifndef Q_OS_MAC    // QTBUG-18040
     // alignment of Text with no text set to it
     QString componentStr = "import QtQuick 2.0\nText {}";
     QDeclarativeComponent textComponent(&engine);
@@ -732,7 +729,6 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     QCOMPARE(textObject->hAlign(), QApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickText::AlignLeft : QQuickText::AlignRight);
     delete textObject;
-#endif
 }
 
 void tst_qquicktext::verticalAlignment()
