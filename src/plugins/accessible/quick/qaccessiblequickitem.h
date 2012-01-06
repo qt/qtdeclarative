@@ -85,10 +85,10 @@ public:
 
     void *interface_cast(QAccessible::InterfaceType t);
 
-    QVariant currentValue();
+    QVariant currentValue() const;
     void setCurrentValue(const QVariant &value);
-    QVariant maximumValue();
-    QVariant minimumValue();
+    QVariant maximumValue() const;
+    QVariant minimumValue() const;
 };
 
 #endif // QT_NO_ACCESSIBILITY

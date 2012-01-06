@@ -260,7 +260,7 @@ void *QAccessibleQuickItemValueInterface::interface_cast(QAccessible::InterfaceT
     return QAccessibleQuickItem::interface_cast(t);
 }
 
-QVariant QAccessibleQuickItemValueInterface::currentValue()
+QVariant QAccessibleQuickItemValueInterface::currentValue() const
 {
     return item()->property("value");
 }
@@ -270,12 +270,12 @@ void QAccessibleQuickItemValueInterface::setCurrentValue(const QVariant &value)
     item()->setProperty("value", value);
 }
 
-QVariant QAccessibleQuickItemValueInterface::maximumValue()
+QVariant QAccessibleQuickItemValueInterface::maximumValue() const
 {
     return item()->property("maximumValue");
 }
 
-QVariant QAccessibleQuickItemValueInterface::minimumValue()
+QVariant QAccessibleQuickItemValueInterface::minimumValue() const
 {
     return item()->property("minimumValue");
 }
