@@ -49,9 +49,13 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Accessible QQuickAccessibleAttached
+    \brief Attached property to enable accessibility of QML items.
+
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-interaction-elements
-    \brief Attached property to enable accessibility of QML items.
+    \ingroup accessibility
+
+    This class is part of \l {Accessibility for Qt Quick Applications}.
 
     Items the user interacts with or that give information to the user
     need to expose their information in a semantic way.
