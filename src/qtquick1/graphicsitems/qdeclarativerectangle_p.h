@@ -52,7 +52,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 class Q_QTQUICK1_EXPORT QDeclarative1Pen : public QObject
 {
     Q_OBJECT

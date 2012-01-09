@@ -63,7 +63,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarativeDebugConnection;
 class QDeclarativeDebugWatch;

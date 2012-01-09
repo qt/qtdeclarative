@@ -56,7 +56,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class FlatListModel_1;
 class NestedListModel_1;

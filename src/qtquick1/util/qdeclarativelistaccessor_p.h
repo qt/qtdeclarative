@@ -50,7 +50,6 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
 
-QT_MODULE(Declarative)
 
 class Q_AUTOTEST_EXPORT QDeclarative1ListAccessor
 {

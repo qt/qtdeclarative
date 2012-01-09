@@ -52,7 +52,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarative1FlipablePrivate;
 class Q_AUTOTEST_EXPORT QDeclarative1Flipable : public QDeclarativeItem

@@ -48,7 +48,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 //### set component root as focusscope
 class Q_AUTOTEST_EXPORT QDeclarative1FocusScope : public QDeclarativeItem

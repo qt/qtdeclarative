@@ -52,7 +52,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarative1ParentChangePrivate;
 class Q_AUTOTEST_EXPORT QDeclarative1ParentChange : public QDeclarative1StateOperation, public QDeclarative1ActionEvent

@@ -59,7 +59,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarativeDebugServer;
 class Q_DECLARATIVE_EXPORT QDeclarativeDebugServerConnection

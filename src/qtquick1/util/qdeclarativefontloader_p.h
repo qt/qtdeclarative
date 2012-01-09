@@ -51,7 +51,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarative1FontLoaderPrivate;
 class Q_AUTOTEST_EXPORT QDeclarative1FontLoader : public QObject

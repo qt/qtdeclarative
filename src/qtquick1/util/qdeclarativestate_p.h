@@ -56,7 +56,6 @@ class QDeclarativeAbstractBinding;
 class QDeclarativeBinding;
 class QDeclarativeExpression;
 
-QT_MODULE(Declarative)
 
 class QDeclarative1ActionEvent;
 class Q_QTQUICK1_EXPORT QDeclarative1Action

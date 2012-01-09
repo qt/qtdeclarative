@@ -50,7 +50,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarative1ApplicationPrivate;
 class Q_QTQUICK1_EXPORT QDeclarative1Application : public QObject

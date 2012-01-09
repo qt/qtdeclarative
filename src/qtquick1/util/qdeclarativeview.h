@@ -59,7 +59,6 @@ class QDeclarativeContext;
 class QDeclarativeError;
 class QDeclarativeItem;
 
-QT_MODULE(Declarative)
 
 class QDeclarativeViewPrivate;
 class Q_QTQUICK1_EXPORT QDeclarativeView : public QGraphicsView

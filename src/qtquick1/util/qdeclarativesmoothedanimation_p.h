@@ -53,7 +53,6 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeProperty;
 
-QT_MODULE(Declarative)
 
 class QDeclarative1SmoothedAnimationPrivate;
 class Q_AUTOTEST_EXPORT QDeclarative1SmoothedAnimation : public QDeclarative1NumberAnimation

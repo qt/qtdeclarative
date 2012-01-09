@@ -49,7 +49,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
     
 class QDeclarative1PropertyChangesPrivate;
 class Q_QTQUICK1_EXPORT QDeclarative1PropertyChanges : public QDeclarative1StateOperation

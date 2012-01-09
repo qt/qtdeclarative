@@ -66,7 +66,6 @@ QT_BEGIN_NAMESPACE
 
 class QScriptEngine;
 
-QT_MODULE(Declarative)
 
 class QDeclarative1OpenMetaObject;
 class QDeclarative1ListModelWorkerAgent;

@@ -52,7 +52,6 @@ QT_BEGIN_NAMESPACE
 
 class QMovie;
 
-QT_MODULE(Declarative)
 
 class QDeclarative1AnimatedImagePrivate;
 

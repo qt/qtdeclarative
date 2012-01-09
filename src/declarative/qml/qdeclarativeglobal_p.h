@@ -49,7 +49,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 #define DEFINE_BOOL_CONFIG_OPTION(name, var) \
     static bool name() \

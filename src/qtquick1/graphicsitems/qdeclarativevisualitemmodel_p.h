@@ -53,7 +53,6 @@ Q_DECLARE_METATYPE(QModelIndex)
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarativeComponent;
 class QDeclarativeItem;

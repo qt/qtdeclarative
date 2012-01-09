@@ -53,7 +53,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarative1TimerPrivate;
 class Q_QTQUICK1_EXPORT QDeclarative1Timer : public QObject, public QDeclarativeParserStatus

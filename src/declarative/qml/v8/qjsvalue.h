@@ -34,7 +34,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QJSValue;
 class QJSEngine;

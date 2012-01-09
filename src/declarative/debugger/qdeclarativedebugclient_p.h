@@ -61,7 +61,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarativeDebugConnectionPrivate;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDebugConnection : public QIODevice

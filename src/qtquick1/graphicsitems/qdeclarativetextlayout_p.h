@@ -48,7 +48,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarative1TextLayoutPrivate;
 class QDeclarative1TextLayout : public QTextLayout

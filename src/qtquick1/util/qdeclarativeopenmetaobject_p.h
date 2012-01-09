@@ -56,7 +56,6 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeEngine;
 class QMetaPropertyBuilder;
 
-QT_MODULE(Declarative)
 
 class QDeclarative1OpenMetaObjectTypePrivate;
 class Q_QTQUICK1_EXPORT QDeclarative1OpenMetaObjectType : public QDeclarativeRefCount

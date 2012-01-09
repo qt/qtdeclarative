@@ -49,7 +49,6 @@
 QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDeclarative1ImagePrivate;
 class Q_AUTOTEST_EXPORT QDeclarative1Image : public QDeclarative1ImageBase

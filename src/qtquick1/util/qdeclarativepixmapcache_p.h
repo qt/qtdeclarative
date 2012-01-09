@@ -53,7 +53,6 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
 
-QT_MODULE(Declarative)
 
 class QDeclarative1PixmapData;
 class Q_QTQUICK1_EXPORT QDeclarative1Pixmap

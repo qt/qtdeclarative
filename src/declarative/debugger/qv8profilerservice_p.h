@@ -59,7 +59,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 struct Q_AUTOTEST_EXPORT QV8ProfilerData
 {

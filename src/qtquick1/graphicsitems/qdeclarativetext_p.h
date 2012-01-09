@@ -51,7 +51,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 class QDeclarative1TextPrivate;
 class Q_QTQUICK1_EXPORT QDeclarative1Text : public QDeclarative1ImplicitSizeItem
 {
