@@ -92,7 +92,6 @@ public:
     QJSEngine *engine() const;
     bool isValid() const;
     bool isBool() const;
-    bool isBoolean() const;
     bool isNumber() const;
     bool isFunction() const;
     bool isNull() const;
@@ -109,7 +108,6 @@ public:
     QString toString() const;
     double toNumber() const;
     bool toBool() const;
-    bool toBoolean() const;
     double toInteger() const;
     qint32 toInt32() const;
     quint32 toUInt32() const;

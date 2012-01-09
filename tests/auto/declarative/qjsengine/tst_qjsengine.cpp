@@ -751,8 +751,8 @@ void tst_QJSEngine::newVariant_valueOfToString()
     {
         QJSValue object = eng.newVariant(QVariant(false));
         QJSValue value = object.property("valueOf").call(object);
-        QVERIFY(value.isBoolean());
-        QCOMPARE(value.toBoolean(), false);
+        QVERIFY(value.isBool());
+        QCOMPARE(value.toBool(), false);
         QCOMPARE(object.toString(), QString::fromLatin1("false"));
         QCOMPARE(object.toVariant().toString(), object.toString());
     }
@@ -929,8 +929,8 @@ void tst_QJSEngine::jsParseDate()
     // Date.parse() should be able to parse the output of Date().toString()
     {
         QJSValue ret = eng.evaluate("var x = new Date(); var s = x.toString(); s == new Date(Date.parse(s)).toString()");
-        QVERIFY(ret.isBoolean());
-        QCOMPARE(ret.toBoolean(), true);
+        QVERIFY(ret.isBool());
+        QCOMPARE(ret.toBool(), true);
     }
 }
 
@@ -1264,8 +1264,8 @@ void tst_QJSEngine::newQMetaObject()
     {
         QScriptValue ret = qclass3.call();
         QVERIFY(ret.isObject());
-        QVERIFY(ret.property("isCalledAsConstructor").isBoolean());
-        QVERIFY(!ret.property("isCalledAsConstructor").toBoolean());
+        QVERIFY(ret.property("isCalledAsConstructor").isBool());
+        QVERIFY(!ret.property("isCalledAsConstructor").toBool());
         QVERIFY(ret.instanceOf(qclass3));
         QVERIFY(instanceofJS(ret, qclass3).strictlyEquals(true));
         QVERIFY(!ret.instanceOf(qclass));
@@ -1274,8 +1274,8 @@ void tst_QJSEngine::newQMetaObject()
     {
         QScriptValue ret = qclass3.construct();
         QVERIFY(ret.isObject());
-        QVERIFY(ret.property("isCalledAsConstructor").isBoolean());
-        QVERIFY(ret.property("isCalledAsConstructor").toBoolean());
+        QVERIFY(ret.property("isCalledAsConstructor").isBool());
+        QVERIFY(ret.property("isCalledAsConstructor").toBool());
         QVERIFY(ret.instanceOf(qclass3));
         QVERIFY(instanceofJS(ret, qclass3).strictlyEquals(true));
         QVERIFY(!ret.instanceOf(qclass2));
@@ -2620,8 +2620,8 @@ void tst_QJSEngine::valueConversion_QVariant()
     {
         QJSValue val = eng.toScriptValue(QVariant(true));
         QVERIFY(!val.isVariant());
-        QVERIFY(val.isBoolean());
-        QCOMPARE(val.toBoolean(), true);
+        QVERIFY(val.isBool());
+        QCOMPARE(val.toBool(), true);
     }
     {
         QJSValue val = eng.toScriptValue(QVariant(int(123)));
@@ -3906,14 +3906,14 @@ void tst_QJSEngine::isEvaluating_fromNative()
     QScriptValue fun = eng.newFunction(myFunctionReturningIsEvaluating);
     eng.globalObject().setProperty("myFunctionReturningIsEvaluating", fun);
     QScriptValue ret = eng.evaluate("myFunctionReturningIsEvaluating()");
-    QVERIFY(ret.isBoolean());
-    QVERIFY(ret.toBoolean());
+    QVERIFY(ret.isBool());
+    QVERIFY(ret.toBool());
     ret = fun.call();
-    QVERIFY(ret.isBoolean());
-    QVERIFY(ret.toBoolean());
+    QVERIFY(ret.isBool());
+    QVERIFY(ret.toBool());
     ret = myFunctionReturningIsEvaluating(eng.currentContext(), &eng);
-    QVERIFY(ret.isBoolean());
-    QVERIFY(!ret.toBoolean());
+    QVERIFY(ret.isBool());
+    QVERIFY(!ret.toBool());
 }
 
 void tst_QJSEngine::isEvaluating_fromEvent()
@@ -4023,7 +4023,7 @@ void tst_QJSEngine::argumentsProperty_globalContext()
         QVERIFY(ret.isNumber());
         QCOMPARE(ret.toInt32(), 10);
     }
-    QVERIFY(eng.evaluate("delete arguments").toBoolean());
+    QVERIFY(eng.evaluate("delete arguments").toBool());
     QVERIFY(!eng.globalObject().property("arguments").isValid());
 }
 
@@ -4413,17 +4413,17 @@ void tst_QJSEngine::stringObjects()
         QCOMPARE(ret4.toInt32(), 456);
 
         QJSValue ret5 = eng.evaluate("delete s[0]");
-        QVERIFY(ret5.isBoolean());
+        QVERIFY(ret5.isBool());
         QEXPECT_FAIL("", "FIXME: This is V8 bug, please report it! ECMA script standard 15.5.5.2", Abort);
-        QVERIFY(!ret5.toBoolean());
+        QVERIFY(!ret5.toBool());
 
         QJSValue ret6 = eng.evaluate("delete s[-1]");
-        QVERIFY(ret6.isBoolean());
-        QVERIFY(ret6.toBoolean());
+        QVERIFY(ret6.isBool());
+        QVERIFY(ret6.toBool());
 
         QJSValue ret7 = eng.evaluate("delete s[s.length]");
-        QVERIFY(ret7.isBoolean());
-        QVERIFY(ret7.toBoolean());
+        QVERIFY(ret7.isBool());
+        QVERIFY(ret7.toBool());
     }
 }
 
@@ -4522,14 +4522,14 @@ void tst_QJSEngine::getterSetterThisObject_plain()
         eng.evaluate("o = {}");
         // read
         eng.evaluate("o.__defineGetter__('x', function() { return this; })");
-        QVERIFY(eng.evaluate("o.x === o").toBoolean());
+        QVERIFY(eng.evaluate("o.x === o").toBool());
         QVERIFY(eng.evaluate("with (o) x").equals(eng.evaluate("o")));
-        QVERIFY(eng.evaluate("(function() { with (o) return x; })() === o").toBoolean());
+        QVERIFY(eng.evaluate("(function() { with (o) return x; })() === o").toBool());
         eng.evaluate("q = {}; with (o) with (q) x").equals(eng.evaluate("o"));
         // write
         eng.evaluate("o.__defineSetter__('x', function() { return this; });");
         // SpiderMonkey says setter return value, JSC says RHS.
-        QVERIFY(eng.evaluate("(o.x = 'foo') === 'foo'").toBoolean());
+        QVERIFY(eng.evaluate("(o.x = 'foo') === 'foo'").toBool());
         QVERIFY(eng.evaluate("with (o) x = 'foo'").equals("foo"));
         QVERIFY(eng.evaluate("with (o) with (q) x = 'foo'").equals("foo"));
     }
@@ -4542,15 +4542,15 @@ void tst_QJSEngine::getterSetterThisObject_prototypeChain()
         eng.evaluate("o = {}; p = {}; o.__proto__ = p");
         // read
         eng.evaluate("p.__defineGetter__('x', function() { return this; })");
-        QVERIFY(eng.evaluate("o.x === o").toBoolean());
+        QVERIFY(eng.evaluate("o.x === o").toBool());
         QVERIFY(eng.evaluate("with (o) x").equals(eng.evaluate("o")));
-        QVERIFY(eng.evaluate("(function() { with (o) return x; })() === o").toBoolean());
+        QVERIFY(eng.evaluate("(function() { with (o) return x; })() === o").toBool());
         eng.evaluate("q = {}; with (o) with (q) x").equals(eng.evaluate("o"));
         eng.evaluate("with (q) with (o) x").equals(eng.evaluate("o"));
         // write
         eng.evaluate("o.__defineSetter__('x', function() { return this; });");
         // SpiderMonkey says setter return value, JSC says RHS.
-        QVERIFY(eng.evaluate("(o.x = 'foo') === 'foo'").toBoolean());
+        QVERIFY(eng.evaluate("(o.x = 'foo') === 'foo'").toBool());
         QVERIFY(eng.evaluate("with (o) x = 'foo'").equals("foo"));
         QVERIFY(eng.evaluate("with (o) with (q) x = 'foo'").equals("foo"));
     }
@@ -4567,16 +4567,16 @@ void tst_QJSEngine::getterSetterThisObject_activation()
         act.setProperty("act", act);
         // read
         eng.evaluate("act.__defineGetter__('x', function() { return this; })");
-        QVERIFY(eng.evaluate("x === act").toBoolean());
+        QVERIFY(eng.evaluate("x === act").toBool());
         QEXPECT_FAIL("", "QTBUG-17605: Not possible to implement local variables as getter/setter properties", Abort);
         QVERIFY(!eng.hasUncaughtException());
         QVERIFY(eng.evaluate("with (act) x").equals("foo"));
-        QVERIFY(eng.evaluate("(function() { with (act) return x; })() === act").toBoolean());
+        QVERIFY(eng.evaluate("(function() { with (act) return x; })() === act").toBool());
         eng.evaluate("q = {}; with (act) with (q) x").equals(eng.evaluate("act"));
         eng.evaluate("with (q) with (act) x").equals(eng.evaluate("act"));
         // write
         eng.evaluate("act.__defineSetter__('x', function() { return this; });");
-        QVERIFY(eng.evaluate("(x = 'foo') === 'foo'").toBoolean());
+        QVERIFY(eng.evaluate("(x = 'foo') === 'foo'").toBool());
         QVERIFY(eng.evaluate("with (act) x = 'foo'").equals("foo"));
         QVERIFY(eng.evaluate("with (act) with (q) x = 'foo'").equals("foo"));
         eng.popContext();
@@ -4674,7 +4674,7 @@ void tst_QJSEngine::jsShadowReadOnlyPrototypeProperty()
     QJSEngine eng;
     QVERIFY(eng.evaluate("o = {}; o.__proto__ = parseInt; o.length").isNumber());
     QCOMPARE(eng.evaluate("o.length = 123; o.length").toInt32(), 123);
-    QVERIFY(eng.evaluate("o.hasOwnProperty('length')").toBoolean());
+    QVERIFY(eng.evaluate("o.hasOwnProperty('length')").toBool());
 }
 
 void tst_QJSEngine::toObject()
