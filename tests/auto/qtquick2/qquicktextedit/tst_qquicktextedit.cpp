@@ -97,6 +97,7 @@ public:
     tst_qquicktextedit();
 
 private slots:
+    void cleanup();
     void text();
     void width();
     void wrap();
@@ -294,6 +295,13 @@ tst_qquicktextedit::tst_qquicktextedit()
                  // << "#AA0011DD"
                  // << "#00F16B11";
                  //
+}
+
+void tst_qquicktextedit::cleanup()
+{
+    // ensure not even skipped tests with custom input context leave it dangling
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = 0;
 }
 
 void tst_qquicktextedit::text()
@@ -616,6 +624,10 @@ void tst_qquicktextedit::hAlign()
 
 void tst_qquicktextedit::hAlign_RightToLeft()
 {
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
     QQuickView canvas(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextEdit *textEdit = canvas.rootObject()->findChild<QQuickTextEdit*>("text");
     QVERIFY(textEdit != 0);
@@ -716,24 +728,40 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from qApp->inputPanel()->inputDirection
     textEdit->setText("");
-    QCOMPARE(textEdit->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextEdit::AlignLeft : QQuickTextEdit::AlignRight);
-    if (qApp->inputPanel()->inputDirection() == Qt::LeftToRight)
-        QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
-    else
-        QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
-    textEdit->setHAlign(QQuickTextEdit::AlignRight);
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::LeftToRight);
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignLeft);
+    QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
+
+    QSignalSpy cursorRectangleSpy(textEdit, SIGNAL(cursorRectangleChanged()));
+
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QCOMPARE(cursorRectangleSpy.count(), 1);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::RightToLeft);
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
     QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
 
-    // alignment of TextEdit with no text set to it
-    QString componentStr = "import QtQuick 2.0\nTextEdit {}";
-    QDeclarativeComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextEdit::AlignLeft : QQuickTextEdit::AlignRight);
-    delete textObject;
+    // set input direction while having content
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textEdit->setText("a");
+    textEdit->setCursorPosition(1);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QTest::keyClick(&canvas, Qt::Key_Backspace);
+    QVERIFY(textEdit->text().isEmpty());
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(textEdit->cursorRectangle().left() > canvas.width()/2);
+
+    // input direction changed while not having focus
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textEdit->setFocus(false);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    textEdit->setFocus(true);
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(textEdit->cursorRectangle().left() > canvas.width()/2);
+
+    textEdit->setHAlign(QQuickTextEdit::AlignRight);
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
 }
 
 void tst_qquicktextedit::vAlign()

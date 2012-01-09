@@ -282,6 +282,7 @@ private Q_SLOTS:
     void q_canPasteChanged();
     void updateDocument();
     void updateCursor();
+    void q_updateAlignment();
 
 private:
     void updateSize();

@@ -1502,6 +1502,15 @@ void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemActiveFocusHasChanged) {
         setCursorVisible(value.boolValue); // ### refactor: focus handling && d->canvas && d->canvas->hasFocus());
+
+        if (value.boolValue) {
+            q_updateAlignment();
+            connect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                    this, SLOT(q_updateAlignment()));
+        } else {
+            disconnect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                       this, SLOT(q_updateAlignment()));
+        }
     }
     QQuickItem::itemChange(change, value);
 }
@@ -1923,6 +1932,15 @@ void QQuickTextEdit::updateCursor()
     if (isComponentComplete()) {
         updateImageCache(d->control->cursorRect());
         update();
+    }
+}
+
+void QQuickTextEdit::q_updateAlignment()
+{
+    Q_D(QQuickTextEdit);
+    if (d->determineHorizontalAlignment()) {
+        d->updateDefaultTextOption();
+        moveCursorDelegate();
     }
 }
 
