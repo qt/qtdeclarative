@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qfastmetabuilder_p.h"
-#include "qvariant.h"
 
 #include <QtCore/qmetaobject.h>
 
@@ -260,20 +259,16 @@ void QFastMetaBuilder::setProperty(int index, const StringRef &name, const Strin
     QMetaObjectPrivate *p = priv(m_data);
     Q_ASSERT(index < p->propertyCount);
 
-    uint qtType = mtype;
-    if ((int)qtType == qMetaTypeId<QVariant>())
-        qtType = 0xFF; // Special handling for QVariant
-
     uint *ptr = fieldPointer(m_data) + p->propertyData + index * PROPERTY_FIELD_COUNT;
     // properties: name, type, flags
     ptr[0] = name.offset();
     ptr[1] = type.offset();
     if (notifySignal == -1) {
-        ptr[2] = qtType << 24;
+        ptr[2] = mtype << 24;
         ptr[2] |= flags | Scriptable | Readable;
         *(fieldPointer(m_data) + p->propertyData + p->propertyCount * PROPERTY_FIELD_COUNT + index) = 0;
     } else {
-        ptr[2] = qtType << 24;
+        ptr[2] = mtype << 24;
         ptr[2] |= flags | Scriptable | Readable | Notify;
         *(fieldPointer(m_data) + p->propertyData + p->propertyCount * PROPERTY_FIELD_COUNT + index) = notifySignal;
     }

@@ -527,31 +527,22 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                int t = (metaData->propertyData() + id)->propertyType;
                 bool needActivate = false;
 
-                if (t == -1) {
-
-                    if (id >= firstVarPropertyIndex) {
-                        // the context can be null if accessing var properties from cpp after re-parenting an item.
-                        QDeclarativeEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QDeclarativeEnginePrivate::get(ctxt->engine);
-                        QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
-                        if (v8e) {
-                            v8::HandleScope handleScope;
-                            v8::Context::Scope contextScope(v8e->context());
-                            if (c == QMetaObject::ReadProperty) {
-                                *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
-                            } else if (c == QMetaObject::WriteProperty) {
-                                writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
-                            }
-                        } else if (c == QMetaObject::ReadProperty) {
-                            // if the context was disposed, we just return an invalid variant from read.
-                            *reinterpret_cast<QVariant *>(a[0]) = QVariant();
-                        }
-                    } else {
-                        // don't need to set up v8 scope objects, since not accessing varProperties.
+                if (id >= firstVarPropertyIndex) {
+                    Q_ASSERT(t == QMetaType::QVariant);
+                    // the context can be null if accessing var properties from cpp after re-parenting an item.
+                    QDeclarativeEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QDeclarativeEnginePrivate::get(ctxt->engine);
+                    QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
+                    if (v8e) {
+                        v8::HandleScope handleScope;
+                        v8::Context::Scope contextScope(v8e->context());
                         if (c == QMetaObject::ReadProperty) {
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                         } else if (c == QMetaObject::WriteProperty) {
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                         }
+                    } else if (c == QMetaObject::ReadProperty) {
+                        // if the context was disposed, we just return an invalid variant from read.
+                        *reinterpret_cast<QVariant *>(a[0]) = QVariant();
                     }
 
                 } else {
@@ -584,6 +575,9 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             break;
                         case QMetaType::QObjectStar:
                             *reinterpret_cast<QObject **>(a[0]) = data[id].asQObject();
+                            break;
+                        case QMetaType::QVariant:
+                            *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                             break;
                         default:
                             break;
@@ -635,6 +629,9 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         case QMetaType::QObjectStar:
                             needActivate = *reinterpret_cast<QObject **>(a[0]) != data[id].asQObject();
                             data[id].setValue(*reinterpret_cast<QObject **>(a[0]));
+                            break;
+                        case QMetaType::QVariant:
+                            writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                             break;
                         default:
                             break;

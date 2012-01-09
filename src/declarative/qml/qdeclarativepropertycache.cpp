@@ -146,6 +146,9 @@ void QDeclarativePropertyData::lazyLoad(const QMetaProperty &p, QDeclarativeEngi
     if (type == QMetaType::QObjectStar || type == QMetaType::QWidgetStar) {
         propType = type;
         flags |= QDeclarativePropertyData::IsQObjectDerived;
+    } else if (type == QMetaType::QVariant) {
+        propType = type;
+        flags |= QDeclarativePropertyData::IsQVariant;
     } else if (type == QVariant::UserType || type == -1) {
         propTypeName = p.typeName();
         flags |= QDeclarativePropertyData::NotFullyResolved;
@@ -157,8 +160,6 @@ void QDeclarativePropertyData::lazyLoad(const QMetaProperty &p, QDeclarativeEngi
 void QDeclarativePropertyData::load(const QMetaProperty &p, QDeclarativeEngine *engine)
 {
     propType = p.userType();
-    if (QVariant::Type(propType) == QVariant::LastType)
-        propType = QMetaType::QVariant;
     coreIndex = p.propertyIndex();
     notifyIndex = p.notifySignalIndex();
     flags = fastFlagsForProperty(p) | flagsForPropertyType(propType, engine);
@@ -549,8 +550,6 @@ void QDeclarativePropertyCache::resolve(QDeclarativePropertyData *data) const
     Q_ASSERT(data->notFullyResolved());
 
     data->propType = QMetaType::type(data->propTypeName);
-    if (QVariant::Type(data->propType) == QVariant::LastType)
-        data->propType = QMetaType::QVariant;
 
     if (!data->isFunction())
         data->flags |= flagsForPropertyType(data->propType, engine);

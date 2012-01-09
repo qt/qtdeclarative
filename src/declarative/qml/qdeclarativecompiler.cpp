@@ -2833,8 +2833,8 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
         int metaType;
         const char *cppType;
     } builtinTypes[] = {
-        { Object::DynamicProperty::Var, 0, "QVariant" },
-        { Object::DynamicProperty::Variant, 0, "QVariant" },
+        { Object::DynamicProperty::Var, QMetaType::QVariant, "QVariant" },
+        { Object::DynamicProperty::Variant, QMetaType::QVariant, "QVariant" },
         { Object::DynamicProperty::Int, QMetaType::Int, "int" },
         { Object::DynamicProperty::Bool, QMetaType::Bool, "bool" },
         { Object::DynamicProperty::Real, QMetaType::Double, "double" },
@@ -2870,8 +2870,6 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
                 if (typeRefs[p->type].isEmpty()) 
                     typeRefs[p->type] = builder.newString(strlen(builtinTypes[p->type].cppType));
                 typeRef = typeRefs[p->type];
-                if (p->type == Object::DynamicProperty::Variant)
-                    propertyType = -1;
 
             } else {
                 Q_ASSERT(p->type == Object::DynamicProperty::CustomList ||
@@ -2950,11 +2948,11 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
                     QFastMetaBuilder::StringRef typeRef = typeRefs[p->type];
                     if (buildData) {
                         vmd->propertyCount++;
-                        (vmd->propertyData() + effectivePropertyIndex)->propertyType = -1;
+                        (vmd->propertyData() + effectivePropertyIndex)->propertyType = QMetaType::QVariant;
                     }
 
                     builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef,
-                                        (QMetaType::Type)-1,
+                                        QMetaType::QVariant,
                                         p->isReadOnly?QFastMetaBuilder::None:QFastMetaBuilder::Writable,
                                         effectivePropertyIndex);
 
@@ -3267,8 +3265,8 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
         writable = aliasProperty.isWritable() && !prop.isReadOnly;
         resettable = aliasProperty.isResettable() && !prop.isReadOnly;
 
-        if (aliasProperty.type() < QVariant::UserType ||
-            aliasProperty.type() == QVariant::LastType /* for QVariant */ )
+        if (aliasProperty.type() < QVariant::UserType
+            || uint(aliasProperty.type()) == QMetaType::QVariant)
             type = aliasProperty.type();
 
         if (alias.count() == 3) {
