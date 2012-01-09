@@ -350,11 +350,6 @@ void tst_qquickborderimage::pendingRemoteRequest()
 {
     QFETCH(QString, source);
 
-#ifdef Q_OS_MAC
-    if (source == QLatin1String("http://localhost/none.sci"))
-        QSKIP("QTBUG-23479");
-#endif
-
     QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + source + "\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
