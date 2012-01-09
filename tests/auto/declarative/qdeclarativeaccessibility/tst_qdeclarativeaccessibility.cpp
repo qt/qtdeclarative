@@ -382,6 +382,7 @@ void tst_QDeclarativeAccessibility::basicPropertiesTest()
     QCOMPARE(item->childCount(), 2);
     QCOMPARE(item->rect().size(), QSize(400, 400));
     QCOMPARE(item->role(), QAccessible::Pane);
+    QCOMPARE(iface->indexOfChild(item.data()), 0);
 
     QAI text = QAI(item->child(0));
     QVERIFY(text.data());
@@ -392,6 +393,7 @@ void tst_QDeclarativeAccessibility::basicPropertiesTest()
     QCOMPARE(text->rect().x(), item->rect().x() + 100);
     QCOMPARE(text->rect().y(), item->rect().y() + 20);
     QCOMPARE(text->role(), QAccessible::StaticText);
+    QCOMPARE(item->indexOfChild(text.data()), 0);
 
     QAI text2 = QAI(item->child(1));
     QVERIFY(text2.data());
@@ -402,6 +404,10 @@ void tst_QDeclarativeAccessibility::basicPropertiesTest()
     QCOMPARE(text2->rect().x(), item->rect().x() + 100);
     QCOMPARE(text2->rect().y(), item->rect().y() + 40);
     QCOMPARE(text2->role(), QAccessible::StaticText);
+    QCOMPARE(item->indexOfChild(text2.data()), 1);
+
+    QCOMPARE(iface->indexOfChild(text2.data()), -1);
+    QCOMPARE(text2->indexOfChild(item.data()), -1);
 
     delete canvas;
 }

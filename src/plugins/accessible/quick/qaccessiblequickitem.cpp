@@ -135,10 +135,7 @@ int QAccessibleQuickItem::navigate(QAccessible::RelationFlag rel, int entry, QAc
 int QAccessibleQuickItem::indexOfChild(const QAccessibleInterface *iface) const
 {
     QList<QQuickItem*> kids = childItems();
-    int idx = kids.indexOf(static_cast<QQuickItem*>(iface->object()));
-    if (idx != -1)
-        ++idx;
-    return idx;
+    return kids.indexOf(static_cast<QQuickItem*>(iface->object()));
 }
 
 QList<QQuickItem *> QAccessibleQuickItem::childItems() const

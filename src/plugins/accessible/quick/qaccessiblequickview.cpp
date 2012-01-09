@@ -158,7 +158,7 @@ int QAccessibleQuickView::indexOfChild(const QAccessibleInterface *iface) const
     if (iface) {
         QQuickItem *declarativeRoot = view()->rootObject();
         if (declarativeRoot == iface->object())
-            return 1;
+            return 0;
     }
     return -1;
 

@@ -80,7 +80,7 @@ int QAccessibleDeclarativeView::indexOfChild(const QAccessibleInterface *iface) 
     if (iface) {
         QDeclarativeItem *declarativeRoot = m_view->accessibleRootItem();
         if (declarativeRoot == iface->object())
-            return 1;
+            return 0;
     }
     return -1;
 }
