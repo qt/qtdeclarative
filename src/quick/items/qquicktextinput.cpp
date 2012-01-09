@@ -2316,6 +2316,12 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
         if (!hasFocus) {
             d->commitPreedit();
             d->deselect();
+            disconnect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                       this, SLOT(q_updateAlignment()));
+        } else {
+            q_updateAlignment();
+            connect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                    this, SLOT(q_updateAlignment()));
         }
     }
     QQuickItem::itemChange(change, value);
@@ -2444,6 +2450,15 @@ void QQuickTextInput::q_canPasteChanged()
 
 }
 
+void QQuickTextInput::q_updateAlignment()
+{
+    Q_D(QQuickTextInput);
+    if (d->determineHorizontalAlignment()) {
+        d->updateLayout();
+        updateCursorRectangle();
+    }
+}
+
 // ### these should come from QStyleHints
 const int textCursorWidth = 1;
 const bool fullWidthSelection = true;
@@ -2510,7 +2525,7 @@ void QQuickTextInputPrivate::updateLayout()
         return;
 
     QTextOption option = m_textLayout.textOption();
-    option.setTextDirection(m_layoutDirection);
+    option.setTextDirection(layoutDirection());
     option.setFlags(QTextOption::IncludeTrailingSpaces);
     option.setWrapMode(QTextOption::WrapMode(wrapMode));
     option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
@@ -2984,6 +2999,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 
     Q_UNUSED(update)
     bool notifyInputPanel = m_textDirty || m_selDirty;
+    bool alignmentChanged = false;
 
     if (m_textDirty) {
         // do validation
@@ -3026,18 +3042,21 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         if (m_textDirty) {
             m_textDirty = false;
             m_preeditDirty = false;
-            determineHorizontalAlignment();
+            alignmentChanged = determineHorizontalAlignment();
             emit q->textChanged();
         }
 
-        updateDisplayText();
+        updateDisplayText(alignmentChanged);
 
         if (m_validInput != wasValidInput)
             emit q->acceptableInputChanged();
     }
     if (m_preeditDirty) {
         m_preeditDirty = false;
-        determineHorizontalAlignment();
+        if (determineHorizontalAlignment()) {
+            alignmentChanged = true;
+            updateLayout();
+        }
     }
 
     if (m_selDirty) {
@@ -3049,7 +3068,9 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     if (notifyInputPanel)
         q->updateMicroFocus();
     emitUndoRedoChanged();
-    emitCursorPositionChanged();
+
+    if (!emitCursorPositionChanged() && alignmentChanged)
+        q->updateCursorRectangle();
 
     return true;
 }
@@ -3683,7 +3704,7 @@ void QQuickTextInputPrivate::emitUndoRedoChanged()
     If the current cursor position differs from the last emitted cursor
     position, emits cursorPositionChanged().
 */
-void QQuickTextInputPrivate::emitCursorPositionChanged()
+bool QQuickTextInputPrivate::emitCursorPositionChanged()
 {
     Q_Q(QQuickTextInput);
     if (m_cursor != m_lastCursorPos) {
@@ -3710,7 +3731,10 @@ void QQuickTextInputPrivate::emitCursorPositionChanged()
 #ifndef QT_NO_ACCESSIBILITY
         QAccessible::updateAccessibility(q, 0, QAccessible::TextCaretMoved);
 #endif
+
+        return true;
     }
+    return false;
 }
 
 

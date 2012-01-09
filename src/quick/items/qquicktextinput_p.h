@@ -323,6 +323,7 @@ private Q_SLOTS:
     void createCursor();
     void updateCursorRectangle();
     void q_canPasteChanged();
+    void q_updateAlignment();
 
 private:
     Q_DECLARE_PRIVATE(QQuickTextInput)

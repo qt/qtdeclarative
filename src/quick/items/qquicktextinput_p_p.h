@@ -424,7 +424,7 @@ private:
     void internalRedo();
     void emitUndoRedoChanged();
 
-    void emitCursorPositionChanged();
+    bool emitCursorPositionChanged();
 
     bool finishChange(int validateFromState = -1, bool update = false, bool edited = true);
 

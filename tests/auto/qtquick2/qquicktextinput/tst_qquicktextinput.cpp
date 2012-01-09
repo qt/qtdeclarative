@@ -1219,6 +1219,10 @@ void tst_qquicktextinput::horizontalAlignment()
 
 void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 {
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
     QQuickView canvas(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextInput *textInput = canvas.rootObject()->findChild<QQuickTextInput*>("text");
     QVERIFY(textInput != 0);
@@ -1314,26 +1318,42 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QInputPanel::inputDirection()
     textInput->setText("");
-    QCOMPARE(textInput->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
-    if (qApp->inputPanel()->inputDirection() == Qt::LeftToRight) {
-        QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
-    } else {
-        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
-        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
-    }
-    textInput->setHAlign(QQuickTextInput::AlignRight);
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::LeftToRight);
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
+
+    QSignalSpy cursorRectangleSpy(textInput, SIGNAL(cursorRectangleChanged()));
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::RightToLeft);
+    QCOMPARE(cursorRectangleSpy.count(), 1);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
     QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
-    QString componentStr = "import QtQuick 2.0\nTextInput {}";
-    QDeclarativeComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
-    delete textObject;
+    // set input direction while having content
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textInput->setText("a");
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QTest::keyClick(&canvas, Qt::Key_Backspace);
+    QVERIFY(textInput->text().isEmpty());
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
+
+    // input direction changed while not having focus
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textInput->setFocus(false);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    textInput->setFocus(true);
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
+
+    textInput->setHAlign(QQuickTextInput::AlignRight);
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 }
 
 void tst_qquicktextinput::verticalAlignment()

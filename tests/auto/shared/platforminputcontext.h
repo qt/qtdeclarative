@@ -48,7 +48,7 @@ public:
     PlatformInputContext()
         : m_visible(false), m_action(QInputPanel::Click), m_cursorPosition(0),
           m_invokeActionCallCount(0), m_showInputPanelCallCount(0), m_hideInputPanelCallCount(0),
-          m_updateCallCount(0)
+          m_updateCallCount(0), m_direction(Qt::LeftToRight)
     {
     }
 
@@ -77,6 +77,25 @@ public:
         m_updateCallCount++;
     }
 
+    virtual QLocale locale() const
+    {
+        if (m_direction == Qt::RightToLeft)
+            return QLocale(QLocale::Arabic);
+        else
+            return QLocale(QLocale::English);
+    }
+
+    virtual Qt::LayoutDirection inputDirection() const
+    {
+        return m_direction;
+    }
+
+    void setInputDirection(Qt::LayoutDirection direction) {
+        m_direction = direction;
+        emitLocaleChanged();
+        emitInputDirectionChanged(inputDirection());
+    }
+
     void clear() {
         m_cursorPosition = 0;
         m_invokeActionCallCount = 0;
@@ -93,4 +112,5 @@ public:
     int m_showInputPanelCallCount;
     int m_hideInputPanelCallCount;
     int m_updateCallCount;
+    Qt::LayoutDirection m_direction;
 };
