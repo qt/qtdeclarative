@@ -300,47 +300,6 @@ QSGRenderer *QSGContext::createRenderer()
 
 
 
-/*!
-    Return true if the image provider supports direct decoding of images,
-    straight into textures without going through a QImage first.
-
-    If the implementation returns true from this function, the decodeImageToTexture() function
-    will be called to read data from a QIODevice, rather than QML decoding
-    the image using QImageReader and passing the result to setImage().
-
-    \warning This function will be called from outside the GUI and rendering threads
-    and must not make use of OpenGL.
- */
-
-bool QSGContext::canDecodeImageToTexture() const
-{
-    return false;
-}
-
-
-
-/*!
-    Decode the data in \a dev directly to a texture provider of \a requestSize size.
-    The size of the decoded data should be written to \a impsize.
-
-    If the implementation fails to decode the image data, it should return 0. The
-    image data will then be decoded normally.
-
-    \warning This function will be called from outside the GUI and renderer threads
-    and must not make use of GL calls.
- */
-
-QSGTexture *QSGContext::decodeImageToTexture(QIODevice *dev,
-                                             QSize *size,
-                                             const QSize &requestSize)
-{
-    Q_UNUSED(dev);
-    Q_UNUSED(size);
-    Q_UNUSED(requestSize);
-    return 0;
-}
-
-
 
 QSurfaceFormat QSGContext::defaultSurfaceFormat() const
 {

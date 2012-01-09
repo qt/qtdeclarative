@@ -46,6 +46,8 @@
 #include <QtCore/qplugin.h>
 #include <QtCore/qfactoryinterface.h>
 
+#include <QDeclarativeImageProvider>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -55,6 +57,8 @@ class QSGContext;
 struct Q_QUICK_EXPORT QSGContextFactoryInterface : public QFactoryInterface
 {
     virtual QSGContext *create(const QString &key) const = 0;
+
+    virtual QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image) = 0;
 };
 
 #define QSGContextFactoryInterface_iid \
@@ -71,6 +75,8 @@ public:
 
     virtual QStringList keys() const = 0;
     virtual QSGContext *create(const QString &key) const = 0;
+
+    virtual QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image) { return 0; }
 };
 
 QT_END_NAMESPACE

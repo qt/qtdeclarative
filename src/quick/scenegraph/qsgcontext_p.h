@@ -102,11 +102,6 @@ public:
     virtual QSGGlyphNode *createGlyphNode();
     virtual QSGRenderer *createRenderer();
 
-    virtual bool canDecodeImageToTexture() const;
-    virtual QSGTexture *decodeImageToTexture(QIODevice *dev,
-                                             QSize *size,
-                                             const QSize &requestSize);
-
     virtual QSGTexture *createTexture(const QImage &image = QImage()) const;
     virtual QSize minimumFBOSize() const;
 
@@ -126,6 +121,8 @@ public:
     bool isDistanceFieldEnabled() const;
 
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
+
+    static QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image);
 
 
 public slots:
