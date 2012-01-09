@@ -1288,17 +1288,16 @@ void tst_QQuickPathView::visualDataModel()
 
 void tst_QQuickPathView::undefinedPath()
 {
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-23482");
-#endif
-
     QDeclarativeEngine engine;
 
-    QString warning1("QPainterPath::moveTo: Adding point where x or y is NaN or Inf, ignoring call");
-    QTest::ignoreMessage(QtWarningMsg,qPrintable(warning1));
+    // QPainterPath warnings are only received if QT_NO_DEBUG is not defined
+    if (QLibraryInfo::isDebugBuild()) {
+        QString warning1("QPainterPath::moveTo: Adding point where x or y is NaN or Inf, ignoring call");
+        QTest::ignoreMessage(QtWarningMsg,qPrintable(warning1));
 
-    QString warning2("QPainterPath::lineTo: Adding point where x or y is NaN or Inf, ignoring call");
-    QTest::ignoreMessage(QtWarningMsg,qPrintable(warning2));
+        QString warning2("QPainterPath::lineTo: Adding point where x or y is NaN or Inf, ignoring call");
+        QTest::ignoreMessage(QtWarningMsg,qPrintable(warning2));
+    }
 
     QDeclarativeComponent c(&engine, testFileUrl("undefinedpath.qml"));
 
