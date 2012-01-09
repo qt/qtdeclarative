@@ -103,12 +103,8 @@ QQuickItemParticle::QQuickItemParticle(QQuickItem *parent) :
     QQuickParticlePainter(parent), m_fade(true), m_delegate(0)
 {
     setFlag(QQuickItem::ItemHasContents);
-    QTimer* manageDelegates = new QTimer(this);//TODO: don't leak
-    connect(manageDelegates, SIGNAL(timeout()),
-            this, SLOT(tick()));
-    manageDelegates->setInterval(16);
-    manageDelegates->setSingleShot(false);
-    manageDelegates->start();
+    clock = new Clock(this, this);
+    clock->start();
 }
 
 
@@ -146,8 +142,9 @@ void QQuickItemParticle::commit(int, int)
 {
 }
 
-void QQuickItemParticle::tick()
+void QQuickItemParticle::tick(int time)
 {
+    Q_UNUSED(time);//only needed because QTickAnimationProxy expects one
     foreach (QQuickItem* item, m_deletables){
         if (m_fade)
             item->setOpacity(0.);
@@ -194,8 +191,8 @@ void QQuickItemParticle::tick()
 void QQuickItemParticle::reset()
 {
     QQuickParticlePainter::reset();
-    //TODO: Cleanup items?
     m_loadables.clear();
+    //TODO: Cleanup items?
     //deletables?
 }
 
@@ -205,7 +202,14 @@ QSGNode* QQuickItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
     //Dummy update just to get painting tick
     if (m_pleaseReset){
         m_pleaseReset = false;
-        reset();
+        //Refill loadables, delayed here so as to only happen once per frame max
+        //### Constant resetting might lead to m_loadables never being populated when tick() occurs
+        foreach (const QString group, m_groups){
+            int gIdx = m_system->groupIds[group];
+            foreach (QQuickParticleData* d, m_system->groupData[gIdx]->data)
+                if (!d->delegate && d->t != -1  && d->stillAlive())
+                    m_loadables << d;
+        }
     }
     prepareNextFrame();
 

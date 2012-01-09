@@ -7,7 +7,5 @@ testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
-CONFIG += insignificant_test    #temporary
-
 QT += core-private gui-private v8-private declarative-private quick-private opengl-private testlib
 

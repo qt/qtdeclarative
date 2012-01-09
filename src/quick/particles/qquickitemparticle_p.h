@@ -44,6 +44,7 @@
 #include "qquickparticlepainter_p.h"
 #include <QPointer>
 #include <QSet>
+#include <private/qdeclarativeanimation_p_p.h>
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -95,9 +96,8 @@ protected:
     virtual void commit(int gIdx, int pIdx);
     virtual void initialize(int gIdx, int pIdx);
     void prepareNextFrame();
-private slots:
-    void tick();
 private:
+    void tick(int time = 0);
     QList<QQuickItem* > m_deletables;
     QList< QQuickParticleData* > m_loadables;
     bool m_fade;
@@ -108,6 +108,9 @@ private:
     qreal m_lastT;
     int m_activeCount;
     QDeclarativeComponent* m_delegate;
+
+    typedef QTickAnimationProxy<QQuickItemParticle, &QQuickItemParticle::tick> Clock;
+    Clock *clock;
 };
 
 class QQuickItemParticleAttached : public QObject
