@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,45 +39,29 @@
 **
 ****************************************************************************/
 
+
 import QtQuick 2.0
 
+// Minimal slider implementation
 Rectangle {
-    id: button
+    id: slider
 
-    property bool checked: false
     property alias text : buttonText.text
-    Accessible.name: text
-    Accessible.description: "This button does " + text
-    Accessible.role: Accessible.Button
-    function accessiblePressAction() {
-        button.clicked()
-    }
+    Accessible.role: Accessible.Slider
 
-    signal clicked
+    property int value             // required
+    property int minimumValue : 0  // optional (default INT_MIN)
+    property int maximumValue : 20 // optional (default INT_MAX)
+    property int stepSize : 1      // optional (default 1)
 
-    width: buttonText.width + 20
+    width: 30
     height: 30
-    gradient: Gradient {
-        GradientStop { position: 0.0; color: "lightsteelblue" }
-        GradientStop { position: 1.0; color: "blue" }
-    }
-    border.width: 2
-    border.color: "black";
-    radius: 10
+
 
     Text {
         id: buttonText
-        text: parent.description
+        text: parent.value
         anchors.centerIn: parent
         font.pixelSize: parent.height * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
-            parent.clicked()
-        }
     }
 }

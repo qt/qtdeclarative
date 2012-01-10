@@ -99,6 +99,7 @@ QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, Q
         case QAccessible::Slider:
         case QAccessible::SpinBox:
         case QAccessible::Dial:
+        case QAccessible::ScrollBar:
             return new QAccessibleQuickItemValueInterface(item);
         default:
             return new QAccessibleQuickItem(item);

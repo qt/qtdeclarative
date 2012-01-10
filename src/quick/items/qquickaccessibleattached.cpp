@@ -104,6 +104,7 @@ QT_BEGIN_NAMESPACE
         }
         Accessible.name: label.text
         Accessible.role: Accessible.Button
+        funtion accessiblePressAction { ... }
     }
     \endqml
 
@@ -117,24 +118,19 @@ QT_BEGIN_NAMESPACE
         \o
 
     \row
-       \o CheckBox
-       \o checked
-       \o The check state of the check box.
+        \o Button
+        \o function accessiblePressAction
+        \o Called when the button receives a press action. The implementation should visually simulate a button click and perform the button action.
     \row
-       \o RadioButton
+       \o CheckBox, Radiobutton
        \o checked
-       \o The selected state of the radio button.
+       \o The check state of the check box. Updated on Press, Check and Uncheck actions.
     \row
-       \o Button
-       \o checkable
-       \o Whether the button is checkable.
-    \row
-       \o Button
-       \o checked
-       \o Whether the button is checked (only if checkable is true).
+       \o Slider, SpinBox, Dial, ScrollBar
+       \o value, minimumValue, maximumValue, stepSize
+       \o value will be updated on increase and decrase actions, in accordance with the other properties
 
     \endtable
-
 */
 
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
