@@ -3615,8 +3615,6 @@ void tst_qquicktextedit::emptytags_QTBUG_22058()
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("<b>Bold<"));
     event.setCommitString(">");
-    QEXPECT_FAIL("", "Entering empty tags into a TextEdit asserts - QTBUG-22058", Abort);
-    QVERIFY(false);
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("<b>Bold<>"));
 }
