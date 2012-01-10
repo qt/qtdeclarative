@@ -99,6 +99,8 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
+    Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
+    Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
 
 public:
@@ -238,6 +240,9 @@ public:
     QRectF boundingRect() const;
     bool canPaste() const;
 
+    bool canUndo() const;
+    bool canRedo() const;
+
     bool isInputMethodComposing() const;
 
     Qt::InputMethodHints imHints() const;
@@ -275,6 +280,8 @@ Q_SIGNALS:
     void selectByMouseChanged(bool selectByMouse);
     void mouseSelectionModeChanged(SelectionMode mode);
     void canPasteChanged();
+    void canUndoChanged();
+    void canRedoChanged();
     void inputMethodComposingChanged();
     void effectiveHorizontalAlignmentChanged();
 
@@ -306,6 +313,8 @@ public Q_SLOTS:
     void copy();
     void paste();
 #endif
+    void undo();
+    void redo();
     void insert(int position, const QString &text);
     void remove(int start, int end);
 

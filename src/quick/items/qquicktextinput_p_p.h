@@ -113,6 +113,8 @@ public:
         , selectByMouse(false)
         , canPaste(false)
         , canPasteValid(false)
+        , canUndo(false)
+        , canRedo(false)
         , hAlignImplicit(true)
         , selectPressed(false)
         , textLayoutDirty(true)
@@ -237,6 +239,8 @@ public:
     bool selectByMouse:1;
     bool canPaste:1;
     bool canPasteValid:1;
+    bool canUndo:1;
+    bool canRedo:1;
     bool hAlignImplicit:1;
     bool selectPressed:1;
     bool textLayoutDirty:1;
@@ -349,8 +353,6 @@ public:
 
     void insert(const QString &);
     void clear();
-    void undo() { internalUndo(); finishChange(-1, true); }
-    void redo() { internalRedo(); finishChange(); }
     void selectWordAtPos(int);
 
     void setCursorPosition(int pos) { if (pos <= m_text.length()) moveCursor(qMax(0, pos)); }
@@ -422,6 +424,7 @@ private:
 
     void internalUndo(int until = -1);
     void internalRedo();
+    void emitUndoRedoChanged();
 
     void emitCursorPositionChanged();
 

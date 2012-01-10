@@ -56,6 +56,7 @@
 #include <QtCore/qmath.h>
 
 #include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativeproperty_p.h>
 #include <private/qtextengine_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -1402,6 +1403,29 @@ void QQuickTextEdit::paste()
 }
 #endif // QT_NO_CLIPBOARD
 
+
+/*!
+    Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
+    current selection, and updates the selection start to the current cursor
+    position.
+*/
+
+void QQuickTextEdit::undo()
+{
+    Q_D(QQuickTextEdit);
+    d->control->undo();
+}
+
+/*!
+    Redoes the last operation if redo is \l {canRedo}{available}.
+*/
+
+void QQuickTextEdit::redo()
+{
+    Q_D(QQuickTextEdit);
+    d->control->redo();
+}
+
 /*!
 \overload
 Handles the given mouse \a event.
@@ -1653,6 +1677,32 @@ bool QQuickTextEdit::canPaste() const
 }
 
 /*!
+    \qmlproperty bool QtQuick2::TextEdit::canUndo
+
+    Returns true if the TextEdit is writable and there are previous operations
+    that can be undone.
+*/
+
+bool QQuickTextEdit::canUndo() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->document->isUndoAvailable();
+}
+
+/*!
+    \qmlproperty bool QtQuick2::TextEdit::canRedo
+
+    Returns true if the TextEdit is writable and there are \l {undo}{undone}
+    operations that can be redone.
+*/
+
+bool QQuickTextEdit::canRedo() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->document->isRedoAvailable();
+}
+
+/*!
     \qmlproperty bool QtQuick2::TextEdit::inputMethodComposing
 
 
@@ -1709,6 +1759,8 @@ void QQuickTextEditPrivate::init()
 #ifndef QT_NO_CLIPBOARD
     QObject::connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
 #endif
+    FAST_CONNECT(document, SIGNAL(undoAvailable(bool)), q, SIGNAL(canUndoChanged()));
+    FAST_CONNECT(document, SIGNAL(redoAvailable(bool)), q, SIGNAL(canRedoChanged()));
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);

@@ -571,6 +571,7 @@ void QQuickTextInput::setReadOnly(bool ro)
     if (!ro)
         d->setCursorPosition(d->end());
     q_canPasteChanged();
+    d->emitUndoRedoChanged();
     emit readOnlyChanged(ro);
 }
 
@@ -1754,6 +1755,34 @@ void QQuickTextInput::paste()
 #endif // QT_NO_CLIPBOARD
 
 /*!
+    Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
+    current selection, and updates the selection start to the current cursor
+    position.
+*/
+
+void QQuickTextInput::undo()
+{
+    Q_D(QQuickTextInput);
+    if (!d->m_readOnly) {
+        d->internalUndo();
+        d->finishChange(-1, true);
+    }
+}
+
+/*!
+    Redoes the last operation if redo is \l {canRedo}{available}.
+*/
+
+void QQuickTextInput::redo()
+{
+    Q_D(QQuickTextInput);
+    if (!d->m_readOnly) {
+        d->internalRedo();
+        d->finishChange();
+    }
+}
+
+/*!
     \qmlmethod void QtQuick2::TextInput::insert(int position, string text)
 
     Inserts \a text into the TextInput at position.
@@ -2041,6 +2070,32 @@ bool QQuickTextInput::canPaste() const
         const_cast<QQuickTextInputPrivate *>(d)->canPasteValid = true;
     }
     return d->canPaste;
+}
+
+/*!
+    \qmlproperty bool QtQuick2::TextInput::canUndo
+
+    Returns true if the TextInput is writable and there are previous operations
+    that can be undone.
+*/
+
+bool QQuickTextInput::canUndo() const
+{
+    Q_D(const QQuickTextInput);
+    return d->canUndo;
+}
+
+/*!
+    \qmlproperty bool QtQuick2::TextInput::canRedo
+
+    Returns true if the TextInput is writable and there are \l {undo}{undone}
+    operations that can be redone.
+*/
+
+bool QQuickTextInput::canRedo() const
+{
+    Q_D(const QQuickTextInput);
+    return d->canRedo;
 }
 
 void QQuickTextInput::moveCursorSelection(int position)
@@ -2988,6 +3043,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     notifyInputPanel |= (m_cursor == m_lastCursorPos);
     if (notifyInputPanel)
         q->updateMicroFocus();
+    emitUndoRedoChanged();
     emitCursorPositionChanged();
 
     return true;
@@ -3557,7 +3613,6 @@ void QQuickTextInputPrivate::internalUndo(int until)
         }
     }
     m_textDirty = true;
-    emitCursorPositionChanged();
 }
 
 void QQuickTextInputPrivate::internalRedo()
@@ -3600,7 +3655,21 @@ void QQuickTextInputPrivate::internalRedo()
         }
     }
     m_textDirty = true;
-    emitCursorPositionChanged();
+}
+
+void QQuickTextInputPrivate::emitUndoRedoChanged()
+{
+    Q_Q(QQuickTextInput);
+    const bool previousUndo = canUndo;
+    const bool previousRedo = canRedo;
+
+    canUndo = isUndoAvailable();
+    canRedo = isRedoAvailable();
+
+    if (previousUndo != canUndo)
+        emit q->canUndoChanged();
+    if (previousRedo != canRedo)
+        emit q->canRedoChanged();
 }
 
 /*!
@@ -3725,11 +3794,11 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
 #ifndef QT_NO_SHORTCUT
     else if (event == QKeySequence::Undo) {
         if (!m_readOnly)
-            undo();
+            q->undo();
     }
     else if (event == QKeySequence::Redo) {
         if (!m_readOnly)
-            redo();
+            q->redo();
     }
     else if (event == QKeySequence::SelectAll) {
         selectAll();

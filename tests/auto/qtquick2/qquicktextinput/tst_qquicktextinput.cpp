@@ -3975,6 +3975,10 @@ void tst_qquicktextinput::undo()
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
 
+    QVERIFY(!textInput->canUndo());
+
+    QSignalSpy spy(textInput, SIGNAL(canUndoChanged()));
+
     int i;
 
 // STEP 1: First build up an undo history by inserting or typing some strings...
@@ -3994,14 +3998,19 @@ void tst_qquicktextinput::undo()
             QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
     }
 
+    QCOMPARE(spy.count(), 1);
+
 // STEP 2: Next call undo several times and see if we can restore to the previous state
     for (i = 0; i < expectedString.size() - 1; ++i) {
         QCOMPARE(textInput->text(), expectedString[i]);
-        simulateKeys(&canvas, QKeySequence::Undo);
+        QVERIFY(textInput->canUndo());
+        textInput->undo();
     }
 
 // STEP 3: Verify that we have undone everything
     QVERIFY(textInput->text().isEmpty());
+    QVERIFY(!textInput->canUndo());
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextinput::redo_data()
@@ -4052,6 +4061,11 @@ void tst_qquicktextinput::redo()
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
 
+    QVERIFY(!textInput->canUndo());
+    QVERIFY(!textInput->canRedo());
+
+    QSignalSpy spy(textInput, SIGNAL(canRedoChanged()));
+
     int i;
     // inserts the diff strings at diff positions
     for (i = 0; i < insertString.size(); ++i) {
@@ -4059,16 +4073,29 @@ void tst_qquicktextinput::redo()
             textInput->setCursorPosition(insertIndex[i]);
         for (int j = 0; j < insertString.at(i).length(); j++)
             QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
+        QVERIFY(textInput->canUndo());
+        QVERIFY(!textInput->canRedo());
     }
+
+    QCOMPARE(spy.count(), 0);
 
     // undo everything
-    while (!textInput->text().isEmpty())
-        simulateKeys(&canvas, QKeySequence::Undo);
+    while (!textInput->text().isEmpty()) {
+        QVERIFY(textInput->canUndo());
+        textInput->undo();
+        QVERIFY(textInput->canRedo());
+    }
+
+    QCOMPARE(spy.count(), 1);
 
     for (i = 0; i < expectedString.size(); ++i) {
-        simulateKeys(&canvas, QKeySequence::Redo);
+        QVERIFY(textInput->canRedo());
+        textInput->redo();
         QCOMPARE(textInput->text() , expectedString[i]);
+        QVERIFY(textInput->canUndo());
     }
+    QVERIFY(!textInput->canRedo());
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextinput::undo_keypressevents_data()
@@ -4230,7 +4257,7 @@ void tst_qquicktextinput::undo_keypressevents()
 
     for (int i = 0; i < expectedString.size(); ++i) {
         QCOMPARE(textInput->text() , expectedString[i]);
-        simulateKeys(&canvas, QKeySequence::Undo);
+        textInput->undo();
     }
     QVERIFY(textInput->text().isEmpty());
 }

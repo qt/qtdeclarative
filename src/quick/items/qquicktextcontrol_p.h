@@ -174,11 +174,9 @@ Q_SIGNALS:
     void updateCursorRequest(const QRectF &rect = QRectF());
     void updateRequest(const QRectF &rect = QRectF());
     void documentSizeChanged(const QSizeF &);
-    void blockCountChanged(int newBlockCount);
     void cursorRectangleChanged();
     void linkActivated(const QString &link);
     void linkHovered(const QString &);
-    void modificationChanged(bool m);
 
 public:
     // control properties

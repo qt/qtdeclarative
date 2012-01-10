@@ -3326,28 +3326,32 @@ void tst_qquicktextedit::undo()
     QFETCH(QStringList, expectedString);
 
     QString componentStr = "import QtQuick 2.0\nTextEdit { focus: true }";
-    QDeclarativeComponent textInputComponent(&engine);
-    textInputComponent.setData(componentStr.toLatin1(), QUrl());
-    QQuickTextEdit *textInput = qobject_cast<QQuickTextEdit*>(textInputComponent.create());
-    QVERIFY(textInput != 0);
+    QDeclarativeComponent textEditComponent(&engine);
+    textEditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
+    QVERIFY(textEdit != 0);
 
     QQuickCanvas canvas;
-    textInput->setParentItem(canvas.rootItem());
+    textEdit->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    QVERIFY(!textEdit->canUndo());
+
+    QSignalSpy spy(textEdit, SIGNAL(canUndoChanged()));
 
     int i;
 
 // STEP 1: First build up an undo history by inserting or typing some strings...
     for (i = 0; i < insertString.size(); ++i) {
         if (insertIndex[i] > -1)
-            textInput->setCursorPosition(insertIndex[i]);
+            textEdit->setCursorPosition(insertIndex[i]);
 
  // experimental stuff
         if (insertMode[i] == REPLACE_UNTIL_END) {
-            textInput->select(insertIndex[i], insertIndex[i] + 8);
+            textEdit->select(insertIndex[i], insertIndex[i] + 8);
 
             // This is what I actually want...
             // QTest::keyClick(testWidget, Qt::Key_End, Qt::ShiftModifier);
@@ -3357,14 +3361,19 @@ void tst_qquicktextedit::undo()
             QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
     }
 
+    QCOMPARE(spy.count(), 1);
+
 // STEP 2: Next call undo several times and see if we can restore to the previous state
     for (i = 0; i < expectedString.size() - 1; ++i) {
-        QCOMPARE(textInput->text(), expectedString[i]);
-        simulateKeys(&canvas, QKeySequence::Undo);
+        QCOMPARE(textEdit->text(), expectedString[i]);
+        QVERIFY(textEdit->canUndo());
+        textEdit->undo();
     }
 
 // STEP 3: Verify that we have undone everything
-    QVERIFY(textInput->text().isEmpty());
+    QVERIFY(textEdit->text().isEmpty());
+    QVERIFY(!textEdit->canUndo());
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextedit::redo_data()
@@ -3403,35 +3412,53 @@ void tst_qquicktextedit::redo()
     QFETCH(QStringList, expectedString);
 
     QString componentStr = "import QtQuick 2.0\nTextEdit { focus: true }";
-    QDeclarativeComponent textInputComponent(&engine);
-    textInputComponent.setData(componentStr.toLatin1(), QUrl());
-    QQuickTextEdit *textInput = qobject_cast<QQuickTextEdit*>(textInputComponent.create());
-    QVERIFY(textInput != 0);
+    QDeclarativeComponent textEditComponent(&engine);
+    textEditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
+    QVERIFY(textEdit != 0);
 
     QQuickCanvas canvas;
-    textInput->setParentItem(canvas.rootItem());
+    textEdit->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
 
+    QVERIFY(!textEdit->canUndo());
+    QVERIFY(!textEdit->canRedo());
+
+    QSignalSpy spy(textEdit, SIGNAL(canRedoChanged()));
+
     int i;
     // inserts the diff strings at diff positions
     for (i = 0; i < insertString.size(); ++i) {
         if (insertIndex[i] > -1)
-            textInput->setCursorPosition(insertIndex[i]);
+            textEdit->setCursorPosition(insertIndex[i]);
         for (int j = 0; j < insertString.at(i).length(); j++)
             QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
+        QVERIFY(textEdit->canUndo());
+        QVERIFY(!textEdit->canRedo());
     }
+
+    QCOMPARE(spy.count(), 0);
 
     // undo everything
-    while (!textInput->text().isEmpty())
-        simulateKeys(&canvas, QKeySequence::Undo);
+    while (!textEdit->text().isEmpty()) {
+        QVERIFY(textEdit->canUndo());
+        textEdit->undo();
+        QVERIFY(textEdit->canRedo());
+    }
+
+    QCOMPARE(spy.count(), 1);
 
     for (i = 0; i < expectedString.size(); ++i) {
-        simulateKeys(&canvas, QKeySequence::Redo);
-        QCOMPARE(textInput->text() , expectedString[i]);
+        QVERIFY(textEdit->canRedo());
+        textEdit->redo();
+        QCOMPARE(textEdit->text() , expectedString[i]);
+        QVERIFY(textEdit->canUndo());
     }
+    QVERIFY(!textEdit->canRedo());
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextedit::undo_keypressevents_data()
@@ -3578,13 +3605,13 @@ void tst_qquicktextedit::undo_keypressevents()
     QFETCH(QStringList, expectedString);
 
     QString componentStr = "import QtQuick 2.0\nTextEdit { focus: true }";
-    QDeclarativeComponent textInputComponent(&engine);
-    textInputComponent.setData(componentStr.toLatin1(), QUrl());
-    QQuickTextEdit *textInput = qobject_cast<QQuickTextEdit*>(textInputComponent.create());
-    QVERIFY(textInput != 0);
+    QDeclarativeComponent textEditComponent(&engine);
+    textEditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
+    QVERIFY(textEdit != 0);
 
     QQuickCanvas canvas;
-    textInput->setParentItem(canvas.rootItem());
+    textEdit->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -3593,10 +3620,10 @@ void tst_qquicktextedit::undo_keypressevents()
     simulateKeys(&canvas, keys);
 
     for (int i = 0; i < expectedString.size(); ++i) {
-        QCOMPARE(textInput->text() , expectedString[i]);
-        simulateKeys(&canvas, QKeySequence::Undo);
+        QCOMPARE(textEdit->text() , expectedString[i]);
+        textEdit->undo();
     }
-    QVERIFY(textInput->text().isEmpty());
+    QVERIFY(textEdit->text().isEmpty());
 }
 
 void tst_qquicktextedit::emptytags_QTBUG_22058()
