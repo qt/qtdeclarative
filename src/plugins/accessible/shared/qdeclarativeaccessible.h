@@ -79,7 +79,6 @@ public:
     QFlags<QAccessible::RelationFlag> relationTo(const QAccessibleInterface*) const;
     QAccessibleInterface *childAt(int, int) const;
     QAccessible::State state() const;
-    QVariant invokeMethod(QAccessible::Method, const QVariantList &);
 
     QStringList actionNames() const;
     void doAction(const QString &actionName);

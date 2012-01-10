@@ -161,12 +161,6 @@ QStringList QDeclarativeAccessible::keyBindingsForAction(const QString &actionNa
     return QStringList();
 }
 
-QVariant QDeclarativeAccessible::invokeMethod(QAccessible::Method method, const QVariantList&)
-{
-    Q_UNUSED(method)
-    return QVariant();
-}
-
 QT_END_NAMESPACE
 
 #endif // QT_NO_ACCESSIBILITY
