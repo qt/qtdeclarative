@@ -315,9 +315,9 @@ void QDeclarativeTimer::finished()
     Q_D(QDeclarativeTimer);
     if (d->repeating || !d->running)
         return;
-    emit triggered();
     d->running = false;
     d->firstTick = false;
+    emit triggered();
     emit runningChanged();
 }
 
