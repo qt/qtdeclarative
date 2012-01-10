@@ -105,7 +105,6 @@ public:
         , inputMethodHints(Qt::ImhNone)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
         , m_passwordCharacter(QLatin1Char('*'))
-        , oldValidity(false)
         , focused(false)
         , focusOnPress(true)
         , cursorVisible(false)
@@ -231,7 +230,6 @@ public:
     QChar m_blank;
     QChar m_passwordCharacter;
 
-    bool oldValidity:1;
     bool focused:1;
     bool focusOnPress:1;
     bool cursorVisible:1;

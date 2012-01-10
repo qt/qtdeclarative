@@ -931,7 +931,12 @@ void QQuickTextInput::setValidator(QValidator* v)
 
     d->m_validator = v;
     if (!d->hasAcceptableInput(d->m_text)) {
-        d->oldValidity = false;
+        if (d->m_validInput) {
+            d->m_validInput = false;
+            emit acceptableInputChanged();
+        }
+    } else if (!d->m_validInput) {
+        d->m_validInput = true;
         emit acceptableInputChanged();
     }
 
@@ -2345,7 +2350,6 @@ void QQuickTextInputPrivate::init()
             q, SLOT(q_canPasteChanged()));
 #endif // QT_NO_CLIPBOARD
 
-    oldValidity = hasAcceptableInput(m_text);
     lastSelectionStart = 0;
     lastSelectionEnd = 0;
     selectedTextColor = m_palette.color(QPalette::HighlightedText);

@@ -1611,6 +1611,47 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
 
+    // Ensure the validator doesn't prevent characters being removed.
+    dblInput->setValidator(intInput->validator());
+    QCOMPARE(dblInput->text(), QLatin1String("12.11"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    // Once unacceptable input is in anything goes until it reaches an acceptable state again.
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QCOMPARE(dblInput->text(), QLatin1String("11"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+
     QQuickTextInput *strInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("strInput")));
     QTRY_VERIFY(strInput);
     strInput->setFocus(true);
