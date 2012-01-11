@@ -227,7 +227,7 @@ public:
     Q_INVOKABLE QString getFormattedText(int start, int end) const;
 
 Q_SIGNALS:
-    void textChanged(const QString &);
+    void textChanged();
     void paintedSizeChanged();
     void cursorPositionChanged();
     void cursorRectangleChanged();

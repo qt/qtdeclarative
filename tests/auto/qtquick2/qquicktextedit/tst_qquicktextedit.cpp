@@ -2077,7 +2077,7 @@ void tst_qquicktextedit::textInput()
     QVERIFY(edit->hasActiveFocus() == true);
 
     // test that input method event is committed and change signal is emitted
-    QSignalSpy spy(edit, SIGNAL(textChanged(QString)));
+    QSignalSpy spy(edit, SIGNAL(textChanged()));
     QInputMethodEvent event;
     event.setCommitString( "Hello world!", 0, 0);
     QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
@@ -2804,7 +2804,7 @@ void tst_qquicktextedit::insert()
     QSignalSpy selectionSpy(textEdit, SIGNAL(selectionChanged()));
     QSignalSpy selectionStartSpy(textEdit, SIGNAL(selectionStartChanged()));
     QSignalSpy selectionEndSpy(textEdit, SIGNAL(selectionEndChanged()));
-    QSignalSpy textSpy(textEdit, SIGNAL(textChanged(QString)));
+    QSignalSpy textSpy(textEdit, SIGNAL(textChanged()));
     QSignalSpy cursorPositionSpy(textEdit, SIGNAL(cursorPositionChanged()));
 
     textEdit->insert(insertPosition, insertText);
@@ -3049,7 +3049,7 @@ void tst_qquicktextedit::remove()
     QSignalSpy selectionSpy(textEdit, SIGNAL(selectionChanged()));
     QSignalSpy selectionStartSpy(textEdit, SIGNAL(selectionStartChanged()));
     QSignalSpy selectionEndSpy(textEdit, SIGNAL(selectionEndChanged()));
-    QSignalSpy textSpy(textEdit, SIGNAL(textChanged(QString)));
+    QSignalSpy textSpy(textEdit, SIGNAL(textChanged()));
     QSignalSpy cursorPositionSpy(textEdit, SIGNAL(cursorPositionChanged()));
 
     textEdit->remove(removeStart, removeEnd);

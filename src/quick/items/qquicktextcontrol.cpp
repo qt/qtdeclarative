@@ -624,7 +624,7 @@ QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
     : QObject(*new QQuickTextControlPrivate, parent)
 {
     Q_D(QQuickTextControl);
-    d->init(Qt::RichText, QString(), doc);
+    d->init(Qt::PlainText, QString(), doc);
 }
 
 QQuickTextControl::~QQuickTextControl()

@@ -127,13 +127,17 @@ QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
 QString QQuickTextEdit::text() const
 {
     Q_D(const QQuickTextEdit);
-
+    if (!d->textCached) {
+        QQuickTextEditPrivate *d = const_cast<QQuickTextEditPrivate *>(d_func());
 #ifndef QT_NO_TEXTHTMLPARSER
-    if (d->richText)
-        return d->control->toHtml();
-    else
+        if (d->richText)
+            d->text = d->control->toHtml();
+        else
 #endif
-        return d->control->toPlainText();
+            d->text = d->control->toPlainText();
+        d->textCached = true;
+    }
+    return d->text;
 }
 
 /*!
@@ -320,21 +324,21 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     Q_D(QQuickTextEdit);
     if (format == d->format)
         return;
-    bool wasRich = d->richText;
-    d->richText = format == RichText || (format == AutoText && Qt::mightBeRichText(d->text));
 
+    bool wasRich = d->richText;
+    d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
+
+#ifndef QT_NO_TEXTHTMLPARSER
     if (wasRich && !d->richText) {
-        d->control->setPlainText(d->text);
+        d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
         updateSize();
     } else if (!wasRich && d->richText) {
-#ifndef QT_NO_TEXTHTMLPARSER
-        d->control->setHtml(d->text);
-#else
-        d->control->setPlainText(d->text);
-#endif
+        d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
         updateSize();
         d->useImageFallback = qmlEnableImageCache();
     }
+#endif
+
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
     emit textFormatChanged(d->format);
@@ -553,7 +557,7 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
     Q_Q(QQuickTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
         bool alignToRight;
-        if (text.isEmpty()) {
+        if (document->isEmpty()) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
             alignToRight = preeditText.isEmpty()
                     ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
@@ -864,7 +868,7 @@ int QQuickTextEdit::cursorPosition() const
 void QQuickTextEdit::setCursorPosition(int pos)
 {
     Q_D(QQuickTextEdit);
-    if (pos < 0 || pos > d->text.length())
+    if (pos < 0 || pos >= d->document->characterCount()) // characterCount includes the terminating null.
         return;
     QTextCursor cursor = d->control->textCursor();
     if (cursor.position() == pos && cursor.anchor() == pos)
@@ -1338,7 +1342,7 @@ void QQuickTextEdit::selectWord()
 void QQuickTextEdit::select(int start, int end)
 {
     Q_D(QQuickTextEdit);
-    if (start < 0 || end < 0 || start > d->text.length() || end > d->text.length())
+    if (start < 0 || end < 0 || start >= d->document->characterCount() || end >= d->document->characterCount())
         return;
     QTextCursor cursor = d->control->textCursor();
     cursor.beginEditBlock();
@@ -1359,12 +1363,11 @@ void QQuickTextEdit::select(int start, int end)
 */
 bool QQuickTextEdit::isRightToLeft(int start, int end)
 {
-    Q_D(QQuickTextEdit);
     if (start > end) {
         qmlInfo(this) << "isRightToLeft(start, end) called with the end property being smaller than the start.";
         return false;
     } else {
-        return d->text.mid(start, end - start).isRightToLeft();
+        return getText(start, end).isRightToLeft();
     }
 }
 
@@ -1772,13 +1775,13 @@ void QQuickTextEditPrivate::init()
 void QQuickTextEdit::q_textChanged()
 {
     Q_D(QQuickTextEdit);
-    d->text = text();
+    d->textCached = false;
     d->rightToLeftText = d->document->begin().layout()->engine()->isRightToLeft();
     d->determineHorizontalAlignment();
     d->updateDefaultTextOption();
     updateSize();
     updateTotalLines();
-    emit textChanged(d->text);
+    emit textChanged();
 }
 
 void QQuickTextEdit::moveCursorDelegate()
