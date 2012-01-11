@@ -245,7 +245,7 @@ void QV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
     if (parent->context())
         QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding,
-                                              parent->context()->url, line);
+                                              parent->context()->url, line, column);
     parent->run(this, flags);
     QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
 }

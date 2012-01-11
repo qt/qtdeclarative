@@ -326,6 +326,7 @@ union QDeclarativeInstruction
         int scope;
         int bindingId;
         ushort line;
+        ushort column;
     }; 
     struct instr_storeScript {
         QML_INSTR_HEADER
@@ -407,6 +408,7 @@ union QDeclarativeInstruction
         int value;
         short context;
         ushort line;
+        ushort column;
     };
     struct instr_assignSignalObject {
         QML_INSTR_HEADER

@@ -80,7 +80,8 @@ public:
 
     QString sourceFile() const;
     int lineNumber() const;
-    void setSourceLocation(const QString &fileName, int line);
+    int columnNumber() const;
+    void setSourceLocation(const QString &fileName, int line, int column = 0);
 
     QObject *scopeObject() const;
 
@@ -99,7 +100,7 @@ protected:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, void *, 
                            QDeclarativeExpressionPrivate &dd);
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &, bool,
-                           const QString &, int, QDeclarativeExpressionPrivate &dd);
+                           const QString &, int, int, QDeclarativeExpressionPrivate &dd);
 
 private:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &);

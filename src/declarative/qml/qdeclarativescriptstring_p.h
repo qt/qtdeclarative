@@ -49,13 +49,14 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeScriptStringPrivate : public QSharedData
 {
 public:
-    QDeclarativeScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(-1) {}
+    QDeclarativeScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(-1), columnNumber(-1) {}
 
     QDeclarativeContext *context;
     QObject *scope;
     QString script;
     int bindingId;
     int lineNumber;
+    int columnNumber;
 };
 
 QT_END_NAMESPACE

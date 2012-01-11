@@ -71,6 +71,7 @@ struct Q_AUTOTEST_EXPORT QDeclarativeDebugData
     //###
     QString detailData; //used by RangeData and RangeLocation
     int line;           //used by RangeLocation
+    int column;         //used by RangeLocation
     int framerate;      //used by animation events
     int animationcount; //used by animation events
 
@@ -125,8 +126,8 @@ public:
     static void startRange(RangeType);
     static void rangeData(RangeType, const QString &);
     static void rangeData(RangeType, const QUrl &);
-    static void rangeLocation(RangeType, const QString &, int);
-    static void rangeLocation(RangeType, const QUrl &, int);
+    static void rangeLocation(RangeType, const QString &, int, int);
+    static void rangeLocation(RangeType, const QUrl &, int, int);
     static void endRange(RangeType);
     static void animationFrame(qint64);
 
@@ -145,8 +146,8 @@ private:
     void startRangeImpl(RangeType);
     void rangeDataImpl(RangeType, const QString &);
     void rangeDataImpl(RangeType, const QUrl &);
-    void rangeLocationImpl(RangeType, const QString &, int);
-    void rangeLocationImpl(RangeType, const QUrl &, int);
+    void rangeLocationImpl(RangeType, const QString &, int, int);
+    void rangeLocationImpl(RangeType, const QUrl &, int, int);
     void endRangeImpl(RangeType);
     void animationFrameImpl(qint64);
 

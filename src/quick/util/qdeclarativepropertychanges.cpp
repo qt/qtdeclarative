@@ -337,7 +337,7 @@ void QDeclarativePropertyChangesPrivate::decode()
             QDeclarativeExpression *expression = new QDeclarativeExpression(qmlContext(q), object, data.toString());
             QDeclarativeData *ddata = QDeclarativeData::get(q);
             if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber);
+                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber, ddata->columnNumber);
             QDeclarativeReplaceSignalHandler *handler = new QDeclarativeReplaceSignalHandler;
             handler->property = prop;
             handler->expression = expression;
@@ -346,7 +346,7 @@ void QDeclarativePropertyChangesPrivate::decode()
             QDeclarativeExpression *expression = new QDeclarativeExpression(qmlContext(q), object, data.toString());
             QDeclarativeData *ddata = QDeclarativeData::get(q);
             if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber);
+                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber, ddata->columnNumber);
             expressions << ExpressionChange(name, id, expression);
         } else {
             properties << qMakePair(name, data);
@@ -480,7 +480,7 @@ QDeclarativePropertyChanges::ActionList QDeclarativePropertyChanges::actions()
                 QDeclarativeBinding *newBinding = id != QDeclarativeBinding::Invalid ? QDeclarativeBinding::createBinding(id, object(), qmlContext(this), e->sourceFile(), e->lineNumber()) : 0;
                 if (!newBinding) {
                     newBinding = new QDeclarativeBinding(e->expression(), object(), qmlContext(this));
-                    newBinding->setSourceLocation(e->sourceFile(), e->lineNumber());
+                    newBinding->setSourceLocation(e->sourceFile(), e->lineNumber(), e->columnNumber());
                 }
                 newBinding->setTarget(prop);
                 a.toBinding = newBinding;

@@ -711,7 +711,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 
             QDeclarativeBoundSignal *bs = new QDeclarativeBoundSignal(target, signal, target);
             QDeclarativeExpression *expr = 
-                new QDeclarativeExpression(CTXT, context, PRIMITIVES.at(instr.value), true, COMP->name, instr.line, *new QDeclarativeExpressionPrivate);
+                new QDeclarativeExpression(CTXT, context, PRIMITIVES.at(instr.value), true, COMP->name, instr.line, instr.column, *new QDeclarativeExpressionPrivate);
             bs->setExpression(expr);
         QML_END_INSTR(StoreSignal)
 
@@ -728,6 +728,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             ss.setScript(PRIMITIVES.at(instr.value));
             ss.d.data()->bindingId = instr.bindingId;
             ss.d.data()->lineNumber = instr.line;
+            ss.d.data()->columnNumber = instr.column;
 
             void *a[] = { &ss, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 

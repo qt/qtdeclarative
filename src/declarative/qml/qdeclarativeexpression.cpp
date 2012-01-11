@@ -120,10 +120,11 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, v8::Hand
 
 void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QString &expr,
                                          bool isRewritten, QObject *me, const QString &srcUrl,
-                                         int lineNumber)
+                                         int lineNumber, int columnNumber)
 {
     url = srcUrl;
     line = lineNumber;
+    column = columnNumber;
 
     expression = expr;
 
@@ -159,9 +160,9 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
 }
 
 QDeclarativeExpression *QDeclarativeExpressionPrivate::create(QDeclarativeContextData *ctxt, QObject *object, const QString &expr, bool isRewritten,
-                                      const QString &url, int lineNumber)
+                                      const QString &url, int lineNumber, int columnNumber)
 {
-    return new QDeclarativeExpression(ctxt, object, expr, isRewritten, url, lineNumber, *new QDeclarativeExpressionPrivate);
+    return new QDeclarativeExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber, *new QDeclarativeExpressionPrivate);
 }
 
 /*!
@@ -206,12 +207,12 @@ QDeclarativeExpression::QDeclarativeExpression()
 /*!  \internal */
 QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, 
                                                QObject *object, const QString &expr, bool isRewritten,
-                                               const QString &url, int lineNumber, 
+                                               const QString &url, int lineNumber, int columnNumber,
                                                QDeclarativeExpressionPrivate &dd)
 : QObject(dd, 0)
 {
     Q_D(QDeclarativeExpression);
-    d->init(ctxt, expr, isRewritten, object, url, lineNumber);
+    d->init(ctxt, expr, isRewritten, object, url, lineNumber, columnNumber);
 }
 
 /*!
@@ -250,7 +251,7 @@ QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &s
 
         if (cdata)
             d->init(ctxtdata, cdata->primitives.at(id), true, script.scopeObject(),
-                    cdata->name, script.d.data()->lineNumber);
+                    cdata->name, script.d.data()->lineNumber, script.d.data()->columnNumber);
         else
            defaultConstruction = true;
 
@@ -695,14 +696,25 @@ int QDeclarativeExpression::lineNumber() const
 }
 
 /*!
+    Returns the source file column number for this expression.  The source location
+    must have been previously set by calling setSourceLocation().
+*/
+int QDeclarativeExpression::columnNumber() const
+{
+    Q_D(const QDeclarativeExpression);
+    return d->column;
+}
+
+/*!
     Set the location of this expression to \a line of \a url. This information
     is used by the script engine.
 */
-void QDeclarativeExpression::setSourceLocation(const QString &url, int line)
+void QDeclarativeExpression::setSourceLocation(const QString &url, int line, int column)
 {
     Q_D(QDeclarativeExpression);
     d->url = url;
     d->line = line;
+    d->column = column;
 }
 
 /*!

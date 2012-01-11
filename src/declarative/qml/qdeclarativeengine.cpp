@@ -964,7 +964,7 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
             QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(object->metaObject()->className());
             QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, typeName);
             if (data->outerContext)
-                QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, data->outerContext->url, data->lineNumber);
+                QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, data->outerContext->url, data->lineNumber, data->columnNumber);
         }
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(data->context->engine);
 

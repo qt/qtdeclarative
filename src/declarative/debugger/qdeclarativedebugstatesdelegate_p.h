@@ -79,7 +79,7 @@ public:
     virtual void updateBinding(QDeclarativeContext *context,
                                const QDeclarativeProperty &property,
                                const QVariant &expression, bool isLiteralValue,
-                               const QString &fileName, int line,
+                               const QString &fileName, int line, int column,
                                bool *inBaseState) = 0;
     virtual bool setBindingForInvalidProperty(QObject *object,
                                               const QString &propertyName,

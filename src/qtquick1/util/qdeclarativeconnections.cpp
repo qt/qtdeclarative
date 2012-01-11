@@ -266,7 +266,7 @@ void QDeclarative1Connections::connectSignals()
             QDeclarativeExpression *expression = new QDeclarativeExpression(qmlContext(this), 0, script);
             QDeclarativeData *ddata = QDeclarativeData::get(this);
             if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber);
+                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber, ddata->columnNumber);
             signal->setExpression(expression);
             d->boundsignals += signal;
         } else {

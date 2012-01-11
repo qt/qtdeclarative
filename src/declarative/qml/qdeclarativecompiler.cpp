@@ -1270,6 +1270,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 //        ss.bindingId = rewriteBinding(script, prop->name());
         ss.bindingId = rewriteBinding(prop->values.first()->value, QString()); // XXX
         ss.line = prop->location.start.line;
+        ss.column = prop->location.start.column;
         output->addInstruction(ss);
     }
 
@@ -1331,6 +1332,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
             store.value = output->indexForString(rewrite);
             store.context = v->signalExpressionContextStack;
             store.line = v->location.start.line;
+            store.column = v->location.start.column;
             output->addInstruction(store);
 
         }

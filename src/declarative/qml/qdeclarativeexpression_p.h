@@ -177,7 +177,7 @@ public:
 
     void init(QDeclarativeContextData *, const QString &, QObject *);
     void init(QDeclarativeContextData *, v8::Handle<v8::Function>, QObject *);
-    void init(QDeclarativeContextData *, const QString &, bool, QObject *, const QString &, int);
+    void init(QDeclarativeContextData *, const QString &, bool, QObject *, const QString &, int, int);
 
     QVariant value(QObject *secondaryScope = 0, bool *isUndefined = 0);
 
@@ -194,7 +194,7 @@ public:
                                                      const QString &code, const QString &filename, int line,
                                                      v8::Persistent<v8::Object> *qmlscope = 0);
     static QDeclarativeExpression *create(QDeclarativeContextData *, QObject *, const QString &, bool,
-                                          const QString &, int);
+                                          const QString &, int, int);
 
     bool expressionFunctionValid:1;
     bool expressionFunctionRewritten:1;
@@ -209,6 +209,7 @@ public:
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     int line;
+    int column;
     QString name; //function name, hint for the debugger
 
     QDeclarativeRefCount *dataRef;

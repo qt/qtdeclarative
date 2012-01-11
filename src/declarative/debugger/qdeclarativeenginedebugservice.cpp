@@ -540,7 +540,8 @@ void QDeclarativeEngineDebugService::setBinding(int objectId,
                                                 const QVariant &expression,
                                                 bool isLiteralValue,
                                                 QString filename,
-                                                int line)
+                                                int line,
+                                                int column)
 {
     QObject *object = objectForId(objectId);
     QDeclarativeContext *context = qmlContext(object);
@@ -552,7 +553,7 @@ void QDeclarativeEngineDebugService::setBinding(int objectId,
             bool inBaseState = true;
             if (m_statesDelegate) {
                 m_statesDelegate->updateBinding(context, property, expression, isLiteralValue,
-                                                filename, line, &inBaseState);
+                                                filename, line, column, &inBaseState);
             }
 
             if (inBaseState) {
@@ -561,11 +562,11 @@ void QDeclarativeEngineDebugService::setBinding(int objectId,
                 } else if (hasValidSignal(object, propertyName)) {
                     QDeclarativeExpression *declarativeExpression = new QDeclarativeExpression(context, object, expression.toString());
                     QDeclarativePropertyPrivate::setSignalExpression(property, declarativeExpression);
-                    declarativeExpression->setSourceLocation(filename, line);
+                    declarativeExpression->setSourceLocation(filename, line, column);
                 } else if (property.isProperty()) {
                     QDeclarativeBinding *binding = new QDeclarativeBinding(expression.toString(), object, context);
                     binding->setTarget(property);
-                    binding->setSourceLocation(filename, line);
+                    binding->setSourceLocation(filename, line, column);
                     binding->setNotifyOnValueChanged(true);
                     QDeclarativeAbstractBinding *oldBinding = QDeclarativePropertyPrivate::setBinding(property, binding);
                     if (oldBinding)

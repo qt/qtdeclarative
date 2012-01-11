@@ -216,7 +216,7 @@ void QDeclarativeBindingPrivate::refresh()
 }
 
 QDeclarativeBindingPrivate::QDeclarativeBindingPrivate()
-: updating(false), enabled(false), columnNumber(0)
+: updating(false), enabled(false)
 {
 }
 
@@ -268,13 +268,12 @@ QDeclarativeBinding::QDeclarativeBinding(const QString &str, bool isRewritten, Q
                                          QDeclarativeContextData *ctxt, 
                                          const QString &url, int lineNumber, int columnNumber,
                                          QObject *parent)
-: QDeclarativeExpression(ctxt, obj, str, isRewritten, url, lineNumber, *new QDeclarativeBindingPrivate)
+: QDeclarativeExpression(ctxt, obj, str, isRewritten, url, lineNumber, columnNumber, *new QDeclarativeBindingPrivate)
 {
     Q_D(QDeclarativeBinding);
 
     setParent(parent);
     setNotifyOnValueChanged(true);
-    d->columnNumber = columnNumber;
 }
 
 /*!  
@@ -340,7 +339,7 @@ public:
     {
         QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
         QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Binding, bind->expression());
-        QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding, bind->sourceFile(), bind->lineNumber());
+        QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding, bind->sourceFile(), bind->lineNumber(), bind->columnNumber());
     }
 
     ~QDeclarativeBindingProfiler()

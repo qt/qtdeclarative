@@ -830,7 +830,7 @@ void QDeclarative1ScriptActionPrivate::execute()
         QDeclarativeExpression expr(scriptStr.context(), scriptStr.scopeObject(), str);
         QDeclarativeData *ddata = QDeclarativeData::get(q);
         if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-            expr.setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber);
+            expr.setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber, ddata->columnNumber);
         expr.evaluate();
         if (expr.hasError())
             qmlInfo(q) << expr.error();

@@ -768,7 +768,7 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
             QDeclarativeData *data = QDeclarativeData::get(rv);
             Q_ASSERT(data);
             QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, 
-                                                  cc->url, data->lineNumber);
+                                                  cc->url, data->lineNumber, data->columnNumber);
         }
     }
 

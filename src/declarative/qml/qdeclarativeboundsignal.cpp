@@ -173,7 +173,7 @@ int QDeclarativeBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
         if (QDeclarativeDebugService::isDebuggingEnabled()) {
             QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::HandlingSignal);
             QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::HandlingSignal, QLatin1String(m_signal.signature()) % QLatin1String(": ") % m_expression->expression());
-            QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::HandlingSignal, m_expression->sourceFile(), m_expression->lineNumber());
+            QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::HandlingSignal, m_expression->sourceFile(), m_expression->lineNumber(), m_expression->columnNumber());
             QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.signature()));
         }
         m_isEvaluating = true;

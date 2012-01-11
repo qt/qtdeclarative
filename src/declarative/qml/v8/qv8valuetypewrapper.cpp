@@ -342,10 +342,11 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
                                                             v8::StackTrace::kScriptName));
             v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
             int lineNumber = frame->GetLineNumber();
+            int columnNumber = frame->GetColumn();
             QString url = r->engine->toString(frame->GetScriptName());
 
             newBinding = new QDeclarativeBinding(&function, reference->object, context);
-            newBinding->setSourceLocation(url, lineNumber);
+            newBinding->setSourceLocation(url, lineNumber, columnNumber);
             newBinding->setTarget(reference->object, cacheData, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                          QDeclarativeBinding::RequiresThisObject);
