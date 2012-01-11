@@ -63,6 +63,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_ENUMS(TextElideMode)
     Q_ENUMS(WrapMode)
     Q_ENUMS(LineHeightMode)
+    Q_ENUMS(FontSizeMode)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
@@ -84,6 +85,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal lineHeight READ lineHeight WRITE setLineHeight NOTIFY lineHeightChanged)
     Q_PROPERTY(LineHeightMode lineHeightMode READ lineHeightMode WRITE setLineHeightMode NOTIFY lineHeightModeChanged)
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
+    Q_PROPERTY(int minimumPixelSize READ minimumPixelSize WRITE setMinimumPixelSize NOTIFY minimumPixelSizeChanged)
+    Q_PROPERTY(int minimumPointSize READ minimumPointSize WRITE setMinimumPointSize NOTIFY minimumPointSizeChanged)
+    Q_PROPERTY(FontSizeMode fontSizeMode READ fontSizeMode WRITE setFontSizeMode NOTIFY fontSizeModeChanged)
 
 public:
     QQuickText(QQuickItem *parent=0);
@@ -117,6 +121,9 @@ public:
                   };
 
     enum LineHeightMode { ProportionalHeight, FixedHeight };
+
+    enum FontSizeMode { FixedSize = 0x0, HorizontalFit = 0x01, VerticalFit = 0x02,
+                        Fit = HorizontalFit | VerticalFit };
 
     QString text() const;
     void setText(const QString &);
@@ -163,9 +170,19 @@ public:
     LineHeightMode lineHeightMode() const;
     void setLineHeightMode(LineHeightMode);
 
+
     QUrl baseUrl() const;
     void setBaseUrl(const QUrl &url);
     void resetBaseUrl();
+
+    int minimumPixelSize() const;
+    void setMinimumPixelSize(int size);
+
+    int minimumPointSize() const;
+    void setMinimumPointSize(int size);
+
+    FontSizeMode fontSizeMode() const;
+    void setFontSizeMode(FontSizeMode mode);
 
     virtual void componentComplete();
 
@@ -195,6 +212,9 @@ Q_SIGNALS:
     void paintedSizeChanged();
     void lineHeightChanged(qreal lineHeight);
     void lineHeightModeChanged(LineHeightMode mode);
+    void fontSizeModeChanged();
+    void minimumPixelSizeChanged();
+    void minimumPointSizeChanged();
     void effectiveHorizontalAlignmentChanged();
     void lineLaidOut(QQuickTextLine *line);
     void baseUrlChanged();
@@ -206,6 +226,8 @@ protected:
                                  const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     virtual bool event(QEvent *);
+
+    void updatePolish();
 
 private Q_SLOTS:
     void q_imagesLoaded();
@@ -231,6 +253,7 @@ public:
     QQuickTextLine();
 
     void setLine(QTextLine* line);
+    void setLineOffset(int offset);
     int number() const;
 
     qreal width() const;
@@ -248,6 +271,7 @@ public:
 private:
     QTextLine *m_line;
     qreal m_height;
+    int m_lineOffset;
 };
 
 QT_END_NAMESPACE

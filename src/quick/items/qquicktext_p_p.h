@@ -103,9 +103,12 @@ public:
     int lineCount;
     int maximumLineCount;
     int maximumLineCountValid;
+    QQuickText::FontSizeMode fontSizeMode;
+    int minimumPixelSize;
+    int minimumPointSize;
     QPointF elidePos;
 
-    static QString elideChar;
+    static const QChar elideChar;
 
     void markDirty();
     bool invalidateImageCache();
@@ -115,6 +118,7 @@ public:
 
     bool imageCacheDirty:1;
     bool updateOnComponentComplete:1;
+    bool updateLayoutOnPolish:1;
     bool richText:1;
     bool styledText:1;
     bool singleline:1;
@@ -141,13 +145,13 @@ public:
     QQuickTextDocumentWithImageResources *doc;
 
     QRect setupTextLayout();
-    void setupCustomLineGeometry(QTextLine &line, qreal &height, qreal elideWidth);
+    void setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset = 0);
     QPixmap textLayoutImage(bool drawStyle);
     void drawTextLayout(QPainter *p, const QPointF &pos, bool drawStyle);
     bool isLinkActivatedConnected();
     QString anchorAt(const QPointF &pos);
     QTextLayout layout;
-    QTextLayout *elipsisLayout;
+    QTextLayout *elideLayout;
     QQuickTextLine *textLine;
 
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource);

@@ -48,12 +48,16 @@ Rectangle {
 
     Item {
         id: textpanel
-        height: 360
-        width: 440
+
+        anchors.fill: parent
+        anchors.rightMargin: controlpanel.width
+
         Text {
             id: textelement
             height: parent.height - 20; width: parent.width - 20
             anchors.centerIn: parent
+            anchors.fill: parent;
+            anchors.margins: 10
 
             text: { textvalue.model.get(textvalue.currentIndex).value }
             textFormat: { formatvalue.model.get(formatvalue.currentIndex).value }
@@ -79,6 +83,8 @@ Rectangle {
             smooth: { smoothvalue.model.get(smoothvalue.currentIndex).value }
             style: { stylevalue.model.get(stylevalue.currentIndex).value }
             styleColor: { stylecolorvalue.model.get(stylecolorvalue.currentIndex).value }
+            fontSizeMode : { fontsizemodevalue.model.get(fontsizemodevalue.currentIndex).value }
+            minimumPointSize : { minimumpointsizevalue.model.get(minimumpointsizevalue.currentIndex).value }
 
             Rectangle{ color: "transparent"; border.color: "green"; anchors.fill: parent }
         }
@@ -204,11 +210,11 @@ Rectangle {
             ControlView {
                 id: pixelvalue
                 controlname: "Pixel"
-                model: ListModel { ListElement { name: "-1"; value: -1 } ListElement { name: "8"; value: 8 } ListElement { name: "20"; value: 20 } } }
+                model: ListModel { ListElement { name: "-1"; value: -1 } ListElement { name: "8"; value: 8 } ListElement { name: "20"; value: 20 } ListElement { name: "50"; value: 20 } } }
             ControlView {
                 id: pointvalue
                 controlname: "Point"
-                model: ListModel { ListElement { name: "-1"; value: -1 } ListElement { name: "8"; value: 8 } ListElement { name: "20"; value: 20 } } }
+                model: ListModel { ListElement { name: "-1"; value: -1 } ListElement { name: "8"; value: 8 } ListElement { name: "20"; value: 20 } ListElement { name: "50"; value: 20 } } }
             ControlView {
                 id: strikeoutvalue
                 controlname: "Strike"
@@ -267,6 +273,21 @@ Rectangle {
                 controlname: "Wrap"
                 model: ListModel { ListElement { name: "None"; value: Text.NoWrap } ListElement { name: "Word"; value: Text.WordWrap }
                     ListElement { name: "Anywhere"; value: Text.WrapAnywhere } ListElement { name: "Wrap"; value: Text.Wrap } } }
+            ControlView {
+                id: fontsizemodevalue
+                controlname: "FontSize"
+                model: ListModel { ListElement { name: "FixedSize"; value: Text.FixedSize } ListElement { name: "Horizontal"; value: Text.HorizontalFit }
+                    ListElement { name: "Vertical"; value: Text.VerticalFit } ListElement { name: "Fit"; value: Text.Fit } } }
+            ControlView {
+                id: minimumpixelsizevalue
+                controlname: "MinPixelSize"
+                model: ListModel { ListElement { name: "8"; value: 8 } ListElement { name: "12"; value: 12 }
+                    ListElement { name: "24"; value: 24 } ListElement { name: "32"; value: 32 } } }
+            ControlView {
+                id: minimumpointsizevalue
+                controlname: "MinPointSize"
+                model: ListModel { ListElement { name: "8"; value: 8 } ListElement { name: "12"; value: 12 }
+                    ListElement { name: "24"; value: 24 } ListElement { name: "32"; value: 32 } } }
         }
     }
 }
