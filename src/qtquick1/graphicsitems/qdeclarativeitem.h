@@ -49,6 +49,7 @@
 #include <QtCore/QList>
 #include <QtGui/qfont.h>
 #include <QtWidgets/qgraphicsitem.h>
+#include <QtWidgets/qgraphicswidget.h>
 #include <QtWidgets/qgraphicstransform.h>
 #include <QtGui/qaccessible.h>
 #include <QtWidgets/qaction.h>
