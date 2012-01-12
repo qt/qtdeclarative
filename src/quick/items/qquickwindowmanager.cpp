@@ -152,6 +152,7 @@ public:
         : sg(QSGContext::createDefaultContext())
         , gl(0)
         , animationTimer(-1)
+        , allowMainThreadProcessingFlag(false)
         , isGuiLocked(0)
         , animationRunning(false)
         , isPaintCompleted(false)
