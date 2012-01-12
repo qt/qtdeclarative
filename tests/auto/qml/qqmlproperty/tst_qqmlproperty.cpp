@@ -57,10 +57,23 @@ class MyQmlObject : public QObject
 {
     Q_OBJECT
 public:
-    MyQmlObject() {}
+    MyQmlObject(QObject *parent = 0) : QObject(parent) {}
 };
 
 QML_DECLARE_TYPE(MyQmlObject);
+
+class MyQObject : public QObject
+{
+    Q_OBJECT
+public:
+    MyQObject(QObject *parent = 0) : QObject(parent), m_i(0) {}
+
+    int inc() { return ++m_i; }
+
+private:
+  int m_i;
+};
+
 
 class MyAttached : public QObject
 {
@@ -316,10 +329,11 @@ class PropertyObject : public QObject
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
     Q_PROPERTY(int propertyWithNotify READ propertyWithNotify WRITE setPropertyWithNotify NOTIFY oddlyNamedNotifySignal)
     Q_PROPERTY(MyQmlObject *qmlObject READ qmlObject)
+    Q_PROPERTY(MyQObject *qObject READ qObject WRITE setQObject NOTIFY qObjectChanged)
 
     Q_CLASSINFO("DefaultProperty", "defaultProperty")
 public:
-    PropertyObject() : m_resetProperty(9) {}
+    PropertyObject() : m_resetProperty(9), m_qObject(0) {}
 
     int defaultProperty() { return 10; }
     QRect rectProperty() { return QRect(10, 10, 1, 209); }
@@ -342,9 +356,19 @@ public:
 
     MyQmlObject *qmlObject() { return &m_qmlObject; }
 
+    MyQObject *qObject() { return m_qObject; }
+    void setQObject(MyQObject *object)
+    {
+        if (m_qObject != object) {
+            m_qObject = object;
+            emit qObjectChanged();
+        }
+    }
+
 signals:
     void clicked();
     void oddlyNamedNotifySignal();
+    void qObjectChanged();
 
 private:
     int m_resetProperty;
@@ -353,6 +377,7 @@ private:
     QVariantMap m_variantMap;
     int m_propertyWithNotify;
     MyQmlObject m_qmlObject;
+    MyQObject *m_qObject;
 };
 
 QML_DECLARE_TYPE(PropertyObject);
@@ -1130,6 +1155,18 @@ void tst_qqmlproperty::read()
         QCOMPARE(p.read(), QVariant());
     }
 
+    // Object property registered with Qt, but not registered with QML.
+    {
+        PropertyObject o;
+        QQmlProperty p(&o, "qObject");
+        QCOMPARE(p.propertyTypeCategory(), QQmlProperty::Object);
+
+        QCOMPARE(p.propertyType(), qMetaTypeId<MyQObject*>());
+        QVariant v = p.read();
+        QVERIFY(v.canConvert(QMetaType::QObjectStar));
+        QVERIFY(qvariant_cast<QObject *>(v) == o.qObject());
+    }
+
     // Object property
     {
         PropertyObject o;
@@ -1386,6 +1423,23 @@ void tst_qqmlproperty::write()
         p.write(QVariant(99));
         QCOMPARE(p.read(), QVariant(99));
         delete object;
+    }
+    // Writable pointer to QObject derived
+    {
+        PropertyObject o;
+        QQmlProperty p(&o, QString("qObject"));
+        QCOMPARE(o.qObject(), (QObject*)0);
+        QObject *newObject = new MyQObject(this);
+        QCOMPARE(p.write(QVariant::fromValue(newObject)), true);
+        QCOMPARE(o.qObject(), newObject);
+        QVariant data = p.read();
+        QCOMPARE(data.value<QObject*>(), newObject);
+        QCOMPARE(data.value<MyQObject*>(), newObject);
+        // Incompatible types can not be written.
+        QCOMPARE(p.write(QVariant::fromValue(new MyQmlObject(this))), false);
+        QVariant newData = p.read();
+        QCOMPARE(newData.value<QObject*>(), newObject);
+        QCOMPARE(newData.value<MyQObject*>(), newObject);
     }
 }
 

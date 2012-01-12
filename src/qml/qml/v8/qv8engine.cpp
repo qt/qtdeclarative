@@ -310,6 +310,8 @@ QV4::Value QV8Engine::fromVariant(const QVariant &variant)
                 a->arrayData[ii].value = QV4::QObjectWrapper::wrap(m_v4Engine, list.at(ii));
             a->setArrayLengthUnchecked(list.count());
             return QV4::Value::fromObject(a);
+        } else if (QMetaType::typeFlags(type) & QMetaType::PointerToQObject) {
+            return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(ptr));
         }
 
         bool objOk;

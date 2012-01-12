@@ -1611,10 +1611,14 @@ QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engi
 {
     if (engine) {
         return engine->rawMetaObjectForType(userType);
-    } else {
-        QQmlType *type = QQmlMetaType::qmlType(userType);
-        return QQmlMetaObject(type?type->baseMetaObject():0);
     }
+    QQmlType *type = QQmlMetaType::qmlType(userType);
+    if (type)
+        return QQmlMetaObject(type->baseMetaObject());
+    QMetaType metaType(userType);
+    if ((metaType.flags() & QMetaType::PointerToQObject) && metaType.metaObject())
+        return metaType.metaObject();
+    return QQmlMetaObject((QObject*)0);
 }
 
 /*!

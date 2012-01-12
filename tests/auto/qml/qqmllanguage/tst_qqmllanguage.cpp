@@ -3016,7 +3016,6 @@ void tst_qqmllanguage::signalParameterTypes()
     QQmlComponent component(&engine, testFileUrl("signalParameterTypes.2.qml"));
     QObject *obj = component.create();
     QVERIFY(obj != 0);
-    QEXPECT_FAIL("", "Dynamic connections don't enforce type safety - QTBUG-26662", Abort);
     QVERIFY(obj->property("success").toBool());
     delete obj;
     }
