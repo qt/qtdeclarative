@@ -220,12 +220,9 @@ void tst_qquickborderimage::smooth()
 void tst_qquickborderimage::mirror()
 {
     QQuickView *canvas = new QQuickView;
-    canvas->show();
-
     canvas->setSource(testFileUrl("mirror.qml"));
     QQuickBorderImage *image = qobject_cast<QQuickBorderImage*>(canvas->rootObject());
     QVERIFY(image != 0);
-    canvas->show();
 
     QImage screenshot = canvas->grabFrameBuffer();
 
