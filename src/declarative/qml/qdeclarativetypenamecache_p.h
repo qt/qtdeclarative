@@ -144,7 +144,7 @@ bool QDeclarativeTypeNameCache::Result::isValid() const
 }
 
 QDeclarativeTypeNameCache::Import::Import()
-: scriptIndex(-1)
+: moduleApi(0), scriptIndex(-1)
 {
 }
 
