@@ -1112,7 +1112,7 @@ void QQuickImageParticle::createEngine()
     if (m_sprites.count()) {
         m_spriteEngine = new QQuickSpriteEngine(m_sprites, this);
         connect(m_spriteEngine, SIGNAL(stateChanged(int)),
-                this, SLOT(spriteAdvance(int)));
+                this, SLOT(spriteAdvance(int)), Qt::DirectConnection);
         m_explicitAnimation = true;
     } else {
         m_spriteEngine = 0;
