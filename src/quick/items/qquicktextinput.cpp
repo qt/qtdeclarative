@@ -1625,7 +1625,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             offset = -QPoint(d->hscroll, d->vscroll);
         }
 
-        if (!d->m_textLayout.text().isEmpty()) {
+        if (!d->m_textLayout.text().isEmpty() || !d->m_textLayout.preeditAreaText().isEmpty()) {
             node->addTextLayout(offset, &d->m_textLayout, d->color,
                                 QQuickText::Normal, QColor(),
                                 d->selectionColor, d->selectedTextColor,
