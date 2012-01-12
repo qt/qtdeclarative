@@ -878,6 +878,10 @@ void QQuickItemView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 {
     Q_D(QQuickItemView);
     d->markExtentsDirty();
+    if (isComponentComplete() && d->isValid()) {
+        d->forceLayout = true;
+        polish();
+    }
     QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -1212,7 +1216,6 @@ void QQuickItemViewPrivate::init()
     Q_Q(QQuickItemView);
     QQuickItemPrivate::get(contentItem)->childrenDoNotOverlap = true;
     q->setFlag(QQuickItem::ItemIsFocusScope);
-    addItemChangeListener(this, Geometry);
     QObject::connect(q, SIGNAL(movementEnded()), q, SLOT(animStopped()));
     q->setFlickableDirection(QQuickFlickable::VerticalFlick);
 }
@@ -1291,10 +1294,11 @@ void QQuickItemViewPrivate::mirrorChange()
 
 void QQuickItemViewPrivate::refill()
 {
+    qreal s = qMax(size(), qreal(0.));
     if (isContentFlowReversed())
-        refill(-position()-size(), -position());
+        refill(-position()-s, -position());
     else
-        refill(position(), position()+size());
+        refill(position(), position()+s);
 }
 
 void QQuickItemViewPrivate::refill(qreal from, qreal to, bool doBuffer)

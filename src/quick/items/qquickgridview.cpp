@@ -195,7 +195,6 @@ public:
     virtual void initializeCurrentItem();
 
     virtual void updateViewport();
-    virtual void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual void fixupPosition();
     virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
     virtual void flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
@@ -787,21 +786,6 @@ void QQuickGridViewPrivate::initializeCurrentItem()
     if (currentItem && currentIndex >= 0) {
         FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(currentItem);
         gridItem->setPosition(colPosAt(currentIndex), rowPosAt(currentIndex));
-    }
-}
-
-void QQuickGridViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
-{
-    Q_Q(QQuickGridView);
-    QQuickItemViewPrivate::itemGeometryChanged(item, newGeometry, oldGeometry);
-    if (!q->isComponentComplete())
-        return;
-    if (item == q) {
-        if (newGeometry.height() != oldGeometry.height() || newGeometry.width() != oldGeometry.width()) {
-            updateViewport();
-            forceLayout = true;
-            q->polish();
-        }
     }
 }
 

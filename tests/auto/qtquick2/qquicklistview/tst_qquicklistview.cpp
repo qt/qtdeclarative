@@ -3576,6 +3576,7 @@ void tst_QQuickListView::resizeView()
     ctxt->setContextProperty("testObject", testObject);
 
     canvas->setSource(testFileUrl("listviewtest.qml"));
+    canvas->show();
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3601,6 +3602,40 @@ void tst_QQuickListView::resizeView()
 
     QMetaObject::invokeMethod(canvas->rootObject(), "heightRatio", Q_RETURN_ARG(QVariant, heightRatio));
     QCOMPARE(heightRatio.toReal(), 0.25);
+
+    // Ensure we handle -ve sizes
+    listview->setHeight(-100);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 1);
+
+    listview->setCacheBuffer(200);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 11);
+
+    // ensure items in cache become visible
+    listview->setHeight(200);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 21);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), i*20.);
+        QCOMPARE(item->isVisible(), i < 11); // inside view visible, outside not visible
+    }
+
+    // ensure items outside view become invisible
+    listview->setHeight(100);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 16);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), i*20.);
+        QCOMPARE(item->isVisible(), i < 6); // inside view visible, outside not visible
+    }
 
     delete canvas;
     delete testObject;

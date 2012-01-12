@@ -3175,6 +3175,41 @@ void tst_QQuickGridView::resizeViewAndRepaint()
     gridview->setHeight(100);
     QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 10));
 
+    // Ensure we handle -ve sizes
+    gridview->setHeight(-100);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 3);
+
+    gridview->setCacheBuffer(120);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 9);
+
+    // ensure items in cache become visible
+    gridview->setHeight(120);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 15);
+
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
+        QCOMPARE(item->isVisible(), i < 9); // inside view visible, outside not visible
+    }
+
+    // ensure items outside view become invisible
+    gridview->setHeight(60);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 12);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
+        QCOMPARE(item->isVisible(), i < 6); // inside view visible, outside not visible
+    }
+
     delete canvas;
 }
 
