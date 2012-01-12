@@ -13,3 +13,4 @@ testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
 QT += core-private gui-private declarative-private quick-private widgets widgets-private v8-private opengl-private testlib
+CONFIG += insignificant_test // QTBUG-23605
