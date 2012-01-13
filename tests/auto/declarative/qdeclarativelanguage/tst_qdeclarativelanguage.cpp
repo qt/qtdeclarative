@@ -417,7 +417,6 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("nestedErrors") << "nestedErrors.qml" << "nestedErrors.errors.txt" << false;
     QTest::newRow("defaultGrouped") << "defaultGrouped.qml" << "defaultGrouped.errors.txt" << false;
     QTest::newRow("doubleSignal") << "doubleSignal.qml" << "doubleSignal.errors.txt" << false;
-    QTest::newRow("invalidRoot") << "invalidRoot.qml" << "invalidRoot.errors.txt" << false;
     QTest::newRow("missingValueTypeProperty") << "missingValueTypeProperty.qml" << "missingValueTypeProperty.errors.txt" << false;
     QTest::newRow("objectValueTypeProperty") << "objectValueTypeProperty.qml" << "objectValueTypeProperty.errors.txt" << false;
     QTest::newRow("enumTypes") << "enumTypes.qml" << "enumTypes.errors.txt" << false;
@@ -441,6 +440,16 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("metaobjectRevision.1") << "metaobjectRevision.1.qml" << "metaobjectRevision.1.errors.txt" << false;
     QTest::newRow("metaobjectRevision.2") << "metaobjectRevision.2.qml" << "metaobjectRevision.2.errors.txt" << false;
     QTest::newRow("metaobjectRevision.3") << "metaobjectRevision.3.qml" << "metaobjectRevision.3.errors.txt" << false;
+
+    QTest::newRow("invalidRoot.1") << "invalidRoot.1.qml" << "invalidRoot.1.errors.txt" << false;
+    QTest::newRow("invalidRoot.2") << "invalidRoot.2.qml" << "invalidRoot.2.errors.txt" << false;
+    QTest::newRow("invalidRoot.3") << "invalidRoot.3.qml" << "invalidRoot.3.errors.txt" << false;
+    QTest::newRow("invalidRoot.4") << "invalidRoot.4.qml" << "invalidRoot.4.errors.txt" << false;
+
+    QTest::newRow("invalidTypeName.1") << "invalidTypeName.1.qml" << "invalidTypeName.1.errors.txt" << false;
+    QTest::newRow("invalidTypeName.2") << "invalidTypeName.2.qml" << "invalidTypeName.2.errors.txt" << false;
+    QTest::newRow("invalidTypeName.3") << "invalidTypeName.3.qml" << "invalidTypeName.3.errors.txt" << false;
+    QTest::newRow("invalidTypeName.4") << "invalidTypeName.4.qml" << "invalidTypeName.4.errors.txt" << false;
 
     QTest::newRow("Major version isolation") << "majorVersionIsolation.qml" << "majorVersionIsolation.errors.txt" << false;
 }

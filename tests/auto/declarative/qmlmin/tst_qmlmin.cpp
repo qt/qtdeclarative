@@ -103,6 +103,7 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/missingObject.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/insertedSemicolon.1.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/nonexistantProperty.5.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/invalidRoot.1.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativefolderlistmodel/data/dummy.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.js";
     invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.library.js";
