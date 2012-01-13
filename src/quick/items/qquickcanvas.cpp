@@ -348,7 +348,7 @@ void QQuickCanvasPrivate::translateTouchEvent(QTouchEvent *touchEvent)
         touchPoint.setStartScenePos(touchPoint.startPos());
         touchPoint.setLastScenePos(touchPoint.lastPos());
 
-        if (touchPoint.isPrimary())
+        if (i == 0)
             lastMousePosition = touchPoint.pos().toPoint();
     }
     touchEvent->setTouchPoints(touchPoints);
