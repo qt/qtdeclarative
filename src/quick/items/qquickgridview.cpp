@@ -171,8 +171,7 @@ public:
 
     virtual FxViewItem *newViewItem(int index, QQuickItem *item);
     virtual void repositionPackageItemAt(QQuickItem *item, int index);
-    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
-    virtual void resetFirstItemPosition();
+    virtual void resetFirstItemPosition(qreal pos = 0.0);
     virtual void adjustFirstItem(qreal forwards, qreal backwards);
 
     virtual void createHighlight();
@@ -180,8 +179,8 @@ public:
     virtual void resetHighlightPosition();
 
     virtual void setPosition(qreal pos);
-    virtual void layoutVisibleItems();
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *addedItems);
+    virtual void layoutVisibleItems(int fromModelIndex = 0);
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems);
     virtual bool needsRefillForAddedOrRemovedIndex(int index) const;
 
     virtual qreal headerSize() const;
@@ -538,7 +537,7 @@ void QQuickGridViewPrivate::updateViewport()
     QQuickItemViewPrivate::updateViewport();
 }
 
-void QQuickGridViewPrivate::layoutVisibleItems()
+void QQuickGridViewPrivate::layoutVisibleItems(int fromModelIndex)
 {
     if (visibleItems.count()) {
         const qreal from = isContentFlowReversed() ? -position() - size() : position();
@@ -560,8 +559,10 @@ void QQuickGridViewPrivate::layoutVisibleItems()
                 rowPos += rowSize();
             }
             colPos = col * colSize();
-            item->setPosition(colPos, rowPos);
-            item->item->setVisible(rowPos + rowSize() >= from && rowPos <= to);
+            if (item->index >= fromModelIndex) {
+                item->setPosition(colPos, rowPos);
+                item->item->setVisible(rowPos + rowSize() >= from && rowPos <= to);
+            }
         }
     }
 }
@@ -583,18 +584,10 @@ void QQuickGridViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
     }
 }
 
-void QQuickGridViewPrivate::resetItemPosition(FxViewItem *item, FxViewItem *toItem)
-{
-    if (item == toItem)
-        return;
-    FxGridItemSG *toGridItem = static_cast<FxGridItemSG*>(toItem);
-    static_cast<FxGridItemSG*>(item)->setPosition(toGridItem->colPos(), toGridItem->rowPos());
-}
-
-void QQuickGridViewPrivate::resetFirstItemPosition()
+void QQuickGridViewPrivate::resetFirstItemPosition(qreal pos)
 {
     FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.first());
-    item->setPosition(0, 0);
+    item->setPosition(0, pos);
 }
 
 void QQuickGridViewPrivate::adjustFirstItem(qreal forwards, qreal backwards)
@@ -1754,7 +1747,7 @@ void QQuickGridView::moveCurrentIndexRight()
     }
 }
 
-bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *addedItems)
+bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems)
 {
     Q_Q(QQuickGridView);
 
@@ -1865,7 +1858,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             item->item->setVisible(true);
             visibleItems.insert(index, item);
             if (index == 0)
-                *newVisibleItemsFirst = true;
+                insertResult->changedFirstItem = true;
             if (!change.isMove())
                 addedItems->append(item);
             insertResult->sizeChangesAfterVisiblePos += rowSize();

@@ -103,9 +103,10 @@ public:
         QDeclarativeNullableValue<qreal> visiblePos;
         qreal sizeChangesBeforeVisiblePos;
         qreal sizeChangesAfterVisiblePos;
+        bool changedFirstItem;
 
         ChangeResult(const QDeclarativeNullableValue<qreal> &p)
-            : visiblePos(p), sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0) {}
+            : visiblePos(p), sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0), changedFirstItem(false) {}
     };
 
     enum BufferMode { NoBuffer = 0x00, BufferBefore = 0x01, BufferAfter = 0x02 };
@@ -147,6 +148,8 @@ public:
     void applyPendingChanges();
     bool applyModelChanges();
     bool applyRemovalChange(const QDeclarativeChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
+    void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
+            FxViewItem *prevFirstVisible, const ChangeResult &insertionResult, const ChangeResult &removalResult);
 
     void checkVisible() const;
 
@@ -236,13 +239,12 @@ protected:
 
     virtual FxViewItem *newViewItem(int index, QQuickItem *item) = 0;
     virtual void repositionPackageItemAt(QQuickItem *item, int index) = 0;
-    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem) = 0;
-    virtual void resetFirstItemPosition() = 0;
+    virtual void resetFirstItemPosition(qreal pos = 0.0) = 0;
     virtual void adjustFirstItem(qreal forwards, qreal backwards) = 0;
 
-    virtual void layoutVisibleItems() = 0;
+    virtual void layoutVisibleItems(int fromModelIndex = 0) = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *newItems) = 0;
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *newItems) = 0;
 
     virtual bool needsRefillForAddedOrRemovedIndex(int) const { return false; }
 

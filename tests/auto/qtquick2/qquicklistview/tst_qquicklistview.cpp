@@ -1359,6 +1359,7 @@ void tst_QQuickListView::moved(const QUrl &source)
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -1495,6 +1496,26 @@ void tst_QQuickListView::moved_data()
             << 80.0     // show 4-19
             << 0 << 5 << 3
             << 20.0 * 3;        // moving 3 from above the content y should adjust y positions accordingly
+
+    QTest::newRow("move multiple forwards, mix of non-visible/visible")
+            << 40.0
+            << 1 << 16 << 2
+            << 20.0;    // item 1,2 are removed, item 3 is now first visible
+
+    QTest::newRow("move multiple forwards, to bottom of view")
+            << 0.0
+            << 5 << 13 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, first->last")
+            << 0.0
+            << 0 << 13 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, content y not 0")
+            << 80.0
+            << 5+4 << 13+4 << 3
+            << 0.0;
 
     QTest::newRow("move multiple forwards, from visible -> non-visible")
             << 0.0

@@ -93,8 +93,7 @@ public:
     virtual void initializeViewItem(FxViewItem *item);
     virtual void releaseItem(FxViewItem *item);
     virtual void repositionPackageItemAt(QQuickItem *item, int index);
-    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
-    virtual void resetFirstItemPosition();
+    virtual void resetFirstItemPosition(qreal pos = 0.0);
     virtual void adjustFirstItem(qreal forwards, qreal backwards);
 
     virtual void createHighlight();
@@ -102,8 +101,8 @@ public:
     virtual void resetHighlightPosition();
 
     virtual void setPosition(qreal pos);
-    virtual void layoutVisibleItems();
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *addedItems);
+    virtual void layoutVisibleItems(int fromModelIndex = 0);
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems);
 
     virtual void updateSections();
     QQuickItem *getSectionItem(const QString &section);
@@ -689,7 +688,7 @@ void QQuickListViewPrivate::visibleItemsChanged()
     updateUnrequestedPositions();
 }
 
-void QQuickListViewPrivate::layoutVisibleItems()
+void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
 {
     if (!visibleItems.isEmpty()) {
         const qreal from = isContentFlowReversed() ? -position() - size() : position();
@@ -702,8 +701,10 @@ void QQuickListViewPrivate::layoutVisibleItems()
         firstItem->item->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
         for (int i=1; i < visibleItems.count(); ++i) {
             FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.at(i));
-            item->setPosition(pos);
-            item->item->setVisible(item->endPosition() >= from && item->position() <= to);
+            if (item->index >= fromModelIndex) {
+                item->setPosition(pos);
+                item->item->setVisible(item->endPosition() >= from && item->position() <= to);
+            }
             pos += item->size() + spacing;
             sum += item->size();
             fixedCurrent = fixedCurrent || (currentItem && item->item == currentItem->item);
@@ -734,17 +735,10 @@ void QQuickListViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
     }
 }
 
-void QQuickListViewPrivate::resetItemPosition(FxViewItem *item, FxViewItem *toItem)
-{
-    if (item == toItem)
-        return;
-    static_cast<FxListItemSG*>(item)->setPosition(toItem->position());
-}
-
-void QQuickListViewPrivate::resetFirstItemPosition()
+void QQuickListViewPrivate::resetFirstItemPosition(qreal pos)
 {
     FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.first());
-    item->setPosition(0);
+    item->setPosition(pos);
 }
 
 void QQuickListViewPrivate::adjustFirstItem(qreal forwards, qreal backwards)
@@ -2376,7 +2370,7 @@ void QQuickListView::updateSections()
     }
 }
 
-bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *addedItems)
+bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems)
 {
     int modelIndex = change.index;
     int count = change.count;
@@ -2440,7 +2434,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 
                 visibleItems.insert(insertionIdx, item);
                 if (insertionIdx == 0)
-                    *newVisibleItemsFirst = true;
+                    insertResult->changedFirstItem = true;
                 if (!change.isMove())
                     addedItems->append(item);
                 insertResult->sizeChangesBeforeVisiblePos += item->size() + spacing;
@@ -2462,7 +2456,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 
             visibleItems.insert(index, item);
             if (index == 0)
-                *newVisibleItemsFirst = true;
+                insertResult->changedFirstItem = true;
             if (!change.isMove())
                 addedItems->append(item);
             insertResult->sizeChangesAfterVisiblePos += item->size() + spacing;

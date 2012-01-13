@@ -1302,6 +1302,26 @@ void tst_QQuickGridView::moved_data()
             << 0 << 6 << 3
             << 60.0;    // top row moved and shifted to below 3rd row, all items should shift down by 1 row
 
+    QTest::newRow("move multiple forwards, mix of non-visible/visible")
+            << 120.0
+            << 3 << 16 << 6
+            << 60.0;    // top two rows removed, third row is now the first visible
+
+    QTest::newRow("move multiple forwards, to bottom of view")
+            << 0.0
+            << 5 << 13 << 5
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, first row -> last")
+            << 0.0
+            << 0 << 15 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, content y not 0")
+            << 120.0
+            << 5+4 << 13+4 << 5
+            << 0.0;
+
     QTest::newRow("move multiple forwards, from visible -> non-visible")
             << 0.0
             << 1 << 16 << 3
