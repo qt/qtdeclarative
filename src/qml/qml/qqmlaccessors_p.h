@@ -47,6 +47,10 @@
 #include <QtCore/qhash.h>
 #include <QtCore/QReadWriteLock>
 
+#ifdef Q_OS_QNX
+#include <stdint.h>
+#endif
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE

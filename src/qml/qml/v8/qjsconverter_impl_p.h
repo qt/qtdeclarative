@@ -44,6 +44,10 @@
 #ifndef QJSCONVERTER_IMPL_P_H
 #define QJSCONVERTER_IMPL_P_H
 
+#ifdef Q_OS_QNX
+#include <malloc.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 extern char *qdtoa(double d, int mode, int ndigits, int *decpt, int *sign, char **rve, char **digits_str);
