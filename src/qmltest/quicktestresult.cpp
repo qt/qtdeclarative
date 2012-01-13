@@ -437,7 +437,7 @@ void QuickTestResult::warn(const QString &message, const QUrl &location, int lin
 
 void QuickTestResult::ignoreWarning(const QString &message)
 {
-    QTestResult::ignoreMessage(QtWarningMsg, message.toLatin1().constData());
+    QTestLog::ignoreMessage(QtWarningMsg, message.toLatin1().constData());
 }
 
 void QuickTestResult::wait(int ms)
