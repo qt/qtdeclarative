@@ -558,7 +558,7 @@ void tst_qquicktext::alignments()
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWait(50);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
+    QTRY_COMPARE(QGuiApplication::activeWindow(), static_cast<QWidget *>(canvas));
 
     QObject *ob = canvas->rootObject();
     QVERIFY(ob != 0);
@@ -571,7 +571,7 @@ void tst_qquicktext::alignments()
     canvas->render(&p);
 
     QImage expect(expectfile);
-    if (QApplicationPrivate::graphics_system_name == "raster" || QApplicationPrivate::graphics_system_name == "") {
+    if (QGuiApplicationPrivate::graphics_system_name == "raster" || QGuiApplicationPrivate::graphics_system_name == "") {
         QCOMPARE(actual,expect);
     }
     delete canvas;

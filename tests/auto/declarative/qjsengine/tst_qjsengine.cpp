@@ -971,7 +971,7 @@ void tst_QJSEngine::newQObject_ownership()
         }
         collectGarbage_helper(eng);
         if (ptr)
-            QApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
+            QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
         QVERIFY(ptr == 0);
     }
     {
@@ -1002,7 +1002,7 @@ void tst_QJSEngine::newQObject_ownership()
         collectGarbage_helper(eng);
         // no parent, so it should be like ScriptOwnership
         if (ptr)
-            QApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
+            QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
         QVERIFY(ptr == 0);
     }
     {
@@ -3106,7 +3106,7 @@ void tst_QJSEngine::collectGarbage()
     (void)eng.newQObject(ptr);
     collectGarbage_helper(eng);
     if (ptr)
-        QApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
+        QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
     QVERIFY(ptr == 0);
 }
 

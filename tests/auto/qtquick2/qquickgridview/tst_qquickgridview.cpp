@@ -3796,7 +3796,7 @@ void tst_QQuickGridView::flick(QQuickView *canvas, const QPoint &from, const QPo
 
     for (int i = 0; i < pointCount; ++i) {
         QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
+        QGuiApplication::sendEvent(canvas, &mv);
         QTest::qWait(duration/pointCount);
         QCoreApplication::processEvents();
     }

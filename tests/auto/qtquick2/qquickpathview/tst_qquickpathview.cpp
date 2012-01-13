@@ -1328,11 +1328,11 @@ void tst_QQuickPathView::mouseDrag()
 
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(30,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
+        QGuiApplication::sendEvent(canvas, &mv);
     }
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(90,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
+        QGuiApplication::sendEvent(canvas, &mv);
     }
 
     QVERIFY(pathview->currentIndex() != current);

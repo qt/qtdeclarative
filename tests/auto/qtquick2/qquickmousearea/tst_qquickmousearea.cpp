@@ -218,7 +218,7 @@ void tst_QQuickMouseArea::dragging()
 
 #ifdef OLDWAY
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 #else
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
 #endif
@@ -241,7 +241,7 @@ void tst_QQuickMouseArea::dragging()
 
 #ifdef OLDWAY
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 #else
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(122,122));
     QTest::qWait(50);
@@ -280,7 +280,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
     QCOMPARE(mouseRegion->mouseY(), rect->y());
 
     QMouseEvent event(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &event);
+    QGuiApplication::sendEvent(canvas, &event);
 
     QCOMPARE(mouseRegion->mouseX(), 100.0);
     QCOMPARE(mouseRegion->mouseY(), 100.0);
@@ -309,7 +309,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnResize()
     QCOMPARE(mouseRegion->mouseY(), 0.0);
 
     QMouseEvent event(QEvent::MouseButtonPress, rect->pos().toPoint(), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &event);
+    QGuiApplication::sendEvent(canvas, &event);
 
     QVERIFY(!mouseRegion->property("emitPositionChanged").toBool());
     QVERIFY(mouseRegion->property("mouseMatchesPos").toBool());
@@ -337,7 +337,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         QVERIFY(canvas->rootObject() != 0);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &pressEvent);
+        QGuiApplication::sendEvent(canvas, &pressEvent);
 
         QVERIFY(!canvas->rootObject()->property("clicked").toBool());
         QVERIFY(!canvas->rootObject()->property("held").toBool());
@@ -345,7 +345,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         QTest::qWait(1000);
 
         QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &releaseEvent);
+        QGuiApplication::sendEvent(canvas, &releaseEvent);
 
         QVERIFY(!canvas->rootObject()->property("clicked").toBool());
         QVERIFY(canvas->rootObject()->property("held").toBool());
@@ -362,14 +362,14 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         QVERIFY(canvas->rootObject() != 0);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &pressEvent);
+        QGuiApplication::sendEvent(canvas, &pressEvent);
 
         QVERIFY(!canvas->rootObject()->property("clicked").toBool());
 
         QTest::qWait(1000);
 
         QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &releaseEvent);
+        QGuiApplication::sendEvent(canvas, &releaseEvent);
 
         QVERIFY(canvas->rootObject()->property("clicked").toBool());
 
@@ -394,7 +394,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
     QVERIFY(!canvas->rootObject()->property("mr2_canceled").toBool());
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QVERIFY(canvas->rootObject()->property("mr1_pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("mr1_released").toBool());
@@ -406,7 +406,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
     QTest::qWait(200);
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QVERIFY(canvas->rootObject()->property("mr1_released").toBool());
     QVERIFY(!canvas->rootObject()->property("mr1_canceled").toBool());
@@ -426,7 +426,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QVERIFY(!canvas->rootObject()->property("released").toBool());
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QVERIFY(canvas->rootObject()->property("pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("canceled").toBool());
@@ -435,7 +435,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QTest::qWait(200);
 
     QEvent windowDeactivateEvent(QEvent::WindowDeactivate);
-    QApplication::sendEvent(canvas, &windowDeactivateEvent);
+    QGuiApplication::sendEvent(canvas, &windowDeactivateEvent);
     QVERIFY(!canvas->rootObject()->property("pressed").toBool());
     QVERIFY(canvas->rootObject()->property("canceled").toBool());
     QVERIFY(!canvas->rootObject()->property("released").toBool());
@@ -443,7 +443,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QTest::qWait(200);
 
     //press again
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
     QVERIFY(canvas->rootObject()->property("pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("canceled").toBool());
     QVERIFY(!canvas->rootObject()->property("released").toBool());
@@ -452,7 +452,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 
     //release
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
     QVERIFY(!canvas->rootObject()->property("pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("canceled").toBool());
     QVERIFY(canvas->rootObject()->property("released").toBool());
@@ -468,17 +468,17 @@ void tst_QQuickMouseArea::doubleClick()
     QVERIFY(canvas->rootObject() != 0);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 1);
 
     pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("doubleClicked").toInt(), 1);
@@ -497,20 +497,20 @@ void tst_QQuickMouseArea::clickTwice()
     QVERIFY(canvas->rootObject() != 0);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("pressed").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 1);
 
     pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("pressed").toInt(), 2);
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 2);
@@ -530,16 +530,16 @@ void tst_QQuickMouseArea::pressedOrdering()
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("base"));
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("pressed"));
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("toggled"));
 
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("pressed"));
 
@@ -794,13 +794,13 @@ void tst_QQuickMouseArea::hoverPropagation()
     QCOMPARE(root->property("point2").toBool(), false);
 
     QMouseEvent moveEvent(QEvent::MouseMove, QPoint(32, 32), Qt::NoButton, Qt::NoButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
+    QGuiApplication::sendEvent(canvas, &moveEvent);
 
     QCOMPARE(root->property("point1").toBool(), true);
     QCOMPARE(root->property("point2").toBool(), false);
 
     QMouseEvent moveEvent2(QEvent::MouseMove, QPoint(232, 32), Qt::NoButton, Qt::NoButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent2);
+    QGuiApplication::sendEvent(canvas, &moveEvent2);
     QCOMPARE(root->property("point1").toBool(), false);
     QCOMPARE(root->property("point2").toBool(), true);
 

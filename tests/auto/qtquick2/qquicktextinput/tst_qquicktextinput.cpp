@@ -619,7 +619,7 @@ void tst_qquicktextinput::selection()
         QList<QInputMethodEvent::Attribute> attributes;
         attributes << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 12, 5, QVariant());
         QInputMethodEvent event("", attributes);
-        QApplication::sendEvent(textinputObject, &event);
+        QGuiApplication::sendEvent(textinputObject, &event);
     }
     QCOMPARE(selectionSpy.count(), 1);
     QCOMPARE(textinputObject->selectionStart(), 12);
@@ -1734,19 +1734,19 @@ void tst_qquicktextinput::inputMethods()
     QList<QInputMethodEvent::Attribute> attributes;
     QInputMethodEvent preeditEvent("test", attributes);
     preeditEvent.setTentativeCommitString("test");
-    QApplication::sendEvent(input, &preeditEvent);
+    QGuiApplication::sendEvent(input, &preeditEvent);
     QCOMPARE(input->text(), QString("test"));
 
     // tentative commit not allowed present in surrounding text
     QInputMethodQueryEvent queryEvent(Qt::ImSurroundingText);
-    QApplication::sendEvent(input, &queryEvent);
+    QGuiApplication::sendEvent(input, &queryEvent);
     QCOMPARE(queryEvent.value(Qt::ImSurroundingText).toString(), QString(""));
 
     // if text with tentative commit does not validate, not allowed to be part of text property
     input->setText(""); // ensure input state is reset
     QValidator *validator = new QIntValidator(0, 100);
     input->setValidator(validator);
-    QApplication::sendEvent(input, &preeditEvent);
+    QGuiApplication::sendEvent(input, &preeditEvent);
     QCOMPARE(input->text(), QString(""));
     input->setValidator(0);
     delete validator;
@@ -2777,7 +2777,7 @@ void tst_qquicktextinput::inputContextMouseHandler()
     QPoint position = QPointF(x, y).toPoint();
 
     QInputMethodEvent inputEvent(text.mid(0, 5), QList<QInputMethodEvent::Attribute>());
-    QApplication::sendEvent(input, &inputEvent);
+    QGuiApplication::sendEvent(input, &inputEvent);
 
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, position);
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, position);

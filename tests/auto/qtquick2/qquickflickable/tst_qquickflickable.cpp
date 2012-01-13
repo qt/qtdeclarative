@@ -359,7 +359,7 @@ void tst_qquickflickable::wheel()
     {
         QWheelEvent event(QPoint(200, 200), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
         event.setAccepted(false);
-        QApplication::sendEvent(canvas, &event);
+        QGuiApplication::sendEvent(canvas, &event);
     }
 
     QTRY_VERIFY(flick->contentY() > 0);
@@ -371,7 +371,7 @@ void tst_qquickflickable::wheel()
     {
         QWheelEvent event(QPoint(200, 200), -120, Qt::NoButton, Qt::NoModifier, Qt::Horizontal);
         event.setAccepted(false);
-        QApplication::sendEvent(canvas, &event);
+        QGuiApplication::sendEvent(canvas, &event);
     }
 
     QTRY_VERIFY(flick->contentX() > 0);
@@ -610,7 +610,7 @@ void tst_qquickflickable::flick(QQuickView *canvas, const QPoint &from, const QP
 
     for (int i = 0; i < pointCount; ++i) {
         QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
+        QGuiApplication::sendEvent(canvas, &mv);
         QTest::qWait(duration/pointCount);
         QCoreApplication::processEvents();
     }

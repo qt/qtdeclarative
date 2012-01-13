@@ -899,7 +899,7 @@ void tst_qquickitem::wheelEvent()
 
     QWheelEvent event(QPoint(100, 50), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
     event.setAccepted(false);
-    QApplication::sendEvent(canvas, &event);
+    QGuiApplication::sendEvent(canvas, &event);
 
     if (shouldReceiveWheelEvents) {
         QVERIFY(event.isAccepted());
@@ -963,7 +963,7 @@ void tst_qquickitem::hoverEvent_data()
 static void sendMouseMove(QObject *object, const QPoint &position)
 {
     QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, 0);
-    QApplication::sendEvent(object, &moveEvent);
+    QGuiApplication::sendEvent(object, &moveEvent);
 }
 
 void tst_qquickitem::hoverEvent()
