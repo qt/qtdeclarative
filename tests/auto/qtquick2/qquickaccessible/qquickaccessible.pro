@@ -1,23 +1,19 @@
 CONFIG += testcase
 
-TARGET = tst_qdeclarativeaccessibility
-QT += declarative-private network qtquick1-private testlib
+TARGET = tst_qquickaccessible
+QT += declarative-private network quick-private testlib
 macx:CONFIG -= app_bundle
 
-SOURCES  += tst_qdeclarativeaccessibility.cpp
+SOURCES  += tst_qquickaccessible.cpp
 
 include (../../shared/util.pri)
 
+OTHER_FILES += data/checkbuttons.qml
+OTHER_FILES += data/hittest.qml
 OTHER_FILES += data/pushbutton.qml
 OTHER_FILES += data/statictext.qml
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 
@@ -26,7 +22,4 @@ wince*: {
     accessneeded.path = accessible
     DEPLOYMENT += accessneeded
 }
-
-
-
 

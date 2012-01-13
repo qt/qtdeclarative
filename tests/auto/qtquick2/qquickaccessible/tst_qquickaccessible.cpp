@@ -45,99 +45,17 @@
 
 #include <QtGui/qaccessible.h>
 
-#include <QtQuick1/qdeclarativeview.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
-#include <private/qdeclarativeaccessibleattached_p.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 
 #include "../../shared/util.h"
 
 
 typedef QSharedPointer<QAccessibleInterface> QAI;
-
-
-static inline bool verifyChild(QWidget *child, QAccessibleInterface *iface,
-                               int index, const QRect &domain)
-{
-    if (!child) {
-        qWarning("tst_QAccessibility::verifyChild: null pointer to child.");
-        return false;
-    }
-
-    if (!iface) {
-        qWarning("tst_QAccessibility::verifyChild: null pointer to interface.");
-        return false;
-    }
-
-    // Verify that we get a valid QAccessibleInterface for the child.
-    QAccessibleInterface *childInterface = QAccessible::queryAccessibleInterface(child);
-    if (!childInterface) {
-        qWarning("tst_QAccessibility::verifyChild: Failed to retrieve interface for child.");
-        return false;
-    }
-
-    // QAccessibleInterface::indexOfChild():
-    // Verify that indexOfChild() returns an index equal to the index passed in
-    int indexFromIndexOfChild = iface->indexOfChild(childInterface);
-    delete childInterface;
-    if (indexFromIndexOfChild != index) {
-        qWarning("tst_QAccessibility::verifyChild (indexOfChild()):");
-        qWarning() << "Expected:" << index;
-        qWarning() << "Actual:  " << indexFromIndexOfChild;
-        return false;
-    }
-
-    // Navigate to child, compare its object and role with the interface from queryAccessibleInterface(child).
-    QAccessibleInterface *navigatedChildInterface = iface->child(index - 1);
-    if (navigatedChildInterface == 0)
-        return false;
-
-    const QRect rectFromInterface = navigatedChildInterface->rect();
-    delete navigatedChildInterface;
-
-    // QAccessibleInterface::childAt():
-    // Calculate global child position and check that the interface
-    // returns the correct index for that position.
-    QPoint globalChildPos = child->mapToGlobal(QPoint(0, 0));
-    QAccessibleInterface *childAtInterface = iface->childAt(globalChildPos.x(), globalChildPos.y());
-    if (!childAtInterface) {
-        qWarning("tst_QAccessibility::verifyChild (childAt()):");
-        qWarning() << "Expected:" << childInterface;
-        qWarning() << "Actual:  no child";
-        return false;
-    }
-    if (childAtInterface->object() != childInterface->object()) {
-        qWarning("tst_QAccessibility::verifyChild (childAt()):");
-        qWarning() << "Expected:" << childInterface;
-        qWarning() << "Actual:  " << childAtInterface;
-        return false;
-    }
-    delete childInterface;
-    delete childAtInterface;
-
-    // Verify that the child is within its domain.
-    if (!domain.contains(rectFromInterface)) {
-        qWarning("tst_QAccessibility::verifyChild: Child is not within its domain.");
-        return false;
-    }
-
-    return true;
-}
-
-static inline int indexOfChild(QAccessibleInterface *parentInterface, QWidget *childWidget)
-{
-    if (!parentInterface || !childWidget)
-        return -1;
-    QAccessibleInterface *childInterface = QAccessible::queryAccessibleInterface(childWidget);
-    if (!childInterface)
-        return -1;
-    int index = parentInterface->indexOfChild(childInterface);
-    delete childInterface;
-    return index;
-}
 
 #define EXPECT(cond) \
     do { \
@@ -166,15 +84,6 @@ static int verifyHierarchy(QAccessibleInterface *iface)
         EXPECT(iface->object() == parent->object());
         delete parent;
 
-            // navigate Sibling...
-//            if (middleChild) {
-//                entry = if2->navigate(QAccessible::Sibling, middle, &if3);
-//                EXPECT(entry == 0 && if3->object() == middleChild->object());
-//                if (entry == 0)
-//                    delete if3;
-//                EXPECT(iface->indexOfChild(middleChild) == middle);
-//            }
-
         // verify children...
         if (!errorAt)
             errorAt = verifyHierarchy(if2);
@@ -189,12 +98,12 @@ static int verifyHierarchy(QAccessibleInterface *iface)
 
 //TESTED_FILES=
 
-class tst_QDeclarativeAccessibility : public QDeclarativeDataTest
+class tst_QQuickAccessible : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
-    tst_QDeclarativeAccessibility();
-    virtual ~tst_QDeclarativeAccessibility();
+    tst_QQuickAccessible();
+    virtual ~tst_QQuickAccessible();
 
 private slots:
     void commonTests_data();
@@ -206,17 +115,17 @@ private slots:
     void checkableTest();
 };
 
-tst_QDeclarativeAccessibility::tst_QDeclarativeAccessibility()
+tst_QQuickAccessible::tst_QQuickAccessible()
 {
 
 }
 
-tst_QDeclarativeAccessibility::~tst_QDeclarativeAccessibility()
+tst_QQuickAccessible::~tst_QQuickAccessible()
 {
 
 }
 
-void tst_QDeclarativeAccessibility::commonTests_data()
+void tst_QQuickAccessible::commonTests_data()
 {
     QTest::addColumn<QString>("accessibleRoleFileName");
 
@@ -224,7 +133,7 @@ void tst_QDeclarativeAccessibility::commonTests_data()
     QTest::newRow("PushButton") << SRCDIR "/data/pushbutton.qml";
 }
 
-void tst_QDeclarativeAccessibility::commonTests()
+void tst_QQuickAccessible::commonTests()
 {
     QFETCH(QString, accessibleRoleFileName);
 
@@ -288,17 +197,17 @@ QString eventName(const int ev)
     }
 }
 
-void tst_QDeclarativeAccessibility::declarativeAttachedProperties()
+void tst_QQuickAccessible::declarativeAttachedProperties()
 {
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent component(&engine);
-        component.setData("import QtQuick 1.1\nItem {\n"
+        component.setData("import QtQuick 2.0\nItem {\n"
                                 "}", QUrl());
         QObject *object = component.create();
         QVERIFY(object != 0);
 
-        QObject *attachedObject = QDeclarativeAccessibleAttached::attachedProperties(object);
+        QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object);
         QCOMPARE(attachedObject, static_cast<QObject*>(0));
         delete object;
     }
@@ -306,20 +215,20 @@ void tst_QDeclarativeAccessibility::declarativeAttachedProperties()
     // Attached property
     {
         QObject parent;
-        QDeclarativeAccessibleAttached *attachedObj = new QDeclarativeAccessibleAttached(&parent);
+        QQuickAccessibleAttached *attachedObj = new QQuickAccessibleAttached(&parent);
 
         attachedObj->name();
 
         QVariant pp = attachedObj->property("name");
         QDeclarativeEngine engine;
         QDeclarativeComponent component(&engine);
-        component.setData("import QtQuick 1.1\nItem {\n"
+        component.setData("import QtQuick 2.0\nItem {\n"
                                 "Accessible.role: Accessible.Button\n"
                                 "}", QUrl());
         QObject *object = component.create();
         QVERIFY(object != 0);
 
-        QObject *attachedObject = QDeclarativeAccessibleAttached::attachedProperties(object);
+        QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object);
         QVERIFY(attachedObject);
         if (attachedObject) {
             QVariant p = attachedObject->property("role");
@@ -337,7 +246,7 @@ void tst_QDeclarativeAccessibility::declarativeAttachedProperties()
     {
         QDeclarativeEngine engine;
         QDeclarativeComponent component(&engine);
-        component.setData("import QtQuick 1.1\nItem {\n"
+        component.setData("import QtQuick 2.0\nItem {\n"
                                 "Accessible.role: Accessible.Button\n"
                                 "Accessible.name: \"Donald\"\n"
                                 "Accessible.description: \"Duck\"\n"
@@ -345,7 +254,7 @@ void tst_QDeclarativeAccessibility::declarativeAttachedProperties()
         QObject *object = component.create();
         QVERIFY(object != 0);
 
-        QObject *attachedObject = QDeclarativeAccessibleAttached::attachedProperties(object);
+        QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object);
         QVERIFY(attachedObject);
         if (attachedObject) {
             QVariant p = attachedObject->property("role");
@@ -363,7 +272,7 @@ void tst_QDeclarativeAccessibility::declarativeAttachedProperties()
 }
 
 
-void tst_QDeclarativeAccessibility::basicPropertiesTest()
+void tst_QQuickAccessible::basicPropertiesTest()
 {
     QAI app = QAI(QAccessible::queryAccessibleInterface(qApp));
     QCOMPARE(app->childCount(), 0);
@@ -425,7 +334,7 @@ QAI topLevelChildAt(QAccessibleInterface *iface, int x, int y)
     return child;
 }
 
-void tst_QDeclarativeAccessibility::hitTest()
+void tst_QQuickAccessible::hitTest()
 {
     QQuickView *canvas = new QQuickView;
     canvas->setSource(testFileUrl("hittest.qml"));
@@ -471,7 +380,7 @@ void tst_QDeclarativeAccessibility::hitTest()
     delete canvas;
 }
 
-void tst_QDeclarativeAccessibility::checkableTest()
+void tst_QQuickAccessible::checkableTest()
 {
     QQuickView *canvas = new QQuickView();
     canvas->setSource(testFileUrl("checkbuttons.qml"));
@@ -496,6 +405,6 @@ void tst_QDeclarativeAccessibility::checkableTest()
     QVERIFY(!(checkBox2->state().checked));
 }
 
-QTEST_MAIN(tst_QDeclarativeAccessibility)
+QTEST_MAIN(tst_QQuickAccessible)
 
-#include "tst_qdeclarativeaccessibility.moc"
+#include "tst_qquickaccessible.moc"
