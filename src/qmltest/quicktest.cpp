@@ -379,7 +379,10 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
 
     saveCoverageTool(argv[0], QuickTestResult::exitCode());
 
-    delete app;
+    //Sometimes delete app cause crash here with some qpa plugins,
+    //so we comment the follow line out to make them happy.
+    //delete app;
+
     // Return the number of failures as the exit code.
     return QuickTestResult::exitCode();
 }
