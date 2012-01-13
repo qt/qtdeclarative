@@ -127,10 +127,14 @@ public:
         lastEvent = makeTouchData(QEvent::None, canvas(), 0, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
     }
 
+    static void clearMousePressCounter()
+    {
+        mousePressNum = 0;
+    }
+
     bool acceptEvents;
     TouchEventData lastEvent;
     int mousePressId;
-
 protected:
     virtual void touchEvent(QTouchEvent *event) {
         if (!acceptEvents) {
@@ -177,14 +181,24 @@ class tst_qquickcanvas : public QDeclarativeDataTest
 public:
 
 private slots:
+    void initTestCase()
+    {
+        QDeclarativeDataTest::initTestCase();
+        touchDevice = new QTouchDevice();
+        touchDevice->setType(QTouchDevice::TouchScreen);
+        QWindowSystemInterface::registerTouchDevice(touchDevice);
+    }
+
+
     void constantUpdates();
+    void mouseFiltering();
+    void headless();
 
     void touchEvent_basic();
     void touchEvent_propagation();
     void touchEvent_propagation_data();
 
     void clearCanvas();
-    void mouseFiltering();
 
     void qmlCreation();
     void clearColor();
@@ -194,7 +208,8 @@ private slots:
 
     void animationsWhileHidden();
 
-    void headless();
+private:
+    QTouchDevice *touchDevice;
 };
 
 //If the item calls update inside updatePaintNode, it should schedule another update
@@ -209,6 +224,8 @@ void tst_qquickcanvas::constantUpdates()
 
 void tst_qquickcanvas::touchEvent_basic()
 {
+    TestTouchItem::clearMousePressCounter();
+
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
     canvas->move(100, 100);
@@ -230,12 +247,8 @@ void tst_qquickcanvas::touchEvent_basic()
 
     QPointF pos(10, 10);
 
-    QTouchDevice *device = new QTouchDevice;
-    device->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(device);
-
     // press single point
-    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas);
+    QTest::touchEvent(canvas, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),canvas);
     QTest::qWait(50);
 
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
@@ -247,7 +260,7 @@ void tst_qquickcanvas::touchEvent_basic()
     topItem->reset();
 
     // press multiple points
-    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas)
+    QTest::touchEvent(canvas, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),canvas)
             .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
@@ -259,9 +272,9 @@ void tst_qquickcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // touch point on top item moves to bottom item, but top item should still receive the event
-    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas, device).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, touchDevice).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, canvas, Qt::TouchPointMoved,
@@ -269,9 +282,9 @@ void tst_qquickcanvas::touchEvent_basic()
     topItem->reset();
 
     // touch point on bottom item moves to top item, but bottom item should still receive the event
-    QTest::touchEvent(canvas, device).press(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, touchDevice).press(0, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas, device).move(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, touchDevice).move(0, topItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchUpdate, canvas, Qt::TouchPointMoved,
@@ -279,9 +292,9 @@ void tst_qquickcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // a single stationary press on an item shouldn't cause an event
-    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas, device).stationary(0)
+    QTest::touchEvent(canvas, touchDevice).stationary(0)
             .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);    // received press only, not stationary
@@ -293,9 +306,9 @@ void tst_qquickcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // move touch point from top item to bottom, and release
-    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas);
+    QTest::touchEvent(canvas, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas, device).release(0, bottomItem->mapToScene(pos).toPoint(),canvas);
+    QTest::touchEvent(canvas, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(),canvas);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchEnd, canvas, Qt::TouchPointReleased,
@@ -303,12 +316,12 @@ void tst_qquickcanvas::touchEvent_basic()
     topItem->reset();
 
     // release while another point is pressed
-    QTest::touchEvent(canvas, device).press(0, topItem->mapToScene(pos).toPoint(),canvas)
+    QTest::touchEvent(canvas, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),canvas)
             .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas, device).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::touchEvent(canvas, touchDevice).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
     QTest::qWait(50);
-    QTest::touchEvent(canvas, device).release(0, bottomItem->mapToScene(pos).toPoint(), canvas)
+    QTest::touchEvent(canvas, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(), canvas)
                              .stationary(1);
     QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
@@ -328,13 +341,11 @@ void tst_qquickcanvas::touchEvent_basic()
 
 void tst_qquickcanvas::touchEvent_propagation()
 {
+    TestTouchItem::clearMousePressCounter();
+
     QFETCH(bool, acceptEvents);
     QFETCH(bool, enableItem);
     QFETCH(qreal, itemOpacity);
-
-    QTouchDevice *device = new QTouchDevice;
-    device->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(device);
 
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
@@ -366,7 +377,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     topItem->setOpacity(itemOpacity);
 
     // single touch to top item, should be received by middle item
-    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas);
+    QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas);
     QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(middleItem->lastEvent.touchPoints.count(), 1);
@@ -375,7 +386,7 @@ void tst_qquickcanvas::touchEvent_propagation()
             makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))));
 
     // touch top and middle items, middle item should get both events
-    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas)
+    QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas)
             .press(1, pointInMiddleItem, canvas);
     QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
@@ -392,7 +403,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     middleItem->setOpacity(itemOpacity);
 
     // touch top and middle items, bottom item should get all events
-    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas)
+    QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas)
             .press(1, pointInMiddleItem, canvas);
     QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
@@ -409,7 +420,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     bottomItem->setOpacity(itemOpacity);
 
     // no events should be received
-    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas)
+    QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas)
             .press(1, pointInMiddleItem, canvas)
             .press(2, pointInBottomItem, canvas);
     QTest::qWait(50);
@@ -425,7 +436,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     middleItem->acceptEvents = acceptEvents;
     middleItem->setEnabled(enableItem);
     middleItem->setOpacity(itemOpacity);
-    QTest::touchEvent(canvas, device).press(0, pointInTopItem, canvas);
+    QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas);
     QTest::qWait(50);
     if (!enableItem || itemOpacity == 0) {
         // middle item is disabled or has 0 opacity, bottom item receives the event
@@ -477,6 +488,8 @@ void tst_qquickcanvas::clearCanvas()
 
 void tst_qquickcanvas::mouseFiltering()
 {
+    TestTouchItem::clearMousePressCounter();
+
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
     canvas->move(100, 100);
@@ -499,16 +512,15 @@ void tst_qquickcanvas::mouseFiltering()
     QPoint pos(100, 100);
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, pos);
-    QTest::qWait(50);
 
     // Mouse filtering propagates down the stack, so the
     // correct order is
     // 1. middleItem filters event
     // 2. bottomItem filters event
     // 3. topItem receives event
-    QCOMPARE(middleItem->mousePressId, 1);
-    QCOMPARE(bottomItem->mousePressId, 2);
-    QCOMPARE(topItem->mousePressId, 3);
+    QTRY_COMPARE(middleItem->mousePressId, 1);
+    QTRY_COMPARE(bottomItem->mousePressId, 2);
+    QTRY_COMPARE(topItem->mousePressId, 3);
 
     delete canvas;
 }
