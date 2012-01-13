@@ -200,6 +200,7 @@ public:
     float autoRotate;//Assume that GPUs prefer floats to bools
     float animIdx;
     float frameDuration;
+    float frameAt;//Used for duration -1
     float frameCount;
     float animT;
     float animX;

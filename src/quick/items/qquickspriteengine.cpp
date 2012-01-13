@@ -339,67 +339,73 @@ void QQuickStochasticEngine::restart(int index)
     int time = m_duration[index] * m_states[m_things[index]]->frames() + m_startTimes[index];
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
-    addToUpdateList(time, index);
+    if (m_duration[index] > 0)
+        addToUpdateList(time, index);
+}
+
+// Doesn't remove from update list. If you want to cancel pending timed updates, call restart() first.
+// Usually sprites are either manually advanced or in the list, and mixing is not recommended anyways.
+void QQuickStochasticEngine::advance(int idx)
+{
+    if (idx >= m_things.count())
+        return;//TODO: Proper fix(because this has happened and I just ignored it)
+    int stateIdx = m_things[idx];
+    int nextIdx = nextState(stateIdx,idx);
+    m_things[idx] = nextIdx;
+    m_duration[idx] = m_states[nextIdx]->variedDuration();
+    m_startTimes[idx] = m_timeOffset;//This will be the last time updateSprites was called
+    emit m_states[nextIdx]->entered();
+    emit stateChanged(idx); //TODO: emit this when a psuedostate changes too(but manually in SpriteEngine)
+    if (m_duration[idx] >= 0)
+        addToUpdateList((m_duration[idx] * m_states[nextIdx]->frames()) + m_startTimes[idx], idx);
+}
+
+int QQuickStochasticEngine::nextState(int curState, int curThing)
+{
+    int nextIdx = -1;
+    int goalPath = goalSeek(curState, curThing);
+    if (goalPath == -1){//Random
+        qreal r =(qreal) qrand() / (qreal) RAND_MAX;
+        qreal total = 0.0;
+        for (QVariantMap::const_iterator iter=m_states[curState]->m_to.constBegin();
+            iter!=m_states[curState]->m_to.constEnd(); iter++)
+            total += (*iter).toReal();
+        r*=total;
+        for (QVariantMap::const_iterator iter= m_states[curState]->m_to.constBegin();
+                iter!=m_states[curState]->m_to.constEnd(); iter++){
+            if (r < (*iter).toReal()){
+                bool superBreak = false;
+                for (int i=0; i<m_states.count(); i++){
+                    if (m_states[i]->name() == iter.key()){
+                        nextIdx = i;
+                        superBreak = true;
+                        break;
+                    }
+                }
+                if (superBreak)
+                    break;
+            }
+            r -= (*iter).toReal();
+        }
+    }else{//Random out of shortest paths to goal
+        nextIdx = goalPath;
+    }
+    if (nextIdx == -1)//No 'to' states means stay here
+        nextIdx = curState;
+    return nextIdx;
 }
 
 uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a list of changed idxs be faster than signals?
 {
     //Sprite State Update;
-    QSet<int> changedIndexes;
+    m_timeOffset = time;
     while (!m_stateUpdates.isEmpty() && time >= m_stateUpdates.first().first){
-        foreach (int idx, m_stateUpdates.first().second){
-            if (idx >= m_things.count())
-                continue;//TODO: Proper fix(because this does happen and I'm just ignoring it)
-            int stateIdx = m_things[idx];
-            int nextIdx = -1;
-            int goalPath = goalSeek(stateIdx, idx);
-            if (goalPath == -1){//Random
-                qreal r =(qreal) qrand() / (qreal) RAND_MAX;
-                qreal total = 0.0;
-                for (QVariantMap::const_iterator iter=m_states[stateIdx]->m_to.constBegin();
-                    iter!=m_states[stateIdx]->m_to.constEnd(); iter++)
-                    total += (*iter).toReal();
-                r*=total;
-                for (QVariantMap::const_iterator iter= m_states[stateIdx]->m_to.constBegin();
-                        iter!=m_states[stateIdx]->m_to.constEnd(); iter++){
-                    if (r < (*iter).toReal()){
-                        bool superBreak = false;
-                        for (int i=0; i<m_states.count(); i++){
-                            if (m_states[i]->name() == iter.key()){
-                                nextIdx = i;
-                                superBreak = true;
-                                break;
-                            }
-                        }
-                        if (superBreak)
-                            break;
-                    }
-                    r -= (*iter).toReal();
-                }
-            }else{//Random out of shortest paths to goal
-                nextIdx = goalPath;
-            }
-            if (nextIdx == -1)//No to states means stay here
-                nextIdx = stateIdx;
-
-            m_things[idx] = nextIdx;
-            m_duration[idx] = m_states[nextIdx]->variedDuration();
-            m_startTimes[idx] = time;
-            if (nextIdx != stateIdx){
-                changedIndexes << idx;
-                emit m_states[nextIdx]->entered();
-            }
-            addToUpdateList((m_duration[idx] * m_states[nextIdx]->frames()) + time, idx);
-        }
+        foreach (int idx, m_stateUpdates.first().second)
+            advance(idx);
         m_stateUpdates.pop_front();
     }
 
-    m_timeOffset = time;
     m_advanceTime.start();
-    //TODO: emit this when a psuedostate changes too
-    foreach (int idx, changedIndexes){//Batched so that update list doesn't change midway
-        emit stateChanged(idx);
-    }
     if (m_stateUpdates.isEmpty())
         return -1;
     return m_stateUpdates.first().first;

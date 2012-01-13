@@ -420,6 +420,7 @@ QQuickParticleData::QQuickParticleData(QQuickParticleSystem* sys)
     autoRotate = 0;
     animIdx = 0;
     frameDuration = 1;
+    frameAt = -1;
     frameCount = 1;
     animT = -1;
     animX = 0;

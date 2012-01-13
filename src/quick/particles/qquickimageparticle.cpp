@@ -53,6 +53,7 @@
 #include <QtQuick/qsgengine.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qdeclarativeglobal_p.h>
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -82,9 +83,8 @@ static const char vertexShaderCode[] =
     "attribute highp vec3 vRotation; //x = radians of rotation, y=rotation speed, z= bool autoRotate\n"
     "#endif\n"
     "#if defined(SPRITE)\n"
-    "attribute highp vec4 vAnimData;// interpolate(bool), duration, frameCount (this anim), timestamp (this anim)\n"
-    "attribute highp vec4 vAnimPos;//sheet x,y, width/height of this anim\n"
-    "uniform highp vec2 animSheetSize; //width/height of whole sheet\n"
+    "attribute highp vec3 vAnimData;// w,h(premultiplied of anim), interpolation progress\n"
+    "attribute highp vec4 vAnimPos;//x,y, x,y (two frames for interpolation)\n"
     "#endif\n"
     "\n"
     "uniform highp mat4 qt_Matrix;\n"
@@ -117,18 +117,12 @@ static const char vertexShaderCode[] =
     "#endif\n"
     "    } else {\n"
     "#if defined(SPRITE)\n"
+    "        tt.y = vAnimData.z;\n"
     "        //Calculate frame location in texture\n"
-    "        highp float frameIndex = mod((((timestamp - vAnimData.w)*1000.)/vAnimData.y),vAnimData.z);\n"
-    "        tt.y = mod((timestamp - vAnimData.w)*1000., vAnimData.y) / vAnimData.y;\n"
-    "\n"
-    "        frameIndex = floor(frameIndex);\n"
-    "        fTexS.xy = vec2(((frameIndex + vPosTex.z) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vPosTex.w * vAnimPos.w) / animSheetSize.y));\n"
-    "\n"
+    "        fTexS.xy = vAnimPos.xy + vPosTex.zw * vAnimData.xy;\n"
     "        //Next frame is also passed, for interpolation\n"
-    "        //### Should the next anim be precalculated to allow for interpolation there?\n"
-    "        if (vAnimData.x == 1.0 && frameIndex != vAnimData.z - 1.)//Can't do it for the last frame though, this anim may not loop\n"
-    "            frameIndex = mod(frameIndex+1., vAnimData.z);\n"
-    "        fTexS.zw = vec2(((frameIndex + vPosTex.z) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vPosTex.w * vAnimPos.w) / animSheetSize.y));\n"
+    "        fTexS.zw = vAnimPos.zw + vPosTex.zw * vAnimData.xy;\n"
+    "\n"
     "#elif defined(DEFORM)\n"
     "        fTex = vPosTex.zw;\n"
     "#endif\n"
@@ -413,8 +407,8 @@ public:
         program()->setUniformValue("texture", 0);
         program()->setUniformValue("colortable", 1);
         glFuncs = QOpenGLContext::currentContext()->functions();
+        //Don't actually expose the animSheetSize in the shader, it's currently only used for CPU calculations.
         m_timestamp_id = program()->uniformLocation("timestamp");
-        m_animsize_id = program()->uniformLocation("animSheetSize");
         m_entry_id = program()->uniformLocation("entry");
         m_sizetable_id = program()->uniformLocation("sizetable");
         m_opacitytable_id = program()->uniformLocation("opacitytable");
@@ -429,14 +423,12 @@ public:
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue(m_animsize_id, d->animSheetSize);
         program()->setUniformValue(m_entry_id, (float) d->entry);
         program()->setUniformValueArray(m_sizetable_id, (float*) d->sizeTable, 64, 1);
         program()->setUniformValueArray(m_opacitytable_id, (float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
     int m_timestamp_id;
-    int m_animsize_id;
     int m_entry_id;
     int m_sizetable_id;
     int m_opacitytable_id;
@@ -1171,14 +1163,14 @@ static QSGGeometry::Attribute SpriteParticle_Attributes[] = {
     QSGGeometry::Attribute::create(3, 4, GL_UNSIGNED_BYTE),     // Colors
     QSGGeometry::Attribute::create(4, 4, GL_FLOAT),             // DeformationVectors
     QSGGeometry::Attribute::create(5, 3, GL_FLOAT),             // Rotation
-    QSGGeometry::Attribute::create(6, 4, GL_FLOAT),             // Anim Data
+    QSGGeometry::Attribute::create(6, 3, GL_FLOAT),             // Anim Data
     QSGGeometry::Attribute::create(7, 4, GL_FLOAT)              // Anim Pos
 };
 
 static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 {
     8, // Attribute Count
-    (4 + 4 + 4 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
+    (4 + 4 + 4 + 4 + 3 + 3 + 4) * sizeof(float) + 4 * sizeof(uchar),
     SpriteParticle_Attributes
 };
 
@@ -1386,8 +1378,10 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
                 indices += 6;
             }
         }
-
     }
+
+    if (perfLevel == Sprites)
+        spritesUpdate();//Gives all vertexes the initial sprite data, then maintained per frame
 
     foreach (QSGGeometryNode* node, m_nodes){
         if (node == *(m_nodes.begin()))
@@ -1454,7 +1448,8 @@ void QQuickImageParticle::prepareNextFrame()
     case Sprites:
         //Advance State
         if (m_spriteEngine)
-            m_spriteEngine->updateSprites(timeStamp);
+            m_spriteEngine->updateSprites(timeStamp);//fires signals if anim changed
+        spritesUpdate(time);
     case Tabled:
     case Deformable:
     case Colored:
@@ -1465,6 +1460,65 @@ void QQuickImageParticle::prepareNextFrame()
     }
     foreach (QSGGeometryNode* node, m_nodes)
         node->markDirty(QSGNode::DirtyMaterial);
+}
+
+void QQuickImageParticle::spritesUpdate(qreal time)
+{
+    // Sprite progression handled CPU side, so as to have per-frame control.
+    foreach (const QString &str, m_groups) {
+        int gIdx = m_system->groupIds[str];
+        foreach (QQuickParticleData* mainDatum, m_system->groupData[gIdx]->data) {
+            QSGGeometryNode *node = m_nodes[gIdx];
+            if (!node)
+                continue;
+            //TODO: Interpolate between two different animations if it's going to transition next frame
+            //      This is particularly important for cut-up sprites.
+            QQuickParticleData* datum = (mainDatum->animationOwner == this ? mainDatum : getShadowDatum(mainDatum));
+            double frameAt;
+            qreal progress;
+            if (datum->frameDuration > 0) {
+                qreal frame = (time - datum->animT)/(datum->frameDuration / 1000.0);
+                frame = qBound(0.0, frame, (qreal)datum->frameCount - 1.0);//Stop at count-1 frames until we have between anim interpolation
+                progress = modf(frame,&frameAt);
+            } else {
+                datum->frameAt++;
+                if (datum->frameAt >= datum->frameCount){
+                    datum->frameAt = 0;
+                    for (int i = 0; i<m_startsIdx.count(); i++) {
+                        if (m_startsIdx[i].second == gIdx){
+                            m_spriteEngine->advance(m_startsIdx[i].first + datum->index);
+                            break;
+                        }
+                    }
+                }
+                frameAt = datum->frameAt;
+                progress = 0;
+            }
+            QSizeF sheetSize = getState<ImageMaterialData>(m_material)->animSheetSize;
+            qreal y = datum->animY / sheetSize.height();
+            qreal w = datum->animWidth / sheetSize.width();
+            qreal h = datum->animHeight / sheetSize.height();
+            qreal x1 = datum->animX / sheetSize.width();
+            x1 += frameAt * w;
+            qreal x2 = x1;
+            if (frameAt < (datum->frameCount-1))
+                x2 += w;
+
+            node->setFlag(QSGNode::OwnsGeometry, false);
+            SpriteVertex *spriteVertices = (SpriteVertex *) node->geometry()->vertexData();
+            spriteVertices += datum->index*4;
+            for (int i=0; i<4; i++) {
+                spriteVertices[i].animX1 = x1;
+                spriteVertices[i].animY1 = y;
+                spriteVertices[i].animX2 = x2;
+                spriteVertices[i].animY2 = y;
+                spriteVertices[i].animW = w;
+                spriteVertices[i].animH = h;
+                spriteVertices[i].animProgress = progress;
+            }
+            node->setFlag(QSGNode::OwnsGeometry, true);
+        }
+    }
 }
 
 void QQuickImageParticle::spriteAdvance(int spriteIdx)
@@ -1484,19 +1538,17 @@ void QQuickImageParticle::spriteAdvance(int spriteIdx)
         gIdx = m_startsIdx[i-1].second;
     int pIdx = spriteIdx - m_startsIdx[i-1].first;
 
-    QQuickParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
-    QQuickParticleData* d = (datum->animationOwner == this ? datum : getShadowDatum(datum));
+    QQuickParticleData* mainDatum = m_system->groupData[gIdx]->data[pIdx];
+    QQuickParticleData* datum = (mainDatum->animationOwner == this ? mainDatum : getShadowDatum(mainDatum));
 
-    d->animIdx = m_spriteEngine->spriteState(spriteIdx);
-    Vertices<SpriteVertex>* particles = (Vertices<SpriteVertex> *) m_nodes[gIdx]->geometry()->vertexData();
-    Vertices<SpriteVertex> &p = particles[pIdx];
-    d->animT = p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
-    d->frameCount = p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(spriteIdx);
-    d->frameDuration = p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
-    d->animX = p.v1.animX = p.v2.animX = p.v3.animX = p.v4.animX = m_spriteEngine->spriteX(spriteIdx);
-    d->animY = p.v1.animY = p.v2.animY = p.v3.animY = p.v4.animY = m_spriteEngine->spriteY(spriteIdx);
-    d->animWidth = p.v1.animWidth = p.v2.animWidth = p.v3.animWidth = p.v4.animWidth = m_spriteEngine->spriteWidth(spriteIdx);
-    d->animHeight = p.v1.animHeight = p.v2.animHeight = p.v3.animHeight = p.v4.animHeight = m_spriteEngine->spriteHeight(spriteIdx);
+    datum->animIdx = m_spriteEngine->spriteState(spriteIdx);
+    datum->animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
+    datum->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
+    datum->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+    datum->animX = m_spriteEngine->spriteX(spriteIdx);
+    datum->animY = m_spriteEngine->spriteY(spriteIdx);
+    datum->animWidth = m_spriteEngine->spriteWidth(spriteIdx);
+    datum->animHeight = m_spriteEngine->spriteHeight(spriteIdx);
 }
 
 void QQuickImageParticle::reloadColor(const Color4ub &c, QQuickParticleData* d)
@@ -1536,6 +1588,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                     writeTo->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
                     writeTo->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
                     writeTo->animIdx = 0;//Always starts at 0
+                    writeTo->frameAt = -1;
                     writeTo->animX = m_spriteEngine->spriteX(spriteIdx);
                     writeTo->animY = m_spriteEngine->spriteY(spriteIdx);
                     writeTo->animWidth = m_spriteEngine->spriteWidth(spriteIdx);
@@ -1546,6 +1599,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 writeTo->animT = datum->t;
                 writeTo->frameCount = 1;
                 writeTo->frameDuration = 60000000.0;
+                writeTo->frameAt = -1;
                 writeTo->animIdx = 0;
                 writeTo->animT = 0;
                 writeTo->animX = writeTo->animY = 0;
@@ -1667,25 +1721,7 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
                 spriteVertices[i].rotationSpeed = datum->rotationSpeed;
                 spriteVertices[i].autoRotate = datum->autoRotate;
             }
-            spriteVertices[i].animInterpolate = m_spriteEngine ? (m_spritesInterpolate ? 1.0 : 0.0) : 0.0;//### Shadow? In particleData? Or uniform?
-            if (!m_spriteEngine || (m_explicitAnimation && datum->animationOwner != this)) {
-                QQuickParticleData* shadow = getShadowDatum(datum);
-                spriteVertices[i].frameDuration = shadow->frameDuration;
-                spriteVertices[i].frameCount = shadow->frameCount;
-                spriteVertices[i].animT = shadow->animT;
-                spriteVertices[i].animX = shadow->animX;
-                spriteVertices[i].animY = shadow->animY;
-                spriteVertices[i].animWidth = shadow->animWidth;
-                spriteVertices[i].animHeight = shadow->animHeight;
-            } else {
-                spriteVertices[i].frameDuration = datum->frameDuration;
-                spriteVertices[i].frameCount = datum->frameCount;
-                spriteVertices[i].animT = datum->animT;
-                spriteVertices[i].animX = datum->animX;
-                spriteVertices[i].animY = datum->animY;
-                spriteVertices[i].animWidth = datum->animWidth;
-                spriteVertices[i].animHeight = datum->animHeight;
-            }
+            //Sprite-related vertices updated per-frame in spritesUpdate(), not on demand
             if (m_explicitColor && datum->colorOwner != this) {
                 QQuickParticleData* shadow = getShadowDatum(datum);
                 spriteVertices[i].color.r = shadow->color.r;

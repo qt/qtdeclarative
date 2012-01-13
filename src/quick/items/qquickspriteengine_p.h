@@ -102,9 +102,9 @@ public:
 
     int variedDuration() const
     {
-        return m_duration
+        return qMax(qreal(0.0) , m_duration
                 + (m_durationVariance * ((qreal)qrand()/RAND_MAX) * 2)
-                - m_durationVariance;
+                - m_durationVariance);
     }
 
     int frames() const
@@ -212,6 +212,7 @@ public:
 
     void setGoal(int state, int sprite=0, bool jump=false);
     void start(int index=0, int state=0);
+    void advance(int index=0);//Sends state to the next chosen state, unlike goal.
     void stop(int index=0);
     int curState(int index=0) {return m_things[index];}
 
@@ -246,6 +247,7 @@ protected:
     friend class QQuickParticleSystem;
     void restart(int index);
     void addToUpdateList(uint t, int idx);
+    int nextState(int curState, int idx=0);
     int goalSeek(int curState, int idx, int dist=-1);
     QList<QQuickStochasticState*> m_states;
     //### Consider struct or class for the four data variables?

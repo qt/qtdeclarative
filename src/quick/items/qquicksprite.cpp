@@ -53,12 +53,13 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick2::Sprite::duration
 
-    Time between frames.
+    Time between frames. Use -1 to indicate one sprite frame per rendered frame.
 */
 /*!
     \qmlproperty int QtQuick2::Sprite::durationVariation
 
-    The time between frames can vary by up to this amount.
+    The time between frames can vary by up to this amount. Variation will never decrease the time
+    between frames to less than 0.
 
     Default is 0.
 */
@@ -105,17 +106,6 @@ QT_BEGIN_NAMESPACE
     If frameHeight and frameWidth are not specified, it is assumed to be a single long row of square frames.
     Otherwise, it can be multiple contiguous rows or rectangluar frames, when one row runs out the next will be used.
 */
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(int durationVariation READ durationVariance WRITE setDurationVariance NOTIFY durationVarianceChanged)
-    Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(qreal speedModifiesDuration READ speedModifer WRITE setSpeedModifier NOTIFY speedModifierChanged)
-    Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    //If frame height or width is not specified, it is assumed to be a single long row of square frames.
-    //Otherwise, it can be multiple contiguous rows, when one row runs out the next will be used.
-    Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged)
-    Q_PROPERTY(int frameWidth READ frameWidth WRITE setFrameWidth NOTIFY frameWidthChanged)
 
 QQuickSprite::QQuickSprite(QObject *parent) :
     QQuickStochasticState(parent)
