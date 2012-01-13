@@ -242,12 +242,12 @@ void QV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::Write
 
 void QV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
-    QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
+    QString bindingUrl;
     if (parent->context())
-        QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding,
-                                              parent->context()->url, line, column);
+        bindingUrl = parent->context()->url.toString();
+
+    QDeclarativeBindingProfiler prof(bindingUrl, line, column);
     parent->run(this, flags);
-    QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
 }
 
 void QV4Bindings::Binding::destroy()

@@ -49,6 +49,7 @@
 #include <private/qdeclarativeexpression_p.h>
 #include <private/qobject_p.h>
 #include <private/qdeclarativetrace_p.h>
+#include <private/qdeclarativedebugtrace_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -86,6 +87,7 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         return;
 
     if (!updating) {
+        QDeclarativeBindingProfiler prof(parent->url.toString(), line, column);
         updating = true;
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context->engine);
 

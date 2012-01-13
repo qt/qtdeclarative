@@ -83,6 +83,14 @@ Q_DECLARE_TYPEINFO(QDeclarativeDebugData, Q_MOVABLE_TYPE);
 class QUrl;
 class QDeclarativeEngine;
 
+// RAII
+class Q_AUTOTEST_EXPORT QDeclarativeBindingProfiler {
+public:
+    QDeclarativeBindingProfiler(const QString &url, int line, int column);
+    ~QDeclarativeBindingProfiler();
+    void addDetail(const QString &details);
+};
+
 class Q_DECLARATIVE_EXPORT QDeclarativeDebugTrace : public QDeclarativeDebugService
 {
 public:

@@ -332,22 +332,6 @@ QDeclarativeBinding::EvaluateFlags QDeclarativeBinding::evaluateFlags() const
     return d->requiresThisObject()?RequiresThisObject:None;
 }
 
-
-class QDeclarativeBindingProfiler {
-public:
-    QDeclarativeBindingProfiler(QDeclarativeBinding *bind)
-    {
-        QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
-        QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Binding, bind->expression());
-        QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding, bind->sourceFile(), bind->lineNumber(), bind->columnNumber());
-    }
-
-    ~QDeclarativeBindingProfiler()
-    {
-        QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
-    }
-};
-
 void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     Q_D(QDeclarativeBinding);
@@ -361,7 +345,8 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     trace.addDetail("Column", d->columnNumber);
 
     if (!d->updating) {
-        QDeclarativeBindingProfiler prof(this);
+        QDeclarativeBindingProfiler prof(d->url, d->line, d->column);
+        prof.addDetail(expression());
         d->updating = true;
 
         QDeleteWatcher watcher(d);

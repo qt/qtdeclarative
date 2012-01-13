@@ -54,6 +54,22 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QDeclarativeDebugTrace, traceInstance)
 
+QDeclarativeBindingProfiler::QDeclarativeBindingProfiler(const QString &url, int line, int column)
+{
+    QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
+    QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding, url, line, column);
+}
+
+QDeclarativeBindingProfiler::~QDeclarativeBindingProfiler()
+{
+    QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
+}
+
+void QDeclarativeBindingProfiler::addDetail(const QString &details)
+{
+    QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Binding, details);
+}
+
 // convert to a QByteArray that can be sent to the debug client
 // use of QDataStream can skew results
 //     (see tst_qdeclarativedebugtrace::trace() benchmark)
