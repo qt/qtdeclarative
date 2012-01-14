@@ -59,6 +59,7 @@
 #include <QXmlStreamReader>
 #include <QBuffer>
 #include <QNetworkReply>
+#include <QNetworkCookie>
 #include <QNetworkCookieJar>
 #include <QNetworkDiskCache>
 #include <QNetworkAccessManager>
