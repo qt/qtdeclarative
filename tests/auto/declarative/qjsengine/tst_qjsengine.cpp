@@ -235,7 +235,6 @@ private slots:
 #endif
     void jsContinueInSwitch();
     void jsShadowReadOnlyPrototypeProperty();
-    void toObject();
     void jsReservedWords_data();
     void jsReservedWords();
     void jsFutureReservedWords_data();
@@ -4366,7 +4365,7 @@ void tst_QJSEngine::stringObjects()
     QString str("ciao");
     // in C++
     {
-        QJSValue obj = QJSValue(&eng, str).toObject();
+        QJSValue obj = eng.evaluate(QString::fromLatin1("new String('%0')").arg(str));
         QCOMPARE(obj.property("length").toInt(), str.length());
         QCOMPARE(obj.propertyFlags("length"), QJSValue::PropertyFlags(QJSValue::Undeletable | QJSValue::SkipInEnumeration | QJSValue::ReadOnly));
         for (int i = 0; i < str.length(); ++i) {
@@ -4390,7 +4389,6 @@ void tst_QJSEngine::stringObjects()
         QVERIFY(obj.property("100").strictlyEquals(val));
     }
 
-    // in script
     {
         QJSValue ret = eng.evaluate("s = new String('ciao'); r = []; for (var p in s) r.push(p); r");
         QVERIFY(ret.isArray());
@@ -4675,85 +4673,6 @@ void tst_QJSEngine::jsShadowReadOnlyPrototypeProperty()
     QVERIFY(eng.evaluate("o = {}; o.__proto__ = parseInt; o.length").isNumber());
     QCOMPARE(eng.evaluate("o.length = 123; o.length").toInt(), 123);
     QVERIFY(eng.evaluate("o.hasOwnProperty('length')").toBool());
-}
-
-void tst_QJSEngine::toObject()
-{
-    QJSEngine eng;
-
-    QVERIFY(!eng.toObject(eng.undefinedValue()).isValid());
-
-    QVERIFY(!eng.toObject(eng.nullValue()).isValid());
-
-    QJSValue falskt(false);
-    {
-        QJSValue tmp = eng.toObject(falskt);
-        QVERIFY(tmp.isObject());
-        QCOMPARE(tmp.toNumber(), falskt.toNumber());
-    }
-    QVERIFY(falskt.isBool());
-
-    QJSValue sant(true);
-    {
-        QJSValue tmp = eng.toObject(sant);
-        QVERIFY(tmp.isObject());
-        QCOMPARE(tmp.toNumber(), sant.toNumber());
-    }
-    QVERIFY(sant.isBool());
-
-    QJSValue number(123.0);
-    {
-        QJSValue tmp = eng.toObject(number);
-        QVERIFY(tmp.isObject());
-        QCOMPARE(tmp.toNumber(), number.toNumber());
-    }
-    QVERIFY(number.isNumber());
-
-    QJSValue str = QJSValue(&eng, QString("ciao"));
-    {
-        QJSValue tmp = eng.toObject(str);
-        QVERIFY(tmp.isObject());
-        QCOMPARE(tmp.toString(), str.toString());
-    }
-    QVERIFY(str.isString());
-
-    QJSValue object = eng.newObject();
-    {
-        QJSValue tmp = eng.toObject(object);
-        QVERIFY(tmp.isObject());
-        QVERIFY(tmp.strictlyEquals(object));
-    }
-
-    QJSValue qobject = eng.newQObject(this);
-    QVERIFY(eng.toObject(qobject).strictlyEquals(qobject));
-
-    QVERIFY(!eng.toObject(QJSValue()).isValid());
-
-    // v1 constructors
-
-    QJSValue boolValue(&eng, true);
-    {
-        QJSValue ret = eng.toObject(boolValue);
-        QVERIFY(ret.isObject());
-        QCOMPARE(ret.toBool(), boolValue.toBool());
-    }
-    QVERIFY(boolValue.isBool());
-
-    QJSValue numberValue(&eng, 123.0);
-    {
-        QJSValue ret = eng.toObject(numberValue);
-        QVERIFY(ret.isObject());
-        QCOMPARE(ret.toNumber(), numberValue.toNumber());
-    }
-    QVERIFY(numberValue.isNumber());
-
-    QJSValue stringValue(&eng, QString::fromLatin1("foo"));
-    {
-        QJSValue ret = eng.toObject(stringValue);
-        QVERIFY(ret.isObject());
-        QCOMPARE(ret.toString(), stringValue.toString());
-    }
-    QVERIFY(stringValue.isString());
 }
 
 void tst_QJSEngine::jsReservedWords_data()

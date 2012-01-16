@@ -101,8 +101,6 @@ public:
     QT_DEPRECATED QJSValue newRegExp(const QString &pattern, const QString &flags);
     QT_DEPRECATED QJSValue newDate(double value);
     QT_DEPRECATED QJSValue newDate(const QDateTime &value);
-
-    QT_DEPRECATED QJSValue toObject(const QJSValue &value);
 #endif
 
 Q_SIGNALS:

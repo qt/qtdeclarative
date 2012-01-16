@@ -461,7 +461,7 @@ bool QJSValue::isArray() const
   Note that function values, variant values, and QObject values are
   objects, so this function returns true for such values.
 
-  \sa toObject(), QJSEngine::newObject()
+  \sa QJSEngine::newObject()
 */
 bool QJSValue::isObject() const
 {
@@ -675,18 +675,6 @@ quint16 QJSValue::toUInt16() const
     Q_D(const QJSValue);
     QScriptIsolate api(d->engine());
     return d->toUInt16();
-}
-
-/*!
-  \obsolete
-
-  This function is obsolete; use QJSEngine::toObject() instead.
-*/
-QJSValue QJSValue::toObject() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->toObject());
 }
 
 #endif // QT_DEPRECATED

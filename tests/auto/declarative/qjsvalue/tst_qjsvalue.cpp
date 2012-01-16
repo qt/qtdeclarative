@@ -1437,114 +1437,6 @@ void tst_QJSValue::toQObject()
     QCOMPARE(qjsvalue_cast<QPushButton*>(variant3), &button);
 }
 
-void tst_QJSValue::toObject()
-{
-    QJSEngine eng;
-
-    QJSValue undefined = eng.undefinedValue();
-    QCOMPARE(undefined.toObject().isValid(), false);
-    QVERIFY(undefined.isUndefined());
-
-    QJSValue null = eng.nullValue();
-    QCOMPARE(null.toObject().isValid(), false);
-    QVERIFY(null.isNull());
-
-    {
-        QJSValue falskt = QJSValue(&eng, false);
-        {
-            QJSValue tmp = falskt.toObject();
-            QCOMPARE(tmp.isObject(), true);
-            QCOMPARE(tmp.toNumber(), falskt.toNumber());
-        }
-        QVERIFY(falskt.isBool());
-
-        QJSValue sant = QJSValue(&eng, true);
-        {
-            QJSValue tmp = sant.toObject();
-            QCOMPARE(tmp.isObject(), true);
-            QCOMPARE(tmp.toNumber(), sant.toNumber());
-        }
-        QVERIFY(sant.isBool());
-
-        QJSValue number = QJSValue(&eng, 123.0);
-        {
-            QJSValue tmp = number.toObject();
-            QCOMPARE(tmp.isObject(), true);
-            QCOMPARE(tmp.toNumber(), number.toNumber());
-        }
-        QVERIFY(number.isNumber());
-
-        QJSValue str = QJSValue(&eng, QString("ciao"));
-        {
-            QJSValue tmp = str.toObject();
-            QCOMPARE(tmp.isObject(), true);
-            QCOMPARE(tmp.toString(), str.toString());
-        }
-        QVERIFY(str.isString());
-    }
-
-    QJSValue object = eng.newObject();
-    {
-        QJSValue tmp = object.toObject();
-        QCOMPARE(tmp.isObject(), true);
-    }
-
-    QJSValue qobject = eng.newQObject(this);
-    QCOMPARE(qobject.toObject().isValid(), true);
-
-    QJSValue inv;
-    QCOMPARE(inv.toObject().isValid(), false);
-
-    // V2 constructors: in this case, you have to use QScriptEngine::toObject()
-    {
-        QJSValue undefined = QJSValue(QJSValue::UndefinedValue);
-        QVERIFY(!undefined.toObject().isValid());
-        QVERIFY(!eng.toObject(undefined).isValid());
-        QVERIFY(undefined.isUndefined());
-
-        QJSValue null = QJSValue(QJSValue::NullValue);
-        QVERIFY(!null.toObject().isValid());
-        QVERIFY(!eng.toObject(null).isValid());
-        QVERIFY(null.isNull());
-
-        QJSValue falskt = QJSValue(false);
-        QVERIFY(!falskt.toObject().isValid());
-        {
-            QJSValue tmp = eng.toObject(falskt);
-            QVERIFY(tmp.isObject());
-            QVERIFY(tmp.toBool());
-        }
-        QVERIFY(falskt.isBool());
-
-        QJSValue sant = QJSValue(true);
-        QVERIFY(!sant.toObject().isValid());
-        {
-            QJSValue tmp = eng.toObject(sant);
-            QVERIFY(tmp.isObject());
-            QVERIFY(tmp.toBool());
-        }
-        QVERIFY(sant.isBool());
-
-        QJSValue number = QJSValue(123.0);
-        QVERIFY(!number.toObject().isValid());
-        {
-            QJSValue tmp = eng.toObject(number);
-            QVERIFY(tmp.isObject());
-            QCOMPARE(tmp.toInt(), number.toInt());
-        }
-        QVERIFY(number.isNumber());
-
-        QJSValue str = QJSValue(QString::fromLatin1("ciao"));
-        QVERIFY(!str.toObject().isValid());
-        {
-            QJSValue tmp = eng.toObject(str);
-            QVERIFY(tmp.isObject());
-            QCOMPARE(tmp.toString(), QString::fromLatin1("ciao"));
-        }
-        QVERIFY(str.isString());
-    }
-}
-
 void tst_QJSValue::toDateTime()
 {
     QJSEngine eng;
@@ -2851,7 +2743,7 @@ void tst_QJSValue::call_this()
     QJSValue fun = eng.evaluate("(function() { return this; })");
     QCOMPARE(fun.isCallable(), true);
 
-    QJSValue numberObject = QJSValue(&eng, 123.0).toObject();
+    QJSValue numberObject = eng.evaluate("new Number(123)");
     QJSValue result = fun.callWithInstance(numberObject);
     QCOMPARE(result.isObject(), true);
     QCOMPARE(result.toNumber(), 123.0);
@@ -3445,11 +3337,11 @@ void tst_QJSValue::equals()
     QCOMPARE(num.equals(QJSValue(&eng, 321)), false);
     QCOMPARE(num.equals(QJSValue(&eng, QLatin1String("123"))), true);
     QCOMPARE(num.equals(QJSValue(&eng, QLatin1String("321"))), false);
-    QCOMPARE(num.equals(QJSValue(&eng, 123).toObject()), true);
-    QCOMPARE(num.equals(QJSValue(&eng, 321).toObject()), false);
-    QCOMPARE(num.equals(QJSValue(&eng, QLatin1String("123")).toObject()), true);
-    QCOMPARE(num.equals(QJSValue(&eng, QLatin1String("321")).toObject()), false);
-    QVERIFY(num.toObject().equals(num));
+    QCOMPARE(num.equals(eng.evaluate("new Number(123)")), true);
+    QCOMPARE(num.equals(eng.evaluate("new Number(321)")), false);
+    QCOMPARE(num.equals(eng.evaluate("new String('123')")), true);
+    QCOMPARE(num.equals(eng.evaluate("new String('321')")), false);
+    QVERIFY(eng.evaluate("new Number(123)").equals(num));
     QCOMPARE(num.equals(QJSValue()), false);
 
     QJSValue str = QJSValue(&eng, QLatin1String("123"));
@@ -3457,11 +3349,11 @@ void tst_QJSValue::equals()
     QCOMPARE(str.equals(QJSValue(&eng, QLatin1String("321"))), false);
     QCOMPARE(str.equals(QJSValue(&eng, 123)), true);
     QCOMPARE(str.equals(QJSValue(&eng, 321)), false);
-    QCOMPARE(str.equals(QJSValue(&eng, QLatin1String("123")).toObject()), true);
-    QCOMPARE(str.equals(QJSValue(&eng, QLatin1String("321")).toObject()), false);
-    QCOMPARE(str.equals(QJSValue(&eng, 123).toObject()), true);
-    QCOMPARE(str.equals(QJSValue(&eng, 321).toObject()), false);
-    QVERIFY(str.toObject().equals(str));
+    QCOMPARE(str.equals(eng.evaluate("new String('123')")), true);
+    QCOMPARE(str.equals(eng.evaluate("new String('321')")), false);
+    QCOMPARE(str.equals(eng.evaluate("new Number(123)")), true);
+    QCOMPARE(str.equals(eng.evaluate("new Number(321)")), false);
+    QVERIFY(eng.evaluate("new String('123')").equals(str));
     QCOMPARE(str.equals(QJSValue()), false);
 
     QJSValue num2 = QJSValue(123);
@@ -3499,10 +3391,10 @@ void tst_QJSValue::equals()
     QVERIFY(sant.equals(QJSValue(&eng, 1)));
     QVERIFY(sant.equals(QJSValue(&eng, QLatin1String("1"))));
     QVERIFY(sant.equals(sant));
-    QVERIFY(sant.equals(QJSValue(&eng, 1).toObject()));
-    QVERIFY(sant.equals(QJSValue(&eng, QLatin1String("1")).toObject()));
-    QVERIFY(sant.equals(sant.toObject()));
-    QVERIFY(sant.toObject().equals(sant));
+    QVERIFY(sant.equals(eng.evaluate("new Number(1)")));
+    QVERIFY(sant.equals(eng.evaluate("new String('1')")));
+    QVERIFY(sant.equals(eng.evaluate("new Boolean(true)")));
+    QVERIFY(eng.evaluate("new Boolean(true)").equals(sant));
     QVERIFY(!sant.equals(QJSValue(&eng, 0)));
     QVERIFY(!sant.equals(undefined));
     QVERIFY(!sant.equals(null));
@@ -3511,10 +3403,10 @@ void tst_QJSValue::equals()
     QVERIFY(falskt.equals(QJSValue(&eng, 0)));
     QVERIFY(falskt.equals(QJSValue(&eng, QLatin1String("0"))));
     QVERIFY(falskt.equals(falskt));
-    QVERIFY(falskt.equals(QJSValue(&eng, 0).toObject()));
-    QVERIFY(falskt.equals(QJSValue(&eng, QLatin1String("0")).toObject()));
-    QVERIFY(falskt.equals(falskt.toObject()));
-    QVERIFY(falskt.toObject().equals(falskt));
+    QVERIFY(falskt.equals(eng.evaluate("new Number(0)")));
+    QVERIFY(falskt.equals(eng.evaluate("new String('0')")));
+    QVERIFY(falskt.equals(eng.evaluate("new Boolean(false)")));
+    QVERIFY(eng.evaluate("new Boolean(false)").equals(falskt));
     QVERIFY(!falskt.equals(sant));
     QVERIFY(!falskt.equals(undefined));
     QVERIFY(!falskt.equals(null));
@@ -3646,11 +3538,11 @@ void tst_QJSValue::strictlyEquals()
     QCOMPARE(num.strictlyEquals(QJSValue(&eng, 321)), false);
     QCOMPARE(num.strictlyEquals(QJSValue(&eng, QLatin1String("123"))), false);
     QCOMPARE(num.strictlyEquals(QJSValue(&eng, QLatin1String("321"))), false);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, 123).toObject()), false);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, 321).toObject()), false);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, QLatin1String("123")).toObject()), false);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, QLatin1String("321")).toObject()), false);
-    QVERIFY(!num.toObject().strictlyEquals(num));
+    QCOMPARE(num.strictlyEquals(eng.evaluate("new Number(123)")), false);
+    QCOMPARE(num.strictlyEquals(eng.evaluate("new Number(321)")), false);
+    QCOMPARE(num.strictlyEquals(eng.evaluate("new String('123')")), false);
+    QCOMPARE(num.strictlyEquals(eng.evaluate("new String('321')")), false);
+    QVERIFY(!eng.evaluate("new Number(123)").strictlyEquals(num));
     QVERIFY(!num.strictlyEquals(QJSValue()));
     QVERIFY(!QJSValue().strictlyEquals(num));
 
@@ -3659,11 +3551,11 @@ void tst_QJSValue::strictlyEquals()
     QCOMPARE(str.strictlyEquals(QJSValue(&eng, QLatin1String("321"))), false);
     QCOMPARE(str.strictlyEquals(QJSValue(&eng, 123)), false);
     QCOMPARE(str.strictlyEquals(QJSValue(&eng, 321)), false);
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, QLatin1String("123")).toObject()), false);
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, QLatin1String("321")).toObject()), false);
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, 123).toObject()), false);
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, 321).toObject()), false);
-    QVERIFY(!str.toObject().strictlyEquals(str));
+    QCOMPARE(str.strictlyEquals(eng.evaluate("new String('123')")), false);
+    QCOMPARE(str.strictlyEquals(eng.evaluate("new String('321')")), false);
+    QCOMPARE(str.strictlyEquals(eng.evaluate("new Number(123)")), false);
+    QCOMPARE(str.strictlyEquals(eng.evaluate("new Number(321)")), false);
+    QVERIFY(!eng.evaluate("new String('123')").strictlyEquals(str));
     QVERIFY(!str.strictlyEquals(QJSValue()));
 
     QJSValue num2 = QJSValue(123);
@@ -3699,10 +3591,10 @@ void tst_QJSValue::strictlyEquals()
     QVERIFY(!sant.strictlyEquals(QJSValue(&eng, 1)));
     QVERIFY(!sant.strictlyEquals(QJSValue(&eng, QLatin1String("1"))));
     QVERIFY(sant.strictlyEquals(sant));
-    QVERIFY(!sant.strictlyEquals(QJSValue(&eng, 1).toObject()));
-    QVERIFY(!sant.strictlyEquals(QJSValue(&eng, QLatin1String("1")).toObject()));
-    QVERIFY(!sant.strictlyEquals(sant.toObject()));
-    QVERIFY(!sant.toObject().strictlyEquals(sant));
+    QVERIFY(!sant.strictlyEquals(eng.evaluate("new Number(1)")));
+    QVERIFY(!sant.strictlyEquals(eng.evaluate("new String('1')")));
+    QVERIFY(!sant.strictlyEquals(eng.evaluate("new Boolean(true)")));
+    QVERIFY(!eng.evaluate("new Boolean(true)").strictlyEquals(sant));
     QVERIFY(!sant.strictlyEquals(QJSValue(&eng, 0)));
     QVERIFY(!sant.strictlyEquals(undefined));
     QVERIFY(!sant.strictlyEquals(null));
@@ -3712,10 +3604,10 @@ void tst_QJSValue::strictlyEquals()
     QVERIFY(!falskt.strictlyEquals(QJSValue(&eng, 0)));
     QVERIFY(!falskt.strictlyEquals(QJSValue(&eng, QLatin1String("0"))));
     QVERIFY(falskt.strictlyEquals(falskt));
-    QVERIFY(!falskt.strictlyEquals(QJSValue(&eng, 0).toObject()));
-    QVERIFY(!falskt.strictlyEquals(QJSValue(&eng, QLatin1String("0")).toObject()));
-    QVERIFY(!falskt.strictlyEquals(falskt.toObject()));
-    QVERIFY(!falskt.toObject().strictlyEquals(falskt));
+    QVERIFY(!falskt.strictlyEquals(eng.evaluate("new Number(0)")));
+    QVERIFY(!falskt.strictlyEquals(eng.evaluate("new String('0')")));
+    QVERIFY(!falskt.strictlyEquals(eng.evaluate("new Boolean(false)")));
+    QVERIFY(!eng.evaluate("new Boolean(false)").strictlyEquals(falskt));
     QVERIFY(!falskt.strictlyEquals(sant));
     QVERIFY(!falskt.strictlyEquals(undefined));
     QVERIFY(!falskt.strictlyEquals(null));

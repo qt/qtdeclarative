@@ -282,9 +282,7 @@ void tst_QJSValueIterator::iterateArray()
 void tst_QJSValueIterator::iterateString()
 {
     QJSEngine engine;
-    QJSValue str = QJSValue(&engine, QString::fromLatin1("ciao"));
-    QVERIFY(str.isString());
-    QJSValue obj = str.toObject();
+    QJSValue obj = engine.evaluate("new String('ciao')");
     QVERIFY(obj.property("length").isNumber());
     int length = obj.property("length").toInt();
     QCOMPARE(length, 4);

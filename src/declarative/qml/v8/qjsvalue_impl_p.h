@@ -256,51 +256,6 @@ double QJSValuePrivate::toNumber() const
     return 0; // Avoid compiler warning.
 }
 
-QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::toObject(QV8Engine* engine) const
-{
-    Q_ASSERT(engine);
-    if (this->engine() && engine != this->engine()) {
-        qWarning("QJSEngine::toObject: cannot convert value created in a different engine");
-        return InvalidValue();
-    }
-
-    v8::HandleScope scope;
-    switch (m_state) {
-    case Invalid:
-    case CNull:
-    case CUndefined:
-        return new QJSValuePrivate;
-    case CString:
-        return new QJSValuePrivate(engine, engine->makeJSValue(*u.m_string)->ToObject());
-    case CNumber:
-        return new QJSValuePrivate(engine, engine->makeJSValue(u.m_number)->ToObject());
-    case CBool:
-        return new QJSValuePrivate(engine, engine->makeJSValue(u.m_bool)->ToObject());
-    case JSValue:
-        if (m_value->IsObject())
-            return const_cast<QJSValuePrivate*>(this);
-        if (m_value->IsNull() || m_value->IsUndefined()) // avoid "Uncaught TypeError: Cannot convert null to object"
-            return InvalidValue();
-        return new QJSValuePrivate(engine, m_value->ToObject());
-    default:
-        Q_ASSERT_X(false, Q_FUNC_INFO, "Not all states are included in this switch");
-        return InvalidValue();
-    }
-}
-
-/*!
-  This method is created only for QJSValue::toObject() purpose which is obsolete.
-  \internal
- */
-QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::toObject() const
-{
-    if (isJSBased())
-        return toObject(engine());
-
-    // Without an engine there is not much we can do.
-    return new QJSValuePrivate;
-}
-
 QString QJSValuePrivate::toString() const
 {
     switch (m_state) {

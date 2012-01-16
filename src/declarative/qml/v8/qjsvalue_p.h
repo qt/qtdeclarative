@@ -84,8 +84,6 @@ public:
 
     inline bool toBool() const;
     inline double toNumber() const;
-    inline QScriptPassPointer<QJSValuePrivate> toObject() const;
-    inline QScriptPassPointer<QJSValuePrivate> toObject(QV8Engine *engine) const;
     inline QString toString() const;
     inline double toInteger() const;
     inline qint32 toInt32() const;

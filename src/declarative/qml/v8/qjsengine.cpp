@@ -450,33 +450,6 @@ QJSValue QJSEngine::globalObject() const
 /*!
   \obsolete
 
-  Converts the given \a value to an object, if such a conversion is
-  possible; otherwise returns an invalid QJSValue. The conversion
-  is performed according to the following table:
-
-    \table
-    \header \o Input Type \o Result
-    \row    \o Undefined  \o An invalid QJSValue.
-    \row    \o Null       \o An invalid QJSValue.
-    \row    \o Boolean    \o A new Boolean object whose internal value is set to the value of the boolean.
-    \row    \o Number     \o A new Number object whose internal value is set to the value of the number.
-    \row    \o String     \o A new String object whose internal value is set to the value of the string.
-    \row    \o Object     \o The result is the object itself (no conversion).
-    \endtable
-
-    \sa newObject()
-*/
-QJSValue QJSEngine::toObject(const QJSValue& value)
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(QJSValuePrivate::get(value)->toObject(d));
-}
-
-/*!
-  \obsolete
-
   Creates a JavaScript object of class Date from the given \a value.
 
   \sa QJSValue::toDateTime()

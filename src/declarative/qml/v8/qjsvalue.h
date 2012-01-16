@@ -144,7 +144,6 @@ public:
     QT_DEPRECATED qint32 toInt32() const;
     QT_DEPRECATED quint32 toUInt32() const;
     QT_DEPRECATED quint16 toUInt16() const;
-    QT_DEPRECATED QJSValue toObject() const;
     QT_DEPRECATED QRegExp toRegExp() const;
 
     QT_DEPRECATED bool instanceOf(const QJSValue &other) const;

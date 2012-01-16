@@ -60,8 +60,6 @@ public:
     virtual ~tst_QJSValue();
 
 private slots:
-    void toObject();
-
     void ctor_invalid();
     void ctor_undefinedWithEngine();
     void ctor_undefined();
