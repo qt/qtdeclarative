@@ -541,7 +541,7 @@ QString QJSValue::toString() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa isNumber(), toInt(), toUInt(), toUInt16()
+  \sa isNumber(), toInt(), toUInt()
 */
 double QJSValue::toNumber() const
 {
@@ -631,25 +631,6 @@ quint32 QJSValue::toUInt32() const
     Q_D(const QJSValue);
     QScriptIsolate api(d->engine());
     return d->toUInt32();
-}
-
-/*!
-  Returns the unsigned 16-bit integer value of this QJSValue, using
-  the conversion rules described in \l{ECMA-262} section 9.7, "ToUint16".
-
-  Note that if this QJSValue is an object, calling this function
-  has side effects on the script engine, since the engine will call
-  the object's valueOf() function (and possibly toString()) in an
-  attempt to convert the object to a primitive value (possibly
-  resulting in an uncaught script exception).
-
-  \sa toNumber()
-*/
-quint16 QJSValue::toUInt16() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toUInt16();
 }
 
 #endif // QT_DEPRECATED
