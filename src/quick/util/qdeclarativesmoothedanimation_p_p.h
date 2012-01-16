@@ -77,12 +77,12 @@ private:
     QSmoothedAnimation *m_animation;
 };
 
-
+class QDeclarativeSmoothedAnimationPrivate;
 class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation2
 {
     Q_DISABLE_COPY(QSmoothedAnimation)
 public:
-    QSmoothedAnimation();
+    QSmoothedAnimation(QDeclarativeSmoothedAnimationPrivate * = 0);
 
     ~QSmoothedAnimation();
     qreal to;
@@ -131,6 +131,7 @@ private:
     bool recalc();
     void delayedStop();
     QSmoothedAnimationTimer *delayedStopTimer;
+    QDeclarativeSmoothedAnimationPrivate *animationTemplate;
 };
 
 class QDeclarativeSmoothedAnimationPrivate : public QDeclarativePropertyAnimationPrivate

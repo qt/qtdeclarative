@@ -54,11 +54,12 @@
 
 QT_BEGIN_NAMESPACE
 
+class QDeclarativeSpringAnimationPrivate;
 class Q_AUTOTEST_EXPORT QSpringAnimation : public QAbstractAnimation2
 {
     Q_DISABLE_COPY(QSpringAnimation)
 public:
-    QSpringAnimation();
+    QSpringAnimation(QDeclarativeSpringAnimationPrivate * = 0);
 
     ~QSpringAnimation();
     int duration() const;
@@ -95,9 +96,12 @@ public:
 protected:
     virtual void updateCurrentTime(int time);
     virtual void updateState(QAbstractAnimation2::State, QAbstractAnimation2::State);
+
+private:
+    QDeclarativeSpringAnimationPrivate *animationTemplate;
 };
 
-QSpringAnimation::QSpringAnimation()
+QSpringAnimation::QSpringAnimation(QDeclarativeSpringAnimationPrivate *priv)
     : QAbstractAnimation2()
     , currentValue(0)
     , to(0)
@@ -116,13 +120,10 @@ QSpringAnimation::QSpringAnimation()
     , useMass(false)
     , haveModulus(false)
     , useDelta(false)
+    , animationTemplate(priv)
 {
 }
 
-QSpringAnimation::~QSpringAnimation()
-{
-
-}
 int QSpringAnimation::duration() const
 {
     return dura;
@@ -283,6 +284,16 @@ public:
 
     QSpringAnimation::ActiveAnimationHash activeAnimations;
 };
+
+QSpringAnimation::~QSpringAnimation()
+{
+    if (animationTemplate) {
+        QSpringAnimation::ActiveAnimationHash::iterator it =
+                animationTemplate->activeAnimations.find(target);
+        if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+            animationTemplate->activeAnimations.erase(it);
+    }
+}
 
 void QDeclarativeSpringAnimationPrivate::updateMode()
 {

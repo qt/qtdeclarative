@@ -74,11 +74,11 @@ void QSmoothedAnimationTimer::stopAnimation()
     m_animation->stop();
 }
 
-QSmoothedAnimation::QSmoothedAnimation()
+QSmoothedAnimation::QSmoothedAnimation(QDeclarativeSmoothedAnimationPrivate *priv)
     : QAbstractAnimation2(), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
       reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
-      useDelta(false), delayedStopTimer(new QSmoothedAnimationTimer(this))
+      useDelta(false), delayedStopTimer(new QSmoothedAnimationTimer(this)), animationTemplate(priv)
 {
     delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
     delayedStopTimer->setSingleShot(true);
@@ -87,6 +87,12 @@ QSmoothedAnimation::QSmoothedAnimation()
 QSmoothedAnimation::~QSmoothedAnimation()
 {
     delete delayedStopTimer;
+    if (animationTemplate) {
+        QHash<QDeclarativeProperty, QSmoothedAnimation* >::iterator it =
+                animationTemplate->activeAnimations.find(target);
+        if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+            animationTemplate->activeAnimations.erase(it);
+    }
 }
 
 void QSmoothedAnimation::restart()
@@ -376,7 +382,7 @@ QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeState
             QSmoothedAnimation *ease;
             bool needsRestart;
             if (!d->activeAnimations.contains(dataActions[i].property)) {
-                ease = new QSmoothedAnimation();
+                ease = new QSmoothedAnimation(d);
                 d->activeAnimations.insert(dataActions[i].property, ease);
                 ease->target = dataActions[i].property;
                 needsRestart = false;

@@ -593,7 +593,7 @@ QAbstractAnimation2* QQuickPathAnimation::transition(QDeclarativeStateActions &a
     bool havePrevData = false;
     if (d->activeAnimations.contains(d->target)) {
         havePrevData = true;
-        prevData = *static_cast<QQuickPathAnimationUpdater*>(d->activeAnimations[d->target]->getAnimValue());
+        prevData = *d->activeAnimations[d->target]->pathUpdater();
     }
 
     QList<QQuickItem*> keys = d->activeAnimations.keys();
@@ -603,7 +603,7 @@ QAbstractAnimation2* QQuickPathAnimation::transition(QDeclarativeStateActions &a
     }
 
     QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater();
-    QDeclarativeBulkValueAnimator *pa = new QDeclarativeBulkValueAnimator();
+    QQuickPathAnimationAnimator *pa = new QQuickPathAnimationAnimator(d);
 
     d->activeAnimations[d->target] = pa;
 
@@ -773,6 +773,21 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
     if ((reverse && v == 0.0) || (!reverse && v == 1.0)) {
         if (!anchorPoint.isNull() && !fixed && qFuzzyIsNull(angle))
             target->setTransformOriginPoint(QPointF());
+    }
+}
+
+QQuickPathAnimationAnimator::QQuickPathAnimationAnimator(QQuickPathAnimationPrivate *priv)
+    : animationTemplate(priv)
+{
+}
+
+QQuickPathAnimationAnimator::~QQuickPathAnimationAnimator()
+{
+    if (animationTemplate && pathUpdater()) {
+        QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator it =
+                animationTemplate->activeAnimations.find(pathUpdater()->target);
+        if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+            animationTemplate->activeAnimations.erase(it);
     }
 }
 
