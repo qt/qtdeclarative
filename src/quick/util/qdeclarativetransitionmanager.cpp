@@ -43,7 +43,6 @@
 
 #include "qdeclarativetransition_p.h"
 #include "qdeclarativestate_p_p.h"
-#include "qdeclarativestate_p.h"
 
 #include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativeglobal_p.h>
@@ -59,12 +58,12 @@ class QDeclarativeTransitionManagerPrivate
 {
 public:
     QDeclarativeTransitionManagerPrivate()
-        : state(0) {}
+        : state(0), transitionInstance(0) {}
 
     void applyBindings();
     typedef QList<QDeclarativeSimpleAction> SimpleActionList;
     QDeclarativeState *state;
-    QDeclarativeGuard<QDeclarativeTransition> transition;
+    QDeclarativeTransitionInstance *transitionInstance;
     QDeclarativeStateOperation::ActionList bindingsList;
     SimpleActionList completeList;
 };
@@ -81,7 +80,13 @@ void QDeclarativeTransitionManager::setState(QDeclarativeState *s)
 
 QDeclarativeTransitionManager::~QDeclarativeTransitionManager()
 {
+    delete d->transitionInstance;
     delete d; d = 0;
+}
+
+bool QDeclarativeTransitionManager::isRunning() const
+{
+    return d->transitionInstance && d->transitionInstance->isRunning();
 }
 
 void QDeclarativeTransitionManager::complete() 
@@ -97,6 +102,8 @@ void QDeclarativeTransitionManager::complete()
 
     if (d->state) 
         static_cast<QDeclarativeStatePrivate*>(QObjectPrivate::get(d->state))->complete();
+
+    finished();
 }
 
 void QDeclarativeTransitionManagerPrivate::applyBindings()
@@ -114,6 +121,10 @@ void QDeclarativeTransitionManagerPrivate::applyBindings()
     }
 
     bindingsList.clear();
+}
+
+void QDeclarativeTransitionManager::finished()
+{
 }
 
 void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &list,
@@ -196,8 +207,8 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
 
     if (transition) {
         QList<QDeclarativeProperty> touched;
-        d->transition = transition;
-        d->transition->prepare(applyList, touched, this);
+        d->transitionInstance = transition->prepare(applyList, touched, this);
+        d->transitionInstance->start();
 
         // Modify the action list to remove actions handled in the transition
         for (int ii = 0; ii < applyList.count(); ++ii) {
@@ -257,10 +268,11 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
 
 void QDeclarativeTransitionManager::cancel()
 {
-    if (d->transition) {
-        // ### this could potentially trigger a complete in rare circumstances
-        d->transition->stop();
-        d->transition = 0;
+    if (d->transitionInstance) {
+        if (d->transitionInstance->isRunning())
+            d->transitionInstance->stop();
+        delete d->transitionInstance;
+        d->transitionInstance = 0;
     }
 
     for(int i = 0; i < d->bindingsList.count(); ++i) {

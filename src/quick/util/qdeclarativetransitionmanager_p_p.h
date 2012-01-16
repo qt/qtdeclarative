@@ -54,6 +54,7 @@
 //
 
 #include "qdeclarativestateoperations_p.h"
+#include "qdeclarativeanimation_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -65,9 +66,14 @@ public:
     QDeclarativeTransitionManager();
     ~QDeclarativeTransitionManager();
 
+    bool isRunning() const;
+
     void transition(const QList<QDeclarativeAction> &, QDeclarativeTransition *transition);
 
     void cancel();
+
+protected:
+    virtual void finished();
 
 private:
     Q_DISABLE_COPY(QDeclarativeTransitionManager)
@@ -77,7 +83,7 @@ private:
     void setState(QDeclarativeState *);
 
     friend class QDeclarativeState;
-    friend class QDeclarativeTransitionPrivate;
+    friend class ParallelAnimationWrapper;
 };
 
 QT_END_NAMESPACE

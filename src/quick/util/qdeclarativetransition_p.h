@@ -43,7 +43,6 @@
 #define QDECLARATIVETRANSITION_H
 
 #include "qdeclarativestate_p.h"
-
 #include <qdeclarative.h>
 
 #include <QtCore/qobject.h>
@@ -55,6 +54,25 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeAbstractAnimation;
 class QDeclarativeTransitionPrivate;
 class QDeclarativeTransitionManager;
+class QDeclarativeTransition;
+class QAbstractAnimation2;
+
+class Q_QUICK_EXPORT QDeclarativeTransitionInstance
+{
+public:
+    QDeclarativeTransitionInstance();
+    ~QDeclarativeTransitionInstance();
+
+    void start();
+    void stop();
+
+    bool isRunning() const;
+
+private:
+    QAbstractAnimation2 *m_anim;
+    friend class QDeclarativeTransition;
+};
+
 class Q_QUICK_EXPORT QDeclarativeTransition : public QObject
 {
     Q_OBJECT
@@ -86,12 +104,11 @@ public:
 
     QDeclarativeListProperty<QDeclarativeAbstractAnimation> animations();
 
-    void prepare(QDeclarativeStateOperation::ActionList &actions,
+    QDeclarativeTransitionInstance *prepare(QDeclarativeStateOperation::ActionList &actions,
                  QList<QDeclarativeProperty> &after,
                  QDeclarativeTransitionManager *end);
 
     void setReversed(bool r);
-    void stop();
 
 Q_SIGNALS:
     void fromChanged();
