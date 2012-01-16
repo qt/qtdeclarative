@@ -324,7 +324,7 @@ void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
 {
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathInterpolatorBack.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("pathInterpolatorBack.qml"));
         QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
         QVERIFY(interpolator);
 
@@ -355,7 +355,7 @@ void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("pathInterpolatorBack2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("pathInterpolatorBack2.qml"));
         QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
         QVERIFY(interpolator);
 

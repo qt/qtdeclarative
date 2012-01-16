@@ -135,10 +135,10 @@ void QParallelAnimationGroup2::updateState(QAbstractAnimation2::State newState,
                 animation->pause();
         break;
     case Running:
-        resetUncontrolledAnimationsFinishTime();
         for (QAbstractAnimation2 *animation = firstChild(); animation; animation = animation->nextSibling()) {
             if (oldState == Stopped)
                 animation->stop();
+            resetUncontrolledAnimationFinishTime(animation);
             animation->setDirection(m_direction);
             if (shouldAnimationStart(animation, oldState == Stopped))
                 animation->start();

@@ -70,7 +70,7 @@ public:
     };
 
     QAbstractAnimation2();
-    ~QAbstractAnimation2();
+    virtual ~QAbstractAnimation2();
 
     //definition
     inline QAnimationGroup2 *group() const {return m_group;}
@@ -141,6 +141,7 @@ protected:
     bool m_hasRegisteredTimer;
     //records the finish time for an uncontrolled animation (used by animation groups)
     int m_uncontrolledFinishTime;
+    bool *m_wasDeleted;
 
     struct ChangeListener {
         ChangeListener(QAnimation2ChangeListener *l, QAbstractAnimation2::ChangeTypes t) : listener(l), types(t) {}

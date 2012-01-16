@@ -258,6 +258,7 @@ QAbstractAnimation2::QAbstractAnimation2()
     , m_currentLoop(0)
     , m_hasRegisteredTimer(false)
     , m_uncontrolledFinishTime(-1)
+    , m_wasDeleted(0)
     , m_nextSibling(0)
     , m_previousSibling(0)
 {
@@ -265,6 +266,9 @@ QAbstractAnimation2::QAbstractAnimation2()
 
 QAbstractAnimation2::~QAbstractAnimation2()
 {
+    if (m_wasDeleted)
+        *m_wasDeleted = true;
+
     //we can't call stop here. Otherwise we get pure virtual calls
     if (m_state != Stopped) {
         State oldState = m_state;
@@ -428,7 +432,12 @@ void QAbstractAnimation2::setCurrentTime(int msecs)
     if (m_currentLoop != oldLoop && !m_group)   //### verify Running as well?
         topLevelAnimationLoopChanged();
 
+    bool wasDeleted = false;
+    m_wasDeleted = &wasDeleted;
     updateCurrentTime(m_currentTime);
+    if (wasDeleted)
+        return;
+    m_wasDeleted = 0;
 
     if (m_currentLoop != oldLoop)
         currentLoopChanged(m_currentLoop);
