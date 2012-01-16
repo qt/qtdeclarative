@@ -214,6 +214,10 @@ public:
     qreal paintedWidth() const;
     qreal paintedHeight() const;
 
+    QUrl baseUrl() const;
+    void setBaseUrl(const QUrl &url);
+    void resetBaseUrl();
+
     Q_INVOKABLE QRectF positionToRectangle(int) const;
     Q_INVOKABLE int positionAt(int x, int y) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
@@ -283,9 +287,9 @@ private Q_SLOTS:
     void updateDocument();
     void updateCursor();
     void q_updateAlignment();
+    void updateSize();
 
 private:
-    void updateSize();
     void updateTotalLines();
     void updateImageCache(const QRectF &rect = QRectF());
 

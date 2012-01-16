@@ -82,6 +82,9 @@ public:
     {
     }
 
+    static QQuickTextEditPrivate *get(QQuickTextEdit *item) {
+        return static_cast<QQuickTextEditPrivate *>(QObjectPrivate::get(item)); }
+
     void init();
 
     void updateDefaultTextOption();

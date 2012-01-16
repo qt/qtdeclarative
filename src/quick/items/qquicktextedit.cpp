@@ -1773,6 +1773,7 @@ void QQuickTextEditPrivate::init()
 #endif
     FAST_CONNECT(document, SIGNAL(undoAvailable(bool)), q, SIGNAL(canUndoChanged()));
     FAST_CONNECT(document, SIGNAL(redoAvailable(bool)), q, SIGNAL(canRedoChanged()));
+    FAST_CONNECT(document, SIGNAL(imagesLoaded()), q, SLOT(updateSize()));
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);

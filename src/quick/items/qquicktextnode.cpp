@@ -56,6 +56,7 @@
 #include <qtexttable.h>
 #include <qtextlist.h>
 #include <private/qdeclarativestyledtext_p.h>
+#include <private/qquicktext_p_p.h>
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>
 #include <private/qrawfont_p.h>
@@ -702,8 +703,15 @@ namespace {
 
             if (format.objectType() == QTextFormat::ImageObject) {
                 QTextImageFormat imageFormat = format.toImageFormat();
-                QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
-                image = imageHandler->image(textDocument, imageFormat);
+                if (QQuickTextDocumentWithImageResources *imageDoc = qobject_cast<QQuickTextDocumentWithImageResources *>(textDocument)) {
+                    image = imageDoc->image(imageFormat);
+
+                    if (image.isNull())
+                        return;
+                } else {
+                    QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
+                    image = imageHandler->image(textDocument, imageFormat);
+                }
             }
 
             if (image.isNull()) {

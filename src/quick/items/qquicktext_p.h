@@ -203,6 +203,9 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     virtual bool event(QEvent *);
 
+private Q_SLOTS:
+    void q_imagesLoaded();
+
 private:
     Q_DISABLE_COPY(QQuickText)
     Q_DECLARE_PRIVATE(QQuickText)

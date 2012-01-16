@@ -51,6 +51,7 @@
 #include <QtGui/qguiapplication.h>
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktextedit_p_p.h>
+#include <private/qquicktext_p_p.h>
 #include <QFontMetrics>
 #include <QtQuick/QQuickView>
 #include <QDir>
@@ -173,6 +174,9 @@ private slots:
     void redo();
     void undo_keypressevents_data();
     void undo_keypressevents();
+
+    void embeddedImages();
+    void embeddedImages_data();
 
     void emptytags_QTBUG_22058();
 
@@ -3652,6 +3656,48 @@ void tst_qquicktextedit::undo_keypressevents()
         textEdit->undo();
     }
     QVERIFY(textEdit->text().isEmpty());
+}
+
+void tst_qquicktextedit::embeddedImages_data()
+{
+    QTest::addColumn<QUrl>("qmlfile");
+    QTest::addColumn<QString>("error");
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
+    QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
+        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML TextEdit: Cannot open: " + testFileUrl("http/notexists.png").toString();
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
+    QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
+        << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error downloading http://127.0.0.1:42332/notexists.png - server replied: Not found";
+}
+
+void tst_qquicktextedit::embeddedImages()
+{
+    QFETCH(QUrl, qmlfile);
+    QFETCH(QString, error);
+
+    TestHTTPServer server(42332);
+    server.serveDirectory(testFile("http"));
+
+    if (!error.isEmpty())
+        QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
+
+    QDeclarativeComponent textComponent(&engine, qmlfile);
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
+
+    QVERIFY(textObject != 0);
+    QTRY_COMPARE(QQuickTextEditPrivate::get(textObject)->document->resourcesLoading(), 0);
+
+    QPixmap pm(testFile("http/exists.png"));
+    if (error.isEmpty()) {
+        QCOMPARE(textObject->width(), double(pm.width()));
+        QCOMPARE(textObject->height(), double(pm.height()));
+    } else {
+        QVERIFY(16 != pm.width()); // check test is effective
+        QCOMPARE(textObject->width(), 16.0); // default size of QTextDocument broken image icon
+        QCOMPARE(textObject->height(), 16.0);
+    }
+
+    delete textObject;
 }
 
 void tst_qquicktextedit::emptytags_QTBUG_22058()

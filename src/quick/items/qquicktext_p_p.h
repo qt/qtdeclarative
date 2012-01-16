@@ -58,6 +58,7 @@
 #include "qquickimplicitsizeitem_p_p.h"
 
 #include <QtDeclarative/qdeclarative.h>
+#include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qtextlayout.h>
 
 QT_BEGIN_NAMESPACE
@@ -167,9 +168,10 @@ public:
 };
 
 class QDeclarativePixmap;
-class QQuickTextDocumentWithImageResources : public QTextDocument {
+class QQuickTextDocumentWithImageResources : public QTextDocument, public QTextObjectInterface
+{
     Q_OBJECT
-
+    Q_INTERFACES(QTextObjectInterface)
 public:
     QQuickTextDocumentWithImageResources(QQuickItem *parent);
     virtual ~QQuickTextDocumentWithImageResources();
@@ -181,8 +183,18 @@ public:
 
     void clear();
 
+    QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format);
+    void drawObject(QPainter *p, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format);
+
+    QImage image(const QTextImageFormat &format);
+
+Q_SIGNALS:
+    void imagesLoaded();
+
 protected:
     QVariant loadResource(int type, const QUrl &name);
+
+    QDeclarativePixmap *loadPixmap(QDeclarativeContext *context, const QUrl &name);
 
 private slots:
     void requestFinished();

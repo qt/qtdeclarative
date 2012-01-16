@@ -107,6 +107,7 @@ QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuic
 : QTextDocument(parent), outstanding(0)
 {
     setUndoRedoEnabled(false);
+    documentLayout()->registerHandler(QTextFormat::ImageObject, this);
 }
 
 QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
@@ -121,27 +122,8 @@ QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl
     QUrl url = context->resolvedUrl(name);
 
     if (type == QTextDocument::ImageResource) {
-        QHash<QUrl, QDeclarativePixmap *>::Iterator iter = m_resources.find(url);
-
-        if (iter == m_resources.end()) {
-            QDeclarativePixmap *p = new QDeclarativePixmap(context->engine(), url);
-            iter = m_resources.insert(url, p);
-
-            if (p->isLoading()) {
-                p->connectFinished(this, SLOT(requestFinished()));
-                outstanding++;
-            }
-        }
-
-        QDeclarativePixmap *p = *iter;
-        if (p->isReady()) {
-            return p->image();
-        } else if (p->isError()) {
-            if (!errors.contains(url)) {
-                errors.insert(url);
-                qmlInfo(parent()) << p->error();
-            }
-        }
+        QDeclarativePixmap *p = loadPixmap(context, url);
+        return p->image();
     }
 
     return QTextDocument::loadResource(type,url); // The *resolved* URL
@@ -152,9 +134,7 @@ void QQuickTextDocumentWithImageResources::requestFinished()
     outstanding--;
     if (outstanding == 0) {
         markContentsDirty(0, characterCount());
-
-        if (QQuickText *item = qobject_cast<QQuickText *>(parent()))
-            QQuickTextPrivate::get(item)->updateLayout();
+        emit imagesLoaded();
     }
 }
 
@@ -163,6 +143,91 @@ void QQuickTextDocumentWithImageResources::clear()
     clearResources();
 
     QTextDocument::clear();
+}
+
+
+QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
+        QTextDocument *, int, const QTextFormat &format)
+{
+    if (format.isImageFormat()) {
+        QTextImageFormat imageFormat = format.toImageFormat();
+
+        const bool hasWidth = imageFormat.hasProperty(QTextFormat::ImageWidth);
+        const int width = qRound(imageFormat.width());
+        const bool hasHeight = imageFormat.hasProperty(QTextFormat::ImageHeight);
+        const int height = qRound(imageFormat.height());
+
+        QSizeF size(width, height);
+        if (!hasWidth || !hasHeight) {
+            QDeclarativeContext *context = qmlContext(parent());
+            QUrl url = context->resolvedUrl(QUrl(imageFormat.name()));
+
+            QDeclarativePixmap *p = loadPixmap(context, url);
+            if (!p->isReady()) {
+                if (!hasWidth)
+                    size.setWidth(16);
+                if (!hasHeight)
+                    size.setHeight(16);
+                return size;
+            }
+            QSize implicitSize = p->implicitSize();
+
+            if (!hasWidth) {
+                if (!hasHeight)
+                    size.setWidth(implicitSize.width());
+                else
+                    size.setWidth(qRound(height * (implicitSize.width() / (qreal) implicitSize.height())));
+            }
+            if (!hasHeight) {
+                if (!hasWidth)
+                    size.setHeight(implicitSize.height());
+                else
+                    size.setHeight(qRound(width * (implicitSize.height() / (qreal) implicitSize.width())));
+            }
+        }
+        return size;
+    }
+    return QSizeF();
+}
+
+void QQuickTextDocumentWithImageResources::drawObject(
+        QPainter *, const QRectF &, QTextDocument *, int, const QTextFormat &)
+{
+}
+
+QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format)
+{
+    QDeclarativeContext *context = qmlContext(parent());
+    QUrl url = context->resolvedUrl(QUrl(format.name()));
+
+    QDeclarativePixmap *p = loadPixmap(context, url);
+    return p->image();
+}
+
+QDeclarativePixmap *QQuickTextDocumentWithImageResources::loadPixmap(
+        QDeclarativeContext *context, const QUrl &url)
+{
+
+    QHash<QUrl, QDeclarativePixmap *>::Iterator iter = m_resources.find(url);
+
+    if (iter == m_resources.end()) {
+        QDeclarativePixmap *p = new QDeclarativePixmap(context->engine(), url);
+        iter = m_resources.insert(url, p);
+
+        if (p->isLoading()) {
+            p->connectFinished(this, SLOT(requestFinished()));
+            outstanding++;
+        }
+    }
+
+    QDeclarativePixmap *p = *iter;
+    if (p->isError()) {
+        if (!errors.contains(url)) {
+            errors.insert(url);
+            qmlInfo(parent()) << p->error();
+        }
+    }
+    return p;
 }
 
 void QQuickTextDocumentWithImageResources::clearResources()
@@ -204,6 +269,12 @@ qreal QQuickTextPrivate::getImplicitWidth() const
         me->updateSize();
     }
     return implicitWidth;
+}
+
+void QQuickText::q_imagesLoaded()
+{
+    Q_D(QQuickText);
+    d->updateLayout();
 }
 
 void QQuickTextPrivate::updateLayout()
@@ -830,6 +901,7 @@ void QQuickTextPrivate::ensureDoc()
         Q_Q(QQuickText);
         doc = new QQuickTextDocumentWithImageResources(q);
         doc->setDocumentMargin(0);
+        FAST_CONNECT(doc, SIGNAL(imagesLoaded()), q, SLOT(q_imagesLoaded()));
     }
 }
 
