@@ -83,7 +83,6 @@ private slots:
     void toNumber();
     void toBoolean();
     void toBool();
-    void toInteger();
     void toInt();
     void toUInt();
     void toUInt16();

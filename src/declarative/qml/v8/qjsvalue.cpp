@@ -541,7 +541,7 @@ QString QJSValue::toString() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa isNumber(), toInteger(), toInt(), toUInt(), toUInt16()
+  \sa isNumber(), toInt(), toUInt(), toUInt16()
 */
 double QJSValue::toNumber() const
 {
@@ -568,31 +568,6 @@ bool QJSValue::toBool() const
     QScriptIsolate api(d->engine());
     return d->toBool();
 }
-
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Returns the integer value of this QJSValue, using the conversion
-  rules described in \l{ECMA-262} section 9.4, "ToInteger".
-
-  Note that if this QJSValue is an object, calling this function
-  has side effects on the script engine, since the engine will call
-  the object's valueOf() function (and possibly toString()) in an
-  attempt to convert the object to a primitive value (possibly
-  resulting in an uncaught script exception).
-
-  \sa toNumber()
-*/
-double QJSValue::toInteger() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toInteger();
-}
-
-#endif // QT_DEPRECATED
 
 /*!
   Returns the signed 32-bit integer value of this QJSValue, using

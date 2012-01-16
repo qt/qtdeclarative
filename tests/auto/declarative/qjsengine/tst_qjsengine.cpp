@@ -6421,7 +6421,7 @@ public:
         QJSEngine firstEngine;
         QJSEngine secondEngine;
         QJSValue value = firstEngine.evaluate("1");
-        result = secondEngine.evaluate("1 + " + QString::number(value.toInteger())).toInteger();
+        result = secondEngine.evaluate("1 + " + QString::number(value.toInt())).toInt();
     }
 };
 
