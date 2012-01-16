@@ -213,6 +213,8 @@ QJSValue::QJSValue(QScriptPassPointer<QJSValuePrivate> d)
 {
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
   \obsolete
 
@@ -325,6 +327,8 @@ QJSValue::QJSValue(QJSEngine* engine, SpecialValue value)
     }
 }
 
+#endif // QT_DEPRECATED
+
 /*!
   Constructs a new QJSValue that is a copy of \a other.
 
@@ -344,7 +348,11 @@ QJSValue::~QJSValue()
 {
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns true if this QJSValue is valid; otherwise returns
   false.
 */
@@ -354,6 +362,8 @@ bool QJSValue::isValid() const
     QScriptIsolate api(d->engine());
     return d->isValid();
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns true if this QJSValue is of the primitive type Boolean;
@@ -473,6 +483,8 @@ bool QJSValue::isCallable() const
     return d->isCallable();
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
   \obsolete
 
@@ -484,6 +496,8 @@ bool QJSValue::isFunction() const
     QScriptIsolate api(d->engine());
     return d->isCallable();
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns true if this QJSValue is a variant value;
@@ -555,7 +569,11 @@ bool QJSValue::toBool() const
     return d->toBool();
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns the integer value of this QJSValue, using the conversion
   rules described in \l{ECMA-262} section 9.4, "ToInteger".
 
@@ -573,6 +591,8 @@ double QJSValue::toInteger() const
     QScriptIsolate api(d->engine());
     return d->toInteger();
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns the signed 32-bit integer value of this QJSValue, using
@@ -611,6 +631,8 @@ quint32 QJSValue::toUInt() const
     QScriptIsolate api(d->engine());
     return d->toUInt32();
 }
+
+#ifdef QT_DEPRECATED
 
 /*!
   \obsolete
@@ -666,6 +688,8 @@ QJSValue QJSValue::toObject() const
     QScriptIsolate api(d->engine());
     return QJSValuePrivate::get(d->toObject());
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns the QVariant value of this QJSValue, if it can be
@@ -772,6 +796,8 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     return QJSValuePrivate::get(d->callAsConstructor(args));
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
   \obsolete
 
@@ -797,6 +823,8 @@ QJSValue QJSValue::construct(const QJSValueList &args)
 }
 
 /*!
+  \obsolete
+
   Returns the QJSEngine that created this QJSValue,
   or 0 if this QJSValue is invalid or the value is not
   associated with a particular engine.
@@ -811,6 +839,7 @@ QJSEngine* QJSValue::engine() const
     return 0;
 }
 
+#endif // QT_DEPRECATED
 
 /*!
   If this QJSValue is an object, returns the internal prototype
@@ -919,7 +948,11 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
     return d_ptr->strictlyEquals(o);
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+    \obsolete
+
     Returns true if this QJSValue is an instance of
     \a other; otherwise returns false.
 
@@ -934,6 +967,8 @@ bool QJSValue::instanceOf(const QJSValue &other) const
     QScriptIsolate api(d->engine());
     return d->instanceOf(QJSValuePrivate::get(other));
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns the value of this QJSValue's property with the given \a name.
@@ -1076,7 +1111,11 @@ bool QJSValue::hasOwnProperty(const QString &name) const
     return d->hasOwnProperty(name);
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns the flags of the property with the given \a name.
 
   \sa property()
@@ -1087,6 +1126,8 @@ QJSValue::PropertyFlags QJSValue::propertyFlags(const QString& name) const
     QScriptIsolate api(d->engine());
     return d->propertyFlags(name);
 }
+
+#endif // QT_DEPRECATED
 
 /*!
  * If this QJSValue is a QObject, returns the QObject pointer
@@ -1119,7 +1160,11 @@ QDateTime QJSValue::toDateTime() const
     return d->toDataTime();
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns the QRegExp representation of this value.
   If this QJSValue is not a regular expression, an empty
   QRegExp is returned.
@@ -1132,6 +1177,8 @@ QRegExp QJSValue::toRegExp() const
     QScriptIsolate api(d->engine());
     return d->toRegExp();
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns true if this QJSValue is an object of the Date class;

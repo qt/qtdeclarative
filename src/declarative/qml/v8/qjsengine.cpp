@@ -158,6 +158,8 @@ QJSEngine::QJSEngine()
 {
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
     \internal
 */
@@ -165,6 +167,8 @@ QJSEngine::QJSEngine(QJSEngine::ContextOwnership ownership)
     : d(new QV8Engine(this, ownership))
 {
 }
+
+#endif // QT_DEPRECATED
 
 /*!
     Constructs a QJSEngine object with the given \a parent.
@@ -198,7 +202,11 @@ QJSEngine::~QJSEngine()
     \internal
 */
 
+#ifdef QT_DEPRECATED
+
 /*!
+    \obsolete
+
     Returns true if the last script evaluation resulted in an uncaught
     exception; otherwise returns false.
 
@@ -215,6 +223,8 @@ bool QJSEngine::hasUncaughtException() const
 }
 
 /*!
+    \obsolete
+
     Returns the current uncaught exception, or an invalid QJSValue
     if there is no uncaught exception.
 
@@ -233,6 +243,8 @@ QJSValue QJSEngine::uncaughtException() const
 }
 
 /*!
+    \obsolete
+
     Clears any uncaught exceptions in this engine.
 
     \sa hasUncaughtException()
@@ -244,6 +256,7 @@ void QJSEngine::clearExceptions()
     d->clearExceptions();
 }
 
+#endif // QT_DEPRECATED
 
 /*!
     Runs the garbage collector.
@@ -298,7 +311,11 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     return QJSValuePrivate::get(d->evaluate(program, fileName, lineNumber));
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns a QJSValue of the primitive type Null.
 
   \sa nullValue()
@@ -312,6 +329,8 @@ QJSValue QJSEngine::nullValue()
 }
 
 /*!
+  \obsolete
+
   Returns a QJSValue of the primitive type Undefined.
 
   \sa nullValue()
@@ -323,6 +342,8 @@ QJSValue QJSEngine::undefinedValue()
     v8::HandleScope handleScope;
     return QJSValuePrivate::get(new QJSValuePrivate(d, v8::Undefined()));
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Creates a JavaScript object of class Object.
@@ -382,7 +403,11 @@ QJSValue QJSEngine::newQObject(QObject *object)
     return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership));
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Creates a JavaScript object holding the given variant \a value.
 
   If a default prototype has been registered with the meta type id of
@@ -400,6 +425,7 @@ QJSValue QJSEngine::newVariant(const QVariant &value)
     return d->scriptValueFromInternal(d->newVariant(value));
 }
 
+#endif // QT_DEPRECATED
 
 /*!
   Returns this engine's Global Object.
@@ -419,7 +445,11 @@ QJSValue QJSEngine::globalObject() const
     return d->scriptValueFromInternal(d->global());
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Converts the given \a value to an object, if such a conversion is
   possible; otherwise returns an invalid QJSValue. The conversion
   is performed according to the following table:
@@ -445,6 +475,8 @@ QJSValue QJSEngine::toObject(const QJSValue& value)
 }
 
 /*!
+  \obsolete
+
   Creates a JavaScript object of class Date from the given \a value.
 
   \sa QJSValue::toDateTime()
@@ -458,6 +490,8 @@ QJSValue QJSEngine::newDate(const QDateTime &dt)
 }
 
 /*!
+  \obsolete
+
   Creates a JavaScript object of class Date with the given
   \a value (the number of milliseconds since 01 January 1970,
   UTC).
@@ -471,6 +505,8 @@ QJSValue QJSEngine::newDate(double date)
 }
 
 /*!
+  \obsolete
+
   Creates a JavaScript object of class RegExp with the given
   \a regexp.
 
@@ -485,6 +521,8 @@ QJSValue QJSEngine::newRegExp(const QRegExp &regexp)
 }
 
 /*!
+  \obsolete
+
   Creates a JavaScript object of class RegExp with the given
   \a pattern and \a flags.
 
@@ -498,6 +536,8 @@ QJSValue QJSEngine::newRegExp(const QString &pattern, const QString &flags)
     v8::HandleScope handleScope;
     return QJSValuePrivate::get(d->newRegExp(pattern, flags));
 }
+
+#endif // QT_DEPRECATED
 
 /*!
  *  \internal

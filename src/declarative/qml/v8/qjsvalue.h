@@ -52,12 +52,14 @@ template <class T> class QScriptPassPointer;
 class Q_DECLARATIVE_EXPORT QJSValue
 {
 public:
+#ifdef QT_DEPRECATED
     enum PropertyFlag {
         ReadOnly            = 0x00000001,
         Undeletable         = 0x00000002,
         SkipInEnumeration   = 0x00000004
     };
     Q_DECLARE_FLAGS(PropertyFlags, PropertyFlag)
+#endif
 
     enum SpecialValue {
         NullValue,
@@ -68,12 +70,6 @@ public:
     QJSValue();
     ~QJSValue();
     QJSValue(const QJSValue &other);
-    QJSValue(QJSEngine *engine, SpecialValue val);
-    QJSValue(QJSEngine *engine, bool val);
-    QJSValue(QJSEngine *engine, int val);
-    QJSValue(QJSEngine *engine, uint val);
-    QJSValue(QJSEngine *engine, double val);
-    QJSValue(QJSEngine *engine, const QString &val);
 
     QJSValue(SpecialValue value);
     QJSValue(bool value);
@@ -88,11 +84,8 @@ public:
 
     QJSValue &operator=(const QJSValue &other);
 
-    QJSEngine *engine() const;
-    bool isValid() const;
     bool isBool() const;
     bool isNumber() const;
-    bool isFunction() const;
     bool isNull() const;
     bool isString() const;
     bool isUndefined() const;
@@ -109,17 +102,9 @@ public:
     qint32 toInt() const;
     quint32 toUInt() const;
     bool toBool() const;
-    double toInteger() const;
-    qint32 toInt32() const;
-    quint32 toUInt32() const;
-    quint16 toUInt16() const;
     QVariant toVariant() const;
     QObject *toQObject() const;
-    QJSValue toObject() const;
     QDateTime toDateTime() const;
-    QRegExp toRegExp() const;
-
-    bool instanceOf(const QJSValue &other) const;
 
     bool equals(const QJSValue &other) const;
     bool strictlyEquals(const QJSValue &other) const;
@@ -138,22 +123,47 @@ public:
 
     bool deleteProperty(const QString &name);
 
-    QJSValue::PropertyFlags propertyFlags(const QString &name) const;
-
     bool isCallable() const;
     QJSValue call(const QJSValueList &args);
     QJSValue callWithInstance(const QJSValue &instance, const QJSValueList &args = QJSValueList());
     QJSValue callAsConstructor(const QJSValueList &args = QJSValueList());
-    QJSValue call(const QJSValue &thisObject = QJSValue(),
+
+#ifdef QT_DEPRECATED
+    QT_DEPRECATED QJSValue(QJSEngine *engine, SpecialValue val);
+    QT_DEPRECATED QJSValue(QJSEngine *engine, bool val);
+    QT_DEPRECATED QJSValue(QJSEngine *engine, int val);
+    QT_DEPRECATED QJSValue(QJSEngine *engine, uint val);
+    QT_DEPRECATED QJSValue(QJSEngine *engine, double val);
+    QT_DEPRECATED QJSValue(QJSEngine *engine, const QString &val);
+
+    QT_DEPRECATED QJSEngine *engine() const;
+
+    QT_DEPRECATED bool isValid() const;
+    QT_DEPRECATED bool isFunction() const;
+    QT_DEPRECATED double toInteger() const;
+    QT_DEPRECATED qint32 toInt32() const;
+    QT_DEPRECATED quint32 toUInt32() const;
+    QT_DEPRECATED quint16 toUInt16() const;
+    QT_DEPRECATED QJSValue toObject() const;
+    QT_DEPRECATED QRegExp toRegExp() const;
+
+    QT_DEPRECATED bool instanceOf(const QJSValue &other) const;
+
+    QT_DEPRECATED QJSValue::PropertyFlags propertyFlags(const QString &name) const;
+
+    QT_DEPRECATED QJSValue call(const QJSValue &thisObject = QJSValue(),
                       const QJSValueList &args = QJSValueList());
-    QJSValue construct(const QJSValueList &args = QJSValueList());
+    QT_DEPRECATED QJSValue construct(const QJSValueList &args = QJSValueList());
+#endif
 
 private:
     // force compile error, prevent QJSValue(bool) to be called
     QJSValue(void *);
+#ifdef QT_DEPRECATED
     // force compile error, prevent QJSValue(QScriptEngine*, bool) to be called
     QJSValue(QJSEngine *, void *);
     QJSValue(QJSEngine *, const char *);
+#endif
 
     QJSValue(QJSValuePrivate*);
     QJSValue(QScriptPassPointer<QJSValuePrivate>);
@@ -164,7 +174,9 @@ private:
     Q_DECLARE_PRIVATE(QJSValue)
 };
 
+#ifdef QT_DEPRECATED
 Q_DECLARE_OPERATORS_FOR_FLAGS(QJSValue::PropertyFlags)
+#endif
 
 QT_END_NAMESPACE
 
