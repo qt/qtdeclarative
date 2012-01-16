@@ -43,10 +43,8 @@ import QtQuick.Window 2.0 as Window
 
 Item {
     id: root
-    width: 800
-    height: dpi + dpcm
-    property real dpcm: Window.Screen.physicalDotsPerInch / 2.54
-    property real dpi: Window.Screen.physicalDotsPerInch
+    width: 400
+    height: 200
     Item {
         id: main
         state: "orientation " + Window.Screen.currentOrientation
@@ -61,42 +59,11 @@ Item {
         height: main.baseHeight
         anchors.centerIn: parent
 
-        Repeater {
-            model: Math.ceil(main.width/ dpcm) + 1
-            delegate: Rectangle{
-                border.width: 1
-                color: "goldenrod"
-                width: dpcm
-                height: dpcm
-                x: dpcm * (index - 1)
-                Text {
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 2
-                    font.pointSize: 6
-                    text: index + " cm"
-                }
-            }
+        Text {
+            text: "Screen is " + Window.Screen.width + "x" + Window.Screen.height + " and primarily orientation " + Window.Screen.primaryOrientation
+            anchors.centerIn:parent
         }
 
-        Repeater {
-            model: Math.ceil(main.width / dpi) + 1
-            delegate: Rectangle{
-                border.width: 1
-                color: "goldenrod"
-                width: dpi
-                height: dpi
-                x: dpi * (index - 1)
-                y: dpcm
-                Text {
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 2
-                    font.pointSize: 8
-                    text: index + " in"
-                }
-            }
-        }
 
         states: [
             State {
