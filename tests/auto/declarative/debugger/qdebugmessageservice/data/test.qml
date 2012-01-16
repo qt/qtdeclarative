@@ -46,5 +46,6 @@ Item {
     height: 360
     Component.onCompleted:  {
         console.log("console.log")
+        console.count("console.count");
     }
 }

@@ -69,6 +69,11 @@ void tst_qdeclarativeconsole::logging()
     QTest::ignoreMessage(QtWarningMsg, "console.warn");
     QTest::ignoreMessage(QtCriticalMsg, "console.error");
 
+    QTest::ignoreMessage(QtDebugMsg, "console.count: 1");
+    QTest::ignoreMessage(QtDebugMsg, ": 1");
+    QTest::ignoreMessage(QtDebugMsg, "console.count: 2");
+    QTest::ignoreMessage(QtDebugMsg, ": 2");
+
     QTest::ignoreMessage(QtDebugMsg, "[1,2]");
     QTest::ignoreMessage(QtDebugMsg, "Object");
     QTest::ignoreMessage(QtDebugMsg, "undefined");
@@ -79,7 +84,6 @@ void tst_qdeclarativeconsole::logging()
     QTest::ignoreMessage(QtDebugMsg, "Object");
     QTest::ignoreMessage(QtDebugMsg, "1 pong! Object");
     QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] Object 2");
-
 
     QDeclarativeComponent component(&engine, testUrl);
     QObject *object = component.create();

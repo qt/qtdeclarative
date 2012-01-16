@@ -432,6 +432,9 @@ public:
     void startTimer(const QString &timerName);
     qint64 stopTimer(const QString &timerName, bool *wasRunning);
 
+    // used for console.count()
+    int consoleCountHelper(const QString &file, int line, int column);
+
     QObject *qtObjectFromJS(v8::Handle<v8::Value> value);
     QSet<int> visitedConversionObjects;
 
@@ -485,6 +488,8 @@ protected:
 
     QElapsedTimer m_time;
     QHash<QString, qint64> m_startedTimers;
+
+    QHash<QString, quint32> m_consoleCount;
 
     QVariant toBasicVariant(v8::Handle<v8::Value>);
 

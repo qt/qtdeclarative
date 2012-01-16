@@ -80,6 +80,20 @@ enum ConsoleLogTypes {
     Error
 };
 
+static QString extendMessage(const QString &msg) {
+    if (qmlConsoleExtended()) {
+        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
+        if (stackTrace->GetFrameCount()) {
+            v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(0);
+            int line = frame->GetLineNumber();
+            QString scriptName = QString::fromUtf16(*v8::String::Value(frame->GetScriptName()));
+
+            return QString::fromLatin1("%1 (%2:%3)").arg(msg).arg(scriptName).arg(line);
+        }
+    }
+    return msg;
+}
+
 v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args)
 {
     v8::HandleScope handleScope;
@@ -105,19 +119,7 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
         }
     }
 
-    if (qmlConsoleExtended()) {
-        int line = -1;
-        QString scriptName;
-        //get only current frame
-        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
-        if (stackTrace->GetFrameCount()) {
-            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
-            line = currentStackFrame->GetLineNumber();
-            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
-        }
-
-        result = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
-    }
+    result = extendMessage(result);
 
     switch (logType) {
     case Log:
@@ -215,6 +217,33 @@ v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
     if (wasRunning) {
         qDebug("%s: %llims", qPrintable(name), elapsed);
     }
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
+{
+    // first argument: name to print. Ignore any additional arguments
+    QString name;
+    if (args.Length() > 0)
+        name = V8ENGINE()->toString(args[0]);
+
+    v8::Handle<v8::StackTrace> stackTrace =
+        v8::StackTrace::CurrentStackTrace(1, v8::StackTrace::kOverview);
+
+    if (stackTrace->GetFrameCount()) {
+        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(0);
+
+        QString scriptName = V8ENGINE()->toString(frame->GetScriptName());
+        int line = frame->GetLineNumber();
+        int column = frame->GetColumn();
+
+        int value = V8ENGINE()->consoleCountHelper(scriptName, line, column);
+        QString message = name + QLatin1String(": ") + QString::number(value);
+        if (qmlConsoleExtended())
+            message = QString::fromLatin1("%1 (%2:%3)").arg(message).arg(scriptName).arg(line);
+        qDebug("%s", qPrintable(message));
+    }
+
     return v8::Undefined();
 }
 

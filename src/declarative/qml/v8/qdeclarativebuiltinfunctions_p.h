@@ -67,6 +67,7 @@ v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTime(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleCount(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args);
 v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);

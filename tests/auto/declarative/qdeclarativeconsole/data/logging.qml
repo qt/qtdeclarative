@@ -44,12 +44,21 @@ import QtQuick 2.0
 
 QtObject {
     id:root
+
+    function consoleCount() {
+        console.count("console.count", "Ignore additonal argument");
+        console.count();
+    }
+
     Component.onCompleted: {
         console.debug("console.debug");
         console.log("console.log");
         console.info("console.info");
         console.warn("console.warn");
         console.error("console.error");
+
+        consoleCount();
+        consoleCount();
 
         var a = [1, 2];
         var b = {a: "hello", d: 1 };

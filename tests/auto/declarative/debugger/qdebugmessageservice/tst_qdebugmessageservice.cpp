@@ -59,14 +59,16 @@ class tst_QDebugMessageService : public QDeclarativeDataTest
 public:
     tst_QDebugMessageService();
 
+    void init(bool extendedOutput);
+
 private slots:
     void initTestCase();
     void cleanupTestCase();
 
-    void init();
     void cleanup();
 
     void retrieveDebugOutput();
+    void retrieveDebugOutputExtended();
 
 private:
     QDeclarativeDebugProcess *m_process;
@@ -158,13 +160,14 @@ void tst_QDebugMessageService::cleanupTestCase()
         delete m_connection;
 }
 
-void tst_QDebugMessageService::init()
+void tst_QDebugMessageService::init(bool extendedOutput)
 {
     m_connection = new QDeclarativeDebugConnection();
     m_process = new QDeclarativeDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     m_client = new QDeclarativeDebugMsgClient(m_connection);
 
-    m_process->setEnvironment(QProcess::systemEnvironment() << "QML_CONSOLE_EXTENDED=1");
+    if (extendedOutput)
+        m_process->setEnvironment(QProcess::systemEnvironment() << "QML_CONSOLE_EXTENDED=1");
     m_process->start(QStringList() << QLatin1String(NORMALMODE) << QDeclarativeDataTest::instance()->testFile(QMLFILE));
     if (!m_process->waitForSessionStart()) {
         QFAIL(QString("Could not launch app. Application output: \n%1").arg(m_process->output()).toAscii());
@@ -196,15 +199,42 @@ void tst_QDebugMessageService::cleanup()
 
 void tst_QDebugMessageService::retrieveDebugOutput()
 {
-    if (m_client->logBuffer.isEmpty())
+    init(false);
+
+    int maxTries = 2;
+    while ((m_client->logBuffer.size() < 2)
+           && (maxTries-- > 0))
+        QVERIFY(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput())));
+
+    QCOMPARE(m_client->logBuffer.size(), 2);
+
+    QCOMPARE(m_client->logBuffer.at(0).toString(),
+             LogEntry(QtDebugMsg, QLatin1String("console.log")).toString());
+    QCOMPARE(m_client->logBuffer.at(1).toString(),
+             LogEntry(QtDebugMsg, QLatin1String("console.count: 1")).toString());
+}
+
+void tst_QDebugMessageService::retrieveDebugOutputExtended()
+{
+    init(true);
+
+    int maxTries = 2;
+    while ((m_client->logBuffer.size() < 2)
+           && (maxTries-- > 0))
         QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()));
-    QVERIFY(!m_client->logBuffer.isEmpty());
 
+    QCOMPARE(m_client->logBuffer.size(), 2);
 
-    QString msg = QString::fromLatin1("console.log (%1:%2)").arg(
-                QUrl::fromLocalFile(QDeclarativeDataTest::instance()->testFile(QMLFILE)).toString()).arg(48);
-    QCOMPARE(m_client->logBuffer.last().toString(),
-             LogEntry(QtDebugMsg, msg).toString());
+    const QString path =
+            QUrl::fromLocalFile(QDeclarativeDataTest::instance()->testFile(QMLFILE)).toString();
+
+    QString logMsg = QString::fromLatin1("console.log (%1:%2)").arg(path).arg(48);
+    QString countMsg = QString::fromLatin1("console.count: 1 (%1:%2)").arg(path).arg(49);
+
+    QCOMPARE(m_client->logBuffer.at(0).toString(),
+             LogEntry(QtDebugMsg, logMsg).toString());
+    QCOMPARE(m_client->logBuffer.at(1).toString(),
+             LogEntry(QtDebugMsg, countMsg).toString());
 }
 
 QTEST_MAIN(tst_QDebugMessageService)

@@ -71,6 +71,19 @@ function f() {
 it was called. The stack trace info contains function name, file name, line number
 and column number. The stack trace is limited to last 10 stack frames.
 
+\section2 Count
+
+\c console.count prints the current number of times a particular piece of code has been executed,
+along with a message. That is,
+
+\qml
+function f() {
+  console.count("f called");
+}
+\endqml
+
+will print \c{f called: 1}, \c{f called: 2} ... whenever \c{f()} is executed.
+
 \section2 Profile
 
 \c console.profile turns on the QML and JavaScript profilers. Nested calls are not

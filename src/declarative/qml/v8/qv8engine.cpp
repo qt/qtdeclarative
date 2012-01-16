@@ -531,6 +531,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     console->Set(v8::String::New("warn"), V8FUNCTION(consoleWarn, this));
     console->Set(v8::String::New("error"), V8FUNCTION(consoleError, this));
 
+    console->Set(v8::String::New("count"), V8FUNCTION(consoleCount, this));
     console->Set(v8::String::New("profile"), V8FUNCTION(consoleProfile, this));
     console->Set(v8::String::New("profileEnd"), V8FUNCTION(consoleProfileEnd, this));
     console->Set(v8::String::New("time"), V8FUNCTION(consoleTime, this));
@@ -1512,6 +1513,15 @@ qint64 QV8Engine::stopTimer(const QString &timerName, bool *wasRunning)
     *wasRunning = true;
     qint64 startedAt = m_startedTimers.take(timerName);
     return m_time.elapsed() - startedAt;
+}
+
+int QV8Engine::consoleCountHelper(const QString &file, int line, int column)
+{
+    const QString key = file + QString::number(line) + QString::number(column);
+    int number = m_consoleCount.value(key, 0);
+    number++;
+    m_consoleCount.insert(key, number);
+    return number;
 }
 
 void QV8GCCallback::registerGcPrologueCallback()
