@@ -65,6 +65,7 @@ void tst_qdeclarativeconsole::logging()
 
     QTest::ignoreMessage(QtDebugMsg, "console.debug");
     QTest::ignoreMessage(QtDebugMsg, "console.log");
+    QTest::ignoreMessage(QtDebugMsg, "console.info");
     QTest::ignoreMessage(QtWarningMsg, "console.warn");
     QTest::ignoreMessage(QtCriticalMsg, "console.error");
 

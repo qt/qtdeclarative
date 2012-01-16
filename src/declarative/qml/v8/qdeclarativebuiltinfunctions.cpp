@@ -152,6 +152,7 @@ v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
 {
     //console.log
     //console.debug
+    //console.info
     //print
     return console(Log, args);
 }

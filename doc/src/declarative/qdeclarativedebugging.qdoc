@@ -34,7 +34,7 @@
 
 \section2 Log
 
-\c console.log, console.debug, console.warn and console.error can be used to print
+\c console.log, console.debug, console.info, console.warn and console.error can be used to print
 debugging information to the console. For example:
 
 \qml
