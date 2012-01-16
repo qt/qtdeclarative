@@ -1040,6 +1040,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
 
     gridview->setCurrentIndex(0);
     qApp->processEvents();
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // scroll down until item 0 is no longer drawn
     // (bug not triggered if we just move using content y, since that doesn't
