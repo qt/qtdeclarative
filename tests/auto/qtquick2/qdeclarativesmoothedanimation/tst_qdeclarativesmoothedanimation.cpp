@@ -121,7 +121,7 @@ void tst_qdeclarativesmoothedanimation::disabled()
 void tst_qdeclarativesmoothedanimation::simpleAnimation()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("simpleanimation.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("simpleanimation.qml"));
     QObject *obj = c.create();
     QVERIFY(obj);
 
@@ -142,6 +142,7 @@ void tst_qdeclarativesmoothedanimation::simpleAnimation()
     QVERIFY(animation->isRunning());
     QTest::qWait(animation->duration());
     QTRY_COMPARE(rect->x(), qreal(200));
+    QTest::qWait(100);  //smoothed animation doesn't report stopped until delayed timer fires
 
     QVERIFY(!animation->isRunning());
     rect->setX(0);

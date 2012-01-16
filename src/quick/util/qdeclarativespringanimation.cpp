@@ -129,12 +129,12 @@ int QSpringAnimation::duration() const
 }
 void QSpringAnimation::restart()
 {
-    if (state() != QAbstractAnimation2::Running) {
-        useDelta = false;
-        start();
-    } else {
+    if (isRunning()) {
         useDelta = true;
         init();
+    } else {
+        useDelta = false;
+        //init() will be triggered when group starts
     }
 }
 

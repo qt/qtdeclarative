@@ -92,14 +92,14 @@ QSmoothedAnimation::~QSmoothedAnimation()
 void QSmoothedAnimation::restart()
 {
     initialVelocity = trackVelocity;
-    if (state() != QAbstractAnimation2::Running) {
-        useDelta = false;
-        start();
-    } else {
-        //we are joining a new wrapper group, our times need to be restarted
+    if (isRunning()) {
+        //we are joining a new wrapper group while running, our times need to be restarted
         useDelta = true;
         init();
         lastTime = 0;
+    } else {
+        useDelta = false;
+        //we'll be started when the group starts, which will force an init()
     }
 }
 
