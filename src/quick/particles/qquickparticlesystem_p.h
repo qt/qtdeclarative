@@ -302,6 +302,7 @@ public:
     void updateCurrentTime( int currentTime );
     QQuickParticleSystemAnimation* m_animation;
     bool m_running;
+    bool m_debugMode;
 
     int timeInt;
     bool initialized;
@@ -340,7 +341,6 @@ private:
     QSignalMapper m_painterMapper;
     QSignalMapper m_emitterMapper;
     bool m_paused;
-    bool m_debugMode;
     bool m_allDead;
     bool m_empty;
 };

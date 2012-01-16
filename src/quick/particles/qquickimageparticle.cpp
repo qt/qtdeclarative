@@ -55,8 +55,6 @@
 #include <private/qdeclarativeglobal_p.h>
 
 QT_BEGIN_NAMESPACE
-//###Switch to define later, for now user-friendly (no compilation) debugging is worth it
-DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 
 #ifndef QT_OPENGL_ES_2
 #define SHADER_DEFINES "#version 120\n"
@@ -825,7 +823,6 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_entryEffect(Fade)
 {
     setFlag(ItemHasContents);
-    m_debugMode = qmlParticlesDebug();
 }
 
 QQuickImageParticle::~QQuickImageParticle()
@@ -1221,6 +1218,8 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
 
     if (count() <= 0)
         return 0;
+
+    m_debugMode = m_system->m_debugMode;
 
     if (m_sprites.count() || m_bypassOptimizations) {
         perfLevel = Sprites;

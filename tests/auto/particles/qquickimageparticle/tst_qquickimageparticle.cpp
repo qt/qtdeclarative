@@ -51,10 +51,12 @@ class tst_qquickimageparticle : public QObject
     Q_OBJECT
 public:
     tst_qquickimageparticle();
+    ~tst_qquickimageparticle();
 
 private slots:
     void test_basic();
     void test_colored();
+    void test_colorVariance();
     void test_deformed();
     void test_tabled();
     void test_sprite();
@@ -63,6 +65,12 @@ private slots:
 tst_qquickimageparticle::tst_qquickimageparticle()
 {
     QUnifiedTimer::instance()->setConsistentTiming(true);
+    setenv("QML_PARTICLES_DEBUG","please",0);//QQuickImageParticle has several debug statements, with possible pointer dereferences
+}
+
+tst_qquickimageparticle::~tst_qquickimageparticle()
+{
+    unsetenv("QML_PARTICLES_DEBUG");
 }
 
 void tst_qquickimageparticle::test_basic()
@@ -134,6 +142,51 @@ void tst_qquickimageparticle::test_colored()
         QCOMPARE(d->color.g, (uchar)002);
         QCOMPARE(d->color.b, (uchar)001);
         QCOMPARE(d->color.a, (uchar)127);
+        QCOMPARE(d->xx, 1.0f);
+        QCOMPARE(d->xy, 0.0f);
+        QCOMPARE(d->yy, 1.0f);
+        QCOMPARE(d->yx, 0.0f);
+        QCOMPARE(d->rotation, 0.0f);
+        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->autoRotate, 0.0f);
+        QCOMPARE(d->animX, 0.0f);
+        QCOMPARE(d->animY, 0.0f);
+        QCOMPARE(d->animWidth, 1.0f);
+        QCOMPARE(d->animHeight, 1.0f);
+        QCOMPARE(d->frameDuration, 1.0f);
+        QCOMPARE(d->frameCount, 1.0f);
+        QCOMPARE(d->animT, -1.0f);
+    }
+    delete view;
+}
+
+
+void tst_qquickimageparticle::test_colorVariance()
+{
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/colorVariance.qml", 600);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
+
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
+    foreach (QQuickParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
+        QCOMPARE(d->x, 0.f);
+        QCOMPARE(d->y, 0.f);
+        QCOMPARE(d->vx, 0.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
+        QVERIFY(d->color.r < 128);
+        QVERIFY(d->color.g < 64);
+        QVERIFY(d->color.b < 32);
+        QVERIFY(d->color.a >= 64);
+        QVERIFY(d->color.a < 192);
         QCOMPARE(d->xx, 1.0f);
         QCOMPARE(d->xy, 0.0f);
         QCOMPARE(d->yy, 1.0f);
