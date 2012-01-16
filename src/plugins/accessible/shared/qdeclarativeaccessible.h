@@ -76,7 +76,6 @@ public:
     ~QDeclarativeAccessible();
 
     virtual QRect viewRect() const = 0;
-    QFlags<QAccessible::RelationFlag> relationTo(const QAccessibleInterface*) const;
     QAccessibleInterface *childAt(int, int) const;
     QAccessible::State state() const;
 

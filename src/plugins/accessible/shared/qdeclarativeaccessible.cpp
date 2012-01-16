@@ -63,11 +63,6 @@ QDeclarativeAccessible::~QDeclarativeAccessible()
 {
 }
 
-QFlags<QAccessible::RelationFlag> QDeclarativeAccessible::relationTo(const QAccessibleInterface *) const
-{
-    return QAccessible::Unrelated;
-}
-
 QAccessibleInterface *QDeclarativeAccessible::childAt(int x, int y) const
 {
     // Note that this function will disregard stacking order.
