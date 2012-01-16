@@ -273,7 +273,6 @@ QImage QQuickSpriteEngine::assembledImage()
             while (framesLeft > 0){
                 if (image.width() - x + curX <= img.width()){//finish a row in image (dest)
                     int copied = image.width() - x;
-                    Q_ASSERT(!(copied % frameWidth));//XXX: Just checking
                     framesLeft -= copied/frameWidth;
                     p.drawImage(x,y,img.copy(curX,curY,copied,frameHeight));
                     y += frameHeight;
@@ -285,7 +284,6 @@ QImage QQuickSpriteEngine::assembledImage()
                     }
                 }else{//finish a row in img (src)
                     int copied = img.width() - curX;
-                    Q_ASSERT(!(copied % frameWidth));//XXX: Just checking
                     framesLeft -= copied/frameWidth;
                     p.drawImage(x,y,img.copy(curX,curY,copied,frameHeight));
                     curY += frameHeight;
