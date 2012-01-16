@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -639,11 +639,14 @@ void QQuickParticleData::extendLife(float time)
 QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
     QQuickItem(parent),
     stateEngine(0),
+    m_animation(0),
     m_running(true),
+    initialized(0),
     particleCount(0),
     m_nextIndex(0),
     m_componentComplete(false),
-    m_paused(false)
+    m_paused(false),
+    m_empty(true)
 {
     connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
             this, SLOT(loadPainter(QObject*)));
@@ -674,6 +677,8 @@ void QQuickParticleSystem::initGroups()
 
 void QQuickParticleSystem::registerParticlePainter(QQuickParticlePainter* p)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Painter" << p << "to" << this;
     //TODO: a way to Unregister emitters, painters and affectors
     m_painters << QPointer<QQuickParticlePainter>(p);//###Set or uniqueness checking?
     connect(p, SIGNAL(groupsChanged(QStringList)),
@@ -683,6 +688,8 @@ void QQuickParticleSystem::registerParticlePainter(QQuickParticlePainter* p)
 
 void QQuickParticleSystem::registerParticleEmitter(QQuickParticleEmitter* e)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Emitter" << e << "to" << this;
     m_emitters << QPointer<QQuickParticleEmitter>(e);//###How to get them out?
     connect(e, SIGNAL(particleCountChanged()),
             this, SLOT(emittersChanged()));
@@ -694,11 +701,15 @@ void QQuickParticleSystem::registerParticleEmitter(QQuickParticleEmitter* e)
 
 void QQuickParticleSystem::registerParticleAffector(QQuickParticleAffector* a)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Affector" << a << "to" << this;
     m_affectors << QPointer<QQuickParticleAffector>(a);
 }
 
 void QQuickParticleSystem::registerParticleGroup(QQuickParticleGroup* g)
 {
+    if (m_debugMode)
+        qDebug() << "Registering Group" << g << "to" << this;
     m_groups << QPointer<QQuickParticleGroup>(g);
     createEngine();
 }
@@ -826,7 +837,7 @@ void QQuickParticleSystem::reset()
 
 void QQuickParticleSystem::loadPainter(QObject *p)
 {
-    if (!m_componentComplete)
+    if (!m_componentComplete || !p)
         return;
 
     QQuickParticlePainter* painter = qobject_cast<QQuickParticlePainter*>(p);
@@ -898,6 +909,9 @@ void QQuickParticleSystem::emittersChanged()
 
     if (particleCount > bySysIdx.size())//New datum requests haven't updated it
         bySysIdx.resize(particleCount);
+
+    foreach (QQuickParticleAffector *a, m_affectors)//Groups may have changed
+        a->m_updateIntSet = true;
 
     foreach (QQuickParticlePainter *p, m_painters)
         loadPainter(p);

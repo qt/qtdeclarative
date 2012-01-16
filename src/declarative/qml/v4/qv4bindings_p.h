@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -72,7 +72,8 @@ public:
     virtual ~QV4Bindings();
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, 
-                                               QObject *scope, int property, int line);
+                                               QObject *scope, int property,
+                                               int line, int column);
 
 #ifdef QML_THREADED_INTERPRETER
     static void **getDecodeInstrTable();
@@ -96,6 +97,7 @@ private:
         int property;
         QObject *scope;
         int line;
+        int column;
         QObject *target;
         quint32 executedBlocks;
 

@@ -43,7 +43,7 @@
 #define QQUICKSHADEREFFECTSOURCE_P_H
 
 #include "qquickitem.h"
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgdefaultimagenode_p.h>
@@ -232,6 +232,7 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
     virtual void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect);
+    virtual void itemChange(ItemChange change, const ItemChangeData &value);
 
 private:
     void ensureTexture();

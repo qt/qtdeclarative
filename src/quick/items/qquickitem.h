@@ -1,7 +1,7 @@
 // Commit: 6f78a6080b84cc3ef96b73a4ff58d1b5a72f08f4
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -51,6 +51,7 @@
 #include <QtCore/QList>
 #include <QtGui/qevent.h>
 #include <QtGui/qfont.h>
+#include <QtGui/qaccessible.h>
 
 QT_BEGIN_HEADER
 
@@ -80,6 +81,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickTransform)
 };
 
+class QQuickItemLayer;
 class QDeclarativeV8Function;
 class QDeclarativeState;
 class QQuickAnchorLine;
@@ -143,6 +145,8 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QDeclarativeParserStatu
     Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
+
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
     Q_ENUMS(TransformOrigin)
     Q_CLASSINFO("DefaultProperty", "data")
@@ -315,8 +319,8 @@ public:
        UpdatePaintNodeData();
     };
 
-    virtual bool isTextureProvider() const { return false; }
-    virtual QSGTextureProvider *textureProvider() const { return 0; }
+    virtual bool isTextureProvider() const;
+    virtual QSGTextureProvider *textureProvider() const;
 
 public Q_SLOTS:
     void update();
@@ -393,6 +397,9 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     virtual void updatePolish();
 
+protected Q_SLOTS:
+    void sendAccessibilityUpdate();
+
 protected:
     QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = 0);
 
@@ -400,6 +407,8 @@ private:
     friend class QQuickCanvas;
     friend class QQuickCanvasPrivate;
     friend class QSGRenderer;
+    friend class QAccessibleQuickItem;
+    friend class QQuickAccessibleAttached;
     Q_DISABLE_COPY(QQuickItem)
     Q_DECLARE_PRIVATE(QQuickItem)
 };

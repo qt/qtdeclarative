@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
        version: an int representing the highest protocol version the client knows
        pluginNames: plugins available on client side
     2. Server sends
-         "QDeclarativeDebugClient" 0 version pluginNames
+         "QDeclarativeDebugClient" 0 version pluginNames pluginVersions
        version: an int representing the highest protocol version the client & server know
        pluginNames: plugins available on server side. plugins both in the client and server message are enabled.
   client plugin advertisement
@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
          "QDeclarativeDebugServer" 1 pluginNames
   server plugin advertisement
     1. Server sends
-         "QDeclarativeDebugClient" 1 pluginNames
+         "QDeclarativeDebugClient" 1 pluginNames pluginVersions
   plugin communication:
        Everything send with a header different to "QDeclarativeDebugServer" is sent to the appropriate plugin.
   */
@@ -106,7 +106,7 @@ public:
 
 private:
     // private slot
-    void _q_sendMessage(const QByteArray &message);
+    void _q_sendMessages(const QList<QByteArray> &messages);
 };
 
 class QDeclarativeDebugServerThread : public QThread
@@ -134,6 +134,8 @@ QDeclarativeDebugServerPrivate::QDeclarativeDebugServerPrivate() :
     gotHello(false),
     thread(0)
 {
+    // used in _q_sendMessages
+    qRegisterMetaType<QList<QByteArray> >("QList<QByteArray>");
 }
 
 void QDeclarativeDebugServerPrivate::advertisePlugins()
@@ -146,10 +148,16 @@ void QDeclarativeDebugServerPrivate::advertisePlugins()
     QByteArray message;
     {
         QDataStream out(&message, QIODevice::WriteOnly);
-        out << QString(QLatin1String("QDeclarativeDebugClient")) << 1 << plugins.keys();
+        QStringList pluginNames;
+        QList<float> pluginVersions;
+        foreach (QDeclarativeDebugService *service, plugins.values()) {
+            pluginNames << service->name();
+            pluginVersions << service->version();
+        }
+        out << QString(QLatin1String("QDeclarativeDebugClient")) << 1 << pluginNames << pluginVersions;
     }
 
-    QMetaObject::invokeMethod(q, "_q_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+    QMetaObject::invokeMethod(q, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, QList<QByteArray>() << message));
 }
 
 QDeclarativeDebugServerConnection *QDeclarativeDebugServerPrivate::loadConnectionPlugin(
@@ -225,6 +233,13 @@ bool QDeclarativeDebugServer::hasDebuggingClient() const
 
 static QDeclarativeDebugServer *qDeclarativeDebugServer = 0;
 
+
+static void cleanup()
+{
+    delete qDeclarativeDebugServer;
+    qDeclarativeDebugServer = 0;
+}
+
 QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 {
     static bool commandLineTested = false;
@@ -263,10 +278,7 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 
             if (ok) {
                 qDeclarativeDebugServer = new QDeclarativeDebugServer();
-
                 QDeclarativeDebugServerThread *thread = new QDeclarativeDebugServerThread;
-
-                qDeclarativeDebugServer = new QDeclarativeDebugServer();
                 qDeclarativeDebugServer->d_func()->thread = thread;
                 qDeclarativeDebugServer->moveToThread(thread);
                 thread->setPluginName(pluginName);
@@ -303,6 +315,29 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 QDeclarativeDebugServer::QDeclarativeDebugServer()
     : QObject(*(new QDeclarativeDebugServerPrivate))
 {
+    qAddPostRoutine(cleanup);
+}
+
+QDeclarativeDebugServer::~QDeclarativeDebugServer()
+{
+    Q_D(QDeclarativeDebugServer);
+
+    QReadLocker(&d->pluginsLock);
+    {
+        foreach (QDeclarativeDebugService *service, d->plugins.values()) {
+            service->d_func()->server = 0;
+            service->d_func()->status = QDeclarativeDebugService::NotConnected;
+            service->statusChanged(QDeclarativeDebugService::NotConnected);
+        }
+    }
+
+    if (d->thread) {
+        d->thread->exit();
+        if (!d->thread->wait(1000))
+            d->thread->terminate();
+        delete d->thread;
+    }
+    delete d->connection;
 }
 
 void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
@@ -326,9 +361,16 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
             QByteArray helloAnswer;
             {
                 QDataStream out(&helloAnswer, QIODevice::WriteOnly);
-                out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << d->plugins.keys();
+                QStringList pluginNames;
+                QList<float> pluginVersions;
+                foreach (QDeclarativeDebugService *service, d->plugins.values()) {
+                    pluginNames << service->name();
+                    pluginVersions << service->version();
+                }
+
+                out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
             }
-            d->connection->send(helloAnswer);
+            d->connection->send(QList<QByteArray>() << helloAnswer);
 
             d->gotHello = true;
 
@@ -394,10 +436,10 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
     }
 }
 
-void QDeclarativeDebugServerPrivate::_q_sendMessage(const QByteArray &message)
+void QDeclarativeDebugServerPrivate::_q_sendMessages(const QList<QByteArray> &messages)
 {
     if (connection)
-        connection->send(message);
+        connection->send(messages);
 }
 
 QList<QDeclarativeDebugService*> QDeclarativeDebugServer::services() const
@@ -450,32 +492,23 @@ bool QDeclarativeDebugServer::removeService(QDeclarativeDebugService *service)
         service->d_func()->server = 0;
         service->d_func()->status = newStatus;
         service->statusChanged(newStatus);
-
-        // Last service? Then stop thread & delete instance
-        if (d->plugins.isEmpty()) {
-            d->thread->exit();
-            d->thread->wait();
-            delete d->thread;
-            delete d->connection;
-
-            qDeclarativeDebugServer = 0;
-            deleteLater();
-        }
     }
 
     return true;
 }
 
-void QDeclarativeDebugServer::sendMessage(QDeclarativeDebugService *service,
-                                          const QByteArray &message)
+void QDeclarativeDebugServer::sendMessages(QDeclarativeDebugService *service,
+                                          const QList<QByteArray> &messages)
 {
-    QByteArray msg;
-    {
-        QDataStream out(&msg, QIODevice::WriteOnly);
+    QList<QByteArray> prefixedMessages;
+    foreach (const QByteArray &message, messages) {
+        QByteArray prefixed;
+        QDataStream out(&prefixed, QIODevice::WriteOnly);
         out << service->name() << message;
+        prefixedMessages << prefixed;
     }
 
-    QMetaObject::invokeMethod(this, "_q_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, msg));
+    QMetaObject::invokeMethod(this, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, prefixedMessages));
 }
 
 bool QDeclarativeDebugServer::waitForMessage(QDeclarativeDebugService *service)

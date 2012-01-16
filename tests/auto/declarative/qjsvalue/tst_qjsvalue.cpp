@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -97,10 +97,10 @@ void tst_QJSValue::ctor_boolWithEngine()
     {
         QJSValue v(&eng, false);
         QCOMPARE(v.isValid(), true);
-        QCOMPARE(v.isBoolean(), true);
+        QCOMPARE(v.isBool(), true);
         QCOMPARE(v.isBool(), true);
         QCOMPARE(v.isObject(), false);
-        QCOMPARE(v.toBoolean(), false);
+        QCOMPARE(v.toBool(), false);
         QCOMPARE(v.engine(), &eng);
     }
 }
@@ -283,10 +283,10 @@ void tst_QJSValue::ctor_bool()
 {
     QJSValue v(false);
     QCOMPARE(v.isValid(), true);
-    QCOMPARE(v.isBoolean(), true);
+    QCOMPARE(v.isBool(), true);
     QCOMPARE(v.isBool(), true);
     QCOMPARE(v.isObject(), false);
-    QCOMPARE(v.toBoolean(), false);
+    QCOMPARE(v.toBool(), false);
     QCOMPARE(v.engine(), (QJSEngine *)0);
 }
 
@@ -536,49 +536,49 @@ void tst_QJSValue::toBoolean() // deprecated
     QJSEngine eng;
 
     QJSValue undefined = eng.undefinedValue();
-    QCOMPARE(undefined.toBoolean(), false);
+    QCOMPARE(undefined.toBool(), false);
     QCOMPARE(qjsvalue_cast<bool>(undefined), false);
 
     QJSValue null = eng.nullValue();
-    QCOMPARE(null.toBoolean(), false);
+    QCOMPARE(null.toBool(), false);
     QCOMPARE(qjsvalue_cast<bool>(null), false);
 
     {
         QJSValue falskt = QJSValue(&eng, false);
-        QCOMPARE(falskt.toBoolean(), false);
+        QCOMPARE(falskt.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(falskt), false);
 
         QJSValue sant = QJSValue(&eng, true);
-        QCOMPARE(sant.toBoolean(), true);
+        QCOMPARE(sant.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(sant), true);
 
         QJSValue number = QJSValue(&eng, 0.0);
-        QCOMPARE(number.toBoolean(), false);
+        QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
         QJSValue number2 = QJSValue(&eng, qSNaN());
-        QCOMPARE(number2.toBoolean(), false);
+        QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
         QJSValue number3 = QJSValue(&eng, 123.0);
-        QCOMPARE(number3.toBoolean(), true);
+        QCOMPARE(number3.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number3), true);
 
         QJSValue number4 = QJSValue(&eng, -456.0);
-        QCOMPARE(number4.toBoolean(), true);
+        QCOMPARE(number4.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number4), true);
 
         QJSValue str = QJSValue(&eng, QString(""));
-        QCOMPARE(str.toBoolean(), false);
+        QCOMPARE(str.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(str), false);
 
         QJSValue str2 = QJSValue(&eng, QString("123"));
-        QCOMPARE(str2.toBoolean(), true);
+        QCOMPARE(str2.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(str2), true);
     }
 
     QJSValue object = eng.newObject();
-    QCOMPARE(object.toBoolean(), true);
+    QCOMPARE(object.toBool(), true);
     QCOMPARE(qjsvalue_cast<bool>(object), true);
 
     // FIXME: No c-style callbacks currently
@@ -589,44 +589,44 @@ void tst_QJSValue::toBoolean() // deprecated
 #endif
 
     QJSValue inv = QJSValue();
-    QCOMPARE(inv.toBoolean(), false);
+    QCOMPARE(inv.toBool(), false);
     QCOMPARE(qjsvalue_cast<bool>(inv), false);
 
     // V2 constructors
     {
         QJSValue falskt = QJSValue(false);
-        QCOMPARE(falskt.toBoolean(), false);
+        QCOMPARE(falskt.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(falskt), false);
 
         QJSValue sant = QJSValue(true);
-        QCOMPARE(sant.toBoolean(), true);
+        QCOMPARE(sant.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(sant), true);
 
         QJSValue number = QJSValue(0.0);
-        QCOMPARE(number.toBoolean(), false);
+        QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
         QJSValue number2 = QJSValue(qSNaN());
-        QCOMPARE(number2.toBoolean(), false);
+        QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
         QJSValue number3 = QJSValue(123.0);
-        QCOMPARE(number3.toBoolean(), true);
+        QCOMPARE(number3.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number3), true);
 
         QJSValue number4 = QJSValue(-456.0);
-        QCOMPARE(number4.toBoolean(), true);
+        QCOMPARE(number4.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number4), true);
 
         QJSValue number5 = QJSValue(0x43211234);
-        QCOMPARE(number5.toBoolean(), true);
+        QCOMPARE(number5.toBool(), true);
 
         QJSValue str = QJSValue(QString(""));
-        QCOMPARE(str.toBoolean(), false);
+        QCOMPARE(str.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(str), false);
 
         QJSValue str2 = QJSValue(QString("123"));
-        QCOMPARE(str2.toBoolean(), true);
+        QCOMPARE(str2.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(str2), true);
     }
 }

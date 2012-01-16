@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -58,8 +58,8 @@ bool QDeclarativeDebugTest::waitForSignal(QObject *receiver, const char *member,
     return timer.isActive();
 }
 
-QDeclarativeDebugTestService::QDeclarativeDebugTestService(const QString &s, QObject *parent)
-    : QDeclarativeDebugService(s, parent)
+QDeclarativeDebugTestService::QDeclarativeDebugTestService(const QString &s, float version, QObject *parent)
+    : QDeclarativeDebugService(s, version, parent)
 {
     registerService();
 }

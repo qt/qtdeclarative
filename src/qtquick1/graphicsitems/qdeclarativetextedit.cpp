@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -130,10 +130,10 @@ QString QDeclarative1TextEdit::text() const
 
 #ifndef QT_NO_TEXTHTMLPARSER
     if (d->richText)
-        return d->document->toHtml();
+        return d->control->toHtml();
     else
 #endif
-        return d->document->toPlainText();
+        return d->control->toPlainText();
 }
 
 /*!
@@ -560,7 +560,7 @@ bool QDeclarative1TextEditPrivate::determineHorizontalAlignment()
                     ? control->textCursor().block().layout()->preeditAreaText()
                     : QString();
             alignToRight = preeditText.isEmpty()
-                    ? QApplication::keyboardInputDirection() == Qt::RightToLeft
+                    ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
                     : preeditText.isRightToLeft();
         } else {
             alignToRight = rightToLeftText;

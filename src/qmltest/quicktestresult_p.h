@@ -50,6 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QUrl;
 class QuickTestResultPrivate;
 
 class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
@@ -123,18 +124,18 @@ public Q_SLOTS:
 
     void finishTestFunction();
 
-    void fail(const QString &message, const QString &file, int line);
+    void fail(const QString &message, const QUrl &location, int line);
     bool verify(bool success, const QString &message,
-                const QString &file, int line);
+                const QUrl &location, int line);
     bool compare(bool success, const QString &message,
                  const QString &val1, const QString &val2,
-                 const QString &file, int line);
-    void skip(const QString &message, const QString &file, int line);
+                 const QUrl &location, int line);
+    void skip(const QString &message, const QUrl &location, int line);
     bool expectFail(const QString &tag, const QString &comment,
-                    const QString &file, int line);
+                    const QUrl &location, int line);
     bool expectFailContinue(const QString &tag, const QString &comment,
-                            const QString &file, int line);
-    void warn(const QString &message, const QString &file, int line);
+                            const QUrl &location, int line);
+    void warn(const QString &message, const QUrl &location, int line);
 
     void ignoreWarning(const QString &message);
 

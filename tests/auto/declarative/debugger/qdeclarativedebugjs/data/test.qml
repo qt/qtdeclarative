@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -40,45 +40,15 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "test.js" as Script
 
 //DO NOT CHANGE
 
-Rectangle {
-    id: root
-    width: 10; height: 10;
-    Component.onCompleted: { Script.printMessage("onCompleted"); doSomething(); }
-
-    property int result: 0
-    property int someValue: 10
-    property bool raiseException: false
-
-    function doSomething() {
-        var a = root.result;
-        var b = commonFunction();
-        var c = [1,2,3];
-        var d = Script.add(a,c[2]);
-        result += d;
-        doSomethingElse();
-    }
-
-    Timer {
-        id: timer;  interval: 1
-        onTriggered: {
-            doSomething();
-            Script.printMessage("onTriggered");
-        }
-    }
-
-    function commonFunction() {
-        console.log("commonFunction");
-        return 5;
-    }
-
-    function doSomethingElse() {
-        result = Script.add(result,8);
-        if (raiseException)
-            dummy();
+Item {
+    Component.onCompleted: {
+            var a = [1, 2]
+            var b = {a: "hello", d: 1 }
+            var c
+            var d = 12
     }
 }
 

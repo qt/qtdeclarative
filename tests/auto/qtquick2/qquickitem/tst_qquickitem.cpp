@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -73,9 +73,9 @@ class TestPolishItem : public QQuickItem
 {
 Q_OBJECT
 public:
-    TestPolishItem(QQuickItem *parent)
+    TestPolishItem(QQuickItem *parent = 0)
     : QQuickItem(parent), wasPolished(false) {
-        QTimer::singleShot(10, this, SLOT(doPolish()));
+
     }
 
     bool wasPolished;
@@ -103,15 +103,13 @@ protected:
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
 };
 
-class tst_qquickitem : public QObject
+class tst_qquickitem : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickitem();
 
 private slots:
     void initTestCase();
-    void cleanupTestCase();
 
     void noCanvas();
     void simpleFocus();
@@ -127,6 +125,7 @@ private slots:
 
     void mouseGrab();
     void polishOutsideAnimation();
+    void polishOnCompleted();
 
     void wheelEvent_data();
     void wheelEvent();
@@ -150,16 +149,10 @@ private:
     }
 };
 
-tst_qquickitem::tst_qquickitem()
-{
-}
-
 void tst_qquickitem::initTestCase()
 {
-}
-
-void tst_qquickitem::cleanupTestCase()
-{
+    QDeclarativeDataTest::initTestCase();
+    qmlRegisterType<TestPolishItem>("Qt.test", 1, 0, "TestPolishItem");
 }
 
 // Focus has no effect when outside a canvas
@@ -878,10 +871,30 @@ void tst_qquickitem::polishOutsideAnimation()
     TestPolishItem *item = new TestPolishItem(canvas->rootItem());
     item->setSize(QSizeF(200, 100));
     QTest::qWait(50);
+
+    QTimer::singleShot(10, item, SLOT(doPolish()));
     QTRY_VERIFY(item->wasPolished);
 
     delete item;
     delete canvas;
+}
+
+void tst_qquickitem::polishOnCompleted()
+{
+    QQuickView *view = new QQuickView;
+    view->setSource(testFileUrl("polishOnCompleted.qml"));
+    view->show();
+
+    TestPolishItem *item = qobject_cast<TestPolishItem*>(view->rootObject());
+    QVERIFY(item);
+
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-21590 view does not reliably receive polish without a running animation");
+#endif
+
+    QTRY_VERIFY(item->wasPolished);
+
+    delete view;
 }
 
 void tst_qquickitem::wheelEvent_data()
@@ -915,7 +928,7 @@ void tst_qquickitem::wheelEvent()
 
     QWheelEvent event(QPoint(100, 50), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
     event.setAccepted(false);
-    QApplication::sendEvent(canvas, &event);
+    QGuiApplication::sendEvent(canvas, &event);
 
     if (shouldReceiveWheelEvents) {
         QVERIFY(event.isAccepted());
@@ -979,7 +992,7 @@ void tst_qquickitem::hoverEvent_data()
 static void sendMouseMove(QObject *object, const QPoint &position)
 {
     QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, 0);
-    QApplication::sendEvent(object, &moveEvent);
+    QGuiApplication::sendEvent(object, &moveEvent);
 }
 
 void tst_qquickitem::hoverEvent()
@@ -1075,56 +1088,59 @@ void tst_qquickitem::hoverEventInParent()
 
 void tst_qquickitem::paintOrder_data()
 {
+    const QUrl order1Url = testFileUrl("order.1.qml");
+    const QUrl order2Url = testFileUrl("order.2.qml");
+
     QTest::addColumn<QUrl>("source");
     QTest::addColumn<int>("op");
     QTest::addColumn<QVariant>("param1");
     QTest::addColumn<QVariant>("param2");
     QTest::addColumn<QStringList>("expected");
 
-    QTest::newRow("test 1 noop") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 noop") << order1Url
         << int(NoOp) << QVariant() << QVariant()
         << (QStringList() << "1" << "2" << "3");
-    QTest::newRow("test 1 add") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 add") << order1Url
         << int(Append) << QVariant("new") << QVariant()
         << (QStringList() << "1" << "2" << "3" << "new");
-    QTest::newRow("test 1 remove") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 remove") << order1Url
         << int(Remove) << QVariant(1) << QVariant()
         << (QStringList() << "1" << "3");
-    QTest::newRow("test 1 stack before") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 stack before") << order1Url
         << int(StackBefore) << QVariant(2) << QVariant(1)
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 1 stack after") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 stack after") << order1Url
         << int(StackAfter) << QVariant(0) << QVariant(1)
         << (QStringList() << "2" << "1" << "3");
-    QTest::newRow("test 1 set z") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 set z") << order1Url
         << int(SetZ) << QVariant(1) << QVariant(qreal(1.))
         << (QStringList() << "1" << "3" << "2");
 
-    QTest::newRow("test 2 noop") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 noop") << order2Url
         << int(NoOp) << QVariant() << QVariant()
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 2 add") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 add") << order2Url
         << int(Append) << QVariant("new") << QVariant()
         << (QStringList() << "1" << "3" << "new" << "2");
-    QTest::newRow("test 2 remove 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 remove 1") << order2Url
         << int(Remove) << QVariant(1) << QVariant()
         << (QStringList() << "1" << "3");
-    QTest::newRow("test 2 remove 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 remove 2") << order2Url
         << int(Remove) << QVariant(2) << QVariant()
         << (QStringList() << "1" << "2");
-    QTest::newRow("test 2 stack before 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack before 1") << order2Url
         << int(StackBefore) << QVariant(1) << QVariant(0)
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 2 stack before 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack before 2") << order2Url
         << int(StackBefore) << QVariant(2) << QVariant(0)
         << (QStringList() << "3" << "1" << "2");
-    QTest::newRow("test 2 stack after 1") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack after 1") << order2Url
         << int(StackAfter) << QVariant(0) << QVariant(1)
         << (QStringList() << "1" << "3" << "2");
-    QTest::newRow("test 2 stack after 2") << QUrl::fromLocalFile(TESTDATA("order.2.qml"))
+    QTest::newRow("test 2 stack after 2") << order2Url
         << int(StackAfter) << QVariant(0) << QVariant(2)
         << (QStringList() << "3" << "1" << "2");
-    QTest::newRow("test 1 set z") << QUrl::fromLocalFile(TESTDATA("order.1.qml"))
+    QTest::newRow("test 1 set z") << order1Url
         << int(SetZ) << QVariant(2) << QVariant(qreal(2.))
         << (QStringList() << "1" << "2" << "3");
 }

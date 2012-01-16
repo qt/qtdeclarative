@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -55,6 +55,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qurl.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -105,6 +106,7 @@ public:
 
     inline QString *NewString(const QString &);
     inline QByteArray *NewByteArray(const QByteArray &);
+    inline QUrl *NewUrl(const QUrl &);
 
     template<typename T>
     struct List {
@@ -144,6 +146,8 @@ private:
     struct StringClass : public QString, public Class {
     };
     struct ByteArrayClass : public QByteArray, public Class {
+    };
+    struct UrlClass : public QUrl, public Class {
     };
 
     inline void *allocate(int size);
@@ -218,6 +222,13 @@ QString *QDeclarativePool::NewString(const QString &s)
 QByteArray *QDeclarativePool::NewByteArray(const QByteArray &s)
 {
     QByteArray *rv = New<ByteArrayClass>();
+    *rv = s;
+    return rv;
+}
+
+QUrl *QDeclarativePool::NewUrl(const QUrl &s)
+{
+    QUrl *rv = New<UrlClass>();
     *rv = s;
     return rv;
 }

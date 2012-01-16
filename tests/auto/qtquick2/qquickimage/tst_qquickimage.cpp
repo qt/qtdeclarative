@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -64,7 +64,7 @@
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
-class tst_qquickimage : public QObject
+class tst_qquickimage : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -130,13 +130,13 @@ void tst_qquickimage::imageSource_data()
     QTest::addColumn<bool>("cache");
     QTest::addColumn<QString>("error");
 
-    QTest::newRow("local") << QUrl::fromLocalFile(TESTDATA("colors.png")).toString() << 120.0 << 120.0 << false << false << true << "";
-    QTest::newRow("local no cache") << QUrl::fromLocalFile(TESTDATA("colors.png")).toString() << 120.0 << 120.0 << false << false << false << "";
-    QTest::newRow("local async") << QUrl::fromLocalFile(TESTDATA("colors1.png")).toString() << 120.0 << 120.0 << false << true << true << "";
-    QTest::newRow("local not found") << QUrl::fromLocalFile(TESTDATA("no-such-file.png")).toString() << 0.0 << 0.0 << false
-        << false << true << "file::2:1: QML Image: Cannot open: " + QUrl::fromLocalFile(TESTDATA("no-such-file.png")).toString();
-    QTest::newRow("local async not found") << QUrl::fromLocalFile(TESTDATA("no-such-file-1.png")).toString() << 0.0 << 0.0 << false
-        << true << true << "file::2:1: QML Image: Cannot open: " + QUrl::fromLocalFile(TESTDATA("no-such-file-1.png")).toString();
+    QTest::newRow("local") << testFileUrl("colors.png").toString() << 120.0 << 120.0 << false << false << true << "";
+    QTest::newRow("local no cache") << testFileUrl("colors.png").toString() << 120.0 << 120.0 << false << false << false << "";
+    QTest::newRow("local async") << testFileUrl("colors1.png").toString() << 120.0 << 120.0 << false << true << true << "";
+    QTest::newRow("local not found") << testFileUrl("no-such-file.png").toString() << 0.0 << 0.0 << false
+        << false << true << "file::2:1: QML Image: Cannot open: " + testFileUrl("no-such-file.png").toString();
+    QTest::newRow("local async not found") << testFileUrl("no-such-file-1.png").toString() << 0.0 << 0.0 << false
+        << true << true << "file::2:1: QML Image: Cannot open: " + testFileUrl("no-such-file-1.png").toString();
     QTest::newRow("remote") << SERVER_ADDR "/colors.png" << 120.0 << 120.0 << true << false << true << "";
     QTest::newRow("remote redirected") << SERVER_ADDR "/oldcolors.png" << 120.0 << 120.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svg"))
@@ -160,7 +160,7 @@ void tst_qquickimage::imageSource()
     TestHTTPServer server(SERVER_PORT);
     if (remote) {
         QVERIFY(server.isValid());
-        server.serveDirectory(TESTDATA(""));
+        server.serveDirectory(dataDirectory());
         server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
     }
 
@@ -207,7 +207,7 @@ void tst_qquickimage::clearSource()
 {
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("colors.png")));
+    ctxt->setContextProperty("srcImage", testFileUrl("colors.png"));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
@@ -229,7 +229,7 @@ void tst_qquickimage::clearSource()
 
 void tst_qquickimage::resized()
 {
-    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + TESTDATA("colors.png") + "\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + testFile("colors.png") + "\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
@@ -246,14 +246,14 @@ void tst_qquickimage::preserveAspectRatio()
     QQuickView *canvas = new QQuickView(0);
     canvas->show();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("aspectratio.qml")));
+    canvas->setSource(testFileUrl("aspectratio.qml"));
     QQuickImage *image = qobject_cast<QQuickImage*>(canvas->rootObject());
     QVERIFY(image != 0);
     image->setWidth(80.0);
     QCOMPARE(image->width(), 80.);
     QCOMPARE(image->height(), 80.);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("aspectratio.qml")));
+    canvas->setSource(testFileUrl("aspectratio.qml"));
     image = qobject_cast<QQuickImage*>(canvas->rootObject());
     image->setHeight(60.0);
     QVERIFY(image != 0);
@@ -264,7 +264,7 @@ void tst_qquickimage::preserveAspectRatio()
 
 void tst_qquickimage::smooth()
 {
-    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + TESTDATA("colors.png") + "\"; smooth: true; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + testFile("colors.png") + "\"; smooth: true; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
@@ -291,7 +291,7 @@ void tst_qquickimage::mirror()
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
         QQuickView *canvas = new QQuickView;
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("mirror.qml")));
+        canvas->setSource(testFileUrl("mirror.qml"));
 
         QQuickImage *obj = canvas->rootObject()->findChild<QQuickImage*>("image");
         QVERIFY(obj != 0);
@@ -307,7 +307,7 @@ void tst_qquickimage::mirror()
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
         QPixmap srcPixmap;
-        QVERIFY(srcPixmap.load(TESTDATA("pattern.png")));
+        QVERIFY(srcPixmap.load(testFile("pattern.png")));
 
         QPixmap expected(width, height);
         expected.fill();
@@ -359,7 +359,7 @@ void tst_qquickimage::svg()
     if (!QImageReader::supportedImageFormats().contains("svg"))
         QSKIP("svg support not available");
 
-    QString src = QUrl::fromLocalFile(TESTDATA("heart.svg")).toString();
+    QString src = testFileUrl("heart.svg").toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; sourceSize.width: 300; sourceSize.height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -423,7 +423,7 @@ void tst_qquickimage::geometry()
     QFETCH(double, boundingWidth);
     QFETCH(double, boundingHeight);
 
-    QString src = QUrl::fromLocalFile(TESTDATA("rect.png")).toString();
+    QString src = testFileUrl("rect.png").toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; fillMode: Image." + fillMode + "; ";
 
     if (explicitWidth)
@@ -451,7 +451,7 @@ void tst_qquickimage::big()
     // If the JPEG loader does not implement scaling efficiently, it would
     // have to build a 400 MB image. That would be a bug in the JPEG loader.
 
-    QString src = QUrl::fromLocalFile(TESTDATA("big.jpeg")).toString();
+    QString src = testFileUrl("big.jpeg").toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 100; sourceSize.height: 256 }";
 
     QDeclarativeComponent component(&engine);
@@ -484,7 +484,7 @@ void tst_qquickimage::tiling_QTBUG_6716()
     QQuickView *canvas = new QQuickView(0);
     AutoDelete<QQuickView> del(canvas);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA(source)));
+    canvas->setSource(testFileUrl(source));
     canvas->show();
     qApp->processEvents();
 
@@ -512,12 +512,12 @@ void tst_qquickimage::noLoading()
 
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(TESTDATA(""));
+    server.serveDirectory(dataDirectory());
     server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
 
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage; cache: true }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("heart.png")));
+    ctxt->setContextProperty("srcImage", testFileUrl("heart.png"));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
@@ -529,7 +529,7 @@ void tst_qquickimage::noLoading()
     QSignalSpy statusSpy(obj, SIGNAL(statusChanged(QQuickImageBase::Status)));
 
     // Loading local file
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("green.png")));
+    ctxt->setContextProperty("srcImage", testFileUrl("green.png"));
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 1);
@@ -547,7 +547,7 @@ void tst_qquickimage::noLoading()
     QTRY_COMPARE(statusSpy.count(), 2);
 
     // Loading remote file again - should not go through 'Loading' state.
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("green.png")));
+    ctxt->setContextProperty("srcImage", testFileUrl("green.png"));
     ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/rect.png");
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
@@ -561,7 +561,7 @@ void tst_qquickimage::noLoading()
 void tst_qquickimage::paintedWidthHeight()
 {
     {
-        QString src = QUrl::fromLocalFile(TESTDATA("heart.png")).toString();
+        QString src = testFileUrl("heart.png").toString();
         QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 200; height: 25; fillMode: Image.PreserveAspectFit }";
 
         QDeclarativeComponent component(&engine);
@@ -577,7 +577,7 @@ void tst_qquickimage::paintedWidthHeight()
     }
 
     {
-        QString src = QUrl::fromLocalFile(TESTDATA("heart.png")).toString();
+        QString src = testFileUrl("heart.png").toString();
         QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 26; height: 175; fillMode: Image.PreserveAspectFit }";
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -596,7 +596,7 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 {
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("heart200.png")));
+    ctxt->setContextProperty("srcImage", testFileUrl("heart200.png"));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
@@ -610,12 +610,12 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
     QTRY_COMPARE(obj->sourceSize().height(), 200);
     QTRY_COMPARE(sourceSizeSpy.count(), 0);
 
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("colors.png")));
+    ctxt->setContextProperty("srcImage", testFileUrl("colors.png"));
     QTRY_COMPARE(obj->sourceSize().width(), 120);
     QTRY_COMPARE(obj->sourceSize().height(), 120);
     QTRY_COMPARE(sourceSizeSpy.count(), 1);
 
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("heart200.png")));
+    ctxt->setContextProperty("srcImage", testFileUrl("heart200.png"));
     QTRY_COMPARE(obj->sourceSize().width(), 200);
     QTRY_COMPARE(obj->sourceSize().height(), 200);
     QTRY_COMPARE(sourceSizeSpy.count(), 2);
@@ -626,7 +626,7 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 void tst_qquickimage::sourceSize_QTBUG_16389()
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("qtbug_16389.qml")));
+    canvas->setSource(testFileUrl("qtbug_16389.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -659,7 +659,7 @@ static void checkWarnings(QtMsgType, const char *msg)
 void tst_qquickimage::nullPixmapPaint()
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("nullpixmap.qml")));
+    canvas->setSource(testFileUrl("nullpixmap.qml"));
     canvas->show();
 
     QQuickImage *image = qobject_cast<QQuickImage*>(canvas->rootObject());
@@ -679,10 +679,10 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(TESTDATA(""), TestHTTPServer::Delay);
+    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     {
-        QQuickView view(QUrl::fromLocalFile(TESTDATA("qtbug_22125.qml")));
+        QQuickView view(testFileUrl("qtbug_22125.qml"));
         view.show();
         qApp->processEvents();
         qApp->processEvents();

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -43,6 +43,7 @@
 #include "../../shared/util.h"
 #include <private/qinputpanel_p.h>
 #include <QtDeclarative/qdeclarativeengine.h>
+#include <QtDeclarative/qdeclarativeexpression.h>
 #include <QFile>
 #include <QtQuick/qquickview.h>
 #include <QtGui/qguiapplication.h>
@@ -55,14 +56,13 @@
 #include <QStyle>
 #include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
-#include <qplatforminputcontext_qpa.h>
-#include <private/qinputpanel_p.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>
 #endif
 
 #include "qplatformdefs.h"
+#include "../../shared/platforminputcontext.h"
 
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
@@ -70,7 +70,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
     // XXX This will be replaced by some clever persistent platform image store.
-    QString persistent_dir = TESTDATA("");
+    QString persistent_dir = QDeclarativeDataTest::instance()->dataDirectory();
     QString arch = "unknown-architecture"; // QTest needs to help with this.
 
     QString expectfile = persistent_dir + QDir::separator() + filebasename + "-" + arch + ".png";
@@ -83,9 +83,18 @@ QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& 
     return expectfile;
 }
 
+template <typename T> static T evaluate(QObject *scope, const QString &expression)
+{
+    QDeclarativeExpression expr(qmlContext(scope), scope, expression);
+    T result = expr.evaluate().value<T>();
+    if (expr.hasError())
+        qWarning() << expr.error().toString();
+    return result;
+}
+
 typedef QPair<int, QChar> Key;
 
-class tst_qquicktextinput : public QObject
+class tst_qquicktextinput : public QDeclarativeDataTest
 
 {
     Q_OBJECT
@@ -93,13 +102,12 @@ public:
     tst_qquicktextinput();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void cleanup();
     void text();
     void width();
     void font();
     void color();
+    void wrap();
     void selection();
     void isRightToLeft_data();
     void isRightToLeft();
@@ -115,6 +123,9 @@ private slots:
     void horizontalAlignment_data();
     void horizontalAlignment();
     void horizontalAlignment_RightToLeft();
+    void verticalAlignment();
+
+    void boundingRect();
 
     void positionAt();
 
@@ -151,7 +162,15 @@ private slots:
     void preeditCursorRectangle();
     void inputContextMouseHandler();
     void inputMethodComposing();
+    void inputPanelUpdate();
     void cursorRectangleSize();
+
+    void getText_data();
+    void getText();
+    void insert_data();
+    void insert();
+    void remove_data();
+    void remove();
 
     void keySequence_data();
     void keySequence();
@@ -166,6 +185,8 @@ private slots:
     void QTBUG_19956();
     void QTBUG_19956_data();
     void QTBUG_19956_regexp();
+
+    void negativeDimensions();
 
 private:
     void simulateKey(QQuickView *, int key);
@@ -232,14 +253,6 @@ QList<Key> &operator <<(QList<Key> &keys, Qt::Key key)
     return keys;
 }
 
-void tst_qquicktextinput::initTestCase()
-{
-}
-
-void tst_qquicktextinput::cleanupTestCase()
-{
-}
-
 void tst_qquicktextinput::cleanup()
 {
     // ensure not even skipped tests with custom input context leave it dangling
@@ -278,6 +291,7 @@ void tst_qquicktextinput::text()
 
         QVERIFY(textinputObject != 0);
         QCOMPARE(textinputObject->text(), QString(""));
+        QCOMPARE(textinputObject->length(), 0);
 
         delete textinputObject;
     }
@@ -291,6 +305,7 @@ void tst_qquicktextinput::text()
 
         QVERIFY(textinputObject != 0);
         QCOMPARE(textinputObject->text(), standard.at(i));
+        QCOMPARE(textinputObject->length(), standard.at(i).length());
 
         delete textinputObject;
     }
@@ -479,6 +494,41 @@ void tst_qquicktextinput::color()
     }
 }
 
+void tst_qquicktextinput::wrap()
+{
+    int textHeight = 0;
+    // for specified width and wrap set true
+    {
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData("import QtQuick 2.0\nTextInput { text: \"Hello\"; wrapMode: Text.WrapAnywhere; width: 300 }", QUrl::fromLocalFile(""));
+        QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
+        textHeight = textObject->height();
+
+        QVERIFY(textObject != 0);
+        QVERIFY(textObject->wrapMode() == QQuickTextInput::WrapAnywhere);
+        QCOMPARE(textObject->width(), 300.);
+
+        delete textObject;
+    }
+
+    for (int i = 0; i < standard.count(); i++) {
+        QString componentStr = "import QtQuick 2.0\nTextInput { wrapMode: Text.WrapAnywhere; width: 30; text: \"" + standard.at(i) + "\" }";
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
+
+        QVERIFY(textObject != 0);
+        QCOMPARE(textObject->width(), 30.);
+        QVERIFY(textObject->height() > textHeight);
+
+        int oldHeight = textObject->height();
+        textObject->setWidth(100);
+        QVERIFY(textObject->height() < oldHeight);
+
+        delete textObject;
+    }
+}
+
 void tst_qquicktextinput::selection()
 {
     QString testStr = standard[0];
@@ -569,7 +619,7 @@ void tst_qquicktextinput::selection()
         QList<QInputMethodEvent::Attribute> attributes;
         attributes << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 12, 5, QVariant());
         QInputMethodEvent event("", attributes);
-        QApplication::sendEvent(textinputObject, &event);
+        QGuiApplication::sendEvent(textinputObject, &event);
     }
     QCOMPARE(selectionSpy.count(), 1);
     QCOMPARE(textinputObject->selectionStart(), 12);
@@ -1048,7 +1098,7 @@ void tst_qquicktextinput::moveCursorSelectionSequence()
 
 void tst_qquicktextinput::dragMouseSelection()
 {
-    QString qmlfile = TESTDATA("mouseselection_true.qml");
+    QString qmlfile = testFile("mouseselection_true.qml");
 
     QQuickView canvas(QUrl::fromLocalFile(qmlfile));
 
@@ -1093,9 +1143,9 @@ void tst_qquicktextinput::mouseSelectionMode_data()
     QTest::addColumn<bool>("selectWords");
 
     // import installed
-    QTest::newRow("SelectWords") << TESTDATA("mouseselectionmode_words.qml") << true;
-    QTest::newRow("SelectCharacters") << TESTDATA("mouseselectionmode_characters.qml") << false;
-    QTest::newRow("default") << TESTDATA("mouseselectionmode_default.qml") << false;
+    QTest::newRow("SelectWords") << testFile("mouseselectionmode_words.qml") << true;
+    QTest::newRow("SelectCharacters") << testFile("mouseselectionmode_characters.qml") << false;
+    QTest::newRow("default") << testFile("mouseselectionmode_default.qml") << false;
 }
 
 void tst_qquicktextinput::mouseSelectionMode()
@@ -1149,7 +1199,7 @@ void tst_qquicktextinput::horizontalAlignment()
     QFETCH(int, hAlign);
     QFETCH(QString, expectfile);
 
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("horizontalAlignment.qml")));
+    QQuickView canvas(testFileUrl("horizontalAlignment.qml"));
 
     canvas.show();
     canvas.requestActivateWindow();
@@ -1169,7 +1219,7 @@ void tst_qquicktextinput::horizontalAlignment()
 
 void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("horizontalAlignment_RightToLeft.qml")));
+    QQuickView canvas(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextInput *textInput = canvas.rootObject()->findChild<QQuickTextInput*>("text");
     QVERIFY(textInput != 0);
     canvas.show();
@@ -1178,37 +1228,41 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 
     QQuickTextInputPrivate *textInputPrivate = QQuickTextInputPrivate::get(textInput);
     QVERIFY(textInputPrivate != 0);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // implicit alignment should follow the reading direction of RTL text
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // explicitly left aligned
     textInput->setHAlign(QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
 
     // explicitly right aligned
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // explicitly center aligned
     textInput->setHAlign(QQuickTextInput::AlignHCenter);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignHCenter);
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
-    QVERIFY(-textInputPrivate->hscroll + textInputPrivate->width > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll > 0);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll < textInput->width());
 
     // reseted alignment should go back to following the text reading direction
     textInput->resetHAlign();
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // mirror the text item
     QQuickItemPrivate::get(textInput)->setLayoutMirror(true);
@@ -1216,19 +1270,21 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // mirrored implicit alignment should continue to follow the reading direction of the text
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), textInput->hAlign());
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // explicitly right aligned behaves as left aligned
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignLeft);
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
 
     // mirrored explicitly left aligned behaves as right aligned
     textInput->setHAlign(QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     // disable mirroring
     QQuickItemPrivate::get(textInput)->setLayoutMirror(false);
@@ -1238,7 +1294,7 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // English text should be implicitly left aligned
     textInput->setText("Hello world!");
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
-    QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
 
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1256,30 +1312,92 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
 
     // empty text with implicit alignment follows the system locale-based
-    // keyboard input direction from QGuiApplication::keyboardInputDirection
+    // keyboard input direction from QInputPanel::inputDirection()
     textInput->setText("");
-    QCOMPARE(textInput->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(textInput->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
-    if (QGuiApplication::keyboardInputDirection() == Qt::LeftToRight)
-        QVERIFY(-textInputPrivate->hscroll < canvas.width()/2);
-    else
-        QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    if (qApp->inputPanel()->inputDirection() == Qt::LeftToRight) {
+        QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
+    } else {
+        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
+    }
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
     QString componentStr = "import QtQuick 2.0\nTextInput {}";
     QDeclarativeComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
+    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
     delete textObject;
 }
 
+void tst_qquicktextinput::verticalAlignment()
+{
+    QQuickView canvas(testFileUrl("horizontalAlignment.qml"));
+    QQuickTextInput *textInput = canvas.rootObject()->findChild<QQuickTextInput*>("text");
+    QVERIFY(textInput != 0);
+    canvas.show();
+
+    QQuickTextInputPrivate *textInputPrivate = QQuickTextInputPrivate::get(textInput);
+    QVERIFY(textInputPrivate != 0);
+
+    QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignTop);
+    QVERIFY(textInputPrivate->boundingRect.bottom() - textInputPrivate->vscroll < canvas.height() / 2);
+
+    // bottom aligned
+    textInput->setVAlign(QQuickTextInput::AlignBottom);
+    QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignBottom);
+    QVERIFY(textInputPrivate->boundingRect.top() - textInputPrivate->vscroll > canvas.height() / 2);
+
+    // explicitly center aligned
+    textInput->setVAlign(QQuickTextInput::AlignVCenter);
+    QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignVCenter);
+    QVERIFY(textInputPrivate->boundingRect.top() - textInputPrivate->vscroll < canvas.height() / 2);
+    QVERIFY(textInputPrivate->boundingRect.bottom() - textInputPrivate->vscroll > canvas.height() / 2);
+}
+
+void tst_qquicktextinput::boundingRect()
+{
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextInput {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(object.data());
+    QVERIFY(input);
+
+    QCOMPARE(input->width() + input->cursorRectangle().width(), input->boundingRect().width());
+    QCOMPARE(input->height(), input->boundingRect().height());
+
+    input->setText("Hello World");
+    QCOMPARE(input->width() + input->cursorRectangle().width(), input->boundingRect().width());
+    QCOMPARE(input->height(), input->boundingRect().height());
+
+    // bounding rect shouldn't exceed the size of the item, expect for the cursor width;
+    input->setWidth(input->width() / 2);
+    QCOMPARE(input->width() + input->cursorRectangle().width(), input->boundingRect().width());
+    QCOMPARE(input->height(), input->boundingRect().height());
+
+    input->setHeight(input->height() * 2);
+    QCOMPARE(input->width() + input->cursorRectangle().width(), input->boundingRect().width());
+    QCOMPARE(input->height(), input->boundingRect().height());
+
+    QDeclarativeComponent cursorComponent(&engine);
+    cursorComponent.setData("import QtQuick 2.0\nRectangle { height: 20; width: 8 }", QUrl());
+
+    input->setCursorDelegate(&cursorComponent);
+
+    // If a cursor delegate is used it's size should determine the excess width.
+    QCOMPARE(input->width() + 8, input->boundingRect().width());
+    QCOMPARE(input->height(), input->boundingRect().height());
+}
+
 void tst_qquicktextinput::positionAt()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
+    QQuickView canvas(testFileUrl("positionAt.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
@@ -1290,7 +1408,7 @@ void tst_qquicktextinput::positionAt()
 
     // Check autoscrolled...
 
-    int pos = textinputObject->positionAt(textinputObject->width()/2);
+    int pos = evaluate<int>(textinputObject, QString("positionAt(%1)").arg(textinputObject->width()/2));
 
     QTextLayout layout(textinputObject->text());
     layout.setFont(textinputObject->font());
@@ -1312,12 +1430,12 @@ void tst_qquicktextinput::positionAt()
     QVERIFY(textLeftWidthEnd >= textWidth - textinputObject->width() / 2);
 
     int x = textinputObject->positionToRectangle(pos + 1).x() - 1;
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorBetweenCharacters), pos + 1);
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorOnCharacter), pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorBetweenCharacters)").arg(x)), pos + 1);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorOnCharacter)").arg(x)), pos);
 
     // Check without autoscroll...
     textinputObject->setAutoScroll(false);
-    pos = textinputObject->positionAt(textinputObject->width()/2);
+    pos = evaluate<int>(textinputObject, QString("positionAt(%1)").arg(textinputObject->width() / 2));
 
     textLeftWidthBegin = floor(line.cursorToX(pos - 1));
     textLeftWidthEnd = ceil(line.cursorToX(pos + 1));
@@ -1326,8 +1444,8 @@ void tst_qquicktextinput::positionAt()
     QVERIFY(textLeftWidthEnd >= textinputObject->width() / 2);
 
     x = textinputObject->positionToRectangle(pos + 1).x() - 1;
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorBetweenCharacters), pos + 1);
-    QCOMPARE(textinputObject->positionAt(x, QQuickTextInput::CursorOnCharacter), pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorBetweenCharacters)").arg(x)), pos + 1);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, 0, TextInput.CursorOnCharacter)").arg(x)), pos);
 
     const qreal x0 = textinputObject->positionToRectangle(pos).x();
     const qreal x1 = textinputObject->positionToRectangle(pos + 1).x();
@@ -1336,22 +1454,38 @@ void tst_qquicktextinput::positionAt()
     textinputObject->setText(textinputObject->text().mid(pos));
     textinputObject->setCursorPosition(0);
 
-    QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent);
+    {   QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
+        QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent); }
 
     // Check all points within the preedit text return the same position.
-    QCOMPARE(textinputObject->positionAt(0), 0);
-    QCOMPARE(textinputObject->positionAt(x0 / 2), 0);
-    QCOMPARE(textinputObject->positionAt(x0), 0);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(0)), 0);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(x0 / 2)), 0);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(x0)), 0);
 
     // Verify positioning returns to normal after the preedit text.
-    QCOMPARE(textinputObject->positionAt(x1), 1);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(x1)), 1);
     QCOMPARE(textinputObject->positionToRectangle(1).x(), x1);
+
+    {   QInputMethodEvent inputEvent;
+        QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent); }
+
+    // With wrapping.
+    textinputObject->setWrapMode(QQuickTextInput::WrapAnywhere);
+
+    const qreal y0 = line.height() / 2;
+    const qreal y1 = line.height() * 3 / 2;
+
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x0).arg(y0)), pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x1).arg(y0)), pos + 1);
+
+    int newLinePos = evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x0).arg(y1));
+    QVERIFY(newLinePos > pos);
+    QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1, %2)").arg(x1).arg(y1)), newLinePos + 1);
 }
 
 void tst_qquicktextinput::maxLength()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("maxLength.qml")));
+    QQuickView canvas(testFileUrl("maxLength.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
@@ -1382,7 +1516,7 @@ void tst_qquicktextinput::masks()
 {
     //Not a comprehensive test of the possible masks, that's done elsewhere (QLineEdit)
     //QString componentStr = "import QtQuick 2.0\nTextInput {  inputMask: 'HHHHhhhh'; }";
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("masks.qml")));
+    QQuickView canvas(testFileUrl("masks.qml"));
     canvas.show();
     canvas.requestActivateWindow();
     QVERIFY(canvas.rootObject() != 0);
@@ -1391,8 +1525,12 @@ void tst_qquicktextinput::masks()
     QTRY_VERIFY(textinputObject->hasActiveFocus() == true);
     QVERIFY(textinputObject->text().length() == 0);
     QCOMPARE(textinputObject->inputMask(), QString("HHHHhhhh; "));
+    QCOMPARE(textinputObject->length(), 8);
     for (int i=0; i<10; i++) {
         QTRY_COMPARE(qMin(i,8), textinputObject->text().length());
+        QCOMPARE(textinputObject->length(), 8);
+        QCOMPARE(textinputObject->getText(0, qMin(i, 8)), QString(qMin(i, 8), 'a'));
+        QCOMPARE(textinputObject->getText(qMin(i, 8), 8), QString(8 - qMin(i, 8), ' '));
         QCOMPARE(i>=4, textinputObject->hasAcceptableInput());
         //simulateKey(&canvas, Qt::Key_A);
         QTest::keyPress(&canvas, Qt::Key_A);
@@ -1407,7 +1545,7 @@ void tst_qquicktextinput::validators()
     // so you may need to run their tests first. All validators are checked
     // here to ensure that their exposure to QML is working.
 
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("validators.qml")));
+    QQuickView canvas(testFileUrl("validators.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1473,6 +1611,47 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
 
+    // Ensure the validator doesn't prevent characters being removed.
+    dblInput->setValidator(intInput->validator());
+    QCOMPARE(dblInput->text(), QLatin1String("12.11"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    // Once unacceptable input is in anything goes until it reaches an acceptable state again.
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QCOMPARE(dblInput->text(), QLatin1String("11"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+
     QQuickTextInput *strInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("strInput")));
     QTRY_VERIFY(strInput);
     strInput->setFocus(true);
@@ -1511,7 +1690,7 @@ void tst_qquicktextinput::validators()
 
 void tst_qquicktextinput::inputMethods()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("inputmethods.qml")));
+    QQuickView canvas(testFileUrl("inputmethods.qml"));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1555,22 +1734,30 @@ void tst_qquicktextinput::inputMethods()
     QList<QInputMethodEvent::Attribute> attributes;
     QInputMethodEvent preeditEvent("test", attributes);
     preeditEvent.setTentativeCommitString("test");
-    QApplication::sendEvent(input, &preeditEvent);
+    QGuiApplication::sendEvent(input, &preeditEvent);
     QCOMPARE(input->text(), QString("test"));
 
     // tentative commit not allowed present in surrounding text
     QInputMethodQueryEvent queryEvent(Qt::ImSurroundingText);
-    QApplication::sendEvent(input, &queryEvent);
+    QGuiApplication::sendEvent(input, &queryEvent);
     QCOMPARE(queryEvent.value(Qt::ImSurroundingText).toString(), QString(""));
 
     // if text with tentative commit does not validate, not allowed to be part of text property
     input->setText(""); // ensure input state is reset
     QValidator *validator = new QIntValidator(0, 100);
     input->setValidator(validator);
-    QApplication::sendEvent(input, &preeditEvent);
+    QGuiApplication::sendEvent(input, &preeditEvent);
     QCOMPARE(input->text(), QString(""));
     input->setValidator(0);
     delete validator;
+
+    // input should reset selection even if replacement parameters are out of bounds
+    input->setText("text");
+    input->setCursorPosition(0);
+    input->moveCursorSelection(input->text().length());
+    event.setCommitString("replacement", -input->text().length(), input->text().length());
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QCOMPARE(input->selectionStart(), input->selectionEnd());
 }
 
 /*
@@ -1580,7 +1767,7 @@ the extent of the text, then they should ignore the keys.
 */
 void tst_qquicktextinput::navigation()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
+    QQuickView canvas(testFileUrl("navigation.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1619,7 +1806,7 @@ void tst_qquicktextinput::navigation()
 
 void tst_qquicktextinput::navigation_RTL()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
+    QQuickView canvas(testFileUrl("navigation.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1823,8 +2010,7 @@ void tst_qquicktextinput::canPasteEmpty() {
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QQuickLineControl lc;
-    bool cp = !lc.isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
+    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 
 #endif
@@ -1841,8 +2027,7 @@ void tst_qquicktextinput::canPaste() {
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QQuickLineControl lc;
-    bool cp = !lc.isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
+    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 
 #endif
@@ -1868,7 +2053,7 @@ void tst_qquicktextinput::passwordCharacter()
 
 void tst_qquicktextinput::cursorDelegate()
 {
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("cursorTest.qml")));
+    QQuickView view(testFileUrl("cursorTest.qml"));
     view.show();
     view.requestActivateWindow();
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
@@ -1895,13 +2080,14 @@ void tst_qquicktextinput::cursorDelegate()
 
 void tst_qquicktextinput::cursorVisible()
 {
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("cursorVisible.qml")));
+    QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(&view, qGuiApp->focusWindow());
 
     QQuickTextInput input;
+    input.componentComplete();
     QSignalSpy spy(&input, SIGNAL(cursorVisibleChanged(bool)));
 
     QCOMPARE(input.isCursorVisible(), false);
@@ -1951,6 +2137,7 @@ void tst_qquicktextinput::cursorRectangle()
 
     QQuickTextInput input;
     input.setText(text);
+    input.componentComplete();
 
     QTextLayout layout(text);
     layout.setFont(input.font());
@@ -1964,6 +2151,7 @@ void tst_qquicktextinput::cursorRectangle()
     layout.endLayout();
 
     input.setWidth(line.cursorToX(5, QTextLine::Leading));
+    input.setHeight(qCeil(line.height() * 3 / 2));
 
     QRect r;
 
@@ -1984,7 +2172,7 @@ void tst_qquicktextinput::cursorRectangle()
     }
 
     // Check the cursor rectangle remains within the input bounding rect when auto scrolling.
-    QVERIFY(r.left() < input.boundingRect().width());
+    QVERIFY(r.left() < input.width());
     QVERIFY(r.right() >= input.width() - error);
 
     for (int i = 6; i < text.length(); ++i) {
@@ -1996,20 +2184,56 @@ void tst_qquicktextinput::cursorRectangle()
     for (int i = text.length() - 2; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
+        QCOMPARE(r.top(), 0);
         QVERIFY(r.right() >= 0);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+    }
+
+    // Check vertical scrolling with word wrap.
+    input.setWrapMode(QQuickTextInput::WordWrap);
+    for (int i = 0; i <= 5; ++i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+
+        QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
+        QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
+        QCOMPARE(r.top(), 0);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+    }
+
+    input.setCursorPosition(6);
+    r = input.cursorRectangle();
+    QCOMPARE(r.left(), 0);
+    QVERIFY(r.bottom() >= input.height() - error);
+
+    for (int i = 7; i < text.length(); ++i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+        QVERIFY(r.bottom() >= input.height() - error);
+    }
+
+    for (int i = text.length() - 2; i >= 6; --i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+        QVERIFY(r.bottom() >= input.height() - error);
+    }
+
+    for (int i = 5; i >= 0; --i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+        QCOMPARE(r.top(), 0);
     }
 
     input.setText("Hi!");
     input.setHAlign(QQuickTextInput::AlignRight);
     r = input.cursorRectangle();
-    QVERIFY(r.left() < input.boundingRect().width());
+    QVERIFY(r.left() < input.width() + error);
     QVERIFY(r.right() >= input.width() - error);
 }
 
 void tst_qquicktextinput::readOnly()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("readOnly.qml")));
+    QQuickView canvas(testFileUrl("readOnly.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -2036,7 +2260,7 @@ void tst_qquicktextinput::readOnly()
 
 void tst_qquicktextinput::echoMode()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("echoMode.qml")));
+    QQuickView canvas(testFileUrl("echoMode.qml"));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -2055,7 +2279,7 @@ void tst_qquicktextinput::echoMode()
     QCOMPARE(input->displayText(), input->text());
     //Normal
     ref &= ~Qt::ImhHiddenText;
-    ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->inputMethodHints(), ref);
     input->setEchoMode(QQuickTextInput::NoEcho);
     QCOMPARE(input->text(), initial);
@@ -2063,12 +2287,12 @@ void tst_qquicktextinput::echoMode()
     QCOMPARE(input->passwordCharacter(), QLatin1String("*"));
     //NoEcho
     ref |= Qt::ImhHiddenText;
-    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->inputMethodHints(), ref);
     input->setEchoMode(QQuickTextInput::Password);
     //Password
     ref |= Qt::ImhHiddenText;
-    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String("********"));
     QCOMPARE(input->inputMethodHints(), ref);
@@ -2079,7 +2303,7 @@ void tst_qquicktextinput::echoMode()
     input->setEchoMode(QQuickTextInput::PasswordEchoOnEdit);
     //PasswordEchoOnEdit
     ref &= ~Qt::ImhHiddenText;
-    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->inputMethodHints(), ref);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String("QQQQQQQQ"));
@@ -2104,12 +2328,11 @@ void tst_qquicktextinput::echoMode()
 }
 
 #ifdef QT_GUI_PASSWORD_ECHO_DELAY
-void tst_qdeclarativetextinput::passwordEchoDelay()
+void tst_qquicktextinput::passwordEchoDelay()
 {
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA("echoMode.qml")));
+    QQuickView canvas(testFileUrl("echoMode.qml"));
     canvas.show();
-    canvas.setFocus();
-    QGuiApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
@@ -2119,7 +2342,7 @@ void tst_qdeclarativetextinput::passwordEchoDelay()
 
     QChar fillChar = QLatin1Char('*');
 
-    input->setEchoMode(QDeclarativeTextInput::Password);
+    input->setEchoMode(QQuickTextInput::Password);
     QCOMPARE(input->displayText(), QString(8, fillChar));
     input->setText(QString());
     QCOMPARE(input->displayText(), QString());
@@ -2150,8 +2373,15 @@ void tst_qdeclarativetextinput::passwordEchoDelay()
 
     QInputMethodEvent ev;
     ev.setCommitString(QLatin1String("7"));
-    QGuiApplication::sendEvent(&canvas, &ev);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev);
     QCOMPARE(input->displayText(), QString(7, fillChar) + QLatin1Char('7'));
+
+    input->setCursorPosition(3);
+    QCOMPARE(input->displayText(), QString(7, fillChar) + QLatin1Char('7'));
+    QTest::keyPress(&canvas, 'a');
+    QCOMPARE(input->displayText(), QString(3, fillChar) + QLatin1Char('a') + QString(5, fillChar));
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QCOMPARE(input->displayText(), QString(8, fillChar));
 }
 #endif
 
@@ -2165,39 +2395,6 @@ void tst_qquicktextinput::simulateKey(QQuickView *view, int key)
     QGuiApplication::sendEvent(view, &release);
 }
 
-class PlatformInputContext : public QPlatformInputContext
-{
-public:
-    PlatformInputContext()
-        : m_visible(false), m_action(QInputPanel::Click), m_cursorPosition(0),
-          m_invokeActionCallCount(0)
-    {
-    }
-
-    virtual void showInputPanel()
-    {
-        m_visible = true;
-    }
-    virtual void hideInputPanel()
-    {
-        m_visible = false;
-    }
-    virtual bool isInputPanelVisible() const
-    {
-        return m_visible;
-    }
-    virtual void invokeAction(QInputPanel::Action action, int cursorPosition)
-    {
-        m_invokeActionCallCount++;
-        m_action = action;
-        m_cursorPosition = cursorPosition;
-    }
-
-    bool m_visible;
-    QInputPanel::Action m_action;
-    int m_cursorPosition;
-    int m_invokeActionCallCount;
-};
 
 void tst_qquicktextinput::openInputPanel()
 {
@@ -2205,7 +2402,7 @@ void tst_qquicktextinput::openInputPanel()
     QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
     inputPanelPrivate->testContext = &platformInputContext;
 
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("openInputPanel.qml")));
+    QQuickView view(testFileUrl("openInputPanel.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2217,7 +2414,6 @@ void tst_qquicktextinput::openInputPanel()
     // check default values
     QVERIFY(input->focusOnPress());
     QVERIFY(!input->hasActiveFocus());
-    qDebug() << &input << qApp->inputPanel()->inputItem();
     QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
@@ -2243,6 +2439,7 @@ void tst_qquicktextinput::openInputPanel()
     // input panel should stay visible if focus is lost to another text inputor
     QSignalSpy inputPanelVisibilitySpy(qApp->inputPanel(), SIGNAL(visibleChanged()));
     QQuickTextInput anotherInput;
+    anotherInput.componentComplete();
     anotherInput.setParentItem(view.rootObject());
     anotherInput.setFocus(true);
     QCOMPARE(qApp->inputPanel()->visible(), true);
@@ -2314,6 +2511,9 @@ void tst_qquicktextinput::setHAlignClearCache()
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-23485", Abort);
+#endif
     QTRY_COMPARE(input.nbPaint, 1);
     input.setHAlign(QQuickTextInput::AlignRight);
     //Changing the alignment should trigger a repaint
@@ -2329,6 +2529,8 @@ void tst_qquicktextinput::focusOutClearSelection()
     input.setFocus(true);
     input2.setParentItem(view.rootItem());
     input.setParentItem(view.rootItem());
+    input.componentComplete();
+    input2.componentComplete();
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2343,7 +2545,7 @@ void tst_qquicktextinput::focusOutClearSelection()
 
 void tst_qquicktextinput::geometrySignals()
 {
-    QDeclarativeComponent component(&engine, TESTDATA("geometrySignals.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("geometrySignals.qml"));
     QObject *o = component.create();
     QVERIFY(o);
     QCOMPARE(o->property("bindingWidth").toInt(), 400);
@@ -2405,7 +2607,7 @@ void tst_qquicktextinput::preeditAutoScroll()
 {
     QString preeditText = "califragisiticexpialidocious!";
 
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("preeditAutoScroll.qml")));
+    QQuickView view(testFileUrl("preeditAutoScroll.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2421,15 +2623,15 @@ void tst_qquicktextinput::preeditAutoScroll()
 
     // test the text is scrolled so the preedit is visible.
     sendPreeditText(preeditText.mid(0, 3), 1);
-    QVERIFY(input->positionAt(0) != 0);
+    QVERIFY(evaluate<int>(input, QString("positionAt(0)")) != 0);
     QVERIFY(input->cursorRectangle().left() < input->boundingRect().width());
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
 
     // test the text is scrolled back when the preedit is removed.
     QInputMethodEvent imEvent;
     QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
-    QCOMPARE(input->positionAt(0), 0);
-    QCOMPARE(input->positionAt(input->width()), 5);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(0)), 0);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(input->width())), 5);
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
 
     QTextLayout layout(preeditText);
@@ -2484,15 +2686,15 @@ void tst_qquicktextinput::preeditAutoScroll()
 
     input->setAutoScroll(false);
     sendPreeditText(preeditText.mid(0, 3), 1);
-    QCOMPARE(input->positionAt(0), 0);
-    QCOMPARE(input->positionAt(input->width()), 5);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(0)), 0);
+    QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(input->width())), 5);
 }
 
 void tst_qquicktextinput::preeditCursorRectangle()
 {
     QString preeditText = "super";
 
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
+    QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2547,7 +2749,7 @@ void tst_qquicktextinput::inputContextMouseHandler()
     inputPanelPrivate->testContext = &platformInputContext;
 
     QString text = "supercalifragisiticexpialidocious!";
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
+    QQuickView view(testFileUrl("inputContext.qml"));
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
     QVERIFY(input);
 
@@ -2575,7 +2777,7 @@ void tst_qquicktextinput::inputContextMouseHandler()
     QPoint position = QPointF(x, y).toPoint();
 
     QInputMethodEvent inputEvent(text.mid(0, 5), QList<QInputMethodEvent::Attribute>());
-    QApplication::sendEvent(input, &inputEvent);
+    QGuiApplication::sendEvent(input, &inputEvent);
 
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, position);
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, position);
@@ -2590,7 +2792,7 @@ void tst_qquicktextinput::inputMethodComposing()
 {
     QString text = "supercalifragisiticexpialidocious!";
 
-    QQuickView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
+    QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2621,9 +2823,76 @@ void tst_qquicktextinput::inputMethodComposing()
     QCOMPARE(spy.count(), 2);
 }
 
+void tst_qquicktextinput::inputPanelUpdate()
+{
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
+    QQuickView view(testFileUrl("inputContext.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
+    QVERIFY(input);
+
+    // text change even without cursor position change needs to trigger update
+    input->setText("test");
+    platformInputContext.clear();
+    input->setText("xxxx");
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // input method event replacing text
+    platformInputContext.clear();
+    {
+        QInputMethodEvent inputMethodEvent;
+        inputMethodEvent.setCommitString("y", -1, 1);
+        QGuiApplication::sendEvent(input, &inputMethodEvent);
+    }
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // input method changing selection
+    platformInputContext.clear();
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        attributes << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 0, 2, QVariant());
+        QInputMethodEvent inputMethodEvent("", attributes);
+        QGuiApplication::sendEvent(input, &inputMethodEvent);
+    }
+    QVERIFY(input->selectionStart() != input->selectionEnd());
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // programmatical selections trigger update
+    platformInputContext.clear();
+    input->selectAll();
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // font changes
+    platformInputContext.clear();
+    QFont font = input->font();
+    font.setBold(!font.bold());
+    input->setFont(font);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // normal input
+    platformInputContext.clear();
+    {
+        QInputMethodEvent inputMethodEvent;
+        inputMethodEvent.setCommitString("y");
+        QGuiApplication::sendEvent(input, &inputMethodEvent);
+    }
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // changing cursor position
+    platformInputContext.clear();
+    input->setCursorPosition(0);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+}
+
 void tst_qquicktextinput::cursorRectangleSize()
 {
-    QQuickView *canvas = new QQuickView(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
+    QQuickView *canvas = new QQuickView(testFileUrl("positionAt.qml"));
     QVERIFY(canvas->rootObject() != 0);
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput *>(canvas->rootObject());
 
@@ -2651,9 +2920,6 @@ void tst_qquicktextinput::cursorRectangleSize()
     QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
 
     // item-canvas transform and input item transform match
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("","QTBUG-22966", Abort);
-#endif
     QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputPanel()->inputItemTransform());
 
     // input panel cursorRectangle property and tranformed item cursor rectangle match
@@ -2665,7 +2931,7 @@ void tst_qquicktextinput::cursorRectangleSize()
 
 void tst_qquicktextinput::tripleClickSelectsAll()
 {
-    QString qmlfile = TESTDATA("positionAt.qml");
+    QString qmlfile = testFile("positionAt.qml");
     QQuickView view(QUrl::fromLocalFile(qmlfile));
     view.show();
     view.requestActivateWindow();
@@ -2710,6 +2976,790 @@ void tst_qquicktextinput::QTBUG_19956_data()
     QTest::addColumn<QString>("url");
     QTest::newRow("intvalidator") << "qtbug-19956int.qml";
     QTest::newRow("doublevalidator") << "qtbug-19956double.qml";
+}
+
+
+void tst_qquicktextinput::getText_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("inputMask");
+    QTest::addColumn<int>("start");
+    QTest::addColumn<int>("end");
+    QTest::addColumn<QString>("expectedText");
+
+    QTest::newRow("all plain text")
+            << standard.at(0)
+            << QString()
+            << 0 << standard.at(0).length()
+            << standard.at(0);
+
+    QTest::newRow("plain text sub string")
+            << standard.at(0)
+            << QString()
+            << 0 << 12
+            << standard.at(0).mid(0, 12);
+
+    QTest::newRow("plain text sub string reversed")
+            << standard.at(0)
+            << QString()
+            << 12 << 0
+            << standard.at(0).mid(0, 12);
+
+    QTest::newRow("plain text cropped beginning")
+            << standard.at(0)
+            << QString()
+            << -3 << 4
+            << standard.at(0).mid(0, 4);
+
+    QTest::newRow("plain text cropped end")
+            << standard.at(0)
+            << QString()
+            << 23 << standard.at(0).length() + 8
+            << standard.at(0).mid(23);
+
+    QTest::newRow("plain text cropped beginning and end")
+            << standard.at(0)
+            << QString()
+            << -9 << standard.at(0).length() + 4
+            << standard.at(0);
+}
+
+void tst_qquicktextinput::getText()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, inputMask);
+    QFETCH(int, start);
+    QFETCH(int, end);
+    QFETCH(QString, expectedText);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; inputMask: \"" + inputMask + "\" }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QCOMPARE(textInput->getText(start, end), expectedText);
+}
+
+void tst_qquicktextinput::insert_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("inputMask");
+    QTest::addColumn<int>("selectionStart");
+    QTest::addColumn<int>("selectionEnd");
+    QTest::addColumn<int>("insertPosition");
+    QTest::addColumn<QString>("insertText");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<int>("expectedSelectionStart");
+    QTest::addColumn<int>("expectedSelectionEnd");
+    QTest::addColumn<int>("expectedCursorPosition");
+    QTest::addColumn<bool>("selectionChanged");
+    QTest::addColumn<bool>("cursorPositionChanged");
+
+    QTest::newRow("at cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 5 << 5 << 5
+            << false << true;
+
+    QTest::newRow("at cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length() << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << standard.at(0).length() + 5 << standard.at(0).length() + 5 << standard.at(0).length() + 5
+            << false << true;
+
+    QTest::newRow("at cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 23 << 23 << 23
+            << false << true;
+
+    QTest::newRow("after cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("before cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length() << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << standard.at(0).length() + 5 << standard.at(0).length() + 5 << standard.at(0).length() + 5
+            << false << true;
+
+    QTest::newRow("before cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 23 << 23 << 23
+            << false << true;
+
+    QTest::newRow("after cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18 << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << 18 << 18 << 18
+            << false << false;
+
+    QTest::newRow("before selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 19 << 24 << 24
+            << false << true;
+
+    QTest::newRow("before reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14 << 0
+            << QString("Hello")
+            << QString("Hello") + standard.at(0)
+            << 19 << 24 << 19
+            << false << true;
+
+    QTest::newRow("after selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19 << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << 14 << 19 << 19
+            << false << false;
+
+    QTest::newRow("after reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14 << standard.at(0).length()
+            << QString("Hello")
+            << standard.at(0) + QString("Hello")
+            << 14 << 19 << 14
+            << false << false;
+
+    QTest::newRow("into selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 14 << 24 << 24
+            << true << true;
+
+    QTest::newRow("into reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14 << 18
+            << QString("Hello")
+            << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
+            << 14 << 24 << 14
+            << true << false;
+
+    QTest::newRow("rich text into plain text")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << 0
+            << QString("<b>Hello</b>")
+            << QString("<b>Hello</b>") + standard.at(0)
+            << 12 << 12 << 12
+            << false << true;
+
+    QTest::newRow("before start")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << -3
+            << QString("Hello")
+            << standard.at(0)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("past end")
+            << standard.at(0)
+            << QString()
+            << 0 << 0 << standard.at(0).length() + 3
+            << QString("Hello")
+            << standard.at(0)
+            << 0 << 0 << 0
+            << false << false;
+
+    const QString inputMask = "009.009.009.009";
+    const QString ip = "192.168.2.14";
+
+    QTest::newRow("mask: at cursor position (beginning)")
+            << ip
+            << inputMask
+            << 0 << 0 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: at cursor position (end)")
+            << ip
+            << inputMask
+            << inputMask.length() << inputMask.length() << inputMask.length()
+            << QString("8")
+            << ip
+            << inputMask.length() << inputMask.length() << inputMask.length()
+            << false << false;
+
+    QTest::newRow("mask: at cursor position (middle)")
+            << ip
+            << inputMask
+            << 6 << 6 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: after cursor position (beginning)")
+            << ip
+            << inputMask
+            << 0 << 0 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: before cursor position (end)")
+            << ip
+            << inputMask
+            << inputMask.length() << inputMask.length() << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << inputMask.length() << inputMask.length() << inputMask.length()
+            << false << false;
+
+    QTest::newRow("mask: before cursor position (middle)")
+            << ip
+            << inputMask
+            << 6 << 6 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: after cursor position (middle)")
+            << ip
+            << inputMask
+            << 6 << 6 << 13
+            << QString("8")
+            << "192.168.2.18"
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: before selection")
+            << ip
+            << inputMask
+            << 6 << 8 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: before reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6 << 0
+            << QString("125")
+            << QString("125.168.2.14")
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: after selection")
+            << ip
+            << inputMask
+            << 6 << 8 << 13
+            << QString("8")
+            << "192.168.2.18"
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: after reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6 << 13
+            << QString("8")
+            << "192.168.2.18"
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: into selection")
+            << ip
+            << inputMask
+            << 5 << 8 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 5 << 8 << 8
+            << true << false;
+
+    QTest::newRow("mask: into reversed selection")
+            << ip
+            << inputMask
+            << 8 << 5 << 6
+            << QString("75.2")
+            << QString("192.167.5.24")
+            << 5 << 8 << 5
+            << true << false;
+
+    QTest::newRow("mask: before start")
+            << ip
+            << inputMask
+            << 0 << 0 << -3
+            << QString("4")
+            << ip
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: past end")
+            << ip
+            << inputMask
+            << 0 << 0 << ip.length() + 3
+            << QString("4")
+            << ip
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: invalid characters")
+            << ip
+            << inputMask
+            << 0 << 0 << 0
+            << QString("abc")
+            << QString("192.168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: mixed validity")
+            << ip
+            << inputMask
+            << 0 << 0 << 0
+            << QString("a1b2c5")
+            << QString("125.168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+}
+
+void tst_qquicktextinput::insert()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, inputMask);
+    QFETCH(int, selectionStart);
+    QFETCH(int, selectionEnd);
+    QFETCH(int, insertPosition);
+    QFETCH(QString, insertText);
+    QFETCH(QString, expectedText);
+    QFETCH(int, expectedSelectionStart);
+    QFETCH(int, expectedSelectionEnd);
+    QFETCH(int, expectedCursorPosition);
+    QFETCH(bool, selectionChanged);
+    QFETCH(bool, cursorPositionChanged);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; inputMask: \"" + inputMask + "\" }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    textInput->select(selectionStart, selectionEnd);
+
+    QSignalSpy selectionSpy(textInput, SIGNAL(selectedTextChanged()));
+    QSignalSpy selectionStartSpy(textInput, SIGNAL(selectionStartChanged()));
+    QSignalSpy selectionEndSpy(textInput, SIGNAL(selectionEndChanged()));
+    QSignalSpy textSpy(textInput, SIGNAL(textChanged()));
+    QSignalSpy cursorPositionSpy(textInput, SIGNAL(cursorPositionChanged()));
+
+    textInput->insert(insertPosition, insertText);
+
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.length() : inputMask.length());
+
+    QCOMPARE(textInput->selectionStart(), expectedSelectionStart);
+    QCOMPARE(textInput->selectionEnd(), expectedSelectionEnd);
+    QCOMPARE(textInput->cursorPosition(), expectedCursorPosition);
+
+    if (selectionStart > selectionEnd)
+        qSwap(selectionStart, selectionEnd);
+
+    QCOMPARE(selectionSpy.count() > 0, selectionChanged);
+    QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
+    QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
+    QCOMPARE(textSpy.count() > 0, text != expectedText);
+    QCOMPARE(cursorPositionSpy.count() > 0, cursorPositionChanged);
+}
+
+void tst_qquicktextinput::remove_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("inputMask");
+    QTest::addColumn<int>("selectionStart");
+    QTest::addColumn<int>("selectionEnd");
+    QTest::addColumn<int>("removeStart");
+    QTest::addColumn<int>("removeEnd");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<int>("expectedSelectionStart");
+    QTest::addColumn<int>("expectedSelectionEnd");
+    QTest::addColumn<int>("expectedCursorPosition");
+    QTest::addColumn<bool>("selectionChanged");
+    QTest::addColumn<bool>("cursorPositionChanged");
+
+    QTest::newRow("from cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("to cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 5 << 0
+            << standard.at(0).mid(5)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("to cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length()
+            << standard.at(0).length() << standard.at(0).length() - 5
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << false << true;
+
+    QTest::newRow("to cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length()
+            << standard.at(0).length() - 5 << standard.at(0).length()
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << false << true;
+
+    QTest::newRow("from cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 18 << 18 << 18
+            << false << false;
+
+    QTest::newRow("to cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 23 << 23
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 18 << 18 << 18
+            << false << true;
+
+    QTest::newRow("after cursor position (beginning)")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("before cursor position (end)")
+            << standard.at(0)
+            << QString()
+            << standard.at(0).length() << standard.at(0).length()
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << false << true;
+
+    QTest::newRow("before cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 23 << 23
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 18 << 18 << 18
+            << false << true;
+
+    QTest::newRow("after cursor position (middle)")
+            << standard.at(0)
+            << QString()
+            << 18 << 18
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 18 << 18 << 18
+            << false << false;
+
+    QTest::newRow("before selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 9 << 14 << 14
+            << false << true;
+
+    QTest::newRow("before reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14
+            << 0 << 5
+            << standard.at(0).mid(5)
+            << 9 << 14 << 9
+            << false << true;
+
+    QTest::newRow("after selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 19
+            << standard.at(0).length() - 5 << standard.at(0).length()
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << 14 << 19 << 19
+            << false << false;
+
+    QTest::newRow("after reversed selection")
+            << standard.at(0)
+            << QString()
+            << 19 << 14
+            << standard.at(0).length() - 5 << standard.at(0).length()
+            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << 14 << 19 << 14
+            << false << false;
+
+    QTest::newRow("from selection")
+            << standard.at(0)
+            << QString()
+            << 14 << 24
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 14 << 19 << 19
+            << true << true;
+
+    QTest::newRow("from reversed selection")
+            << standard.at(0)
+            << QString()
+            << 24 << 14
+            << 18 << 23
+            << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
+            << 14 << 19 << 14
+            << true << false;
+
+    QTest::newRow("cropped beginning")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << -3 << 4
+            << standard.at(0).mid(4)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("cropped end")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << 23 << standard.at(0).length() + 8
+            << standard.at(0).mid(0, 23)
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("cropped beginning and end")
+            << standard.at(0)
+            << QString()
+            << 0 << 0
+            << -9 << standard.at(0).length() + 4
+            << QString()
+            << 0 << 0 << 0
+            << false << false;
+
+    const QString inputMask = "009.009.009.009";
+    const QString ip = "192.168.2.14";
+
+    QTest::newRow("mask: from cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 6 << 9
+            << QString("192.16..14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: to cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 2 << 6
+            << QString("19.8.2.14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: before cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 0 << 2
+            << QString("2.168.2.14")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: after cursor position")
+            << ip
+            << inputMask
+            << 6 << 6
+            << 12 << 16
+            << QString("192.168.2.")
+            << 6 << 6 << 6
+            << false << false;
+
+    QTest::newRow("mask: before selection")
+            << ip
+            << inputMask
+            << 6 << 8
+            << 0 << 2
+            << QString("2.168.2.14")
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: before reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6
+            << 0 << 2
+            << QString("2.168.2.14")
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: after selection")
+            << ip
+            << inputMask
+            << 6 << 8
+            << 12 << 16
+            << QString("192.168.2.")
+            << 6 << 8 << 8
+            << false << false;
+
+    QTest::newRow("mask: after reversed selection")
+            << ip
+            << inputMask
+            << 8 << 6
+            << 12 << 16
+            << QString("192.168.2.")
+            << 6 << 8 << 6
+            << false << false;
+
+    QTest::newRow("mask: from selection")
+            << ip
+            << inputMask
+            << 6 << 13
+            << 8 << 10
+            << QString("192.168..14")
+            << 6 << 13 << 13
+            << true << false;
+
+    QTest::newRow("mask: from reversed selection")
+            << ip
+            << inputMask
+            << 13 << 6
+            << 8 << 10
+            << QString("192.168..14")
+            << 6 << 13 << 6
+            << true << false;
+
+    QTest::newRow("mask: cropped beginning")
+            << ip
+            << inputMask
+            << 0 << 0
+            << -3 << 4
+            << QString(".168.2.14")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: cropped end")
+            << ip
+            << inputMask
+            << 0 << 0
+            << 13 << 28
+            << QString("192.168.2.1")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("mask: cropped beginning and end")
+            << ip
+            << inputMask
+            << 0 << 0
+            << -9 << 28
+            << QString("...")
+            << 0 << 0 << 0
+            << false << false;
+}
+
+void tst_qquicktextinput::remove()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, inputMask);
+    QFETCH(int, selectionStart);
+    QFETCH(int, selectionEnd);
+    QFETCH(int, removeStart);
+    QFETCH(int, removeEnd);
+    QFETCH(QString, expectedText);
+    QFETCH(int, expectedSelectionStart);
+    QFETCH(int, expectedSelectionEnd);
+    QFETCH(int, expectedCursorPosition);
+    QFETCH(bool, selectionChanged);
+    QFETCH(bool, cursorPositionChanged);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; inputMask: \"" + inputMask + "\" }";
+    QDeclarativeComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    textInput->select(selectionStart, selectionEnd);
+
+    QSignalSpy selectionSpy(textInput, SIGNAL(selectedTextChanged()));
+    QSignalSpy selectionStartSpy(textInput, SIGNAL(selectionStartChanged()));
+    QSignalSpy selectionEndSpy(textInput, SIGNAL(selectionEndChanged()));
+    QSignalSpy textSpy(textInput, SIGNAL(textChanged()));
+    QSignalSpy cursorPositionSpy(textInput, SIGNAL(cursorPositionChanged()));
+
+    textInput->remove(removeStart, removeEnd);
+
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.length() : inputMask.length());
+
+    if (selectionStart > selectionEnd)  //
+        qSwap(selectionStart, selectionEnd);
+
+    QCOMPARE(textInput->selectionStart(), expectedSelectionStart);
+    QCOMPARE(textInput->selectionEnd(), expectedSelectionEnd);
+    QCOMPARE(textInput->cursorPosition(), expectedCursorPosition);
+
+    QCOMPARE(selectionSpy.count() > 0, selectionChanged);
+    QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
+    QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
+    QCOMPARE(textSpy.count() > 0, text != expectedText);
+
+    if (cursorPositionChanged)  //
+        QVERIFY(cursorPositionSpy.count() > 0);
 }
 
 void tst_qquicktextinput::keySequence_data()
@@ -2966,6 +4016,10 @@ void tst_qquicktextinput::undo()
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
 
+    QVERIFY(!textInput->canUndo());
+
+    QSignalSpy spy(textInput, SIGNAL(canUndoChanged()));
+
     int i;
 
 // STEP 1: First build up an undo history by inserting or typing some strings...
@@ -2985,14 +4039,19 @@ void tst_qquicktextinput::undo()
             QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
     }
 
+    QCOMPARE(spy.count(), 1);
+
 // STEP 2: Next call undo several times and see if we can restore to the previous state
     for (i = 0; i < expectedString.size() - 1; ++i) {
         QCOMPARE(textInput->text(), expectedString[i]);
-        simulateKeys(&canvas, QKeySequence::Undo);
+        QVERIFY(textInput->canUndo());
+        textInput->undo();
     }
 
 // STEP 3: Verify that we have undone everything
     QVERIFY(textInput->text().isEmpty());
+    QVERIFY(!textInput->canUndo());
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextinput::redo_data()
@@ -3043,6 +4102,11 @@ void tst_qquicktextinput::redo()
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
 
+    QVERIFY(!textInput->canUndo());
+    QVERIFY(!textInput->canRedo());
+
+    QSignalSpy spy(textInput, SIGNAL(canRedoChanged()));
+
     int i;
     // inserts the diff strings at diff positions
     for (i = 0; i < insertString.size(); ++i) {
@@ -3050,16 +4114,29 @@ void tst_qquicktextinput::redo()
             textInput->setCursorPosition(insertIndex[i]);
         for (int j = 0; j < insertString.at(i).length(); j++)
             QTest::keyClick(&canvas, insertString.at(i).at(j).toLatin1());
+        QVERIFY(textInput->canUndo());
+        QVERIFY(!textInput->canRedo());
     }
+
+    QCOMPARE(spy.count(), 0);
 
     // undo everything
-    while (!textInput->text().isEmpty())
-        simulateKeys(&canvas, QKeySequence::Undo);
+    while (!textInput->text().isEmpty()) {
+        QVERIFY(textInput->canUndo());
+        textInput->undo();
+        QVERIFY(textInput->canRedo());
+    }
+
+    QCOMPARE(spy.count(), 1);
 
     for (i = 0; i < expectedString.size(); ++i) {
-        simulateKeys(&canvas, QKeySequence::Redo);
+        QVERIFY(textInput->canRedo());
+        textInput->redo();
         QCOMPARE(textInput->text() , expectedString[i]);
+        QVERIFY(textInput->canUndo());
     }
+    QVERIFY(!textInput->canRedo());
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextinput::undo_keypressevents_data()
@@ -3221,7 +4298,7 @@ void tst_qquicktextinput::undo_keypressevents()
 
     for (int i = 0; i < expectedString.size(); ++i) {
         QCOMPARE(textInput->text() , expectedString[i]);
-        simulateKeys(&canvas, QKeySequence::Undo);
+        textInput->undo();
     }
     QVERIFY(textInput->text().isEmpty());
 }
@@ -3230,7 +4307,7 @@ void tst_qquicktextinput::QTBUG_19956()
 {
     QFETCH(QString, url);
 
-    QQuickView canvas(QUrl::fromLocalFile(TESTDATA(url)));
+    QQuickView canvas(testFileUrl(url));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -3264,7 +4341,7 @@ void tst_qquicktextinput::QTBUG_19956()
 
 void tst_qquicktextinput::QTBUG_19956_regexp()
 {
-    QUrl url = QUrl::fromLocalFile(TESTDATA("qtbug-19956regexp.qml"));
+    QUrl url = testFileUrl("qtbug-19956regexp.qml");
 
     QString warning = url.toString() + ":11: Unable to assign [undefined] to QRegExp";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -3291,6 +4368,19 @@ void tst_qquicktextinput::QTBUG_19956_regexp()
     canvas.rootObject()->setProperty("regexvalue", QRegExp("abc"));
     QCOMPARE(canvas.rootObject()->property("regexvalue").toRegExp(), QRegExp("abc"));
     QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
+}
+
+
+void tst_qquicktextinput::negativeDimensions()
+{
+    // Verify this doesn't assert during initialization.
+    QDeclarativeComponent component(&engine, testFileUrl("negativeDimensions.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
+    QQuickTextInput *input = o->findChild<QQuickTextInput *>("input");
+    QVERIFY(input);
+    QCOMPARE(input->width(), qreal(-1));
+    QCOMPARE(input->height(), qreal(-1));
 }
 
 QTEST_MAIN(tst_qquicktextinput)

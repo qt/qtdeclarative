@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -44,7 +44,7 @@ import QtQuick 2.0
 //DO NOT CHANGE
 Item {
     Timer {
-        id: timer;  interval: 1000; running: true; repeat: true; triggeredOnStart:  true
+        id: timer;  interval: 1; running: true; repeat: true; triggeredOnStart:  true
         onTriggered: {
             console.log("timer");
         }

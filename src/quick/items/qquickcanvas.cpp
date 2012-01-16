@@ -116,6 +116,10 @@ private:
     bool m_eventSent;
 };
 
+QAccessibleInterface *QQuickCanvas::accessibleRoot() const
+{
+    return QAccessible::queryAccessibleInterface(const_cast<QQuickCanvas*>(this));
+}
 
 
 /*
@@ -199,10 +203,22 @@ void QQuickCanvasPrivate::polishItems()
     updateFocusItemTransform();
 }
 
+void forceUpdate(QQuickItem *item)
+{
+    if (item->flags() & QQuickItem::ItemHasContents)
+        item->update();
+    QQuickItemPrivate::get(item)->dirty(QQuickItemPrivate::ChildrenUpdateMask);
+
+    QList <QQuickItem *> items = item->childItems();
+    for (int i=0; i<items.size(); ++i)
+        forceUpdate(items.at(i));
+}
 
 void QQuickCanvasPrivate::syncSceneGraph()
 {
     if (!renderer) {
+        forceUpdate(rootItem);
+
         QSGRootNode *rootNode = new QSGRootNode;
         rootNode->appendChildNode(QQuickItemPrivate::get(rootItem)->itemNode());
         renderer = context->createRenderer();
@@ -273,9 +289,9 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     q->setSurfaceType(QWindow::OpenGLSurface);
     q->setFormat(context->defaultSurfaceFormat());
 
-    QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()));
-    QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()));
-    QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()));
+    QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
+    QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
+    QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
 
     // ### TODO: remove QSGEngine
     engine = new QSGEngine();
@@ -332,7 +348,7 @@ void QQuickCanvasPrivate::translateTouchEvent(QTouchEvent *touchEvent)
         touchPoint.setStartScenePos(touchPoint.startPos());
         touchPoint.setLastScenePos(touchPoint.lastPos());
 
-        if (touchPoint.isPrimary())
+        if (i == 0)
             lastMousePosition = touchPoint.pos().toPoint();
     }
     touchEvent->setTouchPoints(touchPoints);
@@ -371,7 +387,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            qApp->inputPanel()->commit();
+            qApp->inputPanel()->reset();
 #endif
 
             activeFocusItem = 0;
@@ -480,7 +496,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
-        qApp->inputPanel()->commit();
+        qApp->inputPanel()->reset();
 #endif
 
         activeFocusItem = 0;
@@ -1099,7 +1115,7 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
-        if (!child->isEnabled())
+        if (!child->isEnabled() || !child->isVisible())
             continue;
         if (deliverTouchPoints(child, event, newPoints, acceptedNewPoints, updatedPoints))
             return true;
@@ -1399,8 +1415,10 @@ void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
 void QQuickCanvasPrivate::cleanupNodesOnShutdown()
 {
     cleanupNodes();
-
     cleanupNodesOnShutdown(rootItem);
+    QSet<QQuickItem *>::const_iterator it = parentlessItems.begin();
+    for (; it != parentlessItems.end(); ++it)
+        cleanupNodesOnShutdown(*it);
 }
 
 void QQuickCanvasPrivate::updateDirtyNodes()
@@ -1610,6 +1628,11 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         }
     }
 
+    if ((dirty & QQuickItemPrivate::PerformanceHints) && itemPriv->groupNode) {
+        itemPriv->groupNode->setFlag(QSGNode::ChildrenDoNotOverlap, itemPriv->childrenDoNotOverlap);
+        itemPriv->groupNode->setFlag(QSGNode::StaticSubtreeGeometry, itemPriv->staticSubtreeGeometry);
+    }
+
 #ifndef QT_NO_DEBUG
     // Check consistency.
     const QSGNode *nodeChain[] = {
@@ -1681,9 +1704,40 @@ void QQuickCanvas::cleanupSceneGraph()
 }
 
 /*!
-    \fn void QSGEngine::sceneGraphInitialized();
+    Returns the opengl context used for rendering.
+
+    If the scene graph is not ready, this function will return 0.
+
+    \sa sceneGraphInitialized(), sceneGraphInvalidated()
+ */
+
+QOpenGLContext *QQuickCanvas::openglContext() const
+{
+    Q_D(const QQuickCanvas);
+    if (d->context->isReady())
+        return d->context->glContext();
+    return 0;
+}
+
+
+/*!
+    \fn void QSGContext::sceneGraphInitialized()
 
     This signal is emitted when the scene graph has been initialized.
+
+    This signal will be emitted from the scene graph rendering thread.
+
+ */
+
+
+/*!
+    \fn void QSGContext::sceneGraphInvalidated()
+
+    This signal is emitted when the scene graph has been invalidated.
+
+    This signal implies that the opengl rendering context used
+    has been invalidated and all user resources tied to that context
+    should be released.
 
     This signal will be emitted from the scene graph rendering thread.
  */

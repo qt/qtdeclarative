@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -104,7 +104,7 @@ Item {
 
         State {
             name: "DeathState"; when: dying == true
-            StateChangeScript { script: particles.pulse(100); }
+            StateChangeScript { script: {particleSystem.paused = false; particles.pulse(100);} }
             PropertyChanges { target: img; opacity: 0 }
             StateChangeScript { script: block.destroy(1000); }
         }

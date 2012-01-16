@@ -107,6 +107,7 @@ public:
     void initRootItem();//Currently only used if items added in QML
 
     QQuickRootItem *rootItem;
+    QSet<QQuickItem *> parentlessItems;
     QDeclarativeListProperty<QObject> data();
 
     QQuickItem *activeFocusItem;
@@ -164,6 +165,8 @@ public:
     bool updateEffectiveOpacity(QQuickItem *);
     void updateEffectiveOpacityRoot(QQuickItem *, qreal);
     void updateDirtyNode(QQuickItem *);
+
+    void fireFrameSwapped() { emit q_func()->frameSwapped(); }
 
     QSGEngine *engine;
     QSGContext *context;

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -182,7 +182,7 @@ void tst_qdeclarativelistcompositor::find_data()
     QTest::addColumn<int>("visibleIndex");
     QTest::addColumn<int>("defaultIndex");
     QTest::addColumn<int>("cacheIndex");
-    QTest::addColumn<int>("rangeFlags");
+    QTest::addColumn<uint>("rangeFlags");
     QTest::addColumn<int>("rangeIndex");
 
     int listA; void *a = &listA;
@@ -195,7 +195,7 @@ void tst_qdeclarativelistcompositor::find_data()
             << C::Cache << 2
             << Selection << 0
             << 0 << 0 << 0 << 0
-            << int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
+            << uint(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
 }
 
 void tst_qdeclarativelistcompositor::find()
@@ -209,7 +209,7 @@ void tst_qdeclarativelistcompositor::find()
     QFETCH(int, defaultIndex);
     QFETCH(int, visibleIndex);
     QFETCH(int, selectionIndex);
-    QFETCH(int, rangeFlags);
+    QFETCH(uint, rangeFlags);
     QFETCH(int, rangeIndex);
 
     QDeclarativeListCompositor compositor;
@@ -233,15 +233,13 @@ void tst_qdeclarativelistcompositor::find()
 void tst_qdeclarativelistcompositor::findInsertPosition_data()
 {
     QTest::addColumn<RangeList>("ranges");
-    QTest::addColumn<C::Group>("startGroup");
-    QTest::addColumn<int>("startIndex");
     QTest::addColumn<C::Group>("group");
     QTest::addColumn<int>("index");
     QTest::addColumn<int>("selectionIndex");
     QTest::addColumn<int>("visibleIndex");
     QTest::addColumn<int>("defaultIndex");
     QTest::addColumn<int>("cacheIndex");
-    QTest::addColumn<int>("rangeFlags");
+    QTest::addColumn<uint>("rangeFlags");
     QTest::addColumn<int>("rangeIndex");
 
     int listA; void *a = &listA;
@@ -251,33 +249,29 @@ void tst_qdeclarativelistcompositor::findInsertPosition_data()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
                 << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
-            << C::Cache << 2
             << Selection << 0
             << 0 << 0 << 0 << 0
-            << int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
+            << uint(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
     QTest::newRow("1")
             << (RangeList()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
                 << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
-            << C::Cache << 2
             << Selection << 1
             << 1 << 0 << 1 << 1
-            << int(C::AppendFlag | C::PrependFlag | C::CacheFlag) << 1;
+            << uint(C::AppendFlag | C::PrependFlag | C::CacheFlag) << 1;
 }
 
 void tst_qdeclarativelistcompositor::findInsertPosition()
 {
     QFETCH(RangeList, ranges);
-    QFETCH(C::Group, startGroup);
-    QFETCH(int, startIndex);
     QFETCH(C::Group, group);
     QFETCH(int, index);
     QFETCH(int, cacheIndex);
     QFETCH(int, defaultIndex);
     QFETCH(int, visibleIndex);
     QFETCH(int, selectionIndex);
-    QFETCH(int, rangeFlags);
+    QFETCH(uint, rangeFlags);
     QFETCH(int, rangeIndex);
 
     QDeclarativeListCompositor compositor;
@@ -988,7 +982,7 @@ void tst_qdeclarativelistcompositor::move()
 
     QVector<C::Remove> removes;
     QVector<C::Insert> inserts;
-    compositor.move(fromGroup, from, toGroup, to, count, &removes, &inserts);
+    compositor.move(fromGroup, from, toGroup, to, count, fromGroup, &removes, &inserts);
 
     QCOMPARE(removes, expectedRemoves);
     QCOMPARE(inserts, expectedInserts);
@@ -1031,7 +1025,7 @@ void tst_qdeclarativelistcompositor::moveFromEnd()
     compositor.append(a, 0, 1, C::AppendFlag | C::PrependFlag | C::DefaultFlag);
 
     // Moving an item anchors it to that position.
-    compositor.move(C::Default, 0, C::Default, 0, 1);
+    compositor.move(C::Default, 0, C::Default, 0, 1, C::Default);
 
     // The existing item is anchored at 0 so prepending an item to the source will append it here
     QVector<C::Insert> inserts;
@@ -1486,6 +1480,42 @@ void tst_qdeclarativelistcompositor::listItemsMoved_data()
                 << (InsertList()
                     << Insert(0, 0, 0, 0, 2, C::DefaultFlag | C::CacheFlag, 0)
                     << Insert(0, 0, 2, 2, 3, C::DefaultFlag, 1))
+                << IndexArray(cacheIndexes)
+                << IndexArray(defaultIndexes)
+                << IndexArray()
+                << IndexArray();
+    } { static const int cacheIndexes[] = {/*A*/0,1,2,3};
+        static const int defaultIndexes[] = {/*A*/0,1,2,3};
+        static const int selectionIndexes[] = {/*A*/3};
+        QTest::newRow("Move selection")
+                << (RangeList()
+                    << Range(a, 0, 2, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 2, 1, C::PrependFlag | SelectionFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 3, 1, C::AppendFlag | C::PrependFlag | C::DefaultFlag | C::CacheFlag))
+                << a << 2 << 3 << 1
+                << (RemoveList()
+                    << Remove(0, 0, 2, 2, 1, C::PrependFlag | SelectionFlag | C::DefaultFlag | C::CacheFlag, 0))
+                << (InsertList()
+                    << Insert(0, 0, 3, 3, 1, C::PrependFlag | SelectionFlag | C::DefaultFlag | C::CacheFlag, 0))
+                << IndexArray(cacheIndexes)
+                << IndexArray(defaultIndexes)
+                << IndexArray()
+                << IndexArray(selectionIndexes);
+    } { static const int cacheIndexes[] = {/*A*/0,1,2,3,4,5,8,9};
+        static const int defaultIndexes[] = {/*A*/0,1,2,3,4,5,6,7,8,9,10,11};
+        QTest::newRow("move mixed cached items")
+                << (RangeList()
+                    << Range(a,  0,  1, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a,  1,  2, C::PrependFlag | C::DefaultFlag)
+                    << Range(a,  3,  7, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 10,  2, C::PrependFlag | C::DefaultFlag))
+                << a << 1 << 6 << 3
+                << (RemoveList()
+                    << Remove(0, 0, 1, 1, 2, C::PrependFlag | C::DefaultFlag, 0)
+                    << Remove(0, 0, 1, 1, 1, C::PrependFlag | C::DefaultFlag | C::CacheFlag, 1))
+                << (InsertList()
+                    << Insert(0, 0, 6, 6, 2, C::PrependFlag | C::DefaultFlag, 0)
+                    << Insert(0, 0, 8, 6, 1, C::PrependFlag | C::DefaultFlag | C::CacheFlag, 1))
                 << IndexArray(cacheIndexes)
                 << IndexArray(defaultIndexes)
                 << IndexArray()

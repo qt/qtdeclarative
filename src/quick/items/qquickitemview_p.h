@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -147,6 +147,7 @@ public:
 
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;
+    Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;
     Q_INVOKABLE void positionViewAtBeginning();
     Q_INVOKABLE void positionViewAtEnd();
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -49,6 +49,7 @@
 #include <private/qdeclarativeaccessors_p.h>
 #include <private/qdeclarativedebugtrace_p.h>
 #include <private/qdeclarativemetatype_p.h>
+#include <private/qdeclarativetrace_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qnumeric.h>
@@ -212,7 +213,8 @@ QV4Bindings::~QV4Bindings()
 }
 
 QDeclarativeAbstractBinding *QV4Bindings::configBinding(int index, QObject *target, 
-                                                                   QObject *scope, int property, int line)
+                                                        QObject *scope, int property,
+                                                        int line, int column)
 {
     Binding *rv = bindings + index;
 
@@ -221,6 +223,7 @@ QDeclarativeAbstractBinding *QV4Bindings::configBinding(int index, QObject *targ
     rv->target = target;
     rv->scope = scope;
     rv->line = line;
+    rv->column = column;
     rv->parent = this;
 
     addref(); // This is decremented in Binding::destroy()
@@ -270,8 +273,10 @@ void QV4Bindings::subscriptionNotify(int id)
         QV4Program::BindingReference *bindingRef = list->bindings + ii;
 
         Binding *binding = bindings + bindingRef->binding;
-        if (binding->executedBlocks & bindingRef->blockMask)
+
+        if (binding->executedBlocks & bindingRef->blockMask) {
             run(binding, QDeclarativePropertyPrivate::DontRemoveBinding);
+        }
     }
 }
 
@@ -283,6 +288,11 @@ void QV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags 
     QDeclarativeContextData *context = QDeclarativeAbstractExpression::context();
     if (!context || !context->isValid()) 
         return;
+
+    QDeclarativeTrace trace("V4 Binding Update");
+    trace.addDetail("URL", context->url);
+    trace.addDetail("Line", binding->line);
+    trace.addDetail("Column", binding->column);
 
     if (binding->updating) {
         QString name;
@@ -988,6 +998,80 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         }
     }
     QML_V4_END_INSTR(ConvertStringToReal, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertStringToUrl, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QString tmp(*src.getstringptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupString();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.geturlptr()) QUrl(tmp);
+            URL_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertStringToUrl, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertUrlToBool, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupUrl();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            output.setbool(!tmp.isEmpty());
+        }
+    }
+    QML_V4_END_INSTR(ConvertUrlToBool, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertUrlToString, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupUrl();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.getstringptr()) QString(tmp.toString());
+            STRING_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertUrlToString, unaryop)
+
+    QML_V4_BEGIN_INSTR(ResolveUrl, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                *output.geturlptr() = context->resolvedUrl(tmp);
+            } else {
+                new (output.geturlptr()) QUrl(context->resolvedUrl(tmp));
+                URL_REGISTER(instr->unaryop.output);
+            }
+        }
+    }
+    QML_V4_END_INSTR(ResolveUrl, unaryop)
 
     QML_V4_BEGIN_INSTR(MathSinReal, unaryop)
     {

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -450,6 +450,24 @@ void tst_qdeclarativeinstruction::dump()
         data->addInstruction(i);
     }
 
+    {
+        QDeclarativeCompiledData::Instruction::StoreTrString i;
+        i.propertyIndex = 99;
+        i.context = 3;
+        i.text = 14;
+        i.comment = 14;
+        i.n = 2;
+        data->addInstruction(i);
+    }
+
+    {
+        QDeclarativeCompiledData::Instruction::StoreTrIdString i;
+        i.propertyIndex = 78;
+        i.text = 7;
+        i.n = -1;
+        data->addInstruction(i);
+    }
+
     QStringList expect;
     expect 
         << "Index\tOperation\t\tData1\tData2\tData3\tComments"
@@ -505,6 +523,8 @@ void tst_qdeclarativeinstruction::dump()
         << "48\t\tSTORE_VARIANT_INTEGER\t\t32\t11"
         << "49\t\tSTORE_VARIANT_DOUBLE\t\t19\t33.7"
         << "50\t\tDONE"
+        << "51\t\tSTORE_TR_STRING\t99\t3\t14\t14\t2"
+        << "52\t\tSTORE_TRID_STRING\t78\t7\t-1"
         << "-------------------------------------------------------------------------------";
 
     messages = QStringList();

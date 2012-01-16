@@ -1,7 +1,7 @@
 // Commit: ac5c099cc3c5b8c7eec7a49fdeb8a21037230350
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -44,7 +44,7 @@
 #define QQUICKIMAGE_P_H
 
 #include "qquickimagebase_p.h"
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 
 QT_BEGIN_HEADER
 

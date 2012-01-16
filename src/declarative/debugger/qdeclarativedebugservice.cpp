@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -53,11 +53,12 @@ QDeclarativeDebugServicePrivate::QDeclarativeDebugServicePrivate()
 {
 }
 
-QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, QObject *parent)
+QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, float version, QObject *parent)
     : QObject(*(new QDeclarativeDebugServicePrivate), parent)
 {
     Q_D(QDeclarativeDebugService);
     d->name = name;
+    d->version = version;
     d->server = QDeclarativeDebugServer::instance();
     d->status = QDeclarativeDebugService::NotConnected;
 
@@ -65,11 +66,12 @@ QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, QObject 
 }
 
 QDeclarativeDebugService::QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd,
-                                                   const QString &name, QObject *parent)
+                                                   const QString &name, float version, QObject *parent)
     : QObject(dd, parent)
 {
     Q_D(QDeclarativeDebugService);
     d->name = name;
+    d->version = version;
     d->server = QDeclarativeDebugServer::instance();
     d->status = QDeclarativeDebugService::NotConnected;
 }
@@ -105,6 +107,12 @@ QString QDeclarativeDebugService::name() const
 {
     Q_D(const QDeclarativeDebugService);
     return d->name;
+}
+
+float QDeclarativeDebugService::version() const
+{
+    Q_D(const QDeclarativeDebugService);
+    return d->version;
 }
 
 QDeclarativeDebugService::Status QDeclarativeDebugService::status() const
@@ -222,12 +230,17 @@ QString QDeclarativeDebugService::objectToString(QObject *obj)
 
 void QDeclarativeDebugService::sendMessage(const QByteArray &message)
 {
+    sendMessages(QList<QByteArray>() << message);
+}
+
+void QDeclarativeDebugService::sendMessages(const QList<QByteArray> &messages)
+{
     Q_D(QDeclarativeDebugService);
 
     if (status() != Enabled)
         return;
 
-    d->server->sendMessage(this, message);
+    d->server->sendMessages(this, messages);
 }
 
 bool QDeclarativeDebugService::waitForMessage()

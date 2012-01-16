@@ -114,4 +114,5 @@
 %dependencies = (
         "qtbase" => "refs/heads/master",
         "qtxmlpatterns" => "refs/heads/master",
+        "qtjsbackend" => "refs/heads/master",
 );

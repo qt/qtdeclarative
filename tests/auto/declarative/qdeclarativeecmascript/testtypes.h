@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -57,7 +57,6 @@
 #include <QtDeclarative/qdeclarativescriptstring.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 
-#include <private/qv8gccallback_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <private/qv8engine_p.h>
 
@@ -94,6 +93,7 @@ class MyQmlObject : public QObject
     Q_PROPERTY(int value READ value WRITE setValue)
     Q_PROPERTY(int console READ console CONSTANT)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringChanged)
+    Q_PROPERTY(QUrl urlProperty READ urlProperty WRITE setUrlProperty NOTIFY urlChanged)
     Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty NOTIFY objectChanged)
     Q_PROPERTY(QDeclarativeListProperty<QObject> objectListProperty READ objectListProperty CONSTANT)
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
@@ -117,6 +117,15 @@ public:
             return;
         m_string = s;
         emit stringChanged();
+    }
+
+    QUrl urlProperty() const { return m_url; }
+    void setUrlProperty(const QUrl &url)
+    {
+        if (url == m_url)
+            return;
+        m_url = url;
+        emit urlChanged();
     }
 
     QObject *objectProperty() const { return m_object; }
@@ -172,6 +181,7 @@ signals:
     void basicSignal();
     void argumentSignal(int a, QString b, qreal c, MyEnum2 d, Qt::MouseButtons e);
     void stringChanged();
+    void urlChanged();
     void objectChanged();
     void anotherBasicSignal();
     void thirdBasicSignal();
@@ -197,6 +207,7 @@ private:
 
     QObject *m_object;
     QString m_string;
+    QUrl m_url;
     QList<QObject *> m_objectQList;
     int m_value;
     int m_resetProperty;
@@ -1020,6 +1031,7 @@ public:
     {
         CircularReferenceObject *retn = new CircularReferenceObject(parent);
         retn->m_dtorCount = m_dtorCount;
+        retn->m_engine = m_engine;
         return retn;
     }
 
@@ -1028,17 +1040,23 @@ public:
         m_referenced = other;
     }
 
-    static void callback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *n)
+    static void callback(QV8GCCallback::Node *n)
     {
         CircularReferenceObject *cro = static_cast<CircularReferenceObject*>(n);
         if (cro->m_referenced) {
-            r->addRelationship(cro, cro->m_referenced);
+            cro->m_engine->addRelationshipForGC(cro, cro->m_referenced);
         }
+    }
+
+    void setEngine(QDeclarativeEngine* declarativeEngine)
+    {
+        m_engine = QDeclarativeEnginePrivate::get(declarativeEngine)->v8engine();
     }
 
 private:
     QObject *m_referenced;
     int *m_dtorCount;
+    QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceObject*)
 
@@ -1049,7 +1067,7 @@ class CircularReferenceHandle : public QObject,
 
 public:
     CircularReferenceHandle(QObject *parent = 0)
-        : QObject(parent), QV8GCCallback::Node(gccallback), m_dtorCount(0)
+        : QObject(parent), QV8GCCallback::Node(gccallback), m_dtorCount(0), m_engine(0)
     {
         QV8GCCallback::addGcCallbackNode(this);
     }
@@ -1068,6 +1086,7 @@ public:
     {
         CircularReferenceHandle *retn = new CircularReferenceHandle(parent);
         retn->m_dtorCount = m_dtorCount;
+        retn->m_engine = m_engine;
         return retn;
     }
 
@@ -1084,15 +1103,21 @@ public:
         crh->m_referenced.Clear();
     }
 
-    static void gccallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *n)
+    static void gccallback(QV8GCCallback::Node *n)
     {
         CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(n);
-        r->addRelationship(crh, crh->m_referenced);
+        crh->m_engine->addRelationshipForGC(crh, crh->m_referenced);
+    }
+
+    void setEngine(QDeclarativeEngine* declarativeEngine)
+    {
+        m_engine = QDeclarativeEnginePrivate::get(declarativeEngine)->v8engine();
     }
 
 private:
     v8::Persistent<v8::Value> m_referenced;
     int *m_dtorCount;
+    QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceHandle*)
 

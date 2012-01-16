@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -51,17 +51,7 @@
 #include "../../shared/util.h"
 #include "testtypes.h"
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
-inline QUrl TEST_FILE(const char *filename)
-{
-    return TEST_FILE(QLatin1String(filename));
-}
-
-class tst_v4 : public QObject
+class tst_v4 : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -86,6 +76,7 @@ private:
 
 void tst_v4::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     registerTypes();
 }
 
@@ -102,7 +93,7 @@ void tst_v4::qtscript()
     QFETCH(QString, file);
     QV4Compiler::enableBindingsTest(true);
 
-    QDeclarativeComponent component(&engine, TEST_FILE(file));
+    QDeclarativeComponent component(&engine, testFileUrl(file));
 
     v4ErrorsMsgCount = 0;
     QtMsgHandler old = qInstallMsgHandler(v4ErrorsMsgHandler);
@@ -132,7 +123,7 @@ void tst_v4::qtscript_data()
 
 void tst_v4::unnecessaryReeval()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("unnecessaryReeval.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("unnecessaryReeval.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -166,7 +157,7 @@ void tst_v4::unnecessaryReeval()
 void tst_v4::logicalOr()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("logicalOr.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("logicalOr.qml"));
 
         QObject *o = component.create();
         QVERIFY(o != 0);
@@ -179,7 +170,7 @@ void tst_v4::logicalOr()
     }
 
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("logicalOr.2.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("logicalOr.2.qml"));
 
         QObject *o = component.create();
         QVERIFY(o != 0);
@@ -195,7 +186,7 @@ void tst_v4::logicalOr()
 void tst_v4::conditionalExpr()
 {
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("conditionalExpr.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("conditionalExpr.qml"));
 
         QObject *o = component.create();
         QVERIFY(o != 0);
@@ -213,7 +204,7 @@ void tst_v4::conditionalExpr()
 // NestedObject::result.
 void tst_v4::nestedObjectAccess()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("nestedObjectAccess.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("nestedObjectAccess.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -228,7 +219,7 @@ void tst_v4::nestedObjectAccess()
 
 void tst_v4::subscriptionsInConditionalExpressions()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("subscriptionsInConditionalExpressions.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("subscriptionsInConditionalExpressions.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -244,7 +235,7 @@ void tst_v4::subscriptionsInConditionalExpressions()
 // Crash test
 void tst_v4::qtbug_21883()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_21883.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("qtbug_21883.qml"));
 
     QString warning = component.url().toString() + ":4: Unable to assign null to ResultObject*";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
@@ -256,7 +247,7 @@ void tst_v4::qtbug_21883()
 
 void tst_v4::qtbug_22816()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22816.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("qtbug_22816.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);

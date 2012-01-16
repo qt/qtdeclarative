@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -48,6 +48,7 @@
 #include "qdeclarativecompiler_p.h"
 #include "qdeclarativedata_p.h"
 #include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativetrace_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -215,7 +216,7 @@ void QDeclarativeBindingPrivate::refresh()
 }
 
 QDeclarativeBindingPrivate::QDeclarativeBindingPrivate()
-: updating(false), enabled(false)
+: updating(false), enabled(false), columnNumber(0)
 {
 }
 
@@ -239,7 +240,7 @@ QDeclarativeBinding::createBinding(Identifier id, QObject *obj, QDeclarativeCont
         typeData = engine->typeLoader.get(ctxtdata->url);
         cdata = typeData->compiledData();
     }
-    QDeclarativeBinding *rv = cdata ? new QDeclarativeBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, parent) : 0;
+    QDeclarativeBinding *rv = cdata ? new QDeclarativeBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, 0, parent) : 0;
     if (cdata)
         cdata->release();
     if (typeData)
@@ -265,11 +266,15 @@ QDeclarativeBinding::QDeclarativeBinding(const QString &str, QObject *obj, QDecl
 
 QDeclarativeBinding::QDeclarativeBinding(const QString &str, bool isRewritten, QObject *obj, 
                                          QDeclarativeContextData *ctxt, 
-                                         const QString &url, int lineNumber, QObject *parent)
+                                         const QString &url, int lineNumber, int columnNumber,
+                                         QObject *parent)
 : QDeclarativeExpression(ctxt, obj, str, isRewritten, url, lineNumber, *new QDeclarativeBindingPrivate)
 {
+    Q_D(QDeclarativeBinding);
+
     setParent(parent);
     setNotifyOnValueChanged(true);
+    d->columnNumber = columnNumber;
 }
 
 /*!  
@@ -351,6 +356,11 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     if (!d->enabled || !d->context() || !d->context()->isValid()) 
         return;
 
+    QDeclarativeTrace trace("General Binding Update");
+    trace.addDetail("URL", d->url);
+    trace.addDetail("Line", d->line);
+    trace.addDetail("Column", d->columnNumber);
+
     if (!d->updating) {
         QDeclarativeBindingProfiler prof(this);
         d->updating = true;
@@ -378,6 +388,8 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(ep->v8engine()->context());
             v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
+
+            trace.event("writing binding result");
 
             bool needsErrorData = false;
             if (!watcher.wasDeleted() && !d->error.isValid()) 

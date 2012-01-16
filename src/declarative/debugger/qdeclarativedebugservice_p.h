@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -71,15 +71,17 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDebugService : public QObject
     Q_DISABLE_COPY(QDeclarativeDebugService)
 
 public:
-    explicit QDeclarativeDebugService(const QString &, QObject *parent = 0);
+    explicit QDeclarativeDebugService(const QString &, float version, QObject *parent = 0);
     ~QDeclarativeDebugService();
 
     QString name() const;
+    float version() const;
 
     enum Status { NotConnected, Unavailable, Enabled };
     Status status() const;
 
     void sendMessage(const QByteArray &);
+    void sendMessages(const QList<QByteArray> &);
     bool waitForMessage();
 
     static int idForObject(QObject *);
@@ -91,7 +93,7 @@ public:
     static bool hasDebuggingClient();
 
 protected:
-    QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd, const QString &, QObject *parent = 0);
+    QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd, const QString &name, float version, QObject *parent = 0);
 
     Status registerService();
 

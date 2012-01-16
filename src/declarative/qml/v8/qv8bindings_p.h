@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -75,7 +75,7 @@ public:
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, 
                                                const QDeclarativePropertyData &prop,
-                                               int line);
+                                               int line, int column);
 
 private:
     Q_DISABLE_COPY(QV8Bindings)
@@ -100,6 +100,7 @@ private:
         bool enabled:1;
         bool updating:1;
         int line;
+        int column;
         QObject *object;
         QDeclarativePropertyData property;
         QV8Bindings *parent;

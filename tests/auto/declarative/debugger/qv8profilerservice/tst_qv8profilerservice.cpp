@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -98,7 +98,7 @@ protected:
     void messageReceived(const QByteArray &message);
 };
 
-class tst_QV8ProfilerService : public QObject
+class tst_QV8ProfilerService : public QDeclarativeDataTest
 {
     Q_OBJECT
 
@@ -174,7 +174,7 @@ void tst_QV8ProfilerService::connect(bool block)
     else
         arguments << QString("-qmljsdebugger=port:"STR_PORT);
 
-    arguments << QString(TESTDATA(QLatin1String("test.qml")));
+    arguments << QDeclarativeDataTest::instance()->testFile("test.qml");
 
     m_process = new QDeclarativeDebugProcess(executable);
     m_process->start(QStringList() << arguments);

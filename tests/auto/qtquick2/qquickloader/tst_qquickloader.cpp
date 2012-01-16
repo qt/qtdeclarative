@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -51,11 +51,6 @@
 
 #define SERVER_PORT 14450
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
 class PeriodicIncubationController : public QObject,
     public QDeclarativeIncubationController
 {
@@ -70,7 +65,7 @@ protected:
     }
 };
 
-class tst_QQuickLoader : public QObject
+class tst_QQuickLoader : public QDeclarativeDataTest
 
 {
     Q_OBJECT
@@ -149,7 +144,7 @@ void tst_QQuickLoader::sourceOrComponent()
             "   onProgressChanged: onProgressChangedCount += 1\n"
             "   onLoaded: onLoadedCount += 1\n"
             "}")
-        , TEST_FILE(""));
+        , dataDirectoryUrl());
 
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
@@ -194,10 +189,10 @@ void tst_QQuickLoader::sourceOrComponent_data()
     QTest::addColumn<QUrl>("sourceUrl");
     QTest::addColumn<QString>("errorString");
 
-    QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << QUrl::fromLocalFile(TESTDATA("Rect120x60.qml")) << "";
+    QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << testFileUrl("Rect120x60.qml") << "";
     QTest::newRow("sourceComponent") << "component" << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
-    QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << QUrl::fromLocalFile(TESTDATA("IDontExist.qml"))
-            << QString(QUrl::fromLocalFile(TESTDATA("IDontExist.qml")).toString() + ": File not found");
+    QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << testFileUrl("IDontExist.qml")
+            << QString(testFileUrl("IDontExist.qml").toString() + ": File not found");
 }
 
 void tst_QQuickLoader::clear()
@@ -210,7 +205,7 @@ void tst_QQuickLoader::clear()
                     "  source: 'Rect120x60.qml'\n"
                     "  Timer { interval: 200; running: true; onTriggered: loader.source = '' }\n"
                     " }")
-                , TEST_FILE(""));
+                , dataDirectoryUrl());
         QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
         QVERIFY(loader != 0);
         QVERIFY(loader->item());
@@ -225,7 +220,7 @@ void tst_QQuickLoader::clear()
         delete loader;
     }
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("/SetSourceComponent.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
         QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
         QVERIFY(item);
 
@@ -245,7 +240,7 @@ void tst_QQuickLoader::clear()
         delete item;
     }
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("/SetSourceComponent.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
         QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
         QVERIFY(item);
 
@@ -276,7 +271,7 @@ void tst_QQuickLoader::urlToComponent()
                 " source: \"Rect120x60.qml\"\n"
                 " Timer { interval: 100; running: true; onTriggered: loader.sourceComponent = myComp }\n"
                 "}" )
-            , TEST_FILE(""));
+            , dataDirectoryUrl());
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QTest::qWait(200);
     QTRY_VERIFY(loader != 0);
@@ -291,7 +286,7 @@ void tst_QQuickLoader::urlToComponent()
 
 void tst_QQuickLoader::componentToUrl()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("/SetSourceComponent.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
 
@@ -301,7 +296,7 @@ void tst_QQuickLoader::componentToUrl()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
 
-    loader->setSource(TEST_FILE("/Rect120x60.qml"));
+    loader->setSource(testFileUrl("/Rect120x60.qml"));
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
@@ -313,7 +308,7 @@ void tst_QQuickLoader::componentToUrl()
 
 void tst_QQuickLoader::anchoredLoader()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("/AnchoredLoader.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("/AnchoredLoader.qml"));
     QQuickItem *rootItem = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(rootItem != 0);
     QQuickItem *loader = rootItem->findChild<QQuickItem*>("loader");
@@ -334,7 +329,7 @@ void tst_QQuickLoader::anchoredLoader()
 
 void tst_QQuickLoader::sizeLoaderToItem()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("/SizeToItem.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("/SizeToItem.qml"));
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
     QCOMPARE(loader->width(), 120.0);
@@ -375,7 +370,7 @@ void tst_QQuickLoader::sizeLoaderToItem()
 
 void tst_QQuickLoader::sizeItemToLoader()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("/SizeToLoader.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("/SizeToLoader.qml"));
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
     QCOMPARE(loader->width(), 200.0);
@@ -405,7 +400,7 @@ void tst_QQuickLoader::sizeItemToLoader()
 
 void tst_QQuickLoader::noResize()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("/NoResize.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("/NoResize.qml"));
     QQuickItem* item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
     QCOMPARE(item->width(), 200.0);
@@ -418,10 +413,10 @@ void tst_QQuickLoader::networkRequestUrl()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(TESTDATA(""));
+    server.serveDirectory(dataDirectory());
 
     QDeclarativeComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"http://127.0.0.1:14450/Rect120x60.qml\"; onLoaded: signalCount += 1 }"), QUrl::fromLocalFile(TESTDATA("../dummy.qml")));
+    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"http://127.0.0.1:14450/Rect120x60.qml\"; onLoaded: signalCount += 1 }"), testFileUrl("../dummy.qml"));
     if (component.isError())
         qDebug() << component.errors();
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
@@ -451,7 +446,7 @@ void tst_QQuickLoader::networkComponent()
                 "Item {\n"
                 " Component { id: comp; NW.SlowRect {} }\n"
                 " Loader { sourceComponent: comp } }")
-            , TEST_FILE(""));
+            , dataDirectoryUrl());
 
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -473,7 +468,7 @@ void tst_QQuickLoader::failNetworkRequest()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(TESTDATA(""));
+    server.serveDirectory(dataDirectory());
 
     QTest::ignoreMessage(QtWarningMsg, "http://127.0.0.1:14450/IDontExist.qml: File not found");
 
@@ -496,7 +491,7 @@ void tst_QQuickLoader::active()
 {
     // check that the item isn't instantiated until active is set to true
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.1.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.1.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
@@ -515,7 +510,7 @@ void tst_QQuickLoader::active()
 
     // check that the status is Null if active is set to false
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.2.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.2.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
@@ -532,7 +527,7 @@ void tst_QQuickLoader::active()
 
     // check that the source is not cleared if active is set to false
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.3.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.3.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
@@ -549,7 +544,7 @@ void tst_QQuickLoader::active()
 
     // check that the sourceComponent is not cleared if active is set to false
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.4.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.4.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
@@ -566,7 +561,7 @@ void tst_QQuickLoader::active()
 
     // check that the item is released if active is set to false
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.5.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.5.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
@@ -583,7 +578,7 @@ void tst_QQuickLoader::active()
 
     // check that the activeChanged signal is emitted correctly
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.6.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.6.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
@@ -613,7 +608,7 @@ void tst_QQuickLoader::active()
 
     // check that the component isn't loaded until active is set to true
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.7.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.7.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QCOMPARE(object->property("success").toBool(), true);
@@ -622,7 +617,7 @@ void tst_QQuickLoader::active()
 
     // check that the component is loaded if active is not set (true by default)
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("active.8.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("active.8.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
         QCOMPARE(object->property("success").toBool(), true);
@@ -637,42 +632,42 @@ void tst_QQuickLoader::initialPropertyValues_data()
     QTest::addColumn<QStringList>("propertyNames");
     QTest::addColumn<QVariantList>("propertyValues");
 
-    QTest::newRow("source url with value set in onLoaded, initially active = true") << TEST_FILE("initialPropertyValues.1.qml")
+    QTest::newRow("source url with value set in onLoaded, initially active = true") << testFileUrl("initialPropertyValues.1.qml")
             << QStringList()
             << (QStringList() << "initialValue" << "behaviorCount")
             << (QVariantList() << 1 << 1);
 
-    QTest::newRow("set source with initial property values specified, active = true") << TEST_FILE("initialPropertyValues.2.qml")
+    QTest::newRow("set source with initial property values specified, active = true") << testFileUrl("initialPropertyValues.2.qml")
             << QStringList()
             << (QStringList() << "initialValue" << "behaviorCount")
             << (QVariantList() << 2 << 0);
 
-    QTest::newRow("set source with initial property values specified, active = false") << TEST_FILE("initialPropertyValues.3.qml")
-            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("initialPropertyValues.3.qml").toLocalFile() + QLatin1String(":16: TypeError: Cannot read property 'canary' of null")))
+    QTest::newRow("set source with initial property values specified, active = false") << testFileUrl("initialPropertyValues.3.qml")
+            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("initialPropertyValues.3.qml").toLocalFile() + QLatin1String(":16: TypeError: Cannot read property 'canary' of null")))
             << (QStringList())
             << (QVariantList());
 
-    QTest::newRow("set source with initial property values specified, active = false, with active set true later") << TEST_FILE("initialPropertyValues.4.qml")
+    QTest::newRow("set source with initial property values specified, active = false, with active set true later") << testFileUrl("initialPropertyValues.4.qml")
             << QStringList()
             << (QStringList() << "initialValue" << "behaviorCount")
             << (QVariantList() << 4 << 0);
 
-    QTest::newRow("set source without initial property values specified, active = true") << TEST_FILE("initialPropertyValues.5.qml")
+    QTest::newRow("set source without initial property values specified, active = true") << testFileUrl("initialPropertyValues.5.qml")
             << QStringList()
             << (QStringList() << "initialValue" << "behaviorCount")
             << (QVariantList() << 0 << 0);
 
-    QTest::newRow("set source with initial property values specified with binding, active = true") << TEST_FILE("initialPropertyValues.6.qml")
+    QTest::newRow("set source with initial property values specified with binding, active = true") << testFileUrl("initialPropertyValues.6.qml")
             << QStringList()
             << (QStringList() << "initialValue" << "behaviorCount")
             << (QVariantList() << 6 << 0);
 
-    QTest::newRow("ensure initial property value semantics mimic createObject") << TEST_FILE("initialPropertyValues.7.qml")
+    QTest::newRow("ensure initial property value semantics mimic createObject") << testFileUrl("initialPropertyValues.7.qml")
             << QStringList()
             << (QStringList() << "loaderValue" << "createObjectValue")
             << (QVariantList() << 1 << 1);
 
-    QTest::newRow("ensure initial property values aren't disposed prior to component completion") << TEST_FILE("initialPropertyValues.8.qml")
+    QTest::newRow("ensure initial property values aren't disposed prior to component completion") << testFileUrl("initialPropertyValues.8.qml")
             << QStringList()
             << (QStringList() << "initialValue")
             << (QVariantList() << 6);
@@ -687,7 +682,7 @@ void tst_QQuickLoader::initialPropertyValues()
 
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(TESTDATA(""));
+    server.serveDirectory(dataDirectory());
 
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
@@ -706,7 +701,7 @@ void tst_QQuickLoader::initialPropertyValues()
 
 void tst_QQuickLoader::initialPropertyValuesBinding()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("initialPropertyValues.binding.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("initialPropertyValues.binding.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -721,18 +716,18 @@ void tst_QQuickLoader::initialPropertyValuesError_data()
     QTest::addColumn<QUrl>("qmlFile");
     QTest::addColumn<QStringList>("expectedWarnings");
 
-    QTest::newRow("invalid initial property values object") << TEST_FILE("initialPropertyValues.error.1.qml")
-            << (QStringList() << QString(TEST_FILE("initialPropertyValues.error.1.qml").toString() + ":6:5: QML Loader: setSource: value is not an object"));
+    QTest::newRow("invalid initial property values object") << testFileUrl("initialPropertyValues.error.1.qml")
+            << (QStringList() << QString(testFileUrl("initialPropertyValues.error.1.qml").toString() + ":6:5: QML Loader: setSource: value is not an object"));
 
-    QTest::newRow("nonexistent source url") << TEST_FILE("initialPropertyValues.error.2.qml")
-            << (QStringList() << QString(TEST_FILE("NonexistentSourceComponent.qml").toString() + ": File not found"));
+    QTest::newRow("nonexistent source url") << testFileUrl("initialPropertyValues.error.2.qml")
+            << (QStringList() << QString(testFileUrl("NonexistentSourceComponent.qml").toString() + ": File not found"));
 
-    QTest::newRow("invalid source url") << TEST_FILE("initialPropertyValues.error.3.qml")
-            << (QStringList() << QString(TEST_FILE("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
+    QTest::newRow("invalid source url") << testFileUrl("initialPropertyValues.error.3.qml")
+            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
 
-    QTest::newRow("invalid initial property values object with invalid property access") << TEST_FILE("initialPropertyValues.error.4.qml")
-            << (QStringList() << QString(TEST_FILE("initialPropertyValues.error.4.qml").toString() + ":7:5: QML Loader: setSource: value is not an object")
-                              << QString(TEST_FILE("initialPropertyValues.error.4.qml").toString() + ":5: TypeError: Cannot read property 'canary' of null"));
+    QTest::newRow("invalid initial property values object with invalid property access") << testFileUrl("initialPropertyValues.error.4.qml")
+            << (QStringList() << QString(testFileUrl("initialPropertyValues.error.4.qml").toString() + ":7:5: QML Loader: setSource: value is not an object")
+                              << QString(testFileUrl("initialPropertyValues.error.4.qml").toString() + ":5: TypeError: Cannot read property 'canary' of null"));
 }
 
 void tst_QQuickLoader::initialPropertyValuesError()
@@ -755,7 +750,7 @@ void tst_QQuickLoader::initialPropertyValuesError()
 // QTBUG-9241
 void tst_QQuickLoader::deleteComponentCrash()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("crash.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("crash.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
 
@@ -769,15 +764,15 @@ void tst_QQuickLoader::deleteComponentCrash()
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     qApp->processEvents(QEventLoop::DeferredDeletion);
     QTRY_COMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
-    QVERIFY(loader->source() == QUrl::fromLocalFile(TESTDATA("BlueRect.qml")));
+    QVERIFY(loader->source() == testFileUrl("BlueRect.qml"));
 
     delete item;
 }
 
 void tst_QQuickLoader::nonItem()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("nonItem.qml"));
-    QString err = QUrl::fromLocalFile(TESTDATA("nonItem.qml")).toString() + ":3:1: QML Loader: Loader does not support loading non-visual elements.";
+    QDeclarativeComponent component(&engine, testFileUrl("nonItem.qml"));
+    QString err = testFileUrl("nonItem.qml").toString() + ":3:1: QML Loader: Loader does not support loading non-visual elements.";
 
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
@@ -789,8 +784,8 @@ void tst_QQuickLoader::nonItem()
 
 void tst_QQuickLoader::vmeErrors()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("vmeErrors.qml"));
-    QString err = QUrl::fromLocalFile(TESTDATA("VmeError.qml")).toString() + ":6: Cannot assign object type QObject with no default method";
+    QDeclarativeComponent component(&engine, testFileUrl("vmeErrors.qml"));
+    QString err = testFileUrl("VmeError.qml").toString() + ":6: Cannot assign object type QObject with no default method";
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader);
@@ -802,7 +797,7 @@ void tst_QQuickLoader::vmeErrors()
 // QTBUG-13481
 void tst_QQuickLoader::creationContext()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("creationContext.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("creationContext.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -814,7 +809,7 @@ void tst_QQuickLoader::creationContext()
 
 void tst_QQuickLoader::QTBUG_16928()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("QTBUG_16928.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("QTBUG_16928.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
 
@@ -826,7 +821,7 @@ void tst_QQuickLoader::QTBUG_16928()
 
 void tst_QQuickLoader::implicitSize()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("implicitSize.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("implicitSize.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
 
@@ -841,7 +836,7 @@ void tst_QQuickLoader::implicitSize()
 
 void tst_QQuickLoader::QTBUG_17114()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("QTBUG_17114.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("QTBUG_17114.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
 
@@ -856,14 +851,14 @@ void tst_QQuickLoader::asynchronous_data()
     QTest::addColumn<QUrl>("qmlFile");
     QTest::addColumn<QStringList>("expectedWarnings");
 
-    QTest::newRow("Valid component") << TEST_FILE("BigComponent.qml")
+    QTest::newRow("Valid component") << testFileUrl("BigComponent.qml")
             << QStringList();
 
-    QTest::newRow("Non-existant component") << TEST_FILE("IDoNotExist.qml")
-            << (QStringList() << QString(TEST_FILE("IDoNotExist.qml").toString() + ": File not found"));
+    QTest::newRow("Non-existant component") << testFileUrl("IDoNotExist.qml")
+            << (QStringList() << QString(testFileUrl("IDoNotExist.qml").toString() + ": File not found"));
 
-    QTest::newRow("Invalid component") << TEST_FILE("InvalidSourceComponent.qml")
-            << (QStringList() << QString(TEST_FILE("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
+    QTest::newRow("Invalid component") << testFileUrl("InvalidSourceComponent.qml")
+            << (QStringList() << QString(testFileUrl("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
 }
 
 void tst_QQuickLoader::asynchronous()
@@ -873,7 +868,7 @@ void tst_QQuickLoader::asynchronous()
 
     if (!engine.incubationController())
         engine.setIncubationController(new PeriodicIncubationController);
-    QDeclarativeComponent component(&engine, TEST_FILE("asynchronous.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("asynchronous.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
 
@@ -907,7 +902,7 @@ void tst_QQuickLoader::asynchronous_clear()
 {
     if (!engine.incubationController())
         engine.setIncubationController(new PeriodicIncubationController);
-    QDeclarativeComponent component(&engine, TEST_FILE("asynchronous.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("asynchronous.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
 
@@ -948,7 +943,7 @@ void tst_QQuickLoader::asynchronous_clear()
 
 void tst_QQuickLoader::parented()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("parented.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("parented.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
 

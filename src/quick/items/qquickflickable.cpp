@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -174,6 +174,8 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , hMoved(false), vMoved(false)
     , stealMouse(false), pressed(false), interactive(true), calcVelocity(false)
     , pixelAligned(false)
+    , lastPosTime(-1)
+    , lastPressTime(0)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
     , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY), reportedVelocitySmoothing(100)
     , delayedPressEvent(0), delayedPressTarget(0), pressDelay(0), fixupDuration(400)
@@ -188,13 +190,11 @@ void QQuickFlickablePrivate::init()
     Q_Q(QQuickFlickable);
     QDeclarative_setParent_noEvent(contentItem, q);
     contentItem->setParentItem(q);
-    FAST_CONNECT(&timeline, SIGNAL(updated()), q, SLOT(ticked()))
     FAST_CONNECT(&timeline, SIGNAL(completed()), q, SLOT(movementEnding()))
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFiltersChildMouseEvents(true);
     QQuickItemPrivate *viewportPrivate = QQuickItemPrivate::get(contentItem);
     viewportPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
-    lastPosTime.invalidate();
 }
 
 /*
@@ -237,9 +237,13 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, const QRectF 
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
-        if (newGeom.x() != oldGeom.x())
+        bool xChanged = newGeom.x() != oldGeom.x();
+        bool yChanged = newGeom.y() != oldGeom.y();
+        if (xChanged || yChanged)
+            q->viewportMoved();
+        if (xChanged)
             emit q->contentXChanged();
-        if (newGeom.y() != oldGeom.y())
+        if (yChanged)
             emit q->contentYChanged();
     }
 }
@@ -594,10 +598,8 @@ void QQuickFlickable::setContentX(qreal pos)
     d->timeline.reset(d->hData.move);
     d->vTime = d->timeline.time();
     movementXEnding();
-    if (-pos != d->hData.move.value()) {
+    if (-pos != d->hData.move.value())
         d->hData.move.setValue(-pos);
-        viewportMoved();
-    }
 }
 
 qreal QQuickFlickable::contentY() const
@@ -613,10 +615,8 @@ void QQuickFlickable::setContentY(qreal pos)
     d->timeline.reset(d->vData.move);
     d->vTime = d->timeline.time();
     movementYEnding();
-    if (-pos != d->vData.move.value()) {
+    if (-pos != d->vData.move.value())
         d->vData.move.setValue(-pos);
-        viewportMoved();
-    }
 }
 
 /*!
@@ -710,11 +710,6 @@ bool QQuickFlickable::isAtYBeginning() const
     return d->vData.atBeginning;
 }
 
-void QQuickFlickable::ticked()
-{
-    viewportMoved();
-}
-
 /*!
     \qmlproperty Item QtQuick2::Flickable::contentItem
 
@@ -792,9 +787,18 @@ void QQuickFlickable::setPixelAligned(bool align)
     }
 }
 
+qint64 QQuickFlickablePrivate::computeCurrentTime(QInputEvent *event)
+{
+    if (0 != event->timestamp() && QQuickItemPrivate::consistentTime == -1)
+        return event->timestamp();
+
+    return QQuickItemPrivate::elapsed(timer);
+}
+
 void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QQuickFlickable);
+    QQuickItemPrivate::start(timer);
     if (interactive && timeline.isActive()
         && (qAbs(hData.smoothVelocity.value()) > RetainGrabVelocity
             || qAbs(vData.smoothVelocity.value()) > RetainGrabVelocity)) {
@@ -813,20 +817,20 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     vData.dragMaxBound = q->maxYExtent();
     fixupMode = Normal;
     lastPos = QPointF();
-    QQuickItemPrivate::start(lastPosTime);
+    lastPosTime = computeCurrentTime(event);
     pressPos = event->localPos();
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
     hData.flicking = false;
     vData.flicking = false;
-    QQuickItemPrivate::start(pressTime);
+    lastPressTime = computeCurrentTime(event);
     QQuickItemPrivate::start(velocityTime);
 }
 
 void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 {
     Q_Q(QQuickFlickable);
-    if (!interactive || !lastPosTime.isValid())
+    if (!interactive || lastPosTime == -1)
         return;
     bool rejectY = false;
     bool rejectX = false;
@@ -834,9 +838,11 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     bool stealY = stealMouse;
     bool stealX = stealMouse;
 
+    qint64 elapsed = computeCurrentTime(event) - lastPressTime;
+
     if (q->yflick()) {
         qreal dy = event->localPos().y() - pressPos.y();
-        if (qAbs(dy) > qApp->styleHints()->startDragDistance() || QQuickItemPrivate::elapsed(pressTime) > 200) {
+        if (qAbs(dy) > qApp->styleHints()->startDragDistance() || elapsed > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - vData.dragStartOffset;
@@ -868,7 +874,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 
     if (q->xflick()) {
         qreal dx = event->localPos().x() - pressPos.x();
-        if (qAbs(dx) > qApp->styleHints()->startDragDistance() || QQuickItemPrivate::elapsed(pressTime) > 200) {
+        if (qAbs(dx) > qApp->styleHints()->startDragDistance() || elapsed > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
@@ -915,14 +921,14 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (hMoved || vMoved) {
         draggingStarting();
         q->movementStarting();
-        q->viewportMoved();
     }
 
     if (!lastPos.isNull()) {
-        qreal elapsed = qreal(QQuickItemPrivate::elapsed(lastPosTime)) / 1000.;
+        qint64 currentTimestamp = computeCurrentTime(event);
+        qreal elapsed = qreal(currentTimestamp - lastPosTime) / 1000.;
         if (elapsed <= 0)
             return;
-        QQuickItemPrivate::restart(lastPosTime);
+        lastPosTime = currentTimestamp;
         qreal dy = event->localPos().y()-lastPos.y();
         if (q->yflick() && !rejectY)
             vData.addVelocitySample(dy/elapsed, maxVelocity);
@@ -942,14 +948,14 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
     pressed = false;
 
     // if we drag then pause before release we should not cause a flick.
-    qint64 elapsed = QQuickItemPrivate::elapsed(lastPosTime);
+    qint64 elapsed = computeCurrentTime(event) - lastPosTime;
 
     vData.updateVelocity();
     hData.updateVelocity();
 
     draggingEnding();
 
-    if (!lastPosTime.isValid())
+    if (lastPosTime == -1)
         return;
 
     vTime = timeline.time();
@@ -1659,6 +1665,7 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
         QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
                                event->button(), event->buttons(), event->modifiers());
 
+        mouseEvent.setTimestamp(event->timestamp());
         mouseEvent.setAccepted(false);
 
         switch (mouseEvent.type()) {
@@ -1701,12 +1708,12 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
         }
 
         return stealThisEvent || d->delayedPressEvent || disabledItem;
-    } else if (d->lastPosTime.isValid()) {
-        d->lastPosTime.invalidate();
+    } else if (d->lastPosTime != -1) {
+        d->lastPosTime = -1;
         returnToBounds();
     }
     if (event->type() == QEvent::MouseButtonRelease) {
-        d->lastPosTime.invalidate();
+        d->lastPosTime = -1;
         d->clearDelayedPress();
         d->stealMouse = false;
         d->pressed = false;

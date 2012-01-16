@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -369,20 +369,6 @@ bool QJSValue::isBool() const
 }
 
 /*!
-  \obsolete
-
-  Use isBool() instead.
-  Returns true if this QJSValue is of the primitive type Boolean;
-  otherwise returns false.
-*/
-bool QJSValue::isBoolean() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isBool();
-}
-
-/*!
   Returns true if this QJSValue is of the primitive type Number;
   otherwise returns false.
 
@@ -551,18 +537,6 @@ double QJSValue::toNumber() const
   \sa isBool()
 */
 bool QJSValue::toBool() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toBool();
-}
-
-/*!
-  \obsolete
-
-  Use toBool() instead.
-*/
-bool QJSValue::toBoolean() const
 {
     Q_D(const QJSValue);
     QScriptIsolate api(d->engine());

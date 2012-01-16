@@ -8,6 +8,8 @@ HEADERS += ../../shared/testhttpserver.h
 SOURCES += tst_qdeclarativexmlhttprequest.cpp \
            ../../shared/testhttpserver.cpp
 
+include (../../shared/util.pri)
+
 testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -223,8 +223,10 @@ public:
     LocationSpan location;
 
     // Used by compiler
-    QDeclarativeCompilerTypes::BindingReference *bindingReference;
-    int signalExpressionContextStack;
+    union {
+        QDeclarativeCompilerTypes::BindingReference *bindingReference;
+        int signalExpressionContextStack;
+    };
 
     // Used in Property::ValueList lists
     Value *nextValue;
@@ -399,6 +401,7 @@ public:
         QHashedStringRef name;
         QDeclarativeScript::Property *defaultValue;
         LocationSpan location;
+        Location nameLocation;
 
         // Used by Object::DynamicPropertyList
         DynamicProperty *nextProperty;

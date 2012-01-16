@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -67,7 +67,7 @@ QDeclarativeEngineDebugService *QDeclarativeEngineDebugService::instance()
 }
 
 QDeclarativeEngineDebugService::QDeclarativeEngineDebugService(QObject *parent)
-    : QDeclarativeDebugService(QLatin1String("QDeclarativeEngine"), parent),
+    : QDeclarativeDebugService(QLatin1String("QDeclarativeEngine"), 1, parent),
       m_watch(new QDeclarativeWatcher(this)),
       m_statesDelegate(0)
 {

@@ -7,6 +7,9 @@ Flickable {
     contentWidth: width
     contentHeight: height * 2
 
+    property int cancelCount: 0
+    property int touchCount: 0
+
     MultiPointTouchArea {
         anchors.fill: parent
         minimumTouchPoints: 2
@@ -20,6 +23,9 @@ Flickable {
             TouchPoint { id: point1; objectName: "point1" },
             TouchPoint { id: point2; objectName: "point2" }
         ]
+
+        onCanceled: cancelCount = touchPoints.length
+        onTouchUpdated: touchCount = touchPoints.length
     }
 }
 

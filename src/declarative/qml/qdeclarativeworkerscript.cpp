@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -59,7 +59,6 @@
 
 #include <private/qv8engine_p.h>
 #include <private/qv8worker_p.h>
-#include <private/qv8gccallback_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -527,9 +526,6 @@ void QDeclarativeWorkerScriptEngine::run()
 {
     d->m_lock.lock();
 
-    v8::Isolate *isolate = v8::Isolate::New(); 
-    isolate->Enter();
-
     d->workerEngine = new QDeclarativeWorkerScriptEnginePrivate::WorkerEngine(d);
     d->workerEngine->init();
 
@@ -543,9 +539,6 @@ void QDeclarativeWorkerScriptEngine::run()
     d->workers.clear();
 
     delete d->workerEngine; d->workerEngine = 0;
-    QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData();
-    isolate->Exit();
-    isolate->Dispose();
 }
 
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -106,7 +106,6 @@ can be used to produce sophisticated interfaces and applications:
 \image qml-webbrowser-demo-small.png
 
 \endtable
-
 
 \section1 Code Snippets
 
@@ -239,6 +238,15 @@ to QML, you may also find the \l{QML Tutorial}{Hello World} and
 
 \list
 \o \l{src/imports/folderlistmodel}{Folder List Model} - a C++ model plugin
+\endlist
+
+\section1 Tutorials
+
+\list
+\o \l {QML Tutorial}{Hello World}
+\o \l {QML Advanced Tutorial}{Same Game}
+\o \l {Tutorial: Writing QML Extensions with C++}{Writing QML Extensions with C++}
+\o \l {QML Dynamic View Ordering Tutorial}{Dynamic View Ordering}
 \endlist
 
 */

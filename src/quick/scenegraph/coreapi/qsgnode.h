@@ -74,30 +74,12 @@ public:
         UserNodeType = 1024
     };
 
-    enum DirtyFlag {
-        DirtyMatrix                 = 0x0001,
-        DirtyClipList               = 0x0002,
-        DirtyNodeAdded              = 0x0004,
-        DirtyNodeRemoved            = 0x0008,
-        DirtyGeometry               = 0x0010,
-        DirtyMaterial               = 0x0040,
-        DirtyOpacity                = 0x0080,
-        DirtyForceUpdate            = 0x0100,
-
-        DirtyPropagationMask        = DirtyMatrix
-                                      | DirtyClipList
-                                      | DirtyNodeAdded
-                                      | DirtyOpacity
-                                      | DirtyForceUpdate
-
-    };
-    Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
-
     enum Flag {
         // Lower 16 bites reserved for general node
         OwnedByParent               = 0x0001,
         UsePreprocess               = 0x0002,
         ChildrenDoNotOverlap        = 0x0004,
+        StaticSubtreeGeometry       = 0x0008, // Subtree nodes have fixed matrix and vertex data.
 
         // Upper 16 bits reserved for node subclasses
 
@@ -107,6 +89,29 @@ public:
         OwnsOpaqueMaterial          = 0x00040000
     };
     Q_DECLARE_FLAGS(Flags, Flag)
+
+    enum DirtyStateBit {
+        DirtyUsePreprocess          = UsePreprocess,
+        DirtyChildrenDoNotOverlap   = ChildrenDoNotOverlap,
+        DirtyStaticSubtreeGeometry  = StaticSubtreeGeometry,
+
+        DirtyMatrix                 = 0x0100,
+        DirtyClipList               = 0x0200,
+        DirtyNodeAdded              = 0x0400,
+        DirtyNodeRemoved            = 0x0800,
+        DirtyGeometry               = 0x1000,
+        DirtyMaterial               = 0x2000,
+        DirtyOpacity                = 0x4000,
+        DirtyForceUpdate            = 0x8000,
+
+        DirtyPropagationMask        = DirtyMatrix
+                                      | DirtyClipList
+                                      | DirtyNodeAdded
+                                      | DirtyOpacity
+                                      | DirtyForceUpdate
+
+    };
+    Q_DECLARE_FLAGS(DirtyState, DirtyStateBit)
 
     QSGNode();
     virtual ~QSGNode();
@@ -129,9 +134,9 @@ public:
 
     inline NodeType type() const { return m_type; }
 
-    void clearDirty() { m_flags = 0; }
-    void markDirty(DirtyFlags flags);
-    DirtyFlags dirtyFlags() const { return m_flags; }
+    void clearDirty() { m_dirtyState = 0; }
+    void markDirty(DirtyState bits);
+    DirtyState dirtyState() const { return m_dirtyState; }
 
     virtual bool isSubtreeBlocked() const;
 
@@ -163,12 +168,12 @@ private:
     int m_subtreeGeometryCount;
 
     Flags m_nodeFlags;
-    DirtyFlags m_flags;
+    DirtyState m_dirtyState;
 
     void *m_reserved;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::DirtyFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::DirtyState)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::Flags)
 
 class Q_QUICK_EXPORT QSGBasicGeometryNode : public QSGNode
@@ -284,7 +289,7 @@ public:
     ~QSGRootNode();
 
 private:
-    void notifyNodeChange(QSGNode *node, DirtyFlags flags);
+    void notifyNodeChange(QSGNode *node, DirtyState state);
 
     friend class QSGRenderer;
     friend class QSGNode;

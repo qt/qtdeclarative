@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -43,7 +43,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquickspriteimage_p.h>
 
-class tst_qquickspriteimage : public QObject
+class tst_qquickspriteimage : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -57,7 +57,7 @@ void tst_qquickspriteimage::test_properties()
 {
     QQuickView *canvas = new QQuickView(0);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("basic.qml")));
+    canvas->setSource(testFileUrl("basic.qml"));
     canvas->show();
     QTest::qWaitForWindowShown(canvas);
 

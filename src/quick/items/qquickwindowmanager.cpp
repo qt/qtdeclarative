@@ -58,6 +58,9 @@
 
 QT_BEGIN_NAMESPACE
 
+const QEvent::Type QEvent_Sync = QEvent::Type(QEvent::User);
+const QEvent::Type QEvent_DeferredUpdate = QEvent::Type(QEvent::User + 1);
+
 
 #define QQUICK_CANVAS_TIMING
 #ifdef QQUICK_CANVAS_TIMING
@@ -149,16 +152,18 @@ public:
         : sg(QSGContext::createDefaultContext())
         , gl(0)
         , animationTimer(-1)
+        , allowMainThreadProcessingFlag(false)
         , isGuiLocked(0)
         , animationRunning(false)
         , isPaintCompleted(false)
         , isPostingSyncEvent(false)
         , isRenderBlocked(false)
+        , isExternalUpdatePending(false)
         , syncAlreadyHappened(false)
         , inSync(false)
         , shouldExit(false)
         , hasExited(false)
-        , renderThreadAwakened(false)
+        , isDeferredUpdatePosted(false)
         , canvasToGrab(0)
     {
         sg->moveToThread(this);
@@ -179,6 +184,7 @@ public:
     void paint(QQuickCanvas *canvas);
     QImage grab(QQuickCanvas *canvas);
     void resize(QQuickCanvas *canvas, const QSize &size);
+    void handleDeferredUpdate();
     void maybeUpdate(QQuickCanvas *canvas);
 
     void startRendering();
@@ -232,8 +238,7 @@ private:
     uint inSync : 1;
     uint shouldExit : 1;
     uint hasExited : 1;
-    uint renderThreadAwakened : 1;
-    uint isGuiAboutToBeBlockedForSync : 1;
+    uint isDeferredUpdatePosted : 1;
 
     QQuickCanvas *canvasToGrab;
     QImage grabContent;
@@ -244,7 +249,6 @@ private:
         QSize viewportSize;
 
         uint sizeWasChanged : 1;
-        uint isExternalUpdatePending : 1;
     };
 
     QHash<QQuickCanvas *, CanvasData *> m_rendered_windows;
@@ -371,10 +375,11 @@ void QQuickRenderThreadSingleContextWindowManager::handleAddedWindow(QQuickCanva
 #endif
 
     CanvasData *data = new CanvasData;
-    data->isExternalUpdatePending = true;
     data->sizeWasChanged = false;
     data->windowSize = canvas->size();
     m_rendered_windows[canvas] = data;
+
+    isExternalUpdatePending = true;
 }
 
 
@@ -452,7 +457,7 @@ void QQuickRenderThreadSingleContextWindowManager::handleRemovedWindows()
     while (m_removed_windows.size()) {
         QQuickCanvas *canvas = m_removed_windows.takeLast();
 #ifdef THREAD_DEBUG
-    printf("            RenderThread: removing %p\n", canvas);
+    printf("                RenderThread: removing %p\n", canvas);
 #endif
 
         QQuickCanvasPrivate::get(canvas)->cleanupNodesOnShutdown();
@@ -527,8 +532,13 @@ void QQuickRenderThreadSingleContextWindowManager::run()
     printf("QML Rendering Thread Started\n");
 #endif
 
-    if (!gl)
-        initialize();
+    lock();
+    Q_ASSERT(!gl);
+    initialize();
+    // Wake GUI as it is waiting for the GL context to have appeared, as
+    // an indication that the render thread is now running.
+    wake();
+    unlock();
 
     while (!shouldExit) {
         lock();
@@ -537,6 +547,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         printf("                RenderThread: *** NEW FRAME ***\n");
 #endif
 
+        isExternalUpdatePending = false;
         handleAddedWindows();
 
         if (!isGuiLocked) {
@@ -546,7 +557,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             printf("                RenderThread: aquired sync lock...\n");
 #endif
             allowMainThreadProcessingFlag = false;
-            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+            QCoreApplication::postEvent(this, new QEvent(QEvent_Sync));
 
 #ifdef THREAD_DEBUG
             printf("                RenderThread: going to sleep...\n");
@@ -590,7 +601,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
                 glViewport(0, 0, canvasData->viewportSize.width(), canvasData->viewportSize.height());
             }
 
-            canvasData->isExternalUpdatePending = false;
             canvasPrivate->syncSceneGraph();
         }
         inSync = false;
@@ -650,6 +660,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 #endif
 
             gl->swapBuffers(canvas);
+            canvasPrivate->fireFrameSwapped();
 #ifdef THREAD_DEBUG
             printf("                RenderThread: --- swap complete...\n");
 #endif
@@ -671,8 +682,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 
         isPaintCompleted = true;
 
-        bool isExternalUpdatePending = false;
-
         // Update sizes...
         for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
              it != m_rendered_windows.constEnd(); ++it) {
@@ -681,7 +690,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
                 canvasData->renderedSize = canvasData->viewportSize;
                 canvasData->sizeWasChanged = false;
             }
-            isExternalUpdatePending |= canvasData->isExternalUpdatePending;
         }
 
 
@@ -743,7 +751,7 @@ bool QQuickRenderThreadSingleContextWindowManager::event(QEvent *e)
 {
     Q_ASSERT(QThread::currentThread() == qApp->thread());
 
-    if (e->type() == QEvent::User) {
+    if (e->type() == QEvent_Sync) {
 
         // If all canvases have been hidden, ignore the event
         if (!isRunning())
@@ -767,6 +775,8 @@ bool QQuickRenderThreadSingleContextWindowManager::event(QEvent *e)
         }
 
         return true;
+    } else if (e->type() == QEvent_DeferredUpdate) {
+        handleDeferredUpdate();
 
     } else if (e->type() == QEvent::Timer) {
 #ifdef THREAD_DEBUG
@@ -797,8 +807,6 @@ void QQuickRenderThreadSingleContextWindowManager::sync(bool guiAlreadyLocked)
 #endif
     if (!guiAlreadyLocked)
         lockInGui();
-
-    renderThreadAwakened = false;
 
     for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
          it != m_rendered_windows.constEnd(); ++it) {
@@ -895,10 +903,6 @@ void QQuickRenderThreadSingleContextWindowManager::paint(QQuickCanvas *canvas)
     printf("GUI: paint called: %p\n", canvas);
 #endif
 
-    return;
-
-
-
     lockInGui();
     exhaustSyncEvent();
 
@@ -960,10 +964,12 @@ void QQuickRenderThreadSingleContextWindowManager::startRendering()
     isGuiLocked = 0;
     isPostingSyncEvent = false;
     syncAlreadyHappened = false;
-    renderThreadAwakened = false;
     inSync = false;
 
+    lockInGui();
     start(); // Start the render thread...
+    wait();
+    unlockInGui();
 
     // Animations will now be driven from the rendering thread.
     if (animationTimer >= 0) {
@@ -1054,36 +1060,38 @@ QImage QQuickRenderThreadSingleContextWindowManager::grab(QQuickCanvas *canvas)
 }
 
 
+void QQuickRenderThreadSingleContextWindowManager::handleDeferredUpdate()
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: handling update to ourselves...\n");
+#endif
 
-void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickCanvas *canvas)
+    isDeferredUpdatePosted = false;
+
+    lockInGui();
+    isExternalUpdatePending = true;
+    if (isRenderBlocked)
+        wake();
+    unlockInGui();
+}
+
+void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickCanvas *)
 {
     Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread() || inSync,
                "QQuickCanvas::update",
                "Function can only be called from GUI thread or during QQuickItem::updatePaintNode()");
 
     if (inSync) {
-        CanvasData *canvasData = m_rendered_windows.value(canvas);
-        if (canvasData)
-            canvasData->isExternalUpdatePending = true;
+        isExternalUpdatePending = true;
 
-    } else if (!renderThreadAwakened) {
+    } else if (!isDeferredUpdatePosted) {
 #ifdef THREAD_DEBUG
-        printf("GUI: doing update...\n");
+        printf("GUI: posting update to ourselves...\n");
 #endif
-        renderThreadAwakened = true;
-
-        // If we are getting here from the renderer's sync event, the renderer is about
-        // to go to sleep anyway.
-        if (!isGuiAboutToBeBlockedForSync)
-            lockInGui();
-        CanvasData *canvasData = m_rendered_windows.value(canvas);
-        if (canvasData)
-            canvasData->isExternalUpdatePending = true;
-        if (isRenderBlocked)
-            wake();
-        if (!isGuiAboutToBeBlockedForSync)
-            unlockInGui();
+        isDeferredUpdatePosted = true;
+        QCoreApplication::postEvent(this, new QEvent(QEvent_DeferredUpdate));
     }
+
 }
 
 QQuickTrivialWindowManager::QQuickTrivialWindowManager()
@@ -1155,8 +1163,10 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         data.grabOnly = false;
     }
 
-    if (alsoSwap)
+    if (alsoSwap) {
         gl->swapBuffers(canvas);
+        cd->fireFrameSwapped();
+    }
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)

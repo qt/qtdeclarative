@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -53,7 +53,7 @@ const int FileNameRole = Qt::UserRole+1;
 const int FilePathRole = Qt::UserRole+2;
 enum SortField { Unsorted, Name, Time, Size, Type };
 
-class tst_qdeclarativefolderlistmodel : public QObject
+class tst_qdeclarativefolderlistmodel : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -98,16 +98,16 @@ void tst_qdeclarativefolderlistmodel::checkNoErrors(const QDeclarativeComponent&
 
 void tst_qdeclarativefolderlistmodel::basicProperties()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("basic.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("basic.qml"));
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != 0);
 
-    flm->setProperty("folder",QUrl::fromLocalFile(TESTDATA("")));
+    flm->setProperty("folder", dataDirectoryUrl());
     QTRY_COMPARE(flm->property("count").toInt(),4); // wait for refresh
-    QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(TESTDATA("")));
-    QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(TESTDATA("..")).canonicalPath()));
+    QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
+    QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
     QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml");
     QCOMPARE(flm->property("sortReversed").toBool(), false);
@@ -124,7 +124,7 @@ void tst_qdeclarativefolderlistmodel::basicProperties()
 void tst_qdeclarativefolderlistmodel::resetFiltering()
 {
     // see QTBUG-17837
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("resetFiltering.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("resetFiltering.qml"));
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
@@ -133,19 +133,19 @@ void tst_qdeclarativefolderlistmodel::resetFiltering()
     connect(flm, SIGNAL(rowsRemoved(const QModelIndex&,int,int)),
             this, SLOT(removed(const QModelIndex&,int,int)));
 
-    flm->setProperty("folder",QUrl::fromLocalFile(TESTDATA("resetfiltering")));
+    flm->setProperty("folder", testFileUrl("resetfiltering"));
     QTRY_COMPARE(flm->property("count").toInt(),1); // should just be "test.txt" visible
     int count = flm->rowCount();
     QCOMPARE(removeStart, 0);
     QCOMPARE(removeEnd, count-1);
 
-    flm->setProperty("folder",QUrl::fromLocalFile(TESTDATA("resetfiltering/innerdir")));
+    flm->setProperty("folder", testFileUrl("resetfiltering/innerdir"));
     QTRY_COMPARE(flm->property("count").toInt(),1); // should just be "test2.txt" visible
     count = flm->rowCount();
     QCOMPARE(removeStart, 0);
     QCOMPARE(removeEnd, count-1);
 
-    flm->setProperty("folder",QUrl::fromLocalFile(TESTDATA("resetfiltering")));
+    flm->setProperty("folder", testFileUrl("resetfiltering"));
     QTRY_COMPARE(flm->property("count").toInt(),1); // should just be "test.txt" visible
     count = flm->rowCount();
     QCOMPARE(removeStart, 0);
@@ -154,13 +154,13 @@ void tst_qdeclarativefolderlistmodel::resetFiltering()
 
 void tst_qdeclarativefolderlistmodel::refresh()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("basic.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("basic.qml"));
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != 0);
 
-    flm->setProperty("folder",QUrl::fromLocalFile(TESTDATA("")));
+    flm->setProperty("folder", dataDirectoryUrl());
     QTRY_COMPARE(flm->property("count").toInt(),4); // wait for refresh
 
     int count = flm->rowCount();

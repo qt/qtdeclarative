@@ -9,6 +9,8 @@ HEADERS += testtypes.h \
            ../../shared/testhttpserver.h
 INCLUDEPATH += ../../shared
 
+include (../../shared/util.pri)
+
 # QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
 # LIBS += -lgcov
 

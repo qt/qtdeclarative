@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -81,7 +81,7 @@ static bool isValidErrorMessage(const QString &msg, bool dynamicRoleTest)
     return valid;
 }
 
-class tst_qdeclarativelistmodel : public QObject
+class tst_qdeclarativelistmodel : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -622,7 +622,7 @@ void tst_qdeclarativelistmodel::dynamic_worker()
     QDeclarativeListModel model;
     model.setDynamicRoles(dynamicRoles);
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("model.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -673,7 +673,7 @@ void tst_qdeclarativelistmodel::dynamic_worker_sync()
     QDeclarativeListModel model;
     model.setDynamicRoles(dynamicRoles);
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("model.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -704,7 +704,7 @@ void tst_qdeclarativelistmodel::dynamic_worker_sync()
 void tst_qdeclarativelistmodel::enumerate()
 {
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("enumerate.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("enumerate.qml"));
     QVERIFY(!component.isError());
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
@@ -950,7 +950,7 @@ void tst_qdeclarativelistmodel::get_worker()
     QDeclarativeListModel model;
     model.setDynamicRoles(dynamicRoles);
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("model.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -1102,7 +1102,7 @@ void tst_qdeclarativelistmodel::get_nested_data()
 void tst_qdeclarativelistmodel::crash_model_with_multiple_roles()
 {
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("multipleroles.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("multipleroles.qml"));
     QObject *rootItem = component.create();
     QVERIFY(component.errorString().isEmpty());
     QVERIFY(rootItem != 0);
@@ -1119,7 +1119,7 @@ void tst_qdeclarativelistmodel::crash_model_with_multiple_roles()
 void tst_qdeclarativelistmodel::set_model_cache()
 {
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("setmodelcachelist.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("setmodelcachelist.qml"));
     QObject *model = component.create();
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
     QVERIFY(model != 0);
@@ -1271,7 +1271,7 @@ void tst_qdeclarativelistmodel::property_changes_worker()
     QDeclarativeListModel model;
     model.setDynamicRoles(dynamicRoles);
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("model.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QQuickItem *item = createWorkerTest(&engine, &component, &model);
     QVERIFY(item != 0);
@@ -1362,7 +1362,7 @@ void tst_qdeclarativelistmodel::signal_handlers()
     QFETCH(bool, dynamicRoles);
 
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("signalhandlers.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("signalhandlers.qml"));
     QObject *model = component.create();
     QDeclarativeListModel *lm = qobject_cast<QDeclarativeListModel *>(model);
     QVERIFY(lm != 0);
@@ -1389,7 +1389,7 @@ void tst_qdeclarativelistmodel::worker_sync()
     QDeclarativeListModel model;
     model.setDynamicRoles(dynamicRoles);
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("workersync.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("workersync.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -1454,7 +1454,7 @@ void tst_qdeclarativelistmodel::worker_remove_element()
     QDeclarativeListModel model;
     model.setDynamicRoles(dynamicRoles);
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("workerremoveelement.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("workerremoveelement.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -1495,7 +1495,7 @@ void tst_qdeclarativelistmodel::worker_remove_list()
     QDeclarativeListModel model;
     model.setDynamicRoles(dynamicRoles);
     QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(TESTDATA("workerremovelist.qml")));
+    QDeclarativeComponent component(&eng, testFileUrl("workerremovelist.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
@@ -1577,7 +1577,7 @@ void tst_qdeclarativelistmodel::dynamic_role()
     QDeclarativeListModel model;
     model.setDynamicRoles(true);
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("model.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&engine, &component, &model);
     QVERIFY(item != 0);
 

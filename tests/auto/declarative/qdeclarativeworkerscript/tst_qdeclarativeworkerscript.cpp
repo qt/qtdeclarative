@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -52,13 +52,7 @@
 #include <private/qdeclarativeengine_p.h>
 #include "../../shared/util.h"
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
-
-class tst_QDeclarativeWorkerScript : public QObject
+class tst_QDeclarativeWorkerScript : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -93,7 +87,7 @@ private:
 
 void tst_QDeclarativeWorkerScript::source()
 {
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker.qml"));
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
     const QMetaObject *mo = worker->metaObject();
@@ -103,7 +97,7 @@ void tst_QDeclarativeWorkerScript::source()
     waitForEchoMessage(worker);
     QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>(), value);
 
-    QUrl source = QUrl::fromLocalFile(TESTDATA("script_fixed_return.js"));
+    QUrl source = testFileUrl("script_fixed_return.js");
     worker->setSource(source);
     QCOMPARE(worker->source(), source);
     QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
@@ -118,7 +112,7 @@ void tst_QDeclarativeWorkerScript::messaging()
 {
     QFETCH(QVariant, value);
 
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker.qml"));
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
@@ -155,7 +149,7 @@ void tst_QDeclarativeWorkerScript::messaging_sendQObjectList()
     // instances. If objects are sent in a list, they will be sent as 'undefined'
     // js values.
 
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker.qml"));
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
@@ -176,7 +170,7 @@ void tst_QDeclarativeWorkerScript::messaging_sendQObjectList()
 
 void tst_QDeclarativeWorkerScript::messaging_sendJsObject()
 {
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker.qml"));
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
@@ -203,7 +197,7 @@ void tst_QDeclarativeWorkerScript::messaging_sendJsObject()
 
 void tst_QDeclarativeWorkerScript::messaging_sendExternalObject()
 {
-    QDeclarativeComponent component(&m_engine, TESTDATA("externalObjectWorker.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("externalObjectWorker.qml"));
     QObject *obj = component.create();
     QVERIFY(obj);
     QMetaObject::invokeMethod(obj, "testExternalObject");
@@ -215,7 +209,7 @@ void tst_QDeclarativeWorkerScript::script_with_pragma()
 {
     QVariant value(100);
 
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker_pragma.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker_pragma.qml"));
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
@@ -231,7 +225,7 @@ void tst_QDeclarativeWorkerScript::script_with_pragma()
 
 void tst_QDeclarativeWorkerScript::script_included()
 {
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker_include.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker_include.qml"));
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
@@ -256,14 +250,14 @@ static void qdeclarativeworkerscript_warningsHandler(QtMsgType type, const char 
 
 void tst_QDeclarativeWorkerScript::scriptError_onLoad()
 {
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker_error_onLoad.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker_error_onLoad.qml"));
 
     QtMsgHandler previousMsgHandler = qInstallMsgHandler(qdeclarativeworkerscript_warningsHandler);
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
     QTRY_COMPARE(qdeclarativeworkerscript_lastWarning,
-            TEST_FILE("script_error_onLoad.js").toString() + QLatin1String(":3: SyntaxError: Unexpected identifier"));
+            testFileUrl("script_error_onLoad.js").toString() + QLatin1String(":3: SyntaxError: Unexpected identifier"));
 
     qInstallMsgHandler(previousMsgHandler);
     qApp->processEvents();
@@ -272,7 +266,7 @@ void tst_QDeclarativeWorkerScript::scriptError_onLoad()
 
 void tst_QDeclarativeWorkerScript::scriptError_onCall()
 {
-    QDeclarativeComponent component(&m_engine, TESTDATA("worker_error_onCall.qml"));
+    QDeclarativeComponent component(&m_engine, testFileUrl("worker_error_onCall.qml"));
     QDeclarativeWorkerScript *worker = qobject_cast<QDeclarativeWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
@@ -281,7 +275,7 @@ void tst_QDeclarativeWorkerScript::scriptError_onCall()
     QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
 
     QTRY_COMPARE(qdeclarativeworkerscript_lastWarning,
-            TEST_FILE("script_error_onCall.js").toString() + QLatin1String(":4: ReferenceError: Can't find variable: getData"));
+            testFileUrl("script_error_onCall.js").toString() + QLatin1String(":4: ReferenceError: Can't find variable: getData"));
 
     qInstallMsgHandler(previousMsgHandler);
     qApp->processEvents();
@@ -294,7 +288,7 @@ void tst_QDeclarativeWorkerScript::stressDispose()
 {
     for (int ii = 0; ii < 100; ++ii) {
         QDeclarativeEngine engine;
-        QDeclarativeComponent component(&engine, TESTDATA("stressDispose.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("stressDispose.qml"));
         QObject *o = component.create();
         QVERIFY(o);
         delete o;

@@ -42,8 +42,8 @@
 #ifndef QSGDEFAULTDISTANCEFIELDGLYPHCACHE_H
 #define QSGDEFAULTDISTANCEFIELDGLYPHCACHE_H
 
+#include "qsgadaptationlayer_p.h"
 #include <QtGui/qopenglfunctions.h>
-#include <private/qsgadaptationlayer_p.h>
 #include <qopenglshaderprogram.h>
 #include <QtGui/private/qopenglengineshadersource_p.h>
 
@@ -54,9 +54,10 @@ class Q_QUICK_EXPORT QSGDefaultDistanceFieldGlyphCache : public QSGDistanceField
 public:
     QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
 
-    void requestGlyphs(const QVector<glyph_t> &glyphs);
+    void requestGlyphs(const QSet<glyph_t> &glyphs);
     void storeGlyphs(const QHash<glyph_t, QImage> &glyphs);
-    void releaseGlyphs(const QVector<glyph_t> &glyphs);
+    void referenceGlyphs(const QSet<glyph_t> &glyphs);
+    void releaseGlyphs(const QSet<glyph_t> &glyphs);
 
     bool cacheIsFull() const { return m_textureData->currY >= maxTextureSize(); }
     bool useWorkaroundBrokenFBOReadback() const;
@@ -72,7 +73,6 @@ private:
         GLuint texture;
         GLuint fbo;
         QSize size;
-        QHash<glyph_t, quint32> glyphRefCount;
         QSet<glyph_t> unusedGlyphs;
         int currX;
         int currY;

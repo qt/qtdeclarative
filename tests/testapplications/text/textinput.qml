@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -73,6 +73,8 @@ Rectangle {
             font.pointSize: { pointvalue.model.get(pointvalue.currentIndex).value }
             font.pixelSize: { pixelvalue.model.get(pixelvalue.currentIndex).value }
             horizontalAlignment: { halignvalue.model.get(halignvalue.currentIndex).value }
+            verticalAlignment: { valignvalue.model.get(valignvalue.currentIndex).value }
+            wrapMode: { wrapvalue.model.get(wrapvalue.currentIndex).value }
             smooth: { smoothvalue.model.get(smoothvalue.currentIndex).value }
             selectByMouse: { mousevalue.model.get(mousevalue.currentIndex).value }
             echoMode: { echovalue.model.get(echovalue.currentIndex).value }

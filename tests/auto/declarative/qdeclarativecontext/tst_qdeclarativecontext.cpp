@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -48,17 +48,7 @@
 #include <private/qdeclarativecontext_p.h>
 #include "../../shared/util.h"
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
-inline QUrl TEST_FILE(const char *filename)
-{
-    return TEST_FILE(QLatin1String(filename));
-}
-
-class tst_qdeclarativecontext : public QObject
+class tst_qdeclarativecontext : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -586,8 +576,8 @@ public slots:
 void tst_qdeclarativecontext::refreshExpressions()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("refreshExpressions.qml"));
-    QDeclarativeComponent component2(&engine, TEST_FILE("RefreshExpressionsType.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("refreshExpressions.qml"));
+    QDeclarativeComponent component2(&engine, testFileUrl("RefreshExpressionsType.qml"));
 
     CountCommand command;
     engine.rootContext()->setContextProperty("countCommand", &command);
@@ -621,8 +611,8 @@ void tst_qdeclarativecontext::refreshExpressionsRootContext()
     CountCommand command;
     engine.rootContext()->setContextProperty("countCommand", &command);
 
-    QDeclarativeComponent component(&engine, TEST_FILE("refreshExpressions.qml"));
-    QDeclarativeComponent component2(&engine, TEST_FILE("refreshExpressionsRootContext.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("refreshExpressions.qml"));
+    QDeclarativeComponent component2(&engine, testFileUrl("refreshExpressionsRootContext.qml"));
 
     QDeclarativeContext context(engine.rootContext());
     QDeclarativeContext context2(engine.rootContext());
@@ -648,7 +638,7 @@ void tst_qdeclarativecontext::refreshExpressionsRootContext()
 void tst_qdeclarativecontext::qtbug_22535()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_22535.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("qtbug_22535.qml"));
     QDeclarativeContext context(engine.rootContext());
 
     QObject *o = component.create(&context);

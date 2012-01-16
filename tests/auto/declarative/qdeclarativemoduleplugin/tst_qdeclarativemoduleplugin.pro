@@ -6,6 +6,8 @@ SOURCES = tst_qdeclarativemoduleplugin.cpp \
           ../../shared/testhttpserver.cpp
 CONFIG -= app_bundle
 
+include (../../shared/util.pri)
+
 testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles

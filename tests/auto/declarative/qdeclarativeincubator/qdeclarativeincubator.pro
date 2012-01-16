@@ -4,7 +4,10 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativeincubator.cpp \
            testtypes.cpp
+
 HEADERS += testtypes.h
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

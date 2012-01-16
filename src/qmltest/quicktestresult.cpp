@@ -53,6 +53,8 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/QUrl>
+#include <QtCore/QDir>
 
 QT_BEGIN_NAMESPACE
 
@@ -355,83 +357,82 @@ void QuickTestResult::finishTestFunction()
     QTestResult::finishedCurrentTestFunction();
 }
 
-static QString qtest_fixFile(const QString &file)
+static QString qtestFixUrl(const QUrl &location)
 {
-    if (file.startsWith(QLatin1String("file://")))
-        return file.mid(7);
-    else
-        return file;
+    if (location.isLocalFile()) // Use QUrl's logic for Windows drive letters.
+        return QDir::toNativeSeparators(location.toLocalFile());
+    return location.toString();
 }
 
 void QuickTestResult::fail
-    (const QString &message, const QString &file, int line)
+    (const QString &message, const QUrl &location, int line)
 {
     QTestResult::addFailure(message.toLatin1().constData(),
-                            qtest_fixFile(file).toLatin1().constData(), line);
+                            qtestFixUrl(location).toLatin1().constData(), line);
 }
 
 bool QuickTestResult::verify
-    (bool success, const QString &message, const QString &file, int line)
+    (bool success, const QString &message, const QUrl &location, int line)
 {
     if (!success && message.isEmpty()) {
         return QTestResult::verify
             (success, "verify()", "",
-             qtest_fixFile(file).toLatin1().constData(), line);
+             qtestFixUrl(location).toLatin1().constData(), line);
     } else {
         return QTestResult::verify
             (success, message.toLatin1().constData(), "",
-             qtest_fixFile(file).toLatin1().constData(), line);
+             qtestFixUrl(location).toLatin1().constData(), line);
     }
 }
 
 bool QuickTestResult::compare
     (bool success, const QString &message,
      const QString &val1, const QString &val2,
-     const QString &file, int line)
+     const QUrl &location, int line)
 {
     if (success) {
         return QTestResult::compare
             (success, message.toLocal8Bit().constData(),
-             qtest_fixFile(file).toLatin1().constData(), line);
+             qtestFixUrl(location).toLatin1().constData(), line);
     } else {
         return QTestResult::compare
             (success, message.toLocal8Bit().constData(),
              QTest::toString(val1.toLatin1().constData()),
              QTest::toString(val2.toLatin1().constData()),
              "", "",
-             qtest_fixFile(file).toLatin1().constData(), line);
+             qtestFixUrl(location).toLatin1().constData(), line);
     }
 }
 
 void QuickTestResult::skip
-    (const QString &message, const QString &file, int line)
+    (const QString &message, const QUrl &location, int line)
 {
     QTestResult::addSkip(message.toLatin1().constData(),
-                         qtest_fixFile(file).toLatin1().constData(), line);
+                         qtestFixUrl(location).toLatin1().constData(), line);
     QTestResult::setSkipCurrentTest(true);
 }
 
 bool QuickTestResult::expectFail
-    (const QString &tag, const QString &comment, const QString &file, int line)
+    (const QString &tag, const QString &comment, const QUrl &location, int line)
 {
     return QTestResult::expectFail
         (tag.toLatin1().constData(),
          QTest::toString(comment.toLatin1().constData()),
-         QTest::Abort, qtest_fixFile(file).toLatin1().constData(), line);
+         QTest::Abort, qtestFixUrl(location).toLatin1().constData(), line);
 }
 
 bool QuickTestResult::expectFailContinue
-    (const QString &tag, const QString &comment, const QString &file, int line)
+    (const QString &tag, const QString &comment, const QUrl &location, int line)
 {
     return QTestResult::expectFail
         (tag.toLatin1().constData(),
          QTest::toString(comment.toLatin1().constData()),
-         QTest::Continue, qtest_fixFile(file).toLatin1().constData(), line);
+         QTest::Continue, qtestFixUrl(location).toLatin1().constData(), line);
 }
 
-void QuickTestResult::warn(const QString &message, const QString &file, int line)
+void QuickTestResult::warn(const QString &message, const QUrl &location, int line)
 {
-    QTestLog::warn(message.toLatin1().constData(), qtest_fixFile(file).toLatin1().constData(), line);
+    QTestLog::warn(message.toLatin1().constData(), qtestFixUrl(location).toLatin1().constData(), line);
 }
 
 void QuickTestResult::ignoreWarning(const QString &message)

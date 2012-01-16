@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -50,7 +50,7 @@
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
 
-class tst_qdeclarativebehaviors : public QObject
+class tst_qdeclarativebehaviors : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -85,7 +85,7 @@ private slots:
 void tst_qdeclarativebehaviors::simpleBehavior()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("simple.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("simple.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QTRY_VERIFY(rect);
     QTRY_VERIFY(qobject_cast<QDeclarativeBehavior*>(rect->findChild<QDeclarativeBehavior*>("MyBehavior"))->animation());
@@ -101,7 +101,7 @@ void tst_qdeclarativebehaviors::simpleBehavior()
 void tst_qdeclarativebehaviors::scriptTriggered()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("scripttrigger.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("scripttrigger.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QTRY_VERIFY(rect);
 
@@ -116,7 +116,7 @@ void tst_qdeclarativebehaviors::scriptTriggered()
 void tst_qdeclarativebehaviors::cppTriggered()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("cpptrigger.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("cpptrigger.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QTRY_VERIFY(rect);
 
@@ -133,7 +133,7 @@ void tst_qdeclarativebehaviors::cppTriggered()
 void tst_qdeclarativebehaviors::loop()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("loop.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("loop.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QTRY_VERIFY(rect);
 
@@ -146,7 +146,7 @@ void tst_qdeclarativebehaviors::loop()
 void tst_qdeclarativebehaviors::colorBehavior()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("color.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("color.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QTRY_VERIFY(rect);
 
@@ -161,7 +161,7 @@ void tst_qdeclarativebehaviors::colorBehavior()
 void tst_qdeclarativebehaviors::parentBehavior()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("parent.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("parent.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QTRY_VERIFY(rect);
 
@@ -175,7 +175,7 @@ void tst_qdeclarativebehaviors::parentBehavior()
 void tst_qdeclarativebehaviors::replaceBinding()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("binding.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("binding.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QTRY_VERIFY(rect);
 
@@ -208,7 +208,7 @@ void tst_qdeclarativebehaviors::group()
     /* XXX TODO Create a test element for this case.
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("groupProperty.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("groupProperty.qml")));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         qDebug() << c.errorString();
         QTRY_VERIFY(rect);
@@ -225,7 +225,7 @@ void tst_qdeclarativebehaviors::group()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("groupProperty2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("groupProperty2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QTRY_VERIFY(rect);
 
@@ -241,7 +241,7 @@ void tst_qdeclarativebehaviors::group()
 void tst_qdeclarativebehaviors::valueType()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("valueType.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("valueType.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -254,7 +254,7 @@ void tst_qdeclarativebehaviors::valueType()
 void tst_qdeclarativebehaviors::emptyBehavior()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("empty.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("empty.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -268,7 +268,7 @@ void tst_qdeclarativebehaviors::emptyBehavior()
 void tst_qdeclarativebehaviors::explicitSelection()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("explicit.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("explicit.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -283,7 +283,7 @@ void tst_qdeclarativebehaviors::explicitSelection()
 void tst_qdeclarativebehaviors::nonSelectingBehavior()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("nonSelecting2.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("nonSelecting2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -297,8 +297,8 @@ void tst_qdeclarativebehaviors::nonSelectingBehavior()
 void tst_qdeclarativebehaviors::reassignedAnimation()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("reassignedAnimation.qml")));
-    QString warning = QUrl::fromLocalFile(TESTDATA("reassignedAnimation.qml")).toString() + ":9:9: QML Behavior: Cannot change the animation assigned to a Behavior.";
+    QDeclarativeComponent c(&engine, testFileUrl("reassignedAnimation.qml"));
+    QString warning = testFileUrl("reassignedAnimation.qml").toString() + ":9:9: QML Behavior: Cannot change the animation assigned to a Behavior.";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
@@ -311,7 +311,7 @@ void tst_qdeclarativebehaviors::reassignedAnimation()
 void tst_qdeclarativebehaviors::disabled()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("disabled.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("disabled.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
     QCOMPARE(rect->findChild<QDeclarativeBehavior*>("MyBehavior")->enabled(), false);
@@ -327,7 +327,7 @@ void tst_qdeclarativebehaviors::dontStart()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("dontStart.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("dontStart.qml"));
 
     QString warning = c.url().toString() + ":13:13: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -345,7 +345,7 @@ void tst_qdeclarativebehaviors::startup()
 {
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("startup.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("startup.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -359,7 +359,7 @@ void tst_qdeclarativebehaviors::startup()
 
     {
         QDeclarativeEngine engine;
-        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("startup2.qml")));
+        QDeclarativeComponent c(&engine, testFileUrl("startup2.qml"));
         QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
         QVERIFY(rect);
 
@@ -379,7 +379,7 @@ void tst_qdeclarativebehaviors::startup()
 void tst_qdeclarativebehaviors::groupedPropertyCrash()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("groupedPropertyCrash.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("groupedPropertyCrash.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);  //don't crash
 
@@ -390,7 +390,7 @@ void tst_qdeclarativebehaviors::groupedPropertyCrash()
 void tst_qdeclarativebehaviors::runningTrue()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("runningTrue.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("runningTrue.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -408,7 +408,7 @@ void tst_qdeclarativebehaviors::runningTrue()
 void tst_qdeclarativebehaviors::sameValue()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("qtbug12295.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("qtbug12295.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
 
@@ -438,7 +438,7 @@ void tst_qdeclarativebehaviors::delayedRegistration()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("delayedRegistration.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("delayedRegistration.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -455,7 +455,7 @@ void tst_qdeclarativebehaviors::startOnCompleted()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("startOnCompleted.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("startOnCompleted.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 

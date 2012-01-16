@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -61,11 +61,14 @@ QT_BEGIN_NAMESPACE
 namespace QDeclarativeBuiltinFunctions
 {
 v8::Handle<v8::Value> gc(const v8::Arguments &args);
-v8::Handle<v8::Value> consoleLog(const v8::Arguments &args);
-v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleError(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleLog(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTime(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args);
 v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);
 v8::Handle<v8::Value> rgba(const v8::Arguments &args);
 v8::Handle<v8::Value> hsla(const v8::Arguments &args);

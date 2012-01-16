@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -71,6 +71,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qdebug.h>
+#include <QtGui/qaccessible.h>
 
 #include <QtWidgets/private/qgraphicsitem_p.h>
 
@@ -130,7 +131,7 @@ public:
       componentComplete(true), keepMouse(false),
       smooth(false), transformOriginDirty(true), doneEventPreHandler(false),
       inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
-      inheritMirrorFromParent(false), inheritMirrorFromItem(false), keyHandler(0),
+      inheritMirrorFromParent(false), inheritMirrorFromItem(false), isAccessible(0), keyHandler(0),
       mWidth(0), mHeight(0), mImplicitWidth(0), mImplicitHeight(0), attachedLayoutDirection(0), hadSubFocusItem(false)
     {
         QGraphicsItemPrivate::acceptedMouseButtons = 0;
@@ -287,6 +288,7 @@ public:
     bool isMirrorImplicit:1;
     bool inheritMirrorFromParent:1;
     bool inheritMirrorFromItem:1;
+    bool isAccessible:1;
 
     QDeclarativeItemKeyFilter *keyHandler;
 
@@ -298,6 +300,7 @@ public:
     QDeclarative1LayoutMirroringAttached* attachedLayoutDirection;
 
     bool hadSubFocusItem;
+    void setAccessibleFlagAndListener();
 
     QPointF computeTransformOrigin() const;
 
@@ -616,6 +619,7 @@ private:
 
     static const SigMap sigMap[];
 };
+
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativeItemPrivate::ChangeTypes);
 

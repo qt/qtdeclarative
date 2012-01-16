@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -46,7 +46,7 @@
 
 #include "../../shared/util.h"
 
-class tst_QDeclarativePath : public QObject
+class tst_QDeclarativePath : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -55,13 +55,14 @@ public:
 private slots:
     void arc();
     void catmullromCurve();
+    void closedCatmullromCurve();
     void svg();
 };
 
 void tst_QDeclarativePath::arc()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("arc.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("arc.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 
@@ -96,7 +97,7 @@ void tst_QDeclarativePath::arc()
 void tst_QDeclarativePath::catmullromCurve()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("curve.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("curve.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 
@@ -106,14 +107,15 @@ void tst_QDeclarativePath::catmullromCurve()
     QDeclarativeListReference list(obj, "pathElements");
     QCOMPARE(list.count(), 3);
 
-    QDeclarativePathCatmullRomCurve* arc = qobject_cast<QDeclarativePathCatmullRomCurve*>(list.at(0));
-//    QVERIFY(arc != 0);
-//    QCOMPARE(arc->x(), 100.);
-//    QCOMPARE(arc->y(), 100.);
-//    QCOMPARE(arc->radiusX(), 100.);
-//    QCOMPARE(arc->radiusY(), 100.);
-//    QCOMPARE(arc->useLargeArc(), false);
-//    QCOMPARE(arc->direction(), QDeclarativePathArc::Clockwise);
+    QDeclarativePathCatmullRomCurve* curve = qobject_cast<QDeclarativePathCatmullRomCurve*>(list.at(0));
+    QVERIFY(curve != 0);
+    QCOMPARE(curve->x(), 100.);
+    QCOMPARE(curve->y(), 50.);
+
+    curve = qobject_cast<QDeclarativePathCatmullRomCurve*>(list.at(2));
+    QVERIFY(curve != 0);
+    QCOMPARE(curve->x(), 100.);
+    QCOMPARE(curve->y(), 150.);
 
     QPainterPath path = obj->path();
     QVERIFY(path != QPainterPath());
@@ -128,10 +130,43 @@ void tst_QDeclarativePath::catmullromCurve()
     QCOMPARE(pos, QPointF(100,150));
 }
 
+void tst_QDeclarativePath::closedCatmullromCurve()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, testFileUrl("closedcurve.qml"));
+    QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
+    QVERIFY(obj != 0);
+
+    QCOMPARE(obj->startX(), 50.);
+    QCOMPARE(obj->startY(), 50.);
+
+    QDeclarativeListReference list(obj, "pathElements");
+    QCOMPARE(list.count(), 3);
+
+    QDeclarativePathCatmullRomCurve* curve = qobject_cast<QDeclarativePathCatmullRomCurve*>(list.at(2));
+    QVERIFY(curve != 0);
+    QCOMPARE(curve->x(), 50.);
+    QCOMPARE(curve->y(), 50.);
+
+    QVERIFY(obj->isClosed());
+
+    QPainterPath path = obj->path();
+    QVERIFY(path != QPainterPath());
+
+    QPointF pos = obj->pointAt(0);
+    QCOMPARE(pos, QPointF(50,50));
+    pos = obj->pointAt(.1);
+    QCOMPARE(pos.toPoint(), QPoint(67,56));  //fuzzy compare
+    pos = obj->pointAt(.75);
+    QCOMPARE(pos.toPoint(), QPoint(44,116)); //fuzzy compare
+    pos = obj->pointAt(1);
+    QCOMPARE(pos, QPointF(50,50));
+}
+
 void tst_QDeclarativePath::svg()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("svg.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("svg.qml"));
     QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
     QVERIFY(obj != 0);
 

@@ -1,7 +1,7 @@
 
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -64,7 +64,7 @@ class QDeclarativeDebugTestService : public QDeclarativeDebugService
 {
     Q_OBJECT
 public:
-    QDeclarativeDebugTestService(const QString &s, QObject *parent = 0);
+    QDeclarativeDebugTestService(const QString &s, float version = 1, QObject *parent = 0);
 
 signals:
     void statusHasChanged();

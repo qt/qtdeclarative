@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -528,7 +528,7 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
                     if (absolutePath.at(0) == QLatin1Char(':'))
                         url = QLatin1String("qrc://") + absolutePath.mid(1);
                     else
-                        url = QLatin1String("file://") + absolutePath;
+                        url = QUrl::fromLocalFile(absolutePath).toString();
                     uri = resolvedUri(dir, database);
                     if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
                         return false;

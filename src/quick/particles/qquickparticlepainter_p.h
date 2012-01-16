@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -89,6 +89,7 @@ public slots:
     {
         if (m_groups != arg) {
             m_groups = arg;
+            //Note: The system watches this as it has to recalc things when groups change. It will request a reset if necessary
             emit groupsChanged(arg);
         }
     }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -818,7 +818,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_explicitRotation(false)
     , m_explicitDeformation(false)
     , m_explicitAnimation(false)
-    , m_bloat(false)
+    , m_bypassOptimizations(false)
     , perfLevel(Unknown)
     , m_lastLevel(Unknown)
     , m_debugMode(false)
@@ -1036,11 +1036,11 @@ void QQuickImageParticle::setSpritesInterpolate(bool arg)
     }
 }
 
-void QQuickImageParticle::setBloat(bool arg)
+void QQuickImageParticle::setBypassOptimizations(bool arg)
 {
-    if (m_bloat != arg) {
-        m_bloat = arg;
-        emit bloatChanged(arg);
+    if (m_bypassOptimizations != arg) {
+        m_bypassOptimizations = arg;
+        emit bypassOptimizationsChanged(arg);
     }
     if (perfLevel < 9999)
         reset();
@@ -1222,7 +1222,7 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
     if (count() <= 0)
         return 0;
 
-    if (m_sprites.count() || m_bloat) {
+    if (m_sprites.count() || m_bypassOptimizations) {
         perfLevel = Sprites;
     } else if (!m_colortable_name.isEmpty() || !m_sizetable_name.isEmpty()
                || !m_opacitytable_name.isEmpty()) {
@@ -1264,12 +1264,16 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
     if (perfLevel >= Sprites){
         if (!m_spriteEngine) {
             qWarning() << "ImageParticle: No sprite engine...";
-            return 0;
+            //Sprite performance mode with static image is supported, but not advised
+            //Note that in this case it always uses shadow data
+        } else {
+            image = m_spriteEngine->assembledImage();
+            if (image.isNull())//Warning is printed in engine
+                return 0;
         }
-        image = m_spriteEngine->assembledImage();
-        if (image.isNull())//Warning is printed in engine
-            return 0;
-    } else {
+    }
+
+    if ( image.isNull() ) {
         image = QImage(m_image_name.toLocalFile());
         if (image.isNull()) {
             printf("ImageParticle: loading image failed '%s'\n", qPrintable(m_image_name.toLocalFile()));
@@ -1289,7 +1293,8 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
     case Sprites:
         m_material = SpriteMaterial::createMaterial();
         getState<ImageMaterialData>(m_material)->animSheetSize = QSizeF(image.size());
-        m_spriteEngine->setCount(m_count);
+        if (m_spriteEngine)
+            m_spriteEngine->setCount(m_count);
     case Tabled:
         if (!m_material)
             m_material = TabledMaterial::createMaterial();
@@ -1319,6 +1324,7 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
         m_material->setFlag(QSGMaterial::Blending);
     }
 
+    m_nodes.clear();
     foreach (const QString &str, m_groups){
         int gIdx = m_system->groupIds[str];
         int count = m_system->groupData[gIdx]->size();
@@ -1428,8 +1434,6 @@ void QQuickImageParticle::prepareNextFrame()
 {
     if (m_rootNode == 0){//TODO: Staggered loading (as emitted)
         m_rootNode = buildParticleNodes();
-        if (m_rootNode == 0)
-            return;
         if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";
@@ -1440,6 +1444,8 @@ void QQuickImageParticle::prepareNextFrame()
             }
             qDebug() << "Total count: " << count;
         }
+        if (m_rootNode == 0)
+            return;
     }
     qint64 timeStamp = m_system->systemSync(this);
 
@@ -1448,7 +1454,8 @@ void QQuickImageParticle::prepareNextFrame()
     switch (perfLevel){//Fall-through intended
     case Sprites:
         //Advance State
-        m_spriteEngine->updateSprites(timeStamp);
+        if (m_spriteEngine)
+            m_spriteEngine->updateSprites(timeStamp);
     case Tabled:
     case Deformable:
     case Colored:
@@ -1457,7 +1464,6 @@ void QQuickImageParticle::prepareNextFrame()
         getState<ImageMaterialData>(m_material)->timestamp = time;
         break;
     }
-
     foreach (QSGGeometryNode* node, m_nodes)
         node->markDirty(QSGNode::DirtyMaterial);
 }
@@ -1520,7 +1526,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
     switch (perfLevel){//Fall-through is intended on all of them
         case Sprites:
             // Initial Sprite State
-            if (m_explicitAnimation){
+            if (m_explicitAnimation && m_spriteEngine){
                 if (!datum->animationOwner)
                     datum->animationOwner = this;
                 QQuickParticleData* writeTo = (datum->animationOwner == this ? datum : getShadowDatum(datum));
@@ -1530,16 +1536,22 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                     m_spriteEngine->start(spriteIdx);
                     writeTo->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
                     writeTo->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                    writeTo->animIdx = 0;//Always starts at 0
                     writeTo->animX = m_spriteEngine->spriteX(spriteIdx);
                     writeTo->animY = m_spriteEngine->spriteY(spriteIdx);
                     writeTo->animWidth = m_spriteEngine->spriteWidth(spriteIdx);
                     writeTo->animHeight = m_spriteEngine->spriteHeight(spriteIdx);
-                }else{
-                    writeTo->frameCount = 1;
-                    writeTo->frameDuration = 9999;
-                    writeTo->animX = writeTo->animY = 0;
-                    writeTo->animWidth = writeTo->animHeight = 1;
                 }
+            } else {
+                QQuickParticleData* writeTo = getShadowDatum(datum);
+                writeTo->animT = datum->t;
+                writeTo->frameCount = 1;
+                writeTo->frameDuration = 60000000.0;
+                writeTo->animIdx = 0;
+                writeTo->animT = 0;
+                writeTo->animX = writeTo->animY = 0;
+                writeTo->animWidth = getState<ImageMaterialData>(m_material)->animSheetSize.width();
+                writeTo->animHeight = getState<ImageMaterialData>(m_material)->animSheetSize.height();
             }
         case Tabled:
         case Deformable:
@@ -1656,8 +1668,8 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
                 spriteVertices[i].rotationSpeed = datum->rotationSpeed;
                 spriteVertices[i].autoRotate = datum->autoRotate;
             }
-            spriteVertices[i].animInterpolate = m_spritesInterpolate ? 1.0 : 0.0;//### Shadow? In particleData? Or uniform?
-            if (m_explicitAnimation && datum->animationOwner != this) {
+            spriteVertices[i].animInterpolate = m_spriteEngine ? (m_spritesInterpolate ? 1.0 : 0.0) : 0.0;//### Shadow? In particleData? Or uniform?
+            if (!m_spriteEngine || (m_explicitAnimation && datum->animationOwner != this)) {
                 QQuickParticleData* shadow = getShadowDatum(datum);
                 spriteVertices[i].frameDuration = shadow->frameDuration;
                 spriteVertices[i].frameCount = shadow->frameCount;

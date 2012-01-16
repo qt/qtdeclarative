@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -75,7 +75,7 @@ QDeclarativeOpenMetaObjectType::QDeclarativeOpenMetaObjectType(const QMetaObject
 QDeclarativeOpenMetaObjectType::~QDeclarativeOpenMetaObjectType()
 {
     if (d->mem)
-        qFree(d->mem);
+        free(d->mem);
     if (d->cache)
         d->cache->release();
     delete d;
@@ -102,7 +102,7 @@ int QDeclarativeOpenMetaObjectType::createProperty(const QByteArray &name)
     d->mob.addSignal("__" + QByteArray::number(id) + "()");
     QMetaPropertyBuilder build = d->mob.addProperty(name, "QVariant", id);
     propertyCreated(id, build);
-    qFree(d->mem);
+    free(d->mem);
     d->mem = d->mob.toMetaObject();
     d->names.insert(name, id);
     QSet<QDeclarativeOpenMetaObject*>::iterator it = d->referers.begin();

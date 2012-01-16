@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -182,7 +182,6 @@ class QQuickImageParticle : public QQuickParticlePainter
     Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
-    Q_PROPERTY(bool bloat READ bloat WRITE setBloat NOTIFY bloatChanged)//Just a debugging property to bypass optimizations
     Q_ENUMS(EntryEffect)
 public:
     explicit QQuickImageParticle(QQuickItem *parent = 0);
@@ -251,7 +250,7 @@ public:
 
     bool spritesInterpolate() const { return m_spritesInterpolate; }
 
-    bool bloat() const { return m_bloat; }
+    bool bypassOptimizations() const { return m_bypassOptimizations; }
 
     EntryEffect entryEffect() const { return m_entryEffect; }
 
@@ -295,7 +294,7 @@ signals:
 
     void spritesInterpolateChanged(bool arg);
 
-    void bloatChanged(bool arg);
+    void bypassOptimizationsChanged(bool arg);
 
     void entryEffectChanged(EntryEffect arg);
 
@@ -327,7 +326,7 @@ public slots:
 
     void setSpritesInterpolate(bool arg);
 
-    void setBloat(bool arg);
+    void setBypassOptimizations(bool arg);
 
     void setEntryEffect(EntryEffect arg);
 
@@ -389,7 +388,7 @@ private:
     void clearShadows();
     QQuickParticleData* getShadowDatum(QQuickParticleData* datum);
 
-    bool m_bloat;
+    bool m_bypassOptimizations;
     PerformanceLevel perfLevel;
 
     PerformanceLevel m_lastLevel;

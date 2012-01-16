@@ -4,8 +4,11 @@ macx:CONFIG -= app_bundle
 
 INCLUDEPATH += ../../shared/
 HEADERS += ../../shared/testhttpserver.h
+
 SOURCES += tst_qquickloader.cpp \
            ../../shared/testhttpserver.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

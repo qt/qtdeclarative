@@ -82,7 +82,7 @@ public:
 
     void render();
 
-    void nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags);
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
 
     void setSortFrontToBackEnabled(bool sort);
     bool isSortFrontToBackEnabled() const;

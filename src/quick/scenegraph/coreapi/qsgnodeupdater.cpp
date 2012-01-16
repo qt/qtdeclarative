@@ -114,7 +114,7 @@ bool QSGNodeUpdater::isNodeBlocked(QSGNode *node, QSGNode *root) const
 
 void QSGNodeUpdater::enterTransformNode(QSGTransformNode *t)
 {
-    if (t->dirtyFlags() & QSGNode::DirtyMatrix)
+    if (t->dirtyState() & QSGNode::DirtyMatrix)
         ++m_force_update;
 
 #ifdef QSG_UPDATER_DEBUG
@@ -144,7 +144,7 @@ void QSGNodeUpdater::leaveTransformNode(QSGTransformNode *t)
     qDebug() << "leave transform:" << t;
 #endif
 
-    if (t->dirtyFlags() & QSGNode::DirtyMatrix)
+    if (t->dirtyState() & QSGNode::DirtyMatrix)
         --m_force_update;
 
     if (!t->matrix().isIdentity()) {
@@ -160,7 +160,7 @@ void QSGNodeUpdater::enterClipNode(QSGClipNode *c)
     qDebug() << "enter clip:" << c;
 #endif
 
-    if (c->dirtyFlags() & QSGNode::DirtyClipList)
+    if (c->dirtyState() & QSGNode::DirtyClipList)
         ++m_force_update;
 
     c->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.last();
@@ -175,7 +175,7 @@ void QSGNodeUpdater::leaveClipNode(QSGClipNode *c)
     qDebug() << "leave clip:" << c;
 #endif
 
-    if (c->dirtyFlags() & QSGNode::DirtyClipList)
+    if (c->dirtyState() & QSGNode::DirtyClipList)
         --m_force_update;
 
     m_current_clip = c->m_clip_list;
@@ -204,7 +204,7 @@ void QSGNodeUpdater::leaveGeometryNode(QSGGeometryNode *g)
 
 void QSGNodeUpdater::enterOpacityNode(QSGOpacityNode *o)
 {
-    if (o->dirtyFlags() & QSGNode::DirtyOpacity)
+    if (o->dirtyState() & QSGNode::DirtyOpacity)
         ++m_force_update;
 
     qreal opacity = m_opacity_stack.last() * o->opacity();
@@ -239,12 +239,12 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
     qDebug() << "enter:" << n;
 #endif
 
-    if (!n->dirtyFlags() && !m_force_update)
+    if (!n->dirtyState() && !m_force_update)
         return;
     if (n->isSubtreeBlocked())
         return;
 
-    bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
+    bool forceUpdate = n->dirtyState() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
     if (forceUpdate)
         ++m_force_update;
 

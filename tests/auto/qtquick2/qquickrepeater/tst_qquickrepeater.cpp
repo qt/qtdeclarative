@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -52,12 +52,7 @@
 
 #include "../../shared/util.h"
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
-class tst_QQuickRepeater : public QObject
+class tst_QQuickRepeater : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -183,7 +178,7 @@ void tst_QQuickRepeater::numberModel()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(TEST_FILE("intmodel.qml"));
+    canvas->setSource(testFileUrl("intmodel.qml"));
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
@@ -224,7 +219,7 @@ void tst_QQuickRepeater::objectList()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testData", QVariant::fromValue(data));
 
-    canvas->setSource(TEST_FILE("objlist.qml"));
+    canvas->setSource(testFileUrl("objlist.qml"));
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
@@ -265,7 +260,7 @@ void tst_QQuickRepeater::stringList()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testData", data);
 
-    canvas->setSource(TEST_FILE("repeater1.qml"));
+    canvas->setSource(testFileUrl("repeater1.qml"));
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
@@ -313,7 +308,7 @@ void tst_QQuickRepeater::dataModel_adding()
 
     TestModel testModel;
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(TEST_FILE("repeater2.qml"));
+    canvas->setSource(testFileUrl("repeater2.qml"));
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
@@ -383,7 +378,7 @@ void tst_QQuickRepeater::dataModel_removing()
     testModel.addItem("five", "5");
 
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(TEST_FILE("repeater2.qml"));
+    canvas->setSource(testFileUrl("repeater2.qml"));
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
@@ -449,7 +444,7 @@ void tst_QQuickRepeater::dataModel_changes()
     testModel.addItem("three", "3");
 
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(TEST_FILE("repeater2.qml"));
+    canvas->setSource(testFileUrl("repeater2.qml"));
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
@@ -483,7 +478,7 @@ void tst_QQuickRepeater::itemModel()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(TEST_FILE("itemlist.qml"));
+    canvas->setSource(testFileUrl("itemlist.qml"));
     qApp->processEvents();
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
@@ -527,7 +522,7 @@ void tst_QQuickRepeater::resetModel()
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testData", dataA);
-    canvas->setSource(TEST_FILE("repeater1.qml"));
+    canvas->setSource(testFileUrl("repeater1.qml"));
     qApp->processEvents();
     QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
     QVERIFY(repeater != 0);
@@ -589,7 +584,7 @@ void tst_QQuickRepeater::resetModel()
 void tst_QQuickRepeater::modelChanged()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("modelChanged.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("modelChanged.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(rootObject);
@@ -612,7 +607,7 @@ void tst_QQuickRepeater::modelChanged()
 void tst_QQuickRepeater::properties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("properties.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("properties.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(rootObject);
@@ -646,7 +641,7 @@ void tst_QQuickRepeater::asynchronous()
     QDeclarativeIncubationController controller;
     canvas->engine()->setIncubationController(&controller);
 
-    canvas->setSource(TEST_FILE("asyncloader.qml"));
+    canvas->setSource(testFileUrl("asyncloader.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(rootObject);
@@ -698,7 +693,7 @@ void tst_QQuickRepeater::asynchronous()
 void tst_QQuickRepeater::initParent()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("initparent.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("initparent.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(rootObject);

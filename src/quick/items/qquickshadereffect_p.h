@@ -83,8 +83,6 @@ public:
     QQuickShaderEffect(QQuickItem *parent = 0);
     ~QQuickShaderEffect();
 
-    virtual void componentComplete();
-
     QByteArray fragmentShader() const { return m_source.fragmentCode; }
     void setFragmentShader(const QByteArray &code);
 
@@ -100,6 +98,8 @@ public:
     CullMode cullMode() const { return m_cullMode; }
     void setCullMode(CullMode face);
 
+    void ensureCompleted();
+
 Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();
@@ -110,6 +110,7 @@ Q_SIGNALS:
 protected:
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    virtual void itemChange(ItemChange change, const ItemChangeData &value);
 
 private Q_SLOTS:
     void changeSource(int index);
@@ -147,6 +148,8 @@ private:
     uint m_programDirty : 1;
     uint m_dirtyMesh : 1;
     uint m_dirtyGeometry : 1;
+
+    uint m_complete : 1;
 };
 
 QT_END_NAMESPACE

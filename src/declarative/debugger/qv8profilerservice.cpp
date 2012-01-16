@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -100,7 +100,7 @@ public:
 };
 
 QV8ProfilerService::QV8ProfilerService(QObject *parent)
-    : QDeclarativeDebugService(*(new QV8ProfilerServicePrivate()), QLatin1String("V8Profiler"), parent)
+    : QDeclarativeDebugService(*(new QV8ProfilerServicePrivate()), QLatin1String("V8Profiler"), 1, parent)
 {
     Q_D(QV8ProfilerService);
 
@@ -241,8 +241,10 @@ void QV8ProfilerServicePrivate::sendMessages()
 {
     Q_Q(QV8ProfilerService);
 
+    QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
-        q->sendMessage(m_data.at(i).toByteArray());
+        messages << m_data.at(i).toByteArray();
+    q->sendMessages(messages);
     m_data.clear();
 
     //indicate completion

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -45,7 +45,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include "../../shared/util.h"
 
-class tst_qdeclarativebinding : public QObject
+class tst_qdeclarativebinding : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -69,7 +69,7 @@ tst_qdeclarativebinding::tst_qdeclarativebinding()
 void tst_qdeclarativebinding::binding()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-binding.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("test-binding.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -97,7 +97,7 @@ void tst_qdeclarativebinding::binding()
 void tst_qdeclarativebinding::whenAfterValue()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-binding2.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("test-binding2.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
 
     QVERIFY(rect != 0);
@@ -113,7 +113,7 @@ void tst_qdeclarativebinding::whenAfterValue()
 void tst_qdeclarativebinding::restoreBinding()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("restoreBinding.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("restoreBinding.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -143,7 +143,7 @@ void tst_qdeclarativebinding::restoreBinding()
 void tst_qdeclarativebinding::restoreBindingWithLoop()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("restoreBindingWithLoop.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("restoreBindingWithLoop.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
@@ -180,7 +180,7 @@ void tst_qdeclarativebinding::restoreBindingWithLoop()
 void tst_qdeclarativebinding::deletedObject()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("deletedObject.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("deletedObject.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 

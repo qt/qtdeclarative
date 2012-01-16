@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -45,13 +45,14 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qabstractitemmodel.h>
 
-#include <private/qdeclarativerefcount_p.h>
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
+
+class QQuickVisualDataModelItem;
+class QQuickVisualDataModelItemMetaType;
 
 class QQuickVisualAdaptorModelPrivate;
 class QQuickVisualAdaptorModel : public QObject
@@ -61,8 +62,7 @@ class QQuickVisualAdaptorModel : public QObject
 public:
     enum Flag
     {
-        MetaObjectCacheable = 0x01,
-        ProxiedObject       = 0x02
+        ProxiedObject       = 0x01
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -81,10 +81,9 @@ public:
     QVariant parentModelIndex() const;
 
     int count() const;
-    QObject *data(int index);
+    QQuickVisualDataModelItem *createItem(QQuickVisualDataModelItemMetaType *metaType, int index);
     QString stringValue(int index, const QString &role);
     void replaceWatchedRoles(const QList<QByteArray> &oldRoles, const QList<QByteArray> &newRoles);
-    int indexOf(QObject *object) const;
 
     bool canFetchMore() const;
     void fetchMore();

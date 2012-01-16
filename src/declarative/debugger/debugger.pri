@@ -9,7 +9,8 @@ SOURCES += \
     $$PWD/qdeclarativeinspectorservice.cpp \
     $$PWD/qv8debugservice.cpp \
     $$PWD/qv8profilerservice.cpp \
-    $$PWD/qdeclarativeenginedebugservice.cpp
+    $$PWD/qdeclarativeenginedebugservice.cpp \
+    $$PWD/qdebugmessageservice.cpp
 
 HEADERS += \
     $$PWD/qpacketprotocol_p.h \
@@ -27,4 +28,5 @@ HEADERS += \
     $$PWD/qv8debugservice_p.h \
     $$PWD/qv8profilerservice_p.h \
     $$PWD/qdeclarativeenginedebugservice_p.h \
-    $$PWD/qdeclarativedebug.h
+    $$PWD/qdeclarativedebug.h \
+    $$PWD/qdebugmessageservice_p.h

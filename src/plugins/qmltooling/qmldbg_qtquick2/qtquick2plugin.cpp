@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qtquick2plugin.h"
-#include "sgviewinspector.h"
+#include "qquickviewinspector.h"
 
 #include <QtCore/qplugin.h>
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
@@ -68,7 +68,7 @@ void QtQuick2Plugin::activate(QObject *view)
 {
     QQuickView *qtQuickView = qobject_cast<QQuickView*>(view);
     Q_ASSERT(qtQuickView);
-    m_inspector = new SGViewInspector(qtQuickView, qtQuickView);
+    m_inspector = new QQuickViewInspector(qtQuickView, qtQuickView);
 }
 
 void QtQuick2Plugin::deactivate()

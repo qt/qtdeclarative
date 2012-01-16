@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -75,7 +75,7 @@ protected:
     void messageReceived(const QByteArray &message);
 };
 
-class tst_QDeclarativeDebugTrace : public QObject
+class tst_QDeclarativeDebugTrace : public QDeclarativeDataTest
 {
     Q_OBJECT
 
@@ -190,7 +190,7 @@ void tst_QDeclarativeDebugTrace::connect(bool block)
     else
         arguments << QString("-qmljsdebugger=port:"STR_PORT);
 
-    arguments << QString(TESTDATA(QLatin1String("test.qml")));
+    arguments << testFile("test.qml");
 
     m_process = new QDeclarativeDebugProcess(executable);
     m_process->start(QStringList() << arguments);
@@ -226,6 +226,7 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
         QFAIL(qPrintable(failMsg));
     }
 
+    QVERIFY(m_client->traceMessages.count());
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
     QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
@@ -248,6 +249,8 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
                 = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
         QFAIL(qPrintable(failMsg));
     }
+
+    QVERIFY(m_client->traceMessages.count());
 
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);

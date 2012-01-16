@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -54,7 +54,7 @@
 //
 
 #include "qdeclarativedebugservice_p.h"
-#include <private/qv8_p.h>
+#include <private/qv8debug_p.h>
 
 QT_BEGIN_HEADER
 
@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QDeclarativeEngine;
+class QV8Engine;
 class QV8DebugServicePrivate;
 
 class QV8DebugService : public QDeclarativeDebugService
@@ -73,22 +73,26 @@ public:
     ~QV8DebugService();
 
     static QV8DebugService *instance();
-    static void initialize();
+    static void initialize(const QV8Engine *engine);
 
-    void debugMessageHandler(const QString &message, bool willStartRunning);
-
-    void appendSourcePath(const v8::Handle<v8::Object> &eventData);
+    void debugMessageHandler(const QString &message, const v8::DebugEvent &event);
 
     void signalEmitted(const QString &signal);
 
+public slots:
+    void processDebugMessages();
+
 private slots:
-    void scheduledDebugBreak();
-    void cancelDebugBreak();
-    void initialize(bool);
+    void scheduledDebugBreak(bool schedule);
+    void sendDebugMessage(const QString &message);
+    void init();
 
 protected:
     void statusChanged(Status newStatus);
     void messageReceived(const QByteArray &);
+
+private:
+    void setEngine(const QV8Engine *engine);
 
 private:
     Q_DISABLE_COPY(QV8DebugService)

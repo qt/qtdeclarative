@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -46,35 +46,17 @@
 #include <QtGui/QScreen>
 #include "../../shared/util.h"
 
-class tst_qquickscreen : public QObject
+class tst_qquickscreen : public QDeclarativeDataTest
 {
     Q_OBJECT
-public:
-    tst_qquickscreen ();
-
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
     void basicProperties();
 };
-
-tst_qquickscreen::tst_qquickscreen()
-{
-}
-
-void tst_qquickscreen::initTestCase()
-{
-}
-
-void tst_qquickscreen::cleanupTestCase()
-{
-}
 
 void tst_qquickscreen::basicProperties()
 {
     QQuickView view;
-    view.setSource(TESTDATA("screen.qml"));
+    view.setSource(testFileUrl("screen.qml"));
     view.show();
     QTest::qWaitForWindowShown(&view);
 

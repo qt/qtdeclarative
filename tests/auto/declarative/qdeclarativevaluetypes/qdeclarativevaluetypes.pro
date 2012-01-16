@@ -7,6 +7,8 @@ HEADERS += testtypes.h
 SOURCES += tst_qdeclarativevaluetypes.cpp \
            testtypes.cpp
 
+include (../../shared/util.pri)
+
 testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles

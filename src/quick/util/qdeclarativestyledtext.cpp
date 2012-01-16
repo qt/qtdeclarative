@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -51,6 +51,7 @@
     QDeclarativeStyledText supports few tags:
 
     <b></b> - bold
+    <strong></strong> - bold
     <i></i> - italic
     <br> - new line
     <p> - paragraph
@@ -59,6 +60,7 @@
     <h1> to <h6> - headers
     <a href=""> - anchor
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
+    <pre></pre> - preformated
 
     The opening and closing tags must be correctly nested.
 */
@@ -79,6 +81,7 @@ public:
 
     QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l)
         : text(t), layout(l), baseFont(layout.font()), hasNewLine(false)
+        , preFormat(false)
     {
     }
 
@@ -106,6 +109,7 @@ public:
     QFont baseFont;
     QStack<List> listStack;
     bool hasNewLine;
+    bool preFormat;
 
     static const QChar lessThan;
     static const QChar greaterThan;
@@ -160,6 +164,7 @@ void QDeclarativeStyledTextPrivate::parse()
     int textStart = 0;
     int textLength = 0;
     int rangeStart = 0;
+    bool formatChanged = false;
     const QChar *ch = text.constData();
     while (!ch->isNull()) {
         if (*ch == lessThan) {
@@ -177,26 +182,35 @@ void QDeclarativeStyledTextPrivate::parse()
                 }
             }
             if (rangeStart != drawText.length() && formatStack.count()) {
-                QTextLayout::FormatRange formatRange;
-                formatRange.format = formatStack.top();
-                formatRange.start = rangeStart;
-                formatRange.length = drawText.length() - rangeStart;
-                ranges.append(formatRange);
+                if (formatChanged) {
+                    QTextLayout::FormatRange formatRange;
+                    formatRange.format = formatStack.top();
+                    formatRange.start = rangeStart;
+                    formatRange.length = drawText.length() - rangeStart;
+                    ranges.append(formatRange);
+                    formatChanged = false;
+                } else if (ranges.count()) {
+                    ranges.last().length += drawText.length() - rangeStart;
+                }
             }
             rangeStart = drawText.length();
             ++ch;
             if (*ch == slash) {
                 ++ch;
                 if (parseCloseTag(ch, text, drawText)) {
-                    if (formatStack.count())
+                    if (formatStack.count()) {
+                        formatChanged = true;
                         formatStack.pop();
+                    }
                 }
             } else {
                 QTextCharFormat format;
                 if (formatStack.count())
                     format = formatStack.top();
-                if (parseTag(ch, text, drawText, format))
+                if (parseTag(ch, text, drawText, format)) {
+                    formatChanged = true;
                     formatStack.push(format);
+                }
             }
             textStart = ch - text.constData() + 1;
             textLength = 0;
@@ -204,6 +218,11 @@ void QDeclarativeStyledTextPrivate::parse()
             ++ch;
             drawText.append(QStringRef(&text, textStart, textLength));
             parseEntity(ch, text, drawText);
+            textStart = ch - text.constData() + 1;
+            textLength = 0;
+        } else if (preFormat && ch->isSpace()) {
+            drawText.append(QStringRef(&text, textStart, textLength));
+            drawText.append(QChar(QChar::Nbsp));
             textStart = ch - text.constData() + 1;
             textLength = 0;
         } else {
@@ -215,11 +234,15 @@ void QDeclarativeStyledTextPrivate::parse()
     if (textLength)
         drawText.append(QStringRef(&text, textStart, textLength));
     if (rangeStart != drawText.length() && formatStack.count()) {
-        QTextLayout::FormatRange formatRange;
-        formatRange.format = formatStack.top();
-        formatRange.start = rangeStart;
-        formatRange.length = drawText.length() - rangeStart;
-        ranges.append(formatRange);
+        if (formatChanged) {
+            QTextLayout::FormatRange formatRange;
+            formatRange.format = formatStack.top();
+            formatRange.start = rangeStart;
+            formatRange.length = drawText.length() - rangeStart;
+            ranges.append(formatRange);
+        } else if (ranges.count()) {
+            ranges.last().length += drawText.length() - rangeStart;
+        }
     }
 
     layout.setText(drawText);
@@ -239,24 +262,35 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
             QStringRef tag(&textIn, tagStart, tagLength);
             const QChar char0 = tag.at(0);
             if (char0 == QLatin1Char('b')) {
-                if (tagLength == 1)
+                if (tagLength == 1) {
                     format.setFontWeight(QFont::Bold);
-                else if (tagLength == 2 && tag.at(1) == QLatin1Char('r')) {
+                    return true;
+                } else if (tagLength == 2 && tag.at(1) == QLatin1Char('r')) {
                     textOut.append(QChar(QChar::LineSeparator));
                     return false;
                 }
             } else if (char0 == QLatin1Char('i')) {
-                if (tagLength == 1)
+                if (tagLength == 1) {
                     format.setFontItalic(true);
+                    return true;
+                }
             } else if (char0 == QLatin1Char('p')) {
                 if (tagLength == 1) {
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
+                } else if (tag == QLatin1String("pre")) {
+                    preFormat = true;
+                    if (!hasNewLine)
+                        textOut.append(QChar::LineSeparator);
+                    format.setFontFamily(QString::fromLatin1("Courier New,courier"));
+                    format.setFontFixedPitch(true);
+                    return true;
                 }
             } else if (char0 == QLatin1Char('u')) {
-                if (tagLength == 1)
+                if (tagLength == 1) {
                     format.setFontUnderline(true);
-                else if (tag == QLatin1String("ul")) {
+                    return true;
+                } else if (tag == QLatin1String("ul")) {
                     List listItem;
                     listItem.level = 0;
                     listItem.type = Unordered;
@@ -271,7 +305,11 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
                         textOut.append(QChar::LineSeparator);
                     format.setFontPointSize(baseFont.pointSize() * scaling[level - 1]);
                     format.setFontWeight(QFont::Bold);
+                    return true;
                 }
+            } else if (tag == QLatin1String("strong")) {
+                format.setFontWeight(QFont::Bold);
+                return true;
             } else if (tag == QLatin1String("ol")) {
                 List listItem;
                 listItem.level = 0;
@@ -314,16 +352,20 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
                     textOut += QString(2, QChar::Nbsp);
                 }
             }
-            return true;
+            return false;
         } else if (ch->isSpace()) {
             // may have params.
             QStringRef tag(&textIn, tagStart, tagLength);
             if (tag == QLatin1String("font"))
                 return parseFontAttributes(ch, textIn, format);
-            if (tag == QLatin1String("ol"))
-                return parseOrderedListAttributes(ch, textIn);
-            if (tag == QLatin1String("ul"))
-                return parseUnorderedListAttributes(ch, textIn);
+            if (tag == QLatin1String("ol")) {
+                parseOrderedListAttributes(ch, textIn);
+                return false; // doesn't modify format
+            }
+            if (tag == QLatin1String("ul")) {
+                parseUnorderedListAttributes(ch, textIn);
+                return false; // doesn't modify format
+            }
             if (tag == QLatin1String("a")) {
                 return parseAnchorAttributes(ch, textIn, format);
             }
@@ -354,7 +396,7 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
                 if (tagLength == 1)
                     return true;
                 else if (tag.at(1) == QLatin1Char('r') && tagLength == 2)
-                    return true;
+                    return false;
             } else if (char0 == QLatin1Char('i')) {
                 if (tagLength == 1)
                     return true;
@@ -364,6 +406,12 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
             } else if (char0 == QLatin1Char('p')) {
                 if (tagLength == 1) {
                     textOut.append(QChar::LineSeparator);
+                    hasNewLine = true;
+                    return false;
+                } else if (tag == QLatin1String("pre")) {
+                    preFormat = false;
+                    if (!hasNewLine)
+                        textOut.append(QChar::LineSeparator);
                     hasNewLine = true;
                     return true;
                 }
@@ -376,7 +424,7 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
                         if (!listStack.count())
                             textOut.append(QChar::LineSeparator);
                     }
-                    return true;
+                    return false;
                 }
             } else if (char0 == QLatin1Char('h') && tagLength == 2) {
                 textOut.append(QChar::LineSeparator);
@@ -384,15 +432,17 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
                 return true;
             } else if (tag == QLatin1String("font")) {
                 return true;
+            } else if (tag == QLatin1String("strong")) {
+                return true;
             } else if (tag == QLatin1String("ol")) {
                 if (!listStack.isEmpty()) {
                     listStack.pop();
                     if (!listStack.count())
                         textOut.append(QChar::LineSeparator);
                 }
-                return true;
+                return false;
             } else if (tag == QLatin1String("li")) {
-                return true;
+                return false;
             }
             return false;
         } else if (!ch->isSpace()){

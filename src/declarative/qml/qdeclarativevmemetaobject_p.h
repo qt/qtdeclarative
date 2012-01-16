@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -69,7 +69,7 @@
 #include "qdeclarativecompiler_p.h"
 #include "qdeclarativecontext_p.h"
 
-#include <private/qv8gccallback_p.h>
+#include <private/qv8engine_p.h>
 
 #include <private/qv8_p.h>
 
@@ -179,7 +179,7 @@ private:
     int firstVarPropertyIndex;
     bool varPropertiesInitialized;
     static void VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter);
-    static void GcPrologueCallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *node);
+    static void GcPrologueCallback(QV8GCCallback::Node *node);
     inline void allocateVarPropertiesArray();
     inline void ensureVarPropertiesAllocated();
 

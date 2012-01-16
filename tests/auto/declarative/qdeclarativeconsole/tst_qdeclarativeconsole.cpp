@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -44,7 +44,7 @@
 #include <QDeclarativeComponent>
 #include "../../shared/util.h"
 
-class tst_qdeclarativeconsole : public QObject
+class tst_qdeclarativeconsole : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -58,11 +58,6 @@ private:
     QDeclarativeEngine engine;
 };
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
 void tst_qdeclarativeconsole::init()
 {
     qputenv("QML_CONSOLE_EXTENDED", QByteArray("1"));
@@ -71,37 +66,38 @@ void tst_qdeclarativeconsole::init()
 void tst_qdeclarativeconsole::consoleLogExtended()
 {
     int startLineNumber = 15;
-    QUrl testFileUrl = TEST_FILE("consoleLog.qml");
-    QString testString = QString(QLatin1String("completed ok (%1:%2)")).arg(testFileUrl.toString());
+    QUrl testUrl = testFileUrl("consoleLog.qml");
+    const QString testUrlString = testUrl.toString();
+    QString testString = QString(QLatin1String("completed ok (%1:%2)")).arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(testString.arg(startLineNumber++)));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(testString.arg(startLineNumber++)));
 
-    QString testArray = QString(QLatin1String("[1,2] (%1:%2)")).arg(testFileUrl.toString());
+    QString testArray = QString(QLatin1String("[1,2] (%1:%2)")).arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testArray.arg(startLineNumber++)));
-    QString testObject = QString(QLatin1String("Object (%1:%2)")).arg(testFileUrl.toString());
+    QString testObject = QString(QLatin1String("Object (%1:%2)")).arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
-    QString testUndefined = QString(QLatin1String("undefined (%1:%2)")).arg(testFileUrl.toString());
+    QString testUndefined = QString(QLatin1String("undefined (%1:%2)")).arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testUndefined.arg(startLineNumber++)));
-    QString testNumber = QString(QLatin1String("12 (%1:%2)")).arg(testFileUrl.toString());
+    QString testNumber = QString(QLatin1String("12 (%1:%2)")).arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testNumber.arg(startLineNumber++)));
-    QString testFunction = QString(QLatin1String("function () { return 5;} (%1:%2)")).arg(testFileUrl.toString());
+    QString testFunction = QString(QLatin1String("function () { return 5;} (%1:%2)")).arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testFunction.arg(startLineNumber++)));
-    QString testBoolean = QString(QLatin1String("true (%1:%2)")).arg(testFileUrl.toString());
+    QString testBoolean = QString(QLatin1String("true (%1:%2)")).arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testBoolean.arg(startLineNumber++)));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
-    QString testMix = QString::fromLatin1("1 pong! Object (%1:%2)").arg(testFileUrl.toString());
+    QString testMix = QString::fromLatin1("1 pong! Object (%1:%2)").arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testMix.arg(startLineNumber++)));
-    testMix = QString::fromLatin1("1 [ping,pong] Object 2 (%1:%2)").arg(testFileUrl.toString());
+    testMix = QString::fromLatin1("1 [ping,pong] Object 2 (%1:%2)").arg(testUrlString);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(testMix.arg(startLineNumber++)));
 
-    QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testFileUrl.toString());
+    QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testUrlString);
     QTest::ignoreMessage(QtWarningMsg, qPrintable(testException.arg(startLineNumber++)));
 
-    QDeclarativeComponent component(&engine, testFileUrl);
+    QDeclarativeComponent component(&engine, testUrl);
     QObject *object = component.create();
     QVERIFY(object != 0);
     delete object;

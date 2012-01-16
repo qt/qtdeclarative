@@ -4,6 +4,8 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qquickrepeater.cpp
 
+include (../../shared/util.pri)
+
 testFiles.files = data
 testFiles.path = .
 DEPLOYMENT += testFiles

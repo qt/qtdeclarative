@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -159,10 +159,10 @@ void QQuickParticleAffector::componentComplete()
 }
 
 bool QQuickParticleAffector::activeGroup(int g) {
-    if (m_updateIntSet){
+    if (m_updateIntSet){ //This can occur before group ids are properly assigned, but that resets the flag
         m_groupIds.clear();
         foreach (const QString &p, m_groups)
-            m_groupIds << m_system->groupIds[p];//###Can this occur before group ids are properly assigned?
+            m_groupIds << m_system->groupIds[p];
         m_updateIntSet = false;
     }
     return m_groupIds.isEmpty() || m_groupIds.contains(g);

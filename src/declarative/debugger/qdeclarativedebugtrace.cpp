@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -74,7 +74,7 @@ QByteArray QDeclarativeDebugData::toByteArray() const
 }
 
 QDeclarativeDebugTrace::QDeclarativeDebugTrace()
-    : QDeclarativeDebugService(QLatin1String("CanvasFrameRate")),
+    : QDeclarativeDebugService(QLatin1String("CanvasFrameRate"), 1),
       m_enabled(false), m_messageReceived(false)
 {
     m_timer.start();
@@ -98,57 +98,86 @@ void QDeclarativeDebugTrace::initialize()
     traceInstance();
 }
 
+bool QDeclarativeDebugTrace::startProfiling()
+{
+    return traceInstance()->startProfilingImpl();
+}
+
+bool QDeclarativeDebugTrace::stopProfiling()
+{
+    return traceInstance()->stopProfilingImpl();
+}
+
 void QDeclarativeDebugTrace::addEvent(EventType t)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        traceInstance()->addEventImpl(t);
+    traceInstance()->addEventImpl(t);
 }
 
 void QDeclarativeDebugTrace::startRange(RangeType t)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        traceInstance()->startRangeImpl(t);
+    traceInstance()->startRangeImpl(t);
 }
 
 void QDeclarativeDebugTrace::rangeData(RangeType t, const QString &data)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        traceInstance()->rangeDataImpl(t, data);
+    traceInstance()->rangeDataImpl(t, data);
 }
 
 void QDeclarativeDebugTrace::rangeData(RangeType t, const QUrl &data)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        traceInstance()->rangeDataImpl(t, data);
+    traceInstance()->rangeDataImpl(t, data);
 }
 
 void QDeclarativeDebugTrace::rangeLocation(RangeType t, const QString &fileName, int line)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        traceInstance()->rangeLocationImpl(t, fileName, line);
+    traceInstance()->rangeLocationImpl(t, fileName, line);
 }
 
 void QDeclarativeDebugTrace::rangeLocation(RangeType t, const QUrl &fileName, int line)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        traceInstance()->rangeLocationImpl(t, fileName, line);
+    traceInstance()->rangeLocationImpl(t, fileName, line);
 }
 
 void QDeclarativeDebugTrace::endRange(RangeType t)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        traceInstance()->endRangeImpl(t);
+    traceInstance()->endRangeImpl(t);
 }
 
 void QDeclarativeDebugTrace::animationFrame(qint64 delta)
 {
-    Q_ASSERT(QDeclarativeDebugService::isDebuggingEnabled());
     traceInstance()->animationFrameImpl(delta);
+}
+
+void QDeclarativeDebugTrace::sendProfilingData()
+{
+    traceInstance()->sendMessages();
+}
+
+bool QDeclarativeDebugTrace::startProfilingImpl()
+{
+    bool success = false;
+    if (!profilingEnabled()) {
+        setProfilingEnabled(true);
+        addEventImpl(StartTrace);
+        success = true;
+    }
+    return success;
+}
+
+bool QDeclarativeDebugTrace::stopProfilingImpl()
+{
+    bool success = false;
+    if (profilingEnabled()) {
+        addEventImpl(EndTrace);
+        setProfilingEnabled(false);
+        success = true;
+    }
+    return success;
 }
 
 void QDeclarativeDebugTrace::addEventImpl(EventType event)
 {
-    if (status() != Enabled || !m_enabled)
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
     QDeclarativeDebugData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event, QString(), -1, 0, 0};
@@ -157,7 +186,7 @@ void QDeclarativeDebugTrace::addEventImpl(EventType event)
 
 void QDeclarativeDebugTrace::startRangeImpl(RangeType range)
 {
-    if (status() != Enabled || !m_enabled)
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
     QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range, QString(), -1, 0, 0};
@@ -166,7 +195,7 @@ void QDeclarativeDebugTrace::startRangeImpl(RangeType range)
 
 void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QString &rData)
 {
-    if (status() != Enabled || !m_enabled)
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
     QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData, -1, 0, 0};
@@ -175,7 +204,7 @@ void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QString &rData
 
 void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QUrl &rData)
 {
-    if (status() != Enabled || !m_enabled)
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
     QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(QUrl::FormattingOption(0x100)), -1, 0, 0};
@@ -184,7 +213,7 @@ void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QUrl &rData)
 
 void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QString &fileName, int line)
 {
-    if (status() != Enabled || !m_enabled)
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
     QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName, line, 0, 0};
@@ -193,7 +222,7 @@ void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QString &f
 
 void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QUrl &fileName, int line)
 {
-    if (status() != Enabled || !m_enabled)
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
     QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(QUrl::FormattingOption(0x100)), line, 0, 0};
@@ -202,7 +231,7 @@ void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QUrl &file
 
 void QDeclarativeDebugTrace::endRangeImpl(RangeType range)
 {
-    if (status() != Enabled || !m_enabled)
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
     QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range, QString(), -1, 0, 0};
@@ -211,7 +240,8 @@ void QDeclarativeDebugTrace::endRangeImpl(RangeType range)
 
 void QDeclarativeDebugTrace::animationFrameImpl(qint64 delta)
 {
-    if (status() != Enabled || !m_enabled)
+    Q_ASSERT(QDeclarativeDebugService::isDebuggingEnabled());
+    if (!m_enabled)
         return;
 
     int animCount = QUnifiedTimer::instance()->runningAnimationCount();
@@ -234,15 +264,26 @@ void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message
     m_data.append(message);
 }
 
+bool QDeclarativeDebugTrace::profilingEnabled()
+{
+    return m_enabled;
+}
+
+void QDeclarativeDebugTrace::setProfilingEnabled(bool enable)
+{
+    m_enabled = enable;
+}
+
 /*
     Send the messages queued up by processMessage
 */
 void QDeclarativeDebugTrace::sendMessages()
 {
     QMutexLocker locker(&m_mutex);
-    //### this is a suboptimal way to send batched messages
+    QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
-        sendMessage(m_data.at(i).toByteArray());
+        messages << m_data.at(i).toByteArray();
+    QDeclarativeDebugService::sendMessages(messages);
     m_data.clear();
 
     //indicate completion
@@ -262,15 +303,11 @@ void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
 
     m_messageReceived = true;
 
-    if (m_enabled != enabled) {
-        if (enabled) {
-            m_enabled = true;
-            addEventImpl(StartTrace);
-        } else {
-            addEventImpl(EndTrace);
-            m_enabled = false;
+    if (enabled) {
+        startProfilingImpl();
+    } else {
+        if (stopProfilingImpl())
             sendMessages();
-        }
     }
 }
 

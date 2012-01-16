@@ -4,6 +4,8 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativeinfo.cpp
 
+include (../../shared/util.pri)
+
 testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles

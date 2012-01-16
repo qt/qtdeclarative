@@ -4,6 +4,8 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativesqldatabase.cpp
 
+include (../../shared/util.pri)
+
 CONFIG += parallel_test
 
 testDataFiles.files = data

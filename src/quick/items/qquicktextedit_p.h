@@ -1,7 +1,7 @@
 // Commit: 27e4302b7f45f22180693d26747f419177c81e27
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -90,6 +90,8 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
+    Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
+    Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
 
 public:
@@ -193,6 +195,9 @@ public:
 
     bool canPaste() const;
 
+    bool canUndo() const;
+    bool canRedo() const;
+
     virtual void componentComplete();
 
     /* FROM EDIT */
@@ -248,6 +253,8 @@ Q_SIGNALS:
     void mouseSelectionModeChanged(SelectionMode mode);
     void linkActivated(const QString &link);
     void canPasteChanged();
+    void canUndoChanged();
+    void canRedoChanged();
     void inputMethodComposingChanged();
     void effectiveHorizontalAlignmentChanged();
 
@@ -262,6 +269,8 @@ public Q_SLOTS:
     void copy();
     void paste();
 #endif
+    void undo();
+    void redo();
     void insert(int position, const QString &text);
     void remove(int start, int end);
 

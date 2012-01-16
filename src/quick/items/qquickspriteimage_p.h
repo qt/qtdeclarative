@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -59,7 +59,8 @@ class Q_AUTOTEST_EXPORT QQuickSpriteImage : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
-    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
+    Q_PROPERTY(QString goalSprite READ goalSprite WRITE setGoalSprite NOTIFY goalSpriteChanged)
+    Q_PROPERTY(QString currentSprite READ currentSprite NOTIFY currentSpriteChanged)
     //###try to share similar spriteEngines for less overhead?
     Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
     Q_CLASSINFO("DefaultProperty", "sprites")
@@ -79,21 +80,27 @@ public:
         return m_interpolate;
     }
 
-    QString goalState() const
+    QString goalSprite() const
     {
         return m_goalState;
+    }
+
+    QString currentSprite() const
+    {
+        return m_curState;
     }
 
 signals:
 
     void runningChanged(bool arg);
     void interpolateChanged(bool arg);
-    void goalStateChanged(QString arg);
+    void goalSpriteChanged(QString arg);
+    void currentSpriteChanged(QString arg);
 
 public slots:
 
     void jumpTo(const QString &sprite);
-    void setGoalState(const QString &sprite);
+    void setGoalSprite(const QString &sprite);
 
     void setRunning(bool arg)
     {
@@ -129,6 +136,7 @@ private:
     bool m_running;
     bool m_interpolate;
     QString m_goalState;
+    QString m_curState;
 };
 
 QT_END_NAMESPACE

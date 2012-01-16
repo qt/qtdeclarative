@@ -3,7 +3,10 @@ TARGET = tst_qquickimage
 macx:CONFIG -= app_bundle
 
 HEADERS += ../../shared/testhttpserver.h
-SOURCES += tst_qquickimage.cpp ../../shared/testhttpserver.cpp
+SOURCES += tst_qquickimage.cpp \
+           ../../shared/testhttpserver.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

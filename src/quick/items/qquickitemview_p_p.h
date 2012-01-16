@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -99,12 +99,13 @@ class QQuickItemViewPrivate : public QQuickFlickablePrivate
 public:
     QQuickItemViewPrivate();
 
-    struct InsertionsResult {
-        QList<FxViewItem *> addedItems;
-        QList<FxViewItem *> movedBackwards;
-        qreal sizeAddedBeforeVisible;
+    struct ChangeResult {
+        QDeclarativeNullableValue<qreal> visiblePos;
+        qreal sizeChangesBeforeVisiblePos;
+        qreal sizeChangesAfterVisiblePos;
 
-        InsertionsResult() : sizeAddedBeforeVisible(0) {}
+        ChangeResult(const QDeclarativeNullableValue<qreal> &p)
+            : visiblePos(p), sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0) {}
     };
 
     enum BufferMode { NoBuffer = 0x00, BufferBefore = 0x01, BufferAfter = 0x02 };
@@ -145,6 +146,7 @@ public:
     void positionViewAtIndex(int index, int mode);
     void applyPendingChanges();
     bool applyModelChanges();
+    bool applyRemovalChange(const QDeclarativeChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
 
     void checkVisible() const;
 
@@ -236,11 +238,12 @@ protected:
     virtual void repositionPackageItemAt(QQuickItem *item, int index) = 0;
     virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem) = 0;
     virtual void resetFirstItemPosition() = 0;
-    virtual void moveItemBy(FxViewItem *item, qreal forwards, qreal backwards) = 0;
+    virtual void adjustFirstItem(qreal forwards, qreal backwards) = 0;
 
     virtual void layoutVisibleItems() = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *, InsertionsResult *) = 0;
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *newItems) = 0;
+
     virtual bool needsRefillForAddedOrRemovedIndex(int) const { return false; }
 
     virtual void initializeViewItem(FxViewItem *) {}

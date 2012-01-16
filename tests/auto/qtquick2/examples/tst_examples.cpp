@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -90,6 +90,7 @@ tst_examples::tst_examples()
 
     // Add directories you want excluded here
     excludedDirs << "examples/declarative/text/fonts"; // QTBUG-21415
+    excludedDirs << "doc/src/snippets/declarative/path"; //No root QQuickItem
 
     // Not run in QQuickView
     excludedDirs << "examples/declarative/qtquick1";

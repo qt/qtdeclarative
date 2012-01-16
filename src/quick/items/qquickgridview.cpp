@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -173,7 +173,7 @@ public:
     virtual void repositionPackageItemAt(QQuickItem *item, int index);
     virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
     virtual void resetFirstItemPosition();
-    virtual void moveItemBy(FxViewItem *item, qreal forwards, qreal backwards);
+    virtual void adjustFirstItem(qreal forwards, qreal backwards);
 
     virtual void createHighlight();
     virtual void updateHighlight();
@@ -181,7 +181,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems();
-    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *, InsertionsResult *);
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *addedItems);
     virtual bool needsRefillForAddedOrRemovedIndex(int index) const;
 
     virtual qreal headerSize() const;
@@ -547,6 +547,9 @@ void QQuickGridViewPrivate::updateViewport()
 void QQuickGridViewPrivate::layoutVisibleItems()
 {
     if (visibleItems.count()) {
+        const qreal from = isContentFlowReversed() ? -position() - size() : position();
+        const qreal to = isContentFlowReversed() ? -position() : position() + size();
+
         FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.first());
         qreal rowPos = firstItem->rowPos();
         qreal colPos = firstItem->colPos();
@@ -554,6 +557,7 @@ void QQuickGridViewPrivate::layoutVisibleItems()
         if (colPos != col * colSize()) {
             colPos = col * colSize();
             firstItem->setPosition(colPos, rowPos);
+            firstItem->item->setVisible(rowPos + rowSize() >= from && rowPos <= to);
         }
         for (int i = 1; i < visibleItems.count(); ++i) {
             FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.at(i));
@@ -563,6 +567,7 @@ void QQuickGridViewPrivate::layoutVisibleItems()
             }
             colPos = col * colSize();
             item->setPosition(colPos, rowPos);
+            item->item->setVisible(rowPos + rowSize() >= from && rowPos <= to);
         }
     }
 }
@@ -598,11 +603,14 @@ void QQuickGridViewPrivate::resetFirstItemPosition()
     item->setPosition(0, 0);
 }
 
-void QQuickGridViewPrivate::moveItemBy(FxViewItem *item, qreal forwards, qreal backwards)
+void QQuickGridViewPrivate::adjustFirstItem(qreal forwards, qreal backwards)
 {
+    if (!visibleItems.count())
+        return;
+
     int moveCount = (forwards / rowSize()) - (backwards / rowSize());
 
-    FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
+    FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.first());
     gridItem->setPosition(gridItem->colPos(), gridItem->rowPos() + ((moveCount / columns) * rowSize()));
 }
 
@@ -783,8 +791,7 @@ void QQuickGridViewPrivate::initializeCurrentItem()
 {
     if (currentItem && currentIndex >= 0) {
         FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(currentItem);
-        if (gridItem)
-            gridItem->setPosition(colPosAt(currentIndex), rowPosAt(currentIndex));
+        gridItem->setPosition(colPosAt(currentIndex), rowPosAt(currentIndex));
     }
 }
 
@@ -1768,7 +1775,7 @@ void QQuickGridView::moveCurrentIndexRight()
     }
 }
 
-bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, FxViewItem *firstVisible, InsertionsResult *insertResult)
+bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *addedItems)
 {
     Q_Q(QQuickGridView);
 
@@ -1828,8 +1835,8 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             item->index += count;
     }
 
-    int prevAddedCount = insertResult->addedItems.count();
-    if (firstVisible && rowPos < firstVisible->position()) {
+    int prevVisibleCount = visibleItems.count();
+    if (insertResult->visiblePos.isValid() && rowPos < insertResult->visiblePos) {
         // Insert items before the visible item.
         int insertionIdx = index;
         int i = count - 1;
@@ -1838,15 +1845,12 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
         while (i >= 0) {
             if (rowPos > from && insertionIdx < visibleIndex) {
                 // item won't be visible, just note the size for repositioning
-                insertResult->sizeAddedBeforeVisible += rowSize();
+                insertResult->sizeChangesBeforeVisiblePos += rowSize();
             } else {
                 // item is before first visible e.g. in cache buffer
                 FxViewItem *item = 0;
-                if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
-                    if (item->index > modelIndex + i)
-                        insertResult->movedBackwards.append(item);
+                if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                     item->index = modelIndex + i;
-                }
                 if (!item)
                     item = createItem(modelIndex + i);
                 if (!item)
@@ -1854,10 +1858,9 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 
                 item->item->setVisible(true);
                 visibleItems.insert(insertionIdx, item);
-                if (!change.isMove()) {
-                    insertResult->addedItems.append(item);
-                    insertResult->sizeAddedBeforeVisible += rowSize();
-                }
+                if (!change.isMove())
+                    addedItems->append(item);
+                insertResult->sizeChangesBeforeVisiblePos += rowSize();
             }
 
             if (--colNum < 0 ) {
@@ -1873,11 +1876,8 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
         int to = buffer+tempPos+size()-1;
         while (i < count && rowPos <= to + rowSize()*(columns - (colPos/colSize()))/qreal(columns)) {
             FxViewItem *item = 0;
-            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
-                if (item->index > modelIndex + i)
-                    insertResult->movedBackwards.append(item);
+            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                 item->index = modelIndex + i;
-            }
             if (!item)
                 item = createItem(modelIndex + i);
             if (!item)
@@ -1885,8 +1885,12 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 
             item->item->setVisible(true);
             visibleItems.insert(index, item);
+            if (index == 0)
+                *newVisibleItemsFirst = true;
             if (!change.isMove())
-                insertResult->addedItems.append(item);
+                addedItems->append(item);
+            insertResult->sizeChangesAfterVisiblePos += rowSize();
+
             if (++colNum >= columns) {
                 colNum = 0;
                 rowPos += rowSize();
@@ -1899,7 +1903,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 
     updateVisibleIndex();
 
-    return insertResult->addedItems.count() > prevAddedCount;
+    return visibleItems.count() > prevVisibleCount;
 }
 
 bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) const
@@ -1970,6 +1974,19 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     not visible -1 is returned.
 
     If the item is outside the visible area, -1 is returned, regardless of
+    whether an item will exist at that point when scrolled into view.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
+
+/*!
+    \qmlmethod Item QtQuick2::GridView::itemAt(int x, int y)
+
+    Returns the visible item containing the point \a x, \a y in content
+    coordinates.  If there is no item at the point specified, or the item is
+    not visible null is returned.
+
+    If the item is outside the visible area, null is returned, regardless of
     whether an item will exist at that point when scrolled into view.
 
     \bold Note: methods should only be called after the Component has completed.

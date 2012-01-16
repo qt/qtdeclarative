@@ -3,7 +3,10 @@ TARGET = tst_qquickmousearea
 macx:CONFIG -= app_bundle
 
 HEADERS += ../../shared/testhttpserver.h
-SOURCES += tst_qquickmousearea.cpp ../../shared/testhttpserver.cpp
+SOURCES += tst_qquickmousearea.cpp \
+           ../../shared/testhttpserver.cpp
+
+include (../../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

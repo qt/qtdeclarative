@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -81,6 +81,8 @@ QT_BEGIN_NAMESPACE
     F(StoreString, storeString) \
     F(StoreStringList, storeString) \
     F(StoreStringQList, storeString) \
+    F(StoreTrString, storeTrString) \
+    F(StoreTrIdString, storeTrIdString) \
     F(StoreByteArray, storeByteArray) \
     F(StoreUrl, storeUrl) \
     F(StoreUrlQList, storeUrl) \
@@ -241,6 +243,7 @@ union QDeclarativeInstruction
         short owner;
         bool isRoot;
         ushort line;
+        ushort column;
     };
     struct instr_assignBinding {
         QML_INSTR_HEADER
@@ -250,6 +253,7 @@ union QDeclarativeInstruction
         short owner;
         bool isRoot;
         ushort line;
+        ushort column;
     };
     struct instr_fetch {
         QML_INSTR_HEADER
@@ -295,6 +299,20 @@ union QDeclarativeInstruction
         QML_INSTR_HEADER
         int propertyIndex;
         int value;
+    };
+    struct instr_storeTrString {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        int context;
+        int text;
+        int comment;
+        int n;
+    };
+    struct instr_storeTrIdString {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        int text;
+        int n;
     };
     struct instr_storeByteArray {
         QML_INSTR_HEADER
@@ -492,6 +510,8 @@ union QDeclarativeInstruction
     instr_storeInteger storeInteger;
     instr_storeBool storeBool;
     instr_storeString storeString;
+    instr_storeTrString storeTrString;
+    instr_storeTrIdString storeTrIdString;
     instr_storeByteArray storeByteArray;
     instr_storeScriptString storeScriptString;
     instr_storeScript storeScript;

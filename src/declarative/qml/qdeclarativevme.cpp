@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -121,6 +121,11 @@ void QDeclarativeVME::init(QDeclarativeContextData *ctxt, QDeclarativeCompiledDa
     bindValues.allocate(i->init.bindingsSize);
     parserStatus.allocate(i->init.parserStatusSize);
 
+#ifdef QML_ENABLE_TRACE
+    parserStatusData.allocate(i->init.parserStatusSize);
+    rootComponent = comp;
+#endif
+
     rootContext = 0;
     engine = ctxt->engine;
 }
@@ -155,6 +160,11 @@ bool QDeclarativeVME::initDeferred(QObject *object)
 
     objects.push(object);
 
+#ifdef QML_ENABLE_TRACE
+    parserStatusData.allocate(i->deferInit.parserStatusSize);
+    rootComponent = comp;
+#endif
+
     rootContext = 0;
     engine = ctxt->engine;
 
@@ -176,6 +186,11 @@ struct ActiveVMERestorer
 QObject *QDeclarativeVME::execute(QList<QDeclarativeError> *errors, const Interrupt &interrupt)
 {
     Q_ASSERT(states.count() >= 1);
+
+#ifdef QML_ENABLE_TRACE
+    QDeclarativeTrace trace("VME Execute");
+    trace.addDetail("URL", rootComponent->url);
+#endif
 
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(states.at(0).context->engine);
 
@@ -366,6 +381,13 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
         QML_STORE_POINTER(StoreString, &PRIMITIVES.at(instr.value));
         QML_STORE_POINTER(StoreByteArray, &DATAS.at(instr.value));
         QML_STORE_POINTER(StoreUrl, &URLS.at(instr.value));
+        QML_STORE_VALUE(StoreTrString, QString,
+                        QCoreApplication::translate(DATAS.at(instr.context).constData(),
+                                                    DATAS.at(instr.text).constData(),
+                                                    DATAS.at(instr.comment).constData(),
+                                                    QCoreApplication::UnicodeUTF8,
+                                                    instr.n));
+        QML_STORE_VALUE(StoreTrIdString, QString, qtTrId(DATAS.at(instr.text).constData(), instr.n));
 
         // Store a literal value in a QList
         QML_STORE_LIST(StoreStringList, QStringList, PRIMITIVES.at(instr.value));
@@ -387,6 +409,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
         QML_STORE_VAR(StoreVarInteger, v8::Integer::New(instr.value));
         QML_STORE_VAR(StoreVarDouble, v8::Number::New(instr.value));
         QML_STORE_VAR(StoreVarBool, v8::Boolean::New(instr.value));
+
 
         QML_BEGIN_INSTR(Init)
             // Ensure that the compiled data has been initialized
@@ -715,6 +738,10 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QObject *target = objects.top();
             QDeclarativeParserStatus *status = reinterpret_cast<QDeclarativeParserStatus *>(reinterpret_cast<char *>(target) + instr.castValue);
             parserStatus.push(status);
+#ifdef QML_ENABLE_TRACE
+            Q_ASSERT(QObjectPrivate::get(target)->declarativeData);
+            parserStatusData.push(static_cast<QDeclarativeData *>(QObjectPrivate::get(target)->declarativeData));
+#endif
             status->d = &parserStatus.top();
 
             status->classBegin();
@@ -735,7 +762,8 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 QML_NEXT_INSTR(StoreBinding);
 
             QDeclarativeBinding *bind = new QDeclarativeBinding(PRIMITIVES.at(instr.value), true, 
-                                                                context, CTXT, COMP->name, instr.line);
+                                                                context, CTXT, COMP->name, instr.line,
+                                                                instr.column);
             bindValues.push(bind);
             bind->m_mePtr = &bindValues.top();
             bind->setTarget(target, instr.property, CTXT);
@@ -753,7 +781,8 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 QML_NEXT_INSTR(StoreBindingOnAlias);
 
             QDeclarativeBinding *bind = new QDeclarativeBinding(PRIMITIVES.at(instr.value), true,
-                                                                context, CTXT, COMP->name, instr.line);
+                                                                context, CTXT, COMP->name, instr.line,
+                                                                instr.column);
             bindValues.push(bind);
             bind->m_mePtr = &bindValues.top();
             bind->setTarget(target, instr.property, CTXT);
@@ -776,7 +805,8 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 QML_NEXT_INSTR(StoreV4Binding);
 
             QDeclarativeAbstractBinding *binding = 
-                CTXT->v4bindings->configBinding(instr.value, target, scope, property, instr.line);
+                CTXT->v4bindings->configBinding(instr.value, target, scope, property,
+                                                instr.line, instr.column);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
             binding->addToObject(target, property);
@@ -793,7 +823,8 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 
             QDeclarativeAbstractBinding *binding = 
                 CTXT->v8bindings->configBinding(instr.value, target, scope, 
-                                                instr.property, instr.line);
+                                                instr.property, instr.line,
+                                                instr.column);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
             binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(instr.property));
@@ -1019,6 +1050,9 @@ void QDeclarativeVME::reset()
     lists.deallocate();
     bindValues.deallocate();
     parserStatus.deallocate();
+#ifdef QML_ENABLE_TRACE
+    parserStatusData.deallocate();
+#endif
     finalizeCallbacks.clear();
     states.clear();
     rootContext = 0;
@@ -1158,9 +1192,17 @@ QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
     if (!engine)
         return 0;
 
+    QDeclarativeTrace trace("VME Complete");
+#ifdef QML_ENABLE_TRACE
+    trace.addDetail("URL", rootComponent->url);
+#endif
+
     ActiveVMERestorer restore(this, QDeclarativeEnginePrivate::get(engine));
     QRecursionWatcher<QDeclarativeVME, &QDeclarativeVME::recursion> watcher(this);
 
+    {
+    QDeclarativeTrace trace("VME Binding Enable");
+    trace.event("begin binding eval");
     while (!bindValues.isEmpty()) {
         QDeclarativeAbstractBinding *b = bindValues.pop();
 
@@ -1174,12 +1216,23 @@ QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
             return 0;
     }
     bindValues.deallocate();
+    }
 
+    {
+    QDeclarativeTrace trace("VME Component Complete");
     while (!parserStatus.isEmpty()) {
         QDeclarativeParserStatus *status = parserStatus.pop();
+#ifdef QML_ENABLE_TRACE
+        QDeclarativeData *data = parserStatusData.pop();
+#endif
 
         if (status && status->d) {
             status->d = 0;
+#ifdef QML_ENABLE_TRACE
+            QDeclarativeTrace trace("Component complete");
+            trace.addDetail("URL", data->outerContext->url);
+            trace.addDetail("Line", data->lineNumber);
+#endif
             status->componentComplete();
         }
         
@@ -1187,7 +1240,10 @@ QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
             return 0;
     }
     parserStatus.deallocate();
+    }
 
+    {
+    QDeclarativeTrace trace("VME Finalize Callbacks");
     for (int ii = 0; ii < finalizeCallbacks.count(); ++ii) {
         QDeclarativeEnginePrivate::FinalizeCallback callback = finalizeCallbacks.at(ii);
         QObject *obj = callback.first;
@@ -1199,7 +1255,10 @@ QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
             return 0;
     }
     finalizeCallbacks.clear();
+    }
 
+    {
+    QDeclarativeTrace trace("VME Component.onCompleted Callbacks");
     while (componentAttached) {
         QDeclarativeComponentAttached *a = componentAttached;
         a->rem();
@@ -1211,6 +1270,7 @@ QDeclarativeContextData *QDeclarativeVME::complete(const Interrupt &interrupt)
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;
+    }
     }
 
     QDeclarativeContextData *rv = rootContext;

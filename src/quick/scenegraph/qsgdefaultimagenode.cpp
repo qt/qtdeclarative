@@ -41,7 +41,7 @@
 
 #include "qsgdefaultimagenode_p.h"
 
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qmath.h>

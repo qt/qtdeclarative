@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -46,7 +46,7 @@
 #include <QtDeclarative/qdeclarativescriptstring.h>
 #include "../../shared/util.h"
 
-class tst_qdeclarativeexpression : public QObject
+class tst_qdeclarativeexpression : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -83,7 +83,7 @@ void tst_qdeclarativeexpression::scriptString()
     qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("scriptString.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("scriptString.qml"));
     TestObject *testObj = qobject_cast<TestObject*>(c.create());
     QVERIFY(testObj != 0);
 

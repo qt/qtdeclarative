@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -159,7 +159,7 @@ class QTickAnimationProxy : public QAbstractAnimation2
 {
     Q_DISABLE_COPY(QTickAnimationProxy)
 public:
-    QTickAnimationProxy(T *instance, QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), m_instance(instance) {}
+    QTickAnimationProxy(T *instance) : QAbstractAnimation2(), m_instance(instance) {}
     virtual int duration() const { return -1; }
 protected:
     virtual void updateCurrentTime(int msec) { (m_instance->*method)(msec); }

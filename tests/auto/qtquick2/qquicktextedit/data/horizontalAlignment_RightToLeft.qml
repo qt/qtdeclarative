@@ -19,6 +19,7 @@ Rectangle {
             anchors.fill: parent
             text: top.text
             focus: true
+            textFormat: TextEdit.AutoText
         }
     }
 }

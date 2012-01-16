@@ -1,7 +1,7 @@
 // Commit: 27e4302b7f45f22180693d26747f419177c81e27
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -73,9 +73,9 @@ public:
       : color("black"), hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop),
       documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
       persistentSelection(true), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
-      hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
+      canPasteValid(false), hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
-      format(QQuickTextEdit::AutoText), document(0), wrapMode(QQuickTextEdit::NoWrap),
+      format(QQuickTextEdit::PlainText), document(0), wrapMode(QQuickTextEdit::NoWrap),
       mouseSelectionMode(QQuickTextEdit::SelectCharacters),
       lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0)
     {
@@ -110,6 +110,7 @@ public:
     bool requireImplicitWidth:1;
     bool selectByMouse:1;
     bool canPaste:1;
+    bool canPasteValid:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
     bool useImageFallback:1;

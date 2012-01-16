@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -104,9 +104,9 @@ Item { id:link
             anchors.fill: parent
             group: "star"
             emitRate: 50
-            emitting: false
+            enabled: false
             lifeSpan: 700
-            acceleration: AngledDirection { angleVariation: 360; magnitude: 200 }
+            acceleration: AngleDirection { angleVariation: 360; magnitude: 200 }
         }
     }
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -75,7 +75,7 @@ void QQuickItemViewChangeSet::applyChanges(const QDeclarativeChangeSet &changeSe
     pendingChanges.apply(changeSet);
 
     int moveId = -1;
-    int moveOffset;
+    int moveOffset = 0;
 
     foreach (const QDeclarativeChangeSet::Remove &r, changeSet.removes()) {
         itemCount -= r.count;
@@ -700,6 +700,18 @@ int QQuickItemView::indexAt(qreal x, qreal y) const
     return -1;
 }
 
+QQuickItem *QQuickItemView::itemAt(qreal x, qreal y) const
+{
+    Q_D(const QQuickItemView);
+    for (int i = 0; i < d->visibleItems.count(); ++i) {
+        const FxViewItem *item = d->visibleItems.at(i);
+        if (item->contains(x, y))
+            return item->item;
+    }
+
+    return 0;
+}
+
 void QQuickItemViewPrivate::applyPendingChanges()
 {
     Q_Q(QQuickItemView);
@@ -1209,7 +1221,6 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
 {
     Q_Q(QQuickItemView);
     applyPendingChanges();
-
     if (!q->isComponentComplete() || !isValid() || modelIndex < 0 || modelIndex >= model->count()) {
         if (currentItem) {
             currentItem->attached->setIsCurrentItem(false);
@@ -1413,57 +1424,25 @@ bool QQuickItemViewPrivate::applyModelChanges()
     updateUnrequestedIndexes();
     moveReason = QQuickItemViewPrivate::Other;
 
-    int prevCount = itemCount;
+    FxViewItem *prevVisibleItemsFirst = visibleItems.count() ? visibleItems.first() : 0;
+    int prevItemCount = itemCount;
+    int prevVisibleItemsCount = visibleItems.count();
     bool visibleAffected = false;
     bool viewportChanged = !currentChanges.pendingChanges.removes().isEmpty()
             || !currentChanges.pendingChanges.inserts().isEmpty();
 
-    FxViewItem *firstVisible = firstVisibleItem();
-    FxViewItem *origVisibleItemsFirst = visibleItems.count() ? visibleItems.first() : 0;
-    int firstItemIndex = firstVisible ? firstVisible->index : -1;
-    qreal removedBeforeFirstVisibleBy = 0;
+    FxViewItem *prevFirstVisible = firstVisibleItem();
+    QDeclarativeNullableValue<qreal> prevFirstVisiblePos;
+    if (prevFirstVisible)
+        prevFirstVisiblePos = prevFirstVisible->position();
 
     const QVector<QDeclarativeChangeSet::Remove> &removals = currentChanges.pendingChanges.removes();
+    ChangeResult removalResult(prevFirstVisiblePos);
+    int removedCount = 0;
     for (int i=0; i<removals.count(); i++) {
         itemCount -= removals[i].count;
-
-        // Remove the items from the visible list, skipping anything already marked for removal
-        QList<FxViewItem*>::Iterator it = visibleItems.begin();
-        while (it != visibleItems.end()) {
-            FxViewItem *item = *it;
-            if (item->index == -1 || item->index < removals[i].index) {
-                // already removed, or before removed items
-                if (!visibleAffected && item->index < removals[i].index)
-                    visibleAffected = true;
-                ++it;
-            } else if (item->index >= removals[i].index + removals[i].count) {
-                // after removed items
-                item->index -= removals[i].count;
-                ++it;
-            } else {
-                // removed item
-                visibleAffected = true;
-                if (!removals[i].isMove())
-                    item->attached->emitRemove();
-
-                if (item->attached->delayRemove() && !removals[i].isMove()) {
-                    item->index = -1;
-                    QObject::connect(item->attached, SIGNAL(delayRemoveChanged()), q, SLOT(destroyRemoved()), Qt::QueuedConnection);
-                    ++it;
-                } else {
-                    if (firstVisible && item->position() < firstVisible->position() && item != visibleItems.first())
-                        removedBeforeFirstVisibleBy += item->size();
-                    if (removals[i].isMove()) {
-                        currentChanges.removedItems.insert(removals[i].moveKey(item->index), item);
-                    } else {
-                        if (item == firstVisible)
-                            firstVisible = 0;
-                        currentChanges.removedItems.insertMulti(QDeclarativeChangeSet::MoveKey(), item);
-                    }
-                    it = visibleItems.erase(it);
-                }
-            }
-        }
+        if (applyRemovalChange(removals[i], &removalResult, &removedCount))
+            visibleAffected = true;
         if (!visibleAffected && needsRefillForAddedOrRemovedIndex(removals[i].index))
             visibleAffected = true;
     }
@@ -1471,59 +1450,47 @@ bool QQuickItemViewPrivate::applyModelChanges()
         updateVisibleIndex();
 
     const QVector<QDeclarativeChangeSet::Insert> &insertions = currentChanges.pendingChanges.inserts();
-    InsertionsResult insertResult;
-    bool allInsertionsBeforeVisible = true;
-
+    ChangeResult insertionResult(prevFirstVisiblePos);
+    bool newVisibleItemsFirst = false;
+    QList<FxViewItem *> newItems;
     for (int i=0; i<insertions.count(); i++) {
         bool wasEmpty = visibleItems.isEmpty();
-        if (applyInsertionChange(insertions[i], firstVisible, &insertResult))
+        if (applyInsertionChange(insertions[i], &insertionResult, &newVisibleItemsFirst, &newItems))
             visibleAffected = true;
         if (!visibleAffected && needsRefillForAddedOrRemovedIndex(insertions[i].index))
             visibleAffected = true;
-        if (insertions[i].index >= visibleIndex)
-            allInsertionsBeforeVisible = false;
         if (wasEmpty && !visibleItems.isEmpty())
             resetFirstItemPosition();
         itemCount += insertions[i].count;
     }
-    for (int i=0; i<insertResult.addedItems.count(); ++i)
-        insertResult.addedItems.at(i)->attached->emitAdd();
+    for (int i=0; i<newItems.count(); i++)
+        newItems.at(i)->attached->emitAdd();
 
-    // if the first visible item has moved, ensure another one takes its place
-    // so that we avoid shifting all content forwards
-    // (if an item is removed from before the first visible, the first visible should not move upwards)
-    bool movedBackToFirstVisible = false;
-    if (firstVisible && firstItemIndex >= 0) {
-        for (int i=0; i<insertResult.movedBackwards.count(); i++) {
-            if (insertResult.movedBackwards[i]->index == firstItemIndex) {
-                // an item has moved backwards up to the first visible's position
-                resetItemPosition(insertResult.movedBackwards[i], firstVisible);
-                insertResult.movedBackwards.removeAt(i);
-                movedBackToFirstVisible = true;
-                break;
+    // reposition visibleItems.first() correctly so that the content y doesn't jump
+    if (visibleItems.count() && removedCount != prevVisibleItemsCount) {
+        if (newVisibleItemsFirst && prevVisibleItemsFirst)
+            resetItemPosition(visibleItems.first(), prevVisibleItemsFirst);
+
+        if (prevFirstVisible && prevVisibleItemsFirst == prevFirstVisible
+                && prevFirstVisible != visibleItems.first()) {
+            // the previous visibleItems.first() was also the first visible item, and it has been
+            // moved/removed, so move the new visibleItems.first() to the pos of the previous one
+            if (!newVisibleItemsFirst)
+                resetItemPosition(visibleItems.first(), prevFirstVisible);
+
+        } else if (prevFirstVisiblePos.isValid()) {
+            qreal moveForwardsBy = 0;
+            qreal moveBackwardsBy = 0;
+
+            // shift visibleItems.first() relative to the number of added/removed items
+            if (visibleItems.first()->position() > prevFirstVisiblePos) {
+                moveForwardsBy = insertionResult.sizeChangesAfterVisiblePos;
+                moveBackwardsBy = removalResult.sizeChangesAfterVisiblePos;
+            } else if (visibleItems.first()->position() < prevFirstVisiblePos) {
+                moveForwardsBy = removalResult.sizeChangesBeforeVisiblePos;
+                moveBackwardsBy = insertionResult.sizeChangesBeforeVisiblePos;
             }
-        }
-        if (!movedBackToFirstVisible && !allInsertionsBeforeVisible) {
-            // first visible item has moved forward, another visible item takes its place
-            FxViewItem *item = visibleItem(firstItemIndex);
-            if (item)
-                resetItemPosition(item, firstVisible);
-        }
-    }
-
-    // Ensure we don't cause an ugly list scroll
-    if (firstVisible && visibleItems.count() && visibleItems.first() != firstVisible) {
-        // ensure first item is placed at correct postion if moving backward
-        // since it will be used to position all subsequent items
-        if (insertResult.movedBackwards.count() && origVisibleItemsFirst)
-            resetItemPosition(visibleItems.first(), origVisibleItemsFirst);
-
-        // correct the first item position (unless it has already been fixed)
-        if (!movedBackToFirstVisible) {
-            qreal moveBackwardsBy = insertResult.sizeAddedBeforeVisible;
-            for (int i=0; i<insertResult.movedBackwards.count(); i++)
-                moveBackwardsBy += insertResult.movedBackwards[i]->size();
-            moveItemBy(visibleItems.first(), removedBeforeFirstVisibleBy, moveBackwardsBy);
+            adjustFirstItem(moveForwardsBy, moveBackwardsBy);
         }
     }
 
@@ -1546,7 +1513,7 @@ bool QQuickItemViewPrivate::applyModelChanges()
     currentChanges.reset();
 
     updateSections();
-    if (prevCount != itemCount)
+    if (prevItemCount != itemCount)
         emit q->countChanged();
 
     if (!visibleAffected)
@@ -1555,6 +1522,58 @@ bool QQuickItemViewPrivate::applyModelChanges()
         updateViewport();
 
     inApplyModelChanges = false;
+    return visibleAffected;
+}
+
+bool QQuickItemViewPrivate::applyRemovalChange(const QDeclarativeChangeSet::Remove &removal, ChangeResult *insertResult, int *removedCount)
+{
+    Q_Q(QQuickItemView);
+    bool visibleAffected = false;
+
+    QList<FxViewItem*>::Iterator it = visibleItems.begin();
+    while (it != visibleItems.end()) {
+        FxViewItem *item = *it;
+        if (item->index == -1 || item->index < removal.index) {
+            // already removed, or before removed items
+            if (!visibleAffected && item->index < removal.index)
+                visibleAffected = true;
+            ++it;
+        } else if (item->index >= removal.index + removal.count) {
+            // after removed items
+            item->index -= removal.count;
+            ++it;
+        } else {
+            // removed item
+            visibleAffected = true;
+            if (!removal.isMove())
+                item->attached->emitRemove();
+
+            if (item->attached->delayRemove() && !removal.isMove()) {
+                item->index = -1;
+                QObject::connect(item->attached, SIGNAL(delayRemoveChanged()), q, SLOT(destroyRemoved()), Qt::QueuedConnection);
+                ++it;
+            } else {
+                if (insertResult->visiblePos.isValid()) {
+                    if (item->position() < insertResult->visiblePos) {
+                        // sizeRemovedBeforeFirstVisible measures the size between the visibleItems.first()
+                        // and the firstVisible, so don't count it if removing visibleItems.first()
+                        if (item != visibleItems.first())
+                            insertResult->sizeChangesBeforeVisiblePos += item->size();
+                    } else {
+                        insertResult->sizeChangesAfterVisiblePos += item->size();
+                    }
+                }
+                if (removal.isMove()) {
+                    currentChanges.removedItems.insert(removal.moveKey(item->index), item);
+                } else {
+                    // track item so it is released later
+                    currentChanges.removedItems.insertMulti(QDeclarativeChangeSet::MoveKey(), item);
+                    (*removedCount)++;
+                }
+                it = visibleItems.erase(it);
+            }
+        }
+    }
     return visibleAffected;
 }
 
@@ -1651,6 +1670,7 @@ void QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     if (model->release(item->item) == 0) {
         // item was not destroyed, and we no longer reference it.
+        item->item->setVisible(false);
         unrequestedItems.insert(item->item, model->indexOf(item->item, q));
     }
     delete item;

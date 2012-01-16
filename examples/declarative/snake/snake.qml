@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -76,7 +76,7 @@ Rectangle {
     Timer {
         id: heartbeat;
         interval: heartbeatInterval;
-        running: activeGame && Qt.application.active
+        running: activeGame
         repeat: true
         onTriggered: { Logic.move() }
     }
@@ -105,7 +105,7 @@ Rectangle {
         source: "content/pics/pause.png"
         anchors.centerIn: parent;
         //opacity is deliberately not animated
-        opacity: activeGame && !Qt.application.active
+        opacity: 0 //Was !Qt.application.active && activeGame, but application doesn't work (QTBUG-23331)
     }
 
     Image {

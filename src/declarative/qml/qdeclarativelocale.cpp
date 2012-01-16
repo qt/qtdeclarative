@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -811,7 +811,10 @@ v8::Handle<v8::Value> QDeclarativeLocale::locale(QV8Engine *v8engine, const QStr
     QV8LocaleDataDeletable *d = localeV8Data(v8engine);
     v8::Local<v8::Object> v8Value = d->constructor->NewInstance();
     QV8LocaleDataResource *r = new QV8LocaleDataResource(v8engine);
-    r->locale = QLocale(locale);
+    if (locale.isEmpty())
+        r->locale = QLocale();
+    else
+        r->locale = QLocale(locale);
     v8Value->SetExternalResource(r);
 
     return v8Value;
@@ -1027,6 +1030,7 @@ v8::Handle<v8::Value> QDeclarativeLocale::locale(QV8Engine *v8engine, const QStr
     \o Locale.CurrencySymbol a currency symbol.
     \o Locale.CurrencyDisplayName a user readable name of the currency.
     \endlist
+    \sa Number::toLocaleCurrencyString()
 */
 
 /*!

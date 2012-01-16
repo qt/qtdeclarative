@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -61,26 +61,14 @@ DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 */
 QString testdata(QString const& name = QString())
 {
-    /*
-        Try to find it relative to the binary.
-        Note we are looking for a _directory_ which exists, but the _file_ itself need not exist,
-        to support the case of finding a path to a testdata file which doesn't exist yet (i.e.
-        a file we are about to create).
-    */
-    QFileInfo relative = QDir(QCoreApplication::applicationDirPath()).filePath(QLatin1String("data/") + name);
-    if (relative.dir().exists()) {
-        return relative.absoluteFilePath();
+    static const QString dataDirectory = QDir::currentPath() + QLatin1String("/data");
+    QString result = dataDirectory;
+    if (!name.isEmpty()) {
+        result += QLatin1Char('/');
+        result += name;
     }
-
-    qWarning("requested testdata %s could not be found (looked at %s)",
-        qPrintable(name),
-        qPrintable(relative.filePath())
-    );
-
-    // Chances are the calling test will now fail.
-    return QString();
+    return result;
 }
-
 
 /*
 This test case covers QML language issues.  This covers everything that does not
@@ -2048,6 +2036,9 @@ void tst_qdeclarativelanguage::revisionOverloads()
 
 void tst_qdeclarativelanguage::initTestCase()
 {
+    QString testdataDir = QFileInfo(QFINDTESTDATA("data")).absolutePath();
+    QVERIFY2(QDir::setCurrent(testdataDir), qPrintable("Could not chdir to " + testdataDir));
+
     registerTypes();
 
     // Registering the TestType class in other modules should have no adverse effects
@@ -2068,9 +2059,9 @@ void tst_qdeclarativelanguage::initTestCase()
     // For iso8859-1 locale, this will just be data/I18nType?????.qml where ????? is 5 8-bit characters
     // For utf-8 locale, this will be data/I18nType??????????.qml where ?????????? is 5 8-bit characters, UTF-8 encoded
     QFile in(TEST_FILE(QLatin1String("I18nType30.qml")).toLocalFile());
-    QVERIFY(in.open(QIODevice::ReadOnly));
+    QVERIFY2(in.open(QIODevice::ReadOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(in.fileName(), in.errorString())));
     QFile out(TEST_FILE(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml")).toLocalFile());
-    QVERIFY(out.open(QIODevice::WriteOnly));
+    QVERIFY2(out.open(QIODevice::WriteOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(out.fileName(), out.errorString())));
     out.write(in.readAll());
 }
 

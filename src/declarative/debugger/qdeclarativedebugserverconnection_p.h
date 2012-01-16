@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -71,7 +71,7 @@ public:
     virtual void setServer(QDeclarativeDebugServer *server) = 0;
     virtual void setPort(int port, bool bock) = 0;
     virtual bool isConnected() const = 0;
-    virtual void send(const QByteArray &message) = 0;
+    virtual void send(const QList<QByteArray> &messages) = 0;
     virtual void disconnect() = 0;
     virtual bool waitForMessage() = 0;
 };

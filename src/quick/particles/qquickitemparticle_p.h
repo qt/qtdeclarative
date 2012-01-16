@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -44,6 +44,7 @@
 #include "qquickparticlepainter_p.h"
 #include <QPointer>
 #include <QSet>
+#include <private/qdeclarativeanimation_p_p.h>
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -58,6 +59,7 @@ class QQuickItemParticle : public QQuickParticlePainter
     Q_PROPERTY(QDeclarativeComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
 public:
     explicit QQuickItemParticle(QQuickItem *parent = 0);
+    ~QQuickItemParticle();
 
     bool fade() const { return m_fade; }
 
@@ -95,9 +97,8 @@ protected:
     virtual void commit(int gIdx, int pIdx);
     virtual void initialize(int gIdx, int pIdx);
     void prepareNextFrame();
-private slots:
-    void tick();
 private:
+    void tick(int time = 0);
     QList<QQuickItem* > m_deletables;
     QList< QQuickParticleData* > m_loadables;
     bool m_fade;
@@ -108,6 +109,9 @@ private:
     qreal m_lastT;
     int m_activeCount;
     QDeclarativeComponent* m_delegate;
+
+    typedef QTickAnimationProxy<QQuickItemParticle, &QQuickItemParticle::tick> Clock;
+    Clock *clock;
 };
 
 class QQuickItemParticleAttached : public QObject

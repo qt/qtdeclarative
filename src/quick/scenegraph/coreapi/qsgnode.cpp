@@ -92,7 +92,7 @@ QSGNode::QSGNode()
     , m_previousSibling(0)
     , m_subtreeGeometryCount(0)
     , m_nodeFlags(OwnedByParent)
-    , m_flags(0)
+    , m_dirtyState(0)
 {
     init();
 }
@@ -106,7 +106,7 @@ QSGNode::QSGNode(NodeType type)
     , m_previousSibling(0)
     , m_subtreeGeometryCount(type == GeometryNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
-    , m_flags(0)
+    , m_dirtyState(0)
 {
     init();
 }
@@ -421,10 +421,15 @@ QSGNode *QSGNode::childAtIndex(int i) const
 
 void QSGNode::setFlag(Flag f, bool enabled)
 {
-    if (enabled)
-        m_nodeFlags |= f;
-    else
-        m_nodeFlags &= ~f;
+    if (bool(m_nodeFlags & f) == enabled)
+        return;
+    m_nodeFlags ^= f;
+    Q_ASSERT(int(UsePreprocess) == int(DirtyUsePreprocess));
+    Q_ASSERT(int(ChildrenDoNotOverlap) == int(DirtyChildrenDoNotOverlap));
+    Q_ASSERT(int(StaticSubtreeGeometry) == int(DirtyStaticSubtreeGeometry));
+    int changedFlag = f & (UsePreprocess | ChildrenDoNotOverlap | StaticSubtreeGeometry);
+    if (changedFlag)
+        markDirty(DirtyState(changedFlag));
 }
 
 
@@ -437,10 +442,18 @@ void QSGNode::setFlag(Flag f, bool enabled)
 
 void QSGNode::setFlags(Flags f, bool enabled)
 {
+    Flags oldFlags = m_nodeFlags;
     if (enabled)
         m_nodeFlags |= f;
     else
         m_nodeFlags &= ~f;
+    Q_ASSERT(int(UsePreprocess) == int(DirtyUsePreprocess));
+    Q_ASSERT(int(ChildrenDoNotOverlap) == int(DirtyChildrenDoNotOverlap));
+    Q_ASSERT(int(StaticSubtreeGeometry) == int(DirtyStaticSubtreeGeometry));
+    int changedFlags = (oldFlags ^ m_nodeFlags)
+                       & (UsePreprocess | ChildrenDoNotOverlap | StaticSubtreeGeometry);
+    if (changedFlags)
+        markDirty(DirtyState(changedFlags));
 }
 
 
@@ -452,24 +465,24 @@ void QSGNode::setFlags(Flags f, bool enabled)
     as dirty and notify all connected renderers that the has dirty states.
  */
 
-void QSGNode::markDirty(DirtyFlags flags)
+void QSGNode::markDirty(DirtyState bits)
 {
-    m_flags |= (flags & DirtyPropagationMask);
+    m_dirtyState |= (bits & DirtyPropagationMask);
 
-    DirtyFlags subtreeFlags = DirtyFlags((flags & DirtyPropagationMask) << 16);
+    DirtyState subtreeBits = DirtyState((bits & DirtyPropagationMask) << 16);
 
     int geometryCountDiff = 0;
-    if (flags & DirtyNodeAdded)
+    if (bits & DirtyNodeAdded)
         geometryCountDiff += m_subtreeGeometryCount;
-    if (flags & DirtyNodeRemoved)
+    if (bits & DirtyNodeRemoved)
         geometryCountDiff -= m_subtreeGeometryCount;
 
     QSGNode *p = m_parent;
     while (p) {
-        p->m_flags |= subtreeFlags;
+        p->m_dirtyState |= subtreeBits;
         p->m_subtreeGeometryCount += geometryCountDiff;
         if (p->type() == RootNodeType)
-            static_cast<QSGRootNode *>(p)->notifyNodeChange(this, flags);
+            static_cast<QSGRootNode *>(p)->notifyNodeChange(this, bits);
         p = p->m_parent;
     }
 }
@@ -685,7 +698,7 @@ void QSGGeometryNode::setOpaqueMaterial(QSGMaterial *material)
  */
 QSGMaterial *QSGGeometryNode::activeMaterial() const
 {
-    Q_ASSERT_X(dirtyFlags() == 0, "QSGGeometryNode::activeMaterial()", "function assumes that all dirty states are cleaned up");
+    Q_ASSERT_X(dirtyState() == 0, "QSGGeometryNode::activeMaterial()", "function assumes that all dirty states are cleaned up");
     if (m_opaque_material && m_opacity > 0.999)
         return m_opaque_material;
     return m_material;
@@ -908,10 +921,10 @@ QSGRootNode::~QSGRootNode()
     with \a flags.
  */
 
-void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyFlags flags)
+void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyState state)
 {
     for (int i=0; i<m_renderers.size(); ++i) {
-        m_renderers.at(i)->nodeChanged(node, flags);
+        m_renderers.at(i)->nodeChanged(node, state);
     }
 }
 
@@ -1138,7 +1151,7 @@ QDebug operator<<(QDebug d, const QSGGeometryNode *n)
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
 #endif
-    d << "dirty=" << hex << (int) n->dirtyFlags() << dec;
+    d << "dirty=" << hex << (int) n->dirtyState() << dec;
     return d;
 }
 
@@ -1159,7 +1172,7 @@ QDebug operator<<(QDebug d, const QSGClipNode *n)
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
 #endif
-    d << "dirty=" << hex << (int) n->dirtyFlags() << dec << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
+    d << "dirty=" << hex << (int) n->dirtyState() << dec << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
     return d;
 }
 
@@ -1181,7 +1194,7 @@ QDebug operator<<(QDebug d, const QSGTransformNode *n)
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
 #endif
-    d << "dirty=" << hex << (int) n->dirtyFlags() << dec << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
+    d << "dirty=" << hex << (int) n->dirtyState() << dec << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
     d << ")";
     return d;
 }
@@ -1200,7 +1213,7 @@ QDebug operator<<(QDebug d, const QSGOpacityNode *n)
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
 #endif
-    d << "dirty=" << hex << (int) n->dirtyFlags() << dec;
+    d << "dirty=" << hex << (int) n->dirtyState() << dec;
     d << ")";
     return d;
 }
@@ -1212,7 +1225,7 @@ QDebug operator<<(QDebug d, const QSGRootNode *n)
         d << "QSGRootNode(null)";
         return d;
     }
-    d << "QSGRootNode" << hex << (void *) n << "dirty=" << (int) n->dirtyFlags() << dec
+    d << "QSGRootNode" << hex << (void *) n << "dirty=" << (int) n->dirtyState() << dec
       << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
@@ -1247,7 +1260,7 @@ QDebug operator<<(QDebug d, const QSGNode *n)
         break;
     default:
         d << "QSGNode(" << hex << (void *) n << dec
-          << "dirty=" << hex << (int) n->dirtyFlags()
+          << "dirty=" << hex << (int) n->dirtyState()
           << "flags=" << (int) n->flags() << dec
           << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QML_RUNTIME_TESTING

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -48,6 +48,9 @@
 #include <private/qdeclarativelocale_p.h>
 #include <private/qv8engine_p.h>
 
+#include <private/qv8profilerservice_p.h>
+#include <private/qdeclarativedebugtrace_p.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qcryptographichash.h>
@@ -55,6 +58,7 @@
 #include <QtCore/qsize.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qurl.h>
+#include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
 
 #include <QtGui/qcolor.h>
@@ -139,6 +143,58 @@ v8::Handle<v8::Value> gc(const v8::Arguments &args)
     return v8::Undefined();
 }
 
+v8::Handle<v8::Value> consoleError(const v8::Arguments &args)
+{
+    return console(Error, args);
+}
+
+v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
+{
+    //console.log
+    //console.debug
+    //print
+    return console(Log, args);
+}
+
+v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args)
+{
+    //DeclarativeDebugTrace cannot handle nested profiling
+    //although v8 can handle several profiling at once,
+    //we do not allow that. Hence, we pass an empty(default) title
+    Q_UNUSED(args);
+    QString title;
+
+    if (QDeclarativeDebugTrace::startProfiling()) {
+        QV8ProfilerService::instance()->startProfiling(title);
+        qDebug("Profiling started.");
+    } else {
+        qWarning("Profiling is already in progress. First, end current profiling session.");
+    }
+
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args)
+{
+    //DeclarativeDebugTrace cannot handle nested profiling
+    //although v8 can handle several profiling at once,
+    //we do not allow that. Hence, we pass an empty(default) title
+    Q_UNUSED(args);
+    QString title;
+
+    if (QDeclarativeDebugTrace::stopProfiling()) {
+        QV8ProfilerService *profiler = QV8ProfilerService::instance();
+        profiler->stopProfiling(title);
+        QDeclarativeDebugTrace::sendProfilingData();
+        profiler->sendProfilingData();
+        qDebug("Profiling ended.");
+    } else {
+        qWarning("Profiling was not started.");
+    }
+
+    return v8::Undefined();
+}
+
 v8::Handle<v8::Value> consoleTime(const v8::Arguments &args)
 {
     if (args.Length() != 1)
@@ -161,22 +217,30 @@ v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
     return v8::Undefined();
 }
 
-v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
+v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
 {
-    //console.log
-    //console.debug
-    //print
-    return console(Log, args);
+    if (args.Length() != 0)
+        V8THROW_ERROR("console.trace(): Invalid arguments");
+
+    //The v8 default is currently 10 stack frames.
+    v8::Handle<v8::StackTrace> stackTrace =
+        v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kOverview);
+    int stackCount = stackTrace->GetFrameCount();
+
+    for (int i = 0; i < stackCount; i++) {
+        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(i);
+        v8::String::Utf8Value func_name(frame->GetFunctionName());
+        v8::String::Utf8Value script_name(frame->GetScriptName());
+        int lineNumber = frame->GetLineNumber();
+        int columnNumber = frame->GetColumn();
+        qDebug("%s (%s:%d:%d)\n", *func_name, *script_name, lineNumber, columnNumber);
+    }
+    return v8::Undefined();
 }
 
 v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args)
 {
     return console(Warn, args);
-}
-
-v8::Handle<v8::Value> consoleError(const v8::Arguments &args)
-{
-    return console(Error, args);
 }
 
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)

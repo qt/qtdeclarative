@@ -42,7 +42,7 @@
 #include <private/qquickshadereffectnode_p.h>
 
 #include "qquickshadereffectmesh_p.h"
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
 QT_BEGIN_NAMESPACE

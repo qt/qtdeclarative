@@ -1,10 +1,11 @@
 HEADERS += \
     $$PWD/qquickevents_p_p.h \
-    $$PWD/qquickitemchangelistener_p.h \
     $$PWD/qquickanchors_p.h \
     $$PWD/qquickanchors_p_p.h \
+    $$PWD/qquickaccessibleattached_p.h \
     $$PWD/qquickitem.h \
     $$PWD/qquickitem_p.h \
+    $$PWD/qquickitemchangelistener_p.h \
     $$PWD/qquickrectangle_p.h \
     $$PWD/qquickrectangle_p_p.h \
     $$PWD/qquickcanvas.h \
@@ -16,7 +17,6 @@ HEADERS += \
     $$PWD/qquicktext_p.h \
     $$PWD/qquicktext_p_p.h \
     $$PWD/qquicktextnode_p.h \
-    $$PWD/qquicklinecontrol_p.h \
     $$PWD/qquicktextinput_p.h \
     $$PWD/qquicktextinput_p_p.h \
     $$PWD/qquicktextcontrol_p.h \
@@ -40,6 +40,7 @@ HEADERS += \
     $$PWD/qquicklistview_p.h \
     $$PWD/qquickvisualadaptormodel_p.h \
     $$PWD/qquickvisualdatamodel_p.h \
+    $$PWD/qquickvisualdatamodel_p_p.h \
     $$PWD/qquickvisualitemmodel_p.h \
     $$PWD/qquickrepeater_p.h \
     $$PWD/qquickrepeater_p_p.h \
@@ -85,7 +86,6 @@ SOURCES += \
     $$PWD/qquickpainteditem.cpp \
     $$PWD/qquicktext.cpp \
     $$PWD/qquicktextnode.cpp \
-    $$PWD/qquicklinecontrol.cpp \
     $$PWD/qquicktextinput.cpp \
     $$PWD/qquicktextcontrol.cpp \
     $$PWD/qquicktextedit.cpp \
@@ -117,6 +117,7 @@ SOURCES += \
     $$PWD/qquickspriteengine.cpp \
     $$PWD/qquicksprite.cpp \
     $$PWD/qquickspriteimage.cpp \
+    $$PWD/qquickaccessibleattached.cpp \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \

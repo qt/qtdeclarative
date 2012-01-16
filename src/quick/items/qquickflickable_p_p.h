@@ -1,7 +1,7 @@
 // Commit: 160f1867868cdea916923652b00484ed11f90aaa
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -183,10 +183,11 @@ public:
     bool interactive : 1;
     bool calcVelocity : 1;
     bool pixelAligned : 1;
-    QElapsedTimer lastPosTime;
+    QElapsedTimer timer;
+    qint64 lastPosTime;
+    qint64 lastPressTime;
     QPointF lastPos;
     QPointF pressPos;
-    QElapsedTimer pressTime;
     qreal deceleration;
     qreal maxVelocity;
     QElapsedTimer velocityTime;
@@ -214,6 +215,8 @@ public:
     void handleMousePressEvent(QMouseEvent *);
     void handleMouseMoveEvent(QMouseEvent *);
     void handleMouseReleaseEvent(QMouseEvent *);
+
+    qint64 computeCurrentTime(QInputEvent *event);
 
     // flickableData property
     static void data_append(QDeclarativeListProperty<QObject> *, QObject *);

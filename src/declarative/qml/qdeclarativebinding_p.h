@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -153,7 +153,7 @@ public:
     QDeclarativeBinding(const QString &, QObject *, QDeclarativeContext *, QObject *parent=0);
     QDeclarativeBinding(const QString &, QObject *, QDeclarativeContextData *, QObject *parent=0);
     QDeclarativeBinding(const QString &, bool isRewritten, QObject *, QDeclarativeContextData *, 
-                        const QString &url, int lineNumber, QObject *parent=0);
+                        const QString &url, int lineNumber, int columnNumber = 0, QObject *parent=0);
     QDeclarativeBinding(void *, QObject *, QDeclarativeContextData *, QObject *parent=0);
 
     void setTarget(const QDeclarativeProperty &);

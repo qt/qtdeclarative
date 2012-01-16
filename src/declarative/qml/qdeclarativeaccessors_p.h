@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -97,8 +97,9 @@ class QDeclarativeNotifier;
 
 #define QML_PROPERTY_NAME(name) #name, sizeof #name - 1
 
-struct QDeclarativeAccessors
+class QDeclarativeAccessors
 {
+public:
     void (*read)(QObject *object, intptr_t property, void *output);
     void (*notifier)(QObject *object, intptr_t property, QDeclarativeNotifier **notifier);
 };

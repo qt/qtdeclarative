@@ -629,7 +629,7 @@ namespace {
         QRectF searchRect = rect;
         if (layoutPosition == QTextFrameFormat::InFlow) {
             if (m_currentLineTree.isEmpty()) {
-                searchRect.moveTopLeft(m_position);
+                searchRect.moveTopLeft(m_position + m_currentLine.position());
             } else {
                 const BinaryTreeNode *lastNode = m_currentLineTree.data() + m_currentLineTree.size() - 1;
                 if (lastNode->glyphRun.isRightToLeft()) {

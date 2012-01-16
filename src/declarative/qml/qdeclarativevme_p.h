@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -66,6 +66,8 @@
 #include <private/qv8_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <private/qfinitestack_p.h>
+
+#include <private/qdeclarativetrace_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -145,11 +147,19 @@ private:
     QDeclarativeEngine *engine;
     QRecursionNode recursion;
 
+#ifdef QML_ENABLE_TRACE
+    QDeclarativeCompiledData *rootComponent;
+#endif
+
     QFiniteStack<QObject *> objects;
     QFiniteStack<QDeclarativeVMETypes::List> lists;
 
     QFiniteStack<QDeclarativeAbstractBinding *> bindValues;
     QFiniteStack<QDeclarativeParserStatus *> parserStatus;
+#ifdef QML_ENABLE_TRACE
+    QFiniteStack<QDeclarativeData *> parserStatusData;
+#endif
+
     QDeclarativeGuardedContextData rootContext;
     QDeclarativeGuardedContextData creationContext;
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -49,11 +49,6 @@
 #include <QtCore/qdir.h>
 #include "../../shared/util.h"
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(TESTDATA(filename));
-}
-
 class MyQmlObject : public QObject
 {
     Q_OBJECT
@@ -97,7 +92,7 @@ private:
 QML_DECLARE_TYPE(MyContainer);
 QML_DECLARE_TYPEINFO(MyContainer, QML_HAS_ATTACHED_PROPERTIES)
 
-class tst_qdeclarativeproperty : public QObject
+class tst_qdeclarativeproperty : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -1000,7 +995,7 @@ void tst_qdeclarativeproperty::read()
         QVERIFY(qvariant_cast<QObject *>(v) == o.qmlObject());
     }
     {
-        QDeclarativeComponent component(&engine, TEST_FILE("readSynthesizedObject.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("readSynthesizedObject.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
 
@@ -1015,7 +1010,7 @@ void tst_qdeclarativeproperty::read()
         QCOMPARE(qvariant_cast<QObject *>(v)->property("b").toInt(), 19);
     }
     {   // static
-        QDeclarativeComponent component(&engine, TEST_FILE("readSynthesizedObject.qml"));
+        QDeclarativeComponent component(&engine, testFileUrl("readSynthesizedObject.qml"));
         QObject *object = component.create();
         QVERIFY(object != 0);
 
@@ -1370,7 +1365,7 @@ void tst_qdeclarativeproperty::crashOnValueProperty()
 // QTBUG-13719
 void tst_qdeclarativeproperty::aliasPropertyBindings()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("aliasPropertyBindings.qml"));
+    QDeclarativeComponent component(&engine, testFileUrl("aliasPropertyBindings.qml"));
 
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1479,8 +1474,8 @@ void tst_qdeclarativeproperty::copy()
 
 void tst_qdeclarativeproperty::noContext()
 {
-    QDeclarativeComponent compA(&engine, TEST_FILE("NoContextTypeA.qml"));
-    QDeclarativeComponent compB(&engine, TEST_FILE("NoContextTypeB.qml"));
+    QDeclarativeComponent compA(&engine, testFileUrl("NoContextTypeA.qml"));
+    QDeclarativeComponent compB(&engine, testFileUrl("NoContextTypeB.qml"));
 
     QObject *a = compA.create();
     QVERIFY(a != 0);
@@ -1495,6 +1490,7 @@ void tst_qdeclarativeproperty::noContext()
 
 void tst_qdeclarativeproperty::initTestCase()
 {
+    QDeclarativeDataTest::initTestCase();
     qmlRegisterType<MyQmlObject>("Test",1,0,"MyQmlObject");
     qmlRegisterType<PropertyObject>("Test",1,0,"PropertyObject");
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");

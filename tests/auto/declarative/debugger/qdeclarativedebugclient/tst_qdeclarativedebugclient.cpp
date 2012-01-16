@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -109,14 +109,16 @@ void tst_QDeclarativeDebugClient::status()
         QDeclarativeDebugConnection dummyConn;
         QDeclarativeDebugClient client("tst_QDeclarativeDebugClient::status()", &dummyConn);
         QCOMPARE(client.status(), QDeclarativeDebugClient::NotConnected);
+        QCOMPARE(client.serviceVersion(), -1.0f);
     }
 
     QDeclarativeDebugTestClient client("tst_QDeclarativeDebugClient::status()", m_conn);
     QCOMPARE(client.status(), QDeclarativeDebugClient::Unavailable);
 
     {
-        QDeclarativeDebugTestService service("tst_QDeclarativeDebugClient::status()");
+        QDeclarativeDebugTestService service("tst_QDeclarativeDebugClient::status()", 2);
         QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Enabled);
+        QCOMPARE(client.serviceVersion(), 2.0f);
     }
 
     QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Unavailable);

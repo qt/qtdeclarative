@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -60,6 +60,7 @@
 #include <QtCore/qstack.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QThreadStorage>
 
 #include <private/qv8_p.h>
 #include <qjsengine.h>
@@ -221,6 +222,27 @@ class QDeclarativeEngine;
 class QDeclarativeValueType;
 class QNetworkAccessManager;
 class QDeclarativeContextData;
+
+class Q_AUTOTEST_EXPORT QV8GCCallback
+{
+private:
+    class ThreadData;
+public:
+    static void garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags);
+    static void registerGcPrologueCallback();
+
+    class Q_AUTOTEST_EXPORT Node {
+    public:
+        typedef void (*PrologueCallback)(Node *node);
+        Node(PrologueCallback callback);
+        ~Node();
+
+        QIntrusiveListNode node;
+        PrologueCallback prologueCallback;
+    };
+
+    static void addGcCallbackNode(Node *node);
+};
 
 class Q_DECLARATIVE_EXPORT QV8Engine
 {
@@ -415,6 +437,23 @@ public:
 
     static QDateTime qtDateTimeFromJsDate(double jsDate);
 
+    void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
+    void addRelationshipForGC(QObject *object, QObject *other);
+
+    struct ThreadData {
+        ThreadData();
+        ~ThreadData();
+        v8::Isolate* isolate;
+        bool gcPrologueCallbackRegistered;
+        QIntrusiveList<QV8GCCallback::Node, &QV8GCCallback::Node::node> gcCallbackNodes;
+    };
+
+    static bool hasThreadData();
+    static ThreadData* threadData();
+    static void ensurePerThreadIsolate();
+
+    v8::Persistent<v8::Object> m_strongReferencer;
+
 protected:
     QJSEngine* q;
     QDeclarativeEngine *m_engine;
@@ -454,6 +493,8 @@ protected:
     double qtDateTimeToJsDate(const QDateTime &dt);
 
 private:
+    static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
+
     typedef QScriptIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
     ValueList m_values;
     typedef QScriptIntrusiveList<QJSValueIteratorPrivate, &QJSValueIteratorPrivate::m_node> ValueIteratorList;

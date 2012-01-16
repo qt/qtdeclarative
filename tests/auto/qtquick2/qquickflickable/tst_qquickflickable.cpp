@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -49,16 +49,12 @@
 #include "../../shared/util.h"
 #include <QtOpenGL/QGLShaderProgram>
 
-class tst_qquickflickable : public QObject
+class tst_qquickflickable : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickflickable();
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
-
     void create();
     void horizontalViewportSize();
     void verticalViewportSize();
@@ -85,24 +81,10 @@ private:
     T *findItem(QQuickItem *parent, const QString &objectName);
 };
 
-tst_qquickflickable::tst_qquickflickable()
-{
-}
-
-void tst_qquickflickable::initTestCase()
-{
-
-}
-
-void tst_qquickflickable::cleanupTestCase()
-{
-
-}
-
 void tst_qquickflickable::create()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable01.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("flickable01.qml"));
     QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -127,7 +109,7 @@ void tst_qquickflickable::create()
 void tst_qquickflickable::horizontalViewportSize()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable02.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("flickable02.qml"));
     QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -144,7 +126,7 @@ void tst_qquickflickable::horizontalViewportSize()
 void tst_qquickflickable::verticalViewportSize()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable03.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("flickable03.qml"));
     QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -161,7 +143,7 @@ void tst_qquickflickable::verticalViewportSize()
 void tst_qquickflickable::properties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable04.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("flickable04.qml"));
     QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -261,7 +243,7 @@ void tst_qquickflickable::pressDelay()
 void tst_qquickflickable::nestedPressDelay()
 {
     QQuickView *canvas = new QQuickView;
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("nestedPressDelay.qml")));
+    canvas->setSource(testFileUrl("nestedPressDelay.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -316,7 +298,7 @@ void tst_qquickflickable::flickableDirection()
 void tst_qquickflickable::resizeContent()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("resize.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("resize.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
     QQuickFlickable *obj = findItem<QQuickFlickable>(root, "flick");
 
@@ -340,7 +322,7 @@ void tst_qquickflickable::resizeContent()
 void tst_qquickflickable::returnToBounds()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("resize.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("resize.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
     QQuickFlickable *obj = findItem<QQuickFlickable>(root, "flick");
 
@@ -366,7 +348,7 @@ void tst_qquickflickable::returnToBounds()
 void tst_qquickflickable::wheel()
 {
     QQuickView *canvas = new QQuickView;
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("wheel.qml")));
+    canvas->setSource(testFileUrl("wheel.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -377,7 +359,7 @@ void tst_qquickflickable::wheel()
     {
         QWheelEvent event(QPoint(200, 200), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
         event.setAccepted(false);
-        QApplication::sendEvent(canvas, &event);
+        QGuiApplication::sendEvent(canvas, &event);
     }
 
     QTRY_VERIFY(flick->contentY() > 0);
@@ -389,7 +371,7 @@ void tst_qquickflickable::wheel()
     {
         QWheelEvent event(QPoint(200, 200), -120, Qt::NoButton, Qt::NoModifier, Qt::Horizontal);
         event.setAccepted(false);
-        QApplication::sendEvent(canvas, &event);
+        QGuiApplication::sendEvent(canvas, &event);
     }
 
     QTRY_VERIFY(flick->contentX() > 0);
@@ -401,7 +383,7 @@ void tst_qquickflickable::wheel()
 void tst_qquickflickable::movingAndDragging()
 {
     QQuickView *canvas = new QQuickView;
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("flickable03.qml")));
+    canvas->setSource(testFileUrl("flickable03.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -506,7 +488,7 @@ void tst_qquickflickable::movingAndDragging()
 void tst_qquickflickable::disabled()
 {
     QQuickView *canvas = new QQuickView;
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("disabled.qml")));
+    canvas->setSource(testFileUrl("disabled.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -538,7 +520,7 @@ void tst_qquickflickable::flickVelocity()
 #endif
 
     QQuickView *canvas = new QQuickView;
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("flickable03.qml")));
+    canvas->setSource(testFileUrl("flickable03.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -562,7 +544,7 @@ void tst_qquickflickable::flickVelocity()
 void tst_qquickflickable::margins()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("margins.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("margins.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
     QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(root);
     QVERIFY(obj != 0);
@@ -628,7 +610,7 @@ void tst_qquickflickable::flick(QQuickView *canvas, const QPoint &from, const QP
 
     for (int i = 0; i < pointCount; ++i) {
         QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
+        QGuiApplication::sendEvent(canvas, &mv);
         QTest::qWait(duration/pointCount);
         QCoreApplication::processEvents();
     }

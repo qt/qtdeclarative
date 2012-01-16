@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -56,6 +56,7 @@
 #include <QtGui/qtextobject.h>
 #include <QtGui/qtextcursor.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qinputpanel.h>
 
 #include <private/qdeclarativestyledtext_p.h>
 #include <QtQuick/private/qdeclarativepixmapcache_p.h>
@@ -78,9 +79,10 @@ QQuickTextPrivate::QQuickTextPrivate()
   format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap), lineHeight(1),
   lineHeightMode(QQuickText::ProportionalHeight), lineCount(1), maximumLineCount(INT_MAX),
   maximumLineCountValid(false),
-  texture(0),
+  imageCache(0), texture(0),
   imageCacheDirty(false), updateOnComponentComplete(true),
-  richText(false), styledText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
+  richText(false), styledText(false), singleline(false), cacheAllTextAsImage(true),
+  disableDistanceField(false), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), textHasChanged(true),
   naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull)
@@ -91,6 +93,7 @@ QQuickTextPrivate::QQuickTextPrivate()
 
 {
     cacheAllTextAsImage = enableImageCache();
+    disableDistanceField = qmlDisableDistanceField();
 }
 
 void QQuickTextPrivate::init()
@@ -188,6 +191,7 @@ QQuickTextPrivate::~QQuickTextPrivate()
 {
     delete elipsisLayout;
     delete textLine; textLine = 0;
+    delete imageCache;
 }
 
 qreal QQuickTextPrivate::getImplicitWidth() const
@@ -217,9 +221,11 @@ void QQuickTextPrivate::updateLayout()
             delete elipsisLayout;
             elipsisLayout = 0;
         }
-        layout.clearLayout();
         layout.setFont(font);
-        if (!styledText) {
+        if (text.isEmpty()) {
+            if (!layout.text().isEmpty())
+                layout.setText(text);
+        } else if (!styledText) {
             QString tmp = text;
             tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
             singleline = !tmp.contains(QChar::LineSeparator);
@@ -281,8 +287,9 @@ void QQuickTextPrivate::updateSize()
 
     QFontMetrics fm(font);
     if (text.isEmpty()) {
-        q->setImplicitSize(0, fm.height());
-        paintedSize = QSize(0, fm.height());
+        qreal fontHeight = fm.height();
+        q->setImplicitSize(0, fontHeight);
+        paintedSize = QSize(0, fontHeight);
         emit q->paintedSizeChanged();
         q->update();
         return;
@@ -315,7 +322,7 @@ void QQuickTextPrivate::updateSize()
         QTextOption option;
         option.setAlignment((Qt::Alignment)int(horizontalAlignment | vAlign));
         option.setWrapMode(QTextOption::WrapMode(wrapMode));
-        if (!cacheAllTextAsImage && !richTextAsImage && !qmlDisableDistanceField())
+        if (!cacheAllTextAsImage && !richTextAsImage && !disableDistanceField)
             option.setUseDesignMetrics(true);
         doc->setDefaultTextOption(option);
         if (requireImplicitWidth && q->widthValid()) {
@@ -451,9 +458,9 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
 
 #if defined(Q_OS_MAC)
     if (QThread::currentThread() != paintingThread) {
-#endif
         if (!line.lineNumber())
             linesRects.clear();
+#endif
 
         if (!textLine)
             textLine = new QQuickTextLine;
@@ -471,10 +478,11 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
 
         emit q->lineLaidOut(textLine);
 
-        linesRects << QRectF(textLine->x(), textLine->y(), textLine->width(), textLine->height());
         height += textLine->height();
 
 #if defined(Q_OS_MAC)
+        linesRects << QRectF(textLine->x(), textLine->y(), textLine->width(), textLine->height());
+
     } else {
         if (line.lineNumber() < linesRects.count()) {
             QRectF r = linesRects.at(line.lineNumber());
@@ -508,7 +516,7 @@ QRect QQuickTextPrivate::setupTextLayout()
     QTextOption textOption = layout.textOption();
     textOption.setAlignment(Qt::Alignment(q->effectiveHAlign()));
     textOption.setWrapMode(QTextOption::WrapMode(wrapMode));
-    if (!cacheAllTextAsImage && !richTextAsImage && !qmlDisableDistanceField())
+    if (!cacheAllTextAsImage && !richTextAsImage && !disableDistanceField)
         textOption.setUseDesignMetrics(true);
     layout.setTextOption(textOption);
 
@@ -561,7 +569,7 @@ QRect QQuickTextPrivate::setupTextLayout()
 
     bool truncate = layoutTextElided;
     bool customLayout = isLineLaidOutConnected();
-    bool elideEnabled = elideMode == QQuickText::ElideRight && q->widthValid();
+    bool multilineElideEnabled = elideMode == QQuickText::ElideRight && q->widthValid() && wrapMode != QQuickText::NoWrap;
 
     layout.beginLayout();
     if (!lineWidth)
@@ -585,7 +593,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         }
 
         bool elide = false;
-        if (elideEnabled && q->heightValid() && height > q->height()) {
+        if (multilineElideEnabled && q->heightValid() && height > q->height()) {
             // This line does not fit in the remaining area.
             elide = true;
             if (visibleCount > 1) {
@@ -602,7 +610,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         if (elide || (maximumLineCountValid && --linesLeft == 0)) {
             if (visibleTextLength < text.length()) {
                 truncate = true;
-                if (elideEnabled) {
+                if (multilineElideEnabled) {
                     qreal elideWidth = fm.width(elideChar);
                     // Need to correct for alignment
                     if (customLayout)
@@ -731,23 +739,33 @@ QPixmap QQuickTextPrivate::textDocumentImage(bool drawStyle)
     return img;
 }
 
+
+void QQuickTextPrivate::markDirty()
+{
+    Q_Q(QQuickText);
+    if (!invalidateImageCache() && q->isComponentComplete())
+       q->update();
+}
+
 /*!
     Mark the image cache as dirty.
 */
-void QQuickTextPrivate::invalidateImageCache()
+bool QQuickTextPrivate::invalidateImageCache()
 {
     Q_Q(QQuickText);
 
-    if (richTextAsImage || cacheAllTextAsImage || (qmlDisableDistanceField() && style != QQuickText::Normal)) { // If actually using the image cache
+    if (richTextAsImage || cacheAllTextAsImage || (disableDistanceField && style != QQuickText::Normal)) { // If actually using the image cache
         if (imageCacheDirty)
-            return;
+            return true;
 
         imageCacheDirty = true;
 
         if (q->isComponentComplete())
             QCoreApplication::postEvent(q, new QEvent(QEvent::User));
-    } else if (q->isComponentComplete())
-        q->update();
+        return true;
+    }
+
+    return false;
 }
 
 /*!
@@ -762,7 +780,8 @@ void QQuickTextPrivate::checkImageCache()
 
     if (text.isEmpty()) {
 
-        imageCache = QPixmap();
+        delete imageCache;
+        imageCache = 0;
 
     } else {
 
@@ -779,18 +798,19 @@ void QQuickTextPrivate::checkImageCache()
                 styledImage = textLayoutImage(true); //### should use styleColor
         }
 
+        delete imageCache;
         switch (style) {
         case QQuickText::Outline:
-            imageCache = drawOutline(textImage, styledImage);
+            imageCache = new QPixmap(drawOutline(textImage, styledImage));
             break;
         case QQuickText::Sunken:
-            imageCache = drawOutline(textImage, styledImage, -1);
+            imageCache = new QPixmap(drawOutline(textImage, styledImage, -1));
             break;
         case QQuickText::Raised:
-            imageCache = drawOutline(textImage, styledImage, 1);
+            imageCache = new QPixmap(drawOutline(textImage, styledImage, 1));
             break;
         default:
-            imageCache = textImage;
+            imageCache = new QPixmap(textImage);
             break;
         }
 
@@ -1183,7 +1203,7 @@ void QQuickText::setColor(const QColor &color)
         return;
 
     d->color = color;
-    d->invalidateImageCache();
+    d->markDirty();
     emit colorChanged(d->color);
 }
 /*!
@@ -1226,7 +1246,7 @@ void QQuickText::setStyle(QQuickText::TextStyle style)
     if (isComponentComplete() && (d->style == Normal || style == Normal))
         update();
     d->style = style;
-    d->invalidateImageCache();
+    d->markDirty();
     emit styleChanged(d->style);
 }
 
@@ -1258,7 +1278,7 @@ void QQuickText::setStyleColor(const QColor &color)
         return;
 
     d->styleColor = color;
-    d->invalidateImageCache();
+    d->markDirty();
     emit styleColorChanged(d->styleColor);
 }
 
@@ -1346,7 +1366,7 @@ bool QQuickTextPrivate::setHAlign(QQuickText::HAlignment alignment, bool forceAl
 bool QQuickTextPrivate::determineHorizontalAlignment()
 {
     if (hAlignImplicit) {
-        bool alignToRight = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
+        bool alignToRight = text.isEmpty() ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft : rightToLeftText;
         return setHAlign(alignToRight ? QQuickText::AlignRight : QQuickText::AlignLeft);
     }
     return false;
@@ -1509,6 +1529,7 @@ void QQuickText::resetMaximumLineCount()
 
     \code
     <b></b> - bold
+    <strong></strong> - bold
     <i></i> - italic
     <br> - new line
     <p> - paragraph
@@ -1517,6 +1538,7 @@ void QQuickText::resetMaximumLineCount()
     <h1> to <h6> - headers
     <a href=""> - anchor
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
+    <pre></pre> - preformatted
     &gt; &lt; &amp;
     \endcode
 
@@ -1594,7 +1616,7 @@ void QQuickText::setTextFormat(TextFormat format)
     \o Text.ElideRight
     \endlist
 
-    If this property is set to Text.ElideRight, it can be used with multiline
+    If this property is set to Text.ElideRight, it can be used with \l {wrapMode}{wrapped}
     text. The text will only elide if \c maximumLineCount, or \c height has been set.
     If both \c maximumLineCount and \c height are set, \c maximumLineCount will
     apply unless the lines do not fit in the height allowed.
@@ -1653,6 +1675,11 @@ QRectF QQuickText::boundingRect() const
 void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickText);
+    if (d->text.isEmpty()) {
+        QQuickItem::geometryChanged(newGeometry, oldGeometry);
+        return;
+    }
+
     bool widthChanged = newGeometry.width() != oldGeometry.width();
     bool heightChanged = newGeometry.height() != oldGeometry.height();
     bool leftAligned = effectiveHAlign() == QQuickText::AlignLeft;
@@ -1714,11 +1741,11 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 #endif
 
     // XXX todo - some styled text can be done by the QQuickTextNode
-    if (d->richTextAsImage || d->cacheAllTextAsImage || (qmlDisableDistanceField() && d->style != Normal)) {
+    if (d->richTextAsImage || d->cacheAllTextAsImage || (d->disableDistanceField && d->style != Normal)) {
         bool wasDirty = d->textureImageCacheDirty;
         d->textureImageCacheDirty = false;
 
-        if (d->imageCache.isNull()) {
+        if (!d->imageCache || d->imageCache->isNull()) {
             delete oldNode;
             return 0;
         }
@@ -1736,12 +1763,12 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         }
 
         if (wasDirty) {
-            qobject_cast<QSGPlainTexture *>(d->texture)->setImage(d->imageCache.toImage());
+            qobject_cast<QSGPlainTexture *>(d->texture)->setImage(d->imageCache->toImage());
             node->setTexture(0);
             node->setTexture(d->texture);
         }
 
-        node->setTargetRect(QRectF(bounds.x(), bounds.y(), d->imageCache.width(), d->imageCache.height()));
+        node->setTargetRect(QRectF(bounds.x(), bounds.y(), d->imageCache->width(), d->imageCache->height()));
         node->setSourceRect(QRectF(0, 0, 1, 1));
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
         node->setVerticalWrapMode(QSGTexture::ClampToEdge);
@@ -1896,6 +1923,9 @@ void QQuickText::componentComplete()
     QQuickItem::componentComplete();
     if (d->updateOnComponentComplete)
         d->updateLayout();
+
+    // Enable accessibility for text items.
+    d->setAccessibleFlagAndListener();
 }
 
 

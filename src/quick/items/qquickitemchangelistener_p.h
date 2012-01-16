@@ -1,7 +1,7 @@
 // Commit: ac5c099cc3c5b8c7eec7a49fdeb8a21037230350
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -64,7 +64,7 @@ class QQuickAnchorsPrivate;
 class QQuickItemChangeListener
 {
 public:
-    virtual void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) {}
+    virtual void itemGeometryChanged(QQuickItem *, const QRectF & /* new */, const QRectF & /* old */ ) {}
     virtual void itemSiblingOrderChanged(QQuickItem *) {}
     virtual void itemVisibilityChanged(QQuickItem *) {}
     virtual void itemOpacityChanged(QQuickItem *) {}

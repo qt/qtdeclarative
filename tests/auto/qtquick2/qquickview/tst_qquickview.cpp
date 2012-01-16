@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -48,7 +48,7 @@
 #include <QtGui/QWindow>
 #include <QtCore/QDebug>
 
-class tst_QQuickView : public QObject
+class tst_QQuickView : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -73,7 +73,7 @@ void tst_QQuickView::resizemodeitem()
     QVERIFY(canvas);
     canvas->setResizeMode(QQuickView::SizeRootObjectToView);
     QCOMPARE(QSize(0,0), canvas->initialSize());
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizemodeitem.qml")));
+    canvas->setSource(testFileUrl("resizemodeitem.qml"));
     QQuickItem* item = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(item);
     window.show();
@@ -119,7 +119,7 @@ void tst_QQuickView::resizemodeitem()
     canvas = new QQuickView(&window);
     QVERIFY(canvas);
     canvas->setResizeMode(QQuickView::SizeViewToRootObject);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizemodeitem.qml")));
+    canvas->setSource(testFileUrl("resizemodeitem.qml"));
     item = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(item);
     window.show();
@@ -166,7 +166,7 @@ void tst_QQuickView::resizemodeitem()
     canvas->resize(300, 300);
     canvas->setResizeMode(QQuickView::SizeRootObjectToView);
     QCOMPARE(QSize(0,0), canvas->initialSize());
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizemodeitem.qml")));
+    canvas->setSource(testFileUrl("resizemodeitem.qml"));
     canvas->resize(300, 300);
     item = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(item);
@@ -194,7 +194,7 @@ void tst_QQuickView::errors()
     QQuickView *canvas = new QQuickView;
     QVERIFY(canvas);
     QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("error1.qml")));
+    canvas->setSource(testFileUrl("error1.qml"));
     qInstallMsgHandler(old);
     QVERIFY(canvas->status() == QQuickView::Error);
     QVERIFY(canvas->errors().count() == 1);

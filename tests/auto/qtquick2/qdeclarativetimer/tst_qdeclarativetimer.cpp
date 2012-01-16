@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -61,6 +61,8 @@ private slots:
     void triggeredOnStartRepeat();
     void changeDuration();
     void restart();
+    void restartFromTriggered();
+    void runningFromTriggered();
     void parentProperty();
 };
 
@@ -312,6 +314,63 @@ void tst_qdeclarativetimer::restart()
     QVERIFY(timer->isRunning());
 
     delete timer;
+}
+
+void tst_qdeclarativetimer::restartFromTriggered()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.setData(QByteArray("import QtQuick 2.0\nTimer { "
+                                    "interval: 500; "
+                                    "repeat: false; "
+                                    "running: true; "
+                                    "onTriggered: restart()"
+                                 " }"), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(component.create());
+    QDeclarativeTimer *timer = qobject_cast<QDeclarativeTimer*>(object.data());
+    QVERIFY(timer != 0);
+
+    TimerHelper helper;
+    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    QCOMPARE(helper.count, 0);
+
+    QTest::qWait(600);
+    QCOMPARE(helper.count, 1);
+    QVERIFY(timer->isRunning());
+
+    QTest::qWait(600);
+    QCOMPARE(helper.count, 2);
+    QVERIFY(timer->isRunning());
+}
+
+void tst_qdeclarativetimer::runningFromTriggered()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.setData(QByteArray("import QtQuick 2.0\nTimer { "
+                                    "property bool ok: false; "
+                                    "interval: 500; "
+                                    "repeat: false; "
+                                    "running: true; "
+                                    "onTriggered: { ok = !running; running = true }"
+                                 " }"), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(component.create());
+    QDeclarativeTimer *timer = qobject_cast<QDeclarativeTimer*>(object.data());
+    QVERIFY(timer != 0);
+
+    TimerHelper helper;
+    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    QCOMPARE(helper.count, 0);
+
+    QTest::qWait(600);
+    QCOMPARE(helper.count, 1);
+    QVERIFY(timer->property("ok").toBool());
+    QVERIFY(timer->isRunning());
+
+    QTest::qWait(600);
+    QCOMPARE(helper.count, 2);
+    QVERIFY(timer->property("ok").toBool());
+    QVERIFY(timer->isRunning());
 }
 
 void tst_qdeclarativetimer::parentProperty()

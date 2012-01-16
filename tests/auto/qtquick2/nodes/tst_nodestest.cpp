@@ -93,7 +93,7 @@ public:
     DummyRenderer(QSGRootNode *root)
         : QSGRenderer(QSGContext::createDefaultContext())
         , changedNode(0)
-        , changedFlags(0)
+        , changedState(0)
         , renderCount(0)
     {
         setRootNode(root);
@@ -104,14 +104,14 @@ public:
         renderingOrder = ++globalRendereringOrder;
     }
 
-    void nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags) {
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) {
         changedNode = node;
-        changedFlags = flags;
-        QSGRenderer::nodeChanged(node, flags);
+        changedState = state;
+        QSGRenderer::nodeChanged(node, state);
     }
 
     QSGNode *changedNode;
-    QSGNode::DirtyFlags changedFlags;
+    QSGNode::DirtyState changedState;
 
     int renderCount;
     int renderingOrder;
@@ -136,7 +136,7 @@ void NodesTest::propegate()
     child.markDirty(QSGNode::DirtyGeometry);
 
     QCOMPARE(&child, renderer.changedNode);
-    QCOMPARE((int) renderer.changedFlags, (int) QSGNode::DirtyGeometry);
+    QCOMPARE((int) renderer.changedState, (int) QSGNode::DirtyGeometry);
 }
 
 
@@ -159,8 +159,8 @@ void NodesTest::propegateWithMultipleRoots()
     QCOMPARE(ren1.changedNode, &child4);
     QCOMPARE(ren2.changedNode, &child4);
 
-    QCOMPARE((int) ren1.changedFlags, (int) QSGNode::DirtyGeometry);
-    QCOMPARE((int) ren2.changedFlags, (int) QSGNode::DirtyGeometry);
+    QCOMPARE((int) ren1.changedState, (int) QSGNode::DirtyGeometry);
+    QCOMPARE((int) ren2.changedState, (int) QSGNode::DirtyGeometry);
 }
 
 

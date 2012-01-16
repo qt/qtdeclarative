@@ -138,6 +138,7 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     , m_owns_data(false)
     , m_index_usage_pattern(AlwaysUploadPattern)
     , m_vertex_usage_pattern(AlwaysUploadPattern)
+    , m_line_width(1.0)
 {
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
@@ -182,7 +183,7 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
 QSGGeometry::~QSGGeometry()
 {
     if (m_owns_data)
-        qFree(m_data);
+        free(m_data);
 
     if (m_server_data)
         delete m_server_data;
@@ -253,6 +254,30 @@ void QSGGeometry::setDrawingMode(GLenum mode)
 }
 
 /*!
+    Gets the current line width to be used for this geometry. This property only
+    applies where the drawingMode is GL_LINES or a related value.
+
+    The default value is 1.0
+
+    \sa setLineWidth(), drawingMode()
+*/
+float QSGGeometry::lineWidth() const
+{
+    return m_line_width;
+}
+
+/*!
+    Sets the line width to be used for this geometry. This property only applies
+    where the drawingMode is GL_LINES or a related value.
+
+    \sa lineWidth(), drawingMode()
+*/
+void QSGGeometry::setLineWidth(float w)
+{
+    m_line_width = w;
+}
+
+/*!
     \fn int QSGGeometry::drawingMode() const
 
     Returns the drawing mode of this geometry.
@@ -286,7 +311,7 @@ void QSGGeometry::allocate(int vertexCount, int indexCount)
     int vertexByteSize = m_attributes.stride * m_vertex_count;
 
     if (m_owns_data)
-        qFree(m_data);
+        free(m_data);
 
     if (canUsePrealloc && vertexByteSize <= (int) sizeof(m_prealloc)) {
         m_data = (void *) &m_prealloc[0];
@@ -295,7 +320,7 @@ void QSGGeometry::allocate(int vertexCount, int indexCount)
     } else {
         Q_ASSERT(m_index_type == GL_UNSIGNED_INT || m_index_type == GL_UNSIGNED_SHORT);
         int indexByteSize = indexCount * (m_index_type == GL_UNSIGNED_SHORT ? sizeof(quint16) : sizeof(quint32));
-        m_data = (void *) qMalloc(vertexByteSize + indexByteSize);
+        m_data = (void *) malloc(vertexByteSize + indexByteSize);
         m_index_data_offset = vertexByteSize;
         m_owns_data = true;
     }

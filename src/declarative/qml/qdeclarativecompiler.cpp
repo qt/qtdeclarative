@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -83,6 +83,7 @@ QT_BEGIN_NAMESPACE
 DEFINE_BOOL_CONFIG_OPTION(compilerDump, QML_COMPILER_DUMP);
 DEFINE_BOOL_CONFIG_OPTION(compilerStatDump, QML_COMPILER_STATS);
 
+using namespace QDeclarativeJS;
 using namespace QDeclarativeScript;
 using namespace QDeclarativeCompilerTypes;
 
@@ -91,13 +92,15 @@ static QString on_string(QLatin1String("on"));
 static QString Changed_string(QLatin1String("Changed"));
 static QString Component_string(QLatin1String("Component"));
 static QString Component_import_string(QLatin1String("QML/Component"));
+static QString qsTr_string(QLatin1String("qsTr"));
+static QString qsTrId_string(QLatin1String("qsTrId"));
 
 /*!
     Instantiate a new QDeclarativeCompiler.
 */
 QDeclarativeCompiler::QDeclarativeCompiler(QDeclarativePool *pool)
 : pool(pool), output(0), engine(0), unitRoot(0), unit(0), cachedComponentTypeRef(-1),
-  componentStats(0)
+  cachedTranslationContextIndex(-1), componentStats(0)
 {
     if (compilerStatDump()) 
         componentStats = pool->New<ComponentStats>();
@@ -182,17 +185,19 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QHashedStringRef &name)
     COMPILE_EXCEPTION(property, tr("Error for property \"%1\"").arg(property->name));
     \endcode
 */
-#define COMPILE_EXCEPTION(token, desc) \
+#define COMPILE_EXCEPTION_LOCATION(line, column, desc) \
     {  \
-        QString exceptionDescription; \
         QDeclarativeError error; \
         error.setUrl(output->url); \
-        error.setLine((token)->location.start.line); \
-        error.setColumn((token)->location.start.column); \
+        error.setLine(line); \
+        error.setColumn(column); \
         error.setDescription(desc.trimmed()); \
         exceptions << error; \
         return false; \
     }
+
+#define COMPILE_EXCEPTION(token, desc) \
+    COMPILE_EXCEPTION_LOCATION((token)->location.start.line, (token)->location.start.column, desc)
 
 /*!
     \macro COMPILE_CHECK
@@ -832,6 +837,7 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
     this->enginePrivate = 0;
     this->unit = 0;
     this->cachedComponentTypeRef = -1;
+    this->cachedTranslationContextIndex = -1;
     this->unitRoot = 0;
 
     return !isError();
@@ -1606,6 +1612,20 @@ int QDeclarativeCompiler::componentTypeRef()
     return cachedComponentTypeRef;
 }
 
+int QDeclarativeCompiler::translationContextIndex()
+{
+    if (cachedTranslationContextIndex == -1) {
+        // This code must match that in the qsTr() implementation
+        QString path = output->url.toString();
+        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+        QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) :
+                                             QString();
+        QByteArray contextUtf8 = context.toUtf8();
+        cachedTranslationContextIndex = output->indexForByteArray(contextUtf8);
+    }
+    return cachedTranslationContextIndex;
+}
+
 bool QDeclarativeCompiler::buildSignal(QDeclarativeScript::Property *prop, QDeclarativeScript::Object *obj,
                                        const BindingContext &ctxt)
 {
@@ -2028,7 +2048,7 @@ void QDeclarativeCompiler::addId(const QString &id, QDeclarativeScript::Object *
     compileState->ids.append(obj);
 }
 
-void QDeclarativeCompiler::addBindingReference(BindingReference *ref)
+void QDeclarativeCompiler::addBindingReference(JSBindingReference *ref)
 {
     Q_ASSERT(ref->value && !ref->value->bindingReference);
     ref->value->bindingReference = ref;
@@ -2185,7 +2205,7 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
                 if (isEnumAssignment) {
                     value->type = Value::Literal;
                 } else {
-                    BindingReference *reference = pool->New<BindingReference>();
+                    JSBindingReference *reference = pool->New<JSBindingReference>();
                     reference->expression = value->value;
                     reference->property = prop;
                     reference->value = value;
@@ -2456,7 +2476,9 @@ bool QDeclarativeCompiler::buildPropertyLiteralAssignment(QDeclarativeScript::Pr
             }
         }
 
-        COMPILE_CHECK(buildBinding(v, prop, ctxt));
+        // Test for other binding optimizations
+        if (!buildLiteralBinding(v, prop, ctxt))
+            COMPILE_CHECK(buildBinding(v, prop, ctxt));
 
         v->type = Value::PropertyBinding;
 
@@ -2621,16 +2643,25 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeScript::Object *obj)
         if (propNames.testAndSet(prop.name.hash())) {
             for (Object::DynamicProperty *p2 = obj->dynamicProperties.first(); p2 != p; 
                  p2 = obj->dynamicProperties.next(p2)) {
-                if (p2->name == prop.name)
-                    COMPILE_EXCEPTION(&prop, tr("Duplicate property name"));
+                if (p2->name == prop.name) {
+                    COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
+                                               prop.nameLocation.column,
+                                               tr("Duplicate property name"));
+                }
             }
         }
 
-        if (prop.name.at(0).isUpper())
-            COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));
+        if (prop.name.at(0).isUpper()) {
+            COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
+                                       prop.nameLocation.column,
+                                       tr("Property names cannot begin with an upper case letter"));
+        }
 
-        if (enginePrivate->v8engine()->illegalNames().contains(prop.name))
-            COMPILE_EXCEPTION(&prop, tr("Illegal property name"));
+        if (enginePrivate->v8engine()->illegalNames().contains(prop.name)) {
+            COMPILE_EXCEPTION_LOCATION(prop.nameLocation.line,
+                                       prop.nameLocation.column,
+                                       tr("Illegal property name"));
+        }
     }
 
     for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
@@ -3101,11 +3132,12 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
     }
 
     if (obj->type != -1) {
-        QDeclarativePropertyCache *cache = output->types[obj->type].createPropertyCache(engine)->copy();
-        cache->append(engine, &obj->extObject,
-                      QDeclarativePropertyData::NoFlags,
-                      QDeclarativePropertyData::IsVMEFunction,
-                      QDeclarativePropertyData::IsVMESignal);
+        QDeclarativePropertyCache *superCache = output->types[obj->type].createPropertyCache(engine);
+        QDeclarativePropertyCache *cache =
+            superCache->copyAndAppend(engine, &obj->extObject,
+                                      QDeclarativePropertyData::NoFlags,
+                                      QDeclarativePropertyData::IsVMEFunction,
+                                      QDeclarativePropertyData::IsVMESignal);
 
         // now we modify the flags appropriately for var properties.
         int propertyOffset = obj->extObject.propertyOffset();
@@ -3294,7 +3326,7 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeScript::Value *value,
     if (!prop->core.isWritable() && !prop->core.isQList() && !prop->isReadOnlyDeclaration)
         COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
-    BindingReference *reference = pool->New<BindingReference>();
+    JSBindingReference *reference = pool->New<JSBindingReference>();
     reference->expression = value->value;
     reference->property = prop;
     reference->value = value;
@@ -3302,6 +3334,79 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeScript::Value *value,
     addBindingReference(reference);
 
     return true;
+}
+
+bool QDeclarativeCompiler::buildLiteralBinding(QDeclarativeScript::Value *v,
+                                               QDeclarativeScript::Property *prop,
+                                               const QDeclarativeCompilerTypes::BindingContext &)
+{
+    Q_ASSERT(v->value.isScript());
+
+    if (!prop->core.isWritable())
+        return false;
+
+    AST::Node *binding = v->value.asAST();
+
+    if (prop->type == QVariant::String) {
+        if (AST::CallExpression *e = AST::cast<AST::CallExpression *>(binding)) {
+            if (AST::IdentifierExpression *i = AST::cast<AST::IdentifierExpression *>(e->base)) {
+                if (i->name == qsTrId_string) {
+                    AST::ArgumentList *arg1 = e->arguments?e->arguments:0;
+                    AST::ArgumentList *arg2 = arg1?arg1->next:0;
+
+                    if (arg1 && arg1->expression->kind == AST::Node::Kind_StringLiteral &&
+                        (!arg2 || arg2->expression->kind == AST::Node::Kind_NumericLiteral) &&
+                        (!arg2 || !arg2->next)) {
+
+                        QStringRef text;
+                        int n = -1;
+
+                        text = AST::cast<AST::StringLiteral *>(arg1->expression)->value;
+                        if (arg2) n = (int)AST::cast<AST::NumericLiteral *>(arg2->expression)->value;
+
+                        TrBindingReference *reference = pool->New<TrBindingReference>();
+                        reference->dataType = BindingReference::TrId;
+                        reference->text = text;
+                        reference->n = n;
+                        v->bindingReference = reference;
+                        return true;
+                    }
+
+                } else if (i->name == qsTr_string) {
+
+                    AST::ArgumentList *arg1 = e->arguments?e->arguments:0;
+                    AST::ArgumentList *arg2 = arg1?arg1->next:0;
+                    AST::ArgumentList *arg3 = arg2?arg2->next:0;
+
+                    if (arg1 && arg1->expression->kind == AST::Node::Kind_StringLiteral &&
+                        (!arg2 || arg2->expression->kind == AST::Node::Kind_StringLiteral) &&
+                        (!arg3 || arg3->expression->kind == AST::Node::Kind_NumericLiteral) &&
+                        (!arg3 || !arg3->next)) {
+
+                        QStringRef text;
+                        QStringRef comment;
+                        int n = -1;
+
+                        text = AST::cast<AST::StringLiteral *>(arg1->expression)->value;
+                        if (arg2) comment = AST::cast<AST::StringLiteral *>(arg2->expression)->value;
+                        if (arg3) n = (int)AST::cast<AST::NumericLiteral *>(arg3->expression)->value;
+
+                        TrBindingReference *reference = pool->New<TrBindingReference>();
+                        reference->dataType = BindingReference::Tr;
+                        reference->text = text;
+                        reference->comment = comment;
+                        reference->n = n;
+                        v->bindingReference = reference;
+                        return true;
+                    }
+
+                }
+            }
+        }
+
+    }
+
+    return false;
 }
 
 void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *binding,
@@ -3313,11 +3418,31 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
     Q_ASSERT(binding->bindingReference);
 
     const BindingReference &ref = *binding->bindingReference;
-    if (ref.dataType == BindingReference::V4) {
+    if (ref.dataType == BindingReference::TrId) {
+        const TrBindingReference &tr = static_cast<const TrBindingReference &>(ref);
+
+        Instruction::StoreTrIdString store;
+        store.propertyIndex = prop->core.coreIndex;
+        store.text = output->indexForByteArray(tr.text.toUtf8());
+        store.n = tr.n;
+        output->addInstruction(store);
+    } else if (ref.dataType == BindingReference::Tr) {
+        const TrBindingReference &tr = static_cast<const TrBindingReference &>(ref);
+
+        Instruction::StoreTrString store;
+        store.propertyIndex = prop->core.coreIndex;
+        store.context = translationContextIndex();
+        store.text = output->indexForByteArray(tr.text.toUtf8());
+        store.comment = output->indexForByteArray(tr.comment.toUtf8());
+        store.n = tr.n;
+        output->addInstruction(store);
+    } else if (ref.dataType == BindingReference::V4) {
+        const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
+
         Instruction::StoreV4Binding store;
-        store.value = ref.compiledIndex;
-        store.context = ref.bindingContext.stack;
-        store.owner = ref.bindingContext.owner;
+        store.value = js.compiledIndex;
+        store.context = js.bindingContext.stack;
+        store.owner = js.bindingContext.owner;
         if (valueTypeProperty) {
             store.property = (valueTypeProperty->index & 0xFFFF) |
                              ((valueTypeProperty->type & 0xFF)) << 16 |
@@ -3328,34 +3453,41 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
             store.isRoot = (compileState->root == obj);
         }
         store.line = binding->location.start.line;
+        store.column = binding->location.start.column;
         output->addInstruction(store);
     } else if (ref.dataType == BindingReference::V8) {
+        const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
+
         Instruction::StoreV8Binding store;
-        store.value = ref.compiledIndex;
-        store.context = ref.bindingContext.stack;
-        store.owner = ref.bindingContext.owner;
+        store.value = js.compiledIndex;
+        store.context = js.bindingContext.stack;
+        store.owner = js.bindingContext.owner;
         if (valueTypeProperty) {
             store.isRoot = (compileState->root == valueTypeProperty->parent);
         } else {
             store.isRoot = (compileState->root == obj);
         }
         store.line = binding->location.start.line;
+        store.column = binding->location.start.column;
 
-        Q_ASSERT(ref.bindingContext.owner == 0 ||
-                 (ref.bindingContext.owner != 0 && valueTypeProperty));
-        if (ref.bindingContext.owner) {
+        Q_ASSERT(js.bindingContext.owner == 0 ||
+                 (js.bindingContext.owner != 0 && valueTypeProperty));
+        if (js.bindingContext.owner) {
             store.property = genValueTypeData(prop, valueTypeProperty);
         } else {
             store.property = prop->core;
         }
 
         output->addInstruction(store);
-    } else {
+    } else if (ref.dataType == BindingReference::QtScript) {
+        const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
+
         QDeclarativeInstruction store;
-        store.assignBinding.value = output->indexForString(ref.rewrittenExpression);
-        store.assignBinding.context = ref.bindingContext.stack;
-        store.assignBinding.owner = ref.bindingContext.owner;
+        store.assignBinding.value = output->indexForString(js.rewrittenExpression);
+        store.assignBinding.context = js.bindingContext.stack;
+        store.assignBinding.owner = js.bindingContext.owner;
         store.assignBinding.line = binding->location.start.line;
+        store.assignBinding.column = binding->location.start.column;
 
         if (valueTypeProperty) {
             store.assignBinding.isRoot = (compileState->root == valueTypeProperty->parent);
@@ -3363,9 +3495,9 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
             store.assignBinding.isRoot = (compileState->root == obj);
         }
 
-        Q_ASSERT(ref.bindingContext.owner == 0 ||
-                 (ref.bindingContext.owner != 0 && valueTypeProperty));
-        if (ref.bindingContext.owner) {
+        Q_ASSERT(js.bindingContext.owner == 0 ||
+                 (js.bindingContext.owner != 0 && valueTypeProperty));
+        if (js.bindingContext.owner) {
             store.assignBinding.property = genValueTypeData(prop, valueTypeProperty);
         } else {
             store.assignBinding.property = prop->core;
@@ -3374,6 +3506,8 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
             !prop->isAlias ? QDeclarativeInstruction::StoreBinding
                            : QDeclarativeInstruction::StoreBindingOnAlias
             , store);
+    } else {
+        Q_ASSERT(!"Unhandled BindingReference::DataType type");
     }
 }
 
@@ -3417,11 +3551,11 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
     QV4Compiler bindingCompiler;
 
-    QList<BindingReference*> sharedBindings;
+    QList<JSBindingReference*> sharedBindings;
 
-    for (BindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
+    for (JSBindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
-        BindingReference &binding = *b;
+        JSBindingReference &binding = *b;
 
         // ### We don't currently optimize for bindings on alias's - because 
         // of the solution to QTBUG-13719
@@ -3462,7 +3596,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
     if (!sharedBindings.isEmpty()) {
         struct Sort {
-            static bool lt(const BindingReference *lhs, const BindingReference *rhs)
+            static bool lt(const JSBindingReference *lhs, const JSBindingReference *rhs)
             {
                 return lhs->value->location.start.line < rhs->value->location.start.line;
             }
@@ -3475,7 +3609,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
         QString functionArray(QLatin1String("["));
         for (int ii = 0; ii < sharedBindings.count(); ++ii) {
-            BindingReference *reference = sharedBindings.at(ii);
+            JSBindingReference *reference = sharedBindings.at(ii);
             QDeclarativeScript::Value *value = reference->value;
             const QString &expression = reference->rewrittenExpression;
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -251,7 +251,12 @@ struct SpriteVertices {
     Default is true.
 */
 /*!
-    \qmlproperty string QtQuick2::SpriteImage::goalState
+    \qmlproperty string QtQuick2::SpriteImage::goalSprite
+
+    The name of the Sprite which is currently animating.
+*/
+/*!
+    \qmlproperty string QtQuick2::SpriteImage::goalSprite
 
     The name of the Sprite which the animation should move to.
 
@@ -296,11 +301,11 @@ void QQuickSpriteImage::jumpTo(const QString &sprite)
     m_spriteEngine->setGoal(m_spriteEngine->stateIndex(sprite), 0, true);
 }
 
-void QQuickSpriteImage::setGoalState(const QString &sprite)
+void QQuickSpriteImage::setGoalSprite(const QString &sprite)
 {
     if (m_goalState != sprite){
         m_goalState = sprite;
-        emit goalStateChanged(sprite);
+        emit goalSpriteChanged(sprite);
         m_spriteEngine->setGoal(m_spriteEngine->stateIndex(sprite));
     }
 }
@@ -360,6 +365,8 @@ QSGGeometryNode* QQuickSpriteImage::buildNode()
     m_material->sheetHeight = image.height();
     m_material->elementWidth = width();
     m_material->elementHeight = height();
+    m_curState = m_spriteEngine->state(m_spriteEngine->curState())->name();
+    emit currentSpriteChanged(m_curState);
 
     int vCount = 4;
     int iCount = 6;
@@ -449,6 +456,8 @@ void QQuickSpriteImage::prepareNextFrame()
         m_material->animY = m_spriteEngine->spriteY();
         m_material->animWidth = m_spriteEngine->spriteWidth();
         m_material->animHeight = m_spriteEngine->spriteHeight();
+        m_curState = m_spriteEngine->state(m_spriteEngine->curState())->name();
+        emit currentSpriteChanged(m_curState);
     }
 }
 

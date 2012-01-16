@@ -1,7 +1,7 @@
 // Commit: ac5c099cc3c5b8c7eec7a49fdeb8a21037230350
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -46,11 +46,12 @@
 #include <private/qdeclarativelistcompositor_p.h>
 #include <private/qquickvisualitemmodel_p.h>
 
-
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
 
+
 #include <private/qv8engine_p.h>
+#include <private/qdeclarativeglobal_p.h>
 
 QT_BEGIN_HEADER
 
@@ -160,9 +161,11 @@ public:
     void setDefaultInclude(bool include);
 
     Q_INVOKABLE QDeclarativeV8Handle get(int index);
-    Q_INVOKABLE QObject *create(int index);
 
 public Q_SLOTS:
+    void insert(QDeclarativeV8Function *);
+    void create(QDeclarativeV8Function *);
+    void resolve(QDeclarativeV8Function *);
     void remove(QDeclarativeV8Function *);
     void addGroups(QDeclarativeV8Function *);
     void removeGroups(QDeclarativeV8Function *);
@@ -178,30 +181,36 @@ private:
     Q_DECLARE_PRIVATE(QQuickVisualDataGroup)
 };
 
-class QQuickVisualDataModelCacheItem;
+class QQuickVisualDataModelItem;
 class QQuickVisualDataModelAttachedMetaObject;
 class QQuickVisualDataModelAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickVisualDataModel *model READ model NOTIFY modelChanged)
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
+    Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged)
 public:
     QQuickVisualDataModelAttached(QObject *parent)
-        : QObject(parent)
-        , m_cacheItem(0)
+        : m_cacheItem(0)
         , m_previousGroups(0)
         , m_modelChanged(false)
-    {}
+    {
+        QDeclarative_setParent_noEvent(this, parent);
+    }
     ~QQuickVisualDataModelAttached() { attachedProperties.remove(parent()); }
 
-    void setCacheItem(QQuickVisualDataModelCacheItem *item);
+    void setCacheItem(QQuickVisualDataModelItem *item);
 
     QQuickVisualDataModel *model() const;
 
     QStringList groups() const;
     void setGroups(const QStringList &groups);
 
+    bool isUnresolved() const;
+
     void emitChanges();
+
+    void emitUnresolvedChanged() { emit unresolvedChanged(); }
 
     static QQuickVisualDataModelAttached *properties(QObject *obj)
     {
@@ -216,9 +225,10 @@ public:
 Q_SIGNALS:
     void modelChanged();
     void groupsChanged();
+    void unresolvedChanged();
 
 public:
-    QQuickVisualDataModelCacheItem *m_cacheItem;
+    QQuickVisualDataModelItem *m_cacheItem;
     int m_previousGroups;
     int m_previousIndex[QDeclarativeListCompositor::MaximumGroupCount];
     bool m_modelChanged;

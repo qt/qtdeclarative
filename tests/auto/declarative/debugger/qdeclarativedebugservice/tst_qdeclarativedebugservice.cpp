@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -66,6 +66,7 @@ private slots:
     void initTestCase();
 
     void name();
+    void version();
     void status();
     void sendMessage();
     void idForObject();
@@ -99,8 +100,16 @@ void tst_QDeclarativeDebugService::name()
 {
     QString name = "tst_QDeclarativeDebugService::name()";
 
-    QDeclarativeDebugService service(name);
+    QDeclarativeDebugService service(name, 1);
     QCOMPARE(service.name(), name);
+}
+
+void tst_QDeclarativeDebugService::version()
+{
+    QString name = "tst_QDeclarativeDebugService::name()";
+
+    QDeclarativeDebugService service(name, 2);
+    QCOMPARE(service.version(), 2.0f);
 }
 
 void tst_QDeclarativeDebugService::status()

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -42,7 +42,7 @@
 #include "qquickimage_p.h"
 #include "qquickimage_p_p.h"
 
-#include <QtQuick/private/qsgtextureprovider_p.h>
+#include <QtQuick/qsgtextureprovider.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>

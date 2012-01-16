@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -46,6 +46,10 @@ BorderImage {
 
     property alias operation: buttonText.text
     property string color: ""
+
+    Accessible.name: operation
+    Accessible.description: "This button does " + operation
+    Accessible.role: Accessible.Button
 
     signal clicked
 

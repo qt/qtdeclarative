@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -71,6 +71,8 @@ class Q_DECLARATIVE_EXPORT QDeclarativeDebugServer : public QObject
     Q_DECLARE_PRIVATE(QDeclarativeDebugServer)
     Q_DISABLE_COPY(QDeclarativeDebugServer)
 public:
+    ~QDeclarativeDebugServer();
+
     static QDeclarativeDebugServer *instance();
 
     void setConnection(QDeclarativeDebugServerConnection *connection);
@@ -87,14 +89,14 @@ public:
     void receiveMessage(const QByteArray &message);
 
     bool waitForMessage(QDeclarativeDebugService *service);
-    void sendMessage(QDeclarativeDebugService *service, const QByteArray &message);
+    void sendMessages(QDeclarativeDebugService *service, const QList<QByteArray> &messages);
 
 private:
     friend class QDeclarativeDebugService;
     friend class QDeclarativeDebugServicePrivate;
     friend class QDeclarativeDebugServerThread;
     QDeclarativeDebugServer();
-    Q_PRIVATE_SLOT(d_func(), void _q_sendMessage(QByteArray))
+    Q_PRIVATE_SLOT(d_func(), void _q_sendMessages(QList<QByteArray>))
 };
 
 QT_END_NAMESPACE

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -44,7 +44,7 @@
 #include <QDebug>
 #include "../../shared/util.h"
 
-class tst_qdeclarativeerror : public QObject
+class tst_qdeclarativeerror : public QDeclarativeDataTest
 {
     Q_OBJECT
 private slots:
@@ -208,7 +208,7 @@ void tst_qdeclarativeerror::debug()
     }
 
     {
-        QUrl url(QUrl::fromLocalFile(TESTDATA("")).resolved(QUrl("test.txt")));
+        QUrl url(dataDirectoryUrl().resolved(QUrl("test.txt")));
         QDeclarativeError error;
         error.setUrl(url);
         error.setDescription("An Error");
@@ -222,7 +222,7 @@ void tst_qdeclarativeerror::debug()
     }
 
     {
-        QUrl url(QUrl::fromLocalFile(TESTDATA("")).resolved(QUrl("foo.txt")));
+        QUrl url(dataDirectoryUrl().resolved(QUrl("foo.txt")));
         QDeclarativeError error;
         error.setUrl(url);
         error.setDescription("An Error");

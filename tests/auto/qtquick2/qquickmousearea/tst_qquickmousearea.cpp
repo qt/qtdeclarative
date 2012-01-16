@@ -52,12 +52,10 @@
 
 //#define OLDWAY
 
-class tst_QQuickMouseArea: public QObject
+class tst_QQuickMouseArea: public QDeclarativeDataTest
 {
     Q_OBJECT
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void dragProperties();
     void resetDrag();
     void dragging();
@@ -80,21 +78,11 @@ private:
     QQuickView *createView();
 };
 
-void tst_QQuickMouseArea::initTestCase()
-{
-
-}
-
-void tst_QQuickMouseArea::cleanupTestCase()
-{
-
-}
-
 void tst_QQuickMouseArea::dragProperties()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragproperties.qml")));
+    canvas->setSource(testFileUrl("dragproperties.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -180,7 +168,7 @@ void tst_QQuickMouseArea::resetDrag()
     QQuickView *canvas = createView();
 
     canvas->rootContext()->setContextProperty("haveTarget", QVariant(true));
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragreset.qml")));
+    canvas->setSource(testFileUrl("dragreset.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -210,7 +198,7 @@ void tst_QQuickMouseArea::dragging()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("dragging.qml")));
+    canvas->setSource(testFileUrl("dragging.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWait(20);
@@ -230,7 +218,7 @@ void tst_QQuickMouseArea::dragging()
 
 #ifdef OLDWAY
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 #else
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
 #endif
@@ -253,7 +241,7 @@ void tst_QQuickMouseArea::dragging()
 
 #ifdef OLDWAY
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 #else
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(122,122));
     QTest::qWait(50);
@@ -277,7 +265,7 @@ QQuickView *tst_QQuickMouseArea::createView()
 void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("updateMousePosOnClick.qml")));
+    canvas->setSource(testFileUrl("updateMousePosOnClick.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -292,7 +280,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
     QCOMPARE(mouseRegion->mouseY(), rect->y());
 
     QMouseEvent event(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &event);
+    QGuiApplication::sendEvent(canvas, &event);
 
     QCOMPARE(mouseRegion->mouseX(), 100.0);
     QCOMPARE(mouseRegion->mouseY(), 100.0);
@@ -306,7 +294,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
 void tst_QQuickMouseArea::updateMouseAreaPosOnResize()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("updateMousePosOnResize.qml")));
+    canvas->setSource(testFileUrl("updateMousePosOnResize.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -321,7 +309,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnResize()
     QCOMPARE(mouseRegion->mouseY(), 0.0);
 
     QMouseEvent event(QEvent::MouseButtonPress, rect->pos().toPoint(), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &event);
+    QGuiApplication::sendEvent(canvas, &event);
 
     QVERIFY(!mouseRegion->property("emitPositionChanged").toBool());
     QVERIFY(mouseRegion->property("mouseMatchesPos").toBool());
@@ -343,13 +331,13 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
     {
         // We handle onPressAndHold, therefore no onClicked
         QQuickView *canvas = createView();
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("clickandhold.qml")));
+        canvas->setSource(testFileUrl("clickandhold.qml"));
         canvas->show();
         canvas->requestActivateWindow();
         QVERIFY(canvas->rootObject() != 0);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &pressEvent);
+        QGuiApplication::sendEvent(canvas, &pressEvent);
 
         QVERIFY(!canvas->rootObject()->property("clicked").toBool());
         QVERIFY(!canvas->rootObject()->property("held").toBool());
@@ -357,7 +345,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         QTest::qWait(1000);
 
         QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &releaseEvent);
+        QGuiApplication::sendEvent(canvas, &releaseEvent);
 
         QVERIFY(!canvas->rootObject()->property("clicked").toBool());
         QVERIFY(canvas->rootObject()->property("held").toBool());
@@ -368,20 +356,20 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
     {
         // We do not handle onPressAndHold, therefore we get onClicked
         QQuickView *canvas = createView();
-        canvas->setSource(QUrl::fromLocalFile(TESTDATA("noclickandhold.qml")));
+        canvas->setSource(testFileUrl("noclickandhold.qml"));
         canvas->show();
         canvas->requestActivateWindow();
         QVERIFY(canvas->rootObject() != 0);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &pressEvent);
+        QGuiApplication::sendEvent(canvas, &pressEvent);
 
         QVERIFY(!canvas->rootObject()->property("clicked").toBool());
 
         QTest::qWait(1000);
 
         QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-        QApplication::sendEvent(canvas, &releaseEvent);
+        QGuiApplication::sendEvent(canvas, &releaseEvent);
 
         QVERIFY(canvas->rootObject()->property("clicked").toBool());
 
@@ -392,7 +380,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
 void tst_QQuickMouseArea::onMousePressRejected()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("rejectEvent.qml")));
+    canvas->setSource(testFileUrl("rejectEvent.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -406,7 +394,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
     QVERIFY(!canvas->rootObject()->property("mr2_canceled").toBool());
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QVERIFY(canvas->rootObject()->property("mr1_pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("mr1_released").toBool());
@@ -418,7 +406,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
     QTest::qWait(200);
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QVERIFY(canvas->rootObject()->property("mr1_released").toBool());
     QVERIFY(!canvas->rootObject()->property("mr1_canceled").toBool());
@@ -429,7 +417,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
 void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pressedCanceled.qml")));
+    canvas->setSource(testFileUrl("pressedCanceled.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -438,7 +426,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QVERIFY(!canvas->rootObject()->property("released").toBool());
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QVERIFY(canvas->rootObject()->property("pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("canceled").toBool());
@@ -447,7 +435,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QTest::qWait(200);
 
     QEvent windowDeactivateEvent(QEvent::WindowDeactivate);
-    QApplication::sendEvent(canvas, &windowDeactivateEvent);
+    QGuiApplication::sendEvent(canvas, &windowDeactivateEvent);
     QVERIFY(!canvas->rootObject()->property("pressed").toBool());
     QVERIFY(canvas->rootObject()->property("canceled").toBool());
     QVERIFY(!canvas->rootObject()->property("released").toBool());
@@ -455,7 +443,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QTest::qWait(200);
 
     //press again
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
     QVERIFY(canvas->rootObject()->property("pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("canceled").toBool());
     QVERIFY(!canvas->rootObject()->property("released").toBool());
@@ -464,7 +452,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 
     //release
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
     QVERIFY(!canvas->rootObject()->property("pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("canceled").toBool());
     QVERIFY(canvas->rootObject()->property("released").toBool());
@@ -474,23 +462,23 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 void tst_QQuickMouseArea::doubleClick()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("doubleclick.qml")));
+    canvas->setSource(testFileUrl("doubleclick.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 1);
 
     pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("doubleClicked").toInt(), 1);
@@ -503,26 +491,26 @@ void tst_QQuickMouseArea::doubleClick()
 void tst_QQuickMouseArea::clickTwice()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("clicktwice.qml")));
+    canvas->setSource(testFileUrl("clicktwice.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("pressed").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 1);
 
     pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("pressed").toInt(), 2);
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 2);
@@ -534,7 +522,7 @@ void tst_QQuickMouseArea::clickTwice()
 void tst_QQuickMouseArea::pressedOrdering()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("pressedOrdering.qml")));
+    canvas->setSource(testFileUrl("pressedOrdering.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -542,16 +530,16 @@ void tst_QQuickMouseArea::pressedOrdering()
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("base"));
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("pressed"));
 
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("toggled"));
 
-    QApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
 
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("pressed"));
 
@@ -562,7 +550,7 @@ void tst_QQuickMouseArea::preventStealing()
 {
     QQuickView *canvas = createView();
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("preventstealing.qml")));
+    canvas->setSource(testFileUrl("preventstealing.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -625,7 +613,7 @@ void tst_QQuickMouseArea::clickThrough()
 {
     //With no handlers defined click, doubleClick and PressAndHold should propagate to those with handlers
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("clickThrough.qml")));
+    canvas->setSource(testFileUrl("clickThrough.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -658,7 +646,7 @@ void tst_QQuickMouseArea::clickThrough()
 
     //With handlers defined click, doubleClick and PressAndHold should propagate only when explicitly ignored
     canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("clickThrough2.qml")));
+    canvas->setSource(testFileUrl("clickThrough2.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -776,7 +764,7 @@ void tst_QQuickMouseArea::testQtQuick11Attributes_data()
 void tst_QQuickMouseArea::hoverPosition()
 {
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("hoverPosition.qml")));
+    canvas->setSource(testFileUrl("hoverPosition.qml"));
 
     QQuickItem *root = canvas->rootObject();
     QVERIFY(root != 0);
@@ -797,7 +785,7 @@ void tst_QQuickMouseArea::hoverPropagation()
 {
     //QTBUG-18175, to behave like GV did.
     QQuickView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("hoverPropagation.qml")));
+    canvas->setSource(testFileUrl("hoverPropagation.qml"));
 
     QQuickItem *root = canvas->rootObject();
     QVERIFY(root != 0);
@@ -806,13 +794,13 @@ void tst_QQuickMouseArea::hoverPropagation()
     QCOMPARE(root->property("point2").toBool(), false);
 
     QMouseEvent moveEvent(QEvent::MouseMove, QPoint(32, 32), Qt::NoButton, Qt::NoButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
+    QGuiApplication::sendEvent(canvas, &moveEvent);
 
     QCOMPARE(root->property("point1").toBool(), true);
     QCOMPARE(root->property("point2").toBool(), false);
 
     QMouseEvent moveEvent2(QEvent::MouseMove, QPoint(232, 32), Qt::NoButton, Qt::NoButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent2);
+    QGuiApplication::sendEvent(canvas, &moveEvent2);
     QCOMPARE(root->property("point1").toBool(), false);
     QCOMPARE(root->property("point2").toBool(), true);
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -127,6 +127,25 @@
   than the actual version of the library. Indeed, it is normal for the new library to allow
   QML written to previous versions to continue to work, even if more advanced versions of
   some of its types are available.
+*/
+
+/*!
+  \fn int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
+  \relates QDeclarativeEngine
+
+  This template function registers the specified revision of a C++ type in the QML system with
+  the library imported from \a uri having the version number composed
+  from \a versionMajor and \a versionMinor.
+
+  Returns the QML type id.
+
+  \code
+  template<typename T, int metaObjectRevision>
+  int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor);
+  \endcode
+
+  This function is typically used to register the revision of a base class to
+  use for the specified module version (see \l {QML Type Versioning}).
 */
 
 /*!

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -48,6 +48,7 @@
 #include <private/qdeclarativeengine_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
 
 #include <QCoreApplication>
 #include <QImageReader>
@@ -64,7 +65,6 @@
 #include <QtCore/qdebug.h>
 #include <private/qobject_p.h>
 #include <QSslError>
-#include <QOpenGLContext>
 
 #define IMAGEREQUEST_MAX_REQUEST_COUNT       8
 #define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16
@@ -430,7 +430,11 @@ void QDeclarativePixmapReader::networkRequestDone(QNetworkReply *reply)
         // send completion event to the QDeclarativePixmapReply
         mutex.lock();
         if (!cancelled.contains(job)) {
-            job->postReply(error, errorString, readSize, image);
+            QDeclarativeTextureFactory *factory = QSGContext::createTextureFactoryFromImage(image);
+            if (factory)
+                job->postReply(error, errorString, readSize, factory, image);
+            else
+                job->postReply(error, errorString, readSize, image);
         }
         mutex.unlock();
     }
@@ -529,8 +533,14 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
                 errorStr = QDeclarativePixmap::tr("Failed to get image from provider: %1").arg(url.toString());
             }
             mutex.lock();
-            if (!cancelled.contains(runningJob))
-                runningJob->postReply(errorCode, errorStr, readSize, image);
+            if (!cancelled.contains(runningJob)) {
+                QDeclarativeTextureFactory *factory = QSGContext::createTextureFactoryFromImage(image);
+                if (factory)
+                    runningJob->postReply(errorCode, errorStr, readSize, factory, image);
+                else
+                    runningJob->postReply(errorCode, errorStr, readSize, image);
+            }
+
             mutex.unlock();
         } else {
             QDeclarativeTextureFactory *t = ep->getTextureFromProvider(url, &readSize, requestSize);
@@ -564,8 +574,13 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
                 errorCode = QDeclarativePixmapReply::Loading;
             }
             mutex.lock();
-            if (!cancelled.contains(runningJob))
-                runningJob->postReply(errorCode, errorStr, readSize, image);
+            if (!cancelled.contains(runningJob)) {
+                QDeclarativeTextureFactory *factory = QSGContext::createTextureFactoryFromImage(image);
+                if (factory)
+                    runningJob->postReply(errorCode, errorStr, readSize, factory, image);
+                else
+                    runningJob->postReply(errorCode, errorStr, readSize, image);
+            }
             mutex.unlock();
         } else {
             // Network resource

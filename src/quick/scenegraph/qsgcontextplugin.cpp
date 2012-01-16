@@ -61,6 +61,64 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
     (QSGContextFactoryInterface_iid, QLatin1String("/scenegraph")))
 #endif
 
+struct QSGAdaptionPluginData
+{
+    QSGAdaptionPluginData()
+        : tried(false)
+        , factory(0)
+    {
+    }
+
+    ~QSGAdaptionPluginData()
+    {
+        delete factory;
+    }
+
+    bool tried;
+    QSGContextFactoryInterface *factory;
+    QString deviceName;
+};
+
+QThreadStorage<QSGAdaptionPluginData> qsg_plugin_data;
+
+
+QSGAdaptionPluginData *contextFactory()
+{
+    QSGAdaptionPluginData &plugin = qsg_plugin_data.localData();
+    if (!plugin.tried) {
+        plugin.tried = true;
+        const QStringList args = QGuiApplication::arguments();
+        QString device;
+        for (int index = 0; index < args.count(); ++index) {
+            if (args.at(index).startsWith(QLatin1String("--device="))) {
+                device = args.at(index).mid(9);
+                break;
+            }
+        }
+        if (device.isEmpty())
+            device = QString::fromLocal8Bit(qgetenv("QMLSCENE_DEVICE"));
+
+#if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
+        if (!device.isEmpty()) {
+            plugin.factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(device));
+            plugin.deviceName = device;
+        }
+#ifndef QT_NO_DEBUG
+        if (!device.isEmpty()) {
+            qWarning("Could not create scene graph context for device '%s'"
+                     " - check that plugins are installed correctly in %s",
+                     qPrintable(device),
+                     qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
+        }
+#endif
+
+#endif // QT_NO_LIBRARY || QT_NO_SETTINGS
+    }
+    return &plugin;
+}
+
+
+
 /*!
     \fn QSGContext *QSGContext::createDefaultContext()
 
@@ -69,36 +127,31 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
 */
 QSGContext *QSGContext::createDefaultContext()
 {
-    const QStringList args = QGuiApplication::arguments();
-    QString device;
-    for (int index = 0; index < args.count(); ++index) {
-        if (args.at(index).startsWith(QLatin1String("--device="))) {
-            device = args.at(index).mid(9);
-            break;
-        }
-    }
-    if (device.isEmpty())
-        device = QString::fromLocal8Bit(qgetenv("QMLSCENE_DEVICE"));
-    if (device.isEmpty())
-        return new QSGContext();
-
-#if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
-    if (QSGContextFactoryInterface *factory
-            = qobject_cast<QSGContextFactoryInterface*>
-                (loader()->instance(device))) {
-        QSGContext *context = factory->create(device);
-        if (context)
-            return context;
-    }
-#ifndef QT_NO_DEBUG
-    qWarning("Could not create scene graph context for device '%s'"
-             " - check that plugins are installed correctly in %s",
-             qPrintable(device),
-             qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
-#endif
-#endif // QT_NO_LIBRARY || QT_NO_SETTINGS
-
+    QSGAdaptionPluginData *plugin = contextFactory();
+    if (plugin->factory)
+        return plugin->factory->create(plugin->deviceName);
     return new QSGContext();
 }
+
+
+
+/*!
+    \fn QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image)
+
+    Calls into the scene graph adaptation if available and creates a texture
+    factory. The primary purpose of this function is to reimplement hardware
+    specific asynchronous texture frameskip-less uploads that can happen on
+    the image providers thread.
+ */
+
+QDeclarativeTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &image)
+{
+    QSGAdaptionPluginData *plugin = contextFactory();
+    if (plugin->factory)
+        return plugin->factory->createTextureFactoryFromImage(image);
+    return 0;
+}
+
+
 
 QT_END_NAMESPACE

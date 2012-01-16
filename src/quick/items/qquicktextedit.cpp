@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -56,6 +56,7 @@
 #include <QtCore/qmath.h>
 
 #include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativeproperty_p.h>
 #include <private/qtextengine_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -129,10 +130,10 @@ QString QQuickTextEdit::text() const
 
 #ifndef QT_NO_TEXTHTMLPARSER
     if (d->richText)
-        return d->document->toHtml();
+        return d->control->toHtml();
     else
 #endif
-        return d->document->toPlainText();
+        return d->control->toPlainText();
 }
 
 /*!
@@ -280,7 +281,7 @@ void QQuickTextEdit::setText(const QString &text)
     \o TextEdit.RichText
     \endlist
 
-    The default is TextEdit.AutoText.  If the text format is TextEdit.AutoText the text edit
+    The default is TextEdit.PlainText.  If the text format is TextEdit.AutoText the text edit
     will automatically determine whether the text should be treated as
     rich text.  This determination is made using Qt::mightBeRichText().
 
@@ -555,7 +556,7 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
         if (text.isEmpty()) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
             alignToRight = preeditText.isEmpty()
-                    ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft
+                    ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
                     : preeditText.isRightToLeft();
         } else {
             alignToRight = rightToLeftText;
@@ -1029,7 +1030,7 @@ void QQuickTextEdit::setPersistentSelection(bool on)
     emit persistentSelectionChanged(d->persistentSelection);
 }
 
-/*
+/*!
    \qmlproperty real QtQuick2::TextEdit::textMargin
 
    The margin, in pixels, around the text in the TextEdit.
@@ -1049,6 +1050,50 @@ void QQuickTextEdit::setTextMargin(qreal margin)
     d->document->setDocumentMargin(d->textMargin);
     emit textMarginChanged(d->textMargin);
 }
+
+/*!
+    \qmlproperty enumeration QtQuick2::TextEdit::inputMethodHints
+
+    Provides hints to the input method about the expected content of the text edit and how it
+    should operate.
+
+    The value is a bit-wise combination of flags or Qt.ImhNone if no hints are set.
+
+    Flags that alter behaviour are:
+
+    \list
+    \o Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
+    \o Qt.ImhSensitiveData - Typed text should not be stored by the active input method
+            in any persistent storage like predictive user dictionary.
+    \o Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
+            when a sentence ends.
+    \o Qt.ImhPreferNumbers - Numbers are preferred (but not required).
+    \o Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
+    \o Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
+    \o Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
+
+    \o Qt.ImhDate - The text editor functions as a date field.
+    \o Qt.ImhTime - The text editor functions as a time field.
+    \endlist
+
+    Flags that restrict input (exclusive flags) are:
+
+    \list
+    \o Qt.ImhDigitsOnly - Only digits are allowed.
+    \o Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
+    \o Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
+    \o Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
+    \o Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
+    \o Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
+    \o Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
+    \endlist
+
+    Masks:
+
+    \list
+    \o Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
+    \endlist
+*/
 
 void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
@@ -1160,6 +1205,7 @@ void QQuickTextEdit::setReadOnly(bool r)
     if (!r)
         d->control->moveCursor(QTextCursor::End);
 
+    q_canPasteChanged();
     emit readOnlyChanged(r);
 }
 
@@ -1192,8 +1238,12 @@ Qt::TextInteractionFlags QQuickTextEdit::textInteractionFlags() const
 /*!
     \qmlproperty rectangle QtQuick2::TextEdit::cursorRectangle
 
-    The rectangle where the text cursor is rendered
+    The rectangle where the standard text cursor is rendered
     within the text edit. Read-only.
+
+    The position and height of a custom cursorDelegate are updated to follow the cursorRectangle
+    automatically when it changes.  The width of the delegate is unaffected by changes in the
+    cursor rectangle.
 */
 QRect QQuickTextEdit::cursorRectangle() const
 {
@@ -1352,6 +1402,29 @@ void QQuickTextEdit::paste()
     d->control->paste();
 }
 #endif // QT_NO_CLIPBOARD
+
+
+/*!
+    Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
+    current selection, and updates the selection start to the current cursor
+    position.
+*/
+
+void QQuickTextEdit::undo()
+{
+    Q_D(QQuickTextEdit);
+    d->control->undo();
+}
+
+/*!
+    Redoes the last operation if redo is \l {canRedo}{available}.
+*/
+
+void QQuickTextEdit::redo()
+{
+    Q_D(QQuickTextEdit);
+    d->control->redo();
+}
 
 /*!
 \overload
@@ -1596,7 +1669,37 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 bool QQuickTextEdit::canPaste() const
 {
     Q_D(const QQuickTextEdit);
+    if (!d->canPasteValid) {
+        const_cast<QQuickTextEditPrivate *>(d)->canPaste = d->control->canPaste();
+        const_cast<QQuickTextEditPrivate *>(d)->canPasteValid = true;
+    }
     return d->canPaste;
+}
+
+/*!
+    \qmlproperty bool QtQuick2::TextEdit::canUndo
+
+    Returns true if the TextEdit is writable and there are previous operations
+    that can be undone.
+*/
+
+bool QQuickTextEdit::canUndo() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->document->isUndoAvailable();
+}
+
+/*!
+    \qmlproperty bool QtQuick2::TextEdit::canRedo
+
+    Returns true if the TextEdit is writable and there are \l {undo}{undone}
+    operations that can be redone.
+*/
+
+bool QQuickTextEdit::canRedo() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->document->isRedoAvailable();
 }
 
 /*!
@@ -1632,18 +1735,8 @@ void QQuickTextEditPrivate::init()
 
     control = new QQuickTextControl(document, q);
     control->setView(q);
-    control->setIgnoreUnusedNavigationEvents(true);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
-    control->setDragEnabled(false);
-
-    // By default, QQuickTextControl will issue both a updateCursorRequest() and an updateRequest()
-    // when the cursor needs to be repainted. We need the signals to be separate to be able to
-    // distinguish the cursor updates so that we can avoid updating the whole subtree when the
-    // cursor blinks.
-    if (!QObject::disconnect(control, SIGNAL(updateCursorRequest(QRectF)),
-                             control, SIGNAL(updateRequest(QRectF)))) {
-        qWarning("QQuickTextEditPrivate::init: Failed to disconnect updateCursorRequest and updateRequest");
-    }
+    control->setAcceptRichText(false);
 
     // QQuickTextControl follows the default text color
     // defined by the platform, declarative text
@@ -1661,13 +1754,13 @@ void QQuickTextEditPrivate::init()
     QObject::connect(control, SIGNAL(selectionChanged()), q, SLOT(updateSelectionMarkers()));
     QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SLOT(updateSelectionMarkers()));
     QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SIGNAL(cursorPositionChanged()));
-    QObject::connect(control, SIGNAL(microFocusChanged()), q, SLOT(moveCursorDelegate()));
+    QObject::connect(control, SIGNAL(cursorRectangleChanged()), q, SLOT(moveCursorDelegate()));
     QObject::connect(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
-    QObject::connect(q, SIGNAL(readOnlyChanged(bool)), q, SLOT(q_canPasteChanged()));
     QObject::connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
-    canPaste = control->canPaste();
 #endif
+    FAST_CONNECT(document, SIGNAL(undoAvailable(bool)), q, SIGNAL(canUndoChanged()));
+    FAST_CONNECT(document, SIGNAL(redoAvailable(bool)), q, SIGNAL(canRedoChanged()));
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
@@ -1981,7 +2074,9 @@ void QQuickTextEdit::q_canPasteChanged()
     Q_D(QQuickTextEdit);
     bool old = d->canPaste;
     d->canPaste = d->control->canPaste();
-    if (old!=d->canPaste)
+    bool changed = old!=d->canPaste || !d->canPasteValid;
+    d->canPasteValid = true;
+    if (changed)
         emit canPasteChanged();
 }
 

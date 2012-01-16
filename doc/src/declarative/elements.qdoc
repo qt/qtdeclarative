@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -158,6 +158,9 @@ Elements that animate properties based on data types
 \o \l {PathLine} - Defines a line in \l {Path}
 \o \l {PathQuad} - Defines a quadratic Bezier curve in a \l {Path}
 \o \l {PathCubic} - Defines a cubic Bezier curve in a \l {Path}
+\o \l {PathArc} - Defines an arc in a \l {Path}
+\o \l {PathCurve} - Defines a point on a Catmull-Rom curve in a \l {Path}
+\o \l {PathSvg} - Defines a sub-path specified as a SVG path data string in a \l {Path}
 \o \l {PathAttribute} - Allows the setting of attributes along a \l {Path}
 \o \l {PathPercent} - Modifies the item distribution along a \l {Path}
 \endlist
@@ -177,6 +180,11 @@ Elements that animate properties based on data types
 \o \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
 \o \l {GridMesh} - Generates a gird mesh of vertices for use by ShaderEffect
 \o The \l{QtQuick.Particles 2} module provides a set of Particle System elements for QtQuick 2
+\endlist
+
+\section1 Accessibility
+\list
+\o \l {Accessible} - Attached property to make components accessible
 \endlist
 
 */

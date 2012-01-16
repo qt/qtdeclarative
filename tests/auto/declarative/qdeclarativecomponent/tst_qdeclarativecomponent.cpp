@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -59,7 +59,7 @@ protected:
     }
 };
 
-class tst_qdeclarativecomponent : public QObject
+class tst_qdeclarativecomponent : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -107,7 +107,7 @@ void tst_qdeclarativecomponent::loadEmptyUrl()
 
 void tst_qdeclarativecomponent::qmlIncubateObject()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("incubateObject.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("incubateObject.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property("test1").toBool(), true);
@@ -121,7 +121,7 @@ void tst_qdeclarativecomponent::qmlIncubateObject()
 void tst_qdeclarativecomponent::qmlCreateObject()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("createObject.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("createObject.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -138,7 +138,7 @@ void tst_qdeclarativecomponent::qmlCreateObject()
 void tst_qdeclarativecomponent::qmlCreateObjectWithProperties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("createObjectWithScript.qml")));
+    QDeclarativeComponent component(&engine, testFileUrl("createObjectWithScript.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QObject *object = component.create();
     QVERIFY(object != 0);

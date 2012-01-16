@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -417,7 +417,7 @@ bool QDeclarative1TextInputPrivate::determineHorizontalAlignment()
         if (text.isEmpty())
             text = control->preeditAreaText();
         bool isRightToLeft = text.isEmpty()
-                ? QApplication::keyboardInputDirection() == Qt::RightToLeft
+                ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
                 : text.isRightToLeft();
         return setHAlign(isRightToLeft ? QDeclarative1TextInput::AlignRight : QDeclarative1TextInput::AlignLeft);
     }
@@ -1065,8 +1065,10 @@ void QDeclarative1TextInputPrivate::focusChanged(bool hasFocus)
     q->setCursorVisible(hasFocus && scene && scene->hasFocus());
     if(!hasFocus && control->passwordEchoEditing())
         control->updatePasswordEchoEditing(false);//QWidgetLineControl sets it on key events, but doesn't deal with focus events
-    if (!hasFocus)
+    if (!hasFocus) {
+        control->commitPreedit();
         control->deselect();
+    }
     QDeclarativeItemPrivate::focusChanged(hasFocus);
 }
 

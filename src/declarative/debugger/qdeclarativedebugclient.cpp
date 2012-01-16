@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -75,7 +75,7 @@ public:
     QIODevice *device;
 
     bool gotHello;
-    QStringList serverPlugins;
+    QHash <QString, float> serverPlugins;
     QHash<QString, QDeclarativeDebugClient *> plugins;
 
     void advertisePlugins();
@@ -130,7 +130,21 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
                 int version = -1;
                 pack >> version;
                 if (version == protocolVersion) {
-                    pack >> serverPlugins;
+                    QStringList pluginNames;
+                    QList<float> pluginVersions;
+                    pack >> pluginNames;
+                    if (!pack.isEmpty())
+                        pack >> pluginVersions;
+
+                    const int pluginNamesSize = pluginNames.size();
+                    const int pluginVersionsSize = pluginVersions.size();
+                    for (int i = 0; i < pluginNamesSize; ++i) {
+                        float pluginVersion = 1.0;
+                        if (i < pluginVersionsSize)
+                            pluginVersion = pluginVersions.at(i);
+                        serverPlugins.insert(pluginNames.at(i), pluginVersion);
+                    }
+
                     validHello = true;
                 }
             }
@@ -163,8 +177,23 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
 
             if (op == 1) {
                 // Service Discovery
-                QStringList oldServerPlugins = serverPlugins;
-                pack >> serverPlugins;
+                QHash<QString, float> oldServerPlugins = serverPlugins;
+                serverPlugins.clear();
+
+                QStringList pluginNames;
+                QList<float> pluginVersions;
+                pack >> pluginNames;
+                if (!pack.isEmpty())
+                    pack >> pluginVersions;
+
+                const int pluginNamesSize = pluginNames.size();
+                const int pluginVersionsSize = pluginVersions.size();
+                for (int i = 0; i < pluginNamesSize; ++i) {
+                    float pluginVersion = 1.0;
+                    if (i < pluginVersionsSize)
+                        pluginVersion = pluginVersions.at(i);
+                    serverPlugins.insert(pluginNames.at(i), pluginVersion);
+                }
 
                 QHash<QString, QDeclarativeDebugClient *>::Iterator iter = plugins.begin();
                 for (; iter != plugins.end(); ++iter) {
@@ -343,6 +372,14 @@ QString QDeclarativeDebugClient::name() const
 {
     Q_D(const QDeclarativeDebugClient);
     return d->name;
+}
+
+float QDeclarativeDebugClient::serviceVersion() const
+{
+    Q_D(const QDeclarativeDebugClient);
+    if (d->connection->d->serverPlugins.contains(d->name))
+        return d->connection->d->serverPlugins.value(d->name);
+    return -1;
 }
 
 QDeclarativeDebugClient::Status QDeclarativeDebugClient::status() const

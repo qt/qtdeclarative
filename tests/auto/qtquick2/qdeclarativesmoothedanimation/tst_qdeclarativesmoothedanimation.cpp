@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -46,7 +46,7 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include "../../shared/util.h"
 
-class tst_qdeclarativesmoothedanimation : public QObject
+class tst_qdeclarativesmoothedanimation : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
@@ -71,7 +71,7 @@ tst_qdeclarativesmoothedanimation::tst_qdeclarativesmoothedanimation()
 void tst_qdeclarativesmoothedanimation::defaultValues()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("smoothedanimation1.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("smoothedanimation1.qml"));
     QDeclarativeSmoothedAnimation *obj = qobject_cast<QDeclarativeSmoothedAnimation*>(c.create());
 
     QVERIFY(obj != 0);
@@ -88,7 +88,7 @@ void tst_qdeclarativesmoothedanimation::defaultValues()
 void tst_qdeclarativesmoothedanimation::values()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("smoothedanimation2.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("smoothedanimation2.qml"));
     QDeclarativeSmoothedAnimation *obj = qobject_cast<QDeclarativeSmoothedAnimation*>(c.create());
 
     QVERIFY(obj != 0);
@@ -105,7 +105,7 @@ void tst_qdeclarativesmoothedanimation::values()
 void tst_qdeclarativesmoothedanimation::disabled()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("smoothedanimation3.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("smoothedanimation3.qml"));
     QDeclarativeSmoothedAnimation *obj = qobject_cast<QDeclarativeSmoothedAnimation*>(c.create());
 
     QVERIFY(obj != 0);
@@ -159,7 +159,7 @@ void tst_qdeclarativesmoothedanimation::valueSource()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("smoothedanimationValueSource.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("smoothedanimationValueSource.qml"));
 
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);
@@ -191,7 +191,7 @@ void tst_qdeclarativesmoothedanimation::behavior()
 {
     QDeclarativeEngine engine;
 
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("smoothedanimationBehavior.qml")));
+    QDeclarativeComponent c(&engine, testFileUrl("smoothedanimationBehavior.qml"));
 
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect);

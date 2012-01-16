@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -41,10 +41,8 @@
 
 #include "qv8engine_p.h"
 
-#include "qv8gccallback_p.h"
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
-#include "qv8gccallback_p.h"
 #include "qv8sequencewrapper_p.h"
 #include "qv8include_p.h"
 #include "qjsengine_p.h"
@@ -133,6 +131,8 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
         v8args.append(" --nobreakpoint_relocation");
     v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
 
+    ensurePerThreadIsolate();
+
     v8::HandleScope handle_scope;
     m_context = (ownership == QJSEngine::CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
     qPersistentRegister(m_context);
@@ -141,6 +141,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
 
     v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);
     QV8GCCallback::registerGcPrologueCallback();
+    m_strongReferencer = qPersistentNew(v8::Object::New());
 
     m_stringWrapper.init();
     m_contextWrapper.init(this);
@@ -150,8 +151,6 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
     m_sequenceWrapper.init(this);
-
-    QV8GCCallback::registerGcPrologueCallback();
 
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
@@ -178,6 +177,8 @@ QV8Engine::~QV8Engine()
 
     invalidateAllValues();
     clearExceptions();
+
+    qPersistentDispose(m_strongReferencer);
 
     m_sequenceWrapper.destroy();
     m_valueTypeWrapper.destroy();
@@ -527,16 +528,16 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 
     v8::Local<v8::Object> console = v8::Object::New();
     v8::Local<v8::Function> consoleLogFn = V8FUNCTION(consoleLog, this);
-    v8::Local<v8::Function> consoleWarnFn = V8FUNCTION(consoleWarn, this);
-    v8::Local<v8::Function> consoleErrorFn = V8FUNCTION(consoleError, this);
-    v8::Local<v8::Function> consoleTimeFn = V8FUNCTION(consoleTime, this);
-    v8::Local<v8::Function> consoleTimeEndFn = V8FUNCTION(consoleTimeEnd, this);
-    console->Set(v8::String::New("log"), consoleLogFn);
+
     console->Set(v8::String::New("debug"), consoleLogFn);
-    console->Set(v8::String::New("warn"), consoleWarnFn);
-    console->Set(v8::String::New("error"), consoleErrorFn);
-    console->Set(v8::String::New("time"), consoleTimeFn);
-    console->Set(v8::String::New("timeEnd"), consoleTimeEndFn);
+    console->Set(v8::String::New("error"), V8FUNCTION(consoleError, this));
+    console->Set(v8::String::New("log"), consoleLogFn);
+    console->Set(v8::String::New("profile"), V8FUNCTION(consoleProfile, this));
+    console->Set(v8::String::New("profileEnd"), V8FUNCTION(consoleProfileEnd, this));
+    console->Set(v8::String::New("time"), V8FUNCTION(consoleTime, this));
+    console->Set(v8::String::New("timeEnd"), V8FUNCTION(consoleTimeEnd, this));
+    console->Set(v8::String::New("trace"), V8FUNCTION(consoleTrace, this));
+    console->Set(v8::String::New("warn"), V8FUNCTION(consoleWarn, this));
 
     v8::Local<v8::Object> qt = v8::Object::New();
 
@@ -753,6 +754,37 @@ double QV8Engine::qtDateTimeToJsDate(const QDateTime &dt)
     return QV8DateConverter::JSC::gregorianDateTimeToMS(tm, time.msec());
 }
 
+v8::Persistent<v8::Object> *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
+{
+    QObject *parent = object->parent();
+    if (!parent) {
+        // if the object has JS ownership, the object's v8object owns the lifetime of the persistent value.
+        if (QDeclarativeEngine::objectOwnership(object) == QDeclarativeEngine::JavaScriptOwnership) {
+            *shouldBeStrong = false;
+            return &(QDeclarativeData::get(object)->v8object);
+        }
+
+        // no parent, and has CPP ownership - doesn't have an implicit parent.
+        *shouldBeStrong = true;
+        return 0;
+    }
+
+    // if it is owned by CPP, it's root parent may still be owned by JS.
+    // in that case, the owner of the persistent handle is the root parent's v8object.
+    while (parent->parent())
+        parent = parent->parent();
+
+    if (QDeclarativeEngine::objectOwnership(parent) == QDeclarativeEngine::JavaScriptOwnership) {
+        // root parent is owned by JS.  It's v8object owns the persistent value in question.
+        *shouldBeStrong = false;
+        return &(QDeclarativeData::get(parent)->v8object);
+    } else {
+        // root parent has CPP ownership.  The persistent value should not be made weak.
+        *shouldBeStrong = true;
+        return 0;
+    }
+}
+
 QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
 {
     // from QScriptEngine::MsToDateTime()
@@ -769,6 +801,51 @@ QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
     QDateTime convertedUTC = QDateTime(QDate(tm.year + 1900, tm.month + 1, tm.monthDay),
                                        QTime(tm.hour, tm.minute, tm.second, ms), Qt::UTC);
     return convertedUTC.toLocalTime();
+}
+
+void QV8Engine::addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle)
+{
+    if (handle.IsEmpty())
+        return;
+
+    bool handleShouldBeStrong = false;
+    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    if (handleShouldBeStrong) {
+        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
+    } else if (!implicitOwner->IsEmpty()) {
+        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
+    }
+}
+
+void QV8Engine::addRelationshipForGC(QObject *object, QObject *other)
+{
+    bool handleShouldBeStrong = false;
+    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    v8::Persistent<v8::Value> handle = QDeclarativeData::get(other, true)->v8object;
+    if (handleShouldBeStrong) {
+        v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
+    } else if (!implicitOwner->IsEmpty()) {
+        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
+    }
+}
+
+static QThreadStorage<QV8Engine::ThreadData*> perThreadEngineData;
+
+bool QV8Engine::hasThreadData()
+{
+    return perThreadEngineData.hasLocalData();
+}
+
+QV8Engine::ThreadData *QV8Engine::threadData()
+{
+    Q_ASSERT(perThreadEngineData.hasLocalData());
+    return perThreadEngineData.localData();
+}
+
+void QV8Engine::ensurePerThreadIsolate()
+{
+    if (!perThreadEngineData.hasLocalData())
+        perThreadEngineData.setLocalData(new ThreadData);
 }
 
 void QV8Engine::initDeclarativeGlobalObject()
@@ -1434,42 +1511,12 @@ qint64 QV8Engine::stopTimer(const QString &timerName, bool *wasRunning)
     return m_time.elapsed() - startedAt;
 }
 
-QThreadStorage<QV8GCCallback::ThreadData *> QV8GCCallback::threadData;
-void QV8GCCallback::initializeThreadData()
-{
-    QV8GCCallback::ThreadData *newThreadData = new QV8GCCallback::ThreadData;
-    threadData.setLocalData(newThreadData);
-}
-
 void QV8GCCallback::registerGcPrologueCallback()
 {
-    if (!threadData.hasLocalData())
-        initializeThreadData();
-
-    QV8GCCallback::ThreadData *td = threadData.localData();
+    QV8Engine::ThreadData *td = QV8Engine::threadData();
     if (!td->gcPrologueCallbackRegistered) {
         td->gcPrologueCallbackRegistered = true;
         v8::V8::AddGCPrologueCallback(QV8GCCallback::garbageCollectorPrologueCallback, v8::kGCTypeMarkSweepCompact);
-    }
-}
-
-void QV8GCCallback::ThreadData::releaseStrongReferencer()
-{
-    // NOTE: must be called with a valid current isolate
-    if (!referencer.strongReferencer.IsEmpty()) {
-        qPersistentDispose(referencer.strongReferencer);
-    }
-}
-
-void QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()
-{
-    // Note that only worker-thread implementations with their
-    // own QV8Engine should explicitly release the Referencer
-    // by calling this functions.
-    Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()", "called after v8::Isolate has exited");
-    if (threadData.hasLocalData()) {
-        QV8GCCallback::ThreadData *td = threadData.localData();
-        td->releaseStrongReferencer();
     }
 }
 
@@ -1481,81 +1528,6 @@ QV8GCCallback::Node::Node(PrologueCallback callback)
 QV8GCCallback::Node::~Node()
 {
     node.remove();
-}
-
-QV8GCCallback::Referencer::~Referencer()
-{
-    if (!strongReferencer.IsEmpty()) {
-        Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::Referencer::~Referencer()", "called after v8::Isolate has exited");
-        // automatically release the strongReferencer if it hasn't
-        // been explicitly released already.
-        qPersistentDispose(strongReferencer);
-    }
-}
-
-QV8GCCallback::Referencer::Referencer()
-{
-    v8::HandleScope handleScope;
-    v8::Handle<v8::Context> context = v8::Context::New();
-    v8::Context::Scope contextScope(context);
-    strongReferencer = qPersistentNew(v8::Object::New());
-}
-
-void QV8GCCallback::Referencer::addRelationship(QObject *object, QObject *other)
-{
-    bool handleShouldBeStrong = false;
-    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
-    v8::Persistent<v8::Value> handle = QDeclarativeData::get(other, true)->v8object;
-    if (handleShouldBeStrong) {
-        v8::V8::AddImplicitReferences(strongReferencer, &handle, 1);
-    } else if (!implicitOwner->IsEmpty()) {
-        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
-    }
-}
-
-void QV8GCCallback::Referencer::addRelationship(QObject *object, v8::Persistent<v8::Value> handle)
-{
-    if (handle.IsEmpty())
-        return;
-
-    bool handleShouldBeStrong = false;
-    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
-    if (handleShouldBeStrong) {
-        v8::V8::AddImplicitReferences(strongReferencer, &handle, 1);
-    } else if (!implicitOwner->IsEmpty()) {
-        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
-    }
-}
-
-v8::Persistent<v8::Object> *QV8GCCallback::Referencer::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
-{
-    QObject *parent = object->parent();
-    if (!parent) {
-        // if the object has JS ownership, the object's v8object owns the lifetime of the persistent value.
-        if (QDeclarativeEngine::objectOwnership(object) == QDeclarativeEngine::JavaScriptOwnership) {
-            *shouldBeStrong = false;
-            return &(QDeclarativeData::get(object)->v8object);
-        }
-
-        // no parent, and has CPP ownership - doesn't have an implicit parent.
-        *shouldBeStrong = true;
-        return 0;
-    }
-
-    // if it is owned by CPP, it's root parent may still be owned by JS.
-    // in that case, the owner of the persistent handle is the root parent's v8object.
-    while (parent->parent())
-        parent = parent->parent();
-
-    if (QDeclarativeEngine::objectOwnership(parent) == QDeclarativeEngine::JavaScriptOwnership) {
-        // root parent is owned by JS.  It's v8object owns the persistent value in question.
-        *shouldBeStrong = false;
-        return &(QDeclarativeData::get(parent)->v8object);
-    } else {
-        // root parent has CPP ownership.  The persistent value should not be made weak.
-        *shouldBeStrong = true;
-        return 0;
-    }
 }
 
 /*
@@ -1573,32 +1545,45 @@ v8::Persistent<v8::Object> *QV8GCCallback::Referencer::findOwnerAndStrength(QObj
  */
 void QV8GCCallback::garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags)
 {
-    if (!threadData.hasLocalData())
+    if (!QV8Engine::hasThreadData())
         return;
 
-    QV8GCCallback::ThreadData *td = threadData.localData();
+    QV8Engine::ThreadData *td = QV8Engine::threadData();
     QV8GCCallback::Node *currNode = td->gcCallbackNodes.first();
 
     while (currNode) {
         // The client which adds itself to the list is responsible
         // for maintaining the correct implicit references in the
         // specified callback.
-        currNode->prologueCallback(&td->referencer, currNode);
+        currNode->prologueCallback(currNode);
         currNode = td->gcCallbackNodes.next(currNode);
     }
 }
 
 void QV8GCCallback::addGcCallbackNode(QV8GCCallback::Node *node)
 {
-    if (!threadData.hasLocalData())
-        initializeThreadData();
-
-    QV8GCCallback::ThreadData *td = threadData.localData();
+    QV8Engine::ThreadData *td = QV8Engine::threadData();
     td->gcCallbackNodes.insert(node);
 }
 
-QV8GCCallback::ThreadData::~ThreadData()
+QV8Engine::ThreadData::ThreadData()
+    : gcPrologueCallbackRegistered(false)
 {
+    if (!v8::Isolate::GetCurrent()) {
+        isolate = v8::Isolate::New();
+        isolate->Enter();
+    } else {
+        isolate = 0;
+    }
+}
+
+QV8Engine::ThreadData::~ThreadData()
+{
+    if (isolate) {
+        isolate->Exit();
+        isolate->Dispose();
+        isolate = 0;
+    }
 }
 
 QT_END_NAMESPACE

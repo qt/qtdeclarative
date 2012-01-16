@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -124,19 +124,16 @@ void QQuickTouchPoint::setArea(const QRectF &area)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::TouchPoint::valid
+    \qmlproperty bool QtQuick2::TouchPoint::pressed
 
-    This property holds whether the touch point is valid.
-
-    An invalid touch point is one that has not yet been pressed,
-    or has already been released.
+    This property holds whether the touch point is currently pressed.
 */
-void QQuickTouchPoint::setValid(bool valid)
+void QQuickTouchPoint::setPressed(bool pressed)
 {
-    if (_valid == valid)
+    if (_pressed == pressed)
         return;
-    _valid = valid;
-    emit validityChanged();
+    _pressed = pressed;
+    emit pressedChanged();
 }
 
 /*!
@@ -232,43 +229,43 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::touchPointsPressed(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick2::MultiPointTouchArea::onPressed(list<TouchPoint> touchPoints)
 
     This handler is called when new touch points are added. \a touchPoints is a list of these new points.
 
     If minimumTouchPoints is set to a value greater than one, this handler will not be called until the minimum number
-    of required touch points has been reached. At that point, touchPointsPressed will be called with all the current touch points.
+    of required touch points has been reached. At that point, onPressed will be called with all the current touch points.
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::touchPointsUpdated(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick2::MultiPointTouchArea::onUpdated(list<TouchPoint> touchPoints)
 
     This handler is called when existing touch points are updated. \a touchPoints is a list of these updated points.
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::touchPointsReleased(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick2::MultiPointTouchArea::onReleased(list<TouchPoint> touchPoints)
 
     This handler is called when existing touch points are removed. \a touchPoints is a list of these removed points.
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::touchPointsCanceled(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick2::MultiPointTouchArea::onCanceled(list<TouchPoint> touchPoints)
 
     This handler is called when new touch events have been canceled because another element stole the touch event handling.
 
     This signal is for advanced use: it is useful when there is more than one MultiPointTouchArea
     that is handling input, or when there is a MultiPointTouchArea inside a \l Flickable. In the latter
-    case, if you execute some logic on the touchPointsPressed signal and then start dragging, the
+    case, if you execute some logic on the onPressed signal and then start dragging, the
     \l Flickable may steal the touch handling from the MultiPointTouchArea. In these cases, to reset
     the logic when the MultiPointTouchArea has lost the touch handling to the \l Flickable,
-    \c onTouchPointsCanceled should be used in addition to onTouchPointsReleased.
+    \c onCanceled should be used in addition to onReleased.
 
     \a touchPoints is the list of canceled points.
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::gestureStarted(GestureEvent gesture)
+    \qmlsignal QtQuick2::MultiPointTouchArea::onGestureStarted(GestureEvent gesture)
 
     This handler is called when the global drag threshold has been reached.
 
@@ -281,10 +278,10 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 */
 
 /*!
-    \qmlsignal QtQuick2::MultiPointTouchArea::touchUpdated(list<TouchPoint> touchPoints)
+    \qmlsignal QtQuick2::MultiPointTouchArea::onTouchUpdated(list<TouchPoint> touchPoints)
 
     This handler is called when the touch points handled by the MultiPointTouchArea change. This includes adding new touch points,
-    removing previous touch points, as well as updating current touch point data. \a touchPoints is the list of all current touch
+    removing or canceling previous touch points, as well as updating current touch point data. \a touchPoints is the list of all current touch
     points.
 */
 
@@ -417,25 +414,28 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     QList<QTouchEvent::TouchPoint> touchPoints = e->touchPoints();
     int numTouchPoints = touchPoints.count();
     //always remove released touches, and make sure we handle all releases before adds.
-    foreach (QTouchEvent::TouchPoint p, touchPoints) {
+    foreach (const QTouchEvent::TouchPoint &p, touchPoints) {
         Qt::TouchPointState touchPointState = p.state();
         int id = p.id();
         if (touchPointState & Qt::TouchPointReleased) {
             QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
             if (!dtp)
                 continue;
+            updateTouchPoint(dtp, &p);
+            dtp->setPressed(false);
             _releasedTouchPoints.append(dtp);
             _touchPoints.remove(id);
             ended = true;
         }
     }
     if (numTouchPoints >= _minimumTouchPoints && numTouchPoints <= _maximumTouchPoints) {
-        foreach (QTouchEvent::TouchPoint p, touchPoints) {
+        foreach (const QTouchEvent::TouchPoint &p, touchPoints) {
             Qt::TouchPointState touchPointState = p.state();
             int id = p.id();
             if (touchPointState & Qt::TouchPointReleased) {
                 //handled above
             } else if (!_touchPoints.contains(id)) { //could be pressed, moved, or stationary
+                // (we may have just obtained enough points to start tracking them -- in that case moved or stationary count as newly pressed)
                 addTouchPoint(&p);
                 started = true;
             } else if (touchPointState & Qt::TouchPointMoved) {
@@ -477,10 +477,19 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
             }
         }
 
-        if (ended) emit(touchPointsReleased(_releasedTouchPoints));
-        if (moved) emit(touchPointsUpdated(_movedTouchPoints));
-        if (started) emit(touchPointsPressed(_pressedTouchPoints));
-        if (!_touchPoints.isEmpty()) emit touchUpdated(_touchPoints.values());
+        if (ended) {
+            emit released(_releasedTouchPoints);
+            emit touchPointsReleased(_releasedTouchPoints);
+        }
+        if (moved) {
+            emit updated(_movedTouchPoints);
+            emit touchPointsUpdated(_movedTouchPoints);
+        }
+        if (started) {
+            emit pressed(_pressedTouchPoints);
+            emit touchPointsPressed(_pressedTouchPoints);
+        }
+        if (ended || moved || started) emit touchUpdated(_touchPoints.values());
     }
 }
 
@@ -491,7 +500,7 @@ void QQuickMultiPointTouchArea::clearTouchLists()
         if (!dtp->isQmlDefined())
             delete dtp;
         else
-            dtp->setValid(false);
+            dtp->setInUse(false);
     }
     _releasedTouchPoints.clear();
     _pressedTouchPoints.clear();
@@ -502,8 +511,8 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
 {
     QQuickTouchPoint *dtp = 0;
     foreach (QQuickTouchPoint* tp, _touchPrototypes) {
-        if (!tp->isValid()) {
-            tp->setValid(true);
+        if (!tp->inUse()) {
+            tp->setInUse(true);
             dtp = tp;
             break;
         }
@@ -513,10 +522,9 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
         dtp = new QQuickTouchPoint(false);
     dtp->setPointId(p->id());
     updateTouchPoint(dtp,p);
+    dtp->setPressed(true);
     _touchPoints.insert(p->id(),dtp);
-    //we may have just obtained enough points to start tracking them -- in that case moved or stationary count as newly pressed
-    if (p->state() & Qt::TouchPointPressed || p->state() & Qt::TouchPointMoved || p->state() & Qt::TouchPointStationary)
-        _pressedTouchPoints.append(dtp);
+    _pressedTouchPoints.append(dtp);
 }
 
 void QQuickMultiPointTouchArea::addTouchPrototype(QQuickTouchPoint *prototype)
@@ -586,6 +594,9 @@ void QQuickMultiPointTouchArea::ungrab()
             setKeepMouseGrab(false);
         }
         setKeepTouchGrab(false);
+        foreach (QObject *obj, _touchPoints)
+            static_cast<QQuickTouchPoint*>(obj)->setPressed(false);
+        emit canceled(_touchPoints.values());
         emit touchPointsCanceled(_touchPoints.values());
         clearTouchLists();
         foreach (QObject *obj, _touchPoints) {
@@ -593,9 +604,10 @@ void QQuickMultiPointTouchArea::ungrab()
             if (!dtp->isQmlDefined())
                 delete dtp;
             else
-                dtp->setValid(false);
+                dtp->setInUse(false);
         }
         _touchPoints.clear();
+        emit touchUpdated(QList<QObject*>());
     }
 }
 

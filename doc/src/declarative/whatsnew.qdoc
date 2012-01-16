@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -124,6 +124,12 @@ Text improvements:
  - a \c doLayout method was added to trigger the layout from Javascript.
  - now automatically switch to StyledText instead of RichText if textFormat is set to AutoText.
 
+TextEdit:
+ - the default value of the textFormat property is now PlainText instead of AutoText.
+
+TextInput has new wrapMode and verticalAlignment properties, and the positionAt function now takes
+a y parameter.
+
 PathView now has a \c currentItem property
 
 ListView and GridView:
@@ -136,6 +142,8 @@ at the start and/or next section label at the end of the view.
 A new property type ("var") has been introduced which obsoletes "variant" properties in QML.
 Properties of this type are equivalent to regular JavaScript variables.  See the documentation
 on \l{QML Basic Types} for more information about "var" properties.
+
+New elements have been added for contructing paths: PathArc, PathCurve, PathSvg.
 
 \section2 QtQuick 1 is now a separate library and module
 
