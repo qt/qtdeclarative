@@ -131,12 +131,14 @@ private:
     QList<QQuickSprite*> m_sprites;
     QQuickSpriteEngine* m_spriteEngine;
     QTime m_timestamp;
-    int m_maxFrames;
+    int m_curFrame;
     bool m_pleaseReset;
     bool m_running;
     bool m_interpolate;
     QString m_goalState;
     QString m_curState;
+    int m_curStateIdx;
+    QSizeF m_sheetSize;
 };
 
 QT_END_NAMESPACE

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: http://www.qt-project.org/
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -38,61 +38,29 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QtTest/QtTest>
-#include "../../shared/util.h"
-#include <QtQuick/qquickview.h>
-#include <private/qquickspriteimage_p.h>
 
-class tst_qquickspriteimage : public QDeclarativeDataTest
-{
-    Q_OBJECT
-public:
-    tst_qquickspriteimage(){}
+import QtQuick 2.0
 
-private slots:
-    void test_properties();
-    void test_framerateAdvance();//Separate codepath for QQuickSpriteEngine
-};
+Rectangle {
+    color: "black"
+    width: 320
+    height: 320
 
-void tst_qquickspriteimage::test_properties()
-{
-    QQuickView *canvas = new QQuickView(0);
-
-    canvas->setSource(testFileUrl("basic.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
-
-    QVERIFY(canvas->rootObject());
-    QQuickSpriteImage* sprite = canvas->rootObject()->findChild<QQuickSpriteImage*>("sprite");
-    QVERIFY(sprite);
-
-    QVERIFY(sprite->running());
-    QVERIFY(sprite->interpolate());
-
-    sprite->setRunning(false);
-    QVERIFY(!sprite->running());
-    sprite->setInterpolate(false);
-    QVERIFY(!sprite->interpolate());
-
-    delete canvas;
+    SpriteImage {
+        objectName: "sprite"
+        sprites: [Sprite {
+            name: "firstState"
+            source: "squarefacesprite.png"
+            frames: 3
+            duration: -1
+            to: {"secondState":1}
+        }, Sprite {
+            name: "secondState"
+            source: "squarefacesprite.png"
+            frames: 6
+            duration: -1
+        } ]
+        width: 160
+        height: 160
+    }
 }
-
-void tst_qquickspriteimage::test_framerateAdvance()
-{
-    QQuickView *canvas = new QQuickView(0);
-
-    canvas->setSource(testFileUrl("advance.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
-
-    QVERIFY(canvas->rootObject());
-    QQuickSpriteImage* sprite = canvas->rootObject()->findChild<QQuickSpriteImage*>("sprite");
-    QVERIFY(sprite);
-
-    QCOMPARE(sprite->currentSprite(), QLatin1String("secondState"));
-    delete canvas;
-}
-
-QTEST_MAIN(tst_qquickspriteimage)
-
-#include "tst_qquickspriteimage.moc"
