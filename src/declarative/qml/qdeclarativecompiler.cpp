@@ -404,6 +404,14 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
     return true;
 }
 
+static QUrl urlFromUserString(const QString &data)
+{
+    QUrl u;
+    // Preserve any valid percent-encoded octets supplied by the source
+    u.setEncodedUrl(data.toUtf8(), QUrl::TolerantMode);
+    return u;
+}
+
 /*!
     Generate a store instruction for assigning literal \a v to property \a prop.
 
@@ -511,7 +519,7 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             {
             Instruction::StoreUrl instr;
             QString string = v->value.asString();
-            QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
+            QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(urlFromUserString(string));
             instr.propertyIndex = prop->index;
             instr.value = output->indexForUrl(u);
             output->addInstruction(instr);
@@ -720,7 +728,7 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             } else if (type == qMetaTypeId<QList<QUrl> >()) {
                 Instruction::StoreUrlQList instr;
                 QString string = v->value.asString();
-                QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
+                QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(urlFromUserString(string));
                 instr.propertyIndex = prop->index;
                 instr.value = output->indexForUrl(u);
                 output->addInstruction(instr);

@@ -580,7 +580,9 @@ void tst_qdeclarativelanguage::assignBasicTypes()
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));
     QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2, 2.3));
-    QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
+    QUrl encoded;
+    encoded.setEncodedUrl("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
+    QCOMPARE(object->urlProperty(), component.url().resolved(encoded));
     QVERIFY(object->objectProperty() != 0);
     MyTypeObject *child = qobject_cast<MyTypeObject *>(object->objectProperty());
     QVERIFY(child != 0);

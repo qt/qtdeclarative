@@ -49,6 +49,7 @@
 #include <QtCore/qdir.h>
 #include "../../shared/util.h"
 
+#include <QDebug>
 class MyQmlObject : public QObject
 {
     Q_OBJECT
@@ -119,6 +120,9 @@ private slots:
     void writeListToList();
 
     //writeToReadOnly();
+
+    void urlHandling_data();
+    void urlHandling();
 
     // Bugs
     void crashOnValueProperty();
@@ -1336,6 +1340,110 @@ void tst_qdeclarativeproperty::writeListToList()
     typedObjList << new MyQmlObject();
     prop.write(qVariantFromValue(&typedObjList));
     QCOMPARE(container->children()->size(), 1);*/
+}
+
+void tst_qdeclarativeproperty::urlHandling_data()
+{
+    QTest::addColumn<QByteArray>("input");
+    QTest::addColumn<QString>("scheme");
+    QTest::addColumn<QString>("path");
+    QTest::addColumn<QByteArray>("encoded");
+
+    QTest::newRow("unspecifiedFile")
+        << QByteArray("main.qml")
+        << QString("")
+        << QString("main.qml")
+        << QByteArray("main.qml");
+
+    QTest::newRow("specifiedFile")
+        << QByteArray("file:///main.qml")
+        << QString("file")
+        << QString("/main.qml")
+        << QByteArray("file:///main.qml");
+
+    QTest::newRow("httpFile")
+        << QByteArray("http://www.example.com/main.qml")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml");
+
+    QTest::newRow("pathFile")
+        << QByteArray("http://www.example.com/resources/main.qml")
+        << QString("http")
+        << QString("/resources/main.qml")
+        << QByteArray("http://www.example.com/resources/main.qml");
+
+    QTest::newRow("encodableName")
+        << QByteArray("http://www.example.com/main file.qml")
+        << QString("http")
+        << QString("/main file.qml")
+        << QByteArray("http://www.example.com/main%20file.qml");
+
+    QTest::newRow("preencodedName")
+        << QByteArray("http://www.example.com/resources%7cmain%20file.qml")
+        << QString("http")
+        << QString("/resources|main file.qml")
+        << QByteArray("http://www.example.com/resources%7cmain%20file.qml");
+
+    QTest::newRow("encodableQuery")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now working?")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now%20working?");
+
+    QTest::newRow("preencodedQuery")
+        << QByteArray("http://www.example.com/main.qml?type=text%2fqml&comment=now working%3f")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text%2fqml&comment=now%20working%3f");
+
+    QTest::newRow("encodableFragment")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000|volume+50%")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7Cvolume+50%25");
+
+    QTest::newRow("preencodedFragment")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7cvolume%2b50%")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7cvolume%2b50%25");
+}
+
+void tst_qdeclarativeproperty::urlHandling()
+{
+    QFETCH(QByteArray, input);
+    QFETCH(QString, scheme);
+    QFETCH(QString, path);
+    QFETCH(QByteArray, encoded);
+
+    QString inputString(QString::fromUtf8(input));
+
+    {
+        PropertyObject o;
+        QDeclarativeProperty p(&o, "url");
+
+        // Test url written as QByteArray
+        QCOMPARE(p.write(input), true);
+        QUrl byteArrayResult(o.url());
+
+        QCOMPARE(byteArrayResult.scheme(), scheme);
+        QCOMPARE(byteArrayResult.path(), path);
+        QCOMPARE(byteArrayResult.toEncoded(), encoded);
+    }
+
+    {
+        PropertyObject o;
+        QDeclarativeProperty p(&o, "url");
+
+        // Test url written as QString
+        QCOMPARE(p.write(inputString), true);
+        QUrl stringResult(o.url());
+
+        QCOMPARE(stringResult.scheme(), scheme);
+        QCOMPARE(stringResult.path(), path);
+        QCOMPARE(stringResult.toEncoded(), encoded);
+    }
 }
 
 void tst_qdeclarativeproperty::crashOnValueProperty()

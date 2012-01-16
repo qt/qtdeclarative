@@ -420,15 +420,16 @@ inline static QUrl toUrl(Register *reg, int type, QDeclarativeContextData *conte
         if (vt == QVariant::Url) {
             base = var->toUrl();
         } else if (vt == QVariant::ByteArray) {
-            base = QUrl(QString::fromUtf8(var->toByteArray()));
+            // Preserve any valid percent-encoded octets supplied by the source
+            base.setEncodedUrl(var->toByteArray(), QUrl::TolerantMode);
         } else if (vt == QVariant::String) {
-            base = QUrl(var->toString());
+            base.setEncodedUrl(var->toString().toUtf8(), QUrl::TolerantMode);
         } else {
             if (ok) *ok = false;
             return QUrl();
         }
     } else if (type == QMetaType::QString) {
-        base = QUrl(*reg->getstringptr());
+        base.setEncodedUrl(reg->getstringptr()->toUtf8(), QUrl::TolerantMode);
     } else {
         if (ok) *ok = false;
         return QUrl();
@@ -1012,7 +1013,10 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
             }
-            new (output.geturlptr()) QUrl(tmp);
+            QUrl *urlPtr = output.geturlptr();
+            new (urlPtr) QUrl();
+            urlPtr->setEncodedUrl(tmp.toUtf8(), QUrl::TolerantMode);
+
             URL_REGISTER(instr->unaryop.output);
         }
     }

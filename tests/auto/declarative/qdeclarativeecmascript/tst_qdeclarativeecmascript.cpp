@@ -213,6 +213,8 @@ private slots:
     void aliasToCompositeElement();
     void realToInt();
     void urlProperty();
+    void urlPropertyWithEncoding();
+    void urlListPropertyWithEncoding();
     void dynamicString();
     void include();
     void signalHandlers();
@@ -5516,6 +5518,42 @@ void tst_qdeclarativeecmascript::urlProperty()
         QCOMPARE(object->intProperty(), 123);
         QCOMPARE(object->value(), 1);
         QCOMPARE(object->property("result").toBool(), true);
+    }
+}
+
+void tst_qdeclarativeecmascript::urlPropertyWithEncoding()
+{
+    {
+        QDeclarativeComponent component(&engine, testFileUrl("urlProperty.2.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+        QVERIFY(object != 0);
+        object->setStringProperty("http://qt-project.org");
+        QUrl encoded;
+        encoded.setEncodedUrl("http://qt-project.org/?get%3cDATA%3e", QUrl::TolerantMode);
+        QCOMPARE(object->urlProperty(), encoded);
+        QCOMPARE(object->value(), 0);   // Interpreting URL as string yields canonicalised version
+        QCOMPARE(object->property("result").toBool(), true);
+    }
+}
+
+void tst_qdeclarativeecmascript::urlListPropertyWithEncoding()
+{
+    {
+        QDeclarativeComponent component(&engine, testFileUrl("urlListProperty.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        MySequenceConversionObject *msco1 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco1"));
+        MySequenceConversionObject *msco2 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco2"));
+        MySequenceConversionObject *msco3 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco3"));
+        MySequenceConversionObject *msco4 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco4"));
+        QVERIFY(msco1 != 0 && msco2 != 0 && msco3 != 0 && msco4 != 0);
+        QUrl encoded;
+        encoded.setEncodedUrl("http://qt-project.org/?get%3cDATA%3e", QUrl::TolerantMode);
+        QCOMPARE(msco1->urlListProperty(), (QList<QUrl>() << encoded));
+        QCOMPARE(msco2->urlListProperty(), (QList<QUrl>() << encoded));
+        QCOMPARE(msco3->urlListProperty(), (QList<QUrl>() << encoded << encoded));
+        QCOMPARE(msco4->urlListProperty(), (QList<QUrl>() << encoded << encoded));
+        delete object;
     }
 }
 
