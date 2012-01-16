@@ -66,7 +66,7 @@ public:
 
 QDebugMessageService::QDebugMessageService(QObject *parent) :
     QDeclarativeDebugService(*(new QDebugMessageServicePrivate()),
-                                   QLatin1String("DebugMessages"), 1, parent)
+                                   QLatin1String("DebugMessages"), 2, parent)
 {
     Q_D(QDebugMessageService);
 
@@ -89,13 +89,9 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type, const char *buf)
     //We do not want to alter the message handling mechanism
     //We just eavesdrop and forward the messages to a port
     //only if a client is connected to it.
-    QByteArray debugMessage;
-    QDataStream rs(&debugMessage, QIODevice::WriteOnly);
-    rs << type << QString::fromLocal8Bit(buf).toUtf8();
-
     QByteArray message;
     QDataStream ws(&message, QIODevice::WriteOnly);
-    ws << QByteArray("MESSAGE") << debugMessage;
+    ws << QByteArray("MESSAGE") << type << QString::fromLocal8Bit(buf).toUtf8();
 
     sendMessage(message);
     if (d->oldMsgHandler)

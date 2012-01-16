@@ -119,16 +119,10 @@ void QDeclarativeDebugMsgClient::messageReceived(const QByteArray &data)
     ds >> command;
 
     if (command == "MESSAGE") {
-        QByteArray container;
-        ds >> container;
-
-        QVERIFY(ds.atEnd());
-
-        QDataStream containerDs(container);
         int type;
         QByteArray message;
-        containerDs >> type >> message;
-        QVERIFY(containerDs.atEnd());
+        ds >> type >> message;
+        QVERIFY(ds.atEnd());
 
         QVERIFY(type >= QtDebugMsg);
         QVERIFY(type <= QtFatalMsg);
