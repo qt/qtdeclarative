@@ -256,7 +256,7 @@ void QuickTestResult::setSkipped(bool skip)
 */
 int QuickTestResult::passCount() const
 {
-    return QTestResult::passCount();
+    return QTestLog::passCount();
 }
 
 /*!
@@ -268,7 +268,7 @@ int QuickTestResult::passCount() const
 */
 int QuickTestResult::failCount() const
 {
-    return QTestResult::failCount();
+    return QTestLog::failCount();
 }
 
 /*!
@@ -280,7 +280,7 @@ int QuickTestResult::failCount() const
 */
 int QuickTestResult::skipCount() const
 {
-    return QTestResult::skipCount();
+    return QTestLog::skipCount();
 }
 
 /*!
@@ -582,7 +582,7 @@ int QuickTestResult::exitCode()
 #else
     // make sure our exit code is never going above 127
     // since that could wrap and indicate 0 test fails
-    return qMin(QTestResult::failCount(), 127);
+    return qMin(QTestLog::failCount(), 127);
 #endif
 }
 
