@@ -39,12 +39,42 @@
 **
 ****************************************************************************/
 
+
 import QtQuick 2.0
 
-Item {
-    width: 360
-    height: 360
-    Component.onCompleted:  {
-        console.log("console.log")
+QtObject {
+    id:root
+    Component.onCompleted: {
+        console.debug("console.debug");
+        console.log("console.log");
+        console.warn("console.warn");
+        console.error("console.error");
+
+        var a = [1, 2];
+        var b = {a: "hello", d: 1 };
+        var c
+        var d = 12;
+        var e = function() { return 5;};
+        var f = true;
+        var g = {toString: function() { throw new Error('toString'); }};
+
+        console.log(a);
+        console.log(b);
+        console.log(c);
+        console.log(d);
+        console.log(e);
+        console.log(f);
+        console.log(root);
+        console.log(g);
+        console.log(1, "pong!", new Object);
+        console.log(1, ["ping","pong"], new Object, 2);
+
+        try {
+            console.log(exception);
+        } catch (e) {
+            return;
+        }
+
+        throw ("console.log(exception) should have raised an exception");
     }
 }

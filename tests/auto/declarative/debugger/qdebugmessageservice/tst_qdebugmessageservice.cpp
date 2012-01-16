@@ -48,7 +48,7 @@
 #include <QtCore/QString>
 #include <QtTest/QtTest>
 
-const char *NORMALMODE = "-qmljsdebugger=port:3777";
+const char *NORMALMODE = "-qmljsdebugger=port:3777,block";
 const char *QMLFILE = "test.qml";
 
 class QDeclarativeDebugMsgClient;
@@ -74,6 +74,16 @@ private:
     QDeclarativeDebugConnection *m_connection;
 };
 
+struct LogEntry {
+    LogEntry(QtMsgType _type, QString _message)
+        : type(_type), message(_message) {}
+
+    QtMsgType type;
+    QString message;
+
+    QString toString() const { return QString::number(type) + ": " + message; }
+};
+
 class QDeclarativeDebugMsgClient : public QDeclarativeDebugClient
 {
     Q_OBJECT
@@ -83,6 +93,8 @@ public:
     {
     }
 
+    QList<LogEntry> logBuffer;
+
 protected:
     //inherited from QDeclarativeDebugClient
     void statusChanged(Status status);
@@ -91,9 +103,6 @@ protected:
 signals:
     void enabled();
     void debugOutput();
-
-public:
-    QByteArray debugMessage;
 };
 
 void QDeclarativeDebugMsgClient::statusChanged(Status status)
@@ -110,9 +119,24 @@ void QDeclarativeDebugMsgClient::messageReceived(const QByteArray &data)
     ds >> command;
 
     if (command == "MESSAGE") {
+        QByteArray container;
+        ds >> container;
+
+        QVERIFY(ds.atEnd());
+
+        QDataStream containerDs(container);
         int type;
-        ds >> type >> debugMessage;
+        QByteArray message;
+        containerDs >> type >> message;
+        QVERIFY(containerDs.atEnd());
+
+        QVERIFY(type >= QtDebugMsg);
+        QVERIFY(type <= QtFatalMsg);
+
+        logBuffer << LogEntry((QtMsgType)type, QString::fromUtf8(message));
         emit debugOutput();
+    } else {
+        QFAIL("Unknown message");
     }
 }
 
@@ -146,6 +170,7 @@ void tst_QDebugMessageService::init()
     m_process = new QDeclarativeDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     m_client = new QDeclarativeDebugMsgClient(m_connection);
 
+    m_process->setEnvironment(QProcess::systemEnvironment() << "QML_CONSOLE_EXTENDED=1");
     m_process->start(QStringList() << QLatin1String(NORMALMODE) << QDeclarativeDataTest::instance()->testFile(QMLFILE));
     if (!m_process->waitForSessionStart()) {
         QFAIL(QString("Could not launch app. Application output: \n%1").arg(m_process->output()).toAscii());
@@ -177,8 +202,15 @@ void tst_QDebugMessageService::cleanup()
 
 void tst_QDebugMessageService::retrieveDebugOutput()
 {
-    if (m_client->debugMessage.isEmpty())
-        QVERIFY(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput())));
+    if (m_client->logBuffer.isEmpty())
+        QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()));
+    QVERIFY(!m_client->logBuffer.isEmpty());
+
+
+    QString msg = QString::fromLatin1("console.log (%1:%2)").arg(
+                QUrl::fromLocalFile(QDeclarativeDataTest::instance()->testFile(QMLFILE)).toString()).arg(48);
+    QCOMPARE(m_client->logBuffer.last().toString(),
+             LogEntry(QtDebugMsg, msg).toString());
 }
 
 QTEST_MAIN(tst_QDebugMessageService)

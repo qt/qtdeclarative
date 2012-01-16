@@ -51,57 +51,70 @@ public:
     tst_qdeclarativeconsole() {}
 
 private slots:
-    void init();
-    void consoleLogExtended();
+    void logging();
+    void tracing();
+    void profiling();
 
 private:
     QDeclarativeEngine engine;
 };
 
-void tst_qdeclarativeconsole::init()
+void tst_qdeclarativeconsole::logging()
 {
-    qputenv("QML_CONSOLE_EXTENDED", QByteArray("1"));
-}
+    QUrl testUrl = testFileUrl("logging.qml");
 
-void tst_qdeclarativeconsole::consoleLogExtended()
-{
-    int startLineNumber = 15;
-    QUrl testUrl = testFileUrl("consoleLog.qml");
-    const QString testUrlString = testUrl.toString();
-    QString testString = QString(QLatin1String("completed ok (%1:%2)")).arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(testString.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtCriticalMsg, qPrintable(testString.arg(startLineNumber++)));
+    QTest::ignoreMessage(QtDebugMsg, "console.debug");
+    QTest::ignoreMessage(QtDebugMsg, "console.log");
+    QTest::ignoreMessage(QtWarningMsg, "console.warn");
+    QTest::ignoreMessage(QtCriticalMsg, "console.error");
 
-    QString testArray = QString(QLatin1String("[1,2] (%1:%2)")).arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testArray.arg(startLineNumber++)));
-    QString testObject = QString(QLatin1String("Object (%1:%2)")).arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
-    QString testUndefined = QString(QLatin1String("undefined (%1:%2)")).arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testUndefined.arg(startLineNumber++)));
-    QString testNumber = QString(QLatin1String("12 (%1:%2)")).arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testNumber.arg(startLineNumber++)));
-    QString testFunction = QString(QLatin1String("function () { return 5;} (%1:%2)")).arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testFunction.arg(startLineNumber++)));
-    QString testBoolean = QString(QLatin1String("true (%1:%2)")).arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testBoolean.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testObject.arg(startLineNumber++)));
-    QString testMix = QString::fromLatin1("1 pong! Object (%1:%2)").arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testMix.arg(startLineNumber++)));
-    testMix = QString::fromLatin1("1 [ping,pong] Object 2 (%1:%2)").arg(testUrlString);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testMix.arg(startLineNumber++)));
+    QTest::ignoreMessage(QtDebugMsg, "[1,2]");
+    QTest::ignoreMessage(QtDebugMsg, "Object");
+    QTest::ignoreMessage(QtDebugMsg, "undefined");
+    QTest::ignoreMessage(QtDebugMsg, "12");
+    QTest::ignoreMessage(QtDebugMsg, "function () { return 5;}");
+    QTest::ignoreMessage(QtDebugMsg, "true");
+    QTest::ignoreMessage(QtDebugMsg, "Object");
+    QTest::ignoreMessage(QtDebugMsg, "Object");
+    QTest::ignoreMessage(QtDebugMsg, "1 pong! Object");
+    QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] Object 2");
 
-    QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testUrlString);
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(testException.arg(startLineNumber++)));
 
     QDeclarativeComponent component(&engine, testUrl);
     QObject *object = component.create();
     QVERIFY(object != 0);
     delete object;
 }
+
+void tst_qdeclarativeconsole::tracing()
+{
+    QUrl testUrl = testFileUrl("tracing.qml");
+
+    QString trace1 = QString::fromLatin1("tracing (%1:%2:%3)\n").arg(testUrl.toString()).arg(50).arg(17);
+    QString trace2 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(54).arg(9);
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace1));
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace2));
+
+    QDeclarativeComponent component(&engine, testUrl);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    delete object;
+}
+
+void tst_qdeclarativeconsole::profiling()
+{
+    QUrl testUrl = testFileUrl("profiling.qml");
+
+    // profiling()
+    QTest::ignoreMessage(QtDebugMsg, "Profiling started.");
+    QTest::ignoreMessage(QtDebugMsg, "Profiling ended.");
+
+    QDeclarativeComponent component(&engine, testUrl);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    delete object;
+}
+
 
 QTEST_MAIN(tst_qdeclarativeconsole)
 

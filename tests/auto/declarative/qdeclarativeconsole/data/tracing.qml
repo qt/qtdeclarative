@@ -41,10 +41,16 @@
 
 import QtQuick 2.0
 
-Item {
-    width: 360
-    height: 360
-    Component.onCompleted:  {
-        console.log("console.log")
+// moving lines in here requires fixing tst_qdeclarativeconsole.cpp
+QtObject {
+    id: root
+
+    function tracing()
+    {
+        console.trace();
+    }
+
+    Component.onCompleted: {
+        tracing();
     }
 }

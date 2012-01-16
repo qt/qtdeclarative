@@ -41,10 +41,11 @@
 
 import QtQuick 2.0
 
-Item {
-    width: 360
-    height: 360
-    Component.onCompleted:  {
-        console.log("console.log")
+QtObject {
+    Component.onCompleted: {
+        console.profile("profile1");
+        console.time("timer1");
+        console.timeEnd("timer1");
+        console.profileEnd("profile1");
     }
 }
