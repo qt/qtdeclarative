@@ -225,7 +225,7 @@ private:
     QRectF m_sourceRect;
     QString m_name;
     QDeclarativeComponent *m_effectComponent;
-    QQuickShaderEffect *m_effect;
+    QQuickItem *m_effect;
     QQuickShaderEffectSource *m_effectSource;
 };
 

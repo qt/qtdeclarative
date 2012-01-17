@@ -5497,9 +5497,9 @@ void QQuickItemLayer::activateEffect()
     Q_ASSERT(!m_effect);
 
     QObject *created = m_effectComponent->create();
-    m_effect = qobject_cast<QQuickShaderEffect *>(created);
+    m_effect = qobject_cast<QQuickItem *>(created);
     if (!m_effect) {
-        qWarning("Item: layer.effect is not a ShaderEffect.");
+        qWarning("Item: layer.effect is not a QML Item.");
         delete created;
         return;
     }
@@ -5527,7 +5527,8 @@ void QQuickItemLayer::deactivateEffect()
 
     Holds the effect that is applied to this layer.
 
-    The effect must be a \l ShaderEffect.
+    The effect is typically a \l ShaderEffect component, although any \l Item component can be
+    assigned. The effect should have a source texture property with a name matching \l samplerName.
 
     \sa samplerName
  */

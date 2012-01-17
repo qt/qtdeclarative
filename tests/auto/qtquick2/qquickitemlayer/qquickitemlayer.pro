@@ -25,7 +25,9 @@ OTHER_FILES += \
     data/ZOrderChange.qml \
     data/ToggleLayerAndEffect.qml \
     data/DisableLayer.qml \
-    data/SamplerNameChange.qml
+    data/SamplerNameChange.qml \
+    data/ItemEffect.qml \
+    data/RectangleEffect.qml
 
 
 

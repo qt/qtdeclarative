@@ -86,6 +86,8 @@ private slots:
     void toggleLayerAndEffect();
     void disableLayer();
     void changeSamplerName();
+    void itemEffect();
+    void rectangleEffect();
 
 private:
     bool m_isMesaSoftwareRasterizer;
@@ -402,6 +404,32 @@ void tst_QQuickItemLayer::changeSamplerName()
     QImage fb = runTest(testFile("SamplerNameChange.qml"));
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
 }
+
+void tst_QQuickItemLayer::itemEffect()
+{
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+    QImage fb = runTest(testFile("ItemEffect.qml"));
+    QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
+    QCOMPARE(fb.pixel(199, 0), qRgb(0xff, 0, 0));
+    QCOMPARE(fb.pixel(0, 199), qRgb(0, 0, 0xff));
+    QCOMPARE(fb.pixel(199, 199), qRgb(0, 0, 0xff));
+}
+
+void tst_QQuickItemLayer::rectangleEffect()
+{
+    QImage fb = runTest(testFile("RectangleEffect.qml"));
+    QCOMPARE(fb.pixel(0, 0), qRgb(0, 0xff, 0));
+    QCOMPARE(fb.pixel(199, 0), qRgb(0, 0xff, 0));
+    QCOMPARE(fb.pixel(0, 199), qRgb(0, 0xff, 0));
+    QCOMPARE(fb.pixel(199, 199), qRgb(0, 0xff, 0));
+
+    QCOMPARE(fb.pixel(100, 0), qRgb(0, 0, 0xff));
+    QCOMPARE(fb.pixel(199, 100), qRgb(0, 0, 0xff));
+    QCOMPARE(fb.pixel(100, 199), qRgb(0, 0, 0xff));
+    QCOMPARE(fb.pixel(0, 100), qRgb(0, 0, 0xff));
+}
+
 
 QTEST_MAIN(tst_QQuickItemLayer)
 
