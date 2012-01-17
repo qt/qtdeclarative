@@ -117,6 +117,11 @@ function f() {
 }
 \endqml
 
+\section2 Exception
+
+\c console.exception prints an error message together with the stack trace of JavaScript
+execution at the point where it is called.
+
 \section1 Debugging Transitions
 
 When a transition doesn't look quite right, it can be helpful to view it in slow

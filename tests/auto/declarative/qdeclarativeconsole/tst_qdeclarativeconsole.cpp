@@ -55,6 +55,7 @@ private slots:
     void tracing();
     void profiling();
     void assert();
+    void exception();
 
 private:
     QDeclarativeEngine engine;
@@ -131,6 +132,26 @@ void tst_qdeclarativeconsole::assert()
     QString trace1 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(54).arg(17);
     QString trace2 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(59).arg(9);
     QString trace3 = QString::fromLatin1("assertFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(47).arg(17);
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace1));
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace2));
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace3));
+
+    QDeclarativeComponent component(&engine, testUrl);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    delete object;
+}
+
+void tst_qdeclarativeconsole::exception()
+{
+    QUrl testUrl = testFileUrl("exception.qml");
+
+    // exception()
+    QTest::ignoreMessage(QtCriticalMsg, "Exception 1");
+    QTest::ignoreMessage(QtCriticalMsg, "Exception 2");
+    QString trace1 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(51).arg(21);
+    QString trace2 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(56).arg(9);
+    QString trace3 = QString::fromLatin1("exceptionFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(46).arg(17);
     QTest::ignoreMessage(QtDebugMsg, qPrintable(trace1));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(trace2));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(trace3));

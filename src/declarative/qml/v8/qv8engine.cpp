@@ -538,6 +538,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     console->Set(v8::String::New("time"), V8FUNCTION(consoleTime, this));
     console->Set(v8::String::New("timeEnd"), V8FUNCTION(consoleTimeEnd, this));
     console->Set(v8::String::New("trace"), V8FUNCTION(consoleTrace, this));
+    console->Set(v8::String::New("exception"), V8FUNCTION(consoleException, this));
 
     v8::Local<v8::Object> qt = v8::Object::New();
 

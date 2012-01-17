@@ -71,6 +71,7 @@ v8::Handle<v8::Value> consoleCount(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleException(const v8::Arguments &args);
 v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);
 v8::Handle<v8::Value> rgba(const v8::Arguments &args);
 v8::Handle<v8::Value> hsla(const v8::Arguments &args);

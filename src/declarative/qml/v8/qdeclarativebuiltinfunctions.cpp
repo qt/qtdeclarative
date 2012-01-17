@@ -299,6 +299,16 @@ v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
     return v8::Undefined();
 }
 
+v8::Handle<v8::Value> consoleException(const v8::Arguments &args)
+{
+    if (args.Length() == 0)
+        V8THROW_ERROR("console.exception(): Missing argument");
+    console(Error, args);
+    printStack();
+
+    return v8::Undefined();
+}
+
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
 {
     QString value = V8ENGINE()->toString(args.This()->ToString());
