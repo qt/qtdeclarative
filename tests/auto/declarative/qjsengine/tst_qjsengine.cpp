@@ -2105,7 +2105,7 @@ void tst_QJSEngine::evaluate()
 #endif
     if (eng.hasUncaughtException() && ret.isError()) {
         QEXPECT_FAIL("", "we have no more lineNumber property ", Continue);
-        QVERIFY(ret.property("lineNumber").strictlyEquals(QJSValue(&eng, expectErrorLineNumber)));
+        QVERIFY(ret.property("lineNumber").strictlyEquals(eng.toScriptValue(expectErrorLineNumber)));
     } else {
 #if 0 // ###FIXME: No support for the backtrace of an uncaught exception
         QVERIFY(eng.uncaughtExceptionBacktrace().isEmpty());
@@ -2276,8 +2276,8 @@ void tst_QJSEngine::getSetDefaultPrototype_customType()
 static QJSValue fooToScriptValue(QJSEngine *eng, const Foo &foo)
 {
     QJSValue obj = eng->newObject();
-    obj.setProperty("x", QJSValue(eng, foo.x));
-    obj.setProperty("y", QJSValue(eng, foo.y));
+    obj.setProperty("x", eng->toScriptValue(foo.x));
+    obj.setProperty("y", eng->toScriptValue(foo.y));
     return obj;
 }
 
@@ -2289,7 +2289,7 @@ static void fooFromScriptValue(const QJSValue &value, Foo &foo)
 
 static QJSValue fooToScriptValueV2(QJSEngine *eng, const Foo &foo)
 {
-    return QJSValue(eng, foo.x);
+    return eng->toScriptValue(foo.x);
 }
 
 static void fooFromScriptValueV2(const QJSValue &value, Foo &foo)
@@ -2310,7 +2310,7 @@ void tst_QJSEngine::valueConversion_basic()
     {
         QJSValue num = eng.toScriptValue(123);
         QCOMPARE(num.isNumber(), true);
-        QCOMPARE(num.strictlyEquals(QJSValue(&eng, 123)), true);
+        QCOMPARE(num.strictlyEquals(eng.toScriptValue(123)), true);
 
         int inum = eng.fromScriptValue<int>(num);
         QCOMPARE(inum, 123);
@@ -2321,7 +2321,7 @@ void tst_QJSEngine::valueConversion_basic()
     {
         QJSValue num = eng.toScriptValue(123);
         QCOMPARE(num.isNumber(), true);
-        QCOMPARE(num.strictlyEquals(QJSValue(&eng, 123)), true);
+        QCOMPARE(num.strictlyEquals(eng.toScriptValue(123)), true);
 
         int inum = eng.fromScriptValue<int>(num);
         QCOMPARE(inum, 123);
@@ -2330,7 +2330,7 @@ void tst_QJSEngine::valueConversion_basic()
         QCOMPARE(snum, QLatin1String("123"));
     }
     {
-        QJSValue num(&eng, 123);
+        QJSValue num = eng.toScriptValue(123);
         QCOMPARE(eng.fromScriptValue<char>(num), char(123));
         QCOMPARE(eng.fromScriptValue<unsigned char>(num), (unsigned char)(123));
         QCOMPARE(eng.fromScriptValue<short>(num), short(123));
@@ -2360,9 +2360,9 @@ void tst_QJSEngine::valueConversion_basic()
 
     {
         QChar c = QLatin1Char('c');
-        QJSValue str = QJSValue(&eng, QLatin1String("ciao"));
+        QJSValue str = eng.toScriptValue(QString::fromLatin1("ciao"));
         QCOMPARE(eng.fromScriptValue<QChar>(str), c);
-        QJSValue code = QJSValue(&eng, c.unicode());
+        QJSValue code = eng.toScriptValue(c.unicode());
         QCOMPARE(eng.fromScriptValue<QChar>(code), c);
         QCOMPARE(eng.fromScriptValue<QChar>(eng.toScriptValue(c)), c);
     }
@@ -3906,7 +3906,7 @@ void tst_QJSEngine::printThrowsException()
     QJSEngine eng;
     QJSValue ret = eng.evaluate("print({ toString: function() { throw 'foo'; } });");
     QVERIFY(eng.hasUncaughtException());
-    QVERIFY(ret.strictlyEquals(QJSValue(&eng, QLatin1String("foo"))));
+    QVERIFY(ret.strictlyEquals(eng.toScriptValue(QLatin1String("foo"))));
 }
 #endif
 
@@ -4293,14 +4293,14 @@ void tst_QJSEngine::stringObjects()
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
             QEXPECT_FAIL("", "FIXME: This is V8 issue 862. ECMA script standard 15.5.5.2 compliance.", Continue);
             QVERIFY(!obj.deleteProperty(pname));
-            obj.setProperty(pname, QJSValue(&eng, 123));
+            obj.setProperty(pname, 123);
             QVERIFY(obj.property(pname).isString());
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
         }
         QVERIFY(obj.property("-1").isUndefined());
         QVERIFY(obj.property(QString::number(str.length())).isUndefined());
 
-        QJSValue val(&eng, 123);
+        QJSValue val = eng.toScriptValue(123);
         obj.setProperty("-1", val);
         QVERIFY(obj.property("-1").strictlyEquals(val));
         obj.setProperty("100", val);

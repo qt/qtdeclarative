@@ -109,11 +109,11 @@ void tst_QJSValueIterator::iterateForward()
         QString name = propertyNames.at(i);
         QString value = propertyValues.at(i);
         pmap.insert(name, value);
-        object.setProperty(name, QJSValue(&engine, value));
+        object.setProperty(name, engine.toScriptValue(value));
     }
     QJSValue otherObject = engine.newObject();
-    otherObject.setProperty("foo", QJSValue(&engine, 123456));
-    otherObject.setProperty("protoProperty", QJSValue(&engine, 654321));
+    otherObject.setProperty("foo", engine.toScriptValue(123456));
+    otherObject.setProperty("protoProperty", engine.toScriptValue(654321));
     object.setPrototype(otherObject); // should not affect iterator
 
     QStringList lst;
@@ -125,7 +125,7 @@ void tst_QJSValueIterator::iterateForward()
         QString name = it.name();
         QCOMPARE(pmap.contains(name), true);
         QCOMPARE(it.name(), name);
-        QCOMPARE(it.value().strictlyEquals(QJSValue(&engine, pmap.value(name))), true);
+        QCOMPARE(it.value().strictlyEquals(engine.toScriptValue(pmap.value(name))), true);
         pmap.remove(name);
         lst.append(name);
     }

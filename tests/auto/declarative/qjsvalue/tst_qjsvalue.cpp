@@ -71,7 +71,7 @@ void tst_QJSValue::ctor_undefinedWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v(&eng, QJSValue::UndefinedValue);
+        QJSValue v = eng.evaluate("undefined");
         QVERIFY(v.isUndefined());
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.engine(), &eng);
@@ -82,7 +82,7 @@ void tst_QJSValue::ctor_nullWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v(&eng, QJSValue::NullValue);
+        QJSValue v = eng.evaluate("null");
         QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNull(), true);
         QCOMPARE(v.isObject(), false);
@@ -94,9 +94,8 @@ void tst_QJSValue::ctor_boolWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v(&eng, false);
+        QJSValue v = eng.toScriptValue(false);
         QVERIFY(!v.isUndefined());
-        QCOMPARE(v.isBool(), true);
         QCOMPARE(v.isBool(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toBool(), false);
@@ -108,7 +107,7 @@ void tst_QJSValue::ctor_intWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v(&eng, int(1));
+        QJSValue v = eng.toScriptValue(int(1));
         QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
@@ -138,7 +137,7 @@ void tst_QJSValue::ctor_uintWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v(&eng, uint(1));
+        QJSValue v = eng.toScriptValue(uint(1));
         QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
@@ -168,7 +167,7 @@ void tst_QJSValue::ctor_floatWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v(&eng, 1.0);
+        QJSValue v = eng.toScriptValue(float(1.0));
         QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
@@ -198,7 +197,7 @@ void tst_QJSValue::ctor_stringWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v(&eng, QLatin1String("ciao"));
+        QJSValue v = eng.toScriptValue(QString::fromLatin1("ciao"));
         QVERIFY(!v.isUndefined());
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
@@ -232,7 +231,7 @@ void tst_QJSValue::ctor_copyAndAssignWithEngine()
     QJSEngine eng;
     // copy constructor, operator=
     {
-        QJSValue v(&eng, 1.0);
+        QJSValue v = eng.toScriptValue(1.0);
         QJSValue v2(v);
         QCOMPARE(v2.strictlyEquals(v), true);
         QCOMPARE(v2.engine(), &eng);
@@ -242,7 +241,7 @@ void tst_QJSValue::ctor_copyAndAssignWithEngine()
         QCOMPARE(v3.strictlyEquals(v2), true);
         QCOMPARE(v3.engine(), &eng);
 
-        QJSValue v4(&eng, 2.0);
+        QJSValue v4 = eng.toScriptValue(2.0);
         QCOMPARE(v4.strictlyEquals(v), false);
         v3 = v4;
         QCOMPARE(v3.strictlyEquals(v), false);
@@ -317,18 +316,6 @@ void tst_QJSValue::ctor_copyAndAssign()
     QCOMPARE(v5.toNumber(), 1.0);
 }
 
-void tst_QJSValue::ctor_nullEngine()
-{
-    // 0 engine
-    QVERIFY(QJSValue(0, QJSValue::UndefinedValue).isUndefined());
-    QVERIFY(QJSValue(0, QJSValue::NullValue).isNull());
-    QVERIFY(QJSValue(0, false).isBool());
-    QVERIFY(QJSValue(0, int(1)).isNumber());
-    QVERIFY(QJSValue(0, uint(1)).isNumber());
-    QVERIFY(QJSValue(0, 1.0).isNumber());
-    QVERIFY(QJSValue(0, QString("ciao")).isString());
-}
-
 #if 0 // FIXME: No c-style callbacks currently
 static QJSValue myFunction(QScriptContext *, QScriptEngine *eng)
 {
@@ -349,28 +336,28 @@ void tst_QJSValue::toString()
     QCOMPARE(qjsvalue_cast<QString>(null), QString());
 
     {
-        QJSValue falskt = QJSValue(&eng, false);
+        QJSValue falskt = eng.toScriptValue(false);
         QCOMPARE(falskt.toString(), QString("false"));
         QCOMPARE(qjsvalue_cast<QString>(falskt), QString("false"));
 
-        QJSValue sant = QJSValue(&eng, true);
+        QJSValue sant = eng.toScriptValue(true);
         QCOMPARE(sant.toString(), QString("true"));
         QCOMPARE(qjsvalue_cast<QString>(sant), QString("true"));
     }
     {
-        QJSValue number = QJSValue(&eng, 123);
+        QJSValue number = eng.toScriptValue(123);
         QCOMPARE(number.toString(), QString("123"));
         QCOMPARE(qjsvalue_cast<QString>(number), QString("123"));
     }
     {
-        QJSValue number = QJSValue(&eng, 6.37e-8);
+        QJSValue number = eng.toScriptValue(6.37e-8);
         QCOMPARE(number.toString(), QString("6.37e-8"));
     }
     {
-        QJSValue number = QJSValue(&eng, -6.37e-8);
+        QJSValue number = eng.toScriptValue(-6.37e-8);
         QCOMPARE(number.toString(), QString("-6.37e-8"));
 
-        QJSValue str = QJSValue(&eng, QString("ciao"));
+        QJSValue str = eng.toScriptValue(QString("ciao"));
         QCOMPARE(str.toString(), QString("ciao"));
         QCOMPARE(qjsvalue_cast<QString>(str), QString("ciao"));
     }
@@ -461,23 +448,23 @@ void tst_QJSValue::toNumber()
     QCOMPARE(qjsvalue_cast<qreal>(null), 0.0);
 
     {
-        QJSValue falskt = QJSValue(&eng, false);
+        QJSValue falskt = eng.toScriptValue(false);
         QCOMPARE(falskt.toNumber(), 0.0);
         QCOMPARE(qjsvalue_cast<qreal>(falskt), 0.0);
 
-        QJSValue sant = QJSValue(&eng, true);
+        QJSValue sant = eng.toScriptValue(true);
         QCOMPARE(sant.toNumber(), 1.0);
         QCOMPARE(qjsvalue_cast<qreal>(sant), 1.0);
 
-        QJSValue number = QJSValue(&eng, 123.0);
+        QJSValue number = eng.toScriptValue(123.0);
         QCOMPARE(number.toNumber(), 123.0);
         QCOMPARE(qjsvalue_cast<qreal>(number), 123.0);
 
-        QJSValue str = QJSValue(&eng, QString("ciao"));
+        QJSValue str = eng.toScriptValue(QString("ciao"));
         QCOMPARE(qIsNaN(str.toNumber()), true);
         QCOMPARE(qIsNaN(qjsvalue_cast<qreal>(str)), true);
 
-        QJSValue str2 = QJSValue(&eng, QString("123"));
+        QJSValue str2 = eng.toScriptValue(QString("123"));
         QCOMPARE(str2.toNumber(), 123.0);
         QCOMPARE(qjsvalue_cast<qreal>(str2), 123.0);
     }
@@ -537,35 +524,35 @@ void tst_QJSValue::toBoolean() // deprecated
     QCOMPARE(qjsvalue_cast<bool>(null), false);
 
     {
-        QJSValue falskt = QJSValue(&eng, false);
+        QJSValue falskt = eng.toScriptValue(false);
         QCOMPARE(falskt.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(falskt), false);
 
-        QJSValue sant = QJSValue(&eng, true);
+        QJSValue sant = eng.toScriptValue(true);
         QCOMPARE(sant.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(sant), true);
 
-        QJSValue number = QJSValue(&eng, 0.0);
+        QJSValue number = eng.toScriptValue(0.0);
         QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
-        QJSValue number2 = QJSValue(&eng, qSNaN());
+        QJSValue number2 = eng.toScriptValue(qSNaN());
         QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
-        QJSValue number3 = QJSValue(&eng, 123.0);
+        QJSValue number3 = eng.toScriptValue(123.0);
         QCOMPARE(number3.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number3), true);
 
-        QJSValue number4 = QJSValue(&eng, -456.0);
+        QJSValue number4 = eng.toScriptValue(-456.0);
         QCOMPARE(number4.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number4), true);
 
-        QJSValue str = QJSValue(&eng, QString(""));
+        QJSValue str = eng.toScriptValue(QString(""));
         QCOMPARE(str.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(str), false);
 
-        QJSValue str2 = QJSValue(&eng, QString("123"));
+        QJSValue str2 = eng.toScriptValue(QString("123"));
         QCOMPARE(str2.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(str2), true);
     }
@@ -637,35 +624,35 @@ void tst_QJSValue::toBool()
     QCOMPARE(qjsvalue_cast<bool>(null), false);
 
     {
-        QJSValue falskt = QJSValue(&eng, false);
+        QJSValue falskt = eng.toScriptValue(false);
         QCOMPARE(falskt.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(falskt), false);
 
-        QJSValue sant = QJSValue(&eng, true);
+        QJSValue sant = eng.toScriptValue(true);
         QCOMPARE(sant.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(sant), true);
 
-        QJSValue number = QJSValue(&eng, 0.0);
+        QJSValue number = eng.toScriptValue(0.0);
         QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
-        QJSValue number2 = QJSValue(&eng, qSNaN());
+        QJSValue number2 = eng.toScriptValue(qSNaN());
         QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
-        QJSValue number3 = QJSValue(&eng, 123.0);
+        QJSValue number3 = eng.toScriptValue(123.0);
         QCOMPARE(number3.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number3), true);
 
-        QJSValue number4 = QJSValue(&eng, -456.0);
+        QJSValue number4 = eng.toScriptValue(-456.0);
         QCOMPARE(number4.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(number4), true);
 
-        QJSValue str = QJSValue(&eng, QString(""));
+        QJSValue str = eng.toScriptValue(QString(""));
         QCOMPARE(str.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(str), false);
 
-        QJSValue str2 = QJSValue(&eng, QString("123"));
+        QJSValue str2 = eng.toScriptValue(QString("123"));
         QCOMPARE(str2.toBool(), true);
         QCOMPARE(qjsvalue_cast<bool>(str2), true);
     }
@@ -729,63 +716,63 @@ void tst_QJSValue::toInt()
     QJSEngine eng;
 
     {
-        QJSValue zer0 = QJSValue(&eng, 0.0);
+        QJSValue zer0 = eng.toScriptValue(0.0);
         QCOMPARE(zer0.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(zer0), 0);
 
-        QJSValue number = QJSValue(&eng, 123.0);
+        QJSValue number = eng.toScriptValue(123.0);
         QCOMPARE(number.toInt(), 123);
         QCOMPARE(qjsvalue_cast<qint32>(number), 123);
 
-        QJSValue number2 = QJSValue(&eng, qSNaN());
+        QJSValue number2 = eng.toScriptValue(qSNaN());
         QCOMPARE(number2.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(number2), 0);
 
-        QJSValue number3 = QJSValue(&eng, +qInf());
+        QJSValue number3 = eng.toScriptValue(+qInf());
         QCOMPARE(number3.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(number3), 0);
 
-        QJSValue number3_2 = QJSValue(&eng, -qInf());
+        QJSValue number3_2 = eng.toScriptValue(-qInf());
         QCOMPARE(number3_2.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(number3_2), 0);
 
-        QJSValue number4 = QJSValue(&eng, 0.5);
+        QJSValue number4 = eng.toScriptValue(0.5);
         QCOMPARE(number4.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(number4), 0);
 
-        QJSValue number5 = QJSValue(&eng, 123.5);
+        QJSValue number5 = eng.toScriptValue(123.5);
         QCOMPARE(number5.toInt(), 123);
         QCOMPARE(qjsvalue_cast<qint32>(number5), 123);
 
-        QJSValue number6 = QJSValue(&eng, -456.5);
+        QJSValue number6 = eng.toScriptValue(-456.5);
         QCOMPARE(number6.toInt(), -456);
         QCOMPARE(qjsvalue_cast<qint32>(number6), -456);
 
-        QJSValue str = QJSValue(&eng, QLatin1String("123.0"));
+        QJSValue str = eng.toScriptValue(QString::fromLatin1("123.0"));
         QCOMPARE(str.toInt(), 123);
         QCOMPARE(qjsvalue_cast<qint32>(str), 123);
 
-        QJSValue str2 = QJSValue(&eng, QLatin1String("NaN"));
+        QJSValue str2 = eng.toScriptValue(QString::fromLatin1("NaN"));
         QCOMPARE(str2.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(str2), 0);
 
-        QJSValue str3 = QJSValue(&eng, QLatin1String("Infinity"));
+        QJSValue str3 = eng.toScriptValue(QString::fromLatin1("Infinity"));
         QCOMPARE(str3.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(str3), 0);
 
-        QJSValue str3_2 = QJSValue(&eng, QLatin1String("-Infinity"));
+        QJSValue str3_2 = eng.toScriptValue(QString::fromLatin1("-Infinity"));
         QCOMPARE(str3_2.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(str3_2), 0);
 
-        QJSValue str4 = QJSValue(&eng, QLatin1String("0.5"));
+        QJSValue str4 = eng.toScriptValue(QString::fromLatin1("0.5"));
         QCOMPARE(str4.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(str4), 0);
 
-        QJSValue str5 = QJSValue(&eng, QLatin1String("123.5"));
+        QJSValue str5 = eng.toScriptValue(QString::fromLatin1("123.5"));
         QCOMPARE(str5.toInt(), 123);
         QCOMPARE(qjsvalue_cast<qint32>(str5), 123);
 
-        QJSValue str6 = QJSValue(&eng, QLatin1String("-456.5"));
+        QJSValue str6 = eng.toScriptValue(QString::fromLatin1("-456.5"));
         QCOMPARE(str6.toInt(), -456);
         QCOMPARE(qjsvalue_cast<qint32>(str6), -456);
     }
@@ -1009,23 +996,23 @@ void tst_QJSValue::toVariant()
     QCOMPARE(qjsvalue_cast<QVariant>(null), QVariant());
 
     {
-        QJSValue number = QJSValue(&eng, 123.0);
+        QJSValue number = eng.toScriptValue(123.0);
         QCOMPARE(number.toVariant(), QVariant(123.0));
         QCOMPARE(qjsvalue_cast<QVariant>(number), QVariant(123.0));
 
-        QJSValue intNumber = QJSValue(&eng, (qint32)123);
+        QJSValue intNumber = eng.toScriptValue((qint32)123);
         QCOMPARE(intNumber.toVariant().type(), QVariant((qint32)123).type());
         QCOMPARE((qjsvalue_cast<QVariant>(number)).type(), QVariant((qint32)123).type());
 
-        QJSValue falskt = QJSValue(&eng, false);
+        QJSValue falskt = eng.toScriptValue(false);
         QCOMPARE(falskt.toVariant(), QVariant(false));
         QCOMPARE(qjsvalue_cast<QVariant>(falskt), QVariant(false));
 
-        QJSValue sant = QJSValue(&eng, true);
+        QJSValue sant = eng.toScriptValue(true);
         QCOMPARE(sant.toVariant(), QVariant(true));
         QCOMPARE(qjsvalue_cast<QVariant>(sant), QVariant(true));
 
-        QJSValue str = QJSValue(&eng, QString("ciao"));
+        QJSValue str = eng.toScriptValue(QString("ciao"));
         QCOMPARE(str.toVariant(), QVariant(QString("ciao")));
         QCOMPARE(qjsvalue_cast<QVariant>(str), QVariant(QString("ciao")));
     }
@@ -1115,10 +1102,10 @@ void tst_QJSValue::toQObject_nonQObject_data()
     QTest::newRow("undefined") << QJSValue(QJSValue::UndefinedValue);
     QTest::newRow("null") << QJSValue(QJSValue::NullValue);
 
-    QTest::newRow("bool bound(false)") << QJSValue(engine, false);
-    QTest::newRow("bool bound(true)") << QJSValue(engine, true);
-    QTest::newRow("int bound") << QJSValue(engine, 123);
-    QTest::newRow("string bound") << QJSValue(engine, QString::fromLatin1("ciao"));
+    QTest::newRow("bool bound(false)") << engine->toScriptValue(false);
+    QTest::newRow("bool bound(true)") << engine->toScriptValue(true);
+    QTest::newRow("int bound") << engine->toScriptValue(123);
+    QTest::newRow("string bound") << engine->toScriptValue(QString::fromLatin1("ciao"));
     QTest::newRow("undefined bound") << engine->undefinedValue();
     QTest::newRow("null bound") << engine->nullValue();
     QTest::newRow("object") << engine->newObject();
@@ -1468,17 +1455,17 @@ void tst_QJSValue::getSetProperty_HooliganTask162051()
 {
     QJSEngine eng;
     // task 162051 -- detecting whether the property is an array index or not
-    QVERIFY(eng.evaluate("a = []; a['00'] = 123; a['00']").strictlyEquals(QJSValue(&eng, 123)));
-    QVERIFY(eng.evaluate("a.length").strictlyEquals(QJSValue(&eng, 0)));
-    QVERIFY(eng.evaluate("a.hasOwnProperty('00')").strictlyEquals(QJSValue(&eng, true)));
-    QVERIFY(eng.evaluate("a.hasOwnProperty('0')").strictlyEquals(QJSValue(&eng, false)));
+    QVERIFY(eng.evaluate("a = []; a['00'] = 123; a['00']").strictlyEquals(eng.toScriptValue(123)));
+    QVERIFY(eng.evaluate("a.length").strictlyEquals(eng.toScriptValue(0)));
+    QVERIFY(eng.evaluate("a.hasOwnProperty('00')").strictlyEquals(eng.toScriptValue(true)));
+    QVERIFY(eng.evaluate("a.hasOwnProperty('0')").strictlyEquals(eng.toScriptValue(false)));
     QVERIFY(eng.evaluate("a[0]").isUndefined());
-    QVERIFY(eng.evaluate("a[0.5] = 456; a[0.5]").strictlyEquals(QJSValue(&eng, 456)));
-    QVERIFY(eng.evaluate("a.length").strictlyEquals(QJSValue(&eng, 0)));
-    QVERIFY(eng.evaluate("a.hasOwnProperty('0.5')").strictlyEquals(QJSValue(&eng, true)));
+    QVERIFY(eng.evaluate("a[0.5] = 456; a[0.5]").strictlyEquals(eng.toScriptValue(456)));
+    QVERIFY(eng.evaluate("a.length").strictlyEquals(eng.toScriptValue(0)));
+    QVERIFY(eng.evaluate("a.hasOwnProperty('0.5')").strictlyEquals(eng.toScriptValue(true)));
     QVERIFY(eng.evaluate("a[0]").isUndefined());
-    QVERIFY(eng.evaluate("a[0] = 789; a[0]").strictlyEquals(QJSValue(&eng, 789)));
-    QVERIFY(eng.evaluate("a.length").strictlyEquals(QJSValue(&eng, 1)));
+    QVERIFY(eng.evaluate("a[0] = 789; a[0]").strictlyEquals(eng.toScriptValue(789)));
+    QVERIFY(eng.evaluate("a.length").strictlyEquals(eng.toScriptValue(1)));
 }
 
 void tst_QJSValue::getSetProperty_HooliganTask183072()
@@ -1486,17 +1473,17 @@ void tst_QJSValue::getSetProperty_HooliganTask183072()
     QJSEngine eng;
     // task 183072 -- 0x800000000 is not an array index
     eng.evaluate("a = []; a[0x800000000] = 123");
-    QVERIFY(eng.evaluate("a.length").strictlyEquals(QJSValue(&eng, 0)));
+    QVERIFY(eng.evaluate("a.length").strictlyEquals(eng.toScriptValue(0)));
     QVERIFY(eng.evaluate("a[0]").isUndefined());
-    QVERIFY(eng.evaluate("a[0x800000000]").strictlyEquals(QJSValue(&eng, 123)));
+    QVERIFY(eng.evaluate("a[0x800000000]").strictlyEquals(eng.toScriptValue(123)));
 }
 
 void tst_QJSValue::getSetProperty_propertyRemoval()
 {
     QJSEngine eng;
     QJSValue object = eng.newObject();
-    QJSValue str = QJSValue(&eng, QLatin1String("bar"));
-    QJSValue num = QJSValue(&eng, 123.0);
+    QJSValue str = eng.toScriptValue(QString::fromLatin1("bar"));
+    QJSValue num = eng.toScriptValue(123.0);
 
     object.setProperty("foo", num);
     QCOMPARE(object.property("foo").strictlyEquals(num), true);
@@ -1516,13 +1503,13 @@ void tst_QJSValue::getSetProperty_propertyRemoval()
 
     eng.globalObject().setProperty("object3", object);
     QCOMPARE(eng.evaluate("object3.hasOwnProperty('foo')")
-             .strictlyEquals(QJSValue(&eng, false)), true);
+             .strictlyEquals(eng.toScriptValue(false)), true);
     object.setProperty("foo", num);
     QCOMPARE(eng.evaluate("object3.hasOwnProperty('foo')")
-             .strictlyEquals(QJSValue(&eng, true)), true);
+             .strictlyEquals(eng.toScriptValue(true)), true);
     QVERIFY(eng.globalObject().deleteProperty("object3"));
     QCOMPARE(eng.evaluate("this.hasOwnProperty('object3')")
-             .strictlyEquals(QJSValue(&eng, false)), true);
+             .strictlyEquals(eng.toScriptValue(false)), true);
 }
 
 void tst_QJSValue::getSetProperty_resolveMode()
@@ -1532,7 +1519,7 @@ void tst_QJSValue::getSetProperty_resolveMode()
     QJSValue object = eng.newObject();
     QJSValue prototype = eng.newObject();
     object.setPrototype(prototype);
-    QJSValue num2 = QJSValue(&eng, 456.0);
+    QJSValue num2 = eng.toScriptValue(456.0);
     prototype.setProperty("propertyInPrototype", num2);
     // default is ResolvePrototype
     QCOMPARE(object.property("propertyInPrototype")
@@ -1555,7 +1542,7 @@ void tst_QJSValue::getSetProperty_twoEngines()
     QJSValue object = engine.newObject();
 
     QJSEngine otherEngine;
-    QJSValue otherNum = QJSValue(&otherEngine, 123);
+    QJSValue otherNum = otherEngine.toScriptValue(123);
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::setProperty(oof) failed: cannot set value created in a different engine");
     object.setProperty("oof", otherNum);
     QVERIFY(!object.hasOwnProperty("oof"));
@@ -1567,8 +1554,8 @@ void tst_QJSValue::getSetProperty_gettersAndSetters()
 {
 #if 0 // FIXME: No setters/getters right now
     QScriptEngine eng;
-    QJSValue str = QJSValue(&eng, QLatin1String("bar"));
-    QJSValue num = QJSValue(&eng, 123.0);
+    QJSValue str = eng.toScriptValue(QString::fromLatin1("bar"));
+    QJSValue num = eng.toScriptValue(123.0);
     QJSValue object = eng.newObject();
     for (int x = 0; x < 2; ++x) {
         object.deleteProperty("foo");
@@ -1664,7 +1651,7 @@ void tst_QJSValue::getSetProperty_gettersAndSettersThrowErrorNative()
 #if 0 // FIXME: No setters/getters right now
     // getter/setter that throws an error
     QScriptEngine eng;
-    QJSValue str = QJSValue(&eng, "bar");
+    QJSValue str = eng.toScriptValue("bar");
     QJSValue object = eng.newObject();
 
     object.setProperty("foo", eng.newFunction(getterSetterThrowingError),
@@ -1687,7 +1674,7 @@ void tst_QJSValue::getSetProperty_gettersAndSettersThrowErrorJS()
 {
     // getter/setter that throws an error (from js function)
     QJSEngine eng;
-    QJSValue str = QJSValue(&eng, QLatin1String("bar"));
+    QJSValue str = eng.toScriptValue(QString::fromLatin1("bar"));
 
     eng.evaluate("o = new Object; "
                  "o.__defineGetter__('foo', function() { throw new Error('get foo') }); "
@@ -1715,7 +1702,7 @@ void tst_QJSValue::getSetProperty_gettersAndSettersOnNative()
     QVERIFY(object.property("__proto__").strictlyEquals(object.prototype()));
 
     QJSValue fun = eng.newFunction(getSet__proto__);
-    fun.setProperty("value", QJSValue(&eng, "boo"));
+    fun.setProperty("value", eng.toScriptValue("boo"));
 /*    QTest::ignoreMessage(QtWarningMsg, "QJSValue::setProperty() failed: "
                          "cannot set getter or setter of native property "
                          "`__proto__'");*/
@@ -1741,7 +1728,7 @@ void tst_QJSValue::getSetProperty_gettersAndSettersOnGlobalObject()
     {
         QJSValue ret = eng.evaluate("globalGetterSetterProperty");
         QVERIFY(ret.isNumber());
-        QVERIFY(ret.strictlyEquals(QJSValue(&eng, 123)));
+        QVERIFY(ret.strictlyEquals(eng.toScriptValue(123)));
     }
     QCOMPARE(eng.evaluate("typeof globalGetterSetterProperty").toString(),
              QString::fromLatin1("number"));
@@ -1783,8 +1770,8 @@ void tst_QJSValue::getSetProperty_gettersAndSettersChange()
 void tst_QJSValue::getSetProperty_array()
 {
     QJSEngine eng;
-    QJSValue str = QJSValue(&eng, QLatin1String("bar"));
-    QJSValue num = QJSValue(&eng, 123.0);
+    QJSValue str = eng.toScriptValue(QString::fromLatin1("bar"));
+    QJSValue num = eng.toScriptValue(123.0);
     QJSValue array = eng.newArray();
 
     QVERIFY(array.isArray());
@@ -1796,7 +1783,7 @@ void tst_QJSValue::getSetProperty_array()
     QCOMPARE(array.property(1).toString(), str.toString());
     QCOMPARE(array.property("1").toString(), str.toString());
     QCOMPARE(array.property("length").toUInt(), quint32(2));
-    array.setProperty("length", QJSValue(&eng, 1));
+    array.setProperty("length", eng.toScriptValue(1));
     QCOMPARE(array.property("length").toUInt(), quint32(1));
     QVERIFY(array.property(1).isUndefined());
 }
@@ -1806,7 +1793,7 @@ void tst_QJSValue::getSetProperty_gettersAndSettersStupid()
 #if 0 // FIXME: No setters/getters API right now
     //removing unexisting Setter or Getter should not crash.
     QScriptEngine eng;
-    QJSValue num = QJSValue(&eng, 123.0);
+    QJSValue num = eng.toScriptValue(123.0);
 
     {
         QJSValue object = eng.newObject();
@@ -1841,11 +1828,11 @@ void tst_QJSValue::getSetProperty()
 
     QJSValue object = eng.newObject();
 
-    QJSValue str = QJSValue(&eng, QLatin1String("bar"));
+    QJSValue str = eng.toScriptValue(QString::fromLatin1("bar"));
     object.setProperty("foo", str);
     QCOMPARE(object.property("foo").toString(), str.toString());
 
-    QJSValue num = QJSValue(&eng, 123.0);
+    QJSValue num = eng.toScriptValue(123.0);
     object.setProperty("baz", num);
     QCOMPARE(object.property("baz").toNumber(), num.toNumber());
 
@@ -1881,12 +1868,12 @@ void tst_QJSValue::getSetProperty()
             "    found = true; break;"
             "  }"
             "} found");
-        QCOMPARE(ret.strictlyEquals(QJSValue(&eng, true)), true);
+        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
     }
     // should still be deletable
     {
         QJSValue ret = eng.evaluate("delete object.readOnlyProperty");
-        QCOMPARE(ret.strictlyEquals(QJSValue(&eng, true)), true);
+        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
         QCOMPARE(object.property("readOnlyProperty").isValid(), false);
     }
 
@@ -1896,7 +1883,7 @@ void tst_QJSValue::getSetProperty()
     QCOMPARE(object.property("undeletableProperty").strictlyEquals(num), true);
     {
         QJSValue ret = eng.evaluate("delete object.undeletableProperty");
-        QCOMPARE(ret.strictlyEquals(QJSValue(&eng, true)), false);
+        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), false);
         QCOMPARE(object.property("undeletableProperty").strictlyEquals(num), true);
     }
     // should still be writable
@@ -1911,7 +1898,7 @@ void tst_QJSValue::getSetProperty()
             "    found = true; break;"
             "  }"
             "} found");
-        QCOMPARE(ret.strictlyEquals(QJSValue(&eng, true)), true);
+        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
     }
     // should still be deletable from C++
     object.deleteProperty("undeletableProperty");
@@ -1933,7 +1920,7 @@ void tst_QJSValue::getSetProperty()
             "    found = true; break;"
             "  }"
             "} found");
-        QCOMPARE(ret.strictlyEquals(QJSValue(&eng, false)), true);
+        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(false)), true);
     }
     // should still be writable
     eng.evaluate("object.dontEnumProperty = object.dontEnumProperty + 1");
@@ -1941,7 +1928,7 @@ void tst_QJSValue::getSetProperty()
     // should still be deletable
     {
         QJSValue ret = eng.evaluate("delete object.dontEnumProperty");
-        QCOMPARE(ret.strictlyEquals(QJSValue(&eng, true)), true);
+        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
         QCOMPARE(object.property("dontEnumProperty").isValid(), false);
     }
 
@@ -2096,7 +2083,7 @@ void tst_QJSValue::getSetPrototype_null()
     object.setPrototype(newProto);
     QVERIFY(object.prototype().equals(newProto));
 
-    object.setPrototype(QJSValue(&eng, QJSValue::NullValue));
+    object.setPrototype(eng.evaluate("null"));
     QVERIFY(object.prototype().isNull());
 }
 
@@ -2109,25 +2096,25 @@ void tst_QJSValue::getSetPrototype_notObjectOrNull()
     // bool
     object.setPrototype(true);
     QVERIFY(object.prototype().equals(originalProto));
-    object.setPrototype(QJSValue(&eng, true));
+    object.setPrototype(eng.toScriptValue(true));
     QVERIFY(object.prototype().equals(originalProto));
 
     // number
     object.setPrototype(123);
     QVERIFY(object.prototype().equals(originalProto));
-    object.setPrototype(QJSValue(&eng, 123));
+    object.setPrototype(eng.toScriptValue(123));
     QVERIFY(object.prototype().equals(originalProto));
 
     // string
     object.setPrototype("foo");
     QVERIFY(object.prototype().equals(originalProto));
-    object.setPrototype(QJSValue(&eng, QLatin1String("foo")));
+    object.setPrototype(eng.toScriptValue(QString::fromLatin1("foo")));
     QVERIFY(object.prototype().equals(originalProto));
 
     // undefined
     object.setPrototype(QJSValue(QJSValue::UndefinedValue));
     QVERIFY(object.prototype().equals(originalProto));
-    object.setPrototype(QJSValue(&eng, QJSValue::UndefinedValue));
+    object.setPrototype(eng.evaluate("undefined"));
     QVERIFY(object.prototype().equals(originalProto));
 }
 
@@ -2222,8 +2209,8 @@ void tst_QJSValue::getSetData_nonObjects_data()
 
     QTest::newRow("undefined (bound)") << engine->undefinedValue();
     QTest::newRow("null (bound)") << engine->nullValue();
-    QTest::newRow("string (bound)") << QJSValue(engine, "Pong");
-    QTest::newRow("bool (bound)") << QJSValue(engine, false);
+    QTest::newRow("string (bound)") << engine->toScriptValue("Pong");
+    QTest::newRow("bool (bound)") << engine->toScriptValue(false);
 
     QTest::newRow("undefined") << QJSValue(QJSValue::UndefinedValue);
     QTest::newRow("null") << QJSValue(QJSValue::NullValue);
@@ -2287,9 +2274,9 @@ void tst_QJSValue::getSetScriptClass_emptyClass_data()
     QTest::newRow("null") << QJSValue(QJSValue::NullValue);
     QTest::newRow("undefined") << QJSValue(QJSValue::UndefinedValue);
 
-    QTest::newRow("number") << QJSValue(engine, 123);
-    QTest::newRow("string") << QJSValue(engine, "pong");
-    QTest::newRow("bool") << QJSValue(engine, true);
+    QTest::newRow("number") << engine->toScriptValue(123);
+    QTest::newRow("string") << engine->toScriptValue("pong");
+    QTest::newRow("bool") << engine->toScriptValue(true);
     QTest::newRow("null") << QJSValue(engine->nullValue());
     QTest::newRow("undefined") << QJSValue(engine->undefinedValue());
     QTest::newRow("object") << QJSValue(engine->newObject());
@@ -2416,7 +2403,7 @@ void tst_QJSValue::call_newObjects()
     QJSValue Object = eng.evaluate("Object");
     QCOMPARE(Object.isCallable(), true);
     QJSValueList args;
-    args << QJSValue(&eng, 123);
+    args << eng.toScriptValue(123);
     QJSValue result = Number.callWithInstance(Object, args);
     QCOMPARE(result.strictlyEquals(args.at(0)), true);
 }
@@ -2447,7 +2434,7 @@ void tst_QJSValue::call_arguments()
     }
     {
         QJSValueList args;
-        args << QJSValue(&eng, 123.0);
+        args << eng.toScriptValue(123.0);
         QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
         QCOMPARE(result.isNumber(), true);
         QCOMPARE(result.toNumber(), 123.0);
@@ -2480,7 +2467,7 @@ void tst_QJSValue::call()
 
         {
             QJSValueList args;
-            args << QJSValue(&eng, 123.0) << QJSValue(&eng, 456.0);
+            args << eng.toScriptValue(123.0) << eng.toScriptValue(456.0);
             QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 456.0);
@@ -2514,7 +2501,7 @@ void tst_QJSValue::call()
         QJSValue fun = eng.newFunction(getArg);
         {
             QJSValueList args;
-            args << QJSValue(&eng, 123.0);
+            args << eng.toScriptValue(123.0);
             QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(result.isNumber(), true);
@@ -2542,7 +2529,7 @@ void tst_QJSValue::call()
         QJSValue fun = eng.newFunction(evaluateArg);
         {
             QJSValueList args;
-            args << QJSValue(&eng, 123.0);
+            args << eng.toScriptValue(123.0);
             QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(result.isNumber(), true);
@@ -2619,7 +2606,7 @@ void tst_QJSValue::call_twoEngines()
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with argument created in "
                          "a different engine");
-    QVERIFY(fun.call(QJSValueList() << QJSValue(&eng, 123)).isUndefined());
+    QVERIFY(fun.call(QJSValueList() << eng.toScriptValue(123)).isUndefined());
     {
         QJSValue fun = eng.evaluate("Object");
         QVERIFY(fun.isCallable());
@@ -2639,9 +2626,9 @@ void tst_QJSValue::call_array()
     QJSValue fun = eng.evaluate("(function() { return arguments; })");
     QVERIFY(fun.isCallable());
     QJSValue array = eng.newArray(3);
-    array.setProperty(0, QJSValue(&eng, 123.0));
-    array.setProperty(1, QJSValue(&eng, 456.0));
-    array.setProperty(2, QJSValue(&eng, 789.0));
+    array.setProperty(0, eng.toScriptValue(123.0));
+    array.setProperty(1, eng.toScriptValue(456.0));
+    array.setProperty(2, eng.toScriptValue(789.0));
     // call with single array object as arguments
     QJSValue ret = fun.call(QJSValue(), array);
     QVERIFY(!eng.hasUncaughtException());
@@ -2666,7 +2653,7 @@ void tst_QJSValue::call_array()
     QCOMPARE(ret4.property("length").isNumber(), true);
     QCOMPARE(ret4.property("length").toNumber(), 0.0);
     // call with something else as arguments
-    QJSValue ret5 = fun.call(QJSValue(), QJSValue(&eng, 123.0));
+    QJSValue ret5 = fun.call(QJSValue(), eng.toScriptValue(123.0));
     QCOMPARE(ret5.isError(), true);
     // call with a non-array object as arguments
     QJSValue ret6 = fun.call(QJSValue(), eng.globalObject());
@@ -2688,9 +2675,9 @@ void tst_QJSValue::call_nonFunction_data()
     QTest::newRow("undefined") << QJSValue(QJSValue::UndefinedValue);
     QTest::newRow("null") << QJSValue(QJSValue::NullValue);
 
-    QTest::newRow("bool bound") << QJSValue(engine, false);
-    QTest::newRow("int bound") << QJSValue(engine, 123);
-    QTest::newRow("string bound") << QJSValue(engine, QString::fromLatin1("ciao"));
+    QTest::newRow("bool bound") << engine->toScriptValue(false);
+    QTest::newRow("int bound") << engine->toScriptValue(123);
+    QTest::newRow("string bound") << engine->toScriptValue(QString::fromLatin1("ciao"));
     QTest::newRow("undefined bound") << engine->undefinedValue();
     QTest::newRow("null bound") << engine->nullValue();
 }
@@ -2729,9 +2716,9 @@ void tst_QJSValue::construct_nonFunction_data()
     QTest::newRow("undefined") << QJSValue(QJSValue::UndefinedValue);
     QTest::newRow("null") << QJSValue(QJSValue::NullValue);
 
-    QTest::newRow("bool bound") << QJSValue(engine, false);
-    QTest::newRow("int bound") << QJSValue(engine, 123);
-    QTest::newRow("string bound") << QJSValue(engine, QString::fromLatin1("ciao"));
+    QTest::newRow("bool bound") << engine->toScriptValue(false);
+    QTest::newRow("int bound") << engine->toScriptValue(123);
+    QTest::newRow("string bound") << engine->toScriptValue(QString::fromLatin1("ciao"));
     QTest::newRow("undefined bound") << engine->undefinedValue();
     QTest::newRow("null bound") << engine->nullValue();
 }
@@ -2794,7 +2781,7 @@ void tst_QJSValue::construct_arg()
     QJSValue Number = eng.evaluate("Number");
     QCOMPARE(Number.isCallable(), true);
     QJSValueList args;
-    args << QJSValue(&eng, 123);
+    args << eng.toScriptValue(123);
     QJSValue ret = Number.callAsConstructor(args);
     QCOMPARE(ret.isObject(), true);
     QCOMPARE(ret.toNumber(), args.at(0).toNumber());
@@ -2839,9 +2826,9 @@ void tst_QJSValue::construct()
     QJSValue fun = eng.evaluate("(function() { return arguments; })");
     QVERIFY(fun.isCallable());
     QJSValue array = eng.newArray(3);
-    array.setProperty(0, QJSValue(&eng, 123.0));
-    array.setProperty(1, QJSValue(&eng, 456.0));
-    array.setProperty(2, QJSValue(&eng, 789.0));
+    array.setProperty(0, eng.toScriptValue(123.0));
+    array.setProperty(1, eng.toScriptValue(456.0));
+    array.setProperty(2, eng.toScriptValue(789.0));
     // construct with single array object as arguments
     QJSValue ret = fun.callAsConstructor(array);
     QVERIFY(!eng.hasUncaughtException());
@@ -2865,7 +2852,7 @@ void tst_QJSValue::construct()
     QCOMPARE(ret4.property("length").isNumber(), true);
     QCOMPARE(ret4.property("length").toNumber(), 0.0);
     // construct with something else as arguments
-    QJSValue ret5 = fun.callAsConstructor(QJSValue(&eng, 123.0));
+    QJSValue ret5 = fun.callAsConstructor(eng.toScriptValue(123.0));
     QCOMPARE(ret5.isError(), true);
     // construct with a non-array object as arguments
     QJSValue ret6 = fun.callAsConstructor(eng.globalObject());
@@ -2879,7 +2866,7 @@ void tst_QJSValue::construct_twoEngines()
     QJSEngine engine;
     QJSEngine otherEngine;
     QJSValue ctor = engine.evaluate("(function (a, b) { this.foo = 123; })");
-    QJSValue arg(&otherEngine, 124567);
+    QJSValue arg = otherEngine.toScriptValue(124567);
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
     QVERIFY(ctor.callAsConstructor(QJSValueList() << arg).isUndefined());
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
@@ -2920,43 +2907,43 @@ void tst_QJSValue::lessThan()
 
     QVERIFY(!QJSValue().lessThan(QJSValue()));
 
-    QJSValue num = QJSValue(&eng, 123);
-    QCOMPARE(num.lessThan(QJSValue(&eng, 124)), true);
-    QCOMPARE(num.lessThan(QJSValue(&eng, 122)), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, 123)), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, "124")), true);
-    QCOMPARE(num.lessThan(QJSValue(&eng, "122")), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, "123")), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, qSNaN())), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, +qInf())), true);
-    QCOMPARE(num.lessThan(QJSValue(&eng, -qInf())), false);
+    QJSValue num = eng.toScriptValue(123);
+    QCOMPARE(num.lessThan(eng.toScriptValue(124)), true);
+    QCOMPARE(num.lessThan(eng.toScriptValue(122)), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue(123)), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue("124")), true);
+    QCOMPARE(num.lessThan(eng.toScriptValue("122")), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue("123")), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue(qSNaN())), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue(+qInf())), true);
+    QCOMPARE(num.lessThan(eng.toScriptValue(-qInf())), false);
     QCOMPARE(num.lessThan(num), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, 124).toObject()), true);
-    QCOMPARE(num.lessThan(QJSValue(&eng, 122).toObject()), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, 123).toObject()), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, "124").toObject()), true);
-    QCOMPARE(num.lessThan(QJSValue(&eng, "122").toObject()), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, "123").toObject()), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, qSNaN()).toObject()), false);
-    QCOMPARE(num.lessThan(QJSValue(&eng, +qInf()).toObject()), true);
-    QCOMPARE(num.lessThan(QJSValue(&eng, -qInf()).toObject()), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue(124).toObject()), true);
+    QCOMPARE(num.lessThan(eng.toScriptValue(122).toObject()), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue(123).toObject()), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue("124").toObject()), true);
+    QCOMPARE(num.lessThan(eng.toScriptValue("122").toObject()), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue("123").toObject()), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue(qSNaN()).toObject()), false);
+    QCOMPARE(num.lessThan(eng.toScriptValue(+qInf()).toObject()), true);
+    QCOMPARE(num.lessThan(eng.toScriptValue(-qInf()).toObject()), false);
     QCOMPARE(num.lessThan(num.toObject()), false);
     QCOMPARE(num.lessThan(QJSValue()), false);
 
-    QJSValue str = QJSValue(&eng, "123");
-    QCOMPARE(str.lessThan(QJSValue(&eng, "124")), true);
-    QCOMPARE(str.lessThan(QJSValue(&eng, "122")), false);
-    QCOMPARE(str.lessThan(QJSValue(&eng, "123")), false);
-    QCOMPARE(str.lessThan(QJSValue(&eng, 124)), true);
-    QCOMPARE(str.lessThan(QJSValue(&eng, 122)), false);
-    QCOMPARE(str.lessThan(QJSValue(&eng, 123)), false);
+    QJSValue str = eng.toScriptValue("123");
+    QCOMPARE(str.lessThan(eng.toScriptValue("124")), true);
+    QCOMPARE(str.lessThan(eng.toScriptValue("122")), false);
+    QCOMPARE(str.lessThan(eng.toScriptValue("123")), false);
+    QCOMPARE(str.lessThan(eng.toScriptValue(124)), true);
+    QCOMPARE(str.lessThan(eng.toScriptValue(122)), false);
+    QCOMPARE(str.lessThan(eng.toScriptValue(123)), false);
     QCOMPARE(str.lessThan(str), false);
-    QCOMPARE(str.lessThan(QJSValue(&eng, "124").toObject()), true);
-    QCOMPARE(str.lessThan(QJSValue(&eng, "122").toObject()), false);
-    QCOMPARE(str.lessThan(QJSValue(&eng, "123").toObject()), false);
-    QCOMPARE(str.lessThan(QJSValue(&eng, 124).toObject()), true);
-    QCOMPARE(str.lessThan(QJSValue(&eng, 122).toObject()), false);
-    QCOMPARE(str.lessThan(QJSValue(&eng, 123).toObject()), false);
+    QCOMPARE(str.lessThan(eng.toScriptValue("124").toObject()), true);
+    QCOMPARE(str.lessThan(eng.toScriptValue("122").toObject()), false);
+    QCOMPARE(str.lessThan(eng.toScriptValue("123").toObject()), false);
+    QCOMPARE(str.lessThan(eng.toScriptValue(124).toObject()), true);
+    QCOMPARE(str.lessThan(eng.toScriptValue(122).toObject()), false);
+    QCOMPARE(str.lessThan(eng.toScriptValue(123).toObject()), false);
     QCOMPARE(str.lessThan(str.toObject()), false);
     QCOMPARE(str.lessThan(QJSValue()), false);
 
@@ -3005,7 +2992,7 @@ void tst_QJSValue::lessThan()
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::lessThan: "
                          "cannot compare to a value created in "
                          "a different engine");
-    QCOMPARE(date1.lessThan(QJSValue(&otherEngine, 123)), false);
+    QCOMPARE(date1.lessThan(otherEngine.toScriptValue(123)), false);
 }
 #endif
 
@@ -3015,11 +3002,11 @@ void tst_QJSValue::equals()
 
     QVERIFY(QJSValue().equals(QJSValue()));
 
-    QJSValue num = QJSValue(&eng, 123);
-    QCOMPARE(num.equals(QJSValue(&eng, 123)), true);
-    QCOMPARE(num.equals(QJSValue(&eng, 321)), false);
-    QCOMPARE(num.equals(QJSValue(&eng, QLatin1String("123"))), true);
-    QCOMPARE(num.equals(QJSValue(&eng, QLatin1String("321"))), false);
+    QJSValue num = eng.toScriptValue(123);
+    QCOMPARE(num.equals(eng.toScriptValue(123)), true);
+    QCOMPARE(num.equals(eng.toScriptValue(321)), false);
+    QCOMPARE(num.equals(eng.toScriptValue(QString::fromLatin1("123"))), true);
+    QCOMPARE(num.equals(eng.toScriptValue(QString::fromLatin1("321"))), false);
     QCOMPARE(num.equals(eng.evaluate("new Number(123)")), true);
     QCOMPARE(num.equals(eng.evaluate("new Number(321)")), false);
     QCOMPARE(num.equals(eng.evaluate("new String('123')")), true);
@@ -3027,11 +3014,11 @@ void tst_QJSValue::equals()
     QVERIFY(eng.evaluate("new Number(123)").equals(num));
     QCOMPARE(num.equals(QJSValue()), false);
 
-    QJSValue str = QJSValue(&eng, QLatin1String("123"));
-    QCOMPARE(str.equals(QJSValue(&eng, QLatin1String("123"))), true);
-    QCOMPARE(str.equals(QJSValue(&eng, QLatin1String("321"))), false);
-    QCOMPARE(str.equals(QJSValue(&eng, 123)), true);
-    QCOMPARE(str.equals(QJSValue(&eng, 321)), false);
+    QJSValue str = eng.toScriptValue(QString::fromLatin1("123"));
+    QCOMPARE(str.equals(eng.toScriptValue(QString::fromLatin1("123"))), true);
+    QCOMPARE(str.equals(eng.toScriptValue(QString::fromLatin1("321"))), false);
+    QCOMPARE(str.equals(eng.toScriptValue(123)), true);
+    QCOMPARE(str.equals(eng.toScriptValue(321)), false);
     QCOMPARE(str.equals(eng.evaluate("new String('123')")), true);
     QCOMPARE(str.equals(eng.evaluate("new String('321')")), false);
     QCOMPARE(str.equals(eng.evaluate("new Number(123)")), true);
@@ -3070,21 +3057,21 @@ void tst_QJSValue::equals()
     QVERIFY(!null.equals(num));
     QVERIFY(!undefined.equals(num));
 
-    QJSValue sant = QJSValue(&eng, true);
-    QVERIFY(sant.equals(QJSValue(&eng, 1)));
-    QVERIFY(sant.equals(QJSValue(&eng, QLatin1String("1"))));
+    QJSValue sant = eng.toScriptValue(true);
+    QVERIFY(sant.equals(eng.toScriptValue(1)));
+    QVERIFY(sant.equals(eng.toScriptValue(QString::fromLatin1("1"))));
     QVERIFY(sant.equals(sant));
     QVERIFY(sant.equals(eng.evaluate("new Number(1)")));
     QVERIFY(sant.equals(eng.evaluate("new String('1')")));
     QVERIFY(sant.equals(eng.evaluate("new Boolean(true)")));
     QVERIFY(eng.evaluate("new Boolean(true)").equals(sant));
-    QVERIFY(!sant.equals(QJSValue(&eng, 0)));
+    QVERIFY(!sant.equals(eng.toScriptValue(0)));
     QVERIFY(!sant.equals(undefined));
     QVERIFY(!sant.equals(null));
 
-    QJSValue falskt = QJSValue(&eng, false);
-    QVERIFY(falskt.equals(QJSValue(&eng, 0)));
-    QVERIFY(falskt.equals(QJSValue(&eng, QLatin1String("0"))));
+    QJSValue falskt = eng.toScriptValue(false);
+    QVERIFY(falskt.equals(eng.toScriptValue(0)));
+    QVERIFY(falskt.equals(eng.toScriptValue(QString::fromLatin1("0"))));
     QVERIFY(falskt.equals(falskt));
     QVERIFY(falskt.equals(eng.evaluate("new Number(0)")));
     QVERIFY(falskt.equals(eng.evaluate("new String('0')")));
@@ -3144,7 +3131,7 @@ void tst_QJSValue::equals()
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::equals: "
                          "cannot compare to a value created in "
                          "a different engine");
-    QCOMPARE(date1.equals(QJSValue(&otherEngine, 123)), false);
+    QCOMPARE(date1.equals(otherEngine.toScriptValue(123)), false);
 }
 
 void tst_QJSValue::strictlyEquals()
@@ -3153,11 +3140,11 @@ void tst_QJSValue::strictlyEquals()
 
     QVERIFY(QJSValue().strictlyEquals(QJSValue()));
 
-    QJSValue num = QJSValue(&eng, 123);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, 123)), true);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, 321)), false);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, QLatin1String("123"))), false);
-    QCOMPARE(num.strictlyEquals(QJSValue(&eng, QLatin1String("321"))), false);
+    QJSValue num = eng.toScriptValue(123);
+    QCOMPARE(num.strictlyEquals(eng.toScriptValue(123)), true);
+    QCOMPARE(num.strictlyEquals(eng.toScriptValue(321)), false);
+    QCOMPARE(num.strictlyEquals(eng.toScriptValue(QString::fromLatin1("123"))), false);
+    QCOMPARE(num.strictlyEquals(eng.toScriptValue(QString::fromLatin1("321"))), false);
     QCOMPARE(num.strictlyEquals(eng.evaluate("new Number(123)")), false);
     QCOMPARE(num.strictlyEquals(eng.evaluate("new Number(321)")), false);
     QCOMPARE(num.strictlyEquals(eng.evaluate("new String('123')")), false);
@@ -3166,11 +3153,11 @@ void tst_QJSValue::strictlyEquals()
     QVERIFY(!num.strictlyEquals(QJSValue()));
     QVERIFY(!QJSValue().strictlyEquals(num));
 
-    QJSValue str = QJSValue(&eng, QLatin1String("123"));
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, QLatin1String("123"))), true);
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, QLatin1String("321"))), false);
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, 123)), false);
-    QCOMPARE(str.strictlyEquals(QJSValue(&eng, 321)), false);
+    QJSValue str = eng.toScriptValue(QString::fromLatin1("123"));
+    QCOMPARE(str.strictlyEquals(eng.toScriptValue(QString::fromLatin1("123"))), true);
+    QCOMPARE(str.strictlyEquals(eng.toScriptValue(QString::fromLatin1("321"))), false);
+    QCOMPARE(str.strictlyEquals(eng.toScriptValue(123)), false);
+    QCOMPARE(str.strictlyEquals(eng.toScriptValue(321)), false);
     QCOMPARE(str.strictlyEquals(eng.evaluate("new String('123')")), false);
     QCOMPARE(str.strictlyEquals(eng.evaluate("new String('321')")), false);
     QCOMPARE(str.strictlyEquals(eng.evaluate("new Number(123)")), false);
@@ -3207,22 +3194,22 @@ void tst_QJSValue::strictlyEquals()
     QCOMPARE(null.strictlyEquals(undefined), false);
     QVERIFY(!null.strictlyEquals(QJSValue()));
 
-    QJSValue sant = QJSValue(&eng, true);
-    QVERIFY(!sant.strictlyEquals(QJSValue(&eng, 1)));
-    QVERIFY(!sant.strictlyEquals(QJSValue(&eng, QLatin1String("1"))));
+    QJSValue sant = eng.toScriptValue(true);
+    QVERIFY(!sant.strictlyEquals(eng.toScriptValue(1)));
+    QVERIFY(!sant.strictlyEquals(eng.toScriptValue(QString::fromLatin1("1"))));
     QVERIFY(sant.strictlyEquals(sant));
     QVERIFY(!sant.strictlyEquals(eng.evaluate("new Number(1)")));
     QVERIFY(!sant.strictlyEquals(eng.evaluate("new String('1')")));
     QVERIFY(!sant.strictlyEquals(eng.evaluate("new Boolean(true)")));
     QVERIFY(!eng.evaluate("new Boolean(true)").strictlyEquals(sant));
-    QVERIFY(!sant.strictlyEquals(QJSValue(&eng, 0)));
+    QVERIFY(!sant.strictlyEquals(eng.toScriptValue(0)));
     QVERIFY(!sant.strictlyEquals(undefined));
     QVERIFY(!sant.strictlyEquals(null));
     QVERIFY(!sant.strictlyEquals(QJSValue()));
 
-    QJSValue falskt = QJSValue(&eng, false);
-    QVERIFY(!falskt.strictlyEquals(QJSValue(&eng, 0)));
-    QVERIFY(!falskt.strictlyEquals(QJSValue(&eng, QLatin1String("0"))));
+    QJSValue falskt = eng.toScriptValue(false);
+    QVERIFY(!falskt.strictlyEquals(eng.toScriptValue(0)));
+    QVERIFY(!falskt.strictlyEquals(eng.toScriptValue(QString::fromLatin1("0"))));
     QVERIFY(falskt.strictlyEquals(falskt));
     QVERIFY(!falskt.strictlyEquals(eng.evaluate("new Number(0)")));
     QVERIFY(!falskt.strictlyEquals(eng.evaluate("new String('0')")));
@@ -3239,13 +3226,13 @@ void tst_QJSValue::strictlyEquals()
     QVERIFY(!QJSValue(false).strictlyEquals("ciao"));
     QVERIFY(!QJSValue(QJSValue::UndefinedValue).strictlyEquals("ciao"));
     QVERIFY(!QJSValue(QJSValue::NullValue).strictlyEquals("ciao"));
-    QVERIFY(QJSValue(&eng, QLatin1String("ciao")).strictlyEquals("ciao"));
-    QVERIFY(QJSValue("ciao").strictlyEquals(QJSValue(&eng, QLatin1String("ciao"))));
+    QVERIFY(eng.toScriptValue(QString::fromLatin1("ciao")).strictlyEquals("ciao"));
+    QVERIFY(QJSValue("ciao").strictlyEquals(eng.toScriptValue(QString::fromLatin1("ciao"))));
     QVERIFY(!QJSValue("ciao").strictlyEquals(123));
-    QVERIFY(!QJSValue("ciao").strictlyEquals(QJSValue(&eng, 123)));
+    QVERIFY(!QJSValue("ciao").strictlyEquals(eng.toScriptValue(123)));
     QVERIFY(!QJSValue(123).strictlyEquals("ciao"));
-    QVERIFY(!QJSValue(123).strictlyEquals(QJSValue(&eng, QLatin1String("ciao"))));
-    QVERIFY(!QJSValue(&eng, 123).strictlyEquals("ciao"));
+    QVERIFY(!QJSValue(123).strictlyEquals(eng.toScriptValue(QString::fromLatin1("ciao"))));
+    QVERIFY(!eng.toScriptValue(123).strictlyEquals("ciao"));
 
     QJSValue obj1 = eng.newObject();
     QJSValue obj2 = eng.newObject();
@@ -3286,7 +3273,7 @@ void tst_QJSValue::strictlyEquals()
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::strictlyEquals: "
                          "cannot compare to a value created in "
                          "a different engine");
-    QCOMPARE(date1.strictlyEquals(QJSValue(&otherEngine, 123)), false);
+    QCOMPARE(date1.strictlyEquals(otherEngine.toScriptValue(123)), false);
 }
 
 Q_DECLARE_METATYPE(int*)
@@ -3495,9 +3482,9 @@ void tst_QJSValue::prettyPrinter()
 void tst_QJSValue::engineDeleted()
 {
     QJSEngine *eng = new QJSEngine;
-    QJSValue v1(eng, 123);
+    QJSValue v1 = eng->toScriptValue(123);
     QVERIFY(v1.isNumber());
-    QJSValue v2(eng, QString("ciao"));
+    QJSValue v2 = eng->toScriptValue(QString("ciao"));
     QVERIFY(v2.isString());
     QJSValue v3 = eng->newObject();
     QVERIFY(v3.isObject());

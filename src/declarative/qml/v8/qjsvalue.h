@@ -118,13 +118,6 @@ public:
     QJSValue callAsConstructor(const QJSValueList &args = QJSValueList());
 
 #ifdef QT_DEPRECATED
-    QT_DEPRECATED QJSValue(QJSEngine *engine, SpecialValue val);
-    QT_DEPRECATED QJSValue(QJSEngine *engine, bool val);
-    QT_DEPRECATED QJSValue(QJSEngine *engine, int val);
-    QT_DEPRECATED QJSValue(QJSEngine *engine, uint val);
-    QT_DEPRECATED QJSValue(QJSEngine *engine, double val);
-    QT_DEPRECATED QJSValue(QJSEngine *engine, const QString &val);
-
     QT_DEPRECATED QJSEngine *engine() const;
 
     QT_DEPRECATED bool isFunction() const;
@@ -139,11 +132,6 @@ public:
 private:
     // force compile error, prevent QJSValue(bool) to be called
     QJSValue(void *);
-#ifdef QT_DEPRECATED
-    // force compile error, prevent QJSValue(QScriptEngine*, bool) to be called
-    QJSValue(QJSEngine *, void *);
-    QJSValue(QJSEngine *, const char *);
-#endif
 
     QJSValue(QJSValuePrivate*);
     QJSValue(QScriptPassPointer<QJSValuePrivate>);

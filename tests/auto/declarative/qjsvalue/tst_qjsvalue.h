@@ -77,7 +77,6 @@ private slots:
     void ctor_string();
     void ctor_copyAndAssignWithEngine();
     void ctor_copyAndAssign();
-    void ctor_nullEngine();
 
     void toString();
     void toNumber();
