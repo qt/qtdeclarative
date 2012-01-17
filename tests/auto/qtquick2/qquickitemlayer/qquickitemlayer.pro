@@ -21,7 +21,11 @@ OTHER_FILES += \
     data/SourceRect.qml \
     data/TextureProvider.qml \
     data/Visible.qml \
-    data/ZOrder.qml
+    data/ZOrder.qml \
+    data/ZOrderChange.qml \
+    data/ToggleLayerAndEffect.qml \
+    data/DisableLayer.qml \
+    data/SamplerNameChange.qml
 
 
 

@@ -43,6 +43,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
+#include <QtGui/qopenglcontext.h>
 
 #include "../../shared/util.h"
 
@@ -74,18 +75,55 @@ private slots:
 
     void layerSourceRect();
 
-
     void layerZOrder_data();
     void layerZOrder();
 
     void layerIsTextureProvider();
+
+    void changeZOrder_data();
+    void changeZOrder();
+
+    void toggleLayerAndEffect();
+    void disableLayer();
+    void changeSamplerName();
+
+private:
+    bool m_isMesaSoftwareRasterizer;
+    int m_mesaVersion;
 };
 
 tst_QQuickItemLayer::tst_QQuickItemLayer()
+    : m_mesaVersion(0)
 {
+    QWindow window;
+    QOpenGLContext context;
+    window.setSurfaceType(QWindow::OpenGLSurface);
+    window.create();
+    context.create();
+    context.makeCurrent(&window);
+    const char *vendor = (const char *)glGetString(GL_VENDOR);
+    const char *renderer = (const char *)glGetString(GL_RENDERER);
+    m_isMesaSoftwareRasterizer = strcmp(vendor, "Mesa Project") == 0
+            && strcmp(renderer, "Software Rasterizer") == 0;
+    if (m_isMesaSoftwareRasterizer) {
+        // Expects format: <OpenGL version> Mesa <Mesa version>[-devel] [...]
+        const char *version = (const char *)glGetString(GL_VERSION);
+        QList<QByteArray> list = QByteArray(version).split(' ');
+        if (list.size() >= 3) {
+            list = list.at(2).split('-').at(0).split('.');
+            int major = 0;
+            int minor = 0;
+            int patch = 0;
+            if (list.size() >= 1)
+                major = list.at(0).toInt();
+            if (list.size() >= 2)
+                minor = list.at(1).toInt();
+            if (list.size() >= 3)
+                patch = list.at(2).toInt();
+            m_mesaVersion = QT_VERSION_CHECK(major, minor, patch);
+        }
+    }
 }
-
-
 
 // The test draws a red and a blue box next to each other and tests that the
 // output is still red and blue on the left and right and a combination of
@@ -93,6 +131,8 @@ tst_QQuickItemLayer::tst_QQuickItemLayer()
 
 void tst_QQuickItemLayer::layerSmooth()
 {
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest(testFile("Smooth.qml"));
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0, 0xff));
@@ -110,6 +150,8 @@ void tst_QQuickItemLayer::layerSmooth()
 
 void tst_QQuickItemLayer::layerEnabled()
 {
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest(testFile("Enabled.qml"));
     // Verify the banding
     QCOMPARE(fb.pixel(0, 0), fb.pixel(0, 1));
@@ -124,6 +166,8 @@ void tst_QQuickItemLayer::layerEnabled()
 
 void tst_QQuickItemLayer::layerMipmap()
 {
+    if (m_isMesaSoftwareRasterizer)
+        QSKIP("Mipmapping does not work with the Mesa Software Rasterizer.");
     QImage fb = runTest(testFile("Mipmap.qml"));
     QVERIFY(fb.pixel(0, 0) != 0xff000000);
     QVERIFY(fb.pixel(0, 0) != 0xffffffff);
@@ -136,6 +180,8 @@ void tst_QQuickItemLayer::layerMipmap()
 
 void tst_QQuickItemLayer::layerEffect()
 {
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest(testFile("Effect.qml"));
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
@@ -148,6 +194,9 @@ void tst_QQuickItemLayer::layerEffect()
 // a shader that pads transparent to blue. Everything else is red.
 void tst_QQuickItemLayer::layerSourceRect()
 {
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
     QImage fb = runTest(testFile("SourceRect.qml"));
 
     // Check that the edges are converted to blue
@@ -166,6 +215,8 @@ void tst_QQuickItemLayer::layerSourceRect()
 // directly in a stand alone ShaderEffect
 void tst_QQuickItemLayer::layerIsTextureProvider()
 {
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
     QImage fb = runTest(testFile("TextureProvider.qml"));
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
@@ -196,6 +247,9 @@ void tst_QQuickItemLayer::layerVisibility_data()
 
 void tst_QQuickItemLayer::layerVisibility()
 {
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
     QFETCH(bool, visible);
     QFETCH(bool, effect);
     QFETCH(qreal, opacity);
@@ -241,6 +295,9 @@ void tst_QQuickItemLayer::layerZOrder_data()
 
 void tst_QQuickItemLayer::layerZOrder()
 {
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
     QFETCH(bool, effect);
 
     QQuickView view;
@@ -260,7 +317,91 @@ void tst_QQuickItemLayer::layerZOrder()
 
 }
 
+void tst_QQuickItemLayer::changeZOrder_data()
+{
+    QTest::addColumn<bool>("layered");
+    QTest::addColumn<bool>("effect");
 
+    QTest::newRow("layered, effect") << true << true;
+    QTest::newRow("layered, !effect") << true << false;
+    QTest::newRow("!layered") << false << false;
+}
+
+void tst_QQuickItemLayer::changeZOrder()
+{
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+
+    QFETCH(bool, layered);
+    QFETCH(bool, effect);
+
+    QQuickView view;
+    view.setSource(testFile("ZOrderChange.qml"));
+
+    QQuickItem *child = view.rootItem()->childItems().at(0);
+    child->setProperty("layerEnabled", layered);
+    child->setProperty("layerEffect", effect);
+    child->setProperty("layerZ", 1);
+
+    view.show();
+
+    QTest::qWaitForWindowShown(&view);
+
+    QImage fb = view.grabFrameBuffer();
+
+    QRgb topLeft = fb.pixel(50, 50);
+    QRgb topRight = fb.pixel(150, 50);
+    QRgb bottomLeft = fb.pixel(50, 150);
+    QRgb bottomRight = fb.pixel(150, 150);
+
+    QCOMPARE(bottomLeft, qRgb(0, 0, 0xff));
+
+    if (layered) {
+        QCOMPARE(topLeft, qRgb(0, 0xff, 0xff));
+    } else {
+        QCOMPARE(qGreen(topLeft), 0xff);
+        QVERIFY(qAbs(qRed(topLeft) - 0x3f) < 4);
+        QVERIFY(qAbs(qBlue(topLeft) - 0xbf) < 4);
+    }
+
+    if (layered && effect) {
+        QCOMPARE(qRed(topRight), 0xff);
+        QCOMPARE(qGreen(topRight), 0x00);
+        QVERIFY(qAbs(qBlue(topRight) - 0x7f) < 4);
+
+        QVERIFY(qAbs(qRed(bottomRight) - 0x7f) < 4);
+        QCOMPARE(qBlue(bottomRight), 0xff);
+        QVERIFY(qAbs(qGreen(bottomRight) - 0x7f) < 4);
+    } else {
+        QCOMPARE(qRed(topRight), 0xff);
+        QCOMPARE(qBlue(topRight), 0x00);
+        QVERIFY(qAbs(qGreen(topRight) - 0x7f) < 4);
+
+        QVERIFY(qAbs(qRed(bottomRight) - 0x7f) < 4);
+        QCOMPARE(qGreen(bottomRight), 0xff);
+        QVERIFY(qAbs(qBlue(bottomRight) - 0x7f) < 4);
+    }
+}
+
+void tst_QQuickItemLayer::toggleLayerAndEffect()
+{
+    // This test passes if it doesn't crash.
+    runTest(testFile("ToggleLayerAndEffect.qml"));
+}
+
+void tst_QQuickItemLayer::disableLayer()
+{
+    // This test passes if it doesn't crash.
+    runTest(testFile("DisableLayer.qml"));
+}
+
+void tst_QQuickItemLayer::changeSamplerName()
+{
+    if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
+        QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
+    QImage fb = runTest(testFile("SamplerNameChange.qml"));
+    QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
+}
 
 QTEST_MAIN(tst_QQuickItemLayer)
 

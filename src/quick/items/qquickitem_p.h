@@ -157,7 +157,7 @@ public:
     void classBegin();
     void componentComplete();
 
-    bool enabled() const { return m_effectSource != 0; }
+    bool enabled() const { return m_enabled; }
     void setEnabled(bool enabled);
 
     bool mipmap() const { return m_mipmap; }
@@ -179,12 +179,7 @@ public:
     void setWrapMode(QQuickShaderEffectSource::WrapMode mode);
 
     QString name() const { return m_name; }
-    void setName(const QString &name) {
-        if (m_name == name)
-            return;
-        m_name = name;
-        emit nameChanged(name);
-    }
+    void setName(const QString &name);
 
     QDeclarativeComponent *effect() const { return m_effectComponent; }
     void setEffect(QDeclarativeComponent *effect);
@@ -216,6 +211,8 @@ signals:
 private:
     void activate();
     void deactivate();
+    void activateEffect();
+    void deactivateEffect();
 
     QQuickItem *m_item;
     bool m_enabled;
