@@ -401,30 +401,6 @@ QJSValue QJSEngine::newQObject(QObject *object)
     return d->scriptValueFromInternal(d->newQObject(object, QV8Engine::JavaScriptOwnership));
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Creates a JavaScript object holding the given variant \a value.
-
-  If a default prototype has been registered with the meta type id of
-  \a value, then the prototype of the created object will be that
-  prototype; otherwise, the prototype will be the Object prototype
-  object.
-
-  \sa setDefaultPrototype(), QJSValue::toVariant(), reportAdditionalMemoryCost()
-*/
-QJSValue QJSEngine::newVariant(const QVariant &value)
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(d->newVariant(value));
-}
-
-#endif // QT_DEPRECATED
-
 /*!
   Returns this engine's Global Object.
 

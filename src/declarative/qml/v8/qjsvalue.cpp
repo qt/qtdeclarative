@@ -502,7 +502,7 @@ bool QJSValue::isFunction() const
   Returns true if this QJSValue is a variant value;
   otherwise returns false.
 
-  \sa toVariant(), QJSEngine::newVariant()
+  \sa toVariant()
 */
 bool QJSValue::isVariant() const
 {

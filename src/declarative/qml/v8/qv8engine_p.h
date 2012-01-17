@@ -401,7 +401,6 @@ public:
 
     QScriptPassPointer<QJSValuePrivate> newArray(uint length);
     v8::Local<v8::Object> newVariant(const QVariant &variant);
-    QScriptPassPointer<QJSValuePrivate> newVariant(QJSValuePrivate* value, const QVariant &variant);
 
     v8::Local<v8::Array> variantListToJS(const QVariantList &lst);
     QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray);

@@ -654,7 +654,7 @@ void tst_QJSEngine::newVariant()
 {
     QJSEngine eng;
     {
-        QJSValue opaque = eng.newVariant(QVariant());
+        QJSValue opaque = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QCOMPARE(opaque.isValid(), true);
         QCOMPARE(opaque.isVariant(), true);
         QVERIFY(!opaque.isCallable());
@@ -662,7 +662,7 @@ void tst_QJSEngine::newVariant()
         QCOMPARE(opaque.prototype().isValid(), true);
         QEXPECT_FAIL("", "FIXME: newly created QObject's prototype is an JS Object", Continue);
         QCOMPARE(opaque.prototype().isVariant(), true);
-        QVERIFY(opaque.property("valueOf").callWithInstance(opaque).isUndefined());
+        QVERIFY(opaque.property("valueOf").callWithInstance(opaque).equals(opaque));
     }
 }
 
@@ -732,31 +732,7 @@ void tst_QJSEngine::newVariant_valueOfToString()
     // valueOf() and toString()
     QJSEngine eng;
     {
-        QJSValue object = eng.newVariant(QVariant(123));
-        QJSValue value = object.property("valueOf").callWithInstance(object);
-        QVERIFY(value.isNumber());
-        QCOMPARE(value.toInt(), 123);
-        QCOMPARE(object.toString(), QString::fromLatin1("123"));
-        QCOMPARE(object.toVariant().toString(), object.toString());
-    }
-    {
-        QJSValue object = eng.newVariant(QVariant(QString::fromLatin1("hello")));
-        QJSValue value = object.property("valueOf").callWithInstance(object);
-        QVERIFY(value.isString());
-        QCOMPARE(value.toString(), QString::fromLatin1("hello"));
-        QCOMPARE(object.toString(), QString::fromLatin1("hello"));
-        QCOMPARE(object.toVariant().toString(), object.toString());
-    }
-    {
-        QJSValue object = eng.newVariant(QVariant(false));
-        QJSValue value = object.property("valueOf").callWithInstance(object);
-        QVERIFY(value.isBool());
-        QCOMPARE(value.toBool(), false);
-        QCOMPARE(object.toString(), QString::fromLatin1("false"));
-        QCOMPARE(object.toVariant().toString(), object.toString());
-    }
-    {
-        QJSValue object = eng.newVariant(QVariant(QPoint(10, 20)));
+        QJSValue object = eng.toScriptValue(QVariant(QPoint(10, 20)));
         QJSValue value = object.property("valueOf").callWithInstance(object);
         QVERIFY(value.isObject());
         QVERIFY(value.strictlyEquals(object));

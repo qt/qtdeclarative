@@ -442,16 +442,11 @@ void tst_QJSValue::toString()
 
     // variant should use internal valueOf(), then fall back to QVariant::toString(),
     // then fall back to "QVariant(typename)"
-    QJSValue variant = eng.newVariant(123);
-    QVERIFY(variant.isVariant());
-    QCOMPARE(variant.toString(), QString::fromLatin1("123"));
-    variant = eng.newVariant(QByteArray("hello"));
-    QVERIFY(variant.isVariant());
-    QCOMPARE(variant.toString(), QString::fromLatin1("hello"));
-    variant = eng.newVariant(QVariant(QPoint(10, 20)));
+    QJSValue variant = eng.toScriptValue(QPoint(10, 20));
     QVERIFY(variant.isVariant());
     QCOMPARE(variant.toString(), QString::fromLatin1("QVariant(QPoint)"));
-    variant = eng.newVariant(QUrl());
+    variant = eng.toScriptValue(QUrl());
+    QVERIFY(variant.isVariant());
     QVERIFY(variant.toString().isEmpty());
 }
 
@@ -1037,11 +1032,6 @@ void tst_QJSValue::toVariant()
         QCOMPARE(qjsvalue_cast<QVariant>(str), QVariant(QString("ciao")));
     }
 
-    QVariant var(QChar(0x007A));
-    QJSValue opaque = eng.newVariant(var);
-    QVERIFY(opaque.isVariant());
-    QCOMPARE(opaque.toVariant(), var);
-
     QJSValue object = eng.newObject();
     QCOMPARE(object.toVariant(), QVariant(QVariantMap()));
 
@@ -1136,8 +1126,8 @@ void tst_QJSValue::toQObject_nonQObject_data()
     QTest::newRow("object") << engine->newObject();
     QTest::newRow("array") << engine->newArray();
     QTest::newRow("date") << engine->evaluate("new Date(124)");
-    QTest::newRow("variant(12345)") << engine->newVariant(12345);
-    QTest::newRow("variant((QObject*)0)") << engine->newVariant(qVariantFromValue((QObject*)0));
+    QTest::newRow("variant(12345)") << engine->toScriptValue(QVariant(12345));
+    QTest::newRow("variant((QObject*)0)") << engine->toScriptValue(qVariantFromValue((QObject*)0));
     QTest::newRow("newQObject(0)") << engine->newQObject(0);
 }
 
@@ -1173,25 +1163,6 @@ void tst_QJSValue::toQObject()
     QCOMPARE(qjsvalue_cast<QObject*>(qbutton), (QObject *)&button);
     QCOMPARE(qjsvalue_cast<QWidget*>(qbutton), (QWidget *)&button);
     QCOMPARE(qjsvalue_cast<QPushButton*>(qbutton), &button);
-
-    // wrapping a QObject* as variant
-    QJSValue variant = eng.newVariant(qVariantFromValue((QObject*)&button));
-    QCOMPARE(variant.toQObject(), (QObject*)&button);
-    QCOMPARE(qjsvalue_cast<QObject*>(variant), (QObject*)&button);
-    QCOMPARE(qjsvalue_cast<QWidget*>(variant), (QWidget*)&button);
-    QCOMPARE(qjsvalue_cast<QPushButton*>(variant), &button);
-
-    QJSValue variant2 = eng.newVariant(qVariantFromValue((QWidget*)&button));
-    QCOMPARE(variant2.toQObject(), (QObject*)&button);
-    QCOMPARE(qjsvalue_cast<QObject*>(variant2), (QObject*)&button);
-    QCOMPARE(qjsvalue_cast<QWidget*>(variant2), (QWidget*)&button);
-    QCOMPARE(qjsvalue_cast<QPushButton*>(variant2), &button);
-
-    QJSValue variant3 = eng.newVariant(qVariantFromValue(&button));
-    QCOMPARE(variant3.toQObject(), (QObject*)0);
-    QCOMPARE(qjsvalue_cast<QObject*>(variant3), (QObject*)0);
-    QCOMPARE(qjsvalue_cast<QWidget*>(variant3), (QWidget*)0);
-    QCOMPARE(qjsvalue_cast<QPushButton*>(variant3), &button);
 }
 
 void tst_QJSValue::toDateTime()
@@ -2371,7 +2342,7 @@ void tst_QJSValue::getSetScriptClass_QVariant()
     TestScriptClass testClass(&eng);
     // object that already has a(n internal) class
     {
-        QJSValue obj = eng.newVariant(QUrl("http://example.com"));
+        QJSValue obj = eng.toScriptValue(QUrl("http://example.com"));
         QVERIFY(obj.isVariant());
         QCOMPARE(obj.scriptClass(), (QScriptClass*)0);
         obj.setScriptClass(&testClass);
@@ -3162,78 +3133,15 @@ void tst_QJSValue::equals()
     }
 
     {
-        QJSValue var1 = eng.newVariant(QVariant(false));
-        QJSValue var2 = eng.newVariant(QVariant(false));
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
-        QVERIFY(var1.equals(var2));
-        {
-            QJSValue ret = compareFun.call(QJSValue(), QJSValueList() << var1 << var2);
-            QVERIFY(ret.isBool());
-        }
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(false));
-        QJSValue var2 = eng.newVariant(QVariant(0));
-        // QVariant::operator==() performs type conversion
+        QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
+        QJSValue var2 = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
         QVERIFY(var1.equals(var2));
     }
     {
-        QJSValue var1 = eng.newVariant(QVariant(QStringList() << "a"));
-        QJSValue var2 = eng.newVariant(QVariant(QStringList() << "a"));
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
-        QVERIFY(var1.equals(var2));
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(QStringList() << "a"));
-        QJSValue var2 = eng.newVariant(QVariant(QStringList() << "b"));
+        QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
+        QJSValue var2 = eng.toScriptValue(QVariant(QPoint(3, 4)));
         QVERIFY(!var1.equals(var2));
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(QPoint(1, 2)));
-        QJSValue var2 = eng.newVariant(QVariant(QPoint(1, 2)));
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
-        QVERIFY(var1.equals(var2));
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(QPoint(1, 2)));
-        QJSValue var2 = eng.newVariant(QVariant(QPoint(3, 4)));
-        QVERIFY(!var1.equals(var2));
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(int(1)));
-        QJSValue var2 = eng.newVariant(QVariant(double(1)));
-        // QVariant::operator==() performs type conversion
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
-        QVERIFY(var1.equals(var2));
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(QString::fromLatin1("123")));
-        QJSValue var2 = eng.newVariant(QVariant(double(123)));
-        QJSValue var3(QString::fromLatin1("123"));
-        QJSValue var4(123);
-
-        QVERIFY(var1.equals(var1));
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
-        QVERIFY(var1.equals(var2));
-        QVERIFY(var1.equals(var3));
-        QVERIFY(var1.equals(var4));
-
-        QEXPECT_FAIL("", "FIXME: QVariant comparison does not work with v8", Continue);
-        QVERIFY(var2.equals(var1));
-        QVERIFY(var2.equals(var2));
-        QVERIFY(var2.equals(var3));
-        QVERIFY(var2.equals(var4));
-
-        QVERIFY(var3.equals(var1));
-        QVERIFY(var3.equals(var2));
-        QVERIFY(var3.equals(var3));
-        QVERIFY(var3.equals(var4));
-
-        QVERIFY(var4.equals(var1));
-        QVERIFY(var4.equals(var2));
-        QVERIFY(var4.equals(var3));
-        QVERIFY(var4.equals(var4));
     }
 
     QJSEngine otherEngine;
@@ -3356,34 +3264,25 @@ void tst_QJSValue::strictlyEquals()
     QVERIFY(qobj1.strictlyEquals(qobj2));
 
     {
-        QJSValue var1 = eng.newVariant(QVariant(false));
-        QJSValue var2 = eng.newVariant(QVariant(false));
-        QVERIFY(!var1.strictlyEquals(var2));
-        QVERIFY(!var1.strictlyEquals(QJSValue()));
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(false));
-        QJSValue var2 = eng.newVariant(QVariant(0));
+        QJSValue var1 = eng.toScriptValue(QVariant(QStringList() << "a"));
+        QJSValue var2 = eng.toScriptValue(QVariant(QStringList() << "a"));
+        QVERIFY(var1.isArray());
+        QVERIFY(var2.isArray());
         QVERIFY(!var1.strictlyEquals(var2));
     }
     {
-        QJSValue var1 = eng.newVariant(QVariant(QStringList() << "a"));
-        QJSValue var2 = eng.newVariant(QVariant(QStringList() << "a"));
+        QJSValue var1 = eng.toScriptValue(QVariant(QStringList() << "a"));
+        QJSValue var2 = eng.toScriptValue(QVariant(QStringList() << "b"));
         QVERIFY(!var1.strictlyEquals(var2));
     }
     {
-        QJSValue var1 = eng.newVariant(QVariant(QStringList() << "a"));
-        QJSValue var2 = eng.newVariant(QVariant(QStringList() << "b"));
+        QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
+        QJSValue var2 = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QVERIFY(!var1.strictlyEquals(var2));
     }
     {
-        QJSValue var1 = eng.newVariant(QVariant(QPoint(1, 2)));
-        QJSValue var2 = eng.newVariant(QVariant(QPoint(1, 2)));
-        QVERIFY(!var1.strictlyEquals(var2));
-    }
-    {
-        QJSValue var1 = eng.newVariant(QVariant(QPoint(1, 2)));
-        QJSValue var2 = eng.newVariant(QVariant(QPoint(3, 4)));
+        QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
+        QJSValue var2 = eng.toScriptValue(QVariant(QPoint(3, 4)));
         QVERIFY(!var1.strictlyEquals(var2));
     }
 
@@ -3403,22 +3302,8 @@ void tst_QJSValue::castToPointer()
 {
     QJSEngine eng;
     {
-        QJSValue v = eng.newVariant(int(123));
-        int *ip = qjsvalue_cast<int*>(v);
-        QVERIFY(ip != 0);
-        QCOMPARE(*ip, 123);
-        *ip = 456;
-        QCOMPARE(qjsvalue_cast<int>(v), 456);
-
-        double *dp = qjsvalue_cast<double*>(v);
-        QVERIFY(dp == 0);
-
-        QJSValue v2 = eng.newVariant(qVariantFromValue(ip));
-        QCOMPARE(qjsvalue_cast<int*>(v2), ip);
-    }
-    {
         QColor c(123, 210, 231);
-        QJSValue v = eng.newVariant(c);
+        QJSValue v = eng.toScriptValue(c);
         QColor *cp = qjsvalue_cast<QColor*>(v);
         QVERIFY(cp != 0);
         QCOMPARE(*cp, c);
@@ -3426,7 +3311,7 @@ void tst_QJSValue::castToPointer()
         QBrush *bp = qjsvalue_cast<QBrush*>(v);
         QVERIFY(bp == 0);
 
-        QJSValue v2 = eng.newVariant(qVariantFromValue(cp));
+        QJSValue v2 = eng.toScriptValue(qVariantFromValue(cp));
         QCOMPARE(qjsvalue_cast<QColor*>(v2), cp);
     }
 }

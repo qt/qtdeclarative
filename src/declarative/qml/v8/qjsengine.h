@@ -90,8 +90,6 @@ public:
 
     QT_DEPRECATED QJSValue nullValue();
     QT_DEPRECATED QJSValue undefinedValue();
-
-    QT_DEPRECATED QJSValue newVariant(const QVariant &value);
 #endif
 
 Q_SIGNALS:
