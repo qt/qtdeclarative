@@ -1242,47 +1242,6 @@ void tst_QJSValue::toRegExp()
     QVERIFY(qjsvalue_cast<QRegExp>(eng.undefinedValue()).isEmpty());
 }
 
-void tst_QJSValue::instanceOf_twoEngines()
-{
-    QJSEngine eng;
-    QJSValue obj = eng.newObject();
-    QJSEngine otherEngine;
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::instanceof: cannot perform operation on a value created in a different engine");
-    QCOMPARE(obj.instanceOf(otherEngine.globalObject().property("Object")), false);
-}
-
-void tst_QJSValue::instanceOf()
-{
-    QJSEngine eng;
-    QJSValue obj = eng.newObject();
-    QCOMPARE(obj.instanceOf(eng.evaluate("Object.prototype")), false);
-    QCOMPARE(obj.instanceOf(eng.evaluate("Array.prototype")), false);
-    QCOMPARE(obj.instanceOf(eng.evaluate("Function.prototype")), false);
-    QCOMPARE(obj.instanceOf(eng.evaluate("QObject.prototype")), false);
-    QCOMPARE(obj.instanceOf(QJSValue(&eng, 123)), false);
-    QCOMPARE(obj.instanceOf(eng.undefinedValue()), false);
-    QCOMPARE(obj.instanceOf(eng.nullValue()), false);
-    QCOMPARE(obj.instanceOf(QJSValue()), false);
-
-    QCOMPARE(obj.instanceOf(eng.evaluate("Object")), true);
-    QCOMPARE(obj.instanceOf(eng.evaluate("Array")), false);
-    QCOMPARE(obj.instanceOf(eng.evaluate("Function")), false);
-    QCOMPARE(obj.instanceOf(eng.evaluate("QObject")), false);
-
-    QJSValue arr = eng.newArray();
-    QVERIFY(arr.isArray());
-    QCOMPARE(arr.instanceOf(eng.evaluate("Object.prototype")), false);
-    QCOMPARE(arr.instanceOf(eng.evaluate("Array.prototype")), false);
-    QCOMPARE(arr.instanceOf(eng.evaluate("Function.prototype")), false);
-    QCOMPARE(arr.instanceOf(eng.evaluate("QObject.prototype")), false);
-    QCOMPARE(arr.instanceOf(eng.evaluate("Object")), true);
-    QCOMPARE(arr.instanceOf(eng.evaluate("Array")), true);
-    QCOMPARE(arr.instanceOf(eng.evaluate("Function")), false);
-    QCOMPARE(arr.instanceOf(eng.evaluate("QObject")), false);
-
-    QCOMPARE(QJSValue().instanceOf(arr), false);
-}
-
 void tst_QJSValue::isArray_data()
 {
     newEngine();
@@ -2823,7 +2782,7 @@ void tst_QJSValue::construct_simple()
     QVERIFY(fun.isCallable());
     QJSValue ret = fun.callAsConstructor();
     QVERIFY(ret.isObject());
-    QVERIFY(ret.instanceOf(fun));
+    QVERIFY(ret.prototype().strictlyEquals(fun.property("prototype")));
     QCOMPARE(ret.property("foo").toInt(), 123);
 }
 
@@ -2835,7 +2794,7 @@ void tst_QJSValue::construct_newObjectJS()
     QVERIFY(fun.isCallable());
     QJSValue ret = fun.callAsConstructor();
     QVERIFY(ret.isObject());
-    QVERIFY(!ret.instanceOf(fun));
+    QVERIFY(!ret.prototype().strictlyEquals(fun.property("prototype")));
     QCOMPARE(ret.property("bar").toInt(), 456);
 }
 

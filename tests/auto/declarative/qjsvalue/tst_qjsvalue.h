@@ -91,8 +91,6 @@ private slots:
     void toQObject();
     void toDateTime();
     void toRegExp();
-    void instanceOf_twoEngines();
-    void instanceOf();
     void isArray_data();
     void isArray();
     void isDate();

@@ -4090,7 +4090,6 @@ void tst_QJSEngine::jsNumberClass()
         QVERIFY(ctor.property("POSITIVE_INFINITY").isNumber());
         QCOMPARE(ctor.propertyFlags("POSITIVE_INFINITY"), flags);
     }
-    QVERIFY(proto.instanceOf(eng.globalObject().property("Object")));
     QCOMPARE(proto.toNumber(), qreal(0));
     QVERIFY(proto.property("constructor").strictlyEquals(ctor));
 

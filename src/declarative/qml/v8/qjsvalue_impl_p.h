@@ -603,37 +603,6 @@ inline bool QJSValuePrivate::lessThan(QJSValuePrivate *other) const
     return nthis < nother;
 }
 
-inline bool QJSValuePrivate::instanceOf(QJSValuePrivate* other) const
-{
-    if (!isObject() || !other->isFunction())
-        return false;
-    if (engine() != other->engine()) {
-        qWarning("QJSValue::instanceof: cannot perform operation on a value created in a different engine");
-        return false;
-    }
-    v8::HandleScope handleScope;
-    return instanceOf(v8::Handle<v8::Object>::Cast(other->m_value));
-}
-
-inline bool QJSValuePrivate::instanceOf(v8::Handle<v8::Object> other) const
-{
-    Q_ASSERT(isObject());
-    Q_ASSERT(other->IsFunction());
-
-    v8::Handle<v8::Object> self = v8::Handle<v8::Object>::Cast(m_value);
-    v8::Handle<v8::Value> selfPrototype = self->GetPrototype();
-    v8::Handle<v8::Value> otherPrototype = other->Get(v8::String::New("prototype"));
-
-    while (!selfPrototype->IsNull()) {
-        if (selfPrototype->StrictEquals(otherPrototype))
-            return true;
-        // In general a prototype can be an object or null, but in the loop it can't be null, so
-        // we can cast it safely.
-        selfPrototype = v8::Handle<v8::Object>::Cast(selfPrototype)->GetPrototype();
-    }
-    return false;
-}
-
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::prototype() const
 {
     if (isObject()) {

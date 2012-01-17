@@ -142,8 +142,6 @@ public:
     QT_DEPRECATED qint32 toInt32() const;
     QT_DEPRECATED quint32 toUInt32() const;
 
-    QT_DEPRECATED bool instanceOf(const QJSValue &other) const;
-
     QT_DEPRECATED QJSValue::PropertyFlags propertyFlags(const QString &name) const;
 
     QT_DEPRECATED QJSValue call(const QJSValue &thisObject = QJSValue(),

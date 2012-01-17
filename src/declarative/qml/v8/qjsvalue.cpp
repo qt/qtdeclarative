@@ -891,28 +891,6 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
     return d_ptr->strictlyEquals(o);
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-    \obsolete
-
-    Returns true if this QJSValue is an instance of
-    \a other; otherwise returns false.
-
-    This QJSValue is considered to be an instance of \a other if
-    \a other is a function and the value of the \c{prototype}
-    property of \a other is in the prototype chain of this
-    QJSValue.
-*/
-bool QJSValue::instanceOf(const QJSValue &other) const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->instanceOf(QJSValuePrivate::get(other));
-}
-
-#endif // QT_DEPRECATED
-
 /*!
   Returns the value of this QJSValue's property with the given \a name.
   If no such property exists, an invalid QJSValue is returned.

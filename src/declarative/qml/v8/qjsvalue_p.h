@@ -112,8 +112,6 @@ public:
     inline bool equals(QJSValuePrivate* other);
     inline bool strictlyEquals(QJSValuePrivate* other);
     inline bool lessThan(QJSValuePrivate *other) const;
-    inline bool instanceOf(QJSValuePrivate*) const;
-    inline bool instanceOf(v8::Handle<v8::Object> other) const;
 
     inline QScriptPassPointer<QJSValuePrivate> prototype() const;
     inline void setPrototype(QJSValuePrivate* prototype);
