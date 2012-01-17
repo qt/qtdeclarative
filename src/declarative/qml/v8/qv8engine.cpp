@@ -530,6 +530,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     console->Set(v8::String::New("info"), consoleLogFn);
     console->Set(v8::String::New("warn"), V8FUNCTION(consoleWarn, this));
     console->Set(v8::String::New("error"), V8FUNCTION(consoleError, this));
+    console->Set(v8::String::New("assert"), V8FUNCTION(consoleAssert, this));
 
     console->Set(v8::String::New("count"), V8FUNCTION(consoleCount, this));
     console->Set(v8::String::New("profile"), V8FUNCTION(consoleProfile, this));

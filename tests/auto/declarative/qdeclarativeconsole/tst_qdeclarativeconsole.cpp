@@ -54,6 +54,7 @@ private slots:
     void logging();
     void tracing();
     void profiling();
+    void assert();
 
 private:
     QDeclarativeEngine engine;
@@ -120,6 +121,25 @@ void tst_qdeclarativeconsole::profiling()
     delete object;
 }
 
+void tst_qdeclarativeconsole::assert()
+{
+    QUrl testUrl = testFileUrl("assert.qml");
+
+    // assert()
+    QTest::ignoreMessage(QtCriticalMsg, "This will fail");
+    QTest::ignoreMessage(QtCriticalMsg, "This will fail too");
+    QString trace1 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(54).arg(17);
+    QString trace2 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(59).arg(9);
+    QString trace3 = QString::fromLatin1("assertFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(47).arg(17);
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace1));
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace2));
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace3));
+
+    QDeclarativeComponent component(&engine, testUrl);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    delete object;
+}
 
 QTEST_MAIN(tst_qdeclarativeconsole)
 

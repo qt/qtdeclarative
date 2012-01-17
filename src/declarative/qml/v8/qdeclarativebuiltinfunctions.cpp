@@ -94,6 +94,22 @@ static QString extendMessage(const QString &msg) {
     return msg;
 }
 
+static void printStack() {
+    //The v8 default is currently 10 stack frames.
+    v8::Handle<v8::StackTrace> stackTrace =
+        v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kOverview);
+    int stackCount = stackTrace->GetFrameCount();
+
+    for (int i = 0; i < stackCount; i++) {
+        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(i);
+        v8::String::Utf8Value func_name(frame->GetFunctionName());
+        v8::String::Utf8Value script_name(frame->GetScriptName());
+        int lineNumber = frame->GetLineNumber();
+        int columnNumber = frame->GetColumn();
+        qDebug("%s (%s:%d:%d)\n", *func_name, *script_name, lineNumber, columnNumber);
+    }
+}
+
 v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args)
 {
     v8::HandleScope handleScope;
@@ -252,25 +268,35 @@ v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
     if (args.Length() != 0)
         V8THROW_ERROR("console.trace(): Invalid arguments");
 
-    //The v8 default is currently 10 stack frames.
-    v8::Handle<v8::StackTrace> stackTrace =
-        v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kOverview);
-    int stackCount = stackTrace->GetFrameCount();
-
-    for (int i = 0; i < stackCount; i++) {
-        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(i);
-        v8::String::Utf8Value func_name(frame->GetFunctionName());
-        v8::String::Utf8Value script_name(frame->GetScriptName());
-        int lineNumber = frame->GetLineNumber();
-        int columnNumber = frame->GetColumn();
-        qDebug("%s (%s:%d:%d)\n", *func_name, *script_name, lineNumber, columnNumber);
-    }
+    printStack();
     return v8::Undefined();
 }
 
 v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args)
 {
     return console(Warn, args);
+}
+
+v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
+{
+    if (args.Length() == 0)
+        V8THROW_ERROR("console.assert(): Missing argument");
+
+    if (!args[0]->ToBoolean()->Value()) {
+        QString message;
+        for (int i = 1; i < args.Length(); ++i) {
+            if (i != 1)
+                message.append(QLatin1Char(' '));
+
+            v8::Local<v8::Value> value = args[i];
+            message.append(V8ENGINE()->toString(value->ToString()));
+        }
+
+        message = extendMessage(message);
+        qCritical("%s", qPrintable(message));
+        printStack();
+    }
+    return v8::Undefined();
 }
 
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)

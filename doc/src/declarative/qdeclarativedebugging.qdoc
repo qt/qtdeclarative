@@ -49,6 +49,19 @@ The output is generated using the qDebug, qWarning, qCritical methods in C++
 \hint Setting the environment variable QML_CONSOLE_EXTENDED also prints the source
 code location of the call.
 
+\section2 Assert
+
+\c console.assert tests that an expression is true. If not, it will write an optional message
+to the console and print the stack trace.
+
+\qml
+function f() {
+  var x = 12
+  console.assert(x == 12, "This will pass");
+  console.assert(x > 12, "This will fail");
+}
+\endqml
+
 \section2 Timer
 
 \c console.time and console.timeEnd log the time (in milliseconds) that was spent between
