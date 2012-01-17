@@ -367,17 +367,10 @@ union QDeclarativeInstruction
         QML_INSTR_HEADER
         int propertyIndex;
         struct QRect {
-#if defined(Q_OS_MAC)
-            int y1;
-            int x1;
-            int y2;
-            int x2;
-#else
             int x1;
             int y1;
             int x2;
             int y2;
-#endif
         } rect;
     };
     struct instr_storeRectF {
