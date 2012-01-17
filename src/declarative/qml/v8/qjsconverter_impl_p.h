@@ -143,14 +143,14 @@ QString QJSConverter::toString(double value)
 }
 
 // return a mask of v8::PropertyAttribute that may also contains QScriptValue::PropertyGetter or QScriptValue::PropertySetter
-uint QJSConverter::toPropertyAttributes(const QFlags<QJSValue::PropertyFlag>& flags)
+uint QJSConverter::toPropertyAttributes(const QFlags<QJSValuePrivate::PropertyFlag>& flags)
 {
     uint attr = 0;
-    if (flags.testFlag(QJSValue::ReadOnly))
+    if (flags.testFlag(QJSValuePrivate::ReadOnly))
         attr |= v8::ReadOnly;
-    if (flags.testFlag(QJSValue::Undeletable))
+    if (flags.testFlag(QJSValuePrivate::Undeletable))
         attr |= v8::DontDelete;
-    if (flags.testFlag(QJSValue::SkipInEnumeration))
+    if (flags.testFlag(QJSValuePrivate::SkipInEnumeration))
         attr |= v8::DontEnum;
     //        if (flags.testFlag(QScriptValue::PropertyGetter))
     //            attr |= QScriptValue::PropertyGetter;

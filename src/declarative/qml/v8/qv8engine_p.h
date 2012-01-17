@@ -315,7 +315,7 @@ public:
     QDeclarativeContextData *callingContext();
 
     v8::Local<v8::Array> getOwnPropertyNames(v8::Handle<v8::Object>);
-    inline QJSValue::PropertyFlags getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property);
+    inline QJSValuePrivate::PropertyFlags getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property);
     void freezeObject(v8::Handle<v8::Value>);
 
     inline QString toString(v8::Handle<v8::Value> string);

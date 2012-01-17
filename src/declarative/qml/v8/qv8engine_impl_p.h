@@ -128,9 +128,9 @@ inline void QV8Engine::invalidateAllIterators()
   \note property can be index (v8::Integer) or a property (v8::String) name, according to ECMA script
   property would be converted to a string.
 */
-inline QJSValue::PropertyFlags QV8Engine::getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property)
+inline QJSValuePrivate::PropertyFlags QV8Engine::getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property)
 {
-    QJSValue::PropertyFlags flags = m_originalGlobalObject.getPropertyFlags(object, property);
+    QJSValuePrivate::PropertyFlags flags = m_originalGlobalObject.getPropertyFlags(object, property);
     return flags;
 }
 

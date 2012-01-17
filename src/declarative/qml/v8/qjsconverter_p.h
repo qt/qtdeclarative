@@ -24,7 +24,7 @@
 #ifndef QJSCONVERTER_P_H
 #define QJSCONVERTER_P_H
 
-#include "qjsvalue.h"
+#include "qjsvalue_p.h"
 #include <QtCore/qglobal.h>
 #include <QtCore/qnumeric.h>
 #include <QtCore/qstring.h>
@@ -57,7 +57,7 @@ public:
         PropertyAttributeMask = v8::ReadOnly | v8::DontDelete | v8::DontEnum,
     };
     // return a mask of v8::PropertyAttribute that may also contains QScriptValue::PropertyGetter or QScriptValue::PropertySetter
-    static inline uint toPropertyAttributes(const QFlags<QJSValue::PropertyFlag>& flags);
+    static inline uint toPropertyAttributes(const QFlags<QJSValuePrivate::PropertyFlag>& flags);
 
     // Converts a JS RegExp to a QRegExp.
     // The conversion is not 100% exact since ECMA regexp and QRegExp

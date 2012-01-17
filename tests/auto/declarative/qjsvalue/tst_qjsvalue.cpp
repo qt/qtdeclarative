@@ -3665,32 +3665,4 @@ void tst_QJSValue::nestedObjectToVariant()
     QCOMPARE(o.toVariant(), expected);
 }
 
-void tst_QJSValue::propertyFlags_data()
-{
-    QTest::addColumn<QString>("program");
-    QTest::addColumn<uint>("expected");
-
-    QTest::newRow("nothing") << "" << 0u;
-#if 0 // FIXME: No getter/setter API
-    QTest::newRow("getter") << "o.__defineGetter__('prop', function() { return 'blah' } );\n" << uint(QJSValue::PropertyGetter);
-    QTest::newRow("setter") << "o.__defineSetter__('prop', function(a) { this.setted_prop2 = a; } );\n" << uint(QJSValue::PropertySetter);
-    QTest::newRow("getterSetter") <<  "o.__defineGetter__('prop', function() { return 'ploup' } );\n"
-                                      "o.__defineSetter__('prop', function(a) { this.setted_prop3 = a; } );\n" << uint(QJSValue::PropertySetter|QJSValue::PropertyGetter);
-#endif
-    QTest::newRow("nothing2") << "o.prop = 'nothing'" << 0u;
-}
-
-void tst_QJSValue::propertyFlags()
-{
-    QFETCH(QString, program);
-    QFETCH(uint, expected);
-    QJSEngine eng;
-    eng.evaluate("o = new Object;");
-    eng.evaluate(program);
-    QJSValue o = eng.evaluate("o");
-
-    QCOMPARE(uint(o.propertyFlags("prop")), expected);
-}
-
-
 QTEST_MAIN(tst_QJSValue)

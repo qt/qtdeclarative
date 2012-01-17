@@ -51,15 +51,6 @@ template <class T> class QScriptPassPointer;
 class Q_DECLARATIVE_EXPORT QJSValue
 {
 public:
-#ifdef QT_DEPRECATED
-    enum PropertyFlag {
-        ReadOnly            = 0x00000001,
-        Undeletable         = 0x00000002,
-        SkipInEnumeration   = 0x00000004
-    };
-    Q_DECLARE_FLAGS(PropertyFlags, PropertyFlag)
-#endif
-
     enum SpecialValue {
         NullValue,
         UndefinedValue
@@ -140,8 +131,6 @@ public:
     QT_DEPRECATED qint32 toInt32() const;
     QT_DEPRECATED quint32 toUInt32() const;
 
-    QT_DEPRECATED QJSValue::PropertyFlags propertyFlags(const QString &name) const;
-
     QT_DEPRECATED QJSValue call(const QJSValue &thisObject = QJSValue(),
                       const QJSValueList &args = QJSValueList());
     QT_DEPRECATED QJSValue construct(const QJSValueList &args = QJSValueList());
@@ -164,10 +153,6 @@ private:
 
     Q_DECLARE_PRIVATE(QJSValue)
 };
-
-#ifdef QT_DEPRECATED
-Q_DECLARE_OPERATORS_FOR_FLAGS(QJSValue::PropertyFlags)
-#endif
 
 QT_END_NAMESPACE
 

@@ -61,9 +61,6 @@
 
   \snippet doc/src/snippets/code/src_script_qjsvalue.cpp 0
 
-  The attributes of a property can be queried by calling the
-  propertyFlags() function.
-
   If you want to iterate over the properties of a script object, use
   the QJSValueIterator class.
 
@@ -94,18 +91,6 @@
     \value UndefinedValue An undefined value.
 
     \value NullValue A null value.
-*/
-
-/*!
-    \enum QJSValue::PropertyFlag
-
-    This enum describes the attributes of a property.
-
-    \value ReadOnly The property is read-only. Attempts by Qt Script code to write to the property will be ignored.
-
-    \value Undeletable Attempts by Qt Script code to \c{delete} the property will be ignored.
-
-    \value SkipInEnumeration The property is not to be enumerated by a \c{for-in} enumeration.
 */
 
 QT_BEGIN_NAMESPACE
@@ -994,24 +979,6 @@ bool QJSValue::hasOwnProperty(const QString &name) const
     QScriptIsolate api(d->engine());
     return d->hasOwnProperty(name);
 }
-
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Returns the flags of the property with the given \a name.
-
-  \sa property()
-*/
-QJSValue::PropertyFlags QJSValue::propertyFlags(const QString& name) const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->propertyFlags(name);
-}
-
-#endif // QT_DEPRECATED
 
 /*!
  * If this QJSValue is a QObject, returns the QObject pointer

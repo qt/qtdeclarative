@@ -297,7 +297,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
             } else if (!moduleApi->scriptApi.isUndefined()) {
                 QScopedPointer<QJSValuePrivate> setvalp(new QJSValuePrivate(v8engine, value));
                 QJSValuePrivate *apiprivate = QJSValuePrivate::get(moduleApi->scriptApi);
-                if (apiprivate->propertyFlags(property) & QJSValue::ReadOnly) {
+                if (apiprivate->propertyFlags(property) & QJSValuePrivate::ReadOnly) {
                     QString error = QLatin1String("Cannot assign to read-only property \"") +
                                     v8engine->toString(property) + QLatin1Char('\"');
                     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));

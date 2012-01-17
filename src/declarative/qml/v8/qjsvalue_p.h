@@ -59,6 +59,13 @@ class QJSValuePrivate
         : public QSharedData
 {
 public:
+    enum PropertyFlag {
+        ReadOnly            = 0x00000001,
+        Undeletable         = 0x00000002,
+        SkipInEnumeration   = 0x00000004
+    };
+    Q_DECLARE_FLAGS(PropertyFlags, PropertyFlag)
+
     inline static QJSValuePrivate* get(const QJSValue& q);
     inline static QJSValue get(const QJSValuePrivate* d);
     inline static QJSValue get(QJSValuePrivate* d);
@@ -125,8 +132,8 @@ public:
     inline bool deleteProperty(const QString& name);
     inline bool hasProperty(const QString &name) const;
     inline bool hasOwnProperty(const QString &name) const;
-    inline QJSValue::PropertyFlags propertyFlags(const QString& name) const;
-    inline QJSValue::PropertyFlags propertyFlags(v8::Handle<v8::String> name) const;
+    inline PropertyFlags propertyFlags(const QString& name) const;
+    inline PropertyFlags propertyFlags(v8::Handle<v8::String> name) const;
 
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, const QJSValueList& args);
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, const QJSValue& arguments);
@@ -180,6 +187,8 @@ private:
 
     friend class QV8Engine;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QJSValuePrivate::PropertyFlags)
 
 QT_END_NAMESPACE
 

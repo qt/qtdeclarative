@@ -714,19 +714,19 @@ inline bool QJSValuePrivate::hasOwnProperty(const QString &name) const
     return self->HasOwnProperty(QJSConverter::toString(name));
 }
 
-inline QJSValue::PropertyFlags QJSValuePrivate::propertyFlags(const QString& name) const
+inline QJSValuePrivate::PropertyFlags QJSValuePrivate::propertyFlags(const QString& name) const
 {
     if (!isObject())
-        return QJSValue::PropertyFlags(0);
+        return QJSValuePrivate::PropertyFlags(0);
 
     v8::HandleScope handleScope;
     return engine()->getPropertyFlags(v8::Handle<v8::Object>::Cast(m_value), QJSConverter::toString(name));
 }
 
-inline QJSValue::PropertyFlags QJSValuePrivate::propertyFlags(v8::Handle<v8::String> name) const
+inline QJSValuePrivate::PropertyFlags QJSValuePrivate::propertyFlags(v8::Handle<v8::String> name) const
 {
     if (!isObject())
-        return QJSValue::PropertyFlags(0);
+        return QJSValuePrivate::PropertyFlags(0);
 
     v8::HandleScope handleScope;
     return engine()->getPropertyFlags(v8::Handle<v8::Object>::Cast(m_value), name);

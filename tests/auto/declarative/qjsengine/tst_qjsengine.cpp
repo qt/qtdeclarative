@@ -443,8 +443,6 @@ void tst_QJSEngine::newFunction()
             QScriptValue prot = fun.property("prototype", QScriptValue::ResolveLocal);
             QVERIFY(prot.isObject());
             QVERIFY(prot.property("constructor").strictlyEquals(fun));
-            QCOMPARE(fun.propertyFlags("prototype"), QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-            QCOMPARE(prot.propertyFlags("constructor"), QScriptValue::SkipInEnumeration);
         }
         // prototype should be Function.prototype
         QVERIFY(!fun.prototype().isUndefined());
@@ -468,8 +466,6 @@ void tst_QJSEngine::newFunctionWithArg()
             QScriptValue prot = fun.property("prototype", QScriptValue::ResolveLocal);
             QVERIFY(prot.isObject());
             QVERIFY(prot.property("constructor").strictlyEquals(fun));
-            QCOMPARE(fun.propertyFlags("prototype"), QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-            QCOMPARE(prot.propertyFlags("constructor"), QScriptValue::SkipInEnumeration);
         }
         // prototype should be Function.prototype
         QVERIFY(!fun.prototype().isUndefined());
@@ -496,9 +492,7 @@ void tst_QJSEngine::newFunctionWithProto()
         QCOMPARE(fun.prototype().strictlyEquals(eng.evaluate("Function.prototype")), true);
         // public prototype should be the one we passed
         QCOMPARE(fun.property("prototype").strictlyEquals(proto), true);
-        QCOMPARE(fun.propertyFlags("prototype"), QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
         QCOMPARE(proto.property("constructor").strictlyEquals(fun), true);
-        QCOMPARE(proto.propertyFlags("constructor"), QScriptValue::SkipInEnumeration);
 
         QCOMPARE(fun.call().isNull(), true);
         QCOMPARE(fun.callAsConstructor().isObject(), true);
@@ -1436,75 +1430,47 @@ void tst_QJSEngine::globalObjectProperties()
 
     QVERIFY(global.property("NaN").isNumber());
     QVERIFY(qIsNaN(global.property("NaN").toNumber()));
-    QCOMPARE(global.propertyFlags("NaN"), QJSValue::SkipInEnumeration | QJSValue::Undeletable);
 
     QVERIFY(global.property("Infinity").isNumber());
     QVERIFY(qIsInf(global.property("Infinity").toNumber()));
-    QCOMPARE(global.propertyFlags("NaN"), QJSValue::SkipInEnumeration | QJSValue::Undeletable);
 
     QVERIFY(global.property("undefined").isUndefined());
-    QCOMPARE(global.propertyFlags("undefined"), QJSValue::SkipInEnumeration | QJSValue::Undeletable);
 
     QVERIFY(global.property("eval").isCallable());
-    QCOMPARE(global.propertyFlags("eval"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("parseInt").isCallable());
-    QCOMPARE(global.propertyFlags("parseInt"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("parseFloat").isCallable());
-    QCOMPARE(global.propertyFlags("parseFloat"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("isNaN").isCallable());
-    QCOMPARE(global.propertyFlags("isNaN"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("isFinite").isCallable());
-    QCOMPARE(global.propertyFlags("isFinite"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("decodeURI").isCallable());
-    QCOMPARE(global.propertyFlags("decodeURI"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("decodeURIComponent").isCallable());
-    QCOMPARE(global.propertyFlags("decodeURIComponent"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("encodeURI").isCallable());
-    QCOMPARE(global.propertyFlags("encodeURI"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("encodeURIComponent").isCallable());
-    QCOMPARE(global.propertyFlags("encodeURIComponent"), QJSValue::SkipInEnumeration);
 
     QVERIFY(global.property("Object").isCallable());
-    QCOMPARE(global.propertyFlags("Object"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("Function").isCallable());
-    QCOMPARE(global.propertyFlags("Function"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("Array").isCallable());
-    QCOMPARE(global.propertyFlags("Array"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("String").isCallable());
-    QCOMPARE(global.propertyFlags("String"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("Boolean").isCallable());
-    QCOMPARE(global.propertyFlags("Boolean"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("Number").isCallable());
-    QCOMPARE(global.propertyFlags("Number"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("Date").isCallable());
-    QCOMPARE(global.propertyFlags("Date"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("RegExp").isCallable());
-    QCOMPARE(global.propertyFlags("RegExp"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("Error").isCallable());
-    QCOMPARE(global.propertyFlags("Error"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("EvalError").isCallable());
-    QCOMPARE(global.propertyFlags("EvalError"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("RangeError").isCallable());
-    QCOMPARE(global.propertyFlags("RangeError"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("ReferenceError").isCallable());
-    QCOMPARE(global.propertyFlags("ReferenceError"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("SyntaxError").isCallable());
-    QCOMPARE(global.propertyFlags("SyntaxError"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("TypeError").isCallable());
-    QCOMPARE(global.propertyFlags("TypeError"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("URIError").isCallable());
-    QCOMPARE(global.propertyFlags("URIError"), QJSValue::SkipInEnumeration);
     QVERIFY(global.property("Math").isObject());
     QVERIFY(!global.property("Math").isCallable());
-    QCOMPARE(global.propertyFlags("Math"), QJSValue::SkipInEnumeration);
 }
 
 void tst_QJSEngine::globalObjectEquals()
@@ -1590,7 +1556,6 @@ void tst_QJSEngine::createGlobalObjectProperty()
         QJSValue val(123);
         global.setProperty(name, val);
         QVERIFY(global.property(name).equals(val));
-        QVERIFY(global.propertyFlags(name) == 0);
         global.deleteProperty(name);
         QVERIFY(global.property(name).isUndefined());
     }
@@ -1604,7 +1569,6 @@ void tst_QJSEngine::createGlobalObjectProperty()
         global.setProperty(name, val, flags);
         QVERIFY(global.property(name).equals(val));
         //QEXPECT_FAIL("", "QTBUG-6134: custom Global Object properties don't retain attributes", Continue);
-        QCOMPARE(global.propertyFlags(name), flags);
         global.setProperty(name, QScriptValue());
         QVERIFY(global.property(name).isUndefined());
     }
@@ -4047,20 +4011,11 @@ void tst_QJSEngine::jsNumberClass()
     QJSValue proto = ctor.property("prototype");
     QVERIFY(proto.isObject());
     {
-        QJSValue::PropertyFlags flags = QJSValue::SkipInEnumeration
-                                            | QJSValue::Undeletable
-                                            | QJSValue::ReadOnly;
-        QCOMPARE(ctor.propertyFlags("prototype"), flags);
         QVERIFY(ctor.property("MAX_VALUE").isNumber());
-        QCOMPARE(ctor.propertyFlags("MAX_VALUE"), flags);
         QVERIFY(ctor.property("MIN_VALUE").isNumber());
-        QCOMPARE(ctor.propertyFlags("MIN_VALUE"), flags);
         QVERIFY(ctor.property("NaN").isNumber());
-        QCOMPARE(ctor.propertyFlags("NaN"), flags);
         QVERIFY(ctor.property("NEGATIVE_INFINITY").isNumber());
-        QCOMPARE(ctor.propertyFlags("NEGATIVE_INFINITY"), flags);
         QVERIFY(ctor.property("POSITIVE_INFINITY").isNumber());
-        QCOMPARE(ctor.propertyFlags("POSITIVE_INFINITY"), flags);
     }
     QCOMPARE(proto.toNumber(), qreal(0));
     QVERIFY(proto.property("constructor").strictlyEquals(ctor));
@@ -4332,13 +4287,10 @@ void tst_QJSEngine::stringObjects()
     {
         QJSValue obj = eng.evaluate(QString::fromLatin1("new String('%0')").arg(str));
         QCOMPARE(obj.property("length").toInt(), str.length());
-        QCOMPARE(obj.propertyFlags("length"), QJSValue::PropertyFlags(QJSValue::Undeletable | QJSValue::SkipInEnumeration | QJSValue::ReadOnly));
         for (int i = 0; i < str.length(); ++i) {
             QString pname = QString::number(i);
             QVERIFY(obj.property(pname).isString());
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
-            QEXPECT_FAIL("", "FIXME: This is V8 issue 862. ECMA script standard 15.5.5.2 compliance.", Continue);
-            QCOMPARE(obj.propertyFlags(pname), QJSValue::PropertyFlags(QJSValue::Undeletable | QJSValue::ReadOnly));
             QEXPECT_FAIL("", "FIXME: This is V8 issue 862. ECMA script standard 15.5.5.2 compliance.", Continue);
             QVERIFY(!obj.deleteProperty(pname));
             obj.setProperty(pname, QJSValue(&eng, 123));
@@ -5602,13 +5554,11 @@ void tst_QJSEngine::functionScopes()
             QScriptValue ret = scope.property("foo");
             QVERIFY(ret.isNumber());
             QCOMPARE(ret.toInt(), 123);
-            QCOMPARE(scope.propertyFlags("foo"), QScriptValue::Undeletable);
         }
         {
             QScriptValue ret = scope.property("arg");
             QVERIFY(ret.isNumber());
             QCOMPARE(ret.toInt(), 123);
-            QCOMPARE(scope.propertyFlags("arg"), QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
         }
 
         scope.setProperty("foo", 456);
@@ -6101,13 +6051,11 @@ void tst_QJSEngine::newFixedStaticScopeObject()
                 scope.setProperty(names[i], QScriptValue());
             }
             QVERIFY(scope.property(names[i]).equals(values[i]));
-            QCOMPARE(scope.propertyFlags(names[i]), flags[i]);
         }
     }
 
     // Property that doesn't exist.
     QVERIFY(scope.property("noSuchProperty").isUndefined());
-    QCOMPARE(scope.propertyFlags("noSuchProperty"), QScriptValue::PropertyFlags());
 
     // Write to writable property.
     {
@@ -6240,7 +6188,6 @@ void tst_QJSEngine::newGrowingStaticScopeObject()
     scope.setProperty("foo", 123);
     QVERIFY(scope.property("foo").equals(123));
     QEXPECT_FAIL("", "FIXME: newStaticScopeObject not properly implemented", Abort);
-    QCOMPARE(scope.propertyFlags("foo"), QScriptValue::Undeletable);
 
     // Modify existing property.
     scope.setProperty("foo", 456);
@@ -6249,7 +6196,6 @@ void tst_QJSEngine::newGrowingStaticScopeObject()
     // Add a read-only property.
     scope.setProperty("bar", "ciao", QScriptValue::ReadOnly);
     QVERIFY(scope.property("bar").equals("ciao"));
-    QCOMPARE(scope.propertyFlags("bar"), QScriptValue::ReadOnly | QScriptValue::Undeletable);
 
     // Attempt to modify read-only property.
     scope.setProperty("bar", "hello");
@@ -6363,9 +6309,7 @@ void tst_QJSEngine::functionPrototypeExtensions()
     QJSValue funProto = eng.globalObject().property("Function").property("prototype");
     QVERIFY(funProto.isCallable());
     QVERIFY(funProto.property("connect").isCallable());
-    QCOMPARE(funProto.propertyFlags("connect"), QJSValue::SkipInEnumeration);
     QVERIFY(funProto.property("disconnect").isCallable());
-    QCOMPARE(funProto.propertyFlags("disconnect"), QJSValue::SkipInEnumeration);
 
     // No properties should appear in for-in statements.
     QJSValue props = eng.evaluate("props = []; for (var p in Function.prototype) props.push(p); props");

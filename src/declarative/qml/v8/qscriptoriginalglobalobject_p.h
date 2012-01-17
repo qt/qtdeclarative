@@ -25,7 +25,7 @@
 #define QSCRIPTORIGINALGLOBALOBJECT_P_H
 
 #include "QtCore/qglobal.h"
-#include "qjsvalue.h"
+#include "qjsvalue_p.h"
 
 #include <private/qv8_p.h>
 
@@ -53,7 +53,7 @@ public:
     inline void init(v8::Handle<v8::Context> context);
     inline void destroy();
 
-    inline QJSValue::PropertyFlags getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property);
+    inline QJSValuePrivate::PropertyFlags getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property);
     inline v8::Local<v8::Object> getOwnPropertyDescriptor(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property) const;
     inline bool strictlyEquals(v8::Handle<v8::Object> object);
 private:
@@ -96,7 +96,7 @@ inline void QScriptOriginalGlobalObject::destroy()
     // After this line this instance is unusable.
 }
 
-inline QJSValue::PropertyFlags QScriptOriginalGlobalObject::getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property)
+inline QJSValuePrivate::PropertyFlags QScriptOriginalGlobalObject::getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property)
 {
     Q_ASSERT(object->IsObject());
     Q_ASSERT(!property.IsEmpty());
@@ -119,14 +119,14 @@ inline QJSValue::PropertyFlags QScriptOriginalGlobalObject::getPropertyFlags(v8:
     unsigned flags = 0;
 
     if (!descriptor->Get(configurableName)->BooleanValue())
-        flags |= QJSValue::Undeletable;
+        flags |= QJSValuePrivate::Undeletable;
     if (!descriptor->Get(enumerableName)->BooleanValue())
-        flags |= QJSValue::SkipInEnumeration;
+        flags |= QJSValuePrivate::SkipInEnumeration;
 
     //"writable" is only a property of the descriptor if it is not an accessor
     if (descriptor->Has(writableName)) {
         if (!descriptor->Get(writableName)->BooleanValue())
-            flags |= QJSValue::ReadOnly;
+            flags |= QJSValuePrivate::ReadOnly;
     } else {
 //        if (descriptor->Get(getName)->IsObject())
 //            flags |= QScriptValue::PropertyGetter;
@@ -134,7 +134,7 @@ inline QJSValue::PropertyFlags QScriptOriginalGlobalObject::getPropertyFlags(v8:
 //            flags |= QScriptValue::PropertySetter;
     }
 
-    return QJSValue::PropertyFlag(flags);
+    return QJSValuePrivate::PropertyFlag(flags);
 }
 
 inline v8::Local<v8::Object> QScriptOriginalGlobalObject::getOwnPropertyDescriptor(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property) const
