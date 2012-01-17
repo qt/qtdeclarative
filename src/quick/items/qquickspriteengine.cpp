@@ -54,19 +54,17 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickStochasticEngine::QQuickStochasticEngine(QObject *parent) :
-    QObject(parent), m_timeOffset(0)
+    QObject(parent), m_timeOffset(0), m_addAdvance(false)
 {
     //Default size 1
     setCount(1);
-    m_advanceTime.start();
 }
 
 QQuickStochasticEngine::QQuickStochasticEngine(QList<QQuickStochasticState*> states, QObject *parent) :
-    QObject(parent), m_states(states), m_timeOffset(0)
+    QObject(parent), m_states(states), m_timeOffset(0), m_addAdvance(false)
 {
     //Default size 1
     setCount(1);
-    m_advanceTime.start();
 }
 
 QQuickStochasticEngine::~QQuickStochasticEngine()
@@ -102,24 +100,39 @@ int QQuickSpriteEngine::maxFrames()
 TODO: All these calculations should be pre-calculated and cached during initialization for a significant performance boost
 TODO: Above idea needs to have the varying duration offset added to it
 */
+//TODO: Should these be adding advanceTime as well?
+/*
+    To get these working with duration=-1, m_startTimes will be messed with should duration=-1
+    m_startTimes will be set in advance/restart to 0->(m_framesPerRow-1) and can be used directly as extra.
+    This makes it 'frame' instead, but is more memory efficient than two arrays and less hideous than a vector of unions.
+*/
 int QQuickSpriteEngine::spriteState(int sprite)
 {
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return state;
-    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
-    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    int extra;
+    if (m_sprites[state]->duration() < 0) {
+        extra = m_startTimes[sprite];
+    } else {
+        if (!m_duration[sprite])
+            return state;
+        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+        extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    }
     return state + extra;
 }
 
 int QQuickSpriteEngine::spriteStart(int sprite)
 {
+    if (!m_duration[sprite])
+        return m_timeOffset;
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_startTimes[sprite];
     int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    return state + extra*rowDuration;
+    return m_startTimes[sprite] + extra*rowDuration;
 }
 
 int QQuickSpriteEngine::spriteFrames(int sprite)
@@ -127,19 +140,28 @@ int QQuickSpriteEngine::spriteFrames(int sprite)
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->frames();
-    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
-    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    int extra;
+    if (m_sprites[state]->duration() < 0) {
+        extra = m_startTimes[sprite];
+    } else {
+        if (!m_duration[sprite])
+            return state;
+        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+        extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    }
     if (extra == m_sprites[state]->m_generatedCount - 1)//last state
         return m_sprites[state]->frames() % m_sprites[state]->m_framesPerRow;
     else
         return m_sprites[state]->m_framesPerRow;
 }
 
-int QQuickSpriteEngine::spriteDuration(int sprite)
+int QQuickSpriteEngine::spriteDuration(int sprite)//Full duration, not per frame
 {
+    if (!m_duration[sprite])
+        return m_duration[sprite];
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
-        return m_duration[sprite];
+        return m_duration[sprite] * m_sprites[state]->frames();
     int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     if (extra == m_sprites[state]->m_generatedCount - 1)//last state
@@ -153,8 +175,15 @@ int QQuickSpriteEngine::spriteY(int sprite)
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->m_rowY;
-    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
-    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    int extra;
+    if (m_sprites[state]->duration() < 0) {
+        extra = m_startTimes[sprite];
+    } else {
+        if (!m_duration[sprite])
+            return state;
+        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+        extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    }
     return m_sprites[state]->m_rowY + m_sprites[state]->m_frameHeight * extra;
 }
 
@@ -205,6 +234,7 @@ QImage QQuickSpriteEngine::assembledImage()
     int maxSize = 0;
 
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+    //qDebug() << "MAX TEXTURE SIZE" << maxSize;
     foreach (QQuickStochasticState* s, m_states){
         QQuickSprite* sprite = qobject_cast<QQuickSprite*>(s);
         if (sprite)
@@ -235,8 +265,11 @@ QImage QQuickSpriteEngine::assembledImage()
                 static int divRoundUp(int a, int b){return (a+b-1)/b;}
             };
             int rowsNeeded = helper::divRoundUp(state->frames(), (maxSize / state->frameWidth()));
-            if (rowsNeeded * state->frameHeight() > maxSize){
-                qWarning() << "SpriteEngine: Animation too large to fit in one texture..." << state->source().toLocalFile();
+            if (h + rowsNeeded * state->frameHeight() > maxSize){
+                if (rowsNeeded * state->frameHeight() > maxSize)
+                    qWarning() << "SpriteEngine: Animation too large to fit in one texture:" << state->source().toLocalFile();
+                else
+                    qWarning() << "SpriteEngine: Animations too large to fit in one texture, pushed over the edge by:" << state->source().toLocalFile();
                 qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
             }
             state->m_generatedCount = rowsNeeded;
@@ -333,29 +366,71 @@ void QQuickStochasticEngine::stop(int index)
 
 void QQuickStochasticEngine::restart(int index)
 {
-    m_startTimes[index] = m_timeOffset + m_advanceTime.elapsed();
+    m_startTimes[index] = m_timeOffset;
+    if (m_addAdvance)
+        m_startTimes[index] += m_advanceTime.elapsed();
     int time = m_duration[index] * m_states[m_things[index]]->frames() + m_startTimes[index];
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
-    if (m_duration[index] > 0)
+    if (m_duration[index] >= 0)
         addToUpdateList(time, index);
 }
 
-// Doesn't remove from update list. If you want to cancel pending timed updates, call restart() first.
-// Usually sprites are either manually advanced or in the list, and mixing is not recommended anyways.
+void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and handle pseudostates
+{
+    if (m_sprites[m_things[index]]->duration() < 0) {//Manually advanced
+        m_startTimes[index] = 0;
+    } else {
+        m_startTimes[index] = m_timeOffset;
+        if (m_addAdvance)
+            m_startTimes[index] += m_advanceTime.elapsed();
+        int time = spriteDuration(index) + m_startTimes[index];
+        for (int i=0; i<m_stateUpdates.count(); i++)
+            m_stateUpdates[i].second.removeAll(index);
+        addToUpdateList(time, index);
+    }
+}
+
 void QQuickStochasticEngine::advance(int idx)
 {
     if (idx >= m_things.count())
         return;//TODO: Proper fix(because this has happened and I just ignored it)
-    int stateIdx = m_things[idx];
-    int nextIdx = nextState(stateIdx,idx);
+    int nextIdx = nextState(m_things[idx],idx);
     m_things[idx] = nextIdx;
     m_duration[idx] = m_states[nextIdx]->variedDuration();
-    m_startTimes[idx] = m_timeOffset;//This will be the last time updateSprites was called
+    restart(idx);
     emit m_states[nextIdx]->entered();
-    emit stateChanged(idx); //TODO: emit this when a psuedostate changes too(but manually in SpriteEngine)
-    if (m_duration[idx] >= 0)
-        addToUpdateList((m_duration[idx] * m_states[nextIdx]->frames()) + m_startTimes[idx], idx);
+    emit stateChanged(idx);
+}
+
+void QQuickSpriteEngine::advance(int idx) //Reimplemented to recognize and handle pseudostates
+{
+    if (idx >= m_things.count())
+        return;//TODO: Proper fix(because this has happened and I just ignored it)
+    if (m_duration[idx] == 0) {
+        if (m_sprites[m_things[idx]]->duration() < 0) {
+            //Manually called, advance inner substate count
+            m_startTimes[idx]++;
+            if (m_startTimes[idx] < m_sprites[m_things[idx]]->m_generatedCount) {
+                //only a pseudostate ended
+                emit stateChanged(idx);
+                return;
+            }
+        }
+        //just go past the pseudostate logic
+    } else if (m_startTimes[idx] + m_duration[idx] * m_states[m_things[idx]]->frames()
+            > m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0)) {
+        //only a pseduostate ended
+        emit stateChanged(idx);
+        addToUpdateList(m_timeOffset + spriteDuration(idx), idx);
+        return;
+    }
+    int nextIdx = nextState(m_things[idx],idx);
+    m_things[idx] = nextIdx;
+    m_duration[idx] = m_states[nextIdx]->variedDuration();
+    restart(idx);
+    emit m_states[nextIdx]->entered();
+    emit stateChanged(idx);
 }
 
 int QQuickStochasticEngine::nextState(int curState, int curThing)
@@ -397,6 +472,7 @@ uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a lis
 {
     //Sprite State Update;
     m_timeOffset = time;
+    m_addAdvance = false;
     while (!m_stateUpdates.isEmpty() && time >= m_stateUpdates.first().first){
         foreach (int idx, m_stateUpdates.first().second)
             advance(idx);
@@ -404,6 +480,7 @@ uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a lis
     }
 
     m_advanceTime.start();
+    m_addAdvance = true;
     if (m_stateUpdates.isEmpty())
         return -1;
     return m_stateUpdates.first().first;

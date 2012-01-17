@@ -1475,11 +1475,14 @@ void QQuickImageParticle::spritesUpdate(qreal time)
             //      This is particularly important for cut-up sprites.
             QQuickParticleData* datum = (mainDatum->animationOwner == this ? mainDatum : getShadowDatum(mainDatum));
             double frameAt;
-            qreal progress;
+            qreal progress = 0;
             if (datum->frameDuration > 0) {
                 qreal frame = (time - datum->animT)/(datum->frameDuration / 1000.0);
                 frame = qBound((qreal)0.0, frame, (qreal)((qreal)datum->frameCount - 1.0));//Stop at count-1 frames until we have between anim interpolation
-                progress = modf(frame,&frameAt);
+                if (m_spritesInterpolate)
+                    progress = modf(frame,&frameAt);
+                else
+                    modf(frame,&frameAt);
             } else {
                 datum->frameAt++;
                 if (datum->frameAt >= datum->frameCount){
@@ -1492,7 +1495,6 @@ void QQuickImageParticle::spritesUpdate(qreal time)
                     }
                 }
                 frameAt = datum->frameAt;
-                progress = 0;
             }
             QSizeF sheetSize = getState<ImageMaterialData>(m_material)->animSheetSize;
             qreal y = datum->animY / sheetSize.height();
@@ -1544,7 +1546,7 @@ void QQuickImageParticle::spriteAdvance(int spriteIdx)
     datum->animIdx = m_spriteEngine->spriteState(spriteIdx);
     datum->animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
     datum->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
-    datum->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+    datum->frameDuration = m_spriteEngine->spriteDuration(spriteIdx) / datum->frameCount;
     datum->animX = m_spriteEngine->spriteX(spriteIdx);
     datum->animY = m_spriteEngine->spriteY(spriteIdx);
     datum->animWidth = m_spriteEngine->spriteWidth(spriteIdx);
@@ -1586,7 +1588,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 if (m_spriteEngine){
                     m_spriteEngine->start(spriteIdx);
                     writeTo->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
-                    writeTo->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                    writeTo->frameDuration = m_spriteEngine->spriteDuration(spriteIdx) / writeTo->frameCount;
                     writeTo->animIdx = 0;//Always starts at 0
                     writeTo->frameAt = -1;
                     writeTo->animX = m_spriteEngine->spriteX(spriteIdx);

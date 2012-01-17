@@ -435,8 +435,8 @@ void QQuickSpriteImage::prepareNextFrame()
 
     //Advance Sprite
     qreal animT = m_spriteEngine->spriteStart()/1000.0;
-    qreal frameDuration = m_spriteEngine->spriteDuration();
     qreal frameCount = m_spriteEngine->spriteFrames();
+    qreal frameDuration = m_spriteEngine->spriteDuration()/frameCount;
     double frameAt;
     qreal progress;
     if (frameDuration > 0) {
@@ -467,7 +467,7 @@ void QQuickSpriteImage::prepareNextFrame()
     m_material->animY2 = y;
     m_material->animW = w;
     m_material->animH = h;
-    m_material->animT = progress;
+    m_material->animT = m_interpolate ? progress : 0.0;
 }
 
 QT_END_NAMESPACE
