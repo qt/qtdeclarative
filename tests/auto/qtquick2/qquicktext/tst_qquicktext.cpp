@@ -75,6 +75,7 @@ private slots:
     void alignments_data();
     void alignments();
 
+    void baseUrl();
     void embeddedImages_data();
     void embeddedImages();
 
@@ -1282,6 +1283,32 @@ void tst_qquicktext::clickLink()
     }
 }
 
+void tst_qquicktext::baseUrl()
+{
+    QUrl localUrl("file:///tests/text.qml");
+    QUrl remoteUrl("http://qt.nokia.com/test.qml");
+
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData("import QtQuick 2.0\n Text {}", localUrl);
+    QQuickText *textObject = qobject_cast<QQuickText *>(textComponent.create());
+
+    QCOMPARE(textObject->baseUrl(), localUrl);
+
+    QSignalSpy spy(textObject, SIGNAL(baseUrlChanged()));
+
+    textObject->setBaseUrl(localUrl);
+    QCOMPARE(textObject->baseUrl(), localUrl);
+    QCOMPARE(spy.count(), 0);
+
+    textObject->setBaseUrl(remoteUrl);
+    QCOMPARE(textObject->baseUrl(), remoteUrl);
+    QCOMPARE(spy.count(), 1);
+
+    textObject->resetBaseUrl();
+    QCOMPARE(textObject->baseUrl(), localUrl);
+    QCOMPARE(spy.count(), 2);
+}
+
 void tst_qquicktext::embeddedImages_data()
 {
     QTest::addColumn<QUrl>("qmlfile");
@@ -1289,9 +1316,11 @@ void tst_qquicktext::embeddedImages_data()
     QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
         << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + testFileUrl("http/notexists.png").toString();
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
         << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading http://127.0.0.1:14453/notexists.png - server replied: Not found";
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
 }
 
 void tst_qquicktext::embeddedImages()

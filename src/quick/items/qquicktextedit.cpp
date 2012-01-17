@@ -686,6 +686,44 @@ qreal QQuickTextEdit::paintedHeight() const
 }
 
 /*!
+    \qmlproperty url QtQuick2::TextEdit::baseUrl
+
+    This property specifies a base URL which is used to resolve relative URLs
+    within the text.
+
+    By default is the url of the TextEdit element.
+*/
+
+QUrl QQuickTextEdit::baseUrl() const
+{
+    Q_D(const QQuickTextEdit);
+    if (d->baseUrl.isEmpty()) {
+        if (QDeclarativeContext *context = qmlContext(this))
+            const_cast<QQuickTextEditPrivate *>(d)->baseUrl = context->baseUrl();
+    }
+    return d->baseUrl;
+}
+
+void QQuickTextEdit::setBaseUrl(const QUrl &url)
+{
+    Q_D(QQuickTextEdit);
+    if (baseUrl() != url) {
+        d->baseUrl = url;
+
+        d->document->setBaseUrl(url, d->richText);
+        emit baseUrlChanged();
+    }
+}
+
+void QQuickTextEdit::resetBaseUrl()
+{
+    if (QDeclarativeContext *context = qmlContext(this))
+        setBaseUrl(context->baseUrl());
+    else
+        setBaseUrl(QUrl());
+}
+
+/*!
     \qmlmethod rectangle QtQuick2::TextEdit::positionToRectangle(position)
 
     Returns the rectangle at the given \a position in the text. The x, y,
@@ -1116,6 +1154,7 @@ void QQuickTextEdit::componentComplete()
     Q_D(QQuickTextEdit);
     QQuickImplicitSizeItem::componentComplete();
 
+    d->document->setBaseUrl(baseUrl(), d->richText);
     if (d->richText)
         d->useImageFallback = qmlEnableImageCache();
 

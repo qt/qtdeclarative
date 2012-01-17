@@ -95,6 +95,7 @@ public:
     qreal getImplicitWidth() const;
 
     QString text;
+    QUrl baseUrl;
     QFont font;
     QFont sourceFont;
     QColor  color;

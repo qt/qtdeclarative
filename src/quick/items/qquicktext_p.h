@@ -85,6 +85,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedSizeChanged)
     Q_PROPERTY(qreal lineHeight READ lineHeight WRITE setLineHeight NOTIFY lineHeightChanged)
     Q_PROPERTY(LineHeightMode lineHeightMode READ lineHeightMode WRITE setLineHeightMode NOTIFY lineHeightModeChanged)
+    Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
 
 public:
     QQuickText(QQuickItem *parent=0);
@@ -164,6 +165,10 @@ public:
     LineHeightMode lineHeightMode() const;
     void setLineHeightMode(LineHeightMode);
 
+    QUrl baseUrl() const;
+    void setBaseUrl(const QUrl &url);
+    void resetBaseUrl();
+
     virtual void componentComplete();
 
     int resourcesLoading() const; // mainly for testing
@@ -194,6 +199,7 @@ Q_SIGNALS:
     void lineHeightModeChanged(LineHeightMode mode);
     void effectiveHorizontalAlignmentChanged();
     void lineLaidOut(QQuickTextLine *line);
+    void baseUrlChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event);

@@ -93,6 +93,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
+    Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);
@@ -261,6 +262,7 @@ Q_SIGNALS:
     void canRedoChanged();
     void inputMethodComposingChanged();
     void effectiveHorizontalAlignmentChanged();
+    void baseUrlChanged();
 
 public Q_SLOTS:
     void selectAll();

@@ -175,6 +175,7 @@ private slots:
     void undo_keypressevents_data();
     void undo_keypressevents();
 
+    void baseUrl();
     void embeddedImages();
     void embeddedImages_data();
 
@@ -3658,6 +3659,32 @@ void tst_qquicktextedit::undo_keypressevents()
     QVERIFY(textEdit->text().isEmpty());
 }
 
+void tst_qquicktextedit::baseUrl()
+{
+    QUrl localUrl("file:///tests/text.qml");
+    QUrl remoteUrl("http://qt.nokia.com/test.qml");
+
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData("import QtQuick 2.0\n TextEdit {}", localUrl);
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit *>(textComponent.create());
+
+    QCOMPARE(textObject->baseUrl(), localUrl);
+
+    QSignalSpy spy(textObject, SIGNAL(baseUrlChanged()));
+
+    textObject->setBaseUrl(localUrl);
+    QCOMPARE(textObject->baseUrl(), localUrl);
+    QCOMPARE(spy.count(), 0);
+
+    textObject->setBaseUrl(remoteUrl);
+    QCOMPARE(textObject->baseUrl(), remoteUrl);
+    QCOMPARE(spy.count(), 1);
+
+    textObject->resetBaseUrl();
+    QCOMPARE(textObject->baseUrl(), localUrl);
+    QCOMPARE(spy.count(), 2);
+}
+
 void tst_qquicktextedit::embeddedImages_data()
 {
     QTest::addColumn<QUrl>("qmlfile");
@@ -3665,9 +3692,11 @@ void tst_qquicktextedit::embeddedImages_data()
     QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
         << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML TextEdit: Cannot open: " + testFileUrl("http/notexists.png").toString();
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
         << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error downloading http://127.0.0.1:42332/notexists.png - server replied: Not found";
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
 }
 
 void tst_qquicktextedit::embeddedImages()

@@ -119,7 +119,7 @@ QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
 QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl &name)
 {
     QDeclarativeContext *context = qmlContext(parent());
-    QUrl url = context->resolvedUrl(name);
+    QUrl url = m_baseUrl.resolved(name);
 
     if (type == QTextDocument::ImageResource) {
         QDeclarativePixmap *p = loadPixmap(context, url);
@@ -160,7 +160,7 @@ QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
         QSizeF size(width, height);
         if (!hasWidth || !hasHeight) {
             QDeclarativeContext *context = qmlContext(parent());
-            QUrl url = context->resolvedUrl(QUrl(imageFormat.name()));
+            QUrl url = m_baseUrl.resolved(QUrl(imageFormat.name()));
 
             QDeclarativePixmap *p = loadPixmap(context, url);
             if (!p->isReady()) {
@@ -198,10 +198,19 @@ void QQuickTextDocumentWithImageResources::drawObject(
 QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format)
 {
     QDeclarativeContext *context = qmlContext(parent());
-    QUrl url = context->resolvedUrl(QUrl(format.name()));
+    QUrl url = m_baseUrl.resolved(QUrl(format.name()));
 
     QDeclarativePixmap *p = loadPixmap(context, url);
     return p->image();
+}
+
+void QQuickTextDocumentWithImageResources::setBaseUrl(const QUrl &url, bool clear)
+{
+    m_baseUrl = url;
+    if (clear) {
+        clearResources();
+        markContentsDirty(0, characterCount());
+    }
 }
 
 QDeclarativePixmap *QQuickTextDocumentWithImageResources::loadPixmap(
@@ -901,6 +910,7 @@ void QQuickTextPrivate::ensureDoc()
         Q_Q(QQuickText);
         doc = new QQuickTextDocumentWithImageResources(q);
         doc->setDocumentMargin(0);
+        doc->setBaseUrl(q->baseUrl());
         FAST_CONNECT(doc, SIGNAL(imagesLoaded()), q, SLOT(q_imagesLoaded()));
     }
 }
@@ -1715,6 +1725,45 @@ void QQuickText::setElideMode(QQuickText::TextElideMode mode)
     d->updateLayout();
 
     emit elideModeChanged(d->elideMode);
+}
+
+/*!
+    \qmlproperty url QtQuick2::Text::baseUrl
+
+    This property specifies a base URL which is used to resolve relative URLs
+    within the text.
+
+    By default is the url of the Text element.
+*/
+
+QUrl QQuickText::baseUrl() const
+{
+    Q_D(const QQuickText);
+    if (d->baseUrl.isEmpty()) {
+        if (QDeclarativeContext *context = qmlContext(this))
+            const_cast<QQuickTextPrivate *>(d)->baseUrl = context->baseUrl();
+    }
+    return d->baseUrl;
+}
+
+void QQuickText::setBaseUrl(const QUrl &url)
+{
+    Q_D(QQuickText);
+    if (baseUrl() != url) {
+        d->baseUrl = url;
+
+        if (d->doc)
+            d->doc->setBaseUrl(url);
+        emit baseUrlChanged();
+    }
+}
+
+void QQuickText::resetBaseUrl()
+{
+    if (QDeclarativeContext *context = qmlContext(this))
+        setBaseUrl(context->baseUrl());
+    else
+        setBaseUrl(QUrl());
 }
 
 /*! \internal */

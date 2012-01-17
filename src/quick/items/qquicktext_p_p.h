@@ -84,6 +84,7 @@ public:
     bool isLineLaidOutConnected();
 
     QString text;
+    QUrl baseUrl;
     QFont font;
     QFont sourceFont;
     QColor  color;
@@ -188,6 +189,8 @@ public:
 
     QImage image(const QTextImageFormat &format);
 
+    void setBaseUrl(const QUrl &url, bool clear = true);
+
 Q_SIGNALS:
     void imagesLoaded();
 
@@ -201,6 +204,7 @@ private slots:
 
 private:
     QHash<QUrl, QDeclarativePixmap *> m_resources;
+    QUrl m_baseUrl;
 
     int outstanding;
     static QSet<QUrl> errors;
