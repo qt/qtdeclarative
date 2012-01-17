@@ -46,24 +46,14 @@
 
 // We only have private exports from this library
 
-#if defined(Q_OS_WIN)
-#  if defined(QT_MAKEDLL) /* create a Qt DLL library */
-#    if defined(QT_BUILD_QUICKPARTICLES_LIB)
-#      define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_EXPORT
-#    else
-#      define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_IMPORT
-#    endif
-#  elif defined(QT_DLL) /* use a Qt DLL library */
-#    define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_IMPORT
-#  endif
-#endif
-
-#if !defined(Q_QUICKPARTICLES_PRIVATE_EXPORT)
-#  if defined(QT_SHARED)
+#ifndef QT_STATIC
+#  if defined(QT_BUILD_QUICKPARTICLES_LIB)
 #    define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_EXPORT
 #  else
-#    define Q_QUICKPARTICLES_PRIVATE_EXPORT
+#    define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_IMPORT
 #  endif
+#else
+#  define Q_QUICKPARTICLES_PRIVATE_EXPORT
 #endif
 
 #endif // QTQUICKPARTICLESGLOBAL_P_H

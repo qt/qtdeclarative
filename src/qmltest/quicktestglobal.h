@@ -46,29 +46,14 @@
 
 QT_BEGIN_HEADER
 
-#if defined(Q_OS_WIN)
-#  if defined(QT_NODLL)
-#    undef QT_MAKEDLL
-#    undef QT_DLL
-#  elif defined(QT_MAKEDLL)        /* create a Qt DLL library */
-#    if defined(QT_DLL)
-#      undef QT_DLL
-#    endif
-#    if defined(QT_BUILD_QMLTEST_LIB)
-#        define Q_QUICK_TEST_EXPORT Q_DECL_EXPORT
-#    else
-#        define Q_QUICK_TEST_EXPORT Q_DECL_IMPORT
-#    endif
-#  elif defined(QT_DLL) /* use a Qt DLL library */
+#ifndef QT_STATIC
+#  if defined(QT_BUILD_QMLTEST_LIB)
+#    define Q_QUICK_TEST_EXPORT Q_DECL_EXPORT
+#  else
 #    define Q_QUICK_TEST_EXPORT Q_DECL_IMPORT
 #  endif
-#endif
-#if !defined(Q_QUICK_TEST_EXPORT)
-#   if defined(QT_SHARED)
-#       define Q_QUICK_TEST_EXPORT Q_DECL_EXPORT
-#   else
-#       define Q_QUICK_TEST_EXPORT
-#   endif
+#else
+#  define Q_QUICK_TEST_EXPORT
 #endif
 
 QT_END_HEADER

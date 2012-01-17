@@ -44,24 +44,14 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(Q_OS_WIN)
-#  if defined(QT_MAKEDLL) /* create a Qt DLL library */
-#    if defined(QT_BUILD_QML_LIB)
-#      define Q_QML_EXPORT Q_DECL_EXPORT
-#    else
-#      define Q_QML_EXPORT Q_DECL_IMPORT
-#    endif
-#  elif defined(QT_DLL) /* use a Qt DLL library */
-#    define Q_QML_EXPORT Q_DECL_IMPORT
-#  endif
-#endif
-
-#if !defined(Q_QML_EXPORT)
-#  if defined(QT_SHARED)
+#ifndef QT_STATIC
+#  if defined(QT_BUILD_QML_LIB)
 #    define Q_QML_EXPORT Q_DECL_EXPORT
 #  else
-#    define Q_QML_EXPORT
+#    define Q_QML_EXPORT Q_DECL_IMPORT
 #  endif
+#else
+#  define Q_QML_EXPORT
 #endif
 
 #endif // QTQMLGLOBAL_H
