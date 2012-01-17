@@ -313,10 +313,8 @@ Item {
     }
 
     function skipAll(msg) {
-        if (msg === undefined)
-            msg = ""
-        warn("The skipAll function is deprecated and will be removed soon. Please update this test by changing skipAll to skip.")
-        qtest_results.skip(msg, util.callerFile(), util.callerLine())
+        msg = "The skipAll function is no longer available. Please update this test by changing skipAll to skip."
+        qtest_results.fail(msg, util.callerFile(), util.callerLine())
         throw new Error("QtQuickTest::skip")
     }
 
