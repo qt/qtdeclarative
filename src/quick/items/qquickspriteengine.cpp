@@ -48,6 +48,33 @@
 
 QT_BEGIN_NAMESPACE
 
+/*
+    \internal Stochastic/Sprite engine implementation docs
+
+    Nomenclature: 'thing' refers to an instance of a running sprite or state. It could be renamed.
+    States and Transitions are referred to in the state machine sense here, NOT in the QML sense.
+
+    The Stochastic State engine takes states with stochastic state transitions defined and transitions them.
+    When a state is started, it's added to a list of pending updates sorted by their time they want to update.
+    An external driver calls the update function with an elapsed time, which becomes the new time offset.
+    The pending update stack is popped until all entries are past the current time, which simulates all intervening time.
+
+    The Sprite Engine subclass has two major differences. Firstly all states are sprites (and there's a new vector with them
+    cast to sprite). Secondly, it chops up images and states to fit a texture friendly format.
+    Before the Sprite Engine starts running, its user requests a texture assembled from all the sprite images. This
+    texture is made by pasting the sprites into one image, with one sprite animation per row (in the future it is planned to have
+    arbitrary X/Y start ends, but they will still be assembled and recorded here and still have to be contiguous lines).
+    This cut-up allows the users to calcuate frame positions with a texture percentage width and elapsed time.
+    It also means that large sprites cover multiple lines to fit inside the texture memory limit (which is a square).
+
+    Large sprites covering multiple lines breaks this simple interface for the users, so each line is treated as a pseudostate
+    and it's mostly hidden from the spriteengine users (except that they'll get advanced signals where the state is the same
+    but the visual parameters changed). These are not real states because that would get very complex with bindings. Instead,
+    when sprite attributes are requested from a sprite that has multiple pseudostates, it returns the values for the psuedostate
+    it is in. State advancement is intercepted and hollow for pseudostates, except the last one. The last one transitions as the
+    state normally does.
+*/
+
 /* TODO:
    make sharable?
    solve the state data initialization/transfer issue so as to not need to make friends
@@ -337,6 +364,7 @@ QImage QQuickSpriteEngine::assembledImage()
     return image;
 }
 
+//TODO: Add a reset() function, for completeness in the case of a SpriteEngine being restarted from 0
 void QQuickStochasticEngine::setCount(int c)
 {
     m_things.resize(c);
