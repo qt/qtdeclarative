@@ -1054,7 +1054,7 @@ void tst_QJSValue::toVariant()
 
     {
         QDateTime dateTime = QDateTime(QDate(1980, 10, 4));
-        QJSValue dateObject = eng.newDate(dateTime);
+        QJSValue dateObject = eng.toScriptValue(dateTime);
         QVariant var = dateObject.toVariant();
         QCOMPARE(var, QVariant(dateTime));
     }
@@ -1135,7 +1135,7 @@ void tst_QJSValue::toQObject_nonQObject_data()
     QTest::newRow("null bound") << engine->nullValue();
     QTest::newRow("object") << engine->newObject();
     QTest::newRow("array") << engine->newArray();
-    QTest::newRow("date") << engine->newDate(124);
+    QTest::newRow("date") << engine->evaluate("new Date(124)");
     QTest::newRow("variant(12345)") << engine->newVariant(12345);
     QTest::newRow("variant((QObject*)0)") << engine->newVariant(qVariantFromValue((QObject*)0));
     QTest::newRow("newQObject(0)") << engine->newQObject(0);
@@ -2218,7 +2218,7 @@ void tst_QJSValue::getSetData_objects_data()
     QTest::newRow("object from evaluate") << engine->evaluate("new Object()");
     QTest::newRow("object from engine") << engine->newObject();
     QTest::newRow("Array") << engine->newArray();
-    QTest::newRow("Date") << engine->newDate(12324);
+    QTest::newRow("Date") << engine->evaluate("new Date(12324)");
     QTest::newRow("QObject") << engine->newQObject(this);
     QTest::newRow("RegExp") << engine->newRegExp(QRegExp());
 #endif
@@ -3024,8 +3024,8 @@ void tst_QJSValue::lessThan()
     QCOMPARE(obj1.lessThan(obj1), false);
     QCOMPARE(obj2.lessThan(obj2), false);
 
-    QJSValue date1 = eng.newDate(QDateTime(QDate(2000, 1, 1)));
-    QJSValue date2 = eng.newDate(QDateTime(QDate(1999, 1, 1)));
+    QJSValue date1 = eng.toScriptValue(QDateTime(QDate(2000, 1, 1)));
+    QJSValue date2 = eng.toScriptValue(QDateTime(QDate(1999, 1, 1)));
     QCOMPARE(date1.lessThan(date2), false);
     QCOMPARE(date2.lessThan(date1), true);
     QCOMPARE(date1.lessThan(date1), false);
@@ -3086,8 +3086,8 @@ void tst_QJSValue::equals()
     QCOMPARE(str2.equals(QJSValue(321)), false);
     QCOMPARE(str2.equals(QJSValue()), false);
 
-    QJSValue date1 = eng.newDate(QDateTime(QDate(2000, 1, 1)));
-    QJSValue date2 = eng.newDate(QDateTime(QDate(1999, 1, 1)));
+    QJSValue date1 = eng.toScriptValue(QDateTime(QDate(2000, 1, 1)));
+    QJSValue date2 = eng.toScriptValue(QDateTime(QDate(1999, 1, 1)));
     QCOMPARE(date1.equals(date2), false);
     QCOMPARE(date1.equals(date1), true);
     QCOMPARE(date2.equals(date2), true);
@@ -3288,8 +3288,8 @@ void tst_QJSValue::strictlyEquals()
     QCOMPARE(str2.strictlyEquals(QJSValue(321)), false);
     QVERIFY(!str2.strictlyEquals(QJSValue()));
 
-    QJSValue date1 = eng.newDate(QDateTime(QDate(2000, 1, 1)));
-    QJSValue date2 = eng.newDate(QDateTime(QDate(1999, 1, 1)));
+    QJSValue date1 = eng.toScriptValue(QDateTime(QDate(2000, 1, 1)));
+    QJSValue date2 = eng.toScriptValue(QDateTime(QDate(1999, 1, 1)));
     QCOMPARE(date1.strictlyEquals(date2), false);
     QCOMPARE(date1.strictlyEquals(date1), true);
     QCOMPARE(date2.strictlyEquals(date2), true);

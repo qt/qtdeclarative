@@ -126,8 +126,7 @@ Q_DECLARE_METATYPE(QList<int>)
   C++ equivalent of the script statement \c{new Object()}. You can use
   the object-specific functionality in QJSValue to manipulate the
   script object (e.g. QJSValue::setProperty()). Similarly, use
-  newArray() to create a JavaScript array object. Use newDate() to
-  create a \c{Date} object.
+  newArray() to create a JavaScript array object.
 
   \section1 QObject Integration
 
@@ -443,40 +442,6 @@ QJSValue QJSEngine::globalObject() const
     v8::HandleScope handleScope;
     return d->scriptValueFromInternal(d->global());
 }
-
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Creates a JavaScript object of class Date from the given \a value.
-
-  \sa QJSValue::toDateTime()
-*/
-QJSValue QJSEngine::newDate(const QDateTime &dt)
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(QJSConverter::toDateTime(dt));
-}
-
-/*!
-  \obsolete
-
-  Creates a JavaScript object of class Date with the given
-  \a value (the number of milliseconds since 01 January 1970,
-  UTC).
-*/
-QJSValue QJSEngine::newDate(double date)
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return d->scriptValueFromInternal(v8::Handle<v8::Value>(v8::Date::New(date)));
-}
-
-#endif // QT_DEPRECATED
 
 /*!
  *  \internal

@@ -36,7 +36,6 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 
-class QDateTime;
 class QV8Engine;
 
 template <typename T>
@@ -93,9 +92,6 @@ public:
     QT_DEPRECATED QJSValue undefinedValue();
 
     QT_DEPRECATED QJSValue newVariant(const QVariant &value);
-
-    QT_DEPRECATED QJSValue newDate(double value);
-    QT_DEPRECATED QJSValue newDate(const QDateTime &value);
 #endif
 
 Q_SIGNALS:

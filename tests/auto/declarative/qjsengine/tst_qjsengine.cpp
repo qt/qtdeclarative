@@ -876,7 +876,7 @@ void tst_QJSEngine::newDate()
     QJSEngine eng;
 
     {
-        QJSValue date = eng.newDate(0);
+        QJSValue date = eng.evaluate("new Date(0)");
         QCOMPARE(date.isValid(), true);
         QCOMPARE(date.isDate(), true);
         QCOMPARE(date.isObject(), true);
@@ -889,7 +889,7 @@ void tst_QJSEngine::newDate()
 
     {
         QDateTime dt = QDateTime(QDate(1, 2, 3), QTime(4, 5, 6, 7), Qt::LocalTime);
-        QJSValue date = eng.newDate(dt);
+        QJSValue date = eng.toScriptValue(dt);
         QCOMPARE(date.isValid(), true);
         QCOMPARE(date.isDate(), true);
         QCOMPARE(date.isObject(), true);
@@ -903,7 +903,7 @@ void tst_QJSEngine::newDate()
 
     {
         QDateTime dt = QDateTime(QDate(1, 2, 3), QTime(4, 5, 6, 7), Qt::UTC);
-        QJSValue date = eng.newDate(dt);
+        QJSValue date = eng.toScriptValue(dt);
         // toDateTime() result should be in local time
         QCOMPARE(date.toDateTime(), dt.toLocalTime());
     }
@@ -5019,8 +5019,9 @@ void tst_QJSEngine::reentrancy_objectCreation()
     QJSEngine eng1;
     QJSEngine eng2;
     {
-        QJSValue d1 = eng1.newDate(0);
-        QJSValue d2 = eng2.newDate(0);
+        QDateTime dt = QDateTime::currentDateTime();
+        QJSValue d1 = eng1.toScriptValue(dt);
+        QJSValue d2 = eng2.toScriptValue(dt);
         QCOMPARE(d1.toDateTime(), d2.toDateTime());
         QCOMPARE(d2.toDateTime(), d1.toDateTime());
     }
@@ -6023,7 +6024,7 @@ void tst_QJSEngine::dateRoundtripJSQtJS()
     for (int i = 0; i < 8000; ++i) {
         QJSValue jsDate = eng.evaluate(QString::fromLatin1("new Date(%0)").arg(secs * 1000.0));
         QDateTime qtDate = jsDate.toDateTime();
-        QJSValue jsDate2 = eng.newDate(qtDate);
+        QJSValue jsDate2 = eng.toScriptValue(qtDate);
         if (jsDate2.toNumber() != jsDate.toNumber())
             QFAIL(qPrintable(jsDate.toString()));
         secs += 2*60*60;
@@ -6035,7 +6036,7 @@ void tst_QJSEngine::dateRoundtripQtJSQt()
     QDateTime qtDate = QDateTime(QDate(2009, 1, 1));
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
-        QJSValue jsDate = eng.newDate(qtDate);
+        QJSValue jsDate = eng.toScriptValue(qtDate);
         QDateTime qtDate2 = jsDate.toDateTime();
         if (qtDate2 != qtDate)
             QFAIL(qPrintable(qtDate.toString()));
@@ -6064,7 +6065,7 @@ void tst_QJSEngine::dateConversionQtJS()
     QDateTime qtDate = QDateTime(QDate(2009, 1, 1));
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
-        QJSValue jsDate = eng.newDate(qtDate);
+        QJSValue jsDate = eng.toScriptValue(qtDate);
         QString jsUTCDateStr = jsDate.property("toISOString").callWithInstance(jsDate).toString();
         jsUTCDateStr.remove(jsUTCDateStr.length() - 5, 4); // get rid of milliseconds (".000")
         QString qtUTCDateStr = qtDate.toUTC().toString(Qt::ISODate);
