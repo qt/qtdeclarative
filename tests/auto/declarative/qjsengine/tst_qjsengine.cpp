@@ -792,24 +792,18 @@ void tst_QJSEngine::newRegExp()
 {
     QSKIP("Test failing - QTBUG-22238");
     QJSEngine eng;
-    for (int x = 0; x < 2; ++x) {
-        QJSValue rexp;
-        if (x == 0)
-            rexp = eng.newRegExp("foo", "bar");
-        else
-            rexp = eng.newRegExp(QRegExp("foo"));
-        QCOMPARE(rexp.isValid(), true);
-        QCOMPARE(rexp.isRegExp(), true);
-        QCOMPARE(rexp.isObject(), true);
-        QVERIFY(rexp.isCallable()); // in JSC, RegExp objects are callable
-        // prototype should be RegExp.prototype
-        QCOMPARE(rexp.prototype().isValid(), true);
-        QCOMPARE(rexp.prototype().isObject(), true);
-        QCOMPARE(rexp.prototype().isRegExp(), false);
-        QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
+    QJSValue rexp = eng.toScriptValue(QRegExp("foo"));
+    QCOMPARE(rexp.isValid(), true);
+    QCOMPARE(rexp.isRegExp(), true);
+    QCOMPARE(rexp.isObject(), true);
+    QVERIFY(rexp.isCallable()); // in JSC, RegExp objects are callable
+    // prototype should be RegExp.prototype
+    QCOMPARE(rexp.prototype().isValid(), true);
+    QCOMPARE(rexp.prototype().isObject(), true);
+    QCOMPARE(rexp.prototype().isRegExp(), false);
+    QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
 
-        QCOMPARE(rexp.toRegExp().pattern(), QRegExp("foo").pattern());
-    }
+    QCOMPARE(qjsvalue_cast<QRegExp>(rexp).pattern(), QRegExp("foo").pattern());
 }
 
 void tst_QJSEngine::jsRegExp()
@@ -2746,7 +2740,7 @@ void tst_QJSEngine::valueConversion_regExp()
         QRegExp in = QRegExp("foo");
         QJSValue val = eng.toScriptValue(in);
         QVERIFY(val.isRegExp());
-        QRegExp out = val.toRegExp();
+        QRegExp out = qjsvalue_cast<QRegExp>(val);
         QEXPECT_FAIL("", "QTBUG-6136: JSC-based back-end doesn't preserve QRegExp::patternSyntax (always uses RegExp2)", Continue);
         QCOMPARE(out.patternSyntax(), in.patternSyntax());
         QCOMPARE(out.pattern(), in.pattern());
@@ -2757,7 +2751,7 @@ void tst_QJSEngine::valueConversion_regExp()
         QRegExp in = QRegExp("foo", Qt::CaseSensitive, QRegExp::RegExp2);
         QJSValue val = eng.toScriptValue(in);
         QVERIFY(val.isRegExp());
-        QCOMPARE(val.toRegExp(), in);
+        QCOMPARE(qjsvalue_cast<QRegExp>(val), in);
     }
     {
         QRegExp in = QRegExp("foo");
@@ -2765,7 +2759,7 @@ void tst_QJSEngine::valueConversion_regExp()
         QJSValue val = eng.toScriptValue(in);
         QVERIFY(val.isRegExp());
         QEXPECT_FAIL("", "QTBUG-6136: JSC-based back-end doesn't preserve QRegExp::minimal (always false)", Continue);
-        QCOMPARE(val.toRegExp().isMinimal(), in.isMinimal());
+        QCOMPARE(qjsvalue_cast<QRegExp>(val).isMinimal(), in.isMinimal());
     }
 }
 
@@ -5032,10 +5026,10 @@ void tst_QJSEngine::reentrancy_objectCreation()
         QCOMPARE(d2.toDateTime(), d1.toDateTime());
     }
     {
-        QJSValue r1 = eng1.newRegExp("foo", "gim");
-        QJSValue r2 = eng2.newRegExp("foo", "gim");
-        QCOMPARE(r1.toRegExp(), r2.toRegExp());
-        QCOMPARE(r2.toRegExp(), r1.toRegExp());
+        QJSValue r1 = eng1.evaluate("new RegExp('foo', 'gim')");
+        QJSValue r2 = eng2.evaluate("new RegExp('foo', 'gim')");
+        QCOMPARE(qjsvalue_cast<QRegExp>(r1), qjsvalue_cast<QRegExp>(r2));
+        QCOMPARE(qjsvalue_cast<QRegExp>(r2), qjsvalue_cast<QRegExp>(r1));
     }
     {
         QJSValue o1 = eng1.newQObject(this);
@@ -6004,7 +5998,7 @@ void tst_QJSEngine::qRegExpInport()
 
     QJSEngine eng;
     QJSValue rexp;
-    rexp = eng.newRegExp(rx);
+    rexp = eng.toScriptValue(rx);
 
     QCOMPARE(rexp.isValid(), true);
     QCOMPARE(rexp.isRegExp(), true);

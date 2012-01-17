@@ -28,7 +28,6 @@
 #include "qjsvalue_p.h"
 #include "qscript_impl_p.h"
 #include "qscriptshareddata_p.h"
-#include <QtCore/qregexp.h>
 #include <QtCore/qstring.h>
 
 /*!
@@ -650,7 +649,7 @@ quint32 QJSValue::toUInt32() const
     \row    \o QVariant Object \o The result is the QVariant value of the object (no conversion).
     \row    \o QObject Object \o A QVariant containing a pointer to the QObject.
     \row    \o Date Object \o A QVariant containing the date value (toDateTime()).
-    \row    \o RegExp Object \o A QVariant containing the regular expression value (toRegExp()).
+    \row    \o RegExp Object \o A QVariant containing the regular expression value.
     \row    \o Array Object \o The array is converted to a QVariantList. Each element is converted to a QVariant, recursively; cyclic references are not followed.
     \row    \o Object     \o The object is converted to a QVariantMap. Each property is converted to a QVariant, recursively; cyclic references are not followed.
     \endtable
@@ -1104,26 +1103,6 @@ QDateTime QJSValue::toDateTime() const
     return d->toDataTime();
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Returns the QRegExp representation of this value.
-  If this QJSValue is not a regular expression, an empty
-  QRegExp is returned.
-
-  \sa isRegExp()
-*/
-QRegExp QJSValue::toRegExp() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toRegExp();
-}
-
-#endif // QT_DEPRECATED
-
 /*!
   Returns true if this QJSValue is an object of the Date class;
   otherwise returns false.
@@ -1140,8 +1119,6 @@ bool QJSValue::isDate() const
 /*!
   Returns true if this QJSValue is an object of the RegExp class;
   otherwise returns false.
-
-  \sa QJSEngine::newRegExp()
 */
 bool QJSValue::isRegExp() const
 {

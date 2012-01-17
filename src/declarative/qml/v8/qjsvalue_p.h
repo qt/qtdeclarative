@@ -90,7 +90,6 @@ public:
     inline quint32 toUInt32() const;
     inline quint16 toUInt16() const;
     inline QDateTime toDataTime() const;
-    inline QRegExp toRegExp() const;
     inline QObject *toQObject() const;
     inline QVariant toVariant() const;
 

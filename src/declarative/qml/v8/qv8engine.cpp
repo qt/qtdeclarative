@@ -1007,38 +1007,6 @@ void QV8Engine::Exception::pop()
     m_message = pair.second;
 }
 
-QScriptPassPointer<QJSValuePrivate> QV8Engine::newRegExp(const QString &pattern, const QString &flags)
-{
-    int f = v8::RegExp::kNone;
-
-    QString::const_iterator i = flags.constBegin();
-    for (; i != flags.constEnd(); ++i) {
-        switch (i->unicode()) {
-        case 'i':
-            f |= v8::RegExp::kIgnoreCase;
-            break;
-        case 'm':
-            f |= v8::RegExp::kMultiline;
-            break;
-        case 'g':
-            f |= v8::RegExp::kGlobal;
-            break;
-        default:
-            {
-                // ignore a Syntax Error.
-            }
-        }
-    }
-
-    v8::Handle<v8::RegExp> regexp = v8::RegExp::New(QJSConverter::toString(pattern), static_cast<v8::RegExp::Flags>(f));
-    return new QJSValuePrivate(this, regexp);
-}
-
-QScriptPassPointer<QJSValuePrivate> QV8Engine::newRegExp(const QRegExp &regexp)
-{
-    return new QJSValuePrivate(this, QJSConverter::toRegExp(regexp));
-}
-
 
 // Converts a QVariantList to JS.
 // The result is a new Array object with length equal to the length

@@ -127,8 +127,7 @@ Q_DECLARE_METATYPE(QList<int>)
   the object-specific functionality in QJSValue to manipulate the
   script object (e.g. QJSValue::setProperty()). Similarly, use
   newArray() to create a JavaScript array object. Use newDate() to
-  create a \c{Date} object, and newRegExp() to create a \c{RegExp}
-  object.
+  create a \c{Date} object.
 
   \section1 QObject Integration
 
@@ -475,39 +474,6 @@ QJSValue QJSEngine::newDate(double date)
     QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
     return d->scriptValueFromInternal(v8::Handle<v8::Value>(v8::Date::New(date)));
-}
-
-/*!
-  \obsolete
-
-  Creates a JavaScript object of class RegExp with the given
-  \a regexp.
-
-  \sa QJSValue::toRegExp()
-*/
-QJSValue QJSEngine::newRegExp(const QRegExp &regexp)
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(d->newRegExp(regexp));
-}
-
-/*!
-  \obsolete
-
-  Creates a JavaScript object of class RegExp with the given
-  \a pattern and \a flags.
-
-  The legal flags are 'g' (global), 'i' (ignore case), and 'm'
-  (multiline).
-*/
-QJSValue QJSEngine::newRegExp(const QString &pattern, const QString &flags)
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(d->newRegExp(pattern, flags));
 }
 
 #endif // QT_DEPRECATED

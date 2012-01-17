@@ -39,8 +39,6 @@ QT_BEGIN_NAMESPACE
 class QDateTime;
 class QV8Engine;
 
-class QRegExp;
-
 template <typename T>
 inline T qjsvalue_cast(const QJSValue &);
 
@@ -96,9 +94,6 @@ public:
 
     QT_DEPRECATED QJSValue newVariant(const QVariant &value);
 
-    QT_DEPRECATED QJSValue newRegExp(const QRegExp &regexp);
-
-    QT_DEPRECATED QJSValue newRegExp(const QString &pattern, const QString &flags);
     QT_DEPRECATED QJSValue newDate(double value);
     QT_DEPRECATED QJSValue newDate(const QDateTime &value);
 #endif

@@ -336,9 +336,6 @@ public:
     // Return the QML global "scope" object for the \a ctxt context and \a scope object.
     inline v8::Local<v8::Object> qmlScope(QDeclarativeContextData *ctxt, QObject *scope);
 
-    QScriptPassPointer<QJSValuePrivate> newRegExp(const QRegExp &regexp);
-    QScriptPassPointer<QJSValuePrivate> newRegExp(const QString &pattern, const QString &flags);
-
     // Return a JS wrapper for the given QObject \a object
     inline v8::Handle<v8::Value> newQObject(QObject *object);
     inline v8::Handle<v8::Value> newQObject(QObject *object, const ObjectOwnership ownership);

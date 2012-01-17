@@ -324,15 +324,6 @@ inline QDateTime QJSValuePrivate::toDataTime() const
 
 }
 
-inline QRegExp QJSValuePrivate::toRegExp() const
-{
-    if (!isRegExp())
-        return QRegExp();
-
-    v8::HandleScope handleScope;
-    return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(m_value));
-}
-
 QObject* QJSValuePrivate::toQObject() const
 {
     if (!isJSBased())

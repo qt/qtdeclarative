@@ -41,7 +41,6 @@ class QVariant;
 class QObject;
 struct QMetaObject;
 class QDateTime;
-class QRegExp;
 
 typedef QList<QJSValue> QJSValueList;
 
@@ -142,7 +141,6 @@ public:
     QT_DEPRECATED bool isFunction() const;
     QT_DEPRECATED qint32 toInt32() const;
     QT_DEPRECATED quint32 toUInt32() const;
-    QT_DEPRECATED QRegExp toRegExp() const;
 
     QT_DEPRECATED bool instanceOf(const QJSValue &other) const;
 

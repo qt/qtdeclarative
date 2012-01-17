@@ -1061,7 +1061,8 @@ void tst_QJSValue::toVariant()
 
     {
         QRegExp rx = QRegExp("[0-9a-z]+", Qt::CaseSensitive, QRegExp::RegExp2);
-        QJSValue rxObject = eng.newRegExp(rx);
+        QJSValue rxObject = eng.toScriptValue(rx);
+        QVERIFY(rxObject.isRegExp());
         QVariant var = rxObject.toVariant();
         QCOMPARE(var, QVariant(rx));
     }
@@ -1215,7 +1216,7 @@ void tst_QJSValue::toRegExp()
 {
     QJSEngine eng;
     {
-        QRegExp rx = eng.evaluate("/foo/").toRegExp();
+        QRegExp rx = qjsvalue_cast<QRegExp>(eng.evaluate("/foo/"));
         QVERIFY(rx.isValid());
         QCOMPARE(rx.patternSyntax(), QRegExp::RegExp2);
         QCOMPARE(rx.pattern(), QString::fromLatin1("foo"));
@@ -1223,7 +1224,7 @@ void tst_QJSValue::toRegExp()
         QVERIFY(!rx.isMinimal());
     }
     {
-        QRegExp rx = eng.evaluate("/bar/gi").toRegExp();
+        QRegExp rx = qjsvalue_cast<QRegExp>(eng.evaluate("/bar/gi"));
         QVERIFY(rx.isValid());
         QCOMPARE(rx.patternSyntax(), QRegExp::RegExp2);
         QCOMPARE(rx.pattern(), QString::fromLatin1("bar"));
@@ -1231,14 +1232,14 @@ void tst_QJSValue::toRegExp()
         QVERIFY(!rx.isMinimal());
     }
 
-    QVERIFY(eng.evaluate("[]").toRegExp().isEmpty());
-    QVERIFY(eng.evaluate("{}").toRegExp().isEmpty());
-    QVERIFY(eng.globalObject().toRegExp().isEmpty());
-    QVERIFY(QJSValue().toRegExp().isEmpty());
-    QVERIFY(QJSValue(123).toRegExp().isEmpty());
-    QVERIFY(QJSValue(false).toRegExp().isEmpty());
-    QVERIFY(eng.nullValue().toRegExp().isEmpty());
-    QVERIFY(eng.undefinedValue().toRegExp().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(eng.evaluate("[]")).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(eng.evaluate("{}")).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(eng.globalObject()).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(QJSValue()).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(QJSValue(123)).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(QJSValue(false)).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(eng.nullValue()).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(eng.undefinedValue()).isEmpty());
 }
 
 void tst_QJSValue::instanceOf_twoEngines()
