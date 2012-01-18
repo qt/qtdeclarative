@@ -48,7 +48,7 @@
 #include "qdeclarativeanimation_p_p.h"
 #include "qdeclarativetransitionmanager_p_p.h"
 
-#include "private/qparallelanimationgroup2_p.h"
+#include "private/qparallelanimationgroupjob_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -120,20 +120,20 @@ void QDeclarativeTransitionInstance::stop()
 
 bool QDeclarativeTransitionInstance::isRunning() const
 {
-    return m_anim && m_anim->state() == QAbstractAnimation2::Running;
+    return m_anim && m_anim->state() == QAbstractAnimationJob::Running;
 }
 
 
 //ParallelAnimationWrapper allows us to do a "callback" when the animation finishes, rather than connecting
 //and disconnecting signals and slots frequently
-class ParallelAnimationWrapper : public QParallelAnimationGroup2
+class ParallelAnimationWrapper : public QParallelAnimationGroupJob
 {
 public:
-    ParallelAnimationWrapper() : QParallelAnimationGroup2() {}
+    ParallelAnimationWrapper() : QParallelAnimationGroupJob() {}
     QDeclarativeTransitionManager *manager;
 
 protected:
-    virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
+    virtual void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
 };
 
 class QDeclarativeTransitionPrivate : public QObjectPrivate
@@ -187,12 +187,12 @@ void QDeclarativeTransitionPrivate::clear_animations(QDeclarativeListProperty<QD
     }
 }
 
-void ParallelAnimationWrapper::updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState)
+void ParallelAnimationWrapper::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState)
 {
-    QParallelAnimationGroup2::updateState(newState, oldState);
+    QParallelAnimationGroupJob::updateState(newState, oldState);
     if (newState == Stopped && (duration() == -1
-        || (direction() == QAbstractAnimation2::Forward && currentLoopTime() == duration())
-        || (direction() == QAbstractAnimation2::Backward && currentLoopTime() == 0)))
+        || (direction() == QAbstractAnimationJob::Forward && currentLoopTime() == duration())
+        || (direction() == QAbstractAnimationJob::Backward && currentLoopTime() == 0)))
     {
          manager->complete();
     }
@@ -230,7 +230,7 @@ QDeclarativeTransitionInstance *QDeclarativeTransition::prepare(QDeclarativeStat
     int start = d->reversed ? d->animations.count() - 1 : 0;
     int end = d->reversed ? -1 : d->animations.count();
 
-    QAbstractAnimation2 *anim = 0;
+    QAbstractAnimationJob *anim = 0;
     for (int i = start; i != end;) {
         anim = d->animations.at(i)->transition(actions, after, direction);
         if (anim)
@@ -238,7 +238,7 @@ QDeclarativeTransitionInstance *QDeclarativeTransition::prepare(QDeclarativeStat
         d->reversed ? --i : ++i;
     }
 
-    group->setDirection(d->reversed ? QAbstractAnimation2::Backward : QAbstractAnimation2::Forward);
+    group->setDirection(d->reversed ? QAbstractAnimationJob::Backward : QAbstractAnimationJob::Forward);
 
     QDeclarativeTransitionInstance *wrapper = new QDeclarativeTransitionInstance;
     wrapper->m_anim = group;

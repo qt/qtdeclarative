@@ -54,7 +54,7 @@
 //
 
 #include <QtCore/QObject>
-#include "private/qabstractanimation2_p.h"
+#include "private/qabstractanimationjob_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -63,7 +63,7 @@ class QDeclarativeTimeLineValue;
 class QDeclarativeTimeLineCallback;
 struct QDeclarativeTimeLinePrivate;
 class QDeclarativeTimeLineObject;
-class Q_AUTOTEST_EXPORT QDeclarativeTimeLine : public QObject, QAbstractAnimation2
+class Q_AUTOTEST_EXPORT QDeclarativeTimeLine : public QObject, QAbstractAnimationJob
 {
 Q_OBJECT
 public:

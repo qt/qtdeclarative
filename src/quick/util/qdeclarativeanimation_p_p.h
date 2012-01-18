@@ -61,11 +61,11 @@
 #include <qdeclarativecontext.h>
 
 #include <private/qvariantanimation_p.h>
-#include "private/qpauseanimation2_p.h"
+#include "private/qpauseanimationjob_p.h"
 #include <QDebug>
 
 #include <private/qobject_p.h>
-#include "private/qanimationgroup2_p.h"
+#include "private/qanimationgroupjob_p.h"
 #include <QDebug>
 
 #include <private/qobject_p.h>
@@ -96,7 +96,7 @@ private:
 };
 
 //performs an action of type QAbstractAnimationAction
-class Q_AUTOTEST_EXPORT QActionAnimation : public QAbstractAnimation2
+class Q_AUTOTEST_EXPORT QActionAnimation : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QActionAnimation)
 public:
@@ -124,7 +124,7 @@ public:
 };
 
 //animates QDeclarativeBulkValueUpdater (assumes start and end values will be reals or compatible)
-class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QAbstractAnimation2
+class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QDeclarativeBulkValueAnimator)
 public:
@@ -155,11 +155,11 @@ private:
 
 //an animation that just gives a tick
 template<class T, void (T::*method)(int)>
-class QTickAnimationProxy : public QAbstractAnimation2
+class QTickAnimationProxy : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QTickAnimationProxy)
 public:
-    QTickAnimationProxy(T *instance) : QAbstractAnimation2(), m_instance(instance) {}
+    QTickAnimationProxy(T *instance) : QAbstractAnimationJob(), m_instance(instance) {}
     virtual int duration() const { return -1; }
 protected:
     virtual void updateCurrentTime(int msec) { (m_instance->*method)(msec); }
@@ -190,12 +190,12 @@ public:
     int loopCount;
 
     void commence();
-    virtual void animationFinished(QAbstractAnimation2 *);
+    virtual void animationFinished(QAbstractAnimationJob *);
 
     QDeclarativeProperty defaultProperty;
 
     QDeclarativeAnimationGroup *group;
-    QAbstractAnimation2* animationInstance;
+    QAbstractAnimationJob* animationInstance;
 
     static QDeclarativeProperty createProperty(QObject *obj, const QString &str, QObject *infoObj);
 };

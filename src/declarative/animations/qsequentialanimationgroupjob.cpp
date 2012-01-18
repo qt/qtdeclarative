@@ -39,23 +39,23 @@
 **
 ****************************************************************************/
 
-#include "private/qsequentialanimationgroup2_p.h"
-#include "private/qpauseanimation2_p.h"
+#include "private/qsequentialanimationgroupjob_p.h"
+#include "private/qpauseanimationjob_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QSequentialAnimationGroup2::QSequentialAnimationGroup2()
-    : QAnimationGroup2()
+QSequentialAnimationGroupJob::QSequentialAnimationGroupJob()
+    : QAnimationGroupJob()
     , m_currentAnimation(0)
     , m_previousLoop(0)
 {
 }
 
-QSequentialAnimationGroup2::~QSequentialAnimationGroup2()
+QSequentialAnimationGroupJob::~QSequentialAnimationGroupJob()
 {
 }
 
-bool QSequentialAnimationGroup2::atEnd() const
+bool QSequentialAnimationGroupJob::atEnd() const
 {
     // we try to detect if we're at the end of the group
     //this is true if the following conditions are true:
@@ -70,7 +70,7 @@ bool QSequentialAnimationGroup2::atEnd() const
         && animTotalCurrentTime == animationActualTotalDuration(m_currentAnimation));
 }
 
-int QSequentialAnimationGroup2::animationActualTotalDuration(QAbstractAnimation2 *anim) const
+int QSequentialAnimationGroupJob::animationActualTotalDuration(QAbstractAnimationJob *anim) const
 {
     int ret = anim->totalDuration();
     if (ret == -1)
@@ -78,12 +78,12 @@ int QSequentialAnimationGroup2::animationActualTotalDuration(QAbstractAnimation2
     return ret;
 }
 
-QSequentialAnimationGroup2::AnimationIndex QSequentialAnimationGroup2::indexForCurrentTime() const
+QSequentialAnimationGroupJob::AnimationIndex QSequentialAnimationGroupJob::indexForCurrentTime() const
 {
     Q_ASSERT(firstChild());
 
     AnimationIndex ret;
-    QAbstractAnimation2 *anim = 0;
+    QAbstractAnimationJob *anim = 0;
     int duration = 0;
 
     for (anim = firstChild(); anim; anim = anim->nextSibling()) {
@@ -95,7 +95,7 @@ QSequentialAnimationGroup2::AnimationIndex QSequentialAnimationGroup2::indexForC
         // 3. it is the last animation (this can happen in case there is at least 1 uncontrolled animation)
         // 4. it ends exactly in msecs and the direction is backwards
         if (duration == -1 || m_currentTime < (ret.timeOffset + duration)
-            || (m_currentTime == (ret.timeOffset + duration) && m_direction == QAbstractAnimation2::Backward)) {
+            || (m_currentTime == (ret.timeOffset + duration) && m_direction == QAbstractAnimationJob::Backward)) {
             ret.animation = anim;
             return ret;
         }
@@ -115,7 +115,7 @@ QSequentialAnimationGroup2::AnimationIndex QSequentialAnimationGroup2::indexForC
     return ret;
 }
 
-void QSequentialAnimationGroup2::restart()
+void QSequentialAnimationGroupJob::restart()
 {
     // restarting the group by making the first/last animation the current one
     if (m_direction == Forward) {
@@ -134,11 +134,11 @@ void QSequentialAnimationGroup2::restart()
     }
 }
 
-void QSequentialAnimationGroup2::advanceForwards(const AnimationIndex &newAnimationIndex)
+void QSequentialAnimationGroupJob::advanceForwards(const AnimationIndex &newAnimationIndex)
 {
     if (m_previousLoop < m_currentLoop) {
         // we need to fast forward to the end
-        for (QAbstractAnimation2 *anim = m_currentAnimation; anim; anim = anim->nextSibling()) {
+        for (QAbstractAnimationJob *anim = m_currentAnimation; anim; anim = anim->nextSibling()) {
             setCurrentAnimation(anim, true);
             anim->setCurrentTime(animationActualTotalDuration(anim));
         }
@@ -151,18 +151,18 @@ void QSequentialAnimationGroup2::advanceForwards(const AnimationIndex &newAnimat
     }
 
     // and now we need to fast forward from the current position to
-    for (QAbstractAnimation2 *anim = m_currentAnimation; anim && anim != newAnimationIndex.animation; anim = anim->nextSibling()) {     //### WRONG,
+    for (QAbstractAnimationJob *anim = m_currentAnimation; anim && anim != newAnimationIndex.animation; anim = anim->nextSibling()) {     //### WRONG,
         setCurrentAnimation(anim, true);
         anim->setCurrentTime(animationActualTotalDuration(anim));
     }
     // setting the new current animation will happen later
 }
 
-void QSequentialAnimationGroup2::rewindForwards(const AnimationIndex &newAnimationIndex)
+void QSequentialAnimationGroupJob::rewindForwards(const AnimationIndex &newAnimationIndex)
 {
     if (m_previousLoop > m_currentLoop) {
         // we need to fast rewind to the beginning
-        for (QAbstractAnimation2 *anim = m_currentAnimation; anim; anim = anim->previousSibling()) {
+        for (QAbstractAnimationJob *anim = m_currentAnimation; anim; anim = anim->previousSibling()) {
             setCurrentAnimation(anim, true);
             anim->setCurrentTime(0);
         }
@@ -176,18 +176,18 @@ void QSequentialAnimationGroup2::rewindForwards(const AnimationIndex &newAnimati
     }
 
     // and now we need to fast rewind from the current position to
-    for (QAbstractAnimation2 *anim = m_currentAnimation; anim && anim != newAnimationIndex.animation; anim = anim->previousSibling()) {
+    for (QAbstractAnimationJob *anim = m_currentAnimation; anim && anim != newAnimationIndex.animation; anim = anim->previousSibling()) {
         setCurrentAnimation(anim, true);
         anim->setCurrentTime(0);
     }
     // setting the new current animation will happen later
 }
 
-int QSequentialAnimationGroup2::duration() const
+int QSequentialAnimationGroupJob::duration() const
 {
     int ret = 0;
 
-    for (QAbstractAnimation2 *anim = firstChild(); anim; anim = anim->nextSibling()) {
+    for (QAbstractAnimationJob *anim = firstChild(); anim; anim = anim->nextSibling()) {
         const int currentDuration = anim->totalDuration();
         if (currentDuration == -1)
             return -1; // Undetermined length
@@ -198,12 +198,12 @@ int QSequentialAnimationGroup2::duration() const
     return ret;
 }
 
-void QSequentialAnimationGroup2::updateCurrentTime(int currentTime)
+void QSequentialAnimationGroupJob::updateCurrentTime(int currentTime)
 {
     if (!m_currentAnimation)
         return;
 
-    const QSequentialAnimationGroup2::AnimationIndex newAnimationIndex = indexForCurrentTime();
+    const QSequentialAnimationGroupJob::AnimationIndex newAnimationIndex = indexForCurrentTime();
 
     // newAnimationIndex.index is the new current animation
     if (m_previousLoop < m_currentLoop
@@ -238,10 +238,10 @@ void QSequentialAnimationGroup2::updateCurrentTime(int currentTime)
     m_previousLoop = m_currentLoop;
 }
 
-void QSequentialAnimationGroup2::updateState(QAbstractAnimation2::State newState,
-                                            QAbstractAnimation2::State oldState)
+void QSequentialAnimationGroupJob::updateState(QAbstractAnimationJob::State newState,
+                                            QAbstractAnimationJob::State oldState)
 {
-    QAnimationGroup2::updateState(newState, oldState);
+    QAnimationGroupJob::updateState(newState, oldState);
 
     if (!m_currentAnimation)
         return;
@@ -265,14 +265,14 @@ void QSequentialAnimationGroup2::updateState(QAbstractAnimation2::State newState
     }
 }
 
-void QSequentialAnimationGroup2::updateDirection(QAbstractAnimation2::Direction direction)
+void QSequentialAnimationGroupJob::updateDirection(QAbstractAnimationJob::Direction direction)
 {
     // we need to update the direction of the current animation
     if (!isStopped() && m_currentAnimation)
         m_currentAnimation->setDirection(direction);
 }
 
-void QSequentialAnimationGroup2::setCurrentAnimation(QAbstractAnimation2 *anim, bool intermediate)
+void QSequentialAnimationGroupJob::setCurrentAnimation(QAbstractAnimationJob *anim, bool intermediate)
 {
     if (!anim) {
         Q_ASSERT(!firstChild());
@@ -292,7 +292,7 @@ void QSequentialAnimationGroup2::setCurrentAnimation(QAbstractAnimation2 *anim, 
     activateCurrentAnimation(intermediate);
 }
 
-void QSequentialAnimationGroup2::activateCurrentAnimation(bool intermediate)
+void QSequentialAnimationGroupJob::activateCurrentAnimation(bool intermediate)
 {
     if (!m_currentAnimation || isStopped())
         return;
@@ -311,7 +311,7 @@ void QSequentialAnimationGroup2::activateCurrentAnimation(bool intermediate)
         m_currentAnimation->pause();
 }
 
-void QSequentialAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2 *animation)
+void QSequentialAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimationJob *animation)
 {
     Q_ASSERT(animation == m_currentAnimation);
 
@@ -330,7 +330,7 @@ void QSequentialAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimatio
     }
 }
 
-void QSequentialAnimationGroup2::animationInserted(QAbstractAnimation2 *anim)
+void QSequentialAnimationGroupJob::animationInserted(QAbstractAnimationJob *anim)
 {
     if (m_currentAnimation == 0)
         setCurrentAnimation(firstChild()); // initialize the current animation
@@ -348,9 +348,9 @@ void QSequentialAnimationGroup2::animationInserted(QAbstractAnimation2 *anim)
 //    }
 }
 
-void QSequentialAnimationGroup2::animationRemoved(QAbstractAnimation2 *anim, QAbstractAnimation2 *prev, QAbstractAnimation2 *next)
+void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim, QAbstractAnimationJob *prev, QAbstractAnimationJob *next)
 {
-    QAnimationGroup2::animationRemoved(anim, prev, next);
+    QAnimationGroupJob::animationRemoved(anim, prev, next);
 
     Q_ASSERT(m_currentAnimation); // currentAnimation should always be set
 
@@ -366,7 +366,7 @@ void QSequentialAnimationGroup2::animationRemoved(QAbstractAnimation2 *anim, QAb
 
     // duration of the previous animations up to the current animation
     m_currentTime = 0;
-    for (QAbstractAnimation2 *anim = firstChild(); anim; anim = anim->nextSibling()) {
+    for (QAbstractAnimationJob *anim = firstChild(); anim; anim = anim->nextSibling()) {
         if (anim == m_currentAnimation)
             break;
         m_currentTime += animationActualTotalDuration(anim);

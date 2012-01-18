@@ -75,7 +75,7 @@ void QSmoothedAnimationTimer::stopAnimation()
 }
 
 QSmoothedAnimation::QSmoothedAnimation(QDeclarativeSmoothedAnimationPrivate *priv)
-    : QAbstractAnimation2(), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
+    : QAbstractAnimationJob(), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
       reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
       useDelta(false), delayedStopTimer(new QSmoothedAnimationTimer(this)), animationTemplate(priv)
@@ -109,9 +109,9 @@ void QSmoothedAnimation::restart()
     }
 }
 
-void QSmoothedAnimation::updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State /*oldState*/)
+void QSmoothedAnimation::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State /*oldState*/)
 {
-    if (newState == QAbstractAnimation2::Running)
+    if (newState == QAbstractAnimationJob::Running)
         init();
 }
 
@@ -365,7 +365,7 @@ void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
     }
 }
 
-QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
                                                QDeclarativeProperties &modified,
                                                TransitionDirection direction)
 {
@@ -374,10 +374,10 @@ QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeState
 
     QDeclarativeStateActions dataActions = QDeclarativePropertyAnimation::createTransitionActions(actions, modified);
 
-    QParallelAnimationGroup2 *wrapperGroup = new QParallelAnimationGroup2();
+    QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
 
     if (!dataActions.isEmpty()) {
-        QSet<QAbstractAnimation2*> anims;
+        QSet<QAbstractAnimationJob*> anims;
         for (int i = 0; i < dataActions.size(); i++) {
             QSmoothedAnimation *ease;
             bool needsRestart;

@@ -1,15 +1,15 @@
 INCLUDEPATH += $$PWD
 
 HEADERS += \
-        $$PWD/qabstractanimation2_p.h \
-        $$PWD/qanimationgroup2_p.h \
-        $$PWD/qsequentialanimationgroup2_p.h \
-        $$PWD/qparallelanimationgroup2_p.h \
-        $$PWD/qpauseanimation2_p.h
+        $$PWD/qabstractanimationjob_p.h \
+        $$PWD/qanimationgroupjob_p.h \
+        $$PWD/qsequentialanimationgroupjob_p.h \
+        $$PWD/qparallelanimationgroupjob_p.h \
+        $$PWD/qpauseanimationjob_p.h
 
 SOURCES += \
-        $$PWD/qabstractanimation2.cpp \
-        $$PWD/qanimationgroup2.cpp \
-        $$PWD/qsequentialanimationgroup2.cpp \
-        $$PWD/qparallelanimationgroup2.cpp \
-        $$PWD/qpauseanimation2.cpp
+        $$PWD/qabstractanimationjob.cpp \
+        $$PWD/qanimationgroupjob.cpp \
+        $$PWD/qsequentialanimationgroupjob.cpp \
+        $$PWD/qparallelanimationgroupjob.cpp \
+        $$PWD/qpauseanimationjob.cpp

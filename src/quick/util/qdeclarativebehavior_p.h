@@ -46,7 +46,7 @@
 
 #include <private/qdeclarativepropertyvalueinterceptor_p.h>
 #include <qdeclarative.h>
-#include <private/qabstractanimation2_p.h>
+#include <private/qabstractanimationjob_p.h>
 
 QT_BEGIN_HEADER
 

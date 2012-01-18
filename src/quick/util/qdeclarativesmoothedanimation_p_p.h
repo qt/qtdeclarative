@@ -58,7 +58,7 @@
 
 #include "qdeclarativeanimation_p_p.h"
 
-#include "private/qparallelanimationgroup2_p.h"
+#include "private/qparallelanimationgroupjob_p.h"
 
 #include <private/qobject_p.h>
 #include <QBasicTimer>
@@ -78,7 +78,7 @@ private:
 };
 
 class QDeclarativeSmoothedAnimationPrivate;
-class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation2
+class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QSmoothedAnimation)
 public:
@@ -103,7 +103,7 @@ public:
 
 protected:
     virtual void updateCurrentTime(int);
-    virtual void updateState(QAbstractAnimation2::State, QAbstractAnimation2::State);
+    virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
 
 private:
     qreal easeFollow(qreal);

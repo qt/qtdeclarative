@@ -27,6 +27,7 @@ PUBLICTESTS += \
     qmlplugindump
 
 PRIVATETESTS += \
+    animation \
     qdeclarativeaccessibility \
     qdeclarativebinding \
     qdeclarativechangeset \

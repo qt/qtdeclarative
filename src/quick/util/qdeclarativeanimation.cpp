@@ -59,8 +59,8 @@
 #include <qvariant.h>
 #include <qcolor.h>
 #include <qfile.h>
-#include "private/qparallelanimationgroup2_p.h"
-#include "private/qsequentialanimationgroup2_p.h"
+#include "private/qparallelanimationgroupjob_p.h"
+#include "private/qsequentialanimationgroupjob_p.h"
 #include <QtCore/qset.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qpoint.h>
@@ -97,7 +97,7 @@ QDeclarativeAbstractAnimation::QDeclarativeAbstractAnimation(QDeclarativeAbstrac
 {
 }
 
-QAbstractAnimation2* QDeclarativeAbstractAnimation::qtAnimation()
+QAbstractAnimationJob* QDeclarativeAbstractAnimation::qtAnimation()
 {
     Q_D(QDeclarativeAbstractAnimation);
     return d->animationInstance;
@@ -162,10 +162,10 @@ void QDeclarativeAbstractAnimationPrivate::commence()
     QDeclarativeStateActions actions;
     QDeclarativeProperties properties;
 
-    QAbstractAnimation2 *oldInstance = animationInstance;
+    QAbstractAnimationJob *oldInstance = animationInstance;
     animationInstance = q->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
     if (oldInstance != animationInstance) {
-        animationInstance->addAnimationChangeListener(this, QAbstractAnimation2::Completion);
+        animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
         if (oldInstance)
             delete oldInstance;
     }
@@ -573,14 +573,14 @@ bool QDeclarativeAbstractAnimation::userControlDisabled() const
     return d->disableUserControl;
 }
 
-QAbstractAnimation2* QDeclarativeAbstractAnimation::initInstance(QAbstractAnimation2 *animation)
+QAbstractAnimationJob* QDeclarativeAbstractAnimation::initInstance(QAbstractAnimationJob *animation)
 {
     Q_D(QDeclarativeAbstractAnimation);
     animation->setLoopCount(d->loopCount);
     return animation;
 }
 
-QAbstractAnimation2* QDeclarativeAbstractAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeAbstractAnimation::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
                                       TransitionDirection direction)
 {
@@ -590,7 +590,7 @@ QAbstractAnimation2* QDeclarativeAbstractAnimation::transition(QDeclarativeState
     return 0;
 }
 
-void QDeclarativeAbstractAnimationPrivate::animationFinished(QAbstractAnimation2*)
+void QDeclarativeAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
 {
     Q_Q(QDeclarativeAbstractAnimation);
     q->setRunning(false);
@@ -656,7 +656,7 @@ void QDeclarativePauseAnimation::setDuration(int duration)
     emit durationChanged(duration);
 }
 
-QAbstractAnimation2* QDeclarativePauseAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativePauseAnimation::transition(QDeclarativeStateActions &actions,
                                     QDeclarativeProperties &modified,
                                     TransitionDirection direction)
 {
@@ -665,7 +665,7 @@ QAbstractAnimation2* QDeclarativePauseAnimation::transition(QDeclarativeStateAct
     Q_UNUSED(modified);
     Q_UNUSED(direction);
 
-    return initInstance(new QPauseAnimation2(d->duration));
+    return initInstance(new QPauseAnimationJob(d->duration));
 }
 
 /*!
@@ -771,12 +771,12 @@ void QDeclarativeColorAnimation::setTo(const QColor &t)
 }
 
 QActionAnimation::QActionAnimation()
-    : QAbstractAnimation2(), animAction(0)
+    : QAbstractAnimationJob(), animAction(0)
 {
 }
 
 QActionAnimation::QActionAnimation(QAbstractAnimationAction *action)
-    : QAbstractAnimation2(), animAction(action)
+    : QAbstractAnimationJob(), animAction(action)
 {
 }
 
@@ -911,7 +911,7 @@ void QDeclarativeScriptActionPrivate::execute()
     }
 }
 
-QAbstractAnimation2* QDeclarativeScriptAction::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeScriptAction::transition(QDeclarativeStateActions &actions,
                                     QDeclarativeProperties &modified,
                                     TransitionDirection direction)
 {
@@ -1085,7 +1085,7 @@ void QDeclarativePropertyAction::setValue(const QVariant &v)
     }
 }
 
-QAbstractAnimation2* QDeclarativePropertyAction::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativePropertyAction::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
                                       TransitionDirection direction)
 {
@@ -1650,13 +1650,13 @@ QDeclarativeSequentialAnimation::~QDeclarativeSequentialAnimation()
 {
 }
 
-QAbstractAnimation2* QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actions,
                                     QDeclarativeProperties &modified,
                                     TransitionDirection direction)
 {
     Q_D(QDeclarativeAnimationGroup);
 
-    QSequentialAnimationGroup2 *ag = new QSequentialAnimationGroup2;
+    QSequentialAnimationGroupJob *ag = new QSequentialAnimationGroupJob;
 
     int inc = 1;
     int from = 0;
@@ -1666,7 +1666,7 @@ QAbstractAnimation2* QDeclarativeSequentialAnimation::transition(QDeclarativeSta
     }
 
     bool valid = d->defaultProperty.isValid();
-    QAbstractAnimation2* anim;
+    QAbstractAnimationJob* anim;
     for (int ii = from; ii < d->animations.count() && ii >= 0; ii += inc) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
@@ -1716,15 +1716,15 @@ QDeclarativeParallelAnimation::~QDeclarativeParallelAnimation()
 {
 }
 
-QAbstractAnimation2* QDeclarativeParallelAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeParallelAnimation::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
                                       TransitionDirection direction)
 {
     Q_D(QDeclarativeAnimationGroup);
-    QParallelAnimationGroup2 *ag = new QParallelAnimationGroup2;
+    QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
 
     bool valid = d->defaultProperty.isValid();
-    QAbstractAnimation2* anim;
+    QAbstractAnimationJob* anim;
     for (int ii = 0; ii < d->animations.count(); ++ii) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
@@ -1788,7 +1788,7 @@ void QDeclarativePropertyAnimationPrivate::convertVariant(QVariant &variant, int
 }
 
 QDeclarativeBulkValueAnimator::QDeclarativeBulkValueAnimator()
-    : QAbstractAnimation2(), animValue(0), fromSourced(0), m_duration(250)
+    : QAbstractAnimationJob(), animValue(0), fromSourced(0), m_duration(250)
 {
 }
 
@@ -2482,7 +2482,7 @@ QDeclarativeStateActions QDeclarativePropertyAnimation::createTransitionActions(
     return newActions;
 }
 
-QAbstractAnimation2* QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions,
                                                                      QDeclarativeProperties &modified,
                                                                      TransitionDirection direction)
 {

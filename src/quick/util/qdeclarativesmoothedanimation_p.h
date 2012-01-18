@@ -81,7 +81,7 @@ public:
     int maximumEasingTime() const;
     void setMaximumEasingTime(int);
 
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 Q_SIGNALS:

@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef QPARALLELANIMATIONGROUP2_P_H
-#define QPARALLELANIMATIONGROUP2_P_H
+#ifndef QANIMATIONGROUPJOB_P_H
+#define QANIMATIONGROUPJOB_P_H
 
-#include "private/qanimationgroup2_p.h"
+#include "private/qabstractanimationjob_p.h"
 
 QT_BEGIN_HEADER
 
@@ -50,32 +50,44 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class Q_DECLARATIVE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
+class Q_DECLARATIVE_EXPORT QAnimationGroupJob : public QAbstractAnimationJob
 {
-    Q_DISABLE_COPY(QParallelAnimationGroup2)
+    Q_DISABLE_COPY(QAnimationGroupJob)
 public:
-    QParallelAnimationGroup2();
-    ~QParallelAnimationGroup2();
+    QAnimationGroupJob();
+    ~QAnimationGroupJob();
 
-    int duration() const;
+    void appendAnimation(QAbstractAnimationJob *animation);
+    void prependAnimation(QAbstractAnimationJob *animation);
+    void removeAnimation(QAbstractAnimationJob *animation);
 
+    QAbstractAnimationJob *firstChild() const { return m_firstChild; }
+    QAbstractAnimationJob *lastChild() const { return m_lastChild; }
+
+    void clear();
+
+    //called by QAbstractAnimationJob
+    virtual void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
 protected:
-    void updateCurrentTime(int currentTime);
-    void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
-    void updateDirection(QAbstractAnimation2::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimation2 *animation);
+    void topLevelAnimationLoopChanged();
+
+    virtual void animationInserted(QAbstractAnimationJob*) { }
+    virtual void animationRemoved(QAbstractAnimationJob*, QAbstractAnimationJob*, QAbstractAnimationJob*);
+
+    //TODO: confirm location of these (should any be moved into QAbstractAnimationJob?)
+    void resetUncontrolledAnimationsFinishTime();
+    void resetUncontrolledAnimationFinishTime(QAbstractAnimationJob *anim);
+    int uncontrolledAnimationFinishTime(QAbstractAnimationJob *anim) const { return anim->m_uncontrolledFinishTime; }
+    void setUncontrolledAnimationFinishTime(QAbstractAnimationJob *anim, int time);
 
 private:
-    bool shouldAnimationStart(QAbstractAnimation2 *animation, bool startIfAtEnd) const;
-    void applyGroupState(QAbstractAnimation2 *animation);
-
-    //state
-    int m_previousLoop;
-    int m_previousCurrentTime;
+    //definition
+    QAbstractAnimationJob *m_firstChild;
+    QAbstractAnimationJob *m_lastChild;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QPARALLELANIMATIONGROUP2_P_H
+#endif //QANIMATIONGROUPJOB_P_H

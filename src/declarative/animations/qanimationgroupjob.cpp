@@ -39,31 +39,31 @@
 **
 ****************************************************************************/
 
-#include "private/qanimationgroup2_p.h"
+#include "private/qanimationgroupjob_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QAnimationGroup2::QAnimationGroup2()
-    : QAbstractAnimation2(), m_firstChild(0), m_lastChild(0)
+QAnimationGroupJob::QAnimationGroupJob()
+    : QAbstractAnimationJob(), m_firstChild(0), m_lastChild(0)
 {
     m_isGroup = true;
 }
 
-QAnimationGroup2::~QAnimationGroup2()
+QAnimationGroupJob::~QAnimationGroupJob()
 {
     while (firstChild() != 0)
         delete firstChild();
 }
 
-void QAnimationGroup2::topLevelAnimationLoopChanged()
+void QAnimationGroupJob::topLevelAnimationLoopChanged()
 {
-    for (QAbstractAnimation2 *animation = firstChild(); animation; animation = animation->nextSibling())
+    for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling())
         animation->topLevelAnimationLoopChanged();
 }
 
-void QAnimationGroup2::appendAnimation(QAbstractAnimation2 *animation)
+void QAnimationGroupJob::appendAnimation(QAbstractAnimationJob *animation)
 {
-    if (QAnimationGroup2 *oldGroup = animation->m_group)
+    if (QAnimationGroupJob *oldGroup = animation->m_group)
         oldGroup->removeAnimation(animation);
 
     Q_ASSERT(!previousSibling() && !nextSibling());
@@ -79,9 +79,9 @@ void QAnimationGroup2::appendAnimation(QAbstractAnimation2 *animation)
     animationInserted(animation);
 }
 
-void QAnimationGroup2::prependAnimation(QAbstractAnimation2 *animation)
+void QAnimationGroupJob::prependAnimation(QAbstractAnimationJob *animation)
 {
-    if (QAnimationGroup2 *oldGroup = animation->m_group)
+    if (QAnimationGroupJob *oldGroup = animation->m_group)
         oldGroup->removeAnimation(animation);
 
     Q_ASSERT(!previousSibling() && !nextSibling());
@@ -97,12 +97,12 @@ void QAnimationGroup2::prependAnimation(QAbstractAnimation2 *animation)
     animationInserted(animation);
 }
 
-void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
+void QAnimationGroupJob::removeAnimation(QAbstractAnimationJob *animation)
 {
     Q_ASSERT(animation);
     Q_ASSERT(animation->m_group == this);
-    QAbstractAnimation2 *prev = animation->previousSibling();
-    QAbstractAnimation2 *next = animation->nextSibling();
+    QAbstractAnimationJob *prev = animation->previousSibling();
+    QAbstractAnimationJob *next = animation->nextSibling();
 
     if (prev)
         prev->m_nextSibling = next;
@@ -121,38 +121,38 @@ void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
     animationRemoved(animation, prev, next);
 }
 
-void QAnimationGroup2::clear()
+void QAnimationGroupJob::clear()
 {
     //### should this remove and delete, or just remove?
     while (firstChild() != 0)
         delete firstChild(); //removeAnimation(firstChild());
 }
 
-void QAnimationGroup2::resetUncontrolledAnimationsFinishTime()
+void QAnimationGroupJob::resetUncontrolledAnimationsFinishTime()
 {
-    for (QAbstractAnimation2 *animation = firstChild(); animation; animation = animation->nextSibling()) {
+    for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
         if (animation->duration() == -1 || animation->loopCount() < 0) {
             resetUncontrolledAnimationFinishTime(animation);
         }
     }
 }
 
-void QAnimationGroup2::resetUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim)
+void QAnimationGroupJob::resetUncontrolledAnimationFinishTime(QAbstractAnimationJob *anim)
 {
     setUncontrolledAnimationFinishTime(anim, -1);
 }
 
-void QAnimationGroup2::setUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim, int time)
+void QAnimationGroupJob::setUncontrolledAnimationFinishTime(QAbstractAnimationJob *anim, int time)
 {
     anim->m_uncontrolledFinishTime = time;
 }
 
-void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2 *animation)
+void QAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimationJob *animation)
 {
     Q_UNUSED(animation);
 }
 
-void QAnimationGroup2::animationRemoved(QAbstractAnimation2* anim, QAbstractAnimation2* , QAbstractAnimation2* )
+void QAnimationGroupJob::animationRemoved(QAbstractAnimationJob* anim, QAbstractAnimationJob* , QAbstractAnimationJob* )
 {
     Q_UNUSED(index);
     resetUncontrolledAnimationFinishTime(anim);

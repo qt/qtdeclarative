@@ -47,7 +47,7 @@
 #include <private/qdeclarativeproperty_p.h>
 #include <private/qdeclarativeguard_p.h>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qabstractanimation2_p.h>
+#include <private/qabstractanimationjob_p.h>
 #include <private/qdeclarativetransition_p.h>
 
 #include <private/qobject_p.h>
@@ -61,12 +61,12 @@ public:
     QDeclarativeBehaviorPrivate() : animation(0), animationInstance(0), enabled(true), finalized(false)
       , blockRunningChanged(false) {}
 
-    virtual void animationStateChanged(QAbstractAnimation2 *, QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
+    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
 
     QDeclarativeProperty property;
     QVariant targetValue;
     QDeclarativeGuard<QDeclarativeAbstractAnimation> animation;
-    QAbstractAnimation2 *animationInstance;
+    QAbstractAnimationJob *animationInstance;
     bool enabled;
     bool finalized;
     bool blockRunningChanged;
@@ -140,10 +140,10 @@ void QDeclarativeBehavior::setAnimation(QDeclarativeAbstractAnimation *animation
 }
 
 
-void QDeclarativeBehaviorPrivate::animationStateChanged(QAbstractAnimation2 *, QAbstractAnimation2::State newState,QAbstractAnimation2::State)
+void QDeclarativeBehaviorPrivate::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState,QAbstractAnimationJob::State)
 {
     if (!blockRunningChanged)
-        animation->notifyRunningChanged(newState == QAbstractAnimation2::Running);
+        animation->notifyRunningChanged(newState == QAbstractAnimationJob::Running);
 }
 
 /*!
@@ -202,10 +202,10 @@ void QDeclarativeBehavior::write(const QVariant &value)
     actions << action;
 
     QList<QDeclarativeProperty> after;
-    QAbstractAnimation2 *prev = d->animationInstance;
+    QAbstractAnimationJob *prev = d->animationInstance;
     d->animationInstance = d->animation->transition(actions, after, QDeclarativeAbstractAnimation::Forward);
     if (d->animationInstance != prev) {
-        d->animationInstance->addAnimationChangeListener(d, QAbstractAnimation2::StateChange);
+        d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
         if (prev)
             delete prev;
     }

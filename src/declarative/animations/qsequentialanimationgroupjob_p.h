@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef QSEQUENTIALANIMATIONGROUP2_P_H
-#define QSEQUENTIALANIMATIONGROUP2_P_H
+#ifndef QSEQUENTIALANIMATIONGROUPJOB_P_H
+#define QSEQUENTIALANIMATIONGROUPJOB_P_H
 
-#include <private/qanimationgroup2_p.h>
+#include <private/qanimationgroupjob_p.h>
 
 QT_BEGIN_HEADER
 
@@ -50,23 +50,23 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QPauseAnimation2;
-class Q_DECLARATIVE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
+class QPauseAnimationJob;
+class Q_DECLARATIVE_EXPORT QSequentialAnimationGroupJob : public QAnimationGroupJob
 {
-    Q_DISABLE_COPY(QSequentialAnimationGroup2)
+    Q_DISABLE_COPY(QSequentialAnimationGroupJob)
 public:
-    QSequentialAnimationGroup2();
-    ~QSequentialAnimationGroup2();
+    QSequentialAnimationGroupJob();
+    ~QSequentialAnimationGroupJob();
 
     int duration() const;
 
-    QAbstractAnimation2 *currentAnimation() const { return m_currentAnimation; }
+    QAbstractAnimationJob *currentAnimation() const { return m_currentAnimation; }
 
 protected:
     void updateCurrentTime(int);
-    void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
-    void updateDirection(QAbstractAnimation2::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimation2 *animation);
+    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void updateDirection(QAbstractAnimationJob::Direction direction);
+    void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
 
 private:
     struct AnimationIndex
@@ -76,17 +76,17 @@ private:
         // Note that the index semantic is slightly different depending on the direction.
         bool afterCurrent;  //whether animation is before or after m_currentAnimation   //TODO: make enum Before/After/Same
         int timeOffset; // time offset when the animation at index starts.
-        QAbstractAnimation2 *animation; //points to the animation at timeOffset
+        QAbstractAnimationJob *animation; //points to the animation at timeOffset
     };
 
-    int animationActualTotalDuration(QAbstractAnimation2 *anim) const;
+    int animationActualTotalDuration(QAbstractAnimationJob *anim) const;
     AnimationIndex indexForCurrentTime() const;
 
-    void setCurrentAnimation(QAbstractAnimation2 *anim, bool intermediate = false);
+    void setCurrentAnimation(QAbstractAnimationJob *anim, bool intermediate = false);
     void activateCurrentAnimation(bool intermediate = false);
 
-    void animationInserted(QAbstractAnimation2 *anim);
-    void animationRemoved(QAbstractAnimation2 *anim,QAbstractAnimation2*,QAbstractAnimation2*);
+    void animationInserted(QAbstractAnimationJob *anim);
+    void animationRemoved(QAbstractAnimationJob *anim,QAbstractAnimationJob*,QAbstractAnimationJob*);
 
     bool atEnd() const;
 
@@ -97,7 +97,7 @@ private:
     void advanceForwards(const AnimationIndex &newAnimationIndex);
 
     //state
-    QAbstractAnimation2 *m_currentAnimation;
+    QAbstractAnimationJob *m_currentAnimation;
     int m_previousLoop;
 };
 
@@ -105,4 +105,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif //QSEQUENTIALANIMATIONGROUP2_P_H
+#endif //QSEQUENTIALANIMATIONGROUPJOB_P_H

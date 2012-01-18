@@ -888,7 +888,7 @@ void tst_qdeclarativeanimations::propertyValueSourceDefaultStart()
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
         QVERIFY(myAnim && !myAnim->qtAnimation());
-        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimation2::Stopped);
+        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimationJob::Stopped);
     }
 }
 
@@ -907,7 +907,7 @@ void tst_qdeclarativeanimations::dontStart()
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
         QVERIFY(myAnim && !myAnim->qtAnimation());
-        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimation2::Stopped);
+        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimationJob::Stopped);
     }
 
     {
@@ -922,7 +922,7 @@ void tst_qdeclarativeanimations::dontStart()
 
         QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
         QVERIFY(myAnim && !myAnim->qtAnimation());
-        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimation2::Stopped);
+        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimationJob::Stopped);
     }
 }
 
@@ -1086,7 +1086,7 @@ void tst_qdeclarativeanimations::doubleRegistrationBug()
 
     QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
     QVERIFY(anim != 0);
-    QTRY_COMPARE(anim->qtAnimation()->state(), QAbstractAnimation2::Stopped);
+    QTRY_COMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Stopped);
 }
 
 //QTBUG-16736
@@ -1110,7 +1110,7 @@ void tst_qdeclarativeanimations::alwaysRunToEndRestartBug()
     QVERIFY(rect.x() != qreal(200));
     QTest::qWait(800);
     QTIMED_COMPARE(rect.x(), qreal(200));
-    QCOMPARE(static_cast<QDeclarativeAbstractAnimation*>(&animation)->qtAnimation()->state(), QAbstractAnimation2::Stopped);
+    QCOMPARE(static_cast<QDeclarativeAbstractAnimation*>(&animation)->qtAnimation()->state(), QAbstractAnimationJob::Stopped);
 }
 
 //QTBUG-20227
@@ -1134,7 +1134,7 @@ void tst_qdeclarativeanimations::pauseBindingBug()
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
-    QVERIFY(anim->qtAnimation()->state() == QAbstractAnimation2::Paused);
+    QVERIFY(anim->qtAnimation()->state() == QAbstractAnimationJob::Paused);
 
     delete rect;
 }
@@ -1147,7 +1147,7 @@ void tst_qdeclarativeanimations::pauseBug()
     QDeclarativeComponent c(&engine, testFileUrl("pauseBug.qml"));
     QDeclarativeAbstractAnimation *anim = qobject_cast<QDeclarativeAbstractAnimation*>(c.create());
     QVERIFY(anim != 0);
-    QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimation2::Paused);
+    QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Paused);
     QCOMPARE(anim->isPaused(), true);
     QCOMPARE(anim->isRunning(), true);
 

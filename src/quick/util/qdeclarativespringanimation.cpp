@@ -43,7 +43,7 @@
 
 #include "qdeclarativeanimation_p_p.h"
 #include <private/qdeclarativeproperty_p.h>
-#include "private/qparallelanimationgroup2_p.h"
+#include "private/qparallelanimationgroupjob_p.h"
 
 #include <QtCore/qdebug.h>
 
@@ -55,7 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeSpringAnimationPrivate;
-class Q_AUTOTEST_EXPORT QSpringAnimation : public QAbstractAnimation2
+class Q_AUTOTEST_EXPORT QSpringAnimation : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QSpringAnimation)
 public:
@@ -95,14 +95,14 @@ public:
 
 protected:
     virtual void updateCurrentTime(int time);
-    virtual void updateState(QAbstractAnimation2::State, QAbstractAnimation2::State);
+    virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
 
 private:
     QDeclarativeSpringAnimationPrivate *animationTemplate;
 };
 
 QSpringAnimation::QSpringAnimation(QDeclarativeSpringAnimationPrivate *priv)
-    : QAbstractAnimation2()
+    : QAbstractAnimationJob()
     , currentValue(0)
     , to(0)
     , velocity(0)
@@ -244,9 +244,9 @@ void QSpringAnimation::updateCurrentTime(int time)
         stop();
 }
 
-void QSpringAnimation::updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State /*oldState*/)
+void QSpringAnimation::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State /*oldState*/)
 {
-    if (newState == QAbstractAnimation2::Running)
+    if (newState == QAbstractAnimationJob::Running)
         init();
 }
 
@@ -495,18 +495,18 @@ void QDeclarativeSpringAnimation::setMass(qreal mass)
     }
 }
 
-QAbstractAnimation2* QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
                                                                    QDeclarativeProperties &modified,
                                                                    TransitionDirection direction)
 {
     Q_D(QDeclarativeSpringAnimation);
     Q_UNUSED(direction);
 
-    QParallelAnimationGroup2 *wrapperGroup = new QParallelAnimationGroup2();
+    QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
 
     QDeclarativeStateActions dataActions = QDeclarativeNumberAnimation::createTransitionActions(actions, modified);
     if (!dataActions.isEmpty()) {
-        QSet<QAbstractAnimation2*> anims;
+        QSet<QAbstractAnimationJob*> anims;
         for (int i = 0; i < dataActions.size(); ++i) {
             QSpringAnimation *animation;
             bool needsRestart = false;

@@ -42,7 +42,7 @@
 #include "qdeclarativetimer_p.h"
 
 #include <QtCore/qcoreapplication.h>
-#include "private/qpauseanimation2_p.h"
+#include "private/qpauseanimationjob_p.h"
 #include <qdebug.h>
 
 #include <private/qobject_p.h>
@@ -59,11 +59,11 @@ public:
         : interval(1000), running(false), repeating(false), triggeredOnStart(false)
         , classBegun(false), componentComplete(false), firstTick(true) {}
 
-    virtual void animationFinished(QAbstractAnimation2 *);
-    virtual void animationCurrentLoopChanged(QAbstractAnimation2 *)  { Q_Q(QDeclarativeTimer); q->ticked(); }
+    virtual void animationFinished(QAbstractAnimationJob *);
+    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *)  { Q_Q(QDeclarativeTimer); q->ticked(); }
 
     int interval;
-    QPauseAnimation2 pause;
+    QPauseAnimationJob pause;
     bool running : 1;
     bool repeating : 1;
     bool triggeredOnStart : 1;
@@ -115,7 +115,7 @@ QDeclarativeTimer::QDeclarativeTimer(QObject *parent)
     : QObject(*(new QDeclarativeTimerPrivate), parent)
 {
     Q_D(QDeclarativeTimer);
-    d->pause.addAnimationChangeListener(d, QAbstractAnimation2::Completion | QAbstractAnimation2::CurrentLoop);
+    d->pause.addAnimationChangeListener(d, QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentLoop);
     d->pause.setLoopCount(1);
     d->pause.setDuration(d->interval);
 }
@@ -313,7 +313,7 @@ void QDeclarativeTimer::ticked()
     d->firstTick = false;
 }
 
-void QDeclarativeTimerPrivate::animationFinished(QAbstractAnimation2 *)
+void QDeclarativeTimerPrivate::animationFinished(QAbstractAnimationJob *)
 {
     Q_Q(QDeclarativeTimer);
     if (repeating || !running)

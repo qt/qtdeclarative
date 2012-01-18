@@ -39,37 +39,33 @@
 **
 ****************************************************************************/
 
-#ifndef QPAUSEANIMATION2_P_H
-#define QPAUSEANIMATION2_P_H
-
-#include <private/qanimationgroup2_p.h>
-
-QT_BEGIN_HEADER
+#include "private/qpauseanimationjob_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
-
-class Q_DECLARATIVE_EXPORT QPauseAnimation2 : public QAbstractAnimation2
+QPauseAnimationJob::QPauseAnimationJob(int duration)
+    : QAbstractAnimationJob()
+    , m_duration(duration)
 {
-    Q_DISABLE_COPY(QPauseAnimation2)
-public:
-    explicit QPauseAnimation2(int duration = 250);
-    ~QPauseAnimation2();
+    m_isPause = true;
+}
 
-    int duration() const;
-    void setDuration(int msecs);
+QPauseAnimationJob::~QPauseAnimationJob()
+{
+}
 
-protected:
-    void updateCurrentTime(int);
+int QPauseAnimationJob::duration() const
+{
+    return m_duration;
+}
 
-private:
-    //definition
-    int m_duration;
-};
+void QPauseAnimationJob::setDuration(int msecs)
+{
+    m_duration = msecs;
+}
+
+void QPauseAnimationJob::updateCurrentTime(int)
+{
+}
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
-
-#endif // QPAUSEANIMATION2_P_H

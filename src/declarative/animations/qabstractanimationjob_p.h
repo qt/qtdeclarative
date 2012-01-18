@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QABSTRACTANIMATION2_P_H
-#define QABSTRACTANIMATION2_P_H
+#ifndef QABSTRACTANIMATIONJOB_P_H
+#define QABSTRACTANIMATIONJOB_P_H
 
 #include <QtCore/QObject>
 #include <QtCore/private/qabstractanimation_p.h>
@@ -52,11 +52,11 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QAnimationGroup2;
+class QAnimationGroupJob;
 class QAnimation2ChangeListener;
-class Q_DECLARATIVE_EXPORT QAbstractAnimation2
+class Q_DECLARATIVE_EXPORT QAbstractAnimationJob
 {
-    Q_DISABLE_COPY(QAbstractAnimation2)
+    Q_DISABLE_COPY(QAbstractAnimationJob)
 public:
     enum Direction {
         Forward,
@@ -69,11 +69,11 @@ public:
         Running
     };
 
-    QAbstractAnimation2();
-    virtual ~QAbstractAnimation2();
+    QAbstractAnimationJob();
+    virtual ~QAbstractAnimationJob();
 
     //definition
-    inline QAnimationGroup2 *group() const {return m_group;}
+    inline QAnimationGroupJob *group() const {return m_group;}
 
     inline int loopCount() const {return m_loopCount;}
     void setLoopCount(int loopCount);
@@ -81,14 +81,14 @@ public:
     int totalDuration() const;
     virtual int duration() const {return 0;}
 
-    inline QAbstractAnimation2::Direction direction() const {return m_direction;}
-    void setDirection(QAbstractAnimation2::Direction direction);
+    inline QAbstractAnimationJob::Direction direction() const {return m_direction;}
+    void setDirection(QAbstractAnimationJob::Direction direction);
 
     //state
     inline int currentTime() const {return m_totalCurrentTime;}
     inline int currentLoopTime() const {return m_currentTime;}
     inline int currentLoop() const {return m_currentLoop;}
-    inline QAbstractAnimation2::State state() const {return m_state;}
+    inline QAbstractAnimationJob::State state() const {return m_state;}
     inline bool isRunning() { return m_state == Running; }
     inline bool isStopped() { return m_state == Stopped; }
     inline bool isPaused() { return m_state == Paused; }
@@ -107,34 +107,34 @@ public:
     };
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
-    void addAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimation2::ChangeTypes);
-    void removeAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimation2::ChangeTypes);
+    void addAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
+    void removeAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
 
-    QAbstractAnimation2 *nextSibling() const { return m_nextSibling; }
-    QAbstractAnimation2 *previousSibling() const { return m_previousSibling; }
+    QAbstractAnimationJob *nextSibling() const { return m_nextSibling; }
+    QAbstractAnimationJob *previousSibling() const { return m_previousSibling; }
 
 protected:
     virtual void updateCurrentTime(int) {}
-    virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
-    virtual void updateDirection(QAbstractAnimation2::Direction direction);
+    virtual void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    virtual void updateDirection(QAbstractAnimationJob::Direction direction);
     virtual void topLevelAnimationLoopChanged() {}
 
-    void setState(QAbstractAnimation2::State state);
+    void setState(QAbstractAnimationJob::State state);
 
     void finished();
-    void stateChanged(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
+    void stateChanged(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
     void currentLoopChanged(int currentLoop);
-    void directionChanged(QAbstractAnimation2::Direction);
+    void directionChanged(QAbstractAnimationJob::Direction);
 
     //definition
     bool m_isPause;
     bool m_isGroup;
     int m_loopCount;
-    QAnimationGroup2 *m_group;
-    QAbstractAnimation2::Direction m_direction;
+    QAnimationGroupJob *m_group;
+    QAbstractAnimationJob::Direction m_direction;
 
     //state
-    QAbstractAnimation2::State m_state;
+    QAbstractAnimationJob::State m_state;
     int m_totalCurrentTime;
     int m_currentTime;
     int m_currentLoop;
@@ -144,26 +144,26 @@ protected:
     bool *m_wasDeleted;
 
     struct ChangeListener {
-        ChangeListener(QAnimation2ChangeListener *l, QAbstractAnimation2::ChangeTypes t) : listener(l), types(t) {}
+        ChangeListener(QAnimation2ChangeListener *l, QAbstractAnimationJob::ChangeTypes t) : listener(l), types(t) {}
         QAnimation2ChangeListener *listener;
-        QAbstractAnimation2::ChangeTypes types;
+        QAbstractAnimationJob::ChangeTypes types;
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
     QPODVector<ChangeListener,4> changeListeners;
 
-    QAbstractAnimation2 *m_nextSibling;
-    QAbstractAnimation2 *m_previousSibling;
+    QAbstractAnimationJob *m_nextSibling;
+    QAbstractAnimationJob *m_previousSibling;
 
     friend class QDeclarativeAnimationTimer;
-    friend class QAnimationGroup2;
+    friend class QAnimationGroupJob;
 };
 
 class Q_AUTOTEST_EXPORT QAnimation2ChangeListener
 {
 public:
-    virtual void animationFinished(QAbstractAnimation2 *) {}
-    virtual void animationStateChanged(QAbstractAnimation2 *, QAbstractAnimation2::State, QAbstractAnimation2::State) {}
-    virtual void animationCurrentLoopChanged(QAbstractAnimation2 *) {}
+    virtual void animationFinished(QAbstractAnimationJob *) {}
+    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State) {}
+    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *) {}
 };
 
 class Q_DECLARATIVE_EXPORT QDeclarativeAnimationTimer : public QAbstractAnimationTimer
@@ -176,8 +176,8 @@ public:
     static QDeclarativeAnimationTimer *instance();
     static QDeclarativeAnimationTimer *instance(bool create);
 
-    static void registerAnimation(QAbstractAnimation2 *animation, bool isTopLevel);
-    static void unregisterAnimation(QAbstractAnimation2 *animation);
+    static void registerAnimation(QAbstractAnimationJob *animation, bool isTopLevel);
+    static void unregisterAnimation(QAbstractAnimationJob *animation);
 
     /*
         this is used for updating the currentTime of all animations in case the pause
@@ -211,22 +211,22 @@ private:
     bool startAnimationPending;
     bool stopTimerPending;
 
-    QList<QAbstractAnimation2*> animations, animationsToStart;
+    QList<QAbstractAnimationJob*> animations, animationsToStart;
 
     // this is the count of running animations that are not a group neither a pause animation
     int runningLeafAnimations;
-    QList<QAbstractAnimation2*> runningPauseAnimations;
+    QList<QAbstractAnimationJob*> runningPauseAnimations;
 
-    void registerRunningAnimation(QAbstractAnimation2 *animation);
-    void unregisterRunningAnimation(QAbstractAnimation2 *animation);
+    void registerRunningAnimation(QAbstractAnimationJob *animation);
+    void unregisterRunningAnimation(QAbstractAnimationJob *animation);
 
     int closestPauseAnimationTimeToFinish();
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QAbstractAnimation2::ChangeTypes)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QAbstractAnimationJob::ChangeTypes)
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QABSTRACTANIMATION2_P_H
+#endif // QABSTRACTANIMATIONJOB_P_H

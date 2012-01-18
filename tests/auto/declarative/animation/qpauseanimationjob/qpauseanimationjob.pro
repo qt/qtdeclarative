@@ -1,5 +1,5 @@
 CONFIG += testcase
 macx:CONFIG -= app_bundle
-TARGET = tst_qpauseanimation2
+TARGET = tst_qpauseanimationjob
 QT = core-private gui-private declarative-private testlib
-SOURCES = tst_qpauseanimation2.cpp
+SOURCES = tst_qpauseanimationjob.cpp

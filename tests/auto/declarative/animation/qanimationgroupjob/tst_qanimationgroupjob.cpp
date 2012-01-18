@@ -41,13 +41,13 @@
 
 #include <QtTest/QtTest>
 
-#include <QtDeclarative/private/qanimationgroup2_p.h>
-#include <QtDeclarative/private/qsequentialanimationgroup2_p.h>
-#include <QtDeclarative/private/qparallelanimationgroup2_p.h>
+#include <QtDeclarative/private/qanimationgroupjob_p.h>
+#include <QtDeclarative/private/qsequentialanimationgroupjob_p.h>
+#include <QtDeclarative/private/qparallelanimationgroupjob_p.h>
 
-Q_DECLARE_METATYPE(QAbstractAnimation2::State)
+Q_DECLARE_METATYPE(QAbstractAnimationJob::State)
 
-class tst_QAnimationGroup2 : public QObject
+class tst_QAnimationGroupJob : public QObject
 {
     Q_OBJECT
 public Q_SLOTS:
@@ -60,17 +60,17 @@ private slots:
     void addChildTwice();
 };
 
-void tst_QAnimationGroup2::initTestCase()
+void tst_QAnimationGroupJob::initTestCase()
 {
-    qRegisterMetaType<QAbstractAnimation2::State>("QAbstractAnimation2::State");
+    qRegisterMetaType<QAbstractAnimationJob::State>("QAbstractAnimationJob::State");
 }
 
-void tst_QAnimationGroup2::construction()
+void tst_QAnimationGroupJob::construction()
 {
-    QSequentialAnimationGroup2 animationgroup;
+    QSequentialAnimationGroupJob animationgroup;
 }
 
-class TestableGenericAnimation : public QAbstractAnimation2
+class TestableGenericAnimation : public QAbstractAnimationJob
 {
 public:
     TestableGenericAnimation(int duration = 250) : m_duration(duration) {}
@@ -80,7 +80,7 @@ private:
     int m_duration;
 };
 
-class UncontrolledAnimation : public QObject, public QAbstractAnimation2
+class UncontrolledAnimation : public QObject, public QAbstractAnimationJob
 {
     Q_OBJECT
 public:
@@ -115,7 +115,7 @@ private:
 class StateChangeListener: public QAnimation2ChangeListener
 {
 public:
-    virtual void animationStateChanged(QAbstractAnimation2 *, QAbstractAnimation2::State newState, QAbstractAnimation2::State)
+    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
     {
         states << newState;
     }
@@ -125,83 +125,83 @@ public:
         return states.count();
     }
 
-    QList<QAbstractAnimation2::State> states;
+    QList<QAbstractAnimationJob::State> states;
 };
 
-void tst_QAnimationGroup2::emptyGroup()
+void tst_QAnimationGroupJob::emptyGroup()
 {
-    QSequentialAnimationGroup2 group;
+    QSequentialAnimationGroupJob group;
     StateChangeListener groupStateChangedSpy;
-    group.addAnimationChangeListener(&groupStateChangedSpy, QAbstractAnimation2::StateChange);
+    group.addAnimationChangeListener(&groupStateChangedSpy, QAbstractAnimationJob::StateChange);
 
-    QCOMPARE(group.state(), QAnimationGroup2::Stopped);
+    QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
     group.start();
 
     QCOMPARE(groupStateChangedSpy.count(), 2);
 
-    QCOMPARE(groupStateChangedSpy.states.at(0), QAnimationGroup2::Running);
-    QCOMPARE(groupStateChangedSpy.states.at(1), QAnimationGroup2::Stopped);
+    QCOMPARE(groupStateChangedSpy.states.at(0), QAnimationGroupJob::Running);
+    QCOMPARE(groupStateChangedSpy.states.at(1), QAnimationGroupJob::Stopped);
 
-    QCOMPARE(group.state(), QAnimationGroup2::Stopped);
+    QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
 
-    QTest::ignoreMessage(QtWarningMsg, "QAbstractAnimation2::pause: Cannot pause a stopped animation");
+    QTest::ignoreMessage(QtWarningMsg, "QAbstractAnimationJob::pause: Cannot pause a stopped animation");
     group.pause();
 
     QCOMPARE(groupStateChangedSpy.count(), 2);
-    QCOMPARE(group.state(), QAnimationGroup2::Stopped);
+    QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
 
     group.start();
 
     QCOMPARE(groupStateChangedSpy.states.at(2),
-             QAnimationGroup2::Running);
+             QAnimationGroupJob::Running);
     QCOMPARE(groupStateChangedSpy.states.at(3),
-             QAnimationGroup2::Stopped);
+             QAnimationGroupJob::Stopped);
 
-    QCOMPARE(group.state(), QAnimationGroup2::Stopped);
+    QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
 
     group.stop();
 
     QCOMPARE(groupStateChangedSpy.count(), 4);
-    QCOMPARE(group.state(), QAnimationGroup2::Stopped);
+    QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
 }
 
-void tst_QAnimationGroup2::setCurrentTime()
+void tst_QAnimationGroupJob::setCurrentTime()
 {
     // was originally sequence operating on same object/property
-    QSequentialAnimationGroup2 *sequence = new QSequentialAnimationGroup2();
-    QAbstractAnimation2 *a1_s_o1 = new TestableGenericAnimation;
-    QAbstractAnimation2 *a2_s_o1 = new TestableGenericAnimation;
-    QAbstractAnimation2 *a3_s_o1 = new TestableGenericAnimation;
+    QSequentialAnimationGroupJob *sequence = new QSequentialAnimationGroupJob();
+    QAbstractAnimationJob *a1_s_o1 = new TestableGenericAnimation;
+    QAbstractAnimationJob *a2_s_o1 = new TestableGenericAnimation;
+    QAbstractAnimationJob *a3_s_o1 = new TestableGenericAnimation;
     a2_s_o1->setLoopCount(3);
     sequence->appendAnimation(a1_s_o1);
     sequence->appendAnimation(a2_s_o1);
     sequence->appendAnimation(a3_s_o1);
 
     // was originally sequence operating on different object/properties
-    QAnimationGroup2 *sequence2 = new QSequentialAnimationGroup2();
-    QAbstractAnimation2 *a1_s_o2 = new TestableGenericAnimation;
-    QAbstractAnimation2 *a1_s_o3 = new TestableGenericAnimation;
+    QAnimationGroupJob *sequence2 = new QSequentialAnimationGroupJob();
+    QAbstractAnimationJob *a1_s_o2 = new TestableGenericAnimation;
+    QAbstractAnimationJob *a1_s_o3 = new TestableGenericAnimation;
     sequence2->appendAnimation(a1_s_o2);
     sequence2->appendAnimation(a1_s_o3);
 
     // was originally parallel operating on different object/properties
-    QAnimationGroup2 *parallel = new QParallelAnimationGroup2();
-    QAbstractAnimation2 *a1_p_o1 = new TestableGenericAnimation;
-    QAbstractAnimation2 *a1_p_o2 = new TestableGenericAnimation;
-    QAbstractAnimation2 *a1_p_o3 = new TestableGenericAnimation;
+    QAnimationGroupJob *parallel = new QParallelAnimationGroupJob();
+    QAbstractAnimationJob *a1_p_o1 = new TestableGenericAnimation;
+    QAbstractAnimationJob *a1_p_o2 = new TestableGenericAnimation;
+    QAbstractAnimationJob *a1_p_o3 = new TestableGenericAnimation;
     a1_p_o2->setLoopCount(3);
     parallel->appendAnimation(a1_p_o1);
     parallel->appendAnimation(a1_p_o2);
     parallel->appendAnimation(a1_p_o3);
 
-    QAbstractAnimation2 *notTimeDriven = new UncontrolledAnimation;
+    QAbstractAnimationJob *notTimeDriven = new UncontrolledAnimation;
     QCOMPARE(notTimeDriven->totalDuration(), -1);
 
-    QAbstractAnimation2 *loopsForever = new TestableGenericAnimation;
+    QAbstractAnimationJob *loopsForever = new TestableGenericAnimation;
     loopsForever->setLoopCount(-1);
     QCOMPARE(loopsForever->totalDuration(), -1);
 
-    QParallelAnimationGroup2 group;
+    QParallelAnimationGroupJob group;
     group.appendAnimation(sequence);
     group.appendAnimation(sequence2);
     group.appendAnimation(parallel);
@@ -210,17 +210,17 @@ void tst_QAnimationGroup2::setCurrentTime()
 
     // Current time = 1
     group.setCurrentTime(1);
-    QCOMPARE(group.state(), QAnimationGroup2::Stopped);
-    QCOMPARE(sequence->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(a1_s_o1->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(sequence2->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(a1_s_o2->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(parallel->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(a1_p_o1->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(a1_p_o2->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(a1_p_o3->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(notTimeDriven->state(), QAnimationGroup2::Stopped);
-    QCOMPARE(loopsForever->state(), QAnimationGroup2::Stopped);
+    QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(sequence->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(a1_s_o1->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(sequence2->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(a1_s_o2->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(parallel->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(a1_p_o1->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(a1_p_o2->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(a1_p_o3->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(notTimeDriven->state(), QAnimationGroupJob::Stopped);
+    QCOMPARE(loopsForever->state(), QAnimationGroupJob::Stopped);
 
     QCOMPARE(group.currentLoopTime(), 1);
     QCOMPARE(sequence->currentLoopTime(), 1);
@@ -273,13 +273,13 @@ void tst_QAnimationGroup2::setCurrentTime()
     QCOMPARE(sequence->currentAnimation(), a2_s_o1);
 }
 
-void tst_QAnimationGroup2::addChildTwice()
+void tst_QAnimationGroupJob::addChildTwice()
 {
-    QAbstractAnimation2 *subGroup;
-    QAbstractAnimation2 *subGroup2;
-    QAnimationGroup2 *parent = new QSequentialAnimationGroup2();
+    QAbstractAnimationJob *subGroup;
+    QAbstractAnimationJob *subGroup2;
+    QAnimationGroupJob *parent = new QSequentialAnimationGroupJob();
 
-    subGroup = new QAbstractAnimation2;
+    subGroup = new QAbstractAnimationJob;
     parent->appendAnimation(subGroup);
     parent->appendAnimation(subGroup);
     QVERIFY(parent->firstChild() && !parent->firstChild()->nextSibling());
@@ -290,9 +290,9 @@ void tst_QAnimationGroup2::addChildTwice()
 
     // adding the same item twice to a group will remove the item from its current position
     // and append it to the end
-    subGroup = new QAbstractAnimation2;
+    subGroup = new QAbstractAnimationJob;
     parent->appendAnimation(subGroup);
-    subGroup2 = new QAbstractAnimation2;
+    subGroup2 = new QAbstractAnimationJob;
     parent->appendAnimation(subGroup2);
 
     QCOMPARE(parent->firstChild(), subGroup);
@@ -306,5 +306,5 @@ void tst_QAnimationGroup2::addChildTwice()
     delete parent;
 }
 
-QTEST_MAIN(tst_QAnimationGroup2)
-#include "tst_qanimationgroup2.moc"
+QTEST_MAIN(tst_QAnimationGroupJob)
+#include "tst_qanimationgroupjob.moc"

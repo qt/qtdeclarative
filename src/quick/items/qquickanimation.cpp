@@ -48,8 +48,8 @@
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
-#include "private/qsequentialanimationgroup2_p.h"
-#include "private/qparallelanimationgroup2_p.h"
+#include "private/qsequentialanimationgroupjob_p.h"
+#include "private/qparallelanimationgroupjob_p.h"
 #include <QtGui/qtransform.h>
 
 QT_BEGIN_NAMESPACE
@@ -137,7 +137,7 @@ QPointF QQuickParentAnimationPrivate::computeTransformOrigin(QQuickItem::Transfo
     }
 }
 
-QAbstractAnimation2* QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -303,11 +303,11 @@ QAbstractAnimation2* QQuickParentAnimation::transition(QDeclarativeStateActions 
         }
     }
 
-    QSequentialAnimationGroup2 *topLevelGroup = new QSequentialAnimationGroup2;
+    QSequentialAnimationGroupJob *topLevelGroup = new QSequentialAnimationGroupJob;
     QActionAnimation *viaAction = d->via ? new QActionAnimation : 0;
     QActionAnimation *targetAction = new QActionAnimation;
     //we'll assume the common case by far is to have children, and always create ag
-    QParallelAnimationGroup2 *ag = new QParallelAnimationGroup2;
+    QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
 
     if (data->actions.count()) {
         if (d->via)
@@ -316,7 +316,7 @@ QAbstractAnimation2* QQuickParentAnimation::transition(QDeclarativeStateActions 
 
         //take care of any child animations
         bool valid = d->defaultProperty.isValid();
-        QAbstractAnimation2* anim;
+        QAbstractAnimationJob* anim;
         for (int ii = 0; ii < d->animations.count(); ++ii) {
             if (valid)
                 d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
@@ -396,7 +396,7 @@ void QQuickAnchorAnimation::setEasing(const QEasingCurve &e)
     emit easingChanged(e);
 }
 
-QAbstractAnimation2* QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -583,7 +583,7 @@ void QQuickPathAnimation::setEndRotation(qreal rotation)
     emit endRotationChanged(d->endRotation);
 }
 
-QAbstractAnimation2* QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
                                            QDeclarativeProperties &modified,
                                            TransitionDirection direction)
 {
@@ -598,7 +598,7 @@ QAbstractAnimation2* QQuickPathAnimation::transition(QDeclarativeStateActions &a
 
     QList<QQuickItem*> keys = d->activeAnimations.keys();
     foreach (QQuickItem *item, keys) {
-        if (d->activeAnimations.value(item)->state() == QAbstractAnimation2::Stopped)
+        if (d->activeAnimations.value(item)->state() == QAbstractAnimationJob::Stopped)
             d->activeAnimations.remove(item);
     }
 

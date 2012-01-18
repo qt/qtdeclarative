@@ -40,11 +40,11 @@
 ****************************************************************************/
 
 
-#include <QtDeclarative/private/qabstractanimation2_p.h>
-#include <QtDeclarative/private/qanimationgroup2_p.h>
+#include <QtDeclarative/private/qabstractanimationjob_p.h>
+#include <QtDeclarative/private/qanimationgroupjob_p.h>
 #include <QtTest>
 
-class tst_QAbstractAnimation2 : public QObject
+class tst_QAbstractAnimationJob : public QObject
 {
   Q_OBJECT
 private slots:
@@ -63,7 +63,7 @@ private slots:
     void avoidJumpAtStartWithRunning();
 };
 
-class TestableQAbstractAnimation : public QAbstractAnimation2
+class TestableQAbstractAnimation : public QAbstractAnimationJob
 {
 public:
     TestableQAbstractAnimation() : m_duration(10) {}
@@ -77,37 +77,37 @@ private:
     int m_duration;
 };
 
-class DummyQAnimationGroup : public QAnimationGroup2
+class DummyQAnimationGroup : public QAnimationGroupJob
 {
 public:
     int duration() const { return 10; }
     virtual void updateCurrentTime(int) {}
 };
 
-void tst_QAbstractAnimation2::construction()
+void tst_QAbstractAnimationJob::construction()
 {
     TestableQAbstractAnimation anim;
 }
 
-void tst_QAbstractAnimation2::destruction()
+void tst_QAbstractAnimationJob::destruction()
 {
     TestableQAbstractAnimation *anim = new TestableQAbstractAnimation;
     delete anim;
 }
 
-void tst_QAbstractAnimation2::currentLoop()
+void tst_QAbstractAnimationJob::currentLoop()
 {
     TestableQAbstractAnimation anim;
     QCOMPARE(anim.currentLoop(), 0);
 }
 
-void tst_QAbstractAnimation2::currentLoopTime()
+void tst_QAbstractAnimationJob::currentLoopTime()
 {
     TestableQAbstractAnimation anim;
     QCOMPARE(anim.currentLoopTime(), 0);
 }
 
-void tst_QAbstractAnimation2::currentTime()
+void tst_QAbstractAnimationJob::currentTime()
 {
     TestableQAbstractAnimation anim;
     QCOMPARE(anim.currentTime(), 0);
@@ -115,17 +115,17 @@ void tst_QAbstractAnimation2::currentTime()
     QCOMPARE(anim.currentTime(), 10);
 }
 
-void tst_QAbstractAnimation2::direction()
+void tst_QAbstractAnimationJob::direction()
 {
     TestableQAbstractAnimation anim;
-    QCOMPARE(anim.direction(), QAbstractAnimation2::Forward);
-    anim.setDirection(QAbstractAnimation2::Backward);
-    QCOMPARE(anim.direction(), QAbstractAnimation2::Backward);
-    anim.setDirection(QAbstractAnimation2::Forward);
-    QCOMPARE(anim.direction(), QAbstractAnimation2::Forward);
+    QCOMPARE(anim.direction(), QAbstractAnimationJob::Forward);
+    anim.setDirection(QAbstractAnimationJob::Backward);
+    QCOMPARE(anim.direction(), QAbstractAnimationJob::Backward);
+    anim.setDirection(QAbstractAnimationJob::Forward);
+    QCOMPARE(anim.direction(), QAbstractAnimationJob::Forward);
 }
 
-void tst_QAbstractAnimation2::group()
+void tst_QAbstractAnimationJob::group()
 {
     TestableQAbstractAnimation *anim = new TestableQAbstractAnimation;
     DummyQAnimationGroup group;
@@ -133,7 +133,7 @@ void tst_QAbstractAnimation2::group()
     QCOMPARE(anim->group(), &group);
 }
 
-void tst_QAbstractAnimation2::loopCount()
+void tst_QAbstractAnimationJob::loopCount()
 {
     TestableQAbstractAnimation anim;
     QCOMPARE(anim.loopCount(), 1);
@@ -141,13 +141,13 @@ void tst_QAbstractAnimation2::loopCount()
     QCOMPARE(anim.loopCount(), 10);
 }
 
-void tst_QAbstractAnimation2::state()
+void tst_QAbstractAnimationJob::state()
 {
     TestableQAbstractAnimation anim;
-    QCOMPARE(anim.state(), QAbstractAnimation2::Stopped);
+    QCOMPARE(anim.state(), QAbstractAnimationJob::Stopped);
 }
 
-void tst_QAbstractAnimation2::totalDuration()
+void tst_QAbstractAnimationJob::totalDuration()
 {
     TestableQAbstractAnimation anim;
     QCOMPARE(anim.duration(), 10);
@@ -155,7 +155,7 @@ void tst_QAbstractAnimation2::totalDuration()
     QCOMPARE(anim.totalDuration(), 50);
 }
 
-void tst_QAbstractAnimation2::avoidJumpAtStart()
+void tst_QAbstractAnimationJob::avoidJumpAtStart()
 {
     TestableQAbstractAnimation anim;
     anim.setDuration(1000);
@@ -170,7 +170,7 @@ void tst_QAbstractAnimation2::avoidJumpAtStart()
     QVERIFY(anim.currentTime() < 50);
 }
 
-void tst_QAbstractAnimation2::avoidJumpAtStartWithStop()
+void tst_QAbstractAnimationJob::avoidJumpAtStartWithStop()
 {
     TestableQAbstractAnimation anim;
     anim.setDuration(1000);
@@ -197,7 +197,7 @@ void tst_QAbstractAnimation2::avoidJumpAtStartWithStop()
     QVERIFY(anim3.currentTime() < 50);
 }
 
-void tst_QAbstractAnimation2::avoidJumpAtStartWithRunning()
+void tst_QAbstractAnimationJob::avoidJumpAtStartWithRunning()
 {
     TestableQAbstractAnimation anim;
     anim.setDuration(2000);
@@ -224,6 +224,6 @@ void tst_QAbstractAnimation2::avoidJumpAtStartWithRunning()
 }
 
 
-QTEST_MAIN(tst_QAbstractAnimation2)
+QTEST_MAIN(tst_QAbstractAnimationJob)
 
-#include "tst_qabstractanimation2.moc"
+#include "tst_qabstractanimationjob.moc"

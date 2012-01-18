@@ -51,7 +51,7 @@
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qeasingcurve.h>
-#include "private/qabstractanimation2_p.h"
+#include "private/qabstractanimationjob_p.h"
 #include <QtGui/qcolor.h>
 
 QT_BEGIN_HEADER
@@ -122,14 +122,14 @@ public Q_SLOTS:
 
 protected:
     QDeclarativeAbstractAnimation(QDeclarativeAbstractAnimationPrivate &dd, QObject *parent);
-    QAbstractAnimation2* initInstance(QAbstractAnimation2 *animation);
+    QAbstractAnimationJob* initInstance(QAbstractAnimationJob *animation);
 
 public:
     enum TransitionDirection { Forward, Backward };
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    QAbstractAnimation2* qtAnimation();
+    QAbstractAnimationJob* qtAnimation();
 
 private Q_SLOTS:
     void componentFinalized();
@@ -159,7 +159,7 @@ Q_SIGNALS:
     void durationChanged(int);
 
 protected:
-    QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                                           QDeclarativeProperties &modified,
                                           TransitionDirection direction);
 };
@@ -184,7 +184,7 @@ public:
     void setStateChangeScriptName(const QString &);
 
 protected:
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 };
@@ -228,7 +228,7 @@ Q_SIGNALS:
     void propertyChanged();
 
 protected:
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 };
@@ -282,7 +282,7 @@ protected:
                                                      QDeclarativeProperties &modified);
 
     QDeclarativePropertyAnimation(QDeclarativePropertyAnimationPrivate &dd, QObject *parent);
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 Q_SIGNALS:
@@ -416,7 +416,7 @@ public:
     virtual ~QDeclarativeSequentialAnimation();
 
 protected:
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 };
@@ -431,7 +431,7 @@ public:
     virtual ~QDeclarativeParallelAnimation();
 
 protected:
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 };

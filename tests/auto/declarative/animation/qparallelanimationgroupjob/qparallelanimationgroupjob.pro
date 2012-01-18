@@ -1,5 +1,5 @@
 CONFIG += testcase
 macx:CONFIG -= app_bundle
-TARGET = tst_qparallelanimationgroup2
+TARGET = tst_qparallelanimationgroupjob
 QT = core-private gui declarative-private testlib
-SOURCES = tst_qparallelanimationgroup2.cpp
+SOURCES = tst_qparallelanimationgroupjob.cpp

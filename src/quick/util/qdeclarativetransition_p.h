@@ -55,7 +55,7 @@ class QDeclarativeAbstractAnimation;
 class QDeclarativeTransitionPrivate;
 class QDeclarativeTransitionManager;
 class QDeclarativeTransition;
-class QAbstractAnimation2;
+class QAbstractAnimationJob;
 
 class Q_QUICK_EXPORT QDeclarativeTransitionInstance
 {
@@ -69,7 +69,7 @@ public:
     bool isRunning() const;
 
 private:
-    QAbstractAnimation2 *m_anim;
+    QAbstractAnimationJob *m_anim;
     friend class QDeclarativeTransition;
 };
 
