@@ -56,10 +56,20 @@ class QQuickSprite : public QQuickStochasticState
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    Q_PROPERTY(bool reverse READ reverse WRITE setReverse NOTIFY reverseChanged)
+    Q_PROPERTY(bool frameSync READ frameSync WRITE setFrameSync NOTIFY frameSyncChanged)
+    Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)
     //If frame height or width is not specified, it is assumed to be a single long row of square frames.
     //Otherwise, it can be multiple contiguous rows, when one row runs out the next will be used.
     Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged)
     Q_PROPERTY(int frameWidth READ frameWidth WRITE setFrameWidth NOTIFY frameWidthChanged)
+    Q_PROPERTY(int frameX READ frameX WRITE setFrameX NOTIFY frameXChanged)
+    Q_PROPERTY(int frameY READ frameY WRITE setFrameY NOTIFY frameYChanged)
+    //Precedence order: frameRate, frameDuration, duration
+    Q_PROPERTY(qreal frameRate READ frameRate WRITE setFrameRate NOTIFY frameRateChanged RESET resetFrameRate)
+    Q_PROPERTY(qreal frameRateVariation READ frameRateVariation WRITE setFrameRateVariation NOTIFY frameRateVariationChanged)
+    Q_PROPERTY(int frameDuration READ frameDuration WRITE setFrameDuration NOTIFY frameDurationChanged RESET resetFrameDuration)
+    Q_PROPERTY(int frameDurationVariation READ frameDurationVariation WRITE setFrameDurationVariation NOTIFY frameDurationVariationChanged)
 
 public:
     explicit QQuickSprite(QObject *parent = 0);
@@ -80,6 +90,63 @@ public:
     }
 
 
+    bool reverse() const
+    {
+        return m_reverse;
+    }
+
+    int frames() const
+    {
+        return m_frames;
+    }
+
+    int frameX() const
+    {
+        return m_frameX;
+    }
+
+    int frameY() const
+    {
+        return m_frameY;
+    }
+
+    void resetFrameRate()
+    {
+        setFrameRate(-1);
+    }
+
+    qreal frameRate() const
+    {
+        return m_frameRate;
+    }
+
+    qreal frameRateVariation() const
+    {
+        return m_frameRateVariation;
+    }
+
+    void resetFrameDuration()
+    {
+        setFrameDuration(-1);
+    }
+
+    int frameDuration() const
+    {
+        return m_frameDuration;
+    }
+
+    int frameDurationVariation() const
+    {
+        return m_frameDurationVariation;
+    }
+
+    int variedDuration() const;
+
+    bool frameSync() const
+    {
+        return m_frameSync;
+    }
+
 signals:
 
     void sourceChanged(QUrl arg);
@@ -87,6 +154,24 @@ signals:
     void frameHeightChanged(int arg);
 
     void frameWidthChanged(int arg);
+
+    void reverseChanged(bool arg);
+
+    void framesChanged(int arg);
+
+    void frameXChanged(int arg);
+
+    void frameYChanged(int arg);
+
+    void frameRateChanged(qreal arg);
+
+    void frameRateVariationChanged(qreal arg);
+
+    void frameDurationChanged(int arg);
+
+    void frameDurationVariationChanged(int arg);
+
+    void frameSyncChanged(bool arg);
 
 public slots:
 
@@ -115,17 +200,99 @@ public slots:
     }
 
 
+    void setReverse(bool arg)
+    {
+        if (m_reverse != arg) {
+            m_reverse = arg;
+            emit reverseChanged(arg);
+        }
+    }
+
+    void setFrames(int arg)
+    {
+        if (m_frames != arg) {
+            m_frames = arg;
+            emit framesChanged(arg);
+        }
+    }
+
+    void setFrameX(int arg)
+    {
+        if (m_frameX != arg) {
+            m_frameX = arg;
+            emit frameXChanged(arg);
+        }
+    }
+
+    void setFrameY(int arg)
+    {
+        if (m_frameY != arg) {
+            m_frameY = arg;
+            emit frameYChanged(arg);
+        }
+    }
+
+    void setFrameRate(qreal arg)
+    {
+        if (m_frameRate != arg) {
+            m_frameRate = arg;
+            emit frameRateChanged(arg);
+        }
+    }
+
+    void setFrameRateVariation(qreal arg)
+    {
+        if (m_frameRateVariation != arg) {
+            m_frameRateVariation = arg;
+            emit frameRateVariationChanged(arg);
+        }
+    }
+
+    void setFrameDuration(int arg)
+    {
+        if (m_frameDuration != arg) {
+            m_frameDuration = arg;
+            emit frameDurationChanged(arg);
+        }
+    }
+
+    void setFrameDurationVariation(int arg)
+    {
+        if (m_frameDurationVariation != arg) {
+            m_frameDurationVariation = arg;
+            emit frameDurationVariationChanged(arg);
+        }
+    }
+
+    void setFrameSync(bool arg)
+    {
+        if (m_frameSync != arg) {
+            m_frameSync = arg;
+            emit frameSyncChanged(arg);
+        }
+    }
+
 private:
-    friend class QSGImageParticle;
+    friend class QQuickImageParticle;
+    friend class QQuickSpriteImage;
     friend class QQuickSpriteEngine;
     friend class QQuickStochasticEngine;
     int m_generatedCount;
     int m_framesPerRow;
-    QUrl m_source;
-    int m_frameHeight;
-    int m_frameWidth;
     int m_rowY;
 
+    QUrl m_source;
+    bool m_reverse;
+    int m_frameHeight;
+    int m_frameWidth;
+    int m_frames;
+    int m_frameX;
+    int m_frameY;
+    qreal m_frameRate;
+    qreal m_frameRateVariation;
+    int m_frameDuration;
+    int m_frameDurationVariation;
+    bool m_frameSync;
 };
 
 QT_END_NAMESPACE

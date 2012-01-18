@@ -56,20 +56,17 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickSprite;
-class Q_AUTOTEST_EXPORT QQuickStochasticState : public QObject //For internal use
+class Q_AUTOTEST_EXPORT QQuickStochasticState : public QObject //Currently for internal use only - Sprite and ParticleGroup
 {
     Q_OBJECT
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(int durationVariation READ durationVariance WRITE setDurationVariance NOTIFY durationVarianceChanged)
+    Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
     Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(qreal speedModifiesDuration READ speedModifer WRITE setSpeedModifier NOTIFY speedModifierChanged)
-    Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)
 
 public:
     QQuickStochasticState(QObject* parent = 0)
         : QObject(parent)
-        , m_frames(1)
         , m_duration(1000)
     {
     }
@@ -89,27 +86,17 @@ public:
         return m_to;
     }
 
-    qreal speedModifer() const
+    int durationVariation() const
     {
-        return m_speedModifier;
-    }
-
-    int durationVariance() const
-    {
-        return m_durationVariance;
+        return m_durationVariation;
     }
 
 
-    int variedDuration() const
+    virtual int variedDuration() const
     {
         return qMax(qreal(0.0) , m_duration
-                + (m_durationVariance * ((qreal)qrand()/RAND_MAX) * 2)
-                - m_durationVariance);
-    }
-
-    int frames() const
-    {
-        return m_frames;
+                + (m_durationVariation * ((qreal)qrand()/RAND_MAX) * 2)
+                - m_durationVariation);
     }
 
 signals:
@@ -119,12 +106,9 @@ signals:
 
     void toChanged(QVariantMap arg);
 
-    void speedModifierChanged(qreal arg);
-
-    void durationVarianceChanged(int arg);
+    void durationVariationChanged(int arg);
 
     void entered();//### Just playing around - don't expect full state API
-    void framesChanged(int arg);
 
 public slots:
     void setDuration(int arg)
@@ -151,37 +135,19 @@ public slots:
         }
     }
 
-    void setSpeedModifier(qreal arg)
+    void setDurationVariation(int arg)
     {
-        if (m_speedModifier != arg) {
-            m_speedModifier = arg;
-            emit speedModifierChanged(arg);
-        }
-    }
-
-    void setDurationVariance(int arg)
-    {
-        if (m_durationVariance != arg) {
-            m_durationVariance = arg;
-            emit durationVarianceChanged(arg);
-        }
-    }
-
-    void setFrames(int arg)
-    {
-        if (m_frames != arg) {
-            m_frames = arg;
-            emit framesChanged(arg);
+        if (m_durationVariation != arg) {
+            m_durationVariation = arg;
+            emit durationVariationChanged(arg);
         }
     }
 
 private:
     QString m_name;
-    int m_frames;
     QVariantMap m_to;
     int m_duration;
-    qreal m_speedModifier;
-    int m_durationVariance;
+    int m_durationVariation;
 
     friend class QQuickStochasticEngine;
 };

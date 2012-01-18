@@ -139,12 +139,12 @@ int QQuickSpriteEngine::spriteState(int sprite)
     if (!m_sprites[state]->m_generatedCount)
         return state;
     int extra;
-    if (m_sprites[state]->duration() < 0) {
+    if (m_sprites[state]->frameSync()) {
         extra = m_startTimes[sprite];
     } else {
         if (!m_duration[sprite])
             return state;
-        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
         extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     }
     return state + extra;
@@ -157,7 +157,7 @@ int QQuickSpriteEngine::spriteStart(int sprite)
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_startTimes[sprite];
-    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     return m_startTimes[sprite] + extra*rowDuration;
 }
@@ -168,12 +168,12 @@ int QQuickSpriteEngine::spriteFrames(int sprite)
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->frames();
     int extra;
-    if (m_sprites[state]->duration() < 0) {
+    if (m_sprites[state]->frameSync()) {
         extra = m_startTimes[sprite];
     } else {
         if (!m_duration[sprite])
             return state;
-        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
         extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     }
     if (extra == m_sprites[state]->m_generatedCount - 1)//last state
@@ -188,11 +188,11 @@ int QQuickSpriteEngine::spriteDuration(int sprite)//Full duration, not per frame
         return m_duration[sprite];
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
-        return m_duration[sprite] * m_sprites[state]->frames();
-    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+        return m_duration[sprite];
+    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     if (extra == m_sprites[state]->m_generatedCount - 1)//last state
-        return (m_duration[sprite] * m_sprites[state]->frames()) % rowDuration;
+        return m_duration[sprite] % rowDuration;
     else
         return rowDuration;
 }
@@ -203,12 +203,12 @@ int QQuickSpriteEngine::spriteY(int sprite)
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->m_rowY;
     int extra;
-    if (m_sprites[state]->duration() < 0) {
+    if (m_sprites[state]->frameSync()) {
         extra = m_startTimes[sprite];
     } else {
         if (!m_duration[sprite])
             return state;
-        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
+        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
         extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     }
     return m_sprites[state]->m_rowY + m_sprites[state]->m_frameHeight * extra;
@@ -397,7 +397,7 @@ void QQuickStochasticEngine::restart(int index)
     m_startTimes[index] = m_timeOffset;
     if (m_addAdvance)
         m_startTimes[index] += m_advanceTime.elapsed();
-    int time = m_duration[index] * m_states[m_things[index]]->frames() + m_startTimes[index];
+    int time = m_duration[index] + m_startTimes[index];
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
     if (m_duration[index] >= 0)
@@ -406,7 +406,7 @@ void QQuickStochasticEngine::restart(int index)
 
 void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and handle pseudostates
 {
-    if (m_sprites[m_things[index]]->duration() < 0) {//Manually advanced
+    if (m_sprites[m_things[index]]->frameSync()) {//Manually advanced
         m_startTimes[index] = 0;
     } else {
         m_startTimes[index] = m_timeOffset;
@@ -436,7 +436,7 @@ void QQuickSpriteEngine::advance(int idx) //Reimplemented to recognize and handl
     if (idx >= m_things.count())
         return;//TODO: Proper fix(because this has happened and I just ignored it)
     if (m_duration[idx] == 0) {
-        if (m_sprites[m_things[idx]]->duration() < 0) {
+        if (m_sprites[m_things[idx]]->frameSync()) {
             //Manually called, advance inner substate count
             m_startTimes[idx]++;
             if (m_startTimes[idx] < m_sprites[m_things[idx]]->m_generatedCount) {
@@ -446,8 +446,8 @@ void QQuickSpriteEngine::advance(int idx) //Reimplemented to recognize and handl
             }
         }
         //just go past the pseudostate logic
-    } else if (m_startTimes[idx] + m_duration[idx] * m_states[m_things[idx]]->frames()
-            > m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0)) {
+    } else if (m_startTimes[idx] + m_duration[idx]
+            > int(m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0))) {
         //only a pseduostate ended
         emit stateChanged(idx);
         addToUpdateList(m_timeOffset + spriteDuration(idx), idx);

@@ -50,8 +50,8 @@ Item {
         anchors.fill: parent
         Sprite{
             source: "content/speaker.png"
-            duration: -1
             frames: 60
+            frameSync: true
             frameWidth: 170
             frameHeight: 170
         }

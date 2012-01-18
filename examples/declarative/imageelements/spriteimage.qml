@@ -66,7 +66,7 @@ Item {
             frames: 1
             frameWidth: 256
             frameHeight: 256
-            duration: 100
+            frameDuration: 100
             to: {"still":1, "blink":0.1, "floating":0}
         }
         Sprite{
@@ -75,7 +75,7 @@ Item {
             frames: 3
             frameWidth: 256
             frameHeight: 256
-            duration: 100
+            frameDuration: 100
             to: {"still":1}
         }
         Sprite{
@@ -84,7 +84,7 @@ Item {
             frames: 9
             frameWidth: 256
             frameHeight: 256
-            duration: 160
+            frameDuration: 160
             to: {"still":0, "flailing":1}
         }
         Sprite{
@@ -93,7 +93,7 @@ Item {
             frames: 8
             frameWidth: 256
             frameHeight: 256
-            duration: 160
+            frameDuration: 160
             to: {"falling":1}
         }
         Sprite{
@@ -102,7 +102,7 @@ Item {
             frames: 5
             frameWidth: 256
             frameHeight: 256
-            duration: 160
+            frameDuration: 160
             to: {"falling":1}
         }
     }

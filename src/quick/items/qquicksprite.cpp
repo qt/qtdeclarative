@@ -53,13 +53,59 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick2::Sprite::duration
 
-    Time between frames. Use -1 to indicate one sprite frame per rendered frame.
+    Duration of the animation. Values below 0 are invalid.
+
+    If frameRate is valid then it will be used to calculate the duration of the frames.
+    If not, and frameDuration is valid, then frameDuration will be used. Otherwise duration is used.
 */
 /*!
     \qmlproperty int QtQuick2::Sprite::durationVariation
 
-    The time between frames can vary by up to this amount. Variation will never decrease the time
-    between frames to less than 0.
+    The duration of the animation can vary by up to this amount. Variation will never decrease the
+    length of the animation to less than 0.
+
+    durationVariation will only take effect if duration is
+    used to calculate the duration of frames.
+
+    Default is 0.
+*/
+
+/*!
+    \qmlproperty qreal QtQuick2::Sprite::frameRate
+
+    Frames per second to show in the animation. Values below 0 are invalid.
+
+    If frameRate is valid  then it will be used to calculate the duration of the frames.
+    If not, and frameDuration is valid , then frameDuration will be used. Otherwise duration is used.
+*/
+/*!
+    \qmlproperty qreal QtQuick2::Sprite::frameRateVariation
+
+    The frame rate between animations can vary by up to this amount. Variation will never decrease the
+    length of the animation to less than 0.
+
+    frameRateVariation will only take effect if frameRate is
+    used to calculate the duration of frames.
+
+    Default is 0.
+*/
+
+/*!
+    \qmlproperty int QtQuick2::Sprite::frameDuration
+
+    Duration of each frame of the animation. Values below 0 are invalid.
+
+    If frameRate is valid then it will be used to calculate the duration of the frames.
+    If not, and frameDuration is valid, then frameDuration will be used. Otherwise duration is used.
+*/
+/*!
+    \qmlproperty int QtQuick2::Sprite::frameDurationVariation
+
+    The duration of a frame in the animation can vary by up to this amount. Variation will never decrease the
+    length of the animation to less than 0.
+
+    frameDurationVariation will only take effect if frameDuration is
+    used to calculate the duration of frames.
 
     Default is 0.
 */
@@ -99,22 +145,87 @@ QT_BEGIN_NAMESPACE
     Width of a single frame in this sprite.
 */
 /*!
+    \qmlproperty int QtQuick2::Sprite::frameX
+
+    The X coordinate in the image file of the first frame of the sprite.
+*/
+/*!
+    \qmlproperty int QtQuick2::Sprite::frameY
+
+    The Y coordinate in the image file of the first frame of the sprite.
+*/
+/*!
     \qmlproperty url QtQuick2::Sprite::source
 
     The image source for the animation.
 
     If frameHeight and frameWidth are not specified, it is assumed to be a single long row of square frames.
     Otherwise, it can be multiple contiguous rows or rectangluar frames, when one row runs out the next will be used.
+
+    If frameX and frameY are specified, the row of frames will be taken with that x/y coordinate as the upper left corner.
 */
 
-QQuickSprite::QQuickSprite(QObject *parent) :
-    QQuickStochasticState(parent)
+/*!
+    \qmlproperty bool QtQuick2::Sprite::reverse
+
+    If true, then the animation will be played in reverse.
+
+    Default is false.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::Sprite::frameSync
+
+    If true, then the animation will have no duration. Instead, the animation will advance
+    one frame each time a frame is rendered to the screen. This syncronizes it with the painting
+    rate as opposed to elapsed time.
+
+    If frameSync is set to true, it overrides all of duration, frameRate and frameDuration.
+
+    Default is false.
+*/
+
+static const int unsetDuration = -2;//-1 means perframe for duration
+QQuickSprite::QQuickSprite(QObject *parent)
+    : QQuickStochasticState(parent)
     , m_generatedCount(0)
     , m_framesPerRow(0)
+    , m_rowY(0)
+    , m_reverse(false)
     , m_frameHeight(0)
     , m_frameWidth(0)
-    , m_rowY(0)
+    , m_frames(1)
+    , m_frameX(0)
+    , m_frameY(0)
+    , m_frameRate(unsetDuration)
+    , m_frameRateVariation(0)
+    , m_frameDuration(unsetDuration)
+    , m_frameDurationVariation(0)
+    , m_frameSync(false)
 {
+}
+
+int QQuickSprite::variedDuration() const //Deals with precedence when multiple durations are set
+{
+    if (m_frameSync)
+        return 0;
+
+    if (m_frameRate != unsetDuration) {
+        qreal fpms = (m_frameRate
+                + (m_frameRateVariation * ((qreal)qrand()/RAND_MAX) * 2)
+                - m_frameRateVariation) / 1000.0;
+        return qMax(qreal(0.0) , m_frames / fpms);
+    } else if (m_frameDuration != unsetDuration) {
+        int mspf = m_frameDuration
+                + (m_frameDurationVariation * ((qreal)qrand()/RAND_MAX) * 2)
+                - m_frameDurationVariation;
+        return qMax(0, m_frames * mspf);
+    }
+    qWarning() << "Sprite::duration is changing meaning to the full animation duration.";
+    qWarning() << "Use Sprite::frameDuration for the old meaning, of per frame duration.";
+    qWarning() << "As an interim measure, duration/durationVariation means the same as frameDuration/frameDurationVariation, and you'll get this warning spewed out everywhere to movtivate you.";
+    //Note that the spammyness is due to this being the best location to detect, but also called once each animation loop
+    return QQuickStochasticState::variedDuration() * m_frames;
 }
 
 QT_END_NAMESPACE
