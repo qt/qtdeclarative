@@ -261,8 +261,6 @@ bool QJSValue::isString() const
 /*!
   Returns true if this QJSValue is of the primitive type Undefined;
   otherwise returns false.
-
-  \sa QJSEngine::undefinedValue()
 */
 bool QJSValue::isUndefined() const
 {

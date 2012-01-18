@@ -71,7 +71,7 @@ void tst_QJSValue::ctor_undefinedWithEngine()
 {
     QJSEngine eng;
     {
-        QJSValue v = eng.evaluate("undefined");
+        QJSValue v = eng.toScriptValue(QVariant());
         QVERIFY(v.isUndefined());
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.engine(), &eng);
@@ -327,7 +327,7 @@ void tst_QJSValue::toString()
 {
     QJSEngine eng;
 
-    QJSValue undefined = eng.undefinedValue();
+    QJSValue undefined = eng.toScriptValue(QVariant());
     QCOMPARE(undefined.toString(), QString("undefined"));
     QCOMPARE(qjsvalue_cast<QString>(undefined), QString());
 
@@ -439,7 +439,7 @@ void tst_QJSValue::toNumber()
 {
     QJSEngine eng;
 
-    QJSValue undefined = eng.undefinedValue();
+    QJSValue undefined = eng.toScriptValue(QVariant());
     QCOMPARE(qIsNaN(undefined.toNumber()), true);
     QCOMPARE(qIsNaN(qjsvalue_cast<qreal>(undefined)), true);
 
@@ -515,7 +515,7 @@ void tst_QJSValue::toBoolean() // deprecated
 {
     QJSEngine eng;
 
-    QJSValue undefined = eng.undefinedValue();
+    QJSValue undefined = eng.toScriptValue(QVariant());
     QCOMPARE(undefined.toBool(), false);
     QCOMPARE(qjsvalue_cast<bool>(undefined), false);
 
@@ -615,7 +615,7 @@ void tst_QJSValue::toBool()
 {
     QJSEngine eng;
 
-    QJSValue undefined = eng.undefinedValue();
+    QJSValue undefined = eng.toScriptValue(QVariant());
     QCOMPARE(undefined.toBool(), false);
     QCOMPARE(qjsvalue_cast<bool>(undefined), false);
 
@@ -987,7 +987,7 @@ void tst_QJSValue::toVariant()
 {
     QJSEngine eng;
 
-    QJSValue undefined = eng.undefinedValue();
+    QJSValue undefined = eng.toScriptValue(QVariant());
     QCOMPARE(undefined.toVariant(), QVariant());
     QCOMPARE(qjsvalue_cast<QVariant>(undefined), QVariant());
 
@@ -1106,7 +1106,7 @@ void tst_QJSValue::toQObject_nonQObject_data()
     QTest::newRow("bool bound(true)") << engine->toScriptValue(true);
     QTest::newRow("int bound") << engine->toScriptValue(123);
     QTest::newRow("string bound") << engine->toScriptValue(QString::fromLatin1("ciao"));
-    QTest::newRow("undefined bound") << engine->undefinedValue();
+    QTest::newRow("undefined bound") << engine->toScriptValue(QVariant());
     QTest::newRow("null bound") << engine->evaluate("null");
     QTest::newRow("object") << engine->newObject();
     QTest::newRow("array") << engine->newArray();
@@ -1165,7 +1165,7 @@ void tst_QJSValue::toDateTime()
     QVERIFY(!QJSValue(123).toDateTime().isValid());
     QVERIFY(!QJSValue(false).toDateTime().isValid());
     QVERIFY(!eng.evaluate("null").toDateTime().isValid());
-    QVERIFY(!eng.undefinedValue().toDateTime().isValid());
+    QVERIFY(!eng.toScriptValue(QVariant()).toDateTime().isValid());
 }
 
 void tst_QJSValue::toRegExp()
@@ -1195,7 +1195,7 @@ void tst_QJSValue::toRegExp()
     QVERIFY(qjsvalue_cast<QRegExp>(QJSValue(123)).isEmpty());
     QVERIFY(qjsvalue_cast<QRegExp>(QJSValue(false)).isEmpty());
     QVERIFY(qjsvalue_cast<QRegExp>(eng.evaluate("null")).isEmpty());
-    QVERIFY(qjsvalue_cast<QRegExp>(eng.undefinedValue()).isEmpty());
+    QVERIFY(qjsvalue_cast<QRegExp>(eng.toScriptValue(QVariant())).isEmpty());
 }
 
 void tst_QJSValue::isArray_data()
@@ -1212,7 +1212,7 @@ void tst_QJSValue::isArray_data()
     QTest::newRow("number") << QJSValue(123) << false;
     QTest::newRow("bool") << QJSValue(false) << false;
     QTest::newRow("null") << engine->evaluate("null") << false;
-    QTest::newRow("undefined") << engine->undefinedValue() << false;
+    QTest::newRow("undefined") << engine->toScriptValue(QVariant()) << false;
 }
 
 void tst_QJSValue::isArray()
@@ -1238,7 +1238,7 @@ void tst_QJSValue::isDate_data()
     QTest::newRow("number") << QJSValue(123) << false;
     QTest::newRow("bool") << QJSValue(false) << false;
     QTest::newRow("null") << engine->evaluate("null") << false;
-    QTest::newRow("undefined") << engine->undefinedValue() << false;
+    QTest::newRow("undefined") << engine->toScriptValue(QVariant()) << false;
 }
 
 void tst_QJSValue::isDate()
@@ -1282,7 +1282,7 @@ void tst_QJSValue::isError_data()
     QTest::newRow("number") << QJSValue(123) << false;
     QTest::newRow("bool") << QJSValue(false) << false;
     QTest::newRow("null") << engine->evaluate("null") << false;
-    QTest::newRow("undefined") << engine->undefinedValue() << false;
+    QTest::newRow("undefined") << engine->toScriptValue(QVariant()) << false;
     QTest::newRow("newObject") << engine->newObject() << false;
     QTest::newRow("new Object") << engine->evaluate("new Object()") << false;
 }
@@ -1310,7 +1310,7 @@ void tst_QJSValue::isRegExp_data()
     QTest::newRow("number") << QJSValue(123) << false;
     QTest::newRow("bool") << QJSValue(false) << false;
     QTest::newRow("null") << engine->evaluate("null") << false;
-    QTest::newRow("undefined") << engine->undefinedValue() << false;
+    QTest::newRow("undefined") << engine->toScriptValue(QVariant()) << false;
 }
 
 void tst_QJSValue::isRegExp()
@@ -2114,7 +2114,7 @@ void tst_QJSValue::getSetPrototype_notObjectOrNull()
     // undefined
     object.setPrototype(QJSValue(QJSValue::UndefinedValue));
     QVERIFY(object.prototype().equals(originalProto));
-    object.setPrototype(eng.evaluate("undefined"));
+    object.setPrototype(eng.toScriptValue(QVariant()));
     QVERIFY(object.prototype().equals(originalProto));
 }
 
@@ -2207,7 +2207,7 @@ void tst_QJSValue::getSetData_nonObjects_data()
 
     QTest::addColumn<QJSValue>("value");
 
-    QTest::newRow("undefined (bound)") << engine->undefinedValue();
+    QTest::newRow("undefined (bound)") << engine->toScriptValue(QVariant());
     QTest::newRow("null (bound)") << engine->evaluate("null");
     QTest::newRow("string (bound)") << engine->toScriptValue("Pong");
     QTest::newRow("bool (bound)") << engine->toScriptValue(false);
@@ -2278,7 +2278,7 @@ void tst_QJSValue::getSetScriptClass_emptyClass_data()
     QTest::newRow("string") << engine->toScriptValue("pong");
     QTest::newRow("bool") << engine->toScriptValue(true);
     QTest::newRow("null") << QJSValue(engine->evaluate("null"));
-    QTest::newRow("undefined") << QJSValue(engine->undefinedValue());
+    QTest::newRow("undefined") << QJSValue(engine->toScriptValue(QVariant()));
     QTest::newRow("object") << QJSValue(engine->newObject());
     QTest::newRow("date") << QJSValue(engine->evaluate("new Date()"));
     QTest::newRow("qobject") << QJSValue(engine->newQObject(this));
@@ -2429,13 +2429,13 @@ void tst_QJSValue::call_arguments()
     QJSValue fun = eng.evaluate("(function() { return arguments[0]; })");
     QCOMPARE(fun.isCallable(), true);
     {
-        QJSValue result = fun.callWithInstance(eng.undefinedValue());
+        QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()));
         QCOMPARE(result.isUndefined(), true);
     }
     {
         QJSValueList args;
         args << eng.toScriptValue(123.0);
-        QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+        QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
         QCOMPARE(result.isNumber(), true);
         QCOMPARE(result.toNumber(), 123.0);
     }
@@ -2443,7 +2443,7 @@ void tst_QJSValue::call_arguments()
     {
         QJSValueList args;
         args << QJSValue(123.0);
-        QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+        QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
         QCOMPARE(result.isNumber(), true);
         QCOMPARE(result.toNumber(), 123.0);
     }
@@ -2451,7 +2451,7 @@ void tst_QJSValue::call_arguments()
     {
         QJSValue args = eng.newArray();
         args.setProperty(0, 123);
-        QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+        QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
         QVERIFY(result.isNumber());
         QCOMPARE(result.toNumber(), 123.0);
     }
@@ -2468,7 +2468,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << eng.toScriptValue(123.0) << eng.toScriptValue(456.0);
-            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 456.0);
         }
@@ -2477,7 +2477,7 @@ void tst_QJSValue::call()
             QJSValue args = eng.newArray();
             args.setProperty(0, 123);
             args.setProperty(1, 456);
-            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
             QVERIFY(result.isNumber());
             QCOMPARE(result.toNumber(), 456.0);
         }
@@ -2502,7 +2502,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << eng.toScriptValue(123.0);
-            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 123.0);
@@ -2511,7 +2511,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << QJSValue(123.0);
-            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 123.0);
         }
@@ -2519,7 +2519,7 @@ void tst_QJSValue::call()
         {
             QJSValue args = eng.newArray();
             args.setProperty(0, 123);
-            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
             QVERIFY(result.isNumber());
             QCOMPARE(result.toNumber(), 123.0);
         }
@@ -2530,7 +2530,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << eng.toScriptValue(123.0);
-            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 123.0);
@@ -2648,7 +2648,7 @@ void tst_QJSValue::call_array()
     QCOMPARE(ret3.property("length").isNumber(), true);
     QCOMPARE(ret3.property("length").toNumber(), 0.0);
     // call with undefined as arguments
-    QJSValue ret4 = fun.call(QJSValue(), eng.undefinedValue());
+    QJSValue ret4 = fun.call(QJSValue(), eng.toScriptValue(QVariant()));
     QCOMPARE(ret4.isError(), false);
     QCOMPARE(ret4.property("length").isNumber(), true);
     QCOMPARE(ret4.property("length").toNumber(), 0.0);
@@ -2678,7 +2678,7 @@ void tst_QJSValue::call_nonFunction_data()
     QTest::newRow("bool bound") << engine->toScriptValue(false);
     QTest::newRow("int bound") << engine->toScriptValue(123);
     QTest::newRow("string bound") << engine->toScriptValue(QString::fromLatin1("ciao"));
-    QTest::newRow("undefined bound") << engine->undefinedValue();
+    QTest::newRow("undefined bound") << engine->toScriptValue(QVariant());
     QTest::newRow("null bound") << engine->evaluate("null");
 }
 
@@ -2719,7 +2719,7 @@ void tst_QJSValue::construct_nonFunction_data()
     QTest::newRow("bool bound") << engine->toScriptValue(false);
     QTest::newRow("int bound") << engine->toScriptValue(123);
     QTest::newRow("string bound") << engine->toScriptValue(QString::fromLatin1("ciao"));
-    QTest::newRow("undefined bound") << engine->undefinedValue();
+    QTest::newRow("undefined bound") << engine->toScriptValue(QVariant());
     QTest::newRow("null bound") << engine->evaluate("null");
 }
 
@@ -2847,7 +2847,7 @@ void tst_QJSValue::construct()
     QCOMPARE(ret3.property("length").isNumber(), true);
     QCOMPARE(ret3.property("length").toNumber(), 0.0);
     // construct with undefined as arguments
-    QJSValue ret4 = fun.callAsConstructor(eng.undefinedValue());
+    QJSValue ret4 = fun.callAsConstructor(eng.toScriptValue(QVariant()));
     QCOMPARE(ret4.isError(), false);
     QCOMPARE(ret4.property("length").isNumber(), true);
     QCOMPARE(ret4.property("length").toNumber(), 0.0);
@@ -3046,7 +3046,7 @@ void tst_QJSValue::equals()
     QCOMPARE(date1.equals(date1), true);
     QCOMPARE(date2.equals(date2), true);
 
-    QJSValue undefined = eng.undefinedValue();
+    QJSValue undefined = eng.toScriptValue(QVariant());
     QJSValue null = eng.evaluate("null");
     QCOMPARE(undefined.equals(undefined), true);
     QCOMPARE(null.equals(null), true);
@@ -3186,7 +3186,7 @@ void tst_QJSValue::strictlyEquals()
     QCOMPARE(date2.strictlyEquals(date2), true);
     QVERIFY(!date1.strictlyEquals(QJSValue()));
 
-    QJSValue undefined = eng.undefinedValue();
+    QJSValue undefined = eng.toScriptValue(QVariant());
     QJSValue null = eng.evaluate("null");
     QCOMPARE(undefined.strictlyEquals(undefined), true);
     QCOMPARE(null.strictlyEquals(null), true);

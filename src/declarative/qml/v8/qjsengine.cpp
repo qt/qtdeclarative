@@ -309,23 +309,6 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     return QJSValuePrivate::get(d->evaluate(program, fileName, lineNumber));
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Returns a QJSValue of the primitive type Undefined.
-*/
-QJSValue QJSEngine::undefinedValue()
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(new QJSValuePrivate(d, v8::Undefined()));
-}
-
-#endif // QT_DEPRECATED
-
 /*!
   Creates a JavaScript object of class Object.
 
