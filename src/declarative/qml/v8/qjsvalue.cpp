@@ -71,7 +71,7 @@
   Object values have an internal \c{prototype} property, which can be
   accessed with prototype() and setPrototype().
 
-  Function objects (objects for which isFunction() returns true) can
+  Function objects (objects for which isCallable()) returns true) can
   be invoked by calling call(). Constructor functions can be used to
   construct new objects by calling construct().
 
@@ -461,10 +461,22 @@ bool QJSValue::isObject() const
 }
 
 /*!
-  Returns true if this QJSValue is a function; otherwise returns
-  false.
+  Returns true if this QJSValue can be called a function, otherwise
+  returns false.
 
   \sa call()
+*/
+bool QJSValue::isCallable() const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->isCallable();
+}
+
+/*!
+  \obsolete
+
+  Use isCallable() instead.
 */
 bool QJSValue::isFunction() const
 {

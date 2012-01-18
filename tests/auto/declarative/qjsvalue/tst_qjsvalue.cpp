@@ -1698,7 +1698,7 @@ void tst_QJSValue::isError_propertiesOfGlobalObject()
     QJSEngine eng;
     for (int i = 0; i < errors.size(); ++i) {
         QJSValue ctor = eng.globalObject().property(errors.at(i));
-        QVERIFY(ctor.isFunction());
+        QVERIFY(ctor.isCallable());
         QVERIFY(ctor.property("prototype").isError());
     }
 }
@@ -2816,7 +2816,7 @@ void tst_QJSValue::call_function()
 {
     QJSEngine eng;
     QJSValue fun = eng.evaluate("(function() { return 1; })");
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QJSValue result = fun.call();
     QVERIFY(result.isNumber());
     QCOMPARE(result.toInt(), 1);
@@ -2826,7 +2826,7 @@ void tst_QJSValue::call_object()
 {
     QJSEngine eng;
     QJSValue Object = eng.evaluate("Object");
-    QCOMPARE(Object.isFunction(), true);
+    QCOMPARE(Object.isCallable(), true);
     QJSValue result = Object.call(Object);
     QCOMPARE(result.isObject(), true);
 }
@@ -2837,7 +2837,7 @@ void tst_QJSValue::call_newObjects()
     // test that call() doesn't construct new objects
     QJSValue Number = eng.evaluate("Number");
     QJSValue Object = eng.evaluate("Object");
-    QCOMPARE(Object.isFunction(), true);
+    QCOMPARE(Object.isCallable(), true);
     QJSValueList args;
     args << QJSValue(&eng, 123);
     QJSValue result = Number.call(Object, args);
@@ -2849,7 +2849,7 @@ void tst_QJSValue::call_this()
     QJSEngine eng;
     // test that correct "this" object is used
     QJSValue fun = eng.evaluate("(function() { return this; })");
-    QCOMPARE(fun.isFunction(), true);
+    QCOMPARE(fun.isCallable(), true);
 
     QJSValue numberObject = QJSValue(&eng, 123.0).toObject();
     QJSValue result = fun.call(numberObject);
@@ -2863,7 +2863,7 @@ void tst_QJSValue::call_arguments()
     // test that correct arguments are passed
 
     QJSValue fun = eng.evaluate("(function() { return arguments[0]; })");
-    QCOMPARE(fun.isFunction(), true);
+    QCOMPARE(fun.isCallable(), true);
     {
         QJSValue result = fun.call(eng.undefinedValue());
         QCOMPARE(result.isUndefined(), true);
@@ -2899,7 +2899,7 @@ void tst_QJSValue::call()
     QJSEngine eng;
     {
         QJSValue fun = eng.evaluate("(function() { return arguments[1]; })");
-        QCOMPARE(fun.isFunction(), true);
+        QCOMPARE(fun.isCallable(), true);
 
         {
             QJSValueList args;
@@ -2921,7 +2921,7 @@ void tst_QJSValue::call()
     }
     {
         QJSValue fun = eng.evaluate("(function() { throw new Error('foo'); })");
-        QCOMPARE(fun.isFunction(), true);
+        QCOMPARE(fun.isCallable(), true);
         QVERIFY(!eng.hasUncaughtException());
 
         {
@@ -3035,7 +3035,7 @@ void tst_QJSValue::call_twoEngines()
     QJSValue object = eng.evaluate("Object");
     QJSEngine otherEngine;
     QJSValue fun = otherEngine.evaluate("(function() { return 1; })");
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QTest::ignoreMessage(QtWarningMsg, "JSValue can't be rassigned to an another engine.");
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with thisObject created in "
@@ -3047,7 +3047,7 @@ void tst_QJSValue::call_twoEngines()
     QCOMPARE(fun.call(QJSValue(), QJSValueList() << QJSValue(&eng, 123)).isValid(), false);
     {
         QJSValue fun = eng.evaluate("Object");
-        QVERIFY(fun.isFunction());
+        QVERIFY(fun.isCallable());
         QJSEngine eng2;
         QJSValue objectInDifferentEngine = eng2.newObject();
         QJSValueList args;
@@ -3062,7 +3062,7 @@ void tst_QJSValue::call_array()
 #if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
     QScriptEngine eng;
     QJSValue fun = eng.evaluate("(function() { return arguments; })");
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QJSValue array = eng.newArray(3);
     array.setProperty(0, QJSValue(&eng, 123.0));
     array.setProperty(1, QJSValue(&eng, 456.0));
@@ -3171,7 +3171,7 @@ void tst_QJSValue::construct_simple()
 {
     QJSEngine eng;
     QJSValue fun = eng.evaluate("(function () { this.foo = 123; })");
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QJSValue ret = fun.construct();
     QVERIFY(ret.isObject());
     QVERIFY(ret.instanceOf(fun));
@@ -3183,7 +3183,7 @@ void tst_QJSValue::construct_newObjectJS()
     QJSEngine eng;
     // returning a different object overrides the default-constructed one
     QJSValue fun = eng.evaluate("(function () { return { bar: 456 }; })");
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QJSValue ret = fun.construct();
     QVERIFY(ret.isObject());
     QVERIFY(!ret.instanceOf(fun));
@@ -3216,7 +3216,7 @@ void tst_QJSValue::construct_arg()
 {
     QJSEngine eng;
     QJSValue Number = eng.evaluate("Number");
-    QCOMPARE(Number.isFunction(), true);
+    QCOMPARE(Number.isCallable(), true);
     QJSValueList args;
     args << QJSValue(&eng, 123);
     QJSValue ret = Number.construct(args);
@@ -3229,7 +3229,7 @@ void tst_QJSValue::construct_proto()
     QJSEngine eng;
     // test that internal prototype is set correctly
     QJSValue fun = eng.evaluate("(function() { return this.__proto__; })");
-    QCOMPARE(fun.isFunction(), true);
+    QCOMPARE(fun.isCallable(), true);
     QCOMPARE(fun.property("prototype").isObject(), true);
     QJSValue ret = fun.construct();
     QCOMPARE(fun.property("prototype").strictlyEquals(ret), true);
@@ -3240,7 +3240,7 @@ void tst_QJSValue::construct_returnInt()
     QJSEngine eng;
     // test that we return the new object even if a non-object value is returned from the function
     QJSValue fun = eng.evaluate("(function() { return 123; })");
-    QCOMPARE(fun.isFunction(), true);
+    QCOMPARE(fun.isCallable(), true);
     QJSValue ret = fun.construct();
     QCOMPARE(ret.isObject(), true);
 }
@@ -3249,7 +3249,7 @@ void tst_QJSValue::construct_throw()
 {
     QJSEngine eng;
     QJSValue fun = eng.evaluate("(function() { throw new Error('foo'); })");
-    QCOMPARE(fun.isFunction(), true);
+    QCOMPARE(fun.isCallable(), true);
     QJSValue ret = fun.construct();
     QCOMPARE(ret.isError(), true);
     QCOMPARE(eng.hasUncaughtException(), true);
@@ -3261,7 +3261,7 @@ void tst_QJSValue::construct()
 {
     QScriptEngine eng;
     QJSValue fun = eng.evaluate("(function() { return arguments; })");
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QJSValue array = eng.newArray(3);
     array.setProperty(0, QJSValue(&eng, 123.0));
     array.setProperty(1, QJSValue(&eng, 456.0));
@@ -3315,7 +3315,7 @@ void tst_QJSValue::construct_constructorThrowsPrimitive()
 {
     QJSEngine eng;
     QJSValue fun = eng.evaluate("(function() { throw 123; })");
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     // construct(QJSValueList)
     {
         QJSValue ret = fun.construct();
@@ -3538,7 +3538,7 @@ void tst_QJSValue::equals()
     QVERIFY(!qobj2.equals(obj2)); // compares the QObject pointers
 
     QJSValue compareFun = eng.evaluate("(function(a, b) { return a == b; })");
-    QVERIFY(compareFun.isFunction());
+    QVERIFY(compareFun.isCallable());
     {
         QJSValue ret = compareFun.call(QJSValue(), QJSValueList() << qobj1 << qobj2);
         QVERIFY(ret.isBool());
@@ -3992,7 +3992,7 @@ void tst_QJSValue::prettyPrinter()
     QFETCH(QString, expected);
     QJSEngine eng;
     QJSValue val = eng.evaluate("(" + function + ")");
-    QVERIFY(val.isFunction());
+    QVERIFY(val.isCallable());
     QString actual = val.toString();
     int count = qMin(actual.size(), expected.size());
 //    qDebug() << actual << expected;
