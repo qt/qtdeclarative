@@ -101,6 +101,15 @@ public:
 
     void populateCache(QDeclarativeTypeNameCache *cache, QDeclarativeEngine *) const;
 
+    struct ScriptReference
+    {
+        QString nameSpace;
+        QString qualifier;
+        QUrl location;
+    };
+
+    QList<ScriptReference> resolvedScripts() const;
+
 private:
     friend class QDeclarativeImportDatabase;
     QDeclarativeImportsPrivate *d;

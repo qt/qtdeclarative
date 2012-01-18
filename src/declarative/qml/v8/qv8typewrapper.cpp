@@ -196,9 +196,16 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                                                                              resource->importNamespace);
 
         if (r.isValid()) {
-            Q_ASSERT(r.type);
+            if (r.type) {
+                return v8engine->typeWrapper()->newObject(object, r.type, resource->mode);
+            } else if (r.scriptIndex != -1) {
+                int index = r.scriptIndex;
+                QDeclarativeContextData *context = v8engine->callingContext();
+                if (index < context->importedScripts.count())
+                    return context->importedScripts.at(index);
+            }
 
-            return v8engine->typeWrapper()->newObject(object, r.type, resource->mode);
+            return v8::Undefined();
         } else if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = resource->typeNamespace->moduleApi(resource->importNamespace)) {
 
             if (moduleApi->scriptCallback) {

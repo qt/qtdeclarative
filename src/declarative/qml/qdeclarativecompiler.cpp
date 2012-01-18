@@ -859,19 +859,28 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
     if (componentStats)
         componentStats->componentStat.lineNumber = tree->location.start.line;
 
-    // Build global import scripts
-    QStringList importedScriptIndexes;
-
-    foreach (const QDeclarativeTypeData::ScriptReference &script, unit->resolvedScripts()) {
-        importedScriptIndexes.append(script.qualifier);
-    }
-
     // We generate the importCache before we build the tree so that
     // it can be used in the binding compiler.  Given we "expect" the
     // QML compilation to succeed, this isn't a waste.
     output->importCache = new QDeclarativeTypeNameCache();
-    for (int ii = 0; ii < importedScriptIndexes.count(); ++ii) 
-        output->importCache->add(importedScriptIndexes.at(ii), ii);
+    foreach (const QString &ns, unit->namespaces()) {
+        output->importCache->add(ns);
+    }
+
+    int scriptIndex = 0;
+    foreach (const QDeclarativeTypeData::ScriptReference &script, unit->resolvedScripts()) {
+        QString qualifier = script.qualifier;
+        QString enclosingNamespace;
+
+        const int lastDotIndex = qualifier.lastIndexOf(QLatin1Char('.'));
+        if (lastDotIndex != -1) {
+            enclosingNamespace = qualifier.left(lastDotIndex);
+            qualifier = qualifier.mid(lastDotIndex+1);
+        }
+
+        output->importCache->add(qualifier, scriptIndex++, enclosingNamespace);
+    }
+
     unit->imports().populateCache(output->importCache, engine);
 
     if (!buildObject(tree, BindingContext()) || !completeComponentBuild())

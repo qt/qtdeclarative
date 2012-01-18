@@ -103,6 +103,7 @@ bool QDeclarativeDirParser::parse()
     _errors.clear();
     _plugins.clear();
     _components.clear();
+    _scripts.clear();
 
     if (_source.isEmpty() && !_filePathSouce.isEmpty()) {
         QFile file(_filePathSouce);
@@ -220,9 +221,16 @@ bool QDeclarativeDirParser::parse()
                     const int minorVersion = version.mid(dotIndex + 1).toInt(&validVersionNumber);
 
                     if (validVersionNumber) {
-                        const Component entry(sections[0], sections[2], majorVersion, minorVersion);
+                        const QString &fileName = sections[2];
 
-                        _components.append(entry);
+                        if (fileName.endsWith(QLatin1String(".js"))) {
+                            // A 'js' extension indicates a namespaced script import
+                            const Script entry(sections[0], fileName, majorVersion, minorVersion);
+                            _scripts.append(entry);
+                        } else {
+                            const Component entry(sections[0], fileName, majorVersion, minorVersion);
+                            _components.append(entry);
+                        }
                     }
                 }
             }
@@ -273,6 +281,11 @@ QList<QDeclarativeDirParser::Plugin> QDeclarativeDirParser::plugins() const
 QList<QDeclarativeDirParser::Component> QDeclarativeDirParser::components() const
 {
     return _components;
+}
+
+QList<QDeclarativeDirParser::Script> QDeclarativeDirParser::scripts() const
+{
+    return _scripts;
 }
 
 #ifdef QT_CREATOR

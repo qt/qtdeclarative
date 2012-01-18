@@ -104,6 +104,8 @@ public:
 
     inline v8::Handle<v8::String> string() const;
 
+    inline QString toString() const;
+
 private:
     v8::String::CompleteHashData m_hash;
     v8::Handle<v8::String> m_string;
@@ -915,6 +917,17 @@ quint32 QHashedV8String::symbolId() const
 v8::Handle<v8::String> QHashedV8String::string() const
 {
     return m_string;
+}
+
+QString QHashedV8String::toString() const
+{
+    QString result;
+    result.reserve(m_hash.length);
+
+    for (int i = 0; i < m_hash.length; ++i)
+        result.append(m_string->GetCharacter(i));
+
+    return result;
 }
 
 QHashedStringRef::QHashedStringRef() 

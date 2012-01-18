@@ -159,6 +159,8 @@ private slots:
     void importsOrder_data();
     void importsOrder();
     void importIncorrectCase();
+    void importJs_data();
+    void importJs();
 
     void qmlAttachedPropertiesObjectMethod();
     void customOnProperty();
@@ -179,21 +181,17 @@ private:
     void testType(const QString& qml, const QString& type, const QString& error);
 };
 
-#define VERIFY_ERRORS(errorfile) \
-    if (!errorfile) { \
-        if (qgetenv("DEBUG") != "" && !component.errors().isEmpty()) \
-            qWarning() << "Unexpected Errors:" << component.errors(); \
-        QVERIFY(!component.isError()); \
-        QVERIFY(component.errors().isEmpty()); \
-    } else { \
+#define DETERMINE_ERRORS(errorfile,expected,actual)\
+    QList<QByteArray> expected; \
+    QList<QByteArray> actual; \
+    do { \
         QFile file(testdata(QLatin1String(errorfile))); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \
-        QList<QByteArray> expected = data.split('\n'); \
+        expected = data.split('\n'); \
         expected.removeAll(QByteArray("")); \
         QList<QDeclarativeError> errors = component.errors(); \
-        QList<QByteArray> actual; \
         for (int ii = 0; ii < errors.count(); ++ii) { \
             const QDeclarativeError &error = errors.at(ii); \
             QByteArray errorStr = QByteArray::number(error.line()) + ":" +  \
@@ -201,6 +199,16 @@ private:
                                   error.description().toUtf8(); \
             actual << errorStr; \
         } \
+    } while (false);
+
+#define VERIFY_ERRORS(errorfile) \
+    if (!errorfile) { \
+        if (qgetenv("DEBUG") != "" && !component.errors().isEmpty()) \
+            qWarning() << "Unexpected Errors:" << component.errors(); \
+        QVERIFY(!component.isError()); \
+        QVERIFY(component.errors().isEmpty()); \
+    } else { \
+        DETERMINE_ERRORS(errorfile,actual,expected);\
         if (qgetenv("DEBUG") != "" && expected != actual) \
             qWarning() << "Expected:" << expected << "Actual:" << actual;  \
         if (qgetenv("QDECLARATIVELANGUAGE_UPDATEERRORS") != "" && expected != actual) {\
@@ -1921,6 +1929,89 @@ void tst_qdeclarativelanguage::importIncorrectCase()
 #endif
 
     QCOMPARE(errors.at(0).description(), expectedError);
+}
+
+void tst_qdeclarativelanguage::importJs_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("errorFile");
+    QTest::addColumn<bool>("performTest");
+
+    QTest::newRow("defaultVersion")
+        << "importJs.1.qml"
+        << "importJs.1.errors.txt"
+        << true;
+
+    QTest::newRow("specifiedVersion")
+        << "importJs.2.qml"
+        << "importJs.2.errors.txt"
+        << true;
+
+    QTest::newRow("excludeExcessiveVersion")
+        << "importJs.3.qml"
+        << "importJs.3.errors.txt"
+        << false;
+
+    QTest::newRow("includeAppropriateVersion")
+        << "importJs.4.qml"
+        << "importJs.4.errors.txt"
+        << true;
+
+    QTest::newRow("noDefaultVersion")
+        << "importJs.5.qml"
+        << "importJs.5.errors.txt"
+        << false;
+
+    QTest::newRow("repeatImportFails")
+        << "importJs.6.qml"
+        << "importJs.6.errors.txt"
+        << false;
+
+    QTest::newRow("multipleVersionImportFails")
+        << "importJs.7.qml"
+        << "importJs.7.errors.txt"
+        << false;
+
+    QTest::newRow("namespacedImport")
+        << "importJs.8.qml"
+        << "importJs.8.errors.txt"
+        << true;
+
+    QTest::newRow("namespacedVersionedImport")
+        << "importJs.9.qml"
+        << "importJs.9.errors.txt"
+        << true;
+
+    QTest::newRow("namespacedRepeatImport")
+        << "importJs.10.qml"
+        << "importJs.10.errors.txt"
+        << true;
+}
+
+void tst_qdeclarativelanguage::importJs()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, errorFile);
+    QFETCH(bool, performTest);
+
+    QDeclarativeComponent component(&engine, TEST_FILE(file));
+
+    {
+        DETERMINE_ERRORS(errorFile.toLatin1().constData(),expected,actual);
+        QCOMPARE(expected.size(), actual.size());
+        for (int i = 0; i < expected.size(); ++i)
+        {
+            size_t compareLen = std::min(expected.at(i).length(), actual.at(i).length());
+            QCOMPARE(expected.at(i).left(compareLen), actual.at(i).left(compareLen));
+        }
+    }
+
+    if (performTest) {
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(object->property("test").toBool(),true);
+        delete object;
+    }
 }
 
 void tst_qdeclarativelanguage::qmlAttachedPropertiesObjectMethod()

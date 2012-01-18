@@ -109,7 +109,22 @@ public:
         bool internal;
     };
 
+    struct Script
+    {
+        Script()
+            : majorVersion(0), minorVersion(0) {}
+
+        Script(const QString &nameSpace, const QString &fileName, int majorVersion, int minorVersion)
+            : nameSpace(nameSpace), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion) {}
+
+        QString nameSpace;
+        QString fileName;
+        int majorVersion;
+        int minorVersion;
+    };
+
     QList<Component> components() const;
+    QList<Script> scripts() const;
     QList<Plugin> plugins() const;
 
 #ifdef QT_CREATOR
@@ -134,6 +149,7 @@ private:
     QString _source;
     QString _filePathSouce;
     QList<Component> _components;
+    QList<Script> _scripts;
     QList<Plugin> _plugins;
 #ifdef QT_CREATOR
     QList<TypeInfo> _typeInfos;
@@ -142,6 +158,7 @@ private:
 };
 
 typedef QList<QDeclarativeDirParser::Component> QDeclarativeDirComponents;
+typedef QList<QDeclarativeDirParser::Script> QDeclarativeDirScripts;
 
 
 QT_END_NAMESPACE
