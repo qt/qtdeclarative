@@ -111,14 +111,6 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    Constructs an invalid value.
-*/
-QJSValue::QJSValue()
-    : d_ptr(InvalidValue())
-{
-}
-
-/*!
   Constructs a new QJSValue with a boolean \a value.
 */
 QJSValue::QJSValue(bool value)
@@ -346,23 +338,6 @@ QJSValue::QJSValue(const QJSValue& other)
 QJSValue::~QJSValue()
 {
 }
-
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Returns true if this QJSValue is valid; otherwise returns
-  false.
-*/
-bool QJSValue::isValid() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isValid();
-}
-
-#endif // QT_DEPRECATED
 
 /*!
   Returns true if this QJSValue is of the primitive type Boolean;
@@ -693,7 +668,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
   the function.
 
   If this QJSValue is not a function, call() does nothing
-  and returns an invalid QJSValue.
+  and returns an undefined QJSValue.
 
   Note that if \a instance is not an object, the global object
   (see \l{QJSEngine::globalObject()}) will be used as the
@@ -787,7 +762,7 @@ QJSEngine* QJSValue::engine() const
 /*!
   If this QJSValue is an object, returns the internal prototype
   (\c{__proto__} property) of this object; otherwise returns an
-  invalid QJSValue.
+  undefined QJSValue.
 
   \sa setPrototype(), isObject()
 */
@@ -893,7 +868,7 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
 
 /*!
   Returns the value of this QJSValue's property with the given \a name.
-  If no such property exists, an invalid QJSValue is returned.
+  If no such property exists, an undefined QJSValue is returned.
 
   If the property is implemented using a getter function (i.e. has the
   PropertyGetter flag set), calling property() has side-effects on the
@@ -938,18 +913,6 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
 
   If this QJSValue does not already have a property with name \a name,
   a new property is created.
-
-  If \a value is invalid, the property is removed.
-
-  If the property is implemented using a setter function (i.e. has the
-  PropertySetter flag set), calling setProperty() has side-effects on
-  the script engine, since the setter function will be called with the
-  given \a value as argument (possibly resulting in an uncaught script
-  exception).
-
-  Note that you cannot specify custom getter or setter functions for
-  built-in properties, such as the \c{length} property of Array objects
-  or meta properties of QObject objects.
 
   \sa property(), deleteProperty()
 */

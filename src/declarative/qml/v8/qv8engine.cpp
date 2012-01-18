@@ -1435,7 +1435,7 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> s
         v8::Handle<v8::Value> exception = tryCatch.Exception();
         if (exception.IsEmpty()) {
             // This is possible on syntax errors like { a:12, b:21 } <- missing "(", ")" around expression.
-            return InvalidValue();
+            return new QJSValuePrivate(this);
         }
         setException(exception, tryCatch.Message());
         return new QJSValuePrivate(this, exception);
@@ -1457,7 +1457,7 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> s
 QJSValue QV8Engine::scriptValueFromInternal(v8::Handle<v8::Value> value) const
 {
     if (value.IsEmpty())
-        return QJSValuePrivate::get(InvalidValue());
+        return QJSValuePrivate::get(new QJSValuePrivate(const_cast<QV8Engine*>(this)));
     return QJSValuePrivate::get(new QJSValuePrivate(const_cast<QV8Engine*>(this), value));
 }
 

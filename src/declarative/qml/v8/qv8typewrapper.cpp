@@ -240,7 +240,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                 // check for property.
                 v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(moduleApi->qobjectApi, propertystring, QV8QObjectWrapper::IgnoreRevision);
                 return rv;
-            } else if (moduleApi->scriptApi.isValid()) {
+            } else if (!moduleApi->scriptApi.isUndefined()) {
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
                 QJSValuePrivate *apiprivate = QJSValuePrivate::get(moduleApi->scriptApi);
                 QScopedPointer<QJSValuePrivate> propertyValue(apiprivate->property(property).give());
@@ -294,7 +294,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
             if (moduleApi->qobjectApi) {
                 v8engine->qobjectWrapper()->setProperty(moduleApi->qobjectApi, propertystring, value, 
                                                         QV8QObjectWrapper::IgnoreRevision);
-            } else if (moduleApi->scriptApi.isValid()) {
+            } else if (!moduleApi->scriptApi.isUndefined()) {
                 QScopedPointer<QJSValuePrivate> setvalp(new QJSValuePrivate(v8engine, value));
                 QJSValuePrivate *apiprivate = QJSValuePrivate::get(moduleApi->scriptApi);
                 if (apiprivate->propertyFlags(property) & QJSValue::ReadOnly) {

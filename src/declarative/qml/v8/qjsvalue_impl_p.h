@@ -42,30 +42,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// This template is used indirectly by the Q_GLOBAL_STATIC macro below
-template<>
-class QGlobalStaticDeleter<QJSValuePrivate>
-{
-public:
-    QGlobalStatic<QJSValuePrivate> &globalStatic;
-    QGlobalStaticDeleter(QGlobalStatic<QJSValuePrivate> &_globalStatic)
-        : globalStatic(_globalStatic)
-    {
-        globalStatic.pointer.load()->ref.ref();
-    }
-
-    inline ~QGlobalStaticDeleter()
-    {
-        if (!globalStatic.pointer.load()->ref.deref()) { // Logic copy & paste from SharedDataPointer
-            delete globalStatic.pointer.load();
-        }
-        globalStatic.pointer.store(0);
-        globalStatic.destroyed = true;
-    }
-};
-
-Q_GLOBAL_STATIC(QJSValuePrivate, InvalidValue)
-
 QJSValuePrivate* QJSValuePrivate::get(const QJSValue& q) { Q_ASSERT(q.d_ptr.data()); return q.d_ptr.data(); }
 
 QJSValue QJSValuePrivate::get(const QJSValuePrivate* d)
@@ -84,11 +60,6 @@ QJSValue QJSValuePrivate::get(QJSValuePrivate* d)
 {
     Q_ASSERT(d);
     return QJSValue(d);
-}
-
-QJSValuePrivate::QJSValuePrivate()
-    : m_engine(0), m_state(Invalid)
-{
 }
 
 QJSValuePrivate::QJSValuePrivate(bool value)
@@ -208,7 +179,6 @@ bool QJSValuePrivate::toBool() const
         return !(qIsNaN(u.m_number) || !u.m_number);
     case CBool:
         return u.m_bool;
-    case Invalid:
     case CNull:
     case CUndefined:
         return false;
@@ -233,8 +203,6 @@ double QJSValuePrivate::toNumber() const
     case CBool:
         return u.m_bool ? 1 : 0;
     case CNull:
-    case Invalid:
-        return 0;
     case CUndefined:
         return qQNaN();
     case CString:
@@ -259,8 +227,6 @@ double QJSValuePrivate::toNumber() const
 QString QJSValuePrivate::toString() const
 {
     switch (m_state) {
-    case Invalid:
-        return QString();
     case CBool:
         return u.m_bool ? QString::fromLatin1("true") : QString::fromLatin1("false");
     case CString:
@@ -290,8 +256,6 @@ QString QJSValuePrivate::toString() const
 QVariant QJSValuePrivate::toVariant() const
 {
     switch (m_state) {
-        case Invalid:
-            return QVariant();
         case CBool:
             return QVariant(u.m_bool);
         case CString:
@@ -427,11 +391,6 @@ inline bool QJSValuePrivate::isUndefined() const
     return m_state == CUndefined || (isJSBased() && m_value->IsUndefined());
 }
 
-inline bool QJSValuePrivate::isValid() const
-{
-    return m_state != Invalid;
-}
-
 inline bool QJSValuePrivate::isVariant() const
 {
     return isJSBased() && m_engine->isVariant(m_value);
@@ -454,12 +413,6 @@ bool QJSValuePrivate::isQObject() const
 
 inline bool QJSValuePrivate::equals(QJSValuePrivate* other)
 {
-    if (!isValid())
-        return !other->isValid();
-
-    if (!other->isValid())
-        return false;
-
     if (!isJSBased() && !other->isJSBased()) {
         switch (m_state) {
         case CNull:
@@ -559,10 +512,8 @@ inline bool QJSValuePrivate::strictlyEquals(QJSValuePrivate* other)
         return u.m_bool == other->u.m_bool;
     }
 
-    if (!isValid() && !other->isValid())
-        return true;
-
-    return false;
+    return (isUndefined() && other->isUndefined())
+            || (isNull() && other->isNull());
 }
 
 inline bool QJSValuePrivate::lessThan(QJSValuePrivate *other) const
@@ -571,9 +522,6 @@ inline bool QJSValuePrivate::lessThan(QJSValuePrivate *other) const
         qWarning("QJSValue::lessThan: cannot compare to a value created in a different engine");
         return false;
     }
-
-    if (!isValid() || !other->isValid())
-        return false;
 
     if (isString() && other->isString())
         return toString() < other->toString();
@@ -609,7 +557,7 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::prototype() const
         v8::HandleScope handleScope;
         return new QJSValuePrivate(engine(), v8::Handle<v8::Object>::Cast(m_value)->GetPrototype());
     }
-    return InvalidValue();
+    return new QJSValuePrivate();
 }
 
 inline void QJSValuePrivate::setPrototype(QJSValuePrivate* prototype)
@@ -643,42 +591,6 @@ inline void QJSValuePrivate::setProperty(v8::Handle<v8::String> name, QJSValuePr
 
     if (!value->isJSBased())
         value->assignEngine(engine());
-
-    if (!value->isValid()) {
-        // Remove the property.
-        v8::HandleScope handleScope;
-        v8::TryCatch tryCatch;
-        v8::Handle<v8::Object> recv(v8::Object::Cast(*m_value));
-//        if (attribs & QJSValue::PropertyGetter && !(attribs & QJSValue::PropertySetter)) {
-//            v8::Local<v8::Object> descriptor = engine()->originalGlobalObject()->getOwnPropertyDescriptor(recv, name);
-//            if (!descriptor.IsEmpty()) {
-//                v8::Local<v8::Value> setter = descriptor->Get(v8::String::New("set"));
-//                if (!setter.IsEmpty() && !setter->IsUndefined()) {
-//                    recv->Delete(name);
-//                    engine()->originalGlobalObject()->defineGetterOrSetter(recv, name, setter, QJSValue::PropertySetter);
-//                    if (tryCatch.HasCaught())
-//                        engine()->setException(tryCatch.Exception(), tryCatch.Message());
-//                    return;
-//                }
-//            }
-//        } else if (attribs & QJSValue::PropertySetter && !(attribs & QJSValue::PropertyGetter)) {
-//            v8::Local<v8::Object> descriptor = engine()->originalGlobalObject()->getOwnPropertyDescriptor(recv, name);
-//            if (!descriptor.IsEmpty()) {
-//                v8::Local<v8::Value> getter = descriptor->Get(v8::String::New("get"));
-//                if (!getter.IsEmpty() && !getter->IsUndefined()) {
-//                    recv->Delete(name);
-//                    engine()->originalGlobalObject()->defineGetterOrSetter(recv, name, getter, QJSValue::PropertyGetter);
-//                    if (tryCatch.HasCaught())
-//                        engine()->setException(tryCatch.Exception(), tryCatch.Message());
-//                    return;
-//                }
-//            }
-//        }
-        recv->Delete(name);
-        if (tryCatch.HasCaught())
-            engine()->setException(tryCatch.Exception(), tryCatch.Message());
-        return;
-    }
 
     if (engine() != value->engine()) {
         qWarning("QJSValue::setProperty(%s) failed: "
@@ -715,16 +627,6 @@ inline void QJSValuePrivate::setProperty(quint32 index, QJSValuePrivate* value, 
     if (!value->isJSBased())
         value->assignEngine(engine());
 
-    if (!value->isValid()) {
-        // Remove the property.
-        v8::HandleScope handleScope;
-        v8::TryCatch tryCatch;
-        v8::Object::Cast(*m_value)->Delete(index);
-        if (tryCatch.HasCaught())
-            engine()->setException(tryCatch.Exception(), tryCatch.Message());
-        return;
-    }
-
     if (engine() != value->engine()) {
         qWarning("QJSValue::setProperty() failed: cannot set value created in a different engine");
         return;
@@ -739,10 +641,10 @@ inline void QJSValuePrivate::setProperty(quint32 index, QJSValuePrivate* value, 
 
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(const QString& name) const
 {
-    if (!name.length())
-        return InvalidValue();
     if (!isObject())
-        return InvalidValue();
+        return new QJSValuePrivate();
+    if (!name.length())
+        return new QJSValuePrivate(engine());
 
     v8::HandleScope handleScope;
     return property(QJSConverter::toString(name));
@@ -752,14 +654,14 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(v8::Handle<
 {
     Q_ASSERT(!name.IsEmpty());
     if (!isObject())
-        return InvalidValue();
+        return new QJSValuePrivate();
     return property<>(name);
 }
 
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(quint32 index) const
 {
     if (!isObject())
-        return InvalidValue();
+        return new QJSValuePrivate();
     return property<>(index);
 }
 
@@ -777,11 +679,8 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(T name) con
         engine()->setException(result, tryCatch.Message());
         return new QJSValuePrivate(engine(), result);
     }
-    if (result.IsEmpty() || (result->IsUndefined() && !self->Has(name))) {
-        // In QtScript we make a distinction between a property that exists and has value undefined,
-        // and a property that doesn't exist; in the latter case, we should return an invalid value.
-        return InvalidValue();
-    }
+    if (result.IsEmpty())
+        return new QJSValuePrivate(engine());
     return new QJSValuePrivate(engine(), result);
 }
 
@@ -836,7 +735,7 @@ inline QJSValue::PropertyFlags QJSValuePrivate::propertyFlags(v8::Handle<v8::Str
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate* thisObject, const QJSValueList& args)
 {
     if (!isCallable())
-        return InvalidValue();
+        return new QJSValuePrivate();
 
     v8::HandleScope handleScope;
 
@@ -845,7 +744,7 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate
     QVarLengthArray<v8::Handle<v8::Value>, 8> argv(argc);
     if (!prepareArgumentsForCall(argv.data(), args)) {
         qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
-        return InvalidValue();
+        return new QJSValuePrivate(engine());
     }
 
     return call(thisObject, argc, argv.data());
@@ -862,7 +761,7 @@ QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate* thisO
     } else {
         if (!thisObject->assignEngine(e)) {
             qWarning("QJSValue::call() failed: cannot call function with thisObject created in a different engine");
-            return InvalidValue();
+            return new QJSValuePrivate(engine());
         }
 
         recv = v8::Handle<v8::Object>(v8::Object::Cast(*thisObject->m_value));
@@ -913,7 +812,7 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::callAsConstructor(in
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::callAsConstructor(const QJSValueList& args)
 {
     if (!isCallable())
-        return InvalidValue();
+        return new QJSValuePrivate();
 
     v8::HandleScope handleScope;
 
@@ -922,23 +821,21 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::callAsConstructor(co
     QVarLengthArray<v8::Handle<v8::Value>, 8> argv(argc);
     if (!prepareArgumentsForCall(argv.data(), args)) {
         qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
-        return InvalidValue();
+        return new QJSValuePrivate(engine());
     }
 
     return callAsConstructor(argc, argv.data());
 }
 
 /*! \internal
- * Make sure this value is associated with a v8 value belogning to this engine.
- * If the value was invalid, or belogning to another engine, return false.
+ * Make sure this value is associated with a v8 value belonging to this engine.
+ * If the value belongs to another engine, returns false.
  */
 bool QJSValuePrivate::assignEngine(QV8Engine* engine)
 {
     Q_ASSERT(engine);
     v8::HandleScope handleScope;
     switch (m_state) {
-    case Invalid:
-        return false;
     case CBool:
         m_value = v8::Persistent<v8::Value>::New(engine->makeJSValue(u.m_bool));
         break;
@@ -973,7 +870,7 @@ bool QJSValuePrivate::assignEngine(QV8Engine* engine)
 
 /*!
   \internal
-  Invalidates this value.
+  Invalidates this value (makes it undefined).
 
   Does not remove the value from the engine's list of
   registered values; that's the responsibility of the caller.
@@ -987,7 +884,7 @@ void QJSValuePrivate::invalidate()
         delete u.m_string;
     }
     m_engine = 0;
-    m_state = Invalid;
+    m_state = CUndefined;
 }
 
 QV8Engine* QJSValuePrivate::engine() const
@@ -1059,13 +956,10 @@ inline bool QJSValuePrivate::prepareArgumentsForCall(v8::Handle<v8::Value> argv[
     for (int j = 0; i != args.constEnd(); j++, i++) {
         QJSValuePrivate* value = QJSValuePrivate::get(*i);
         if ((value->isJSBased() && engine() != value->engine())
-                || (!value->isJSBased() && value->isValid() && !value->assignEngine(engine())))
+                || (!value->isJSBased() && !value->assignEngine(engine())))
             // Different engines are not allowed!
             return false;
-        if (value->isValid())
-            argv[j] = *value;
-        else
-            argv[j] = engine()->makeJSValue(QJSValue::UndefinedValue);
+        argv[j] = *value;
     }
     return true;
 }

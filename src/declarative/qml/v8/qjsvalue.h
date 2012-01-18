@@ -66,11 +66,10 @@ public:
     };
 
 public:
-    QJSValue();
+    QJSValue(SpecialValue value = UndefinedValue);
     ~QJSValue();
     QJSValue(const QJSValue &other);
 
-    QJSValue(SpecialValue value);
     QJSValue(bool value);
     QJSValue(int value);
     QJSValue(uint value);
@@ -137,7 +136,6 @@ public:
 
     QT_DEPRECATED QJSEngine *engine() const;
 
-    QT_DEPRECATED bool isValid() const;
     QT_DEPRECATED bool isFunction() const;
     QT_DEPRECATED qint32 toInt32() const;
     QT_DEPRECATED quint32 toUInt32() const;

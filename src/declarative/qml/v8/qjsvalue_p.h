@@ -59,7 +59,6 @@ class QJSValuePrivate
         : public QSharedData
 {
 public:
-    inline QJSValuePrivate();
     inline static QJSValuePrivate* get(const QJSValue& q);
     inline static QJSValue get(const QJSValuePrivate* d);
     inline static QJSValue get(QJSValuePrivate* d);
@@ -71,14 +70,14 @@ public:
     inline QJSValuePrivate(uint value);
     inline QJSValuePrivate(double value);
     inline QJSValuePrivate(const QString& value);
-    inline QJSValuePrivate(QJSValue::SpecialValue value);
+    inline QJSValuePrivate(QJSValue::SpecialValue value = QJSValue::UndefinedValue);
 
     inline QJSValuePrivate(QV8Engine *engine, bool value);
     inline QJSValuePrivate(QV8Engine *engine, int value);
     inline QJSValuePrivate(QV8Engine *engine, uint value);
     inline QJSValuePrivate(QV8Engine *engine, double value);
     inline QJSValuePrivate(QV8Engine *engine, const QString& value);
-    inline QJSValuePrivate(QV8Engine *engine, QJSValue::SpecialValue value);
+    inline QJSValuePrivate(QV8Engine *engine, QJSValue::SpecialValue value = QJSValue::UndefinedValue);
     inline QJSValuePrivate(QV8Engine *engine, v8::Handle<v8::Value>);
     inline void invalidate();
 
@@ -103,7 +102,6 @@ public:
     inline bool isObject() const;
     inline bool isString() const;
     inline bool isUndefined() const;
-    inline bool isValid() const;
     inline bool isVariant() const;
     inline bool isDate() const;
     inline bool isRegExp() const;
@@ -149,7 +147,6 @@ private:
 
     // Please, update class documentation when you change the enum.
     enum State {
-        Invalid = 0,
         CString = 0x1000,
         CNumber,
         CBool,

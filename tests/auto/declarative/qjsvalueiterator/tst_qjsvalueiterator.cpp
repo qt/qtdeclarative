@@ -506,15 +506,15 @@ void tst_QJSValueIterator::iterateOverObjectFromDeletedEngine()
 
     delete engine;
 
-    QVERIFY(!objet.isValid());
+    QVERIFY(objet.isUndefined());
     QVERIFY(it.name().isEmpty());
-    QVERIFY(!it.value().isValid());
+    QVERIFY(it.value().isUndefined());
 
     QVERIFY(!it.hasNext());
     it.next();
 
     QVERIFY(it.name().isEmpty());
-    QVERIFY(!it.value().isValid());
+    QVERIFY(it.value().isUndefined());
 
 }
 

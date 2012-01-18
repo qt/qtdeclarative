@@ -347,7 +347,7 @@ void tst_QJSEngine::currentContext()
     QCOMPARE(globalCtx->argumentCount(), 0);
     QCOMPARE(globalCtx->backtrace().size(), 1);
     QVERIFY(!globalCtx->isCalledAsConstructor());
-    QVERIFY(!globalCtx->callee().isValid());
+    QVERIFY(globalCtx->callee().isUndefined());
     QCOMPARE(globalCtx->state(), QScriptContext::NormalState);
     QVERIFY(globalCtx->thisObject().strictlyEquals(eng.globalObject()));
     QVERIFY(globalCtx->activationObject().strictlyEquals(eng.globalObject()));
@@ -362,7 +362,7 @@ void tst_QJSEngine::pushPopContext()
     QVERIFY(ctx != 0);
     QCOMPARE(ctx->parentContext(), globalCtx);
     QVERIFY(!ctx->isCalledAsConstructor());
-    QVERIFY(!ctx->callee().isValid());
+    QVERIFY(ctx->callee().isUndefined());
     QVERIFY(ctx->thisObject().strictlyEquals(eng.globalObject()));
     QCOMPARE(ctx->argumentCount(), 0);
     QCOMPARE(ctx->backtrace().size(), 2);
@@ -434,7 +434,7 @@ void tst_QJSEngine::newFunction()
     QScriptEngine eng;
     {
         QScriptValue fun = eng.newFunction(myFunction);
-        QCOMPARE(fun.isValid(), true);
+        QVERIFY(!fun.isUndefined());
         QCOMPARE(fun.isCallable(), true);
         QCOMPARE(fun.isObject(), true);
         QCOMPARE(fun.scriptClass(), (QScriptClass*)0);
@@ -447,7 +447,7 @@ void tst_QJSEngine::newFunction()
             QCOMPARE(prot.propertyFlags("constructor"), QScriptValue::SkipInEnumeration);
         }
         // prototype should be Function.prototype
-        QCOMPARE(fun.prototype().isValid(), true);
+        QVERIFY(!fun.prototype().isUndefined());
         QCOMPARE(fun.prototype().isCallable(), true);
         QCOMPARE(fun.prototype().strictlyEquals(eng.evaluate("Function.prototype")), true);
 
@@ -472,7 +472,7 @@ void tst_QJSEngine::newFunctionWithArg()
             QCOMPARE(prot.propertyFlags("constructor"), QScriptValue::SkipInEnumeration);
         }
         // prototype should be Function.prototype
-        QCOMPARE(fun.prototype().isValid(), true);
+        QVERIFY(!fun.prototype().isUndefined());
         QCOMPARE(fun.prototype().isCallable(), true);
         QCOMPARE(fun.prototype().strictlyEquals(eng.evaluate("Function.prototype")), true);
 
@@ -487,11 +487,11 @@ void tst_QJSEngine::newFunctionWithProto()
     {
         QScriptValue proto = eng.newObject();
         QScriptValue fun = eng.newFunction(myFunction, proto);
-        QCOMPARE(fun.isValid(), true);
+        QVERIFY(!fun.isUndefined());
         QCOMPARE(fun.isCallable(), true);
         QCOMPARE(fun.isObject(), true);
         // internal prototype should be Function.prototype
-        QCOMPARE(fun.prototype().isValid(), true);
+        QVERIFY(!fun.prototype().isUndefined());
         QCOMPARE(fun.prototype().isCallable(), true);
         QCOMPARE(fun.prototype().strictlyEquals(eng.evaluate("Function.prototype")), true);
         // public prototype should be the one we passed
@@ -506,7 +506,7 @@ void tst_QJSEngine::newFunctionWithProto()
     // whether the return value is correct
     {
         QScriptValue fun = eng.newFunction(myFunctionThatReturns);
-        QCOMPARE(fun.isValid(), true);
+        QVERIFY(!fun.isUndefined());
         QCOMPARE(fun.isCallable(), true);
         QCOMPARE(fun.isObject(), true);
 
@@ -517,7 +517,7 @@ void tst_QJSEngine::newFunctionWithProto()
     // whether the return value is assigned to the correct engine
     {
         QScriptValue fun = eng.newFunction(myFunctionThatReturnsWithoutEngine);
-        QCOMPARE(fun.isValid(), true);
+        QVERIFY(!fun.isUndefined());
         QCOMPARE(fun.isCallable(), true);
         QCOMPARE(fun.isObject(), true);
 
@@ -531,13 +531,12 @@ void tst_QJSEngine::newFunctionWithProto()
         QScriptEngine wrongEngine;
 
         QScriptValue fun = eng.newFunction(myFunctionThatReturnsWrongEngine, reinterpret_cast<void *>(&wrongEngine));
-        QCOMPARE(fun.isValid(), true);
+        QVERIFY(!fun.isUndefined());
         QCOMPARE(fun.isCallable(), true);
         QCOMPARE(fun.isObject(), true);
 
         QTest::ignoreMessage(QtWarningMsg, "QScriptValue::call(): Value from different engine returned from native function, returning undefined value instead.");
         QScriptValue result = fun.call();
-        QCOMPARE(result.isValid(), true);
         QCOMPARE(result.isUndefined(), true);
     }
     // checking if arguments are passed correctly
@@ -545,7 +544,7 @@ void tst_QJSEngine::newFunctionWithProto()
         QScriptEngine wrongEngine;
 
         QScriptValue fun = eng.newFunction(sumFunction);
-        QCOMPARE(fun.isValid(), true);
+        QVERIFY(!fun.isUndefined());
         QCOMPARE(fun.isCallable(), true);
         QCOMPARE(fun.isObject(), true);
 
@@ -572,12 +571,12 @@ void tst_QJSEngine::newObject()
 {
     QJSEngine eng;
     QJSValue object = eng.newObject();
-    QCOMPARE(object.isValid(), true);
+    QVERIFY(!object.isUndefined());
     QCOMPARE(object.isObject(), true);
     QCOMPARE(object.isCallable(), false);
 // ###FIXME: No QScriptClass    QCOMPARE(object.scriptClass(), (QScriptClass*)0);
     // prototype should be Object.prototype
-    QCOMPARE(object.prototype().isValid(), true);
+    QVERIFY(!object.prototype().isUndefined());
     QCOMPARE(object.prototype().isObject(), true);
     QCOMPARE(object.prototype().strictlyEquals(eng.evaluate("Object.prototype")), true);
 }
@@ -586,13 +585,13 @@ void tst_QJSEngine::newArray()
 {
     QJSEngine eng;
     QJSValue array = eng.newArray();
-    QCOMPARE(array.isValid(), true);
+    QVERIFY(!array.isUndefined());
     QCOMPARE(array.isArray(), true);
     QCOMPARE(array.isObject(), true);
     QVERIFY(!array.isCallable());
 // ###FIXME: No QScriptClass    QCOMPARE(array.scriptClass(), (QScriptClass*)0);
     // prototype should be Array.prototype
-    QCOMPARE(array.prototype().isValid(), true);
+    QVERIFY(!array.prototype().isUndefined());
     QCOMPARE(array.prototype().isArray(), true);
     QCOMPARE(array.prototype().strictlyEquals(eng.evaluate("Array.prototype")), true);
 }
@@ -655,11 +654,11 @@ void tst_QJSEngine::newVariant()
     QJSEngine eng;
     {
         QJSValue opaque = eng.toScriptValue(QVariant(QPoint(1, 2)));
-        QCOMPARE(opaque.isValid(), true);
+        QVERIFY(!opaque.isUndefined());
         QCOMPARE(opaque.isVariant(), true);
         QVERIFY(!opaque.isCallable());
         QCOMPARE(opaque.isObject(), true);
-        QCOMPARE(opaque.prototype().isValid(), true);
+        QVERIFY(!opaque.prototype().isUndefined());
         QEXPECT_FAIL("", "FIXME: newly created QObject's prototype is an JS Object", Continue);
         QCOMPARE(opaque.prototype().isVariant(), true);
         QVERIFY(opaque.property("valueOf").callWithInstance(opaque).equals(opaque));
@@ -700,7 +699,7 @@ void tst_QJSEngine::newVariant_promoteObject()
         QScriptValue originalProto = object.property("foo").prototype();
         QSKIP("It is not possible to promote plain object to a wrapper");
         QScriptValue ret = eng.newVariant(object.property("foo"), QVariant(123));
-        QVERIFY(ret.isValid());
+        QVERIFY(ret.isObject());
         QVERIFY(ret.strictlyEquals(object.property("foo")));
         QVERIFY(ret.isVariant());
         QVERIFY(object.property("foo").isVariant());
@@ -718,7 +717,7 @@ void tst_QJSEngine::newVariant_replaceValue()
         QScriptValue object = eng.newVariant(QVariant(123));
         for (int x = 0; x < 2; ++x) {
             QScriptValue ret = eng.newVariant(object, QVariant(456));
-            QVERIFY(ret.isValid());
+            QVERIFY(!ret.isUndefined());
             QVERIFY(ret.strictlyEquals(object));
             QVERIFY(ret.isVariant());
             QCOMPARE(ret.toVariant(), QVariant(456));
@@ -759,7 +758,7 @@ void tst_QJSEngine::newVariant_promoteNonQScriptObject()
     {
         QTest::ignoreMessage(QtWarningMsg, "QScriptEngine::newVariant(): changing class of non-QScriptObject not supported");
         QScriptValue ret = eng.newVariant(eng.newArray(), 123);
-        QVERIFY(!ret.isValid());
+        QVERIFY(ret.isUndefined());
     }
 }
 #endif
@@ -769,12 +768,12 @@ void tst_QJSEngine::newRegExp()
     QSKIP("Test failing - QTBUG-22238");
     QJSEngine eng;
     QJSValue rexp = eng.toScriptValue(QRegExp("foo"));
-    QCOMPARE(rexp.isValid(), true);
+    QVERIFY(!rexp.isUndefined());
     QCOMPARE(rexp.isRegExp(), true);
     QCOMPARE(rexp.isObject(), true);
     QVERIFY(rexp.isCallable()); // in JSC, RegExp objects are callable
     // prototype should be RegExp.prototype
-    QCOMPARE(rexp.prototype().isValid(), true);
+    QVERIFY(!rexp.prototype().isUndefined());
     QCOMPARE(rexp.prototype().isObject(), true);
     QCOMPARE(rexp.prototype().isRegExp(), false);
     QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
@@ -853,12 +852,12 @@ void tst_QJSEngine::newDate()
 
     {
         QJSValue date = eng.evaluate("new Date(0)");
-        QCOMPARE(date.isValid(), true);
+        QVERIFY(!date.isUndefined());
         QCOMPARE(date.isDate(), true);
         QCOMPARE(date.isObject(), true);
         QVERIFY(!date.isCallable());
         // prototype should be Date.prototype
-        QCOMPARE(date.prototype().isValid(), true);
+        QVERIFY(!date.prototype().isUndefined());
         QCOMPARE(date.prototype().isDate(), true);
         QCOMPARE(date.prototype().strictlyEquals(eng.evaluate("Date.prototype")), true);
     }
@@ -866,11 +865,11 @@ void tst_QJSEngine::newDate()
     {
         QDateTime dt = QDateTime(QDate(1, 2, 3), QTime(4, 5, 6, 7), Qt::LocalTime);
         QJSValue date = eng.toScriptValue(dt);
-        QCOMPARE(date.isValid(), true);
+        QVERIFY(!date.isUndefined());
         QCOMPARE(date.isDate(), true);
         QCOMPARE(date.isObject(), true);
         // prototype should be Date.prototype
-        QCOMPARE(date.prototype().isValid(), true);
+        QVERIFY(!date.prototype().isUndefined());
         QCOMPARE(date.prototype().isDate(), true);
         QCOMPARE(date.prototype().strictlyEquals(eng.evaluate("Date.prototype")), true);
 
@@ -909,20 +908,19 @@ void tst_QJSEngine::newQObject()
 
     {
         QJSValue qobject = eng.newQObject(0);
-        QCOMPARE(qobject.isValid(), true);
         QCOMPARE(qobject.isNull(), true);
         QCOMPARE(qobject.isObject(), false);
         QCOMPARE(qobject.toQObject(), (QObject *)0);
     }
     {
         QJSValue qobject = eng.newQObject(this);
-        QCOMPARE(qobject.isValid(), true);
+        QVERIFY(!qobject.isUndefined());
         QCOMPARE(qobject.isQObject(), true);
         QCOMPARE(qobject.isObject(), true);
         QCOMPARE(qobject.toQObject(), (QObject *)this);
         QVERIFY(!qobject.isCallable());
         // prototype should be QObject.prototype
-        QCOMPARE(qobject.prototype().isValid(), true);
+        QCOMPARE(qobject.prototype().isObject(), true);
         QEXPECT_FAIL("", "FIXME: newly created QObject's prototype is an JS Object", Continue);
         QCOMPARE(qobject.prototype().isQObject(), true);
 // ###FIXME: No QScriptClass        QCOMPARE(qobject.scriptClass(), (QScriptClass*)0);
@@ -997,7 +995,7 @@ void tst_QJSEngine::newQObject_promoteObject()
         QScriptValue obj = eng.newObject();
         QScriptValue originalProto = obj.prototype();
         QScriptValue ret = eng.newQObject(obj, this);
-        QVERIFY(ret.isValid());
+        QVERIFY(!ret.isUndefined());
         QVERIFY(ret.isQObject());
         QVERIFY(ret.strictlyEquals(obj));
         QVERIFY(obj.isQObject());
@@ -1025,7 +1023,7 @@ void tst_QJSEngine::newQObject_promoteObject()
         QObject otherQObject;
         for (int x = 0; x < 2; ++x) {
             QScriptValue ret = eng.newQObject(object, &otherQObject);
-            QVERIFY(ret.isValid());
+            QVERIFY(!ret.isUndefined());
             QVERIFY(ret.isQObject());
             QVERIFY(ret.strictlyEquals(object));
             QCOMPARE(ret.toQObject(), (QObject *)&otherQObject);
@@ -1121,7 +1119,7 @@ void tst_QJSEngine::newQObject_promoteNonQScriptObject()
     {
         QTest::ignoreMessage(QtWarningMsg, "QScriptEngine::newQObject(): changing class of non-QScriptObject not supported");
         QScriptValue ret = eng.newQObject(eng.newArray(), this);
-        QVERIFY(!ret.isValid());
+        QVERIFY(ret.isUndefined());
     }
 #endif
 }
@@ -1161,13 +1159,13 @@ void tst_QJSEngine::newQMetaObject()
     QScriptValue qclass = qScriptValueFromQMetaObject<QObject>(&eng);
     QScriptValue qclass2 = qScriptValueFromQMetaObject<QWidget>(&eng);
 #endif
-    QCOMPARE(qclass.isValid(), true);
+    QVERIFY(!qclass.isUndefined());
     QCOMPARE(qclass.isQMetaObject(), true);
     QCOMPARE(qclass.toQMetaObject(), &QObject::staticMetaObject);
     QCOMPARE(qclass.isCallable(), true);
     QVERIFY(qclass.property("prototype").isObject());
 
-    QCOMPARE(qclass2.isValid(), true);
+    QVERIFY(!qclass2.isUndefined());
     QCOMPARE(qclass2.isQMetaObject(), true);
     QCOMPARE(qclass2.toQMetaObject(), &QWidget::staticMetaObject);
     QCOMPARE(qclass2.isCallable(), true);
@@ -1288,7 +1286,7 @@ void tst_QJSEngine::newActivationObject()
     QScriptEngine eng;
     QScriptValue act = eng.newActivationObject();
     QEXPECT_FAIL("", "", Continue);
-    QCOMPARE(act.isValid(), true);
+    QVERIFY(!act.isUndefined());
     QEXPECT_FAIL("", "", Continue);
     QCOMPARE(act.isObject(), true);
     QVERIFY(!act.isCallable());
@@ -1296,7 +1294,7 @@ void tst_QJSEngine::newActivationObject()
     act.setProperty("prop", v);
     QEXPECT_FAIL("", "", Continue);
     QCOMPARE(act.property("prop").strictlyEquals(v), true);
-    QCOMPARE(act.scope().isValid(), false);
+    QVERIFY(act.scope().isUndefined());
     QEXPECT_FAIL("", "", Continue);
     QVERIFY(act.prototype().isNull());
 }
@@ -1311,9 +1309,9 @@ void tst_QJSEngine::getSetGlobalObjectSimple()
     engine.evaluate("var bar = 100");
     engine.setGlobalObject(object);
     engine.evaluate("rab = 100");
-    QVERIFY(engine.globalObject().property("rab").isValid());
-    QVERIFY(engine.globalObject().property("foo").isValid());
-    QVERIFY(!engine.globalObject().property("bar").isValid());
+    QVERIFY(!engine.globalObject().property("rab").isUndefined());
+    QVERIFY(!engine.globalObject().property("foo").isUndefined());
+    QVERIFY(engine.globalObject().property("bar").isUndefined());
 }
 
 void tst_QJSEngine::getSetGlobalObject()
@@ -1324,7 +1322,7 @@ void tst_QJSEngine::getSetGlobalObject()
     collectGarbage_helper(eng);
 
     glob = eng.globalObject();
-    QCOMPARE(glob.isValid(), true);
+    QVERIFY(!glob.isUndefined());
     QCOMPARE(glob.isObject(), true);
     QVERIFY(!glob.isCallable());
     QVERIFY(eng.currentContext()->thisObject().strictlyEquals(glob));
@@ -1332,7 +1330,7 @@ void tst_QJSEngine::getSetGlobalObject()
     QEXPECT_FAIL("", "FIXME: Do we really want to enforce this? ECMA standard says that it is implementation dependent, skipping for now", Continue);
     QCOMPARE(glob.toString(), QString::fromLatin1("[object global]"));
     // prototype should be Object.prototype
-    QCOMPARE(glob.prototype().isValid(), true);
+    QVERIFY(!glob.prototype().isUndefined());
     QCOMPARE(glob.prototype().isObject(), true);
     QEXPECT_FAIL("", "FIXME: Do we really want to enforce this? ECMA standard says that it is implementation dependent, skipping for now", Continue);
     QCOMPARE(glob.prototype().strictlyEquals(eng.evaluate("Object.prototype")), true);
@@ -1365,7 +1363,7 @@ void tst_QJSEngine::getSetGlobalObject()
     QVERIFY(eng.currentContext()->thisObject().strictlyEquals(obj));
     QVERIFY(eng.currentContext()->activationObject().strictlyEquals(obj));
 
-    QVERIFY(!obj.property("foo").isValid());
+    QVERIFY(obj.property("foo").isUndefined());
     eng.evaluate("var foo = 123");
     {
         QScriptValue ret = obj.property("foo");
@@ -1373,7 +1371,7 @@ void tst_QJSEngine::getSetGlobalObject()
         QCOMPARE(ret.toInt(), 123);
     }
 
-    QVERIFY(!obj.property("bar").isValid());
+    QVERIFY(obj.property("bar").isUndefined());
     eng.evaluate("bar = 456");
     {
         QScriptValue ret = obj.property("bar");
@@ -1381,7 +1379,7 @@ void tst_QJSEngine::getSetGlobalObject()
         QCOMPARE(ret.toInt(), 456);
     }
 
-    QVERIFY(!obj.property("baz").isValid());
+    QVERIFY(obj.property("baz").isUndefined());
     eng.evaluate("this['baz'] = 789");
     {
         QScriptValue ret = obj.property("baz");
@@ -1399,7 +1397,7 @@ void tst_QJSEngine::getSetGlobalObject()
         QScriptValue ret = eng.evaluate("delete foo");
         QVERIFY(ret.isBool());
         QVERIFY(ret.toBool());
-        QVERIFY(!obj.property("foo").isValid());
+        QVERIFY(obj.property("foo").isUndefined());
     }
 
     // Getter/setter property.
@@ -1588,19 +1586,19 @@ void tst_QJSEngine::createGlobalObjectProperty()
     // create property with no attributes
     {
         QString name = QString::fromLatin1("foo");
-        QVERIFY(!global.property(name).isValid());
+        QVERIFY(global.property(name).isUndefined());
         QJSValue val(123);
         global.setProperty(name, val);
         QVERIFY(global.property(name).equals(val));
         QVERIFY(global.propertyFlags(name) == 0);
-        global.setProperty(name, QJSValue());
-        QVERIFY(!global.property(name).isValid());
+        global.deleteProperty(name);
+        QVERIFY(global.property(name).isUndefined());
     }
     // create property with attributes
 #if 0 // ###FIXME: setProperty with flags is not supported
     {
         QString name = QString::fromLatin1("bar");
-        QVERIFY(!global.property(name).isValid());
+        QVERIFY(global.property(name).isUndefined());
         QScriptValue val(QString::fromLatin1("ciao"));
         QScriptValue::PropertyFlags flags = QScriptValue::ReadOnly | QScriptValue::SkipInEnumeration;
         global.setProperty(name, val, flags);
@@ -1608,7 +1606,7 @@ void tst_QJSEngine::createGlobalObjectProperty()
         //QEXPECT_FAIL("", "QTBUG-6134: custom Global Object properties don't retain attributes", Continue);
         QCOMPARE(global.propertyFlags(name), flags);
         global.setProperty(name, QScriptValue());
-        QVERIFY(!global.property(name).isValid());
+        QVERIFY(global.property(name).isUndefined());
     }
 #endif
 }
@@ -1718,7 +1716,7 @@ void tst_QJSEngine::customGlobalObjectWithPrototype()
             QVERIFY(ret.isCallable());
             QVERIFY(ret.strictlyEquals(global.property("print")));
         }
-        QVERIFY(!anotherProto.property("print").isValid());
+        QVERIFY(anotherProto.property("print").isUndefined());
     }
 }
 #endif
@@ -2218,7 +2216,7 @@ void tst_QJSEngine::uncaughtException()
             eng.clearExceptions();
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(eng.uncaughtExceptionLineNumber(), -1);
-            QVERIFY(!eng.uncaughtException().isValid());
+            QVERIFY(eng.uncaughtException().isUndefined());
 
             eng.evaluate("2 = 3");
             QVERIFY(eng.hasUncaughtException());
@@ -2235,7 +2233,7 @@ void tst_QJSEngine::uncaughtException()
         {
             QScriptValue ret = eng.evaluate("a = 10");
             QVERIFY(!eng.hasUncaughtException());
-            QVERIFY(!eng.uncaughtException().isValid());
+            QVERIFY(eng.uncaughtException().isUndefined());
         }
         {
             QScriptValue ret = eng.evaluate("1 = 2");
@@ -2279,7 +2277,7 @@ void tst_QJSEngine::getSetDefaultPrototype_int()
     QScriptEngine eng;
 
     QScriptValue object = eng.newObject();
-    QCOMPARE(eng.defaultPrototype(qMetaTypeId<int>()).isValid(), false);
+    QVERIFY(eng.defaultPrototype(qMetaTypeId<int>()).isUndefined());
     eng.setDefaultPrototype(qMetaTypeId<int>(), object);
     QCOMPARE(eng.defaultPrototype(qMetaTypeId<int>()).strictlyEquals(object), true);
     QScriptValue value = eng.newVariant(int(123));
@@ -2287,7 +2285,7 @@ void tst_QJSEngine::getSetDefaultPrototype_int()
     QCOMPARE(value.prototype().strictlyEquals(object), true);
 
     eng.setDefaultPrototype(qMetaTypeId<int>(), QScriptValue());
-    QCOMPARE(eng.defaultPrototype(qMetaTypeId<int>()).isValid(), false);
+    QVERIFY(eng.defaultPrototype(qMetaTypeId<int>()).isUndefined());
     QScriptValue value2 = eng.newVariant(int(123));
     QCOMPARE(value2.prototype().strictlyEquals(object), false);
 }
@@ -2297,7 +2295,7 @@ void tst_QJSEngine::getSetDefaultPrototype_customType()
     QScriptEngine eng;
 
     QScriptValue object = eng.newObject();
-    QCOMPARE(eng.defaultPrototype(qMetaTypeId<Foo>()).isValid(), false);
+    QVERIFY(eng.defaultPrototype(qMetaTypeId<Foo>()).isUndefined());
     eng.setDefaultPrototype(qMetaTypeId<Foo>(), object);
     QCOMPARE(eng.defaultPrototype(qMetaTypeId<Foo>()).strictlyEquals(object), true);
     QScriptValue value = eng.newVariant(qVariantFromValue(Foo()));
@@ -2305,7 +2303,7 @@ void tst_QJSEngine::getSetDefaultPrototype_customType()
     QCOMPARE(value.prototype().strictlyEquals(object), true);
 
     eng.setDefaultPrototype(qMetaTypeId<Foo>(), QScriptValue());
-    QCOMPARE(eng.defaultPrototype(qMetaTypeId<Foo>()).isValid(), false);
+    QVERIFY(eng.defaultPrototype(qMetaTypeId<Foo>()).isUndefined());
     QScriptValue value2 = eng.newVariant(qVariantFromValue(Foo()));
     QCOMPARE(value2.prototype().strictlyEquals(object), false);
 }
@@ -2558,8 +2556,6 @@ void tst_QJSEngine::valueConversion_QVariant()
 
         QJSValue val1 = eng.toScriptValue(tmp1);
         QJSValue val2 = eng.toScriptValue(tmp2);
-        QVERIFY(val1.isValid());
-        QVERIFY(val2.isValid());
         QVERIFY(val1.isUndefined());
         QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
         QVERIFY(!val2.isUndefined());
@@ -2577,8 +2573,8 @@ void tst_QJSEngine::valueConversion_QVariant()
 
         QJSValue val1 = eng.toScriptValue(tmp2);
         QJSValue val2 = eng.toScriptValue(tmp3);
-        QVERIFY(val1.isValid());
-        QVERIFY(val2.isValid());
+        QVERIFY(!val1.isUndefined());
+        QVERIFY(!val2.isUndefined());
         QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
         QVERIFY(val1.isVariant());
         QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
@@ -2742,8 +2738,8 @@ void tst_QJSEngine::valueConversion_regExp()
 #if 0 // FIXME: No qScriptValueFromValue
 void tst_QJSEngine::qScriptValueFromValue_noEngine()
 {
-    QVERIFY(!qScriptValueFromValue(0, 123).isValid());
-    QVERIFY(!qScriptValueFromValue(0, QVariant(123)).isValid());
+    QVERIFY(qScriptValueFromValue(0, 123).isUndefined());
+    QVERIFY(qScriptValueFromValue(0, QVariant(123)).isUndefined());
 }
 #endif
 
@@ -2783,10 +2779,10 @@ void tst_QJSEngine::importExtension()
     {
         QScriptEngine eng;
         for (int x = 0; x < 2; ++x) {
-            QCOMPARE(eng.globalObject().property("com").isValid(), x == 1);
+            QCOMPARE(!eng.globalObject().property("com").isUndefined(), x == 1);
             QScriptValue ret = eng.importExtension("com.trolltech");
             QCOMPARE(eng.hasUncaughtException(), false);
-            QCOMPARE(ret.isUndefined(), true);
+            QVERIFY(ret.isUndefined());
 
             QScriptValue com = eng.globalObject().property("com");
             QCOMPARE(com.isObject(), true);
@@ -3717,7 +3713,7 @@ void tst_QJSEngine::abortEvaluation()
         switch (receiver.resultType) {
         case EventReceiver3::None:
             QVERIFY(!eng.hasUncaughtException());
-            QVERIFY(!ret.isValid());
+            QVERIFY(ret.isUndefined());
             break;
         case EventReceiver3::Number:
             QVERIFY(!eng.hasUncaughtException());
@@ -3760,7 +3756,7 @@ void tst_QJSEngine::abortEvaluation_tryCatch()
         switch (receiver.resultType) {
         case EventReceiver3::None:
             QVERIFY(!eng.hasUncaughtException());
-            QVERIFY(!ret.isValid());
+            QVERIFY(ret.isUndefined());
             break;
         case EventReceiver3::Number:
             QVERIFY(!eng.hasUncaughtException());
@@ -3786,7 +3782,7 @@ void tst_QJSEngine::abortEvaluation_fromNative()
     QScriptValue fun = eng.newFunction(myFunctionAbortingEvaluation);
     eng.globalObject().setProperty("myFunctionAbortingEvaluation", fun);
     QScriptValue ret = eng.evaluate("myFunctionAbortingEvaluation()");
-    QVERIFY(!ret.isValid());
+    QVERIFY(ret.isUndefined());
 }
 
 class ThreadedEngine : public QThread {
@@ -3993,7 +3989,7 @@ void tst_QJSEngine::argumentsProperty_globalContext()
         QCOMPARE(ret.toInt(), 10);
     }
     QVERIFY(eng.evaluate("delete arguments").toBool());
-    QVERIFY(!eng.globalObject().property("arguments").isValid());
+    QVERIFY(eng.globalObject().property("arguments").isUndefined());
 }
 
 void tst_QJSEngine::argumentsProperty_JS()
@@ -4007,13 +4003,13 @@ void tst_QJSEngine::argumentsProperty_JS()
     }
     {
         QJSEngine eng;
-        QVERIFY(!eng.globalObject().property("arguments").isValid());
+        QVERIFY(eng.globalObject().property("arguments").isUndefined());
         // This is testing ECMA-262 compliance. In function calls, "arguments"
         // appears like a local variable, and it can be replaced.
         QJSValue ret = eng.evaluate("(function() { arguments = 456; return arguments; })()");
         QVERIFY(ret.isNumber());
         QCOMPARE(ret.toInt(), 456);
-        QVERIFY(!eng.globalObject().property("arguments").isValid());
+        QVERIFY(eng.globalObject().property("arguments").isUndefined());
     }
 }
 
@@ -4297,7 +4293,7 @@ void tst_QJSEngine::jsFunctionDeclarationAsStatement()
     // check this behavior.
 
     QJSEngine eng;
-    QVERIFY(!eng.globalObject().property("bar").isValid());
+    QVERIFY(eng.globalObject().property("bar").isUndefined());
     eng.evaluate("function foo(arg) {\n"
                  "  if (arg == 'bar')\n"
                  "    function bar() { return 'bar'; }\n"
@@ -4305,24 +4301,24 @@ void tst_QJSEngine::jsFunctionDeclarationAsStatement()
                  "    function baz() { return 'baz'; }\n"
                  "  return (arg == 'bar') ? bar : baz;\n"
                  "}");
-    QVERIFY(!eng.globalObject().property("bar").isValid());
-    QVERIFY(!eng.globalObject().property("baz").isValid());
+    QVERIFY(eng.globalObject().property("bar").isUndefined());
+    QVERIFY(eng.globalObject().property("baz").isUndefined());
     QVERIFY(eng.evaluate("foo").isCallable());
     {
         QJSValue ret = eng.evaluate("foo('bar')");
         QVERIFY(ret.isCallable());
         QJSValue ret2 = ret.call();
         QCOMPARE(ret2.toString(), QString::fromLatin1("bar"));
-        QVERIFY(!eng.globalObject().property("bar").isValid());
-        QVERIFY(!eng.globalObject().property("baz").isValid());
+        QVERIFY(eng.globalObject().property("bar").isUndefined());
+        QVERIFY(eng.globalObject().property("baz").isUndefined());
     }
     {
         QJSValue ret = eng.evaluate("foo('baz')");
         QVERIFY(ret.isCallable());
         QJSValue ret2 = ret.call();
         QCOMPARE(ret2.toString(), QString::fromLatin1("baz"));
-        QVERIFY(!eng.globalObject().property("bar").isValid());
-        QVERIFY(!eng.globalObject().property("baz").isValid());
+        QVERIFY(eng.globalObject().property("bar").isUndefined());
+        QVERIFY(eng.globalObject().property("baz").isUndefined());
     }
 }
 
@@ -4343,13 +4339,14 @@ void tst_QJSEngine::stringObjects()
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
             QEXPECT_FAIL("", "FIXME: This is V8 issue 862. ECMA script standard 15.5.5.2 compliance.", Continue);
             QCOMPARE(obj.propertyFlags(pname), QJSValue::PropertyFlags(QJSValue::Undeletable | QJSValue::ReadOnly));
-            obj.setProperty(pname, QJSValue());
+            QEXPECT_FAIL("", "FIXME: This is V8 issue 862. ECMA script standard 15.5.5.2 compliance.", Continue);
+            QVERIFY(!obj.deleteProperty(pname));
             obj.setProperty(pname, QJSValue(&eng, 123));
             QVERIFY(obj.property(pname).isString());
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
         }
-        QVERIFY(!obj.property("-1").isValid());
-        QVERIFY(!obj.property(QString::number(str.length())).isValid());
+        QVERIFY(obj.property("-1").isUndefined());
+        QVERIFY(obj.property(QString::number(str.length())).isUndefined());
 
         QJSValue val(&eng, 123);
         obj.setProperty("-1", val);
@@ -4950,14 +4947,14 @@ void tst_QJSEngine::reentrancy_typeConversion()
         QCOMPARE(foo2.x, 12);
         QCOMPARE(foo2.y, 34);
     }
-    QVERIFY(!eng1.defaultPrototype(qMetaTypeId<Foo>()).isValid());
-    QVERIFY(!eng2.defaultPrototype(qMetaTypeId<Foo>()).isValid());
+    QVERIFY(eng1.defaultPrototype(qMetaTypeId<Foo>()).isUndefined());
+    QVERIFY(eng2.defaultPrototype(qMetaTypeId<Foo>()).isUndefined());
     QScriptValue proto1 = eng1.newObject();
     eng1.setDefaultPrototype(qMetaTypeId<Foo>(), proto1);
-    QVERIFY(!eng2.defaultPrototype(qMetaTypeId<Foo>()).isValid());
+    QVERIFY(eng2.defaultPrototype(qMetaTypeId<Foo>()).isUndefined());
     QScriptValue proto2 = eng2.newObject();
     eng2.setDefaultPrototype(qMetaTypeId<Foo>(), proto2);
-    QVERIFY(eng2.defaultPrototype(qMetaTypeId<Foo>()).isValid());
+    QVERIFY(!eng2.defaultPrototype(qMetaTypeId<Foo>()).isUndefined());
     QVERIFY(eng1.defaultPrototype(qMetaTypeId<Foo>()).strictlyEquals(proto1));
 }
 #endif
@@ -4966,10 +4963,10 @@ void tst_QJSEngine::reentrancy_globalObjectProperties()
 {
     QJSEngine eng1;
     QJSEngine eng2;
-    QVERIFY(!eng2.globalObject().property("a").isValid());
+    QVERIFY(eng2.globalObject().property("a").isUndefined());
     eng1.evaluate("a = 10");
     QVERIFY(eng1.globalObject().property("a").isNumber());
-    QVERIFY(!eng2.globalObject().property("a").isValid());
+    QVERIFY(eng2.globalObject().property("a").isUndefined());
     eng2.evaluate("a = 20");
     QVERIFY(eng2.globalObject().property("a").isNumber());
     QCOMPARE(eng1.globalObject().property("a").toInt(), 10);
@@ -5095,13 +5092,13 @@ void tst_QJSEngine::installTranslatorFunctions()
 {
     QScriptEngine eng;
     QScriptValue global = eng.globalObject();
-    QVERIFY(!global.property("qsTranslate").isValid());
-    QVERIFY(!global.property("QT_TRANSLATE_NOOP").isValid());
-    QVERIFY(!global.property("qsTr").isValid());
-    QVERIFY(!global.property("QT_TR_NOOP").isValid());
-    QVERIFY(!global.property("qsTrId").isValid());
-    QVERIFY(!global.property("QT_TRID_NOOP").isValid());
-    QVERIFY(!global.property("String").property("prototype").property("arg").isValid());
+    QVERIFY(global.property("qsTranslate").isUndefined());
+    QVERIFY(global.property("QT_TRANSLATE_NOOP").isUndefined());
+    QVERIFY(global.property("qsTr").isUndefined());
+    QVERIFY(global.property("QT_TR_NOOP").isUndefined());
+    QVERIFY(global.property("qsTrId").isUndefined());
+    QVERIFY(global.property("QT_TRID_NOOP").isUndefined());
+    QVERIFY(global.property("String").property("prototype").property("arg").isUndefined());
 
     eng.installTranslatorFunctions();
     QVERIFY(global.property("qsTranslate").isCallable());
@@ -5582,13 +5579,13 @@ void tst_QJSEngine::functionScopes()
         QEXPECT_FAIL("", "QScriptValue::scope() is internal, not implemented", Abort);
         QVERIFY(fun.scope().isObject());
         QVERIFY(fun.scope().strictlyEquals(eng.globalObject()));
-        QVERIFY(!eng.globalObject().scope().isValid());
+        QVERIFY(eng.globalObject().scope().isUndefined());
     }
     {
         QScriptValue fun = eng.globalObject().property("Object");
         QVERIFY(fun.isCallable());
         // native built-in functions don't have scope
-        QVERIFY(!fun.scope().isValid());
+        QVERIFY(fun.scope().isUndefined());
     }
     {
         // closure
@@ -5873,7 +5870,7 @@ void tst_QJSEngine::evaluateProgram_empty()
         QScriptProgram program;
         QVERIFY(program.isNull());
         QScriptValue ret = eng.evaluate(program);
-        QVERIFY(!ret.isValid());
+        QVERIFY(ret.isUndefined());
     }
 }
 #endif
@@ -5976,7 +5973,6 @@ void tst_QJSEngine::qRegExpInport()
     QJSValue rexp;
     rexp = eng.toScriptValue(rx);
 
-    QCOMPARE(rexp.isValid(), true);
     QCOMPARE(rexp.isRegExp(), true);
     QVERIFY(rexp.isCallable());
 
@@ -6110,7 +6106,7 @@ void tst_QJSEngine::newFixedStaticScopeObject()
     }
 
     // Property that doesn't exist.
-    QVERIFY(!scope.property("noSuchProperty").isValid());
+    QVERIFY(scope.property("noSuchProperty").isUndefined());
     QCOMPARE(scope.propertyFlags("noSuchProperty"), QScriptValue::PropertyFlags());
 
     // Write to writable property.
@@ -6193,9 +6189,9 @@ void tst_QJSEngine::newFixedStaticScopeObject()
 
     // As with normal JS, assigning to an undefined variable will create
     // the property on the Global Object, not the inner scope.
-    QVERIFY(!eng.globalObject().property("newProperty").isValid());
+    QVERIFY(eng.globalObject().property("newProperty").isUndefined());
     QVERIFY(eng.evaluate("(function() { newProperty = 789; })()").isUndefined());
-    QVERIFY(!scope.property("newProperty").isValid());
+    QVERIFY(!scope.property("newProperty").isUndefined());
     QVERIFY(eng.globalObject().property("newProperty").isNumber());
 
     // Nested static scope.
@@ -6238,7 +6234,7 @@ void tst_QJSEngine::newGrowingStaticScopeObject()
 
     // Initially empty.
     QVERIFY(!QScriptValueIterator(scope).hasNext());
-    QVERIFY(!scope.property("foo").isValid());
+    QVERIFY(scope.property("foo").isUndefined());
 
     // Add a static property.
     scope.setProperty("foo", 123);
@@ -6345,7 +6341,7 @@ void tst_QJSEngine::scriptValueFromQMetaObject()
         QCOMPARE(meta.toQMetaObject(), &QScriptEngine::staticMetaObject);
         // Because of missing Q_SCRIPT_DECLARE_QMETAOBJECT() for QScriptEngine.
         QEXPECT_FAIL("", "FIXME: because construct never returns invalid values", Continue);
-        QVERIFY(!meta.callAsConstructor().isValid());
+        QVERIFY(meta.callAsConstructor().isUndefined());
     }
     {
         QScriptValue meta = eng.scriptValueFromQMetaObject<QStandardItemModel>();

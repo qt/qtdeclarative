@@ -62,7 +62,7 @@ void tst_QJSValue::ctor_invalid()
     QJSEngine eng;
     {
         QJSValue v;
-        QCOMPARE(v.isValid(), false);
+        QVERIFY(v.isUndefined());
         QCOMPARE(v.engine(), (QJSEngine *)0);
     }
 }
@@ -72,8 +72,7 @@ void tst_QJSValue::ctor_undefinedWithEngine()
     QJSEngine eng;
     {
         QJSValue v(&eng, QJSValue::UndefinedValue);
-        QCOMPARE(v.isValid(), true);
-        QCOMPARE(v.isUndefined(), true);
+        QVERIFY(v.isUndefined());
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.engine(), &eng);
     }
@@ -84,7 +83,7 @@ void tst_QJSValue::ctor_nullWithEngine()
     QJSEngine eng;
     {
         QJSValue v(&eng, QJSValue::NullValue);
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNull(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.engine(), &eng);
@@ -96,7 +95,7 @@ void tst_QJSValue::ctor_boolWithEngine()
     QJSEngine eng;
     {
         QJSValue v(&eng, false);
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isBool(), true);
         QCOMPARE(v.isBool(), true);
         QCOMPARE(v.isObject(), false);
@@ -110,7 +109,7 @@ void tst_QJSValue::ctor_intWithEngine()
     QJSEngine eng;
     {
         QJSValue v(&eng, int(1));
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
@@ -127,7 +126,7 @@ void tst_QJSValue::ctor_int()
     }
     {
         QJSValue v(int(1));
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
@@ -140,7 +139,7 @@ void tst_QJSValue::ctor_uintWithEngine()
     QJSEngine eng;
     {
         QJSValue v(&eng, uint(1));
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
@@ -157,7 +156,7 @@ void tst_QJSValue::ctor_uint()
     }
     {
         QJSValue v(uint(1));
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
@@ -170,7 +169,7 @@ void tst_QJSValue::ctor_floatWithEngine()
     QJSEngine eng;
     {
         QJSValue v(&eng, 1.0);
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
@@ -187,7 +186,7 @@ void tst_QJSValue::ctor_float()
     }
     {
         QJSValue v(1.0);
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
@@ -200,7 +199,7 @@ void tst_QJSValue::ctor_stringWithEngine()
     QJSEngine eng;
     {
         QJSValue v(&eng, QLatin1String("ciao"));
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
@@ -212,7 +211,7 @@ void tst_QJSValue::ctor_string()
 {
     {
         QJSValue v(QString("ciao"));
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
@@ -220,7 +219,7 @@ void tst_QJSValue::ctor_string()
     }
     {
         QJSValue v("ciao");
-        QCOMPARE(v.isValid(), true);
+        QVERIFY(!v.isUndefined());
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
@@ -264,8 +263,7 @@ void tst_QJSValue::ctor_copyAndAssignWithEngine()
 void tst_QJSValue::ctor_undefined()
 {
     QJSValue v(QJSValue::UndefinedValue);
-    QCOMPARE(v.isValid(), true);
-    QCOMPARE(v.isUndefined(), true);
+    QVERIFY(v.isUndefined());
     QCOMPARE(v.isObject(), false);
     QCOMPARE(v.engine(), (QJSEngine *)0);
 }
@@ -273,7 +271,7 @@ void tst_QJSValue::ctor_undefined()
 void tst_QJSValue::ctor_null()
 {
     QJSValue v(QJSValue::NullValue);
-    QCOMPARE(v.isValid(), true);
+    QVERIFY(!v.isUndefined());
     QCOMPARE(v.isNull(), true);
     QCOMPARE(v.isObject(), false);
     QCOMPARE(v.engine(), (QJSEngine *)0);
@@ -282,7 +280,7 @@ void tst_QJSValue::ctor_null()
 void tst_QJSValue::ctor_bool()
 {
     QJSValue v(false);
-    QCOMPARE(v.isValid(), true);
+    QVERIFY(!v.isUndefined());
     QCOMPARE(v.isBool(), true);
     QCOMPARE(v.isBool(), true);
     QCOMPARE(v.isObject(), false);
@@ -416,7 +414,7 @@ void tst_QJSValue::toString()
     }
 
     QJSValue inv = QJSValue();
-    QCOMPARE(inv.toString(), QString());
+    QCOMPARE(inv.toString(), QString::fromLatin1("undefined"));
 
     // V2 constructors
     {
@@ -496,8 +494,8 @@ void tst_QJSValue::toNumber()
 #endif
 
     QJSValue inv = QJSValue();
-    QCOMPARE(inv.toNumber(), 0.0);
-    QCOMPARE(qjsvalue_cast<qreal>(inv), 0.0);
+    QVERIFY(qIsNaN(inv.toNumber()));
+    QVERIFY(qIsNaN(qjsvalue_cast<qreal>(inv)));
 
     // V2 constructors
     {
@@ -1495,7 +1493,6 @@ void tst_QJSValue::getSetProperty_HooliganTask183072()
 
 void tst_QJSValue::getSetProperty_propertyRemoval()
 {
-    // test property removal (setProperty(QJSValue()))
     QJSEngine eng;
     QJSValue object = eng.newObject();
     QJSValue str = QJSValue(&eng, QLatin1String("bar"));
@@ -1505,17 +1502,17 @@ void tst_QJSValue::getSetProperty_propertyRemoval()
     QCOMPARE(object.property("foo").strictlyEquals(num), true);
     object.setProperty("bar", str);
     QCOMPARE(object.property("bar").strictlyEquals(str), true);
-    object.setProperty("foo", QJSValue());
-    QCOMPARE(object.property("foo").isValid(), false);
+    QVERIFY(object.deleteProperty("foo"));
+    QVERIFY(!object.hasOwnProperty("foo"));
     QCOMPARE(object.property("bar").strictlyEquals(str), true);
     object.setProperty("foo", num);
     QCOMPARE(object.property("foo").strictlyEquals(num), true);
     QCOMPARE(object.property("bar").strictlyEquals(str), true);
-    object.setProperty("bar", QJSValue());
-    QCOMPARE(object.property("bar").isValid(), false);
+    QVERIFY(object.deleteProperty("bar"));
+    QVERIFY(!object.hasOwnProperty("bar"));
     QCOMPARE(object.property("foo").strictlyEquals(num), true);
-    object.setProperty("foo", QJSValue());
-    object.setProperty("foo", QJSValue());
+    QVERIFY(object.deleteProperty("foo"));
+    QVERIFY(!object.hasOwnProperty("foo"));
 
     eng.globalObject().setProperty("object3", object);
     QCOMPARE(eng.evaluate("object3.hasOwnProperty('foo')")
@@ -1523,7 +1520,7 @@ void tst_QJSValue::getSetProperty_propertyRemoval()
     object.setProperty("foo", num);
     QCOMPARE(eng.evaluate("object3.hasOwnProperty('foo')")
              .strictlyEquals(QJSValue(&eng, true)), true);
-    eng.globalObject().setProperty("object3", QJSValue());
+    QVERIFY(eng.globalObject().deleteProperty("object3"));
     QCOMPARE(eng.evaluate("this.hasOwnProperty('object3')")
              .strictlyEquals(QJSValue(&eng, false)), true);
 }
@@ -1561,7 +1558,8 @@ void tst_QJSValue::getSetProperty_twoEngines()
     QJSValue otherNum = QJSValue(&otherEngine, 123);
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::setProperty(oof) failed: cannot set value created in a different engine");
     object.setProperty("oof", otherNum);
-    QCOMPARE(object.property("oof").isValid(), false);
+    QVERIFY(!object.hasOwnProperty("oof"));
+    QVERIFY(object.property("oof").isUndefined());
 }
 
 
@@ -1573,7 +1571,7 @@ void tst_QJSValue::getSetProperty_gettersAndSetters()
     QJSValue num = QJSValue(&eng, 123.0);
     QJSValue object = eng.newObject();
     for (int x = 0; x < 2; ++x) {
-        object.setProperty("foo", QJSValue());
+        object.deleteProperty("foo");
         // getter() returns this.x
         object.setProperty("foo", eng.newFunction(getter),
                             QJSValue::PropertyGetter | QJSValue::UserRange);
@@ -1618,7 +1616,7 @@ void tst_QJSValue::getSetProperty_gettersAndSetters()
     }
 
     for (int x = 0; x < 2; ++x) {
-        object.setProperty("foo", QJSValue());
+        object.deleteProperty("foo");
         // setter() sets this.x
         object.setProperty("foo", eng.newFunction(setter), QJSValue::PropertySetter);
         object.setProperty("foo", str);
@@ -1646,7 +1644,7 @@ void tst_QJSValue::getSetProperty_gettersAndSetters()
     }
 
     // use a single function as both getter and setter
-    object.setProperty("foo", QJSValue());
+    object.deleteProperty("foo");
     object.setProperty("foo", eng.newFunction(getterSetter),
                         QJSValue::PropertyGetter | QJSValue::PropertySetter);
     QCOMPARE(object.propertyFlags("foo"),
@@ -1800,7 +1798,7 @@ void tst_QJSValue::getSetProperty_array()
     QCOMPARE(array.property("length").toUInt(), quint32(2));
     array.setProperty("length", QJSValue(&eng, 1));
     QCOMPARE(array.property("length").toUInt(), quint32(1));
-    QCOMPARE(array.property(1).isValid(), false);
+    QVERIFY(array.property(1).isUndefined());
 }
 
 void tst_QJSValue::getSetProperty_gettersAndSettersStupid()
@@ -1863,7 +1861,7 @@ void tst_QJSValue::getSetProperty()
 
     QJSValue inv;
     inv.setProperty("foo", num);
-    QCOMPARE(inv.property("foo").isValid(), false);
+    QCOMPARE(inv.property("foo").isUndefined(), true);
 
     eng.globalObject().setProperty("object", object);
 
@@ -1916,7 +1914,7 @@ void tst_QJSValue::getSetProperty()
         QCOMPARE(ret.strictlyEquals(QJSValue(&eng, true)), true);
     }
     // should still be deletable from C++
-    object.setProperty("undeletableProperty", QJSValue());
+    object.deleteProperty("undeletableProperty");
     QEXPECT_FAIL("", "QTBUG-17617: With JSC-based back-end, undeletable properties can't be deleted from C++", Continue);
     QVERIFY(!object.property("undeletableProperty").isValid());
     QEXPECT_FAIL("", "QTBUG-17617: With JSC-based back-end, undeletable properties can't be deleted from C++", Continue);
@@ -1981,7 +1979,7 @@ void tst_QJSValue::getSetProperty()
     // using interned strings
     QScriptString foo = eng.toStringHandle("foo");
 
-    object.setProperty(foo, QJSValue());
+    QVERIFY(object.deleteProperty(foo));
     QVERIFY(!object.property(foo).isValid());
 
     object.setProperty(foo, num);
@@ -2068,7 +2066,7 @@ void tst_QJSValue::getSetPrototype_invalidPrototype()
     QJSValue proto = object.prototype();
     QVERIFY(object.prototype().strictlyEquals(proto));
     inv.setPrototype(object);
-    QCOMPARE(inv.prototype().isValid(), false);
+    QVERIFY(inv.prototype().isUndefined());
     object.setPrototype(inv);
     QVERIFY(object.prototype().strictlyEquals(proto));
 }
@@ -2566,8 +2564,7 @@ void tst_QJSValue::call_invalidArguments()
             args << QJSValue();
             QJSValue ret = fun.callWithInstance(args);
             QVERIFY(!eng.hasUncaughtException());
-            QCOMPARE(ret.isValid(), true);
-            QCOMPARE(ret.isUndefined(), true);
+            QVERIFY(ret.isUndefined());
         }
     }
     {
@@ -2576,8 +2573,7 @@ void tst_QJSValue::call_invalidArguments()
             QJSValueList args;
             args << QJSValue();
             QJSValue ret = fun.call(args);
-            QCOMPARE(ret.isValid(), true);
-            QCOMPARE(ret.isUndefined(), true);
+            QVERIFY(ret.isUndefined());
         }
     }
     {
@@ -2586,7 +2582,7 @@ void tst_QJSValue::call_invalidArguments()
             QJSValueList args;
             args << QJSValue() << QJSValue();
             QJSValue ret = fun.call(args);
-            QCOMPARE(ret.isValid(), true);
+            QVERIFY(!ret.isUndefined());
             QCOMPARE(ret.isNumber(), true);
             QCOMPARE(qIsNaN(ret.toNumber()), true);
         }
@@ -2602,7 +2598,7 @@ void tst_QJSValue::call_invalidReturn()
     QJSValue fun = eng.newFunction(returnInvalidValue);
     eng.globalObject().setProperty("returnInvalidValue", fun);
     QJSValue ret = eng.evaluate("returnInvalidValue() + returnInvalidValue()");
-    QCOMPARE(ret.isValid(), true);
+    QVERIFY(!ret.isUndefined());
     QCOMPARE(ret.isNumber(), true);
     QCOMPARE(qIsNaN(ret.toNumber()), true);
 #endif
@@ -2619,11 +2615,11 @@ void tst_QJSValue::call_twoEngines()
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with thisObject created in "
                          "a different engine");
-    QCOMPARE(fun.callWithInstance(object).isValid(), false);
+    QVERIFY(fun.callWithInstance(object).isUndefined());
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with argument created in "
                          "a different engine");
-    QCOMPARE(fun.call(QJSValueList() << QJSValue(&eng, 123)).isValid(), false);
+    QVERIFY(fun.call(QJSValueList() << QJSValue(&eng, 123)).isUndefined());
     {
         QJSValue fun = eng.evaluate("Object");
         QVERIFY(fun.isCallable());
@@ -2703,7 +2699,7 @@ void tst_QJSValue::call_nonFunction()
 {
     // calling things that are not functions
     QFETCH(QJSValue, value);
-    QVERIFY(!value.call().isValid());
+    QVERIFY(value.call().isUndefined());
 }
 
 #if 0 // FIXME: no c-style callbacks
@@ -2743,7 +2739,7 @@ void tst_QJSValue::construct_nonFunction_data()
 void tst_QJSValue::construct_nonFunction()
 {
     QFETCH(QJSValue, value);
-    QVERIFY(!value.callAsConstructor().isValid());
+    QVERIFY(value.callAsConstructor().isUndefined());
 }
 
 void tst_QJSValue::construct_simple()
@@ -2752,6 +2748,7 @@ void tst_QJSValue::construct_simple()
     QJSValue fun = eng.evaluate("(function () { this.foo = 123; })");
     QVERIFY(fun.isCallable());
     QJSValue ret = fun.callAsConstructor();
+    QVERIFY(!ret.isUndefined());
     QVERIFY(ret.isObject());
     QVERIFY(ret.prototype().strictlyEquals(fun.property("prototype")));
     QCOMPARE(ret.property("foo").toInt(), 123);
@@ -2848,7 +2845,6 @@ void tst_QJSValue::construct()
     // construct with single array object as arguments
     QJSValue ret = fun.callAsConstructor(array);
     QVERIFY(!eng.hasUncaughtException());
-    QVERIFY(ret.isValid());
     QVERIFY(ret.isObject());
     QCOMPARE(ret.property(0).strictlyEquals(array.property(0)), true);
     QCOMPARE(ret.property(1).strictlyEquals(array.property(1)), true);
@@ -2885,9 +2881,9 @@ void tst_QJSValue::construct_twoEngines()
     QJSValue ctor = engine.evaluate("(function (a, b) { this.foo = 123; })");
     QJSValue arg(&otherEngine, 124567);
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
-    QVERIFY(!ctor.callAsConstructor(QJSValueList() << arg).isValid());
+    QVERIFY(ctor.callAsConstructor(QJSValueList() << arg).isUndefined());
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
-    QVERIFY(!ctor.callAsConstructor(QJSValueList() << arg << otherEngine.newObject()).isValid());
+    QVERIFY(ctor.callAsConstructor(QJSValueList() << arg << otherEngine.newObject()).isUndefined());
 }
 
 void tst_QJSValue::construct_constructorThrowsPrimitive()
@@ -3069,8 +3065,8 @@ void tst_QJSValue::equals()
     QCOMPARE(null.equals(null), true);
     QCOMPARE(undefined.equals(null), true);
     QCOMPARE(null.equals(undefined), true);
-    QCOMPARE(undefined.equals(QJSValue()), false);
-    QCOMPARE(null.equals(QJSValue()), false);
+    QVERIFY(undefined.equals(QJSValue()));
+    QVERIFY(null.equals(QJSValue()));
     QVERIFY(!null.equals(num));
     QVERIFY(!undefined.equals(num));
 
@@ -3512,18 +3508,18 @@ void tst_QJSValue::engineDeleted()
 
     delete eng;
 
-    QVERIFY(!v1.isValid());
+    QVERIFY(v1.isUndefined());
     QVERIFY(v1.engine() == 0);
-    QVERIFY(!v2.isValid());
+    QVERIFY(v2.isUndefined());
     QVERIFY(v2.engine() == 0);
-    QVERIFY(!v3.isValid());
+    QVERIFY(v3.isUndefined());
     QVERIFY(v3.engine() == 0);
-    QVERIFY(!v4.isValid());
+    QVERIFY(v4.isUndefined());
     QVERIFY(v4.engine() == 0);
-    QVERIFY(v5.isValid());
+    QVERIFY(v5.isString()); // was not bound to engine
     QVERIFY(v5.engine() == 0);
 
-    QVERIFY(!v3.property("foo").isValid());
+    QVERIFY(v3.property("foo").isUndefined());
 }
 
 void tst_QJSValue::valueOfWithClosure()

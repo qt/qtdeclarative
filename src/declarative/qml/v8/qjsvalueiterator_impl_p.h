@@ -97,7 +97,7 @@ inline QString QJSValueIteratorPrivate::name() const
 inline QScriptPassPointer<QJSValuePrivate> QJSValueIteratorPrivate::value() const
 {
     if (!isValid())
-        return InvalidValue();
+        return new QJSValuePrivate();
 
     v8::HandleScope handleScope;
     return m_object->property(m_names->Get(m_index - 1)->ToString());
@@ -105,7 +105,7 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValueIteratorPrivate::value() cons
 
 inline bool QJSValueIteratorPrivate::isValid() const
 {
-    bool result = m_object ? m_object->isValid() : false;
+    bool result = m_object ? !m_object->isUndefined() : false;
     // We know that if this object is still valid then it is an object
     // if this assumption is not correct then some other logic in this class
     // have to be changed too.
