@@ -134,6 +134,8 @@ public:
     QJSValue property(quint32 arrayIndex) const;
     void setProperty(quint32 arrayIndex, const QJSValue &value);
 
+    bool deleteProperty(const QString &name);
+
     QJSValue::PropertyFlags propertyFlags(const QString &name) const;
 
     QJSValue call(const QJSValue &thisObject = QJSValue(),

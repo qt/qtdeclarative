@@ -1843,6 +1843,50 @@ void tst_QJSValue::hasProperty_changePrototype()
     QVERIFY(obj.hasOwnProperty("foo"));
 }
 
+void tst_QJSValue::deleteProperty_basic()
+{
+    QJSEngine eng;
+    QJSValue obj = eng.newObject();
+    // deleteProperty() behavior matches JS delete operator
+    QVERIFY(obj.deleteProperty("foo"));
+
+    obj.setProperty("foo", 123);
+    QVERIFY(obj.deleteProperty("foo"));
+    QVERIFY(!obj.hasOwnProperty("foo"));
+}
+
+void tst_QJSValue::deleteProperty_globalObject()
+{
+    QJSEngine eng;
+    QJSValue global = eng.globalObject();
+    // deleteProperty() behavior matches JS delete operator
+    QVERIFY(global.deleteProperty("foo"));
+
+    global.setProperty("foo", 123);
+    QVERIFY(global.deleteProperty("foo"));
+    QVERIFY(!global.hasProperty("foo"));
+
+    QVERIFY(global.deleteProperty("Math"));
+    QVERIFY(!global.hasProperty("Math"));
+
+    QVERIFY(!global.deleteProperty("NaN")); // read-only
+    QVERIFY(global.hasProperty("NaN"));
+}
+
+void tst_QJSValue::deleteProperty_inPrototype()
+{
+    QJSEngine eng;
+    QJSValue obj = eng.newObject();
+    QJSValue proto = eng.newObject();
+    obj.setPrototype(proto);
+
+    proto.setProperty("foo", 123);
+    QVERIFY(obj.hasProperty("foo"));
+    // deleteProperty() behavior matches JS delete operator
+    QVERIFY(obj.deleteProperty("foo"));
+    QVERIFY(obj.hasProperty("foo"));
+}
+
 void tst_QJSValue::getSetProperty_HooliganTask162051()
 {
     QJSEngine eng;

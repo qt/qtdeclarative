@@ -915,7 +915,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
   built-in properties, such as the \c{length} property of Array objects
   or meta properties of QObject objects.
 
-  \sa property()
+  \sa property(), deleteProperty()
 */
 void QJSValue::setProperty(const QString& name, const QJSValue& value)
 {
@@ -941,6 +941,33 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     Q_D(QJSValue);
     QScriptIsolate api(d->engine());
     d->setProperty(arrayIndex, QJSValuePrivate::get(value));
+}
+
+/*!
+  Attempts to delete this object's property of the given \a name.
+  Returns true if the property was deleted, otherwise returns false.
+
+  The behavior of this function is consistent with the JavaScript
+  delete operator. In particular:
+
+  \list
+  \o Non-configurable properties cannot be deleted.
+  \o This function will return true even if this object doesn't
+     have a property of the given \a name (i.e., non-existent
+     properties are "trivially deletable").
+  \o If this object doesn't have an own property of the given
+     \a name, but an object in the prototype() chain does, the
+     prototype object's property is not deleted, and this function
+     returns true.
+  \endlist
+
+  \sa setProperty(), hasOwnProperty()
+*/
+bool QJSValue::deleteProperty(const QString &name)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->deleteProperty(name);
 }
 
 /*!

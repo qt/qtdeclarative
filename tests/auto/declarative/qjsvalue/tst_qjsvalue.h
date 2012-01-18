@@ -117,6 +117,10 @@ private slots:
     void hasProperty_globalObject();
     void hasProperty_changePrototype();
 
+    void deleteProperty_basic();
+    void deleteProperty_globalObject();
+    void deleteProperty_inPrototype();
+
     void getSetPrototype_cyclicPrototype();
     void getSetPrototype_evalCyclicPrototype();
     void getSetPrototype_eval();
