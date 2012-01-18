@@ -515,7 +515,7 @@ QString QJSValue::toString() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa isNumber(), toInteger(), toInt32(), toUInt32(), toUInt16()
+  \sa isNumber(), toInteger(), toInt(), toUInt(), toUInt16()
 */
 double QJSValue::toNumber() const
 {
@@ -572,9 +572,9 @@ double QJSValue::toInteger() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa toNumber(), toUInt32()
+  \sa toNumber(), toUInt()
 */
-qint32 QJSValue::toInt32() const
+qint32 QJSValue::toInt() const
 {
     Q_D(const QJSValue);
     QScriptIsolate api(d->engine());
@@ -591,7 +591,31 @@ qint32 QJSValue::toInt32() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa toNumber(), toInt32()
+  \sa toNumber(), toInt()
+*/
+quint32 QJSValue::toUInt() const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->toUInt32();
+}
+
+/*!
+  \obsolete
+
+  Use toInt() instead.
+*/
+qint32 QJSValue::toInt32() const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->toInt32();
+}
+
+/*!
+  \obsolete
+
+  Use toUInt() instead.
 */
 quint32 QJSValue::toUInt32() const
 {

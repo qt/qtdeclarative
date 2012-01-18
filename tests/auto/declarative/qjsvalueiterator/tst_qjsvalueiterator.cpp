@@ -173,7 +173,7 @@ void tst_QJSValueIterator::iterateArray()
 
     // Iterate thru array properties. Note that the QJSValueIterator doesn't guarantee
     // any order on the iteration!
-    int length = array.property("length").toInt32();
+    int length = array.property("length").toInt();
     QCOMPARE(length, propertyNames.size());
 
     bool iteratedThruLength = false;
@@ -187,7 +187,7 @@ void tst_QJSValueIterator::iterateArray()
         const QString name = it.name();
         if (name == QString::fromLatin1("length")) {
             QVERIFY(it.value().isNumber());
-            QCOMPARE(it.value().toInt32(), length);
+            QCOMPARE(it.value().toInt(), length);
             QVERIFY2(!iteratedThruLength, "'length' appeared more than once during iteration.");
             iteratedThruLength = true;
             continue;
@@ -220,7 +220,7 @@ void tst_QJSValueIterator::iterateArray()
         const QString name = it.name();
         if (name == QString::fromLatin1("length")) {
             QVERIFY(it.value().isNumber());
-            QCOMPARE(it.value().toInt32(), length);
+            QCOMPARE(it.value().toInt(), length);
             QCOMPARE(it.flags(), QScriptValue::SkipInEnumeration | QScriptValue::Undeletable);
             QVERIFY2(!iteratedThruLength, "'length' appeared more than once during iteration.");
             iteratedThruLength = true;
@@ -255,7 +255,7 @@ void tst_QJSValueIterator::iterateArray()
         const QString name = it2.name();
         if (name == QString::fromLatin1("length")) {
             QVERIFY(it2.value().isNumber());
-            QCOMPARE(it2.value().toInt32(), length);
+            QCOMPARE(it2.value().toInt(), length);
             QCOMPARE(it2.flags(), QScriptValue::SkipInEnumeration | QScriptValue::Undeletable);
             QVERIFY2(!iteratedThruLength, "'length' appeared more than once during iteration.");
             iteratedThruLength = true;
@@ -286,7 +286,7 @@ void tst_QJSValueIterator::iterateString()
     QVERIFY(str.isString());
     QJSValue obj = str.toObject();
     QVERIFY(obj.property("length").isNumber());
-    int length = obj.property("length").toInt32();
+    int length = obj.property("length").toInt();
     QCOMPARE(length, 4);
 
     QJSValueIterator it(obj);
@@ -299,7 +299,7 @@ void tst_QJSValueIterator::iterateString()
 
         if (name == QString::fromLatin1("length")) {
             QVERIFY(it.value().isNumber());
-            QCOMPARE(it.value().toInt32(), length);
+            QCOMPARE(it.value().toInt(), length);
             QVERIFY2(!iteratedThruLength, "'length' appeared more than once during iteration.");
             iteratedThruLength = true;
             continue;
@@ -324,7 +324,7 @@ void tst_QJSValueIterator::iterateString()
 
         if (name == QString::fromLatin1("length")) {
             QVERIFY(it.value().isNumber());
-            QCOMPARE(it.value().toInt32(), length);
+            QCOMPARE(it.value().toInt(), length);
             QVERIFY2(!iteratedThruLength, "'length' appeared more than once during iteration.");
             iteratedThruLength = true;
             continue;

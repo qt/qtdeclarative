@@ -106,6 +106,8 @@ public:
 
     QString toString() const;
     double toNumber() const;
+    qint32 toInt() const;
+    quint32 toUInt() const;
     bool toBool() const;
     double toInteger() const;
     qint32 toInt32() const;

@@ -975,7 +975,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
             }
-            output.setint(tmp.toInt32());
+            output.setint(tmp.toInt());
         }
     }
     QML_V4_END_INSTR(ConvertStringToInt, unaryop)
