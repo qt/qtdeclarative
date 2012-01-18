@@ -2827,7 +2827,7 @@ void tst_QJSValue::call_object()
     QJSEngine eng;
     QJSValue Object = eng.evaluate("Object");
     QCOMPARE(Object.isCallable(), true);
-    QJSValue result = Object.call(Object);
+    QJSValue result = Object.callWithInstance(Object);
     QCOMPARE(result.isObject(), true);
 }
 
@@ -2840,7 +2840,7 @@ void tst_QJSValue::call_newObjects()
     QCOMPARE(Object.isCallable(), true);
     QJSValueList args;
     args << QJSValue(&eng, 123);
-    QJSValue result = Number.call(Object, args);
+    QJSValue result = Number.callWithInstance(Object, args);
     QCOMPARE(result.strictlyEquals(args.at(0)), true);
 }
 
@@ -2852,7 +2852,7 @@ void tst_QJSValue::call_this()
     QCOMPARE(fun.isCallable(), true);
 
     QJSValue numberObject = QJSValue(&eng, 123.0).toObject();
-    QJSValue result = fun.call(numberObject);
+    QJSValue result = fun.callWithInstance(numberObject);
     QCOMPARE(result.isObject(), true);
     QCOMPARE(result.toNumber(), 123.0);
 }
@@ -2865,13 +2865,13 @@ void tst_QJSValue::call_arguments()
     QJSValue fun = eng.evaluate("(function() { return arguments[0]; })");
     QCOMPARE(fun.isCallable(), true);
     {
-        QJSValue result = fun.call(eng.undefinedValue());
+        QJSValue result = fun.callWithInstance(eng.undefinedValue());
         QCOMPARE(result.isUndefined(), true);
     }
     {
         QJSValueList args;
         args << QJSValue(&eng, 123.0);
-        QJSValue result = fun.call(eng.undefinedValue(), args);
+        QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
         QCOMPARE(result.isNumber(), true);
         QCOMPARE(result.toNumber(), 123.0);
     }
@@ -2879,7 +2879,7 @@ void tst_QJSValue::call_arguments()
     {
         QJSValueList args;
         args << QJSValue(123.0);
-        QJSValue result = fun.call(eng.undefinedValue(), args);
+        QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
         QCOMPARE(result.isNumber(), true);
         QCOMPARE(result.toNumber(), 123.0);
     }
@@ -2887,7 +2887,7 @@ void tst_QJSValue::call_arguments()
     {
         QJSValue args = eng.newArray();
         args.setProperty(0, 123);
-        QJSValue result = fun.call(eng.undefinedValue(), args);
+        QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
         QVERIFY(result.isNumber());
         QCOMPARE(result.toNumber(), 123.0);
     }
@@ -2904,7 +2904,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << QJSValue(&eng, 123.0) << QJSValue(&eng, 456.0);
-            QJSValue result = fun.call(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 456.0);
         }
@@ -2913,7 +2913,7 @@ void tst_QJSValue::call()
             QJSValue args = eng.newArray();
             args.setProperty(0, 123);
             args.setProperty(1, 456);
-            QJSValue result = fun.call(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QVERIFY(result.isNumber());
             QCOMPARE(result.toNumber(), 456.0);
         }
@@ -2938,7 +2938,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << QJSValue(&eng, 123.0);
-            QJSValue result = fun.call(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 123.0);
@@ -2947,7 +2947,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << QJSValue(123.0);
-            QJSValue result = fun.call(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 123.0);
         }
@@ -2955,7 +2955,7 @@ void tst_QJSValue::call()
         {
             QJSValue args = eng.newArray();
             args.setProperty(0, 123);
-            QJSValue result = fun.call(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QVERIFY(result.isNumber());
             QCOMPARE(result.toNumber(), 123.0);
         }
@@ -2966,7 +2966,7 @@ void tst_QJSValue::call()
         {
             QJSValueList args;
             args << QJSValue(&eng, 123.0);
-            QJSValue result = fun.call(eng.undefinedValue(), args);
+            QJSValue result = fun.callWithInstance(eng.undefinedValue(), args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 123.0);
@@ -2985,7 +2985,7 @@ void tst_QJSValue::call_invalidArguments()
         {
             QJSValueList args;
             args << QJSValue();
-            QJSValue ret = fun.call(args);
+            QJSValue ret = fun.callWithInstance(args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(ret.isValid(), true);
             QCOMPARE(ret.isUndefined(), true);
@@ -3040,7 +3040,7 @@ void tst_QJSValue::call_twoEngines()
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with thisObject created in "
                          "a different engine");
-    QCOMPARE(fun.call(object).isValid(), false);
+    QCOMPARE(fun.callWithInstance(object).isValid(), false);
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with argument created in "
                          "a different engine");

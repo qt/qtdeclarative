@@ -142,6 +142,7 @@ public:
 
     bool isCallable() const;
     QJSValue call(const QJSValueList &args);
+    QJSValue callWithInstance(const QJSValue &instance, const QJSValueList &args = QJSValueList());
     QJSValue call(const QJSValue &thisObject = QJSValue(),
                       const QJSValueList &args = QJSValueList());
     QJSValue construct(const QJSValueList &args = QJSValueList());

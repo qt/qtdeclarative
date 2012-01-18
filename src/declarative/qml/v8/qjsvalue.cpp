@@ -710,7 +710,7 @@ QVariant QJSValue::toVariant() const
   QJSEngine::hasUncaughtException() to determine if an exception
   occurred.
 
-  \sa isCallable()
+  \sa isCallable(), callWithInstance()
 */
 QJSValue QJSValue::call(const QJSValueList &args)
 {
@@ -720,7 +720,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
 }
 
 /*!
-  Calls this QJSValue as a function, using \a thisObject as
+  Calls this QJSValue as a function, using \a instance as
   the `this' object in the function call, and passing \a args
   as arguments to the function. Returns the value returned from
   the function.
@@ -728,7 +728,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
   If this QJSValue is not a function, call() does nothing
   and returns an invalid QJSValue.
 
-  Note that if \a thisObject is not an object, the global object
+  Note that if \a instance is not an object, the global object
   (see \l{QJSEngine::globalObject()}) will be used as the
   `this' object.
 
@@ -740,7 +740,19 @@ QJSValue QJSValue::call(const QJSValueList &args)
 
   \snippet doc/src/snippets/code/src_script_qjsvalue.cpp 1
 
-  \sa construct()
+  \sa call()
+*/
+QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList &args)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->call(QJSValuePrivate::get(instance), args);
+}
+
+/*!
+  \obsolete
+
+  Use callWithInstance() instead.
 */
 QJSValue QJSValue::call(const QJSValue& thisObject, const QJSValueList& args)
 {

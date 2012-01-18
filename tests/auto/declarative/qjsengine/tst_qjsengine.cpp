@@ -663,7 +663,7 @@ void tst_QJSEngine::newVariant()
         QCOMPARE(opaque.prototype().isValid(), true);
         QEXPECT_FAIL("", "FIXME: newly created QObject's prototype is an JS Object", Continue);
         QCOMPARE(opaque.prototype().isVariant(), true);
-        QVERIFY(opaque.property("valueOf").call(opaque).isUndefined());
+        QVERIFY(opaque.property("valueOf").callWithInstance(opaque).isUndefined());
     }
 }
 
@@ -734,7 +734,7 @@ void tst_QJSEngine::newVariant_valueOfToString()
     QJSEngine eng;
     {
         QJSValue object = eng.newVariant(QVariant(123));
-        QJSValue value = object.property("valueOf").call(object);
+        QJSValue value = object.property("valueOf").callWithInstance(object);
         QVERIFY(value.isNumber());
         QCOMPARE(value.toInt(), 123);
         QCOMPARE(object.toString(), QString::fromLatin1("123"));
@@ -742,7 +742,7 @@ void tst_QJSEngine::newVariant_valueOfToString()
     }
     {
         QJSValue object = eng.newVariant(QVariant(QString::fromLatin1("hello")));
-        QJSValue value = object.property("valueOf").call(object);
+        QJSValue value = object.property("valueOf").callWithInstance(object);
         QVERIFY(value.isString());
         QCOMPARE(value.toString(), QString::fromLatin1("hello"));
         QCOMPARE(object.toString(), QString::fromLatin1("hello"));
@@ -750,7 +750,7 @@ void tst_QJSEngine::newVariant_valueOfToString()
     }
     {
         QJSValue object = eng.newVariant(QVariant(false));
-        QJSValue value = object.property("valueOf").call(object);
+        QJSValue value = object.property("valueOf").callWithInstance(object);
         QVERIFY(value.isBool());
         QCOMPARE(value.toBool(), false);
         QCOMPARE(object.toString(), QString::fromLatin1("false"));
@@ -758,7 +758,7 @@ void tst_QJSEngine::newVariant_valueOfToString()
     }
     {
         QJSValue object = eng.newVariant(QVariant(QPoint(10, 20)));
-        QJSValue value = object.property("valueOf").call(object);
+        QJSValue value = object.property("valueOf").callWithInstance(object);
         QVERIFY(value.isObject());
         QVERIFY(value.strictlyEquals(object));
         QCOMPARE(object.toString(), QString::fromLatin1("QVariant(QPoint)"));
@@ -2215,7 +2215,7 @@ void tst_QJSEngine::nestedEvaluate()
     }
     // From QScriptValue::call()
     {
-        QScriptValue result = fun.call(eng.evaluate("p = { id:'foo' }") , QScriptValueList() );
+        QScriptValue result = fun.callWithInstance(eng.evaluate("p = { id:'foo' }") , QScriptValueList() );
         QCOMPARE(result.property("local_bar").toString(), QString("local"));
         QCOMPARE(result.property("thisObjectIdBefore").toString(), QString("foo"));
         QCOMPARE(result.property("thisObjectIdAfter").toString(), QString("foo"));
@@ -2986,7 +2986,7 @@ void tst_QJSEngine::castWithPrototypeChain()
         }
 
         {
-            QScriptValue ret = toBaz.call(scriptZoo, QScriptValueList() << baz2Value);
+            QScriptValue ret = toBaz.callWithInstance(scriptZoo, QScriptValueList() << baz2Value);
             QVERIFY(ret.isError());
             QCOMPARE(ret.toString(), QLatin1String("TypeError: incompatible type of argument(s) in call to toBaz(); candidates were\n    toBaz(Bar*)"));
         }
@@ -3008,7 +3008,7 @@ void tst_QJSEngine::castWithPrototypeChain()
         }
 
         {
-            QScriptValue ret = toBaz.call(scriptZoo, QScriptValueList() << baz2Value);
+            QScriptValue ret = toBaz.callWithInstance(scriptZoo, QScriptValueList() << baz2Value);
             QEXPECT_FAIL("", "Cannot convert Baz* to Bar*", Continue);
             QVERIFY(!ret.isError());
             QEXPECT_FAIL("", "Cannot convert Baz* to Bar*", Continue);
@@ -5418,7 +5418,7 @@ void tst_QJSEngine::translateScript_crossScript()
 
 static QScriptValue callQsTr(QScriptContext *ctx, QScriptEngine *eng)
 {
-    return eng->globalObject().property("qsTr").call(ctx->thisObject(), ctx->argumentsObject());
+    return eng->globalObject().property("qsTr").callWithInstance(ctx->thisObject(), ctx->argumentsObject());
 }
 
 void tst_QJSEngine::translateScript_callQsTrFromNative()
@@ -6139,7 +6139,7 @@ void tst_QJSEngine::dateConversionJSQt()
         QJSValue jsDate = eng.evaluate(QString::fromLatin1("new Date(%0)").arg(secs * 1000.0));
         QDateTime qtDate = jsDate.toDateTime();
         QString qtUTCDateStr = qtDate.toUTC().toString(Qt::ISODate);
-        QString jsUTCDateStr = jsDate.property("toISOString").call(jsDate).toString();
+        QString jsUTCDateStr = jsDate.property("toISOString").callWithInstance(jsDate).toString();
         jsUTCDateStr.remove(jsUTCDateStr.length() - 5, 4); // get rid of milliseconds (".000")
         if (qtUTCDateStr != jsUTCDateStr)
             QFAIL(qPrintable(jsDate.toString()));
@@ -6153,7 +6153,7 @@ void tst_QJSEngine::dateConversionQtJS()
     QJSEngine eng;
     for (int i = 0; i < 8000; ++i) {
         QJSValue jsDate = eng.newDate(qtDate);
-        QString jsUTCDateStr = jsDate.property("toISOString").call(jsDate).toString();
+        QString jsUTCDateStr = jsDate.property("toISOString").callWithInstance(jsDate).toString();
         jsUTCDateStr.remove(jsUTCDateStr.length() - 5, 4); // get rid of milliseconds (".000")
         QString qtUTCDateStr = qtDate.toUTC().toString(Qt::ISODate);
         if (jsUTCDateStr != qtUTCDateStr)
