@@ -130,6 +130,8 @@ public:
     template<typename T>
     inline QScriptPassPointer<QJSValuePrivate> property(T name) const;
     inline bool deleteProperty(const QString& name);
+    inline bool hasProperty(const QString &name) const;
+    inline bool hasOwnProperty(const QString &name) const;
     inline QJSValue::PropertyFlags propertyFlags(const QString& name) const;
     inline QJSValue::PropertyFlags propertyFlags(v8::Handle<v8::String> name) const;
 

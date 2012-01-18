@@ -1792,6 +1792,57 @@ static QJSValue getSet__proto__(QScriptContext *ctx, QScriptEngine *)
 }
 #endif
 
+void tst_QJSValue::hasProperty_basic()
+{
+    QJSEngine eng;
+    QJSValue obj = eng.newObject();
+    QVERIFY(obj.hasProperty("hasOwnProperty")); // inherited from Object.prototype
+    QVERIFY(!obj.hasOwnProperty("hasOwnProperty"));
+
+    QVERIFY(!obj.hasProperty("foo"));
+    QVERIFY(!obj.hasOwnProperty("foo"));
+    obj.setProperty("foo", 123);
+    QVERIFY(obj.hasProperty("foo"));
+    QVERIFY(obj.hasOwnProperty("foo"));
+
+    QVERIFY(!obj.hasProperty("bar"));
+    QVERIFY(!obj.hasOwnProperty("bar"));
+}
+
+void tst_QJSValue::hasProperty_globalObject()
+{
+    QJSEngine eng;
+    QJSValue global = eng.globalObject();
+    QVERIFY(global.hasProperty("Math"));
+    QVERIFY(global.hasOwnProperty("Math"));
+    QVERIFY(!global.hasProperty("NoSuchStandardProperty"));
+    QVERIFY(!global.hasOwnProperty("NoSuchStandardProperty"));
+
+    QVERIFY(!global.hasProperty("foo"));
+    QVERIFY(!global.hasOwnProperty("foo"));
+    global.setProperty("foo", 123);
+    QVERIFY(global.hasProperty("foo"));
+    QVERIFY(global.hasOwnProperty("foo"));
+}
+
+void tst_QJSValue::hasProperty_changePrototype()
+{
+    QJSEngine eng;
+    QJSValue obj = eng.newObject();
+    QJSValue proto = eng.newObject();
+    obj.setPrototype(proto);
+
+    QVERIFY(!obj.hasProperty("foo"));
+    QVERIFY(!obj.hasOwnProperty("foo"));
+    proto.setProperty("foo", 123);
+    QVERIFY(obj.hasProperty("foo"));
+    QVERIFY(!obj.hasOwnProperty("foo"));
+
+    obj.setProperty("foo", 456); // override prototype property
+    QVERIFY(obj.hasProperty("foo"));
+    QVERIFY(obj.hasOwnProperty("foo"));
+}
+
 void tst_QJSValue::getSetProperty_HooliganTask162051()
 {
     QJSEngine eng;

@@ -113,6 +113,10 @@ private slots:
     void equals();
     void strictlyEquals();
 
+    void hasProperty_basic();
+    void hasProperty_globalObject();
+    void hasProperty_changePrototype();
+
     void getSetPrototype_cyclicPrototype();
     void getSetPrototype_evalCyclicPrototype();
     void getSetPrototype_eval();

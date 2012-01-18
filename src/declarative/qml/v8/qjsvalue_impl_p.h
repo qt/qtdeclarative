@@ -880,6 +880,26 @@ inline bool QJSValuePrivate::deleteProperty(const QString& name)
     return self->Delete(QJSConverter::toString(name));
 }
 
+inline bool QJSValuePrivate::hasProperty(const QString &name) const
+{
+    if (!isObject())
+        return false;
+
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Object> self(v8::Handle<v8::Object>::Cast(m_value));
+    return self->Has(QJSConverter::toString(name));
+}
+
+inline bool QJSValuePrivate::hasOwnProperty(const QString &name) const
+{
+    if (!isObject())
+        return false;
+
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Object> self(v8::Handle<v8::Object>::Cast(m_value));
+    return self->HasOwnProperty(QJSConverter::toString(name));
+}
+
 inline QJSValue::PropertyFlags QJSValuePrivate::propertyFlags(const QString& name) const
 {
     if (!isObject())

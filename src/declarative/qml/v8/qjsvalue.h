@@ -128,6 +128,9 @@ public:
     QJSValue property(const QString &name) const;
     void setProperty(const QString &name, const QJSValue &value);
 
+    bool hasProperty(const QString &name) const;
+    bool hasOwnProperty(const QString &name) const;
+
     QJSValue property(quint32 arrayIndex) const;
     void setProperty(quint32 arrayIndex, const QJSValue &value);
 

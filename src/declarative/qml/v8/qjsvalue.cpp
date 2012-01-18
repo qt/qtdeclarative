@@ -866,7 +866,7 @@ bool QJSValue::instanceOf(const QJSValue &other) const
   occurred, property() returns the value that was thrown (typically
   an \c{Error} object).
 
-  \sa setProperty(), propertyFlags(), QJSValueIterator
+  \sa setProperty(), hasProperty(), QJSValueIterator
 */
 QJSValue QJSValue::property(const QString& name) const
 {
@@ -941,6 +941,32 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     Q_D(QJSValue);
     QScriptIsolate api(d->engine());
     d->setProperty(arrayIndex, QJSValuePrivate::get(value));
+}
+
+/*!
+  Returns true if this object has a property of the given \a name,
+  otherwise returns false.
+
+  \sa property(), hasOwnProperty()
+*/
+bool QJSValue::hasProperty(const QString &name) const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->hasProperty(name);
+}
+
+/*!
+  Returns true if this object has an own (not prototype-inherited)
+  property of the given \a name, otherwise returns false.
+
+  \sa property(), hasProperty()
+*/
+bool QJSValue::hasOwnProperty(const QString &name) const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->hasOwnProperty(name);
 }
 
 /*!
