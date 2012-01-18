@@ -61,6 +61,9 @@ public:
     void prependAnimation(QAbstractAnimation2 *animation);
     void removeAnimation(QAbstractAnimation2 *animation);
 
+    QAbstractAnimation2 *firstChild() const { return m_firstChild; }
+    QAbstractAnimation2 *lastChild() const { return m_lastChild; }
+
     void clear();
 
     //called by QAbstractAnimation2
@@ -76,9 +79,6 @@ protected:
     void resetUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim);
     int uncontrolledAnimationFinishTime(QAbstractAnimation2 *anim) const { return anim->m_uncontrolledFinishTime; }
     void setUncontrolledAnimationFinishTime(QAbstractAnimation2 *anim, int time);
-
-    QAbstractAnimation2 *firstChild() const { return m_firstChild; }
-    QAbstractAnimation2 *lastChild() const { return m_lastChild; }
 
 private:
     //definition

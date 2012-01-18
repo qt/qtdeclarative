@@ -499,6 +499,7 @@ void QAbstractAnimation2::updateDirection(QAbstractAnimation2::Direction directi
 
 void QAbstractAnimation2::finished()
 {
+    //TODO: update this code so it is valid to delete the animation in animationFinished
     for (int i = 0; i < changeListeners.count(); ++i) {
         const QAbstractAnimation2::ChangeListener &change = changeListeners.at(i);
         if (change.types & QAbstractAnimation2::Completion)

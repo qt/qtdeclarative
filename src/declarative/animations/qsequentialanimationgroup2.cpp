@@ -111,7 +111,7 @@ QSequentialAnimationGroup2::AnimationIndex QSequentialAnimationGroup2::indexForC
     // 1. the duration of the group is undefined and we passed its actual duration
     // 2. there are only 0-duration animations in the group
     ret.timeOffset -= duration;
-    ret.animation = anim;
+    ret.animation = lastChild();
     return ret;
 }
 
@@ -138,7 +138,7 @@ void QSequentialAnimationGroup2::advanceForwards(const AnimationIndex &newAnimat
 {
     if (m_previousLoop < m_currentLoop) {
         // we need to fast forward to the end
-        for (QAbstractAnimation2 *anim = firstChild(); anim; anim = anim->nextSibling()) {
+        for (QAbstractAnimation2 *anim = m_currentAnimation; anim; anim = anim->nextSibling()) {
             setCurrentAnimation(anim, true);
             anim->setCurrentTime(animationActualTotalDuration(anim));
         }

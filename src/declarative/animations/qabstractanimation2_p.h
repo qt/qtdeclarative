@@ -158,7 +158,7 @@ protected:
     friend class QAnimationGroup2;
 };
 
-class QAnimation2ChangeListener
+class Q_AUTOTEST_EXPORT QAnimation2ChangeListener
 {
 public:
     virtual void animationFinished(QAbstractAnimation2 *) {}

@@ -60,6 +60,8 @@ public:
 
     int duration() const;
 
+    QAbstractAnimation2 *currentAnimation() const { return m_currentAnimation; }
+
 protected:
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
