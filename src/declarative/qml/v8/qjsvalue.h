@@ -121,8 +121,6 @@ public:
     QT_DEPRECATED QJSEngine *engine() const;
 
     QT_DEPRECATED bool isFunction() const;
-    QT_DEPRECATED qint32 toInt32() const;
-    QT_DEPRECATED quint32 toUInt32() const;
 
     QT_DEPRECATED QJSValue call(const QJSValue &thisObject = QJSValue(),
                       const QJSValueList &args = QJSValueList());

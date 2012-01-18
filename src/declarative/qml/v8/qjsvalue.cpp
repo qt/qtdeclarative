@@ -448,34 +448,6 @@ quint32 QJSValue::toUInt() const
     return d->toUInt32();
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Use toInt() instead.
-*/
-qint32 QJSValue::toInt32() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toInt32();
-}
-
-/*!
-  \obsolete
-
-  Use toUInt() instead.
-*/
-quint32 QJSValue::toUInt32() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->toUInt32();
-}
-
-#endif // QT_DEPRECATED
-
 /*!
   Returns the QVariant value of this QJSValue, if it can be
   converted to a QVariant; otherwise returns an invalid QVariant.
