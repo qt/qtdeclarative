@@ -102,6 +102,7 @@ void QQuickTextInput::componentComplete()
 
     QQuickImplicitSizeItem::componentComplete();
 
+    d->checkIsValid();
     d->updateLayout();
     updateCursorRectangle();
     if (d->cursorComponent && d->cursorComponent->isReady())
@@ -948,19 +949,31 @@ void QQuickTextInput::setValidator(QValidator* v)
         return;
 
     d->m_validator = v;
-    if (!d->hasAcceptableInput(d->m_text)) {
-        if (d->m_validInput) {
-            d->m_validInput = false;
-            emit acceptableInputChanged();
-        }
-    } else if (!d->m_validInput) {
-        d->m_validInput = true;
-        emit acceptableInputChanged();
-    }
+
+    if (isComponentComplete())
+        d->checkIsValid();
 
     emit validatorChanged();
 }
+
 #endif // QT_NO_VALIDATOR
+
+void QQuickTextInputPrivate::checkIsValid()
+{
+    Q_Q(QQuickTextInput);
+
+    ValidatorState state = hasAcceptableInput(m_text);
+    m_validInput = state != InvalidInput;
+    if (state != AcceptableInput) {
+        if (m_acceptableInput) {
+            m_acceptableInput = false;
+            emit q->acceptableInputChanged();
+        }
+    } else if (!m_acceptableInput) {
+        m_acceptableInput = true;
+        emit q->acceptableInputChanged();
+    }
+}
 
 /*!
     \qmlproperty string QtQuick2::TextInput::inputMask
@@ -998,7 +1011,7 @@ void QQuickTextInput::setInputMask(const QString &im)
 bool QQuickTextInput::hasAcceptableInput() const
 {
     Q_D(const QQuickTextInput);
-    return d->hasAcceptableInput(d->m_text);
+    return d->hasAcceptableInput(d->m_text) == QQuickTextInputPrivate::AcceptableInput;
 }
 
 /*!
@@ -3021,12 +3034,16 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     if (m_textDirty) {
         // do validation
         bool wasValidInput = m_validInput;
+        bool wasAcceptable = m_acceptableInput;
         m_validInput = true;
+        m_acceptableInput = true;
 #ifndef QT_NO_VALIDATOR
         if (m_validator) {
             QString textCopy = m_text;
             int cursorCopy = m_cursor;
-            m_validInput = (m_validator->validate(textCopy, cursorCopy) != QValidator::Invalid);
+            QValidator::State state = m_validator->validate(textCopy, cursorCopy);
+            m_validInput = state != QValidator::Invalid;
+            m_acceptableInput = state == QValidator::Acceptable;
             if (m_validInput) {
                 if (m_text != textCopy) {
                     internalSetText(textCopy, cursorCopy);
@@ -3053,6 +3070,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             if (m_modifiedState > m_undoState)
                 m_modifiedState = -1;
             m_validInput = true;
+            m_acceptableInput = wasAcceptable;
             m_textDirty = false;
         }
 
@@ -3065,7 +3083,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 
         updateDisplayText(alignmentChanged);
 
-        if (m_validInput != wasValidInput)
+        if (m_acceptableInput != wasAcceptable)
             emit q->acceptableInputChanged();
     }
     if (m_preeditDirty) {
@@ -3437,32 +3455,34 @@ bool QQuickTextInputPrivate::isValidInput(QChar key, QChar mask) const
 
     Otherwise returns false
 */
-bool QQuickTextInputPrivate::hasAcceptableInput(const QString &str) const
+QQuickTextInputPrivate::ValidatorState QQuickTextInputPrivate::hasAcceptableInput(const QString &str) const
 {
 #ifndef QT_NO_VALIDATOR
     QString textCopy = str;
     int cursorCopy = m_cursor;
-    if (m_validator && m_validator->validate(textCopy, cursorCopy)
-        != QValidator::Acceptable)
-        return false;
+    if (m_validator) {
+        QValidator::State state = m_validator->validate(textCopy, cursorCopy);
+        if (state != QValidator::Acceptable)
+            return ValidatorState(state);
+    }
 #endif
 
     if (!m_maskData)
-        return true;
+        return AcceptableInput;
 
     if (str.length() != m_maxLength)
-        return false;
+        return InvalidInput;
 
     for (int i=0; i < m_maxLength; ++i) {
         if (m_maskData[i].separator) {
             if (str.at(i) != m_maskData[i].maskChar)
-                return false;
+                return InvalidInput;
         } else {
             if (!isValidInput(str.at(i), m_maskData[i].maskChar))
-                return false;
+                return InvalidInput;
         }
     }
-    return true;
+    return AcceptableInput;
 }
 
 /*!

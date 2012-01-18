@@ -125,6 +125,7 @@ public:
         , m_preeditDirty(0)
         , m_selDirty(0)
         , m_validInput(1)
+        , m_acceptableInput(1)
         , m_blinkStatus(0)
         , m_passwordEchoEditing(false)
     {
@@ -251,6 +252,7 @@ public:
     uint m_preeditDirty : 1;
     uint m_selDirty : 1;
     uint m_validInput : 1;
+    uint m_acceptableInput : 1;
     uint m_blinkStatus : 1;
     uint m_passwordEchoEditing;
 
@@ -432,10 +434,23 @@ private:
 
     inline void separate() { m_separator = true; }
 
+    enum ValidatorState {
+#ifndef QT_NO_VALIDATOR
+        InvalidInput        = QValidator::Invalid,
+        IntermediateInput   = QValidator::Intermediate,
+        AcceptableInput     = QValidator::Acceptable
+#else
+        Invalid,
+        Intermediate,
+        Acceptable
+#endif
+    };
+
     // masking
     void parseInputMask(const QString &maskFields);
     bool isValidInput(QChar key, QChar mask) const;
-    bool hasAcceptableInput(const QString &text) const;
+    ValidatorState hasAcceptableInput(const QString &text) const;
+    void checkIsValid();
     QString maskString(uint pos, const QString &str, bool clear = false) const;
     QString clearString(uint pos, uint len) const;
     QString stripString(const QString &str) const;
