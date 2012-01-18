@@ -5384,11 +5384,11 @@ QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     , m_componentComplete(true)
     , m_wrapMode(QQuickShaderEffectSource::ClampToEdge)
     , m_format(QQuickShaderEffectSource::RGBA)
+    , m_name("source")
     , m_effectComponent(0)
     , m_effect(0)
     , m_effectSource(0)
 {
-    m_name = QLatin1String("source");
 }
 
 QQuickItemLayer::~QQuickItemLayer()
@@ -5509,7 +5509,7 @@ void QQuickItemLayer::activateEffect()
         m_effect->stackAfter(m_effectSource);
     }
     m_effect->setVisible(m_item->isVisible());
-    m_effect->setProperty(m_name.toLatin1(), qVariantFromValue<QObject *>(m_effectSource));
+    m_effect->setProperty(m_name, qVariantFromValue<QObject *>(m_effectSource));
 }
 
 void QQuickItemLayer::deactivateEffect()
@@ -5724,12 +5724,12 @@ void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
     \sa effect, ShaderEffect
  */
 
-void QQuickItemLayer::setName(const QString &name) {
+void QQuickItemLayer::setName(const QByteArray &name) {
     if (m_name == name)
         return;
     if (m_effect) {
-        m_effect->setProperty(m_name.toLatin1(), QVariant());
-        m_effect->setProperty(name.toLatin1(), qVariantFromValue<QObject *>(m_effectSource));
+        m_effect->setProperty(m_name, QVariant());
+        m_effect->setProperty(name, qVariantFromValue<QObject *>(m_effectSource));
     }
     m_name = name;
     emit nameChanged(name);

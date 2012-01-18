@@ -148,7 +148,7 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
     Q_PROPERTY(QQuickShaderEffectSource::WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
     Q_PROPERTY(QQuickShaderEffectSource::Format format READ format WRITE setFormat NOTIFY formatChanged)
-    Q_PROPERTY(QString samplerName READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QByteArray samplerName READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QDeclarativeComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
 public:
     QQuickItemLayer(QQuickItem *item);
@@ -178,8 +178,8 @@ public:
     QQuickShaderEffectSource::WrapMode wrapMode() const { return m_wrapMode; }
     void setWrapMode(QQuickShaderEffectSource::WrapMode mode);
 
-    QString name() const { return m_name; }
-    void setName(const QString &name);
+    QByteArray name() const { return m_name; }
+    void setName(const QByteArray &name);
 
     QDeclarativeComponent *effect() const { return m_effectComponent; }
     void setEffect(QDeclarativeComponent *effect);
@@ -202,7 +202,7 @@ signals:
     void sizeChanged(const QSize &size);
     void mipmapChanged(bool mipmap);
     void wrapModeChanged(QQuickShaderEffectSource::WrapMode mode);
-    void nameChanged(const QString &name);
+    void nameChanged(const QByteArray &name);
     void effectChanged(QDeclarativeComponent *component);
     void smoothChanged(bool smooth);
     void formatChanged(QQuickShaderEffectSource::Format format);
@@ -223,7 +223,7 @@ private:
     QQuickShaderEffectSource::Format m_format;
     QSize m_size;
     QRectF m_sourceRect;
-    QString m_name;
+    QByteArray m_name;
     QDeclarativeComponent *m_effectComponent;
     QQuickItem *m_effect;
     QQuickShaderEffectSource *m_effectSource;
