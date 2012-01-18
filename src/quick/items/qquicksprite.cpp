@@ -174,6 +174,18 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty bool QtQuick2::Sprite::randomStart
+
+    If true, then the animation will start its first animation with a random amount of its duration skipped.
+    This allows them to not look like they all just started when the animation begins.
+
+    This only affects the very first animation played. Transitioning to another animation, or the same
+    animation again, will not trigger this.
+
+    Default is false.
+*/
+
+/*!
     \qmlproperty bool QtQuick2::Sprite::frameSync
 
     If true, then the animation will have no duration. Instead, the animation will advance

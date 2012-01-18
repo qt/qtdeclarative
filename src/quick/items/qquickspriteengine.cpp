@@ -75,6 +75,7 @@ QT_BEGIN_NAMESPACE
     state normally does.
 */
 
+static const int NINF = -1000000;//magic number for random start time - should be more negative than a single realistic animation duration
 /* TODO:
    make sharable?
    solve the state data initialization/transfer issue so as to not need to make friends
@@ -380,6 +381,10 @@ void QQuickStochasticEngine::start(int index, int state)
         return;
     m_things[index] = state;
     m_duration[index] = m_states[state]->variedDuration();
+    if (m_states[state]->randomStart())
+        m_startTimes[index] = NINF;
+    else
+        m_startTimes[index] = 0;
     m_goals[index] = -1;
     restart(index);
 }
@@ -388,16 +393,19 @@ void QQuickStochasticEngine::stop(int index)
 {
     if (index >= m_things.count())
         return;
-    //Will never change until start is called again with a new state - this is not a 'pause'
+    //Will never change until start is called again with a new state (or manually advanced) - this is not a 'pause'
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
 }
 
 void QQuickStochasticEngine::restart(int index)
 {
+    bool randomStart = (m_startTimes[index] == NINF);
     m_startTimes[index] = m_timeOffset;
     if (m_addAdvance)
         m_startTimes[index] += m_advanceTime.elapsed();
+    if (randomStart)
+        m_startTimes[index] -= qrand() % m_duration[index];
     int time = m_duration[index] + m_startTimes[index];
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
@@ -407,13 +415,24 @@ void QQuickStochasticEngine::restart(int index)
 
 void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and handle pseudostates
 {
+    bool randomStart = (m_startTimes[index] == NINF);
     if (m_sprites[m_things[index]]->frameSync()) {//Manually advanced
         m_startTimes[index] = 0;
+        if (randomStart && m_sprites[m_things[index]]->m_generatedCount)
+            m_startTimes[index] += qrand() % m_sprites[m_things[index]]->m_generatedCount;
     } else {
         m_startTimes[index] = m_timeOffset;
         if (m_addAdvance)
             m_startTimes[index] += m_advanceTime.elapsed();
+        if (randomStart)
+            m_startTimes[index] -= qrand() % m_duration[index];
         int time = spriteDuration(index) + m_startTimes[index];
+        if (randomStart) {
+            int curTime = m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0);
+            while (time < curTime) //Fast forward through psuedostates as needed
+                time += spriteDuration(index);
+        }
+
         for (int i=0; i<m_stateUpdates.count(); i++)
             m_stateUpdates[i].second.removeAll(index);
         addToUpdateList(time, index);

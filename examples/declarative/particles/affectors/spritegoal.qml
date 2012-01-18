@@ -38,9 +38,8 @@
 **
 ****************************************************************************/
 
-import QtQuick.Particles 2.0
-import QtQuick.Particles 2.0 as Qlp
 import QtQuick 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: root
@@ -108,14 +107,13 @@ Item {
                 source: "../images/meteor.png"
                 frames: 35
                 duration: 40
-                speedModifiesDuration: -0.1
+                randomStart: true
                 to: {"explode":0, "spinning":1}
             },Sprite {
                 name: "explode"
                 source: "../images/_explo.png"
                 frames: 22
                 duration: 40
-                speedModifiesDuration: -0.1
                 to: {"nullFrame":1}
             },Sprite {//Not sure if this is needed, but seemed easiest
                 name: "nullFrame"

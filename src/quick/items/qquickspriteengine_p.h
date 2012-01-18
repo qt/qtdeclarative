@@ -61,6 +61,8 @@ class Q_AUTOTEST_EXPORT QQuickStochasticState : public QObject //Currently for i
     Q_OBJECT
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
+    //Note than manually advanced sprites need to query this variable and implement own behaviour for it
+    Q_PROPERTY(bool randomStart READ randomStart WRITE setRandomStart NOTIFY randomStartChanged)
     Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
@@ -68,6 +70,8 @@ public:
     QQuickStochasticState(QObject* parent = 0)
         : QObject(parent)
         , m_duration(1000)
+        , m_durationVariation(0)
+        , m_randomStart(false)
     {
     }
 
@@ -99,6 +103,11 @@ public:
                 - m_durationVariation);
     }
 
+    bool randomStart() const
+    {
+        return m_randomStart;
+    }
+
 signals:
     void durationChanged(int arg);
 
@@ -109,6 +118,8 @@ signals:
     void durationVariationChanged(int arg);
 
     void entered();//### Just playing around - don't expect full state API
+
+    void randomStartChanged(bool arg);
 
 public slots:
     void setDuration(int arg)
@@ -143,6 +154,14 @@ public slots:
         }
     }
 
+    void setRandomStart(bool arg)
+    {
+        if (m_randomStart != arg) {
+            m_randomStart = arg;
+            emit randomStartChanged(arg);
+        }
+    }
+
 private:
     QString m_name;
     QVariantMap m_to;
@@ -150,6 +169,7 @@ private:
     int m_durationVariation;
 
     friend class QQuickStochasticEngine;
+    bool m_randomStart;
 };
 
 class Q_AUTOTEST_EXPORT QQuickStochasticEngine : public QObject
