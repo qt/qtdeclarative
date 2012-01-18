@@ -280,6 +280,7 @@ private:
     int m_generatedCount;
     int m_framesPerRow;
     int m_rowY;
+    int m_rowStartX;
 
     QUrl m_source;
     bool m_reverse;

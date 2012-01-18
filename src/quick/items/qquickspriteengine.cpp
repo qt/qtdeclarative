@@ -322,13 +322,14 @@ QImage QQuickSpriteEngine::assembledImage()
         if (img.height() == frameHeight && img.width() <  maxSize){//Simple case
             p.drawImage(0,y,img);
             state->m_rowY = y;
+            state->m_rowStartX = state->m_frameX;//In case it was offset, but we took the simple route of not chopping out the other bits
             y += frameHeight;
         }else{//Chopping up image case
             state->m_framesPerRow = image.width()/frameWidth;
             state->m_rowY = y;
             int x = 0;
-            int curX = 0;
-            int curY = 0;
+            int curX = state->m_frameX;
+            int curY = state->m_frameY;
             int framesLeft = state->frames();
             while (framesLeft > 0){
                 if (image.width() - x + curX <= img.width()){//finish a row in image (dest)

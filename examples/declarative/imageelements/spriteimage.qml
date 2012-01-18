@@ -62,7 +62,7 @@ Item {
         goalSprite: ""
         Sprite{
             name: "still"
-            source: "content/Bear0.png"
+            source: "content/BearSheet.png"
             frames: 1
             frameWidth: 256
             frameHeight: 256
@@ -71,8 +71,10 @@ Item {
         }
         Sprite{
             name: "blink"
-            source: "content/BearB.png"
+            source: "content/BearSheet.png"
             frames: 3
+            frameX: 256
+            frameY: 1536
             frameWidth: 256
             frameHeight: 256
             frameDuration: 100
@@ -80,8 +82,10 @@ Item {
         }
         Sprite{
             name: "floating"
-            source: "content/Bear1.png"
+            source: "content/BearSheet.png"
             frames: 9
+            frameX: 0
+            frameY: 0
             frameWidth: 256
             frameHeight: 256
             frameDuration: 160
@@ -89,8 +93,10 @@ Item {
         }
         Sprite{
             name: "flailing"
-            source: "content/Bear2.png"
+            source: "content/BearSheet.png"
             frames: 8
+            frameX: 0
+            frameY: 768
             frameWidth: 256
             frameHeight: 256
             frameDuration: 160
@@ -98,8 +104,9 @@ Item {
         }
         Sprite{
             name: "falling"
-            source: "content/Bear3.png"
+            source: "content/BearSheet.png"
             frames: 5
+            frameY: 1280
             frameWidth: 256
             frameHeight: 256
             frameDuration: 160
