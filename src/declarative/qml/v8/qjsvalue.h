@@ -113,7 +113,7 @@ public:
     bool deleteProperty(const QString &name);
 
     bool isCallable() const;
-    QJSValue call(const QJSValueList &args);
+    QJSValue call(const QJSValueList &args = QJSValueList());
     QJSValue callWithInstance(const QJSValue &instance, const QJSValueList &args = QJSValueList());
     QJSValue callAsConstructor(const QJSValueList &args = QJSValueList());
 
@@ -121,10 +121,6 @@ public:
     QT_DEPRECATED QJSEngine *engine() const;
 
     QT_DEPRECATED bool isFunction() const;
-
-    QT_DEPRECATED QJSValue call(const QJSValue &thisObject = QJSValue(),
-                      const QJSValueList &args = QJSValueList());
-    QT_DEPRECATED QJSValue construct(const QJSValueList &args = QJSValueList());
 #endif
 
 private:

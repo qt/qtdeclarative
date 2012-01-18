@@ -558,30 +558,6 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
 /*!
   \obsolete
 
-  Use callWithInstance() instead.
-*/
-QJSValue QJSValue::call(const QJSValue& thisObject, const QJSValueList& args)
-{
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->call(QJSValuePrivate::get(thisObject), args);
-}
-
-/*!
-  \obsolete
-
-  Use callAsConstructor() instead.
-*/
-QJSValue QJSValue::construct(const QJSValueList &args)
-{
-    Q_D(QJSValue);
-    QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->callAsConstructor(args));
-}
-
-/*!
-  \obsolete
-
   Returns the QJSEngine that created this QJSValue,
   or 0 if this QJSValue is invalid or the value is not
   associated with a particular engine.
