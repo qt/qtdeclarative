@@ -453,7 +453,7 @@ void tst_QJSEngine::newFunction()
         QCOMPARE(fun.prototype().strictlyEquals(eng.evaluate("Function.prototype")), true);
 
         QCOMPARE(fun.call().isNull(), true);
-        QCOMPARE(fun.construct().isObject(), true);
+        QCOMPARE(fun.callAsConstructor().isObject(), true);
     }
 }
 
@@ -478,7 +478,7 @@ void tst_QJSEngine::newFunctionWithArg()
         QCOMPARE(fun.prototype().strictlyEquals(eng.evaluate("Function.prototype")), true);
 
         QCOMPARE(fun.call().isNull(), true);
-        QCOMPARE(fun.construct().isObject(), true);
+        QCOMPARE(fun.callAsConstructor().isObject(), true);
     }
 }
 
@@ -502,7 +502,7 @@ void tst_QJSEngine::newFunctionWithProto()
         QCOMPARE(proto.propertyFlags("constructor"), QScriptValue::SkipInEnumeration);
 
         QCOMPARE(fun.call().isNull(), true);
-        QCOMPARE(fun.construct().isObject(), true);
+        QCOMPARE(fun.callAsConstructor().isObject(), true);
     }
     // whether the return value is correct
     {
@@ -841,7 +841,7 @@ void tst_QJSEngine::jsRegExp()
     QJSValue r4 = rxCtor.call(QJSValueList() << "foo" << "gim");
     QVERIFY(r4.isRegExp());
 
-    QJSValue r5 = rxCtor.construct(QJSValueList() << r);
+    QJSValue r5 = rxCtor.callAsConstructor(QJSValueList() << r);
     QVERIFY(r5.isRegExp());
     QCOMPARE(r5.toString(), QString::fromLatin1("/foo/gim"));
     // In JSC, constructing a RegExp from another produces the same identical object.
@@ -849,7 +849,7 @@ void tst_QJSEngine::jsRegExp()
     QVERIFY(!r5.strictlyEquals(r));
 
     QEXPECT_FAIL("", "V8 and jsc ignores invalid flags", Continue); //https://bugs.webkit.org/show_bug.cgi?id=41614
-    QJSValue r6 = rxCtor.construct(QJSValueList() << "foo" << "bar");
+    QJSValue r6 = rxCtor.callAsConstructor(QJSValueList() << "foo" << "bar");
     QVERIFY(r6.isError());
     // QVERIFY(r6.toString().contains(QString::fromLatin1("SyntaxError"))); // Invalid regular expression flag
 
@@ -865,15 +865,15 @@ void tst_QJSEngine::jsRegExp()
     QVERIFY(r8.isRegExp());
     QCOMPARE(r8.toString(), QString::fromLatin1("/foo/gim"));
 
-    QJSValue r9 = rxCtor.construct();
+    QJSValue r9 = rxCtor.callAsConstructor();
     QVERIFY(r9.isRegExp());
     QCOMPARE(r9.toString(), QString::fromLatin1("/(?:)/"));
 
-    QJSValue r10 = rxCtor.construct(QJSValueList() << "" << "gim");
+    QJSValue r10 = rxCtor.callAsConstructor(QJSValueList() << "" << "gim");
     QVERIFY(r10.isRegExp());
     QCOMPARE(r10.toString(), QString::fromLatin1("/(?:)/gim"));
 
-    QJSValue r11 = rxCtor.construct(QJSValueList() << "{1.*}" << "g");
+    QJSValue r11 = rxCtor.callAsConstructor(QJSValueList() << "{1.*}" << "g");
     QVERIFY(r11.isRegExp());
     QCOMPARE(r11.toString(), QString::fromLatin1("/{1.*}/g"));
 }
@@ -1208,14 +1208,14 @@ void tst_QJSEngine::newQMetaObject()
     QCOMPARE(qclass.prototype().isObject(), true);
     QCOMPARE(qclass2.prototype().isObject(), true);
 
-    QScriptValue instance = qclass.construct();
+    QScriptValue instance = qclass.callAsConstructor();
     QCOMPARE(instance.isQObject(), true);
     QCOMPARE(instance.toQObject()->metaObject(), qclass.toQMetaObject());
     QEXPECT_FAIL("", "FIXME:  newQMetaObject not implemented properly yet", Abort);
     QVERIFY(instance.instanceOf(qclass));
     QVERIFY(instanceofJS(instance, qclass).strictlyEquals(true));
 
-    QScriptValue instance2 = qclass2.construct();
+    QScriptValue instance2 = qclass2.callAsConstructor();
     QCOMPARE(instance2.isQObject(), true);
     QCOMPARE(instance2.toQObject()->metaObject(), qclass2.toQMetaObject());
     QVERIFY(instance2.instanceOf(qclass2));
@@ -1225,7 +1225,7 @@ void tst_QJSEngine::newQMetaObject()
 
     QScriptValueList args;
     args << instance;
-    QScriptValue instance3 = qclass.construct(args);
+    QScriptValue instance3 = qclass.callAsConstructor(args);
     QCOMPARE(instance3.isQObject(), true);
     QCOMPARE(instance3.toQObject()->parent(), instance.toQObject());
     QVERIFY(instance3.instanceOf(qclass));
@@ -1272,7 +1272,7 @@ void tst_QJSEngine::newQMetaObject()
         QVERIFY(instanceofJS(ret, qclass).strictlyEquals(false));
     }
     {
-        QScriptValue ret = qclass3.construct();
+        QScriptValue ret = qclass3.callAsConstructor();
         QVERIFY(ret.isObject());
         QVERIFY(ret.property("isCalledAsConstructor").isBool());
         QVERIFY(ret.property("isCalledAsConstructor").toBool());
@@ -1283,14 +1283,14 @@ void tst_QJSEngine::newQMetaObject()
     }
 
     // subclassing
-    qclass2.setProperty("prototype", qclass.construct());
-    QVERIFY(qclass2.construct().instanceOf(qclass));
-    QVERIFY(instanceofJS(qclass2.construct(), qclass).strictlyEquals(true));
+    qclass2.setProperty("prototype", qclass.callAsConstructor());
+    QVERIFY(qclass2.callAsConstructor().instanceOf(qclass));
+    QVERIFY(instanceofJS(qclass2.callAsConstructor(), qclass).strictlyEquals(true));
 
     // with meta-constructor
     QScriptValue qclass4 = eng.newQMetaObject(&QObject::staticMetaObject);
     {
-        QScriptValue inst = qclass4.construct();
+        QScriptValue inst = qclass4.callAsConstructor();
         QVERIFY(inst.isQObject());
         QVERIFY(inst.toQObject() != 0);
         QCOMPARE(inst.toQObject()->parent(), (QObject*)0);
@@ -1300,7 +1300,7 @@ void tst_QJSEngine::newQMetaObject()
         QVERIFY(instanceofJS(inst, qclass3).strictlyEquals(false));
     }
     {
-        QScriptValue inst = qclass4.construct(QScriptValueList() << eng.newQObject(this));
+        QScriptValue inst = qclass4.callAsConstructor(QScriptValueList() << eng.newQObject(this));
         QVERIFY(inst.isQObject());
         QVERIFY(inst.toQObject() != 0);
         QCOMPARE(inst.toQObject()->parent(), (QObject*)this);
@@ -2896,7 +2896,7 @@ static QScriptValue recurse(QScriptContext *ctx, QScriptEngine *eng)
 static QScriptValue recurse2(QScriptContext *ctx, QScriptEngine *eng)
 {
     Q_UNUSED(eng);
-    return ctx->callee().construct();
+    return ctx->callee().callAsConstructor();
 }
 
 void tst_QJSEngine::infiniteRecursion()
@@ -2920,7 +2920,7 @@ void tst_QJSEngine::infiniteRecursion()
     }
     {
         QScriptValue fun = eng.newFunction(recurse2);
-        QScriptValue ret = fun.construct();
+        QScriptValue ret = fun.callAsConstructor();
         QCOMPARE(ret.isError(), true);
         QCOMPARE(ret.toString(), stackOverflowError);
     }
@@ -3236,7 +3236,7 @@ void tst_QJSEngine::processEventsWhileRunning_function()
         QCOMPARE(eng.processEventsInterval(), 100);
 
         if (x) script.call();
-        else script.construct();
+        else script.callAsConstructor();
 
         QVERIFY(!eng.hasUncaughtException());
         QVERIFY(receiver.received);
@@ -6456,13 +6456,13 @@ void tst_QJSEngine::scriptValueFromQMetaObject()
         QCOMPARE(meta.toQMetaObject(), &QScriptEngine::staticMetaObject);
         // Because of missing Q_SCRIPT_DECLARE_QMETAOBJECT() for QScriptEngine.
         QEXPECT_FAIL("", "FIXME: because construct never returns invalid values", Continue);
-        QVERIFY(!meta.construct().isValid());
+        QVERIFY(!meta.callAsConstructor().isValid());
     }
     {
         QScriptValue meta = eng.scriptValueFromQMetaObject<QStandardItemModel>();
         QVERIFY(meta.isQMetaObject());
         QCOMPARE(meta.toQMetaObject(), &QStandardItemModel::staticMetaObject);
-        QScriptValue obj = meta.construct(QScriptValueList() << eng.newQObject(&eng));
+        QScriptValue obj = meta.callAsConstructor(QScriptValueList() << eng.newQObject(&eng));
         QVERIFY(obj.isQObject());
         QStandardItemModel *model = qobject_cast<QStandardItemModel*>(obj.toQObject());
         QVERIFY(model != 0);

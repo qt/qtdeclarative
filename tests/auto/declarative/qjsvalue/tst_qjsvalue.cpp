@@ -3164,7 +3164,7 @@ void tst_QJSValue::construct_nonFunction_data()
 void tst_QJSValue::construct_nonFunction()
 {
     QFETCH(QJSValue, value);
-    QVERIFY(!value.construct().isValid());
+    QVERIFY(!value.callAsConstructor().isValid());
 }
 
 void tst_QJSValue::construct_simple()
@@ -3172,7 +3172,7 @@ void tst_QJSValue::construct_simple()
     QJSEngine eng;
     QJSValue fun = eng.evaluate("(function () { this.foo = 123; })");
     QVERIFY(fun.isCallable());
-    QJSValue ret = fun.construct();
+    QJSValue ret = fun.callAsConstructor();
     QVERIFY(ret.isObject());
     QVERIFY(ret.instanceOf(fun));
     QCOMPARE(ret.property("foo").toInt(), 123);
@@ -3184,7 +3184,7 @@ void tst_QJSValue::construct_newObjectJS()
     // returning a different object overrides the default-constructed one
     QJSValue fun = eng.evaluate("(function () { return { bar: 456 }; })");
     QVERIFY(fun.isCallable());
-    QJSValue ret = fun.construct();
+    QJSValue ret = fun.callAsConstructor();
     QVERIFY(ret.isObject());
     QVERIFY(!ret.instanceOf(fun));
     QCOMPARE(ret.property("bar").toInt(), 456);
@@ -3195,7 +3195,7 @@ void tst_QJSValue::construct_undefined()
 {
     QScriptEngine eng;
     QJSValue fun = eng.newFunction(ctorReturningUndefined);
-    QJSValue ret = fun.construct();
+    QJSValue ret = fun.callAsConstructor();
     QVERIFY(ret.isObject());
     QVERIFY(ret.instanceOf(fun));
     QCOMPARE(ret.property("foo").toInt(), 123);
@@ -3205,7 +3205,7 @@ void tst_QJSValue::construct_newObjectCpp()
 {
     QScriptEngine eng;
     QJSValue fun = eng.newFunction(ctorReturningNewObject);
-    QJSValue ret = fun.construct();
+    QJSValue ret = fun.callAsConstructor();
     QVERIFY(ret.isObject());
     QVERIFY(!ret.instanceOf(fun));
     QCOMPARE(ret.property("bar").toInt(), 456);
@@ -3219,7 +3219,7 @@ void tst_QJSValue::construct_arg()
     QCOMPARE(Number.isCallable(), true);
     QJSValueList args;
     args << QJSValue(&eng, 123);
-    QJSValue ret = Number.construct(args);
+    QJSValue ret = Number.callAsConstructor(args);
     QCOMPARE(ret.isObject(), true);
     QCOMPARE(ret.toNumber(), args.at(0).toNumber());
 }
@@ -3231,7 +3231,7 @@ void tst_QJSValue::construct_proto()
     QJSValue fun = eng.evaluate("(function() { return this.__proto__; })");
     QCOMPARE(fun.isCallable(), true);
     QCOMPARE(fun.property("prototype").isObject(), true);
-    QJSValue ret = fun.construct();
+    QJSValue ret = fun.callAsConstructor();
     QCOMPARE(fun.property("prototype").strictlyEquals(ret), true);
 }
 
@@ -3241,7 +3241,7 @@ void tst_QJSValue::construct_returnInt()
     // test that we return the new object even if a non-object value is returned from the function
     QJSValue fun = eng.evaluate("(function() { return 123; })");
     QCOMPARE(fun.isCallable(), true);
-    QJSValue ret = fun.construct();
+    QJSValue ret = fun.callAsConstructor();
     QCOMPARE(ret.isObject(), true);
 }
 
@@ -3250,7 +3250,7 @@ void tst_QJSValue::construct_throw()
     QJSEngine eng;
     QJSValue fun = eng.evaluate("(function() { throw new Error('foo'); })");
     QCOMPARE(fun.isCallable(), true);
-    QJSValue ret = fun.construct();
+    QJSValue ret = fun.callAsConstructor();
     QCOMPARE(ret.isError(), true);
     QCOMPARE(eng.hasUncaughtException(), true);
     QVERIFY(ret.strictlyEquals(eng.uncaughtException()));
@@ -3267,7 +3267,7 @@ void tst_QJSValue::construct()
     array.setProperty(1, QJSValue(&eng, 456.0));
     array.setProperty(2, QJSValue(&eng, 789.0));
     // construct with single array object as arguments
-    QJSValue ret = fun.construct(array);
+    QJSValue ret = fun.callAsConstructor(array);
     QVERIFY(!eng.hasUncaughtException());
     QVERIFY(ret.isValid());
     QVERIFY(ret.isObject());
@@ -3275,25 +3275,25 @@ void tst_QJSValue::construct()
     QCOMPARE(ret.property(1).strictlyEquals(array.property(1)), true);
     QCOMPARE(ret.property(2).strictlyEquals(array.property(2)), true);
     // construct with arguments object as arguments
-    QJSValue ret2 = fun.construct(ret);
+    QJSValue ret2 = fun.callAsConstructor(ret);
     QCOMPARE(ret2.property(0).strictlyEquals(ret.property(0)), true);
     QCOMPARE(ret2.property(1).strictlyEquals(ret.property(1)), true);
     QCOMPARE(ret2.property(2).strictlyEquals(ret.property(2)), true);
     // construct with null as arguments
-    QJSValue ret3 = fun.construct(eng.nullValue());
+    QJSValue ret3 = fun.callAsConstructor(eng.nullValue());
     QCOMPARE(ret3.isError(), false);
     QCOMPARE(ret3.property("length").isNumber(), true);
     QCOMPARE(ret3.property("length").toNumber(), 0.0);
     // construct with undefined as arguments
-    QJSValue ret4 = fun.construct(eng.undefinedValue());
+    QJSValue ret4 = fun.callAsConstructor(eng.undefinedValue());
     QCOMPARE(ret4.isError(), false);
     QCOMPARE(ret4.property("length").isNumber(), true);
     QCOMPARE(ret4.property("length").toNumber(), 0.0);
     // construct with something else as arguments
-    QJSValue ret5 = fun.construct(QJSValue(&eng, 123.0));
+    QJSValue ret5 = fun.callAsConstructor(QJSValue(&eng, 123.0));
     QCOMPARE(ret5.isError(), true);
     // construct with a non-array object as arguments
-    QJSValue ret6 = fun.construct(eng.globalObject());
+    QJSValue ret6 = fun.callAsConstructor(eng.globalObject());
     QVERIFY(ret6.isError());
     QCOMPARE(ret6.toString(), QString::fromLatin1("TypeError: Arguments must be an array"));
 }
@@ -3305,10 +3305,10 @@ void tst_QJSValue::construct_twoEngines()
     QJSEngine otherEngine;
     QJSValue ctor = engine.evaluate("(function (a, b) { this.foo = 123; })");
     QJSValue arg(&otherEngine, 124567);
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::construct() failed: cannot construct function with argument created in a different engine");
-    QVERIFY(!ctor.construct(QJSValueList() << arg).isValid());
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::construct() failed: cannot construct function with argument created in a different engine");
-    QVERIFY(!ctor.construct(QJSValueList() << arg << otherEngine.newObject()).isValid());
+    QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
+    QVERIFY(!ctor.callAsConstructor(QJSValueList() << arg).isValid());
+    QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
+    QVERIFY(!ctor.callAsConstructor(QJSValueList() << arg << otherEngine.newObject()).isValid());
 }
 
 void tst_QJSValue::construct_constructorThrowsPrimitive()
@@ -3318,7 +3318,7 @@ void tst_QJSValue::construct_constructorThrowsPrimitive()
     QVERIFY(fun.isCallable());
     // construct(QJSValueList)
     {
-        QJSValue ret = fun.construct();
+        QJSValue ret = fun.callAsConstructor();
         QVERIFY(ret.isNumber());
         QCOMPARE(ret.toNumber(), 123.0);
         QVERIFY(eng.hasUncaughtException());
@@ -3328,7 +3328,7 @@ void tst_QJSValue::construct_constructorThrowsPrimitive()
 #if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
     // construct(QJSValue)
     {
-        QJSValue ret = fun.construct(eng.newArray());
+        QJSValue ret = fun.callAsConstructor(eng.newArray());
         QVERIFY(ret.isNumber());
         QCOMPARE(ret.toNumber(), 123.0);
         QVERIFY(eng.hasUncaughtException());

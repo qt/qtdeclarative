@@ -138,9 +138,9 @@ public:
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, const QJSValueList& args);
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, const QJSValue& arguments);
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, int argc, v8::Handle< v8::Value >* argv);
-    inline QScriptPassPointer<QJSValuePrivate> construct(int argc, v8::Handle<v8::Value> *argv);
-    inline QScriptPassPointer<QJSValuePrivate> construct(const QJSValueList& args);
-    inline QScriptPassPointer<QJSValuePrivate> construct(const QJSValue& arguments);
+    inline QScriptPassPointer<QJSValuePrivate> callAsConstructor(int argc, v8::Handle<v8::Value> *argv);
+    inline QScriptPassPointer<QJSValuePrivate> callAsConstructor(const QJSValueList& args);
+    inline QScriptPassPointer<QJSValuePrivate> callAsConstructor(const QJSValue& arguments);
 
     inline bool assignEngine(QV8Engine *engine);
     inline QV8Engine *engine() const;

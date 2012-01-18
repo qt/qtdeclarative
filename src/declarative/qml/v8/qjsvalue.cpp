@@ -73,7 +73,7 @@
 
   Function objects (objects for which isCallable()) returns true) can
   be invoked by calling call(). Constructor functions can be used to
-  construct new objects by calling construct().
+  construct new objects by calling callAsConstructor().
 
   Use equals() or strictlyEquals() to compare a QJSValue to another.
 
@@ -710,7 +710,7 @@ QVariant QJSValue::toVariant() const
   QJSEngine::hasUncaughtException() to determine if an exception
   occurred.
 
-  \sa isCallable(), callWithInstance()
+  \sa isCallable(), callWithInstance(), callAsConstructor()
 */
 QJSValue QJSValue::call(const QJSValueList &args)
 {
@@ -738,8 +738,6 @@ QJSValue QJSValue::call(const QJSValueList &args)
   QJSEngine::hasUncaughtException() to determine if an exception
   occurred.
 
-  \snippet doc/src/snippets/code/src_script_qjsvalue.cpp 1
-
   \sa call()
 */
 QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList &args)
@@ -747,6 +745,31 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     Q_D(QJSValue);
     QScriptIsolate api(d->engine());
     return d->call(QJSValuePrivate::get(instance), args);
+}
+
+/*!
+  Creates a new \c{Object} and calls this QJSValue as a
+  constructor, using the created object as the `this' object and
+  passing \a args as arguments. If the return value from the
+  constructor call is an object, then that object is returned;
+  otherwise the default constructed object is returned.
+
+  If this QJSValue is not a function, callAsConstructor() does
+  nothing and returns an undefined QJSValue.
+
+  Calling this function can cause an exception to occur in the
+  script engine; in that case, the value that was thrown
+  (typically an \c{Error} object) is returned. You can call
+  QJSEngine::hasUncaughtException() to determine if an exception
+  occurred.
+
+  \sa call(), QJSEngine::newObject()
+*/
+QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return QJSValuePrivate::get(d->callAsConstructor(args));
 }
 
 /*!
@@ -762,28 +785,15 @@ QJSValue QJSValue::call(const QJSValue& thisObject, const QJSValueList& args)
 }
 
 /*!
-  Creates a new \c{Object} and calls this QJSValue as a
-  constructor, using the created object as the `this' object and
-  passing \a args as arguments. If the return value from the
-  constructor call is an object, then that object is returned;
-  otherwise the default constructed object is returned.
+  \obsolete
 
-  If this QJSValue is not a function, construct() does nothing
-  and returns an invalid QJSValue.
-
-  Calling construct() can cause an exception to occur in the script
-  engine; in that case, construct() returns the value that was thrown
-  (typically an \c{Error} object). You can call
-  QJSEngine::hasUncaughtException() to determine if an exception
-  occurred.
-
-  \sa call(), QJSEngine::newObject()
+  Use callAsConstructor() instead.
 */
 QJSValue QJSValue::construct(const QJSValueList &args)
 {
     Q_D(QJSValue);
     QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->construct(args));
+    return QJSValuePrivate::get(d->callAsConstructor(args));
 }
 
 /*!
