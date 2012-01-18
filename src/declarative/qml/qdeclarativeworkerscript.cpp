@@ -478,6 +478,10 @@ QDeclarativeWorkerScriptEngine::~QDeclarativeWorkerScriptEngine()
     QCoreApplication::postEvent(d, new QEvent((QEvent::Type)QDeclarativeWorkerScriptEnginePrivate::WorkerDestroyEvent));
     d->m_lock.unlock();
 
+    //We have to force to cleanup the main thread's event queue here
+    //to make sure the main GUI release all pending locks/wait conditions which
+    //some worker script/agent are waiting for (QDeclarativeListModelWorkerAgent::sync() for example).
+    QCoreApplication::processEvents();
     wait();
     d->deleteLater();
 }

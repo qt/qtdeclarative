@@ -92,6 +92,13 @@ QDeclarativeListModelWorkerAgent::QDeclarativeListModelWorkerAgent(QDeclarativeL
 {
 }
 
+QDeclarativeListModelWorkerAgent::~QDeclarativeListModelWorkerAgent()
+{
+    mutex.lock();
+    syncDone.wakeAll();
+    mutex.unlock();
+}
+
 void QDeclarativeListModelWorkerAgent::setV8Engine(QV8Engine *eng)
 {
     m_copy->m_engine = eng;
