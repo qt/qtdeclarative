@@ -207,8 +207,11 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
 
     if (transition) {
         QList<QDeclarativeProperty> touched;
+        QDeclarativeTransitionInstance *oldInstance = d->transitionInstance;
         d->transitionInstance = transition->prepare(applyList, touched, this);
         d->transitionInstance->start();
+        if (oldInstance && oldInstance != d->transitionInstance)
+            delete oldInstance;
 
         // Modify the action list to remove actions handled in the transition
         for (int ii = 0; ii < applyList.count(); ++ii) {
@@ -268,12 +271,8 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
 
 void QDeclarativeTransitionManager::cancel()
 {
-    if (d->transitionInstance) {
-        if (d->transitionInstance->isRunning())
-            d->transitionInstance->stop();
-        delete d->transitionInstance;
-        d->transitionInstance = 0;
-    }
+    if (d->transitionInstance && d->transitionInstance->isRunning())
+        d->transitionInstance->stop();
 
     for(int i = 0; i < d->bindingsList.count(); ++i) {
         QDeclarativeAction action = d->bindingsList[i];
