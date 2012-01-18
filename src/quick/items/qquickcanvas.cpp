@@ -1679,7 +1679,7 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
 
         if (item->clip()) {
             Q_ASSERT(itemPriv->clipNode() == 0);
-            itemPriv->extra.value().clipNode = new QQuickDefaultClipNode(item->boundingRect());
+            itemPriv->extra.value().clipNode = new QQuickDefaultClipNode(item->clipRect());
             itemPriv->clipNode()->update();
 
             if (child)
@@ -1771,7 +1771,7 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
     }
 
     if ((dirty & QQuickItemPrivate::Size) && itemPriv->clipNode()) {
-        itemPriv->clipNode()->setRect(item->boundingRect());
+        itemPriv->clipNode()->setRect(item->clipRect());
         itemPriv->clipNode()->update();
     }
 

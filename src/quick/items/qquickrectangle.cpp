@@ -553,4 +553,9 @@ QRectF QQuickRectangle::boundingRect() const
                   d->width + 2 * d->penMargin, d->height + 2 * d->penMargin);
 }
 
+QRectF QQuickRectangle::clipRect() const
+{
+    return QQuickRectangle::boundingRect();
+}
+
 QT_END_NAMESPACE
