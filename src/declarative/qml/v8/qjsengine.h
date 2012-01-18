@@ -88,7 +88,6 @@ public:
     QT_DEPRECATED QJSValue uncaughtException() const;
     QT_DEPRECATED void clearExceptions();
 
-    QT_DEPRECATED QJSValue nullValue();
     QT_DEPRECATED QJSValue undefinedValue();
 #endif
 

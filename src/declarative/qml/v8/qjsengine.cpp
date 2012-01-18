@@ -314,24 +314,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 /*!
   \obsolete
 
-  Returns a QJSValue of the primitive type Null.
-
-  \sa nullValue()
-*/
-QJSValue QJSEngine::nullValue()
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
-    v8::HandleScope handleScope;
-    return QJSValuePrivate::get(new QJSValuePrivate(d, v8::Null()));
-}
-
-/*!
-  \obsolete
-
   Returns a QJSValue of the primitive type Undefined.
-
-  \sa nullValue()
 */
 QJSValue QJSEngine::undefinedValue()
 {
@@ -380,7 +363,7 @@ QJSValue QJSEngine::newArray(uint length)
   Signals and slots, properties and children of \a object are
   available as properties of the created QJSValue.
 
-  If \a object is a null pointer, this function returns nullValue().
+  If \a object is a null pointer, this function returns a null value.
 
   If a default prototype has been registered for the \a object's class
   (or its superclass, recursively), the prototype of the new script

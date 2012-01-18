@@ -237,8 +237,6 @@ bool QJSValue::isNumber() const
 /*!
   Returns true if this QJSValue is of the primitive type Null;
   otherwise returns false.
-
-  \sa QJSEngine::nullValue()
 */
 bool QJSValue::isNull() const
 {
