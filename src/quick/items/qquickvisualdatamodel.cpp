@@ -425,6 +425,10 @@ QQuickVisualDataModel::ReleaseFlags QQuickVisualDataModelPrivate::release(QObjec
             if (QQuickItem *item = qobject_cast<QQuickItem *>(object))
                 emitDestroyingItem(item);
             cacheItem->object = 0;
+            if (cacheItem->incubationTask) {
+                releaseIncubator(cacheItem->incubationTask);
+                cacheItem->incubationTask = 0;
+            }
             stat |= QQuickVisualModel::Destroyed;
         } else {
             stat |= QQuickVisualDataModel::Referenced;

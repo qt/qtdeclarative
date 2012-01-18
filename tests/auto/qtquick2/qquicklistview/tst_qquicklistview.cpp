@@ -1961,8 +1961,8 @@ void tst_QQuickListView::spacing()
     QTRY_VERIFY(listview->spacing() == 10);
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() == 11);
+    for (int i = 0; i < 11; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
@@ -1972,8 +1972,8 @@ void tst_QQuickListView::spacing()
     listview->setSpacing(0);
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() >= 16);
+    for (int i = 0; i < 16; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
@@ -2264,7 +2264,7 @@ void tst_QQuickListView::sectionsPositioning()
     model.modifyItem(2, "Three", "aaa");
     model.modifyItem(3, "Four", "aaa");
     model.modifyItem(4, "Five", "aaa");
-    QTest::qWait(300);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QTRY_COMPARE(listview->currentSection(), QString("aaa"));
 
@@ -2275,8 +2275,7 @@ void tst_QQuickListView::sectionsPositioning()
         QTRY_COMPARE(item->y(), qreal(i*20*6));
     }
 
-    topItem = findVisibleChild(contentItem, "sect_aaa"); // section header
-    QVERIFY(topItem);
+    QTRY_VERIFY(topItem = findVisibleChild(contentItem, "sect_aaa")); // section header
     QCOMPARE(topItem->y(), 10.);
 
     // remove section boundary

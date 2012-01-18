@@ -104,9 +104,18 @@ public:
         qreal sizeChangesBeforeVisiblePos;
         qreal sizeChangesAfterVisiblePos;
         bool changedFirstItem;
+        int changeBeforeVisible;
 
         ChangeResult(const QDeclarativeNullableValue<qreal> &p)
-            : visiblePos(p), sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0), changedFirstItem(false) {}
+            : visiblePos(p), sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0),
+            changedFirstItem(false), changeBeforeVisible(0) {}
+
+        void reset() {
+            sizeChangesBeforeVisiblePos = 0.0;
+            sizeChangesAfterVisiblePos = 0.0;
+            changedFirstItem = false;
+            changeBeforeVisible = 0;
+        }
     };
 
     enum BufferMode { NoBuffer = 0x00, BufferBefore = 0x01, BufferAfter = 0x02 };
@@ -130,7 +139,7 @@ public:
     void regenerate();
     void layout();
     void refill();
-    void refill(qreal from, qreal to, bool doBuffer = false);
+    void refill(qreal from, qreal to);
     void mirrorChange();
 
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
@@ -149,7 +158,7 @@ public:
     bool applyModelChanges();
     bool applyRemovalChange(const QDeclarativeChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
     void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
-            FxViewItem *prevFirstVisible, const ChangeResult &insertionResult, const ChangeResult &removalResult);
+            FxViewItem *prevFirstVisible, ChangeResult *insertionResult, ChangeResult *removalResult);
 
     void checkVisible() const;
 
@@ -197,7 +206,6 @@ public:
 
     bool ownModel : 1;
     bool wrap : 1;
-    bool deferredRelease : 1;
     bool inApplyModelChanges : 1;
     bool inViewportMoved : 1;
     bool forceLayout : 1;
@@ -240,7 +248,7 @@ protected:
     virtual FxViewItem *newViewItem(int index, QQuickItem *item) = 0;
     virtual void repositionPackageItemAt(QQuickItem *item, int index) = 0;
     virtual void resetFirstItemPosition(qreal pos = 0.0) = 0;
-    virtual void adjustFirstItem(qreal forwards, qreal backwards) = 0;
+    virtual void adjustFirstItem(qreal forwards, qreal backwards, int changeBeforeVisible) = 0;
 
     virtual void layoutVisibleItems(int fromModelIndex = 0) = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
