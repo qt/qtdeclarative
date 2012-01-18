@@ -435,6 +435,11 @@ QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
 
 QQuickPathAnimation::~QQuickPathAnimation()
 {
+    Q_D(QQuickPathAnimation);
+    QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator it;
+    for (it = d->activeAnimations.begin(); it != d->activeAnimations.end(); ++it) {
+        it.value()->clearTemplate();
+    }
 }
 
 int QQuickPathAnimation::duration() const

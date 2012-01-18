@@ -130,6 +130,8 @@ public:
     QQuickPathAnimationAnimator(QQuickPathAnimationPrivate * = 0);
     ~QQuickPathAnimationAnimator();
 
+    void clearTemplate() { animationTemplate = 0; }
+
     QQuickPathAnimationUpdater *pathUpdater() { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
 private:
     QQuickPathAnimationPrivate *animationTemplate;

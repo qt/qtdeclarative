@@ -93,6 +93,8 @@ public:
     bool useDelta : 1;
     typedef QHash<QDeclarativeProperty, QSpringAnimation*> ActiveAnimationHash;
 
+    void clearTemplate() { animationTemplate = 0; }
+
 protected:
     virtual void updateCurrentTime(int time);
     virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
@@ -350,6 +352,11 @@ QDeclarativeSpringAnimation::QDeclarativeSpringAnimation(QObject *parent)
 
 QDeclarativeSpringAnimation::~QDeclarativeSpringAnimation()
 {
+    Q_D(QDeclarativeSpringAnimation);
+    QSpringAnimation::ActiveAnimationHash::iterator it;
+    for (it = d->activeAnimations.begin(); it != d->activeAnimations.end(); ++it) {
+        it.value()->clearTemplate();
+    }
 }
 
 /*!

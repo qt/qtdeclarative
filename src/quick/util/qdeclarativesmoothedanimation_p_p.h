@@ -101,6 +101,8 @@ public:
     void restart();
     void init();
 
+    void clearTemplate() { animationTemplate = 0; }
+
 protected:
     virtual void updateCurrentTime(int);
     virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);

@@ -352,6 +352,10 @@ QDeclarativeSmoothedAnimationPrivate::QDeclarativeSmoothedAnimationPrivate()
 QDeclarativeSmoothedAnimationPrivate::~QDeclarativeSmoothedAnimationPrivate()
 {
     delete anim;
+    QHash<QDeclarativeProperty, QSmoothedAnimation* >::iterator it;
+    for (it = activeAnimations.begin(); it != activeAnimations.end(); ++it) {
+        it.value()->clearTemplate();
+    }
 }
 
 void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
