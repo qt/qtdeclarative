@@ -52,7 +52,6 @@ int main(int argc, char **argv)
     qmlRegisterType<Squircle>("QtQuick", 2, 0, "Squircle");
 
     QQuickView view;
-    view.setVSyncAnimations(true);
     view.setSource(QUrl("main.qml"));
     view.show();
 
