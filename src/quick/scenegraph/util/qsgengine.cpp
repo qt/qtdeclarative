@@ -78,8 +78,8 @@ QSGEngine::~QSGEngine()
 void QSGEngine::setCanvas(QQuickCanvas *canvas)
 {
     d_func()->canvas = canvas;
-    connect(canvas, SIGNAL(afterRendering()), this, SIGNAL(afterRendering()));
-    connect(canvas, SIGNAL(beforeRendering()), this, SIGNAL(beforeRendering()));
+    connect(canvas, SIGNAL(afterRendering()), this, SIGNAL(afterRendering()), Qt::DirectConnection);
+    connect(canvas, SIGNAL(beforeRendering()), this, SIGNAL(beforeRendering()), Qt::DirectConnection);
 }
 
 void QSGEngine::setClearBeforeRendering(bool enabled)
