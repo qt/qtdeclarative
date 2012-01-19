@@ -1565,15 +1565,33 @@ void tst_qquicktextinput::validators()
     // so you may need to run their tests first. All validators are checked
     // here to ensure that their exposure to QML is working.
 
+    QLocale::setDefault(QLocale(QStringLiteral("C")));
+
     QQuickView canvas(testFileUrl("validators.qml"));
     canvas.show();
     canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
+    QLocale defaultLocale;
+    QLocale enLocale("en");
+    QLocale deLocale("de_DE");
+
     QQuickTextInput *intInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("intInput")));
     QVERIFY(intInput);
     QSignalSpy intSpy(intInput, SIGNAL(acceptableInputChanged()));
+
+    QQuickIntValidator *intValidator = qobject_cast<QQuickIntValidator *>(intInput->validator());
+    QVERIFY(intValidator);
+    QCOMPARE(intValidator->localeName(), defaultLocale.name());
+    QCOMPARE(intInput->validator()->locale(), defaultLocale);
+    intValidator->setLocaleName(enLocale.name());
+    QCOMPARE(intValidator->localeName(), enLocale.name());
+    QCOMPARE(intInput->validator()->locale(), enLocale);
+    intValidator->resetLocaleName();
+    QCOMPARE(intValidator->localeName(), defaultLocale.name());
+    QCOMPARE(intInput->validator()->locale(), defaultLocale);
+
     intInput->setFocus(true);
     QTRY_VERIFY(intInput->hasActiveFocus());
     QCOMPARE(intInput->hasAcceptableInput(), false);
@@ -1592,6 +1610,33 @@ void tst_qquicktextinput::validators()
     QCOMPARE(intInput->hasAcceptableInput(), false);
     QCOMPARE(intInput->property("acceptable").toBool(), false);
     QCOMPARE(intSpy.count(), 0);
+    QTest::keyPress(&canvas, Qt::Key_Period);
+    QTest::keyRelease(&canvas, Qt::Key_Period, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(intInput->text(), QLatin1String("1"));
+    QCOMPARE(intInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Comma);
+    QTest::keyRelease(&canvas, Qt::Key_Comma, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(intInput->text(), QLatin1String("1,"));
+    QCOMPARE(intInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(intInput->text(), QLatin1String("1"));
+    QCOMPARE(intInput->hasAcceptableInput(), false);
+    intValidator->setLocaleName(deLocale.name());
+    QTest::keyPress(&canvas, Qt::Key_Period);
+    QTest::keyRelease(&canvas, Qt::Key_Period, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(intInput->text(), QLatin1String("1."));
+    QCOMPARE(intInput->hasAcceptableInput(), false);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(intInput->text(), QLatin1String("1"));
+    QCOMPARE(intInput->hasAcceptableInput(), false);
+    intValidator->resetLocaleName();
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
@@ -1610,6 +1655,18 @@ void tst_qquicktextinput::validators()
     QQuickTextInput *dblInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("dblInput")));
     QVERIFY(dblInput);
     QSignalSpy dblSpy(dblInput, SIGNAL(acceptableInputChanged()));
+
+    QQuickDoubleValidator *dblValidator = qobject_cast<QQuickDoubleValidator *>(dblInput->validator());
+    QVERIFY(dblValidator);
+    QCOMPARE(dblValidator->localeName(), defaultLocale.name());
+    QCOMPARE(dblInput->validator()->locale(), defaultLocale);
+    dblValidator->setLocaleName(enLocale.name());
+    QCOMPARE(dblValidator->localeName(), enLocale.name());
+    QCOMPARE(dblInput->validator()->locale(), enLocale);
+    dblValidator->resetLocaleName();
+    QCOMPARE(dblValidator->localeName(), defaultLocale.name());
+    QCOMPARE(dblInput->validator()->locale(), defaultLocale);
+
     dblInput->setFocus(true);
     QVERIFY(dblInput->hasActiveFocus() == true);
     QCOMPARE(dblInput->hasAcceptableInput(), false);
@@ -1628,6 +1685,44 @@ void tst_qquicktextinput::validators()
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
     QCOMPARE(dblSpy.count(), 1);
+    QTest::keyPress(&canvas, Qt::Key_Comma);
+    QTest::keyRelease(&canvas, Qt::Key_Comma, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12,"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12,"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    dblValidator->setLocaleName(deLocale.name());
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12,1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12,11"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12,1"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12,"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QTest::keyPress(&canvas, Qt::Key_Backspace);
+    QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    dblValidator->resetLocaleName();
     QTest::keyPress(&canvas, Qt::Key_Period);
     QTest::keyRelease(&canvas, Qt::Key_Period, Qt::NoModifier ,10);
     QTest::qWait(50);

@@ -823,11 +823,48 @@ void QQuickTextInput::setAutoScroll(bool b)
 
     This element provides a validator for integer values.
 
-    IntValidator uses the \l {QLocale::setDefault()}{default locale} to interpret the number and
-    will accept locale specific digits, group separators, and positive and negative signs.  In
-    addition, IntValidator is always guaranteed to accept a number formatted according to the "C"
-    locale.
+    If no \l locale is set IntValidator uses the \l {QLocale::setDefault()}{default locale} to
+    interpret the number and will accept locale specific digits, group separators, and positive
+    and negative signs.  In addition, IntValidator is always guaranteed to accept a number
+    formatted according to the "C" locale.
 */
+
+
+QQuickIntValidator::QQuickIntValidator(QObject *parent)
+    : QIntValidator(parent)
+{
+}
+
+/*!
+    \qmlproperty string QtQuick2::IntValidator::locale
+
+    This property holds the name of the locale used to interpret the number.
+
+    \sa QML:Qt::locale()
+*/
+
+QString QQuickIntValidator::localeName() const
+{
+    return locale().name();
+}
+
+void QQuickIntValidator::setLocaleName(const QString &name)
+{
+    if (locale().name() != name) {
+        setLocale(QLocale(name));
+        emit localeNameChanged();
+    }
+}
+
+void QQuickIntValidator::resetLocaleName()
+{
+    QLocale defaultLocale;
+    if (locale() != defaultLocale) {
+        setLocale(defaultLocale);
+        emit localeNameChanged();
+    }
+}
+
 /*!
     \qmlproperty int QtQuick2::IntValidator::top
 
@@ -865,6 +902,41 @@ void QQuickTextInput::setAutoScroll(bool b)
     and the input is not in the valid range, it is accecpted but invalid. The
     value may yet become valid by changing the exponent.
 */
+
+QQuickDoubleValidator::QQuickDoubleValidator(QObject *parent)
+    : QDoubleValidator(parent)
+{
+}
+
+/*!
+    \qmlproperty string QtQuick2::DoubleValidator::locale
+
+    This property holds the name of the locale used to interpret the number.
+
+    \sa QML:Qt::locale()
+*/
+
+QString QQuickDoubleValidator::localeName() const
+{
+    return locale().name();
+}
+
+void QQuickDoubleValidator::setLocaleName(const QString &name)
+{
+    if (locale().name() != name) {
+        setLocale(QLocale(name));
+        emit localeNameChanged();
+    }
+}
+
+void QQuickDoubleValidator::resetLocaleName()
+{
+    QLocale defaultLocale;
+    if (locale() != defaultLocale) {
+        setLocale(defaultLocale);
+        emit localeNameChanged();
+    }
+}
 
 /*!
     \qmlproperty real QtQuick2::DoubleValidator::top

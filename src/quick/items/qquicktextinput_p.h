@@ -330,13 +330,45 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextInput)
 };
 
+#ifndef QT_NO_VALIDATOR
+class Q_AUTOTEST_EXPORT QQuickIntValidator : public QIntValidator
+{
+    Q_OBJECT
+    Q_PROPERTY(QString locale READ localeName WRITE setLocaleName RESET resetLocaleName NOTIFY localeNameChanged)
+public:
+    QQuickIntValidator(QObject *parent = 0);
+
+    QString localeName() const;
+    void setLocaleName(const QString &name);
+    void resetLocaleName();
+
+Q_SIGNALS:
+    void localeNameChanged();
+};
+
+class Q_AUTOTEST_EXPORT QQuickDoubleValidator : public QDoubleValidator
+{
+    Q_OBJECT
+    Q_PROPERTY(QString locale READ localeName WRITE setLocaleName RESET resetLocaleName NOTIFY localeNameChanged)
+public:
+    QQuickDoubleValidator(QObject *parent = 0);
+
+    QString localeName() const;
+    void setLocaleName(const QString &name);
+    void resetLocaleName();
+
+Q_SIGNALS:
+    void localeNameChanged();
+};
+#endif
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTextInput)
 #ifndef QT_NO_VALIDATOR
 QML_DECLARE_TYPE(QValidator)
-QML_DECLARE_TYPE(QIntValidator)
-QML_DECLARE_TYPE(QDoubleValidator)
+QML_DECLARE_TYPE(QQuickIntValidator)
+QML_DECLARE_TYPE(QQuickDoubleValidator)
 QML_DECLARE_TYPE(QRegExpValidator)
 #endif
 

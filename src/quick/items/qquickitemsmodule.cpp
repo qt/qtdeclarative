@@ -145,8 +145,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickBasePositioner>(uri,major,minor,"Positioner",
                                                   QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
 #ifndef QT_NO_VALIDATOR
-    qmlRegisterType<QIntValidator>(uri,major,minor,"IntValidator");
-    qmlRegisterType<QDoubleValidator>(uri,major,minor,"DoubleValidator");
+    qmlRegisterType<QQuickIntValidator>(uri,major,minor,"IntValidator");
+    qmlRegisterType<QQuickDoubleValidator>(uri,major,minor,"DoubleValidator");
     qmlRegisterType<QRegExpValidator>(uri,major,minor,"RegExpValidator");
 #endif
     qmlRegisterType<QQuickRectangle>(uri,major,minor,"Rectangle");
