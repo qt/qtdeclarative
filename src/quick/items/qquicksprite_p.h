@@ -56,6 +56,7 @@ class QQuickSprite : public QQuickStochasticState
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    //Renderers have to query this hint when advancing frames
     Q_PROPERTY(bool reverse READ reverse WRITE setReverse NOTIFY reverseChanged)
     Q_PROPERTY(bool frameSync READ frameSync WRITE setFrameSync NOTIFY frameSyncChanged)
     Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)

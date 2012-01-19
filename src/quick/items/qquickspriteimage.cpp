@@ -452,6 +452,8 @@ void QQuickSpriteImage::prepareNextFrame()
         frameAt = m_curFrame;
         progress = 0;
     }
+    if (m_spriteEngine->sprite()->reverse())
+        frameAt = (m_spriteEngine->spriteFrames() - 1) - frameAt;
     qreal y = m_spriteEngine->spriteY() / m_sheetSize.height();
     qreal w = m_spriteEngine->spriteWidth() / m_sheetSize.width();
     qreal h = m_spriteEngine->spriteHeight() / m_sheetSize.height();

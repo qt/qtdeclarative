@@ -128,26 +128,41 @@ int QQuickSpriteEngine::maxFrames()
 TODO: All these calculations should be pre-calculated and cached during initialization for a significant performance boost
 TODO: Above idea needs to have the varying duration offset added to it
 */
-//TODO: Should these be adding advanceTime as well?
+//TODO: Should these be adding advanceTime as well? But only if advanceTime was added to your startTime...
 /*
     To get these working with duration=-1, m_startTimes will be messed with should duration=-1
     m_startTimes will be set in advance/restart to 0->(m_framesPerRow-1) and can be used directly as extra.
     This makes it 'frame' instead, but is more memory efficient than two arrays and less hideous than a vector of unions.
 */
+int QQuickSpriteEngine::pseudospriteProgress(int sprite, int state, int* rowDuration)
+{
+    int myRowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
+    if (rowDuration)
+        *rowDuration = myRowDuration;
+
+    if (m_sprites[state]->reverse()) //shift start-time back by the amount of time the first frame is smaller than rowDuration
+        return (m_timeOffset - (m_startTimes[sprite] - (myRowDuration - (m_duration[sprite] % myRowDuration))) )
+                    / myRowDuration;
+    else
+        return (m_timeOffset - m_startTimes[sprite]) / myRowDuration;
+}
+
 int QQuickSpriteEngine::spriteState(int sprite)
 {
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return state;
+
     int extra;
-    if (m_sprites[state]->frameSync()) {
+    if (m_sprites[state]->frameSync())
         extra = m_startTimes[sprite];
-    } else {
-        if (!m_duration[sprite])
-            return state;
-        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
-        extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    }
+    else if (!m_duration[sprite])
+        return state;
+    else
+        extra = pseudospriteProgress(sprite, state);
+    if (m_sprites[state]->reverse())
+        extra = (m_sprites[state]->m_generatedCount - 1) - extra;
+
     return state + extra;
 }
 
@@ -158,8 +173,10 @@ int QQuickSpriteEngine::spriteStart(int sprite)
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_startTimes[sprite];
-    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
-    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    int rowDuration;
+    int extra = pseudospriteProgress(sprite, state, &rowDuration);
+    if (m_sprites[state]->reverse())
+        return m_startTimes[sprite] + (extra ? (extra - 1)*rowDuration + (m_duration[sprite] % rowDuration) : 0);
     return m_startTimes[sprite] + extra*rowDuration;
 }
 
@@ -168,15 +185,18 @@ int QQuickSpriteEngine::spriteFrames(int sprite)
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->frames();
+
     int extra;
-    if (m_sprites[state]->frameSync()) {
+    if (m_sprites[state]->frameSync())
         extra = m_startTimes[sprite];
-    } else {
-        if (!m_duration[sprite])
-            return state;
-        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
-        extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    }
+    else if (!m_duration[sprite])
+        return m_sprites[state]->frames();
+    else
+        extra = pseudospriteProgress(sprite, state);
+    if (m_sprites[state]->reverse())
+        extra = (m_sprites[state]->m_generatedCount - 1) - extra;
+
+
     if (extra == m_sprites[state]->m_generatedCount - 1)//last state
         return m_sprites[state]->frames() % m_sprites[state]->m_framesPerRow;
     else
@@ -190,8 +210,11 @@ int QQuickSpriteEngine::spriteDuration(int sprite)//Full duration, not per frame
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_duration[sprite];
-    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
-    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    int rowDuration;
+    int extra = pseudospriteProgress(sprite, state, &rowDuration);
+    if (m_sprites[state]->reverse())
+        extra = (m_sprites[state]->m_generatedCount - 1) - extra;
+
     if (extra == m_sprites[state]->m_generatedCount - 1)//last state
         return m_duration[sprite] % rowDuration;
     else
@@ -203,16 +226,45 @@ int QQuickSpriteEngine::spriteY(int sprite)
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->m_rowY;
+
     int extra;
-    if (m_sprites[state]->frameSync()) {
+    if (m_sprites[state]->frameSync())
         extra = m_startTimes[sprite];
-    } else {
-        if (!m_duration[sprite])
-            return state;
-        int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow / m_sprites[state]->m_frames;
-        extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    }
+    else if (!m_duration[sprite])
+        return m_sprites[state]->m_rowY;
+    else
+        extra = pseudospriteProgress(sprite, state);
+    if (m_sprites[state]->reverse())
+        extra = (m_sprites[state]->m_generatedCount - 1) - extra;
+
+
     return m_sprites[state]->m_rowY + m_sprites[state]->m_frameHeight * extra;
+}
+
+int QQuickSpriteEngine::spriteX(int sprite)
+{
+    int state = m_things[sprite];
+    if (!m_sprites[state]->m_generatedCount)
+        return m_sprites[state]->m_rowStartX;
+
+    int extra;
+    if (m_sprites[state]->frameSync())
+        extra = m_startTimes[sprite];
+    else if (!m_duration[sprite])
+        return m_sprites[state]->m_rowStartX;
+    else
+        extra = pseudospriteProgress(sprite, state);
+    if (m_sprites[state]->reverse())
+        extra = (m_sprites[state]->m_generatedCount - 1) - extra;
+
+    if (extra)
+        return 0;
+    return m_sprites[state]->m_rowStartX;
+}
+
+QQuickSprite* QQuickSpriteEngine::sprite(int sprite)
+{
+    return m_sprites[m_things[sprite]];
 }
 
 int QQuickSpriteEngine::spriteWidth(int sprite)
@@ -470,7 +522,7 @@ void QQuickSpriteEngine::advance(int idx) //Reimplemented to recognize and handl
             > int(m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0))) {
         //only a pseduostate ended
         emit stateChanged(idx);
-        addToUpdateList(m_timeOffset + spriteDuration(idx), idx);
+        addToUpdateList(spriteStart(idx) + spriteDuration(idx) + (m_addAdvance ? m_advanceTime.elapsed() : 0), idx);
         return;
     }
     int nextIdx = nextState(m_things[idx],idx);

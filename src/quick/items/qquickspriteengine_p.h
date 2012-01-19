@@ -264,12 +264,12 @@ public:
         return QDeclarativeListProperty<QQuickSprite>(this, m_sprites);
     }
 
-
+    QQuickSprite* sprite(int sprite=0);
     int spriteState(int sprite=0);
     int spriteStart(int sprite=0);
     int spriteFrames(int sprite=0);
     int spriteDuration(int sprite=0);//Full duration, not per frame
-    int spriteX(int /* sprite */ = 0) { return 0; }//Currently all rows are 0 aligned, if we get more space efficient we might change this
+    int spriteX(int sprite=0);
     int spriteY(int sprite=0);
     int spriteWidth(int sprite=0);
     int spriteHeight(int sprite=0);
@@ -281,6 +281,7 @@ public:
     virtual void restart(int index=0);
     virtual void advance(int index=0);
 private:
+    int pseudospriteProgress(int,int,int*rd=0);
     QList<QQuickSprite*> m_sprites;
 };
 

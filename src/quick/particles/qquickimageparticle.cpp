@@ -1474,8 +1474,17 @@ void QQuickImageParticle::spritesUpdate(qreal time)
             //TODO: Interpolate between two different animations if it's going to transition next frame
             //      This is particularly important for cut-up sprites.
             QQuickParticleData* datum = (mainDatum->animationOwner == this ? mainDatum : getShadowDatum(mainDatum));
+            int spriteIdx = 0;
+            for (int i = 0; i<m_startsIdx.count(); i++) {
+                if (m_startsIdx[i].second == gIdx){
+                    spriteIdx = m_startsIdx[i].first + datum->index;
+                    break;
+                }
+            }
+
             double frameAt;
             qreal progress = 0;
+
             if (datum->frameDuration > 0) {
                 qreal frame = (time - datum->animT)/(datum->frameDuration / 1000.0);
                 frame = qBound((qreal)0.0, frame, (qreal)((qreal)datum->frameCount - 1.0));//Stop at count-1 frames until we have between anim interpolation
@@ -1487,15 +1496,12 @@ void QQuickImageParticle::spritesUpdate(qreal time)
                 datum->frameAt++;
                 if (datum->frameAt >= datum->frameCount){
                     datum->frameAt = 0;
-                    for (int i = 0; i<m_startsIdx.count(); i++) {
-                        if (m_startsIdx[i].second == gIdx){
-                            m_spriteEngine->advance(m_startsIdx[i].first + datum->index);
-                            break;
-                        }
-                    }
+                    m_spriteEngine->advance(spriteIdx);
                 }
                 frameAt = datum->frameAt;
             }
+            if (m_spriteEngine->sprite(spriteIdx)->reverse())//### Store this in datum too?
+                frameAt = (datum->frameCount - 1) - frameAt;
             QSizeF sheetSize = getState<ImageMaterialData>(m_material)->animSheetSize;
             qreal y = datum->animY / sheetSize.height();
             qreal w = datum->animWidth / sheetSize.width();
