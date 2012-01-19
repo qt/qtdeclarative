@@ -41,8 +41,8 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
-import "SamegameCore"
-import "SamegameCore/samegame.js" as Logic
+import "content"
+import "content/samegame.js" as Logic
 
 Rectangle {
     id: screen
