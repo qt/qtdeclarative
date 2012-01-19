@@ -98,8 +98,7 @@ QAccessibleInterface *QAccessibleQuickItem::parent() const
         if (parent == canvas->rootItem()) {
             return QAccessible::queryAccessibleInterface(canvas);
         } else {
-            QDeclarativeAccessible *ancestor = new QAccessibleQuickItem(parent);
-            return ancestor;
+            return QAccessible::queryAccessibleInterface(parent);
         }
     }
     return 0;
@@ -116,7 +115,7 @@ QAccessibleInterface *QAccessibleQuickItem::child(int index) const
     if (!child) // FIXME can this happen?
         return 0;
 
-    return new QAccessibleQuickItem(child);
+    return QAccessible::queryAccessibleInterface(child);
 }
 
 int QAccessibleQuickItem::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
@@ -125,10 +124,6 @@ int QAccessibleQuickItem::navigate(QAccessible::RelationFlag rel, int entry, QAc
     Q_UNUSED(entry);
     Q_UNUSED(target);
     *target = 0;
-    if (entry == 0) {
-        *target = new QAccessibleQuickItem(item());
-        return 0;
-    }
     return -1;
 }
 
