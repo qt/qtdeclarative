@@ -113,6 +113,11 @@ void QDeclarativePathInterpolator::_q_pathUpdated()
         emit yChanged();
     }
 
+    //convert to clockwise
+    angle = qreal(360) - angle;
+    if (qFuzzyCompare(angle, qreal(360)))
+        angle = qreal(0);
+
     if (angle != _angle) {
         _angle = angle;
         emit angleChanged();

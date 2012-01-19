@@ -311,7 +311,7 @@ void tst_qdeclarativeanimations::pathInterpolator()
     QCOMPARE(interpolator->progress(), qreal(.5));
     QCOMPARE(interpolator->x(), qreal(175));
     QCOMPARE(interpolator->y(), qreal(175));
-    QCOMPARE(interpolator->angle(), qreal(270));
+    QCOMPARE(interpolator->angle(), qreal(90));
 
     interpolator->setProgress(1);
     QCOMPARE(interpolator->progress(), qreal(1));
@@ -331,13 +331,13 @@ void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
         QCOMPARE(interpolator->progress(), qreal(0));
         QCOMPARE(interpolator->x(), qreal(50));
         QCOMPARE(interpolator->y(), qreal(50));
-        QCOMPARE(interpolator->angle(), qreal(270));
+        QCOMPARE(interpolator->angle(), qreal(90));
 
         interpolator->setProgress(.5);
         QCOMPARE(interpolator->progress(), qreal(.5));
         QCOMPARE(interpolator->x(), qreal(100));
         QCOMPARE(interpolator->y(), qreal(75));
-        QCOMPARE(interpolator->angle(), qreal(90));
+        QCOMPARE(interpolator->angle(), qreal(270));
 
         interpolator->setProgress(1);
         QCOMPARE(interpolator->progress(), qreal(1));
@@ -350,7 +350,7 @@ void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
         QCOMPARE(interpolator->progress(), qreal(0));
         QCOMPARE(interpolator->x(), qreal(50));
         QCOMPARE(interpolator->y(), qreal(50));
-        QCOMPARE(interpolator->angle(), qreal(270));
+        QCOMPARE(interpolator->angle(), qreal(90));
     }
 
     {
