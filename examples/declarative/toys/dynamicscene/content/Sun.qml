@@ -50,11 +50,11 @@ Image {
 
     // once item is created, start moving offscreen
     NumberAnimation on y {
-        to: window.height / 2
+        to: (window.height / 2) + window.centerOffset
         running: created
         onRunningChanged: {
             if (running)
-                duration = (window.height - sun.y) * 10;
+                duration = (window.height + window.centerOffset - sun.y) * 10;
             else
                 state = "OffScreen"
         }

@@ -47,7 +47,7 @@ Image {
     property string image 
 
     property double scaledBottom: y + (height + height*scale) / 2 
-    property bool onLand: scaledBottom > window.height / 2
+    property bool onLand: scaledBottom > (window.height / 2 + window.centerOffset)
 
     source: image
     opacity: onLand ? 1 : 0.25

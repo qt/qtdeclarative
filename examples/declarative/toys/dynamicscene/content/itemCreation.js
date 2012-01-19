@@ -51,7 +51,7 @@ function endDrag(mouse)
     if (draggedItem == null)
         return;
 
-    if (draggedItem.x + draggedItem.width > toolbox.x) { //Don't drop it in the toolbox
+    if (draggedItem.y < toolbox.height) { //Don't drop it in the toolbox
         draggedItem.destroy();
         draggedItem = null;
     } else {

@@ -46,9 +46,9 @@ Item {
     id: window
 
     property int activeSuns: 0
+    property int centerOffset: 72
 
-    //This is a desktop-sized example
-    width: 800; height: 480
+    height: 480; width: 360
 
 
     MouseArea {
@@ -86,10 +86,16 @@ Item {
         }
     }
 
-    // sky
+    Item {
+        id: scene
+        anchors { top: sky.top; bottom: ground.bottom; left: parent.left; right: parent.right}
+        z: 10
+    }
+
+   // sky
     Rectangle {
         id: sky
-        anchors { left: parent.left; top: parent.top; right: toolbox.right; bottom: parent.verticalCenter }
+        anchors { left: parent.left; top: toolbox.bottom; right: parent.right;  bottomMargin: -centerOffset; bottom: parent.verticalCenter }
         gradient: Gradient {
             GradientStop { id: gradientStopA; position: 0.0; color: "#0E1533" }
             GradientStop { id: gradientStopB; position: 1.0; color: "#437284" }
@@ -121,7 +127,7 @@ Item {
     Rectangle {
         id: ground
         z: 2    // just above the sun so that the sun can set behind it
-        anchors { left: parent.left; top: parent.verticalCenter; right: toolbox.left; bottom: parent.bottom }
+        anchors { left: parent.left; top: parent.verticalCenter; topMargin: centerOffset; right: parent.right; bottom: parent.bottom }
         gradient: Gradient {
             GradientStop { position: 0.0; color: "ForestGreen" }
             GradientStop { position: 1.0; color: "DarkGreen" }
@@ -134,9 +140,9 @@ Item {
     Rectangle {
         id: toolbox
 
-        width: 380
+        height: centerOffset * 2
         color: activePalette.window
-        anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+        anchors { right: parent.right; top: parent.top; left: parent.left}
 
         Column {
             anchors.centerIn: parent
@@ -187,10 +193,51 @@ Item {
             }
 
             Text { text: "Active Suns: " + activeSuns }
+        }
+    }
 
-            Rectangle { width: parent.width; height: 1; color: "black" }
+    //Popup toolbox down the bottom
+    Rectangle {
+        id: popupToolbox
+        z: 1000
+        width: parent.width
+        height: popupColumn.height + 16
+        color: activePalette.window
 
-            Text { text: "Arbitrary QML:" }
+        property bool poppedUp: false
+        property int downY: window.height - (createButton.height + 16)
+        property int upY: window.height - (popupColumn.height + 16)
+        y: poppedUp ? upY : downY
+        Behavior on y { NumberAnimation {}}
+
+        Column {
+            id: popupColumn
+            y: 8
+            anchors.centerIn: parent
+            spacing: 8
+
+            Row {
+                height: createButton.height
+                spacing: 8
+                Text { text: "Custom QML:"; anchors.verticalCenter: parent.verticalCenter }
+                Button {
+                    id: popupButton
+                    text: popupToolbox.poppedUp ? "Hide" : "Show"
+                    onClicked: popupToolbox.poppedUp = !popupToolbox.poppedUp
+                }
+                Button {
+                    id: createButton
+                    text: "Create"
+                    onClicked: {
+                        try {
+                            Qt.createQmlObject(qmlText.text, scene, 'CustomObject');
+                        } catch(err) {
+                            dialog.show('Error on line ' + err.qmlErrors[0].lineNumber + '\n' + err.qmlErrors[0].message);
+                        }
+                    }
+                }
+
+            }
 
             Rectangle {
                 width: 360; height: 240
@@ -200,20 +247,10 @@ Item {
                     anchors.fill: parent; anchors.margins: 5
                     readOnly: false
                     font.pixelSize: 14
+                    selectByMouse: true
                     wrapMode: TextEdit.WordWrap
 
                     text: "import QtQuick 2.0\nImage {\n    id: smile\n    x: 360 * Math.random()\n    y: 180 * Math.random() \n    source: 'content/images/face-smile.png'\n    NumberAnimation on opacity { \n        to: 0; duration: 1500\n    }\n    Component.onCompleted: smile.destroy(1500);\n}"
-                }
-            }
-
-            Button {
-                text: "Create"
-                onClicked: {
-                    try { 
-                        Qt.createQmlObject(qmlText.text, window, 'CustomObject');
-                    } catch(err) {
-                        dialog.show('Error on line ' + err.qmlErrors[0].lineNumber + '\n' + err.qmlErrors[0].message);
-                    }
                 }
             }
         }
