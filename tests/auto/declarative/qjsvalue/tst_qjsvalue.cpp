@@ -4023,6 +4023,12 @@ void tst_QJSValue::nestedObjectToVariant_data()
     // Object literals
     {
         QVariantMap m;
+        QTest::newRow("{}")
+            << QString::fromLatin1("({})")
+            << QVariant(m);
+    }
+    {
+        QVariantMap m;
         m["a"] = QVariantMap();
         QTest::newRow("{ a:{} }")
             << QString::fromLatin1("({ a:{} })")
