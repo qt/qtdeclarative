@@ -990,9 +990,9 @@ v8::Handle<v8::Value> QDeclarativeLocale::locale(QV8Engine *v8engine, const QStr
 */
 
 /*!
-    \qmlproperty Array<int> QtQuick2::Locale::weekdays
+    \qmlproperty Array<int> QtQuick2::Locale::weekDays
 
-    Holds an array of days that are considered weekdays according to the current locale,
+    Holds an array of days that are considered week days according to the current locale,
     where Sunday is 0 and Saturday is 6.
 
     \sa firstDayOfWeek
