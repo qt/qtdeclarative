@@ -45,12 +45,9 @@ import QtQuick.XmlListModel 2.0
 XmlListModel {
     property string tags : ""
 
-    function commasep(x)
-    {
-        return x.replace(' ',',');
-    }
+    function encodeTags(x) { return encodeURIComponent(x.replace(' ',',')); }
 
-    source: "http://api.flickr.com/services/feeds/photos_public.gne?"+(tags ? "tags="+commasep(tags)+"&" : "")+"format=rss2"
+    source: "http://api.flickr.com/services/feeds/photos_public.gne?"+(tags ? "tags="+encodeTags(tags)+"&" : "")+"format=rss2"
     query: "/rss/channel/item"
     namespaceDeclarations: "declare namespace media=\"http://search.yahoo.com/mrss/\";"
 
