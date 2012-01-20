@@ -2985,7 +2985,7 @@ void tst_QJSValue::call_invalidArguments()
         {
             QJSValueList args;
             args << QJSValue();
-            QJSValue ret = fun.call(QJSValue(), args);
+            QJSValue ret = fun.call(args);
             QVERIFY(!eng.hasUncaughtException());
             QCOMPARE(ret.isValid(), true);
             QCOMPARE(ret.isUndefined(), true);
@@ -2996,7 +2996,7 @@ void tst_QJSValue::call_invalidArguments()
         {
             QJSValueList args;
             args << QJSValue();
-            QJSValue ret = fun.call(QJSValue(), args);
+            QJSValue ret = fun.call(args);
             QCOMPARE(ret.isValid(), true);
             QCOMPARE(ret.isUndefined(), true);
         }
@@ -3006,7 +3006,7 @@ void tst_QJSValue::call_invalidArguments()
         {
             QJSValueList args;
             args << QJSValue() << QJSValue();
-            QJSValue ret = fun.call(QJSValue(), args);
+            QJSValue ret = fun.call(args);
             QCOMPARE(ret.isValid(), true);
             QCOMPARE(ret.isNumber(), true);
             QCOMPARE(qIsNaN(ret.toNumber()), true);
@@ -3044,7 +3044,7 @@ void tst_QJSValue::call_twoEngines()
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with argument created in "
                          "a different engine");
-    QCOMPARE(fun.call(QJSValue(), QJSValueList() << QJSValue(&eng, 123)).isValid(), false);
+    QCOMPARE(fun.call(QJSValueList() << QJSValue(&eng, 123)).isValid(), false);
     {
         QJSValue fun = eng.evaluate("Object");
         QVERIFY(fun.isCallable());
@@ -3053,7 +3053,7 @@ void tst_QJSValue::call_twoEngines()
         QJSValueList args;
         args << objectInDifferentEngine;
         QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: cannot call function with argument created in a different engine");
-        fun.call(QJSValue(), args);
+        fun.call(args);
     }
 }
 
@@ -3540,15 +3540,15 @@ void tst_QJSValue::equals()
     QJSValue compareFun = eng.evaluate("(function(a, b) { return a == b; })");
     QVERIFY(compareFun.isCallable());
     {
-        QJSValue ret = compareFun.call(QJSValue(), QJSValueList() << qobj1 << qobj2);
+        QJSValue ret = compareFun.call(QJSValueList() << qobj1 << qobj2);
         QVERIFY(ret.isBool());
-        ret = compareFun.call(QJSValue(), QJSValueList() << qobj1 << qobj3);
-        QVERIFY(ret.isBool());
-        QVERIFY(!ret.toBool());
-        ret = compareFun.call(QJSValue(), QJSValueList() << qobj1 << qobj4);
+        ret = compareFun.call(QJSValueList() << qobj1 << qobj3);
         QVERIFY(ret.isBool());
         QVERIFY(!ret.toBool());
-        ret = compareFun.call(QJSValue(), QJSValueList() << qobj1 << obj1);
+        ret = compareFun.call(QJSValueList() << qobj1 << qobj4);
+        QVERIFY(ret.isBool());
+        QVERIFY(!ret.toBool());
+        ret = compareFun.call(QJSValueList() << qobj1 << obj1);
         QVERIFY(ret.isBool());
         QVERIFY(!ret.toBool());
     }

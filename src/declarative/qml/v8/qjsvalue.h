@@ -141,6 +141,7 @@ public:
     QJSValue::PropertyFlags propertyFlags(const QString &name) const;
 
     bool isCallable() const;
+    QJSValue call(const QJSValueList &args);
     QJSValue call(const QJSValue &thisObject = QJSValue(),
                       const QJSValueList &args = QJSValueList());
     QJSValue construct(const QJSValueList &args = QJSValueList());

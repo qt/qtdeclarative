@@ -830,15 +830,15 @@ void tst_QJSEngine::jsRegExp()
     QCOMPARE(r.toString(), QString::fromLatin1("/foo/gim"));
 
     QJSValue rxCtor = eng.globalObject().property("RegExp");
-    QJSValue r2 = rxCtor.call(QJSValue(), QJSValueList() << r);
+    QJSValue r2 = rxCtor.call(QJSValueList() << r);
     QVERIFY(r2.isRegExp());
     QVERIFY(r2.strictlyEquals(r));
 
-    QJSValue r3 = rxCtor.call(QJSValue(), QJSValueList() << r << "gim");
+    QJSValue r3 = rxCtor.call(QJSValueList() << r << "gim");
     QVERIFY(r3.isError());
     QVERIFY(r3.toString().contains(QString::fromLatin1("TypeError"))); // Cannot supply flags when constructing one RegExp from another
 
-    QJSValue r4 = rxCtor.call(QJSValue(), QJSValueList() << "foo" << "gim");
+    QJSValue r4 = rxCtor.call(QJSValueList() << "foo" << "gim");
     QVERIFY(r4.isRegExp());
 
     QJSValue r5 = rxCtor.construct(QJSValueList() << r);
@@ -1179,7 +1179,7 @@ static QScriptValue myConstructor(QScriptContext *ctx, QScriptEngine *eng)
 static QScriptValue instanceofJS(const QScriptValue &inst, const QScriptValue &ctor)
 {
     return inst.engine()->evaluate("(function(inst, ctor) { return inst instanceof ctor; })")
-        .call(QScriptValue(), QScriptValueList() << inst << ctor);
+        .call(QScriptValueList() << inst << ctor);
 }
 
 void tst_QJSEngine::newQMetaObject()
@@ -4343,7 +4343,7 @@ void tst_QJSEngine::jsFunctionDeclarationAsStatement()
     {
         QJSValue ret = eng.evaluate("foo('bar')");
         QVERIFY(ret.isCallable());
-        QJSValue ret2 = ret.call(QJSValue());
+        QJSValue ret2 = ret.call();
         QCOMPARE(ret2.toString(), QString::fromLatin1("bar"));
         QVERIFY(!eng.globalObject().property("bar").isValid());
         QVERIFY(!eng.globalObject().property("baz").isValid());
@@ -4351,7 +4351,7 @@ void tst_QJSEngine::jsFunctionDeclarationAsStatement()
     {
         QJSValue ret = eng.evaluate("foo('baz')");
         QVERIFY(ret.isCallable());
-        QJSValue ret2 = ret.call(QJSValue());
+        QJSValue ret2 = ret.call();
         QCOMPARE(ret2.toString(), QString::fromLatin1("baz"));
         QVERIFY(!eng.globalObject().property("bar").isValid());
         QVERIFY(!eng.globalObject().property("baz").isValid());
@@ -5459,7 +5459,7 @@ void tst_QJSEngine::translateScript_callQsTrFromCpp()
 
     // There is no context, but it shouldn't crash
     QCOMPARE(engine.globalObject().property("qsTr").call(
-             QScriptValue(), QScriptValueList() << "One").toString(), QString::fromLatin1("One"));
+             QScriptValueList() << "One").toString(), QString::fromLatin1("One"));
 }
 
 void tst_QJSEngine::translateWithInvalidArgs_data()
@@ -5769,7 +5769,7 @@ void tst_QJSEngine::nativeFunctionScopes()
     QScriptEngine eng;
     {
         QScriptValue fun = eng.newFunction(counter);
-        QScriptValue cnt = fun.call(QScriptValue(), QScriptValueList() << 123);
+        QScriptValue cnt = fun.call(QScriptValueList() << 123);
         QVERIFY(cnt.isCallable());
         {
             QScriptValue ret = cnt.call();
@@ -5780,7 +5780,7 @@ void tst_QJSEngine::nativeFunctionScopes()
     }
     {
         QScriptValue fun = eng.newFunction(counter_hybrid);
-        QScriptValue cnt = fun.call(QScriptValue(), QScriptValueList() << 123);
+        QScriptValue cnt = fun.call(QScriptValueList() << 123);
         QVERIFY(cnt.isCallable());
         {
             QScriptValue ret = cnt.call();
@@ -5941,7 +5941,7 @@ void tst_QJSEngine::evaluateProgram_executeLater()
     {
         QScriptValue fun = eng.newFunction(createProgram);
         QScriptProgram program = qscriptvalue_cast<QScriptProgram>(
-            fun.call(QScriptValue(), QScriptValueList() << "a + 1"));
+            fun.call(QScriptValueList() << "a + 1"));
         QVERIFY(!program.isNull());
         eng.globalObject().setProperty("a", QScriptValue());
         {
@@ -6092,7 +6092,7 @@ void tst_QJSEngine::qRegExpInport()
     QVERIFY(rexp.isCallable());
 
     QJSValue func = eng.evaluate("(function(string, regexp) { return string.match(regexp); })");
-    QJSValue result = func.call(QJSValue(),  QJSValueList() << string << rexp);
+    QJSValue result = func.call(QJSValueList() << string << rexp);
 
     rx.indexIn(string);
     for (int i = 0; i <= rx.captureCount(); i++)  {

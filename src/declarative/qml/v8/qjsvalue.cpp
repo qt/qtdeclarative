@@ -696,6 +696,28 @@ QVariant QJSValue::toVariant() const
     return d->toVariant();
 }
 
+/*!
+  Calls this QJSValue as a function, passing \a args as arguments
+  to the function, and using the globalObject() as the "this"-object.
+  Returns the value returned from the function.
+
+  If this QJSValue is not callable, call() does nothing and
+  returns an undefined QJSValue.
+
+  Calling call() can cause an exception to occur in the script engine;
+  in that case, call() returns the value that was thrown (typically an
+  \c{Error} object). You can call
+  QJSEngine::hasUncaughtException() to determine if an exception
+  occurred.
+
+  \sa isCallable()
+*/
+QJSValue QJSValue::call(const QJSValueList &args)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->call(/*thisObject=*/0, args);
+}
 
 /*!
   Calls this QJSValue as a function, using \a thisObject as

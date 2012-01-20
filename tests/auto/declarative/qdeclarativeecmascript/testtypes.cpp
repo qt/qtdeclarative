@@ -127,7 +127,7 @@ static QJSValue readonly_script_api(QDeclarativeEngine *engine, QJSEngine *scrip
 
     // now freeze it so that it's read-only
     QJSValue freezeFunction = scriptEngine->evaluate("(function(obj) { return Object.freeze(obj); })");
-    v = freezeFunction.call(QJSValue(), (QJSValueList() << v));
+    v = freezeFunction.call(QJSValueList() << v);
 
     return v;
 }
