@@ -374,7 +374,7 @@ QQuickPositionerAttached::QQuickPositionerAttached(QObject *parent) : QObject(pa
 }
 
 /*!
-    \qmlattachedproperty Item QtQuick2::Positioner::index
+    \qmlattachedproperty int QtQuick2::Positioner::index
 
     This property allows the item to determine
     its index within the positioner.
@@ -388,8 +388,8 @@ void QQuickPositionerAttached::setIndex(int index)
 }
 
 /*!
-    \qmlattachedproperty Item QtQuick2::Positioner::isFirstItem
-    \qmlattachedproperty Item QtQuick2::Positioner::isLastItem
+    \qmlattachedproperty bool QtQuick2::Positioner::isFirstItem
+    \qmlattachedproperty bool QtQuick2::Positioner::isLastItem
 
     These properties allow the item to determine if it
     is the first or last item in the positioner, respectively.
