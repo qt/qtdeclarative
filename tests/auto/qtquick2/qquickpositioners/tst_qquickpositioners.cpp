@@ -1206,14 +1206,14 @@ void tst_qquickpositioners::test_conflictinganchors()
     component.setData("import QtQuick 2.0\nColumn { Item { anchors.top: parent.top } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
     warningMessage.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nColumn { Item { anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
     warningMessage.clear();
     delete item;
 
@@ -1227,14 +1227,14 @@ void tst_qquickpositioners::test_conflictinganchors()
     component.setData("import QtQuick 2.0\nRow { Item { anchors.left: parent.left } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
     warningMessage.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nRow { Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
     warningMessage.clear();
     delete item;
 
@@ -1248,27 +1248,27 @@ void tst_qquickpositioners::test_conflictinganchors()
     component.setData("import QtQuick 2.0\nGrid { Item { anchors.horizontalCenter: parent.horizontalCenter } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
     warningMessage.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nGrid { Item { anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
     warningMessage.clear();
     delete item;
 
     component.setData("import QtQuick 2.0\nFlow { Item { anchors.verticalCenter: parent.verticalCenter } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
     delete item;
 
     component.setData("import QtQuick 2.0\nFlow { Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow"));
+    QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
     qInstallMsgHandler(oldMsgHandler);
     delete item;
 }
