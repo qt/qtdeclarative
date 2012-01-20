@@ -1501,8 +1501,10 @@ QDeclarativeListModel::~QDeclarativeListModel()
         m_listModel->destroy();
         delete m_listModel;
 
-        if (m_mainThread && m_agent)
+        if (m_mainThread && m_agent) {
+            m_agent->modelDestroyed();
             m_agent->release();
+        }
     }
 
     m_listModel = 0;

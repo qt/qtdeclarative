@@ -108,6 +108,7 @@ public:
 
         QDeclarativeListModelWorkerAgent *a;
     };
+    void modelDestroyed();
 protected:
     virtual bool event(QEvent *);
 

@@ -316,7 +316,6 @@ v8::Handle<v8::Object> QDeclarativeWorkerScriptEnginePrivate::getWorker(WorkerSc
 
 bool QDeclarativeWorkerScriptEnginePrivate::event(QEvent *event)
 {
-    // XXX must handle remove request
     if (event->type() == (QEvent::Type)WorkerDataEvent::WorkerData) {
         WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
         processMessage(workerEvent->workerId(), workerEvent->data());
@@ -327,6 +326,10 @@ bool QDeclarativeWorkerScriptEnginePrivate::event(QEvent *event)
         return true;
     } else if (event->type() == (QEvent::Type)WorkerDestroyEvent) {
         emit stopThread();
+        return true;
+    } else if (event->type() == (QEvent::Type)WorkerRemoveEvent::WorkerRemove) {
+        WorkerRemoveEvent *workerEvent = static_cast<WorkerRemoveEvent *>(event);
+        workers.remove(workerEvent->workerId());
         return true;
     } else {
         return QObject::event(event);
@@ -513,7 +516,11 @@ int QDeclarativeWorkerScriptEngine::registerWorkerScript(QDeclarativeWorkerScrip
 
 void QDeclarativeWorkerScriptEngine::removeWorkerScript(int id)
 {
-    QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
+    QDeclarativeWorkerScriptEnginePrivate::WorkerScript* script = d->workers.value(id);
+    if (script) {
+        script->owner = 0;
+        QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
+    }
 }
 
 void QDeclarativeWorkerScriptEngine::executeUrl(int id, const QUrl &url)

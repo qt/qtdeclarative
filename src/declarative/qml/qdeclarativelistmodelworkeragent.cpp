@@ -117,6 +117,11 @@ void QDeclarativeListModelWorkerAgent::release()
         delete this;
 }
 
+void QDeclarativeListModelWorkerAgent::modelDestroyed()
+{
+    m_orig = 0;
+}
+
 int QDeclarativeListModelWorkerAgent::count() const
 {
     return m_copy->count();
@@ -178,49 +183,50 @@ void QDeclarativeListModelWorkerAgent::sync()
 bool QDeclarativeListModelWorkerAgent::event(QEvent *e)
 {
     if (e->type() == QEvent::User) {
-
+        bool cc = false;
         QMutexLocker locker(&mutex);
-        Sync *s = static_cast<Sync *>(e);
+        if (m_orig) {
+            Sync *s = static_cast<Sync *>(e);
+            const QList<Change> &changes = s->data.changes;
 
-        const QList<Change> &changes = s->data.changes;
+            cc = m_orig->count() != s->list->count();
 
-        bool cc = m_orig->count() != s->list->count();
+            QHash<int, QDeclarativeListModel *> targetModelDynamicHash;
+            QHash<int, ListModel *> targetModelStaticHash;
 
-        QHash<int, QDeclarativeListModel *> targetModelDynamicHash;
-        QHash<int, ListModel *> targetModelStaticHash;
+            Q_ASSERT(m_orig->m_dynamicRoles == s->list->m_dynamicRoles);
+            if (m_orig->m_dynamicRoles)
+                QDeclarativeListModel::sync(s->list, m_orig, &targetModelDynamicHash);
+            else
+                ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelStaticHash);
 
-        Q_ASSERT(m_orig->m_dynamicRoles == s->list->m_dynamicRoles);
-        if (m_orig->m_dynamicRoles)
-            QDeclarativeListModel::sync(s->list, m_orig, &targetModelDynamicHash);
-        else
-            ListModel::sync(s->list->m_listModel, m_orig->m_listModel, &targetModelStaticHash);
+            for (int ii = 0; ii < changes.count(); ++ii) {
+                const Change &change = changes.at(ii);
 
-        for (int ii = 0; ii < changes.count(); ++ii) {
-            const Change &change = changes.at(ii);
+                QDeclarativeListModel *model = 0;
+                if (m_orig->m_dynamicRoles) {
+                    model = targetModelDynamicHash.value(change.modelUid);
+                } else {
+                    ListModel *lm = targetModelStaticHash.value(change.modelUid);
+                    if (lm)
+                        model = lm->m_modelCache;
+                }
 
-            QDeclarativeListModel *model = 0;
-            if (m_orig->m_dynamicRoles) {
-                model = targetModelDynamicHash.value(change.modelUid);
-            } else {
-                ListModel *lm = targetModelStaticHash.value(change.modelUid);
-                if (lm)
-                    model = lm->m_modelCache;
-            }
-
-            if (model) {
-                switch (change.type) {
-                case Change::Inserted:
-                    emit model->itemsInserted(change.index, change.count);
-                    break;
-                case Change::Removed:
-                    emit model->itemsRemoved(change.index, change.count);
-                    break;
-                case Change::Moved:
-                    emit model->itemsMoved(change.index, change.to, change.count);
-                    break;
-                case Change::Changed:
-                    emit model->itemsChanged(change.index, change.count, change.roles);
-                    break;
+                if (model) {
+                    switch (change.type) {
+                    case Change::Inserted:
+                        emit model->itemsInserted(change.index, change.count);
+                        break;
+                    case Change::Removed:
+                        emit model->itemsRemoved(change.index, change.count);
+                        break;
+                    case Change::Moved:
+                        emit model->itemsMoved(change.index, change.to, change.count);
+                        break;
+                    case Change::Changed:
+                        emit model->itemsChanged(change.index, change.count, change.roles);
+                        break;
+                    }
                 }
             }
         }

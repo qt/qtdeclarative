@@ -1481,6 +1481,28 @@ void tst_qdeclarativelistmodel::worker_remove_element()
 
     delete item;
     qApp->processEvents();
+
+    {
+        //don't crash if model was deleted earlier
+        QDeclarativeListModel* model = new QDeclarativeListModel;
+        model->setDynamicRoles(dynamicRoles);
+        QDeclarativeEngine eng;
+        QDeclarativeComponent component(&eng, testFileUrl("workerremoveelement.qml"));
+        QQuickItem *item = createWorkerTest(&eng, &component, model);
+        QVERIFY(item != 0);
+
+        QVERIFY(QMetaObject::invokeMethod(item, "addItem"));
+
+        QVERIFY(model->count() == 1);
+
+        QVERIFY(QMetaObject::invokeMethod(item, "removeItemViaWorker"));
+        QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
+        delete model;
+        qApp->processEvents(); //must not crash here
+        waitForWorker(item);
+
+        delete item;
+    }
 }
 
 void tst_qdeclarativelistmodel::worker_remove_list_data()
