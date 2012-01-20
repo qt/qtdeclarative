@@ -59,7 +59,6 @@ public:
     ~QDeclarativeInfo();
 
     inline QDeclarativeInfo &operator<<(QChar t) { QDebug::operator<<(t); return *this; }
-    inline QDeclarativeInfo &operator<<(QBool t) { QDebug::operator<<(t); return *this; }
     inline QDeclarativeInfo &operator<<(bool t) { QDebug::operator<<(t); return *this; }
     inline QDeclarativeInfo &operator<<(char t) { QDebug::operator<<(t); return *this; }
     inline QDeclarativeInfo &operator<<(signed short t) { QDebug::operator<<(t); return *this; }
