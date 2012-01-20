@@ -83,6 +83,7 @@ public:
 
     QQuickItem *rootItem() const;
     QQuickItem *activeFocusItem() const;
+    QObject *focusObject() const;
 
     QQuickItem *mouseGrabberItem() const;
 

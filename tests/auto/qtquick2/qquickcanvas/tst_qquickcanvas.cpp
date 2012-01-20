@@ -208,6 +208,8 @@ private slots:
 
     void animationsWhileHidden();
 
+    void focusObject();
+
 private:
     QTouchDevice *touchDevice;
 };
@@ -666,6 +668,30 @@ void tst_qquickcanvas::headless()
     QCOMPARE(originalContent, newContent);
 
 
+}
+
+void tst_qquickcanvas::focusObject()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.loadUrl(testFileUrl("focus.qml"));
+    QObject *created = component.create();
+    QVERIFY(created);
+
+    QQuickCanvas *canvas = qobject_cast<QQuickCanvas*>(created);
+    QVERIFY(canvas);
+
+    QQuickItem *item1 = canvas->findChild<QQuickItem*>("item1");
+    QVERIFY(item1);
+    item1->setFocus(true);
+    QCOMPARE(item1, canvas->focusObject());
+
+    QQuickItem *item2 = canvas->findChild<QQuickItem*>("item2");
+    QVERIFY(item2);
+    item2->setFocus(true);
+    QCOMPARE(item2, canvas->focusObject());
+
+    delete canvas;
 }
 
 QTEST_MAIN(tst_qquickcanvas)

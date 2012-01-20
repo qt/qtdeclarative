@@ -671,6 +671,16 @@ QQuickItem *QQuickCanvas::activeFocusItem() const
     return d->activeFocusItem;
 }
 
+QObject *QQuickCanvas::focusObject() const
+{
+    Q_D(const QQuickCanvas);
+
+    if (d->activeFocusItem)
+        return d->activeFocusItem;
+    return const_cast<QQuickCanvas*>(this);
+}
+
+
 /*!
   Returns the item which currently has the mouse grab.
 */
