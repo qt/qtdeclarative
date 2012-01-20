@@ -54,6 +54,44 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass ParentAnimation QQuickParentAnimation
+    \inqmlmodule QtQuick 2
+    \ingroup qml-animation-transition
+    \since QtQuick 2.0
+    \inherits Animation
+    \brief The ParentAnimation element animates changes in parent values.
+
+    ParentAnimation is used to animate a parent change for an \l Item.
+
+    For example, the following ParentChange changes \c blueRect to become
+    a child of \c redRect when it is clicked. The inclusion of the
+    ParentAnimation, which defines a NumberAnimation to be applied during
+    the transition, ensures the item animates smoothly as it moves to
+    its new parent:
+
+    \snippet doc/src/snippets/declarative/parentanimation.qml 0
+
+    A ParentAnimation can contain any number of animations. These animations will
+    be run in parallel; to run them sequentially, define them within a
+    SequentialAnimation.
+
+    In some cases, such as when reparenting between items with clipping enabled, it is useful
+    to animate the parent change via another item that does not have clipping
+    enabled. Such an item can be set using the \l via property.
+
+    For convenience, when a ParentAnimation is used in a \l Transition, it will
+    animate any ParentChange that has occurred during the state change.
+    This can be overridden by setting a specific target item using the
+    \l target property.
+
+    Like any other animation element, a ParentAnimation can be applied in a
+    number of ways, including transitions, behaviors and property value
+    sources. The \l {QML Animation and Transitions} documentation shows a
+    variety of methods for creating animations.
+
+    \sa {QML Animation and Transitions}, {declarative/animation/basics}{Animation basics example}
+*/
 QQuickParentAnimation::QQuickParentAnimation(QObject *parent)
     : QDeclarativeAnimationGroup(*(new QQuickParentAnimationPrivate), parent)
 {
@@ -78,6 +116,13 @@ QQuickParentAnimation::~QQuickParentAnimation()
 {
 }
 
+/*!
+    \qmlproperty Item QtQuick2::ParentAnimation::target
+    The item to reparent.
+
+    When used in a transition, if no target is specified, all
+    ParentChange occurrences are animated by the ParentAnimation.
+*/
 QQuickItem *QQuickParentAnimation::target() const
 {
     Q_D(const QQuickParentAnimation);
@@ -94,6 +139,15 @@ void QQuickParentAnimation::setTarget(QQuickItem *target)
     emit targetChanged();
 }
 
+/*!
+    \qmlproperty Item QtQuick2::ParentAnimation::newParent
+    The new parent to animate to.
+
+    If the ParentAnimation is defined within a \l Transition or \l Behavior,
+    this value defaults to the value defined in the end state of the
+    \l Transition, or the value of the property change that triggered the
+    \l Behavior.
+*/
 QQuickItem *QQuickParentAnimation::newParent() const
 {
     Q_D(const QQuickParentAnimation);
@@ -110,6 +164,19 @@ void QQuickParentAnimation::setNewParent(QQuickItem *newParent)
     emit newParentChanged();
 }
 
+/*!
+    \qmlproperty Item QtQuick2::ParentAnimation::via
+    The item to reparent via. This provides a way to do an unclipped animation
+    when both the old parent and new parent are clipped.
+
+    \qml
+    ParentAnimation {
+        target: myItem
+        via: topLevelItem
+        // ...
+    }
+    \endqml
+*/
 QQuickItem *QQuickParentAnimation::via() const
 {
     Q_D(const QQuickParentAnimation);
@@ -347,6 +414,31 @@ QAbstractAnimation *QQuickParentAnimation::qtAnimation()
     return d->topLevelGroup;
 }
 
+/*!
+    \qmlclass AnchorAnimation QQuickAnchorAnimation
+    \inqmlmodule QtQuick 2
+    \ingroup qml-animation-transition
+    \inherits Animation
+    \brief The AnchorAnimation element animates changes in anchor values.
+
+    AnchorAnimation is used to animate an anchor change.
+
+    In the following snippet we animate the addition of a right anchor to a \l Rectangle:
+
+    \snippet doc/src/snippets/declarative/anchoranimation.qml 0
+
+    For convenience, when an AnchorAnimation is used in a \l Transition, it will
+    animate any AnchorChanges that have occurred during the state change.
+    This can be overridden by setting a specific target item using the
+    \l target property.
+
+    Like any other animation element, an AnchorAnimation can be applied in a
+    number of ways, including transitions, behaviors and property value
+    sources. The \l {QML Animation and Transitions} documentation shows a
+    variety of methods for creating animations.
+
+    \sa {QML Animation and Transitions}, AnchorChanges
+*/
 QQuickAnchorAnimation::QQuickAnchorAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QQuickAnchorAnimationPrivate), parent)
 {
@@ -365,12 +457,25 @@ QAbstractAnimation *QQuickAnchorAnimation::qtAnimation()
     return d->va;
 }
 
+/*!
+    \qmlproperty list<Item> QtQuick2::AnchorAnimation::targets
+    The items to reanchor.
+
+    If no targets are specified all AnchorChanges will be
+    animated by the AnchorAnimation.
+*/
 QDeclarativeListProperty<QQuickItem> QQuickAnchorAnimation::targets()
 {
     Q_D(QQuickAnchorAnimation);
     return QDeclarativeListProperty<QQuickItem>(this, d->targets);
 }
 
+/*!
+    \qmlproperty int QtQuick2::AnchorAnimation::duration
+    This property holds the duration of the animation, in milliseconds.
+
+    The default value is 250.
+*/
 int QQuickAnchorAnimation::duration() const
 {
     Q_D(const QQuickAnchorAnimation);
@@ -391,6 +496,24 @@ void QQuickAnchorAnimation::setDuration(int duration)
     emit durationChanged(duration);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::AnchorAnimation::easing.type
+    \qmlproperty real QtQuick2::AnchorAnimation::easing.amplitude
+    \qmlproperty real QtQuick2::AnchorAnimation::easing.overshoot
+    \qmlproperty real QtQuick2::AnchorAnimation::easing.period
+    \brief the easing curve used for the animation.
+
+    To specify an easing curve you need to specify at least the type. For some curves you can also specify
+    amplitude, period and/or overshoot. The default easing curve is
+    Linear.
+
+    \qml
+    AnchorAnimation { easing.type: Easing.InOutQuad }
+    \endqml
+
+    See the \l{PropertyAnimation::easing.type} documentation for information
+    about the different types of easing curves.
+*/
 QEasingCurve QQuickAnchorAnimation::easing() const
 {
     Q_D(const QQuickAnchorAnimation);
