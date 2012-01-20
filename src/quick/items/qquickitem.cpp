@@ -2919,7 +2919,6 @@ void QQuickItem::updatePolish()
 
 void QQuickItem::sendAccessibilityUpdate()
 {
-    Q_D(QQuickItem);
 }
 
 void QQuickItemPrivate::removeItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
@@ -5654,6 +5653,7 @@ void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
 
 void QQuickItemLayer::itemOpacityChanged(QQuickItem *item)
 {
+    Q_UNUSED(item)
     updateOpacity();
 }
 
@@ -5664,6 +5664,7 @@ void QQuickItemLayer::itemGeometryChanged(QQuickItem *, const QRectF &, const QR
 
 void QQuickItemLayer::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
+    Q_UNUSED(item)
     if (parent == m_effectSource || parent == m_effect)
         return;
 
