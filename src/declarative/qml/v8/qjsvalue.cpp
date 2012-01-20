@@ -324,22 +324,6 @@ bool QJSValue::isCallable() const
     return d->isCallable();
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Use isCallable() instead.
-*/
-bool QJSValue::isFunction() const
-{
-    Q_D(const QJSValue);
-    QScriptIsolate api(d->engine());
-    return d->isCallable();
-}
-
-#endif // QT_DEPRECATED
-
 /*!
   Returns true if this QJSValue is a variant value;
   otherwise returns false.

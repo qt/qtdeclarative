@@ -119,8 +119,6 @@ public:
 
 #ifdef QT_DEPRECATED
     QT_DEPRECATED QJSEngine *engine() const;
-
-    QT_DEPRECATED bool isFunction() const;
 #endif
 
 private:
