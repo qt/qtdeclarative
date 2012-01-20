@@ -373,6 +373,7 @@ void QQuickTextEdit::setFont(const QFont &font)
         }
         updateSize();
         updateDocument();
+        updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont);
     }
     emit fontChanged(d->sourceFont);
 }
@@ -1248,6 +1249,7 @@ void QQuickTextEdit::setReadOnly(bool r)
     if (!r)
         d->control->moveCursor(QTextCursor::End);
 
+    updateInputMethod(Qt::ImEnabled);
     q_canPasteChanged();
     emit readOnlyChanged(r);
 }
@@ -1853,7 +1855,7 @@ void QQuickTextEdit::moveCursorDelegate()
 {
     Q_D(QQuickTextEdit);
     d->determineHorizontalAlignment();
-    updateMicroFocus();
+    updateInputMethod();
     emit cursorRectangleChanged();
     if (!d->cursor)
         return;

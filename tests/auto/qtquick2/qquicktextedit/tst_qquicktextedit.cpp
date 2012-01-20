@@ -144,6 +144,7 @@ private slots:
     void canPaste();
     void canPasteEmpty();
     void textInput();
+    void inputPanelUpdate();
     void openInputPanel();
     void geometrySignals();
     void pastingRichText_QTBUG_14003();
@@ -226,7 +227,7 @@ void tst_qquicktextedit::simulateKeys(QWindow *window, const QList<Key> &keys)
 
 void tst_qquicktextedit::simulateKeys(QWindow *window, const QKeySequence &sequence)
 {
-    for (uint i = 0; i < sequence.count(); ++i) {
+    for (int i = 0; i < sequence.count(); ++i) {
         const int key = sequence[i];
         const int modifiers = key & Qt::KeyboardModifierMask;
 
@@ -236,7 +237,7 @@ void tst_qquicktextedit::simulateKeys(QWindow *window, const QKeySequence &seque
 
 QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
 {
-    for (uint i = 0; i < sequence.count(); ++i)
+    for (int i = 0; i < sequence.count(); ++i)
         keys << Key(sequence[i], QChar());
     return keys;
 }
@@ -2131,6 +2132,100 @@ void tst_qquicktextedit::textInput()
     QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event2);
     QCOMPARE(spy.count(), 1);
     QCOMPARE(edit->text(), QString("string"));
+
+    QInputMethodQueryEvent queryEvent(Qt::ImEnabled);
+    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &queryEvent);
+    QCOMPARE(queryEvent.value(Qt::ImEnabled).toBool(), true);
+
+    edit->setReadOnly(true);
+    QGuiApplication::sendEvent(edit, &queryEvent);
+    QCOMPARE(queryEvent.value(Qt::ImEnabled).toBool(), false);
+}
+
+void tst_qquicktextedit::inputPanelUpdate()
+{
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
+    QQuickView view(testFileUrl("inputMethodEvent.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
+    QVERIFY(edit);
+    QVERIFY(edit->hasActiveFocus() == true);
+
+    // text change even without cursor position change needs to trigger update
+    edit->setText("test");
+    platformInputContext.clear();
+    edit->setText("xxxx");
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // input method event replacing text
+    platformInputContext.clear();
+    {
+        QInputMethodEvent inputMethodEvent;
+        inputMethodEvent.setCommitString("y", -1, 1);
+        QGuiApplication::sendEvent(edit, &inputMethodEvent);
+    }
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // input method changing selection
+    platformInputContext.clear();
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        attributes << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 0, 2, QVariant());
+        QInputMethodEvent inputMethodEvent("", attributes);
+        QGuiApplication::sendEvent(edit, &inputMethodEvent);
+    }
+    QVERIFY(edit->selectionStart() != edit->selectionEnd());
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // font changes
+    platformInputContext.clear();
+    QFont font = edit->font();
+    font.setBold(!font.bold());
+    edit->setFont(font);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // normal input
+    platformInputContext.clear();
+    {
+        QInputMethodEvent inputMethodEvent;
+        inputMethodEvent.setCommitString("y");
+        QGuiApplication::sendEvent(edit, &inputMethodEvent);
+    }
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // changing cursor position
+    platformInputContext.clear();
+    edit->setCursorPosition(0);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // continuing with selection
+    platformInputContext.clear();
+    edit->moveCursorSelection(1);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // read only disabled input method
+    platformInputContext.clear();
+    edit->setReadOnly(true);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+    edit->setReadOnly(false);
+
+    // no updates while no focus
+    edit->setFocus(false);
+    platformInputContext.clear();
+    edit->setText("Foo");
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
+    edit->setCursorPosition(1);
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
+    edit->selectAll();
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
+    edit->setReadOnly(true);
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
 }
 
 void tst_qquicktextedit::openInputPanel()

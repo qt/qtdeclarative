@@ -3081,13 +3081,6 @@ void QQuickItem::setInputMethodHints(Qt::InputMethodHints hints)
         qApp->inputPanel()->update(Qt::ImHints);
 }
 
-void QQuickItem::updateMicroFocus()
-{
-    QInputPanel *p = qApp->inputPanel();
-    if (p->inputItem() == this)
-        qApp->inputPanel()->update(Qt::ImQueryInput);
-}
-
 QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 {
     Q_D(const QQuickItem);
@@ -3606,6 +3599,15 @@ void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_UNUSED(change);
     Q_UNUSED(value);
+}
+
+/*!
+    Notify input method on updated query values if needed. \a indicates changed attributes.
+*/
+void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
+{
+    if (hasActiveFocus())
+        qApp->inputPanel()->update(queries);
 }
 
 /*! \internal */

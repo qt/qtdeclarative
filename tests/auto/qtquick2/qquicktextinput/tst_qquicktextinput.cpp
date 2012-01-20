@@ -222,7 +222,7 @@ void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
 
 void tst_qquicktextinput::simulateKeys(QWindow *window, const QKeySequence &sequence)
 {
-    for (uint i = 0; i < sequence.count(); ++i) {
+    for (int i = 0; i < sequence.count(); ++i) {
         const int key = sequence[i];
         const int modifiers = key & Qt::KeyboardModifierMask;
 
@@ -232,7 +232,7 @@ void tst_qquicktextinput::simulateKeys(QWindow *window, const QKeySequence &sequ
 
 QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
 {
-    for (uint i = 0; i < sequence.count(); ++i)
+    for (int i = 0; i < sequence.count(); ++i)
         keys << Key(sequence[i], QChar());
     return keys;
 }
@@ -1951,6 +1951,14 @@ void tst_qquicktextinput::inputMethods()
     event.setCommitString("replacement", -input->text().length(), input->text().length());
     QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
     QCOMPARE(input->selectionStart(), input->selectionEnd());
+
+    QInputMethodQueryEvent enabledQueryEvent(Qt::ImEnabled);
+    QGuiApplication::sendEvent(input, &enabledQueryEvent);
+    QCOMPARE(enabledQueryEvent.value(Qt::ImEnabled).toBool(), true);
+
+    input->setReadOnly(true);
+    QGuiApplication::sendEvent(input, &enabledQueryEvent);
+    QCOMPARE(enabledQueryEvent.value(Qt::ImEnabled).toBool(), false);
 }
 
 /*
@@ -3081,6 +3089,24 @@ void tst_qquicktextinput::inputPanelUpdate()
     platformInputContext.clear();
     input->setCursorPosition(0);
     QVERIFY(platformInputContext.m_updateCallCount > 0);
+
+    // read only disabled input method
+    platformInputContext.clear();
+    input->setReadOnly(true);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
+    input->setReadOnly(false);
+
+    // no updates while no focus
+    input->setFocus(false);
+    platformInputContext.clear();
+    input->setText("Foo");
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
+    input->setCursorPosition(1);
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
+    input->selectAll();
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
+    input->setReadOnly(true);
+    QCOMPARE(platformInputContext.m_updateCallCount, 0);
 }
 
 void tst_qquicktextinput::cursorRectangleSize()

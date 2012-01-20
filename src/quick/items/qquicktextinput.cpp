@@ -306,7 +306,7 @@ void QQuickTextInput::setFont(const QFont &font)
     if (oldFont != d->font) {
         d->updateLayout();
         updateCursorRectangle();
-        qApp->inputPanel()->update(Qt::ImCursorRectangle | Qt::ImFont);
+        updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont);
     }
     emit fontChanged(d->sourceFont);
 }
@@ -575,6 +575,7 @@ void QQuickTextInput::setReadOnly(bool ro)
     d->m_readOnly = ro;
     if (!ro)
         d->setCursorPosition(d->end());
+    updateInputMethod(Qt::ImEnabled);
     q_canPasteChanged();
     d->emitUndoRedoChanged();
     emit readOnlyChanged(ro);
@@ -2508,6 +2509,7 @@ void QQuickTextInput::updateCursorRectangle()
         d->cursorItem->setPos(r.topLeft());
         d->cursorItem->setHeight(r.height());
     }
+    updateInputMethod(Qt::ImCursorRectangle);
 }
 
 void QQuickTextInput::selectionChanged()
@@ -2873,8 +2875,8 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
     }
     emit q->selectionChanged();
     emitCursorPositionChanged();
-    qApp->inputPanel()->update(Qt::ImCursorRectangle | Qt::ImAnchorPosition
-                               | Qt::ImCursorPosition | Qt::ImCurrentSelection);
+    q->updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorPosition
+                        | Qt::ImCursorPosition | Qt::ImCurrentSelection);
 }
 
 /*!
@@ -2964,7 +2966,7 @@ void QQuickTextInputPrivate::moveCursor(int pos, bool mark)
         emit q->selectionChanged();
     }
     emitCursorPositionChanged();
-    q->updateMicroFocus();
+    q->updateInputMethod();
 }
 
 /*!
@@ -3065,7 +3067,6 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
         emitCursorPositionChanged();
     } else if (m_preeditCursor != oldPreeditCursor) {
         q->updateCursorRectangle();
-        qApp->inputPanel()->update(Qt::ImCursorRectangle);
     }
 
     bool tentativeCommitChanged = m_tentativeCommit != event->tentativeCommitString();
@@ -3080,8 +3081,8 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
 
     if (selectionChange) {
         emit q->selectionChanged();
-        qApp->inputPanel()->update(Qt::ImCursorRectangle | Qt::ImAnchorPosition
-                                   | Qt::ImCursorPosition | Qt::ImCurrentSelection);
+        q->updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorPosition
+                            | Qt::ImCursorPosition | Qt::ImCurrentSelection);
     }
 }
 
@@ -3123,7 +3124,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     Q_Q(QQuickTextInput);
 
     Q_UNUSED(update)
-    bool notifyInputPanel = m_textDirty || m_selDirty;
+    bool inputMethodAttributesChanged = m_textDirty || m_selDirty;
     bool alignmentChanged = false;
 
     if (m_textDirty) {
@@ -3194,9 +3195,9 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         emit q->selectionChanged();
     }
 
-    notifyInputPanel |= (m_cursor == m_lastCursorPos);
-    if (notifyInputPanel)
-        q->updateMicroFocus();
+    inputMethodAttributesChanged |= (m_cursor == m_lastCursorPos);
+    if (inputMethodAttributesChanged)
+        q->updateInputMethod();
     emitUndoRedoChanged();
 
     if (!emitCursorPositionChanged() && alignmentChanged)

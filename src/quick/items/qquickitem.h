@@ -324,7 +324,6 @@ public:
 
 public Q_SLOTS:
     void update();
-    void updateMicroFocus();
 
 Q_SIGNALS:
     void childrenRectChanged(const QRectF &);
@@ -358,6 +357,8 @@ protected:
 
     bool isComponentComplete() const;
     virtual void itemChange(ItemChange, const ItemChangeData &);
+
+    void updateInputMethod(Qt::InputMethodQueries queries = Qt::ImQueryInput);
 
     void setImplicitWidth(qreal);
     bool widthValid() const; // ### better name?
