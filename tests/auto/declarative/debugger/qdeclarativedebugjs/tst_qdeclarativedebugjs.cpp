@@ -362,7 +362,7 @@ void QJSDebugClient::continueDebugging(StepAction action, int count)
             break;
         default:break;
         }
-        if (args.isValid()) {
+        if (!args.isUndefined()) {
             if (count != 1)
                 args.setProperty(QLatin1String(STEPCOUNT),QJSValue(count));
             jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
@@ -403,7 +403,7 @@ void QJSDebugClient::evaluate(QString expr, bool global, bool disableBreak, int 
     if (disableBreak)
         args.setProperty(QLatin1String(DISABLEBREAK),QJSValue(disableBreak));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -436,7 +436,7 @@ void QJSDebugClient::lookup(QList<int> handles, bool includeSource)
     if (includeSource)
         args.setProperty(QLatin1String(INCLUDESOURCE),QJSValue(includeSource));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -468,7 +468,7 @@ void QJSDebugClient::backtrace(int fromFrame, int toFrame, bool bottom)
     if (bottom)
         args.setProperty(QLatin1String(BOTTOM),QJSValue(bottom));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -491,7 +491,7 @@ void QJSDebugClient::frame(int number)
         QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
         args.setProperty(QLatin1String(NUMBER),QJSValue(number));
 
-        if (args.isValid()) {
+        if (!args.isUndefined()) {
             jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
         }
     }
@@ -519,7 +519,7 @@ void QJSDebugClient::scope(int number, int frameNumber)
         if (frameNumber != -1)
             args.setProperty(QLatin1String(FRAMENUMBER),QJSValue(frameNumber));
 
-        if (args.isValid()) {
+        if (!args.isUndefined()) {
             jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
         }
     }
@@ -543,7 +543,7 @@ void QJSDebugClient::scopes(int frameNumber)
         QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
         args.setProperty(QLatin1String(FRAMENUMBER),QJSValue(frameNumber));
 
-        if (args.isValid()) {
+        if (!args.isUndefined()) {
             jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
         }
     }
@@ -588,7 +588,7 @@ void QJSDebugClient::scripts(int types, QList<int> ids, bool includeSource, QVar
     if (includeSource)
         args.setProperty(QLatin1String(INCLUDESOURCE),QJSValue(includeSource));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -621,7 +621,7 @@ void QJSDebugClient::source(int frame, int fromLine, int toLine)
     if (toLine != -1)
         args.setProperty(QLatin1String(TOLINE),QJSValue(toLine));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -673,7 +673,7 @@ void QJSDebugClient::setBreakpoint(QString type, QString target, int line, int c
         if (ignoreCount != -1)
             args.setProperty(QLatin1String(IGNORECOUNT),QJSValue(ignoreCount));
 
-        if (args.isValid()) {
+        if (!args.isUndefined()) {
             jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
         }
 
@@ -707,7 +707,7 @@ void QJSDebugClient::changeBreakpoint(int breakpoint, bool enabled, QString cond
     if (ignoreCount != -1)
         args.setProperty(QLatin1String(IGNORECOUNT),QJSValue(ignoreCount));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -730,7 +730,7 @@ void QJSDebugClient::clearBreakpoint(int breakpoint)
 
     args.setProperty(QLatin1String(BREAKPOINT),QJSValue(breakpoint));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -760,7 +760,7 @@ void QJSDebugClient::setExceptionBreak(Exception type, bool enabled)
     if (enabled)
         args.setProperty(QLatin1String(ENABLED),QJSValue(enabled));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -783,7 +783,7 @@ void QJSDebugClient::v8flags(QString flags)
 
     args.setProperty(QLatin1String(FLAGS),QJSValue(flags));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
@@ -822,7 +822,7 @@ void QJSDebugClient::version()
 //        args.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(PAUSE)));
 
 //    args.setProperty(QLatin1String("modules"),QJSValue(1));
-//    if (args.isValid()) {
+//    if (!args.isUndefined()) {
 //        jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
 //    }
 
@@ -858,7 +858,7 @@ void QJSDebugClient::gc()
 
     args.setProperty(QLatin1String(TYPE),QJSValue(QLatin1String(ALL)));
 
-    if (args.isValid()) {
+    if (!args.isUndefined()) {
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
