@@ -1147,9 +1147,9 @@ template <int N> void tst_qquickvisualdatamodel::groups_verify(
         QCOMPARE(evaluate<bool>(delegate, "test6"), vMember[i]);
         QCOMPARE(evaluate<int>(delegate, "test7") , sIndex[i]);
         QCOMPARE(evaluate<bool>(delegate, "test8"), sMember[i]);
-        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("items")   , QBool(true));
-        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("visible") , QBool(vMember[i]));
-        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("selected"), QBool(sMember[i]));
+        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("items")   , bool(true));
+        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("visible") , bool(vMember[i]));
+        QCOMPARE(evaluate<QStringList>(delegate, "test9").contains("selected"), bool(sMember[i]));
     }
     failed = false;
 }
