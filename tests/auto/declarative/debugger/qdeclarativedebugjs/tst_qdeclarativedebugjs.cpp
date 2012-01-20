@@ -141,7 +141,7 @@ const char *BREAKPOINTRELOCATION_QMLFILE = "breakpointRelocation.qml";
 
 #define VARIANTMAPINIT \
     QString obj("{}"); \
-    QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj); \
+    QJSValue jsonVal = parser.call(QJSValueList() << obj); \
     jsonVal.setProperty(SEQ,QJSValue(seq++)); \
     jsonVal.setProperty(TYPE,REQUEST);
 
@@ -352,7 +352,7 @@ void QJSDebugClient::continueDebugging(StepAction action, int count)
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(CONTINEDEBUGGING)));
 
     if (action != Continue) {
-        QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+        QJSValue args = parser.call(QJSValueList() << obj);
         switch (action) {
         case In: args.setProperty(QLatin1String(STEPACTION),QJSValue(QLatin1String(IN)));
             break;
@@ -368,7 +368,7 @@ void QJSDebugClient::continueDebugging(StepAction action, int count)
             jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
         }
     }
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -391,7 +391,7 @@ void QJSDebugClient::evaluate(QString expr, bool global, bool disableBreak, int 
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(EVALUATE)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
     args.setProperty(QLatin1String(EXPRESSION),QJSValue(expr));
 
     if (frame != -1)
@@ -407,7 +407,7 @@ void QJSDebugClient::evaluate(QString expr, bool global, bool disableBreak, int 
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -423,10 +423,10 @@ void QJSDebugClient::lookup(QList<int> handles, bool includeSource)
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(LOOKUP)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     QString arr("[]");
-    QJSValue array = parser.call(QJSValue(), QJSValueList() << arr);
+    QJSValue array = parser.call(QJSValueList() << arr);
     int index = 0;
     foreach (int handle, handles) {
         array.setProperty(index++,QJSValue(handle));
@@ -440,7 +440,7 @@ void QJSDebugClient::lookup(QList<int> handles, bool includeSource)
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -457,7 +457,7 @@ void QJSDebugClient::backtrace(int fromFrame, int toFrame, bool bottom)
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(BACKTRACE)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     if (fromFrame != -1)
         args.setProperty(QLatin1String(FROMFRAME),QJSValue(fromFrame));
@@ -472,7 +472,7 @@ void QJSDebugClient::backtrace(int fromFrame, int toFrame, bool bottom)
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -488,7 +488,7 @@ void QJSDebugClient::frame(int number)
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(FRAME)));
 
     if (number != -1) {
-        QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+        QJSValue args = parser.call(QJSValueList() << obj);
         args.setProperty(QLatin1String(NUMBER),QJSValue(number));
 
         if (!args.isUndefined()) {
@@ -496,7 +496,7 @@ void QJSDebugClient::frame(int number)
         }
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -513,7 +513,7 @@ void QJSDebugClient::scope(int number, int frameNumber)
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(SCOPE)));
 
     if (number != -1) {
-        QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+        QJSValue args = parser.call(QJSValueList() << obj);
         args.setProperty(QLatin1String(NUMBER),QJSValue(number));
 
         if (frameNumber != -1)
@@ -524,7 +524,7 @@ void QJSDebugClient::scope(int number, int frameNumber)
         }
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -540,7 +540,7 @@ void QJSDebugClient::scopes(int frameNumber)
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(SCOPES)));
 
     if (frameNumber != -1) {
-        QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+        QJSValue args = parser.call(QJSValueList() << obj);
         args.setProperty(QLatin1String(FRAMENUMBER),QJSValue(frameNumber));
 
         if (!args.isUndefined()) {
@@ -548,7 +548,7 @@ void QJSDebugClient::scopes(int frameNumber)
         }
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -572,12 +572,12 @@ void QJSDebugClient::scripts(int types, QList<int> ids, bool includeSource, QVar
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(SCRIPTS)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
     args.setProperty(QLatin1String(TYPES),QJSValue(types));
 
     if (ids.count()) {
         QString arr("[]");
-        QJSValue array = parser.call(QJSValue(), QJSValueList() << arr);
+        QJSValue array = parser.call(QJSValueList() << arr);
         int index = 0;
         foreach (int id, ids) {
             array.setProperty(index++,QJSValue(id));
@@ -592,7 +592,7 @@ void QJSDebugClient::scripts(int types, QList<int> ids, bool includeSource, QVar
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -610,7 +610,7 @@ void QJSDebugClient::source(int frame, int fromLine, int toLine)
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(SOURCE)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     if (frame != -1)
         args.setProperty(QLatin1String(FRAME),QJSValue(frame));
@@ -625,7 +625,7 @@ void QJSDebugClient::source(int frame, int fromLine, int toLine)
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -654,7 +654,7 @@ void QJSDebugClient::setBreakpoint(QString type, QString target, int line, int c
         VARIANTMAPINIT;
         jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(SETBREAKPOINT)));
 
-        QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+        QJSValue args = parser.call(QJSValueList() << obj);
 
         args.setProperty(QLatin1String(TYPE),QJSValue(type));
         args.setProperty(QLatin1String(TARGET),QJSValue(target));
@@ -677,7 +677,7 @@ void QJSDebugClient::setBreakpoint(QString type, QString target, int line, int c
             jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
         }
 
-        QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+        QJSValue json = stringify.call(QJSValueList() << jsonVal);
         sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
     }
 }
@@ -695,7 +695,7 @@ void QJSDebugClient::changeBreakpoint(int breakpoint, bool enabled, QString cond
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(CHANGEBREAKPOINT)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     args.setProperty(QLatin1String(BREAKPOINT),QJSValue(breakpoint));
 
@@ -711,7 +711,7 @@ void QJSDebugClient::changeBreakpoint(int breakpoint, bool enabled, QString cond
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -726,7 +726,7 @@ void QJSDebugClient::clearBreakpoint(int breakpoint)
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(CLEARBREAKPOINT)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     args.setProperty(QLatin1String(BREAKPOINT),QJSValue(breakpoint));
 
@@ -734,7 +734,7 @@ void QJSDebugClient::clearBreakpoint(int breakpoint)
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -750,7 +750,7 @@ void QJSDebugClient::setExceptionBreak(Exception type, bool enabled)
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(SETEXCEPTIONBREAK)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     if (type == All)
         args.setProperty(QLatin1String(TYPE),QJSValue(QLatin1String(ALL)));
@@ -764,7 +764,7 @@ void QJSDebugClient::setExceptionBreak(Exception type, bool enabled)
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -779,7 +779,7 @@ void QJSDebugClient::v8flags(QString flags)
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(V8FLAGS)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     args.setProperty(QLatin1String(FLAGS),QJSValue(flags));
 
@@ -787,7 +787,7 @@ void QJSDebugClient::v8flags(QString flags)
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -800,7 +800,7 @@ void QJSDebugClient::version()
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(VERSION)));
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -814,7 +814,7 @@ void QJSDebugClient::version()
 //    VARIANTMAPINIT;
 //    jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(PROFILE)));
 
-//    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+//    QJSValue args = parser.call(QJSValueList() << obj);
 
 //    if (command == Resume)
 //        args.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(RESUME)));
@@ -826,7 +826,7 @@ void QJSDebugClient::version()
 //        jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
 //    }
 
-//    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+//    QJSValue json = stringify.call(QJSValueList() << jsonVal);
 //    sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 //}
 
@@ -839,7 +839,7 @@ void QJSDebugClient::disconnect()
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(DISCONNECT)));
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(DISCONNECT, json.toString().toUtf8()));
 }
 
@@ -854,7 +854,7 @@ void QJSDebugClient::gc()
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(GARBAGECOLLECTOR)));
 
-    QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+    QJSValue args = parser.call(QJSValueList() << obj);
 
     args.setProperty(QLatin1String(TYPE),QJSValue(QLatin1String(ALL)));
 
@@ -862,7 +862,7 @@ void QJSDebugClient::gc()
         jsonVal.setProperty(QLatin1String(ARGUMENTS),args);
     }
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -875,7 +875,7 @@ void QJSDebugClient::listBreakpoints()
     VARIANTMAPINIT;
     jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(LISTBREAKPOINTS)));
 
-    QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+    QJSValue json = stringify.call(QJSValueList() << jsonVal);
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
@@ -905,7 +905,7 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
 
         } else if (type == V8MESSAGE) {
             QString jsonString(response);
-            QVariantMap value = parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+            QVariantMap value = parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
             QString type = value.value("type").toString();
 
             if (type == "response") {
@@ -1157,7 +1157,7 @@ void tst_QDeclarativeDebugJS::listBreakpoints()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QList<QVariant> breakpoints = value.value("body").toMap().value("breakpoints").toList();
 
@@ -1176,7 +1176,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnCompleted()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1196,7 +1196,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnComponentCreated()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1215,7 +1215,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnTimerCallback()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1235,7 +1235,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptInDifferentFile()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1257,7 +1257,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnComment()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 1));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1279,7 +1279,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnEmptyLine()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 1));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1301,7 +1301,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptWithCondition()
 
     //Get the frame index
     QString jsonString = client->response;
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1313,7 +1313,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptWithCondition()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
 
     jsonString = client->response;
-    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     body = value.value("body").toMap();
 
@@ -1342,7 +1342,7 @@ void tst_QDeclarativeDebugJS::setBreakpointWhenAttaching()
 //    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
 //    QString jsonString(client->response);
-//    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+//    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
 //    QVariantMap body = value.value("body").toMap();
 
@@ -1362,7 +1362,7 @@ void tst_QDeclarativeDebugJS::setBreakpointOnEvent()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1386,7 +1386,7 @@ void tst_QDeclarativeDebugJS::changeBreakpoint()
 
     //Will hit 1st brakpoint, change this breakpoint enable = false
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
     QList<QVariant> breakpointsHit = body.value("breakpoints").toList();
@@ -1407,7 +1407,7 @@ void tst_QDeclarativeDebugJS::changeBreakpoint()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     jsonString = client->response;
-    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     body = value.value("body").toMap();
 
@@ -1431,7 +1431,7 @@ void tst_QDeclarativeDebugJS::changeBreakpointOnCondition()
 
     //Will hit 1st brakpoint, change this breakpoint enable = false
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
     QList<QVariant> breakpointsHit = body.value("breakpoints").toList();
@@ -1452,7 +1452,7 @@ void tst_QDeclarativeDebugJS::changeBreakpointOnCondition()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     jsonString = client->response;
-    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     body = value.value("body").toMap();
 
@@ -1476,7 +1476,7 @@ void tst_QDeclarativeDebugJS::clearBreakpoint()
 
     //Will hit 1st brakpoint, change this breakpoint enable = false
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
     QList<QVariant> breakpointsHit = body.value("breakpoints").toList();
@@ -1497,7 +1497,7 @@ void tst_QDeclarativeDebugJS::clearBreakpoint()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     jsonString = client->response;
-    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     body = value.value("body").toMap();
 
@@ -1529,7 +1529,7 @@ void tst_QDeclarativeDebugJS::stepNext()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1552,7 +1552,7 @@ void tst_QDeclarativeDebugJS::stepNextWithCount()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1576,7 +1576,7 @@ void tst_QDeclarativeDebugJS::stepIn()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1600,7 +1600,7 @@ void tst_QDeclarativeDebugJS::stepOut()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1625,7 +1625,7 @@ void tst_QDeclarativeDebugJS::continueDebugging()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1690,7 +1690,7 @@ void tst_QDeclarativeDebugJS::evaluateInGlobalScope()
 
     //Verify the value of 'print'
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1713,7 +1713,7 @@ void tst_QDeclarativeDebugJS::evaluateInLocalScope()
 
     //Get the frame index
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
 
@@ -1724,7 +1724,7 @@ void tst_QDeclarativeDebugJS::evaluateInLocalScope()
 
     //Verify the value of 'timer.interval'
     jsonString = client->response;
-    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+    value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     body = value.value("body").toMap();
 
@@ -1761,8 +1761,7 @@ void tst_QDeclarativeDebugJS::getScripts()
     client->scripts();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
     QString jsonString(client->response);
-    QVariantMap value = client->parser.call(QJSValue(),
-                                            QJSValueList()
+    QVariantMap value = client->parser.call(QJSValueList()
                                             << QJSValue(jsonString)).toVariant().toMap();
 
     QList<QVariant> scripts = value.value("body").toList();
