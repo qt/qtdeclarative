@@ -2185,6 +2185,28 @@ void QQuickTextInput::setMouseSelectionMode(SelectionMode mode)
 }
 
 /*!
+    \qmlproperty bool QtQuick2::TextInput::persistentSelection
+
+    Whether the TextInput should keep its selection when it loses active focus to another
+    item in the scene. By default this is set to false;
+*/
+
+bool QQuickTextInput::persistentSelection() const
+{
+    Q_D(const QQuickTextInput);
+    return d->persistentSelection;
+}
+
+void QQuickTextInput::setPersistentSelection(bool on)
+{
+    Q_D(QQuickTextInput);
+    if (d->persistentSelection == on)
+        return;
+    d->persistentSelection = on;
+    emit persistentSelectionChanged();
+}
+
+/*!
     \qmlproperty bool QtQuick2::TextInput::canPaste
 
     Returns true if the TextInput is writable and the content of the clipboard is
@@ -2438,7 +2460,8 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
 
         if (!hasFocus) {
             d->commitPreedit();
-            d->deselect();
+            if (!d->persistentSelection)
+                d->deselect();
             disconnect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                        this, SLOT(q_updateAlignment()));
         } else {

@@ -946,23 +946,47 @@ void tst_qquicktextedit::textMargin()
 
 void tst_qquicktextedit::persistentSelection()
 {
-    {
-        QString componentStr = "import QtQuick 2.0\nTextEdit {  persistentSelection: true; text: \"Hello World\" }";
-        QDeclarativeComponent texteditComponent(&engine);
-        texteditComponent.setData(componentStr.toLatin1(), QUrl());
-        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->persistentSelection(), true);
-    }
+    QQuickView canvas(testFileUrl("persistentSelection.qml"));
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
+    canvas.requestActivateWindow();
 
-    {
-        QString componentStr = "import QtQuick 2.0\nTextEdit {  persistentSelection: false; text: \"Hello World\" }";
-        QDeclarativeComponent texteditComponent(&engine);
-        texteditComponent.setData(componentStr.toLatin1(), QUrl());
-        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->persistentSelection(), false);
-    }
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
+    QVERIFY(edit);
+    QVERIFY(edit->hasActiveFocus());
+
+    QSignalSpy spy(edit, SIGNAL(persistentSelectionChanged(bool)));
+
+    QCOMPARE(edit->persistentSelection(), false);
+
+    edit->setPersistentSelection(false);
+    QCOMPARE(edit->persistentSelection(), false);
+    QCOMPARE(spy.count(), 0);
+
+    edit->select(1, 4);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
+
+    edit->setFocus(false);
+    QCOMPARE(edit->property("selected").toString(), QString());
+
+    edit->setFocus(true);
+    QCOMPARE(edit->property("selected").toString(), QString());
+
+    edit->setPersistentSelection(true);
+    QCOMPARE(edit->persistentSelection(), true);
+    QCOMPARE(spy.count(), 1);
+
+    edit->select(1, 4);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
+
+    edit->setFocus(false);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
+
+    edit->setFocus(true);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
+
 }
 
 void tst_qquicktextedit::focusOnPress()

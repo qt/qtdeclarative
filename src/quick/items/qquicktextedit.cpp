@@ -1806,6 +1806,7 @@ void QQuickTextEditPrivate::init()
     control->setView(q);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
     control->setAcceptRichText(false);
+    control->setCursorIsFocusIndicator(true);
 
     // QQuickTextControl follows the default text color
     // defined by the platform, declarative text

@@ -98,6 +98,7 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(bool autoScroll READ autoScroll WRITE setAutoScroll NOTIFY autoScrollChanged)
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
+    Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
@@ -233,6 +234,9 @@ public:
     SelectionMode mouseSelectionMode() const;
     void setMouseSelectionMode(SelectionMode mode);
 
+    bool persistentSelection() const;
+    void setPersistentSelection(bool persist);
+
     bool hasAcceptableInput() const;
 
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
@@ -279,6 +283,7 @@ Q_SIGNALS:
     void autoScrollChanged(bool autoScroll);
     void selectByMouseChanged(bool selectByMouse);
     void mouseSelectionModeChanged(SelectionMode mode);
+    void persistentSelectionChanged();
     void canPasteChanged();
     void canUndoChanged();
     void canRedoChanged();

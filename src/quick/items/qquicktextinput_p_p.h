@@ -117,6 +117,7 @@ public:
         , hAlignImplicit(true)
         , selectPressed(false)
         , textLayoutDirty(true)
+        , persistentSelection(false)
         , m_hideCursor(false)
         , m_separator(0)
         , m_readOnly(0)
@@ -244,6 +245,7 @@ public:
     bool hAlignImplicit:1;
     bool selectPressed:1;
     bool textLayoutDirty:1;
+    bool persistentSelection:1;
 
     uint m_hideCursor : 1; // used to hide the m_cursor inside preedit areas
     uint m_separator : 1;

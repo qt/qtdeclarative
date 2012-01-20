@@ -109,6 +109,7 @@ private slots:
     void color();
     void wrap();
     void selection();
+    void persistentSelection();
     void isRightToLeft_data();
     void isRightToLeft();
     void moveCursorSelection_data();
@@ -626,6 +627,50 @@ void tst_qquicktextinput::selection()
     QCOMPARE(textinputObject->selectionEnd(), 17);
 
     delete textinputObject;
+}
+
+void tst_qquicktextinput::persistentSelection()
+{
+    QQuickView canvas(testFileUrl("persistentSelection.qml"));
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
+    canvas.requestActivateWindow();
+
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(canvas.rootObject());
+    QVERIFY(input);
+    QVERIFY(input->hasActiveFocus());
+
+    QSignalSpy spy(input, SIGNAL(persistentSelectionChanged()));
+
+    QCOMPARE(input->persistentSelection(), false);
+
+    input->setPersistentSelection(false);
+    QCOMPARE(input->persistentSelection(), false);
+    QCOMPARE(spy.count(), 0);
+
+    input->select(1, 4);
+    QCOMPARE(input->property("selected").toString(), QLatin1String("ell"));
+
+    input->setFocus(false);
+    QCOMPARE(input->property("selected").toString(), QString());
+
+    input->setFocus(true);
+    QCOMPARE(input->property("selected").toString(), QString());
+
+    input->setPersistentSelection(true);
+    QCOMPARE(input->persistentSelection(), true);
+    QCOMPARE(spy.count(), 1);
+
+    input->select(1, 4);
+    QCOMPARE(input->property("selected").toString(), QLatin1String("ell"));
+
+    input->setFocus(false);
+    QCOMPARE(input->property("selected").toString(), QLatin1String("ell"));
+
+    input->setFocus(true);
+    QCOMPARE(input->property("selected").toString(), QLatin1String("ell"));
 }
 
 void tst_qquicktextinput::isRightToLeft_data()

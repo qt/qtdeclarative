@@ -1547,6 +1547,7 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
 {
     Q_Q(QQuickTextControl);
     emit q->updateRequest(q->selectionRect());
+    hasFocus = e->gotFocus();
     if (e->gotFocus()) {
         setBlinkingCursorEnabled(interactionFlags & (Qt::TextEditable | Qt::TextSelectableByKeyboard));
     } else {
@@ -1558,9 +1559,9 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
             && e->reason() != Qt::PopupFocusReason
             && cursor.hasSelection()) {
             cursor.clearSelection();
+            emit q->selectionChanged();
         }
     }
-    hasFocus = e->gotFocus();
 }
 
 QString QQuickTextControlPrivate::anchorForCursor(const QTextCursor &anchorCursor) const

@@ -72,7 +72,7 @@ public:
     QQuickTextEditPrivate()
       : color("black"), hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop),
       documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
-      persistentSelection(true), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
+      persistentSelection(false), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
       canPasteValid(false), hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
       textCached(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
