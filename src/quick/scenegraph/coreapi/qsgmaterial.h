@@ -113,7 +113,9 @@ class Q_QUICK_EXPORT QSGMaterial
 {
 public:
     enum Flag {
-        Blending = 0x0001
+        Blending            = 0x0001,
+        RequiresDeterminant = 0x0002,
+        RequiresFullMatrix  = 0x0004 | RequiresDeterminant
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

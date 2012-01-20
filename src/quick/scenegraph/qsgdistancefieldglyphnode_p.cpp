@@ -189,7 +189,7 @@ QSGDistanceFieldTextMaterial::QSGDistanceFieldTextMaterial()
     : m_glyph_cache(0)
     , m_texture(0)
 {
-   setFlag(Blending, true);
+   setFlag(Blending | RequiresDeterminant, true);
 }
 
 QSGDistanceFieldTextMaterial::~QSGDistanceFieldTextMaterial()

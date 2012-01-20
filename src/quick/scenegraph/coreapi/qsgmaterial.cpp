@@ -471,6 +471,12 @@ QSGMaterial::~QSGMaterial()
 
     \value Blending Set this flag to true if the material requires GL_BLEND to be
     enabled during rendering.
+
+    \value RequiresDeterminant Set this flag to true if the material relies on
+    the determinant of the matrix of the geometry nodes for rendering.
+
+    \value RequiresFullMatrix Set this flag to true if the material relies on
+    the full matrix of the geometry nodes for rendering.
  */
 
 

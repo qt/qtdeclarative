@@ -309,7 +309,7 @@ QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *n
     , m_node(node)
     , m_emittedLogChanged(false)
 {
-    setFlag(Blending, true);
+    setFlag(Blending | RequiresFullMatrix, true);
 }
 
 QSGMaterialType *QQuickShaderEffectMaterial::type() const
