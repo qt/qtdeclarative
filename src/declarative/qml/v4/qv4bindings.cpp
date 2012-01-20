@@ -242,11 +242,6 @@ void QV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::Write
 
 void QV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
-    QString bindingUrl;
-    if (parent->context())
-        bindingUrl = parent->context()->url.toString();
-
-    QDeclarativeBindingProfiler prof(bindingUrl, line, column);
     parent->run(this, flags);
 }
 
@@ -311,6 +306,8 @@ void QV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags 
         qmlInfo(binding->target) << tr("Binding loop detected for property \"%1\"").arg(name);
         return;
     }
+
+    QDeclarativeBindingProfiler prof(context->url.toString(), binding->line, binding->column);
 
     binding->updating = true;
     if (binding->property & 0xFFFF0000) {
