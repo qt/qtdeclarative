@@ -379,11 +379,14 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     QVarLengthArray<QQuickItem *, 20> changed;
 
     // Does this change the active focus?
-    if (item == rootItem || scopePrivate->activeFocus) {
+    if (item == rootItem || scopePrivate->activeFocus && item->isEnabled()) {
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = item;
-        while (newActiveFocusItem->isFocusScope() && newActiveFocusItem->scopedFocusItem())
+        while (newActiveFocusItem->isFocusScope()
+               && newActiveFocusItem->scopedFocusItem()
+               && newActiveFocusItem->scopedFocusItem()->isEnabled()) {
             newActiveFocusItem = newActiveFocusItem->scopedFocusItem();
+        }
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
@@ -405,7 +408,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
         }
     }
 
-    if (item != rootItem) {
+    if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
         // Correct focus chain in scope
         if (oldSubFocusItem) {
@@ -513,7 +516,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         }
     }
 
-    if (item != rootItem) {
+    if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
         // Correct focus chain in scope
         if (oldSubFocusItem) {

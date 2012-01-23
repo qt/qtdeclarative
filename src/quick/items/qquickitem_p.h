@@ -476,7 +476,7 @@ public:
     bool calcEffectiveVisible() const;
     void setEffectiveVisibleRecur(bool);
     bool calcEffectiveEnable() const;
-    void setEffectiveEnableRecur(bool);
+    void setEffectiveEnableRecur(QQuickItem *scope, bool);
 
     // XXX todo
     enum DirtyType {

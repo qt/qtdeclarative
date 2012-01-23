@@ -136,6 +136,7 @@ private slots:
 
     void visible();
     void enabled();
+    void enabledFocus();
 
     void mouseGrab();
     void touchEventAccept();
@@ -799,6 +800,144 @@ void tst_qquickitem::enabled()
     delete root;
     delete child1;
     delete child2;
+}
+
+void tst_qquickitem::enabledFocus()
+{
+    QQuickCanvas canvas;
+    ensureFocus(&canvas);
+
+    QQuickFocusScope root;
+
+    root.setFocus(true);
+    root.setEnabled(false);
+
+    QCOMPARE(root.isEnabled(), false);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), false);
+
+    root.setParentItem(canvas.rootItem());
+
+    QCOMPARE(root.isEnabled(), false);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+
+    root.setEnabled(true);
+    QCOMPARE(root.isEnabled(), true);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), true);
+    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+
+    QQuickItem child1;
+    child1.setParentItem(&root);
+
+    QCOMPARE(child1.isEnabled(), true);
+    QCOMPARE(child1.hasFocus(), false);
+    QCOMPARE(child1.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+
+    QQuickItem child2;
+    child2.setFocus(true);
+    child2.setParentItem(&root);
+
+    QCOMPARE(root.isEnabled(), true);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), true);
+    QCOMPARE(child2.isEnabled(), true);
+    QCOMPARE(child2.hasFocus(), true);
+    QCOMPARE(child2.hasActiveFocus(), true);
+    QCOMPARE(canvas.activeFocusItem(), &child2);
+
+    child2.setEnabled(false);
+
+    QCOMPARE(root.isEnabled(), true);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), true);
+    QCOMPARE(child1.isEnabled(), true);
+    QCOMPARE(child1.hasFocus(), false);
+    QCOMPARE(child1.hasActiveFocus(), false);
+    QCOMPARE(child2.isEnabled(), false);
+    QCOMPARE(child2.hasFocus(), true);
+    QCOMPARE(child2.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+
+    child1.setEnabled(false);
+    QCOMPARE(child1.isEnabled(), false);
+    QCOMPARE(child1.hasFocus(), false);
+    QCOMPARE(child1.hasActiveFocus(), false);
+
+    child1.setFocus(true);
+    QCOMPARE(child1.isEnabled(), false);
+    QCOMPARE(child1.hasFocus(), true);
+    QCOMPARE(child1.hasActiveFocus(), false);
+    QCOMPARE(child2.isEnabled(), false);
+    QCOMPARE(child2.hasFocus(), false);
+    QCOMPARE(child2.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+
+    child1.setEnabled(true);
+    QCOMPARE(child1.isEnabled(), true);
+    QCOMPARE(child1.hasFocus(), true);
+    QCOMPARE(child1.hasActiveFocus(), true);
+    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&child1));
+
+    root.setFocus(false);
+    QCOMPARE(root.isEnabled(), true);
+    QCOMPARE(root.hasFocus(), false);
+    QCOMPARE(root.hasActiveFocus(), false);
+    QCOMPARE(child1.isEnabled(), true);
+    QCOMPARE(child1.hasFocus(), true);
+    QCOMPARE(child1.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+
+    child2.forceActiveFocus();
+    QCOMPARE(root.isEnabled(), true);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), true);
+    QCOMPARE(child1.isEnabled(), true);
+    QCOMPARE(child1.hasFocus(), false);
+    QCOMPARE(child1.hasActiveFocus(), false);
+    QCOMPARE(child2.isEnabled(), false);
+    QCOMPARE(child2.hasFocus(), true);
+    QCOMPARE(child2.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+
+    root.setEnabled(false);
+    QCOMPARE(root.isEnabled(), false);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), false);
+    QCOMPARE(child1.isEnabled(), false);
+    QCOMPARE(child1.hasFocus(), false);
+    QCOMPARE(child1.hasActiveFocus(), false);
+    QCOMPARE(child2.isEnabled(), false);
+    QCOMPARE(child2.hasFocus(), true);
+    QCOMPARE(child2.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+
+    child1.forceActiveFocus();
+    QCOMPARE(root.isEnabled(), false);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), false);
+    QCOMPARE(child1.isEnabled(), false);
+    QCOMPARE(child1.hasFocus(), true);
+    QCOMPARE(child1.hasActiveFocus(), false);
+    QCOMPARE(child2.isEnabled(), false);
+    QCOMPARE(child2.hasFocus(), false);
+    QCOMPARE(child2.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+
+    root.setEnabled(true);
+    QCOMPARE(root.isEnabled(), true);
+    QCOMPARE(root.hasFocus(), true);
+    QCOMPARE(root.hasActiveFocus(), true);
+    QCOMPARE(child1.isEnabled(), true);
+    QCOMPARE(child1.hasFocus(), true);
+    QCOMPARE(child1.hasActiveFocus(), true);
+    QCOMPARE(child2.isEnabled(), false);
+    QCOMPARE(child2.hasFocus(), false);
+    QCOMPARE(child2.hasActiveFocus(), false);
+    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&child1));
 }
 
 void tst_qquickitem::mouseGrab()

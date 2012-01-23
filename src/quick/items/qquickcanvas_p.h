@@ -135,6 +135,7 @@ public:
     QList<QQuickItem*> hoverItems;
     enum FocusOption {
         DontChangeFocusProperty = 0x01,
+        DontChangeSubFocusItem  = 0x02
     };
     Q_DECLARE_FLAGS(FocusOptions, FocusOption)
 

@@ -1913,7 +1913,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         QQuickItemPrivate::get(d->parentItem)->addChild(this);
 
     d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
-    d->setEffectiveEnableRecur(d->calcEffectiveEnable());
+    d->setEffectiveEnableRecur(0, d->calcEffectiveEnable());
 
     if (scopeFocusedItem && d->parentItem && d->canvas) {
         // We need to test whether this item becomes scope focused
@@ -3901,7 +3901,11 @@ void QQuickItem::setEnabled(bool e)
 
     d->explicitEnable = e;
 
-    d->setEffectiveEnableRecur(d->calcEffectiveEnable());
+    QQuickItem *scope = parentItem();
+    while (scope && !scope->isFocusScope())
+        scope = scope->parentItem();
+
+    d->setEffectiveEnableRecur(scope, d->calcEffectiveEnable());
 }
 
 bool QQuickItemPrivate::calcEffectiveVisible() const
@@ -3959,11 +3963,9 @@ bool QQuickItemPrivate::calcEffectiveEnable() const
     return explicitEnable && (!parentItem || QQuickItemPrivate::get(parentItem)->effectiveEnable);
 }
 
-void QQuickItemPrivate::setEffectiveEnableRecur(bool newEffectiveEnable)
+void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffectiveEnable)
 {
     Q_Q(QQuickItem);
-
-    // XXX todo - need to fixup focus
 
     if (newEffectiveEnable && !explicitEnable) {
         // This item locally overrides enable
@@ -3981,10 +3983,21 @@ void QQuickItemPrivate::setEffectiveEnableRecur(bool newEffectiveEnable)
         QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(canvas);
         if (canvasPriv->mouseGrabberItem == q)
             q->ungrabMouse();
+        if (scope && !effectiveEnable && activeFocus) {
+            canvasPriv->clearFocusInScope(
+                    scope, q,  QQuickCanvasPrivate::DontChangeFocusProperty | QQuickCanvasPrivate::DontChangeSubFocusItem);
+        }
     }
 
-    for (int ii = 0; ii < childItems.count(); ++ii)
-        QQuickItemPrivate::get(childItems.at(ii))->setEffectiveEnableRecur(newEffectiveEnable);
+    for (int ii = 0; ii < childItems.count(); ++ii) {
+        QQuickItemPrivate::get(childItems.at(ii))->setEffectiveEnableRecur(
+                flags & QQuickItem::ItemIsFocusScope ? q : scope, newEffectiveEnable);
+    }
+
+    if (canvas && scope && effectiveEnable && focus) {
+        QQuickCanvasPrivate::get(canvas)->setFocusInScope(
+                scope, q, QQuickCanvasPrivate::DontChangeFocusProperty | QQuickCanvasPrivate::DontChangeSubFocusItem);
+    }
 
     emit q->enabledChanged();
 }
