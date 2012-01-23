@@ -195,7 +195,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
                     fixedPointPositions.data());
     cache->fillInPendingGlyphs();
 
-    int margin = cache->glyphMargin();
+    int margin = fontD->fontEngine->glyphMargin(cache->cacheType());
 
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
