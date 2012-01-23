@@ -35,7 +35,8 @@
 \title Network Transparency
 
 QML supports network transparency by using URLs (rather than file names) for all
-references from a QML document to other content:
+references from a QML document to other content. This means that anywhere a URL source is expected,
+QML can handle remote resources as well as local ones, for example in the following image source:
 
 \qml
 Image {
