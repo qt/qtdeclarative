@@ -1863,7 +1863,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
     } else {
         int i = 0;
         int to = buffer+tempPos+size()-1;
-        while (i < count && rowPos <= to + rowSize()*(columns - (colPos/colSize()))/qreal(columns)) {
+        while (i < count && rowPos <= to + rowSize()*(columns - colNum)/qreal(columns+1)) {
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                 item->index = modelIndex + i;
