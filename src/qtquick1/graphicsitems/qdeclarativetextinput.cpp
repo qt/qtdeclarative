@@ -1731,9 +1731,8 @@ void QDeclarative1TextInput::moveCursorSelection(int pos, SelectionMode mode)
     customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextInput. On other platforms
-    the panels are automatically opened when TextInput element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style.
+    The panels are automatically opened when TextInput element gains active focus. Input panels are
     always closed if no editor has active focus.
 
   . You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
@@ -1781,9 +1780,8 @@ void QDeclarative1TextInput::openSoftwareInputPanel()
     for customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextInput. On other platforms
-    the panels are automatically opened when TextInput element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style.
+    The panels are automatically opened when TextInput element gains active focus. Input panels are
     always closed if no editor has active focus.
 
   . You can disable the automatic behavior by setting the property \c activeFocusOnPress to false

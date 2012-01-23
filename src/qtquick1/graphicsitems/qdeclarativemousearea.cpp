@@ -684,10 +684,7 @@ void QDeclarative1MouseArea::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 void QDeclarative1MouseArea::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     bool acceptsContextMenuButton;
-#if defined(Q_OS_SYMBIAN)
-    // In Symbian a Long Tap on the screen will trigger. See QSymbianControl::HandleLongTapEventL().
-    acceptsContextMenuButton = acceptedButtons() & Qt::LeftButton;
-#elif defined(Q_WS_WINCE)
+#if defined(Q_WS_WINCE)
     // ### WinCE can trigger context menu event with a gesture in the left button or a
     // click with the right button. Since we have no way here to differentiate them when
     // event happens, accepting either of the them will block the event.

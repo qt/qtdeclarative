@@ -94,13 +94,12 @@ to export the design to Qt Quick Designer.
 features for completing code snippets, refactoring code, and viewing the element
 hierarchy of QML files.
 \o Build and deploy Qt Quick applications that target multiple desktop and
-mobile platforms, such as Microsoft Windows, Mac OS X, Linux, Symbian, and
-Maemo.
+mobile platforms, such as Microsoft Windows, Mac OS X, Linux, and Maemo.
 \o Debug JavaScript functions and execute JavaScript expressions in the current
 context, and inspect QML at runtime to explore the object structure, debug
 animations, and inspect colors.
 \o Deploy applications to mobile devices and create application installation
-packages for Symbian and Maemo devices that can be published in the Ovi Store
+packages for Maemo devices that can be published in the Ovi Store
 and other channels.
 \o Easily access information with the integrated context-sensitive Qt Help
 system.

@@ -79,11 +79,6 @@ public:
                  autoScroll(true), selectByMouse(false), canPaste(false), hAlignImplicit(true),
                  selectPressed(false)
     {
-#ifdef Q_OS_SYMBIAN
-        if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
-            showInputPanelOnFocus = false;
-        }
-#endif
     }
 
     ~QDeclarative1TextInputPrivate()

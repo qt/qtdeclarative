@@ -20,16 +20,6 @@ INSTALLS += feature
 
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 
-symbian {
-    DEFINES += QT_MAKEDLL
-    CONFIG += epocallowdlldata
-    contains(QT_EDITION, OpenSource) {
-        TARGET.CAPABILITY = LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData
-    } else {
-        TARGET.CAPABILITY = All -Tcb
-    }
-}
-
 #INCLUDEPATH += $$PWD/QtQuick1
 #INCLUDEPATH += $$PWD
 

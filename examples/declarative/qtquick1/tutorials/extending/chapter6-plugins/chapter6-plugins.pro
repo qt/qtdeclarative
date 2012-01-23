@@ -13,8 +13,3 @@ HEADERS += piechart.h \
 SOURCES += piechart.cpp \
            pieslice.cpp \
            chartsplugin.cpp
-
-symbian {
-    include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
-    TARGET.EPOCALLOWDLLDATA = 1
-}

@@ -44,7 +44,7 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)
+#if defined(Q_OS_WIN)
 #  if defined(QT_MAKEDLL) /* create a Qt DLL library */
 #    if defined(QT_BUILD_QUICK_LIB)
 #      define Q_QUICK_EXPORT Q_DECL_EXPORT
