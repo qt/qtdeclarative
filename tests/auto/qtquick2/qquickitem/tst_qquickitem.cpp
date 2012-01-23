@@ -66,7 +66,21 @@ protected:
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
     virtual void mousePressEvent(QMouseEvent *event) { event->accept(); ++pressCount; }
     virtual void mouseReleaseEvent(QMouseEvent *event) { event->accept(); ++releaseCount; }
+    virtual void touchEvent(QTouchEvent *event) { event->accept(); }
     virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; }
+};
+
+class TestCanvas: public QQuickCanvas
+{
+public:
+    TestCanvas()
+        : QQuickCanvas()
+    {}
+
+    virtual bool event(QEvent *event)
+    {
+        return QQuickCanvas::event(event);
+    }
 };
 
 class TestPolishItem : public QQuickItem
@@ -124,6 +138,7 @@ private slots:
     void enabled();
 
     void mouseGrab();
+    void touchEventAccept();
     void polishOutsideAnimation();
     void polishOnCompleted();
 
@@ -859,6 +874,31 @@ void tst_qquickitem::mouseGrab()
 
     delete child1;
     delete child2;
+    delete canvas;
+}
+
+void tst_qquickitem::touchEventAccept()
+{
+    TestCanvas *canvas = new TestCanvas;
+    canvas->resize(100, 100);
+    canvas->show();
+
+    TestItem *item = new TestItem;
+    item->setSize(QSizeF(100, 100));
+    item->setParentItem(canvas->rootItem());
+
+    static QTouchDevice* device = new QTouchDevice;
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device);
+
+    QTouchEvent *event = new QTouchEvent(QEvent::TouchBegin, device);
+
+    bool accepted = canvas->event(event);
+
+    QVERIFY(accepted && event->isAccepted());
+
+    delete event;
+    delete item;
     delete canvas;
 }
 

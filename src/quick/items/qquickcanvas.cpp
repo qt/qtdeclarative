@@ -718,9 +718,8 @@ bool QQuickCanvas::event(QEvent *e)
         QTouchEvent *touch = static_cast<QTouchEvent *>(e);
         d->translateTouchEvent(touch);
         d->deliverTouchEvent(touch);
-        if (!touch->isAccepted())
-            return false;
-        break;
+
+        return touch->isAccepted();
     }
     case QEvent::Leave:
         d->clearHover();
