@@ -48,7 +48,7 @@ classes replace their equivalents in QtQuick 1:
 
 \section2 QML Engine/Language Improvements
 
-JS engine changed to V8.
+JS engine changed to V8. For most QML users this should not make a visible difference beyond performance improvements, however a lot of undefined behavior semantics may have changed as well. As always, it is recommended not to rely on undefined behavior.
 
 Parser and compiler optimizations.
 
