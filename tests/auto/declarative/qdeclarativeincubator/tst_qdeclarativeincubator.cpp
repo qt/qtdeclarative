@@ -421,7 +421,8 @@ void tst_qdeclarativeincubator::clearDuringCompletion()
     QPointer<QObject> srt = SelfRegisteringType::me();
 
     incubator.clear();
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
     QVERIFY(incubator.isNull());
     QVERIFY(srt.isNull());
 }
@@ -458,7 +459,8 @@ void tst_qdeclarativeincubator::objectDeletionAfterInit()
     delete incubator.obj;
 
     incubator.clear();
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
     QVERIFY(incubator.isNull());
 }
 

@@ -1219,12 +1219,15 @@ void tst_qdeclarativeecmascript::dynamicDestruction()
 
     QMetaObject::invokeMethod(object, "killOther");
     QVERIFY(createdQmlObject);
-    QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
     QVERIFY(createdQmlObject);
     for (int ii = 0; createdQmlObject && ii < 50; ++ii) { // After 5 seconds we should give up
         if (createdQmlObject) {
             QTest::qWait(100);
-            QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
+            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+            QCoreApplication::processEvents();
         }
     }
     QVERIFY(!createdQmlObject);
@@ -1232,8 +1235,8 @@ void tst_qdeclarativeecmascript::dynamicDestruction()
     QDeclarativeEngine::setObjectOwnership(object, QDeclarativeEngine::JavaScriptOwnership);
     QMetaObject::invokeMethod(object, "killMe");
     QVERIFY(object);
-    QTest::qWait(0);
-    QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
     QVERIFY(!object);
     }
 
@@ -1250,7 +1253,8 @@ void tst_qdeclarativeecmascript::dynamicDestruction()
 
     QMetaObject::invokeMethod(o, "destroy");
 
-    QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 
     QVERIFY(qvariant_cast<QObject*>(o->property("objectProperty")) == 0);
 
@@ -1765,13 +1769,15 @@ void tst_qdeclarativeecmascript::dynamicCreationOwnership()
                 QMetaObject::invokeMethod(object, "performGc");
             }
             if (i % 10 == 0) {
-                QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+                QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+                QCoreApplication::processEvents();
             }
         }
 
         delete object;
     }
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
     QCOMPARE(dtorCount, expectedDtorCount);
 }
 
@@ -2612,7 +2618,8 @@ void tst_qdeclarativeecmascript::ownership()
 
         engine.collectGarbage();
 
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
 
         QVERIFY(own.object == 0);
 
@@ -2630,7 +2637,8 @@ void tst_qdeclarativeecmascript::ownership()
         
         engine.collectGarbage();
 
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
 
         QVERIFY(own.object != 0);
 
@@ -2685,7 +2693,8 @@ void tst_qdeclarativeecmascript::cppOwnershipReturnValue()
     delete object;
     }
 
-    QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 
     QVERIFY(source.value != 0);
 }
@@ -2713,7 +2722,8 @@ void tst_qdeclarativeecmascript::ownershipCustomReturnValue()
     }
 
     engine.collectGarbage();
-    QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 
     QVERIFY(source.value == 0);
 }
@@ -3750,7 +3760,8 @@ void tst_qdeclarativeecmascript::propertyVarCpp()
 static void gc(QDeclarativeEngine &engine)
 {
     engine.collectGarbage();
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 }
 
 void tst_qdeclarativeecmascript::propertyVarOwnership()
@@ -3829,7 +3840,8 @@ void tst_qdeclarativeecmascript::propertyVarImplicitOwnership()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignCircular");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QObject *rootObject = object->property("vp").value<QObject*>();
     QVERIFY(rootObject != 0);
     QObject *childObject = rootObject->findChild<QObject*>("text");
@@ -3839,10 +3851,12 @@ void tst_qdeclarativeecmascript::propertyVarImplicitOwnership()
     QMetaObject::invokeMethod(childObject, "constructQObject");    // creates a reference to a constructed QObject.
     QWeakPointer<QObject> qobjectGuard(childObject->property("vp").value<QObject*>()); // get the pointer prior to processing deleteLater events.
     QVERIFY(!qobjectGuard.isNull());
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QVERIFY(!qobjectGuard.isNull());
     QMetaObject::invokeMethod(object, "deassignCircular");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QVERIFY(qobjectGuard.isNull());                                // should have been collected now.
     delete object;
 }
@@ -3854,7 +3868,8 @@ void tst_qdeclarativeecmascript::propertyVarReparent()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignVarProp");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QObject *rect = object->property("vp").value<QObject*>();
     QObject *text = rect->findChild<QObject*>("textOne");
     QObject *text2 = rect->findChild<QObject*>("textTwo");
@@ -3875,13 +3890,15 @@ void tst_qdeclarativeecmascript::propertyVarReparent()
     // now reparent the "Image" object (currently, it has JS ownership)
     image->setParent(text);                                        // shouldn't be collected after deassignVp now, since has a parent.
     QMetaObject::invokeMethod(text2, "deassignVp");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QCOMPARE(text->property("textCanary").toInt(), 11);
     QCOMPARE(text2->property("textCanary").toInt(), 22);
     QVERIFY(!imageGuard.isNull());                                 // should still be alive.
     QCOMPARE(image->property("imageCanary").toInt(), 13);          // still able to access var properties
     QMetaObject::invokeMethod(object, "deassignVarProp");          // now deassign the root-object's vp, causing gc of rect+text+text2
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QVERIFY(imageGuard.isNull());                                  // should now have been deleted, due to parent being deleted.
     delete object;
 }
@@ -3895,7 +3912,8 @@ void tst_qdeclarativeecmascript::propertyVarReparentNullContext()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignVarProp");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QObject *rect = object->property("vp").value<QObject*>();
     QObject *text = rect->findChild<QObject*>("textOne");
     QObject *text2 = rect->findChild<QObject*>("textTwo");
@@ -3916,7 +3934,8 @@ void tst_qdeclarativeecmascript::propertyVarReparentNullContext()
     // now reparent the "Image" object (currently, it has JS ownership)
     image->setParent(object);                                      // reparented to base object.  after deassignVarProp, the ctxt will be invalid.
     QMetaObject::invokeMethod(object, "deassignVarProp");          // now deassign the root-object's vp, causing gc of rect+text+text2
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QVERIFY(!imageGuard.isNull());                                 // should still be alive.
     QVERIFY(!image->property("imageCanary").isValid());            // but varProperties won't be available (null context).
     delete object;
@@ -3930,17 +3949,20 @@ void tst_qdeclarativeecmascript::propertyVarCircular()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignCircular");           // cause assignment and gc
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QCOMPARE(object->property("canaryInt"), QVariant(5));
     QVariant canaryResourceVariant = object->property("canaryResource");
     QVERIFY(canaryResourceVariant.isValid());
     QPixmap canaryResourcePixmap = canaryResourceVariant.value<QPixmap>();
     canaryResourceVariant = QVariant();                            // invalidate it to remove one copy of the pixmap from memory.
     QMetaObject::invokeMethod(object, "deassignCanaryResource");   // remove one copy of the pixmap from memory
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QVERIFY(!canaryResourcePixmap.isDetached());                   // two copies extant - this and the propertyVar.vp.vp.vp.vp.memoryHog.
     QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QCOMPARE(object->property("canaryInt"), QVariant(2));
     QCOMPARE(object->property("canaryResource"), QVariant(1));
     QVERIFY(canaryResourcePixmap.isDetached());                    // now detached, since orig copy was member of qdvmemo which was deleted.
@@ -3955,7 +3977,8 @@ void tst_qdeclarativeecmascript::propertyVarCircular2()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignCircular");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QObject *rootObject = object->property("vp").value<QObject*>();
     QVERIFY(rootObject != 0);
     QObject *childObject = rootObject->findChild<QObject*>("text");
@@ -3968,7 +3991,8 @@ void tst_qdeclarativeecmascript::propertyVarCircular2()
     QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QMetaObject::invokeMethod(object, "deassignCircular");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QVERIFY(rootObjectTracker.isNull());                           // should have been collected
     QVERIFY(childObjectTracker.isNull());                          // should have been collected
     delete object;
@@ -3990,7 +4014,8 @@ void tst_qdeclarativeecmascript::propertyVarInheritance()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignCircular");           // cause assignment and gc
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     // we want to be able to track when the varProperties array of the last metaobject is disposed
     QObject *cco5 = object->property("varProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
     QObject *ico5 = object->property("varProperty").value<QObject*>()->property("inheritanceVarProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
@@ -4013,7 +4038,8 @@ void tst_qdeclarativeecmascript::propertyVarInheritance()
     }
     // now we deassign the var prop, which should trigger collection of item subtrees.
     QMetaObject::invokeMethod(object, "deassignCircular");         // cause deassignment and gc
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     // ensure that there are only weak handles to the underlying varProperties array remaining.
     gc(engine);
     QCOMPARE(propertyVarWeakRefCallbackCount, 2);                  // should have been called for both, since all refs should be weak.
@@ -4032,7 +4058,8 @@ void tst_qdeclarativeecmascript::propertyVarInheritance2()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignCircular");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QObject *rootObject = object->property("vp").value<QObject*>();
     QVERIFY(rootObject != 0);
     QObject *childObject = rootObject->findChild<QObject*>("text");
@@ -4051,7 +4078,8 @@ void tst_qdeclarativeecmascript::propertyVarInheritance2()
         QCOMPARE(childObject->property("textCanary").toInt(), 10);
     }
     QMetaObject::invokeMethod(object, "deassignCircular");
-    QCoreApplication::processEvents(QEventLoop::DeferredDeletion); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
+    QCoreApplication::processEvents();
     QVERIFY(propertyVarWeakRefCallbackCount == 1);                 // should have been collected now.
     delete object;
 }
@@ -4136,7 +4164,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QCOMPARE(dtorCount, 0); // second has JS ownership, kept alive by first's reference
         delete object;
         hrmEngine.collectGarbage();
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 3);
     }
 
@@ -4155,7 +4184,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QCOMPARE(dtorCount, 2); // both should be cleaned up, since circular references shouldn't keep alive.
         delete object;
         hrmEngine.collectGarbage();
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 3);
     }
 
@@ -4183,7 +4213,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QCOMPARE(dtorCount, 0); // due to reference from first to second, second shouldn't be collected.
         delete object;
         hrmEngine.collectGarbage();
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 3);
     }
 
@@ -4214,7 +4245,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QCOMPARE(dtorCount, 2); // despite circular references, both will be collected.
         delete object;
         hrmEngine.collectGarbage();
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 3);
     }
 
@@ -4252,13 +4284,15 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         second2->setParent(0);
         QDeclarativeEngine::setObjectOwnership(second2, QDeclarativeEngine::JavaScriptOwnership);
         gc(engine);
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 0); // due to reference from first1 to second2, second2 shouldn't be collected.
         delete object1;
         delete object2;
         hrmEngine1.collectGarbage();
         hrmEngine2.collectGarbage();
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 6);
     }
 
@@ -4305,13 +4339,15 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QDeclarativeEngine::setObjectOwnership(first2, QDeclarativeEngine::JavaScriptOwnership);
         QDeclarativeEngine::setObjectOwnership(second2, QDeclarativeEngine::JavaScriptOwnership);
         gc(engine);
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 4); // circular references shouldn't keep them alive.
         delete object1;
         delete object2;
         hrmEngine1.collectGarbage();
         hrmEngine2.collectGarbage();
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 6);
     }
 
@@ -4363,7 +4399,8 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         delete object1;
         delete object2;
         hrmEngine1->collectGarbage();
-        QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 6);
         delete hrmEngine1;
     }

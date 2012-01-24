@@ -1444,7 +1444,8 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
 
     row->metaObject()->invokeMethod(row, "destroySubRect");
 
-    qApp->processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 
     QTRY_VERIFY(rect1->property("index").toInt() == 1);
     QTRY_VERIFY(rect1->property("firstItem").toBool() == false);

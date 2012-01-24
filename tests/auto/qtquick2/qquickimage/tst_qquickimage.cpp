@@ -693,7 +693,8 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
 
     // shouldn't crash when deleting cancelled QDeclarativePixmapReplys.
     QTest::qWait(520); // Delay mode delays for 500 ms.
-    qApp->processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 }
 
 /*
