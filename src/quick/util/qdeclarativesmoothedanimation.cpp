@@ -421,8 +421,10 @@ QAbstractAnimationJob* QDeclarativeSmoothedAnimation::transition(QDeclarativeSta
         }
 
         foreach (QSmoothedAnimation *ease, d->activeAnimations.values()){
-            if (!anims.contains(ease))
+            if (!anims.contains(ease)) {
+                ease->clearTemplate();
                 d->activeAnimations.remove(ease->target);
+            }
         }
     }
     return wrapperGroup;

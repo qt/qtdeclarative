@@ -569,8 +569,10 @@ QAbstractAnimationJob* QDeclarativeSpringAnimation::transition(QDeclarativeState
             anims.insert(animation);
         }
         foreach (QSpringAnimation *anim, d->activeAnimations.values()){
-            if (!anims.contains(anim))
+            if (!anims.contains(anim)) {
+                anim->clearTemplate();
                 d->activeAnimations.remove(anim->target);
+            }
         }
     }
     return wrapperGroup;

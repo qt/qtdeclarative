@@ -835,8 +835,11 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QDeclarativeStateActions 
 
     QList<QQuickItem*> keys = d->activeAnimations.keys();
     foreach (QQuickItem *item, keys) {
-        if (d->activeAnimations.value(item)->state() == QAbstractAnimationJob::Stopped)
+        QQuickPathAnimationAnimator *anim = d->activeAnimations.value(item);
+        if (anim->state() == QAbstractAnimationJob::Stopped) {
+            anim->clearTemplate();
             d->activeAnimations.remove(item);
+        }
     }
 
     QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater();
