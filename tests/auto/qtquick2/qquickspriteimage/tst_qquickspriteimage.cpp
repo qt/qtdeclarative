@@ -89,7 +89,7 @@ void tst_qquickspriteimage::test_framerateAdvance()
     QQuickSpriteImage* sprite = canvas->rootObject()->findChild<QQuickSpriteImage*>("sprite");
     QVERIFY(sprite);
 
-    QCOMPARE(sprite->currentSprite(), QLatin1String("secondState"));
+    QTRY_COMPARE(sprite->currentSprite(), QLatin1String("secondState"));
     delete canvas;
 }
 
