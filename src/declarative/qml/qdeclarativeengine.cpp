@@ -74,6 +74,9 @@
 #include "qdeclarativeincubator.h"
 #include <private/qv8profilerservice_p.h>
 
+#include <QtCore/qstandardpaths.h>
+#include <QtCore/qsettings.h>
+
 #include <QtCore/qmetaobject.h>
 #include <QNetworkAccessManager>
 #include <QDebug>
@@ -454,6 +457,11 @@ void QDeclarativeEnginePrivate::init()
         QDeclarativeDebugTrace::initialize();
         QDebugMessageService::instance();
     }
+
+    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    offlineStoragePath = dataLocation.replace(QLatin1Char('/'), QDir::separator()) +
+                         QDir::separator() + QLatin1String("QML") +
+                         QDir::separator() + QLatin1String("OfflineStorage");
 }
 
 QDeclarativeWorkerScriptEngine *QDeclarativeEnginePrivate::getWorkerScriptEngine()
@@ -1543,13 +1551,13 @@ bool QDeclarativeEngine::importPlugin(const QString &filePath, const QString &ur
 void QDeclarativeEngine::setOfflineStoragePath(const QString& dir)
 {
     Q_D(QDeclarativeEngine);
-    qt_qmlsqldatabase_setOfflineStoragePath(d->v8engine(), dir);
+    d->offlineStoragePath = dir;
 }
 
 QString QDeclarativeEngine::offlineStoragePath() const
 {
     Q_D(const QDeclarativeEngine);
-    return qt_qmlsqldatabase_getOfflineStoragePath(d->v8engine());
+    return d->offlineStoragePath;
 }
 
 static void voidptr_destructor(void *v)

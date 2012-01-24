@@ -39,10 +39,9 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVESQLDATABASE_P_H
-#define QDECLARATIVESQLDATABASE_P_H
+#ifndef QV8SQLERRORS_P_H
+#define QV8SQLERRORS_P_H
 
-#include <QtDeclarative/qjsengine.h>
 //
 //  W A R N I N G
 //  -------------
@@ -56,14 +55,23 @@
 
 #include <QtCore/qglobal.h>
 
+QT_BEGIN_HEADER
+
 QT_BEGIN_NAMESPACE
+#define SQLEXCEPTION_UNKNOWN_ERR 1
+#define SQLEXCEPTION_DATABASE_ERR 2
+#define SQLEXCEPTION_VERSION_ERR 3
+#define SQLEXCEPTION_TOO_LARGE_ERR 4
+#define SQLEXCEPTION_QUOTA_ERR 5
+#define SQLEXCEPTION_SYNTAX_ERR 6
+#define SQLEXCEPTION_CONSTRAINT_ERR 7
+#define SQLEXCEPTION_TIMEOUT_ERR 8
 
 class QV8Engine;
-
-void *qt_add_qmlsqldatabase(QV8Engine *engine);
-void qt_rem_qmlsqldatabase(QV8Engine *engine, void *);
+void qt_add_sqlexceptions(QV8Engine *engine);
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVESQLDATABASE_P_H
+QT_END_HEADER
 
+#endif // QV8SQLERRORS_P_H

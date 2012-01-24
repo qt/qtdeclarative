@@ -23,6 +23,7 @@ HEADERS += \
     $$PWD/../../../3rdparty/javascriptcore/DateMath.h \
     $$PWD/qv8engine_impl_p.h \
     $$PWD/qv8domerrors_p.h \
+    $$PWD/qv8sqlerrors_p.h \
     $$PWD/qdeclarativebuiltinfunctions_p.h
 
 SOURCES += \
@@ -40,4 +41,5 @@ SOURCES += \
     $$PWD/qv8bindings.cpp \
     $$PWD/../../../3rdparty/javascriptcore/DateMath.cpp \
     $$PWD/qv8domerrors.cpp \
+    $$PWD/qv8sqlerrors.cpp \
     $$PWD/qdeclarativebuiltinfunctions.cpp

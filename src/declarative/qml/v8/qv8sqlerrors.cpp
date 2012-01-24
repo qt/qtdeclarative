@@ -39,31 +39,26 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVESQLDATABASE_P_H
-#define QDECLARATIVESQLDATABASE_P_H
-
-#include <QtDeclarative/qjsengine.h>
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qglobal.h>
+#include "qv8sqlerrors_p.h"
+#include "qv8engine_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
+void qt_add_sqlexceptions(QV8Engine *engine)
+{
+    // SQL Exception
+    v8::PropertyAttribute attributes = (v8::PropertyAttribute)(v8::ReadOnly | v8::DontEnum | v8::DontDelete);
 
-void *qt_add_qmlsqldatabase(QV8Engine *engine);
-void qt_rem_qmlsqldatabase(QV8Engine *engine, void *);
+    v8::Local<v8::Object> sqlexception = v8::Object::New();
+    sqlexception->Set(v8::String::New("UNKNOWN_ERR"), v8::Integer::New(SQLEXCEPTION_UNKNOWN_ERR), attributes);
+    sqlexception->Set(v8::String::New("DATABASE_ERR"), v8::Integer::New(SQLEXCEPTION_DATABASE_ERR), attributes);
+    sqlexception->Set(v8::String::New("VERSION_ERR"), v8::Integer::New(SQLEXCEPTION_VERSION_ERR), attributes);
+    sqlexception->Set(v8::String::New("TOO_LARGE_ERR"), v8::Integer::New(SQLEXCEPTION_TOO_LARGE_ERR), attributes);
+    sqlexception->Set(v8::String::New("QUOTA_ERR"), v8::Integer::New(SQLEXCEPTION_QUOTA_ERR), attributes);
+    sqlexception->Set(v8::String::New("SYNTAX_ERR"), v8::Integer::New(SQLEXCEPTION_SYNTAX_ERR), attributes);
+    sqlexception->Set(v8::String::New("CONSTRAINT_ERR"), v8::Integer::New(SQLEXCEPTION_CONSTRAINT_ERR), attributes);
+    sqlexception->Set(v8::String::New("TIMEOUT_ERR"), v8::Integer::New(SQLEXCEPTION_TIMEOUT_ERR), attributes);
+    engine->global()->Set(v8::String::New("SQLException"), sqlexception);
+}
 
 QT_END_NAMESPACE
-
-#endif // QDECLARATIVESQLDATABASE_P_H
-

@@ -1,4 +1,6 @@
 /* This script file handles the game logic */
+.import QtQuick.LocalStorage 2.0 as Sql
+
 var maxColumn = 10;
 var maxRow = 15;
 var maxIndex = maxColumn * maxRow;
@@ -191,7 +193,7 @@ function saveHighScore(name) {
     if (scoresURL != "")
         sendHighScore(name);
 
-    var db = openDatabaseSync("SameGameScores", "1.0", "Local SameGame High Scores", 100);
+    var db = Sql.openDatabaseSync("SameGameScores", "1.0", "Local SameGame High Scores", 100);
     var dataStr = "INSERT INTO Scores VALUES(?, ?, ?, ?)";
     var data = [name, gameCanvas.score, maxColumn + "x" + maxRow, Math.floor(gameDuration / 1000)];
     db.transaction(function(tx) {
@@ -222,4 +224,3 @@ function sendHighScore(name) {
     postman.send(postData);
 }
 //![1]
-

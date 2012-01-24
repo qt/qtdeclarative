@@ -1,5 +1,6 @@
 /* This script file handles the game logic */
 .pragma library
+.import QtQuick.LocalStorage 2.0 as Sql
 
 var maxColumn = 10;
 var maxRow = 15;
@@ -229,7 +230,7 @@ function createBlock(column,row)
 
 function initHighScoreBar()
 {
-    var db = openDatabaseSync(
+    var db = Sql.openDatabaseSync(
         "SameGameScores",
         "1.0",
         "Local SameGame High Scores",
@@ -254,7 +255,7 @@ function saveHighScore(name)
     if (scoresURL != "")
         sendHighScore(name);
     // Offline storage
-    var db = openDatabaseSync(
+    var db = Sql.openDatabaseSync(
         "SameGameScores",
         "1.0",
         "Local SameGame High Scores",

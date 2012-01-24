@@ -1,5 +1,7 @@
+.import QtQuick.LocalStorage 2.0 as Sql
+
 function test() {
-    var db = openDatabaseSync("QmlTestDB-data/error-notransaction", "1.0", "Test database from Qt autotests", 1000000);
+    var db = Sql.openDatabaseSync("QmlTestDB-data/error-notransaction", "1.0", "Test database from Qt autotests", 1000000);
     var r="transaction_not_finished";
     var v;
 

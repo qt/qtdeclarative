@@ -39,6 +39,7 @@
 ****************************************************************************/
 //![0]
 import QtQuick 2.0
+import QtQuick.LocalStorage 2.0 as LS
 
 Rectangle {
     color: "white"
@@ -49,7 +50,7 @@ Rectangle {
         text: "?"
         anchors.horizontalCenter: parent.horizontalCenter
         function findGreetings() {
-            var db = openDatabaseSync("QDeclarativeExampleDB", "1.0", "The Example QML SQL!", 1000000);
+            var db = LS.openDatabaseSync("QDeclarativeExampleDB", "1.0", "The Example QML SQL!", 1000000);
 
             db.transaction(
                 function(tx) {

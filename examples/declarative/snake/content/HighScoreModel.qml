@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.LocalStorage 2.0 as Sql
 
 // Models a high score table.
 //
@@ -84,7 +85,7 @@ ListModel {
 
     function __db()
     {
-        return openDatabaseSync("HighScoreModel", "1.0", "Generic High Score Functionality for QML", 1000000);
+        return Sql.openDatabaseSync("HighScoreModel", "1.0", "Generic High Score Functionality for QML", 1000000);
     }
     function __ensureTables(tx)
     {

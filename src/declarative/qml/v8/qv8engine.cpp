@@ -58,6 +58,8 @@
 
 #include "qscript_impl_p.h"
 #include "qv8domerrors_p.h"
+#include "qv8sqlerrors_p.h"
+
 
 Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
@@ -618,6 +620,8 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 
     qt_add_domexceptions(this);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
+
+    qt_add_sqlexceptions(this);
     m_sqlDatabaseData = qt_add_qmlsqldatabase(this);
 
     {
