@@ -404,8 +404,8 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
     The valid values for \c horizontalAlignment are \c TextInput.AlignLeft, \c TextInput.AlignRight and
     \c TextInput.AlignHCenter.
 
-    Valid values for \c verticalAlignment are \c TextEdit.AlignTop (default),
-    \c TextEdit.AlignBottom \c TextEdit.AlignVCenter.
+    Valid values for \c verticalAlignment are \c TextInput.AlignTop (default),
+    \c TextInput.AlignBottom \c TextInput.AlignVCenter.
 
     When using the attached property LayoutMirroring::enabled to mirror application
     layouts, the horizontal alignment of text will also be mirrored. However, the property
@@ -507,7 +507,7 @@ void QQuickTextInput::setVAlign(QQuickTextInput::VAlignment alignment)
 /*!
     \qmlproperty enumeration QtQuick2::TextInput::wrapMode
 
-    Set this property to wrap the text to the TextEdit item's width.
+    Set this property to wrap the text to the TextInput item's width.
     The text will only wrap if an explicit width has been set.
 
     \list
@@ -2095,7 +2095,7 @@ void QQuickTextInput::setMouseSelectionMode(SelectionMode mode)
     \qmlproperty bool QtQuick2::TextInput::canPaste
 
     Returns true if the TextInput is writable and the content of the clipboard is
-    suitable for pasting into the TextEdit.
+    suitable for pasting into the TextInput.
 */
 bool QQuickTextInput::canPaste() const
 {
@@ -2155,9 +2155,9 @@ void QQuickTextInput::moveCursorSelection(int position)
     basis.  If not specified the selection mode will default to TextInput.SelectCharacters.
 
     \list
-    \o TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
+    \o TextInput.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
     the previous cursor position) to the specified position.
-    \o TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
+    \o TextInput.SelectWords - Sets the selectionStart and selectionEnd to include all
     words between the specified position and the previous cursor position.  Words partially in the
     range are included.
     \endlist
