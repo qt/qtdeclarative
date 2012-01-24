@@ -98,6 +98,15 @@ QSmoothedAnimation::~QSmoothedAnimation()
 void QSmoothedAnimation::restart()
 {
     initialVelocity = trackVelocity;
+    if (isRunning())
+        init();
+    else
+        start();
+}
+
+void QSmoothedAnimation::prepareForRestart()
+{
+    initialVelocity = trackVelocity;
     if (isRunning()) {
         //we are joining a new wrapper group while running, our times need to be restarted
         useDelta = true;
@@ -384,15 +393,15 @@ QAbstractAnimationJob* QDeclarativeSmoothedAnimation::transition(QDeclarativeSta
         QSet<QAbstractAnimationJob*> anims;
         for (int i = 0; i < dataActions.size(); i++) {
             QSmoothedAnimation *ease;
-            bool needsRestart;
+            bool isActive;
             if (!d->activeAnimations.contains(dataActions[i].property)) {
                 ease = new QSmoothedAnimation(d);
                 d->activeAnimations.insert(dataActions[i].property, ease);
                 ease->target = dataActions[i].property;
-                needsRestart = false;
+                isActive = false;
             } else {
                 ease = d->activeAnimations.value(dataActions[i].property);
-                needsRestart = true;
+                isActive = true;
             }
             wrapperGroup->appendAnimation(initInstance(ease));
 
@@ -406,8 +415,8 @@ QAbstractAnimationJob* QDeclarativeSmoothedAnimation::transition(QDeclarativeSta
 
             ease->initialVelocity = ease->trackVelocity;
 
-            if (needsRestart)
-                ease->restart();
+            if (isActive)
+                ease->prepareForRestart();
             anims.insert(ease);
         }
 

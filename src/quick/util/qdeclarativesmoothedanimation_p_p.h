@@ -101,6 +101,7 @@ public:
     void restart();
     void init();
 
+    void prepareForRestart();
     void clearTemplate() { animationTemplate = 0; }
 
 protected:
