@@ -68,7 +68,7 @@ void tst_qquickscreen::basicProperties()
 
     QCOMPARE(screen->size().width(), root->property("w").toInt());
     QCOMPARE(screen->size().height(), root->property("h").toInt());
-    QCOMPARE(int(screen->currentOrientation()), root->property("curOrientation").toInt());
+    QCOMPARE(int(screen->orientation()), root->property("curOrientation").toInt());
     QCOMPARE(int(screen->primaryOrientation()), root->property("priOrientation").toInt());
 }
 

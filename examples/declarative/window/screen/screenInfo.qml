@@ -47,7 +47,7 @@ Item {
     height: 200
     Item {
         id: main
-        state: "orientation " + Window.Screen.currentOrientation
+        state: "orientation " + Window.Screen.orientation
 
         property bool landscapeWindow: Window.Screen.primaryOrientation == Qt.LandscapeOrientation
         property real baseWidth: landscapeWindow ? root.height : root.width

@@ -63,7 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
-    Q_PROPERTY(Qt::ScreenOrientation currentOrientation READ currentOrientation NOTIFY currentOrientationChanged)
+    Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
 
 public:
     QQuickScreenAttached(QObject* attachee);
@@ -71,7 +71,7 @@ public:
     int width() const;
     int height() const;
     Qt::ScreenOrientation primaryOrientation() const;
-    Qt::ScreenOrientation currentOrientation() const;
+    Qt::ScreenOrientation orientation() const;
 
     Q_INVOKABLE int angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b);
 
@@ -81,7 +81,7 @@ Q_SIGNALS:
     void widthChanged();
     void heightChanged();
     void primaryOrientationChanged();
-    void currentOrientationChanged();
+    void orientationChanged();
 
 private:
     QScreen* m_screen;

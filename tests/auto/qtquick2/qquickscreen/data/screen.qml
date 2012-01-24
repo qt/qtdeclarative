@@ -6,6 +6,6 @@ Item {
     height: 100
     property int w: Window.Screen.width
     property int h: Window.Screen.height
-    property int curOrientation: Window.Screen.currentOrientation
+    property int curOrientation: Window.Screen.orientation
     property int priOrientation: Window.Screen.primaryOrientation
 }

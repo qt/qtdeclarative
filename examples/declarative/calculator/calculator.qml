@@ -62,7 +62,7 @@ Rectangle {
 
     Item {
         id: main
-        state: "orientation " + Screen.currentOrientation
+        state: "orientation " + Screen.orientation
 
         property bool landscapeWindow: window.width > window.height 
         property real baseWidth: landscapeWindow ? window.height : window.width
