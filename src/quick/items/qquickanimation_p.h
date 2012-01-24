@@ -130,8 +130,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathAnimation : public QDeclarativeAbstractAn
     Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
     Q_PROPERTY(QPointF anchorPoint READ anchorPoint WRITE setAnchorPoint NOTIFY anchorPointChanged)
-    Q_PROPERTY(qreal orientationEntryInterval READ orientationEntryInterval WRITE setOrientationEntryInterval NOTIFY orientationEntryIntervalChanged)
-    Q_PROPERTY(qreal orientationExitInterval READ orientationExitInterval WRITE setOrientationExitInterval NOTIFY orientationExitIntervalChanged)
+    Q_PROPERTY(int orientationEntryDuration READ orientationEntryDuration WRITE setOrientationEntryDuration NOTIFY orientationEntryDurationChanged)
+    Q_PROPERTY(int orientationExitDuration READ orientationExitDuration WRITE setOrientationExitDuration NOTIFY orientationExitDurationChanged)
     Q_PROPERTY(qreal endRotation READ endRotation WRITE setEndRotation NOTIFY endRotationChanged)
 
 public:
@@ -165,11 +165,11 @@ public:
     QPointF anchorPoint() const;
     void setAnchorPoint(const QPointF &point);
 
-    qreal orientationEntryInterval() const;
-    void setOrientationEntryInterval(qreal);
+    int orientationEntryDuration() const;
+    void setOrientationEntryDuration(int);
 
-    qreal orientationExitInterval() const;
-    void setOrientationExitInterval(qreal);
+    int orientationExitDuration() const;
+    void setOrientationExitDuration(int);
 
     qreal endRotation() const;
     void setEndRotation(qreal);
@@ -185,8 +185,8 @@ Q_SIGNALS:
     void targetChanged();
     void orientationChanged(Orientation);
     void anchorPointChanged(const QPointF &);
-    void orientationEntryIntervalChanged(qreal);
-    void orientationExitIntervalChanged(qreal);
+    void orientationEntryDurationChanged(qreal);
+    void orientationExitDurationChanged(qreal);
     void endRotationChanged(qreal);
 };
 

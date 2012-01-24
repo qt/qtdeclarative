@@ -551,6 +551,30 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QDeclarativeStateAction
     return initInstance(animator);
 }
 
+/*!
+    \qmlclass PathAnimation QQuickPathAnimation
+    \inqmlmodule QtQuick 2
+    \ingroup qml-animation-transition
+    \inherits Animation
+    \brief The PathAnimation element animates an item along a path.
+
+    When used in a transition, the path can be specified without start
+    or end points, for example:
+    \qml
+    PathAnimation {
+        path: Path {
+            //no startX, startY
+            PathCurve { x: 100; y: 100}
+            PathCurve {}    //last element is empty with no end point specified
+        }
+    }
+    \endqml
+
+    In the above case, the path start will be the item's current position, and the
+    path end will be the item's target position in the target state.
+
+    \sa {QML Animation and Transitions}, PathInterpolator
+*/
 QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QQuickPathAnimationPrivate), parent)
 {
@@ -565,6 +589,12 @@ QQuickPathAnimation::~QQuickPathAnimation()
     }
 }
 
+/*!
+    \qmlproperty int QtQuick2::PathAnimation::duration
+    This property holds the duration of the animation, in milliseconds.
+
+    The default value is 250.
+*/
 int QQuickPathAnimation::duration() const
 {
     Q_D(const QQuickPathAnimation);
@@ -585,6 +615,20 @@ void QQuickPathAnimation::setDuration(int duration)
     emit durationChanged(duration);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::PathAnimation::easing.type
+    \qmlproperty real QtQuick2::PathAnimation::easing.amplitude
+    \qmlproperty list<real> QtQuick2::PathAnimation::easing.bezierCurve
+    \qmlproperty real QtQuick2::PathAnimation::easing.overshoot
+    \qmlproperty real QtQuick2::PathAnimation::easing.period
+    \brief the easing curve used for the animation.
+
+    To specify an easing curve you need to specify at least the type. For some curves you can also specify
+    amplitude, period, overshoot or custom bezierCurve data. The default easing curve is \c Easing.Linear.
+
+    See the \l{PropertyAnimation::easing.type} documentation for information
+    about the different types of easing curves.
+*/
 QEasingCurve QQuickPathAnimation::easing() const
 {
     Q_D(const QQuickPathAnimation);
@@ -601,6 +645,12 @@ void QQuickPathAnimation::setEasing(const QEasingCurve &e)
     emit easingChanged(e);
 }
 
+/*!
+    \qmlproperty Path QtQuick2::PathAnimation::path
+    This property holds the path to animate along.
+
+    For more information on defining a path see the \l Path documentation.
+*/
 QDeclarativePath *QQuickPathAnimation::path() const
 {
     Q_D(const QQuickPathAnimation);
@@ -617,6 +667,10 @@ void QQuickPathAnimation::setPath(QDeclarativePath *path)
     emit pathChanged();
 }
 
+/*!
+    \qmlproperty Item QtQuick2::PathAnimation::target
+    This property holds the item to animate.
+*/
 QQuickItem *QQuickPathAnimation::target() const
 {
     Q_D(const QQuickPathAnimation);
@@ -633,6 +687,22 @@ void QQuickPathAnimation::setTarget(QQuickItem *target)
     emit targetChanged();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::PathAnimation::orientation
+    This property controls the rotation of the item as it animates along the path.
+
+    If a value other than \c Fixed is specified, the PathAnimation will rotate the
+    item to achieve the specified orientation as it travels along the path.
+
+    \list
+    \o PathAnimation.Fixed (default) - the PathAnimation will not control
+       the rotation of the item.
+    \o PathAnimation.RightFirst - The right side of the item will lead along the path.
+    \o PathAnimation.LeftFirst - The left side of the item will lead along the path.
+    \o PathAnimation.BottomFirst - The bottom of the item will lead along the path.
+    \o PathAnimation.TopFirst - The top of the item will lead along the path.
+    \endlist
+*/
 QQuickPathAnimation::Orientation QQuickPathAnimation::orientation() const
 {
     Q_D(const QQuickPathAnimation);
@@ -649,6 +719,15 @@ void QQuickPathAnimation::setOrientation(Orientation orientation)
     emit orientationChanged(d->orientation);
 }
 
+/*!
+    \qmlproperty point QtQuick2::PathAnimation::anchorPoint
+    This property holds the anchor point for the item being animated.
+
+    By default, the upper-left corner of the target (its 0,0 point)
+    will be anchored to (or follow) the path. The anchorPoint property can be used to
+    specify a different point for anchoring. For example, specifying an anchorPoint of
+    5,5 for a 10x10 item means the center of the item will follow the path.
+*/
 QPointF QQuickPathAnimation::anchorPoint() const
 {
     Q_D(const QQuickPathAnimation);
@@ -665,36 +744,66 @@ void QQuickPathAnimation::setAnchorPoint(const QPointF &point)
     emit anchorPointChanged(point);
 }
 
-qreal QQuickPathAnimation::orientationEntryInterval() const
+/*!
+    \qmlproperty real QtQuick2::PathAnimation::orientationEntryDuration
+    This property holds the duration (in milliseconds) of the transition in to the orientation.
+
+    If an orientation has been specified for the PathAnimation, and the starting
+    rotation of the item does not match that given by the orientation,
+    orientationEntryDuration can be used to smoothly transition from the item's
+    starting rotation to the rotation given by the path orientation.
+*/
+int QQuickPathAnimation::orientationEntryDuration() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->entryInterval;
+    return d->entryDuration;
 }
 
-void QQuickPathAnimation::setOrientationEntryInterval(qreal interval)
+void QQuickPathAnimation::setOrientationEntryDuration(int duration)
 {
     Q_D(QQuickPathAnimation);
-    if (d->entryInterval == interval)
+    if (d->entryDuration == duration)
         return;
-    d->entryInterval = interval;
-    emit orientationEntryIntervalChanged(interval);
+    d->entryDuration = duration;
+    emit orientationEntryDurationChanged(duration);
 }
 
-qreal QQuickPathAnimation::orientationExitInterval() const
+/*!
+    \qmlproperty real QtQuick2::PathAnimation::orientationExitDuration
+    This property holds the duration (in milliseconds) of the transition out of the orientation.
+
+    If an orientation and endRotation have been specified for the PathAnimation,
+    orientationExitDuration can be used to smoothly transition from the rotation given
+    by the path orientation to the specified endRotation.
+*/
+int QQuickPathAnimation::orientationExitDuration() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->exitInterval;
+    return d->exitDuration;
 }
 
-void QQuickPathAnimation::setOrientationExitInterval(qreal interval)
+void QQuickPathAnimation::setOrientationExitDuration(int duration)
 {
     Q_D(QQuickPathAnimation);
-    if (d->exitInterval == interval)
+    if (d->exitDuration == duration)
         return;
-    d->exitInterval = interval;
-    emit orientationExitIntervalChanged(interval);
+    d->exitDuration = duration;
+    emit orientationExitDurationChanged(duration);
 }
 
+/*!
+    \qmlproperty real QtQuick2::PathAnimation::endRotation
+    This property holds the ending rotation for the target.
+
+    If an orientation has been specified for the PathAnimation,
+    and the path doesn't end with the item at the desired rotation,
+    the endRotation property can be used to manually specify an end
+    rotation.
+
+    This property is typically used with orientationExitDuration, as specifying
+    an endRotation without an orientationExitDuration may cause a jump to
+    the final rotation, rather than a smooth transition.
+*/
 qreal QQuickPathAnimation::endRotation() const
 {
     Q_D(const QQuickPathAnimation);
@@ -737,8 +846,8 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QDeclarativeStateActions 
 
     data->orientation = d->orientation;
     data->anchorPoint = d->anchorPoint;
-    data->entryInterval = d->entryInterval;
-    data->exitInterval = d->exitInterval;
+    data->entryInterval = d->duration ? qreal(d->entryDuration) / d->duration : qreal(0);
+    data->exitInterval = d->duration ? qreal(d->exitDuration) / d->duration : qreal(0);
     data->endRotation = d->endRotation;
     data->reverse = direction == Backward ? true : false;
     data->fromSourced = false;
@@ -876,6 +985,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
         }
 
         //smoothly transition to the desired orientation
+        //TODO: shortest distance calculations
         if (startRotation.isValid()) {
             if (reverse && v == 0.0)
                 angle = startRotation;
@@ -883,7 +993,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
                 angle = angle * v / entryInterval + startRotation * (entryInterval - v) / entryInterval;
         }
         if (endRotation.isValid()) {
-            qreal exitStart = 1 - exitInterval;
+            qreal exitStart = 1 - entryInterval;
             if (!reverse && v == 1.0)
                 angle = endRotation;
             else if (v > exitStart)

@@ -142,15 +142,15 @@ class QQuickPathAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QQuickPathAnimation)
 public:
     QQuickPathAnimationPrivate() : path(0), target(0),
-        orientation(QQuickPathAnimation::Fixed), entryInterval(0), exitInterval(0), duration(250) {}
+        orientation(QQuickPathAnimation::Fixed), entryDuration(0), exitDuration(0), duration(250) {}
 
     QDeclarativePath *path;
     QQuickItem *target;
     QQuickPathAnimation::Orientation orientation;
 
     QPointF anchorPoint;
-    qreal entryInterval;
-    qreal exitInterval;
+    qreal entryDuration;
+    qreal exitDuration;
     QDeclarativeNullableValue<qreal> endRotation;
     int duration;
     QEasingCurve easingCurve;
