@@ -52,7 +52,7 @@ Rectangle {
                 name: "bear"
                 source: "../images/bear_tiles.png"
                 frames: 13
-                duration: 120
+                frameDuration: 120
             }
         width: 250
         height: 250
@@ -72,25 +72,25 @@ Rectangle {
             name: "happy"
             source: "../images/starfish_1.png"
             frames: 1
-            duration: 260
+            frameDuration: 260
             to: {"happy": 1, "silly": 1, "angry": 1}
         }, Sprite {
             name: "angry"
             source: "../images/starfish_0.png"
             frames: 1
-            duration: 260
+            frameDuration: 260
             to: {"happy": 1, "silly": 1, "angry": 1}
         }, Sprite {
             name: "silly"
             source: "../images/starfish_2.png"
             frames: 1
-            duration: 260
+            frameDuration: 260
             to: {"happy": 1, "silly": 1, "noticedbear": 0}
         }, Sprite {
             name: "noticedbear"
             source: "../images/starfish_3.png"
             frames: 1
-            duration: 2600
+            frameDuration: 2600
         }]
     }
 

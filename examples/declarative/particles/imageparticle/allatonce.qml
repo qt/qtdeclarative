@@ -55,7 +55,7 @@ Rectangle {
                 name: "bear"
                 source: "../images/bear_tiles.png"
                 frames: 13
-                duration: 120
+                frameDuration: 120
             }
         ]
         colorVariation: 0.5

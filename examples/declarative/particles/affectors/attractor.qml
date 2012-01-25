@@ -109,8 +109,7 @@ Rectangle {
             name: "spinning"
             source: "../images/meteor.png"
             frames: 35
-            duration: 60
-            speedModifiesDuration: -0.1
+            frameDuration: 60
         }
     }
     ImageParticle {

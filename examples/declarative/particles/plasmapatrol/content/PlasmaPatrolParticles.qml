@@ -128,19 +128,19 @@ Item {
                 name: "spinning"
                 source: "pics/meteor.png"
                 frames: 35
-                duration: 40
+                frameDuration: 40
                 to: {"death":0, "spinning":1}
             },Sprite {
                 name: "death"
                 source: "pics/meteor_explo.png"
                 frames: 22
-                duration: 40
+                frameDuration: 40
                 to: {"null":1}
             }, Sprite {
                 name: "null"
                 source: "pics/nullRock.png"
                 frames: 1
-                duration: 1000
+                frameDuration: 1000
             }
         ]
     }

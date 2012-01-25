@@ -106,20 +106,20 @@ Item {
                 name: "spinning"
                 source: "../images/meteor.png"
                 frames: 35
-                duration: 40
+                frameDuration: 40
                 randomStart: true
                 to: {"explode":0, "spinning":1}
             },Sprite {
                 name: "explode"
                 source: "../images/_explo.png"
                 frames: 22
-                duration: 40
+                frameDuration: 40
                 to: {"nullFrame":1}
             },Sprite {//Not sure if this is needed, but seemed easiest
                 name: "nullFrame"
                 source: "../images/nullRock.png"
                 frames: 1
-                duration: 1000
+                frameDuration: 1000
             }
         ]
     }

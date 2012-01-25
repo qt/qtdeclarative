@@ -52,8 +52,8 @@ Rectangle {
             name: "snow"
             source: "../images/snowflake.png"
             frames: 51
-            duration: 40
-            durationVariation: 8
+            frameDuration: 40
+            frameDurationVariation: 8
         }
     }
 
