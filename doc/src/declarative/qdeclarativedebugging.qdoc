@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 
 \section2 Log
 
-\c console.log, console.debug, console.warn and console.error can be used to print
+\c console.log, console.debug, console.info, console.warn and console.error can be used to print
 debugging information to the console. For example:
 
 \qml
@@ -48,6 +48,19 @@ The output is generated using the qDebug, qWarning, qCritical methods in C++
 
 \hint Setting the environment variable QML_CONSOLE_EXTENDED also prints the source
 code location of the call.
+
+\section2 Assert
+
+\c console.assert tests that an expression is true. If not, it will write an optional message
+to the console and print the stack trace.
+
+\qml
+function f() {
+  var x = 12
+  console.assert(x == 12, "This will pass");
+  console.assert(x > 12, "This will fail");
+}
+\endqml
 
 \section2 Timer
 
@@ -71,6 +84,19 @@ function f() {
 it was called. The stack trace info contains function name, file name, line number
 and column number. The stack trace is limited to last 10 stack frames.
 
+\section2 Count
+
+\c console.count prints the current number of times a particular piece of code has been executed,
+along with a message. That is,
+
+\qml
+function f() {
+  console.count("f called");
+}
+\endqml
+
+will print \c{f called: 1}, \c{f called: 2} ... whenever \c{f()} is executed.
+
 \section2 Profile
 
 \c console.profile turns on the QML and JavaScript profilers. Nested calls are not
@@ -90,6 +116,11 @@ function f() {
     console.profileEnd();
 }
 \endqml
+
+\section2 Exception
+
+\c console.exception prints an error message together with the stack trace of JavaScript
+execution at the point where it is called.
 
 \section1 Debugging Transitions
 

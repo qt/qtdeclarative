@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -482,7 +482,7 @@ void tst_qquickanchors::crash1()
 {
     QUrl source(testFileUrl("crash1.qml"));
 
-    QString expect = source.toString() + ":3:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column";
+    QString expect = source.toString() + ":3:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function.";
 
     QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
 

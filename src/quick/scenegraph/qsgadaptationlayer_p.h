@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -110,6 +110,8 @@ public:
         HighQualitySubPixelAntialiasing
     };
 
+    QSGGlyphNode() : m_ownerElement(0) {}
+
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
     virtual void setStyle(QQuickText::TextStyle style) = 0;
@@ -123,8 +125,12 @@ public:
 
     virtual void update() = 0;
 
+    void setOwnerElement(QQuickItem *ownerElement) { m_ownerElement = ownerElement; }
+    QQuickItem *ownerElement() const { return m_ownerElement; }
+
 protected:
     QRectF m_bounding_rect;
+    QQuickItem *m_ownerElement;
 };
 
 class Q_QUICK_EXPORT QSGDistanceFieldGlyphCache
@@ -185,6 +191,10 @@ public:
     void registerGlyphNode(QSGDistanceFieldGlyphNode *node);
     void unregisterGlyphNode(QSGDistanceFieldGlyphNode *node);
 
+    virtual void registerOwnerElement(QQuickItem *ownerElement);
+    virtual void unregisterOwnerElement(QQuickItem *ownerElement);
+    virtual void processPendingGlyphs();
+
 protected:
     struct GlyphPosition {
         glyph_t glyph;
@@ -204,6 +214,7 @@ protected:
     void updateTexture(GLuint oldTex, GLuint newTex, const QSize &newTexSize);
 
     bool containsGlyph(glyph_t glyph) const;
+    GLuint textureIdForGlyph(glyph_t glyph) const;
 
     QOpenGLContext *ctx;
 

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -1769,9 +1769,8 @@ void QDeclarative1TextEditPrivate::updateDefaultTextOption()
     customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextEdit. On other platforms
-    the panels are automatically opened when TextEdit element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style.
+    The panels are automatically opened when TextEdit element gains active focus. Input panels are
     always closed if no editor has active focus.
 
     You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
@@ -1819,9 +1818,8 @@ void QDeclarative1TextEdit::openSoftwareInputPanel()
     for customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextEdit. On other platforms
-    the panels are automatically opened when TextEdit element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style.
+    The panels are automatically opened when TextEdit element gains active focus. Input panels are
     always closed if no editor has active focus.
 
     You can disable the automatic behavior by setting the property \c activeFocusOnPress to false

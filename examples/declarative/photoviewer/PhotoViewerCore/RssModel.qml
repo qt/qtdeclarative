@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -45,7 +45,9 @@ import QtQuick.XmlListModel 2.0
 XmlListModel {
     property string tags : ""
 
-    source: "http://api.flickr.com/services/feeds/photos_public.gne?"+(tags ? "tags="+tags+"&" : "")
+    function encodeTags(x) { return encodeURIComponent(x.replace(' ',',')); }
+
+    source: "http://api.flickr.com/services/feeds/photos_public.gne?"+(tags ? "tags="+encodeTags(tags)+"&" : "")
     query: "/feed/entry"
     namespaceDeclarations: "declare default element namespace 'http://www.w3.org/2005/Atom';"
 

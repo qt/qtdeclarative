@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the Declarative module of the Qt Toolkit.
 **
@@ -128,14 +128,13 @@ struct SpriteVertex {
     float rotation;
     float rotationSpeed;
     float autoRotate;//Assumed that GPUs prefer floats to bools
-    float animInterpolate;
-    float frameDuration;
-    float frameCount;
-    float animT;
-    float animX;
-    float animY;
-    float animWidth;
-    float animHeight;
+    float animW;
+    float animH;
+    float animProgress;
+    float animX1;
+    float animY1;
+    float animX2;
+    float animY2;
 };
 
 template <typename Vertex>
@@ -343,6 +342,7 @@ private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
     void spriteAdvance(int spriteIndex);
+    void spritesUpdate(qreal time = 0 );
 private:
     QUrl m_image_name;
     QUrl m_colortable_name;

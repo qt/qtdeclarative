@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -70,7 +70,10 @@ class Q_AUTOTEST_EXPORT QQuickShaderEffect : public QQuickItem
     Q_PROPERTY(bool blending READ blending WRITE setBlending NOTIFY blendingChanged)
     Q_PROPERTY(QVariant mesh READ mesh WRITE setMesh NOTIFY meshChanged)
     Q_PROPERTY(CullMode culling READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
+    Q_PROPERTY(QString log READ log NOTIFY logChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_ENUMS(CullMode)
+    Q_ENUMS(Status)
 
 public:
     enum CullMode
@@ -78,6 +81,13 @@ public:
         NoCulling = QQuickShaderEffectMaterial::NoCulling,
         BackFaceCulling = QQuickShaderEffectMaterial::BackFaceCulling,
         FrontFaceCulling = QQuickShaderEffectMaterial::FrontFaceCulling
+    };
+
+    enum Status
+    {
+        Compiled,
+        Uncompiled,
+        Error
     };
 
     QQuickShaderEffect(QQuickItem *parent = 0);
@@ -98,7 +108,11 @@ public:
     CullMode cullMode() const { return m_cullMode; }
     void setCullMode(CullMode face);
 
+    QString log() const { return m_log; }
+    Status status() const { return m_status; }
+
     void ensureCompleted();
+    QString parseLog() { return m_parseLog; }
 
 Q_SIGNALS:
     void fragmentShaderChanged();
@@ -106,6 +120,8 @@ Q_SIGNALS:
     void blendingChanged();
     void meshChanged();
     void cullModeChanged();
+    void logChanged();
+    void statusChanged();
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
@@ -116,6 +132,7 @@ private Q_SLOTS:
     void changeSource(int index);
     void updateData();
     void updateGeometry();
+    void updateLogAndStatus(const QString &log, int status);
 
 private:
     friend class QQuickCustomMaterialShader;
@@ -133,6 +150,8 @@ private:
     QQuickShaderEffectMesh *m_mesh;
     QQuickGridMesh m_defaultMesh;
     CullMode m_cullMode;
+    QString m_log;
+    Status m_status;
 
     struct SourceData
     {
@@ -141,6 +160,7 @@ private:
         QByteArray name;
     };
     QVector<SourceData> m_sources;
+    QString m_parseLog;
 
     uint m_blending : 1;
     uint m_dirtyData : 1;

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -44,7 +44,7 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)
+#if defined(Q_OS_WIN)
 #  if defined(QT_MAKEDLL) /* create a Qt DLL library */
 #    if defined(QT_BUILD_QUICK_LIB)
 #      define Q_QUICK_EXPORT Q_DECL_EXPORT

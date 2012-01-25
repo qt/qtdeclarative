@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -51,6 +51,7 @@ public:
 
 private slots:
     void test_properties();
+    void test_framerateAdvance();//Separate codepath for QQuickSpriteEngine
 };
 
 void tst_qquickspriteimage::test_properties()
@@ -73,6 +74,22 @@ void tst_qquickspriteimage::test_properties()
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
 
+    delete canvas;
+}
+
+void tst_qquickspriteimage::test_framerateAdvance()
+{
+    QQuickView *canvas = new QQuickView(0);
+
+    canvas->setSource(testFileUrl("advance.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QVERIFY(canvas->rootObject());
+    QQuickSpriteImage* sprite = canvas->rootObject()->findChild<QQuickSpriteImage*>("sprite");
+    QVERIFY(sprite);
+
+    QTRY_COMPARE(sprite->currentSprite(), QLatin1String("secondState"));
     delete canvas;
 }
 

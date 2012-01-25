@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -195,7 +195,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
                     fixedPointPositions.data());
     cache->fillInPendingGlyphs();
 
-    int margin = cache->glyphMargin();
+    int margin = fontD->fontEngine->glyphMargin(cache->cacheType());
 
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);

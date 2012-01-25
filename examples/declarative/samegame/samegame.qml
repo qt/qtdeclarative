@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -41,8 +41,8 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
-import "SamegameCore"
-import "SamegameCore/samegame.js" as Logic
+import "content"
+import "content/samegame.js" as Logic
 
 Rectangle {
     id: screen

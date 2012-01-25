@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -159,6 +159,8 @@ private slots:
     void importsOrder_data();
     void importsOrder();
     void importIncorrectCase();
+    void importJs_data();
+    void importJs();
 
     void qmlAttachedPropertiesObjectMethod();
     void customOnProperty();
@@ -179,21 +181,17 @@ private:
     void testType(const QString& qml, const QString& type, const QString& error);
 };
 
-#define VERIFY_ERRORS(errorfile) \
-    if (!errorfile) { \
-        if (qgetenv("DEBUG") != "" && !component.errors().isEmpty()) \
-            qWarning() << "Unexpected Errors:" << component.errors(); \
-        QVERIFY(!component.isError()); \
-        QVERIFY(component.errors().isEmpty()); \
-    } else { \
+#define DETERMINE_ERRORS(errorfile,expected,actual)\
+    QList<QByteArray> expected; \
+    QList<QByteArray> actual; \
+    do { \
         QFile file(testdata(QLatin1String(errorfile))); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \
-        QList<QByteArray> expected = data.split('\n'); \
+        expected = data.split('\n'); \
         expected.removeAll(QByteArray("")); \
         QList<QDeclarativeError> errors = component.errors(); \
-        QList<QByteArray> actual; \
         for (int ii = 0; ii < errors.count(); ++ii) { \
             const QDeclarativeError &error = errors.at(ii); \
             QByteArray errorStr = QByteArray::number(error.line()) + ":" +  \
@@ -201,6 +199,16 @@ private:
                                   error.description().toUtf8(); \
             actual << errorStr; \
         } \
+    } while (false);
+
+#define VERIFY_ERRORS(errorfile) \
+    if (!errorfile) { \
+        if (qgetenv("DEBUG") != "" && !component.errors().isEmpty()) \
+            qWarning() << "Unexpected Errors:" << component.errors(); \
+        QVERIFY(!component.isError()); \
+        QVERIFY(component.errors().isEmpty()); \
+    } else { \
+        DETERMINE_ERRORS(errorfile,actual,expected);\
         if (qgetenv("DEBUG") != "" && expected != actual) \
             qWarning() << "Expected:" << expected << "Actual:" << actual;  \
         if (qgetenv("QDECLARATIVELANGUAGE_UPDATEERRORS") != "" && expected != actual) {\
@@ -417,7 +425,6 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("nestedErrors") << "nestedErrors.qml" << "nestedErrors.errors.txt" << false;
     QTest::newRow("defaultGrouped") << "defaultGrouped.qml" << "defaultGrouped.errors.txt" << false;
     QTest::newRow("doubleSignal") << "doubleSignal.qml" << "doubleSignal.errors.txt" << false;
-    QTest::newRow("invalidRoot") << "invalidRoot.qml" << "invalidRoot.errors.txt" << false;
     QTest::newRow("missingValueTypeProperty") << "missingValueTypeProperty.qml" << "missingValueTypeProperty.errors.txt" << false;
     QTest::newRow("objectValueTypeProperty") << "objectValueTypeProperty.qml" << "objectValueTypeProperty.errors.txt" << false;
     QTest::newRow("enumTypes") << "enumTypes.qml" << "enumTypes.errors.txt" << false;
@@ -441,6 +448,16 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("metaobjectRevision.1") << "metaobjectRevision.1.qml" << "metaobjectRevision.1.errors.txt" << false;
     QTest::newRow("metaobjectRevision.2") << "metaobjectRevision.2.qml" << "metaobjectRevision.2.errors.txt" << false;
     QTest::newRow("metaobjectRevision.3") << "metaobjectRevision.3.qml" << "metaobjectRevision.3.errors.txt" << false;
+
+    QTest::newRow("invalidRoot.1") << "invalidRoot.1.qml" << "invalidRoot.1.errors.txt" << false;
+    QTest::newRow("invalidRoot.2") << "invalidRoot.2.qml" << "invalidRoot.2.errors.txt" << false;
+    QTest::newRow("invalidRoot.3") << "invalidRoot.3.qml" << "invalidRoot.3.errors.txt" << false;
+    QTest::newRow("invalidRoot.4") << "invalidRoot.4.qml" << "invalidRoot.4.errors.txt" << false;
+
+    QTest::newRow("invalidTypeName.1") << "invalidTypeName.1.qml" << "invalidTypeName.1.errors.txt" << false;
+    QTest::newRow("invalidTypeName.2") << "invalidTypeName.2.qml" << "invalidTypeName.2.errors.txt" << false;
+    QTest::newRow("invalidTypeName.3") << "invalidTypeName.3.qml" << "invalidTypeName.3.errors.txt" << false;
+    QTest::newRow("invalidTypeName.4") << "invalidTypeName.4.qml" << "invalidTypeName.4.errors.txt" << false;
 
     QTest::newRow("Major version isolation") << "majorVersionIsolation.qml" << "majorVersionIsolation.errors.txt" << false;
 }
@@ -571,7 +588,9 @@ void tst_qdeclarativelanguage::assignBasicTypes()
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));
     QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2, 2.3));
-    QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
+    QUrl encoded;
+    encoded.setEncodedUrl("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
+    QCOMPARE(object->urlProperty(), component.url().resolved(encoded));
     QVERIFY(object->objectProperty() != 0);
     MyTypeObject *child = qobject_cast<MyTypeObject *>(object->objectProperty());
     QVERIFY(child != 0);
@@ -1910,6 +1929,89 @@ void tst_qdeclarativelanguage::importIncorrectCase()
 #endif
 
     QCOMPARE(errors.at(0).description(), expectedError);
+}
+
+void tst_qdeclarativelanguage::importJs_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("errorFile");
+    QTest::addColumn<bool>("performTest");
+
+    QTest::newRow("defaultVersion")
+        << "importJs.1.qml"
+        << "importJs.1.errors.txt"
+        << true;
+
+    QTest::newRow("specifiedVersion")
+        << "importJs.2.qml"
+        << "importJs.2.errors.txt"
+        << true;
+
+    QTest::newRow("excludeExcessiveVersion")
+        << "importJs.3.qml"
+        << "importJs.3.errors.txt"
+        << false;
+
+    QTest::newRow("includeAppropriateVersion")
+        << "importJs.4.qml"
+        << "importJs.4.errors.txt"
+        << true;
+
+    QTest::newRow("noDefaultVersion")
+        << "importJs.5.qml"
+        << "importJs.5.errors.txt"
+        << false;
+
+    QTest::newRow("repeatImportFails")
+        << "importJs.6.qml"
+        << "importJs.6.errors.txt"
+        << false;
+
+    QTest::newRow("multipleVersionImportFails")
+        << "importJs.7.qml"
+        << "importJs.7.errors.txt"
+        << false;
+
+    QTest::newRow("namespacedImport")
+        << "importJs.8.qml"
+        << "importJs.8.errors.txt"
+        << true;
+
+    QTest::newRow("namespacedVersionedImport")
+        << "importJs.9.qml"
+        << "importJs.9.errors.txt"
+        << true;
+
+    QTest::newRow("namespacedRepeatImport")
+        << "importJs.10.qml"
+        << "importJs.10.errors.txt"
+        << true;
+}
+
+void tst_qdeclarativelanguage::importJs()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, errorFile);
+    QFETCH(bool, performTest);
+
+    QDeclarativeComponent component(&engine, TEST_FILE(file));
+
+    {
+        DETERMINE_ERRORS(errorFile.toLatin1().constData(),expected,actual);
+        QCOMPARE(expected.size(), actual.size());
+        for (int i = 0; i < expected.size(); ++i)
+        {
+            size_t compareLen = std::min(expected.at(i).length(), actual.at(i).length());
+            QCOMPARE(expected.at(i).left(compareLen), actual.at(i).left(compareLen));
+        }
+    }
+
+    if (performTest) {
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(object->property("test").toBool(),true);
+        delete object;
+    }
 }
 
 void tst_qdeclarativelanguage::qmlAttachedPropertiesObjectMethod()

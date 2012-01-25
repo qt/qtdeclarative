@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -693,7 +693,8 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
 
     // shouldn't crash when deleting cancelled QDeclarativePixmapReplys.
     QTest::qWait(520); // Delay mode delays for 500 ms.
-    qApp->processEvents(QEventLoop::DeferredDeletion);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 }
 
 /*

@@ -22,8 +22,3 @@ sources.path += $$[QT_INSTALL_EXAMPLES]/declarative/plugins
 target.path += $$[QT_INSTALL_EXAMPLES]/declarative/plugins/com/nokia/TimeExample
 
 INSTALLS += qdeclarativesources sources target
-
-symbian {
-    include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
-    TARGET.EPOCALLOWDLLDATA = 1
-}

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -501,10 +501,6 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
     if (!value->IsFunction()) {
         v8::Context::Scope scope(context());
         v8::Handle<v8::Object> object = value->ToObject();
-        v8::Local<v8::Array> properties = object->GetPropertyNames();
-        int length = properties->Length();
-        if (length == 0)
-            return QVariant();
         return variantMapFromJS(object);
     }
 
@@ -530,14 +526,19 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     v8::Local<v8::Function> consoleLogFn = V8FUNCTION(consoleLog, this);
 
     console->Set(v8::String::New("debug"), consoleLogFn);
-    console->Set(v8::String::New("error"), V8FUNCTION(consoleError, this));
     console->Set(v8::String::New("log"), consoleLogFn);
+    console->Set(v8::String::New("info"), consoleLogFn);
+    console->Set(v8::String::New("warn"), V8FUNCTION(consoleWarn, this));
+    console->Set(v8::String::New("error"), V8FUNCTION(consoleError, this));
+    console->Set(v8::String::New("assert"), V8FUNCTION(consoleAssert, this));
+
+    console->Set(v8::String::New("count"), V8FUNCTION(consoleCount, this));
     console->Set(v8::String::New("profile"), V8FUNCTION(consoleProfile, this));
     console->Set(v8::String::New("profileEnd"), V8FUNCTION(consoleProfileEnd, this));
     console->Set(v8::String::New("time"), V8FUNCTION(consoleTime, this));
     console->Set(v8::String::New("timeEnd"), V8FUNCTION(consoleTimeEnd, this));
     console->Set(v8::String::New("trace"), V8FUNCTION(consoleTrace, this));
-    console->Set(v8::String::New("warn"), V8FUNCTION(consoleWarn, this));
+    console->Set(v8::String::New("exception"), V8FUNCTION(consoleException, this));
 
     v8::Local<v8::Object> qt = v8::Object::New();
 
@@ -1086,14 +1087,19 @@ v8::Local<v8::Object> QV8Engine::variantMapToJS(const QVariantMap &vmap)
 QVariantMap QV8Engine::variantMapFromJS(v8::Handle<v8::Object> jsObject)
 {
     QVariantMap result;
+
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Array> propertyNames = jsObject->GetPropertyNames();
+    uint32_t length = propertyNames->Length();
+    if (length == 0)
+        return result;
+
     int hash = jsObject->GetIdentityHash();
     if (visitedConversionObjects.contains(hash))
         return result; // Avoid recursion.
+
     visitedConversionObjects.insert(hash);
-    v8::HandleScope handleScope;
     // TODO: Only object's own property names. Include non-enumerable properties.
-    v8::Handle<v8::Array> propertyNames = jsObject->GetPropertyNames();
-    uint32_t length = propertyNames->Length();
     for (uint32_t i = 0; i < length; ++i) {
         v8::Handle<v8::Value> name = propertyNames->Get(i);
         result.insert(QJSConverter::toString(name->ToString()), variantFromJS(jsObject->Get(name)));
@@ -1509,6 +1515,15 @@ qint64 QV8Engine::stopTimer(const QString &timerName, bool *wasRunning)
     *wasRunning = true;
     qint64 startedAt = m_startedTimers.take(timerName);
     return m_time.elapsed() - startedAt;
+}
+
+int QV8Engine::consoleCountHelper(const QString &file, int line, int column)
+{
+    const QString key = file + QString::number(line) + QString::number(column);
+    int number = m_consoleCount.value(key, 0);
+    number++;
+    m_consoleCount.insert(key, number);
+    return number;
 }
 
 void QV8GCCallback::registerGcPrologueCallback()

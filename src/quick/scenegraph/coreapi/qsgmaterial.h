@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -113,7 +113,9 @@ class Q_QUICK_EXPORT QSGMaterial
 {
 public:
     enum Flag {
-        Blending = 0x0001
+        Blending            = 0x0001,
+        RequiresDeterminant = 0x0002,
+        RequiresFullMatrix  = 0x0004 | RequiresDeterminant
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

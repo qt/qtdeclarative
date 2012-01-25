@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -185,6 +185,7 @@ QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     , m_meshResolution(1, 1)
     , m_mesh(0)
     , m_cullMode(NoCulling)
+    , m_status(Uncompiled)
     , m_blending(true)
     , m_dirtyData(true)
     , m_programDirty(true)
@@ -215,6 +216,10 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
     m_source.fragmentCode = code;
     update();
     m_complete = false;
+    if (m_status != Uncompiled) {
+        m_status = Uncompiled;
+        emit statusChanged();
+    }
     emit fragmentShaderChanged();
 }
 
@@ -234,6 +239,10 @@ void QQuickShaderEffect::setVertexShader(const QByteArray &code)
     m_source.vertexCode = code;
     update();
     m_complete = false;
+    if (m_status != Uncompiled) {
+        m_status = Uncompiled;
+        emit statusChanged();
+    }
     emit vertexShaderChanged();
 }
 
@@ -334,6 +343,34 @@ void QQuickShaderEffect::setCullMode(CullMode face)
     emit cullModeChanged();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::ShaderEffect::status
+
+    This property tells the current status of the OpenGL shader program.
+
+    \list
+    \o ShaderEffect.Compiled - the shader program was successfully compiled and linked.
+    \o ShaderEffect.Uncompiled - the shader program has not yet been compiled.
+    \o ShaderEffect.Error - the shader program failed to compile or link.
+    \endlist
+
+    When setting the fragment or vertex shader source code, the status will become Uncompiled.
+    The first time the ShaderEffect is rendered with new shader source code, the shaders are
+    compiled and linked, and the status is updated to Compiled or Error.
+
+    \sa log
+*/
+
+/*!
+    \qmlproperty string QtQuick2::ShaderEffect::log
+
+    This property holds a log of warnings and errors from the latest attempt at compiling and
+    linking the OpenGL shader program. It is updated at the same time \l status is set to Compiled
+    or Error.
+
+    \sa status
+*/
+
 void QQuickShaderEffect::changeSource(int index)
 {
     Q_ASSERT(index >= 0 && index < m_sources.size());
@@ -351,6 +388,14 @@ void QQuickShaderEffect::updateGeometry()
 {
     m_dirtyGeometry = true;
     update();
+}
+
+void QQuickShaderEffect::updateLogAndStatus(const QString &log, int status)
+{
+    m_log = m_parseLog + log;
+    m_status = Status(status);
+    emit logChanged();
+    emit statusChanged();
 }
 
 void QQuickShaderEffect::setSource(const QVariant &var, int index)
@@ -467,7 +512,8 @@ void QQuickShaderEffect::reset()
         delete source.mapper;
     }
     m_sources.clear();
-
+    m_log.clear();
+    m_parseLog.clear();
     m_programDirty = true;
     m_dirtyMesh = true;
 }
@@ -494,14 +540,22 @@ void QQuickShaderEffect::updateProperties()
         lookThroughShaderCode(m_source.fragmentCode);
     }
 
-    if (!m_mesh && !m_source.attributeNames.contains(qt_position_attribute_name))
-        qWarning("QQuickShaderEffect: Missing reference to \'%s\'.", qt_position_attribute_name);
-    if (!m_mesh && !m_source.attributeNames.contains(qt_texcoord_attribute_name))
-        qWarning("QQuickShaderEffect: Missing reference to \'%s\'.", qt_texcoord_attribute_name);
-    if (!m_source.respectsMatrix)
-        qWarning("QQuickShaderEffect: Missing reference to \'qt_Matrix\'.");
-    if (!m_source.respectsOpacity)
-        qWarning("QQuickShaderEffect: Missing reference to \'qt_Opacity\'.");
+    if (!m_mesh && !m_source.attributeNames.contains(qt_position_attribute_name)) {
+        m_parseLog += QLatin1String("Warning: Missing reference to \'");
+        m_parseLog += QLatin1String(qt_position_attribute_name);
+        m_parseLog += QLatin1String("\'.\n");
+    }
+    if (!m_mesh && !m_source.attributeNames.contains(qt_texcoord_attribute_name)) {
+        m_parseLog += QLatin1String("Warning: Missing reference to \'");
+        m_parseLog += QLatin1String(qt_texcoord_attribute_name);
+        m_parseLog += QLatin1String("\'.\n");
+    }
+    if (!m_source.respectsMatrix) {
+        m_parseLog += QLatin1String("Warning: Missing reference to \'qt_Matrix\'.\n");
+    }
+    if (!m_source.respectsOpacity) {
+        m_parseLog += QLatin1String("Warning: Missing reference to \'qt_Opacity\'.\n");
+    }
 
     for (int i = 0; i < m_sources.size(); ++i) {
         QVariant v = property(m_sources.at(i).name);
@@ -688,6 +742,7 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         m_programDirty = true;
         m_dirtyData = true;
         m_dirtyGeometry = true;
+        connect(node, SIGNAL(logAndStatusChanged(QString,int)), this, SLOT(updateLogAndStatus(QString,int)));
     }
 
     QQuickShaderEffectMaterial *material = node->shaderMaterial();
@@ -706,6 +761,15 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
 
         geometry = mesh->updateGeometry(geometry, m_source.attributeNames, rect);
         if (!geometry) {
+            QString log = mesh->log();
+            if (!log.isNull()) {
+                m_log = m_parseLog;
+                m_log += QLatin1String("*** Mesh ***\n");
+                m_log += log;
+                m_status = Error;
+                emit logChanged();
+                emit statusChanged();
+            }
             delete node;
             return 0;
         }

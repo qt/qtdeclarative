@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -103,7 +103,7 @@ The code that imports and creates two MyWidget instances:
 \snippet doc/src/snippets/declarative/focus/widget.qml window
 
 The MyWidget code:
-\snippet doc/src/snippets/declarative/focus/mywidget.qml mywidget
+\snippet doc/src/snippets/declarative/focus/MyWidget.qml mywidget
 
 We would like to have the first MyWidget object to have the focus by setting its
 \c focus property to \c true. However, by running the code, we can confirm that
@@ -166,7 +166,7 @@ The code that imports and creates two MyClickableWidget instances:
 \snippet doc/src/snippets/declarative/focus/clickablewidget.qml clickable window
 
 The MyClickableWidget code:
-\snippet doc/src/snippets/declarative/focus/myclickablewidget.qml clickable in focusscope
+\snippet doc/src/snippets/declarative/focus/MyClickableWidget.qml clickable in focusscope
 
 \image declarative-qmlfocus4.png
 

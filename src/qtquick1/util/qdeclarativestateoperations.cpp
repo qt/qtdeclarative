@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -667,7 +667,7 @@ void QDeclarative1StateChangeScript::execute(Reason)
         QDeclarativeExpression expr(d->script.context(), d->script.scopeObject(), script);
         QDeclarativeData *ddata = QDeclarativeData::get(this);
         if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-            expr.setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber);
+            expr.setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber, ddata->columnNumber);
         expr.evaluate();
         if (expr.hasError())
             qmlInfo(this, expr.error());

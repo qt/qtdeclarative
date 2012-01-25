@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the Declarative module of the Qt Toolkit.
 **
@@ -57,6 +57,48 @@
 QT_BEGIN_NAMESPACE
 //###Switch to define later, for now user-friendly (no compilation) debugging is worth it
 DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
+
+
+/* \internal ParticleSystem internals documentation
+
+   Affectors, Painters, Emitters and Groups all register themselves on construction as a callback
+   from their setSystem (or componentComplete if they have a system from a parent).
+
+   Particle data is stored by group, They have a group index (used by the particle system almost
+   everywhere) and a global index (used by the Stochastic state engine powering stochastic group
+   transitions). Each group has a recycling list/heap that stores the particle data.
+
+   The recycling list/heap is a heap of particle data sorted by when they're expected to die. If
+   they die prematurely then they are marked as reusable (and will probably still be alive when
+   they exit the heap). If they have their life extended, then they aren't dead when expected.
+   If this happens, they go back in the heap with the new estimate. If they have died on schedule,
+   then the indexes are marked as reusable. If no indexes are reusable when new particles are
+   requested, then the list is extended. This relatively complex datastructure is because memory
+   allocation and deallocation on this scale proved to be a significant performance cost. In order
+   to reuse the indexes validly (even when particles can have their life extended or cut short
+   dynamically, or particle counts grow) this seemed to be the most efficient option for keeping
+   track of which indices could be reused.
+
+   When a new particle is emitted, the emitter gets a new datum from the group (through the
+   system), and sets properties on it. Then it's passed back to the group briefly so that it can
+   now guess when the particle will die. Then the painters get a change to initialize properties
+   as well, since particle data includes shared data from painters as well as logical particle
+   data.
+
+   Every animation advance, the simulation advances by running all emitters for the elapsed
+   duration, then running all affectors, then telling all particle painters to update changed
+   particles. The ParticlePainter superclass stores these changes, and they are implemented
+   when the painter is called to paint in the render thread.
+
+   Particle group changes move the particle from one group to another by killing the old particle
+   and then creating a new one with the same data in the new group.
+
+   Note that currently groups only grow. Given that data is stored in vectors, it is non-trivial
+   to pluck out the unused indexes when the count goes down. Given the dynamic nature of the
+   system, it is difficult to tell if those unused data instances will be used again. Still,
+   some form of garbage collection is on the long term plan.
+*/
+
 /*!
     \qmlclass ParticleSystem QQuickParticleSystem
     \inqmlmodule QtQuick.Particles 2
@@ -420,6 +462,7 @@ QQuickParticleData::QQuickParticleData(QQuickParticleSystem* sys)
     autoRotate = 0;
     animIdx = 0;
     frameDuration = 1;
+    frameAt = -1;
     frameCount = 1;
     animT = -1;
     animX = 0;

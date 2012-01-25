@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -49,8 +49,8 @@ data from over a network.
 The XMLHttpRequest API implements the same \l {http://www.w3.org/TR/XMLHttpRequest/}{W3C standard}
 as many popular web browsers with following exceptions:
 \list
-\i QML's XMLHttpRequest does not enforce the same origin policy.
-\i QML's XMLHttpRequest does not support \i synchronous requests.
+\o QML's XMLHttpRequest does not enforce the same origin policy.
+\o QML's XMLHttpRequest does not support \i synchronous requests.
 \endlist
 
 Additionally, the \c responseXML XML DOM tree currently supported by QML is a reduced subset

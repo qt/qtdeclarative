@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -42,6 +42,7 @@
 #include <private/qquickshadereffectnode_p.h>
 
 #include "qquickshadereffectmesh_p.h"
+#include "qquickshadereffect_p.h"
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
@@ -58,6 +59,7 @@ public:
 protected:
     friend class QQuickShaderEffectNode;
 
+    virtual void compile();
     virtual void initialize();
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
@@ -65,6 +67,8 @@ protected:
     const QQuickShaderEffectMaterialKey m_key;
     QVector<const char *> m_attributeNames;
     const QVector<QByteArray> m_attributes;
+    QString m_log;
+    bool m_compiled;
 
     QVector<int> m_uniformLocs;
     int m_opacityLoc;
@@ -75,6 +79,7 @@ protected:
 QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes)
     : m_key(key)
     , m_attributes(attributes)
+    , m_compiled(false)
     , m_textureIndicesSet(false)
 {
     for (int i = 0; i < attributes.count(); ++i)
@@ -92,7 +97,12 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
 {
     Q_ASSERT(newEffect != 0);
 
-    const QQuickShaderEffectMaterial *material = static_cast<const QQuickShaderEffectMaterial *>(newEffect);
+    QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(newEffect);
+    if (!material->m_emittedLogChanged && material->m_node) {
+        material->m_emittedLogChanged = true;
+        emit material->m_node->logAndStatusChanged(m_log, m_compiled ? QQuickShaderEffect::Compiled
+                                                                     : QQuickShaderEffect::Error);
+    }
 
     if (!m_textureIndicesSet) {
         for (int i = 0; i < material->m_textures.size(); ++i)
@@ -192,6 +202,78 @@ char const *const *QQuickCustomMaterialShader::attributeNames() const
     return m_attributeNames.constData();
 }
 
+void QQuickCustomMaterialShader::compile()
+{
+    Q_ASSERT_X(!program()->isLinked(), "QQuickCustomMaterialShader::compile()", "Compile called multiple times!");
+
+    m_log.clear();
+    m_compiled = true;
+    if (!program()->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShader())) {
+        m_log += QLatin1String("*** Vertex shader ***\n");
+        m_log += program()->log();
+        m_compiled = false;
+    }
+    if (!program()->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShader())) {
+        m_log += QLatin1String("*** Fragment shader ***\n");
+        m_log += program()->log();
+        m_compiled = false;
+    }
+
+    char const *const *attr = attributeNames();
+#ifndef QT_NO_DEBUG
+    int maxVertexAttribs = 0;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+    int attrCount = 0;
+    while (attrCount < maxVertexAttribs && attr[attrCount])
+        ++attrCount;
+    if (attr[attrCount]) {
+        qWarning("List of attribute names is too long.\n"
+                 "Maximum number of attributes on this hardware is %i.\n"
+                 "Vertex shader:\n%s\n"
+                 "Fragment shader:\n%s\n",
+                 maxVertexAttribs, vertexShader(), fragmentShader());
+    }
+#endif
+
+    if (m_compiled) {
+#ifndef QT_NO_DEBUG
+        for (int i = 0; i < attrCount; ++i) {
+#else
+        for (int i = 0; attr[i]; ++i) {
+#endif
+            if (*attr[i])
+                program()->bindAttributeLocation(attr[i], i);
+        }
+        m_compiled = program()->link();
+        m_log += program()->log();
+    }
+
+    static const char *fallbackVertexShader =
+            "uniform highp mat4 qt_Matrix;"
+            "attribute highp vec4 v;"
+            "void main() { gl_Position = qt_Matrix * v; }";
+    static const char *fallbackFragmentShader =
+            "void main() { gl_FragColor = vec4(1., 0., 1., 1.); }";
+
+    if (!m_compiled) {
+        qWarning("QQuickCustomMaterialShader: Shader compilation failed:");
+        qWarning() << program()->log();
+
+        program()->removeAllShaders();
+        program()->addShaderFromSourceCode(QOpenGLShader::Vertex, fallbackVertexShader);
+        program()->addShaderFromSourceCode(QOpenGLShader::Fragment, fallbackFragmentShader);
+#ifndef QT_NO_DEBUG
+        for (int i = 0; i < attrCount; ++i) {
+#else
+        for (int i = 0; attr[i]; ++i) {
+#endif
+            if (qstrcmp(attr[i], qtPositionAttributeName()) == 0)
+                program()->bindAttributeLocation("v", i);
+        }
+        program()->link();
+    }
+}
+
 void QQuickCustomMaterialShader::initialize()
 {
     m_opacityLoc = program()->uniformLocation("qt_Opacity");
@@ -222,10 +304,12 @@ uint qHash(const QQuickShaderEffectMaterialKey &key)
 
 QHash<QQuickShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > QQuickShaderEffectMaterial::materialMap;
 
-QQuickShaderEffectMaterial::QQuickShaderEffectMaterial()
+QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *node)
     : m_cullMode(NoCulling)
+    , m_node(node)
+    , m_emittedLogChanged(false)
 {
-    setFlag(Blending, true);
+    setFlag(Blending | RequiresFullMatrix, true);
 }
 
 QSGMaterialType *QQuickShaderEffectMaterial::type() const
@@ -256,6 +340,7 @@ QQuickShaderEffectMaterial::CullMode QQuickShaderEffectMaterial::cullMode() cons
 void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectProgram &source)
 {
     m_source = source;
+    m_emittedLogChanged = false;
     m_type = materialMap.value(m_source);
     if (m_type.isNull()) {
         m_type = QSharedPointer<QSGMaterialType>(new QSGMaterialType);
@@ -290,6 +375,7 @@ void QQuickShaderEffectMaterial::updateTextures() const
 
 
 QQuickShaderEffectNode::QQuickShaderEffectNode()
+    : m_material(this)
 {
     QSGNode::setFlag(UsePreprocess, true);
     setMaterial(&m_material);

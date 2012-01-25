@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -64,7 +64,9 @@ class Q_QUICK_EXPORT QQuickShaderEffectMesh : public QObject
 public:
     QQuickShaderEffectMesh(QObject *parent = 0);
     // If 'geometry' != 0, 'attributes' is the same as last time the function was called.
-    virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &rect) const = 0;
+    virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &rect) = 0;
+    // If updateGeometry() fails, the reason should appear in the log.
+    virtual QString log() const { return QString(); }
 
 Q_SIGNALS:
     // Emitted when the geometry needs to be updated.
@@ -77,7 +79,8 @@ class QQuickGridMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
 public:
     QQuickGridMesh(QObject *parent = 0);
-    virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &rect) const;
+    virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &rect);
+    virtual QString log() const { return m_log; }
 
     void setResolution(const QSize &res);
     QSize resolution() const;
@@ -87,6 +90,7 @@ Q_SIGNALS:
 
 private:
     QSize m_resolution;
+    QString m_log;
 };
 
 inline QColor qt_premultiply_color(const QColor &c)

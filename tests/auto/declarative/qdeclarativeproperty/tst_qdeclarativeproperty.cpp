@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
 #include <QtDeclarative/private/qdeclarativeproperty_p.h>
 #include <private/qdeclarativebinding_p.h>
@@ -49,6 +50,7 @@
 #include <QtCore/qdir.h>
 #include "../../shared/util.h"
 
+#include <QDebug>
 class MyQmlObject : public QObject
 {
     Q_OBJECT
@@ -120,10 +122,17 @@ private slots:
 
     //writeToReadOnly();
 
+    void urlHandling_data();
+    void urlHandling();
+
+    void variantMapHandling_data();
+    void variantMapHandling();
+
     // Bugs
     void crashOnValueProperty();
     void aliasPropertyBindings();
     void noContext();
+    void assignEmptyVariantMap();
 
     void copy();
 private:
@@ -184,6 +193,7 @@ class PropertyObject : public QObject
     Q_PROPERTY(QRect rectProperty READ rectProperty)
     Q_PROPERTY(QRect wrectProperty READ wrectProperty WRITE setWRectProperty)
     Q_PROPERTY(QUrl url READ url WRITE setUrl)
+    Q_PROPERTY(QVariantMap variantMap READ variantMap WRITE setVariantMap)
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
     Q_PROPERTY(int propertyWithNotify READ propertyWithNotify WRITE setPropertyWithNotify NOTIFY oddlyNamedNotifySignal)
     Q_PROPERTY(MyQmlObject *qmlObject READ qmlObject)
@@ -201,6 +211,9 @@ public:
     QUrl url() { return m_url; }
     void setUrl(const QUrl &u) { m_url = u; }
 
+    QVariantMap variantMap() const { return m_variantMap; }
+    void setVariantMap(const QVariantMap &variantMap) { m_variantMap = variantMap; }
+
     int resettableProperty() const { return m_resetProperty; }
     void setResettableProperty(int r) { m_resetProperty = r; }
     void resetProperty() { m_resetProperty = 9; }
@@ -209,6 +222,7 @@ public:
     void setPropertyWithNotify(int i) { m_propertyWithNotify = i; emit oddlyNamedNotifySignal(); }
 
     MyQmlObject *qmlObject() { return &m_qmlObject; }
+
 signals:
     void clicked();
     void oddlyNamedNotifySignal();
@@ -217,6 +231,7 @@ private:
     int m_resetProperty;
     QRect m_rect;
     QUrl m_url;
+    QVariantMap m_variantMap;
     int m_propertyWithNotify;
     MyQmlObject m_qmlObject;
 };
@@ -1192,6 +1207,32 @@ void tst_qdeclarativeproperty::write()
         QCOMPARE(o.url(), result);
     }
 
+    // VariantMap-property
+    QVariantMap vm;
+    vm.insert("key", "value");
+
+    {
+        PropertyObject o;
+        QDeclarativeProperty p(&o, "variantMap");
+
+        QCOMPARE(p.write(vm), true);
+        QCOMPARE(o.variantMap(), vm);
+
+        QDeclarativeProperty p2(&o, "variantMap", engine.rootContext());
+
+        QCOMPARE(p2.write(vm), true);
+        QCOMPARE(o.variantMap(), vm);
+    }
+    {   // static
+        PropertyObject o;
+
+        QCOMPARE(QDeclarativeProperty::write(&o, "variantMap", vm), true);
+        QCOMPARE(o.variantMap(), vm);
+
+        QCOMPARE(QDeclarativeProperty::write(&o, "variantMap", vm, engine.rootContext()), true);
+        QCOMPARE(o.variantMap(), vm);
+    }
+
     // Attached property
     {
         QDeclarativeComponent component(&engine);
@@ -1315,7 +1356,6 @@ void tst_qdeclarativeproperty::writeObjectToList()
     QCOMPARE(list.at(0), qobject_cast<QObject*>(object));
 }
 
-Q_DECLARE_METATYPE(QList<QObject *>);
 void tst_qdeclarativeproperty::writeListToList()
 {
     QDeclarativeComponent containerComponent(&engine);
@@ -1336,6 +1376,163 @@ void tst_qdeclarativeproperty::writeListToList()
     typedObjList << new MyQmlObject();
     prop.write(qVariantFromValue(&typedObjList));
     QCOMPARE(container->children()->size(), 1);*/
+}
+
+void tst_qdeclarativeproperty::urlHandling_data()
+{
+    QTest::addColumn<QByteArray>("input");
+    QTest::addColumn<QString>("scheme");
+    QTest::addColumn<QString>("path");
+    QTest::addColumn<QByteArray>("encoded");
+
+    QTest::newRow("unspecifiedFile")
+        << QByteArray("main.qml")
+        << QString("")
+        << QString("main.qml")
+        << QByteArray("main.qml");
+
+    QTest::newRow("specifiedFile")
+        << QByteArray("file:///main.qml")
+        << QString("file")
+        << QString("/main.qml")
+        << QByteArray("file:///main.qml");
+
+    QTest::newRow("httpFile")
+        << QByteArray("http://www.example.com/main.qml")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml");
+
+    QTest::newRow("pathFile")
+        << QByteArray("http://www.example.com/resources/main.qml")
+        << QString("http")
+        << QString("/resources/main.qml")
+        << QByteArray("http://www.example.com/resources/main.qml");
+
+    QTest::newRow("encodableName")
+        << QByteArray("http://www.example.com/main file.qml")
+        << QString("http")
+        << QString("/main file.qml")
+        << QByteArray("http://www.example.com/main%20file.qml");
+
+    QTest::newRow("preencodedName")
+        << QByteArray("http://www.example.com/resources%7cmain%20file.qml")
+        << QString("http")
+        << QString("/resources|main file.qml")
+        << QByteArray("http://www.example.com/resources%7cmain%20file.qml");
+
+    QTest::newRow("encodableQuery")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now working?")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now%20working?");
+
+    QTest::newRow("preencodedQuery")
+        << QByteArray("http://www.example.com/main.qml?type=text%2fqml&comment=now working%3f")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text%2fqml&comment=now%20working%3f");
+
+    QTest::newRow("encodableFragment")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000|volume+50%")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7Cvolume+50%25");
+
+    QTest::newRow("preencodedFragment")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7cvolume%2b50%")
+        << QString("http")
+        << QString("/main.qml")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7cvolume%2b50%25");
+}
+
+void tst_qdeclarativeproperty::urlHandling()
+{
+    QFETCH(QByteArray, input);
+    QFETCH(QString, scheme);
+    QFETCH(QString, path);
+    QFETCH(QByteArray, encoded);
+
+    QString inputString(QString::fromUtf8(input));
+
+    {
+        PropertyObject o;
+        QDeclarativeProperty p(&o, "url");
+
+        // Test url written as QByteArray
+        QCOMPARE(p.write(input), true);
+        QUrl byteArrayResult(o.url());
+
+        QCOMPARE(byteArrayResult.scheme(), scheme);
+        QCOMPARE(byteArrayResult.path(), path);
+        QCOMPARE(byteArrayResult.toEncoded(), encoded);
+    }
+
+    {
+        PropertyObject o;
+        QDeclarativeProperty p(&o, "url");
+
+        // Test url written as QString
+        QCOMPARE(p.write(inputString), true);
+        QUrl stringResult(o.url());
+
+        QCOMPARE(stringResult.scheme(), scheme);
+        QCOMPARE(stringResult.path(), path);
+        QCOMPARE(stringResult.toEncoded(), encoded);
+    }
+}
+
+void tst_qdeclarativeproperty::variantMapHandling_data()
+{
+    QTest::addColumn<QVariantMap>("vm");
+
+    // Object literals
+    {
+        QVariantMap m;
+        QTest::newRow("{}") << m;
+    }
+    {
+        QVariantMap m;
+        m["a"] = QVariantMap();
+        QTest::newRow("{ a:{} }") << m;
+    }
+    {
+        QVariantMap m, m2;
+        m2["b"] = 10;
+        m2["c"] = 20;
+        m["a"] = m2;
+        QTest::newRow("{ a:{b:10, c:20} }") << m;
+    }
+    {
+        QVariantMap m;
+        m["a"] = 10;
+        m["b"] = QVariantList() << 20 << 30;
+        QTest::newRow("{ a:10, b:[20, 30]}") << m;
+    }
+
+    // Cyclic objects
+    {
+        QVariantMap m;
+        m["p"] = QVariantMap();
+        QTest::newRow("var o={}; o.p=o") << m;
+    }
+    {
+        QVariantMap m;
+        m["p"] = 123;
+        m["q"] = QVariantMap();
+        QTest::newRow("var o={}; o.p=123; o.q=o") << m;
+    }
+}
+
+void tst_qdeclarativeproperty::variantMapHandling()
+{
+    QFETCH(QVariantMap, vm);
+
+    PropertyObject o;
+    QDeclarativeProperty p(&o, "variantMap");
+
+    QCOMPARE(p.write(vm), true);
+    QCOMPARE(o.variantMap(), vm);
 }
 
 void tst_qdeclarativeproperty::crashOnValueProperty()
@@ -1486,6 +1683,29 @@ void tst_qdeclarativeproperty::noContext()
 
     delete a;
     delete b;
+}
+
+void tst_qdeclarativeproperty::assignEmptyVariantMap()
+{
+    PropertyObject o;
+
+    QVariantMap map;
+    map.insert("key", "value");
+    o.setVariantMap(map);
+    QCOMPARE(o.variantMap().count(), 1);
+    QCOMPARE(o.variantMap().isEmpty(), false);
+
+    QDeclarativeContext context(&engine);
+    context.setContextProperty("o", &o);
+
+    QDeclarativeComponent component(&engine, testFileUrl("assignEmptyVariantMap.qml"));
+    QObject *obj = component.create(&context);
+    QVERIFY(obj);
+
+    QCOMPARE(o.variantMap().count(), 0);
+    QCOMPARE(o.variantMap().isEmpty(), true);
+
+    delete obj;
 }
 
 void tst_qdeclarativeproperty::initTestCase()

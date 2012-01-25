@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -990,9 +990,9 @@ v8::Handle<v8::Value> QDeclarativeLocale::locale(QV8Engine *v8engine, const QStr
 */
 
 /*!
-    \qmlproperty Array<int> QtQuick2::Locale::weekdays
+    \qmlproperty Array<int> QtQuick2::Locale::weekDays
 
-    Holds an array of days that are considered weekdays according to the current locale,
+    Holds an array of days that are considered week days according to the current locale,
     where Sunday is 0 and Saturday is 6.
 
     \sa firstDayOfWeek

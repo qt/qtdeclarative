@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -467,7 +467,7 @@ void tst_QQuickGridView::inserted_more()
     // check visibleItems.first() is in correct position
     QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item0);
-    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+    QCOMPARE(item0->y(), 0.0);
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
@@ -840,6 +840,7 @@ void tst_QQuickGridView::removed_more()
     QFETCH(int, removeIndex);
     QFETCH(int, removeCount);
     QFETCH(qreal, itemsOffsetAfterMove);
+    QFETCH(QString, firstVisible);
 
     QQuickText *name;
     QQuickText *number;
@@ -868,22 +869,20 @@ void tst_QQuickGridView::removed_more()
     model.removeItems(removeIndex, removeCount);
     QTRY_COMPARE(gridview->property("count").toInt(), model.count());
 
-    // check visibleItems.first() is in correct position
-    QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
-//    qApp->exec();
-    QVERIFY(item0);
-    QCOMPARE(item0->y(), itemsOffsetAfterMove);
-
+    QString firstName;
     int firstVisibleIndex = -1;
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     for (int i=0; i<items.count(); i++) {
         if (items[i]->y() >= contentY) {
             QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
             firstVisibleIndex = e.evaluate().toInt();
+            QDeclarativeExpression en(qmlContext(items[i]), items[i], "name");
+            firstName = en.evaluate().toString();
             break;
         }
     }
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+    QCOMPARE(firstName, firstVisible);
 
     // Confirm items positioned correctly and indexes correct
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -911,21 +910,27 @@ void tst_QQuickGridView::removed_more_data()
     QTest::addColumn<int>("removeIndex");
     QTest::addColumn<int>("removeCount");
     QTest::addColumn<qreal>("itemsOffsetAfterMove");
+    QTest::addColumn<QString>("firstVisible");
 
     QTest::newRow("remove 1, before visible items")
             << 120.0     // show 6-23
             << 3 << 1
-            << 0.0;
+            << 0.0 << "Item7";
 
     QTest::newRow("remove multiple, all before visible items")
             << 120.0
             << 1 << 3
-            << 60.0;    // removed top row, slide down by 1 row
+            << 60.0 << "Item6";    // removed top row, slide down by 1 row
 
     QTest::newRow("remove multiple, all before visible items, remove item 0")
             << 120.0
             << 0 << 4
-            << 60.0;    // removed top row, slide down by 1 row
+            << 60.0 << "Item7";    // removed top row, slide down by 1 row
+
+    QTest::newRow("remove multiple rows, all before visible items")
+            << 240.0     // show 12-29
+            << 1 << 7
+            << 120.0 << "Item13";
 
 
     // remove 3,4,5 before the visible pos, first row moves down to just before the visible pos,
@@ -933,80 +938,80 @@ void tst_QQuickGridView::removed_more_data()
     QTest::newRow("remove multiple, mix of items from before and within visible items")
             << 120.0
             << 3 << 5
-            << 60.0;    // adjust for the 1 row removed before the visible
+            << 60.0 << "Item8";    // adjust for the 1 row removed before the visible
 
     QTest::newRow("remove multiple, mix of items from before and within visible items, remove item 0")
             << 120.0
             << 0 << 8
-            << 60.0 * 2;    // adjust for the 2 rows removed before the visible
+            << 60.0 * 2 << "Item8";    // adjust for the 2 rows removed before the visible
 
 
     QTest::newRow("remove 1, from start of visible, content at start")
             << 0.0
             << 0 << 1
-            << 0.0;
+            << 0.0 << "Item1";
 
     QTest::newRow("remove multiple, from start of visible, content at start")
             << 0.0
             << 0 << 3
-            << 0.0;
+            << 0.0 << "Item3";
 
     QTest::newRow("remove 1, from start of visible, content not at start")
             << 120.0     // show 6-23
             << 4 << 1
-            << 0.0;
+            << 0.0 << "Item7";
 
     QTest::newRow("remove multiple, from start of visible, content not at start")
             << 120.0     // show 6-23
             << 4 << 3
-            << 0.0;
+            << 0.0 << "Item9";
 
 
     QTest::newRow("remove 1, from middle of visible, content at start")
             << 0.0
             << 10 << 1
-            << 0.0;
+            << 0.0 << "Item0";
 
     QTest::newRow("remove multiple, from middle of visible, content at start")
             << 0.0
             << 10 << 5
-            << 0.0;
+            << 0.0 << "Item0";
 
     QTest::newRow("remove 1, from middle of visible, content not at start")
             << 120.0     // show 6-23
             << 10 << 1
-            << 0.0;
+            << 0.0 << "Item6";
 
     QTest::newRow("remove multiple, from middle of visible, content not at start")
             << 120.0     // show 6-23
             << 10 << 5
-            << 0.0;
+            << 0.0 << "Item6";
 
 
     QTest::newRow("remove 1, after visible, content at start")
             << 0.0
             << 16 << 1
-            << 0.0;
+            << 0.0 << "Item0";
 
     QTest::newRow("remove multiple, after visible, content at start")
             << 0.0
             << 16 << 5
-            << 0.0;
+            << 0.0 << "Item0";
 
     QTest::newRow("remove 1, after visible, content not at start")
             << 120.0     // show 6-23
             << 16+4 << 1
-            << 0.0;
+            << 0.0 << "Item6";
 
     QTest::newRow("remove multiple, after visible, content not at start")
             << 120.0     // show 6-23
             << 16+4 << 5
-            << 0.0;
+            << 0.0 << "Item6";
 
     QTest::newRow("remove multiple, mix of items from within and after visible items")
             << 120.0     // show 6-23
             << 20 << 5
-            << 0.0;
+            << 0.0 << "Item6";
 }
 
 void tst_QQuickGridView::addOrRemoveBeforeVisible()
@@ -1040,6 +1045,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
 
     gridview->setCurrentIndex(0);
     qApp->processEvents();
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // scroll down until item 0 is no longer drawn
     // (bug not triggered if we just move using content y, since that doesn't
@@ -1091,7 +1097,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible_data()
     QTest::addColumn<qreal>("newTopContentY");
 
     QTest::newRow("add") << true << -60.0;
-    QTest::newRow("remove") << false << 0.0;
+    QTest::newRow("remove") << false << -60.0;
 }
 
 void tst_QQuickGridView::clear()
@@ -1134,11 +1140,6 @@ void tst_QQuickGridView::clear()
 
 void tst_QQuickGridView::moved()
 {
-    if (QTest::currentDataTag() == QLatin1String("move 1 forwards, from non-visible -> visible")
-            || QTest::currentDataTag() == QLatin1String("move 1 forwards, from non-visible -> visible (move first item)")) {
-        QSKIP("QTBUG-23455");
-    }
-
     QFETCH(qreal, contentY);
     QFETCH(int, from);
     QFETCH(int, to);
@@ -1222,13 +1223,11 @@ void tst_QQuickGridView::moved_data()
             << 1 << 8 << 1
             << 0.0;
 
-    // skipped QTBUG-23455
     QTest::newRow("move 1 forwards, from non-visible -> visible")
             << 120.0     // show 6-23
             << 1 << 23 << 1
             << 0.0;
 
-    // skipped QTBUG-23455
     QTest::newRow("move 1 forwards, from non-visible -> visible (move first item)")
             << 120.0     // // show 6-23
             << 0 << 6 << 1
@@ -1300,6 +1299,26 @@ void tst_QQuickGridView::moved_data()
             << 120.0     // show 6-23
             << 0 << 6 << 3
             << 60.0;    // top row moved and shifted to below 3rd row, all items should shift down by 1 row
+
+    QTest::newRow("move multiple forwards, mix of non-visible/visible")
+            << 120.0
+            << 3 << 16 << 6
+            << 60.0;    // top two rows removed, third row is now the first visible
+
+    QTest::newRow("move multiple forwards, to bottom of view")
+            << 0.0
+            << 5 << 13 << 5
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, first row -> last")
+            << 0.0
+            << 0 << 15 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, content y not 0")
+            << 120.0
+            << 5+4 << 13+4 << 5
+            << 0.0;
 
     QTest::newRow("move multiple forwards, from visible -> non-visible")
             << 0.0
@@ -3174,6 +3193,41 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
     gridview->setHeight(100);
     QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 10));
+
+    // Ensure we handle -ve sizes
+    gridview->setHeight(-100);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 3);
+
+    gridview->setCacheBuffer(120);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 9);
+
+    // ensure items in cache become visible
+    gridview->setHeight(120);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 15);
+
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
+        QCOMPARE(item->isVisible(), i < 9); // inside view visible, outside not visible
+    }
+
+    // ensure items outside view become invisible
+    gridview->setHeight(60);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 12);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
+        QCOMPARE(item->isVisible(), i < 6); // inside view visible, outside not visible
+    }
 
     delete canvas;
 }

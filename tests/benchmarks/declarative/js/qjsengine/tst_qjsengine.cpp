@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -81,7 +81,6 @@ private slots:
     void newArray_data();
     void newArray();
     void newDate();
-    void newDateFromMs();
     void newObject();
 #if 0 // No ScriptClass
     void newObjectWithScriptClass();
@@ -94,9 +93,7 @@ private slots:
     void newFunction();
 #endif
     void newRegExp();
-    void newRegExpFromString();
     void newVariant();
-    void nullValue();
     void undefinedValue();
     void collectGarbage();
 #if 0 // No extensions
@@ -107,8 +104,6 @@ private slots:
     void currentContext();
     void pushAndPopContext();
 #endif
-    void toObject_data();
-    void toObject();
 #if 0 // no stringhandle
     void toStringHandle();
 #endif
@@ -319,15 +314,7 @@ void tst_QJSEngine::newDate()
     newEngine();
     QDateTime dt = QDateTime::currentDateTime();
     QBENCHMARK {
-        m_engine->newDate(dt);
-    }
-}
-
-void tst_QJSEngine::newDateFromMs()
-{
-    newEngine();
-    QBENCHMARK {
-        m_engine->newDate(0);
+        m_engine->toScriptValue(dt);
     }
 }
 
@@ -386,42 +373,25 @@ void tst_QJSEngine::newRegExp()
     newEngine();
     QRegExp re = QRegExp("foo");
     QBENCHMARK {
-        m_engine->newRegExp(re);
-    }
-}
-
-void tst_QJSEngine::newRegExpFromString()
-{
-    newEngine();
-    QString pattern("foo");
-    QString flags("gim");
-    QBENCHMARK {
-        m_engine->newRegExp(pattern, flags);
+        m_engine->toScriptValue(re);
     }
 }
 
 void tst_QJSEngine::newVariant()
 {
     newEngine();
-    QVariant var(123);
+    QVariant var(QPoint(10, 20));
     QBENCHMARK {
-        (void)m_engine->newVariant(var);
-    }
-}
-
-void tst_QJSEngine::nullValue()
-{
-    newEngine();
-    QBENCHMARK {
-        m_engine->nullValue();
+        (void)m_engine->toScriptValue(var);
     }
 }
 
 void tst_QJSEngine::undefinedValue()
 {
     newEngine();
+    QVariant var;
     QBENCHMARK {
-        m_engine->undefinedValue();
+        m_engine->toScriptValue(var);
     }
 }
 
@@ -467,46 +437,6 @@ void tst_QJSEngine::pushAndPopContext()
     }
 }
 #endif
-
-void tst_QJSEngine::toObject_data()
-{
-    newEngine();
-    QTest::addColumn<QJSValue>("val");
-    QTest::newRow("bool") << m_engine->evaluate("true");
-    QTest::newRow("number") << m_engine->evaluate("123");
-    QTest::newRow("string") << m_engine->evaluate("'ciao'");
-    QTest::newRow("null") << m_engine->evaluate("null");
-    QTest::newRow("undefined") << m_engine->evaluate("undefined");
-    QTest::newRow("object") << m_engine->evaluate("({foo:123})");
-    QTest::newRow("array") << m_engine->evaluate("[10,20,30]");
-    QTest::newRow("function") << m_engine->evaluate("(function foo(a, b, c) { return a + b + c; })");
-    QTest::newRow("date") << m_engine->evaluate("new Date");
-    QTest::newRow("regexp") << m_engine->evaluate("new RegExp('foo')");
-    QTest::newRow("error") << m_engine->evaluate("new Error");
-
-    QTest::newRow("qobject") << m_engine->newQObject(this);
-#if 0 // no QMetaObject
-    QTest::newRow("qmetaobject") << m_engine->newQMetaObject(&QJSEngine::staticMetaObject);
-#endif
-    QTest::newRow("variant") << m_engine->newVariant(123);
-#if 0 //no classes
-    QTest::newRow("qscriptclassobject") << m_engine->newObject(new QScriptClass(m_engine));
-#endif
-    QTest::newRow("invalid") << QJSValue();
-    QTest::newRow("bool-no-engine") << QJSValue(true);
-    QTest::newRow("number-no-engine") << QJSValue(123.0);
-    QTest::newRow("string-no-engine") << QJSValue(QString::fromLatin1("hello"));
-    QTest::newRow("null-no-engine") << QJSValue(QJSValue::NullValue);
-    QTest::newRow("undefined-no-engine") << QJSValue(QJSValue::UndefinedValue);
-}
-
-void tst_QJSEngine::toObject()
-{
-    QFETCH(QJSValue, val);
-    QBENCHMARK {
-        m_engine->toObject(val);
-    }
-}
 
 #if 0
 void tst_QJSEngine::toStringHandle()

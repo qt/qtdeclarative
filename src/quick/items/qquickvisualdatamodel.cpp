@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -425,6 +425,10 @@ QQuickVisualDataModel::ReleaseFlags QQuickVisualDataModelPrivate::release(QObjec
             if (QQuickItem *item = qobject_cast<QQuickItem *>(object))
                 emitDestroyingItem(item);
             cacheItem->object = 0;
+            if (cacheItem->incubationTask) {
+                releaseIncubator(cacheItem->incubationTask);
+                cacheItem->incubationTask = 0;
+            }
             stat |= QQuickVisualModel::Destroyed;
         } else {
             stat |= QQuickVisualDataModel::Referenced;

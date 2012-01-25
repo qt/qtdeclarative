@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -86,8 +86,8 @@ private slots:
     void toBoolean();
     void toBool();
     void toInteger();
-    void toInt32();
-    void toUInt32();
+    void toInt();
+    void toUInt();
     void toUInt16();
     void toVariant();
     void toQObject_nonQObject_data();
@@ -112,6 +112,14 @@ private slots:
 #endif
     void equals();
     void strictlyEquals();
+
+    void hasProperty_basic();
+    void hasProperty_globalObject();
+    void hasProperty_changePrototype();
+
+    void deleteProperty_basic();
+    void deleteProperty_globalObject();
+    void deleteProperty_inPrototype();
 
     void getSetPrototype_cyclicPrototype();
     void getSetPrototype_evalCyclicPrototype();

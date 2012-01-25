@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -78,6 +78,7 @@ struct QQuickShaderEffectProgram : public QQuickShaderEffectMaterialKey
 
 
 class QQuickCustomMaterialShader;
+class QQuickShaderEffectNode;
 class QQuickShaderEffectMaterial : public QSGMaterial
 {
 public:
@@ -88,7 +89,7 @@ public:
         FrontFaceCulling
     };
 
-    QQuickShaderEffectMaterial();
+    explicit QQuickShaderEffectMaterial(QQuickShaderEffectNode *node = 0);
     virtual QSGMaterialType *type() const;
     virtual QSGMaterialShader *createShader() const;
     virtual int compare(const QSGMaterial *other) const;
@@ -117,6 +118,8 @@ protected:
     QVector<QPair<QByteArray, QVariant> > m_uniformValues;
     QVector<QPair<QByteArray, QSGTextureProvider *> > m_textures;
     CullMode m_cullMode;
+    QQuickShaderEffectNode *m_node;
+    bool m_emittedLogChanged;
 
     static QHash<QQuickShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > materialMap;
 };
@@ -134,6 +137,9 @@ public:
     virtual void preprocess();
 
     QQuickShaderEffectMaterial *shaderMaterial() { return &m_material; }
+
+Q_SIGNALS:
+    void logAndStatusChanged(const QString &, int status);
 
 private Q_SLOTS:
     void markDirtyTexture();

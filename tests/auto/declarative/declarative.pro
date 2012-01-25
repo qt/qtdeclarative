@@ -28,7 +28,6 @@ PUBLICTESTS += \
 
 PRIVATETESTS += \
     animation \
-    qdeclarativeaccessibility \
     qdeclarativebinding \
     qdeclarativechangeset \
     qdeclarativeconnection \

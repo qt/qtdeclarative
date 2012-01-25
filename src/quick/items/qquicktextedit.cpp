@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -127,13 +127,17 @@ QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
 QString QQuickTextEdit::text() const
 {
     Q_D(const QQuickTextEdit);
-
+    if (!d->textCached) {
+        QQuickTextEditPrivate *d = const_cast<QQuickTextEditPrivate *>(d_func());
 #ifndef QT_NO_TEXTHTMLPARSER
-    if (d->richText)
-        return d->control->toHtml();
-    else
+        if (d->richText)
+            d->text = d->control->toHtml();
+        else
 #endif
-        return d->control->toPlainText();
+            d->text = d->control->toPlainText();
+        d->textCached = true;
+    }
+    return d->text;
 }
 
 /*!
@@ -320,21 +324,21 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     Q_D(QQuickTextEdit);
     if (format == d->format)
         return;
-    bool wasRich = d->richText;
-    d->richText = format == RichText || (format == AutoText && Qt::mightBeRichText(d->text));
 
+    bool wasRich = d->richText;
+    d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
+
+#ifndef QT_NO_TEXTHTMLPARSER
     if (wasRich && !d->richText) {
-        d->control->setPlainText(d->text);
+        d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
         updateSize();
     } else if (!wasRich && d->richText) {
-#ifndef QT_NO_TEXTHTMLPARSER
-        d->control->setHtml(d->text);
-#else
-        d->control->setPlainText(d->text);
-#endif
+        d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
         updateSize();
         d->useImageFallback = qmlEnableImageCache();
     }
+#endif
+
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
     emit textFormatChanged(d->format);
@@ -553,7 +557,7 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
     Q_Q(QQuickTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
         bool alignToRight;
-        if (text.isEmpty()) {
+        if (document->isEmpty()) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
             alignToRight = preeditText.isEmpty()
                     ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
@@ -679,6 +683,44 @@ qreal QQuickTextEdit::paintedHeight() const
 {
     Q_D(const QQuickTextEdit);
     return d->paintedSize.height();
+}
+
+/*!
+    \qmlproperty url QtQuick2::TextEdit::baseUrl
+
+    This property specifies a base URL which is used to resolve relative URLs
+    within the text.
+
+    By default is the url of the TextEdit element.
+*/
+
+QUrl QQuickTextEdit::baseUrl() const
+{
+    Q_D(const QQuickTextEdit);
+    if (d->baseUrl.isEmpty()) {
+        if (QDeclarativeContext *context = qmlContext(this))
+            const_cast<QQuickTextEditPrivate *>(d)->baseUrl = context->baseUrl();
+    }
+    return d->baseUrl;
+}
+
+void QQuickTextEdit::setBaseUrl(const QUrl &url)
+{
+    Q_D(QQuickTextEdit);
+    if (baseUrl() != url) {
+        d->baseUrl = url;
+
+        d->document->setBaseUrl(url, d->richText);
+        emit baseUrlChanged();
+    }
+}
+
+void QQuickTextEdit::resetBaseUrl()
+{
+    if (QDeclarativeContext *context = qmlContext(this))
+        setBaseUrl(context->baseUrl());
+    else
+        setBaseUrl(QUrl());
 }
 
 /*!
@@ -864,7 +906,7 @@ int QQuickTextEdit::cursorPosition() const
 void QQuickTextEdit::setCursorPosition(int pos)
 {
     Q_D(QQuickTextEdit);
-    if (pos < 0 || pos > d->text.length())
+    if (pos < 0 || pos >= d->document->characterCount()) // characterCount includes the terminating null.
         return;
     QTextCursor cursor = d->control->textCursor();
     if (cursor.position() == pos && cursor.anchor() == pos)
@@ -1112,6 +1154,7 @@ void QQuickTextEdit::componentComplete()
     Q_D(QQuickTextEdit);
     QQuickImplicitSizeItem::componentComplete();
 
+    d->document->setBaseUrl(baseUrl(), d->richText);
     if (d->richText)
         d->useImageFallback = qmlEnableImageCache();
 
@@ -1338,7 +1381,7 @@ void QQuickTextEdit::selectWord()
 void QQuickTextEdit::select(int start, int end)
 {
     Q_D(QQuickTextEdit);
-    if (start < 0 || end < 0 || start > d->text.length() || end > d->text.length())
+    if (start < 0 || end < 0 || start >= d->document->characterCount() || end >= d->document->characterCount())
         return;
     QTextCursor cursor = d->control->textCursor();
     cursor.beginEditBlock();
@@ -1359,12 +1402,11 @@ void QQuickTextEdit::select(int start, int end)
 */
 bool QQuickTextEdit::isRightToLeft(int start, int end)
 {
-    Q_D(QQuickTextEdit);
     if (start > end) {
         qmlInfo(this) << "isRightToLeft(start, end) called with the end property being smaller than the start.";
         return false;
     } else {
-        return d->text.mid(start, end - start).isRightToLeft();
+        return getText(start, end).isRightToLeft();
     }
 }
 
@@ -1499,6 +1541,15 @@ void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemActiveFocusHasChanged) {
         setCursorVisible(value.boolValue); // ### refactor: focus handling && d->canvas && d->canvas->hasFocus());
+
+        if (value.boolValue) {
+            q_updateAlignment();
+            connect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                    this, SLOT(q_updateAlignment()));
+        } else {
+            disconnect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                       this, SLOT(q_updateAlignment()));
+        }
     }
     QQuickItem::itemChange(change, value);
 }
@@ -1558,10 +1609,26 @@ void QQuickTextEdit::updateImageCache(const QRectF &)
 
 }
 
+void QQuickTextEdit::triggerPreprocess()
+{
+    Q_D(QQuickTextEdit);
+    if (d->updateType == QQuickTextEditPrivate::UpdateNone)
+        d->updateType = QQuickTextEditPrivate::UpdateOnlyPreprocess;
+    update();
+}
+
 QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
     Q_UNUSED(updatePaintNodeData);
     Q_D(QQuickTextEdit);
+
+    if (d->updateType != QQuickTextEditPrivate::UpdatePaintNode && oldNode != 0) {
+        // Update done in preprocess() in the nodes
+        d->updateType = QQuickTextEditPrivate::UpdateNone;
+        return oldNode;
+    }
+
+    d->updateType = QQuickTextEditPrivate::UpdateNone;
 
     QSGNode *currentNode = oldNode;
     if (d->richText && d->useImageFallback) {
@@ -1600,7 +1667,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         QQuickTextNode *node = 0;
         if (oldNode == 0 || d->nodeType != QQuickTextEditPrivate::NodeIsText) {
             delete oldNode;
-            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext());
+            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
             d->nodeType = QQuickTextEditPrivate::NodeIsText;
             currentNode = node;
         } else {
@@ -1761,6 +1828,7 @@ void QQuickTextEditPrivate::init()
 #endif
     FAST_CONNECT(document, SIGNAL(undoAvailable(bool)), q, SIGNAL(canUndoChanged()));
     FAST_CONNECT(document, SIGNAL(redoAvailable(bool)), q, SIGNAL(canRedoChanged()));
+    FAST_CONNECT(document, SIGNAL(imagesLoaded()), q, SLOT(updateSize()));
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
@@ -1772,13 +1840,13 @@ void QQuickTextEditPrivate::init()
 void QQuickTextEdit::q_textChanged()
 {
     Q_D(QQuickTextEdit);
-    d->text = text();
+    d->textCached = false;
     d->rightToLeftText = d->document->begin().layout()->engine()->isRightToLeft();
     d->determineHorizontalAlignment();
     d->updateDefaultTextOption();
     updateSize();
     updateTotalLines();
-    emit textChanged(d->text);
+    emit textChanged();
 }
 
 void QQuickTextEdit::moveCursorDelegate()
@@ -1910,6 +1978,7 @@ void QQuickTextEdit::updateDocument()
 
     if (isComponentComplete()) {
         updateImageCache();
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
 }
@@ -1919,7 +1988,17 @@ void QQuickTextEdit::updateCursor()
     Q_D(QQuickTextEdit);
     if (isComponentComplete()) {
         updateImageCache(d->control->cursorRect());
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
+    }
+}
+
+void QQuickTextEdit::q_updateAlignment()
+{
+    Q_D(QQuickTextEdit);
+    if (d->determineHorizontalAlignment()) {
+        d->updateDefaultTextOption();
+        moveCursorDelegate();
     }
 }
 

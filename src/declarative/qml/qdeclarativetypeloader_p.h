@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -294,6 +294,7 @@ public:
 
     const QList<TypeReference> &resolvedTypes() const;
     const QList<ScriptReference> &resolvedScripts() const;
+    const QSet<QString> &namespaces() const;
 
     QDeclarativeCompiledData *compiledData() const;
 
@@ -326,6 +327,8 @@ private:
 
     QList<ScriptReference> m_scripts;
     QList<QDeclarativeQmldirData *> m_qmldirs;
+
+    QSet<QString> m_namespaces;
 
     QList<TypeReference> m_types;
     bool m_typesResolved:1;

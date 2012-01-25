@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -589,10 +589,11 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativ
                                                                                      v8::StackTrace::kScriptName));
         v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
         int lineNumber = frame->GetLineNumber();
+        int columNumber = frame->GetColumn();
         QString url = engine->toString(frame->GetScriptName());
 
         newBinding = new QDeclarativeBinding(&function, object, context);
-        newBinding->setSourceLocation(url, lineNumber);
+        newBinding->setSourceLocation(url, lineNumber, columNumber);
         newBinding->setTarget(object, *property, context);
         newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                      QDeclarativeBinding::RequiresThisObject);

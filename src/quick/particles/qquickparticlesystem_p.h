@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the Declarative module of the Qt Toolkit.
 **
@@ -200,6 +200,7 @@ public:
     float autoRotate;//Assume that GPUs prefer floats to bools
     float animIdx;
     float frameDuration;
+    float frameAt;//Used for duration -1
     float frameCount;
     float animT;
     float animX;
@@ -302,6 +303,7 @@ public:
     void updateCurrentTime( int currentTime );
     QQuickParticleSystemAnimation* m_animation;
     bool m_running;
+    bool m_debugMode;
 
     int timeInt;
     bool initialized;
@@ -340,7 +342,6 @@ private:
     QSignalMapper m_painterMapper;
     QSignalMapper m_emitterMapper;
     bool m_paused;
-    bool m_debugMode;
     bool m_allDead;
     bool m_empty;
 };

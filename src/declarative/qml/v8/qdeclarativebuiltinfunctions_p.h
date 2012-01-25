@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -67,8 +67,11 @@ v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTime(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleCount(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args);
 v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args);
+v8::Handle<v8::Value> consoleException(const v8::Arguments &args);
 v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);
 v8::Handle<v8::Value> rgba(const v8::Arguments &args);
 v8::Handle<v8::Value> hsla(const v8::Arguments &args);

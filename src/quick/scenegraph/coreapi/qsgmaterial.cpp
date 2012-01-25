@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -471,6 +471,12 @@ QSGMaterial::~QSGMaterial()
 
     \value Blending Set this flag to true if the material requires GL_BLEND to be
     enabled during rendering.
+
+    \value RequiresDeterminant Set this flag to true if the material relies on
+    the determinant of the matrix of the geometry nodes for rendering.
+
+    \value RequiresFullMatrix Set this flag to true if the material relies on
+    the full matrix of the geometry nodes for rendering.
  */
 
 

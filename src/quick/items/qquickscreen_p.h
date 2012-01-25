@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -51,7 +51,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QQuickItem;
 class QQuickCanvas;
@@ -64,7 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
-    Q_PROPERTY(Qt::ScreenOrientation currentOrientation READ currentOrientation NOTIFY currentOrientationChanged)
+    Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
 
 public:
     QQuickScreenAttached(QObject* attachee);
@@ -72,7 +71,7 @@ public:
     int width() const;
     int height() const;
     Qt::ScreenOrientation primaryOrientation() const;
-    Qt::ScreenOrientation currentOrientation() const;
+    Qt::ScreenOrientation orientation() const;
 
     Q_INVOKABLE int angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b);
 
@@ -82,7 +81,7 @@ Q_SIGNALS:
     void widthChanged();
     void heightChanged();
     void primaryOrientationChanged();
-    void currentOrientationChanged();
+    void orientationChanged();
 
 private:
     QScreen* m_screen;

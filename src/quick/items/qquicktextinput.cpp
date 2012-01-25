@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -102,6 +102,7 @@ void QQuickTextInput::componentComplete()
 
     QQuickImplicitSizeItem::componentComplete();
 
+    d->checkIsValid();
     d->updateLayout();
     updateCursorRectangle();
     if (d->cursorComponent && d->cursorComponent->isReady())
@@ -327,6 +328,7 @@ void QQuickTextInput::setColor(const QColor &c)
     if (c != d->color) {
         d->color = c;
         d->textLayoutDirty = true;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
         emit colorChanged(c);
     }
@@ -354,6 +356,7 @@ void QQuickTextInput::setSelectionColor(const QColor &color)
     d->m_palette.setColor(QPalette::Highlight, d->selectionColor);
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     }
     emit selectionColorChanged(color);
@@ -379,6 +382,7 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
     d->m_palette.setColor(QPalette::HighlightedText, d->selectedTextColor);
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     }
     emit selectedTextColorChanged(color);
@@ -403,8 +407,8 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
     The valid values for \c horizontalAlignment are \c TextInput.AlignLeft, \c TextInput.AlignRight and
     \c TextInput.AlignHCenter.
 
-    Valid values for \c verticalAlignment are \c TextEdit.AlignTop (default),
-    \c TextEdit.AlignBottom \c TextEdit.AlignVCenter.
+    Valid values for \c verticalAlignment are \c TextInput.AlignTop (default),
+    \c TextInput.AlignBottom \c TextInput.AlignVCenter.
 
     When using the attached property LayoutMirroring::enabled to mirror application
     layouts, the horizontal alignment of text will also be mirrored. However, the property
@@ -506,7 +510,7 @@ void QQuickTextInput::setVAlign(QQuickTextInput::VAlignment alignment)
 /*!
     \qmlproperty enumeration QtQuick2::TextInput::wrapMode
 
-    Set this property to wrap the text to the TextEdit item's width.
+    Set this property to wrap the text to the TextInput item's width.
     The text will only wrap if an explicit width has been set.
 
     \list
@@ -641,6 +645,7 @@ void QQuickTextInput::setCursorVisible(bool on)
         return;
     d->cursorVisible = on;
     d->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
+    d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
     update();
     emit cursorVisibleChanged(d->cursorVisible);
 }
@@ -842,6 +847,23 @@ void QQuickTextInput::setAutoScroll(bool b)
     \ingroup qml-basic-visual-elements
 
     This element provides a validator for non-integer numbers.
+
+    Input is accepted if it contains a double that is within the valid range
+    and is in the  correct format.
+
+    Input is accepected but invalid if it contains a double that is outside
+    the range or is in the wrong format; e.g. with too many digits after the
+    decimal point or is empty.
+
+    Input is rejected if it is not a double.
+
+    Note: If the valid range consists of just positive doubles (e.g. 0.0 to
+    100.0) and input is a negative double then it is rejected. If \l notation
+    is set to DoubleValidator.StandardNotation, and  the input contains more
+    digits before the decimal point than a double in the valid range may have,
+    it is also rejected. If \l notation is DoubleValidator.ScientificNotation,
+    and the input is not in the valid range, it is accecpted but invalid. The
+    value may yet become valid by changing the exponent.
 */
 
 /*!
@@ -931,19 +953,31 @@ void QQuickTextInput::setValidator(QValidator* v)
         return;
 
     d->m_validator = v;
-    if (!d->hasAcceptableInput(d->m_text)) {
-        if (d->m_validInput) {
-            d->m_validInput = false;
-            emit acceptableInputChanged();
-        }
-    } else if (!d->m_validInput) {
-        d->m_validInput = true;
-        emit acceptableInputChanged();
-    }
+
+    if (isComponentComplete())
+        d->checkIsValid();
 
     emit validatorChanged();
 }
+
 #endif // QT_NO_VALIDATOR
+
+void QQuickTextInputPrivate::checkIsValid()
+{
+    Q_Q(QQuickTextInput);
+
+    ValidatorState state = hasAcceptableInput(m_text);
+    m_validInput = state != InvalidInput;
+    if (state != AcceptableInput) {
+        if (m_acceptableInput) {
+            m_acceptableInput = false;
+            emit q->acceptableInputChanged();
+        }
+    } else if (!m_acceptableInput) {
+        m_acceptableInput = true;
+        emit q->acceptableInputChanged();
+    }
+}
 
 /*!
     \qmlproperty string QtQuick2::TextInput::inputMask
@@ -981,7 +1015,7 @@ void QQuickTextInput::setInputMask(const QString &im)
 bool QQuickTextInput::hasAcceptableInput() const
 {
     Q_D(const QQuickTextInput);
-    return d->hasAcceptableInput(d->m_text);
+    return d->hasAcceptableInput(d->m_text) == QQuickTextInputPrivate::AcceptableInput;
 }
 
 /*!
@@ -1591,14 +1625,30 @@ void QQuickTextInputPrivate::updateVerticalScroll()
         textLayoutDirty = true;
 }
 
+void QQuickTextInput::triggerPreprocess()
+{
+    Q_D(QQuickTextInput);
+    if (d->updateType == QQuickTextInputPrivate::UpdateNone)
+        d->updateType = QQuickTextInputPrivate::UpdateOnlyPreprocess;
+    update();
+}
+
 QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     Q_UNUSED(data);
     Q_D(QQuickTextInput);
 
+    if (d->updateType != QQuickTextInputPrivate::UpdatePaintNode && oldNode != 0) {
+        // Update done in preprocess() in the nodes
+        d->updateType = QQuickTextInputPrivate::UpdateNone;
+        return oldNode;
+    }
+
+    d->updateType = QQuickTextInputPrivate::UpdateNone;
+
     QQuickTextNode *node = static_cast<QQuickTextNode *>(oldNode);
     if (node == 0)
-        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext());
+        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
     d->textNode = node;
 
     if (!d->textLayoutDirty) {
@@ -2065,7 +2115,7 @@ void QQuickTextInput::setMouseSelectionMode(SelectionMode mode)
     \qmlproperty bool QtQuick2::TextInput::canPaste
 
     Returns true if the TextInput is writable and the content of the clipboard is
-    suitable for pasting into the TextEdit.
+    suitable for pasting into the TextInput.
 */
 bool QQuickTextInput::canPaste() const
 {
@@ -2125,9 +2175,9 @@ void QQuickTextInput::moveCursorSelection(int position)
     basis.  If not specified the selection mode will default to TextInput.SelectCharacters.
 
     \list
-    \o TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
+    \o TextInput.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
     the previous cursor position) to the specified position.
-    \o TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
+    \o TextInput.SelectWords - Sets the selectionStart and selectionEnd to include all
     words between the specified position and the previous cursor position.  Words partially in the
     range are included.
     \endlist
@@ -2316,6 +2366,12 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
         if (!hasFocus) {
             d->commitPreedit();
             d->deselect();
+            disconnect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                       this, SLOT(q_updateAlignment()));
+        } else {
+            q_updateAlignment();
+            connect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+                    this, SLOT(q_updateAlignment()));
         }
     }
     QQuickItem::itemChange(change, value);
@@ -2372,6 +2428,7 @@ void QQuickTextInput::updateCursorRectangle()
 
     d->updateHorizontalScroll();
     d->updateVerticalScroll();
+    d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
     update();
     emit cursorRectangleChanged();
     if (d->cursorItem) {
@@ -2385,6 +2442,7 @@ void QQuickTextInput::selectionChanged()
 {
     Q_D(QQuickTextInput);
     d->textLayoutDirty = true; //TODO: Only update rect in selection
+    d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
     update();
     emit selectedTextChanged();
 
@@ -2442,6 +2500,15 @@ void QQuickTextInput::q_canPasteChanged()
     if (changed)
         emit canPasteChanged();
 
+}
+
+void QQuickTextInput::q_updateAlignment()
+{
+    Q_D(QQuickTextInput);
+    if (d->determineHorizontalAlignment()) {
+        d->updateLayout();
+        updateCursorRectangle();
+    }
 }
 
 // ### these should come from QStyleHints
@@ -2510,7 +2577,7 @@ void QQuickTextInputPrivate::updateLayout()
         return;
 
     QTextOption option = m_textLayout.textOption();
-    option.setTextDirection(m_layoutDirection);
+    option.setTextDirection(layoutDirection());
     option.setFlags(QTextOption::IncludeTrailingSpaces);
     option.setWrapMode(QTextOption::WrapMode(wrapMode));
     option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
@@ -2539,6 +2606,7 @@ void QQuickTextInputPrivate::updateLayout()
     m_ascent = qRound(firstLine.ascent());
     textLayoutDirty = true;
 
+    updateType = UpdatePaintNode;
     q->update();
     q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
 
@@ -2984,16 +3052,21 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 
     Q_UNUSED(update)
     bool notifyInputPanel = m_textDirty || m_selDirty;
+    bool alignmentChanged = false;
 
     if (m_textDirty) {
         // do validation
         bool wasValidInput = m_validInput;
+        bool wasAcceptable = m_acceptableInput;
         m_validInput = true;
+        m_acceptableInput = true;
 #ifndef QT_NO_VALIDATOR
         if (m_validator) {
             QString textCopy = m_text;
             int cursorCopy = m_cursor;
-            m_validInput = (m_validator->validate(textCopy, cursorCopy) != QValidator::Invalid);
+            QValidator::State state = m_validator->validate(textCopy, cursorCopy);
+            m_validInput = state != QValidator::Invalid;
+            m_acceptableInput = state == QValidator::Acceptable;
             if (m_validInput) {
                 if (m_text != textCopy) {
                     internalSetText(textCopy, cursorCopy);
@@ -3020,24 +3093,28 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             if (m_modifiedState > m_undoState)
                 m_modifiedState = -1;
             m_validInput = true;
+            m_acceptableInput = wasAcceptable;
             m_textDirty = false;
         }
 
         if (m_textDirty) {
             m_textDirty = false;
             m_preeditDirty = false;
-            determineHorizontalAlignment();
+            alignmentChanged = determineHorizontalAlignment();
             emit q->textChanged();
         }
 
-        updateDisplayText();
+        updateDisplayText(alignmentChanged);
 
-        if (m_validInput != wasValidInput)
+        if (m_acceptableInput != wasAcceptable)
             emit q->acceptableInputChanged();
     }
     if (m_preeditDirty) {
         m_preeditDirty = false;
-        determineHorizontalAlignment();
+        if (determineHorizontalAlignment()) {
+            alignmentChanged = true;
+            updateLayout();
+        }
     }
 
     if (m_selDirty) {
@@ -3049,7 +3126,9 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
     if (notifyInputPanel)
         q->updateMicroFocus();
     emitUndoRedoChanged();
-    emitCursorPositionChanged();
+
+    if (!emitCursorPositionChanged() && alignmentChanged)
+        q->updateCursorRectangle();
 
     return true;
 }
@@ -3399,32 +3478,34 @@ bool QQuickTextInputPrivate::isValidInput(QChar key, QChar mask) const
 
     Otherwise returns false
 */
-bool QQuickTextInputPrivate::hasAcceptableInput(const QString &str) const
+QQuickTextInputPrivate::ValidatorState QQuickTextInputPrivate::hasAcceptableInput(const QString &str) const
 {
 #ifndef QT_NO_VALIDATOR
     QString textCopy = str;
     int cursorCopy = m_cursor;
-    if (m_validator && m_validator->validate(textCopy, cursorCopy)
-        != QValidator::Acceptable)
-        return false;
+    if (m_validator) {
+        QValidator::State state = m_validator->validate(textCopy, cursorCopy);
+        if (state != QValidator::Acceptable)
+            return ValidatorState(state);
+    }
 #endif
 
     if (!m_maskData)
-        return true;
+        return AcceptableInput;
 
     if (str.length() != m_maxLength)
-        return false;
+        return InvalidInput;
 
     for (int i=0; i < m_maxLength; ++i) {
         if (m_maskData[i].separator) {
             if (str.at(i) != m_maskData[i].maskChar)
-                return false;
+                return InvalidInput;
         } else {
             if (!isValidInput(str.at(i), m_maskData[i].maskChar))
-                return false;
+                return InvalidInput;
         }
     }
-    return true;
+    return AcceptableInput;
 }
 
 /*!
@@ -3683,7 +3764,7 @@ void QQuickTextInputPrivate::emitUndoRedoChanged()
     If the current cursor position differs from the last emitted cursor
     position, emits cursorPositionChanged().
 */
-void QQuickTextInputPrivate::emitCursorPositionChanged()
+bool QQuickTextInputPrivate::emitCursorPositionChanged()
 {
     Q_Q(QQuickTextInput);
     if (m_cursor != m_lastCursorPos) {
@@ -3710,7 +3791,10 @@ void QQuickTextInputPrivate::emitCursorPositionChanged()
 #ifndef QT_NO_ACCESSIBILITY
         QAccessible::updateAccessibility(q, 0, QAccessible::TextCaretMoved);
 #endif
+
+        return true;
     }
+    return false;
 }
 
 
@@ -3727,8 +3811,10 @@ void QQuickTextInputPrivate::setCursorBlinkPeriod(int msec)
         m_blinkStatus = 1;
     } else {
         m_blinkTimer = 0;
-        if (m_blinkStatus == 1)
+        if (m_blinkStatus == 1) {
+            updateType = UpdatePaintNode;
             q->update();
+        }
     }
     m_blinkPeriod = msec;
 }
@@ -3748,6 +3834,7 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
     Q_D(QQuickTextInput);
     if (event->timerId() == d->m_blinkTimer) {
         d->m_blinkStatus = !d->m_blinkStatus;
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     } else if (event->timerId() == d->m_deleteAllTimer) {
         killTimer(d->m_deleteAllTimer);

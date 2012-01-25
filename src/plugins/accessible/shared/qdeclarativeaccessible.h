@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -76,7 +76,6 @@ public:
     ~QDeclarativeAccessible();
 
     virtual QRect viewRect() const = 0;
-    QFlags<QAccessible::RelationFlag> relationTo(const QAccessibleInterface*) const;
     QAccessibleInterface *childAt(int, int) const;
     QAccessible::State state() const;
 

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
@@ -16,7 +16,7 @@
 ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** us via http://www.qt-project.org/.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -130,15 +130,17 @@ public:
     template<typename T>
     inline QScriptPassPointer<QJSValuePrivate> property(T name) const;
     inline bool deleteProperty(const QString& name);
+    inline bool hasProperty(const QString &name) const;
+    inline bool hasOwnProperty(const QString &name) const;
     inline QJSValue::PropertyFlags propertyFlags(const QString& name) const;
     inline QJSValue::PropertyFlags propertyFlags(v8::Handle<v8::String> name) const;
 
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, const QJSValueList& args);
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, const QJSValue& arguments);
     inline QScriptPassPointer<QJSValuePrivate> call(QJSValuePrivate* thisObject, int argc, v8::Handle< v8::Value >* argv);
-    inline QScriptPassPointer<QJSValuePrivate> construct(int argc, v8::Handle<v8::Value> *argv);
-    inline QScriptPassPointer<QJSValuePrivate> construct(const QJSValueList& args);
-    inline QScriptPassPointer<QJSValuePrivate> construct(const QJSValue& arguments);
+    inline QScriptPassPointer<QJSValuePrivate> callAsConstructor(int argc, v8::Handle<v8::Value> *argv);
+    inline QScriptPassPointer<QJSValuePrivate> callAsConstructor(const QJSValueList& args);
+    inline QScriptPassPointer<QJSValuePrivate> callAsConstructor(const QJSValue& arguments);
 
     inline bool assignEngine(QV8Engine *engine);
     inline QV8Engine *engine() const;

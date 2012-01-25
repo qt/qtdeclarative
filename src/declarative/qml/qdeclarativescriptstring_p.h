@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -49,13 +49,14 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeScriptStringPrivate : public QSharedData
 {
 public:
-    QDeclarativeScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(-1) {}
+    QDeclarativeScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(-1), columnNumber(-1) {}
 
     QDeclarativeContext *context;
     QObject *scope;
     QString script;
     int bindingId;
     int lineNumber;
+    int columnNumber;
 };
 
 QT_END_NAMESPACE

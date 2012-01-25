@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the Declarative module of the Qt Toolkit.
 **
@@ -131,12 +131,14 @@ private:
     QList<QQuickSprite*> m_sprites;
     QQuickSpriteEngine* m_spriteEngine;
     QTime m_timestamp;
-    int m_maxFrames;
+    int m_curFrame;
     bool m_pleaseReset;
     bool m_running;
     bool m_interpolate;
     QString m_goalState;
     QString m_curState;
+    int m_curStateIdx;
+    QSizeF m_sheetSize;
 };
 
 QT_END_NAMESPACE

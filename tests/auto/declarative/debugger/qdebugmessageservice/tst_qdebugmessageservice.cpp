@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -48,7 +48,7 @@
 #include <QtCore/QString>
 #include <QtTest/QtTest>
 
-const char *NORMALMODE = "-qmljsdebugger=port:3777";
+const char *NORMALMODE = "-qmljsdebugger=port:3777,block";
 const char *QMLFILE = "test.qml";
 
 class QDeclarativeDebugMsgClient;
@@ -59,19 +59,31 @@ class tst_QDebugMessageService : public QDeclarativeDataTest
 public:
     tst_QDebugMessageService();
 
+    void init(bool extendedOutput);
+
 private slots:
     void initTestCase();
     void cleanupTestCase();
 
-    void init();
     void cleanup();
 
     void retrieveDebugOutput();
+    void retrieveDebugOutputExtended();
 
 private:
     QDeclarativeDebugProcess *m_process;
     QDeclarativeDebugMsgClient *m_client;
     QDeclarativeDebugConnection *m_connection;
+};
+
+struct LogEntry {
+    LogEntry(QtMsgType _type, QString _message)
+        : type(_type), message(_message) {}
+
+    QtMsgType type;
+    QString message;
+
+    QString toString() const { return QString::number(type) + ": " + message; }
 };
 
 class QDeclarativeDebugMsgClient : public QDeclarativeDebugClient
@@ -83,6 +95,8 @@ public:
     {
     }
 
+    QList<LogEntry> logBuffer;
+
 protected:
     //inherited from QDeclarativeDebugClient
     void statusChanged(Status status);
@@ -91,9 +105,6 @@ protected:
 signals:
     void enabled();
     void debugOutput();
-
-public:
-    QByteArray debugMessage;
 };
 
 void QDeclarativeDebugMsgClient::statusChanged(Status status)
@@ -111,8 +122,17 @@ void QDeclarativeDebugMsgClient::messageReceived(const QByteArray &data)
 
     if (command == "MESSAGE") {
         int type;
-        ds >> type >> debugMessage;
+        QByteArray message;
+        ds >> type >> message;
+        QVERIFY(ds.atEnd());
+
+        QVERIFY(type >= QtDebugMsg);
+        QVERIFY(type <= QtFatalMsg);
+
+        logBuffer << LogEntry((QtMsgType)type, QString::fromUtf8(message));
         emit debugOutput();
+    } else {
+        QFAIL("Unknown message");
     }
 }
 
@@ -140,12 +160,14 @@ void tst_QDebugMessageService::cleanupTestCase()
         delete m_connection;
 }
 
-void tst_QDebugMessageService::init()
+void tst_QDebugMessageService::init(bool extendedOutput)
 {
     m_connection = new QDeclarativeDebugConnection();
     m_process = new QDeclarativeDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     m_client = new QDeclarativeDebugMsgClient(m_connection);
 
+    if (extendedOutput)
+        m_process->setEnvironment(QProcess::systemEnvironment() << "QML_CONSOLE_EXTENDED=1");
     m_process->start(QStringList() << QLatin1String(NORMALMODE) << QDeclarativeDataTest::instance()->testFile(QMLFILE));
     if (!m_process->waitForSessionStart()) {
         QFAIL(QString("Could not launch app. Application output: \n%1").arg(m_process->output()).toAscii());
@@ -177,8 +199,42 @@ void tst_QDebugMessageService::cleanup()
 
 void tst_QDebugMessageService::retrieveDebugOutput()
 {
-    if (m_client->debugMessage.isEmpty())
+    init(false);
+
+    int maxTries = 2;
+    while ((m_client->logBuffer.size() < 2)
+           && (maxTries-- > 0))
         QVERIFY(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput())));
+
+    QCOMPARE(m_client->logBuffer.size(), 2);
+
+    QCOMPARE(m_client->logBuffer.at(0).toString(),
+             LogEntry(QtDebugMsg, QLatin1String("console.log")).toString());
+    QCOMPARE(m_client->logBuffer.at(1).toString(),
+             LogEntry(QtDebugMsg, QLatin1String("console.count: 1")).toString());
+}
+
+void tst_QDebugMessageService::retrieveDebugOutputExtended()
+{
+    init(true);
+
+    int maxTries = 2;
+    while ((m_client->logBuffer.size() < 2)
+           && (maxTries-- > 0))
+        QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()));
+
+    QCOMPARE(m_client->logBuffer.size(), 2);
+
+    const QString path =
+            QUrl::fromLocalFile(QDeclarativeDataTest::instance()->testFile(QMLFILE)).toString();
+
+    QString logMsg = QString::fromLatin1("console.log (%1:%2)").arg(path).arg(48);
+    QString countMsg = QString::fromLatin1("console.count: 1 (%1:%2)").arg(path).arg(49);
+
+    QCOMPARE(m_client->logBuffer.at(0).toString(),
+             LogEntry(QtDebugMsg, logMsg).toString());
+    QCOMPARE(m_client->logBuffer.at(1).toString(),
+             LogEntry(QtDebugMsg, countMsg).toString());
 }
 
 QTEST_MAIN(tst_QDebugMessageService)

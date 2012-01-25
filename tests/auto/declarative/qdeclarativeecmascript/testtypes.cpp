@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -127,7 +127,7 @@ static QJSValue readonly_script_api(QDeclarativeEngine *engine, QJSEngine *scrip
 
     // now freeze it so that it's read-only
     QJSValue freezeFunction = scriptEngine->evaluate("(function(obj) { return Object.freeze(obj); })");
-    v = freezeFunction.call(QJSValue(), (QJSValueList() << v));
+    v = freezeFunction.call(QJSValueList() << v);
 
     return v;
 }

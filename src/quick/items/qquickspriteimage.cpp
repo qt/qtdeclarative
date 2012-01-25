@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the Declarative module of the Qt Toolkit.
 **
@@ -58,32 +58,24 @@ QT_BEGIN_NAMESPACE
 
 static const char vertexShaderCode[] =
     "attribute highp vec2 vTex;\n"
-    "uniform highp vec4 animData;// interpolate(bool), duration, frameCount (this anim), timestamp (this anim)\n"
-    "uniform highp vec4 animPos;//sheet x,y, width/height of this anim\n"
-    "uniform highp vec4 animSheetSize; //width/height of whole sheet, width/height of element\n"
+    "uniform highp vec3 animData;// w,h(premultiplied of anim), interpolation progress\n"
+    "uniform highp vec4 animPos;//x,y, x,y (two frames for interpolation)\n"
+    "uniform highp vec2 size;//w,h of element\n"
     "\n"
     "uniform highp mat4 qt_Matrix;\n"
-    "uniform highp float timestamp;\n"
     "\n"
     "varying highp vec4 fTexS;\n"
     "varying lowp float progress;\n"
     "\n"
     "\n"
     "void main() {\n"
+    "    progress = animData.z;\n"
     "    //Calculate frame location in texture\n"
-    "    highp float frameIndex = mod((((timestamp - animData.w)*1000.)/animData.y),animData.z);\n"
-    "    progress = mod((timestamp - animData.w)*1000., animData.y) / animData.y;\n"
-    "\n"
-    "    frameIndex = floor(frameIndex);\n"
-    "    fTexS.xy = vec2(((frameIndex + vTex.x) * animPos.z / animSheetSize.x), ((animPos.y + vTex.y * animPos.w) / animSheetSize.y));\n"
-    "\n"
+    "    fTexS.xy = animPos.xy + vTex.xy * animData.xy;\n"
     "    //Next frame is also passed, for interpolation\n"
-    "    //### Should the next anim be precalculated to allow for interpolation there?\n"
-    "    if (animData.x == 1.0 && frameIndex != animData.z - 1.)//Can't do it for the last frame though, this anim may not loop\n"
-    "        frameIndex = mod(frameIndex+1., animData.z);\n"
-    "    fTexS.zw = vec2(((frameIndex + vTex.x) * animPos.z / animSheetSize.x), ((animPos.y + vTex.y * animPos.w) / animSheetSize.y));\n"
+    "    fTexS.zw = animPos.zw + vTex.xy * animData.xy;\n"
     "\n"
-    "    gl_Position = qt_Matrix * vec4(animSheetSize.z * vTex.x, animSheetSize.w * vTex.y, 0, 1);\n"
+    "    gl_Position = qt_Matrix * vec4(size.x * vTex.x, size.y * vTex.y, 0, 1);\n"
     "}\n";
 
 static const char fragmentShaderCode[] =
@@ -111,33 +103,25 @@ public:
 
     QSGTexture *texture;
 
-    qreal timestamp;
-    float interpolate;
-    float frameDuration;
-    float frameCount;
     float animT;
-    float animX;
-    float animY;
-    float animWidth;
-    float animHeight;
-    float sheetWidth;
-    float sheetHeight;
+    float animX1;
+    float animY1;
+    float animX2;
+    float animY2;
+    float animW;
+    float animH;
     float elementWidth;
     float elementHeight;
 };
 
 QQuickSpriteMaterial::QQuickSpriteMaterial()
-    : timestamp(0)
-    , interpolate(1.0f)
-    , frameDuration(1.0f)
-    , frameCount(1.0f)
-    , animT(0.0f)
-    , animX(0.0f)
-    , animY(0.0f)
-    , animWidth(1.0f)
-    , animHeight(1.0f)
-    , sheetWidth(1.0f)
-    , sheetHeight(1.0f)
+    : animT(0.0f)
+    , animX1(0.0f)
+    , animY1(0.0f)
+    , animX2(0.0f)
+    , animY2(0.0f)
+    , animW(1.0f)
+    , animH(1.0f)
     , elementWidth(1.0f)
     , elementHeight(1.0f)
 {
@@ -170,10 +154,9 @@ public:
         m->texture->bind();
 
         program()->setUniformValue(m_opacity_id, state.opacity());
-        program()->setUniformValue(m_timestamp_id, (float) m->timestamp);
-        program()->setUniformValue(m_animData_id, m->interpolate, m->frameDuration, m->frameCount, m->animT);
-        program()->setUniformValue(m_animPos_id, m->animX, m->animY, m->animWidth, m->animHeight);
-        program()->setUniformValue(m_animSheetSize_id, m->sheetWidth, m->sheetHeight, m->elementWidth, m->elementHeight);
+        program()->setUniformValue(m_animData_id, m->animW, m->animH, m->animT);
+        program()->setUniformValue(m_animPos_id, m->animX1, m->animY1, m->animX2, m->animY2);
+        program()->setUniformValue(m_size_id, m->elementWidth, m->elementHeight);
 
         if (state.isMatrixDirty())
             program()->setUniformValue(m_matrix_id, state.combinedMatrix());
@@ -182,10 +165,9 @@ public:
     virtual void initialize() {
         m_matrix_id = program()->uniformLocation("qt_Matrix");
         m_opacity_id = program()->uniformLocation("qt_Opacity");
-        m_timestamp_id = program()->uniformLocation("timestamp");
         m_animData_id = program()->uniformLocation("animData");
         m_animPos_id = program()->uniformLocation("animPos");
-        m_animSheetSize_id = program()->uniformLocation("animSheetSize");
+        m_size_id = program()->uniformLocation("size");
     }
 
     virtual const char *vertexShader() const { return vertexShaderCode; }
@@ -201,10 +183,9 @@ public:
 
     int m_matrix_id;
     int m_opacity_id;
-    int m_timestamp_id;
     int m_animData_id;
     int m_animPos_id;
-    int m_animSheetSize_id;
+    int m_size_id;
 
     static float chunkOfBytes[1024];
 };
@@ -285,9 +266,11 @@ QQuickSpriteImage::QQuickSpriteImage(QQuickItem *parent) :
     , m_node(0)
     , m_material(0)
     , m_spriteEngine(0)
+    , m_curFrame(0)
     , m_pleaseReset(false)
     , m_running(true)
     , m_interpolate(true)
+    , m_curStateIdx(0)
 {
     setFlag(ItemHasContents);
     connect(this, SIGNAL(runningChanged(bool)),
@@ -350,19 +333,17 @@ QSGGeometryNode* QQuickSpriteImage::buildNode()
     QImage image = m_spriteEngine->assembledImage();
     if (image.isNull())
         return 0;
+    m_sheetSize = QSizeF(image.size());
     m_material->texture = canvas()->createTextureFromImage(image);
     m_material->texture->setFiltering(QSGTexture::Linear);
     m_spriteEngine->start(0);
-    m_material->interpolate = m_interpolate ? 1.0 : 0.0;
-    m_material->frameCount = m_spriteEngine->spriteFrames();
-    m_material->frameDuration = m_spriteEngine->spriteDuration();
     m_material->animT = 0;
-    m_material->animX = m_spriteEngine->spriteX();
-    m_material->animY = m_spriteEngine->spriteY();
-    m_material->animWidth = m_spriteEngine->spriteWidth();
-    m_material->animHeight = m_spriteEngine->spriteHeight();
-    m_material->sheetWidth = image.width();
-    m_material->sheetHeight = image.height();
+    m_material->animX1 = m_spriteEngine->spriteX() / m_sheetSize.width();
+    m_material->animY1 = m_spriteEngine->spriteY() / m_sheetSize.height();
+    m_material->animX2 = m_material->animX1;
+    m_material->animY2 = m_material->animY1;
+    m_material->animW = m_spriteEngine->spriteWidth() / m_sheetSize.width();
+    m_material->animH = m_spriteEngine->spriteHeight() / m_sheetSize.height();
     m_material->elementWidth = width();
     m_material->elementHeight = height();
     m_curState = m_spriteEngine->state(m_spriteEngine->curState())->name();
@@ -440,25 +421,53 @@ void QQuickSpriteImage::prepareNextFrame()
 
     uint timeInt = m_timestamp.elapsed();
     qreal time =  timeInt / 1000.;
-    m_material->timestamp = time;
     m_material->elementHeight = height();
     m_material->elementWidth = width();
-    m_material->interpolate = m_interpolate;
 
     //Advance State
     m_spriteEngine->updateSprites(timeInt);
-    int curY = m_spriteEngine->spriteY();
-    if (curY != m_material->animY){
-        m_material->animT = m_spriteEngine->spriteStart()/1000.0;
-        m_material->frameCount = m_spriteEngine->spriteFrames();
-        m_material->frameDuration = m_spriteEngine->spriteDuration();
-        m_material->animX = m_spriteEngine->spriteX();
-        m_material->animY = m_spriteEngine->spriteY();
-        m_material->animWidth = m_spriteEngine->spriteWidth();
-        m_material->animHeight = m_spriteEngine->spriteHeight();
+    if (m_curStateIdx != m_spriteEngine->curState()) {
+        m_curStateIdx = m_spriteEngine->curState();
         m_curState = m_spriteEngine->state(m_spriteEngine->curState())->name();
         emit currentSpriteChanged(m_curState);
+        m_curFrame= -1;
     }
+
+    //Advance Sprite
+    qreal animT = m_spriteEngine->spriteStart()/1000.0;
+    qreal frameCount = m_spriteEngine->spriteFrames();
+    qreal frameDuration = m_spriteEngine->spriteDuration()/frameCount;
+    double frameAt;
+    qreal progress;
+    if (frameDuration > 0) {
+        qreal frame = (time - animT)/(frameDuration / 1000.0);
+        frame = qBound(qreal(0.0), frame, frameCount - qreal(1.0));//Stop at count-1 frames until we have between anim interpolation
+        progress = modf(frame,&frameAt);
+    } else {
+        m_curFrame++;
+        if (m_curFrame >= frameCount){
+            m_curFrame = 0;
+            m_spriteEngine->advance();
+        }
+        frameAt = m_curFrame;
+        progress = 0;
+    }
+    qreal y = m_spriteEngine->spriteY() / m_sheetSize.height();
+    qreal w = m_spriteEngine->spriteWidth() / m_sheetSize.width();
+    qreal h = m_spriteEngine->spriteHeight() / m_sheetSize.height();
+    qreal x1 = m_spriteEngine->spriteX() / m_sheetSize.width();
+    x1 += frameAt * w;
+    qreal x2 = x1;
+    if (frameAt < (frameCount-1))
+        x2 += w;
+
+    m_material->animX1 = x1;
+    m_material->animY1 = y;
+    m_material->animX2 = x2;
+    m_material->animY2 = y;
+    m_material->animW = w;
+    m_material->animH = h;
+    m_material->animT = m_interpolate ? progress : 0.0;
 }
 
 QT_END_NAMESPACE

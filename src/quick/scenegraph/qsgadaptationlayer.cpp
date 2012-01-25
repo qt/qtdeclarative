@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -265,6 +265,21 @@ void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &g
             ++it;
         }
     }
+}
+
+void QSGDistanceFieldGlyphCache::registerOwnerElement(QQuickItem *ownerElement)
+{
+    Q_UNUSED(ownerElement);
+}
+
+void QSGDistanceFieldGlyphCache::unregisterOwnerElement(QQuickItem *ownerElement)
+{
+    Q_UNUSED(ownerElement);
+}
+
+void QSGDistanceFieldGlyphCache::processPendingGlyphs()
+{
+    /* Intentionally empty */
 }
 
 void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs, const Texture &tex)

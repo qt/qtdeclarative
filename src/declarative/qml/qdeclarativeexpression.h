@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -52,7 +52,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QString;
 class QDeclarativeRefCount;
@@ -80,7 +79,8 @@ public:
 
     QString sourceFile() const;
     int lineNumber() const;
-    void setSourceLocation(const QString &fileName, int line);
+    int columnNumber() const;
+    void setSourceLocation(const QString &fileName, int line, int column = 0);
 
     QObject *scopeObject() const;
 
@@ -99,7 +99,7 @@ protected:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, void *, 
                            QDeclarativeExpressionPrivate &dd);
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &, bool,
-                           const QString &, int, QDeclarativeExpressionPrivate &dd);
+                           const QString &, int, int, QDeclarativeExpressionPrivate &dd);
 
 private:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &);

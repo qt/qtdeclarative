@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -56,6 +56,7 @@
 #include <qtexttable.h>
 #include <qtextlist.h>
 #include <private/qdeclarativestyledtext_p.h>
+#include <private/qquicktext_p_p.h>
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>
 #include <private/qrawfont_p.h>
@@ -68,8 +69,8 @@ QT_BEGIN_NAMESPACE
 /*!
   Creates an empty QQuickTextNode
 */
-QQuickTextNode::QQuickTextNode(QSGContext *context)
-    : m_context(context), m_cursorNode(0)
+QQuickTextNode::QQuickTextNode(QSGContext *context, QQuickItem *ownerElement)
+    : m_context(context), m_cursorNode(0), m_ownerElement(ownerElement)
 {
 #if defined(QML_RUNTIME_TESTING)
     description = QLatin1String("text");
@@ -130,6 +131,7 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
                                      QSGNode *parentNode)
 {
     QSGGlyphNode *node = m_context->createGlyphNode();
+    node->setOwnerElement(m_ownerElement);
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
     node->setStyle(style);
     node->setStyleColor(styleColor);
@@ -329,6 +331,12 @@ namespace {
         void addImage(const QRectF &rect, const QImage &image, qreal ascent,
                       BinaryTreeNode::SelectionState selectionState,
                       QTextFrameFormat::Position layoutPosition);
+        int addText(const QTextBlock &block,
+                    const QTextCharFormat &charFormat,
+                    const QColor &textColor,
+                    const QVarLengthArray<QTextLayout::FormatRange> &colorChanges,
+                    int textPos, int fragmentEnd,
+                    int selectionStart, int selectionEnd);
         void addTextObject(const QPointF &position, const QTextCharFormat &format,
                            BinaryTreeNode::SelectionState selectionState,
                            QTextDocument *textDocument, int pos,
@@ -406,6 +414,45 @@ namespace {
 
         QList<QPair<QRectF, QImage> > m_images;
     };
+
+    int SelectionEngine::addText(const QTextBlock &block,
+                                 const QTextCharFormat &charFormat,
+                                 const QColor &textColor,
+                                 const QVarLengthArray<QTextLayout::FormatRange> &colorChanges,
+                                 int textPos, int fragmentEnd,
+                                 int selectionStart, int selectionEnd)
+    {
+        if (charFormat.foreground().style() != Qt::NoBrush)
+            setTextColor(charFormat.foreground().color());
+        else
+            setTextColor(textColor);
+
+        while (textPos < fragmentEnd) {
+            int blockRelativePosition = textPos - block.position();
+            QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
+            if (!currentLine().isValid()
+                || line.lineNumber() != currentLine().lineNumber()) {
+                setCurrentLine(line);
+            }
+
+            Q_ASSERT(line.textLength() > 0);
+            int lineEnd = line.textStart() + block.position() + line.textLength();
+
+            int len = qMin(lineEnd - textPos, fragmentEnd - textPos);
+            Q_ASSERT(len > 0);
+
+            int currentStepEnd = textPos + len;
+
+            addGlyphsForRanges(colorChanges,
+                               textPos - block.position(),
+                               currentStepEnd - block.position(),
+                               selectionStart - block.position(),
+                               selectionEnd - block.position());
+
+            textPos = currentStepEnd;
+        }
+        return textPos;
+    }
 
     void SelectionEngine::addTextDecorations(const QVarLengthArray<TextDecoration> &textDecorations,
                                              qreal offset, qreal thickness)
@@ -657,8 +704,15 @@ namespace {
 
             if (format.objectType() == QTextFormat::ImageObject) {
                 QTextImageFormat imageFormat = format.toImageFormat();
-                QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
-                image = imageHandler->image(textDocument, imageFormat);
+                if (QQuickTextDocumentWithImageResources *imageDoc = qobject_cast<QQuickTextDocumentWithImageResources *>(textDocument)) {
+                    image = imageDoc->image(imageFormat);
+
+                    if (image.isNull())
+                        return;
+                } else {
+                    QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
+                    image = imageHandler->image(textDocument, imageFormat);
+                }
             }
 
             if (image.isNull()) {
@@ -1155,6 +1209,13 @@ void QQuickTextNode::addTextDocument(const QPointF &, QTextDocument *textDocumen
 
                 int textPos = block.position();
                 QTextBlock::iterator blockIterator = block.begin();
+                if (blockIterator.atEnd() && preeditLength) {
+                    engine.setPosition(blockPosition);
+                    textPos = engine.addText(block, block.charFormat(), textColor, colorChanges,
+                                             textPos, textPos + preeditLength,
+                                             selectionStart, selectionEnd);
+                }
+
                 while (!blockIterator.atEnd()) {
                     QTextFragment fragment = blockIterator.fragment();
                     QString text = fragment.text();
@@ -1183,42 +1244,15 @@ void QQuickTextNode::addTextDocument(const QPointF &, QTextDocument *textDocumen
                         }
                         textPos += text.length();
                     } else {
-                        if (charFormat.foreground().style() != Qt::NoBrush)
-                            engine.setTextColor(charFormat.foreground().color());
-                        else
-                            engine.setTextColor(textColor);
-
                         int fragmentEnd = textPos + fragment.length();
                         if (preeditPosition >= 0
                          && preeditPosition >= textPos
-                         && preeditPosition < fragmentEnd) {
+                         && preeditPosition <= fragmentEnd) {
                             fragmentEnd += preeditLength;
                         }
 
-                        while (textPos < fragmentEnd) {
-                            int blockRelativePosition = textPos - block.position();
-                            QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
-                            if (!engine.currentLine().isValid()
-                                    || line.lineNumber() != engine.currentLine().lineNumber()) {
-                                engine.setCurrentLine(line);
-                            }
-
-                            Q_ASSERT(line.textLength() > 0);
-                            int lineEnd = line.textStart() + block.position() + line.textLength();
-
-                            int len = qMin(lineEnd - textPos, fragmentEnd - textPos);
-                            Q_ASSERT(len > 0);
-
-                            int currentStepEnd = textPos + len;
-
-                            engine.addGlyphsForRanges(colorChanges,
-                                                      textPos - block.position(),
-                                                      currentStepEnd - block.position(),
-                                                      selectionStart - block.position(),
-                                                      selectionEnd - block.position());
-
-                            textPos = currentStepEnd;
-                        }
+                        engine.addText(block, charFormat, textColor, colorChanges, textPos, fragmentEnd,
+                                       selectionStart, selectionEnd);
                     }
 
                     ++blockIterator;

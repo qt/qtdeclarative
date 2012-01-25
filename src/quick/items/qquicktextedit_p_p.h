@@ -3,7 +3,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -74,12 +74,16 @@ public:
       documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
       persistentSelection(true), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
       canPasteValid(false), hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
+      textCached(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QQuickTextEdit::PlainText), document(0), wrapMode(QQuickTextEdit::NoWrap),
       mouseSelectionMode(QQuickTextEdit::SelectCharacters),
-      lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0)
+      lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0), updateType(UpdatePaintNode)
     {
     }
+
+    static QQuickTextEditPrivate *get(QQuickTextEdit *item) {
+        return static_cast<QQuickTextEditPrivate *>(QObjectPrivate::get(item)); }
 
     void init();
 
@@ -91,6 +95,7 @@ public:
     qreal getImplicitWidth() const;
 
     QString text;
+    QUrl baseUrl;
     QFont font;
     QFont sourceFont;
     QColor  color;
@@ -114,6 +119,7 @@ public:
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
     bool useImageFallback:1;
+    bool textCached:1;
 
     qreal textMargin;
     int lastSelectionStart;
@@ -137,6 +143,13 @@ public:
     NodeType nodeType;
     QSGTexture *texture;
     QPixmap pixmapCache;
+
+    enum UpdateType {
+        UpdateNone,
+        UpdateOnlyPreprocess,
+        UpdatePaintNode
+    };
+    UpdateType updateType;
 };
 
 QT_END_NAMESPACE

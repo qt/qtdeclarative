@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the Declarative module of the Qt Toolkit.
 **
@@ -102,9 +102,9 @@ public:
 
     int variedDuration() const
     {
-        return m_duration
+        return qMax(qreal(0.0) , m_duration
                 + (m_durationVariance * ((qreal)qrand()/RAND_MAX) * 2)
-                - m_durationVariance;
+                - m_durationVariance);
     }
 
     int frames() const
@@ -212,6 +212,8 @@ public:
 
     void setGoal(int state, int sprite=0, bool jump=false);
     void start(int index=0, int state=0);
+    virtual void restart(int index=0);
+    virtual void advance(int index=0);//Sends state to the next chosen state, unlike goal.
     void stop(int index=0);
     int curState(int index=0) {return m_things[index];}
 
@@ -244,8 +246,8 @@ public slots:
 
 protected:
     friend class QQuickParticleSystem;
-    void restart(int index);
     void addToUpdateList(uint t, int idx);
+    int nextState(int curState, int idx=0);
     int goalSeek(int curState, int idx, int dist=-1);
     QList<QQuickStochasticState*> m_states;
     //### Consider struct or class for the four data variables?
@@ -260,6 +262,7 @@ protected:
     QString m_globalGoal;
     int m_maxFrames;
     int m_imageStateCount;
+    bool m_addAdvance;
 };
 
 class QQuickSpriteEngine : public QQuickStochasticEngine
@@ -279,14 +282,18 @@ public:
     int spriteState(int sprite=0);
     int spriteStart(int sprite=0);
     int spriteFrames(int sprite=0);
-    int spriteDuration(int sprite=0);
+    int spriteDuration(int sprite=0);//Full duration, not per frame
     int spriteX(int /* sprite */ = 0) { return 0; }//Currently all rows are 0 aligned, if we get more space efficient we might change this
     int spriteY(int sprite=0);
     int spriteWidth(int sprite=0);
     int spriteHeight(int sprite=0);
-    int spriteCount();//Like state count, but for the image states
+    int spriteCount();//Like state count
     int maxFrames();
+    QString realName(int sprite=0);//Gives the parent sprite name for pseudosprites
     QImage assembledImage();
+
+    virtual void restart(int index=0);
+    virtual void advance(int index=0);
 private:
     QList<QQuickSprite*> m_sprites;
 };

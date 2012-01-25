@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -103,9 +103,19 @@ public:
         QDeclarativeNullableValue<qreal> visiblePos;
         qreal sizeChangesBeforeVisiblePos;
         qreal sizeChangesAfterVisiblePos;
+        bool changedFirstItem;
+        int changeBeforeVisible;
 
         ChangeResult(const QDeclarativeNullableValue<qreal> &p)
-            : visiblePos(p), sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0) {}
+            : visiblePos(p), sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0),
+            changedFirstItem(false), changeBeforeVisible(0) {}
+
+        void reset() {
+            sizeChangesBeforeVisiblePos = 0.0;
+            sizeChangesAfterVisiblePos = 0.0;
+            changedFirstItem = false;
+            changeBeforeVisible = 0;
+        }
     };
 
     enum BufferMode { NoBuffer = 0x00, BufferBefore = 0x01, BufferAfter = 0x02 };
@@ -129,7 +139,7 @@ public:
     void regenerate();
     void layout();
     void refill();
-    void refill(qreal from, qreal to, bool doBuffer = false);
+    void refill(qreal from, qreal to);
     void mirrorChange();
 
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
@@ -147,6 +157,8 @@ public:
     void applyPendingChanges();
     bool applyModelChanges();
     bool applyRemovalChange(const QDeclarativeChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
+    void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
+            FxViewItem *prevFirstVisible, ChangeResult *insertionResult, ChangeResult *removalResult);
 
     void checkVisible() const;
 
@@ -194,7 +206,6 @@ public:
 
     bool ownModel : 1;
     bool wrap : 1;
-    bool deferredRelease : 1;
     bool inApplyModelChanges : 1;
     bool inViewportMoved : 1;
     bool forceLayout : 1;
@@ -236,13 +247,12 @@ protected:
 
     virtual FxViewItem *newViewItem(int index, QQuickItem *item) = 0;
     virtual void repositionPackageItemAt(QQuickItem *item, int index) = 0;
-    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem) = 0;
-    virtual void resetFirstItemPosition() = 0;
-    virtual void adjustFirstItem(qreal forwards, qreal backwards) = 0;
+    virtual void resetFirstItemPosition(qreal pos = 0.0) = 0;
+    virtual void adjustFirstItem(qreal forwards, qreal backwards, int changeBeforeVisible) = 0;
 
-    virtual void layoutVisibleItems() = 0;
+    virtual void layoutVisibleItems(int fromModelIndex = 0) = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, bool *newVisibleItemsFirst, QList<FxViewItem *> *newItems) = 0;
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *newItems) = 0;
 
     virtual bool needsRefillForAddedOrRemovedIndex(int) const { return false; }
 

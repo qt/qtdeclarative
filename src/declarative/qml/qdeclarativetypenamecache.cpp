@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -53,85 +53,71 @@ QDeclarativeTypeNameCache::~QDeclarativeTypeNameCache()
 {
 }
 
-void QDeclarativeTypeNameCache::add(const QHashedString &name, int importedScriptIndex)
+void QDeclarativeTypeNameCache::add(const QHashedString &name, int importedScriptIndex, const QHashedString &nameSpace)
 {
+    Import import;
+    import.scriptIndex = importedScriptIndex;
+
+    if (nameSpace.length() != 0) {
+        Import *i = m_namedImports.value(nameSpace);
+        Q_ASSERT(i != 0);
+        m_namespacedImports[i].insert(name, import);
+        return;
+    }
+
     if (m_namedImports.contains(name))
         return;
 
-    Import import;
-    import.scriptIndex = importedScriptIndex;
     m_namedImports.insert(name, import);
 }
 
 QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedStringRef &name)
 {
-    Import *i = m_namedImports.value(name);
-    if (i) {
-        if (i->scriptIndex != -1)
-            return Result(i->scriptIndex);
-        else
-            return Result((const void *)i);
-    }
+    Result result = query(m_namedImports, name);
 
-    for (int ii = 0; ii < m_anonymousImports.count(); ++ii) {
-        if (QDeclarativeType *type = m_anonymousImports.at(ii).type(name))
-            return Result(type);
-    }
+    if (!result.isValid())
+        result = typeSearch(m_anonymousImports, name);
 
-    return Result();
+    return result;
 }
 
 QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedStringRef &name, 
                                                                    const void *importNamespace)
 {
     Q_ASSERT(importNamespace);
-    Import *i = (Import *)importNamespace;
+    const Import *i = static_cast<const Import *>(importNamespace);
     Q_ASSERT(i->scriptIndex == -1);
 
-    for (int ii = 0; ii < i->modules.count(); ++ii) {
-        if (QDeclarativeType *type = i->modules.at(ii).type(name))
-            return Result(type);
-    }
-    
-    return Result();
+    return typeSearch(i->modules, name);
 }
 
 QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedV8String &name)
 {
-    Import *i = m_namedImports.value(name);
-    if (i) {
-        if (i->scriptIndex != -1)
-            return Result(i->scriptIndex);
-        else
-            return Result((const void *)i);
-    }
+    Result result = query(m_namedImports, name);
 
-    for (int ii = 0; ii < m_anonymousImports.count(); ++ii) {
-        if (QDeclarativeType *type = m_anonymousImports.at(ii).type(name))
-            return Result(type);
-    }
+    if (!result.isValid())
+        result = typeSearch(m_anonymousImports, name);
 
-    return Result();
+    return result;
 }
 
 QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedV8String &name, const void *importNamespace)
 {
     Q_ASSERT(importNamespace);
-    Import *i = (Import *)importNamespace;
+    const Import *i = static_cast<const Import *>(importNamespace);
     Q_ASSERT(i->scriptIndex == -1);
 
-    for (int ii = 0; ii < i->modules.count(); ++ii) {
-        if (QDeclarativeType *type = i->modules.at(ii).type(name))
-            return Result(type);
-    }
-    
-    return Result();
+    QMap<const Import *, QStringHash<Import> >::const_iterator it = m_namespacedImports.find(i);
+    if (it != m_namespacedImports.constEnd())
+        return query(*it, name);
+
+    return typeSearch(i->modules, name);
 }
 
 QDeclarativeMetaType::ModuleApiInstance *QDeclarativeTypeNameCache::moduleApi(const void *importNamespace)
 {
     Q_ASSERT(importNamespace);
-    Import *i = (Import *)importNamespace;
+    const Import *i = static_cast<const Import *>(importNamespace);
     Q_ASSERT(i->scriptIndex == -1);
 
     return i->moduleApi;

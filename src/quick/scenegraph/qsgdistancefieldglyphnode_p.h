@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -69,7 +69,6 @@ public:
     virtual void setStyleColor(const QColor &color);
 
     virtual void update();
-
     void preprocess();
 
     void invalidateGlyphs(const QVector<quint32> &glyphs);

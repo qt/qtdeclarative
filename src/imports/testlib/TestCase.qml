@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -313,10 +313,8 @@ Item {
     }
 
     function skipAll(msg) {
-        if (msg === undefined)
-            msg = ""
-        warn("The skipAll function is deprecated and will be removed soon. Please update this test by changing skipAll to skip.")
-        qtest_results.skip(msg, util.callerFile(), util.callerLine())
+        msg = "The skipAll function is no longer available. Please update this test by changing skipAll to skip."
+        qtest_results.fail(msg, util.callerFile(), util.callerLine())
         throw new Error("QtQuickTest::skip")
     }
 

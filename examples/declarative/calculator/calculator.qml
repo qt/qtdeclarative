@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -41,8 +41,8 @@
 
 import QtQuick 2.0
 import QtQuick.Window 2.0
-import "Core"
-import "Core/calculator.js" as CalcEngine
+import "content"
+import "content/calculator.js" as CalcEngine
 
 Rectangle {
     id: window
@@ -62,7 +62,7 @@ Rectangle {
 
     Item {
         id: main
-        state: "orientation " + Screen.currentOrientation
+        state: "orientation " + Screen.orientation
 
         property bool landscapeWindow: window.width > window.height 
         property real baseWidth: landscapeWindow ? window.height : window.width

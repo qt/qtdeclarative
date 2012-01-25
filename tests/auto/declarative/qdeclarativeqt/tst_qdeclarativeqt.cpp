@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -78,7 +78,6 @@ private slots:
     void createComponent();
     void createComponent_pragmaLibrary();
     void createQmlObject();
-    void console();
     void dateTimeConversion();
     void dateTimeFormatting();
     void dateTimeFormatting_data();
@@ -453,40 +452,6 @@ void tst_qdeclarativeqt::createQmlObject()
     delete object;
 }
 
-void tst_qdeclarativeqt::console()
-{
-    QUrl testUrl = testFileUrl("console.qml");
-    QString testException = QString(QLatin1String("%1:%2: ReferenceError: Can't find variable: exception")).arg(testUrl.toString()).arg(34);
-    QString testTrace = QString(QLatin1String("onCompleted (%1:%2:%3)\n")).arg(testUrl.toString()).arg(31).arg(17);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(testTrace));
-    QTest::ignoreMessage(QtDebugMsg, "Profiling started.");
-    QTest::ignoreMessage(QtDebugMsg, "Profiling ended.");
-    QTest::ignoreMessage(QtDebugMsg, "completed ok");
-    QTest::ignoreMessage(QtDebugMsg, "completed ok");
-    QTest::ignoreMessage(QtDebugMsg, "completed ok");
-    QTest::ignoreMessage(QtWarningMsg, "completed ok");
-    QTest::ignoreMessage(QtCriticalMsg, "completed ok");
-
-    QTest::ignoreMessage(QtDebugMsg, "[1,2]");
-    QTest::ignoreMessage(QtDebugMsg, "Object");
-    QTest::ignoreMessage(QtDebugMsg, "undefined");
-    QTest::ignoreMessage(QtDebugMsg, "12");
-    QTest::ignoreMessage(QtDebugMsg, "function () { return 5;}");
-    QTest::ignoreMessage(QtDebugMsg, "true");
-    QTest::ignoreMessage(QtDebugMsg, "Object");
-    QTest::ignoreMessage(QtDebugMsg, "Object");
-    QTest::ignoreMessage(QtDebugMsg, "1 pong! Object");
-    QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] Object 2");
-
-
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(testException));
-
-
-    QDeclarativeComponent component(&engine, testUrl);
-    QObject *object = component.create();
-    QVERIFY(object != 0);
-    delete object;
-}
 
 void tst_qdeclarativeqt::dateTimeConversion()
 {

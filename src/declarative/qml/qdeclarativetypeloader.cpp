@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -1427,6 +1427,11 @@ const QList<QDeclarativeTypeData::ScriptReference> &QDeclarativeTypeData::resolv
     return m_scripts;
 }
 
+const QSet<QString> &QDeclarativeTypeData::namespaces() const
+{
+    return m_namespaces;
+}
+
 QDeclarativeCompiledData *QDeclarativeTypeData::compiledData() const
 {
     if (m_compiledData) 
@@ -1646,6 +1651,27 @@ void QDeclarativeTypeData::resolveTypes()
             setError(errors);
             return;
         }
+    }
+
+    // Add any imported scripts to our resolved set
+    foreach (const QDeclarativeImports::ScriptReference &script, m_imports.resolvedScripts())
+    {
+        QDeclarativeScriptBlob *blob = typeLoader()->getScript(script.location);
+        addDependency(blob);
+
+        ScriptReference ref;
+        //ref.location = ...
+        ref.qualifier = script.nameSpace;
+        if (!script.qualifier.isEmpty())
+        {
+            ref.qualifier.prepend(script.qualifier + QLatin1Char('.'));
+
+            // Add a reference to the enclosing namespace
+            m_namespaces.insert(script.qualifier);
+        }
+
+        ref.script = blob;
+        m_scripts << ref;
     }
 
     foreach (QDeclarativeScript::TypeReference *parserRef, scriptParser.referencedTypes()) {

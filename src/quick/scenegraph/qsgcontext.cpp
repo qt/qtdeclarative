@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -47,6 +47,8 @@
 #include <QtQuick/private/qsgdefaultimagenode_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
+#include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
+
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qdeclarativepixmapcache_p.h>
 
@@ -55,6 +57,11 @@
 
 #include <QDeclarativeImageProvider>
 #include <private/qdeclarativeglobal_p.h>
+
+#include <QtQuick/private/qsgtexture_p.h>
+#include <QtGui/private/qguiapplication_p.h>
+
+#include <QtGui/qplatformsharedgraphicscache_qpa.h>
 
 #include <private/qobject_p.h>
 #include <qmutex.h>
@@ -247,6 +254,35 @@ QSGImageNode *QSGContext::createImageNode()
 QSGDistanceFieldGlyphCache *QSGContext::createDistanceFieldGlyphCache(const QRawFont &font)
 {
     Q_D(QSGContext);
+
+    QPlatformIntegration *platformIntegration = QGuiApplicationPrivate::platformIntegration();
+    if (platformIntegration != 0
+        && platformIntegration->hasCapability(QPlatformIntegration::SharedGraphicsCache)) {
+        QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
+        if (!fe->faceId().filename.isEmpty()) {
+            QByteArray keyName = fe->faceId().filename;
+            if (font.style() != QFont::StyleNormal)
+                keyName += QByteArray(" I");
+            if (font.weight() != QFont::Normal)
+                keyName += " " + QByteArray::number(font.weight());
+            keyName += QByteArray(" DF");
+            QPlatformSharedGraphicsCache *sharedGraphicsCache =
+                    platformIntegration->createPlatformSharedGraphicsCache(keyName);
+
+            if (sharedGraphicsCache != 0) {
+                sharedGraphicsCache->ensureCacheInitialized(keyName,
+                                                            QPlatformSharedGraphicsCache::OpenGLTexture,
+                                                            QPlatformSharedGraphicsCache::Alpha8);
+
+                return new QSGSharedDistanceFieldGlyphCache(keyName,
+                                                            sharedGraphicsCache,
+                                                            d->distanceFieldCacheManager,
+                                                            glContext(),
+                                                            font);
+            }
+        }
+    }
+
     return new QSGDefaultDistanceFieldGlyphCache(d->distanceFieldCacheManager, glContext(), font);
 }
 

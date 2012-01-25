@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -180,12 +180,14 @@ static QString convertQStringToString(QV8Engine *, const QString &v)
 
 static QUrl convertV8ValueToUrl(QV8Engine *e, v8::Handle<v8::Value> v)
 {
-    return QUrl(e->toString(v->ToString()));
+    QUrl u;
+    u.setEncodedUrl(e->toString(v->ToString()).toUtf8(), QUrl::TolerantMode);
+    return u;
 }
 
 static v8::Handle<v8::Value> convertUrlToV8Value(QV8Engine *e, const QUrl &v)
 {
-    return e->toString(v.toString());
+    return e->toString(v.toEncoded());
 }
 
 static QString convertUrlToString(QV8Engine *, const QUrl &v)

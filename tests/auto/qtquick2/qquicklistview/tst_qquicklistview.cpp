@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -1359,6 +1359,7 @@ void tst_QQuickListView::moved(const QUrl &source)
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -1495,6 +1496,26 @@ void tst_QQuickListView::moved_data()
             << 80.0     // show 4-19
             << 0 << 5 << 3
             << 20.0 * 3;        // moving 3 from above the content y should adjust y positions accordingly
+
+    QTest::newRow("move multiple forwards, mix of non-visible/visible")
+            << 40.0
+            << 1 << 16 << 2
+            << 20.0;    // item 1,2 are removed, item 3 is now first visible
+
+    QTest::newRow("move multiple forwards, to bottom of view")
+            << 0.0
+            << 5 << 13 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, first->last")
+            << 0.0
+            << 0 << 13 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, to bottom of view, content y not 0")
+            << 80.0
+            << 5+4 << 13+4 << 3
+            << 0.0;
 
     QTest::newRow("move multiple forwards, from visible -> non-visible")
             << 0.0
@@ -1940,8 +1961,8 @@ void tst_QQuickListView::spacing()
     QTRY_VERIFY(listview->spacing() == 10);
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() == 11);
+    for (int i = 0; i < 11; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
@@ -1951,8 +1972,8 @@ void tst_QQuickListView::spacing()
     listview->setSpacing(0);
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() >= 16);
+    for (int i = 0; i < 16; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
         QTRY_VERIFY(item);
@@ -2243,7 +2264,7 @@ void tst_QQuickListView::sectionsPositioning()
     model.modifyItem(2, "Three", "aaa");
     model.modifyItem(3, "Four", "aaa");
     model.modifyItem(4, "Five", "aaa");
-    QTest::qWait(300);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QTRY_COMPARE(listview->currentSection(), QString("aaa"));
 
@@ -2254,8 +2275,7 @@ void tst_QQuickListView::sectionsPositioning()
         QTRY_COMPARE(item->y(), qreal(i*20*6));
     }
 
-    topItem = findVisibleChild(contentItem, "sect_aaa"); // section header
-    QVERIFY(topItem);
+    QTRY_VERIFY(topItem = findVisibleChild(contentItem, "sect_aaa")); // section header
     QCOMPARE(topItem->y(), 10.);
 
     // remove section boundary
@@ -3576,6 +3596,7 @@ void tst_QQuickListView::resizeView()
     ctxt->setContextProperty("testObject", testObject);
 
     canvas->setSource(testFileUrl("listviewtest.qml"));
+    canvas->show();
     qApp->processEvents();
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
@@ -3601,6 +3622,40 @@ void tst_QQuickListView::resizeView()
 
     QMetaObject::invokeMethod(canvas->rootObject(), "heightRatio", Q_RETURN_ARG(QVariant, heightRatio));
     QCOMPARE(heightRatio.toReal(), 0.25);
+
+    // Ensure we handle -ve sizes
+    listview->setHeight(-100);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 1);
+
+    listview->setCacheBuffer(200);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 11);
+
+    // ensure items in cache become visible
+    listview->setHeight(200);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 21);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), i*20.);
+        QCOMPARE(item->isVisible(), i < 11); // inside view visible, outside not visible
+    }
+
+    // ensure items outside view become invisible
+    listview->setHeight(100);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 16);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), i*20.);
+        QCOMPARE(item->isVisible(), i < 6); // inside view visible, outside not visible
+    }
 
     delete canvas;
     delete testObject;

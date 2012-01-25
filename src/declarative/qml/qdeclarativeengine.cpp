@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -964,7 +964,7 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
             QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(object->metaObject()->className());
             QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, typeName);
             if (data->outerContext)
-                QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, data->outerContext->url, data->lineNumber);
+                QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, data->outerContext->url, data->lineNumber, data->columnNumber);
         }
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(data->context->engine);
 

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
 **
@@ -52,7 +52,6 @@ int main(int argc, char **argv)
     qmlRegisterType<Squircle>("QtQuick", 2, 0, "Squircle");
 
     QQuickView view;
-    view.setVSyncAnimations(true);
     view.setSource(QUrl("main.qml"));
     view.show();
 

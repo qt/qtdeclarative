@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -74,10 +74,10 @@ QT_BEGIN_NAMESPACE
     \qmlattachedproperty Qt::ScreenOrientation QtQuickWindow2::Screen::primaryOrientation
     \readonly
 
-    This contains the primary orientation of the screen. This can only change if the screen changes.
+    This contains the primary orientation of the screen.
 */
 /*!
-    \qmlattachedproperty Qt::ScreenOrientation QtQuickWindow2::Screen::currentOrientation
+    \qmlattachedproperty Qt::ScreenOrientation QtQuickWindow2::Screen::orientation
     \readonly
 
     This contains the current orientation of the screen.
@@ -119,20 +119,20 @@ int QQuickScreenAttached::height() const
 Qt::ScreenOrientation QQuickScreenAttached::primaryOrientation() const
 {
     if (!m_screen)
-        return Qt::UnknownOrientation;
+        return Qt::PrimaryOrientation;
     return m_screen->primaryOrientation();
 }
 
-Qt::ScreenOrientation QQuickScreenAttached::currentOrientation() const
+Qt::ScreenOrientation QQuickScreenAttached::orientation() const
 {
     if (!m_screen)
-        return Qt::UnknownOrientation;
-    return m_screen->currentOrientation();
+        return Qt::PrimaryOrientation;
+    return m_screen->orientation();
 }
 
 int QQuickScreenAttached::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
 {
-    return QScreen::angleBetween(a,b);
+    return m_screen->angleBetween(a,b);
 }
 
 void QQuickScreenAttached::canvasChanged(QQuickCanvas* c)//Called by QQuickItemPrivate::initCanvas
@@ -147,8 +147,10 @@ void QQuickScreenAttached::canvasChanged(QQuickCanvas* c)//Called by QQuickItemP
                     this, SIGNAL(widthChanged()));
             disconnect(oldScreen, SIGNAL(sizeChanged(QSize)),
                     this, SIGNAL(heightChanged()));
-            disconnect(oldScreen, SIGNAL(currentOrientationChanged(Qt::ScreenOrientation)),
-                    this, SIGNAL(currentOrientationChanged()));
+            disconnect(oldScreen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
+                    this, SIGNAL(orientationChanged()));
+            disconnect(oldScreen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
+                    this, SIGNAL(primaryOrientationChanged()));
         }
 
         if (!screen)
@@ -158,8 +160,9 @@ void QQuickScreenAttached::canvasChanged(QQuickCanvas* c)//Called by QQuickItemP
             emit widthChanged();
             emit heightChanged();
         }
-        if (!oldScreen || screen->currentOrientation() != oldScreen->currentOrientation())
-            emit currentOrientationChanged();
+
+        if (!oldScreen || screen->orientation() != oldScreen->orientation())
+            emit orientationChanged();
         if (!oldScreen || screen->primaryOrientation() != oldScreen->primaryOrientation())
             emit primaryOrientationChanged();
 
@@ -168,8 +171,10 @@ void QQuickScreenAttached::canvasChanged(QQuickCanvas* c)//Called by QQuickItemP
                 this, SIGNAL(widthChanged()));
         connect(screen, SIGNAL(sizeChanged(QSize)),
                 this, SIGNAL(heightChanged()));
-        connect(screen, SIGNAL(currentOrientationChanged(Qt::ScreenOrientation)),
-                this, SIGNAL(currentOrientationChanged()));
+        connect(screen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
+                this, SIGNAL(orientationChanged()));
+        connect(screen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
+                this, SIGNAL(primaryOrientationChanged()));
     }
 }
 

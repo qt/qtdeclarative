@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -1052,6 +1052,22 @@ QVariant QDeclarativePropertyPrivate::readValueProperty()
     }
 }
 
+static QUrl urlFromUserString(const QByteArray &data)
+{
+    QUrl u;
+    if (!data.isEmpty())
+    {
+        // Preserve any valid percent-encoded octets supplied by the source
+        u.setEncodedUrl(data, QUrl::TolerantMode);
+    }
+    return u;
+}
+
+static QUrl urlFromUserString(const QString &data)
+{
+    return urlFromUserString(data.toUtf8());
+}
+
 // helper function to allow assignment / binding to QList<QUrl> properties.
 static QVariant resolvedUrlSequence(const QVariant &value, QDeclarativeContextData *context)
 {
@@ -1059,19 +1075,19 @@ static QVariant resolvedUrlSequence(const QVariant &value, QDeclarativeContextDa
     if (value.userType() == qMetaTypeId<QUrl>()) {
         urls.append(value.toUrl());
     } else if (value.userType() == qMetaTypeId<QString>()) {
-        urls.append(QUrl(value.toString()));
+        urls.append(urlFromUserString(value.toString()));
     } else if (value.userType() == qMetaTypeId<QByteArray>()) {
-        urls.append(QUrl(QString::fromUtf8(value.toByteArray())));
+        urls.append(urlFromUserString(value.toByteArray()));
     } else if (value.userType() == qMetaTypeId<QList<QUrl> >()) {
         urls = value.value<QList<QUrl> >();
     } else if (value.userType() == qMetaTypeId<QStringList>()) {
         QStringList urlStrings = value.value<QStringList>();
         for (int i = 0; i < urlStrings.size(); ++i)
-            urls.append(QUrl(urlStrings.at(i)));
+            urls.append(urlFromUserString(urlStrings.at(i)));
     } else if (value.userType() == qMetaTypeId<QList<QString> >()) {
         QList<QString> urlStrings = value.value<QList<QString> >();
         for (int i = 0; i < urlStrings.size(); ++i)
-            urls.append(QUrl(urlStrings.at(i)));
+            urls.append(urlFromUserString(urlStrings.at(i)));
     } // note: QList<QByteArray> is not currently supported.
 
     QList<QUrl> resolvedUrls;
@@ -1211,10 +1227,10 @@ bool QDeclarativePropertyPrivate::write(QObject *object,
             u = value.toUrl();
             found = true;
         } else if (variantType == QVariant::ByteArray) {
-            u = QUrl(QString::fromUtf8(value.toByteArray()));
+            u = urlFromUserString(value.toByteArray());
             found = true;
         } else if (variantType == QVariant::String) {
-            u = QUrl(value.toString());
+            u = urlFromUserString(value.toString());
             found = true;
         }
 

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -478,6 +478,10 @@ QDeclarativeWorkerScriptEngine::~QDeclarativeWorkerScriptEngine()
     QCoreApplication::postEvent(d, new QEvent((QEvent::Type)QDeclarativeWorkerScriptEnginePrivate::WorkerDestroyEvent));
     d->m_lock.unlock();
 
+    //We have to force to cleanup the main thread's event queue here
+    //to make sure the main GUI release all pending locks/wait conditions which
+    //some worker script/agent are waiting for (QDeclarativeListModelWorkerAgent::sync() for example).
+    QCoreApplication::processEvents();
     wait();
     d->deleteLater();
 }

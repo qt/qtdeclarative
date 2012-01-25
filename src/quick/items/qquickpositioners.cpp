@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -172,7 +172,6 @@ void QQuickBasePositioner::componentComplete()
     QQuickItem::componentComplete();
     positionedItems.reserve(childItems().count());
     prePositioning();
-    reportConflictingAnchors();
 }
 
 void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &value)
@@ -239,8 +238,11 @@ void QQuickBasePositioner::prePositioning()
         }
     }
     QSizeF contentSize(0,0);
-    doPositioning(&contentSize);
-    updateAttachedProperties();
+    reportConflictingAnchors();
+    if (!d->anchorConflict) {
+        doPositioning(&contentSize);
+        updateAttachedProperties();
+    }
     if (!d->addActions.isEmpty() || !d->moveActions.isEmpty())
         finishApplyTransitions();
     d->doingPositioning = false;
@@ -574,7 +576,8 @@ void QQuickColumn::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict) {
-        qmlInfo(this) << "Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column";
+        qmlInfo(this) << "Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column."
+            << " Column will not function.";
     }
 }
 /*!
@@ -800,7 +803,8 @@ void QQuickRow::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict)
-        qmlInfo(this) << "Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row";
+        qmlInfo(this) << "Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row."
+            << " Row will not function.";
 }
 
 /*!
@@ -1234,7 +1238,7 @@ void QQuickGrid::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict)
-        qmlInfo(this) << "Cannot specify anchors for items inside Grid";
+        qmlInfo(this) << "Cannot specify anchors for items inside Grid." << " Grid will not function.";
 }
 
 /*!
@@ -1526,7 +1530,7 @@ void QQuickFlow::reportConflictingAnchors()
         }
     }
     if (d->anchorConflict)
-        qmlInfo(this) << "Cannot specify anchors for items inside Flow";
+        qmlInfo(this) << "Cannot specify anchors for items inside Flow." << " Flow will not function.";
 }
 
 QT_END_NAMESPACE

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -117,7 +117,7 @@ private:
     QDeclarativeObjectData objectData(QObject *);
     QDeclarativeObjectProperty propertyData(QObject *, int);
     QVariant valueContents(const QVariant &defaultValue) const;
-    void setBinding(int objectId, const QString &propertyName, const QVariant &expression, bool isLiteralValue, QString filename = QString(), int line = -1);
+    void setBinding(int objectId, const QString &propertyName, const QVariant &expression, bool isLiteralValue, QString filename = QString(), int line = -1, int column = 0);
     void resetBinding(int objectId, const QString &propertyName);
     void setMethodBody(int objectId, const QString &method, const QString &body);
 

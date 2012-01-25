@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -97,15 +97,13 @@ void QSGNodeUpdater::updateStates(QSGNode *n)
 bool QSGNodeUpdater::isNodeBlocked(QSGNode *node, QSGNode *root) const
 {
     qreal opacity = 1;
-    while (node != root) {
+    while (node != root && node != 0) {
         if (node->type() == QSGNode::OpacityNodeType) {
             opacity *= static_cast<QSGOpacityNode *>(node)->opacity();
             if (opacity < 0.001)
                 return true;
         }
         node = node->parent();
-
-        Q_ASSERT_X(node, "QSGNodeUpdater::isNodeBlocked", "node is not in the subtree of root");
     }
 
     return false;

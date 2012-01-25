@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
@@ -16,7 +16,7 @@
 ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** us via http://www.qt-project.org/.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -71,9 +71,9 @@
   Object values have an internal \c{prototype} property, which can be
   accessed with prototype() and setPrototype().
 
-  Function objects (objects for which isFunction() returns true) can
+  Function objects (objects for which isCallable()) returns true) can
   be invoked by calling call(). Constructor functions can be used to
-  construct new objects by calling construct().
+  construct new objects by calling callAsConstructor().
 
   Use equals() or strictlyEquals() to compare a QJSValue to another.
 
@@ -213,6 +213,8 @@ QJSValue::QJSValue(QScriptPassPointer<QJSValuePrivate> d)
 {
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
   \obsolete
 
@@ -325,6 +327,8 @@ QJSValue::QJSValue(QJSEngine* engine, SpecialValue value)
     }
 }
 
+#endif // QT_DEPRECATED
+
 /*!
   Constructs a new QJSValue that is a copy of \a other.
 
@@ -344,7 +348,11 @@ QJSValue::~QJSValue()
 {
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns true if this QJSValue is valid; otherwise returns
   false.
 */
@@ -354,6 +362,8 @@ bool QJSValue::isValid() const
     QScriptIsolate api(d->engine());
     return d->isValid();
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns true if this QJSValue is of the primitive type Boolean;
@@ -461,10 +471,24 @@ bool QJSValue::isObject() const
 }
 
 /*!
-  Returns true if this QJSValue is a function; otherwise returns
-  false.
+  Returns true if this QJSValue can be called a function, otherwise
+  returns false.
 
   \sa call()
+*/
+bool QJSValue::isCallable() const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->isCallable();
+}
+
+#ifdef QT_DEPRECATED
+
+/*!
+  \obsolete
+
+  Use isCallable() instead.
 */
 bool QJSValue::isFunction() const
 {
@@ -472,6 +496,8 @@ bool QJSValue::isFunction() const
     QScriptIsolate api(d->engine());
     return d->isCallable();
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns true if this QJSValue is a variant value;
@@ -515,7 +541,7 @@ QString QJSValue::toString() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa isNumber(), toInteger(), toInt32(), toUInt32(), toUInt16()
+  \sa isNumber(), toInteger(), toInt(), toUInt(), toUInt16()
 */
 double QJSValue::toNumber() const
 {
@@ -543,7 +569,11 @@ bool QJSValue::toBool() const
     return d->toBool();
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns the integer value of this QJSValue, using the conversion
   rules described in \l{ECMA-262} section 9.4, "ToInteger".
 
@@ -562,6 +592,8 @@ double QJSValue::toInteger() const
     return d->toInteger();
 }
 
+#endif // QT_DEPRECATED
+
 /*!
   Returns the signed 32-bit integer value of this QJSValue, using
   the conversion rules described in \l{ECMA-262} section 9.5, "ToInt32".
@@ -572,9 +604,9 @@ double QJSValue::toInteger() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa toNumber(), toUInt32()
+  \sa toNumber(), toUInt()
 */
-qint32 QJSValue::toInt32() const
+qint32 QJSValue::toInt() const
 {
     Q_D(const QJSValue);
     QScriptIsolate api(d->engine());
@@ -591,7 +623,33 @@ qint32 QJSValue::toInt32() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa toNumber(), toInt32()
+  \sa toNumber(), toInt()
+*/
+quint32 QJSValue::toUInt() const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->toUInt32();
+}
+
+#ifdef QT_DEPRECATED
+
+/*!
+  \obsolete
+
+  Use toInt() instead.
+*/
+qint32 QJSValue::toInt32() const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->toInt32();
+}
+
+/*!
+  \obsolete
+
+  Use toUInt() instead.
 */
 quint32 QJSValue::toUInt32() const
 {
@@ -631,6 +689,8 @@ QJSValue QJSValue::toObject() const
     return QJSValuePrivate::get(d->toObject());
 }
 
+#endif // QT_DEPRECATED
+
 /*!
   Returns the QVariant value of this QJSValue, if it can be
   converted to a QVariant; otherwise returns an invalid QVariant.
@@ -660,9 +720,31 @@ QVariant QJSValue::toVariant() const
     return d->toVariant();
 }
 
+/*!
+  Calls this QJSValue as a function, passing \a args as arguments
+  to the function, and using the globalObject() as the "this"-object.
+  Returns the value returned from the function.
+
+  If this QJSValue is not callable, call() does nothing and
+  returns an undefined QJSValue.
+
+  Calling call() can cause an exception to occur in the script engine;
+  in that case, call() returns the value that was thrown (typically an
+  \c{Error} object). You can call
+  QJSEngine::hasUncaughtException() to determine if an exception
+  occurred.
+
+  \sa isCallable(), callWithInstance(), callAsConstructor()
+*/
+QJSValue QJSValue::call(const QJSValueList &args)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->call(/*thisObject=*/0, args);
+}
 
 /*!
-  Calls this QJSValue as a function, using \a thisObject as
+  Calls this QJSValue as a function, using \a instance as
   the `this' object in the function call, and passing \a args
   as arguments to the function. Returns the value returned from
   the function.
@@ -670,7 +752,7 @@ QVariant QJSValue::toVariant() const
   If this QJSValue is not a function, call() does nothing
   and returns an invalid QJSValue.
 
-  Note that if \a thisObject is not an object, the global object
+  Note that if \a instance is not an object, the global object
   (see \l{QJSEngine::globalObject()}) will be used as the
   `this' object.
 
@@ -680,15 +762,13 @@ QVariant QJSValue::toVariant() const
   QJSEngine::hasUncaughtException() to determine if an exception
   occurred.
 
-  \snippet doc/src/snippets/code/src_script_qjsvalue.cpp 1
-
-  \sa construct()
+  \sa call()
 */
-QJSValue QJSValue::call(const QJSValue& thisObject, const QJSValueList& args)
+QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList &args)
 {
     Q_D(QJSValue);
     QScriptIsolate api(d->engine());
-    return d->call(QJSValuePrivate::get(thisObject), args);
+    return d->call(QJSValuePrivate::get(instance), args);
 }
 
 /*!
@@ -698,25 +778,53 @@ QJSValue QJSValue::call(const QJSValue& thisObject, const QJSValueList& args)
   constructor call is an object, then that object is returned;
   otherwise the default constructed object is returned.
 
-  If this QJSValue is not a function, construct() does nothing
-  and returns an invalid QJSValue.
+  If this QJSValue is not a function, callAsConstructor() does
+  nothing and returns an undefined QJSValue.
 
-  Calling construct() can cause an exception to occur in the script
-  engine; in that case, construct() returns the value that was thrown
-  (typically an \c{Error} object). You can call
+  Calling this function can cause an exception to occur in the
+  script engine; in that case, the value that was thrown
+  (typically an \c{Error} object) is returned. You can call
   QJSEngine::hasUncaughtException() to determine if an exception
   occurred.
 
   \sa call(), QJSEngine::newObject()
 */
+QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return QJSValuePrivate::get(d->callAsConstructor(args));
+}
+
+#ifdef QT_DEPRECATED
+
+/*!
+  \obsolete
+
+  Use callWithInstance() instead.
+*/
+QJSValue QJSValue::call(const QJSValue& thisObject, const QJSValueList& args)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->call(QJSValuePrivate::get(thisObject), args);
+}
+
+/*!
+  \obsolete
+
+  Use callAsConstructor() instead.
+*/
 QJSValue QJSValue::construct(const QJSValueList &args)
 {
     Q_D(QJSValue);
     QScriptIsolate api(d->engine());
-    return QJSValuePrivate::get(d->construct(args));
+    return QJSValuePrivate::get(d->callAsConstructor(args));
 }
 
 /*!
+  \obsolete
+
   Returns the QJSEngine that created this QJSValue,
   or 0 if this QJSValue is invalid or the value is not
   associated with a particular engine.
@@ -731,6 +839,7 @@ QJSEngine* QJSValue::engine() const
     return 0;
 }
 
+#endif // QT_DEPRECATED
 
 /*!
   If this QJSValue is an object, returns the internal prototype
@@ -839,7 +948,11 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
     return d_ptr->strictlyEquals(o);
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+    \obsolete
+
     Returns true if this QJSValue is an instance of
     \a other; otherwise returns false.
 
@@ -855,6 +968,8 @@ bool QJSValue::instanceOf(const QJSValue &other) const
     return d->instanceOf(QJSValuePrivate::get(other));
 }
 
+#endif // QT_DEPRECATED
+
 /*!
   Returns the value of this QJSValue's property with the given \a name.
   If no such property exists, an invalid QJSValue is returned.
@@ -866,7 +981,7 @@ bool QJSValue::instanceOf(const QJSValue &other) const
   occurred, property() returns the value that was thrown (typically
   an \c{Error} object).
 
-  \sa setProperty(), propertyFlags(), QJSValueIterator
+  \sa setProperty(), hasProperty(), QJSValueIterator
 */
 QJSValue QJSValue::property(const QString& name) const
 {
@@ -915,7 +1030,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
   built-in properties, such as the \c{length} property of Array objects
   or meta properties of QObject objects.
 
-  \sa property()
+  \sa property(), deleteProperty()
 */
 void QJSValue::setProperty(const QString& name, const QJSValue& value)
 {
@@ -944,6 +1059,63 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 }
 
 /*!
+  Attempts to delete this object's property of the given \a name.
+  Returns true if the property was deleted, otherwise returns false.
+
+  The behavior of this function is consistent with the JavaScript
+  delete operator. In particular:
+
+  \list
+  \o Non-configurable properties cannot be deleted.
+  \o This function will return true even if this object doesn't
+     have a property of the given \a name (i.e., non-existent
+     properties are "trivially deletable").
+  \o If this object doesn't have an own property of the given
+     \a name, but an object in the prototype() chain does, the
+     prototype object's property is not deleted, and this function
+     returns true.
+  \endlist
+
+  \sa setProperty(), hasOwnProperty()
+*/
+bool QJSValue::deleteProperty(const QString &name)
+{
+    Q_D(QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->deleteProperty(name);
+}
+
+/*!
+  Returns true if this object has a property of the given \a name,
+  otherwise returns false.
+
+  \sa property(), hasOwnProperty()
+*/
+bool QJSValue::hasProperty(const QString &name) const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->hasProperty(name);
+}
+
+/*!
+  Returns true if this object has an own (not prototype-inherited)
+  property of the given \a name, otherwise returns false.
+
+  \sa property(), hasProperty()
+*/
+bool QJSValue::hasOwnProperty(const QString &name) const
+{
+    Q_D(const QJSValue);
+    QScriptIsolate api(d->engine());
+    return d->hasOwnProperty(name);
+}
+
+#ifdef QT_DEPRECATED
+
+/*!
+  \obsolete
+
   Returns the flags of the property with the given \a name.
 
   \sa property()
@@ -954,6 +1126,8 @@ QJSValue::PropertyFlags QJSValue::propertyFlags(const QString& name) const
     QScriptIsolate api(d->engine());
     return d->propertyFlags(name);
 }
+
+#endif // QT_DEPRECATED
 
 /*!
  * If this QJSValue is a QObject, returns the QObject pointer
@@ -986,7 +1160,11 @@ QDateTime QJSValue::toDateTime() const
     return d->toDataTime();
 }
 
+#ifdef QT_DEPRECATED
+
 /*!
+  \obsolete
+
   Returns the QRegExp representation of this value.
   If this QJSValue is not a regular expression, an empty
   QRegExp is returned.
@@ -999,6 +1177,8 @@ QRegExp QJSValue::toRegExp() const
     QScriptIsolate api(d->engine());
     return d->toRegExp();
 }
+
+#endif // QT_DEPRECATED
 
 /*!
   Returns true if this QJSValue is an object of the Date class;

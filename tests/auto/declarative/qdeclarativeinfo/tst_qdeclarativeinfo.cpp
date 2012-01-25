@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -175,7 +175,7 @@ void tst_qdeclarativeinfo::types()
     qmlInfo(0) << QByteArray("Qt");
 
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: true");
-    qmlInfo(0) << QBool(true);
+    qmlInfo(0) << bool(true);
 
     //### do we actually want QUrl to show up in the output?
     //### why the extra space at the end?
@@ -212,7 +212,7 @@ void tst_qdeclarativeinfo::chaining()
                << QUrl("http://qt.nokia.com")
                << ref
                << QByteArray("Qt")
-               << QBool(true)
+               << bool(true)
                << QString ("Quick");
 }
 

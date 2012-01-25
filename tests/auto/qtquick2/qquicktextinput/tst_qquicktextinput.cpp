@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -1219,6 +1219,10 @@ void tst_qquicktextinput::horizontalAlignment()
 
 void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 {
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
     QQuickView canvas(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextInput *textInput = canvas.rootObject()->findChild<QQuickTextInput*>("text");
     QVERIFY(textInput != 0);
@@ -1314,26 +1318,42 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QInputPanel::inputDirection()
     textInput->setText("");
-    QCOMPARE(textInput->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
-    if (qApp->inputPanel()->inputDirection() == Qt::LeftToRight) {
-        QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
-    } else {
-        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
-        QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
-    }
-    textInput->setHAlign(QQuickTextInput::AlignRight);
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::LeftToRight);
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
+    QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
+
+    QSignalSpy cursorRectangleSpy(textInput, SIGNAL(cursorRectangleChanged()));
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::RightToLeft);
+    QCOMPARE(cursorRectangleSpy.count(), 1);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
     QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 
-    QString componentStr = "import QtQuick 2.0\nTextInput {}";
-    QDeclarativeComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
-    delete textObject;
+    // set input direction while having content
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textInput->setText("a");
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QTest::keyClick(&canvas, Qt::Key_Backspace);
+    QVERIFY(textInput->text().isEmpty());
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
+
+    // input direction changed while not having focus
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textInput->setFocus(false);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    textInput->setFocus(true);
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
+
+    textInput->setHAlign(QQuickTextInput::AlignRight);
+    QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
+    QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll <= textInput->width() + 1);
 }
 
 void tst_qquicktextinput::verticalAlignment()
@@ -1553,139 +1573,217 @@ void tst_qquicktextinput::validators()
 
     QQuickTextInput *intInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("intInput")));
     QVERIFY(intInput);
+    QSignalSpy intSpy(intInput, SIGNAL(acceptableInputChanged()));
     intInput->setFocus(true);
     QTRY_VERIFY(intInput->hasActiveFocus());
+    QCOMPARE(intInput->hasAcceptableInput(), false);
+    QCOMPARE(intInput->property("acceptable").toBool(), false);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(intInput->text(), QLatin1String("1"));
     QCOMPARE(intInput->hasAcceptableInput(), false);
+    QCOMPARE(intInput->property("acceptable").toBool(), false);
+    QCOMPARE(intSpy.count(), 0);
     QTest::keyPress(&canvas, Qt::Key_2);
     QTest::keyRelease(&canvas, Qt::Key_2, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(intInput->text(), QLatin1String("1"));
     QCOMPARE(intInput->hasAcceptableInput(), false);
+    QCOMPARE(intInput->property("acceptable").toBool(), false);
+    QCOMPARE(intSpy.count(), 0);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QCOMPARE(intInput->text(), QLatin1String("11"));
     QCOMPARE(intInput->hasAcceptableInput(), true);
+    QCOMPARE(intInput->property("acceptable").toBool(), true);
+    QCOMPARE(intSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_0);
     QTest::keyRelease(&canvas, Qt::Key_0, Qt::NoModifier ,10);
     QTest::qWait(50);
     QCOMPARE(intInput->text(), QLatin1String("11"));
     QCOMPARE(intInput->hasAcceptableInput(), true);
+    QCOMPARE(intInput->property("acceptable").toBool(), true);
+    QCOMPARE(intSpy.count(), 1);
 
     QQuickTextInput *dblInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("dblInput")));
-    QTRY_VERIFY(dblInput);
+    QVERIFY(dblInput);
+    QSignalSpy dblSpy(dblInput, SIGNAL(acceptableInputChanged()));
     dblInput->setFocus(true);
     QVERIFY(dblInput->hasActiveFocus() == true);
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblSpy.count(), 0);
     QTest::keyPress(&canvas, Qt::Key_2);
     QTest::keyRelease(&canvas, Qt::Key_2, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QCOMPARE(dblInput->property("acceptable").toBool(), true);
+    QCOMPARE(dblSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_Period);
     QTest::keyRelease(&canvas, Qt::Key_Period, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QCOMPARE(dblInput->property("acceptable").toBool(), true);
+    QCOMPARE(dblSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QCOMPARE(dblInput->property("acceptable").toBool(), true);
+    QCOMPARE(dblSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QCOMPARE(dblInput->property("acceptable").toBool(), true);
+    QCOMPARE(dblSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QCOMPARE(dblInput->property("acceptable").toBool(), true);
+    QCOMPARE(dblSpy.count(), 1);
 
     // Ensure the validator doesn't prevent characters being removed.
     dblInput->setValidator(intInput->validator());
     QCOMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblSpy.count(), 2);
     QTest::keyPress(&canvas, Qt::Key_Backspace);
     QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblSpy.count(), 2);
     // Once unacceptable input is in anything goes until it reaches an acceptable state again.
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblSpy.count(), 2);
     QTest::keyPress(&canvas, Qt::Key_Backspace);
     QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblSpy.count(), 2);
     QTest::keyPress(&canvas, Qt::Key_Backspace);
     QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblSpy.count(), 2);
     QTest::keyPress(&canvas, Qt::Key_Backspace);
     QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblSpy.count(), 2);
     QTest::keyPress(&canvas, Qt::Key_Backspace);
     QTest::keyRelease(&canvas, Qt::Key_Backspace, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblSpy.count(), 2);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QCOMPARE(dblInput->text(), QLatin1String("11"));
+    QCOMPARE(dblInput->property("acceptable").toBool(), true);
     QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QCOMPARE(dblSpy.count(), 3);
 
     QQuickTextInput *strInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("strInput")));
-    QTRY_VERIFY(strInput);
+    QVERIFY(strInput);
+    QSignalSpy strSpy(strInput, SIGNAL(acceptableInputChanged()));
     strInput->setFocus(true);
     QVERIFY(strInput->hasActiveFocus() == true);
+    QCOMPARE(strInput->hasAcceptableInput(), false);
+    QCOMPARE(strInput->property("acceptable").toBool(), false);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(strInput->text(), QLatin1String(""));
     QCOMPARE(strInput->hasAcceptableInput(), false);
+    QCOMPARE(strInput->property("acceptable").toBool(), false);
+    QCOMPARE(strSpy.count(), 0);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(strInput->text(), QLatin1String("a"));
     QCOMPARE(strInput->hasAcceptableInput(), false);
+    QCOMPARE(strInput->property("acceptable").toBool(), false);
+    QCOMPARE(strSpy.count(), 0);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(strInput->text(), QLatin1String("aa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
+    QCOMPARE(strInput->property("acceptable").toBool(), true);
+    QCOMPARE(strSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(strInput->text(), QLatin1String("aaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
+    QCOMPARE(strInput->property("acceptable").toBool(), true);
+    QCOMPARE(strSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(strInput->text(), QLatin1String("aaaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
+    QCOMPARE(strInput->property("acceptable").toBool(), true);
+    QCOMPARE(strSpy.count(), 1);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
     QTest::qWait(50);
     QTRY_COMPARE(strInput->text(), QLatin1String("aaaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
+    QCOMPARE(strInput->property("acceptable").toBool(), true);
+    QCOMPARE(strSpy.count(), 1);
+
+    QQuickTextInput *unvalidatedInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("unvalidatedInput")));
+    QVERIFY(unvalidatedInput);
+    QSignalSpy unvalidatedSpy(unvalidatedInput, SIGNAL(acceptableInputChanged()));
+    unvalidatedInput->setFocus(true);
+    QVERIFY(unvalidatedInput->hasActiveFocus() == true);
+    QCOMPARE(unvalidatedInput->hasAcceptableInput(), true);
+    QCOMPARE(unvalidatedInput->property("acceptable").toBool(), true);
+    QTest::keyPress(&canvas, Qt::Key_1);
+    QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(unvalidatedInput->text(), QLatin1String("1"));
+    QCOMPARE(unvalidatedInput->hasAcceptableInput(), true);
+    QCOMPARE(unvalidatedInput->property("acceptable").toBool(), true);
+    QCOMPARE(unvalidatedSpy.count(), 0);
+    QTest::keyPress(&canvas, Qt::Key_A);
+    QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
+    QTest::qWait(50);
+    QTRY_COMPARE(unvalidatedInput->text(), QLatin1String("1a"));
+    QCOMPARE(unvalidatedInput->hasAcceptableInput(), true);
+    QCOMPARE(unvalidatedInput->property("acceptable").toBool(), true);
+    QCOMPARE(unvalidatedSpy.count(), 0);
 }
 
 void tst_qquicktextinput::inputMethods()

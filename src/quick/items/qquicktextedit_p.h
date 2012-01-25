@@ -3,7 +3,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -93,6 +93,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
+    Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);
@@ -214,6 +215,10 @@ public:
     qreal paintedWidth() const;
     qreal paintedHeight() const;
 
+    QUrl baseUrl() const;
+    void setBaseUrl(const QUrl &url);
+    void resetBaseUrl();
+
     Q_INVOKABLE QRectF positionToRectangle(int) const;
     Q_INVOKABLE int positionAt(int x, int y) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
@@ -227,7 +232,7 @@ public:
     Q_INVOKABLE QString getFormattedText(int start, int end) const;
 
 Q_SIGNALS:
-    void textChanged(const QString &);
+    void textChanged();
     void paintedSizeChanged();
     void cursorPositionChanged();
     void cursorRectangleChanged();
@@ -257,6 +262,7 @@ Q_SIGNALS:
     void canRedoChanged();
     void inputMethodComposingChanged();
     void effectiveHorizontalAlignmentChanged();
+    void baseUrlChanged();
 
 public Q_SLOTS:
     void selectAll();
@@ -282,9 +288,11 @@ private Q_SLOTS:
     void q_canPasteChanged();
     void updateDocument();
     void updateCursor();
+    void q_updateAlignment();
+    void updateSize();
+    void triggerPreprocess();
 
 private:
-    void updateSize();
     void updateTotalLines();
     void updateImageCache(const QRectF &rect = QRectF());
 

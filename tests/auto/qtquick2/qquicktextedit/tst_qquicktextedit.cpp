@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -51,6 +51,7 @@
 #include <QtGui/qguiapplication.h>
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktextedit_p_p.h>
+#include <private/qquicktext_p_p.h>
 #include <QFontMetrics>
 #include <QtQuick/QQuickView>
 #include <QDir>
@@ -97,6 +98,7 @@ public:
     tst_qquicktextedit();
 
 private slots:
+    void cleanup();
     void text();
     void width();
     void wrap();
@@ -172,6 +174,10 @@ private slots:
     void redo();
     void undo_keypressevents_data();
     void undo_keypressevents();
+
+    void baseUrl();
+    void embeddedImages();
+    void embeddedImages_data();
 
     void emptytags_QTBUG_22058();
 
@@ -294,6 +300,13 @@ tst_qquicktextedit::tst_qquicktextedit()
                  // << "#AA0011DD"
                  // << "#00F16B11";
                  //
+}
+
+void tst_qquicktextedit::cleanup()
+{
+    // ensure not even skipped tests with custom input context leave it dangling
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = 0;
 }
 
 void tst_qquicktextedit::text()
@@ -616,6 +629,10 @@ void tst_qquicktextedit::hAlign()
 
 void tst_qquicktextedit::hAlign_RightToLeft()
 {
+    PlatformInputContext platformInputContext;
+    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
+    inputPanelPrivate->testContext = &platformInputContext;
+
     QQuickView canvas(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextEdit *textEdit = canvas.rootObject()->findChild<QQuickTextEdit*>("text");
     QVERIFY(textEdit != 0);
@@ -716,24 +733,40 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from qApp->inputPanel()->inputDirection
     textEdit->setText("");
-    QCOMPARE(textEdit->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextEdit::AlignLeft : QQuickTextEdit::AlignRight);
-    if (qApp->inputPanel()->inputDirection() == Qt::LeftToRight)
-        QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
-    else
-        QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
-    textEdit->setHAlign(QQuickTextEdit::AlignRight);
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::LeftToRight);
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignLeft);
+    QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
+
+    QSignalSpy cursorRectangleSpy(textEdit, SIGNAL(cursorRectangleChanged()));
+
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QCOMPARE(cursorRectangleSpy.count(), 1);
+    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::RightToLeft);
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
     QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
 
-    // alignment of TextEdit with no text set to it
-    QString componentStr = "import QtQuick 2.0\nTextEdit {}";
-    QDeclarativeComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
-    QCOMPARE(textObject->hAlign(), qApp->inputPanel()->inputDirection() == Qt::LeftToRight ?
-                                  QQuickTextEdit::AlignLeft : QQuickTextEdit::AlignRight);
-    delete textObject;
+    // set input direction while having content
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textEdit->setText("a");
+    textEdit->setCursorPosition(1);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QTest::keyClick(&canvas, Qt::Key_Backspace);
+    QVERIFY(textEdit->text().isEmpty());
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(textEdit->cursorRectangle().left() > canvas.width()/2);
+
+    // input direction changed while not having focus
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    textEdit->setFocus(false);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    textEdit->setFocus(true);
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(textEdit->cursorRectangle().left() > canvas.width()/2);
+
+    textEdit->setHAlign(QQuickTextEdit::AlignRight);
+    QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
 }
 
 void tst_qquicktextedit::vAlign()
@@ -2077,7 +2110,7 @@ void tst_qquicktextedit::textInput()
     QVERIFY(edit->hasActiveFocus() == true);
 
     // test that input method event is committed and change signal is emitted
-    QSignalSpy spy(edit, SIGNAL(textChanged(QString)));
+    QSignalSpy spy(edit, SIGNAL(textChanged()));
     QInputMethodEvent event;
     event.setCommitString( "Hello world!", 0, 0);
     QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
@@ -2804,7 +2837,7 @@ void tst_qquicktextedit::insert()
     QSignalSpy selectionSpy(textEdit, SIGNAL(selectionChanged()));
     QSignalSpy selectionStartSpy(textEdit, SIGNAL(selectionStartChanged()));
     QSignalSpy selectionEndSpy(textEdit, SIGNAL(selectionEndChanged()));
-    QSignalSpy textSpy(textEdit, SIGNAL(textChanged(QString)));
+    QSignalSpy textSpy(textEdit, SIGNAL(textChanged()));
     QSignalSpy cursorPositionSpy(textEdit, SIGNAL(cursorPositionChanged()));
 
     textEdit->insert(insertPosition, insertText);
@@ -3049,7 +3082,7 @@ void tst_qquicktextedit::remove()
     QSignalSpy selectionSpy(textEdit, SIGNAL(selectionChanged()));
     QSignalSpy selectionStartSpy(textEdit, SIGNAL(selectionStartChanged()));
     QSignalSpy selectionEndSpy(textEdit, SIGNAL(selectionEndChanged()));
-    QSignalSpy textSpy(textEdit, SIGNAL(textChanged(QString)));
+    QSignalSpy textSpy(textEdit, SIGNAL(textChanged()));
     QSignalSpy cursorPositionSpy(textEdit, SIGNAL(cursorPositionChanged()));
 
     textEdit->remove(removeStart, removeEnd);
@@ -3624,6 +3657,76 @@ void tst_qquicktextedit::undo_keypressevents()
         textEdit->undo();
     }
     QVERIFY(textEdit->text().isEmpty());
+}
+
+void tst_qquicktextedit::baseUrl()
+{
+    QUrl localUrl("file:///tests/text.qml");
+    QUrl remoteUrl("http://qt.nokia.com/test.qml");
+
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData("import QtQuick 2.0\n TextEdit {}", localUrl);
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit *>(textComponent.create());
+
+    QCOMPARE(textObject->baseUrl(), localUrl);
+
+    QSignalSpy spy(textObject, SIGNAL(baseUrlChanged()));
+
+    textObject->setBaseUrl(localUrl);
+    QCOMPARE(textObject->baseUrl(), localUrl);
+    QCOMPARE(spy.count(), 0);
+
+    textObject->setBaseUrl(remoteUrl);
+    QCOMPARE(textObject->baseUrl(), remoteUrl);
+    QCOMPARE(spy.count(), 1);
+
+    textObject->resetBaseUrl();
+    QCOMPARE(textObject->baseUrl(), localUrl);
+    QCOMPARE(spy.count(), 2);
+}
+
+void tst_qquicktextedit::embeddedImages_data()
+{
+    QTest::addColumn<QUrl>("qmlfile");
+    QTest::addColumn<QString>("error");
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
+    QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
+        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML TextEdit: Cannot open: " + testFileUrl("http/notexists.png").toString();
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
+    QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
+        << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error downloading http://127.0.0.1:42332/notexists.png - server replied: Not found";
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
+}
+
+void tst_qquicktextedit::embeddedImages()
+{
+    QFETCH(QUrl, qmlfile);
+    QFETCH(QString, error);
+
+    TestHTTPServer server(42332);
+    server.serveDirectory(testFile("http"));
+
+    if (!error.isEmpty())
+        QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
+
+    QDeclarativeComponent textComponent(&engine, qmlfile);
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
+
+    QVERIFY(textObject != 0);
+    QTRY_COMPARE(QQuickTextEditPrivate::get(textObject)->document->resourcesLoading(), 0);
+
+    QPixmap pm(testFile("http/exists.png"));
+    if (error.isEmpty()) {
+        QCOMPARE(textObject->width(), double(pm.width()));
+        QCOMPARE(textObject->height(), double(pm.height()));
+    } else {
+        QVERIFY(16 != pm.width()); // check test is effective
+        QCOMPARE(textObject->width(), 16.0); // default size of QTextDocument broken image icon
+        QCOMPARE(textObject->height(), 16.0);
+    }
+
+    delete textObject;
 }
 
 void tst_qquicktextedit::emptytags_QTBUG_22058()

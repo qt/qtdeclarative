@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
@@ -16,7 +16,7 @@
 ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** us via http://www.qt-project.org/.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -35,7 +35,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
 
 class QDateTime;
 class QV8Engine;
@@ -51,13 +50,15 @@ class Q_DECLARATIVE_EXPORT QJSEngine
 {
     Q_OBJECT
 public:
+#ifdef QT_DEPRECATED
     enum ContextOwnership {
         AdoptCurrentContext,
         CreateNewContext
     };
+    QT_DEPRECATED explicit QJSEngine(ContextOwnership ownership);
+#endif
 
     QJSEngine();
-    explicit QJSEngine(ContextOwnership ownership);
     explicit QJSEngine(QObject *parent);
     virtual ~QJSEngine();
 
@@ -65,22 +66,8 @@ public:
 
     QJSValue evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1);
 
-    bool hasUncaughtException() const;
-    QJSValue uncaughtException() const;
-    void clearExceptions();
-
-    QJSValue nullValue();
-    QJSValue undefinedValue();
-
-    QJSValue newVariant(const QVariant &value);
-
-    QJSValue newRegExp(const QRegExp &regexp);
-
     QJSValue newObject();
     QJSValue newArray(uint length = 0);
-    QJSValue newRegExp(const QString &pattern, const QString &flags);
-    QJSValue newDate(double value);
-    QJSValue newDate(const QDateTime &value);
 
     QJSValue newQObject(QObject *object);
 
@@ -97,9 +84,26 @@ public:
 
     void collectGarbage();
 
-    QJSValue toObject(const QJSValue &value);
-
     QV8Engine *handle() const { return d; }
+
+#ifdef QT_DEPRECATED
+    QT_DEPRECATED bool hasUncaughtException() const;
+    QT_DEPRECATED QJSValue uncaughtException() const;
+    QT_DEPRECATED void clearExceptions();
+
+    QT_DEPRECATED QJSValue nullValue();
+    QT_DEPRECATED QJSValue undefinedValue();
+
+    QT_DEPRECATED QJSValue newVariant(const QVariant &value);
+
+    QT_DEPRECATED QJSValue newRegExp(const QRegExp &regexp);
+
+    QT_DEPRECATED QJSValue newRegExp(const QString &pattern, const QString &flags);
+    QT_DEPRECATED QJSValue newDate(double value);
+    QT_DEPRECATED QJSValue newDate(const QDateTime &value);
+
+    QT_DEPRECATED QJSValue toObject(const QJSValue &value);
+#endif
 
 Q_SIGNALS:
     void signalHandlerException(const QJSValue &exception);

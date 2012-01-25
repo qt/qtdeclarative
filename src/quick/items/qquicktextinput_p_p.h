@@ -3,7 +3,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -125,8 +125,10 @@ public:
         , m_preeditDirty(0)
         , m_selDirty(0)
         , m_validInput(1)
+        , m_acceptableInput(1)
         , m_blinkStatus(0)
         , m_passwordEchoEditing(false)
+        , updateType(UpdatePaintNode)
     {
     }
 
@@ -251,8 +253,16 @@ public:
     uint m_preeditDirty : 1;
     uint m_selDirty : 1;
     uint m_validInput : 1;
+    uint m_acceptableInput : 1;
     uint m_blinkStatus : 1;
     uint m_passwordEchoEditing;
+
+    enum UpdateType {
+        UpdateNone,
+        UpdateOnlyPreprocess,
+        UpdatePaintNode
+    };
+    UpdateType updateType;
 
     static inline QQuickTextInputPrivate *get(QQuickTextInput *t) {
         return t->d_func();
@@ -424,7 +434,7 @@ private:
     void internalRedo();
     void emitUndoRedoChanged();
 
-    void emitCursorPositionChanged();
+    bool emitCursorPositionChanged();
 
     bool finishChange(int validateFromState = -1, bool update = false, bool edited = true);
 
@@ -432,10 +442,23 @@ private:
 
     inline void separate() { m_separator = true; }
 
+    enum ValidatorState {
+#ifndef QT_NO_VALIDATOR
+        InvalidInput        = QValidator::Invalid,
+        IntermediateInput   = QValidator::Intermediate,
+        AcceptableInput     = QValidator::Acceptable
+#else
+        Invalid,
+        Intermediate,
+        Acceptable
+#endif
+    };
+
     // masking
     void parseInputMask(const QString &maskFields);
     bool isValidInput(QChar key, QChar mask) const;
-    bool hasAcceptableInput(const QString &text) const;
+    ValidatorState hasAcceptableInput(const QString &text) const;
+    void checkIsValid();
     QString maskString(uint pos, const QString &str, bool clear = false) const;
     QString clearString(uint pos, uint len) const;
     QString stripString(const QString &str) const;

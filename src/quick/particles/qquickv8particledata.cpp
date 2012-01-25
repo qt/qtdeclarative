@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the Declarative module of the Qt Toolkit.
 **
@@ -411,6 +411,7 @@ FLOAT_GETTER_AND_SETTER(rotation)
 FLOAT_GETTER_AND_SETTER(rotationSpeed)
 FLOAT_GETTER_AND_SETTER(animIdx)
 FLOAT_GETTER_AND_SETTER(frameDuration)
+FLOAT_GETTER_AND_SETTER(frameAt)
 FLOAT_GETTER_AND_SETTER(frameCount)
 FLOAT_GETTER_AND_SETTER(animT)
 FLOAT_GETTER_AND_SETTER(r)
@@ -450,6 +451,7 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     REGISTER_ACCESSOR(ft, engine, autoRotate, autoRotate);
     REGISTER_ACCESSOR(ft, engine, animIdx, animationIndex);
     REGISTER_ACCESSOR(ft, engine, frameDuration, frameDuration);
+    REGISTER_ACCESSOR(ft, engine, frameAt, frameAt);
     REGISTER_ACCESSOR(ft, engine, frameCount, frameCount);
     REGISTER_ACCESSOR(ft, engine, animT, animationT);
     REGISTER_ACCESSOR(ft, engine, r, r);

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -68,7 +68,6 @@ private slots:
     void floatConstructorWithEngine();
     void intConstructorWithEngine();
     void stringConstructorWithEngine();
-    void nullConstructorWithEngine();
     void undefinedConstructorWithEngine();
     void copyConstructor_data();
     void copyConstructor();
@@ -82,8 +81,6 @@ private slots:
     void data_noData_data();
     void data_noData();
 #endif
-    void engine_data();
-    void engine();
     void equalsSelf_data();
     void equalsSelf();
 #if 0 // no less then
@@ -92,7 +89,6 @@ private slots:
 #endif
     void strictlyEqualsSelf_data();
     void strictlyEqualsSelf();
-    void instanceOf();
     void isArray_data();
     void isArray();
     void isBool_data();
@@ -101,8 +97,8 @@ private slots:
     void isDate();
     void isError_data();
     void isError();
-    void isFunction_data();
-    void isFunction();
+    void isCallable_data();
+    void isCallable();
     void isNull_data();
     void isNull();
     void isNumber_data();
@@ -121,28 +117,22 @@ private slots:
     void isString();
     void isUndefined_data();
     void isUndefined();
-    void isValid_data();
-    void isValid();
     void isVariant_data();
     void isVariant();
     void toBool_data();
     void toBool();
     void toDateTime_data();
     void toDateTime();
-    void toInt32_data();
-    void toInt32();
-    void toInteger_data();
-    void toInteger();
+    void toInt_data();
+    void toInt();
     void toNumber_data();
     void toNumber();
     void toRegExp_data();
     void toRegExp();
     void toString_data();
     void toString();
-    void toUInt16_data();
-    void toUInt16();
-    void toUInt32_data();
-    void toUInt32();
+    void toUInt_data();
+    void toUInt();
 #if 0 // no qmetaobject
     void toQMetaObject_data();
     void toQMetaObject();
@@ -260,7 +250,7 @@ void tst_QJSValue::boolConstructorWithEngine()
 {
     newEngine();
     QBENCHMARK {
-        QJSValue val(m_engine, true);
+        m_engine->toScriptValue(true);
     }
 }
 
@@ -268,7 +258,7 @@ void tst_QJSValue::floatConstructorWithEngine()
 {
     newEngine();
     QBENCHMARK {
-        QJSValue val(m_engine, 123.0);
+        m_engine->toScriptValue(123.0);
     }
 }
 
@@ -276,7 +266,7 @@ void tst_QJSValue::intConstructorWithEngine()
 {
     newEngine();
     QBENCHMARK {
-        (void)QJSValue(m_engine, 123);
+        m_engine->toScriptValue(123);
     }
 }
 
@@ -285,23 +275,16 @@ void tst_QJSValue::stringConstructorWithEngine()
     newEngine();
     QString str = QString::fromLatin1("ciao");
     QBENCHMARK {
-        (void)QJSValue(m_engine, str);
-    }
-}
-
-void tst_QJSValue::nullConstructorWithEngine()
-{
-    newEngine();
-    QBENCHMARK {
-        QJSValue val(m_engine, QJSValue::NullValue);
+        m_engine->toScriptValue(str);
     }
 }
 
 void tst_QJSValue::undefinedConstructorWithEngine()
 {
     newEngine();
+    QVariant var;
     QBENCHMARK {
-        QJSValue val(m_engine, QJSValue::UndefinedValue);
+        m_engine->toScriptValue(var);
     }
 }
 
@@ -331,7 +314,7 @@ void tst_QJSValue::call()
 {
     QFETCH(QString, code);
     QJSValue fun = m_engine->evaluate(code);
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QBENCHMARK {
         (void)fun.call();
     }
@@ -349,9 +332,9 @@ void tst_QJSValue::construct()
 {
     QFETCH(QString, code);
     QJSValue fun = m_engine->evaluate(code);
-    QVERIFY(fun.isFunction());
+    QVERIFY(fun.isCallable());
     QBENCHMARK {
-        (void)fun.construct();
+        (void)fun.callAsConstructor();
     }
 }
 
@@ -391,19 +374,6 @@ void tst_QJSValue::data_noData()
 }
 #endif
 
-void tst_QJSValue::engine_data()
-{
-    defineStandardTestValues();
-}
-
-void tst_QJSValue::engine()
-{
-    QFETCH(QJSValue, val);
-    QBENCHMARK {
-        val.engine();
-    }
-}
-
 void tst_QJSValue::equalsSelf_data()
 {
     defineStandardTestValues();
@@ -442,17 +412,6 @@ void tst_QJSValue::strictlyEqualsSelf()
     QFETCH(QJSValue, val);
     QBENCHMARK {
         val.strictlyEquals(val);
-    }
-}
-
-void tst_QJSValue::instanceOf()
-{
-    newEngine();
-    QJSValue arrayCtor = m_engine->globalObject().property("Array");
-    QJSValue array = arrayCtor.construct();
-    QVERIFY(array.instanceOf(arrayCtor));
-    QBENCHMARK {
-        array.instanceOf(arrayCtor);
     }
 }
 
@@ -508,16 +467,16 @@ void tst_QJSValue::isError()
     }
 }
 
-void tst_QJSValue::isFunction_data()
+void tst_QJSValue::isCallable_data()
 {
     defineStandardTestValues();
 }
 
-void tst_QJSValue::isFunction()
+void tst_QJSValue::isCallable()
 {
     QFETCH(QJSValue, val);
     QBENCHMARK {
-        val.isFunction();
+        val.isCallable();
     }
 }
 
@@ -627,19 +586,6 @@ void tst_QJSValue::isUndefined()
     }
 }
 
-void tst_QJSValue::isValid_data()
-{
-    defineStandardTestValues();
-}
-
-void tst_QJSValue::isValid()
-{
-    QFETCH(QJSValue, val);
-    QBENCHMARK {
-        val.isValid();
-    }
-}
-
 void tst_QJSValue::isVariant_data()
 {
     defineStandardTestValues();
@@ -679,29 +625,16 @@ void tst_QJSValue::toDateTime()
     }
 }
 
-void tst_QJSValue::toInt32_data()
+void tst_QJSValue::toInt_data()
 {
     defineStandardTestValues();
 }
 
-void tst_QJSValue::toInt32()
+void tst_QJSValue::toInt()
 {
     QFETCH(QJSValue, val);
     QBENCHMARK {
-        val.toInt32();
-    }
-}
-
-void tst_QJSValue::toInteger_data()
-{
-    defineStandardTestValues();
-}
-
-void tst_QJSValue::toInteger()
-{
-    QFETCH(QJSValue, val);
-    QBENCHMARK {
-        val.toInteger();
+        val.toInt();
     }
 }
 
@@ -727,7 +660,7 @@ void tst_QJSValue::toRegExp()
 {
     QFETCH(QJSValue, val);
     QBENCHMARK {
-        val.toRegExp();
+        qjsvalue_cast<QRegExp>(val);
     }
 }
 
@@ -772,29 +705,16 @@ void tst_QJSValue::toQObject()
     }
 }
 
-void tst_QJSValue::toUInt16_data()
+void tst_QJSValue::toUInt_data()
 {
     defineStandardTestValues();
 }
 
-void tst_QJSValue::toUInt16()
+void tst_QJSValue::toUInt()
 {
     QFETCH(QJSValue, val);
     QBENCHMARK {
-        val.toUInt16();
-    }
-}
-
-void tst_QJSValue::toUInt32_data()
-{
-    defineStandardTestValues();
-}
-
-void tst_QJSValue::toUInt32()
-{
-    QFETCH(QJSValue, val);
-    QBENCHMARK {
-        val.toUInt32();
+        val.toUInt();
     }
 }
 
@@ -869,9 +789,9 @@ void tst_QJSValue::setProperty_data()
     QTest::addColumn<QString>("propertyName");
     QTest::addColumn<QJSValue>("val");
     QTest::newRow("foo") << QString::fromLatin1("foo") << QJSValue(123);
-    QTest::newRow("bar") << QString::fromLatin1("bar") << QJSValue(m_engine, 123);
+    QTest::newRow("bar") << QString::fromLatin1("bar") << m_engine->toScriptValue(123);
     QTest::newRow("baz") << QString::fromLatin1("baz") << QJSValue();
-    QTest::newRow("toString") << QString::fromLatin1("toString") << QJSValue(m_engine, true);
+    QTest::newRow("toString") << QString::fromLatin1("toString") << m_engine->toScriptValue(true);
 }
 
 void tst_QJSValue::setProperty()
@@ -1042,7 +962,7 @@ void tst_QJSValue::defineStandardTestValues()
 #if 0 // no qmetaobject
     QTest::newRow("qmetaobject") << m_engine->newQMetaObject(&QJSEngine::staticMetaObject);
 #endif
-    QTest::newRow("variant") << m_engine->newVariant(123);
+    QTest::newRow("variant") << m_engine->toScriptValue(QPoint(10, 20));
 #if 0 // no classess
     QTest::newRow("qscriptclassobject") << m_engine->newObject(new QJSClass(m_engine));
 #endif

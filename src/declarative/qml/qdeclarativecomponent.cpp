@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -768,7 +768,7 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
             QDeclarativeData *data = QDeclarativeData::get(rv);
             Q_ASSERT(data);
             QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, 
-                                                  cc->url, data->lineNumber);
+                                                  cc->url, data->lineNumber, data->columnNumber);
         }
     }
 

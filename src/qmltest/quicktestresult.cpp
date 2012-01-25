@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -256,7 +256,7 @@ void QuickTestResult::setSkipped(bool skip)
 */
 int QuickTestResult::passCount() const
 {
-    return QTestResult::passCount();
+    return QTestLog::passCount();
 }
 
 /*!
@@ -268,7 +268,7 @@ int QuickTestResult::passCount() const
 */
 int QuickTestResult::failCount() const
 {
-    return QTestResult::failCount();
+    return QTestLog::failCount();
 }
 
 /*!
@@ -280,7 +280,7 @@ int QuickTestResult::failCount() const
 */
 int QuickTestResult::skipCount() const
 {
-    return QTestResult::skipCount();
+    return QTestLog::skipCount();
 }
 
 /*!
@@ -437,7 +437,7 @@ void QuickTestResult::warn(const QString &message, const QUrl &location, int lin
 
 void QuickTestResult::ignoreWarning(const QString &message)
 {
-    QTestResult::ignoreMessage(QtWarningMsg, message.toLatin1().constData());
+    QTestLog::ignoreMessage(QtWarningMsg, message.toLatin1().constData());
 }
 
 void QuickTestResult::wait(int ms)
@@ -582,7 +582,7 @@ int QuickTestResult::exitCode()
 #else
     // make sure our exit code is never going above 127
     // since that could wrap and indicate 0 test fails
-    return qMin(QTestResult::failCount(), 127);
+    return qMin(QTestLog::failCount(), 127);
 #endif
 }
 

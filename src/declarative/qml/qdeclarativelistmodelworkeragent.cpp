@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -90,6 +90,13 @@ void QDeclarativeListModelWorkerAgent::Data::changedChange(int uid, int index, i
 QDeclarativeListModelWorkerAgent::QDeclarativeListModelWorkerAgent(QDeclarativeListModel *model)
 : m_ref(1), m_orig(model), m_copy(new QDeclarativeListModel(model, this))
 {
+}
+
+QDeclarativeListModelWorkerAgent::~QDeclarativeListModelWorkerAgent()
+{
+    mutex.lock();
+    syncDone.wakeAll();
+    mutex.unlock();
 }
 
 void QDeclarativeListModelWorkerAgent::setV8Engine(QV8Engine *eng)

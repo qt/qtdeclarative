@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
@@ -77,7 +77,7 @@ int AnimalModel::rowCount(const QModelIndex & parent) const {
 }
 
 QVariant AnimalModel::data(const QModelIndex & index, int role) const {
-    if (index.row() < 0 || index.row() > m_animals.count())
+    if (index.row() < 0 || index.row() >= m_animals.count())
         return QVariant();
 
     const Animal &animal = m_animals[index.row()];

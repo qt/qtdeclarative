@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -68,7 +68,7 @@ void tst_qquickscreen::basicProperties()
 
     QCOMPARE(screen->size().width(), root->property("w").toInt());
     QCOMPARE(screen->size().height(), root->property("h").toInt());
-    QCOMPARE(int(screen->currentOrientation()), root->property("curOrientation").toInt());
+    QCOMPARE(int(screen->orientation()), root->property("curOrientation").toInt());
     QCOMPARE(int(screen->primaryOrientation()), root->property("priOrientation").toInt());
 }
 

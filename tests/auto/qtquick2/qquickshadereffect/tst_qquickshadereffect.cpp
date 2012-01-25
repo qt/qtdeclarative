@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -89,51 +89,7 @@ private:
         OpacityPresent = 0x08,
         PropertyPresent = 0x10
     };
-
-    static void installMsgHandler();
-    static void uninstallMsgHandler();
-    static void msgHandler(QtMsgType type, const char *msg);
-    static void expectWarning(const char *msg);
-
-    static QtMsgHandler originalMsgHandler;
-    static QByteArray actualWarnings;
-    static QByteArray expectedWarnings;
 };
-
-QtMsgHandler tst_qquickshadereffect::originalMsgHandler = 0;
-QByteArray tst_qquickshadereffect::actualWarnings;
-QByteArray tst_qquickshadereffect::expectedWarnings;
-
-void tst_qquickshadereffect::installMsgHandler()
-{
-    Q_ASSERT(originalMsgHandler == 0);
-    originalMsgHandler = qInstallMsgHandler(msgHandler);
-    actualWarnings.clear();
-    expectedWarnings.clear();
-}
-
-void tst_qquickshadereffect::uninstallMsgHandler()
-{
-    Q_ASSERT(originalMsgHandler != 0);
-    qInstallMsgHandler(originalMsgHandler);
-    originalMsgHandler = 0;
-    QCOMPARE(QString(actualWarnings), QString(expectedWarnings)); // QString for sensible output.
-}
-
-void tst_qquickshadereffect::msgHandler(QtMsgType type, const char *msg)
-{
-    Q_ASSERT(originalMsgHandler != 0);
-    if (type == QtWarningMsg)
-        actualWarnings.append(msg).append('\n');
-    originalMsgHandler(type, msg);
-}
-
-void tst_qquickshadereffect::expectWarning(const char *msg)
-{
-    Q_ASSERT(originalMsgHandler != 0);
-    expectedWarnings.append(msg).append('\n');
-    QTest::ignoreMessage(QtWarningMsg, msg);
-}
 
 tst_qquickshadereffect::tst_qquickshadereffect()
 {
@@ -295,21 +251,20 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     TestShaderEffect item;
     QVERIFY(!item.isConnected(SIGNAL(dummyChanged()))); // Nothing connected yet.
 
-    installMsgHandler();
+    QString expected;
     if ((presenceFlags & VertexPresent) == 0)
-        expectWarning("QQuickShaderEffect: Missing reference to \'qt_Vertex\'.");
+        expected += "Warning: Missing reference to \'qt_Vertex\'.\n";
     if ((presenceFlags & TexCoordPresent) == 0)
-        expectWarning("QQuickShaderEffect: Missing reference to \'qt_MultiTexCoord0\'.");
+        expected += "Warning: Missing reference to \'qt_MultiTexCoord0\'.\n";
     if ((presenceFlags & MatrixPresent) == 0)
-        expectWarning("QQuickShaderEffect: Missing reference to \'qt_Matrix\'.");
+        expected += "Warning: Missing reference to \'qt_Matrix\'.\n";
     if ((presenceFlags & OpacityPresent) == 0)
-        expectWarning("QQuickShaderEffect: Missing reference to \'qt_Opacity\'.");
+        expected += "Warning: Missing reference to \'qt_Opacity\'.\n";
 
     item.setVertexShader(vertexShader);
     item.setFragmentShader(fragmentShader);
     item.ensureCompleted();
-
-    uninstallMsgHandler();
+    QCOMPARE(item.parseLog(), expected);
 
     // If the uniform was successfully parsed, the notify signal has been connected to an update slot.
     QCOMPARE(item.isConnected(SIGNAL(dummyChanged())), (presenceFlags & PropertyPresent) != 0);

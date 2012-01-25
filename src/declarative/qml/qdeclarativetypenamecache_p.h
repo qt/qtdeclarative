@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -73,7 +73,7 @@ public:
 
     inline bool isEmpty() const;
 
-    void add(const QHashedString &, int);
+    void add(const QHashedString &name, int sciptIndex = -1, const QHashedString &nameSpace = QHashedString());
 
     struct Result {
         inline Result();
@@ -107,7 +107,35 @@ private:
         int scriptIndex;
     };
 
+    template<typename Key>
+    Result query(const QStringHash<Import> &imports, Key key)
+    {
+        Import *i = imports.value(key);
+        if (i) {
+            if (i->scriptIndex != -1) {
+                return Result(i->scriptIndex);
+            } else {
+                return Result(static_cast<const void *>(i));
+            }
+        }
+
+        return Result();
+    }
+
+    template<typename Key>
+    Result typeSearch(const QVector<QDeclarativeTypeModuleVersion> &modules, Key key)
+    {
+        QVector<QDeclarativeTypeModuleVersion>::const_iterator end = modules.constEnd();
+        for (QVector<QDeclarativeTypeModuleVersion>::const_iterator it = modules.constBegin(); it != end; ++it) {
+            if (QDeclarativeType *type = it->type(key))
+                return Result(type);
+        }
+
+        return Result();
+    }
+
     QStringHash<Import> m_namedImports;
+    QMap<const Import *, QStringHash<Import> > m_namespacedImports;
     QVector<QDeclarativeTypeModuleVersion> m_anonymousImports;
 
     QDeclarativeEngine *engine;
@@ -144,7 +172,7 @@ bool QDeclarativeTypeNameCache::Result::isValid() const
 }
 
 QDeclarativeTypeNameCache::Import::Import()
-: scriptIndex(-1)
+: moduleApi(0), scriptIndex(-1)
 {
 }
 

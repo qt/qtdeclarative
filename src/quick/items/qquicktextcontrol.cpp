@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -624,7 +624,7 @@ QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
     : QObject(*new QQuickTextControlPrivate, parent)
 {
     Q_D(QQuickTextControl);
-    d->init(Qt::RichText, QString(), doc);
+    d->init(Qt::PlainText, QString(), doc);
 }
 
 QQuickTextControl::~QQuickTextControl()

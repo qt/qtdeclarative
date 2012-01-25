@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -80,6 +80,36 @@ enum ConsoleLogTypes {
     Error
 };
 
+static QString extendMessage(const QString &msg) {
+    if (qmlConsoleExtended()) {
+        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
+        if (stackTrace->GetFrameCount()) {
+            v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(0);
+            int line = frame->GetLineNumber();
+            QString scriptName = QString::fromUtf16(*v8::String::Value(frame->GetScriptName()));
+
+            return QString::fromLatin1("%1 (%2:%3)").arg(msg).arg(scriptName).arg(line);
+        }
+    }
+    return msg;
+}
+
+static void printStack() {
+    //The v8 default is currently 10 stack frames.
+    v8::Handle<v8::StackTrace> stackTrace =
+        v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kOverview);
+    int stackCount = stackTrace->GetFrameCount();
+
+    for (int i = 0; i < stackCount; i++) {
+        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(i);
+        v8::String::Utf8Value func_name(frame->GetFunctionName());
+        v8::String::Utf8Value script_name(frame->GetScriptName());
+        int lineNumber = frame->GetLineNumber();
+        int columnNumber = frame->GetColumn();
+        qDebug("%s (%s:%d:%d)\n", *func_name, *script_name, lineNumber, columnNumber);
+    }
+}
+
 v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args)
 {
     v8::HandleScope handleScope;
@@ -105,19 +135,7 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
         }
     }
 
-    if (qmlConsoleExtended()) {
-        int line = -1;
-        QString scriptName;
-        //get only current frame
-        v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(1);
-        if (stackTrace->GetFrameCount()) {
-            v8::Local<v8::StackFrame> currentStackFrame = stackTrace->GetFrame(0);
-            line = currentStackFrame->GetLineNumber();
-            scriptName = V8ENGINE()->toString(currentStackFrame->GetScriptName());
-        }
-
-        result = QString(QLatin1String("%1 (%2:%3)")).arg(result).arg(scriptName).arg(line);
-    }
+    result = extendMessage(result);
 
     switch (logType) {
     case Log:
@@ -152,6 +170,7 @@ v8::Handle<v8::Value> consoleLog(const v8::Arguments &args)
 {
     //console.log
     //console.debug
+    //console.info
     //print
     return console(Log, args);
 }
@@ -217,30 +236,77 @@ v8::Handle<v8::Value> consoleTimeEnd(const v8::Arguments &args)
     return v8::Undefined();
 }
 
+v8::Handle<v8::Value> consoleCount(const v8::Arguments &args)
+{
+    // first argument: name to print. Ignore any additional arguments
+    QString name;
+    if (args.Length() > 0)
+        name = V8ENGINE()->toString(args[0]);
+
+    v8::Handle<v8::StackTrace> stackTrace =
+        v8::StackTrace::CurrentStackTrace(1, v8::StackTrace::kOverview);
+
+    if (stackTrace->GetFrameCount()) {
+        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(0);
+
+        QString scriptName = V8ENGINE()->toString(frame->GetScriptName());
+        int line = frame->GetLineNumber();
+        int column = frame->GetColumn();
+
+        int value = V8ENGINE()->consoleCountHelper(scriptName, line, column);
+        QString message = name + QLatin1String(": ") + QString::number(value);
+        if (qmlConsoleExtended())
+            message = QString::fromLatin1("%1 (%2:%3)").arg(message).arg(scriptName).arg(line);
+        qDebug("%s", qPrintable(message));
+    }
+
+    return v8::Undefined();
+}
+
 v8::Handle<v8::Value> consoleTrace(const v8::Arguments &args)
 {
     if (args.Length() != 0)
         V8THROW_ERROR("console.trace(): Invalid arguments");
 
-    //The v8 default is currently 10 stack frames.
-    v8::Handle<v8::StackTrace> stackTrace =
-        v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kOverview);
-    int stackCount = stackTrace->GetFrameCount();
-
-    for (int i = 0; i < stackCount; i++) {
-        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(i);
-        v8::String::Utf8Value func_name(frame->GetFunctionName());
-        v8::String::Utf8Value script_name(frame->GetScriptName());
-        int lineNumber = frame->GetLineNumber();
-        int columnNumber = frame->GetColumn();
-        qDebug("%s (%s:%d:%d)\n", *func_name, *script_name, lineNumber, columnNumber);
-    }
+    printStack();
     return v8::Undefined();
 }
 
 v8::Handle<v8::Value> consoleWarn(const v8::Arguments &args)
 {
     return console(Warn, args);
+}
+
+v8::Handle<v8::Value> consoleAssert(const v8::Arguments &args)
+{
+    if (args.Length() == 0)
+        V8THROW_ERROR("console.assert(): Missing argument");
+
+    if (!args[0]->ToBoolean()->Value()) {
+        QString message;
+        for (int i = 1; i < args.Length(); ++i) {
+            if (i != 1)
+                message.append(QLatin1Char(' '));
+
+            v8::Local<v8::Value> value = args[i];
+            message.append(V8ENGINE()->toString(value->ToString()));
+        }
+
+        message = extendMessage(message);
+        qCritical("%s", qPrintable(message));
+        printStack();
+    }
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> consoleException(const v8::Arguments &args)
+{
+    if (args.Length() == 0)
+        V8THROW_ERROR("console.exception(): Missing argument");
+    console(Error, args);
+    printStack();
+
+    return v8::Undefined();
 }
 
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args)

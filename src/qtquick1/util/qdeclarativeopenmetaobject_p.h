@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -56,7 +56,6 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeEngine;
 class QMetaPropertyBuilder;
 
-QT_MODULE(Declarative)
 
 class QDeclarative1OpenMetaObjectTypePrivate;
 class Q_QTQUICK1_EXPORT QDeclarative1OpenMetaObjectType : public QDeclarativeRefCount

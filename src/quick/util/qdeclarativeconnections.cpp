@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -204,6 +204,7 @@ QDeclarativeConnectionsParser::compile(const QList<QDeclarativeCustomParserPrope
     {
         QString propName = props.at(ii).name();
         int propLine = props.at(ii).location().line;
+        int propColumn = props.at(ii).location().column;
 
         if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
             error(props.at(ii), QDeclarativeConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
@@ -227,6 +228,7 @@ QDeclarativeConnectionsParser::compile(const QList<QDeclarativeCustomParserPrope
                     ds << propName;
                     ds << rewriteSignalHandler(v.asScript(), propName);
                     ds << propLine;
+                    ds << propColumn;
                 } else {
                     error(props.at(ii), QDeclarativeConnections::tr("Connections: script expected"));
                     return QByteArray();
@@ -261,6 +263,9 @@ void QDeclarativeConnections::connectSignals()
         ds >> script;
         int line;
         ds >> line;
+        int column;
+        ds >> column;
+
         QDeclarativeProperty prop(target(), propName);
         if (prop.isValid() && (prop.type() & QDeclarativeProperty::SignalProperty)) {
             QDeclarativeBoundSignal *signal =
@@ -276,7 +281,7 @@ void QDeclarativeConnections::connectSignals()
             }
 
             QDeclarativeExpression *expression = ctxtdata ?
-                QDeclarativeExpressionPrivate::create(ctxtdata, 0, script, true, location, line) : 0;
+                QDeclarativeExpressionPrivate::create(ctxtdata, 0, script, true, location, line, column) : 0;
             signal->setExpression(expression);
             d->boundsignals += signal;
         } else {

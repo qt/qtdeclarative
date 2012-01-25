@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -57,10 +57,10 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheM
     , m_dirtyGeometry(false)
     , m_dirtyMaterial(false)
 {
-    setFlag(UsePreprocess);
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
     setPreferredAntialiasingMode(cacheManager->defaultAntialiasingMode());
+    setFlag(UsePreprocess);
 #ifdef QML_RUNTIME_TESTING
     description = QLatin1String("glyphs");
 #endif
@@ -112,9 +112,13 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     QSGDistanceFieldGlyphCache *oldCache = m_glyph_cache;
     m_glyph_cache = m_glyph_cacheManager->cache(m_glyphs.rawFont());
     if (m_glyph_cache != oldCache) {
-        if (oldCache)
+        Q_ASSERT(ownerElement() != 0);
+        if (oldCache) {
             oldCache->unregisterGlyphNode(this);
+            oldCache->unregisterOwnerElement(ownerElement());
+        }
         m_glyph_cache->registerGlyphNode(this);
+        m_glyph_cache->registerOwnerElement(ownerElement());
     }
     m_glyph_cache->populate(glyphs.glyphIndexes());
 
@@ -158,11 +162,12 @@ void QSGDistanceFieldGlyphNode::preprocess()
 {
     Q_ASSERT(m_glyph_cache);
 
-    m_glyph_cache->update();
-
     for (int i = 0; i < m_nodesToDelete.count(); ++i)
         delete m_nodesToDelete.at(i);
     m_nodesToDelete.clear();
+
+    m_glyph_cache->processPendingGlyphs();
+    m_glyph_cache->update();
 
     if (m_dirtyGeometry)
         updateGeometry();
@@ -285,6 +290,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *>::iterator subIt = m_subNodes.find(ite.key());
         if (subIt == m_subNodes.end()) {
             QSGDistanceFieldGlyphNode *subNode = new QSGDistanceFieldGlyphNode(m_glyph_cacheManager);
+            subNode->setOwnerElement(m_ownerElement);
             subNode->setColor(m_color);
             subNode->setStyle(m_style);
             subNode->setStyleColor(m_styleColor);

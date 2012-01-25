@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -67,7 +67,7 @@ public:
     virtual void updateBinding(QDeclarativeContext *context,
                                const QDeclarativeProperty &property,
                                const QVariant &expression, bool isLiteralValue,
-                               const QString &fileName, int line,
+                               const QString &fileName, int line, int column,
                                bool *isBaseState);
     virtual bool setBindingForInvalidProperty(QObject *object,
                                               const QString &propertyName,
@@ -122,7 +122,7 @@ void QDeclarativeQtQuick2DebugStatesDelegate::buildStatesList(QObject *obj)
 void QDeclarativeQtQuick2DebugStatesDelegate::updateBinding(QDeclarativeContext *context,
                                                             const QDeclarativeProperty &property,
                                                             const QVariant &expression, bool isLiteralValue,
-                                                            const QString &fileName, int line,
+                                                            const QString &fileName, int line, int column,
                                                             bool *inBaseState)
 {
     QObject *object = property.object();
@@ -138,7 +138,7 @@ void QDeclarativeQtQuick2DebugStatesDelegate::updateBinding(QDeclarativeContext 
                     newBinding = new QDeclarativeBinding(expression.toString(), object, context);
                     newBinding->setTarget(property);
                     newBinding->setNotifyOnValueChanged(true);
-                    newBinding->setSourceLocation(fileName, line);
+                    newBinding->setSourceLocation(fileName, line, column);
                 }
 
                 state->changeBindingInRevertList(object, propertyName, newBinding);

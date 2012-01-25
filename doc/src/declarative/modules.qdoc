@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -297,6 +297,38 @@ Item {
 The qualifier ("MyScript" in the above example) must be unique within the QML document.
 Unlike ordinary modules, multiple scripts cannot be imported into the same namespace.
 
+Javascript files can be provided by modules, by adding Namespace definitions to the
+\l{Writing a qmldir file}{qmldir file} for the module.  For example:
+
+\code
+SystemFunctions 1.0 SystemFunctions.js
+UserFunctions 1.0 UserFunctions.js
+\endcode
+
+Javascript can be imported from a module, where they will have the namespace defined
+for them in the module's \c qmldir file:
+
+\qml
+import projects.MyQMLProject.MyFunctions 1.0
+
+Window {
+    Component.onCompleted: { SystemFunctions.cleanUp(); }
+}
+\endqml
+
+Javascript provided by modules can also be imported into namespaces:
+
+\qml
+import projects.MyQMLProject.MyFunctions 1.0 as MyFuncs
+import org.example.Functions 1.0 as TheirFuncs
+
+Window {
+    Component.onCompleted: {
+        MyFuncs.SystemFunctions.cleanUp();
+        TheirFuncs.SystemFunctions.shutdown();
+    }
+}
+\endqml
 
 \section1 Writing a qmldir File
 
@@ -310,6 +342,7 @@ It is defined by a plain text file named "qmldir" that contains one or more line
 # <Comment>
 <TypeName> [<InitialVersion>] <File>
 internal <TypeName> <File>
+<Namespace> <InitialVersion> <File>
 plugin <Name> [<Path>]
 typeinfo <File>
 \endcode
@@ -343,6 +376,11 @@ of installed software, since a versioned import \i only imports types for that v
 leaving other identifiers available, even if the actual installed version might otherwise
 provide those identifiers.
 
+\bold {<Namespace> <InitialVersion> <File>} lines are used to import javascript files
+into a Namespace exported by the module.  The contents of the script file are made
+available inside the namespace <Namespace>, which has the version number
+<InitialVersion>.
+
 \bold {plugin <Name> [<Path>]} lines are used to add \l{QDeclarativeExtensionPlugin}{QML C++ plugins} to the module. <Name> is the name of the library.  It is usually not the same as the file name
 of the plugin binary, which is platform dependent; e.g. the library \c MyAppTypes would produce
 \c libMyAppTypes.so on Linux and \c MyAppTypes.dll on Windows.
@@ -359,7 +397,6 @@ file.
 
 Without such a file QML tools may be unable to offer features such as code completion
 for the types defined in your plugins.
-
 
 \section1 Debugging
 

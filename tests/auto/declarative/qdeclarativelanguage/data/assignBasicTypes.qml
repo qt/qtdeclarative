@@ -22,7 +22,7 @@ MyTypeObject {
     variantProperty: "Hello World!"
     vectorProperty: "10,1,2.2"
     vector4Property: "10,1,2.2,2.3"
-    urlProperty: "main.qml"
+    urlProperty: "main.qml?with%3cencoded%3edata"
 
     objectProperty: MyTypeObject { intProperty: 8 }
 }

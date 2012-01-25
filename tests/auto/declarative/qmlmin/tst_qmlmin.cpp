@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -103,6 +103,7 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/missingObject.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/insertedSemicolon.1.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/nonexistantProperty.5.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/invalidRoot.1.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativefolderlistmodel/data/dummy.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.js";
     invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/qtbug_22843.library.js";

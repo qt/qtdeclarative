@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -326,6 +326,7 @@ union QDeclarativeInstruction
         int scope;
         int bindingId;
         ushort line;
+        ushort column;
     }; 
     struct instr_storeScript {
         QML_INSTR_HEADER
@@ -366,17 +367,10 @@ union QDeclarativeInstruction
         QML_INSTR_HEADER
         int propertyIndex;
         struct QRect {
-#if defined(Q_OS_MAC)
-            int y1;
-            int x1;
-            int y2;
-            int x2;
-#else
             int x1;
             int y1;
             int x2;
             int y2;
-#endif
         } rect;
     };
     struct instr_storeRectF {
@@ -407,6 +401,7 @@ union QDeclarativeInstruction
         int value;
         short context;
         ushort line;
+        ushort column;
     };
     struct instr_assignSignalObject {
         QML_INSTR_HEADER

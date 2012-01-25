@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -679,9 +679,9 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
                                 AST::UiObjectInitializer *initializer)
 {
     int lastTypeDot = objectType.lastIndexOf(QLatin1Char('.'));
-    bool isType = !objectType.isEmpty() &&
-                    (objectType.at(0).isUpper() ||
-                        (lastTypeDot >= 0 && objectType.at(lastTypeDot+1).isUpper()));
+
+    // With no preceding qualification, first char is at (-1 + 1) == 0
+    bool isType = !objectType.isEmpty() && objectType.at(lastTypeDot+1).isUpper();
 
     int propertyCount = 0;
     for (AST::UiQualifiedId *name = propertyName; name; name = name->next){
@@ -701,11 +701,26 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
 
     if (!isType) {
 
-        if(propertyCount || !currentObject()) {
+        // Is the identifier qualified by a namespace?
+        int namespaceLength = 0;
+        if (lastTypeDot > 0) {
+            const QString qualifier(objectType.left(lastTypeDot));
+
+            for (int ii = 0; ii < _parser->_imports.count(); ++ii) {
+                const QDeclarativeScript::Import &import = _parser->_imports.at(ii);
+                if (import.qualifier == qualifier) {
+                    // The qualifier is a namespace - expect a type here
+                    namespaceLength = qualifier.length() + 1;
+                    break;
+                }
+            }
+        }
+
+        if (propertyCount || !currentObject() || namespaceLength) {
             QDeclarativeError error;
             error.setDescription(QCoreApplication::translate("QDeclarativeParser","Expected type name"));
             error.setLine(typeLocation.startLine);
-            error.setColumn(typeLocation.startColumn);
+            error.setColumn(typeLocation.startColumn + namespaceLength);
             _parser->_errors << error;
             return 0;
         }

@@ -3,7 +3,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -58,6 +58,7 @@
 #include "qquickimplicitsizeitem_p_p.h"
 
 #include <QtDeclarative/qdeclarative.h>
+#include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qtextlayout.h>
 
 QT_BEGIN_NAMESPACE
@@ -83,6 +84,7 @@ public:
     bool isLineLaidOutConnected();
 
     QString text;
+    QUrl baseUrl;
     QFont font;
     QFont sourceFont;
     QColor  color;
@@ -159,6 +161,13 @@ public:
     };
     NodeType nodeType;
 
+    enum UpdateType {
+        UpdateNone,
+        UpdatePreprocess,
+        UpdatePaintNode
+    };
+    UpdateType updateType;
+
 #if defined(Q_OS_MAC)
     QList<QRectF> linesRects;
     QThread *layoutThread;
@@ -167,9 +176,10 @@ public:
 };
 
 class QDeclarativePixmap;
-class QQuickTextDocumentWithImageResources : public QTextDocument {
+class QQuickTextDocumentWithImageResources : public QTextDocument, public QTextObjectInterface
+{
     Q_OBJECT
-
+    Q_INTERFACES(QTextObjectInterface)
 public:
     QQuickTextDocumentWithImageResources(QQuickItem *parent);
     virtual ~QQuickTextDocumentWithImageResources();
@@ -181,14 +191,27 @@ public:
 
     void clear();
 
+    QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format);
+    void drawObject(QPainter *p, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format);
+
+    QImage image(const QTextImageFormat &format);
+
+    void setBaseUrl(const QUrl &url, bool clear = true);
+
+Q_SIGNALS:
+    void imagesLoaded();
+
 protected:
     QVariant loadResource(int type, const QUrl &name);
+
+    QDeclarativePixmap *loadPixmap(QDeclarativeContext *context, const QUrl &name);
 
 private slots:
     void requestFinished();
 
 private:
     QHash<QUrl, QDeclarativePixmap *> m_resources;
+    QUrl m_baseUrl;
 
     int outstanding;
     static QSet<QUrl> errors;

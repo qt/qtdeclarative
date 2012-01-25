@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -77,11 +77,6 @@ public:
       mouseSelectionMode(QDeclarative1TextEdit::SelectCharacters), lineCount(0), selectByMouse(false), canPaste(false),
       yoff(0)
     {
-#ifdef Q_OS_SYMBIAN
-        if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
-            showInputPanelOnFocus = false;
-        }
-#endif
     }
 
     void init();

@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
@@ -16,7 +16,7 @@
 ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** us via http://www.qt-project.org/.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -880,6 +880,26 @@ inline bool QJSValuePrivate::deleteProperty(const QString& name)
     return self->Delete(QJSConverter::toString(name));
 }
 
+inline bool QJSValuePrivate::hasProperty(const QString &name) const
+{
+    if (!isObject())
+        return false;
+
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Object> self(v8::Handle<v8::Object>::Cast(m_value));
+    return self->Has(QJSConverter::toString(name));
+}
+
+inline bool QJSValuePrivate::hasOwnProperty(const QString &name) const
+{
+    if (!isObject())
+        return false;
+
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Object> self(v8::Handle<v8::Object>::Cast(m_value));
+    return self->HasOwnProperty(QJSConverter::toString(name));
+}
+
 inline QJSValue::PropertyFlags QJSValuePrivate::propertyFlags(const QString& name) const
 {
     if (!isObject())
@@ -954,7 +974,7 @@ QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate* thisO
     return new QJSValuePrivate(e, result);
 }
 
-inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::construct(int argc, v8::Handle<v8::Value> *argv)
+inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::callAsConstructor(int argc, v8::Handle<v8::Value> *argv)
 {
     QV8Engine *e = engine();
 
@@ -975,7 +995,7 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::construct(int argc, 
     return new QJSValuePrivate(e, result);
 }
 
-inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::construct(const QJSValueList& args)
+inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::callAsConstructor(const QJSValueList& args)
 {
     if (!isCallable())
         return InvalidValue();
@@ -986,11 +1006,11 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::construct(const QJSV
     int argc = args.size();
     QVarLengthArray<v8::Handle<v8::Value>, 8> argv(argc);
     if (!prepareArgumentsForCall(argv.data(), args)) {
-        qWarning("QJSValue::construct() failed: cannot construct function with argument created in a different engine");
+        qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
         return InvalidValue();
     }
 
-    return construct(argc, argv.data());
+    return callAsConstructor(argc, argv.data());
 }
 
 /*! \internal

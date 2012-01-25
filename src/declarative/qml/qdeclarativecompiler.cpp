@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -404,6 +404,14 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
     return true;
 }
 
+static QUrl urlFromUserString(const QString &data)
+{
+    QUrl u;
+    // Preserve any valid percent-encoded octets supplied by the source
+    u.setEncodedUrl(data.toUtf8(), QUrl::TolerantMode);
+    return u;
+}
+
 /*!
     Generate a store instruction for assigning literal \a v to property \a prop.
 
@@ -511,7 +519,7 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             {
             Instruction::StoreUrl instr;
             QString string = v->value.asString();
-            QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
+            QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(urlFromUserString(string));
             instr.propertyIndex = prop->index;
             instr.value = output->indexForUrl(u);
             output->addInstruction(instr);
@@ -720,7 +728,7 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             } else if (type == qMetaTypeId<QList<QUrl> >()) {
                 Instruction::StoreUrlQList instr;
                 QString string = v->value.asString();
-                QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
+                QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(urlFromUserString(string));
                 instr.propertyIndex = prop->index;
                 instr.value = output->indexForUrl(u);
                 output->addInstruction(instr);
@@ -851,19 +859,28 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
     if (componentStats)
         componentStats->componentStat.lineNumber = tree->location.start.line;
 
-    // Build global import scripts
-    QStringList importedScriptIndexes;
-
-    foreach (const QDeclarativeTypeData::ScriptReference &script, unit->resolvedScripts()) {
-        importedScriptIndexes.append(script.qualifier);
-    }
-
     // We generate the importCache before we build the tree so that
     // it can be used in the binding compiler.  Given we "expect" the
     // QML compilation to succeed, this isn't a waste.
     output->importCache = new QDeclarativeTypeNameCache();
-    for (int ii = 0; ii < importedScriptIndexes.count(); ++ii) 
-        output->importCache->add(importedScriptIndexes.at(ii), ii);
+    foreach (const QString &ns, unit->namespaces()) {
+        output->importCache->add(ns);
+    }
+
+    int scriptIndex = 0;
+    foreach (const QDeclarativeTypeData::ScriptReference &script, unit->resolvedScripts()) {
+        QString qualifier = script.qualifier;
+        QString enclosingNamespace;
+
+        const int lastDotIndex = qualifier.lastIndexOf(QLatin1Char('.'));
+        if (lastDotIndex != -1) {
+            enclosingNamespace = qualifier.left(lastDotIndex);
+            qualifier = qualifier.mid(lastDotIndex+1);
+        }
+
+        output->importCache->add(qualifier, scriptIndex++, enclosingNamespace);
+    }
+
     unit->imports().populateCache(output->importCache, engine);
 
     if (!buildObject(tree, BindingContext()) || !completeComponentBuild())
@@ -1270,6 +1287,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 //        ss.bindingId = rewriteBinding(script, prop->name());
         ss.bindingId = rewriteBinding(prop->values.first()->value, QString()); // XXX
         ss.line = prop->location.start.line;
+        ss.column = prop->location.start.column;
         output->addInstruction(ss);
     }
 
@@ -1331,6 +1349,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
             store.value = output->indexForString(rewrite);
             store.context = v->signalExpressionContextStack;
             store.line = v->location.start.line;
+            store.column = v->location.start.column;
             output->addInstruction(store);
 
         }

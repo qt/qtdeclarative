@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -52,7 +52,7 @@ Qt applications.
 \o \l{Getting Started Programming with QML}
 
 \o \l{What's New in Qt Quick 2}{What's New in the Qt Quick Release}
-\o \l{QML Examples and Demos}
+\o \l{QML Examples}
 \endlist
 
 \section1 QML Features

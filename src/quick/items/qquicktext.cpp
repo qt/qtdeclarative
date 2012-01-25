@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -85,7 +85,7 @@ QQuickTextPrivate::QQuickTextPrivate()
   disableDistanceField(false), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), textHasChanged(true),
-  naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull)
+  naturalWidth(0), doc(0), elipsisLayout(0), textLine(0), nodeType(NodeIsNull), updateType(UpdatePaintNode)
 
 #if defined(Q_OS_MAC)
 , layoutThread(0), paintingThread(0)
@@ -107,6 +107,7 @@ QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuic
 : QTextDocument(parent), outstanding(0)
 {
     setUndoRedoEnabled(false);
+    documentLayout()->registerHandler(QTextFormat::ImageObject, this);
 }
 
 QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
@@ -118,30 +119,11 @@ QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
 QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl &name)
 {
     QDeclarativeContext *context = qmlContext(parent());
-    QUrl url = context->resolvedUrl(name);
+    QUrl url = m_baseUrl.resolved(name);
 
     if (type == QTextDocument::ImageResource) {
-        QHash<QUrl, QDeclarativePixmap *>::Iterator iter = m_resources.find(url);
-
-        if (iter == m_resources.end()) {
-            QDeclarativePixmap *p = new QDeclarativePixmap(context->engine(), url);
-            iter = m_resources.insert(url, p);
-
-            if (p->isLoading()) {
-                p->connectFinished(this, SLOT(requestFinished()));
-                outstanding++;
-            }
-        }
-
-        QDeclarativePixmap *p = *iter;
-        if (p->isReady()) {
-            return p->image();
-        } else if (p->isError()) {
-            if (!errors.contains(url)) {
-                errors.insert(url);
-                qmlInfo(parent()) << p->error();
-            }
-        }
+        QDeclarativePixmap *p = loadPixmap(context, url);
+        return p->image();
     }
 
     return QTextDocument::loadResource(type,url); // The *resolved* URL
@@ -152,9 +134,7 @@ void QQuickTextDocumentWithImageResources::requestFinished()
     outstanding--;
     if (outstanding == 0) {
         markContentsDirty(0, characterCount());
-
-        if (QQuickText *item = qobject_cast<QQuickText *>(parent()))
-            QQuickTextPrivate::get(item)->updateLayout();
+        emit imagesLoaded();
     }
 }
 
@@ -163,6 +143,100 @@ void QQuickTextDocumentWithImageResources::clear()
     clearResources();
 
     QTextDocument::clear();
+}
+
+
+QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
+        QTextDocument *, int, const QTextFormat &format)
+{
+    if (format.isImageFormat()) {
+        QTextImageFormat imageFormat = format.toImageFormat();
+
+        const bool hasWidth = imageFormat.hasProperty(QTextFormat::ImageWidth);
+        const int width = qRound(imageFormat.width());
+        const bool hasHeight = imageFormat.hasProperty(QTextFormat::ImageHeight);
+        const int height = qRound(imageFormat.height());
+
+        QSizeF size(width, height);
+        if (!hasWidth || !hasHeight) {
+            QDeclarativeContext *context = qmlContext(parent());
+            QUrl url = m_baseUrl.resolved(QUrl(imageFormat.name()));
+
+            QDeclarativePixmap *p = loadPixmap(context, url);
+            if (!p->isReady()) {
+                if (!hasWidth)
+                    size.setWidth(16);
+                if (!hasHeight)
+                    size.setHeight(16);
+                return size;
+            }
+            QSize implicitSize = p->implicitSize();
+
+            if (!hasWidth) {
+                if (!hasHeight)
+                    size.setWidth(implicitSize.width());
+                else
+                    size.setWidth(qRound(height * (implicitSize.width() / (qreal) implicitSize.height())));
+            }
+            if (!hasHeight) {
+                if (!hasWidth)
+                    size.setHeight(implicitSize.height());
+                else
+                    size.setHeight(qRound(width * (implicitSize.height() / (qreal) implicitSize.width())));
+            }
+        }
+        return size;
+    }
+    return QSizeF();
+}
+
+void QQuickTextDocumentWithImageResources::drawObject(
+        QPainter *, const QRectF &, QTextDocument *, int, const QTextFormat &)
+{
+}
+
+QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format)
+{
+    QDeclarativeContext *context = qmlContext(parent());
+    QUrl url = m_baseUrl.resolved(QUrl(format.name()));
+
+    QDeclarativePixmap *p = loadPixmap(context, url);
+    return p->image();
+}
+
+void QQuickTextDocumentWithImageResources::setBaseUrl(const QUrl &url, bool clear)
+{
+    m_baseUrl = url;
+    if (clear) {
+        clearResources();
+        markContentsDirty(0, characterCount());
+    }
+}
+
+QDeclarativePixmap *QQuickTextDocumentWithImageResources::loadPixmap(
+        QDeclarativeContext *context, const QUrl &url)
+{
+
+    QHash<QUrl, QDeclarativePixmap *>::Iterator iter = m_resources.find(url);
+
+    if (iter == m_resources.end()) {
+        QDeclarativePixmap *p = new QDeclarativePixmap(context->engine(), url);
+        iter = m_resources.insert(url, p);
+
+        if (p->isLoading()) {
+            p->connectFinished(this, SLOT(requestFinished()));
+            outstanding++;
+        }
+    }
+
+    QDeclarativePixmap *p = *iter;
+    if (p->isError()) {
+        if (!errors.contains(url)) {
+            errors.insert(url);
+            qmlInfo(parent()) << p->error();
+        }
+    }
+    return p;
 }
 
 void QQuickTextDocumentWithImageResources::clearResources()
@@ -204,6 +278,12 @@ qreal QQuickTextPrivate::getImplicitWidth() const
         me->updateSize();
     }
     return implicitWidth;
+}
+
+void QQuickText::q_imagesLoaded()
+{
+    Q_D(QQuickText);
+    d->updateLayout();
 }
 
 void QQuickTextPrivate::updateLayout()
@@ -291,6 +371,7 @@ void QQuickTextPrivate::updateSize()
         q->setImplicitSize(0, fontHeight);
         paintedSize = QSize(0, fontHeight);
         emit q->paintedSizeChanged();
+        updateType = UpdatePaintNode;
         q->update();
         return;
     }
@@ -365,6 +446,7 @@ void QQuickTextPrivate::updateSize()
         paintedSize = size;
         emit q->paintedSizeChanged();
     }
+    updateType = UpdatePaintNode;
     q->update();
 }
 
@@ -818,6 +900,7 @@ void QQuickTextPrivate::checkImageCache()
 
     imageCacheDirty = false;
     textureImageCacheDirty = true;
+    updateType = UpdatePaintNode;
     q->update();
 }
 
@@ -830,6 +913,8 @@ void QQuickTextPrivate::ensureDoc()
         Q_Q(QQuickText);
         doc = new QQuickTextDocumentWithImageResources(q);
         doc->setDocumentMargin(0);
+        doc->setBaseUrl(q->baseUrl());
+        FAST_CONNECT(doc, SIGNAL(imagesLoaded()), q, SLOT(q_imagesLoaded()));
     }
 }
 
@@ -1243,8 +1328,10 @@ void QQuickText::setStyle(QQuickText::TextStyle style)
         return;
 
     // changing to/from Normal requires the boundingRect() to change
-    if (isComponentComplete() && (d->style == Normal || style == Normal))
+    if (isComponentComplete() && (d->style == Normal || style == Normal)) {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
         update();
+    }
     d->style = style;
     d->markDirty();
     emit styleChanged(d->style);
@@ -1645,6 +1732,45 @@ void QQuickText::setElideMode(QQuickText::TextElideMode mode)
     emit elideModeChanged(d->elideMode);
 }
 
+/*!
+    \qmlproperty url QtQuick2::Text::baseUrl
+
+    This property specifies a base URL which is used to resolve relative URLs
+    within the text.
+
+    By default is the url of the Text element.
+*/
+
+QUrl QQuickText::baseUrl() const
+{
+    Q_D(const QQuickText);
+    if (d->baseUrl.isEmpty()) {
+        if (QDeclarativeContext *context = qmlContext(this))
+            const_cast<QQuickTextPrivate *>(d)->baseUrl = context->baseUrl();
+    }
+    return d->baseUrl;
+}
+
+void QQuickText::setBaseUrl(const QUrl &url)
+{
+    Q_D(QQuickText);
+    if (baseUrl() != url) {
+        d->baseUrl = url;
+
+        if (d->doc)
+            d->doc->setBaseUrl(url);
+        emit baseUrlChanged();
+    }
+}
+
+void QQuickText::resetBaseUrl()
+{
+    if (QDeclarativeContext *context = qmlContext(this))
+        setBaseUrl(context->baseUrl());
+    else
+        setBaseUrl(QUrl());
+}
+
 /*! \internal */
 QRectF QQuickText::boundingRect() const
 {
@@ -1721,6 +1847,14 @@ geomChangeDone:
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
+void QQuickText::triggerPreprocess()
+{
+    Q_D(QQuickText);
+    if (d->updateType == QQuickTextPrivate::UpdateNone)
+        d->updateType = QQuickTextPrivate::UpdatePreprocess;
+    update();
+}
+
 QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     Q_UNUSED(data);
@@ -1730,6 +1864,14 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         delete oldNode;
         return 0;
     }
+
+    if (!d->updateType != QQuickTextPrivate::UpdatePaintNode && oldNode != 0) {
+        // Update done in preprocess() in the nodes
+        d->updateType = QQuickTextPrivate::UpdateNone;
+        return oldNode;
+    }
+
+    d->updateType = QQuickTextPrivate::UpdateNone;
 
     QRectF bounds = boundingRect();
 
@@ -1781,7 +1923,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         QQuickTextNode *node = 0;
         if (!oldNode || d->nodeType != QQuickTextPrivate::NodeIsText) {
             delete oldNode;
-            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext());
+            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
             d->nodeType = QQuickTextPrivate::NodeIsText;
         } else {
             node = static_cast<QQuickTextNode *>(oldNode);

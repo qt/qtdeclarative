@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -51,11 +51,14 @@ Item { id: wrapper
     property string mode : "everyone"
     property int status: xmlModel.status
     function reload() { xmlModel.reload(); }
+
     XmlListModel {
         id: xmlModel
 
+        function encodePhrase(x) { return encodeURIComponent(x); }
+
         source: (from=="" && to=="" && phrase=="") ? "" :
-            'http://search.twitter.com/search.atom?from='+from+"&to="+to+"&phrase="+phrase
+            'http://search.twitter.com/search.atom?from='+from+"&to="+to+"&phrase="+encodePhrase(phrase)
 
         namespaceDeclarations: "declare default element namespace 'http://www.w3.org/2005/Atom'; " +
                                "declare namespace twitter=\"http://api.twitter.com/\";";

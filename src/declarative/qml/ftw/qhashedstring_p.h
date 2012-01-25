@@ -2,7 +2,7 @@
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: http://www.qt-project.org/
 **
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
@@ -103,6 +103,8 @@ public:
     inline quint32 symbolId() const;
 
     inline v8::Handle<v8::String> string() const;
+
+    inline QString toString() const;
 
 private:
     v8::String::CompleteHashData m_hash;
@@ -915,6 +917,17 @@ quint32 QHashedV8String::symbolId() const
 v8::Handle<v8::String> QHashedV8String::string() const
 {
     return m_string;
+}
+
+QString QHashedV8String::toString() const
+{
+    QString result;
+    result.reserve(m_hash.length);
+
+    for (int i = 0; i < m_hash.length; ++i)
+        result.append(m_string->GetCharacter(i));
+
+    return result;
 }
 
 QHashedStringRef::QHashedStringRef() 
