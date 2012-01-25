@@ -628,8 +628,8 @@ void tst_QQuickGridView::insertBeforeVisible()
     gridview->setCacheBuffer(cacheBuffer);
 
     // trigger a refill (not just setting contentY) so that the visibleItems grid is updated
-    int firstVisibleIndex = 20;     // move to an index where the top item is not visible
-    gridview->setContentY(firstVisibleIndex * 20.0);
+    int firstVisibleIndex = 12;     // move to an index where the top item is not visible
+    gridview->setContentY(firstVisibleIndex/3 * 60.0);
     gridview->setCurrentIndex(firstVisibleIndex);
 
     qApp->processEvents();
@@ -914,6 +914,11 @@ void tst_QQuickGridView::removed_more_data()
 
     QTest::newRow("remove 1, before visible items")
             << 120.0     // show 6-23
+            << 2 << 1
+            << 0.0 << "Item7";
+
+    QTest::newRow("remove 1, before visible position")
+            << 120.0     // show 6-23
             << 3 << 1
             << 0.0 << "Item7";
 
@@ -931,6 +936,16 @@ void tst_QQuickGridView::removed_more_data()
             << 240.0     // show 12-29
             << 1 << 7
             << 120.0 << "Item13";
+
+    QTest::newRow("remove one row before visible, content y not on item border")
+            << 100.0
+            << 0 << 3
+            << 60.0 << "Item6"; // 1 row removed
+
+    QTest::newRow("remove mix of visible/non-visible")
+            << 120.0     // show 6-23
+            << 2 << 3
+            << 60.0 << "Item6"; // 1 row removed
 
 
     // remove 3,4,5 before the visible pos, first row moves down to just before the visible pos,
@@ -4091,14 +4106,15 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(item->isVisible(), false);
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 4));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
     QCOMPARE(item->isVisible(), false);
 
-    model.moveItems(19, 1, 1);
+    // move a non-visible item into view
+    model.moveItems(10, 9, 1);
     QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
 
     QTRY_VERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
@@ -4113,55 +4129,59 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(item->isVisible(), false);
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 4));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
     QCOMPARE(item->isVisible(), false);
 
-    model.moveItems(3, 4, 1);
+    // move a visible item out of view
+    model.moveItems(5, 3, 1);
     QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
 
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(item->isVisible(), false);
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 2));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
     QCOMPARE(item->isVisible(), false);
 
-    model.moveItems(4, 5, 1);
+    // move a non-visible item into view
+    model.moveItems(3, 5, 1);
     QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
 
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(item->isVisible(), false);
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 2));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
     QCOMPARE(item->isVisible(), false);
 
+    // move a visible item out of view
     model.moveItems(9, 10, 1);
     QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
 
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(item->isVisible(), false);
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 2));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
     QCOMPARE(item->isVisible(), false);
 
+    // move a non-visible item into view
     model.moveItems(10, 9, 1);
     QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
 
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(item->isVisible(), false);
-    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 2));
+    QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
     QCOMPARE(item->isVisible(), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
     QCOMPARE(item->isVisible(), true);

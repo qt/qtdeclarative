@@ -14,8 +14,10 @@ Item {
                 Package.name: "left"
                 height: 80
                 width: 60
-                Text {
-                    text: index
+                Column {
+                    Text { text: index }
+                    Text { text: name }
+                    Text { text: leftWrapper.x + ", " + leftWrapper.y }
                 }
                 color: ListView.isCurrentItem ? "lightsteelblue" : "white"
             }
@@ -25,8 +27,10 @@ Item {
                 Package.name: "right"
                 height: 80
                 width: 60
-                Text {
-                    text: index
+                Column {
+                    Text { text: index }
+                    Text { text: name }
+                    Text { text: rightWrapper.x + ", " + rightWrapper.y }
                 }
                 color: ListView.isCurrentItem ? "lightsteelblue" : "white"
             }

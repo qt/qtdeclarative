@@ -1426,8 +1426,11 @@ bool QQuickItemViewPrivate::applyModelChanges()
 
     FxViewItem *prevFirstVisible = firstVisibleItem();
     QDeclarativeNullableValue<qreal> prevViewPos;
-    if (prevFirstVisible)
+    int prevFirstVisibleIndex = -1;
+    if (prevFirstVisible) {
         prevViewPos = prevFirstVisible->position();
+        prevFirstVisibleIndex = prevFirstVisible->index;
+    }
     qreal prevVisibleItemsFirstPos = visibleItems.count() ? visibleItems.first()->position() : 0.0;
 
     const QVector<QDeclarativeChangeSet::Remove> &removals = currentChanges.pendingChanges.removes();
@@ -1442,6 +1445,12 @@ bool QQuickItemViewPrivate::applyModelChanges()
             visibleAffected = true;
         if (!visibleAffected && needsRefillForAddedOrRemovedIndex(removals[i].index))
             visibleAffected = true;
+        if (prevFirstVisibleIndex >= 0 && removals[i].index < prevFirstVisibleIndex) {
+            if (removals[i].index + removals[i].count < prevFirstVisibleIndex)
+                removalResult.changeBeforeVisible -= removals[i].count;
+            else
+                removalResult.changeBeforeVisible -= (prevFirstVisibleIndex - removals[i].index);
+        }
     }
     if (!removals.isEmpty()) {
         updateVisibleIndex();
@@ -1556,9 +1565,6 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QDeclarativeChangeSet::Remo
             }
         }
     }
-
-    if (removal.index + removal.count < visibleIndex)
-        removeResult->changeBeforeVisible -= removal.count;
 
     return visibleAffected;
 }

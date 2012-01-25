@@ -609,9 +609,8 @@ void QQuickGridViewPrivate::adjustFirstItem(qreal forwards, qreal backwards, int
         return;
 
     int moveCount = (forwards - backwards) / rowSize();
-
-    if (changeBeforeVisible)
-        moveCount += (changeBeforeVisible%columns) - (columns - 1);
+    if (moveCount == 0 && changeBeforeVisible != 0)
+        moveCount += (changeBeforeVisible % columns) - (columns - 1);
 
     FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.first());
     gridItem->setPosition(gridItem->colPos(), gridItem->rowPos() + ((moveCount / columns) * rowSize()));
