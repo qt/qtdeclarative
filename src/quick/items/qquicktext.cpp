@@ -1865,7 +1865,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         return 0;
     }
 
-    if (!d->updateType != QQuickTextPrivate::UpdatePaintNode && oldNode != 0) {
+    if (d->updateType != QQuickTextPrivate::UpdatePaintNode && oldNode != 0) {
         // Update done in preprocess() in the nodes
         d->updateType = QQuickTextPrivate::UpdateNone;
         return oldNode;
