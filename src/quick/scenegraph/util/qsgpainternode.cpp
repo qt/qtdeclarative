@@ -154,13 +154,12 @@ void QSGPainterNode::paint()
 {
     QRect dirtyRect = m_dirtyRect.isNull() ? QRect(0, 0, m_size.width(), m_size.height()) : m_dirtyRect;
 
-    if (m_image.isNull())
-        return;
-
     QPainter painter;
-    if (m_actualRenderTarget == QQuickPaintedItem::Image)
+    if (m_actualRenderTarget == QQuickPaintedItem::Image) {
+        if (m_image.isNull())
+            return;
         painter.begin(&m_image);
-    else {
+    } else {
         if (!m_gl_device) {
             m_gl_device = new QOpenGLPaintDevice(m_fboSize);
             m_gl_device->setPaintFlipped(true);
