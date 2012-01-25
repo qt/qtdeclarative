@@ -2379,6 +2379,11 @@ void tst_qquicktextedit::inputMethodUpdate()
     QVERIFY(edit->selectionStart() != edit->selectionEnd());
     QVERIFY(platformInputContext.m_updateCallCount > 0);
 
+    // programmatical selections trigger update
+    platformInputContext.clear();
+    edit->selectAll();
+    QCOMPARE(platformInputContext.m_updateCallCount, 1);
+
     // font changes
     platformInputContext.clear();
     QFont font = edit->font();

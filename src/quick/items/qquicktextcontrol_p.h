@@ -74,7 +74,6 @@ class QQuickTextControlPrivate;
 class QAbstractScrollArea;
 class QEvent;
 class QTimerEvent;
-class QPagedPaintDevice;
 
 class Q_AUTOTEST_EXPORT QQuickTextControl : public QObject
 {
@@ -122,7 +121,6 @@ public:
 
     virtual int hitTest(const QPointF &point, Qt::HitTestAccuracy accuracy) const;
     virtual QRectF blockBoundingRect(const QTextBlock &block) const;
-    QAbstractTextDocumentLayout::PaintContext getPaintContext() const;
 
 public Q_SLOTS:
     void setPlainText(const QString &text);

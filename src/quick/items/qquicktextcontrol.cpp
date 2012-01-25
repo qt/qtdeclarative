@@ -46,7 +46,6 @@
 
 #include <qcoreapplication.h>
 #include <qfont.h>
-#include <qpainter.h>
 #include <qevent.h>
 #include <qdebug.h>
 #include <qdrag.h>
@@ -60,8 +59,6 @@
 #include "qtextlist.h"
 #include "qtextdocumentwriter.h"
 #include "private/qtextcursor_p.h"
-#include "qpagedpaintdevice.h"
-#include "private/qpagedpaintdevice_p.h"
 
 #include <qtextformat.h>
 #include <qdatetime.h>
@@ -429,8 +426,11 @@ void QQuickTextControlPrivate::repaintOldAndNewSelection(const QTextCursor &oldS
 void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /*=false*/)
 {
     Q_Q(QQuickTextControl);
-    if (forceEmitSelectionChanged)
+    if (forceEmitSelectionChanged) {
+        if (hasFocus)
+            qGuiApp->inputMethod()->update(Qt::ImCurrentSelection);
         emit q->selectionChanged();
+    }
 
     bool current = cursor.hasSelection();
     if (current == lastSelectionState)
@@ -438,8 +438,11 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
 
     lastSelectionState = current;
     emit q->copyAvailable(current);
-    if (!forceEmitSelectionChanged)
+    if (!forceEmitSelectionChanged) {
+        if (hasFocus)
+            qGuiApp->inputMethod()->update(Qt::ImCurrentSelection);
         emit q->selectionChanged();
+    }
     emit q->cursorRectangleChanged();
 }
 
