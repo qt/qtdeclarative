@@ -42,13 +42,13 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick/qquickview.h>
+#include <QtDeclarative/private/qanimationgroupjob_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qdeclarativeanimation_p.h>
 #include <QtQuick/private/qdeclarativetransition_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qdeclarativepathinterpolator_p.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QVariantAnimation>
 #include <QEasingCurve>
 
 #include <limits.h>
@@ -74,6 +74,8 @@ private slots:
     void simpleColor();
     void simpleRotation();
     void simplePath();
+    void simpleAnchor();
+    void reparent();
     void pathInterpolator();
     void pathInterpolatorBackwardJump();
     void pathWithNoStart();
@@ -102,6 +104,7 @@ private slots:
     void transitionAssignmentBug();
     void pauseBindingBug();
     void pauseBug();
+    void loopingBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -239,6 +242,9 @@ void tst_qdeclarativeanimations::simplePath()
         QQuickPathAnimation *pathAnim = rect->findChild<QQuickPathAnimation*>();
         QVERIFY(pathAnim);
 
+        QCOMPARE(pathAnim->duration(), 100);
+        QCOMPARE(pathAnim->target(), redRect);
+
         pathAnim->start();
         pathAnim->pause();
 
@@ -262,6 +268,8 @@ void tst_qdeclarativeanimations::simplePath()
         pathAnim->start();
         QTRY_VERIFY(redRect->rotation() != 0);
         pathAnim->stop();
+
+        delete rect;
     }
 
     {
@@ -276,6 +284,9 @@ void tst_qdeclarativeanimations::simplePath()
         QVERIFY(pathAnim);
 
         QCOMPARE(pathAnim->orientation(), QQuickPathAnimation::RightFirst);
+        QCOMPARE(pathAnim->endRotation(), qreal(0));
+        QCOMPARE(pathAnim->orientationEntryDuration(), 10);
+        QCOMPARE(pathAnim->orientationExitDuration(), 10);
 
         pathAnim->start();
         pathAnim->pause();
@@ -292,7 +303,134 @@ void tst_qdeclarativeanimations::simplePath()
         QCOMPARE(redRect->x(), qreal(300));
         QCOMPARE(redRect->y(), qreal(300));
         QCOMPARE(redRect->rotation(), qreal(0));
+
+        delete rect;
     }
+}
+
+void tst_qdeclarativeanimations::simpleAnchor()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, testFileUrl("reanchor.qml"));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QQuickRectangle *greenRect = rect->findChild<QQuickRectangle*>();
+    QVERIFY(greenRect);
+
+    QCOMPARE(rect->state(), QLatin1String("reanchored"));
+    QCOMPARE(greenRect->x(), qreal(10));
+    QCOMPARE(greenRect->y(), qreal(0));
+    QCOMPARE(greenRect->width(), qreal(190));
+    QCOMPARE(greenRect->height(), qreal(150));
+
+    rect->setState("");
+
+    //verify animation in progress
+    QTRY_VERIFY(greenRect->x() < 10 && greenRect->x() > 0);
+    QVERIFY(greenRect->y() > 0 && greenRect->y() < 10);
+    QVERIFY(greenRect->width() < 190 && greenRect->width() > 150);
+    QVERIFY(greenRect->height() > 150 && greenRect->height() < 190);
+
+    //verify end state ("")
+    QTRY_COMPARE(greenRect->x(), qreal(0));
+    QCOMPARE(greenRect->y(), qreal(10));
+    QCOMPARE(greenRect->width(), qreal(150));
+    QCOMPARE(greenRect->height(), qreal(190));
+
+    rect->setState("reanchored2");
+
+    //verify animation in progress
+    QTRY_VERIFY(greenRect->y() > 10 && greenRect->y() < 50);
+    QVERIFY(greenRect->height() > 125 && greenRect->height() < 190);
+    //NOTE: setting left/right anchors to undefined removes the anchors, but does not resize.
+    QCOMPARE(greenRect->x(), qreal(0));
+    QCOMPARE(greenRect->width(), qreal(150));
+
+    //verify end state ("reanchored2")
+    QTRY_COMPARE(greenRect->y(), qreal(50));
+    QCOMPARE(greenRect->height(), qreal(125));
+    QCOMPARE(greenRect->x(), qreal(0));
+    QCOMPARE(greenRect->width(), qreal(150));
+
+    rect->setState("reanchored");
+
+    //verify animation in progress
+    QTRY_VERIFY(greenRect->x() < 10 && greenRect->x() > 0);
+    QVERIFY(greenRect->y() > 0 && greenRect->y() < 50);
+    QVERIFY(greenRect->width() < 190 && greenRect->width() > 150);
+    QVERIFY(greenRect->height() > 125 && greenRect->height() < 150);
+
+    //verify end state ("reanchored")
+    QTRY_COMPARE(greenRect->x(), qreal(10));
+    QCOMPARE(greenRect->y(), qreal(0));
+    QCOMPARE(greenRect->width(), qreal(190));
+    QCOMPARE(greenRect->height(), qreal(150));
+
+    rect->setState("reanchored2");
+
+    //verify animation in progress
+    QTRY_VERIFY(greenRect->x() < 10 && greenRect->x() > 0);
+    QVERIFY(greenRect->y() > 0 && greenRect->y() < 50);
+    QVERIFY(greenRect->width() < 190 && greenRect->width() > 150);
+    QVERIFY(greenRect->height() > 125 && greenRect->height() < 150);
+
+    //verify end state ("reanchored2")
+    QTRY_COMPARE(greenRect->x(), qreal(0));
+    QCOMPARE(greenRect->y(), qreal(50));
+    QCOMPARE(greenRect->width(), qreal(150));
+    QCOMPARE(greenRect->height(), qreal(125));
+
+    delete rect;
+}
+
+void tst_qdeclarativeanimations::reparent()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, testFileUrl("reparent.qml"));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QQuickRectangle *target = rect->findChild<QQuickRectangle*>("target");
+    QVERIFY(target);
+
+    QCOMPARE(target->parentItem(), rect);
+    QCOMPARE(target->x(), qreal(0));
+    QCOMPARE(target->y(), qreal(0));
+    QCOMPARE(target->width(), qreal(50));
+    QCOMPARE(target->height(), qreal(50));
+    QCOMPARE(target->rotation(), qreal(0));
+    QCOMPARE(target->scale(), qreal(1));
+
+    rect->setState("state1");
+
+    QQuickRectangle *viaParent = rect->findChild<QQuickRectangle*>("viaParent");
+    QVERIFY(viaParent);
+
+    QQuickRectangle *newParent = rect->findChild<QQuickRectangle*>("newParent");
+    QVERIFY(newParent);
+
+    QTest::qWait(100);
+
+    //animation in progress
+    QTRY_COMPARE(target->parentItem(), viaParent);
+    QVERIFY(target->x() > -100 && target->x() < 50);
+    QVERIFY(target->y() > -100 && target->y() < 50);
+    QVERIFY(target->width() > 50 && target->width() < 100);
+    QCOMPARE(target->height(), qreal(50));
+    QCOMPARE(target->rotation(), qreal(-45));
+    QCOMPARE(target->scale(), qreal(.5));
+
+    //end state
+    QTRY_COMPARE(target->parentItem(), newParent);
+    QCOMPARE(target->x(), qreal(50));
+    QCOMPARE(target->y(), qreal(50));
+    QCOMPARE(target->width(), qreal(100));
+    QCOMPARE(target->height(), qreal(50));
+    QCOMPARE(target->rotation(), qreal(0));
+    QCOMPARE(target->scale(), qreal(1));
+
+    delete rect;
 }
 
 void tst_qdeclarativeanimations::pathInterpolator()
@@ -1152,6 +1290,28 @@ void tst_qdeclarativeanimations::pauseBug()
     QCOMPARE(anim->isRunning(), true);
 
     delete anim;
+}
+
+//QTBUG-23092
+void tst_qdeclarativeanimations::loopingBug()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, testFileUrl("looping.qml"));
+    QObject *obj = c.create();
+
+    QDeclarativeAbstractAnimation *anim = obj->findChild<QDeclarativeAbstractAnimation*>();
+    QVERIFY(anim != 0);
+    QCOMPARE(anim->qtAnimation()->totalDuration(), 300);
+    QCOMPARE(anim->isRunning(), true);
+    QTRY_COMPARE(static_cast<QAnimationGroupJob*>(anim->qtAnimation())->firstChild()->currentLoop(), 2);
+    QTRY_COMPARE(anim->isRunning(), false);
+
+    QQuickRectangle *rect = obj->findChild<QQuickRectangle*>();
+    QVERIFY(rect != 0);
+    QCOMPARE(rect->rotation(), qreal(90));
+
+    delete obj;
 }
 
 QTEST_MAIN(tst_qdeclarativeanimations)
