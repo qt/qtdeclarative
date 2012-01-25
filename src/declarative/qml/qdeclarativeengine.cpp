@@ -423,12 +423,6 @@ void QDeclarativeEnginePrivate::init()
 
     static bool firstTime = true;
     if (firstTime) {
-        // This is a nasty hack as QNetworkAccessManager will issue a 
-        // BlockingQueuedConnection to the main thread if it is initialized for the
-        // first time on a non-main thread.  This can cause a lockup if the main thread
-        // is blocking on the thread that initialize the network access manager.
-        QNetworkConfigurationManager man;
-
         qmlRegisterType<QDeclarativeComponent>("QML", 1, 0, "Component");
 
         firstTime = false;
