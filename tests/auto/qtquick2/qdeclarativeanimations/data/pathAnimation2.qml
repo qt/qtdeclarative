@@ -15,8 +15,8 @@ Rectangle {
         target: redRect
         duration: 100;
         endRotation: 0
-        orientationEntryInterval: .1
-        orientationExitInterval: .1
+        orientationEntryDuration: 10
+        orientationExitDuration: 10
         orientation: PathAnimation.RightFirst
         path: Path {
             startX: 50; startY: 50
