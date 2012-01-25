@@ -41,6 +41,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qquickitem_p.h>
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
@@ -53,6 +54,7 @@
 #include <QtQuick/qsgengine.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qdeclarativeglobal_p.h>
+#include <QtDeclarative/qdeclarativeinfo.h>
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
@@ -784,9 +786,19 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     Default is true.
 */
 
+/*!
+    \qmlproperty Status QtQuick.Particles2::ImageParticle::status
+
+    The status of loading the image.
+*/
+
 
 QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     : QQuickParticlePainter(parent)
+    , m_image(0)
+    , m_colorTable(0)
+    , m_sizeTable(0)
+    , m_opacityTable(0)
     , m_color_variation(0.0)
     , m_rootNode(0)
     , m_material(0)
@@ -813,6 +825,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_lastLevel(Unknown)
     , m_debugMode(false)
     , m_entryEffect(Fade)
+    , m_buildingNodes(false)
 {
     setFlag(ItemHasContents);
 }
@@ -828,9 +841,19 @@ QDeclarativeListProperty<QQuickSprite> QQuickImageParticle::sprites()
 
 void QQuickImageParticle::setImage(const QUrl &image)
 {
-    if (image == m_image_name)
+    if (image.isEmpty()){
+        if (m_image) {
+            delete m_image;
+            emit imageChanged();
+        }
         return;
-    m_image_name = image;
+    }
+
+    if (!m_image)
+        m_image = new ImageData;
+    if (image == m_image->source)
+        return;
+    m_image->source = image;
     emit imageChanged();
     reset();
 }
@@ -838,27 +861,57 @@ void QQuickImageParticle::setImage(const QUrl &image)
 
 void QQuickImageParticle::setColortable(const QUrl &table)
 {
-    if (table == m_colortable_name)
+    if (table.isEmpty()){
+        if (m_colorTable) {
+            delete m_colorTable;
+            emit colortableChanged();
+        }
         return;
-    m_colortable_name = table;
+    }
+
+    if (!m_colorTable)
+        m_colorTable = new ImageData;
+    if (table == m_colorTable->source)
+        return;
+    m_colorTable->source = table;
     emit colortableChanged();
     reset();
 }
 
 void QQuickImageParticle::setSizetable(const QUrl &table)
 {
-    if (table == m_sizetable_name)
+    if (table.isEmpty()){
+        if (m_sizeTable) {
+            delete m_sizeTable;
+            emit sizetableChanged();
+        }
         return;
-    m_sizetable_name = table;
+    }
+
+    if (!m_sizeTable)
+        m_sizeTable = new ImageData;
+    if (table == m_sizeTable->source)
+        return;
+    m_sizeTable->source = table;
     emit sizetableChanged();
     reset();
 }
 
 void QQuickImageParticle::setOpacitytable(const QUrl &table)
 {
-    if (table == m_opacitytable_name)
+    if (table.isEmpty()){
+        if (m_opacityTable) {
+            delete m_opacityTable;
+            emit opacitytableChanged();
+        }
         return;
-    m_opacitytable_name = table;
+    }
+
+    if (!m_opacityTable)
+        m_opacityTable = new ImageData;
+    if (table == m_opacityTable->source)
+        return;
+    m_opacityTable->source = table;
     emit opacitytableChanged();
     reset();
 }
@@ -1199,24 +1252,63 @@ QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datu
     return m_shadowData[datum->group][datum->index];
 }
 
-QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
+bool QQuickImageParticle::loadingSomething()
 {
+    return (m_image && m_image->pix.isLoading())
+        || (m_colorTable && m_colorTable->pix.isLoading())
+        || (m_sizeTable && m_sizeTable->pix.isLoading())
+        || (m_opacityTable && m_opacityTable->pix.isLoading())
+        || (m_spriteEngine && m_spriteEngine->isLoading());
+}
+
+void QQuickImageParticle::buildParticleNodes()//Starts async parts, like loading images.
+{
+    if (m_rootNode || loadingSomething())
+        return;
+
+    if (!m_buildingNodes) {
+        if (m_image) {//ImageData created on setSource
+            m_image->pix.clear(this);
+            m_image->pix.load(qmlEngine(this), m_image->source);
+        }
+
+        if (m_spriteEngine)
+            m_spriteEngine->startAssemblingImage();
+
+        if (m_colorTable)
+            m_colorTable->pix.load(qmlEngine(this), m_colorTable->source);
+
+        if (m_sizeTable)
+            m_sizeTable->pix.load(qmlEngine(this), m_sizeTable->source);
+
+        if (m_opacityTable)
+            m_opacityTable->pix.load(qmlEngine(this), m_opacityTable->source);
+
+        m_buildingNodes = true;
+        if (loadingSomething())
+            return;
+    }
+    finishBuildParticleNodes();
+}
+
+void QQuickImageParticle::finishBuildParticleNodes()
+{
+    m_buildingNodes = false;
 #ifdef QT_OPENGL_ES_2
     if (m_count * 4 > 0xffff) {
         printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
-        return 0;
+        return;
     }
 #endif
 
     if (count() <= 0)
-        return 0;
+        return;
 
     m_debugMode = m_system->m_debugMode;
 
     if (m_sprites.count() || m_bypassOptimizations) {
         perfLevel = Sprites;
-    } else if (!m_colortable_name.isEmpty() || !m_sizetable_name.isEmpty()
-               || !m_opacitytable_name.isEmpty()) {
+    } else if (m_colorTable || m_sizeTable || m_opacityTable) {
         perfLevel = Tabled;
     } else if (m_autoRotation || m_rotation || m_rotationVariation
                || m_rotationSpeed || m_rotationSpeedVariation
@@ -1251,27 +1343,6 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
     if (perfLevel >= Colored  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset
 
-    QImage image;
-    if (perfLevel >= Sprites){
-        if (!m_spriteEngine) {
-            qWarning() << "ImageParticle: No sprite engine...";
-            //Sprite performance mode with static image is supported, but not advised
-            //Note that in this case it always uses shadow data
-        } else {
-            image = m_spriteEngine->assembledImage();
-            if (image.isNull())//Warning is printed in engine
-                return 0;
-        }
-    }
-
-    if ( image.isNull() ) {
-        image = QImage(m_image_name.toLocalFile());
-        if (image.isNull()) {
-            printf("ImageParticle: loading image failed '%s'\n", qPrintable(m_image_name.toLocalFile()));
-            return 0;
-        }
-    }
-
     clearShadows();
     if (m_material)
         m_material = 0;
@@ -1280,23 +1351,55 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
     QImage colortable;
     QImage sizetable;
     QImage opacitytable;
+    QImage image;
+    bool imageLoaded = false;
     switch (perfLevel) {//Fallthrough intended
     case Sprites:
+        if (!m_spriteEngine) {
+            qWarning() << "ImageParticle: No sprite engine...";
+            //Sprite performance mode with static image is supported, but not advised
+            //Note that in this case it always uses shadow data
+        } else {
+            image = m_spriteEngine->assembledImage();
+            if (image.isNull())//Warning is printed in engine
+                return;
+            imageLoaded = true;
+        }
         m_material = SpriteMaterial::createMaterial();
+        if (imageLoaded)
+            getState<ImageMaterialData>(m_material)->texture = QSGPlainTexture::fromImage(image);
         getState<ImageMaterialData>(m_material)->animSheetSize = QSizeF(image.size());
         if (m_spriteEngine)
             m_spriteEngine->setCount(m_count);
     case Tabled:
         if (!m_material)
             m_material = TabledMaterial::createMaterial();
-        colortable = QImage(m_colortable_name.toLocalFile());
-        sizetable = QImage(m_sizetable_name.toLocalFile());
-        opacitytable = QImage(m_opacitytable_name.toLocalFile());
-        if (colortable.isNull()){
+
+        if (m_colorTable) {
+            if (m_colorTable->pix.isReady())
+                colortable = m_colorTable->pix.image();
+            else
+                qmlInfo(this) << "Error loading color table: " << m_colorTable->pix.error();
+        }
+
+        if (m_sizeTable) {
+            if (m_sizeTable->pix.isReady())
+                sizetable = m_sizeTable->pix.image();
+            else
+                qmlInfo(this) << "Error loading size table: " << m_sizeTable->pix.error();
+        }
+
+        if (m_opacityTable) {
+            if (m_opacityTable->pix.isReady())
+                opacitytable = m_opacityTable->pix.image();
+            else
+                qmlInfo(this) << "Error loading opacity table: " << m_opacityTable->pix.error();
+        }
+
+        if (colortable.isNull()){//###Goes through image just for this
             colortable = QImage(1,1,QImage::Format_ARGB32);
             colortable.fill(Qt::white);
         }
-        Q_ASSERT(!colortable.isNull());
         getState<ImageMaterialData>(m_material)->colorTable = QSGPlainTexture::fromImage(colortable);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->opacityTable, opacitytable, UNIFORM_ARRAY_SIZE);
@@ -1309,7 +1412,16 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
     default://Also Simple
         if (!m_material)
             m_material = SimpleMaterial::createMaterial();
-        getState<ImageMaterialData>(m_material)->texture = QSGPlainTexture::fromImage(image);
+        if (!imageLoaded) {
+            if (!m_image->pix.isReady()) {
+                qmlInfo(this) << m_image->pix.error();
+                delete m_material;
+                return;
+            }
+            //getState<ImageMaterialData>(m_material)->texture //TODO: Shouldn't this be better? But not crash?
+            //    = QQuickItemPrivate::get(this)->sceneGraphContext()->textureForFactory(m_imagePix.textureFactory());
+            getState<ImageMaterialData>(m_material)->texture = QSGPlainTexture::fromImage(m_image->pix.image());
+        }
         getState<ImageMaterialData>(m_material)->texture->setFiltering(QSGTexture::Linear);
         getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
         m_material->setFlag(QSGMaterial::Blending);
@@ -1390,7 +1502,8 @@ QSGGeometryNode* QQuickImageParticle::buildParticleNodes()
             (*(m_nodes.begin()))->appendChildNode(node);
     }
 
-    return *(m_nodes.begin());
+    m_rootNode = *(m_nodes.begin());
+    update();
 }
 
 QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
@@ -1409,6 +1522,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
         m_material = 0;
 
         m_pleaseReset = false;
+        m_buildingNodes = false;//Cancel a part-way build
     }
 
     if (m_system && m_system->isRunning() && !m_system->isPaused()){
@@ -1417,6 +1531,8 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
             update();
             foreach (QSGGeometryNode* node, m_nodes)
                 node->markDirty(QSGNode::DirtyGeometry);
+        } else if (m_buildingNodes) {
+            update();//To call prepareNextFrame() again from the renderThread
         }
     }
 
@@ -1426,7 +1542,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
 void QQuickImageParticle::prepareNextFrame()
 {
     if (m_rootNode == 0){//TODO: Staggered loading (as emitted)
-        m_rootNode = buildParticleNodes();
+        buildParticleNodes();
         if (m_debugMode) {
             qDebug() << "QQuickImageParticle Feature level: " << perfLevel;
             qDebug() << "QQuickImageParticle Nodes: ";

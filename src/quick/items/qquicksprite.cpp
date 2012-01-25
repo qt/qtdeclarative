@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qquicksprite_p.h"
+#include <qdeclarative.h>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -253,6 +254,13 @@ int QQuickSprite::variedDuration() const //Deals with precedence when multiple d
     qWarning() << "As an interim measure, duration/durationVariation means the same as frameDuration/frameDurationVariation, and you'll get this warning spewed out everywhere to movtivate you.";
     //Note that the spammyness is due to this being the best location to detect, but also called once each animation loop
     return QQuickStochasticState::variedDuration() * m_frames;
+}
+
+void QQuickSprite::startImageLoading()
+{
+    m_pix.clear(this);
+    if (!m_source.isEmpty())
+        m_pix.load(qmlEngine(this), m_source);
 }
 
 QT_END_NAMESPACE

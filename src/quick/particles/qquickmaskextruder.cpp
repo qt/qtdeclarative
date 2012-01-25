@@ -40,6 +40,8 @@
 ****************************************************************************/
 
 #include "qquickmaskextruder_p.h"
+#include <QtDeclarative/qdeclarative.h>
+#include <QtDeclarative/qdeclarativeinfo.h>
 #include <QImage>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
@@ -65,6 +67,36 @@ QQuickMaskExtruder::QQuickMaskExtruder(QObject *parent) :
 {
 }
 
+void QQuickMaskExtruder::setSource(QUrl arg)
+{
+    if (m_source != arg) {
+        m_source = arg;
+
+        m_lastHeight = -1;//Trigger reset
+        m_lastWidth = -1;
+        emit sourceChanged(arg);
+        startMaskLoading();
+    }
+}
+
+void QQuickMaskExtruder::startMaskLoading()
+{
+    m_pix.clear(this);
+    if (m_source.isEmpty())
+        return;
+    m_pix.load(qmlEngine(this), m_source);
+    if (m_pix.isLoading())
+        m_pix.connectFinished(this, SLOT(finishMaskLoading()));
+    else
+        finishMaskLoading();
+}
+
+void QQuickMaskExtruder::finishMaskLoading()
+{
+    if (m_pix.isError())
+        qmlInfo(this) << m_pix.error();
+}
+
 QPointF QQuickMaskExtruder::extrude(const QRectF &r)
 {
     ensureInitialized(r);
@@ -88,19 +120,15 @@ void QQuickMaskExtruder::ensureInitialized(const QRectF &r)
 {
     if (m_lastWidth == r.width() && m_lastHeight == r.height())
         return;//Same as before
+    if (!m_pix.isReady())
+        return;
     m_lastWidth = r.width();
     m_lastHeight = r.height();
 
-    m_img = QImage();
     m_mask.clear();
-    if (m_source.isEmpty())
-        return;
-    m_img = QImage(m_source.toLocalFile());
-    if (m_img.isNull()){
-        qWarning() << "MaskShape: Cannot load" << qPrintable(m_source.toLocalFile());
-        return;
-    }
-    m_img = m_img.createAlphaMask();
+
+    m_img = m_pix.image().createAlphaMask();
+    m_pix.clear();
     m_img = m_img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier
     m_img = m_img.scaled(r.size().toSize());//TODO: Do they need aspect ratio stuff? Or tiling?
     for (int i=0; i<r.width(); i++){

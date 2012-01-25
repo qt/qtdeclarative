@@ -42,6 +42,7 @@
 #ifndef MASKEXTRUDER_H
 #define MASKEXTRUDER_H
 #include "qquickparticleextruder_p.h"
+#include <private/qdeclarativepixmapcache_p.h>
 #include <QUrl>
 #include <QImage>
 
@@ -68,24 +69,22 @@ signals:
     void sourceChanged(QUrl arg);
 
 public slots:
+    void setSource(QUrl arg);
 
-    void setSource(QUrl arg)
-    {
-        if (m_source != arg) {
-            m_source = arg;
-            m_lastHeight = -1;//Trigger reset
-            m_lastWidth = -1;
-            emit sourceChanged(arg);
-        }
-    }
+private slots:
+    void startMaskLoading();
+    void finishMaskLoading();
+
 private:
     QUrl m_source;
 
     void ensureInitialized(const QRectF &r);
     int m_lastWidth;
     int m_lastHeight;
+    QDeclarativePixmap m_pix;
     QImage m_img;
     QList<QPointF> m_mask;//TODO: More memory efficient datastructures
+    //Perhaps just the mask for the largest bounds is stored, and interpolate up
 };
 
 QT_END_NAMESPACE

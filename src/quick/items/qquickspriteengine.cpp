@@ -41,6 +41,8 @@
 
 #include "qquickspriteengine_p.h"
 #include "qquicksprite_p.h"
+#include <qdeclarativeinfo.h>
+#include <qdeclarative.h>
 #include <QDebug>
 #include <QPainter>
 #include <QSet>
@@ -100,12 +102,12 @@ QQuickStochasticEngine::~QQuickStochasticEngine()
 }
 
 QQuickSpriteEngine::QQuickSpriteEngine(QObject *parent)
-    : QQuickStochasticEngine(parent)
+    : QQuickStochasticEngine(parent), m_startedImageAssembly(false)
 {
 }
 
 QQuickSpriteEngine::QQuickSpriteEngine(QList<QQuickSprite*> sprites, QObject *parent)
-    : QQuickStochasticEngine(parent)
+    : QQuickStochasticEngine(parent), m_startedImageAssembly(false)
 {
     foreach (QQuickSprite* sprite, sprites)
         m_states << (QQuickStochasticState*)sprite;
@@ -305,8 +307,56 @@ void QQuickStochasticEngine::setGoal(int state, int sprite, bool jump)
     return;
 }
 
+QDeclarativePixmap::Status QQuickSpriteEngine::status()//Composed status of all Sprites
+{
+    if (!m_startedImageAssembly)
+        return QDeclarativePixmap::Null;
+    int null, loading, ready;
+    null = loading = ready = 0;
+    foreach (QQuickSprite* s, m_sprites) {
+        switch (s->m_pix.status()) {
+            case QDeclarativePixmap::Null : null++; break;
+            case QDeclarativePixmap::Loading : loading++; break;
+            case QDeclarativePixmap::Error : return QDeclarativePixmap::Error;
+            case QDeclarativePixmap::Ready : ready++; break;
+        }
+    }
+    if (null)
+        return QDeclarativePixmap::Null;
+    if (loading)
+        return QDeclarativePixmap::Loading;
+    if (ready)
+        return QDeclarativePixmap::Ready;
+    return QDeclarativePixmap::Null;
+}
+
+void QQuickSpriteEngine::startAssemblingImage()
+{
+    if (m_startedImageAssembly)
+        return;
+
+    //This could also trigger the start of the image loading in Sprites, however that currently happens in Sprite::setSource
+    foreach (QQuickStochasticState* s, m_states){
+        QQuickSprite* sprite = qobject_cast<QQuickSprite*>(s);
+        if (sprite)
+            m_sprites << sprite;
+        else
+            qDebug() << "Error: Non-sprite in QQuickSpriteEngine";
+    }
+    m_startedImageAssembly = true;
+}
+
 QImage QQuickSpriteEngine::assembledImage()
 {
+    QDeclarativePixmap::Status stat = status();
+    if (stat == QDeclarativePixmap::Error)
+        foreach (QQuickSprite* s, m_sprites)
+            if (s->m_pix.isError())
+                qmlInfo(s) << s->m_pix.error();
+
+    if (stat != QDeclarativePixmap::Ready)
+        return QImage();
+
     int h = 0;
     int w = 0;
     m_maxFrames = 0;
@@ -315,25 +365,13 @@ QImage QQuickSpriteEngine::assembledImage()
 
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
     //qDebug() << "MAX TEXTURE SIZE" << maxSize;
-    foreach (QQuickStochasticState* s, m_states){
-        QQuickSprite* sprite = qobject_cast<QQuickSprite*>(s);
-        if (sprite)
-            m_sprites << sprite;
-        else
-            qDebug() << "Error: Non-sprite in QQuickSpriteEngine";
-    }
-
     foreach (QQuickSprite* state, m_sprites){
         if (state->frames() > m_maxFrames)
             m_maxFrames = state->frames();
 
-        QImage img(state->source().toLocalFile());
-        if (img.isNull()) {
-            qWarning() << "SpriteEngine: loading image failed..." << state->source().toLocalFile();
-            return QImage();
-        }
+        QImage img = state->m_pix.image();
 
-        //Check that the frame sizes are the same within one engine
+        //Check that the frame sizes are the same within one sprite
         if (!state->m_frameWidth)
             state->m_frameWidth = img.width() / state->frames();
 
@@ -347,10 +385,10 @@ QImage QQuickSpriteEngine::assembledImage()
             int rowsNeeded = helper::divRoundUp(state->frames(), (maxSize / state->frameWidth()));
             if (h + rowsNeeded * state->frameHeight() > maxSize){
                 if (rowsNeeded * state->frameHeight() > maxSize)
-                    qWarning() << "SpriteEngine: Animation too large to fit in one texture:" << state->source().toLocalFile();
+                    qmlInfo(state) << "SpriteEngine: Animation too large to fit in one texture:" << state->source().toLocalFile();
                 else
-                    qWarning() << "SpriteEngine: Animations too large to fit in one texture, pushed over the edge by:" << state->source().toLocalFile();
-                qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
+                    qmlInfo(state) << "SpriteEngine: Animations too large to fit in one texture, pushed over the edge by:" << state->source().toLocalFile();
+                qmlInfo(state) << "SpriteEngine: Your texture max size today is " << maxSize;
             }
             state->m_generatedCount = rowsNeeded;
             h += state->frameHeight() * rowsNeeded;

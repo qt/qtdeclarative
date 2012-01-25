@@ -49,6 +49,7 @@
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QtQuick/qquickcanvas.h>
+#include <QtDeclarative/qdeclarativeinfo.h>
 #include <QFile>
 #include <cmath>
 #include <qmath.h>
@@ -324,7 +325,14 @@ static QSGGeometry::AttributeSet SpriteImage_AttributeSet =
 QSGGeometryNode* QQuickSpriteImage::buildNode()
 {
     if (!m_spriteEngine) {
-        qWarning() << "SpriteImage: No sprite engine...";
+        qmlInfo(this) << "No sprite engine...";
+        return 0;
+    } else if (m_spriteEngine->status() == QDeclarativePixmap::Null) {
+        m_spriteEngine->startAssemblingImage();
+        update();//Schedule another update, where we will check again
+        return 0;
+    } else if (m_spriteEngine->status() == QDeclarativePixmap::Loading) {
+        update();//Schedule another update, where we will check again
         return 0;
     }
 

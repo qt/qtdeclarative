@@ -46,6 +46,7 @@
 #include <QUrl>
 #include <QVariantMap>
 #include <QDeclarativeListProperty>
+#include <QtQuick/private/qdeclarativepixmapcache_p.h>
 #include "qquickspriteengine_p.h"
 
 QT_BEGIN_HEADER
@@ -89,7 +90,6 @@ public:
     {
         return m_frameWidth;
     }
-
 
     bool reverse() const
     {
@@ -181,6 +181,7 @@ public slots:
         if (m_source != arg) {
             m_source = arg;
             emit sourceChanged(arg);
+            startImageLoading();
         }
     }
 
@@ -199,7 +200,6 @@ public slots:
             emit frameWidthChanged(arg);
         }
     }
-
 
     void setReverse(bool arg)
     {
@@ -273,6 +273,9 @@ public slots:
         }
     }
 
+private slots:
+    void startImageLoading();
+
 private:
     friend class QQuickImageParticle;
     friend class QQuickSpriteImage;
@@ -295,6 +298,7 @@ private:
     int m_frameDuration;
     int m_frameDurationVariation;
     bool m_frameSync;
+    QDeclarativePixmap m_pix;
 };
 
 QT_END_NAMESPACE

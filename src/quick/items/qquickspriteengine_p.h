@@ -50,6 +50,7 @@
 #include <QDeclarativeListProperty>
 #include <QImage>
 #include <QPair>
+#include <QtQuick/private/qdeclarativepixmapcache_p.h>
 
 QT_BEGIN_HEADER
 
@@ -61,7 +62,7 @@ class Q_AUTOTEST_EXPORT QQuickStochasticState : public QObject //Currently for i
     Q_OBJECT
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
-    //Note than manually advanced sprites need to query this variable and implement own behaviour for it
+    //Note that manually advanced sprites need to query this variable and implement own behaviour for it
     Q_PROPERTY(bool randomStart READ randomStart WRITE setRandomStart NOTIFY randomStartChanged)
     Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
@@ -268,21 +269,30 @@ public:
     int spriteState(int sprite=0);
     int spriteStart(int sprite=0);
     int spriteFrames(int sprite=0);
-    int spriteDuration(int sprite=0);//Full duration, not per frame
+    int spriteDuration(int sprite=0);
     int spriteX(int sprite=0);
     int spriteY(int sprite=0);
     int spriteWidth(int sprite=0);
     int spriteHeight(int sprite=0);
     int spriteCount();//Like state count
     int maxFrames();
-    QString realName(int sprite=0);//Gives the parent sprite name for pseudosprites
-    QImage assembledImage();
 
     virtual void restart(int index=0);
     virtual void advance(int index=0);
+
+    //Similar API to QDeclarativePixmap for async loading convenience
+    bool isNull() { return status() == QDeclarativePixmap::Null; }
+    bool isReady() { return status() == QDeclarativePixmap::Ready; }
+    bool isLoading() { return status() == QDeclarativePixmap::Loading; }
+    bool isError() { return status() == QDeclarativePixmap::Error; }
+    QDeclarativePixmap::Status status();//Composed status of all Sprites
+    void startAssemblingImage();
+    QImage assembledImage();
+
 private:
     int pseudospriteProgress(int,int,int*rd=0);
     QList<QQuickSprite*> m_sprites;
+    bool m_startedImageAssembly;
 };
 
 //Common use is to have your own list property which is transparently an engine

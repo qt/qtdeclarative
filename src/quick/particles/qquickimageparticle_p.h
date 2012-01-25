@@ -43,6 +43,7 @@
 #define ULTRAPARTICLE_H
 #include "qquickparticlepainter_p.h"
 #include "qquickdirection_p.h"
+#include <private/qdeclarativepixmapcache_p.h>
 #include <QDeclarativeListProperty>
 #include <QtQuick/qsgsimplematerial.h>
 #include <QtGui/qcolor.h>
@@ -149,6 +150,11 @@ class QQuickImageParticle : public QQuickParticlePainter
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ image WRITE setImage NOTIFY imageChanged)
+    Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    //### Is it worth having progress like Image has?
+    //Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
+
     Q_PROPERTY(QUrl colorTable READ colortable WRITE setColortable NOTIFY colortableChanged)
     Q_PROPERTY(QUrl sizeTable READ sizetable WRITE setSizetable NOTIFY sizetableChanged)
     Q_PROPERTY(QUrl opacityTable READ opacitytable WRITE setOpacitytable NOTIFY opacitytableChanged)
@@ -172,20 +178,20 @@ class QQuickImageParticle : public QQuickParticlePainter
     //to 180 will lead to facing away from the direction of motion
     Q_PROPERTY(bool autoRotation READ autoRotation WRITE setAutoRotation NOTIFY autoRotationChanged RESET resetRotation)
 
-    //###Call i/j? Makes more sense to those with vector calculus experience, and I could even add the cirumflex in QML?
     //xVector is the vector from the top-left point to the top-right point, and is multiplied by current size
     Q_PROPERTY(QQuickDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged RESET resetDeformation)
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
     Q_PROPERTY(QQuickDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged RESET resetDeformation)
-    Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
     Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
     Q_ENUMS(EntryEffect)
+    Q_ENUMS(Status)
 public:
     explicit QQuickImageParticle(QQuickItem *parent = 0);
     virtual ~QQuickImageParticle();
 
+    enum Status { Null, Ready, Loading, Error };
 
     QDeclarativeListProperty<QQuickSprite> sprites();
     QQuickStochasticEngine* spriteEngine() {return m_spriteEngine;}
@@ -205,16 +211,16 @@ public:
         Sprites
     };
 
-    QUrl image() const { return m_image_name; }
+    QUrl image() const { return m_image ? m_image->source : QUrl(); }
     void setImage(const QUrl &image);
 
-    QUrl colortable() const { return m_colortable_name; }
+    QUrl colortable() const { return m_colorTable ? m_colorTable->source : QUrl(); }
     void setColortable(const QUrl &table);
 
-    QUrl sizetable() const { return m_sizetable_name; }
+    QUrl sizetable() const { return m_sizeTable ? m_sizeTable->source : QUrl(); }
     void setSizetable (const QUrl &table);
 
-    QUrl opacitytable() const { return m_opacitytable_name; }
+    QUrl opacitytable() const { return m_opacityTable ? m_opacityTable->source : QUrl(); }
     void setOpacitytable(const QUrl &table);
 
     QColor color() const { return m_color; }
@@ -252,6 +258,8 @@ public:
     bool bypassOptimizations() const { return m_bypassOptimizations; }
 
     EntryEffect entryEffect() const { return m_entryEffect; }
+
+    Status status() const { return m_status; }
 
     void resetColor();
     void resetRotation();
@@ -297,6 +305,8 @@ signals:
 
     void entryEffectChanged(EntryEffect arg);
 
+    void statusChanged(Status arg);
+
 public slots:
     void reloadColor(const Color4ub &c, QQuickParticleData* d);
     void setAlphaVariation(qreal arg);
@@ -336,18 +346,24 @@ protected:
 
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void prepareNextFrame();
-    QSGGeometryNode* buildParticleNodes();
+    void buildParticleNodes();
 
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
     void spriteAdvance(int spriteIndex);
     void spritesUpdate(qreal time = 0 );
+    void finishBuildParticleNodes();
 private:
-    QUrl m_image_name;
-    QUrl m_colortable_name;
-    QUrl m_sizetable_name;
-    QUrl m_opacitytable_name;
+    struct ImageData {
+        QUrl source;
+        QDeclarativePixmap pix;
+    };
+    ImageData *m_image;
+    ImageData *m_colorTable;
+    ImageData *m_sizeTable;
+    ImageData *m_opacityTable;
+    bool loadingSomething();
 
 
     QColor m_color;
@@ -419,6 +435,8 @@ private:
         return static_cast<QSGSimpleMaterial<MaterialData> *>(m)->state();
     }
     EntryEffect m_entryEffect;
+    Status m_status;
+    bool m_buildingNodes;
 };
 
 QT_END_NAMESPACE
