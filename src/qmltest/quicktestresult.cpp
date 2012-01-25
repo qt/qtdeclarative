@@ -343,6 +343,9 @@ void QuickTestResult::initTestTable()
     Q_D(QuickTestResult);
     delete d->table;
     d->table = new QTestTable;
+    //qmltest does not really need the column for data driven test
+    //add this to avoid warnings.
+    d->table->addColumn(qMetaTypeId<QString>(), "qmltest_dummy_data_column");
 }
 
 void QuickTestResult::clearTestTable()
