@@ -93,7 +93,7 @@ class QTouchEvent;
 class QQuickCanvasRenderLoop;
 class QQuickCanvasIncubationController;
 
-class QQuickCanvasPrivate : public QWindowPrivate
+class Q_QUICK_EXPORT QQuickCanvasPrivate : public QWindowPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickCanvas)
@@ -151,6 +151,9 @@ public:
     void polishItems();
     void syncSceneGraph();
     void renderSceneGraph(const QSize &size);
+
+    bool renderWithoutShowing;
+    void setRenderWithoutShowing(bool enabled);
 
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 

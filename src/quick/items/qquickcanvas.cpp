@@ -204,6 +204,30 @@ void QQuickCanvasPrivate::polishItems()
     updateFocusItemTransform();
 }
 
+/**
+ * This parameter enables that this canvas can be rendered without
+ * being shown on screen. This feature is very limited in what it supports.
+ *
+ * There needs to be another window actually showing that we can make current
+ * to get a surface to make current AND for this feature to be useful
+ * one needs to hook into beforeRender() and set the render tareget.
+ *
+ */
+void QQuickCanvasPrivate::setRenderWithoutShowing(bool render)
+{
+    if (render == renderWithoutShowing)
+        return;
+
+    Q_Q(QQuickCanvas);
+    renderWithoutShowing = render;
+
+    if (render)
+        windowManager->show(q);
+    else
+        windowManager->hide(q);
+}
+
+
 void forceUpdate(QQuickItem *item)
 {
     if (item->flags() & QQuickItem::ItemHasContents)
@@ -253,6 +277,7 @@ QQuickCanvasPrivate::QQuickCanvasPrivate()
     : rootItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
+    , renderWithoutShowing(false)
     , dirtyItemList(0)
     , context(0)
     , renderer(0)

@@ -208,6 +208,16 @@ public:
 
     void run();
 
+    QQuickCanvas *masterCanvas() {
+        QQuickCanvas *win = 0;
+        for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
+            it != m_rendered_windows.constEnd() && !win; ++it) {
+            if (it.value()->isVisible)
+                win = it.key();
+        }
+        return win;
+    }
+
 public slots:
     void animationStarted();
     void animationStopped();
@@ -249,6 +259,7 @@ private:
         QSize viewportSize;
 
         uint sizeWasChanged : 1;
+        uint isVisible : 1;
     };
 
     QHash<QQuickCanvas *, CanvasData *> m_rendered_windows;
@@ -276,6 +287,7 @@ public:
 
     void canvasDestroyed(QQuickCanvas *canvas);
 
+    void initializeGL();
     void renderCanvas(QQuickCanvas *canvas);
     void paint(QQuickCanvas *canvas);
     QImage grab(QQuickCanvas *canvas);
@@ -329,7 +341,10 @@ QQuickWindowManager *QQuickWindowManager::instance()
 void QQuickRenderThreadSingleContextWindowManager::initialize()
 {
     Q_ASSERT(m_rendered_windows.size());
-    QQuickCanvas *win = m_rendered_windows.constBegin().key();
+
+    QQuickCanvas *win = masterCanvas();
+    if (!win)
+        return;
 
     gl = new QOpenGLContext();
     // Pick up the surface format from one of them
@@ -378,6 +393,7 @@ void QQuickRenderThreadSingleContextWindowManager::handleAddedWindow(QQuickCanva
     CanvasData *data = new CanvasData;
     data->sizeWasChanged = false;
     data->windowSize = canvas->size();
+    data->isVisible = canvas->visible();
     m_rendered_windows[canvas] = data;
 
     isExternalUpdatePending = true;
@@ -489,7 +505,7 @@ void QQuickRenderThreadSingleContextWindowManager::canvasVisibilityChanged()
         CanvasTracker &t = const_cast<CanvasTracker &>(m_tracked_windows.at(i));
         QQuickCanvas *win = t.canvas;
 
-        Q_ASSERT(win->visible() || t.toBeRemoved);
+        Q_ASSERT(win->visible() || QQuickCanvasPrivate::get(win)->renderWithoutShowing || t.toBeRemoved);
         bool canvasVisible = win->width() > 0 && win->height() > 0;
         anyoneShowing |= (canvasVisible && !t.toBeRemoved);
 
@@ -541,6 +557,9 @@ void QQuickRenderThreadSingleContextWindowManager::run()
     wake();
     unlock();
 
+    if (!gl)
+        return;
+
     while (!shouldExit) {
         lock();
 
@@ -591,7 +610,10 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 
             Q_ASSERT(canvasData->windowSize.width() > 0 && canvasData->windowSize.height() > 0);
 
-            gl->makeCurrent(canvas);
+            if (!canvasData->isVisible)
+                gl->makeCurrent(masterCanvas());
+            else
+                gl->makeCurrent(canvas);
 
             if (canvasData->viewportSize != canvasData->windowSize) {
 #ifdef THREAD_DEBUG
@@ -660,7 +682,9 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             printf("                RenderThread: --- wait for swap...\n");
 #endif
 
-            gl->swapBuffers(canvas);
+            if (canvasData->isVisible)
+                gl->swapBuffers(canvas);
+
             canvasPrivate->fireFrameSwapped();
 #ifdef THREAD_DEBUG
             printf("                RenderThread: --- swap complete...\n");
@@ -1141,15 +1165,30 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
 
     CanvasData &data = const_cast<CanvasData &>(m_windows[canvas]);
 
+    QQuickCanvas *masterCanvas = 0;
+    if (!canvas->visible()) {
+        // Find a "proper surface" to bind...
+        for (QHash<QQuickCanvas *, CanvasData>::const_iterator it = m_windows.constBegin();
+             it != m_windows.constEnd() && !masterCanvas; ++it) {
+            if (it.key()->visible())
+                masterCanvas = it.key();
+        }
+    } else {
+        masterCanvas = canvas;
+    }
+
+    if (!masterCanvas)
+        return;
+
     if (!gl) {
         gl = new QOpenGLContext();
-        gl->setFormat(canvas->requestedFormat());
+        gl->setFormat(masterCanvas->requestedFormat());
         gl->create();
-        if (!gl->makeCurrent(canvas))
+        if (!gl->makeCurrent(masterCanvas))
             qWarning("QQuickCanvas: makeCurrent() failed...");
         sg->initialize(gl);
     } else {
-        gl->makeCurrent(canvas);
+        gl->makeCurrent(masterCanvas);
     }
 
     bool alsoSwap = data.updatePending;
@@ -1165,7 +1204,7 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         data.grabOnly = false;
     }
 
-    if (alsoSwap) {
+    if (alsoSwap && canvas->visible()) {
         gl->swapBuffers(canvas);
         cd->fireFrameSwapped();
     }
