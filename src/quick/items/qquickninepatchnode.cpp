@@ -145,7 +145,7 @@ void QQuickNinePatchNode::update()
     float tw = m_material.texture()->textureSize().width();
     float th = m_material.texture()->textureSize().height();
 
-    QRectF textureSubRect = m_material.texture()->textureSubRect();
+    QRectF textureSubRect = m_material.texture()->normalizedTextureSubRect();
     QSize textureSize = m_material.texture()->textureSize();
 
     float rightBorder = tw - m_innerRect.right();

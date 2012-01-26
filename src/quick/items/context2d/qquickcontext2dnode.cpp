@@ -115,7 +115,7 @@ void QQuickContext2DNode::updateTexture()
 
 void QQuickContext2DNode::updateGeometry()
 {
-    QRectF source = m_texture->textureSubRect();
+    QRectF source = m_texture->normalizedTextureSubRect();
     QSGGeometry::updateTexturedRectGeometry(&m_geometry,
                                             QRectF(0, 0, m_size.width(), m_size.height()),
                                             source);

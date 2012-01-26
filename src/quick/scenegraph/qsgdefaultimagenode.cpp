@@ -182,7 +182,7 @@ void QSGDefaultImageNode::updateGeometry()
         m_geometry.setDrawingMode(GL_TRIANGLE_STRIP);
         QSGGeometry::updateTexturedRectGeometry(&m_geometry, QRectF(), QRectF());
     } else {
-        QRectF textureRect = t->textureSubRect();
+        QRectF textureRect = t->normalizedTextureSubRect();
 
         bool isSubRect = textureRect != QRectF(0, 0, 1, 1);
         const int ceilRight = qCeil(m_sourceRect.right());

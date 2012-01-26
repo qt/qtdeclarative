@@ -138,7 +138,7 @@ public:
     virtual QImage toImage(const QRectF& region = QRectF());
     virtual QPaintDevice* beginPainting();
     virtual void endPainting();
-    QRectF textureSubRect() const;
+    QRectF normalizedTextureSubRect() const;
     virtual bool supportThreadRendering() const {return false;}
     virtual bool supportDirectRendering() const {return false;}
     virtual QQuickCanvasItem::RenderTarget renderTarget() const;

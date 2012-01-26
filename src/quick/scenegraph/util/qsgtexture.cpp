@@ -249,7 +249,7 @@ bool QSGTexture::isAtlasTexture() const
     The default implementation returns a rect at position (0, 0) with
     width and height of 1.
  */
-QRectF QSGTexture::textureSubRect() const
+QRectF QSGTexture::normalizedTextureSubRect() const
 {
     return QRectF(0, 0, 1, 1);
 }

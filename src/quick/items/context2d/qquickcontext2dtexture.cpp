@@ -468,7 +468,7 @@ void QQuickContext2DFBOTexture::bind()
     updateBindOptions();
 }
 
-QRectF QQuickContext2DFBOTexture::textureSubRect() const
+QRectF QQuickContext2DFBOTexture::normalizedTextureSubRect() const
 {
     return QRectF(0
                 , 0

@@ -76,7 +76,7 @@ public:
     virtual bool hasAlphaChannel() const = 0;
     virtual bool hasMipmaps() const = 0;
 
-    virtual QRectF textureSubRect() const;
+    virtual QRectF normalizedTextureSubRect() const;
 
     virtual bool isAtlasTexture() const;
 
@@ -106,7 +106,7 @@ protected:
 QRectF QSGTexture::convertToNormalizedSourceRect(const QRectF &rect) const
 {
     QSize s = textureSize();
-    QRectF r = textureSubRect();
+    QRectF r = normalizedTextureSubRect();
 
     qreal sx = r.width() / s.width();
     qreal sy = r.height() / s.height();
