@@ -335,7 +335,8 @@ void QQuickRenderThreadSingleContextWindowManager::initialize()
     // Pick up the surface format from one of them
     gl->setFormat(win->requestedFormat());
     gl->create();
-    gl->makeCurrent(win);
+    if (!gl->makeCurrent(win))
+        qWarning("QQuickCanvas: makeCurrent() failed...");
 
     Q_ASSERT(!sg->isReady());
     sg->initialize(gl);
@@ -1144,7 +1145,8 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         gl = new QOpenGLContext();
         gl->setFormat(canvas->requestedFormat());
         gl->create();
-        gl->makeCurrent(canvas);
+        if (!gl->makeCurrent(canvas))
+            qWarning("QQuickCanvas: makeCurrent() failed...");
         sg->initialize(gl);
     } else {
         gl->makeCurrent(canvas);
