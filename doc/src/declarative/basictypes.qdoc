@@ -154,6 +154,11 @@
     Image { source: "pics/logo.png" }
     \endqml
 
+    Note that as QML requires URL paths, you should use "qrc:///" instead of ":/" for
+    referring to files stored with the \l{resources.html}{Qt Resource System}.
+    Usually you will only have to do this once, because relative URLs resolved from
+    that file will use the same protocol.
+
     \sa {QML Basic Types}
 */
 
