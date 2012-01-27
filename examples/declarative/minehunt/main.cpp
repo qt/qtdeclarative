@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
     canvas.setResizeMode(QQuickView::SizeRootObjectToView);
     canvas.engine()->rootContext()->setContextObject(game);
-    canvas.setSource(QString("qrc:minehunt.qml"));
+    canvas.setSource(QString("qrc:///minehunt.qml"));
     QObject::connect(canvas.engine(), SIGNAL(quit()), &app, SLOT(quit()));
 
     canvas.show();

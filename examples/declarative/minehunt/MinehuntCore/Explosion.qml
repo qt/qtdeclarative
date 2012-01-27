@@ -53,10 +53,10 @@ Item {
         }
         Emitter {
             id: particles
-            emitting: false
+            enabled: false
             anchors.centerIn: parent
             group: "star"
-            speed: AngledDirection { angleVariation: 360; magnitude: 150; magnitudeVariation: 50 }
+            speed: AngleDirection { angleVariation: 360; magnitude: 150; magnitudeVariation: 50 }
             emitRate: 200
             z: 100
             lifeSpan: 1000
