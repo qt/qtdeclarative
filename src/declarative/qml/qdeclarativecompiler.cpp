@@ -257,6 +257,9 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
         case QVariant::Url:
             if (!v->value.isString()) COMPILE_EXCEPTION(v, tr("Invalid property assignment: url expected"));
             break;
+        case QVariant::RegExp:
+            COMPILE_EXCEPTION(v, tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
+            break;
         case QVariant::UInt:
             {
             bool ok = v->value.isNumber();

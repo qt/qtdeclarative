@@ -1781,14 +1781,26 @@ void tst_qdeclarativeecmascript::dynamicCreationOwnership()
     QCOMPARE(dtorCount, expectedDtorCount);
 }
 
-//QTBUG-9367
 void tst_qdeclarativeecmascript::regExpBug()
 {
-    QDeclarativeComponent component(&engine, testFileUrl("regExp.qml"));
-    MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
-    QVERIFY(object != 0);
-    QCOMPARE(object->regExp().pattern(), QLatin1String("[a-zA-z]"));
-    delete object;
+    //QTBUG-9367
+    {
+        QDeclarativeComponent component(&engine, testFileUrl("regExp.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->regExp().pattern(), QLatin1String("[a-zA-z]"));
+        delete object;
+    }
+
+    //QTBUG-23068
+    {
+        QString err = QString(QLatin1String("%1:6 Invalid property assignment: regular expression expected; use /pattern/ syntax\n")).arg(testFileUrl("regExp.2.qml").toString());
+        QDeclarativeComponent component(&engine, testFileUrl("regExp.2.qml"));
+        QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
+        MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
+        QVERIFY(!object);
+        QCOMPARE(component.errorString(), err);
+    }
 }
 
 static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, const char *source)
