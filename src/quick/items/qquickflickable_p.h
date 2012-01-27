@@ -184,6 +184,8 @@ public:
 
     Q_INVOKABLE void resizeContent(qreal w, qreal h, QPointF center);
     Q_INVOKABLE void returnToBounds();
+    Q_INVOKABLE void flick(qreal xVelocity, qreal yVelocity);
+    Q_INVOKABLE void cancelFlick();
 
 Q_SIGNALS:
     void contentWidthChanged();
@@ -254,7 +256,6 @@ protected:
 
     bool xflick() const;
     bool yflick() const;
-    void cancelFlick();
 
 protected:
     QQuickFlickable(QQuickFlickablePrivate &dd, QQuickItem *parent);

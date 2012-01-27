@@ -1274,6 +1274,25 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
         d->updateBeginningEnd();
 }
 
+/*!
+    \qmlmethod QtQuick2::Flickable::flick(qreal xVelocity, qreal yVelocity)
+
+    Flicks the content with \a xVelocity horizontally and \a yVelocity vertically in pixels/sec.
+*/
+
+void QQuickFlickable::flick(qreal xVelocity, qreal yVelocity)
+{
+    Q_D(QQuickFlickable);
+    d->flickX(xVelocity);
+    d->flickY(yVelocity);
+}
+
+/*!
+    \qmlmethod QtQuick2::Flickable::cancelFlick()
+
+    Cancels the current flick animation.
+*/
+
 void QQuickFlickable::cancelFlick()
 {
     Q_D(QQuickFlickable);
