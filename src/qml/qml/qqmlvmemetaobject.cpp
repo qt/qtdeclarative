@@ -56,6 +56,28 @@ Q_DECLARE_METATYPE(QJSValue);
 
 QT_BEGIN_NAMESPACE
 
+QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
+    : QQmlGuard<QObject>(0), m_target(0), m_index(-1)
+{
+}
+
+QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
+{
+}
+
+void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
+{
+    if (m_target && m_index >= 0)
+        m_target->activate(m_target->object, m_target->methodOffset + m_index, 0);
+}
+
+void QQmlVMEVariantQObjectPtr::setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index)
+{
+    m_target = target;
+    m_index = index;
+    setObject(obj);
+}
+
 class QQmlVMEVariant
 {
 public:
@@ -79,7 +101,7 @@ public:
     inline const QDateTime &asQDateTime();
     inline const QJSValue &asQJSValue();
 
-    inline void setValue(QObject *);
+    inline void setValue(QObject *v, QQmlVMEMetaObject *target, int index);
     inline void setValue(const QVariant &);
     inline void setValue(int);
     inline void setValue(bool);
@@ -93,7 +115,7 @@ public:
     inline void setValue(const QJSValue &);
 private:
     int type;
-    void *data[4]; // Large enough to hold all types
+    void *data[6]; // Large enough to hold all types
 
     inline void cleanup();
 };
@@ -127,7 +149,7 @@ void QQmlVMEVariant::cleanup()
                type == QMetaType::Double) {
         type = QVariant::Invalid;
     } else if (type == QMetaType::QObjectStar) {
-        ((QQmlGuard<QObject>*)dataPtr())->~QQmlGuard<QObject>();
+        ((QQmlVMEVariantQObjectPtr*)dataPtr())->~QQmlVMEVariantQObjectPtr();
         type = QVariant::Invalid;
     } else if (type == QMetaType::QString) {
         ((QString *)dataPtr())->~QString();
@@ -174,8 +196,8 @@ void *QQmlVMEVariant::dataPtr()
 
 QObject *QQmlVMEVariant::asQObject() 
 {
-    if (type != QMetaType::QObjectStar) 
-        setValue((QObject *)0);
+    if (type != QMetaType::QObjectStar)
+        setValue((QObject *)0, 0, -1);
 
     return *(QQmlGuard<QObject> *)(dataPtr());
 }
@@ -268,14 +290,14 @@ const QJSValue &QQmlVMEVariant::asQJSValue()
     return *(QJSValue *)(dataPtr());
 }
 
-void QQmlVMEVariant::setValue(QObject *v)
+void QQmlVMEVariant::setValue(QObject *v, QQmlVMEMetaObject *target, int index)
 {
     if (type != QMetaType::QObjectStar) {
         cleanup();
         type = QMetaType::QObjectStar;
-        new (dataPtr()) QQmlGuard<QObject>();
+        new (dataPtr()) QQmlVMEVariantQObjectPtr;
     }
-    *(QQmlGuard<QObject>*)(dataPtr()) = v;
+    reinterpret_cast<QQmlVMEVariantQObjectPtr*>(dataPtr())->setGuardedValue(v, target, index);
 }
 
 void QQmlVMEVariant::setValue(const QVariant &v)
@@ -629,7 +651,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             break;
                         case QMetaType::QObjectStar:
                             needActivate = *reinterpret_cast<QObject **>(a[0]) != data[id].asQObject();
-                            data[id].setValue(*reinterpret_cast<QObject **>(a[0]));
+                            data[id].setValue(*reinterpret_cast<QObject **>(a[0]), this, id);
                             break;
                         case QMetaType::QVariant:
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
@@ -892,7 +914,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         if (value.userType() == QMetaType::QObjectStar) {
             QObject *o = qvariant_cast<QObject *>(value);
             needActivate = (data[id].dataType() != QMetaType::QObjectStar || data[id].asQObject() != o);
-            data[id].setValue(qvariant_cast<QObject *>(value));
+            data[id].setValue(qvariant_cast<QObject *>(value), this, id);
         } else {
             needActivate = (data[id].dataType() != qMetaTypeId<QVariant>() ||
                             data[id].asQVariant().userType() != value.userType() ||

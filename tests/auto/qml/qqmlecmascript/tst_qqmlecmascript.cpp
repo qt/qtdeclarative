@@ -1288,6 +1288,28 @@ void tst_qqmlecmascript::dynamicDestruction()
 
     delete o;
     }
+
+    {
+    // QTBUG-23451
+    QQmlGuard<QObject> createdQmlObject = 0;
+    QQmlComponent component(&engine, testFileUrl("dynamicDeletion.3.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QVERIFY(qvariant_cast<QObject*>(o->property("objectProperty")) == 0);
+    QMetaObject::invokeMethod(o, "create");
+    createdQmlObject = qvariant_cast<QObject*>(o->property("objectProperty"));
+    QVERIFY(createdQmlObject);
+    QMetaObject::invokeMethod(o, "destroy");
+    QVERIFY(qvariant_cast<bool>(o->property("test")) == false);
+    for (int ii = 0; createdQmlObject && ii < 50; ++ii) { // After 5 seconds we should give up
+        QTest::qWait(100);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+    }
+    QVERIFY(qvariant_cast<QObject*>(o->property("objectProperty")) == 0);
+    QVERIFY(qvariant_cast<bool>(o->property("test")) == true);
+    delete o;
+    }
 }
 
 /*

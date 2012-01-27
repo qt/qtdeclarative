@@ -1043,7 +1043,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         return v8::Null();
 
     if (QObjectPrivate::get(object)->wasDeleted)
-       return v8::Undefined();
+       return v8::Null();
     
     QQmlData *ddata = QQmlData::get(object, true);
 
