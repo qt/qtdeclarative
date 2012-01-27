@@ -90,6 +90,8 @@ public:
     void setTarget(QObject *target) { m_target = target; }
     void resetTarget() { m_target = 0; }
 
+    bool isEmpty() const { return m_items.isEmpty(); }
+
     typedef ItemList::iterator iterator;
     iterator begin() { return m_items.begin(); }
     iterator end() { return m_items.end(); }
