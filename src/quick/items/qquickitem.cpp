@@ -1640,6 +1640,7 @@ void QQuickItemPrivate::setAccessibleFlagAndListener()
 
 /*!
     \qmlclass Item QQuickItem
+    \inherits QtObject
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
     \brief The Item is the most basic of all visual items in QML.
