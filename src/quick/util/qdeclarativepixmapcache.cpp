@@ -707,17 +707,20 @@ private:
 
     int m_unreferencedCost;
     int m_timerId;
+    bool m_destroying;
 };
 Q_GLOBAL_STATIC(QDeclarativePixmapStore, pixmapStore);
 
 
 QDeclarativePixmapStore::QDeclarativePixmapStore()
-: m_unreferencedPixmaps(0), m_lastUnreferencedPixmap(0), m_unreferencedCost(0), m_timerId(-1)
+    : m_unreferencedPixmaps(0), m_lastUnreferencedPixmap(0), m_unreferencedCost(0), m_timerId(-1), m_destroying(false)
 {
 }
 
 QDeclarativePixmapStore::~QDeclarativePixmapStore()
 {
+    m_destroying = true;
+
     int leakedPixmaps = 0;
     QList<QDeclarativePixmapData*> cachedData = m_cache.values();
 
@@ -764,7 +767,7 @@ void QDeclarativePixmapStore::unreferencePixmap(QDeclarativePixmapData *data)
 
     shrinkCache(-1); // Shrink the cache incase it has become larger than cache_limit
 
-    if (m_timerId == -1 && m_unreferencedPixmaps) 
+    if (m_timerId == -1 && m_unreferencedPixmaps && !m_destroying)
         m_timerId = startTimer(CACHE_EXPIRE_TIME * 1000);
 }
 
