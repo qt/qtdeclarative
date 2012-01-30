@@ -1063,6 +1063,8 @@ bool QQuickCanvasPrivate::deliverTouchEvent(QTouchEvent *event)
         deliverTouchPoints(rootItem, event, event->touchPoints(), &acceptedNewPoints, &updatedPoints);
         if (acceptedNewPoints.count() > 0)
             event->accept();
+        else
+            event->ignore();
         return event->isAccepted();
     }
 
@@ -1095,7 +1097,10 @@ bool QQuickCanvasPrivate::deliverTouchEvent(QTouchEvent *event)
         deliverTouchPoints(rootItem, event, newPoints, &acceptedNewPoints, &updatedPoints);
         if (acceptedNewPoints.count() > 0 || updatedPoints.count() != prevCount)
             event->accept();
-    }
+        else
+            event->ignore();
+    } else
+        event->ignore();
 
     if (event->touchPointStates() & Qt::TouchPointReleased) {
         for (int i=0; i<touchPoints.count(); i++) {

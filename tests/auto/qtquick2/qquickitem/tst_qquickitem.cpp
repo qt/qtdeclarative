@@ -55,18 +55,26 @@ class TestItem : public QQuickItem
 {
 Q_OBJECT
 public:
-    TestItem(QQuickItem *parent = 0) : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0), wheelCount(0) {}
+    TestItem(QQuickItem *parent = 0)
+        : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0)
+        , wheelCount(0), acceptIncomingTouchEvents(true)
+        , touchEventReached(false) {}
 
     bool focused;
     int pressCount;
     int releaseCount;
     int wheelCount;
+    bool acceptIncomingTouchEvents;
+    bool touchEventReached;
 protected:
     virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
     virtual void mousePressEvent(QMouseEvent *event) { event->accept(); ++pressCount; }
     virtual void mouseReleaseEvent(QMouseEvent *event) { event->accept(); ++releaseCount; }
-    virtual void touchEvent(QTouchEvent *event) { event->accept(); }
+    virtual void touchEvent(QTouchEvent *event) {
+        touchEventReached = true;
+        event->setAccepted(acceptIncomingTouchEvents);
+    }
     virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; }
 };
 
@@ -139,7 +147,8 @@ private slots:
     void enabledFocus();
 
     void mouseGrab();
-    void touchEventAccept();
+    void touchEventAcceptIgnore_data();
+    void touchEventAcceptIgnore();
     void polishOutsideAnimation();
     void polishOnCompleted();
 
@@ -1016,8 +1025,18 @@ void tst_qquickitem::mouseGrab()
     delete canvas;
 }
 
-void tst_qquickitem::touchEventAccept()
+void tst_qquickitem::touchEventAcceptIgnore_data()
 {
+    QTest::addColumn<bool>("itemSupportsTouch");
+
+    QTest::newRow("with touch") << true;
+    QTest::newRow("without touch") << false;
+}
+
+void tst_qquickitem::touchEventAcceptIgnore()
+{
+    QFETCH(bool, itemSupportsTouch);
+
     TestCanvas *canvas = new TestCanvas;
     canvas->resize(100, 100);
     canvas->show();
@@ -1025,18 +1044,77 @@ void tst_qquickitem::touchEventAccept()
     TestItem *item = new TestItem;
     item->setSize(QSizeF(100, 100));
     item->setParentItem(canvas->rootItem());
+    item->acceptIncomingTouchEvents = itemSupportsTouch;
 
-    static QTouchDevice* device = new QTouchDevice;
-    device->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(device);
+    static QTouchDevice* device = 0;
+    if (!device) {
+        device =new QTouchDevice;
+        device->setType(QTouchDevice::TouchScreen);
+        QWindowSystemInterface::registerTouchDevice(device);
+    }
 
-    QTouchEvent *event = new QTouchEvent(QEvent::TouchBegin, device);
+    // Send Begin, Update & End touch sequence
+    {
+        QTouchEvent::TouchPoint point;
+        point.setId(1);
+        point.setPos(QPointF(50, 50));
+        point.setScreenPos(point.pos());
+        point.setState(Qt::TouchPointPressed);
 
-    bool accepted = canvas->event(event);
+        QTouchEvent event(QEvent::TouchBegin, device,
+                          Qt::NoModifier,
+                          Qt::TouchPointPressed,
+                          QList<QTouchEvent::TouchPoint>() << point);
+        event.setAccepted(true);
 
-    QVERIFY(accepted && event->isAccepted());
+        item->touchEventReached = false;
 
-    delete event;
+        bool accepted = canvas->event(&event);
+
+        QVERIFY(item->touchEventReached);
+        QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
+    }
+    {
+        QTouchEvent::TouchPoint point;
+        point.setId(1);
+        point.setPos(QPointF(60, 60));
+        point.setScreenPos(point.pos());
+        point.setState(Qt::TouchPointMoved);
+
+        QTouchEvent event(QEvent::TouchUpdate, device,
+                          Qt::NoModifier,
+                          Qt::TouchPointMoved,
+                          QList<QTouchEvent::TouchPoint>() << point);
+        event.setAccepted(true);
+
+        item->touchEventReached = false;
+
+        bool accepted = canvas->event(&event);
+
+        QCOMPARE(item->touchEventReached, itemSupportsTouch);
+        QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
+    }
+    {
+        QTouchEvent::TouchPoint point;
+        point.setId(1);
+        point.setPos(QPointF(60, 60));
+        point.setScreenPos(point.pos());
+        point.setState(Qt::TouchPointReleased);
+
+        QTouchEvent event(QEvent::TouchEnd, device,
+                          Qt::NoModifier,
+                          Qt::TouchPointReleased,
+                          QList<QTouchEvent::TouchPoint>() << point);
+        event.setAccepted(true);
+
+        item->touchEventReached = false;
+
+        bool accepted = canvas->event(&event);
+
+        QCOMPARE(item->touchEventReached, itemSupportsTouch);
+        QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
+    }
+
     delete item;
     delete canvas;
 }
