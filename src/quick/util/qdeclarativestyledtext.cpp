@@ -81,11 +81,12 @@ public:
 
     QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l)
         : text(t), layout(l), baseFont(layout.font()), hasNewLine(false)
-        , preFormat(false)
+        , preFormat(false), prependSpace(false), hasSpace(true)
     {
     }
 
     void parse();
+    void appendText(const QString &textIn, int start, int length, QString &textOut);
     bool parseTag(const QChar *&ch, const QString &textIn, QString &textOut, QTextCharFormat &format);
     bool parseCloseTag(const QChar *&ch, const QString &textIn, QString &textOut);
     void parseEntity(const QChar *&ch, const QString &textIn, QString &textOut);
@@ -95,6 +96,7 @@ public:
     bool parseAnchorAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format);
     QPair<QStringRef,QStringRef> parseAttribute(const QChar *&ch, const QString &textIn);
     QStringRef parseValue(const QChar *&ch, const QString &textIn);
+
 
     inline void skipSpace(const QChar *&ch) {
         while (ch->isSpace() && !ch->isNull())
@@ -110,6 +112,8 @@ public:
     QStack<List> listStack;
     bool hasNewLine;
     bool preFormat;
+    bool prependSpace;
+    bool hasSpace;
 
     static const QChar lessThan;
     static const QChar greaterThan;
@@ -121,6 +125,8 @@ public:
     static const QChar bullet;
     static const QChar disc;
     static const QChar square;
+    static const QChar lineFeed;
+    static const QChar space;
     static const int tabsize = 6;
 };
 
@@ -134,6 +140,8 @@ const QChar QDeclarativeStyledTextPrivate::ampersand(QLatin1Char('&'));
 const QChar QDeclarativeStyledTextPrivate::bullet(0x2022);
 const QChar QDeclarativeStyledTextPrivate::disc(0x25e6);
 const QChar QDeclarativeStyledTextPrivate::square(0x25a1);
+const QChar QDeclarativeStyledTextPrivate::lineFeed(QLatin1Char('\n'));
+const QChar QDeclarativeStyledTextPrivate::space(QLatin1Char(' '));
 
 QDeclarativeStyledText::QDeclarativeStyledText(const QString &string, QTextLayout &layout)
 : d(new QDeclarativeStyledTextPrivate(string, layout))
@@ -165,22 +173,18 @@ void QDeclarativeStyledTextPrivate::parse()
     int textLength = 0;
     int rangeStart = 0;
     bool formatChanged = false;
+
     const QChar *ch = text.constData();
     while (!ch->isNull()) {
         if (*ch == lessThan) {
             if (textLength) {
-                QStringRef ref = QStringRef(&text, textStart, textLength);
-                const QChar *c = ref.constData();
-                bool isWhiteSpace = true;
-                for (int i = 0; isWhiteSpace && (i < textLength); ++c, ++i) {
-                    if (!c->isSpace())
-                        isWhiteSpace = false;
-                }
-                if (!isWhiteSpace) {
-                    drawText.append(ref);
-                    hasNewLine = false;
-                }
+                appendText(text, textStart, textLength, drawText);
+            } else if (prependSpace) {
+                drawText.append(space);
+                prependSpace = false;
+                hasSpace = true;
             }
+
             if (rangeStart != drawText.length() && formatStack.count()) {
                 if (formatChanged) {
                     QTextLayout::FormatRange formatRange;
@@ -216,13 +220,25 @@ void QDeclarativeStyledTextPrivate::parse()
             textLength = 0;
         } else if (*ch == ampersand) {
             ++ch;
-            drawText.append(QStringRef(&text, textStart, textLength));
+            appendText(text, textStart, textLength, drawText);
             parseEntity(ch, text, drawText);
             textStart = ch - text.constData() + 1;
             textLength = 0;
-        } else if (preFormat && ch->isSpace()) {
-            drawText.append(QStringRef(&text, textStart, textLength));
-            drawText.append(QChar(QChar::Nbsp));
+        } else if (ch->isSpace()) {
+            if (textLength)
+                appendText(text, textStart, textLength, drawText);
+            if (!preFormat) {
+                prependSpace = !hasSpace;
+                for (const QChar *n = ch + 1; !n->isNull() && n->isSpace(); ++n)
+                    ch = n;
+                hasNewLine = false;
+            } else  if (*ch == lineFeed) {
+                drawText.append(QChar(QChar::LineSeparator));
+                hasNewLine = true;
+            } else {
+                drawText.append(QChar(QChar::Nbsp));
+                hasNewLine = false;
+            }
             textStart = ch - text.constData() + 1;
             textLength = 0;
         } else {
@@ -232,7 +248,7 @@ void QDeclarativeStyledTextPrivate::parse()
             ++ch;
     }
     if (textLength)
-        drawText.append(QStringRef(&text, textStart, textLength));
+        appendText(text, textStart, textLength, drawText);
     if (rangeStart != drawText.length() && formatStack.count()) {
         if (formatChanged) {
             QTextLayout::FormatRange formatRange;
@@ -247,6 +263,16 @@ void QDeclarativeStyledTextPrivate::parse()
 
     layout.setText(drawText);
     layout.setAdditionalFormats(ranges);
+}
+
+void QDeclarativeStyledTextPrivate::appendText(const QString &textIn, int start, int length, QString &textOut)
+{
+    if (prependSpace)
+        textOut.append(space);
+    textOut.append(QStringRef(&textIn, start, length));
+    prependSpace = false;
+    hasSpace = false;
+    hasNewLine = false;
 }
 
 bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, QString &textOut, QTextCharFormat &format)
@@ -267,6 +293,8 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
                     return true;
                 } else if (tagLength == 2 && tag.at(1) == QLatin1Char('r')) {
                     textOut.append(QChar(QChar::LineSeparator));
+                    hasSpace = true;
+                    prependSpace = false;
                     return false;
                 }
             } else if (char0 == QLatin1Char('i')) {
@@ -278,6 +306,8 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
                 if (tagLength == 1) {
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
+                    hasSpace = true;
+                    prependSpace = false;
                 } else if (tag == QLatin1String("pre")) {
                     preFormat = true;
                     if (!hasNewLine)
@@ -303,6 +333,8 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
                     static const qreal scaling[] = { 2.0, 1.5, 1.2, 1.0, 0.8, 0.7 };
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
+                    hasSpace = true;
+                    prependSpace = false;
                     format.setFontPointSize(baseFont.pointSize() * scaling[level - 1]);
                     format.setFontWeight(QFont::Bold);
                     return true;
@@ -407,12 +439,14 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
                 if (tagLength == 1) {
                     textOut.append(QChar::LineSeparator);
                     hasNewLine = true;
+                    hasSpace = true;
                     return false;
                 } else if (tag == QLatin1String("pre")) {
                     preFormat = false;
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
                     hasNewLine = true;
+                    hasSpace = true;
                     return true;
                 }
             } else if (char0 == QLatin1Char('u')) {
@@ -429,6 +463,7 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
             } else if (char0 == QLatin1Char('h') && tagLength == 2) {
                 textOut.append(QChar::LineSeparator);
                 hasNewLine = true;
+                hasSpace = true;
                 return true;
             } else if (tag == QLatin1String("font")) {
                 return true;

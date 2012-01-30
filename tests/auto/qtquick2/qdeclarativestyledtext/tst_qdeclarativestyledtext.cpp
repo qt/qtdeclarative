@@ -90,6 +90,7 @@ void tst_qdeclarativestyledtext::textOutput_data()
 
     QTest::newRow("bold") << "<b>bold</b>" << "bold" << (FormatList() << Format(Format::Bold, 0, 4));
     QTest::newRow("italic") << "<i>italic</i>" << "italic" << (FormatList() << Format(Format::Italic, 0, 6));
+    QTest::newRow("underline") << "<u>underline</u>" << "underline" << (FormatList() << Format(Format::Underline, 0, 9));
     QTest::newRow("strong") << "<strong>strong</strong>" << "strong" << (FormatList() << Format(Format::Bold, 0, 6));
     QTest::newRow("missing >") << "<b>text</b" << "text" << (FormatList() << Format(Format::Bold, 0, 4));
     QTest::newRow("missing b>") << "<b>text</" << "text" << (FormatList() << Format(Format::Bold, 0, 4));
@@ -134,6 +135,17 @@ void tst_qdeclarativestyledtext::textOutput_data()
     QTest::newRow("h6") << "<h6>head" << QChar(QChar::LineSeparator) + QLatin1String("head") << (FormatList() << Format(Format::Bold, 0, 5));
     QTest::newRow("h7") << "<h7>head" << "head" << FormatList();
     QTest::newRow("pre") << "normal<pre>pre text</pre>normal" << QLatin1String("normal") + QChar(QChar::LineSeparator) + QLatin1String("pre") + QChar(QChar::Nbsp) + QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("normal") << (FormatList() << Format(0, 6, 9));
+    QTest::newRow("pre lb") << "normal<pre>pre\n text</pre>normal" << QLatin1String("normal") + QChar(QChar::LineSeparator) + QLatin1String("pre") + QChar(QChar::LineSeparator) + QChar(QChar::Nbsp) + QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("normal") << (FormatList() << Format(0, 6, 10));
+    QTest::newRow("line feed") << "line\nfeed" << "line feed" << FormatList();
+    QTest::newRow("leading whitespace") << " leading whitespace" << "leading whitespace" << FormatList();
+    QTest::newRow("trailing whitespace") << "trailing whitespace " << "trailing whitespace" << FormatList();
+    QTest::newRow("consecutive whitespace") << " consecutive  \t \n  whitespace" << "consecutive whitespace" << FormatList();
+    QTest::newRow("space after newline") << "text<br/> more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList();
+    QTest::newRow("space after paragraph") << "text<p> more text</p> more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList();
+    QTest::newRow("space in header") << "<h1> head</h1> " << QChar(QChar::LineSeparator) + QLatin1String("head") + QChar(QChar::LineSeparator) << (FormatList() << Format(Format::Bold, 0, 5));
+    QTest::newRow("space before bold") << "this is <b>bold</b>" << "this is bold" << (FormatList() << Format(Format::Bold, 8, 4));
+    QTest::newRow("space leading bold") << "this is<b> bold</b>" << "this is bold" << (FormatList() << Format(Format::Bold, 7, 5));
+    QTest::newRow("space trailing bold") << "this is <b>bold </b>" << "this is bold " << (FormatList() << Format(Format::Bold, 8, 5));
 }
 
 void tst_qdeclarativestyledtext::textOutput()
