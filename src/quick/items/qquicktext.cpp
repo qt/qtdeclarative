@@ -306,6 +306,7 @@ void QQuickTextPrivate::updateLayout()
             if (!layout.text().isEmpty())
                 layout.setText(text);
         } else if (!styledText) {
+            layout.clearAdditionalFormats();
             QString tmp = text;
             tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
             singleline = !tmp.contains(QChar::LineSeparator);
