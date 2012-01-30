@@ -567,6 +567,8 @@ void tst_qquickcanvas::grab()
     canvas.resize(250, 250);
     canvas.show();
 
+    QTest::qWaitForWindowShown(&canvas);
+
     QImage content = canvas.grabFrameBuffer();
     QCOMPARE(content.width(), canvas.width());
     QCOMPARE(content.height(), canvas.height());
@@ -667,7 +669,7 @@ void tst_qquickcanvas::headless()
 
     QCOMPARE(originalContent, newContent);
 
-
+    delete canvas;
 }
 
 void tst_qquickcanvas::focusObject()
