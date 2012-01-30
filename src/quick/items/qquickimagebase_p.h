@@ -44,13 +44,14 @@
 #define QQUICKIMAGEBASE_P_H
 
 #include "qquickimplicitsizeitem_p.h"
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QQuickImageBasePrivate;
-class Q_AUTOTEST_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(Status)
