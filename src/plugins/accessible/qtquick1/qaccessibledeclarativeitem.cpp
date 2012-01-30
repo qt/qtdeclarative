@@ -119,37 +119,30 @@ QAccessibleInterface *QAccessibleDeclarativeItem::child(int index) const
 
 int QAccessibleDeclarativeItem::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
 {
-    //qDebug() << "QAccessibleDeclarativeItem navigate" << rel << entry;
-    Q_ASSERT(entry >= 0);
-
+    Q_UNUSED(rel);
+    Q_UNUSED(entry);
     *target = 0;
-    if (entry == 0) {
-        *target = new QAccessibleDeclarativeItem(m_item->toGraphicsObject(), m_view);
-        return 0;
-    }
+    return -1;
+}
 
-    switch (rel) {
-    case QAccessible::FocusChild: {
-        QGraphicsObject *focusObject = 0;
-        if (m_item->hasFocus()) {
-            focusObject = m_item->toGraphicsObject();
-        } else {
-            if (QGraphicsItem *focusItem = m_view->scene()->focusItem()) {
+/*! \reimp */
+QAccessibleInterface *QAccessibleDeclarativeItem::focusChild() const
+{
+    QGraphicsObject *focusObject = 0;
+    if (m_item->hasFocus()) {
+        focusObject = m_item->toGraphicsObject();
+    } else {
+        if (QGraphicsScene *scene = m_view->scene()) {
+            if (QGraphicsItem *focusItem = scene->focusItem()) {
                 if (m_item->isAncestorOf(focusItem)) {
                     focusObject = focusItem->toGraphicsObject();
                 }
             }
         }
-        //qDebug() << "QAccessibleDeclarativeItem navigate QAccessible::FocusChild" << rel << entry;
-        if (focusObject) {
-            *target = new QAccessibleDeclarativeItem(focusObject, m_view);
-            return 0;
-        }
     }
-    default: break;
-    }
-
-    return -1;
+    if (focusObject)
+        return new QAccessibleDeclarativeItem(focusObject, m_view); //###queryAccessibleInterface?
+    return 0;
 }
 
 int QAccessibleDeclarativeItem::indexOfChild(const QAccessibleInterface *iface) const

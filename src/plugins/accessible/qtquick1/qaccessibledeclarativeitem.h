@@ -59,6 +59,8 @@ public:
 
     bool clipsChildren() const;
 
+    QAccessibleInterface *focusChild() const;
+
     QAccessibleInterface *parent() const;
     QAccessibleInterface *child(int index) const;
     int childCount() const;
