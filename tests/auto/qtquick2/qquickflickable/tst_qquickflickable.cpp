@@ -44,6 +44,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick/qquickview.h>
 #include <private/qquickflickable_p.h>
+#include <private/qquickflickable_p_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include <math.h>
 #include "../../shared/util.h"
@@ -131,7 +132,7 @@ void tst_qquickflickable::verticalViewportSize()
 
     QVERIFY(obj != 0);
     QCOMPARE(obj->contentWidth(), 200.);
-    QCOMPARE(obj->contentHeight(), 1200.);
+    QCOMPARE(obj->contentHeight(), 6000.);
     QCOMPARE(obj->isAtXBeginning(), true);
     QCOMPARE(obj->isAtXEnd(), false);
     QCOMPARE(obj->isAtYBeginning(), true);
@@ -538,6 +539,20 @@ void tst_qquickflickable::flickVelocity()
     QVERIFY(flickable->verticalVelocity() < 0.0);
     QTRY_VERIFY(flickable->verticalVelocity() == 0.0);
 
+    // Flick multiple times and verify that flick acceleration is applied.
+    QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flickable);
+    bool boosted = false;
+    for (int i = 0; i < 6; ++i) {
+        flick(canvas, QPoint(20,390), QPoint(20, 50), 200);
+        boosted |= fp->flickBoost > 1.0;
+    }
+    QVERIFY(boosted);
+
+    // Flick in opposite direction -> boost cancelled.
+    flick(canvas, QPoint(20,10), QPoint(20, 340), 200);
+    QTRY_VERIFY(flickable->verticalVelocity() < 0.0);
+    QVERIFY(fp->flickBoost == 1.0);
+
     delete canvas;
 }
 
@@ -616,6 +631,7 @@ void tst_qquickflickable::flick(QQuickView *canvas, const QPoint &from, const QP
     }
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
+    QTest::qWait(50);
 }
 
 template<typename T>

@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 const qreal MinimumFlickVelocity = 75.0;
 
 class QQuickFlickableVisibleArea;
-class QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_AUTOTEST_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickFlickable)
 
@@ -97,6 +97,7 @@ public:
     struct AxisData {
         AxisData(QQuickFlickablePrivate *fp, void (QQuickFlickablePrivate::*func)(qreal))
             : move(fp, func), viewSize(-1), startMargin(0), endMargin(0)
+            , continuousFlickVelocity(0)
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
             , fixingUp(false), inOvershoot(false), moving(false), flicking(false)
             , dragging(false), extentsChanged(false)
@@ -129,6 +130,7 @@ public:
         qreal flickTarget;
         qreal startMargin;
         qreal endMargin;
+        qreal continuousFlickVelocity;
         QQuickFlickablePrivate::Velocity smoothVelocity;
         QPODVector<qreal,10> velocityBuffer;
         bool atEnd : 1;
@@ -198,6 +200,7 @@ public:
     QBasicTimer delayedPressTimer;
     int pressDelay;
     int fixupDuration;
+    qreal flickBoost;
 
     enum FixupMode { Normal, Immediate, ExtentChanged };
     FixupMode fixupMode;

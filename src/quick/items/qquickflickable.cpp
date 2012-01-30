@@ -83,6 +83,21 @@ QT_BEGIN_NAMESPACE
 #define QML_FLICK_OVERSHOOTFRICTION 8
 #endif
 
+// Multiflick acceleration minimum flick velocity threshold
+#ifndef QML_FLICK_MULTIFLICK_THRESHOLD
+#define QML_FLICK_MULTIFLICK_THRESHOLD 1250
+#endif
+
+// Multiflick acceleration minimum contentSize/viewSize ratio
+#ifndef QML_FLICK_MULTIFLICK_RATIO
+#define QML_FLICK_MULTIFLICK_RATIO 10
+#endif
+
+// Multiflick acceleration maximum velocity multiplier
+#ifndef QML_FLICK_MULTIFLICK_MAXBOOST
+#define QML_FLICK_MULTIFLICK_MAXBOOST 3.0
+#endif
+
 // FlickThreshold determines how far the "mouse" must have moved
 // before we perform a flick.
 static const int FlickThreshold = 20;
@@ -179,7 +194,7 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
     , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY), reportedVelocitySmoothing(100)
     , delayedPressEvent(0), delayedPressTarget(0), pressDelay(0), fixupDuration(400)
-    , fixupMode(Normal), vTime(0), visibleArea(0)
+    , flickBoost(1.0), fixupMode(Normal), vTime(0), visibleArea(0)
     , flickableDirection(QQuickFlickable::AutoFlickDirection)
     , boundsBehavior(QQuickFlickable::DragAndOvershootBounds)
 {
@@ -664,6 +679,11 @@ void QQuickFlickable::setInteractive(bool interactive)
     The instantaneous velocity of movement along the x and y axes, in pixels/sec.
 
     The reported velocity is smoothed to avoid erratic output.
+
+    Note that for views with a large content size (more than 10 times the view size),
+    the velocity of the flick may exceed the velocity of the touch in the case
+    of multiple quick consecutive flicks.  This allows the user to flick faster
+    through large content.
 */
 qreal QQuickFlickable::horizontalVelocity() const
 {
@@ -803,8 +823,23 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
         && (qAbs(hData.smoothVelocity.value()) > RetainGrabVelocity
             || qAbs(vData.smoothVelocity.value()) > RetainGrabVelocity)) {
         stealMouse = true; // If we've been flicked then steal the click.
+        int flickTime = timeline.time();
+        if (flickTime > 600) {
+            // too long between flicks - cancel boost
+            hData.continuousFlickVelocity = 0;
+            vData.continuousFlickVelocity = 0;
+            flickBoost = 1.0;
+        } else {
+            hData.continuousFlickVelocity = -hData.smoothVelocity.value();
+            vData.continuousFlickVelocity = -vData.smoothVelocity.value();
+            if (flickTime > 300) // slower flicking - reduce boost
+                flickBoost = qMax(1.0, flickBoost - 0.5);
+        }
     } else {
         stealMouse = false;
+        hData.continuousFlickVelocity = 0;
+        vData.continuousFlickVelocity = 0;
+        flickBoost = 1.0;
     }
     q->setKeepMouseGrab(stealMouse);
     pressed = true;
@@ -817,13 +852,12 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     vData.dragMaxBound = q->maxYExtent();
     fixupMode = Normal;
     lastPos = QPointF();
-    lastPosTime = computeCurrentTime(event);
     pressPos = event->localPos();
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
     hData.flicking = false;
     vData.flicking = false;
-    lastPressTime = computeCurrentTime(event);
+    lastPosTime = lastPressTime = computeCurrentTime(event);
     QQuickItemPrivate::start(velocityTime);
 }
 
@@ -960,24 +994,46 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     vTime = timeline.time();
 
-    qreal velocity = elapsed < 100 ? vData.velocity : 0;
-    if (vData.atBeginning || vData.atEnd)
-        velocity /= 2;
-    if (q->yflick() && qAbs(velocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold) {
+    bool canBoost = false;
+
+    qreal vVelocity = elapsed < 100 ? vData.velocity : 0;
+    if (vData.atBeginning || vData.atEnd) {
+        vVelocity /= 2;
+    } else if (vData.continuousFlickVelocity != 0.0
+               && vData.viewSize/q->height() > QML_FLICK_MULTIFLICK_RATIO
+               && ((vVelocity > 0) == (vData.continuousFlickVelocity > 0))
+               && qAbs(vVelocity) > QML_FLICK_MULTIFLICK_THRESHOLD) {
+        // accelerate flick for large view flicked quickly
+        canBoost = true;
+    }
+
+    qreal hVelocity = elapsed < 100 ? hData.velocity : 0;
+    if (hData.atBeginning || hData.atEnd) {
+        hVelocity /= 2;
+    } else if (hData.continuousFlickVelocity != 0.0
+               && hData.viewSize/q->width() > QML_FLICK_MULTIFLICK_RATIO
+               && ((hVelocity > 0) == (hData.continuousFlickVelocity > 0))
+               && qAbs(hVelocity) > QML_FLICK_MULTIFLICK_THRESHOLD) {
+        // accelerate flick for large view flicked quickly
+        canBoost = true;
+    }
+
+    flickBoost = canBoost ? qBound(1.0, flickBoost+0.25, QML_FLICK_MULTIFLICK_MAXBOOST) : 1.0;
+
+    vVelocity *= flickBoost;
+    if (q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold) {
         velocityTimeline.reset(vData.smoothVelocity);
-        vData.smoothVelocity.setValue(-velocity);
-        flickY(velocity);
+        vData.smoothVelocity.setValue(-vVelocity);
+        flickY(vVelocity);
     } else {
         fixupY();
     }
 
-    velocity = elapsed < 100 ? hData.velocity : 0;
-    if (hData.atBeginning || hData.atEnd)
-        velocity /= 2;
-    if (q->xflick() && qAbs(velocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold) {
+    hVelocity *= flickBoost;
+    if (q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold) {
         velocityTimeline.reset(hData.smoothVelocity);
-        hData.smoothVelocity.setValue(-velocity);
-        flickX(velocity);
+        hData.smoothVelocity.setValue(-hVelocity);
+        flickX(hVelocity);
     } else {
         fixupX();
     }
