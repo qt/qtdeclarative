@@ -1609,7 +1609,11 @@ void QQuickText::resetMaximumLineCount()
 
     If the text format is \c Text.AutoText the text element
     will automatically determine whether the text should be treated as
-    styled text.  This determination is made using Qt::mightBeRichText().
+    styled text.  This determination is made using Qt::mightBeRichText()
+    which uses a fast and therefore simple heuristic. It mainly checks
+    whether there is something that looks like a tag before the first
+    line break. Although the result may be correct for common cases,
+    there is no guarantee.
 
     Text.StyledText is an optimized format supporting some basic text
     styling markup, in the style of html 3.2:
