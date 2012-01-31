@@ -47,6 +47,9 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
+#include "../shared/visualtestutil.h"
+
+using namespace QQuickVisualTestUtil;
 
 class tst_QQuickItem : public QDeclarativeDataTest
 {
@@ -85,29 +88,6 @@ private slots:
 private:
     QDeclarativeEngine engine;
 };
-
-template<typename T>
-T *findItem(QQuickItem *parent, const QString &objectName)
-{
-    if (!parent)
-        return 0;
-
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->QQuickItem::children().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
-            return static_cast<T*>(item);
-        item = findItem<T>(item, objectName);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
-}
 
 class KeysTestObject : public QObject
 {

@@ -52,12 +52,17 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include <QtDeclarative/private/qdeclarativevaluetype_p.h>
-#include <QAbstractListModel>
 #include <QStringListModel>
 #include <QStandardItemModel>
 #include <QFile>
 
 #include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
+#include "../shared/visualtestutil.h"
+
+using namespace QQuickViewTestUtil;
+using namespace QQuickVisualTestUtil;
+
 
 static void initStandardTreeModel(QStandardItemModel *model)
 {
@@ -118,13 +123,6 @@ private slots:
     void creationContext();
     void currentOffsetOnInsertion();
     void asynchronous();
-
-private:
-    QQuickView *createView();
-    template<typename T>
-    T *findItem(QQuickItem *parent, const QString &objectName, int index=-1);
-    template<typename T>
-    QList<T*> findItems(QQuickItem *parent, const QString &objectName);
 };
 
 class TestObject : public QObject
@@ -157,116 +155,6 @@ private:
     int mPathItemCount;
 };
 
-class TestModel : public QAbstractListModel
-{
-public:
-    enum Roles { Name = Qt::UserRole+1, Number = Qt::UserRole+2 };
-
-    TestModel(QObject *parent=0) : QAbstractListModel(parent) {
-        QHash<int, QByteArray> roles;
-        roles[Name] = "name";
-        roles[Number] = "number";
-        setRoleNames(roles);
-    }
-
-    int rowCount(const QModelIndex &parent=QModelIndex()) const { Q_UNUSED(parent); return list.count(); }
-    QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const {
-        QVariant rv;
-        if (role == Name)
-            rv = list.at(index.row()).first;
-        else if (role == Number)
-            rv = list.at(index.row()).second;
-
-        return rv;
-    }
-
-    int count() const { return rowCount(); }
-    QString name(int index) const { return list.at(index).first; }
-    QString number(int index) const { return list.at(index).second; }
-
-    void addItem(const QString &name, const QString &number) {
-        beginInsertRows(QModelIndex(), list.count(), list.count());
-        list.append(QPair<QString,QString>(name, number));
-        endInsertRows();
-    }
-
-    void insertItem(int index, const QString &name, const QString &number) {
-        beginInsertRows(QModelIndex(), index, index);
-        list.insert(index, QPair<QString,QString>(name, number));
-        endInsertRows();
-    }
-
-    void insertItems(int index, const QList<QPair<QString, QString> > &items) {
-        beginInsertRows(QModelIndex(), index, index+items.count()-1);
-        for (int i=0; i<items.count(); i++)
-            list.insert(index + i, QPair<QString,QString>(items[i].first, items[i].second));
-        endInsertRows();
-    }
-
-    void removeItem(int index) {
-        beginRemoveRows(QModelIndex(), index, index);
-        list.removeAt(index);
-        endRemoveRows();
-    }
-
-    void removeItems(int index, int count) {
-        emit beginRemoveRows(QModelIndex(), index, index+count-1);
-        while (count--)
-            list.removeAt(index);
-        emit endRemoveRows();
-    }
-
-    void moveItem(int from, int to) {
-        beginMoveRows(QModelIndex(), from, from, QModelIndex(), to);
-        list.move(from, to);
-        endMoveRows();
-    }
-
-    void moveItems(int from, int to, int count) {
-        beginMoveRows(QModelIndex(), from, from+count-1, QModelIndex(), to > from ? to+count : to);
-        move(from, to, count);
-        endMoveRows();
-    }
-
-    void modifyItem(int idx, const QString &name, const QString &number) {
-        list[idx] = QPair<QString,QString>(name, number);
-        emit dataChanged(index(idx,0), index(idx,0));
-    }
-
-    void move(int from, int to, int n)
-    {
-        if (from > to) {
-            // Only move forwards - flip if backwards moving
-            int tfrom = from;
-            int tto = to;
-            from = tto;
-            to = tto+n;
-            n = tfrom-tto;
-        }
-        if (n == 1) {
-            list.move(from, to);
-        } else {
-            QList<QPair<QString,QString> > replaced;
-            int i=0;
-            QList<QPair<QString,QString> >::ConstIterator it=list.begin(); it += from+n;
-            for (; i<to-from; ++i,++it)
-                replaced.append(*it);
-            i=0;
-            it=list.begin(); it += from;
-            for (; i<n; ++i,++it)
-                replaced.append(*it);
-            QList<QPair<QString,QString> >::ConstIterator f=replaced.begin();
-            QList<QPair<QString,QString> >::Iterator t=list.begin(); t += from;
-            for (; f != replaced.end(); ++f, ++t)
-                *t = *f;
-        }
-    }
-
-private:
-    QList<QPair<QString,QString> > list;
-};
-
-
 tst_QQuickPathView::tst_QQuickPathView()
 {
 }
@@ -295,7 +183,7 @@ void tst_QQuickPathView::items()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Fred", "12345");
     model.addItem("John", "2345");
     model.addItem("Bob", "54321");
@@ -425,7 +313,7 @@ void tst_QQuickPathView::insertModel()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Ben", "12345");
     model.addItem("Bohn", "2345");
     model.addItem("Bob", "54321");
@@ -511,7 +399,7 @@ void tst_QQuickPathView::removeModel()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Ben", "12345");
     model.addItem("Bohn", "2345");
     model.addItem("Bob", "54321");
@@ -602,7 +490,7 @@ void tst_QQuickPathView::moveModel()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Ben", "12345");
     model.addItem("Bohn", "2345");
     model.addItem("Bob", "54321");
@@ -691,7 +579,7 @@ void tst_QQuickPathView::dataModel()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    TestModel model;
+    QaimModel model;
     model.addItem("red", "1");
     model.addItem("green", "2");
     model.addItem("blue", "3");
@@ -801,7 +689,7 @@ void tst_QQuickPathView::pathMoved()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Ben", "12345");
     model.addItem("Bohn", "2345");
     model.addItem("Bob", "54321");
@@ -858,7 +746,7 @@ void tst_QQuickPathView::setCurrentIndex()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Ben", "12345");
     model.addItem("Bohn", "2345");
     model.addItem("Bob", "54321");
@@ -1430,7 +1318,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
@@ -1560,64 +1448,6 @@ void tst_QQuickPathView::asynchronous()
     delete canvas;
 }
 
-QQuickView *tst_QQuickPathView::createView()
-{
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setGeometry(0,0,240,320);
-
-    return canvas;
-}
-
-/*
-   Find an item with the specified objectName.  If index is supplied then the
-   item must also evaluate the {index} expression equal to index
- */
-template<typename T>
-T *tst_QQuickPathView::findItem(QQuickItem *parent, const QString &objectName, int index)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->childItems().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-            if (index != -1) {
-                QDeclarativeExpression e(qmlContext(item), item, "index");
-                if (e.evaluate().toInt() == index)
-                    return static_cast<T*>(item);
-            } else {
-                return static_cast<T*>(item);
-            }
-        }
-        item = findItem<T>(item, objectName, index);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
-}
-
-template<typename T>
-QList<T*> tst_QQuickPathView::findItems(QQuickItem *parent, const QString &objectName)
-{
-    QList<T*> items;
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->QQuickItem::children().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
-            items.append(static_cast<T*>(item));
-        items += findItems<T>(item, objectName);
-    }
-
-    return items;
-}
-
 void tst_QQuickPathView::missingPercent()
 {
     QDeclarativeEngine engine;
@@ -1627,7 +1457,6 @@ void tst_QQuickPathView::missingPercent()
     QCOMPARE(obj->attributeAt("_qfx_percent", 1.0), qreal(1.0));
     delete obj;
 }
-
 
 QTEST_MAIN(tst_QQuickPathView)
 

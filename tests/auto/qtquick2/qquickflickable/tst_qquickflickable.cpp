@@ -48,7 +48,12 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include <math.h>
 #include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
+#include "../shared/visualtestutil.h"
 #include <QtOpenGL/QGLShaderProgram>
+
+using namespace QQuickViewTestUtil;
+using namespace QQuickVisualTestUtil;
 
 class tst_qquickflickable : public QDeclarativeDataTest
 {
@@ -76,10 +81,6 @@ private slots:
 
 private:
     QDeclarativeEngine engine;
-
-    void flick(QQuickView *canvas, const QPoint &from, const QPoint &to, int duration);
-    template<typename T>
-    T *findItem(QQuickItem *parent, const QString &objectName);
 };
 
 void tst_qquickflickable::create()
@@ -655,46 +656,6 @@ void tst_qquickflickable::margins()
     QCOMPARE(obj->contentHeight(), 600.);
 
     delete root;
-}
-
-void tst_qquickflickable::flick(QQuickView *canvas, const QPoint &from, const QPoint &to, int duration)
-{
-    const int pointCount = 5;
-    QPoint diff = to - from;
-
-    // send press, five equally spaced moves, and release.
-    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
-
-    for (int i = 0; i < pointCount; ++i) {
-        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
-        QTest::qWait(duration/pointCount);
-        QCoreApplication::processEvents();
-    }
-
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
-    QTest::qWait(50);
-}
-
-template<typename T>
-T *tst_qquickflickable::findItem(QQuickItem *parent, const QString &objectName)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->childItems().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-            return static_cast<T*>(item);
-        }
-        item = findItem<T>(item, objectName);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
 }
 
 QTEST_MAIN(tst_qquickflickable)

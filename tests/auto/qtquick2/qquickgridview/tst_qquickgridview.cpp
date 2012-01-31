@@ -48,15 +48,19 @@
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtDeclarative/qdeclarativeincubator.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtDeclarative/private/qlistmodelinterface_p.h>
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
+#include "../shared/visualtestutil.h"
 #include <QtGui/qguiapplication.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickGridView::Flow)
+
+using namespace QQuickViewTestUtil;
+using namespace QQuickVisualTestUtil;
 
 class tst_QQuickGridView : public QDeclarativeDataTest
 {
@@ -123,137 +127,6 @@ private slots:
     void cacheBuffer();
     void asynchronous();
     void unrequestedVisibility();
-
-private:
-    QQuickView *createView();
-    void flick(QQuickView *canvas, const QPoint &from, const QPoint &to, int duration);
-    template<typename T>
-    T *findItem(QQuickItem *parent, const QString &id, int index=-1);
-    template<typename T>
-    QList<T*> findItems(QQuickItem *parent, const QString &objectName);
-    void dumpTree(QQuickItem *parent, int depth = 0);
-};
-
-template<typename T>
-void tst_qquickgridview_move(int from, int to, int n, T *items)
-{
-    if (from > to) {
-        // Only move forwards - flip if backwards moving
-        int tfrom = from;
-        int tto = to;
-        from = tto;
-        to = tto+n;
-        n = tfrom-tto;
-    }
-
-    T replaced;
-    int i=0;
-    typename T::ConstIterator it=items->begin(); it += from+n;
-    for (; i<to-from; ++i,++it)
-        replaced.append(*it);
-    i=0;
-    it=items->begin(); it += from;
-    for (; i<n; ++i,++it)
-        replaced.append(*it);
-    typename T::ConstIterator f=replaced.begin();
-    typename T::Iterator t=items->begin(); t += from;
-    for (; f != replaced.end(); ++f, ++t)
-        *t = *f;
-}
-
-class TestModel : public QAbstractListModel
-{
-public:
-    enum Roles { Name = Qt::UserRole+1, Number = Qt::UserRole+2 };
-
-    TestModel(QObject *parent=0) : QAbstractListModel(parent) {
-        QHash<int, QByteArray> roles;
-        roles[Name] = "name";
-        roles[Number] = "number";
-        setRoleNames(roles);
-    }
-
-    int rowCount(const QModelIndex &parent=QModelIndex()) const { Q_UNUSED(parent); return list.count(); }
-    QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const {
-        QVariant rv;
-        if (role == Name)
-            rv = list.at(index.row()).first;
-        else if (role == Number)
-            rv = list.at(index.row()).second;
-
-        return rv;
-    }
-
-    int count() const { return rowCount(); }
-    QString name(int index) const { return list.at(index).first; }
-    QString number(int index) const { return list.at(index).second; }
-
-    void addItem(const QString &name, const QString &number) {
-        emit beginInsertRows(QModelIndex(), list.count(), list.count());
-        list.append(QPair<QString,QString>(name, number));
-        emit endInsertRows();
-    }
-
-    void addItems(const QList<QPair<QString, QString> > &items) {
-        emit beginInsertRows(QModelIndex(), list.count(), list.count()+items.count()-1);
-        for (int i=0; i<items.count(); i++)
-            list.append(QPair<QString,QString>(items[i].first, items[i].second));
-        emit endInsertRows();
-    }
-
-    void insertItem(int index, const QString &name, const QString &number) {
-        emit beginInsertRows(QModelIndex(), index, index);
-        list.insert(index, QPair<QString,QString>(name, number));
-        emit endInsertRows();
-    }
-
-    void insertItems(int index, const QList<QPair<QString, QString> > &items) {
-        emit beginInsertRows(QModelIndex(), index, index + items.count() - 1);
-        for (int i=0; i<items.count(); i++)
-            list.insert(index + i, QPair<QString,QString>(items[i].first, items[i].second));
-        emit endInsertRows();
-    }
-
-    void removeItem(int index) {
-        emit beginRemoveRows(QModelIndex(), index, index);
-        list.removeAt(index);
-        emit endRemoveRows();
-    }
-
-    void removeItems(int index, int count) {
-        emit beginRemoveRows(QModelIndex(), index, index+count-1);
-        while (count--)
-            list.removeAt(index);
-        emit endRemoveRows();
-    }
-
-    void moveItem(int from, int to) {
-        emit beginMoveRows(QModelIndex(), from, from, QModelIndex(), to);
-        list.move(from, to);
-        emit endMoveRows();
-    }
-
-    void moveItems(int from, int to, int count) {
-        emit beginMoveRows(QModelIndex(), from, from+count-1, QModelIndex(), to > from ? to+count : to);
-        tst_qquickgridview_move(from, to, count, &list);
-        emit endMoveRows();
-    }
-
-    void modifyItem(int idx, const QString &name, const QString &number) {
-        list[idx] = QPair<QString,QString>(name, number);
-        emit dataChanged(index(idx,0), index(idx,0));
-    }
-
-    void clear() {
-        int count = list.count();
-        emit beginRemoveRows(QModelIndex(), 0, count-1);
-        list.clear();
-        emit endRemoveRows();
-    }
-
-
-private:
-    QList<QPair<QString,QString> > list;
 };
 
 tst_QQuickGridView::tst_QQuickGridView()
@@ -264,7 +137,7 @@ void tst_QQuickGridView::items()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Fred", "12345");
     model.addItem("John", "2345");
     model.addItem("Bob", "54321");
@@ -301,7 +174,7 @@ void tst_QQuickGridView::items()
     }
 
     // set an empty model and confirm that items are destroyed
-    TestModel model2;
+    QaimModel model2;
     ctxt->setContextProperty("testModel", &model2);
 
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -314,7 +187,7 @@ void tst_QQuickGridView::changed()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Fred", "12345");
     model.addItem("John", "2345");
     model.addItem("Bob", "54321");
@@ -353,7 +226,7 @@ void tst_QQuickGridView::inserted()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Fred", "12345");
     model.addItem("John", "2345");
     model.addItem("Bob", "54321");
@@ -440,7 +313,7 @@ void tst_QQuickGridView::inserted_more()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -610,7 +483,7 @@ void tst_QQuickGridView::insertBeforeVisible()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -694,7 +567,7 @@ void tst_QQuickGridView::removed()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -848,7 +721,7 @@ void tst_QQuickGridView::removed_more()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1041,7 +914,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1120,7 +993,7 @@ void tst_QQuickGridView::clear()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1167,7 +1040,7 @@ void tst_QQuickGridView::moved()
     QScopedPointer<QQuickView> canvas(createView());
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1373,19 +1246,6 @@ void tst_QQuickGridView::moved_data()
             << -60.0;   // 16,17,18 move to above item 0, all items move up by 1 row
 }
 
-struct ListChange {
-    enum { Inserted, Removed, Moved, SetCurrent } type;
-    int index;
-    int count;
-    int to;     // Move
-
-    static ListChange insert(int index, int count = 1) { ListChange c = { Inserted, index, count, -1 }; return c; }
-    static ListChange remove(int index, int count = 1) { ListChange c = { Removed, index, count, -1 }; return c; }
-    static ListChange move(int index, int to, int count) { ListChange c = { Moved, index, count, to }; return c; }
-    static ListChange setCurrent(int index) { ListChange c = { SetCurrent, index, -1, -1 }; return c; }
-};
-Q_DECLARE_METATYPE(QList<ListChange>)
-
 void tst_QQuickGridView::multipleChanges()
 {
     QFETCH(int, startCount);
@@ -1396,7 +1256,7 @@ void tst_QQuickGridView::multipleChanges()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < startCount; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1613,7 +1473,7 @@ void tst_QQuickGridView::swapWithFirstItem()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1638,7 +1498,7 @@ void tst_QQuickGridView::swapWithFirstItem()
 
 void tst_QQuickGridView::currentIndex()
 {
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 60; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
@@ -1884,7 +1744,7 @@ void tst_QQuickGridView::currentIndex()
 
 void tst_QQuickGridView::noCurrentIndex()
 {
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 60; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
@@ -1923,7 +1783,7 @@ void tst_QQuickGridView::changeFlow()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
@@ -2213,7 +2073,7 @@ void tst_QQuickGridView::positionViewAtIndex()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2414,7 +2274,7 @@ void tst_QQuickGridView::snapping()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2516,7 +2376,7 @@ void tst_QQuickGridView::positionViewAtIndex_rightToLeft()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2691,7 +2551,7 @@ void tst_QQuickGridView::enforceRange()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2733,7 +2593,7 @@ void tst_QQuickGridView::enforceRange()
     gridview->setCurrentIndex(5);
     QTRY_COMPARE(gridview->contentY(), 100.);
 
-    TestModel model2;
+    QaimModel model2;
     for (int i = 0; i < 5; i++)
         model2.addItem("Item" + QString::number(i), "");
 
@@ -2747,7 +2607,7 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2791,7 +2651,7 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     QTRY_COMPARE(gridview->contentX(), -340.);
     QTRY_COMPARE(gridview->contentY(), 0.0);
 
-    TestModel model2;
+    QaimModel model2;
     for (int i = 0; i < 5; i++)
         model2.addItem("Item" + QString::number(i), "");
 
@@ -2877,7 +2737,7 @@ void tst_QQuickGridView::footer()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 7; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3035,7 +2895,7 @@ void tst_QQuickGridView::header()
     QFETCH(QPointF, firstDelegatePos);
     QFETCH(QPointF, resizeContentPos);
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3180,7 +3040,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3213,14 +3073,14 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
     // Ensure we handle -ve sizes
     gridview->setHeight(-100);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 3);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 3);
 
     gridview->setCacheBuffer(120);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 9);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 9);
 
     // ensure items in cache become visible
     gridview->setHeight(120);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 15);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 15);
 
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
@@ -3234,9 +3094,9 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
     // ensure items outside view become invisible
     gridview->setHeight(60);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 12);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 12);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -3251,7 +3111,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
 void tst_QQuickGridView::changeColumnCount()
 {
-    TestModel model;
+    QmlListModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3328,7 +3188,7 @@ void tst_QQuickGridView::indexAt_itemAt()
 
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     model.addItem("Fred", "12345");
     model.addItem("John", "2345");
     model.addItem("Bob", "54321");
@@ -3371,7 +3231,7 @@ void tst_QQuickGridView::onAdd()
 
     const int delegateWidth = 50;
     const int delegateHeight = 100;
-    TestModel model;
+    QaimModel model;
     QQuickView *canvas = createView();
     canvas->setGeometry(0,0,5 * delegateWidth, 5 * delegateHeight); // just ensure all items fit
 
@@ -3432,7 +3292,7 @@ void tst_QQuickGridView::onRemove()
 
     const int delegateWidth = 50;
     const int delegateHeight = 100;
-    TestModel model;
+    QaimModel model;
     for (int i=0; i<initialItemCount; i++)
         model.addItem(QString("value %1").arg(i), "dummy value");
 
@@ -3499,7 +3359,7 @@ void tst_QQuickGridView::margins()
         QQuickView *canvas = createView();
         canvas->show();
 
-        TestModel model;
+        QaimModel model;
         for (int i = 0; i < 40; i++)
             model.addItem("Item" + QString::number(i), "");
 
@@ -3562,7 +3422,7 @@ void tst_QQuickGridView::margins()
         QQuickView *canvas = createView();
         canvas->show();
 
-        TestModel model;
+        QaimModel model;
         for (int i = 0; i < 40; i++)
             model.addItem("Item" + QString::number(i), "");
 
@@ -3854,7 +3714,7 @@ void tst_QQuickGridView::unaligned()
     QQuickView *canvas = createView();
     canvas->show();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 10; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3909,37 +3769,11 @@ void tst_QQuickGridView::unaligned()
     delete canvas;
 }
 
-QQuickView *tst_QQuickGridView::createView()
-{
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setGeometry(0,0,240,320);
-
-    return canvas;
-}
-
-void tst_QQuickGridView::flick(QQuickView *canvas, const QPoint &from, const QPoint &to, int duration)
-{
-    const int pointCount = 5;
-    QPoint diff = to - from;
-
-    // send press, five equally spaced moves, and release.
-    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
-
-    for (int i = 0; i < pointCount; ++i) {
-        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
-        QTest::qWait(duration/pointCount);
-        QCoreApplication::processEvents();
-    }
-
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
-}
-
 void tst_QQuickGridView::cacheBuffer()
 {
     QQuickView *canvas = createView();
 
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 90; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3961,7 +3795,7 @@ void tst_QQuickGridView::cacheBuffer()
     QVERIFY(gridview->model() != 0);
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QTRY_COMPARE(item->x(), (i%3)*80.0);
@@ -3991,7 +3825,7 @@ void tst_QQuickGridView::cacheBuffer()
     }
 
     int newItemCount = 0;
-    newItemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    newItemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
 
     // Confirm items positioned correctly
     for (int i = 0; i < model.count() && i < newItemCount; ++i) {
@@ -4081,7 +3915,7 @@ void tst_QQuickGridView::asynchronous()
 
 void tst_QQuickGridView::unrequestedVisibility()
 {
-    TestModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
@@ -4250,75 +4084,6 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     delete canvas;
 }
-
-/*
-   Find an item with the specified objectName.  If index is supplied then the
-   item must also evaluate the {index} expression equal to index
-*/
-template<typename T>
-T *tst_QQuickGridView::findItem(QQuickItem *parent, const QString &objectName, int index)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->childItems().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-            if (index != -1) {
-                QDeclarativeContext *context = QDeclarativeEngine::contextForObject(item);
-                if (context) {
-                    if (context->contextProperty("index").toInt() == index) {
-                        return static_cast<T*>(item);
-                    }
-                }
-            } else {
-                return static_cast<T*>(item);
-            }
-        }
-        item = findItem<T>(item, objectName, index);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
-}
-
-template<typename T>
-QList<T*> tst_QQuickGridView::findItems(QQuickItem *parent, const QString &objectName)
-{
-    QList<T*> items;
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->childItems().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-            items.append(static_cast<T*>(item));
-            //qDebug() << " found:" << item;
-        }
-        items += findItems<T>(item, objectName);
-    }
-
-    return items;
-}
-
-void tst_QQuickGridView::dumpTree(QQuickItem *parent, int depth)
-{
-    static QString padding("                       ");
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        QDeclarativeContext *context = QDeclarativeEngine::contextForObject(item);
-        qDebug() << padding.left(depth*2) << item << (context ? context->contextProperty("index").toInt() : -1);
-        dumpTree(item, depth+1);
-    }
-}
-
 
 QTEST_MAIN(tst_QQuickGridView)
 

@@ -7,6 +7,7 @@ SOURCES += tst_qquickimage.cpp \
            ../../shared/testhttpserver.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

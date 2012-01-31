@@ -7,6 +7,7 @@ SOURCES += tst_qquicklistview.cpp \
            incrementalmodel.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

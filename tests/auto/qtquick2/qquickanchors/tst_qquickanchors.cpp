@@ -49,9 +49,12 @@
 #include <QtQuick/private/qquickanchors_p_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include "../../shared/util.h"
+#include "../shared/visualtestutil.h"
 
 Q_DECLARE_METATYPE(QQuickAnchors::Anchor)
 Q_DECLARE_METATYPE(QQuickAnchorLine::AnchorLine)
+
+using namespace QQuickVisualTestUtil;
 
 class tst_qquickanchors : public QDeclarativeDataTest
 {
@@ -81,32 +84,6 @@ private slots:
     void margins();
     void marginsRTL();
 };
-
-/*
-   Find an item with the specified objectName.
-*/
-template<typename T>
-T *findItem(QQuickItem *parent, const QString &objectName)
-{
-    if (!parent)
-        return 0;
-
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->QQuickItem::children().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
-            return static_cast<T*>(item);
-        item = findItem<T>(item, objectName);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
-}
 
 void tst_qquickanchors::basicAnchors()
 {

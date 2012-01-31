@@ -5,6 +5,7 @@ macx:CONFIG -= app_bundle
 SOURCES += tst_qquickgridview.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 testDataFiles.files = data
 testDataFiles.path = .

@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 #include "../../shared/util.h"
+#include "../shared/visualtestutil.h"
+
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include <QStandardItemModel>
@@ -54,6 +56,8 @@
 #include <private/qdeclarativechangeset_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <math.h>
+
+using namespace QQuickVisualTestUtil;
 
 template <typename T, int N> int lengthOf(const T (&)[N]) { return N; }
 
@@ -249,8 +253,6 @@ private:
 
     bool failed;
     QDeclarativeEngine engine;
-    template<typename T>
-    T *findItem(QQuickItem *parent, const QString &objectName, int index = -1);
 };
 
 Q_DECLARE_METATYPE(QDeclarativeChangeSet)
@@ -3438,32 +3440,6 @@ void tst_qquickvisualdatamodel::warnings()
     QCOMPARE(evaluate<int>(listView, "count"), count);
 }
 
-template<typename T>
-T *tst_qquickvisualdatamodel::findItem(QQuickItem *parent, const QString &objectName, int index)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->childItems().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-            if (index != -1) {
-                QDeclarativeExpression e(qmlContext(item), item, "index");
-                if (e.evaluate().toInt() == index)
-                    return static_cast<T*>(item);
-            } else {
-                return static_cast<T*>(item);
-            }
-        }
-        item = findItem<T>(item, objectName, index);
-        if (item)
-        return static_cast<T*>(item);
-    }
-
-    return 0;
-}
 
 QTEST_MAIN(tst_qquickvisualdatamodel)
 

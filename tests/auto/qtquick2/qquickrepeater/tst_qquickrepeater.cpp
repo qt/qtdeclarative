@@ -51,6 +51,12 @@
 #include <QtQuick/private/qquicktext_p.h>
 
 #include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
+#include "../shared/visualtestutil.h"
+
+using namespace QQuickViewTestUtil;
+using namespace QQuickVisualTestUtil;
+
 
 class tst_QQuickRepeater : public QDeclarativeDataTest
 {
@@ -71,13 +77,6 @@ private slots:
     void properties();
     void asynchronous();
     void initParent();
-
-private:
-    QQuickView *createView();
-    template<typename T>
-    T *findItem(QObject *parent, const QString &objectName, int index);
-    template<typename T>
-    T *findItem(QObject *parent, const QString &id);
 };
 
 class TestObject : public QObject
@@ -103,67 +102,6 @@ private:
     bool mError;
     bool mUseModel;
 };
-
-class TestModel : public QAbstractListModel
-{
-public:
-    enum Roles { Name = Qt::UserRole+1, Number = Qt::UserRole+2 };
-
-    TestModel(QObject *parent=0) : QAbstractListModel(parent) {
-        QHash<int, QByteArray> roles;
-        roles[Name] = "name";
-        roles[Number] = "number";
-        setRoleNames(roles);
-    }
-
-    int rowCount(const QModelIndex &parent=QModelIndex()) const { Q_UNUSED(parent); return list.count(); }
-    QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const {
-        QVariant rv;
-        if (role == Name)
-            rv = list.at(index.row()).first;
-        else if (role == Number)
-            rv = list.at(index.row()).second;
-
-        return rv;
-    }
-
-    int count() const { return rowCount(); }
-    QString name(int index) const { return list.at(index).first; }
-    QString number(int index) const { return list.at(index).second; }
-
-    void addItem(const QString &name, const QString &number) {
-        emit beginInsertRows(QModelIndex(), list.count(), list.count());
-        list.append(QPair<QString,QString>(name, number));
-        emit endInsertRows();
-    }
-
-    void insertItem(int index, const QString &name, const QString &number) {
-        emit beginInsertRows(QModelIndex(), index, index);
-        list.insert(index, QPair<QString,QString>(name, number));
-        emit endInsertRows();
-    }
-
-    void removeItem(int index) {
-        emit beginRemoveRows(QModelIndex(), index, index);
-        list.removeAt(index);
-        emit endRemoveRows();
-    }
-
-    void moveItem(int from, int to) {
-        emit beginMoveRows(QModelIndex(), from, from, QModelIndex(), to);
-        list.move(from, to);
-        emit endMoveRows();
-    }
-
-    void modifyItem(int idx, const QString &name, const QString &number) {
-        list[idx] = QPair<QString,QString>(name, number);
-        emit dataChanged(index(idx,0), index(idx,0));
-    }
-
-private:
-    QList<QPair<QString,QString> > list;
-};
-
 
 tst_QQuickRepeater::tst_QQuickRepeater()
 {
@@ -306,7 +244,7 @@ void tst_QQuickRepeater::dataModel_adding()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    TestModel testModel;
+    QaimModel testModel;
     ctxt->setContextProperty("testData", &testModel);
     canvas->setSource(testFileUrl("repeater2.qml"));
     qApp->processEvents();
@@ -370,7 +308,7 @@ void tst_QQuickRepeater::dataModel_removing()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    TestModel testModel;
+    QaimModel testModel;
     testModel.addItem("one", "1");
     testModel.addItem("two", "2");
     testModel.addItem("three", "3");
@@ -438,7 +376,7 @@ void tst_QQuickRepeater::dataModel_changes()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    TestModel testModel;
+    QaimModel testModel;
     testModel.addItem("one", "1");
     testModel.addItem("two", "2");
     testModel.addItem("three", "3");
@@ -699,59 +637,6 @@ void tst_QQuickRepeater::initParent()
     QVERIFY(rootObject);
 
     QCOMPARE(qvariant_cast<QQuickItem*>(rootObject->property("parentItem")), rootObject);
-}
-
-QQuickView *tst_QQuickRepeater::createView()
-{
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setGeometry(0,0,240,320);
-
-    return canvas;
-}
-
-template<typename T>
-T *tst_QQuickRepeater::findItem(QObject *parent, const QString &objectName, int index)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->children().count() << "children";
-    for (int i = 0; i < parent->children().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->children().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-            if (index != -1) {
-                QDeclarativeExpression e(qmlContext(item), item, "index");
-                if (e.evaluate().toInt() == index)
-                    return static_cast<T*>(item);
-            } else {
-                return static_cast<T*>(item);
-            }
-        }
-        item = findItem<T>(item, objectName, index);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
-}
-
-template<typename T>
-T *tst_QQuickRepeater::findItem(QObject *parent, const QString &objectName)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    if (mo.cast(parent) && (objectName.isEmpty() || parent->objectName() == objectName))
-        return static_cast<T*>(parent);
-    for (int i = 0; i < parent->children().count(); ++i) {
-        QQuickItem *child = qobject_cast<QQuickItem*>(parent->children().at(i));
-        if (!child)
-            continue;
-        QQuickItem *item = findItem<T>(child, objectName);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

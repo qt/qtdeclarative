@@ -48,15 +48,15 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickfocusscope_p.h>
 #include "../../shared/util.h"
+#include "../shared/visualtestutil.h"
+
+using namespace QQuickVisualTestUtil;
 
 class tst_qquickfocusscope : public QDeclarativeDataTest
 {
     Q_OBJECT
 public:
     tst_qquickfocusscope() {}
-
-    template<typename T>
-    T *findItem(QQuickItem *parent, const QString &id);
 
 private slots:
     void basic();
@@ -70,28 +70,6 @@ private slots:
     void forceActiveFocus();
     void canvasFocus();
 };
-
-/*
-   Find an item with the specified id.
-*/
-template<typename T>
-T *tst_qquickfocusscope::findItem(QQuickItem *parent, const QString &objectName)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    QList<QQuickItem *> children = parent->childItems();
-    for (int i = 0; i < children.count(); ++i) {
-        QQuickItem *item = children.at(i);
-        if (item) {
-            if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-                return static_cast<T*>(item);
-            }
-            item = findItem<T>(item, objectName);
-            if (item)
-                return static_cast<T*>(item);
-        }
-    }
-    return 0;
-}
 
 void tst_qquickfocusscope::basic()
 {

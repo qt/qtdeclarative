@@ -58,9 +58,13 @@
 
 #include "../../shared/util.h"
 #include "../../shared/testhttpserver.h"
+#include "../shared/visualtestutil.h"
 
 #define SERVER_PORT 14451
 #define SERVER_ADDR "http://127.0.0.1:14451"
+
+
+using namespace QQuickVisualTestUtil;
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
@@ -93,9 +97,6 @@ private slots:
     void imageCrash_QTBUG_22125();
 
 private:
-    template<typename T>
-    T *findItem(QQuickItem *parent, const QString &id, int index=-1);
-
     QDeclarativeEngine engine;
 };
 
@@ -695,37 +696,6 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
     QTest::qWait(520); // Delay mode delays for 500 ms.
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
-}
-
-/*
-   Find an item with the specified objectName.  If index is supplied then the
-   item must also evaluate the {index} expression equal to index
-*/
-template<typename T>
-T *tst_qquickimage::findItem(QQuickItem *parent, const QString &objectName, int index)
-{
-    const QMetaObject &mo = T::staticMetaObject;
-    //qDebug() << parent->childItems().count() << "children";
-    for (int i = 0; i < parent->childItems().count(); ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-        if (!item)
-            continue;
-        //qDebug() << "try" << item;
-        if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
-            if (index != -1) {
-                QDeclarativeExpression e(qmlContext(item), item, "index");
-                if (e.evaluate().toInt() == index)
-                    return static_cast<T*>(item);
-            } else {
-                return static_cast<T*>(item);
-            }
-        }
-        item = findItem<T>(item, objectName, index);
-        if (item)
-            return static_cast<T*>(item);
-    }
-
-    return 0;
 }
 
 QTEST_MAIN(tst_qquickimage)

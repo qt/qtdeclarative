@@ -3,6 +3,7 @@ CONFIG += testcase
 SOURCES += tst_qquickanchors.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 
