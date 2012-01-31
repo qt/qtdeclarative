@@ -289,6 +289,8 @@ void QV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags 
     trace.addDetail("Line", binding->line);
     trace.addDetail("Column", binding->column);
 
+    QDeclarativeBindingProfiler prof(context->url.toString(), binding->line, binding->column);
+
     if (binding->updating) {
         QString name;
         if (binding->property & 0xFFFF0000) {
@@ -306,8 +308,6 @@ void QV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags 
         qmlInfo(binding->target) << tr("Binding loop detected for property \"%1\"").arg(name);
         return;
     }
-
-    QDeclarativeBindingProfiler prof(context->url.toString(), binding->line, binding->column);
 
     binding->updating = true;
     if (binding->property & 0xFFFF0000) {

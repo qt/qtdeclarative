@@ -82,12 +82,13 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     trace.addDetail("Line", line);
     trace.addDetail("Column", column);
 
+    QDeclarativeBindingProfiler prof(parent->url.toString(), line, column);
+
     QDeclarativeContextData *context = QDeclarativeAbstractExpression::context();
     if (!context || !context->isValid())
         return;
 
     if (!updating) {
-        QDeclarativeBindingProfiler prof(parent->url.toString(), line, column);
         updating = true;
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context->engine);
 
