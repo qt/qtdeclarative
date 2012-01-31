@@ -413,6 +413,8 @@ void QQuickShaderEffect::setSource(const QVariant &var, int index)
     }
 
     QObject *obj = qVariantValue<QObject *>(var);
+    if (!obj)
+        return;
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
     if (!item || !item->isTextureProvider()) {
         qWarning("ShaderEffect: source uniform [%s] is not assigned a valid texture provider: %s [%s]",
