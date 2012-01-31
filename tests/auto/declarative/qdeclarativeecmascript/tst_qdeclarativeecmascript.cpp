@@ -229,6 +229,7 @@ private slots:
     void qtbug_22679();
     void qtbug_22843_data();
     void qtbug_22843();
+    void rewriteMultiLineStrings();
     void revisionErrors();
     void revision();
 
@@ -5232,6 +5233,16 @@ void tst_qdeclarativeecmascript::qtbug_21864()
     QObject *o = component.create();
     QVERIFY(o != 0);
     QCOMPARE(o->property("test").toBool(), true);
+    delete o;
+}
+
+void tst_qdeclarativeecmascript::rewriteMultiLineStrings()
+{
+    // QTBUG-23387
+    QDeclarativeComponent component(&engine, testFileUrl("rewriteMultiLineStrings.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QTRY_COMPARE(o->property("test").toBool(), true);
     delete o;
 }
 

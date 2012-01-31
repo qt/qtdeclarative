@@ -1346,9 +1346,8 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 
             Instruction::StoreSignal store;
             store.signalIndex = prop->index;
-            QDeclarativeRewrite::RewriteSignalHandler rewriteSignalHandler;
             const QString &rewrite =
-                    rewriteSignalHandler(v->value.asScript().trimmed(), prop->name().toString());
+                    rewriteSignalHandler(v->value, prop->name().toString());
             store.value = output->indexForString(rewrite);
             store.context = v->signalExpressionContextStack;
             store.line = v->location.start.line;
@@ -2635,10 +2634,10 @@ int QDeclarativeCompiler::rewriteBinding(const QDeclarativeScript::Variant& valu
     return output->indexForString(rewrite);
 }
 
-QString QDeclarativeCompiler::rewriteSignalHandler(const QString &handler, const QString &name)
+QString QDeclarativeCompiler::rewriteSignalHandler(const QDeclarativeScript::Variant& value, const QString &name)
 {
     QDeclarativeRewrite::RewriteSignalHandler rewriteSignalHandler;
-    return rewriteSignalHandler(handler, name);
+    return rewriteSignalHandler(value.asAST(), value.asScript(), name);
 }
 
 // Ensures that the dynamic meta specification on obj is valid

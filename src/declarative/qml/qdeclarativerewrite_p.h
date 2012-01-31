@@ -80,6 +80,7 @@ class RewriteBinding: protected AST::Visitor
     unsigned _position;
     TextWriter *_writer;
     QString _name;
+    const QString *_code;
 
 public:
     QString operator()(const QString &code, bool *ok = 0, bool *sharable = 0);
@@ -95,6 +96,7 @@ protected:
     QString rewrite(QString code, unsigned position, AST::Statement *node);
     void rewriteCaseStatements(AST::StatementList *statements, bool rewriteTheLastStatement);
 
+    virtual bool visit(AST::StringLiteral *ast);
     virtual bool visit(AST::Block *ast);
     virtual bool visit(AST::ExpressionStatement *ast);
 
@@ -122,10 +124,21 @@ private:
     int _inLoop;
 };
 
-class RewriteSignalHandler
+class RewriteSignalHandler: protected AST::Visitor
 {
+    QList<int> _strStarts;
+    QList<int> _strLens;
+    int _position;
+
 public:
-    QString operator()(const QString &code, const QString &name);
+    QString operator()(QDeclarativeJS::AST::Node *node, const QString &code, const QString &name);
+
+protected:
+    void rewriteMultilineStrings(QString &code);
+
+    using AST::Visitor::visit;
+    void accept(AST::Node *node);
+    virtual bool visit(AST::StringLiteral *ast);
 };
 
 } // namespace QDeclarativeRewrite

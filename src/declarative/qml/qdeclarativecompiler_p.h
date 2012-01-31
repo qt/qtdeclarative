@@ -293,7 +293,7 @@ public:
     int evaluateEnum(const QByteArray& script) const; // for QDeclarativeCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QString& name) const; // for QDeclarativeCustomParser::resolveType
     int rewriteBinding(const QDeclarativeScript::Variant& value, const QString& name); // for QDeclarativeCustomParser::rewriteBinding
-    QString rewriteSignalHandler(const QString &handler, const QString &name);  // for QDeclarativeCustomParser::rewriteSignalHandler
+    QString rewriteSignalHandler(const QDeclarativeScript::Variant& value, const QString &name);  // for QDeclarativeCustomParser::rewriteSignalHandler
 
 private:
     typedef QDeclarativeCompiledData::Instruction Instruction;

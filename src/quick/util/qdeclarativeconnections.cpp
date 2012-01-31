@@ -226,7 +226,7 @@ QDeclarativeConnectionsParser::compile(const QList<QDeclarativeCustomParserPrope
                 QDeclarativeScript::Variant v = qvariant_cast<QDeclarativeScript::Variant>(value);
                 if (v.isScript()) {
                     ds << propName;
-                    ds << rewriteSignalHandler(v.asScript(), propName);
+                    ds << rewriteSignalHandler(v, propName);
                     ds << propLine;
                     ds << propColumn;
                 } else {
