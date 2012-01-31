@@ -261,7 +261,7 @@ void QDeclarative1PaintedItem::paint(QPainter *p, const QStyleOptionGraphicsItem
     QTransform xinv = x.inverted();
     QRegion effectiveClip;
     QRegion sysClip = p->paintEngine()->systemClip();
-    if (xinv.type() <= QTransform::TxScale && sysClip.numRects() < 5) {
+    if (xinv.type() <= QTransform::TxScale && sysClip.rectCount() < 5) {
         // simple transform, region gets no more complicated...
         effectiveClip = xinv.map(sysClip);
     } else {
