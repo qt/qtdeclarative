@@ -110,7 +110,7 @@ void tst_parserstress::ecmascript()
 
     QString dataStr = QString::fromUtf8(data);
 
-    QString qml = "import QtQuick 1.0\n";
+    QString qml = "import QtQuick 2.0\n";
             qml+= "\n";
             qml+= "QtObject {\n";
             qml+= "    property int test\n";

@@ -1,7 +1,6 @@
 %modules = ( # path to module name map
     "QtDeclarative" => "$basedir/src/declarative",
     "QtQuick" => "$basedir/src/quick",
-    "QtQuick1" => "$basedir/src/qtquick1",
     "QtQuickTest" => "$basedir/src/qmltest",
     "QtQmlDevTools" => "$basedir/src/qmldevtools",
 );
@@ -20,7 +19,6 @@
 %modulepris = (
     "QtDeclarative" => "$basedir/modules/qt_declarative.pri",
     "QtQuick" => "$basedir/modules/qt_quick.pri",
-    "QtQuick1" => "$basedir/modules/qt_qtquick1.pri",
     "QtQuickTest" => "$basedir/modules/qt_qmltest.pri",
     "QtQmlDevTools" => "$basedir/modules/qt_qmldevtools.pri",
 );

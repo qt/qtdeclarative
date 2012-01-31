@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 import "pragmaBmOne.js" as PragmaBmOneJs
 import "pragmaBmTwo.js" as PragmaBmTwoJs

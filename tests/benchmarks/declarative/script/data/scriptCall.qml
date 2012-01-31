@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 import "script.js" as Script
 import "script2.js" as OtherScript
 

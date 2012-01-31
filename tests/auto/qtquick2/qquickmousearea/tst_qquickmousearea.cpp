@@ -69,8 +69,6 @@ private slots:
     void pressedOrdering();
     void preventStealing();
     void clickThrough();
-    void testQtQuick11Attributes();
-    void testQtQuick11Attributes_data();
     void hoverPosition();
     void hoverPropagation();
 
@@ -725,41 +723,6 @@ void tst_QQuickMouseArea::clickThrough()
     QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
 
     delete canvas;
-}
-
-void tst_QQuickMouseArea::testQtQuick11Attributes()
-{
-    QFETCH(QString, code);
-    QFETCH(QString, warning);
-    QFETCH(QString, error);
-
-    QDeclarativeEngine engine;
-    QObject *obj;
-
-    QDeclarativeComponent valid(&engine);
-    valid.setData("import QtQuick 1.1; MouseArea { " + code.toUtf8() + " }", QUrl(""));
-    obj = valid.create();
-    QVERIFY(obj);
-    QVERIFY(valid.errorString().isEmpty());
-    delete obj;
-
-    QDeclarativeComponent invalid(&engine);
-    invalid.setData("import QtQuick 1.0; MouseArea { " + code.toUtf8() + " }", QUrl(""));
-    QTest::ignoreMessage(QtWarningMsg, warning.toUtf8());
-    obj = invalid.create();
-    QCOMPARE(invalid.errorString(), error);
-    delete obj;
-}
-
-void tst_QQuickMouseArea::testQtQuick11Attributes_data()
-{
-    QTest::addColumn<QString>("code");
-    QTest::addColumn<QString>("warning");
-    QTest::addColumn<QString>("error");
-
-    QTest::newRow("preventStealing") << "preventStealing: true"
-        << "QDeclarativeComponent: Component is not ready"
-        << ":1 \"MouseArea.preventStealing\" is not available in QtQuick 1.0.\n";
 }
 
 void tst_QQuickMouseArea::hoverPosition()

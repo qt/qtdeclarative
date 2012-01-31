@@ -173,7 +173,7 @@ QDeclarativeExpression *QDeclarativeExpressionPrivate::create(QDeclarativeContex
     For example, given a file \c main.qml like this:
 
     \qml
-    import QtQuick 1.0
+    import QtQuick 2.0
 
     Item {
         width: 200; height: 200

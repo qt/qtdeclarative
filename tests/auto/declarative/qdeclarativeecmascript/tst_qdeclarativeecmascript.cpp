@@ -2695,7 +2695,7 @@ void tst_qdeclarativeecmascript::cppOwnershipReturnValue()
     QVERIFY(source.value == 0);
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nQtObject {\nComponent.onCompleted: { var a = source.create(); }\n}\n", QUrl());
+    component.setData("import QtQuick 2.0\nQtObject {\nComponent.onCompleted: { var a = source.create(); }\n}\n", QUrl());
 
     QObject *object = component.create();
 
@@ -2723,7 +2723,7 @@ void tst_qdeclarativeecmascript::ownershipCustomReturnValue()
     QVERIFY(source.value == 0);
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nQtObject {\nComponent.onCompleted: { var a = source.createQmlObject(); }\n}\n", QUrl());
+    component.setData("import QtQuick 2.0\nQtObject {\nComponent.onCompleted: { var a = source.createQmlObject(); }\n}\n", QUrl());
 
     QObject *object = component.create();
 

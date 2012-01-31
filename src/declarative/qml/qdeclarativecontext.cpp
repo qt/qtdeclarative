@@ -84,7 +84,7 @@ QDeclarativeContextPrivate::QDeclarativeContextPrivate()
     context->setContextProperty("myModel", &modelData);
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nListView { model: myModel }", QUrl());
+    component.setData("import QtQuick 2.0\nListView { model: myModel }", QUrl());
     QObject *window = component.create(context);
     \endcode
 
@@ -116,7 +116,7 @@ QDeclarativeContextPrivate::QDeclarativeContextPrivate()
     context->setContextObject(&myDataSet);
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nListView { model: myModel }", QUrl());
+    component.setData("import QtQuick 2.0\nListView { model: myModel }", QUrl());
     component.create(context);
     \endcode
 

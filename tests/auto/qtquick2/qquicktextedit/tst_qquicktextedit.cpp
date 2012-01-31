@@ -150,8 +150,6 @@ private slots:
     void pastingRichText_QTBUG_14003();
     void implicitSize_data();
     void implicitSize();
-    void testQtQuick11Attributes();
-    void testQtQuick11Attributes_data();
 
     void preeditCursorRectangle();
     void inputMethodComposing();
@@ -2395,57 +2393,6 @@ void tst_qquicktextedit::implicitSize()
     textObject->resetWidth();
     QVERIFY(textObject->width() == textObject->implicitWidth());
     QVERIFY(textObject->height() == textObject->implicitHeight());
-}
-
-void tst_qquicktextedit::testQtQuick11Attributes()
-{
-    QFETCH(QString, code);
-    QFETCH(QString, warning);
-    QFETCH(QString, error);
-
-    QDeclarativeEngine engine;
-    QObject *obj;
-
-    QDeclarativeComponent valid(&engine);
-    valid.setData("import QtQuick 2.0; TextEdit { " + code.toUtf8() + " }", QUrl(""));
-    obj = valid.create();
-    QVERIFY(obj);
-    QVERIFY(valid.errorString().isEmpty());
-    delete obj;
-
-    QDeclarativeComponent invalid(&engine);
-    invalid.setData("import QtQuick 1.0; TextEdit { " + code.toUtf8() + " }", QUrl(""));
-    QTest::ignoreMessage(QtWarningMsg, warning.toUtf8());
-    obj = invalid.create();
-    QCOMPARE(invalid.errorString(), error);
-    delete obj;
-}
-
-void tst_qquicktextedit::testQtQuick11Attributes_data()
-{
-    QTest::addColumn<QString>("code");
-    QTest::addColumn<QString>("warning");
-    QTest::addColumn<QString>("error");
-
-    QTest::newRow("canPaste") << "property bool foo: canPaste"
-        << "<Unknown File>:1: ReferenceError: Can't find variable: canPaste"
-        << "";
-
-    QTest::newRow("lineCount") << "property int foo: lineCount"
-        << "<Unknown File>:1: ReferenceError: Can't find variable: lineCount"
-        << "";
-
-    QTest::newRow("moveCursorSelection") << "Component.onCompleted: moveCursorSelection(0, TextEdit.SelectCharacters)"
-        << "<Unknown File>:1: ReferenceError: Can't find variable: moveCursorSelection"
-        << "";
-
-    QTest::newRow("deselect") << "Component.onCompleted: deselect()"
-        << "<Unknown File>:1: ReferenceError: Can't find variable: deselect"
-        << "";
-
-    QTest::newRow("onLinkActivated") << "onLinkActivated: {}"
-        << "QDeclarativeComponent: Component is not ready"
-        << ":1 \"TextEdit.onLinkActivated\" is not available in QtQuick 1.0.\n";
 }
 
 void tst_qquicktextedit::preeditCursorRectangle()

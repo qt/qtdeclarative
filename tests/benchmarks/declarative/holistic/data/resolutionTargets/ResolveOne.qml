@@ -43,7 +43,7 @@
 // This will allow us to benchmark the cost of resolving names in
 // bindings.
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Item {
     id: root

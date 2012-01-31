@@ -39,7 +39,7 @@
 ****************************************************************************/
 //![0]
 // exampleThree.qml
-import QtQuick 1.0
+import QtQuick 2.0
 import Qt.example 1.0
 import "exampleThree.js" as ExampleThreeJs
 

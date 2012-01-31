@@ -59,7 +59,6 @@ inline const char *typeName(Type t)
     case VoidType: return "void";
     case StringType: return "string";
     case UrlType: return "url";
-    case AnchorLineType: return "AnchorLine";
     case SGAnchorLineType: return "SGAnchorLine";
     case AttachType: return "AttachType";
     case ObjectType: return "object";

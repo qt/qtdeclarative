@@ -45,7 +45,6 @@
 #include "qtestoptions_p.h"
 #include <QApplication>
 #include <QtDeclarative/qdeclarative.h>
-#include <QtQuick1/qdeclarativeview.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
@@ -331,47 +330,8 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     } else
 #endif
     {
-        foreach (QString file, files) {
-            QFileInfo fi(file);
-            if (!fi.exists())
-                continue;
-            QDeclarativeView view;
-            QTestRootObject rootobj;
-            QEventLoop eventLoop;
-            QObject::connect(view.engine(), SIGNAL(quit()),
-                             &rootobj, SLOT(quit()));
-            QObject::connect(view.engine(), SIGNAL(quit()),
-                             &eventLoop, SLOT(quit()));
-            if (createViewport)
-                view.setViewport((*createViewport)());
-            view.rootContext()->setContextProperty
-                (QLatin1String("qtest"), &rootobj);
-            foreach (QString path, imports)
-                view.engine()->addImportPath(path);
-            QString path = fi.absoluteFilePath();
-            if (path.startsWith(QLatin1String(":/")))
-                view.setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
-            else
-                view.setSource(QUrl::fromLocalFile(path));
-            if (QTest::printAvailableFunctions)
-                continue;
-            if (view.status() == QDeclarativeView::Error) {
-                // Error compiling the test - flag failure in the log and continue.
-                handleCompileErrors(fi, view);
-                continue;
-            }
-            if (!rootobj.hasQuit) {
-                // If the test already quit, then it was performed
-                // synchronously during setSource().  Otherwise it is
-                // an asynchronous test and we need to show the window
-                // and wait for the quit indication.
-                view.show();
-                QTest::qWaitForWindowShown(&view);
-                rootobj.setWindowShown(true);
-                if (!rootobj.hasQuit)
-                    eventLoop.exec();
-            }
-        }
+        qWarning("No suitable QtQuick1 implementation is available!");
+        return 1;
     }
 
     // Flush the current logging stream.

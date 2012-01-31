@@ -45,10 +45,6 @@
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickpincharea_p.h>
 
-#ifdef QT_WIDGETS_LIB
-#include <QtWidgets/QApplication>
-#endif
-
 #include <QtGui/QGuiApplication>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
@@ -84,8 +80,8 @@ void collectReachableMetaObjects(const QMetaObject *meta, QSet<const QMetaObject
     if (! meta || metas->contains(meta))
         return;
 
-    // dynamic meta objects can break things badly (like QDeclarative1VisualDataModelParts)
-    // but extended types are usually fine (like QDeclarative1GraphicsWidget)
+    // dynamic meta objects can break things badly
+    // but extended types are usually fine
     const QMetaObjectPrivate *mop = reinterpret_cast<const QMetaObjectPrivate *>(meta->d.data);
     if (extended || !(mop->flags & DynamicMetaObject))
         metas->insert(meta);
@@ -611,11 +607,7 @@ int main(int argc, char *argv[])
     QtSimulatorPrivate::SimulatorConnection::createStubInstance();
 #endif
 
-#ifdef QT_WIDGETS_LIB
-    QApplication app(argc, argv);
-#else
     QGuiApplication app(argc, argv);
-#endif
     const QStringList args = app.arguments();
     const QString appName = QFileInfo(app.applicationFilePath()).baseName();
     if (args.size() < 2) {
@@ -686,21 +678,6 @@ int main(int argc, char *argv[])
         QDir::setCurrent(pluginImportPath);
         engine.addImportPath(pluginImportPath);
     }
-
-#ifdef QT_WIDGETS_LIB
-    // load the QtQuick 1 plugin
-    {
-        QByteArray code("import QtQuick 1.0\nQtObject {}");
-        QDeclarativeComponent c(&engine);
-        c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick1.qml"));
-        c.create();
-        if (!c.errors().isEmpty()) {
-            foreach (const QDeclarativeError &error, c.errors())
-                qWarning() << error.toString();
-            return EXIT_IMPORTERROR;
-        }
-    }
-#endif
 
     // load the QtQuick 2 plugin
     {

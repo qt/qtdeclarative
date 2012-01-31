@@ -156,7 +156,7 @@ QHash<QUrl, QDeclarativeFontObject*> QDeclarativeFontLoaderPrivate::fonts;
 
     For example:
     \qml
-    import QtQuick 1.0
+    import QtQuick 2.0
 
     Column { 
         FontLoader { id: fixedFont; name: "Courier" }

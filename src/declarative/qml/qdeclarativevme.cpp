@@ -436,7 +436,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 // A component that is logically created within another component instance shares the 
                 // same instances of script imports.  For example:
                 //
-                //     import QtQuick 1.0
+                //     import QtQuick 2.0
                 //     import "test.js" as Test
                 //     ListView {
                 //         model: Test.getModel()

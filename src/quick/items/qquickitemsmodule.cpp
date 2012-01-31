@@ -230,18 +230,9 @@ void QQuickItemsModule::defineModule()
         return;
     initialized = true;
 
-    // XXX todo -  Remove before final integration...
-    QByteArray mode = qgetenv("QMLSCENE_IMPORT_NAME");
     QByteArray name = "QtQuick";
     int majorVersion = 2;
     int minorVersion = 0;
-    if (mode == "quick1") {
-        majorVersion = 1;
-    } else if (mode == "qt") {
-        name = "Qt";
-        majorVersion = 4;
-        minorVersion = 7;
-    }
 
     qt_quickitems_defineModule(name, majorVersion, minorVersion);
 }

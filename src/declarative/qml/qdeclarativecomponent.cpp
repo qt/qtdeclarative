@@ -121,7 +121,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     For example, if there is a \c main.qml file like this:
 
     \qml
-    import QtQuick 1.0
+    import QtQuick 2.0
 
     Item {
         width: 200

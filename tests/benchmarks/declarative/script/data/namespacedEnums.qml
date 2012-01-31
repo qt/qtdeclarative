@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0 as QtQuick
+import QtQuick 2.0 as QtQuick
 
 QtQuick.Item {
     function runtest() {

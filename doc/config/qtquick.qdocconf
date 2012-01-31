@@ -21,9 +21,6 @@ imagedirs += ../src/images \
 sourcedirs += ../src \
               ../../src
 
-excludedirs += ../src/qtquick1 \
-               ../../src/qtquick1
-
 #indexes = $QT5DOC/doc/html/qt.index
 
 # The following parameters are for creating a qhp file, the qhelpgenerator

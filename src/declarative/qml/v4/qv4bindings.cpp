@@ -453,12 +453,7 @@ static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
 
     int type = qtscript.userType();
 
-    if (type == qMetaTypeId<QDeclarative1AnchorLine>()) {
-        QDeclarative1AnchorLine la = qvariant_cast<QDeclarative1AnchorLine>(qtscript);
-        QDeclarative1AnchorLine ra = qvariant_cast<QDeclarative1AnchorLine>(v4);
-
-        return la == ra;
-    } else if (type == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
+    if (type == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
         return QDeclarativeMetaType::QQuickAnchorLineCompare(qtscript.constData(), v4.constData());
     } else if (type == QMetaType::Double) {
 
@@ -538,9 +533,7 @@ static void testBindingResult(const QString &binding, int line, int column,
             v4value = result.getqreal();
             break;
         default:
-            if (resultType == qMetaTypeId<QDeclarative1AnchorLine>()) {
-                v4value = qVariantFromValue<QDeclarative1AnchorLine>(*(QDeclarative1AnchorLine *)result.typeDataPtr());
-            } else if (resultType == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
+            if (resultType == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
                 v4value = QVariant(QDeclarativeMetaType::QQuickAnchorLineMetaTypeId(), result.typeDataPtr());
             } else {
                 iserror = true;

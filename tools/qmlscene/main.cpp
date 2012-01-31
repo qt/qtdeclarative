@@ -241,54 +241,53 @@ static int displayOptionsDialog(Options *options)
 }
 #endif
 
-static void checkAndAdaptVersion(const QUrl &url)
+static bool checkVersion(const QUrl &url)
 {
     if (!qgetenv("QMLSCENE_IMPORT_NAME").isEmpty()) {
-        return;
+        qWarning("QMLSCENE_IMPORT_NAME is no longer supported.");
     }
 
     QString fileName = url.toLocalFile();
-    if (fileName.isEmpty())
-        return;
+    if (fileName.isEmpty()) {
+        qWarning("qmlscene: filename required.");
+        return false;
+    }
 
     QFile f(fileName);
     if (!f.open(QFile::ReadOnly | QFile::Text)) {
         qWarning("qmlscene: failed to check version of file '%s', could not open...",
                  qPrintable(fileName));
-        return;
+        return false;
     }
 
-    QRegExp quick1("^\\s*import +QtQuick +1\\.");
-    QRegExp quick2("^\\s*import +QtQuick +2\\.");
+    QRegExp quick1("^\\s*import +QtQuick +1\\.\\w*");
     QRegExp qt47("^\\s*import +Qt +4\\.7");
-
-    QString envToWrite;
-    QString compat;
 
     QTextStream stream(&f);
     bool codeFound= false;
     while (!codeFound) {
         QString line = stream.readLine();
-        if (line.contains("{"))
+        if (line.contains("{")) {
             codeFound = true;
-        if (envToWrite.isEmpty() && quick1.indexIn(line) >= 0) {
-            envToWrite = QLatin1String("quick1");
-            compat = QLatin1String("QtQuick 1.0");
-        } else if (envToWrite.isEmpty() && qt47.indexIn(line) >= 0) {
-            envToWrite = QLatin1String("qt");
-            compat = QLatin1String("Qt 4.7");
-        } else if (quick2.indexIn(line) >= 0) {
-            envToWrite.clear();
-            compat.clear();
-            break;
+        } else {
+            QString import;
+            if (quick1.indexIn(line) >= 0) {
+                import = quick1.cap(0).trimmed();
+            } else if (qt47.indexIn(line) >= 0) {
+                import = qt47.cap(0).trimmed();
+            }
+
+            if (!import.isNull()) {
+                qWarning("qmlscene: '%s' is no longer supported.\n"
+                         "Use qmlviewer to load file '%s'.",
+                         qPrintable(import),
+                         qPrintable(fileName));
+                return false;
+            }
         }
     }
 
-    if (!envToWrite.isEmpty()) {
-        qWarning("qmlscene: Autodetecting compatibility import \"%s\"...", qPrintable(compat));
-        if (qgetenv("QMLSCENE_IMPORT_NAME").isEmpty())
-            qputenv("QMLSCENE_IMPORT_NAME", envToWrite.toLatin1().constData());
-    }
+    return true;
 }
 
 static void displayFileDialog(Options *options)
@@ -398,36 +397,36 @@ int main(int argc, char ** argv)
     int exitCode = 0;
 
     if (!options.file.isEmpty()) {
-        if (options.versionDetection)
-            checkAndAdaptVersion(options.file);
-        QQuickView *qxView = new MyQQuickView();
-        engine = qxView->engine();
-        for (int i = 0; i < imports.size(); ++i)
-            engine->addImportPath(imports.at(i));
-        window = qxView;
-        if (options.file.isLocalFile()) {
-            QFileInfo fi(options.file.toLocalFile());
-            loadDummyDataFiles(*engine, fi.path());
-        }
-        qxView->setSource(options.file);
+        if (!options.versionDetection || checkVersion(options.file)) {
+            QQuickView *qxView = new MyQQuickView();
+            engine = qxView->engine();
+            for (int i = 0; i < imports.size(); ++i)
+                engine->addImportPath(imports.at(i));
+            window = qxView;
+            if (options.file.isLocalFile()) {
+                QFileInfo fi(options.file.toLocalFile());
+                loadDummyDataFiles(*engine, fi.path());
+            }
+            qxView->setSource(options.file);
 
-        QObject::connect(engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
+            QObject::connect(engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
 
-        window->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
-        if (options.fullscreen)
-            window->showFullScreen();
-        else if (options.maximized)
-            window->showMaximized();
-        else
-            window->show();
+            window->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+            if (options.fullscreen)
+                window->showFullScreen();
+            else if (options.maximized)
+                window->showMaximized();
+            else
+                window->show();
 
-        exitCode = app.exec();
+            exitCode = app.exec();
 
-        delete window;
+            delete window;
 
 #ifdef QML_RUNTIME_TESTING
-        RenderStatistics::printTotalStats();
+            RenderStatistics::printTotalStats();
 #endif
+        }
     }
 
     return exitCode;

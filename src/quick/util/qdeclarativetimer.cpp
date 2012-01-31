@@ -82,7 +82,7 @@ public:
     object to access the current time.
 
     \qml
-    import QtQuick 1.0
+    import QtQuick 2.0
 
     Item {
         Timer {

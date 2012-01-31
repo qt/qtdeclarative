@@ -63,36 +63,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-// NOTE: This is a copy of QDeclarative1AnchorLine: src/qtquick1/graphicsitems/qdeclarativeanchors_p_p.h
-class QGraphicsObject;
-class QDeclarative1AnchorLine
-{
-public:
-    QDeclarative1AnchorLine() : item(0), anchorLine(Invalid) {}
-
-    enum AnchorLine {
-        Invalid = 0x0,
-        Left = 0x01,
-        Right = 0x02,
-        Top = 0x04,
-        Bottom = 0x08,
-        HCenter = 0x10,
-        VCenter = 0x20,
-        Baseline = 0x40,
-        Horizontal_Mask = Left | Right | HCenter,
-        Vertical_Mask = Top | Bottom | VCenter | Baseline
-    };
-
-    QGraphicsObject *item;
-    AnchorLine anchorLine;
-};
-
-inline bool operator==(const QDeclarative1AnchorLine& a, const QDeclarative1AnchorLine& b)
-{
-    return a.item == b.item && a.anchorLine == b.anchorLine;
-}
-
-
 template <typename _Key, typename _Value>
 class QDeclarativeAssociationList
 {
@@ -268,8 +238,6 @@ private:
 
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QDeclarative1AnchorLine)
 
 QT_END_HEADER
 

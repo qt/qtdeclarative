@@ -1003,7 +1003,7 @@ void QQuickDoubleValidator::resetLocaleName()
     input of integers between 11 and 31 into the text input:
 
     \code
-    import QtQuick 1.0
+    import QtQuick 2.0
     TextInput{
         validator: IntValidator{bottom: 11; top: 31;}
         focus: true
@@ -2366,7 +2366,7 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
     Only relevant on platforms, which provide virtual keyboards.
 
     \qml
-        import QtQuick 1.0
+        import QtQuick 2.0
         TextInput {
             id: textInput
             text: "Hello world!"
@@ -2409,7 +2409,7 @@ void QQuickTextInput::openSoftwareInputPanel()
     Only relevant on platforms, which provide virtual keyboards.
 
     \qml
-        import QtQuick 1.0
+        import QtQuick 2.0
         TextInput {
             id: textInput
             text: "Hello world!"

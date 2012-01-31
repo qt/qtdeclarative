@@ -345,9 +345,7 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
             break;
 
         default:
-            if (propTy == qMetaTypeId<QDeclarative1AnchorLine>()) {
-                regType = PODValueType;
-            } else if (propTy == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
+            if (propTy == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
                 regType = PODValueType;
             } else if (QDeclarativeMetaType::isQObject(propTy)) {
                 regType = QObjectStarType;
@@ -989,9 +987,6 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
             break;
         case IR::UrlType:
             test.regType = QMetaType::QUrl;
-            break;
-        case IR::AnchorLineType:
-            test.regType = qMetaTypeId<QDeclarative1AnchorLine>();
             break;
         case IR::SGAnchorLineType:
             test.regType = QDeclarativeMetaType::QQuickAnchorLineMetaTypeId();

@@ -127,7 +127,7 @@ Item {
             }
 
             var img = Qt.createQmlObject
-                ('import QtQuick 1.0; BorderImage { source: "' +
+                ('import QtQuick 2.0; BorderImage { source: "' +
                     row.source + '" }', top)
 
             if (row.remote)
@@ -204,7 +204,7 @@ Item {
 
         function test_sciSource(row) {
             var img = Qt.createQmlObject
-                ('import QtQuick 1.0; BorderImage { source: "' +
+                ('import QtQuick 2.0; BorderImage { source: "' +
                     row.source + '"; width: 300; height: 300 }', top)
 
             if (row.remote)

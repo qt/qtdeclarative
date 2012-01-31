@@ -125,7 +125,7 @@ void tst_creation::qobject_cpp()
 void tst_creation::qobject_qml()
 {
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nQtObject {}", QUrl());
+    component.setData("import QtQuick 2.0\nQtObject {}", QUrl());
     QObject *obj = component.create();
     delete obj;
 

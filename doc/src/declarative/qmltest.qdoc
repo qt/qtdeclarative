@@ -104,21 +104,4 @@
     \code
     IMPORTPATH += $$PWD/../imports/my_module1 $$PWD/../imports/my_module2
     \endcode
-
-    \section1 Running tests with QtQuick 1
-
-    The \c{-qtquick1} option can be passed to a test binary to run
-    the tests using QDeclarativeView (QtQuick 1) rather than QQuickView (QtQuick 2):
-
-    \code
-    tst_example -qtquick1
-    \endcode
-
-    To run tests with either QtQuick 1 or QtQuick 2, use
-    "import QtQuick 1.0" in your unit tests and then specify
-    compatibility mode to the QtQuick2 engine:
-
-    \code
-    QMLSCENE_IMPORT_NAME=quick1 tst_example
-    \endcode
 */

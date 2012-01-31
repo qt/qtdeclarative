@@ -7,9 +7,8 @@ CONFIG += module
 CONFIG += dll warn_on declarative_debug
 MODULE_PRI += ../../modules/qt_qmltest.pri
 
-QT += testlib-private declarative testlib quick qtquick1 widgets widgets-private gui
+QT += testlib-private declarative testlib quick widgets widgets-private gui
 DEFINES += QT_BUILD_QUICK_TEST_LIB QT_NO_URL_CAST_FROM_STRING
-
 
 load(qt_module_config)
 

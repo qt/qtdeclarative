@@ -3,7 +3,6 @@ CONFIG += qt uic console
 DESTDIR = $$QT.declarative.bins
 
 QT += declarative declarative-private quick-private core-private
-!isEmpty(QT.widgets.name):!isEmpty(QT.qtquick1.name): QT += widgets qtquick1
 
 TARGET = qmlplugindump
 

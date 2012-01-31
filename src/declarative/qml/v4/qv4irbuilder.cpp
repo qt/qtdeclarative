@@ -70,11 +70,9 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
         return IR::UrlType;
 
     default:
-        if (t == qMetaTypeId<QDeclarative1AnchorLine>())
-            return IR::AnchorLineType;
-        else if (t == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId())
+        if (t == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
             return IR::SGAnchorLineType;
-        else if (engine->metaObjectForType(t)) {
+        } else if (engine->metaObjectForType(t)) {
             return IR::ObjectType;
         }
 

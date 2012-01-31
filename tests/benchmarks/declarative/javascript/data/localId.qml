@@ -1,6 +1,6 @@
 // Benchmarks the cost of accessing an id in the same file as the script.
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 QtObject {
     id: root

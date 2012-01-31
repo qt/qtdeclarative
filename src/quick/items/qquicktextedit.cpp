@@ -2074,7 +2074,7 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
     Only relevant on platforms, which provide virtual keyboards.
 
     \code
-        import QtQuick 1.0
+        import QtQuick 2.0
         TextEdit {
             id: textEdit
             text: "Hello world!"
@@ -2117,7 +2117,7 @@ void QQuickTextEdit::openSoftwareInputPanel()
     Only relevant on platforms, which provide virtual keyboards.
 
     \code
-        import QtQuick 1.0
+        import QtQuick 2.0
         TextEdit {
             id: textEdit
             text: "Hello world!"

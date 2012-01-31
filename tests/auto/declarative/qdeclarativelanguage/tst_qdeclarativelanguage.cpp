@@ -2276,7 +2276,7 @@ void tst_qdeclarativelanguage::remoteLoadCrash()
     server.serveDirectory(testdata());
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0; Text {}", QUrl("http://127.0.0.1:14448/remoteLoadCrash.qml"));
+    component.setData("import QtQuick 2.0; Text {}", QUrl("http://127.0.0.1:14448/remoteLoadCrash.qml"));
     while (component.isLoading()) 
         QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
 

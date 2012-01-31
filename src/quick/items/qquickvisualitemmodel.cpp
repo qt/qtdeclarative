@@ -132,7 +132,7 @@ public:
 
     The example below places three colored rectangles in a ListView.
     \code
-    import QtQuick 1.0
+    import QtQuick 2.0
 
     Rectangle {
         VisualItemModel {

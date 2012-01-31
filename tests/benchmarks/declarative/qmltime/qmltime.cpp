@@ -177,7 +177,7 @@ void usage(const char *name)
     "\n"
     "we would create a benchmark file that looks like this:\n"
     "\n"
-    "import QtQuick 1.0\n"
+    "import QtQuick 2.0\n"
     "import QmlTime 1.0 as QmlTime\n"
     "\n"
     "Item {\n"

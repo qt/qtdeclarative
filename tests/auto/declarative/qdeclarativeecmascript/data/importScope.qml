@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 import "importScope.1.js" as ImportScope1
 import "importScope.2.js" as ImportScope2
 

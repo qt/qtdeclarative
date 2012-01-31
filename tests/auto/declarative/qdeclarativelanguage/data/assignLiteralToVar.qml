@@ -1,7 +1,7 @@
 // This tests assigning literals to "var" properties.
 // These properties store JavaScript object references.
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 QtObject {
     property var test1: 1

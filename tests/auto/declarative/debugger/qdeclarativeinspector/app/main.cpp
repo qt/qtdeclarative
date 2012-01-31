@@ -43,7 +43,6 @@
 #include <QtCore/QStringList>
 #include <QtQuick/QQuickView>
 #include <QtGui/QGuiApplication>
-#include <QtQuick1/QDeclarativeView>
 
 int main(int argc, char *argv[])
 {
@@ -66,8 +65,7 @@ int main(int argc, char *argv[])
         QQuickView *view = new QQuickView();
         view->setSource(QUrl::fromLocalFile("app/qtquick2.qml"));
     } else {
-        QDeclarativeView *view = new QDeclarativeView();
-        view->setSource(QUrl::fromLocalFile("app/qtquick1.qml"));
+        qWarning("No suitable QtQuick1 implementation is available!");
     }
     return app.exec();
 }

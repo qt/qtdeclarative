@@ -42,8 +42,6 @@
 #include "quicktestevent_p.h"
 #include <QtTest/qtestkeyboard.h>
 #include <QtDeclarative/qdeclarative.h>
-#include <QtQuick1/qdeclarativeitem.h>
-#include <QtQuick1/qdeclarativeview.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickcanvas.h>
@@ -116,8 +114,6 @@ namespace QtQuickTest
         }
 
         QPoint pos;
-        QDeclarativeView *view = qobject_cast<QDeclarativeView *>(window);
-        QWindow *eventWindow = window;
 #ifdef QUICK_TEST_SCENEGRAPH
         QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
         if (sgitem) {
@@ -125,13 +121,7 @@ namespace QtQuickTest
         } else
 #endif
         {
-            QDeclarativeItem *ditem = qobject_cast<QDeclarativeItem *>(item);
-            if (!ditem) {
-                qWarning("Mouse event target is not an Item");
-                return;
-            }
-            pos = view->mapFromScene(ditem->mapToScene(_pos));
-            eventWindow = view->viewport()->windowHandle();
+            qWarning("No suitable QtQuick1 implementation is available!");
         }
         QTEST_ASSERT(button == Qt::NoButton || button & Qt::MouseButtonMask);
         QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
@@ -158,7 +148,7 @@ namespace QtQuickTest
                 QTEST_ASSERT(false);
         }
         QSpontaneKeyEvent::setSpontaneous(&me);
-        if (!qApp->notify(eventWindow, &me)) {
+        if (!qApp->notify(window, &me)) {
             static const char *mouseActionNames[] =
                 { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove" };
             QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving window");
@@ -178,8 +168,6 @@ namespace QtQuickTest
             QTest::qWait(delay);
 
         QPoint pos;
-        QDeclarativeView *view = qobject_cast<QDeclarativeView *>(window);
-        QWindow *eventWindow = window;
 #ifdef QUICK_TEST_SCENEGRAPH
         QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
         if (sgitem) {
@@ -187,13 +175,7 @@ namespace QtQuickTest
         } else
 #endif
         {
-            QDeclarativeItem *ditem = qobject_cast<QDeclarativeItem *>(item);
-            if (!ditem) {
-                qWarning("Mouse event target is not an Item");
-                return;
-            }
-            pos = view->mapFromScene(ditem->mapToScene(_pos));
-            eventWindow = view->viewport()->windowHandle();
+            qWarning("No suitable QtQuick1 implementation is available!");
         }
         QTEST_ASSERT(buttons == Qt::NoButton || buttons & Qt::MouseButtonMask);
         QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
@@ -202,7 +184,7 @@ namespace QtQuickTest
         QWheelEvent we(pos, window->mapToGlobal(pos), delta, buttons, stateKey, orientation);
 
         QSpontaneKeyEvent::setSpontaneous(&we); // hmmmm
-        if (!qApp->notify(eventWindow, &we))
+        if (!qApp->notify(window, &we))
             QTest::qWarn("Wheel event not accepted by receiving window");
     }
 };
@@ -295,6 +277,8 @@ QWindow *QuickTestEvent::eventWindow()
     if (sgitem)
         return sgitem->canvas();
 #endif
+    return 0;
+    /*
     QDeclarativeItem *item = qobject_cast<QDeclarativeItem *>(parent());
     if (!item)
         return 0;
@@ -305,6 +289,7 @@ QWindow *QuickTestEvent::eventWindow()
     if (views.isEmpty())
         return 0;
     return views.at(0)->windowHandle();
+    */
 }
 
 QT_END_NAMESPACE

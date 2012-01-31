@@ -88,7 +88,7 @@ For example, for the following QML code:
 
 \qml
 // MyItem.qml
-import QtQuick 1.0
+import QtQuick 2.0
 
 Text { text: "A bit of text" }
 \endqml

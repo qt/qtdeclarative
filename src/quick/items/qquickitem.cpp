@@ -138,7 +138,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     The following example moves the Y axis of the \l Rectangle elements while still allowing the \l Row element
     to lay the items out as if they had not been transformed:
     \qml
-    import QtQuick 1.0
+    import QtQuick 2.0
 
     Row {
         Rectangle {
@@ -4382,7 +4382,7 @@ qreal QQuickItem::implicitWidth() const
 
     \qml
     // Label.qml
-    import QtQuick 1.1
+    import QtQuick 2.0
 
     Item {
         property alias icon: image.source

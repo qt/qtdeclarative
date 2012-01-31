@@ -137,7 +137,7 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
     \qml
     // MyRect.qml
 
-    import QtQuick 1.0
+    import QtQuick 2.0
 
     Item {
         width: 200; height: 200
@@ -197,7 +197,7 @@ It is not instantiable; to use it, call the members of the global \c Qt object d
 For example:
 
 \qml
-import QtQuick 1.0
+import QtQuick 2.0
 
 Text {
     color: Qt.rgba(1, 0, 0, 1)
@@ -484,7 +484,7 @@ QDeclarativeWorkerScriptEngine *QDeclarativeEnginePrivate::getWorkerScriptEngine
   \code
   QDeclarativeEngine engine;
   QDeclarativeComponent component(&engine);
-  component.setData("import QtQuick 1.0\nText { text: \"Hello world!\" }", QUrl());
+  component.setData("import QtQuick 2.0\nText { text: \"Hello world!\" }", QUrl());
   QDeclarativeItem *item = qobject_cast<QDeclarativeItem *>(component.create());
 
   //add item to view, etc
