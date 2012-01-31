@@ -86,6 +86,11 @@ struct LogEntry {
     QString toString() const { return QString::number(type) + ": " + message; }
 };
 
+bool operator==(const LogEntry &t1, const LogEntry &t2)
+{
+    return t1.type == t2.type && t1.message == t2.message;
+}
+
 class QDeclarativeDebugMsgClient : public QDeclarativeDebugClient
 {
     Q_OBJECT
@@ -206,12 +211,10 @@ void tst_QDebugMessageService::retrieveDebugOutput()
            && (maxTries-- > 0))
         QVERIFY(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput())));
 
-    QCOMPARE(m_client->logBuffer.size(), 2);
+    QVERIFY(m_client->logBuffer.size() >= 2);
 
-    QCOMPARE(m_client->logBuffer.at(0).toString(),
-             LogEntry(QtDebugMsg, QLatin1String("console.log")).toString());
-    QCOMPARE(m_client->logBuffer.at(1).toString(),
-             LogEntry(QtDebugMsg, QLatin1String("console.count: 1")).toString());
+    QVERIFY(m_client->logBuffer.contains(LogEntry(QtDebugMsg, QLatin1String("console.log"))));
+    QVERIFY(m_client->logBuffer.contains(LogEntry(QtDebugMsg, QLatin1String("console.count: 1"))));
 }
 
 void tst_QDebugMessageService::retrieveDebugOutputExtended()
@@ -223,7 +226,7 @@ void tst_QDebugMessageService::retrieveDebugOutputExtended()
            && (maxTries-- > 0))
         QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()));
 
-    QCOMPARE(m_client->logBuffer.size(), 2);
+    QVERIFY(m_client->logBuffer.size() >= 2);
 
     const QString path =
             QUrl::fromLocalFile(QDeclarativeDataTest::instance()->testFile(QMLFILE)).toString();
@@ -231,10 +234,8 @@ void tst_QDebugMessageService::retrieveDebugOutputExtended()
     QString logMsg = QString::fromLatin1("console.log (%1:%2)").arg(path).arg(48);
     QString countMsg = QString::fromLatin1("console.count: 1 (%1:%2)").arg(path).arg(49);
 
-    QCOMPARE(m_client->logBuffer.at(0).toString(),
-             LogEntry(QtDebugMsg, logMsg).toString());
-    QCOMPARE(m_client->logBuffer.at(1).toString(),
-             LogEntry(QtDebugMsg, countMsg).toString());
+    QVERIFY(m_client->logBuffer.contains(LogEntry(QtDebugMsg, logMsg)));
+    QVERIFY(m_client->logBuffer.contains(LogEntry(QtDebugMsg, countMsg)));
 }
 
 QTEST_MAIN(tst_QDebugMessageService)
