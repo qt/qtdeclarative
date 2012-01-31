@@ -162,16 +162,6 @@ QJSValue::QJSValue(const char *value)
 #endif
 
 /*!
-    Block automatic convertion to bool
-    \internal
-*/
-QJSValue::QJSValue(void* d)
-{
-    Q_UNUSED(d);
-    Q_ASSERT(false);
-}
-
-/*!
     Constructs a new QJSValue from private
     \internal
 */

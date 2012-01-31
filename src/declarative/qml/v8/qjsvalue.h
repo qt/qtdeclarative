@@ -123,7 +123,8 @@ public:
 
 private:
     // force compile error, prevent QJSValue(bool) to be called
-    QJSValue(void *);
+
+    QJSValue(void *) Q_DECL_EQ_DELETE;
 
     QJSValue(QJSValuePrivate*);
     QJSValue(QScriptPassPointer<QJSValuePrivate>);
