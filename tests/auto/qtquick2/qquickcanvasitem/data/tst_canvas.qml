@@ -182,7 +182,7 @@ Rectangle {
                    {mimeType:"image/bmp"},
                    {mimeType:"image/jpeg"},
                    {mimeType:"image/x-portable-pixmap"},
-                   {mimeType:"image/tiff"},
+                   //{mimeType:"image/tiff"}, QTBUG-23980
                    {mimeType:"image/xpm"},
                    ];
        }
