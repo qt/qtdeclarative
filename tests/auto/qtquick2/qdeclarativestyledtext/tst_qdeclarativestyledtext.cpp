@@ -92,6 +92,7 @@ void tst_qdeclarativestyledtext::textOutput_data()
     QTest::newRow("italic") << "<i>italic</i>" << "italic" << (FormatList() << Format(Format::Italic, 0, 6));
     QTest::newRow("underline") << "<u>underline</u>" << "underline" << (FormatList() << Format(Format::Underline, 0, 9));
     QTest::newRow("strong") << "<strong>strong</strong>" << "strong" << (FormatList() << Format(Format::Bold, 0, 6));
+    QTest::newRow("underline") << "<u>underline</u>" << "underline" << (FormatList() << Format(Format::Underline, 0, 9));
     QTest::newRow("missing >") << "<b>text</b" << "text" << (FormatList() << Format(Format::Bold, 0, 4));
     QTest::newRow("missing b>") << "<b>text</" << "text" << (FormatList() << Format(Format::Bold, 0, 4));
     QTest::newRow("missing /b>") << "<b>text<" << "text" << (FormatList() << Format(Format::Bold, 0, 4));
@@ -126,6 +127,7 @@ void tst_qdeclarativestyledtext::textOutput_data()
     QTest::newRow("unordered list disc") << "<ul type=\"disc\"><li>one</li><li>two</li></ul>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + disc + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + disc + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
     QTest::newRow("unordered list square") << "<ul type=\"square\"><li>one</li><li>two</li></ul>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + square + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + square + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
     QTest::newRow("unordered list bad") << "<ul type=\"bad\"><li>one</li><li>two</li></ul>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("header close") << "<h1>head</h1>more" << QChar(QChar::LineSeparator) + QLatin1String("head") + QChar(QChar::LineSeparator) + QLatin1String("more") << (FormatList() << Format(Format::Bold, 0, 5));
     QTest::newRow("h0") << "<h0>head" << "head" << FormatList();
     QTest::newRow("h1") << "<h1>head" << QChar(QChar::LineSeparator) + QLatin1String("head") << (FormatList() << Format(Format::Bold, 0, 5));
     QTest::newRow("h2") << "<h2>head" << QChar(QChar::LineSeparator) + QLatin1String("head") << (FormatList() << Format(Format::Bold, 0, 5));
