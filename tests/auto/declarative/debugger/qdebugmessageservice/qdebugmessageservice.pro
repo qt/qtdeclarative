@@ -16,6 +16,7 @@ testDataFiles.files = data
 testDataFiles.path = .
 DEPLOYMENT += testDataFiles
 
-CONFIG += parallel_test
+#QTBUG-23977
+CONFIG += parallel_test insignificant_test
 
 OTHER_FILES += data/test.qml
