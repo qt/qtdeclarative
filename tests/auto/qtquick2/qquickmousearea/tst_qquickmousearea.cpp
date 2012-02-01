@@ -611,6 +611,7 @@ void tst_QQuickMouseArea::preventStealing()
 
 void tst_QQuickMouseArea::clickThrough()
 {
+    QSKIP("QTBUG-23976 Unstable");
     //With no handlers defined click, doubleClick and PressAndHold should propagate to those with handlers
     QQuickView *canvas = createView();
     canvas->setSource(testFileUrl("clickThrough.qml"));
