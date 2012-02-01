@@ -97,12 +97,15 @@ public:
     QList<QV8ProfilerData> m_data;
 
     bool initialized;
+    bool m_enabled;
 };
 
 QV8ProfilerService::QV8ProfilerService(QObject *parent)
     : QDeclarativeDebugService(*(new QV8ProfilerServicePrivate()), QLatin1String("V8Profiler"), 1, parent)
 {
     Q_D(QV8ProfilerService);
+
+    d->m_enabled = false;
 
     if (registerService() == Enabled) {
         // ,block mode, client attached
@@ -138,11 +141,13 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
 
     if (command == "V8PROFILER") {
         ds >>  title;
-        if (option == "start") {
+        if (option == "start" && !d->m_enabled) {
             QMetaObject::invokeMethod(this, "startProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
-        } else if (option == "stop") {
+            d->m_enabled = true;
+        } else if (option == "stop" && d->m_enabled) {
             QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, QString::fromUtf8(title)));
             QMetaObject::invokeMethod(this, "sendProfilingData", Qt::QueuedConnection);
+            d->m_enabled = false;
         }
         d->initialized = true;
     }

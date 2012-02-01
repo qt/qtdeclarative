@@ -216,9 +216,14 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
     connect(true);
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
+    m_client->stopProfiling("");
+    if (QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()), 1000)) {
+        QString failMsg
+                = QString("Unexpected trace received! App output: %1\n\n").arg(m_process->output());
+        QFAIL(qPrintable(failMsg));
+    }
     m_client->startProfiling("");
     m_client->stopProfiling("");
-    m_client->startProfiling("");
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
                 = QString("No trace received in time. App output: %1\n\n").arg(m_process->output());
@@ -231,8 +236,8 @@ void tst_QV8ProfilerService::nonBlockingConnect()
     connect(false);
     QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
 
-    m_client->stopProfiling("");
     m_client->startProfiling("");
+    m_client->stopProfiling("");
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
                 = QString("No trace received in time. App output: %1\n\n").arg(m_process->output());
