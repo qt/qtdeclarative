@@ -2967,7 +2967,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 void QQuickItem::focusInEvent(QFocusEvent *)
 {
-    QAccessible::updateAccessibility(this, 0, QAccessible::Focus);
+    QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::Focus, this, 0));
 }
 
 void QQuickItem::focusOutEvent(QFocusEvent *)
@@ -3950,7 +3950,7 @@ void QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     }
 
     if (isAccessible)
-        QAccessible::updateAccessibility(q, 0, effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide );
+        QAccessible::updateAccessibility(QAccessibleEvent(effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide, q, 0));
 
     emit q->visibleChanged();
 }

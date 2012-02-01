@@ -85,7 +85,7 @@ public:
         if (name != m_name) {
             m_name = name;
             emit nameChanged();
-            QAccessible::updateAccessibility(parent(), 0, QAccessible::NameChanged);
+            QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::NameChanged, parent(), 0));
         }
     }
 
@@ -95,7 +95,7 @@ public:
         if (m_description != description) {
             m_description = description;
             emit descriptionChanged();
-            QAccessible::updateAccessibility(parent(), 0, QAccessible::DescriptionChanged);
+            QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::DescriptionChanged, parent(), 0));
         }
     }
 

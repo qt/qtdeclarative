@@ -83,7 +83,7 @@ public:
     {
         m_name = name;
         emit nameChanged();
-        QAccessible::updateAccessibility(parent(), 0, QAccessible::NameChanged);
+        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::NameChanged, parent(), 0));
     }
 
     QString description() const { return m_description; }
@@ -91,7 +91,7 @@ public:
     {
         m_description = description;
         emit descriptionChanged();
-        QAccessible::updateAccessibility(parent(), 0, QAccessible::DescriptionChanged);
+        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::DescriptionChanged, parent(), 0));
     }
 
     // Factory function
