@@ -65,6 +65,10 @@ public:
     };
     typedef QList<Format> FormatList;
 
+    static const QChar bullet;
+    static const QChar disc;
+    static const QChar square;
+
 private slots:
     void textOutput();
     void textOutput_data();
@@ -72,6 +76,9 @@ private slots:
 
 Q_DECLARE_METATYPE(tst_qdeclarativestyledtext::FormatList);
 
+const QChar tst_qdeclarativestyledtext::bullet(0x2022);
+const QChar tst_qdeclarativestyledtext::disc(0x25e6);
+const QChar tst_qdeclarativestyledtext::square(0x25a1);
 
 // For malformed input all we test is that we get the expected text and format out.
 // 
@@ -106,6 +113,18 @@ void tst_qdeclarativestyledtext::textOutput_data()
     QTest::newRow("self-closing newline") << "text<br/>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList();
     QTest::newRow("empty") << "" << "" << FormatList();
     QTest::newRow("unknown tag") << "<a href='#'><foo>underline</foo></a> not" << "underline not" << (FormatList() << Format(Format::Underline, 0, 9));
+    QTest::newRow("ordered list") << "<ol><li>one<li>two" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("1.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("2.") + QString(2, QChar::Nbsp) + QLatin1String("two") << FormatList();
+    QTest::newRow("ordered list closed") << "<ol><li>one</li><li>two</li></ol>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("1.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("2.") + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("ordered list alpha") << "<ol type=\"a\"><li>one</li><li>two</li></ol>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("a.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("b.") + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("ordered list upper alpha") << "<ol type=\"A\"><li>one</li><li>two</li></ol>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("A.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("B.") + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("ordered list roman") << "<ol type=\"i\"><li>one</li><li>two</li></ol>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("i.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("ii.") + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("ordered list upper roman") << "<ol type=\"I\"><li>one</li><li>two</li></ol>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("I.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("II.") + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("ordered list bad") << "<ol type=\"z\"><li>one</li><li>two</li></ol>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("1.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("2.") + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("unordered list") << "<ul><li>one<li>two" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("two") << FormatList();
+    QTest::newRow("unordered list closed") << "<ul><li>one</li><li>two</li></ul>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("unordered list disc") << "<ul type=\"disc\"><li>one</li><li>two</li></ul>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + disc + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + disc + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("unordered list square") << "<ul type=\"square\"><li>one</li><li>two</li></ul>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + square + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + square + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
+    QTest::newRow("unordered list bad") << "<ul type=\"bad\"><li>one</li><li>two</li></ul>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + bullet + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList();
     QTest::newRow("h0") << "<h0>head" << "head" << FormatList();
     QTest::newRow("h1") << "<h1>head" << QChar(QChar::LineSeparator) + QLatin1String("head") << (FormatList() << Format(Format::Bold, 0, 5));
     QTest::newRow("h2") << "<h2>head" << QChar(QChar::LineSeparator) + QLatin1String("head") << (FormatList() << Format(Format::Bold, 0, 5));
