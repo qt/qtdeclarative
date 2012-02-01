@@ -167,9 +167,10 @@ public:
     FxViewItem *snapItemAt(qreal pos) const;
     int snapIndex() const;
 
+    void resetColumns();
+
     virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
     virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
-    virtual void visibleItemsChanged();
 
     virtual FxViewItem *newViewItem(int index, QQuickItem *item);
     virtual void repositionPackageItemAt(QQuickItem *item, int index);
@@ -395,6 +396,13 @@ int QQuickGridViewPrivate::snapIndex() const
     return index;
 }
 
+void QQuickGridViewPrivate::resetColumns()
+{
+    Q_Q(QQuickGridView);
+    qreal length = flow == QQuickGridView::LeftToRight ? q->width() : q->height();
+    columns = (int)qMax((length + colSize()/2) / colSize(), qreal(1.));
+}
+
 FxViewItem *QQuickGridViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
 {
     Q_Q(QQuickGridView);
@@ -535,18 +543,9 @@ bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
     return changed;
 }
 
-void QQuickGridViewPrivate::visibleItemsChanged()
-{
-    updateHeader();
-    updateFooter();
-    updateViewport();
-}
-
 void QQuickGridViewPrivate::updateViewport()
 {
-    Q_Q(QQuickGridView);
-    qreal length = flow == QQuickGridView::LeftToRight ? q->width() : q->height();
-    columns = (int)qMax((length + colSize()/2) / colSize(), qreal(1.));
+    resetColumns();
     QQuickItemViewPrivate::updateViewport();
 }
 
@@ -1620,6 +1619,14 @@ void QQuickGridView::keyPressEvent(QKeyEvent *event)
     event->ignore();
     QQuickItemView::keyPressEvent(event);
 }
+
+void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickGridView);
+    d->resetColumns();
+    QQuickItemView::geometryChanged(newGeometry, oldGeometry);
+}
+
 /*!
     \qmlmethod QtQuick2::GridView::moveCurrentIndexUp()
 

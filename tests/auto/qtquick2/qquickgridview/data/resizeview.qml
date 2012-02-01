@@ -3,12 +3,13 @@ import QtQuick 2.0
 Rectangle {
     id: root
 
-    property real initialHeight
+    width: 240
+    height: 320
 
     GridView {
         id: grid
         objectName: "grid"
-        width: 240
+        width: initialWidth
         height: initialHeight
         cellWidth: 80
         cellHeight: 60

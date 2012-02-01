@@ -1331,6 +1331,9 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
         markExtentsDirty();
         updateBeginningEnd();
         visibleItemsChanged();
+        updateHeader();
+        updateFooter();
+        updateViewport();
     }
 
     if (prevCount != itemCount)

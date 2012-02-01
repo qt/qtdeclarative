@@ -695,9 +695,6 @@ void QQuickListViewPrivate::visibleItemsChanged()
     }
     if (sectionCriteria)
         updateCurrentSection();
-    updateHeader();
-    updateFooter();
-    updateViewport();
     updateUnrequestedPositions();
 }
 

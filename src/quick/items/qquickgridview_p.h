@@ -108,6 +108,7 @@ Q_SIGNALS:
 protected:
     virtual void viewportMoved();
     virtual void keyPressEvent(QKeyEvent *);
+    virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
 };
 
 class QQuickGridViewAttached : public QQuickItemViewAttached

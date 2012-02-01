@@ -105,6 +105,7 @@ private slots:
     void header();
     void header_data();
     void resizeViewAndRepaint();
+    void changeColumnCount();
     void indexAt_itemAt_data();
     void indexAt_itemAt();
     void onAdd();
@@ -3185,6 +3186,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("initialWidth", 240);
     ctxt->setContextProperty("initialHeight", 100);
 
     canvas->setSource(testFileUrl("resizeview.qml"));
@@ -3242,6 +3244,64 @@ void tst_QQuickGridView::resizeViewAndRepaint()
         QTRY_COMPARE(item->x(), qreal((i%3)*80));
         QTRY_COMPARE(item->y(), qreal((i/3)*60));
         QCOMPARE(item->isVisible(), i < 6); // inside view visible, outside not visible
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::changeColumnCount()
+{
+    TestModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQuickView *canvas = createView();
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("initialWidth", 100);
+    ctxt->setContextProperty("initialHeight", 320);
+    canvas->setSource(testFileUrl("resizeview.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    // a single column of 6 items are visible
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    QCOMPARE(itemCount, 6);
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), 0.0);
+        QCOMPARE(item->y(), qreal(i*60));
+    }
+
+    // now 6x3 grid is visible, plus 1 extra below for refill
+    gridview->setWidth(240);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    QCOMPARE(itemCount, 6*3 + 1);
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), qreal((i%3)*80));
+        QCOMPARE(item->y(), qreal((i/3)*60));
+    }
+
+    // back to single column
+    gridview->setWidth(100);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    QCOMPARE(itemCount, 6);
+    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), 0.0);
+        QCOMPARE(item->y(), qreal(i*60));
     }
 
     delete canvas;

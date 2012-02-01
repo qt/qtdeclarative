@@ -243,7 +243,7 @@ protected:
 
     virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer) = 0;
     virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) = 0;
-    virtual void visibleItemsChanged() = 0;
+    virtual void visibleItemsChanged() {}
 
     virtual FxViewItem *newViewItem(int index, QQuickItem *item) = 0;
     virtual void repositionPackageItemAt(QQuickItem *item, int index) = 0;
