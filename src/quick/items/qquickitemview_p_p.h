@@ -126,7 +126,7 @@ public:
     qreal size() const;
     qreal startPosition() const;
     qreal endPosition() const;
-    qreal contentStartPosition() const;
+    qreal contentStartOffset() const;
     int findLastVisibleIndex(int defaultValue = -1) const;
     FxViewItem *visibleItem(int modelIndex) const;
     FxViewItem *firstVisibleItem() const;

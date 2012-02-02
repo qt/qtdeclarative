@@ -186,7 +186,7 @@ void QQuickItemView::setModel(const QVariant &model)
     QQuickVisualModel *oldModel = d->model;
 
     d->clear();
-    d->setPosition(d->contentStartPosition());
+    d->setPosition(d->contentStartOffset());
     d->model = 0;
     d->modelVariant = model;
 
@@ -837,22 +837,27 @@ void QQuickItemView::trackedPositionChanged()
             qreal trackedEndPos = d->trackedItem->endPosition();
             qreal toItemPos = d->currentItem->position();
             qreal toItemEndPos = d->currentItem->endPosition();
-
-            if (d->header && d->showHeaderForIndex(d->currentIndex)) {
-                trackedPos -= d->headerSize();
-                trackedEndPos -= d->headerSize();
-                toItemPos -= d->headerSize();
-                toItemEndPos -= d->headerSize();
-            } else if (d->footer && d->showFooterForIndex(d->currentIndex)) {
-                trackedPos += d->footerSize();
-                trackedEndPos += d->footerSize();
-                toItemPos += d->footerSize();
-                toItemEndPos += d->footerSize();
+            if (d->showHeaderForIndex(d->currentIndex)) {
+                qreal startOffset = -d->contentStartOffset();
+                trackedPos -= startOffset;
+                trackedEndPos -= startOffset;
+                toItemPos -= startOffset;
+                toItemEndPos -= startOffset;
+            } else if (d->showFooterForIndex(d->currentIndex)) {
+                qreal endOffset = d->footerSize();
+                if (d->layoutOrientation() == Qt::Vertical)
+                    endOffset += d->vData.endMargin;
+                else if (d->isContentFlowReversed())
+                    endOffset += d->hData.endMargin;
+                else
+                    endOffset += d->hData.startMargin;
+                trackedPos += endOffset;
+                trackedEndPos += endOffset;
+                toItemPos += endOffset;
+                toItemEndPos += endOffset;
             }
 
-            if (trackedPos < viewPos && toItemPos < viewPos) {
-                pos = qMax(trackedPos, toItemPos);
-            } else if (trackedEndPos >= viewPos + d->size()
+            if (trackedEndPos >= viewPos + d->size()
                 && toItemEndPos >= viewPos + d->size()) {
                 if (trackedEndPos <= toItemEndPos) {
                     pos = trackedEndPos - d->size();
@@ -864,6 +869,8 @@ void QQuickItemView::trackedPositionChanged()
                         pos = d->currentItem->position();
                 }
             }
+            if (trackedPos < pos && toItemPos < pos)
+                pos = qMax(trackedPos, toItemPos);
         }
         if (viewPos != pos) {
             cancelFlick();
@@ -1078,7 +1085,7 @@ void QQuickItemView::componentComplete()
     d->updateHeader();
     d->updateFooter();
     d->updateViewport();
-    d->setPosition(d->contentStartPosition());
+    d->setPosition(d->contentStartOffset());
     if (d->isValid()) {
         d->refill();
         d->moveReason = QQuickItemViewPrivate::SetIndex;
@@ -1148,7 +1155,7 @@ qreal QQuickItemViewPrivate::endPosition() const
     return isContentFlowReversed() ? -originPosition() : lastPosition();
 }
 
-qreal QQuickItemViewPrivate::contentStartPosition() const
+qreal QQuickItemViewPrivate::contentStartOffset() const
 {
     qreal pos = -headerSize();
     if (layoutOrientation() == Qt::Vertical)
@@ -1353,7 +1360,7 @@ void QQuickItemViewPrivate::regenerate()
         updateFooter();
         clear();
         updateViewport();
-        setPosition(contentStartPosition());
+        setPosition(contentStartOffset());
         refill();
         updateCurrent(currentIndex);
     }
@@ -1378,7 +1385,7 @@ void QQuickItemViewPrivate::layout()
 
     if (!isValid() && !visibleItems.count()) {
         clear();
-        setPosition(contentStartPosition());
+        setPosition(contentStartOffset());
         return;
     }
 

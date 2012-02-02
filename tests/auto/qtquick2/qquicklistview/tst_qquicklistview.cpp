@@ -152,6 +152,8 @@ private slots:
     void rightToLeft();
     void test_mirroring();
     void margins();
+    void marginsResize();
+    void marginsResize_data();
     void creationContext();
     void snapToItem_data();
     void snapToItem();
@@ -4285,6 +4287,61 @@ void tst_QQuickListView::margins()
     QTRY_COMPARE(listview->contentY(), pos-10);
 
     delete canvas;
+}
+
+// QTBUG-24028
+void tst_QQuickListView::marginsResize()
+{
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(qreal, start);
+    QFETCH(qreal, end);
+
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("margins2.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "listview");
+    QTRY_VERIFY(listview != 0);
+
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+
+    // view is resized after componentCompleted - top margin should still be visible
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentY(), start);
+    else
+        QCOMPARE(listview->contentX(), start);
+
+    // move to last index and ensure bottom margin is visible.
+    listview->setCurrentIndex(19);
+    if (orientation == QQuickListView::Vertical)
+        QTRY_COMPARE(listview->contentY(), end);
+    else
+        QTRY_COMPARE(listview->contentX(), end);
+
+    // back to top - top margin should be visible.
+    listview->setCurrentIndex(0);
+    if (orientation == QQuickListView::Vertical)
+        QTRY_COMPARE(listview->contentY(), start);
+    else
+        QTRY_COMPARE(listview->contentX(), start);
+
+    delete canvas;
+}
+
+void tst_QQuickListView::marginsResize_data()
+{
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<qreal>("start");
+    QTest::addColumn<qreal>("end");
+
+    QTest::newRow("vertical") << QQuickListView::Vertical << Qt::LeftToRight << -20.0 << 1020.0;
+    QTest::newRow("horizontal") << QQuickListView::Horizontal << Qt::LeftToRight << -20.0 << 1020.0;
+    QTest::newRow("horizontal, rtl") << QQuickListView::Horizontal << Qt::RightToLeft << -180.0 << -1220.0;
 }
 
 void tst_QQuickListView::snapToItem_data()
