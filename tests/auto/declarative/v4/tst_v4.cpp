@@ -62,6 +62,7 @@ private slots:
 
     void unnecessaryReeval();
     void logicalOr();
+    void nestedLogicalOr();
     void conditionalExpr();
     void qtscript();
     void qtscript_data();
@@ -181,6 +182,21 @@ void tst_v4::logicalOr()
         QCOMPARE(ro->result(), 1);
         delete o;
     }
+}
+
+void tst_v4::nestedLogicalOr()
+{
+    //we are primarily testing that v4 does not get caught in a loop (QTBUG-24038)
+    QDeclarativeComponent component(&engine, testFileUrl("nestedLogicalOr.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    ResultObject *ro = qobject_cast<ResultObject *>(o);
+    QVERIFY(ro != 0);
+
+    QCOMPARE(ro->result(), 1);
+    delete o;
 }
 
 void tst_v4::conditionalExpr()

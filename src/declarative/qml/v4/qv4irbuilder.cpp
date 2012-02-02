@@ -892,6 +892,7 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
         _block = iftrue;
         ExprResult right = expression(ast->right);
         _block->MOVE(r, right);
+        _block->JUMP(endif);
 
         if (left.type() != right.type())
             discard();
