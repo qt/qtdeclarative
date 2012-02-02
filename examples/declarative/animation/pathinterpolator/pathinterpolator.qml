@@ -51,6 +51,7 @@ Rectangle {
         smooth: true
 
         onPaint: {
+            context.clearRect(0, 0, width, height)
             context.strokeStyle = "black"
             context.path = motionPath.path
             context.stroke()
