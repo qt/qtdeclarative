@@ -49,7 +49,7 @@
 #include <private/qv8engine_p.h>
 
 #include <private/qv8profilerservice_p.h>
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>
@@ -183,7 +183,7 @@ v8::Handle<v8::Value> consoleProfile(const v8::Arguments &args)
     Q_UNUSED(args);
     QString title;
 
-    if (QDeclarativeDebugTrace::startProfiling()) {
+    if (QDeclarativeProfilerService::startProfiling()) {
         QV8ProfilerService::instance()->startProfiling(title);
         qDebug("Profiling started.");
     } else {
@@ -201,10 +201,10 @@ v8::Handle<v8::Value> consoleProfileEnd(const v8::Arguments &args)
     Q_UNUSED(args);
     QString title;
 
-    if (QDeclarativeDebugTrace::stopProfiling()) {
+    if (QDeclarativeProfilerService::stopProfiling()) {
         QV8ProfilerService *profiler = QV8ProfilerService::instance();
         profiler->stopProfiling(title);
-        QDeclarativeDebugTrace::sendProfilingData();
+        QDeclarativeProfilerService::sendProfilingData();
         profiler->sendProfilingData();
         qDebug("Profiling ended.");
     } else {

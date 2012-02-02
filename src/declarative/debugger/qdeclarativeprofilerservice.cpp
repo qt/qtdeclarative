@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativedebugtrace_p.h"
+#include "qdeclarativeprofilerservice_p.h"
 
 #include <QtCore/qdatastream.h>
 #include <QtCore/qurl.h>
@@ -52,44 +52,44 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QDeclarativeDebugTrace, traceInstance)
+Q_GLOBAL_STATIC(QDeclarativeProfilerService, profilerInstance)
 
 QDeclarativeBindingProfiler::QDeclarativeBindingProfiler(const QString &url, int line, int column)
 {
-    QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
-    QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Binding, url, line, column);
+    QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Binding);
+    QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Binding, url, line, column);
 }
 
 QDeclarativeBindingProfiler::~QDeclarativeBindingProfiler()
 {
-    QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
+    QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Binding);
 }
 
 void QDeclarativeBindingProfiler::addDetail(const QString &details)
 {
-    QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Binding, details);
+    QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Binding, details);
 }
 
 // convert to a QByteArray that can be sent to the debug client
 // use of QDataStream can skew results
 //     (see tst_qdeclarativedebugtrace::trace() benchmark)
-QByteArray QDeclarativeDebugData::toByteArray() const
+QByteArray QDeclarativeProfilerData::toByteArray() const
 {
     QByteArray data;
     //### using QDataStream is relatively expensive
     QDataStream ds(&data, QIODevice::WriteOnly);
     ds << time << messageType << detailType;
-    if (messageType == (int)QDeclarativeDebugTrace::RangeData)
+    if (messageType == (int)QDeclarativeProfilerService::RangeData)
         ds << detailData;
-    if (messageType == (int)QDeclarativeDebugTrace::RangeLocation)
+    if (messageType == (int)QDeclarativeProfilerService::RangeLocation)
         ds << detailData << line << column;
-    if (messageType == (int)QDeclarativeDebugTrace::Event &&
-            detailType == (int)QDeclarativeDebugTrace::AnimationFrame)
+    if (messageType == (int)QDeclarativeProfilerService::Event &&
+            detailType == (int)QDeclarativeProfilerService::AnimationFrame)
         ds << framerate << animationcount;
     return data;
 }
 
-QDeclarativeDebugTrace::QDeclarativeDebugTrace()
+QDeclarativeProfilerService::QDeclarativeProfilerService()
     : QDeclarativeDebugService(QLatin1String("CanvasFrameRate"), 1),
       m_enabled(false), m_messageReceived(false)
 {
@@ -104,72 +104,72 @@ QDeclarativeDebugTrace::QDeclarativeDebugTrace()
     }
 }
 
-QDeclarativeDebugTrace::~QDeclarativeDebugTrace()
+QDeclarativeProfilerService::~QDeclarativeProfilerService()
 {
 }
 
-void QDeclarativeDebugTrace::initialize()
+void QDeclarativeProfilerService::initialize()
 {
     // just make sure that the service is properly registered
-    traceInstance();
+    profilerInstance();
 }
 
-bool QDeclarativeDebugTrace::startProfiling()
+bool QDeclarativeProfilerService::startProfiling()
 {
-    return traceInstance()->startProfilingImpl();
+    return profilerInstance()->startProfilingImpl();
 }
 
-bool QDeclarativeDebugTrace::stopProfiling()
+bool QDeclarativeProfilerService::stopProfiling()
 {
-    return traceInstance()->stopProfilingImpl();
+    return profilerInstance()->stopProfilingImpl();
 }
 
-void QDeclarativeDebugTrace::addEvent(EventType t)
+void QDeclarativeProfilerService::addEvent(EventType t)
 {
-    traceInstance()->addEventImpl(t);
+    profilerInstance()->addEventImpl(t);
 }
 
-void QDeclarativeDebugTrace::startRange(RangeType t)
+void QDeclarativeProfilerService::startRange(RangeType t)
 {
-    traceInstance()->startRangeImpl(t);
+    profilerInstance()->startRangeImpl(t);
 }
 
-void QDeclarativeDebugTrace::rangeData(RangeType t, const QString &data)
+void QDeclarativeProfilerService::rangeData(RangeType t, const QString &data)
 {
-    traceInstance()->rangeDataImpl(t, data);
+    profilerInstance()->rangeDataImpl(t, data);
 }
 
-void QDeclarativeDebugTrace::rangeData(RangeType t, const QUrl &data)
+void QDeclarativeProfilerService::rangeData(RangeType t, const QUrl &data)
 {
-    traceInstance()->rangeDataImpl(t, data);
+    profilerInstance()->rangeDataImpl(t, data);
 }
 
-void QDeclarativeDebugTrace::rangeLocation(RangeType t, const QString &fileName, int line, int column)
+void QDeclarativeProfilerService::rangeLocation(RangeType t, const QString &fileName, int line, int column)
 {
-    traceInstance()->rangeLocationImpl(t, fileName, line, column);
+    profilerInstance()->rangeLocationImpl(t, fileName, line, column);
 }
 
-void QDeclarativeDebugTrace::rangeLocation(RangeType t, const QUrl &fileName, int line, int column)
+void QDeclarativeProfilerService::rangeLocation(RangeType t, const QUrl &fileName, int line, int column)
 {
-    traceInstance()->rangeLocationImpl(t, fileName, line, column);
+    profilerInstance()->rangeLocationImpl(t, fileName, line, column);
 }
 
-void QDeclarativeDebugTrace::endRange(RangeType t)
+void QDeclarativeProfilerService::endRange(RangeType t)
 {
-    traceInstance()->endRangeImpl(t);
+    profilerInstance()->endRangeImpl(t);
 }
 
-void QDeclarativeDebugTrace::animationFrame(qint64 delta)
+void QDeclarativeProfilerService::animationFrame(qint64 delta)
 {
-    traceInstance()->animationFrameImpl(delta);
+    profilerInstance()->animationFrameImpl(delta);
 }
 
-void QDeclarativeDebugTrace::sendProfilingData()
+void QDeclarativeProfilerService::sendProfilingData()
 {
-    traceInstance()->sendMessages();
+    profilerInstance()->sendMessages();
 }
 
-bool QDeclarativeDebugTrace::startProfilingImpl()
+bool QDeclarativeProfilerService::startProfilingImpl()
 {
     bool success = false;
     if (!profilingEnabled()) {
@@ -180,7 +180,7 @@ bool QDeclarativeDebugTrace::startProfilingImpl()
     return success;
 }
 
-bool QDeclarativeDebugTrace::stopProfilingImpl()
+bool QDeclarativeProfilerService::stopProfilingImpl()
 {
     bool success = false;
     if (profilingEnabled()) {
@@ -191,70 +191,70 @@ bool QDeclarativeDebugTrace::stopProfilingImpl()
     return success;
 }
 
-void QDeclarativeDebugTrace::addEventImpl(EventType event)
+void QDeclarativeProfilerService::addEventImpl(EventType event)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QDeclarativeDebugData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event, QString(), -1, -1, 0, 0};
+    QDeclarativeProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event, QString(), -1, -1, 0, 0};
     processMessage(ed);
 }
 
-void QDeclarativeDebugTrace::startRangeImpl(RangeType range)
+void QDeclarativeProfilerService::startRangeImpl(RangeType range)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range, QString(), -1, -1, 0, 0};
+    QDeclarativeProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range, QString(), -1, -1, 0, 0};
     processMessage(rd);
 }
 
-void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QString &rData)
+void QDeclarativeProfilerService::rangeDataImpl(RangeType range, const QString &rData)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData, -1, -1, 0, 0};
+    QDeclarativeProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData, -1, -1, 0, 0};
     processMessage(rd);
 }
 
-void QDeclarativeDebugTrace::rangeDataImpl(RangeType range, const QUrl &rData)
+void QDeclarativeProfilerService::rangeDataImpl(RangeType range, const QUrl &rData)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(QUrl::FormattingOption(0x100)), -1, -1, 0, 0};
+    QDeclarativeProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(QUrl::FormattingOption(0x100)), -1, -1, 0, 0};
     processMessage(rd);
 }
 
-void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QString &fileName, int line, int column)
+void QDeclarativeProfilerService::rangeLocationImpl(RangeType range, const QString &fileName, int line, int column)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName, line, column, 0, 0};
+    QDeclarativeProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName, line, column, 0, 0};
     processMessage(rd);
 }
 
-void QDeclarativeDebugTrace::rangeLocationImpl(RangeType range, const QUrl &fileName, int line, int column)
+void QDeclarativeProfilerService::rangeLocationImpl(RangeType range, const QUrl &fileName, int line, int column)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(QUrl::FormattingOption(0x100)), line, column, 0, 0};
+    QDeclarativeProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(QUrl::FormattingOption(0x100)), line, column, 0, 0};
     processMessage(rd);
 }
 
-void QDeclarativeDebugTrace::endRangeImpl(RangeType range)
+void QDeclarativeProfilerService::endRangeImpl(RangeType range)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QDeclarativeDebugData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range, QString(), -1, -1, 0, 0};
+    QDeclarativeProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range, QString(), -1, -1, 0, 0};
     processMessage(rd);
 }
 
-void QDeclarativeDebugTrace::animationFrameImpl(qint64 delta)
+void QDeclarativeProfilerService::animationFrameImpl(qint64 delta)
 {
     Q_ASSERT(QDeclarativeDebugService::isDebuggingEnabled());
     if (!m_enabled)
@@ -265,7 +265,7 @@ void QDeclarativeDebugTrace::animationFrameImpl(qint64 delta)
     if (animCount > 0 && delta > 0) {
         // trim fps to integer
         int fps = 1000 / delta;
-        QDeclarativeDebugData ed = {m_timer.nsecsElapsed(), (int)Event, (int)AnimationFrame, QString(), -1, -1, fps, animCount};
+        QDeclarativeProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)AnimationFrame, QString(), -1, -1, fps, animCount};
         processMessage(ed);
     }
 }
@@ -274,18 +274,18 @@ void QDeclarativeDebugTrace::animationFrameImpl(qint64 delta)
     Either send the message directly, or queue up
     a list of messages to send later (via sendMessages)
 */
-void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message)
+void QDeclarativeProfilerService::processMessage(const QDeclarativeProfilerData &message)
 {
     QMutexLocker locker(&m_mutex);
     m_data.append(message);
 }
 
-bool QDeclarativeDebugTrace::profilingEnabled()
+bool QDeclarativeProfilerService::profilingEnabled()
 {
     return m_enabled;
 }
 
-void QDeclarativeDebugTrace::setProfilingEnabled(bool enable)
+void QDeclarativeProfilerService::setProfilingEnabled(bool enable)
 {
     m_enabled = enable;
 }
@@ -293,7 +293,7 @@ void QDeclarativeDebugTrace::setProfilingEnabled(bool enable)
 /*
     Send the messages queued up by processMessage
 */
-void QDeclarativeDebugTrace::sendMessages()
+void QDeclarativeProfilerService::sendMessages()
 {
     QMutexLocker locker(&m_mutex);
     QList<QByteArray> messages;
@@ -310,7 +310,7 @@ void QDeclarativeDebugTrace::sendMessages()
     QDeclarativeDebugService::sendMessages(messages);
 }
 
-void QDeclarativeDebugTrace::stateAboutToBeChanged(QDeclarativeDebugService::State newState)
+void QDeclarativeProfilerService::stateAboutToBeChanged(QDeclarativeDebugService::State newState)
 {
     if (state() == newState)
         return;
@@ -322,7 +322,7 @@ void QDeclarativeDebugTrace::stateAboutToBeChanged(QDeclarativeDebugService::Sta
     }
 }
 
-void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
+void QDeclarativeProfilerService::messageReceived(const QByteArray &message)
 {
     QByteArray rwData = message;
     QDataStream stream(&rwData, QIODevice::ReadOnly);

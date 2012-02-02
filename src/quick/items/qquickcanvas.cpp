@@ -66,7 +66,7 @@
 #include <QtCore/qabstractanimation.h>
 #include <QtDeclarative/qdeclarativeincubator.h>
 
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 
 QT_BEGIN_NAMESPACE
 

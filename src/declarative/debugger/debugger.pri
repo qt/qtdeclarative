@@ -3,7 +3,7 @@ SOURCES += \
     $$PWD/qdeclarativedebugservice.cpp \
     $$PWD/qdeclarativedebugclient.cpp \
     $$PWD/qdeclarativeenginedebug.cpp \
-    $$PWD/qdeclarativedebugtrace.cpp \
+    $$PWD/qdeclarativeprofilerservice.cpp \
     $$PWD/qdeclarativedebughelper.cpp \
     $$PWD/qdeclarativedebugserver.cpp \
     $$PWD/qdeclarativeinspectorservice.cpp \
@@ -18,7 +18,7 @@ HEADERS += \
     $$PWD/qdeclarativedebugservice_p_p.h \
     $$PWD/qdeclarativedebugclient_p.h \
     $$PWD/qdeclarativeenginedebug_p.h \
-    $$PWD/qdeclarativedebugtrace_p.h \
+    $$PWD/qdeclarativeprofilerservice_p.h \
     $$PWD/qdeclarativedebughelper_p.h \
     $$PWD/qdeclarativedebugserver_p.h \
     $$PWD/qdeclarativedebugserverconnection_p.h \

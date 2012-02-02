@@ -46,7 +46,7 @@
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
 
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 #include <private/qdeclarativeinspectorservice_p.h>
 
 #include <QtDeclarative/qdeclarativeengine.h>
@@ -499,35 +499,35 @@ void QQuickView::resizeEvent(QResizeEvent *e)
 
 void QQuickView::keyPressEvent(QKeyEvent *e)
 {
-    QDeclarativeDebugTrace::addEvent(QDeclarativeDebugTrace::Key);
+    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Key);
 
     QQuickCanvas::keyPressEvent(e);
 }
 
 void QQuickView::keyReleaseEvent(QKeyEvent *e)
 {
-    QDeclarativeDebugTrace::addEvent(QDeclarativeDebugTrace::Key);
+    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Key);
 
     QQuickCanvas::keyReleaseEvent(e);
 }
 
 void QQuickView::mouseMoveEvent(QMouseEvent *e)
 {
-    QDeclarativeDebugTrace::addEvent(QDeclarativeDebugTrace::Mouse);
+    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Mouse);
 
     QQuickCanvas::mouseMoveEvent(e);
 }
 
 void QQuickView::mousePressEvent(QMouseEvent *e)
 {
-    QDeclarativeDebugTrace::addEvent(QDeclarativeDebugTrace::Mouse);
+    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Mouse);
 
     QQuickCanvas::mousePressEvent(e);
 }
 
 void QQuickView::mouseReleaseEvent(QMouseEvent *e)
 {
-    QDeclarativeDebugTrace::addEvent(QDeclarativeDebugTrace::Mouse);
+    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Mouse);
 
     QQuickCanvas::mouseReleaseEvent(e);
 }

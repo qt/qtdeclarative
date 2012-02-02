@@ -6,7 +6,7 @@ PRIVATETESTS += \
     qdeclarativedebugservice \
     qdeclarativedebugjs \
     qdeclarativeinspector \
-    qdeclarativedebugtrace \
+    qdeclarativeprofilerservice \
     qpacketprotocol \
     qv8profilerservice \
     qdebugmessageservice

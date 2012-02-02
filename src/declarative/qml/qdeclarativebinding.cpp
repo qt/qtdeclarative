@@ -47,7 +47,7 @@
 #include "qdeclarativeinfo.h"
 #include "qdeclarativecompiler_p.h"
 #include "qdeclarativedata_p.h"
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 #include <private/qdeclarativetrace_p.h>
 
 #include <QVariant>

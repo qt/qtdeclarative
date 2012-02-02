@@ -45,7 +45,7 @@
 #include <qopenglfunctions.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <qthread.h>
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 
 #if !defined(QT_NO_DEBUG) && (defined(Q_OS_LINUX) || defined(Q_OS_MAC))
 #include <execinfo.h>

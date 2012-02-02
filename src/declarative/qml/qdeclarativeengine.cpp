@@ -66,7 +66,7 @@
 #include "qdeclarativelist_p.h"
 #include "qdeclarativetypenamecache_p.h"
 #include "qdeclarativenotifier_p.h"
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 #include <private/qdeclarativeapplication_p.h>
 #include <private/qv8debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
@@ -453,7 +453,7 @@ void QDeclarativeEnginePrivate::init()
         QDeclarativeEngineDebugService::instance()->addEngine(q);
         QV8DebugService::initialize(v8engine());
         QV8ProfilerService::initialize();
-        QDeclarativeDebugTrace::initialize();
+        QDeclarativeProfilerService::initialize();
         QDebugMessageService::instance();
     }
 
@@ -966,12 +966,12 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
 
     if (data && data->deferredComponent) {
         if (QDeclarativeDebugService::isDebuggingEnabled()) {
-            QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Creating);
+            QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Creating);
             QDeclarativeType *type = QDeclarativeMetaType::qmlType(object->metaObject());
             QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(object->metaObject()->className());
-            QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, typeName);
+            QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Creating, typeName);
             if (data->outerContext)
-                QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, data->outerContext->url, data->lineNumber, data->columnNumber);
+                QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Creating, data->outerContext->url, data->lineNumber, data->columnNumber);
         }
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(data->context->engine);
 
@@ -982,7 +982,7 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
         data->deferredComponent = 0;
 
         QDeclarativeComponentPrivate::complete(ep, &state);
-        QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Creating);
+        QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Creating);
     }
 }
 

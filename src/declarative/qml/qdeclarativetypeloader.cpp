@@ -46,7 +46,7 @@
 #include <private/qdeclarativethread_p.h>
 #include <private/qdeclarativecompiler_p.h>
 #include <private/qdeclarativecomponent_p.h>
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -1566,13 +1566,13 @@ void QDeclarativeTypeData::downloadProgressChanged(qreal p)
 void QDeclarativeTypeData::compile()
 {
     Q_ASSERT(m_compiledData == 0);
-    QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Compiling);
+    QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Compiling);
 
     m_compiledData = new QDeclarativeCompiledData(typeLoader()->engine());
     m_compiledData->url = m_imports.baseUrl();
     m_compiledData->name = m_compiledData->url.toString();
-    QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Compiling, QUrl(m_compiledData->name),1,1);
-    QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Compiling, m_compiledData->name);
+    QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Compiling, QUrl(m_compiledData->name),1,1);
+    QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Compiling, m_compiledData->name);
 
     QDeclarativeCompiler compiler(&scriptParser._pool);
     if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
@@ -1580,7 +1580,7 @@ void QDeclarativeTypeData::compile()
         m_compiledData->release();
         m_compiledData = 0;
     }
-    QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Compiling);
+    QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Compiling);
 }
 
 void QDeclarativeTypeData::resolveTypes()

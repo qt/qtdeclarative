@@ -53,7 +53,7 @@
 #include "qdeclarativebinding_p_p.h"
 #include "qdeclarativeglobal_p.h"
 #include "qdeclarativescript_p.h"
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 #include <private/qdeclarativeenginedebugservice_p.h>
 #include "qdeclarativeincubator.h"
 #include "qdeclarativeincubator_p.h"
@@ -745,7 +745,7 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
     state.completePending = true;
 
     if (isRoot) 
-        QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Creating);
+        QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Creating);
 
     enginePriv->referenceScarceResources();
     state.vme.init(context, cc, start, creationContext);
@@ -763,11 +763,11 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
             context->asQDeclarativeContextPrivate()->instances.append(rv);
         QDeclarativeEngineDebugService::instance()->objectCreated(engine, rv);
         if (isRoot) {
-            QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, 
+            QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Creating,
                                               buildTypeNameForDebug(rv->metaObject()));
             QDeclarativeData *data = QDeclarativeData::get(rv);
             Q_ASSERT(data);
-            QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, 
+            QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Creating,
                                                   cc->url, data->lineNumber, data->columnNumber);
         }
     }
@@ -824,7 +824,7 @@ void QDeclarativeComponentPrivate::completeCreate()
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
         complete(ep, &state);
 
-        QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Creating);
+        QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Creating);
     }
 }
 

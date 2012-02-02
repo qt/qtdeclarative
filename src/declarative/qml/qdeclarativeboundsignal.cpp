@@ -49,7 +49,7 @@
 #include "qdeclarative.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarativeglobal_p.h"
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 #include <private/qv8debugservice_p.h>
 
 #include <QtCore/qstringbuilder.h>
@@ -171,9 +171,9 @@ int QDeclarativeBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
         if (!m_expression)
             return -1;
         if (QDeclarativeDebugService::isDebuggingEnabled()) {
-            QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::HandlingSignal);
-            QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::HandlingSignal, QLatin1String(m_signal.signature()) % QLatin1String(": ") % m_expression->expression());
-            QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::HandlingSignal, m_expression->sourceFile(), m_expression->lineNumber(), m_expression->columnNumber());
+            QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::HandlingSignal);
+            QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::HandlingSignal, QLatin1String(m_signal.signature()) % QLatin1String(": ") % m_expression->expression());
+            QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::HandlingSignal, m_expression->sourceFile(), m_expression->lineNumber(), m_expression->columnNumber());
             QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.signature()));
         }
         m_isEvaluating = true;
@@ -191,7 +191,7 @@ int QDeclarativeBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
         }
         if (m_params) m_params->clearValues();
         m_isEvaluating = false;
-        QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::HandlingSignal);
+        QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::HandlingSignal);
         return -1;
     } else {
         return QObject::qt_metacall(c, id, a);

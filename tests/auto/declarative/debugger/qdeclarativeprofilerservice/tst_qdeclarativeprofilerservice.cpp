@@ -42,24 +42,24 @@
 #include <qtest.h>
 #include <QLibraryInfo>
 
-#include "QtDeclarative/private/qdeclarativedebugtrace_p.h"
+#include "QtDeclarative/private/qdeclarativeprofilerservice_p.h"
 #include "../shared/debugutil_p.h"
 #include "../../../shared/util.h"
 
 #define PORT 13773
 #define STR_PORT "13773"
 
-class QDeclarativeDebugTraceClient : public QDeclarativeDebugClient
+class QDeclarativeProfilerClient : public QDeclarativeDebugClient
 {
     Q_OBJECT
 
 public:
-    QDeclarativeDebugTraceClient(QDeclarativeDebugConnection *connection)
+    QDeclarativeProfilerClient(QDeclarativeDebugConnection *connection)
         : QDeclarativeDebugClient(QLatin1String("CanvasFrameRate"), connection)
     {
     }
 
-    QList<QDeclarativeDebugData> traceMessages;
+    QList<QDeclarativeProfilerData> traceMessages;
 
     void setTraceState(bool enabled) {
         QByteArray message;
@@ -75,12 +75,12 @@ protected:
     void messageReceived(const QByteArray &message);
 };
 
-class tst_QDeclarativeDebugTrace : public QDeclarativeDataTest
+class tst_QDeclarativeProfilerService : public QDeclarativeDataTest
 {
     Q_OBJECT
 
 public:
-    tst_QDeclarativeDebugTrace()
+    tst_QDeclarativeProfilerService()
         : m_process(0)
         , m_connection(0)
         , m_client(0)
@@ -90,7 +90,7 @@ public:
 private:
     QDeclarativeDebugProcess *m_process;
     QDeclarativeDebugConnection *m_connection;
-    QDeclarativeDebugTraceClient *m_client;
+    QDeclarativeProfilerClient *m_client;
 
     void connect(bool block, const QString &testFile);
 
@@ -103,13 +103,13 @@ private slots:
     void profileOnExit();
 };
 
-void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
+void QDeclarativeProfilerClient::messageReceived(const QByteArray &message)
 {
     QByteArray msg = message;
     QDataStream stream(&msg, QIODevice::ReadOnly);
 
 
-    QDeclarativeDebugData data;
+    QDeclarativeProfilerData data;
     data.time = -2;
     data.messageType = -1;
     data.detailType = -1;
@@ -122,21 +122,21 @@ void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
     QVERIFY(data.time >= -1);
 
     switch (data.messageType) {
-    case (QDeclarativeDebugTrace::Event): {
+    case (QDeclarativeProfilerService::Event): {
         stream >> data.detailType;
 
         switch (data.detailType) {
-        case QDeclarativeDebugTrace::AnimationFrame: {
+        case QDeclarativeProfilerService::AnimationFrame: {
             stream >> data.framerate >> data.animationcount;
             QVERIFY(data.framerate != -1);
             QVERIFY(data.animationcount != -1);
             break;
         }
-        case QDeclarativeDebugTrace::FramePaint:
-        case QDeclarativeDebugTrace::Mouse:
-        case QDeclarativeDebugTrace::Key:
-        case QDeclarativeDebugTrace::StartTrace:
-        case QDeclarativeDebugTrace::EndTrace:
+        case QDeclarativeProfilerService::FramePaint:
+        case QDeclarativeProfilerService::Mouse:
+        case QDeclarativeProfilerService::Key:
+        case QDeclarativeProfilerService::StartTrace:
+        case QDeclarativeProfilerService::EndTrace:
             break;
         default: {
             QString failMsg = QString("Unknown event type:") + data.detailType;
@@ -146,28 +146,28 @@ void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
         }
         break;
     }
-    case QDeclarativeDebugTrace::Complete: {
+    case QDeclarativeProfilerService::Complete: {
         emit complete();
         return;
     }
-    case QDeclarativeDebugTrace::RangeStart: {
+    case QDeclarativeProfilerService::RangeStart: {
         stream >> data.detailType;
-        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeDebugTrace::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeProfilerService::MaximumRangeType);
         break;
     }
-    case QDeclarativeDebugTrace::RangeEnd: {
+    case QDeclarativeProfilerService::RangeEnd: {
         stream >> data.detailType;
-        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeDebugTrace::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeProfilerService::MaximumRangeType);
         break;
     }
-    case QDeclarativeDebugTrace::RangeData: {
+    case QDeclarativeProfilerService::RangeData: {
         stream >> data.detailType >> data.detailData;
-        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeDebugTrace::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeProfilerService::MaximumRangeType);
         break;
     }
-    case QDeclarativeDebugTrace::RangeLocation: {
+    case QDeclarativeProfilerService::RangeLocation: {
         stream >> data.detailType >> data.detailData >> data.line >> data.column;
-        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeDebugTrace::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QDeclarativeProfilerService::MaximumRangeType);
         QVERIFY(data.line >= -2);
         break;
     }
@@ -180,7 +180,7 @@ void QDeclarativeDebugTraceClient::messageReceived(const QByteArray &message)
     traceMessages.append(data);
 }
 
-void tst_QDeclarativeDebugTrace::connect(bool block, const QString &testFile)
+void tst_QDeclarativeProfilerService::connect(bool block, const QString &testFile)
 {
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
@@ -201,19 +201,19 @@ void tst_QDeclarativeDebugTrace::connect(bool block, const QString &testFile)
     }
 
     QDeclarativeDebugConnection *m_connection = new QDeclarativeDebugConnection();
-    m_client = new QDeclarativeDebugTraceClient(m_connection);
+    m_client = new QDeclarativeProfilerClient(m_connection);
 
     m_connection->connectToHost(QLatin1String("127.0.0.1"), PORT);
 }
 
-void tst_QDeclarativeDebugTrace::cleanup()
+void tst_QDeclarativeProfilerService::cleanup()
 {
     delete m_process;
     delete m_connection;
     delete m_client;
 }
 
-void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
+void tst_QDeclarativeProfilerService::blockingConnectWithTraceEnabled()
 {
     connect(true, "test.qml");
     QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
@@ -228,15 +228,15 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
 
     QVERIFY(m_client->traceMessages.count());
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeProfilerService::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeDebugTrace::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeProfilerService::EndTrace);
 }
 
-void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
+void tst_QDeclarativeProfilerService::blockingConnectWithTraceDisabled()
 {
     connect(true, "test.qml");
     QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
@@ -253,15 +253,15 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
     QVERIFY(m_client->traceMessages.count());
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeProfilerService::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeDebugTrace::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeProfilerService::EndTrace);
 }
 
-void tst_QDeclarativeDebugTrace::nonBlockingConnect()
+void tst_QDeclarativeProfilerService::nonBlockingConnect()
 {
     connect(false, "test.qml");
     QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
@@ -275,15 +275,15 @@ void tst_QDeclarativeDebugTrace::nonBlockingConnect()
     }
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeProfilerService::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeDebugTrace::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeProfilerService::EndTrace);
 }
 
-void tst_QDeclarativeDebugTrace::profileOnExit()
+void tst_QDeclarativeProfilerService::profileOnExit()
 {
     connect(true, "exit.qml");
     QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
@@ -297,14 +297,14 @@ void tst_QDeclarativeDebugTrace::profileOnExit()
     }
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeDebugTrace::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QDeclarativeProfilerService::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeDebugTrace::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeDebugTrace::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QDeclarativeProfilerService::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QDeclarativeProfilerService::EndTrace);
 }
 
-QTEST_MAIN(tst_QDeclarativeDebugTrace)
+QTEST_MAIN(tst_QDeclarativeProfilerService)
 
-#include "tst_qdeclarativedebugtrace.moc"
+#include "tst_qdeclarativeprofilerservice.moc"

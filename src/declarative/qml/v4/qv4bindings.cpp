@@ -47,7 +47,7 @@
 #include "qv4compiler_p_p.h"
 
 #include <private/qdeclarativeaccessors_p.h>
-#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeprofilerservice_p.h>
 #include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativetrace_p.h>
 

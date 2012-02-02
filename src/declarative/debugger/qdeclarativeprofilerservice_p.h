@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEDEBUGTRACE_P_H
-#define QDECLARATIVEDEBUGTRACE_P_H
+#ifndef QDECLARATIVEPROFILERSERVICE_P_H
+#define QDECLARATIVEPROFILERSERVICE_P_H
 
 //
 //  W A R N I N G
@@ -62,7 +62,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-struct Q_AUTOTEST_EXPORT QDeclarativeDebugData
+struct Q_AUTOTEST_EXPORT QDeclarativeProfilerData
 {
     qint64 time;
     int messageType;
@@ -78,7 +78,7 @@ struct Q_AUTOTEST_EXPORT QDeclarativeDebugData
     QByteArray toByteArray() const;
 };
 
-Q_DECLARE_TYPEINFO(QDeclarativeDebugData, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QDeclarativeProfilerData, Q_MOVABLE_TYPE);
 
 class QUrl;
 class QDeclarativeEngine;
@@ -91,7 +91,7 @@ public:
     void addDetail(const QString &details);
 };
 
-class Q_DECLARATIVE_EXPORT QDeclarativeDebugTrace : public QDeclarativeDebugService
+class Q_DECLARATIVE_EXPORT QDeclarativeProfilerService : public QDeclarativeDebugService
 {
 public:
     enum Message {
@@ -141,8 +141,8 @@ public:
 
     static void sendProfilingData();
 
-    QDeclarativeDebugTrace();
-    ~QDeclarativeDebugTrace();
+    QDeclarativeProfilerService();
+    ~QDeclarativeProfilerService();
 
 protected:
     virtual void stateAboutToBeChanged(State state);
@@ -163,13 +163,13 @@ private:
     bool profilingEnabled();
     void setProfilingEnabled(bool enable);
     void sendMessages();
-    void processMessage(const QDeclarativeDebugData &);
+    void processMessage(const QDeclarativeProfilerData &);
 
 private:
     QElapsedTimer m_timer;
     bool m_enabled;
     bool m_messageReceived;
-    QVector<QDeclarativeDebugData> m_data;
+    QVector<QDeclarativeProfilerData> m_data;
     QMutex m_mutex;
 };
 
@@ -177,5 +177,5 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEDEBUGTRACE_P_H
+#endif // QDECLARATIVEPROFILERSERVICE_P_H
 
