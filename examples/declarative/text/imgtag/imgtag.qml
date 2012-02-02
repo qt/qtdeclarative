@@ -42,7 +42,7 @@ import QtQuick 2.0
 
 Rectangle {
     id: main
-    width: 640; height: 800
+    width: 320; height: 480
     focus: true
 
     property var hAlign: Text.AlignLeft
