@@ -148,13 +148,33 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     // QtScript days
     v8::HandleScope handle_scope;
     v8::Context::Scope ctxtscope(ep->v8engine()->context());
-    
+
     v8::TryCatch tc;
     v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
     v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, filename, line);
-    if (tc.HasCaught()) return v8::Persistent<v8::Function>();
+    if (tc.HasCaught()) {
+        QDeclarativeError error;
+        error.setDescription(QLatin1String("Exception occurred during function compilation"));
+        error.setLine(line);
+        error.setUrl(QUrl::fromLocalFile(filename));
+        v8::Local<v8::Message> message = tc.Message();
+        if (!message.IsEmpty())
+            QDeclarativeExpressionPrivate::exceptionToError(message, error);
+        ep->warning(error);
+        return v8::Persistent<v8::Function>();
+    }
     v8::Local<v8::Value> result = script->Run(scopeobject);
-    if (tc.HasCaught()) return v8::Persistent<v8::Function>();
+    if (tc.HasCaught()) {
+        QDeclarativeError error;
+        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
+        error.setLine(line);
+        error.setUrl(QUrl::fromLocalFile(filename));
+        v8::Local<v8::Message> message = tc.Message();
+        if (!message.IsEmpty())
+            QDeclarativeExpressionPrivate::exceptionToError(message, error);
+        ep->warning(error);
+        return v8::Persistent<v8::Function>();
+    }
     if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
     return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
 }

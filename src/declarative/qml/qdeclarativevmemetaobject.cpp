@@ -730,6 +730,17 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
                 v8::Handle<v8::Function> function = method(id);
+                if (function.IsEmpty()) {
+                    // The function was not compiled.  There are some exceptional cases which the
+                    // expression rewriter does not rewrite properly (e.g., \r-terminated lines
+                    // are not rewritten correctly but this bug is deemed out-of-scope to fix for
+                    // performance reasons; see QTBUG-24064) and thus compilation will have failed.
+                    QDeclarativeError e;
+                    e.setDescription(QString(QLatin1String("Exception occurred during compilation of function: %1")).arg(QMetaObject::method(_id).signature()));
+                    ep->warning(e);
+                    return -1; // The dynamic method with that id is not available.
+                }
+
                 QDeclarativeVMEMetaData::MethodData *data = metaData->methodData() + id;
 
                 v8::HandleScope handle_scope;
