@@ -73,7 +73,7 @@ void QQuickCanvasPrivate::updateFocusItemTransform()
 {
     Q_Q(QQuickCanvas);
     QQuickItem *focus = q->activeFocusItem();
-    if (focus && qApp->inputPanel()->inputItem() == focus)
+    if (focus && qApp->focusObject() == focus)
         qApp->inputPanel()->setInputItemTransform(QQuickItemPrivate::get(focus)->itemToCanvasTransform());
 }
 
@@ -188,6 +188,7 @@ void QQuickCanvas::focusInEvent(QFocusEvent *)
 {
     Q_D(QQuickCanvas);
     d->rootItem->setFocus(true);
+    d->updateFocusItemTransform();
 }
 
 
@@ -379,7 +380,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
     QVarLengthArray<QQuickItem *, 20> changed;
 
     // Does this change the active focus?
-    if (item == rootItem || scopePrivate->activeFocus && item->isEnabled()) {
+    if (item == rootItem || (scopePrivate->activeFocus && item->isEnabled())) {
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = item;
         while (newActiveFocusItem->isFocusScope()
@@ -455,13 +456,11 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
             afi = afi->parentItem();
         }
 
-        updateInputMethodData();
-
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
         q->sendEvent(newActiveFocusItem, &event);
-    } else {
-        updateInputMethodData();
     }
+
+    emit q->focusObjectChanged(activeFocusItem);
 
     if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
@@ -541,13 +540,11 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         Q_ASSERT(newActiveFocusItem == scope);
         activeFocusItem = scope;
 
-        updateInputMethodData();
-
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
         q->sendEvent(newActiveFocusItem, &event);
-    } else {
-        updateInputMethodData();
     }
+
+    emit q->focusObjectChanged(activeFocusItem);
 
     if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
@@ -574,14 +571,6 @@ void QQuickCanvasPrivate::notifyFocusChangesRecur(QQuickItem **items, int remain
             emit item->activeFocusChanged(itemPrivate->activeFocus);
         }
     }
-}
-
-void QQuickCanvasPrivate::updateInputMethodData()
-{
-    QQuickItem *inputItem = 0;
-    if (activeFocusItem && activeFocusItem->flags() & QQuickItem::ItemAcceptsInputMethod)
-        inputItem = activeFocusItem;
-    qApp->inputPanel()->setInputItem(inputItem);
 }
 
 void QQuickCanvasPrivate::dirtyItem(QQuickItem *)

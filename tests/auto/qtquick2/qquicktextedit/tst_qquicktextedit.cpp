@@ -722,14 +722,14 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
     textEdit->setText(QString());
-    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
+    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
-    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
+    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignLeft);
 
     // Clear pre-edit text.  TextEdit should maybe do this itself on setText, but that may be
     // redundant as an actual input method may take care of it.
-    { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
+    { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
 
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from qApp->inputPanel()->inputDirection
@@ -1738,7 +1738,7 @@ void tst_qquicktextedit::positionAt()
     texteditObject->setCursorPosition(0);
 
     QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &inputEvent);
 
     // Check all points within the preedit text return the same position.
     QCOMPARE(texteditObject->positionAt(0, y0), 0);
@@ -2138,7 +2138,7 @@ void tst_qquicktextedit::textInput()
     QSignalSpy spy(edit, SIGNAL(textChanged()));
     QInputMethodEvent event;
     event.setCommitString( "Hello world!", 0, 0);
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
     QCOMPARE(edit->text(), QString("Hello world!"));
     QCOMPARE(spy.count(), 1);
 
@@ -2153,12 +2153,12 @@ void tst_qquicktextedit::textInput()
     QList<QInputMethodEvent::Attribute> attributes;
     QInputMethodEvent event2("preedit", attributes);
     event2.setTentativeCommitString("string");
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event2);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event2);
     QCOMPARE(spy.count(), 1);
     QCOMPARE(edit->text(), QString("string"));
 
     QInputMethodQueryEvent queryEvent(Qt::ImEnabled);
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &queryEvent);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &queryEvent);
     QCOMPARE(queryEvent.value(Qt::ImEnabled).toBool(), true);
 
     edit->setReadOnly(true);
@@ -2270,8 +2270,8 @@ void tst_qquicktextedit::openInputPanel()
     // check default values
     QVERIFY(edit->focusOnPress());
     QVERIFY(!edit->hasActiveFocus());
-    qDebug() << &edit << qApp->inputPanel()->inputItem();
-    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    qDebug() << &edit << qApp->focusObject();
+    QVERIFY(qApp->focusObject() != edit);
 
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
@@ -2281,7 +2281,7 @@ void tst_qquicktextedit::openInputPanel()
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QVERIFY(edit->hasActiveFocus());
-    QCOMPARE(qApp->inputPanel()->inputItem(), edit);
+    QCOMPARE(qApp->focusObject(), edit);
     QCOMPARE(qApp->inputPanel()->visible(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
@@ -2300,20 +2300,13 @@ void tst_qquicktextedit::openInputPanel()
     anotherEdit.setParentItem(view.rootObject());
     anotherEdit.setFocus(true);
     QCOMPARE(qApp->inputPanel()->visible(), true);
-    QCOMPARE(qApp->inputPanel()->inputItem(), qobject_cast<QObject*>(&anotherEdit));
+    QCOMPARE(qApp->focusObject(), qobject_cast<QObject*>(&anotherEdit));
     QCOMPARE(inputPanelVisibilitySpy.count(), 0);
 
     anotherEdit.setFocus(false);
-    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QVERIFY(qApp->focusObject() != &anotherEdit);
     QCOMPARE(view.activeFocusItem(), view.rootItem());
     anotherEdit.setFocus(true);
-
-    // input item should be null if focus is lost to an item that doesn't accept inputs
-    QQuickItem item;
-    item.setParentItem(view.rootObject());
-    item.setFocus(true);
-    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
-    QCOMPARE(view.activeFocusItem(), &item);
 
     qApp->inputPanel()->hide();
 
@@ -2474,15 +2467,15 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QRect currentRect;
 
     QInputMethodQueryEvent query(Qt::ImCursorRectangle);
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
     QRect previousRect = query.value(Qt::ImCursorRectangle).toRect();
 
     // Verify that the micro focus rect is positioned the same for position 0 as
     // it would be if there was no preedit text.
     QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>()
             << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, preeditText.length(), QVariant()));
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
     QCOMPARE(editSpy.count(), 0);
@@ -2493,8 +2486,8 @@ void tst_qquicktextedit::preeditCursorRectangle()
     for (int i = 1; i <= 5; ++i) {
         QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>()
                 << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, i, preeditText.length(), QVariant()));
-        QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
-        QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+        QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
+        QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
         currentRect = query.value(Qt::ImCursorRectangle).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
         QVERIFY(editSpy.count() > 0); editSpy.clear();
@@ -2504,12 +2497,12 @@ void tst_qquicktextedit::preeditCursorRectangle()
 
     // Verify that if there is no preedit cursor then the micro focus rect is the
     // same as it would be if it were positioned at the end of the preedit text.
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
     editSpy.clear();
     panelSpy.clear();
     {   QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-        QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent); }
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+        QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent); }
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
     QVERIFY(editSpy.count() > 0);
@@ -2571,7 +2564,7 @@ void tst_qquicktextedit::cursorRectangleSize()
     QTest::qWaitForWindowShown(canvas);
 
     QInputMethodQueryEvent event(Qt::ImCursorRectangle);
-    qApp->sendEvent(qApp->inputPanel()->inputItem(), &event);
+    qApp->sendEvent(qApp->focusObject(), &event);
     QRectF cursorRectFromQuery = event.value(Qt::ImCursorRectangle).toRectF();
 
     QRect cursorRectFromItem = textEdit->cursorRectangle();

@@ -143,7 +143,6 @@ public:
     void clearFocusInScope(QQuickItem *scope, QQuickItem *item, FocusOptions = 0);
     void notifyFocusChangesRecur(QQuickItem **item, int remaining);
 
-    void updateInputMethodData();
     void updateFocusItemTransform();
 
     void dirtyItem(QQuickItem *);

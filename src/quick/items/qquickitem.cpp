@@ -3077,8 +3077,7 @@ void QQuickItem::setInputMethodHints(Qt::InputMethodHints hints)
     if (!d->canvas || d->canvas->activeFocusItem() != this)
         return;
 
-    QInputPanel *p = qApp->inputPanel();
-    if (p->inputItem() == this)
+    if (qApp->focusObject() == this)
         qApp->inputPanel()->update(Qt::ImHints);
 }
 

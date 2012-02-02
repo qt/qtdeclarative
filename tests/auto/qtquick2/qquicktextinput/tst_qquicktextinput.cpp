@@ -1351,14 +1351,14 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 
     // If there is no commited text, the preedit text should determine the alignment.
     textInput->setText(QString());
-    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
+    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
-    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
+    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
 
     // Clear pre-edit text.  TextInput should maybe do this itself on setText, but that may be
     // redundant as an actual input method may take care of it.
-    { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev); }
+    { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
 
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QInputPanel::inputDirection()
@@ -1520,7 +1520,7 @@ void tst_qquicktextinput::positionAt()
     textinputObject->setCursorPosition(0);
 
     {   QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-        QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent); }
+        QGuiApplication::sendEvent(qGuiApp->focusObject(), &inputEvent); }
 
     // Check all points within the preedit text return the same position.
     QCOMPARE(evaluate<int>(textinputObject, QString("positionAt(%1)").arg(0)), 0);
@@ -1532,7 +1532,7 @@ void tst_qquicktextinput::positionAt()
     QCOMPARE(textinputObject->positionToRectangle(1).x(), x1);
 
     {   QInputMethodEvent inputEvent;
-        QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &inputEvent); }
+        QGuiApplication::sendEvent(qGuiApp->focusObject(), &inputEvent); }
 
     // With wrapping.
     textinputObject->setWrapMode(QQuickTextInput::WrapAnywhere);
@@ -1946,24 +1946,24 @@ void tst_qquicktextinput::inputMethods()
     // test that input method event is committed
     QInputMethodEvent event;
     event.setCommitString( "My ", -12, 0);
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
     QCOMPARE(input->text(), QString("My Hello world!"));
 
     input->setCursorPosition(2);
     event.setCommitString("Your", -2, 2);
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
     QCOMPARE(input->text(), QString("Your Hello world!"));
     QCOMPARE(input->cursorPosition(), 4);
 
     input->setCursorPosition(7);
     event.setCommitString("Goodbye", -2, 5);
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
     QCOMPARE(input->text(), QString("Your Goodbye world!"));
     QCOMPARE(input->cursorPosition(), 12);
 
     input->setCursorPosition(8);
     event.setCommitString("Our", -8, 4);
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
     QCOMPARE(input->cursorPosition(), 7);
 
@@ -1994,7 +1994,7 @@ void tst_qquicktextinput::inputMethods()
     input->setCursorPosition(0);
     input->moveCursorSelection(input->text().length());
     event.setCommitString("replacement", -input->text().length(), input->text().length());
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
     QCOMPARE(input->selectionStart(), input->selectionEnd());
 
     QInputMethodQueryEvent enabledQueryEvent(Qt::ImEnabled);
@@ -2619,7 +2619,7 @@ void tst_qquicktextinput::passwordEchoDelay()
 
     QInputMethodEvent ev;
     ev.setCommitString(QLatin1String("7"));
-    QGuiApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &ev);
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev);
     QCOMPARE(input->displayText(), QString(7, fillChar) + QLatin1Char('7'));
 
     input->setCursorPosition(3);
@@ -2660,7 +2660,7 @@ void tst_qquicktextinput::openInputPanel()
     // check default values
     QVERIFY(input->focusOnPress());
     QVERIFY(!input->hasActiveFocus());
-    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QVERIFY(qApp->focusObject() != input);
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
     // input panel should open on focus
@@ -2669,7 +2669,7 @@ void tst_qquicktextinput::openInputPanel()
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QVERIFY(input->hasActiveFocus());
-    QCOMPARE(qApp->inputPanel()->inputItem(), input);
+    QCOMPARE(qApp->focusObject(), input);
     QCOMPARE(qApp->inputPanel()->visible(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
@@ -2689,20 +2689,13 @@ void tst_qquicktextinput::openInputPanel()
     anotherInput.setParentItem(view.rootObject());
     anotherInput.setFocus(true);
     QCOMPARE(qApp->inputPanel()->visible(), true);
-    QCOMPARE(qApp->inputPanel()->inputItem(), qobject_cast<QObject*>(&anotherInput));
+    QCOMPARE(qApp->focusObject(), qobject_cast<QObject*>(&anotherInput));
     QCOMPARE(inputPanelVisibilitySpy.count(), 0);
 
     anotherInput.setFocus(false);
-    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QVERIFY(qApp->focusObject() != &anotherInput);
     QCOMPARE(view.activeFocusItem(), view.rootItem());
     anotherInput.setFocus(true);
-
-    // input item should be null if focus is lost to an item that doesn't accept inputs
-    QQuickItem item;
-    item.setParentItem(view.rootObject());
-    item.setFocus(true);
-    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
-    QCOMPARE(view.activeFocusItem(), &item);
 
     qApp->inputPanel()->hide();
 
@@ -2846,7 +2839,7 @@ static void sendPreeditText(const QString &text, int cursor)
 {
     QInputMethodEvent event(text, QList<QInputMethodEvent::Attribute>()
             << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, cursor, text.length(), QVariant()));
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &event);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &event);
 }
 
 void tst_qquicktextinput::preeditAutoScroll()
@@ -2875,7 +2868,7 @@ void tst_qquicktextinput::preeditAutoScroll()
 
     // test the text is scrolled back when the preedit is removed.
     QInputMethodEvent imEvent;
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
     QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(0)), 0);
     QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(input->width())), 5);
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
@@ -2928,7 +2921,7 @@ void tst_qquicktextinput::preeditAutoScroll()
     }
 
     // Test disabling auto scroll.
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
 
     input->setAutoScroll(false);
     sendPreeditText(preeditText.mid(0, 3), 1);
@@ -2951,13 +2944,13 @@ void tst_qquicktextinput::preeditCursorRectangle()
     QRect currentRect;
 
     QInputMethodQueryEvent query(Qt::ImCursorRectangle);
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
     QRect previousRect = query.value(Qt::ImCursorRectangle).toRect();
 
     // Verify that the micro focus rect is positioned the same for position 0 as
     // it would be if there was no preedit text.
     sendPreeditText(preeditText, 0);
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
 
@@ -2968,7 +2961,7 @@ void tst_qquicktextinput::preeditCursorRectangle()
     // is incremented.
     for (int i = 1; i <= 5; ++i) {
         sendPreeditText(preeditText, i);
-        QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+        QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
         currentRect = query.value(Qt::ImCursorRectangle).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
         QVERIFY(inputSpy.count() > 0); inputSpy.clear();
@@ -2980,8 +2973,8 @@ void tst_qquicktextinput::preeditCursorRectangle()
     // same as it would be if it were positioned at the end of the preedit text.
     sendPreeditText(preeditText, 0);
     QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &imEvent);
-    QCoreApplication::sendEvent(qGuiApp->inputPanel()->inputItem(), &query);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
     QVERIFY(inputSpy.count() > 0);
@@ -3169,9 +3162,10 @@ void tst_qquicktextinput::cursorRectangleSize()
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(qApp->focusObject());
 
     QInputMethodQueryEvent event(Qt::ImCursorRectangle);
-    qApp->sendEvent(qApp->inputPanel()->inputItem(), &event);
+    qApp->sendEvent(qApp->focusObject(), &event);
     QRectF cursorRectFromQuery = event.value(Qt::ImCursorRectangle).toRectF();
 
     QRect cursorRectFromItem = textInput->cursorRectangle();

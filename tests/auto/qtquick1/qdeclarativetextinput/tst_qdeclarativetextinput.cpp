@@ -79,7 +79,7 @@ void sendPreeditText(const QString &text, int cursor)
     attributes.append(QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, cursor,
                                                    text.length(), QVariant()));
     QInputMethodEvent event(text, attributes);
-    QApplication::sendEvent(qApp->inputPanel()->inputItem(), &event);
+    QApplication::sendEvent(qApp->focusObject(), &event);
 }
 
 
@@ -2634,7 +2634,7 @@ void tst_qdeclarativetextinput::preeditMicroFocus()
     sendPreeditText(preeditText, 0);
     ic.clear();
     QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QApplication::sendEvent(qApp->inputPanel()->inputItem(), &imEvent);
+    QApplication::sendEvent(qApp->focusObject(), &imEvent);
     currentRect = input.inputMethodQuery(Qt::ImMicroFocus).toRect();
     QCOMPARE(currentRect, previousRect);
 #if defined(Q_WS_X11) || defined(Q_WS_QWS)
@@ -2705,7 +2705,7 @@ void tst_qdeclarativetextinput::inputMethodComposing()
 
     {
         QInputMethodEvent inputEvent(text.mid(3), QList<QInputMethodEvent::Attribute>());
-        QApplication::sendEvent(qApp->inputPanel()->inputItem(), &inputEvent);
+        QApplication::sendEvent(qApp->focusObject(), &inputEvent);
     }
 
     QCOMPARE(input.isInputMethodComposing(), true);
@@ -2713,7 +2713,7 @@ void tst_qdeclarativetextinput::inputMethodComposing()
 
     {
         QInputMethodEvent inputEvent(text.mid(12), QList<QInputMethodEvent::Attribute>());
-        QApplication::sendEvent(qApp->inputPanel()->inputItem(), &inputEvent);
+        QApplication::sendEvent(qApp->focusObject(), &inputEvent);
     }
 
     QCOMPARE(input.isInputMethodComposing(), true);
@@ -2721,7 +2721,7 @@ void tst_qdeclarativetextinput::inputMethodComposing()
 
     {
         QInputMethodEvent inputEvent;
-        QApplication::sendEvent(qApp->inputPanel()->inputItem(), &inputEvent);
+        QApplication::sendEvent(qApp->focusObject(), &inputEvent);
     }
     QCOMPARE(input.isInputMethodComposing(), false);
     QCOMPARE(spy.count(), 2);
