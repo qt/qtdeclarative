@@ -87,7 +87,7 @@ private slots:
     void init();
 
 protected:
-    void statusChanged(Status newStatus);
+    void stateChanged(State newState);
     void messageReceived(const QByteArray &);
 
 private:

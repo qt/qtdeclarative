@@ -104,7 +104,7 @@ public:
 
 protected:
     //inherited from QDeclarativeDebugClient
-    void statusChanged(Status status);
+    void stateChanged(State state);
     void messageReceived(const QByteArray &data);
 
 signals:
@@ -112,9 +112,9 @@ signals:
     void debugOutput();
 };
 
-void QDeclarativeDebugMsgClient::statusChanged(Status status)
+void QDeclarativeDebugMsgClient::stateChanged(State state)
 {
-    if (status == Enabled) {
+    if (state == Enabled) {
         emit enabled();
     }
 }

@@ -201,7 +201,7 @@ void tst_QV8ProfilerService::cleanup()
 void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
 {
     connect(true, "test.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
     m_client->stopProfiling("");
@@ -215,7 +215,7 @@ void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
 void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
 {
     connect(true, "test.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->stopProfiling("");
     if (QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()), 1000)) {
@@ -235,7 +235,7 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
 void tst_QV8ProfilerService::nonBlockingConnect()
 {
     connect(false, "test.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
     m_client->stopProfiling("");
@@ -249,7 +249,7 @@ void tst_QV8ProfilerService::nonBlockingConnect()
 void tst_QV8ProfilerService::snapshot()
 {
     connect(false, "test.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->takeSnapshot();
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(snapshot()))) {
@@ -262,7 +262,7 @@ void tst_QV8ProfilerService::snapshot()
 void tst_QV8ProfilerService::profileOnExit()
 {
     connect(true, "exit.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
 

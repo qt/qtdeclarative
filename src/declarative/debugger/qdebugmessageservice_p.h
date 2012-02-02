@@ -74,7 +74,7 @@ public:
     void sendDebugMessage(QtMsgType type, const char *buf);
 
 protected:
-    void statusChanged(Status);
+    void stateChanged(State);
 
 private:
     Q_DISABLE_COPY(QDebugMessageService)

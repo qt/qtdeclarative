@@ -69,9 +69,9 @@ void QDeclarativeDebugTestService::messageReceived(const QByteArray &ba)
     sendMessage(ba);
 }
 
-void QDeclarativeDebugTestService::statusChanged(Status)
+void QDeclarativeDebugTestService::stateChanged(State)
 {
-    emit statusHasChanged();
+    emit stateHasChanged();
 }
 
 
@@ -91,10 +91,10 @@ QByteArray QDeclarativeDebugTestClient::waitForResponse()
     return lastMsg;
 }
 
-void QDeclarativeDebugTestClient::statusChanged(Status stat)
+void QDeclarativeDebugTestClient::stateChanged(State stat)
 {
-    QCOMPARE(stat, status());
-    emit statusHasChanged();
+    QCOMPARE(stat, state());
+    emit stateHasChanged();
 }
 
 void QDeclarativeDebugTestClient::messageReceived(const QByteArray &ba)

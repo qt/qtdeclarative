@@ -124,7 +124,7 @@ QV8DebugService::QV8DebugService(QObject *parent)
 {
     Q_D(QV8DebugService);
     v8ServiceInstancePtr = this;
-    // wait for statusChanged() -> initialize()
+    // wait for stateChanged() -> initialize()
     d->initializeMutex.lock();
     if (registerService() == Enabled) {
         init();
@@ -205,10 +205,10 @@ void QV8DebugService::scheduledDebugBreak(bool schedule)
 }
 
 // executed in the debugger thread
-void QV8DebugService::statusChanged(QDeclarativeDebugService::Status newStatus)
+void QV8DebugService::stateChanged(QDeclarativeDebugService::State newState)
 {
     Q_D(QV8DebugService);
-    if (newStatus == Enabled) {
+    if (newState == Enabled) {
         // execute in GUI thread
         d->initializeMutex.lock();
         QMetaObject::invokeMethod(this, "init", Qt::QueuedConnection);

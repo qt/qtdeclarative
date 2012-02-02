@@ -67,7 +67,7 @@ private slots:
 
     void name();
     void version();
-    void status();
+    void state();
     void sendMessage();
     void idForObject();
     void objectForId();
@@ -112,23 +112,23 @@ void tst_QDeclarativeDebugService::version()
     QCOMPARE(service.version(), 2.0f);
 }
 
-void tst_QDeclarativeDebugService::status()
+void tst_QDeclarativeDebugService::state()
 {
-    QDeclarativeDebugTestService service("tst_QDeclarativeDebugService::status()");
-    QCOMPARE(service.status(), QDeclarativeDebugService::Unavailable);
+    QDeclarativeDebugTestService service("tst_QDeclarativeDebugService::state()");
+    QCOMPARE(service.state(), QDeclarativeDebugService::Unavailable);
 
     {
-        QDeclarativeDebugTestClient client("tst_QDeclarativeDebugService::status()", m_conn);
-        QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Enabled);
-        QTRY_COMPARE(service.status(), QDeclarativeDebugService::Enabled);
+        QDeclarativeDebugTestClient client("tst_QDeclarativeDebugService::state()", m_conn);
+        QTRY_COMPARE(client.state(), QDeclarativeDebugClient::Enabled);
+        QTRY_COMPARE(service.state(), QDeclarativeDebugService::Enabled);
     }
 
 
-    QTRY_COMPARE(service.status(), QDeclarativeDebugService::Unavailable);
+    QTRY_COMPARE(service.state(), QDeclarativeDebugService::Unavailable);
 
-    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugService: Conflicting plugin name \"tst_QDeclarativeDebugService::status()\" ");
-    QDeclarativeDebugTestService duplicate("tst_QDeclarativeDebugService::status()");
-    QCOMPARE(duplicate.status(), QDeclarativeDebugService::NotConnected);
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugService: Conflicting plugin name \"tst_QDeclarativeDebugService::state()\" ");
+    QDeclarativeDebugTestService duplicate("tst_QDeclarativeDebugService::state()");
+    QCOMPARE(duplicate.state(), QDeclarativeDebugService::NotConnected);
 }
 
 void tst_QDeclarativeDebugService::sendMessage()
@@ -138,8 +138,8 @@ void tst_QDeclarativeDebugService::sendMessage()
 
     QByteArray msg = "hello!";
 
-    QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Enabled);
-    QTRY_COMPARE(service.status(), QDeclarativeDebugService::Enabled);
+    QTRY_COMPARE(client.state(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(service.state(), QDeclarativeDebugService::Enabled);
 
     client.sendMessage(msg);
     QByteArray resp = client.waitForResponse();

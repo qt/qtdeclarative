@@ -329,10 +329,10 @@ QDeclarativeDebugServer::~QDeclarativeDebugServer()
     QReadLocker(&d->pluginsLock);
     {
         foreach (QDeclarativeDebugService *service, d->plugins.values()) {
-            service->statusAboutToBeChanged(QDeclarativeDebugService::NotConnected);
+            service->stateAboutToBeChanged(QDeclarativeDebugService::NotConnected);
             service->d_func()->server = 0;
-            service->d_func()->status = QDeclarativeDebugService::NotConnected;
-            service->statusChanged(QDeclarativeDebugService::NotConnected);
+            service->d_func()->state = QDeclarativeDebugService::NotConnected;
+            service->stateChanged(QDeclarativeDebugService::NotConnected);
         }
     }
 
@@ -381,11 +381,11 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
             QReadLocker(&d->pluginsLock);
             QHash<QString, QDeclarativeDebugService*>::ConstIterator iter = d->plugins.constBegin();
             for (; iter != d->plugins.constEnd(); ++iter) {
-                QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
+                QDeclarativeDebugService::State newState = QDeclarativeDebugService::Unavailable;
                 if (d->clientPlugins.contains(iter.key()))
-                    newStatus = QDeclarativeDebugService::Enabled;
-                iter.value()->d_func()->status = newStatus;
-                iter.value()->statusChanged(newStatus);
+                    newState = QDeclarativeDebugService::Enabled;
+                iter.value()->d_func()->state = newState;
+                iter.value()->stateChanged(newState);
             }
 
             qWarning("QDeclarativeDebugServer: Connection established");
@@ -401,14 +401,14 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
             QHash<QString, QDeclarativeDebugService*>::ConstIterator iter = d->plugins.constBegin();
             for (; iter != d->plugins.constEnd(); ++iter) {
                 const QString pluginName = iter.key();
-                QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
+                QDeclarativeDebugService::State newState = QDeclarativeDebugService::Unavailable;
                 if (d->clientPlugins.contains(pluginName))
-                    newStatus = QDeclarativeDebugService::Enabled;
+                    newState = QDeclarativeDebugService::Enabled;
 
                 if (oldClientPlugins.contains(pluginName)
                         != d->clientPlugins.contains(pluginName)) {
-                    iter.value()->d_func()->status = newStatus;
-                    iter.value()->statusChanged(newStatus);
+                    iter.value()->d_func()->state = newState;
+                    iter.value()->stateChanged(newState);
                 }
             }
 
@@ -472,10 +472,10 @@ bool QDeclarativeDebugServer::addService(QDeclarativeDebugService *service)
     {
         QReadLocker(&d->pluginsLock);
         d->advertisePlugins();
-        QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
+        QDeclarativeDebugService::State newState = QDeclarativeDebugService::Unavailable;
         if (d->clientPlugins.contains(service->name()))
-            newStatus = QDeclarativeDebugService::Enabled;
-        service->d_func()->status = newStatus;
+            newState = QDeclarativeDebugService::Enabled;
+        service->d_func()->state = newState;
     }
     return true;
 }
@@ -491,12 +491,12 @@ bool QDeclarativeDebugServer::removeService(QDeclarativeDebugService *service)
     }
     {
         QReadLocker(&d->pluginsLock);
-        QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::NotConnected;
-        service->statusAboutToBeChanged(newStatus);
+        QDeclarativeDebugService::State newState = QDeclarativeDebugService::NotConnected;
+        service->stateAboutToBeChanged(newState);
         d->advertisePlugins();
         service->d_func()->server = 0;
-        service->d_func()->status = newStatus;
-        service->statusChanged(newStatus);
+        service->d_func()->state = newState;
+        service->stateChanged(newState);
     }
 
     return true;

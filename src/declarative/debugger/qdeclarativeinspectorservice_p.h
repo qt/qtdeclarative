@@ -79,12 +79,12 @@ public:
     void sendMessage(const QByteArray &message);
 
 protected:
-    virtual void statusChanged(Status status);
+    virtual void stateChanged(State state);
     virtual void messageReceived(const QByteArray &);
 
 private slots:
     void processMessage(const QByteArray &message);
-    void updateStatus();
+    void updateState();
 
 private:
     void loadInspectorPlugins();

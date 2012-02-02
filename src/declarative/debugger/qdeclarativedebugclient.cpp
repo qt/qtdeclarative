@@ -159,10 +159,10 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
 
         QHash<QString, QDeclarativeDebugClient *>::Iterator iter = plugins.begin();
         for (; iter != plugins.end(); ++iter) {
-            QDeclarativeDebugClient::Status newStatus = QDeclarativeDebugClient::Unavailable;
+            QDeclarativeDebugClient::State newState = QDeclarativeDebugClient::Unavailable;
             if (serverPlugins.contains(iter.key()))
-                newStatus = QDeclarativeDebugClient::Enabled;
-            iter.value()->statusChanged(newStatus);
+                newState = QDeclarativeDebugClient::Enabled;
+            iter.value()->stateChanged(newState);
         }
     }
 
@@ -198,13 +198,13 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
                 QHash<QString, QDeclarativeDebugClient *>::Iterator iter = plugins.begin();
                 for (; iter != plugins.end(); ++iter) {
                     const QString pluginName = iter.key();
-                    QDeclarativeDebugClient::Status newStatus = QDeclarativeDebugClient::Unavailable;
+                    QDeclarativeDebugClient::State newSate = QDeclarativeDebugClient::Unavailable;
                     if (serverPlugins.contains(pluginName))
-                        newStatus = QDeclarativeDebugClient::Enabled;
+                        newSate = QDeclarativeDebugClient::Enabled;
 
                     if (oldServerPlugins.contains(pluginName)
                             != serverPlugins.contains(pluginName)) {
-                        iter.value()->statusChanged(newStatus);
+                        iter.value()->stateChanged(newSate);
                     }
                 }
             } else {
@@ -242,7 +242,7 @@ QDeclarativeDebugConnection::~QDeclarativeDebugConnection()
     QHash<QString, QDeclarativeDebugClient*>::iterator iter = d->plugins.begin();
     for (; iter != d->plugins.end(); ++iter) {
         iter.value()->d_func()->connection = 0;
-        iter.value()->statusChanged(QDeclarativeDebugClient::NotConnected);
+        iter.value()->stateChanged(QDeclarativeDebugClient::NotConnected);
     }
 }
 
@@ -280,7 +280,7 @@ void QDeclarativeDebugConnection::close()
 
         QHash<QString, QDeclarativeDebugClient*>::iterator iter = d->plugins.begin();
         for (; iter != d->plugins.end(); ++iter) {
-            iter.value()->statusChanged(QDeclarativeDebugClient::NotConnected);
+            iter.value()->stateChanged(QDeclarativeDebugClient::NotConnected);
         }
     }
 }
@@ -382,7 +382,7 @@ float QDeclarativeDebugClient::serviceVersion() const
     return -1;
 }
 
-QDeclarativeDebugClient::Status QDeclarativeDebugClient::status() const
+QDeclarativeDebugClient::State QDeclarativeDebugClient::state() const
 {
     Q_D(const QDeclarativeDebugClient);
     if (!d->connection
@@ -399,7 +399,7 @@ QDeclarativeDebugClient::Status QDeclarativeDebugClient::status() const
 void QDeclarativeDebugClient::sendMessage(const QByteArray &message)
 {
     Q_D(QDeclarativeDebugClient);
-    if (status() != Enabled)
+    if (state() != Enabled)
         return;
 
     QPacket pack;
@@ -408,7 +408,7 @@ void QDeclarativeDebugClient::sendMessage(const QByteArray &message)
     d->connection->flush();
 }
 
-void QDeclarativeDebugClient::statusChanged(Status)
+void QDeclarativeDebugClient::stateChanged(State)
 {
 }
 

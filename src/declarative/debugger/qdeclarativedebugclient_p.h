@@ -104,19 +104,19 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDebugClient : public QObject
     Q_DISABLE_COPY(QDeclarativeDebugClient)
 
 public:
-    enum Status { NotConnected, Unavailable, Enabled };
+    enum State { NotConnected, Unavailable, Enabled };
 
     QDeclarativeDebugClient(const QString &, QDeclarativeDebugConnection *parent);
     ~QDeclarativeDebugClient();
 
     QString name() const;
     float serviceVersion() const;
-    Status status() const;
+    State state() const;
 
     virtual void sendMessage(const QByteArray &);
 
 protected:
-    virtual void statusChanged(Status);
+    virtual void stateChanged(State);
     virtual void messageReceived(const QByteArray &);
 
 private:

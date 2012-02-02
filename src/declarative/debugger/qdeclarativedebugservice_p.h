@@ -76,8 +76,8 @@ public:
     QString name() const;
     float version() const;
 
-    enum Status { NotConnected, Unavailable, Enabled };
-    Status status() const;
+    enum State { NotConnected, Unavailable, Enabled };
+    State state() const;
 
     void sendMessage(const QByteArray &);
     void sendMessages(const QList<QByteArray> &);
@@ -94,10 +94,10 @@ public:
 protected:
     QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd, const QString &name, float version, QObject *parent = 0);
 
-    Status registerService();
+    State registerService();
 
-    virtual void statusAboutToBeChanged(Status);
-    virtual void statusChanged(Status);
+    virtual void stateAboutToBeChanged(State);
+    virtual void stateChanged(State);
     virtual void messageReceived(const QByteArray &);
 
 private:

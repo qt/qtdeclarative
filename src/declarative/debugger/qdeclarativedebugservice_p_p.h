@@ -72,7 +72,7 @@ public:
     QString name;
     float version;
     QDeclarativeDebugServer *server;
-    QDeclarativeDebugService::Status status;
+    QDeclarativeDebugService::State state;
 };
 
 QT_END_NAMESPACE

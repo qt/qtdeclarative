@@ -310,12 +310,12 @@ void QDeclarativeDebugTrace::sendMessages()
     QDeclarativeDebugService::sendMessages(messages);
 }
 
-void QDeclarativeDebugTrace::statusAboutToBeChanged(QDeclarativeDebugService::Status newStatus)
+void QDeclarativeDebugTrace::stateAboutToBeChanged(QDeclarativeDebugService::State newState)
 {
-    if (status() == newStatus)
+    if (state() == newState)
         return;
 
-    if (status() == Enabled
+    if (state() == Enabled
             && m_enabled) {
         stopProfilingImpl();
         sendMessages();

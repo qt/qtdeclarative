@@ -104,7 +104,7 @@ public slots:
     void sendProfilingData();
 
 protected:
-    void statusAboutToBeChanged(Status status);
+    void stateAboutToBeChanged(State state);
     void messageReceived(const QByteArray &);
 
 private:

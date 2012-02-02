@@ -60,7 +60,7 @@ QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, float ve
     d->name = name;
     d->version = version;
     d->server = QDeclarativeDebugServer::instance();
-    d->status = QDeclarativeDebugService::NotConnected;
+    d->state = QDeclarativeDebugService::NotConnected;
 
 
 }
@@ -73,14 +73,14 @@ QDeclarativeDebugService::QDeclarativeDebugService(QDeclarativeDebugServicePriva
     d->name = name;
     d->version = version;
     d->server = QDeclarativeDebugServer::instance();
-    d->status = QDeclarativeDebugService::NotConnected;
+    d->state = QDeclarativeDebugService::NotConnected;
 }
 
 /**
   Registers the service. This should be called in the constructor of the inherited class. From
   then on the service might get asynchronous calls to messageReceived().
   */
-QDeclarativeDebugService::Status QDeclarativeDebugService::registerService()
+QDeclarativeDebugService::State QDeclarativeDebugService::registerService()
 {
     Q_D(QDeclarativeDebugService);
     if (!d->server)
@@ -92,7 +92,7 @@ QDeclarativeDebugService::Status QDeclarativeDebugService::registerService()
     } else {
         d->server->addService(this);
     }
-    return status();
+    return state();
 }
 
 QDeclarativeDebugService::~QDeclarativeDebugService()
@@ -115,10 +115,10 @@ float QDeclarativeDebugService::version() const
     return d->version;
 }
 
-QDeclarativeDebugService::Status QDeclarativeDebugService::status() const
+QDeclarativeDebugService::State QDeclarativeDebugService::state() const
 {
     Q_D(const QDeclarativeDebugService);
-    return d->status;
+    return d->state;
 }
 
 namespace {
@@ -237,7 +237,7 @@ void QDeclarativeDebugService::sendMessages(const QList<QByteArray> &messages)
 {
     Q_D(QDeclarativeDebugService);
 
-    if (status() != Enabled)
+    if (state() != Enabled)
         return;
 
     d->server->sendMessages(this, messages);
@@ -247,17 +247,17 @@ bool QDeclarativeDebugService::waitForMessage()
 {
     Q_D(QDeclarativeDebugService);
 
-    if (status() != Enabled)
+    if (state() != Enabled)
         return false;
 
     return d->server->waitForMessage(this);
 }
 
-void QDeclarativeDebugService::statusAboutToBeChanged(Status)
+void QDeclarativeDebugService::stateAboutToBeChanged(State)
 {
 }
 
-void QDeclarativeDebugService::statusChanged(Status)
+void QDeclarativeDebugService::stateChanged(State)
 {
 }
 

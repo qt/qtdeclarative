@@ -293,7 +293,7 @@ public:
 
 protected:
     //inherited from QDeclarativeDebugClient
-    void statusChanged(Status status);
+    void stateChanged(State state);
     void messageReceived(const QByteArray &data);
 
 signals:
@@ -879,9 +879,9 @@ void QJSDebugClient::listBreakpoints()
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
-void QJSDebugClient::statusChanged(Status status)
+void QJSDebugClient::stateChanged(State state)
 {
-    if (status == Enabled) {
+    if (state == Enabled) {
         flushSendBuffer();
         emit enabled();
     }
@@ -957,7 +957,7 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
 
 void QJSDebugClient::sendMessage(const QByteArray &msg)
 {
-    if (status() == Enabled) {
+    if (state() == Enabled) {
         QDeclarativeDebugClient::sendMessage(msg);
     } else {
         sendBuffer.append(msg);

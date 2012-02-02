@@ -165,12 +165,12 @@ void tst_QDeclarativeInspector::cleanup()
 
 void tst_QDeclarativeInspector::connect()
 {
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 }
 
 void tst_QDeclarativeInspector::showAppOnTop()
 {
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->setShowAppOnTop(true);
     QVERIFY(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(showAppOnTopChanged())));

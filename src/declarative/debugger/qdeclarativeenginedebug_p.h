@@ -82,12 +82,12 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeEngineDebug : public QObject
 {
     Q_OBJECT
 public:
-    enum Status { NotConnected, Unavailable, Enabled };
+    enum State { NotConnected, Unavailable, Enabled };
 
     explicit QDeclarativeEngineDebug(QDeclarativeDebugConnection *, QObject * = 0);
     ~QDeclarativeEngineDebug();
 
-    Status status() const;
+    State state() const;
 
     QDeclarativeDebugPropertyWatch *addWatch(const QDeclarativeDebugPropertyReference &,
                                              QObject *parent = 0);
@@ -120,7 +120,7 @@ public:
 
 Q_SIGNALS:
     void newObjects();
-    void statusChanged(Status status);
+    void stateChanged(State state);
 
 private:
     Q_DECLARE_PRIVATE(QDeclarativeEngineDebug)

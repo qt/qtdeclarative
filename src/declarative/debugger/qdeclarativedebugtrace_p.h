@@ -145,7 +145,7 @@ public:
     ~QDeclarativeDebugTrace();
 
 protected:
-    virtual void statusAboutToBeChanged(Status status);
+    virtual void stateAboutToBeChanged(State state);
     virtual void messageReceived(const QByteArray &);
 
 private:

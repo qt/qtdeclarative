@@ -56,12 +56,12 @@ class QDebugMessageServicePrivate : public QDeclarativeDebugServicePrivate
 public:
     QDebugMessageServicePrivate()
         : oldMsgHandler(0)
-        , prevStatus(QDeclarativeDebugService::NotConnected)
+        , prevState(QDeclarativeDebugService::NotConnected)
     {
     }
 
     QtMsgHandler oldMsgHandler;
-    QDeclarativeDebugService::Status prevStatus;
+    QDeclarativeDebugService::State prevState;
 };
 
 QDebugMessageService::QDebugMessageService(QObject *parent) :
@@ -71,9 +71,9 @@ QDebugMessageService::QDebugMessageService(QObject *parent) :
     Q_D(QDebugMessageService);
 
     registerService();
-    if (status() == Enabled) {
+    if (state() == Enabled) {
         d->oldMsgHandler = qInstallMsgHandler(DebugMessageHandler);
-        d->prevStatus = Enabled;
+        d->prevState = Enabled;
     }
 }
 
@@ -98,22 +98,22 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type, const char *buf)
         (*d->oldMsgHandler)(type, buf);
 }
 
-void QDebugMessageService::statusChanged(Status status)
+void QDebugMessageService::stateChanged(State state)
 {
     Q_D(QDebugMessageService);
 
-    if (status != Enabled && d->prevStatus == Enabled) {
+    if (state != Enabled && d->prevState == Enabled) {
         QtMsgHandler handler = qInstallMsgHandler(d->oldMsgHandler);
         // has our handler been overwritten in between?
         if (handler != DebugMessageHandler)
             qInstallMsgHandler(handler);
 
-    } else if (status == Enabled && d->prevStatus != Enabled) {
+    } else if (state == Enabled && d->prevState != Enabled) {
         d->oldMsgHandler = qInstallMsgHandler(DebugMessageHandler);
 
     }
 
-    d->prevStatus = status;
+    d->prevState = state;
 }
 
 QT_END_NAMESPACE

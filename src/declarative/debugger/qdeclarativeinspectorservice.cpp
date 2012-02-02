@@ -70,29 +70,29 @@ QDeclarativeInspectorService *QDeclarativeInspectorService::instance()
 void QDeclarativeInspectorService::addView(QObject *view)
 {
     m_views.append(view);
-    updateStatus();
+    updateState();
 }
 
 void QDeclarativeInspectorService::removeView(QObject *view)
 {
     m_views.removeAll(view);
-    updateStatus();
+    updateState();
 }
 
 void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
 {
-    if (status() != Enabled)
+    if (state() != Enabled)
         return;
 
     QDeclarativeDebugService::sendMessage(message);
 }
 
-void QDeclarativeInspectorService::statusChanged(Status /*status*/)
+void QDeclarativeInspectorService::stateChanged(State /*state*/)
 {
-    QMetaObject::invokeMethod(this, "updateStatus", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, "updateState", Qt::QueuedConnection);
 }
 
-void QDeclarativeInspectorService::updateStatus()
+void QDeclarativeInspectorService::updateState()
 {
     if (m_views.isEmpty()) {
         if (m_currentInspectorPlugin) {
@@ -102,7 +102,7 @@ void QDeclarativeInspectorService::updateStatus()
         return;
     }
 
-    if (status() == Enabled) {
+    if (state() == Enabled) {
         if (m_inspectorPlugins.isEmpty())
             loadInspectorPlugins();
 

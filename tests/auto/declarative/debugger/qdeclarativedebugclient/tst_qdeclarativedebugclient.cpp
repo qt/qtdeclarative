@@ -63,7 +63,7 @@ private slots:
     void initTestCase();
 
     void name();
-    void status();
+    void state();
     void sendMessage();
     void parallelConnect();
     void sequentialConnect();
@@ -92,7 +92,7 @@ void tst_QDeclarativeDebugClient::initTestCase()
     QVERIFY(m_conn->isConnected());
 
     QTRY_VERIFY(QDeclarativeDebugService::hasDebuggingClient());
-    QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(client.state(), QDeclarativeDebugClient::Enabled);
 }
 
 void tst_QDeclarativeDebugClient::name()
@@ -103,33 +103,33 @@ void tst_QDeclarativeDebugClient::name()
     QCOMPARE(client.name(), name);
 }
 
-void tst_QDeclarativeDebugClient::status()
+void tst_QDeclarativeDebugClient::state()
 {
     {
         QDeclarativeDebugConnection dummyConn;
-        QDeclarativeDebugClient client("tst_QDeclarativeDebugClient::status()", &dummyConn);
-        QCOMPARE(client.status(), QDeclarativeDebugClient::NotConnected);
+        QDeclarativeDebugClient client("tst_QDeclarativeDebugClient::state()", &dummyConn);
+        QCOMPARE(client.state(), QDeclarativeDebugClient::NotConnected);
         QCOMPARE(client.serviceVersion(), -1.0f);
     }
 
-    QDeclarativeDebugTestClient client("tst_QDeclarativeDebugClient::status()", m_conn);
-    QCOMPARE(client.status(), QDeclarativeDebugClient::Unavailable);
+    QDeclarativeDebugTestClient client("tst_QDeclarativeDebugClient::state()", m_conn);
+    QCOMPARE(client.state(), QDeclarativeDebugClient::Unavailable);
 
     {
-        QDeclarativeDebugTestService service("tst_QDeclarativeDebugClient::status()", 2);
-        QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Enabled);
+        QDeclarativeDebugTestService service("tst_QDeclarativeDebugClient::state()", 2);
+        QTRY_COMPARE(client.state(), QDeclarativeDebugClient::Enabled);
         QCOMPARE(client.serviceVersion(), 2.0f);
     }
 
-    QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Unavailable);
+    QTRY_COMPARE(client.state(), QDeclarativeDebugClient::Unavailable);
 
     // duplicate plugin name
-    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugClient: Conflicting plugin name \"tst_QDeclarativeDebugClient::status()\" ");
-    QDeclarativeDebugClient client2("tst_QDeclarativeDebugClient::status()", m_conn);
-    QCOMPARE(client2.status(), QDeclarativeDebugClient::NotConnected);
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugClient: Conflicting plugin name \"tst_QDeclarativeDebugClient::state()\" ");
+    QDeclarativeDebugClient client2("tst_QDeclarativeDebugClient::state()", m_conn);
+    QCOMPARE(client2.state(), QDeclarativeDebugClient::NotConnected);
 
-    QDeclarativeDebugClient client3("tst_QDeclarativeDebugClient::status3()", 0);
-    QCOMPARE(client3.status(), QDeclarativeDebugClient::NotConnected);
+    QDeclarativeDebugClient client3("tst_QDeclarativeDebugClient::state3()", 0);
+    QCOMPARE(client3.state(), QDeclarativeDebugClient::NotConnected);
 }
 
 void tst_QDeclarativeDebugClient::sendMessage()
@@ -139,7 +139,7 @@ void tst_QDeclarativeDebugClient::sendMessage()
 
     QByteArray msg = "hello!";
 
-    QTRY_COMPARE(client.status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(client.state(), QDeclarativeDebugClient::Enabled);
 
     client.sendMessage(msg);
     QByteArray resp = client.waitForResponse();
@@ -175,7 +175,7 @@ void tst_QDeclarativeDebugClient::sequentialConnect()
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Connection established");
     QVERIFY(connection2.waitForConnected());
     QVERIFY(connection2.isConnected());
-    QTRY_VERIFY(client2.status() == QDeclarativeDebugClient::Enabled);
+    QTRY_VERIFY(client2.state() == QDeclarativeDebugClient::Enabled);
 }
 
 int main(int argc, char *argv[])

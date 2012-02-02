@@ -61,7 +61,7 @@ public:
 
     QList<QDeclarativeDebugData> traceMessages;
 
-    void setTraceStatus(bool enabled) {
+    void setTraceState(bool enabled) {
         QByteArray message;
         QDataStream stream(&message, QIODevice::WriteOnly);
         stream << enabled;
@@ -216,10 +216,10 @@ void tst_QDeclarativeDebugTrace::cleanup()
 void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
 {
     connect(true, "test.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
-    m_client->setTraceStatus(true);
-    m_client->setTraceStatus(false);
+    m_client->setTraceState(true);
+    m_client->setTraceState(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
                 = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
@@ -239,11 +239,11 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceEnabled()
 void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
 {
     connect(true, "test.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
-    m_client->setTraceStatus(false);
-    m_client->setTraceStatus(true);
-    m_client->setTraceStatus(false);
+    m_client->setTraceState(false);
+    m_client->setTraceState(true);
+    m_client->setTraceState(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
                 = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
@@ -264,10 +264,10 @@ void tst_QDeclarativeDebugTrace::blockingConnectWithTraceDisabled()
 void tst_QDeclarativeDebugTrace::nonBlockingConnect()
 {
     connect(false, "test.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
-    m_client->setTraceStatus(true);
-    m_client->setTraceStatus(false);
+    m_client->setTraceState(true);
+    m_client->setTraceState(false);
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg
                 = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
@@ -286,9 +286,9 @@ void tst_QDeclarativeDebugTrace::nonBlockingConnect()
 void tst_QDeclarativeDebugTrace::profileOnExit()
 {
     connect(true, "exit.qml");
-    QTRY_COMPARE(m_client->status(), QDeclarativeDebugClient::Enabled);
+    QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
-    m_client->setTraceStatus(true);
+    m_client->setTraceState(true);
 
     if (!QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
         QString failMsg

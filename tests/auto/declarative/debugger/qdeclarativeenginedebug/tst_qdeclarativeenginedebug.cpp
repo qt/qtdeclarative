@@ -387,7 +387,7 @@ void tst_QDeclarativeEngineDebug::initTestCase()
     QVERIFY(ok);
     QTRY_VERIFY(QDeclarativeDebugService::hasDebuggingClient());
     m_dbg = new QDeclarativeEngineDebug(m_conn, this);
-    QTRY_VERIFY(m_dbg->status() == QDeclarativeEngineDebug::Enabled);
+    QTRY_VERIFY(m_dbg->state() == QDeclarativeEngineDebug::Enabled);
 }
 
 void tst_QDeclarativeEngineDebug::cleanupTestCase()

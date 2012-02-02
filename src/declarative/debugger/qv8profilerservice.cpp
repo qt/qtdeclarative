@@ -127,14 +127,14 @@ void QV8ProfilerService::initialize()
     v8ProfilerInstance();
 }
 
-void QV8ProfilerService::statusAboutToBeChanged(QDeclarativeDebugService::Status newStatus)
+void QV8ProfilerService::stateAboutToBeChanged(QDeclarativeDebugService::State newState)
 {
     Q_D(QV8ProfilerService);
 
-    if (status() == newStatus)
+    if (state() == newState)
         return;
 
-    if (status() == Enabled) {
+    if (state() == Enabled) {
         foreach (const QString &title, d->m_ongoing)
             QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, title));
         sendProfilingData();
