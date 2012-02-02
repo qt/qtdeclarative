@@ -66,7 +66,6 @@ QT_BEGIN_NAMESPACE
 
 class QTextLayout;
 class QQuickTextDocumentWithImageResources;
-class QSGPlainTexture;
 
 class Q_AUTOTEST_EXPORT QQuickTextPrivate : public QQuickImplicitSizeItemPrivate
 {
@@ -110,28 +109,17 @@ public:
 
     static const QChar elideChar;
 
-    void markDirty();
-    bool invalidateImageCache();
-    void checkImageCache();
-    QPixmap *imageCache;
-    QSGTexture *texture;
-
-    bool imageCacheDirty:1;
     bool updateOnComponentComplete:1;
     bool updateLayoutOnPolish:1;
     bool richText:1;
     bool styledText:1;
     bool singleline:1;
-    bool cacheAllTextAsImage:1;
-    bool disableDistanceField:1;
     bool internalWidthUpdate:1;
     bool requireImplicitWidth:1;
     bool truncated:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
     bool layoutTextElided:1;
-    bool richTextAsImage:1;
-    bool textureImageCacheDirty:1;
     bool textHasChanged:1;
     bool needToUpdateLayout:1;
 
@@ -141,32 +129,19 @@ public:
     virtual qreal getImplicitWidth() const;
 
     void ensureDoc();
-    QPixmap textDocumentImage(bool drawStyle);
     QQuickTextDocumentWithImageResources *doc;
 
     QRect setupTextLayout();
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset = 0);
-    QPixmap textLayoutImage(bool drawStyle);
-    void drawTextLayout(QPainter *p, const QPointF &pos, bool drawStyle);
     bool isLinkActivatedConnected();
     QString anchorAt(const QPointF &pos);
     QTextLayout layout;
     QTextLayout *elideLayout;
     QQuickTextLine *textLine;
 
-    static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource);
-    static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource, int yOffset);
-
     static inline QQuickTextPrivate *get(QQuickText *t) {
         return t->d_func();
     }
-
-    enum NodeType {
-        NodeIsNull,
-        NodeIsTexture,
-        NodeIsText
-    };
-    NodeType nodeType;
 
     enum UpdateType {
         UpdateNone,

@@ -67,10 +67,6 @@
 
 QT_BEGIN_NAMESPACE
 
-extern Q_GUI_EXPORT bool qt_applefontsmoothing_enabled;
-
-DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-DEFINE_BOOL_CONFIG_OPTION(enableImageCache, QML_ENABLE_TEXT_IMAGE_CACHE);
 
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
@@ -80,21 +76,17 @@ QQuickTextPrivate::QQuickTextPrivate()
   format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap), lineHeight(1),
   lineHeightMode(QQuickText::ProportionalHeight), lineCount(1), maximumLineCount(INT_MAX),
   maximumLineCountValid(false), fontSizeMode(QQuickText::FixedSize), minimumPixelSize(12),
-  minimumPointSize(12), imageCache(0), texture(0),
-  imageCacheDirty(false), updateOnComponentComplete(true),
-  richText(false), styledText(false), singleline(false), cacheAllTextAsImage(true),
-  disableDistanceField(false), internalWidthUpdate(false),
+  minimumPointSize(12), updateOnComponentComplete(true),
+  richText(false), styledText(false), singleline(false), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
-  layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), textHasChanged(true),
-  needToUpdateLayout(false), naturalWidth(0), doc(0), elideLayout(0), textLine(0), nodeType(NodeIsNull),
+  layoutTextElided(false), textHasChanged(true),
+  needToUpdateLayout(false), naturalWidth(0), doc(0), elideLayout(0), textLine(0),
   updateType(UpdatePaintNode), nbActiveDownloads(0)
 
 #if defined(Q_OS_MAC)
 , layoutThread(0), paintingThread(0)
 #endif
 {
-    cacheAllTextAsImage = enableImageCache();
-    disableDistanceField = qmlDisableDistanceField();
 }
 
 void QQuickTextPrivate::init()
@@ -266,7 +258,6 @@ QQuickTextPrivate::~QQuickTextPrivate()
 {
     delete elideLayout;
     delete textLine; textLine = 0;
-    delete imageCache;
     qDeleteAll(imgTags);
     imgTags.clear();
 }
@@ -382,8 +373,6 @@ void QQuickTextPrivate::updateSize()
             return;
     }
 
-    invalidateImageCache();
-
     QFontMetrics fm(font);
     if (text.isEmpty()) {
         qreal fontHeight = fm.height();
@@ -422,8 +411,7 @@ void QQuickTextPrivate::updateSize()
         QTextOption option;
         option.setAlignment((Qt::Alignment)int(horizontalAlignment | vAlign));
         option.setWrapMode(QTextOption::WrapMode(wrapMode));
-        if (!cacheAllTextAsImage && !richTextAsImage && !disableDistanceField)
-            option.setUseDesignMetrics(true);
+        option.setUseDesignMetrics(true);
         doc->setDefaultTextOption(option);
         if (requireImplicitWidth && q->widthValid()) {
             doc->setTextWidth(-1);
@@ -615,8 +603,7 @@ QRect QQuickTextPrivate::setupTextLayout()
     QTextOption textOption = layout.textOption();
     textOption.setAlignment(Qt::Alignment(q->effectiveHAlign()));
     textOption.setWrapMode(QTextOption::WrapMode(wrapMode));
-    if (!cacheAllTextAsImage && !richTextAsImage && !disableDistanceField)
-        textOption.setUseDesignMetrics(true);
+    textOption.setUseDesignMetrics(true);
     layout.setTextOption(textOption);
     layout.setFont(font);
 
@@ -947,169 +934,6 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
 }
 
 /*!
-    Returns a painted version of the QQuickTextPrivate::layout QTextLayout.
-    If \a drawStyle is true, the style color overrides all colors in the document.
-*/
-QPixmap QQuickTextPrivate::textLayoutImage(bool drawStyle)
-{
-    QSize size = layedOutTextRect.size();
-
-    //paint text
-    QPixmap img(size);
-    if (!size.isEmpty()) {
-        img.fill(Qt::transparent);
-/*#ifdef Q_OS_MAC // Fails on CocoaX64
-        bool oldSmooth = qt_applefontsmoothing_enabled;
-        qt_applefontsmoothing_enabled = false;
-#endif*/
-        QPainter p(&img);
-/*#ifdef Q_OS_MAC // Fails on CocoaX64
-        qt_applefontsmoothing_enabled = oldSmooth;
-#endif*/
-        drawTextLayout(&p, QPointF(-layedOutTextRect.x(),0), drawStyle);
-    }
-    return img;
-}
-
-/*!
-    Paints the QQuickTextPrivate::layout QTextLayout into \a painter at \a pos.  If
-    \a drawStyle is true, the style color overrides all colors in the document.
-*/
-void QQuickTextPrivate::drawTextLayout(QPainter *painter, const QPointF &pos, bool drawStyle)
-{
-    if (drawStyle)
-        painter->setPen(styleColor);
-    else
-        painter->setPen(color);
-    painter->setFont(font);
-    layout.draw(painter, pos);
-    if (!elidePos.isNull())
-        painter->drawText(pos + elidePos, elideChar);
-}
-
-/*!
-    Returns a painted version of the QQuickTextPrivate::doc QTextDocument.
-    If \a drawStyle is true, the style color overrides all colors in the document.
-*/
-QPixmap QQuickTextPrivate::textDocumentImage(bool drawStyle)
-{
-    QSize size = doc->size().toSize();
-
-    //paint text
-    QPixmap img(size);
-    img.fill(Qt::transparent);
-/*#ifdef Q_OS_MAC // Fails on CocoaX64
-    bool oldSmooth = qt_applefontsmoothing_enabled;
-    qt_applefontsmoothing_enabled = false;
-#endif*/
-    QPainter p(&img);
-/*#ifdef Q_OS_MAC // Fails on CocoaX64
-    qt_applefontsmoothing_enabled = oldSmooth;
-#endif*/
-
-    QAbstractTextDocumentLayout::PaintContext context;
-
-    QTextOption oldOption(doc->defaultTextOption());
-    if (drawStyle) {
-        context.palette.setColor(QPalette::Text, styleColor);
-        QTextOption colorOption(doc->defaultTextOption());
-        colorOption.setFlags(QTextOption::SuppressColors);
-        doc->setDefaultTextOption(colorOption);
-    } else {
-        context.palette.setColor(QPalette::Text, color);
-    }
-    doc->documentLayout()->draw(&p, context);
-    if (drawStyle)
-        doc->setDefaultTextOption(oldOption);
-    return img;
-}
-
-
-void QQuickTextPrivate::markDirty()
-{
-    Q_Q(QQuickText);
-    if (!invalidateImageCache() && q->isComponentComplete()) {
-       updateType = UpdatePaintNode;
-       q->update();
-    }
-}
-
-/*!
-    Mark the image cache as dirty.
-*/
-bool QQuickTextPrivate::invalidateImageCache()
-{
-    Q_Q(QQuickText);
-
-    if (richTextAsImage || cacheAllTextAsImage || (disableDistanceField && style != QQuickText::Normal)) { // If actually using the image cache
-        if (imageCacheDirty)
-            return true;
-
-        imageCacheDirty = true;
-
-        if (q->isComponentComplete())
-            QCoreApplication::postEvent(q, new QEvent(QEvent::User));
-        return true;
-    }
-
-    return false;
-}
-
-/*!
-    Tests if the image cache is dirty, and repaints it if it is.
-*/
-void QQuickTextPrivate::checkImageCache()
-{
-    Q_Q(QQuickText);
-
-    if (!imageCacheDirty)
-        return;
-
-    if (text.isEmpty()) {
-
-        delete imageCache;
-        imageCache = 0;
-
-    } else {
-
-        QPixmap textImage;
-        QPixmap styledImage;
-
-        if (richText) {
-            textImage = textDocumentImage(false);
-            if (style != QQuickText::Normal)
-                styledImage = textDocumentImage(true); //### should use styleColor
-        } else {
-            textImage = textLayoutImage(false);
-            if (style != QQuickText::Normal)
-                styledImage = textLayoutImage(true); //### should use styleColor
-        }
-
-        delete imageCache;
-        switch (style) {
-        case QQuickText::Outline:
-            imageCache = new QPixmap(drawOutline(textImage, styledImage));
-            break;
-        case QQuickText::Sunken:
-            imageCache = new QPixmap(drawOutline(textImage, styledImage, -1));
-            break;
-        case QQuickText::Raised:
-            imageCache = new QPixmap(drawOutline(textImage, styledImage, 1));
-            break;
-        default:
-            imageCache = new QPixmap(textImage);
-            break;
-        }
-
-    }
-
-    imageCacheDirty = false;
-    textureImageCacheDirty = true;
-    updateType = UpdatePaintNode;
-    q->update();
-}
-
-/*!
     Ensures the QQuickTextPrivate::doc variable is set to a valid text document
 */
 void QQuickTextPrivate::ensureDoc()
@@ -1121,51 +945,6 @@ void QQuickTextPrivate::ensureDoc()
         doc->setBaseUrl(q->baseUrl());
         FAST_CONNECT(doc, SIGNAL(imagesLoaded()), q, SLOT(q_imagesLoaded()));
     }
-}
-
-/*!
-    Draw \a styleSource as an outline around \a source and return the new image.
-*/
-QPixmap QQuickTextPrivate::drawOutline(const QPixmap &source, const QPixmap &styleSource)
-{
-    QPixmap img = QPixmap(styleSource.width() + 2, styleSource.height() + 2);
-    img.fill(Qt::transparent);
-
-    QPainter ppm(&img);
-
-    QPoint pos(0, 0);
-    pos += QPoint(-1, 0);
-    ppm.drawPixmap(pos, styleSource);
-    pos += QPoint(2, 0);
-    ppm.drawPixmap(pos, styleSource);
-    pos += QPoint(-1, -1);
-    ppm.drawPixmap(pos, styleSource);
-    pos += QPoint(0, 2);
-    ppm.drawPixmap(pos, styleSource);
-
-    pos += QPoint(0, -1);
-    ppm.drawPixmap(pos, source);
-    ppm.end();
-
-    return img;
-}
-
-/*!
-    Draw \a styleSource below \a source at \a yOffset and return the new image.
-*/
-QPixmap QQuickTextPrivate::drawOutline(const QPixmap &source, const QPixmap &styleSource, int yOffset)
-{
-    QPixmap img = QPixmap(styleSource.width() + 2, styleSource.height() + 2);
-    img.fill(Qt::transparent);
-
-    QPainter ppm(&img);
-
-    ppm.drawPixmap(QPoint(0, yOffset), styleSource);
-    ppm.drawPixmap(0, 0, source);
-
-    ppm.end();
-
-    return img;
 }
 
 /*!
@@ -1448,7 +1227,6 @@ void QQuickText::setText(const QString &n)
             d->ensureDoc();
             d->doc->setText(n);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
-            d->richTextAsImage = enableImageCache();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -1495,7 +1273,10 @@ void QQuickText::setColor(const QColor &color)
         return;
 
     d->color = color;
-    d->markDirty();
+    if (isComponentComplete())  {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
+        update();
+    }
     emit colorChanged(d->color);
 }
 /*!
@@ -1534,13 +1315,11 @@ void QQuickText::setStyle(QQuickText::TextStyle style)
     if (d->style == style)
         return;
 
-    // changing to/from Normal requires the boundingRect() to change
-    if (isComponentComplete() && (d->style == Normal || style == Normal)) {
+    d->style = style;
+    if (isComponentComplete()) {
         d->updateType = QQuickTextPrivate::UpdatePaintNode;
         update();
     }
-    d->style = style;
-    d->markDirty();
     emit styleChanged(d->style);
 }
 
@@ -1572,7 +1351,10 @@ void QQuickText::setStyleColor(const QColor &color)
         return;
 
     d->styleColor = color;
-    d->markDirty();
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
+        update();
+    }
     emit styleColorChanged(d->styleColor);
 }
 
@@ -1888,7 +1670,6 @@ void QQuickText::setTextFormat(TextFormat format)
             d->ensureDoc();
             d->doc->setText(d->text);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
-            d->richTextAsImage = enableImageCache();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -2095,84 +1876,32 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         d->updateLayout();
 #endif
 
-    // XXX todo - some styled text can be done by the QQuickTextNode
-    if (d->richTextAsImage || d->cacheAllTextAsImage || (d->disableDistanceField && d->style != Normal)) {
-        bool wasDirty = d->textureImageCacheDirty;
-        d->textureImageCacheDirty = false;
-
-        if (!d->imageCache || d->imageCache->isNull()) {
-            delete oldNode;
-            return 0;
-        }
-
-        QSGImageNode *node = 0;
-        if (!oldNode || d->nodeType != QQuickTextPrivate::NodeIsTexture) {
-            delete oldNode;
-            node = QQuickItemPrivate::get(this)->sceneGraphContext()->createImageNode();
-            d->texture = new QSGPlainTexture();
-            wasDirty = true;
-            d->nodeType = QQuickTextPrivate::NodeIsTexture;
-        } else {
-            node = static_cast<QSGImageNode *>(oldNode);
-            Q_ASSERT(d->texture);
-        }
-
-        if (wasDirty) {
-            qobject_cast<QSGPlainTexture *>(d->texture)->setImage(d->imageCache->toImage());
-            node->setTexture(0);
-            node->setTexture(d->texture);
-        }
-
-        node->setTargetRect(QRectF(bounds.x(), bounds.y(), d->imageCache->width(), d->imageCache->height()));
-        node->setSourceRect(QRectF(0, 0, 1, 1));
-        node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-        node->setVerticalWrapMode(QSGTexture::ClampToEdge);
-        node->setFiltering(QSGTexture::Linear); // Nonsmooth text just ugly, so don't do that..
-        node->update();
-
-        return node;
-
+    QQuickTextNode *node = 0;
+    if (!oldNode) {
+        node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
     } else {
-        QQuickTextNode *node = 0;
-        if (!oldNode || d->nodeType != QQuickTextPrivate::NodeIsText) {
-            delete oldNode;
-            node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
-            d->nodeType = QQuickTextPrivate::NodeIsText;
-        } else {
-            node = static_cast<QQuickTextNode *>(oldNode);
-        }
-
-        node->deleteContent();
-        node->setMatrix(QMatrix4x4());
-
-        if (d->richText) {
-            d->ensureDoc();
-            node->addTextDocument(bounds.topLeft(), d->doc, d->color, d->style, d->styleColor);
-
-        } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
-            node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
-            if (d->elideLayout)
-                node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, d->color, d->style, d->styleColor);
-        }
-
-        foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
-            QDeclarativePixmap *pix = img->pix;
-            if (pix && pix->isReady())
-                node->addImage(QRectF(img->pos.x(), img->pos.y() + bounds.y(), pix->width(), pix->height()), pix->image());
-        }
-        return node;
+        node = static_cast<QQuickTextNode *>(oldNode);
     }
-}
 
-bool QQuickText::event(QEvent *e)
-{
-    Q_D(QQuickText);
-    if (e->type() == QEvent::User) {
-        d->checkImageCache();
-        return true;
-    } else {
-        return QQuickImplicitSizeItem::event(e);
+    node->deleteContent();
+    node->setMatrix(QMatrix4x4());
+
+    if (d->richText) {
+        d->ensureDoc();
+        node->addTextDocument(bounds.topLeft(), d->doc, d->color, d->style, d->styleColor);
+
+    } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
+        node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
+        if (d->elideLayout)
+            node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, d->color, d->style, d->styleColor);
     }
+
+    foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
+        QDeclarativePixmap *pix = img->pix;
+        if (pix && pix->isReady())
+            node->addImage(QRectF(img->pos.x(), img->pos.y() + bounds.y(), pix->width(), pix->height()), pix->image());
+    }
+    return node;
 }
 
 void QQuickText::updatePolish()
@@ -2382,7 +2111,6 @@ void QQuickText::componentComplete()
             d->ensureDoc();
             d->doc->setText(d->text);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
-            d->richTextAsImage = enableImageCache();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
