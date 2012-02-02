@@ -282,7 +282,7 @@ QDeclarativeBinding::QDeclarativeBinding(const QString &str, bool isRewritten, Q
     To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.  
     For example:
         v8::Handle<v8::Function> function;
-        new QDeclarativeBInding(&function, scope, ctxt);
+        new QDeclarativeBinding(&function, scope, ctxt);
  */
 QDeclarativeBinding::QDeclarativeBinding(void *functionPtr, QObject *obj, QDeclarativeContextData *ctxt, 
                                          QObject *parent)

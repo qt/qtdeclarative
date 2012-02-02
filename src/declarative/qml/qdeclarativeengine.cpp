@@ -891,7 +891,7 @@ void QDeclarativeEngine::setContextForObject(QObject *object, QDeclarativeContex
   explicitly.  QML uses a heuristic to set the default object
   ownership.  By default, an object that is created by QML has
   JavaScriptOwnership.  The exception to this are the root objects
-  created by calling QDeclarativeCompnent::create() or
+  created by calling QDeclarativeComponent::create() or
   QDeclarativeComponent::beginCreate() which have CppOwnership by
   default.  The ownership of these root-level objects is considered to
   have been transferred to the C++ caller.
