@@ -724,6 +724,11 @@ QDeclarativePixmapStore::~QDeclarativePixmapStore()
     int leakedPixmaps = 0;
     QList<QDeclarativePixmapData*> cachedData = m_cache.values();
 
+    // Prevent unreferencePixmap() from assuming it needs to kick
+    // off the cache expiry timer, as we're shrinking the cache
+    // manually below after releasing all the pixmaps.
+    m_timerId = -2;
+
     // unreference all (leaked) pixmaps
     foreach (QDeclarativePixmapData* pixmap, cachedData) {
         int currRefCount = pixmap->refCount;
