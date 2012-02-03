@@ -154,7 +154,7 @@ ParticleSystem {
             frames: 9
             frameWidth: 256
             frameHeight: 256
-            duration: 80
+            frameDuration: 80
             to: {"still":0, "flailing":0}
         },
         Sprite{
@@ -163,7 +163,7 @@ ParticleSystem {
             frames: 8
             frameWidth: 256
             frameHeight: 256
-            duration: 80
+            frameDuration: 80
             to: {"falling":1}
         },
         Sprite{
@@ -172,7 +172,7 @@ ParticleSystem {
             frames: 5
             frameWidth: 256
             frameHeight: 256
-            duration: 80
+            frameDuration: 80
             to: {"falling":1}
         }
         ]
