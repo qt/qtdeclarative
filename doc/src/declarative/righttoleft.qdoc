@@ -58,7 +58,7 @@ When the horizontal alignment of a text item is not explicitly set, the text ele
 automatically aligned to the natural reading direction of the text. By default left-to-right text
 like English is aligned to the left side of the text area, and right-to-left text like Arabic is
 aligned to the right side of the text area. The alignment of a text element with empty text takes
-its alignment cue from \l QInputPanel::inputDirection(), which is based on the active
+its alignment cue from \l QInputMethod::inputDirection(), which is based on the active
 system locale.
 
 This default locale-based alignment can be overriden by setting the \c horizontalAlignment

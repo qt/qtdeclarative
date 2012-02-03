@@ -560,7 +560,7 @@ bool QQuickTextEditPrivate::determineHorizontalAlignment()
         if (document->isEmpty()) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
             alignToRight = preeditText.isEmpty()
-                    ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
+                    ? qApp->inputMethod()->inputDirection() == Qt::RightToLeft
                     : preeditText.isRightToLeft();
         } else {
             alignToRight = rightToLeftText;
@@ -1545,10 +1545,10 @@ void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 
         if (value.boolValue) {
             q_updateAlignment();
-            connect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+            connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                     this, SLOT(q_updateAlignment()));
         } else {
-            disconnect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+            disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                        this, SLOT(q_updateAlignment()));
         }
     }
@@ -2099,7 +2099,7 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
 void QQuickTextEdit::openSoftwareInputPanel()
 {
     if (qGuiApp)
-        qGuiApp->inputPanel()->show();
+        qGuiApp->inputMethod()->show();
 }
 
 /*!
@@ -2142,7 +2142,7 @@ void QQuickTextEdit::openSoftwareInputPanel()
 void QQuickTextEdit::closeSoftwareInputPanel()
 {
     if (qGuiApp)
-        qGuiApp->inputPanel()->hide();
+        qGuiApp->inputMethod()->hide();
 }
 
 void QQuickTextEdit::focusInEvent(QFocusEvent *event)

@@ -297,7 +297,7 @@ of their use.
     \o
     This read-only property allows access to application's QInputPanel object
     and all its properties and slots. See the QInputPanel documentation for
-    further details.
+    further details. Deprecated in favor of Qt.InputMethod
     \endtable
 
     The following example uses the \c application object to indicate
@@ -305,6 +305,12 @@ of their use.
 
     \snippet doc/src/snippets/declarative/application.qml document
 
+    \qmlproperty object Qt::inputMethod
+    \since QtQuick 2.0
+
+    The \c inputMethod object allows access to application's QInputMethod object
+    and all its properties and slots. See the QInputMethod documentation for
+    further details.
 */
 
 

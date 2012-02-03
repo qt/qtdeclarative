@@ -54,7 +54,7 @@
 #include <QtGui/qpen.h>
 #include <QtGui/qcursor.h>
 #include <QtGui/qguiapplication.h>
-#include <QtGui/qinputpanel.h>
+#include <QtGui/qinputmethod.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
@@ -3128,7 +3128,7 @@ void QQuickItem::setInputMethodHints(Qt::InputMethodHints hints)
         return;
 
     if (qApp->focusObject() == this)
-        qApp->inputPanel()->update(Qt::ImHints);
+        qApp->inputMethod()->update(Qt::ImHints);
 }
 
 QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
@@ -3671,7 +3671,7 @@ void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
 {
     if (hasActiveFocus())
-        qApp->inputPanel()->update(queries);
+        qApp->inputMethod()->update(queries);
 }
 
 /*! \internal */

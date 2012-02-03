@@ -64,7 +64,7 @@ public:
     virtual ~QDeclarativeApplication();
     bool active() const;
     Qt::LayoutDirection layoutDirection() const;
-    QObject *inputPanel() const;
+    QT_DEPRECATED QObject *inputPanel() const;
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event);

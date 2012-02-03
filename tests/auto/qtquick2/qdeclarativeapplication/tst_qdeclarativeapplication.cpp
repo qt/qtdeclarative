@@ -44,7 +44,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
-#include <QtGui/qinputpanel.h>
+#include <QtGui/qinputmethod.h>
 
 class tst_qdeclarativeapplication : public QObject
 {
@@ -56,6 +56,7 @@ private slots:
     void active();
     void layoutDirection();
     void inputPanel();
+    void inputMethod();
 
 private:
     QDeclarativeEngine engine;
@@ -135,8 +136,23 @@ void tst_qdeclarativeapplication::inputPanel()
     item->setParentItem(view.rootObject());
 
     // check that the inputPanel property maches with application's input panel
-    QCOMPARE(qvariant_cast<QObject*>(item->property("inputPanel")), qApp->inputPanel());
+    QCOMPARE(qvariant_cast<QObject*>(item->property("inputPanel")), qApp->inputMethod());
 }
+
+void tst_qdeclarativeapplication::inputMethod()
+{
+    // technically not in QDeclarativeApplication, but testing anyway here
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0; Item { property variant inputMethod: Qt.inputMethod }", QUrl::fromLocalFile(""));
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(item);
+    QQuickView view;
+    item->setParentItem(view.rootObject());
+
+    // check that the inputMethod property maches with application's input method
+    QCOMPARE(qvariant_cast<QObject*>(item->property("inputMethod")), qApp->inputMethod());
+}
+
 
 QTEST_MAIN(tst_qdeclarativeapplication)
 

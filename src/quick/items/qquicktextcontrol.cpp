@@ -51,7 +51,7 @@
 #include <qdrag.h>
 #include <qclipboard.h>
 #include <qtimer.h>
-#include <qinputpanel.h>
+#include <qinputmethod.h>
 #include "private/qtextdocumentlayout_p.h"
 #include "private/qabstracttextdocumentlayout_p.h"
 #include "qtextdocument.h"
@@ -1310,7 +1310,7 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
                 emit q->cursorPositionChanged();
             _q_updateCurrentCharFormatAndSelection();
             if (qGuiApp)
-                qGuiApp->inputPanel()->update(Qt::ImQueryInput);
+                qGuiApp->inputMethod()->update(Qt::ImQueryInput);
         } else if (cursor.position() != oldCursorPos) {
             emit q->cursorPositionChanged();
         }
@@ -1424,7 +1424,7 @@ bool QQuickTextControlPrivate::sendMouseEventToInputContext(QMouseEvent *e, cons
 
         if (cursorPos >= 0 && cursorPos <= layout->preeditAreaText().length()) {
             if (e->type() == QEvent::MouseButtonRelease) {
-                qApp->inputPanel()->invokeAction(QInputPanel::Click, cursorPos);
+                qApp->inputMethod()->invokeAction(QInputMethod::Click, cursorPos);
             }
 
             return true;
@@ -1859,7 +1859,7 @@ void QQuickTextControlPrivate::commitPreedit()
         return;
 
     cursor.beginEditBlock();
-    qApp->inputPanel()->reset();
+    qApp->inputMethod()->reset();
 
     if (!tentativeCommit.isEmpty()) {
         cursor.insertText(tentativeCommit);

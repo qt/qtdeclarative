@@ -42,7 +42,8 @@
 #include "qdeclarativeapplication_p.h"
 #include <private/qobject_p.h>
 #include <QtGui/QGuiApplication>
-#include <QtGui/QInputPanel>
+#include <QtGui/QInputMethod>
+#include <QtCore/QDebug>
 
 QT_BEGIN_NAMESPACE
 
@@ -85,7 +86,8 @@ Qt::LayoutDirection QDeclarativeApplication::layoutDirection() const
 
 QObject *QDeclarativeApplication::inputPanel() const
 {
-    return qApp ? qApp->inputPanel() : 0;
+    qWarning() << "Qt.application.inputPanel is deprecated, use Qt.inputMethod instead";
+    return qApp ? qApp->inputMethod() : 0;
 }
 
 bool QDeclarativeApplication::eventFilter(QObject *obj, QEvent *event)

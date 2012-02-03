@@ -54,7 +54,7 @@
 #include <private/qquickwindowmanager_p.h>
 
 #include <private/qguiapplication_p.h>
-#include <QtGui/QInputPanel>
+#include <QtGui/QInputMethod>
 
 #include <private/qabstractanimation_p.h>
 
@@ -77,7 +77,7 @@ void QQuickCanvasPrivate::updateFocusItemTransform()
     Q_Q(QQuickCanvas);
     QQuickItem *focus = q->activeFocusItem();
     if (focus && qApp->focusObject() == focus)
-        qApp->inputPanel()->setInputItemTransform(QQuickItemPrivate::get(focus)->itemToCanvasTransform());
+        qApp->inputMethod()->setInputItemTransform(QQuickItemPrivate::get(focus)->itemToCanvasTransform());
 }
 
 class QQuickCanvasIncubationController : public QObject, public QDeclarativeIncubationController
@@ -498,7 +498,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            qApp->inputPanel()->reset();
+            qApp->inputMethod()->reset();
 #endif
 
             activeFocusItem = 0;
@@ -605,7 +605,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
-        qApp->inputPanel()->reset();
+        qApp->inputMethod()->reset();
 #endif
 
         activeFocusItem = 0;

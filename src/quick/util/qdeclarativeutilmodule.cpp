@@ -61,11 +61,14 @@
 #include <private/qdeclarativetypenotavailable_p.h>
 #include <private/qdeclarativeanimationcontroller_p.h>
 #include <QtCore/qcoreapplication.h>
-#include <QtGui/QInputPanel>
+#include <QtGui/QInputMethod>
 
 void QDeclarativeUtilModule::defineModule()
 {
-    qmlRegisterUncreatableType<QInputPanel>("QtQuick",2,0,"InputPanel", QInputPanel::tr("InputPanel is an abstract class"));
+    qmlRegisterUncreatableType<QInputMethod>("QtQuick",2,0,"InputPanel",
+                                             QInputMethod::tr("InputPanel is an abstract class")); // deprecated
+    qmlRegisterUncreatableType<QInputMethod>("QtQuick",2,0,"InputMethod",
+                                             QInputMethod::tr("InputMethod is an abstract class"));
     qmlRegisterUncreatableType<QDeclarativeAbstractAnimation>("QtQuick",2,0,"Animation",QDeclarativeAbstractAnimation::tr("Animation is an abstract class"));
 
     qmlRegisterType<QDeclarativeBehavior>("QtQuick",2,0,"Behavior");

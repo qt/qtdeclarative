@@ -41,6 +41,8 @@
 
 #include "qv8engine_p.h"
 
+#include <QtGui/QGuiApplication>
+
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
@@ -575,6 +577,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 
     if (m_engine) {
         qt->Set(v8::String::New("application"), newQObject(new QDeclarativeApplication(m_engine)));
+        qt->Set(v8::String::New("inputMethod"), newQObject(qGuiApp->inputMethod(), CppOwnership));
         qt->Set(v8::String::New("lighter"), V8FUNCTION(lighter, this));
         qt->Set(v8::String::New("darker"), V8FUNCTION(darker, this));
         qt->Set(v8::String::New("tint"), V8FUNCTION(tint, this));

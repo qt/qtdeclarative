@@ -253,7 +253,6 @@ public:
     QV8Engine(QJSEngine* qq,QJSEngine::ContextOwnership ownership = QJSEngine::CreateNewContext);
     virtual ~QV8Engine();
 
-    // ### TODO get rid of it, do we really need CppOwnership?
     // This enum should be in sync with QDeclarativeEngine::ObjectOwnership
     enum ObjectOwnership { CppOwnership, JavaScriptOwnership };
 

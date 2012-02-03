@@ -52,7 +52,7 @@
 #include <QtQuick/qsgsimplerectnode.h>
 
 #include <QtGui/qstylehints.h>
-#include <QtGui/qinputpanel.h>
+#include <QtGui/qinputmethod.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include "qaccessible.h"
@@ -131,7 +131,7 @@ void QQuickTextInput::setText(const QString &s)
     if (s == text())
         return;
     if (d->composeMode())
-        qApp->inputPanel()->reset();
+        qApp->inputMethod()->reset();
     d->m_tentativeCommit.clear();
     d->internalSetText(s, -1, false);
 }
@@ -482,7 +482,7 @@ bool QQuickTextInputPrivate::determineHorizontalAlignment()
         QString text = q_func()->text();
         if (text.isEmpty())
             text = m_textLayout.preeditAreaText();
-        bool isRightToLeft = text.isEmpty() ? qApp->inputPanel()->inputDirection() == Qt::RightToLeft
+        bool isRightToLeft = text.isEmpty() ? qApp->inputMethod()->inputDirection() == Qt::RightToLeft
                                             : text.isRightToLeft();
         return setHAlign(isRightToLeft ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
     }
@@ -1529,7 +1529,7 @@ bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
         int mousePos = tmp_cursor - m_cursor;
         if (mousePos >= 0 && mousePos <= m_textLayout.preeditAreaText().length()) {
             if (event->type() == QEvent::MouseButtonRelease) {
-                qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
+                qApp->inputMethod()->invokeAction(QInputMethod::Click, mousePos);
             }
             return true;
         }
@@ -2417,7 +2417,7 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
 void QQuickTextInput::openSoftwareInputPanel()
 {
     if (qGuiApp)
-        qGuiApp->inputPanel()->show();
+        qGuiApp->inputMethod()->show();
 }
 
 /*!
@@ -2460,7 +2460,7 @@ void QQuickTextInput::openSoftwareInputPanel()
 void QQuickTextInput::closeSoftwareInputPanel()
 {
     if (qGuiApp)
-        qGuiApp->inputPanel()->hide();
+        qGuiApp->inputMethod()->hide();
 }
 
 void QQuickTextInput::focusInEvent(QFocusEvent *event)
@@ -2490,11 +2490,11 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
             d->commitPreedit();
             if (!d->persistentSelection)
                 d->deselect();
-            disconnect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+            disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                        this, SLOT(q_updateAlignment()));
         } else {
             q_updateAlignment();
-            connect(qApp->inputPanel(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+            connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                     this, SLOT(q_updateAlignment()));
         }
     }
@@ -2790,7 +2790,7 @@ void QQuickTextInputPrivate::commitPreedit()
     if (!composeMode())
         return;
 
-    qApp->inputPanel()->reset();
+    qApp->inputMethod()->reset();
 
     if (!m_tentativeCommit.isEmpty()) {
         internalInsert(m_tentativeCommit);

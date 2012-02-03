@@ -40,13 +40,13 @@
 ****************************************************************************/
 
 #include <qplatforminputcontext_qpa.h>
-#include <QtGui/QInputPanel>
+#include <QtGui/QInputMethod>
 
 class PlatformInputContext : public QPlatformInputContext
 {
 public:
     PlatformInputContext()
-        : m_visible(false), m_action(QInputPanel::Click), m_cursorPosition(0),
+        : m_visible(false), m_action(QInputMethod::Click), m_cursorPosition(0),
           m_invokeActionCallCount(0), m_showInputPanelCallCount(0), m_hideInputPanelCallCount(0),
           m_updateCallCount(0), m_direction(Qt::LeftToRight)
     {
@@ -66,7 +66,7 @@ public:
     {
         return m_visible;
     }
-    virtual void invokeAction(QInputPanel::Action action, int cursorPosition)
+    virtual void invokeAction(QInputMethod::Action action, int cursorPosition)
     {
         m_invokeActionCallCount++;
         m_action = action;
@@ -106,7 +106,7 @@ public:
     }
 
     bool m_visible;
-    QInputPanel::Action m_action;
+    QInputMethod::Action m_action;
     int m_cursorPosition;
     int m_invokeActionCallCount;
     int m_showInputPanelCallCount;

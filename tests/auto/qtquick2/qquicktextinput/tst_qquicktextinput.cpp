@@ -41,14 +41,14 @@
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include "../../shared/util.h"
-#include <private/qinputpanel_p.h>
+#include <private/qinputmethod_p.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QFile>
 #include <QtQuick/qquickview.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
-#include <QInputPanel>
+#include <QInputMethod>
 #include <private/qquicktextinput_p.h>
 #include <private/qquicktextinput_p_p.h>
 #include <QDebug>
@@ -162,7 +162,7 @@ private slots:
     void preeditCursorRectangle();
     void inputContextMouseHandler();
     void inputMethodComposing();
-    void inputPanelUpdate();
+    void inputMethodUpdate();
     void cursorRectangleSize();
 
     void getText_data();
@@ -256,8 +256,8 @@ QList<Key> &operator <<(QList<Key> &keys, Qt::Key key)
 void tst_qquicktextinput::cleanup()
 {
     // ensure not even skipped tests with custom input context leave it dangling
-    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
-    inputPanelPrivate->testContext = 0;
+    QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
+    inputMethodPrivate->testContext = 0;
 }
 
 tst_qquicktextinput::tst_qquicktextinput()
@@ -1264,8 +1264,8 @@ void tst_qquicktextinput::horizontalAlignment()
 void tst_qquicktextinput::horizontalAlignment_RightToLeft()
 {
     PlatformInputContext platformInputContext;
-    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
-    inputPanelPrivate->testContext = &platformInputContext;
+    QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
+    inputMethodPrivate->testContext = &platformInputContext;
 
     QQuickView canvas(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextInput *textInput = canvas.rootObject()->findChild<QQuickTextInput*>("text");
@@ -1360,16 +1360,16 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
 
     // empty text with implicit alignment follows the system locale-based
-    // keyboard input direction from QInputPanel::inputDirection()
+    // keyboard input direction from QInputMethod::inputDirection()
     textInput->setText("");
     platformInputContext.setInputDirection(Qt::LeftToRight);
-    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::LeftToRight);
+    QVERIFY(qApp->inputMethod()->inputDirection() == Qt::LeftToRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInputPrivate->boundingRect.left() - textInputPrivate->hscroll, qreal(0));
 
     QSignalSpy cursorRectangleSpy(textInput, SIGNAL(cursorRectangleChanged()));
     platformInputContext.setInputDirection(Qt::RightToLeft);
-    QVERIFY(qApp->inputPanel()->inputDirection() == Qt::RightToLeft);
+    QVERIFY(qApp->inputMethod()->inputDirection() == Qt::RightToLeft);
     QCOMPARE(cursorRectangleSpy.count(), 1);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(textInputPrivate->boundingRect.right() - textInputPrivate->hscroll >= textInput->width() - 1);
@@ -2698,8 +2698,8 @@ void tst_qquicktextinput::simulateKey(QQuickView *view, int key)
 void tst_qquicktextinput::openInputPanel()
 {
     PlatformInputContext platformInputContext;
-    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
-    inputPanelPrivate->testContext = &platformInputContext;
+    QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
+    inputMethodPrivate->testContext = &platformInputContext;
 
     QQuickView view(testFileUrl("openInputPanel.qml"));
     view.show();
@@ -2714,7 +2714,7 @@ void tst_qquicktextinput::openInputPanel()
     QVERIFY(input->focusOnPress());
     QVERIFY(!input->hasActiveFocus());
     QVERIFY(qApp->focusObject() != input);
-    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->visible(), false);
 
     // input panel should open on focus
     QPoint centerPoint(view.width()/2, view.height()/2);
@@ -2723,25 +2723,25 @@ void tst_qquicktextinput::openInputPanel()
     QGuiApplication::processEvents();
     QVERIFY(input->hasActiveFocus());
     QCOMPARE(qApp->focusObject(), input);
-    QCOMPARE(qApp->inputPanel()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->visible(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
     // input panel should be re-opened when pressing already focused TextInput
-    qApp->inputPanel()->hide();
-    QCOMPARE(qApp->inputPanel()->visible(), false);
+    qApp->inputMethod()->hide();
+    QCOMPARE(qApp->inputMethod()->visible(), false);
     QVERIFY(input->hasActiveFocus());
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
-    QCOMPARE(qApp->inputPanel()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->visible(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
     // input panel should stay visible if focus is lost to another text inputor
-    QSignalSpy inputPanelVisibilitySpy(qApp->inputPanel(), SIGNAL(visibleChanged()));
+    QSignalSpy inputPanelVisibilitySpy(qApp->inputMethod(), SIGNAL(visibleChanged()));
     QQuickTextInput anotherInput;
     anotherInput.componentComplete();
     anotherInput.setParentItem(view.rootObject());
     anotherInput.setFocus(true);
-    QCOMPARE(qApp->inputPanel()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->visible(), true);
     QCOMPARE(qApp->focusObject(), qobject_cast<QObject*>(&anotherInput));
     QCOMPARE(inputPanelVisibilitySpy.count(), 0);
 
@@ -2750,33 +2750,33 @@ void tst_qquicktextinput::openInputPanel()
     QCOMPARE(view.activeFocusItem(), view.rootItem());
     anotherInput.setFocus(true);
 
-    qApp->inputPanel()->hide();
+    qApp->inputMethod()->hide();
 
     // input panel should not be opened if TextInput is read only
     input->setReadOnly(true);
     input->setFocus(true);
-    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->visible(), false);
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
-    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->visible(), false);
 
     // input panel should not be opened if focusOnPress is set to false
     input->setFocusOnPress(false);
     input->setFocus(false);
     input->setFocus(true);
-    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->visible(), false);
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
-    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->visible(), false);
 
     // input panel should open when openSoftwareInputPanel is called
     input->openSoftwareInputPanel();
-    QCOMPARE(qApp->inputPanel()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->visible(), true);
 
     // input panel should close when closeSoftwareInputPanel is called
     input->closeSoftwareInputPanel();
-    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->visible(), false);
 }
 
 class MyTextInput : public QQuickTextInput
@@ -2993,7 +2993,7 @@ void tst_qquicktextinput::preeditCursorRectangle()
     QCOMPARE(currentRect, previousRect);
 
     QSignalSpy inputSpy(input, SIGNAL(cursorRectangleChanged()));
-    QSignalSpy panelSpy(qGuiApp->inputPanel(), SIGNAL(cursorRectangleChanged()));
+    QSignalSpy panelSpy(qGuiApp->inputMethod(), SIGNAL(cursorRectangleChanged()));
 
     // Verify that the micro focus rect moves to the left as the cursor position
     // is incremented.
@@ -3022,8 +3022,8 @@ void tst_qquicktextinput::preeditCursorRectangle()
 void tst_qquicktextinput::inputContextMouseHandler()
 {
     PlatformInputContext platformInputContext;
-    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
-    inputPanelPrivate->testContext = &platformInputContext;
+    QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
+    inputMethodPrivate->testContext = &platformInputContext;
 
     QString text = "supercalifragisiticexpialidocious!";
     QQuickView view(testFileUrl("inputContext.qml"));
@@ -3060,7 +3060,7 @@ void tst_qquicktextinput::inputContextMouseHandler()
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, position);
     QGuiApplication::processEvents();
 
-    QCOMPARE(platformInputContext.m_action, QInputPanel::Click);
+    QCOMPARE(platformInputContext.m_action, QInputMethod::Click);
     QCOMPARE(platformInputContext.m_invokeActionCallCount, 1);
     QCOMPARE(platformInputContext.m_cursorPosition, 2);
 }
@@ -3100,11 +3100,11 @@ void tst_qquicktextinput::inputMethodComposing()
     QCOMPARE(spy.count(), 2);
 }
 
-void tst_qquicktextinput::inputPanelUpdate()
+void tst_qquicktextinput::inputMethodUpdate()
 {
     PlatformInputContext platformInputContext;
-    QInputPanelPrivate *inputPanelPrivate = QInputPanelPrivate::get(qApp->inputPanel());
-    inputPanelPrivate->testContext = &platformInputContext;
+    QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
+    inputMethodPrivate->testContext = &platformInputContext;
 
     QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
@@ -3216,11 +3216,11 @@ void tst_qquicktextinput::cursorRectangleSize()
     QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
 
     // item-canvas transform and input item transform match
-    QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputPanel()->inputItemTransform());
+    QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputMethod()->inputItemTransform());
 
     // input panel cursorRectangle property and tranformed item cursor rectangle match
     QRectF sceneCursorRect = QQuickItemPrivate::get(textInput)->itemToCanvasTransform().mapRect(cursorRectFromItem);
-    QCOMPARE(sceneCursorRect, qApp->inputPanel()->cursorRectangle());
+    QCOMPARE(sceneCursorRect, qApp->inputMethod()->cursorRectangle());
 
     delete canvas;
 }
