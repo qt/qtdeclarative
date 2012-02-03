@@ -210,6 +210,8 @@ private slots:
 
     void focusObject();
 
+    void ignoreUnhandledMouseEvents();
+
 private:
     QTouchDevice *touchDevice;
 };
@@ -692,6 +694,43 @@ void tst_qquickcanvas::focusObject()
     QVERIFY(item2);
     item2->setFocus(true);
     QCOMPARE(item2, canvas->focusObject());
+
+    delete canvas;
+}
+
+void tst_qquickcanvas::ignoreUnhandledMouseEvents()
+{
+    QQuickCanvas* canvas = new QQuickCanvas;
+    canvas->resize(100, 100);
+    canvas->show();
+
+    QQuickItem* item = new QQuickItem;
+    item->setSize(QSizeF(100, 100));
+    item->setParentItem(canvas->rootItem());
+
+    {
+        QMouseEvent me(QEvent::MouseButtonPress, QPointF(50, 50), Qt::LeftButton, Qt::LeftButton,
+                       Qt::NoModifier);
+        me.setAccepted(true);
+        QVERIFY(QCoreApplication::sendEvent(canvas, &me));
+        QVERIFY(!me.isAccepted());
+    }
+
+    {
+        QMouseEvent me(QEvent::MouseMove, QPointF(51, 51), Qt::LeftButton, Qt::LeftButton,
+                       Qt::NoModifier);
+        me.setAccepted(true);
+        QVERIFY(QCoreApplication::sendEvent(canvas, &me));
+        QVERIFY(!me.isAccepted());
+    }
+
+    {
+        QMouseEvent me(QEvent::MouseButtonRelease, QPointF(51, 51), Qt::LeftButton, Qt::LeftButton,
+                       Qt::NoModifier);
+        me.setAccepted(true);
+        QVERIFY(QCoreApplication::sendEvent(canvas, &me));
+        QVERIFY(!me.isAccepted());
+    }
 
     delete canvas;
 }

@@ -835,7 +835,11 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
     if (!mouseGrabberItem &&
          event->type() == QEvent::MouseButtonPress &&
          (event->button() & event->buttons()) == event->buttons()) {
-        return deliverInitialMousePressEvent(rootItem, event);
+        if (deliverInitialMousePressEvent(rootItem, event))
+            event->accept();
+        else
+            event->ignore();
+        return event->isAccepted();
     }
 
     if (mouseGrabberItem) {
