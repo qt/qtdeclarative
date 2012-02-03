@@ -1028,8 +1028,10 @@ QPixmap QQuickTextPrivate::textDocumentImage(bool drawStyle)
 void QQuickTextPrivate::markDirty()
 {
     Q_Q(QQuickText);
-    if (!invalidateImageCache() && q->isComponentComplete())
+    if (!invalidateImageCache() && q->isComponentComplete()) {
+       updateType = UpdatePaintNode;
        q->update();
+    }
 }
 
 /*!
