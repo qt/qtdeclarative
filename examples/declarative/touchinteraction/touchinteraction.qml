@@ -39,29 +39,19 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "content"
+import "../shared"
 
-Rectangle {
-    width: 490
-    height: 285
-
-    Grid {
-        property int cellWidth: (width - (spacing * (columns - 1))) / columns
-        property int cellHeight: (height - (spacing * (rows - 1))) / rows
-
+Item {
+    height: 480
+    width: 320
+    LauncherList {
+        id: ll
         anchors.fill: parent
-        anchors.margins: 30
-
-        columns: 3
-        rows: 2
-        spacing: 30
-
-        ImageCell { mode: Image.Stretch; caption: "Stretch" }
-        ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
-        ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
-
-        ImageCell { mode: Image.Tile; caption: "Tile" }
-        ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
-        ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
+        Component.onCompleted: {
+            addExample("MouseArea", "Using the basic touch input element", Qt.resolvedUrl("mousearea/mousearea-example.qml"));
+            addExample("Multipoint Flames", "Create multiple flames with multiple fingers", Qt.resolvedUrl("multipointtouch/multiflame.qml"));
+            addExample("Bear-Whack", "Use multiple touches to knock all the bears down",  Qt.resolvedUrl("multipointtouch/bearwhack.qml"));
+            addExample("Flick Resize", "Manipulate images using pinch gestures", Qt.resolvedUrl("pincharea/flickresize.qml"));
+        }
     }
 }

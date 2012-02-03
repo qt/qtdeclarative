@@ -65,7 +65,7 @@ ListView {
         Rectangle {
             id: bg
             anchors.fill: parent
-            color: "black"
+            color: "white"
         }
         MouseArea{
             anchors.fill: parent
@@ -83,6 +83,11 @@ ListView {
         anchors.bottom: parent.bottom
         width: parent.width
         height: 40
+        MouseArea{
+            anchors.fill: parent
+            enabled: ei.visible
+            //Eats mouse events
+        }
         Image {
             source: "back.png"
             anchors.verticalCenter: parent.verticalCenter

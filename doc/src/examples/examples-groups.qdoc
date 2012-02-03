@@ -1,0 +1,100 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \title QML Examples - Internationalization
+    \example declarative/i18n
+    \image qml-i18n-example.png
+    \brief This is an internationalization example
+*/
+/*!
+    \title QML Examples - Shader Effects
+    \example declarative/shadereffects
+    \image qml-shadereffects-example.png
+    \brief This is a shader effects example
+
+    This example demonstrates a couple of visual effects that you can perform
+    with shaders in QtQuick 2.0
+*/
+/*!
+    \title QML Examples - Positioners
+    \example declarative/positioners
+    \brief This is a positioners example
+    \image qml-positioners-example.png
+
+    This example demonstrates the positioners and some of their animations.
+*/
+/*!
+    \title QML Examples - Animation
+    \example declarative/animation
+    \brief This is a collection of QML examples
+    \image qml-animations-example.png
+
+    This is a collection of small QML examples relating to animation. Each example is
+    a small QML file, usually containing or emphasizing a particular element or
+    feature. You can run and observe the behavior of each example.
+*/
+/*!
+    \title QML Examples - Image Elements
+    \example declarative/imageelements
+    \brief This is a collection of QML examples
+    \image qml-imageelements-example.png
+
+    This is a collection of small QML examples relating to image elements. Each example is
+    a small QML file, usually containing or emphasizing a particular element or
+    feature. You can run and observe the behavior of each example.
+*/
+/*!
+    \title QML Examples - Models and Views
+    \example declarative/modelviews
+    \brief This is a collection of QML examples
+    \image qml-modelviews-example.png
+
+    This is a collection of small QML examples relating to models and views. Each example is
+    a small QML file, usually containing or emphasizing a particular element or
+    feature. You can run and observe the behavior of each example.
+*/
+/*!
+    \title QML Examples - Text
+    \example declarative/text
+    \brief This is a collection of QML examples
+    \image qml-text-example.png
+
+    This is a collection of  small QML examples relating to text. Each example is
+    a small QML file, usually containing or emphasizing a particular element or
+    feature. You can run and observe the behavior of each example.
+*/
+/*!
+    \title QML Examples - Touch Interaction
+    \example declarative/touchinteraction
+    \brief This is a collection of QML examples
+    \image qml-touchinteraction-example.png
+
+    This is a collection of  small QML examples relating to touch and multi-point touch. Each example is
+    a small QML file, usually containing or emphasizing a particular element or
+    feature. You can run and observe the behavior of each example.
+*/

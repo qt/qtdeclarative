@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "content"
 
 Image {
     width: 640
@@ -90,13 +91,13 @@ Image {
                     Image {
                         width: 160
                         height: 140
-                        source: "qt-logo.png"
+                        source: "content/qt-logo.png"
                         smooth: true
                     }
                     Image {
                         width: 160
                         height: 140
-                        source: "face-smile.png"
+                        source: "content/face-smile.png"
                         smooth: true
                     }
                 }

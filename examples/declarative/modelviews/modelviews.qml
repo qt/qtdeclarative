@@ -39,29 +39,26 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "content"
+import "../shared"
 
-Rectangle {
-    width: 490
-    height: 285
-
-    Grid {
-        property int cellWidth: (width - (spacing * (columns - 1))) / columns
-        property int cellHeight: (height - (spacing * (rows - 1))) / rows
-
+Item {
+    height: 480
+    width: 480
+    LauncherList {
+        id: ll
         anchors.fill: parent
-        anchors.margins: 30
-
-        columns: 3
-        rows: 2
-        spacing: 30
-
-        ImageCell { mode: Image.Stretch; caption: "Stretch" }
-        ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
-        ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
-
-        ImageCell { mode: Image.Tile; caption: "Tile" }
-        ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
-        ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
+        Component.onCompleted: {
+            addExample("Dynamic List", "A ListView harboring dynamic data",  Qt.resolvedUrl("listview/dynamiclist.qml"));
+            addExample("Expanding Delegates", "Delegates that expand to fill the list when clicked", Qt.resolvedUrl("listview/expandingdelegates.qml"));
+            addExample("Highlight", "Adding a highlight to the current item", Qt.resolvedUrl("listview/highlight.qml"));
+            addExample("Sections", "A ListView with section headers", Qt.resolvedUrl("listview/sections.qml"));
+            addExample("GridView", "A view laid out in a grid", Qt.resolvedUrl("gridview/gridview-example.qml"));
+            addExample("PathView", "A view laid out along a path", Qt.resolvedUrl("pathview/pathview-example.qml"));
+            addExample("Package", "Using a package to transition items between views", Qt.resolvedUrl("package/view.qml"));
+            addExample("Parallax", "Adds a background and a parallax effect to a ListView", Qt.resolvedUrl("parallax/parallax.qml"));
+            addExample("Slideshow", "A model demonstrating delayed image loading", Qt.resolvedUrl("visualdatamodel/slideshow.qml"));
+            addExample("Sorted Model", "Two views on a model, one of which is sorted", Qt.resolvedUrl("visualdatamodel/sortedmodel.qml"));
+            addExample("VisualItemModel", "A model that consists of the actual Items", Qt.resolvedUrl("visualitemmodel/visualitemmodel.qml"));
+        }
     }
 }

@@ -37,31 +37,24 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 import QtQuick 2.0
-import "content"
 
-Rectangle {
-    width: 490
-    height: 285
+Item {
+    property alias mode: image.fillMode
+    property alias caption: captionItem.text
 
-    Grid {
-        property int cellWidth: (width - (spacing * (columns - 1))) / columns
-        property int cellHeight: (height - (spacing * (rows - 1))) / rows
+    width: parent.cellWidth; height: parent.cellHeight
 
-        anchors.fill: parent
-        anchors.margins: 30
+    Image {
+        id: image
+        width: parent.width; height: parent.height - captionItem.height
+        source: "qt-logo.png"
+        clip: true      // only makes a difference if mode is PreserveAspectCrop
+        smooth: true
+    }
 
-        columns: 3
-        rows: 2
-        spacing: 30
-
-        ImageCell { mode: Image.Stretch; caption: "Stretch" }
-        ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
-        ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
-
-        ImageCell { mode: Image.Tile; caption: "Tile" }
-        ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
-        ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
+    Text { 
+        id: captionItem
+        anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom
     }
 }

@@ -37,25 +37,21 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 import QtQuick 2.0
-import "content"
+import "../shared"
 
 Item {
-    property alias mode: image.fillMode
-    property alias caption: captionItem.text
-
-    width: parent.cellWidth; height: parent.cellHeight
-
-    Image {
-        id: image
-        width: parent.width; height: parent.height - captionItem.height
-        source: "content/qt-logo.png"
-        clip: true      // only makes a difference if mode is PreserveAspectCrop
-        smooth: true
-    }
-
-    Text { 
-        id: captionItem
-        anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom
+    height: 480
+    width: 480
+    LauncherList {
+        id: ll
+        anchors.fill: parent
+        Component.onCompleted: {
+            addExample("Hello", "An Animated Hello World", Qt.resolvedUrl("fonts/hello.qml"));
+            addExample("Fonts", "Using various fonts with a Text element", Qt.resolvedUrl("fonts/fonts.qml"));
+            addExample("Available Fonts", "A list of your available fonts",  Qt.resolvedUrl("fonts/availableFonts.qml"));
+            addExample("Banner", "Large, scrolling text", Qt.resolvedUrl("fonts/banner.qml"));
+        }
     }
 }

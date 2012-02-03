@@ -39,29 +39,20 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "content"
+import "../shared"
 
-Rectangle {
-    width: 490
-    height: 285
-
-    Grid {
-        property int cellWidth: (width - (spacing * (columns - 1))) / columns
-        property int cellHeight: (height - (spacing * (rows - 1))) / rows
-
+Item {
+    height: 480
+    width: 640
+    LauncherList {
+        id: ll
         anchors.fill: parent
-        anchors.margins: 30
-
-        columns: 3
-        rows: 2
-        spacing: 30
-
-        ImageCell { mode: Image.Stretch; caption: "Stretch" }
-        ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
-        ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
-
-        ImageCell { mode: Image.Tile; caption: "Tile" }
-        ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
-        ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
+        Component.onCompleted: {
+            addExample("BorderImage", "An image with scaled borders",  Qt.resolvedUrl("borderimage.qml"));
+            addExample("Image", "A showcase of the options available to Image", Qt.resolvedUrl("image.qml"));
+            addExample("Shadows", "Rectangles with a drop-shadow effect", Qt.resolvedUrl("shadows.qml"));
+            addExample("Simple Sprite", "A simple sprite-based animation", Qt.resolvedUrl("simplesprite.qml"));
+            addExample("Sprite Image", "A sprite-based animation with complex transitions", Qt.resolvedUrl("spriteimage.qml"));
+        }
     }
 }

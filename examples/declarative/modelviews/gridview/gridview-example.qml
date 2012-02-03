@@ -70,6 +70,10 @@ Rectangle {
                 anchors { top: myIcon.bottom; horizontalCenter: parent.horizontalCenter }
                 text: name
             }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: parent.GridView.view.currentIndex = index
+            }
         }
     }
 
