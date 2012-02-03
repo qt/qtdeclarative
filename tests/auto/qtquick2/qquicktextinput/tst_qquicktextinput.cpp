@@ -1411,17 +1411,25 @@ void tst_qquicktextinput::verticalAlignment()
 
     QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignTop);
     QVERIFY(textInputPrivate->boundingRect.bottom() - textInputPrivate->vscroll < canvas.height() / 2);
+    QVERIFY(textInput->cursorRectangle().bottom() < canvas.height() / 2);
+    QVERIFY(textInput->positionToRectangle(0).bottom() < canvas.height() / 2);
 
     // bottom aligned
     textInput->setVAlign(QQuickTextInput::AlignBottom);
     QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignBottom);
     QVERIFY(textInputPrivate->boundingRect.top() - textInputPrivate->vscroll > canvas.height() / 2);
+    QVERIFY(textInput->cursorRectangle().top() > canvas.height() / 2);
+    QVERIFY(textInput->positionToRectangle(0).top() > canvas.height() / 2);
 
     // explicitly center aligned
     textInput->setVAlign(QQuickTextInput::AlignVCenter);
     QCOMPARE(textInput->vAlign(), QQuickTextInput::AlignVCenter);
     QVERIFY(textInputPrivate->boundingRect.top() - textInputPrivate->vscroll < canvas.height() / 2);
     QVERIFY(textInputPrivate->boundingRect.bottom() - textInputPrivate->vscroll > canvas.height() / 2);
+    QVERIFY(textInput->cursorRectangle().top() < canvas.height() / 2);
+    QVERIFY(textInput->cursorRectangle().bottom() > canvas.height() / 2);
+    QVERIFY(textInput->positionToRectangle(0).top() < canvas.height() / 2);
+    QVERIFY(textInput->positionToRectangle(0).bottom() > canvas.height() / 2);
 }
 
 void tst_qquicktextinput::boundingRect()
@@ -2374,6 +2382,9 @@ void tst_qquicktextinput::cursorVisible()
     QCOMPARE(spy.count(), 7);
 }
 
+static QRect round(const QRectF &r) {
+    return QRect(qRound(r.left()), qRound(r.top()), qCeil(r.width()), qCeil(r.height())); }
+
 void tst_qquicktextinput::cursorRectangle()
 {
 
@@ -2413,6 +2424,7 @@ void tst_qquicktextinput::cursorRectangle()
         QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
         QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
     }
 
     // Check the cursor rectangle remains within the input bounding rect when auto scrolling.
@@ -2423,6 +2435,7 @@ void tst_qquicktextinput::cursorRectangle()
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
     }
 
     for (int i = text.length() - 2; i >= 0; --i) {
@@ -2431,10 +2444,12 @@ void tst_qquicktextinput::cursorRectangle()
         QCOMPARE(r.top(), 0);
         QVERIFY(r.right() >= 0);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
     }
 
-    // Check vertical scrolling with word wrap.
+    // Check position with word wrap.
     input.setWrapMode(QQuickTextInput::WordWrap);
+    input.setAutoScroll(false);
     for (int i = 0; i <= 5; ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
@@ -2443,29 +2458,66 @@ void tst_qquicktextinput::cursorRectangle()
         QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
         QCOMPARE(r.top(), 0);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
+    }
+
+    input.setCursorPosition(6);
+    r = input.cursorRectangle();
+    QCOMPARE(r.left(), 0);
+    QVERIFY(r.top() > line.height() - error);
+    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+    QCOMPARE(round(input.positionToRectangle(6)), r);
+
+    for (int i = 7; i < text.length(); ++i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+        QVERIFY(r.top() > line.height() - error);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
+    }
+
+    // Check vertical scrolling with word wrap.
+    input.setAutoScroll(true);
+    for (int i = 0; i <= 5; ++i) {
+        input.setCursorPosition(i);
+        r = input.cursorRectangle();
+
+        QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
+        QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
+        QCOMPARE(r.top(), 0);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(round(input.positionToRectangle(i))), r);
     }
 
     input.setCursorPosition(6);
     r = input.cursorRectangle();
     QCOMPARE(r.left(), 0);
     QVERIFY(r.bottom() >= input.height() - error);
+    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+    QCOMPARE(round(input.positionToRectangle(6)), r);
 
     for (int i = 7; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height() - error);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
     }
 
     for (int i = text.length() - 2; i >= 6; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height() - error);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
     }
 
     for (int i = 5; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QCOMPARE(r.top(), 0);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
+        QCOMPARE(round(input.positionToRectangle(i)), r);
     }
 
     input.setText("Hi!");

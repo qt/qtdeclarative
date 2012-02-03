@@ -1299,11 +1299,13 @@ void QQuickTextInput::createCursor()
 QRectF QQuickTextInput::positionToRectangle(int pos) const
 {
     Q_D(const QQuickTextInput);
-    if (pos > d->m_cursor)
+    if (d->m_echoMode == NoEcho)
+        pos = 0;
+    else if (pos > d->m_cursor)
         pos += d->preeditAreaText().length();
-    QTextLine l = d->m_textLayout.lineAt(0);
+    QTextLine l = d->m_textLayout.lineForTextPosition(pos);
     return l.isValid()
-            ? QRectF(l.cursorToX(pos) - d->hscroll, 0.0, d->m_cursorWidth, l.height())
+            ? QRectF(l.cursorToX(pos) - d->hscroll, l.y() - d->vscroll, d->m_cursorWidth, l.height())
             : QRectF();
 }
 
