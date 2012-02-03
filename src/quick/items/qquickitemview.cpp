@@ -817,9 +817,6 @@ void QQuickItemView::trackedPositionChanged()
     if (d->moveReason == QQuickItemViewPrivate::SetIndex) {
         qreal trackedPos = d->trackedItem->position();
         qreal trackedSize = d->trackedItem->size();
-        if (d->trackedItem != d->currentItem) {
-            trackedSize += d->currentItem->sectionSize();
-        }
         qreal viewPos = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
         qreal pos = viewPos;
         if (d->haveHighlightRange) {
@@ -834,6 +831,11 @@ void QQuickItemView::trackedPositionChanged()
                     pos = d->startPosition();
             }
         } else {
+            if (d->trackedItem != d->currentItem) {
+                // also make section header visible
+                trackedPos -= d->currentItem->sectionSize();
+                trackedSize += d->currentItem->sectionSize();
+            }
             qreal trackedEndPos = d->trackedItem->endPosition();
             qreal toItemPos = d->currentItem->position();
             qreal toItemEndPos = d->currentItem->endPosition();

@@ -2118,6 +2118,13 @@ void tst_QQuickListView::sectionsDelegate()
         QTRY_COMPARE(item->y(), qreal(i*20*6));
     }
 
+    // ensure section header is maintained in view
+    listview->setCurrentIndex(20);
+    QTRY_VERIFY(listview->contentY() >= 200.0);
+    listview->setCurrentIndex(0);
+    QTRY_COMPARE(listview->contentY(), 0.0);
+
+    // change section
     model.modifyItem(0, "One", "aaa");
     model.modifyItem(1, "Two", "aaa");
     model.modifyItem(2, "Three", "aaa");
