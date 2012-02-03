@@ -103,10 +103,14 @@ QQuickItemParticle::QQuickItemParticle(QQuickItem *parent) :
     QQuickParticlePainter(parent), m_fade(true), m_delegate(0)
 {
     setFlag(QQuickItem::ItemHasContents);
-    clock = new Clock(this, this);
+    clock = new Clock(this);
     clock->start();
 }
 
+QQuickItemParticle::~QQuickItemParticle()
+{
+    delete clock;
+}
 
 void QQuickItemParticle::freeze(QQuickItem* item)
 {

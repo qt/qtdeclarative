@@ -52,7 +52,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeSpringAnimationPrivate;
-class Q_AUTOTEST_EXPORT QDeclarativeSpringAnimation : public QDeclarativeNumberAnimation
+class Q_QUICK_PRIVATE_EXPORT QDeclarativeSpringAnimation : public QDeclarativeNumberAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarativeSpringAnimation)
@@ -87,12 +87,9 @@ public:
     qreal modulus() const;
     void setModulus(qreal modulus);
 
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-
-protected:
-    virtual QAbstractAnimation *qtAnimation();
 
 Q_SIGNALS:
     void modulusChanged();

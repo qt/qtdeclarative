@@ -65,17 +65,12 @@ class QQuickParentAnimationPrivate : public QDeclarativeAnimationGroupPrivate
 {
     Q_DECLARE_PUBLIC(QQuickParentAnimation)
 public:
-    QQuickParentAnimationPrivate()
-    : QDeclarativeAnimationGroupPrivate(), target(0), newParent(0),
-       via(0), topLevelGroup(0), startAction(0), endAction(0) {}
+ QQuickParentAnimationPrivate()
+    : QDeclarativeAnimationGroupPrivate(), target(0), newParent(0), via(0) {}
 
     QQuickItem *target;
     QQuickItem *newParent;
     QQuickItem *via;
-
-    QSequentialAnimationGroup *topLevelGroup;
-    QActionAnimation *startAction;
-    QActionAnimation *endAction;
 
     QPointF computeTransformOrigin(QQuickItem::TransformOrigin origin, qreal width, qreal height) const;
 };
@@ -84,12 +79,11 @@ class QQuickAnchorAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickAnchorAnimation)
 public:
-    QQuickAnchorAnimationPrivate() : rangeIsSet(false), va(0),
-        interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)) {}
+    QQuickAnchorAnimationPrivate() : interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)), duration(250) {}
 
-    bool rangeIsSet;
-    QDeclarativeBulkValueAnimator *va;
     QVariantAnimation::Interpolator interpolator;
+    int duration;
+    QEasingCurve easing;
     QList<QQuickItem*> targets;
 };
 
@@ -102,7 +96,7 @@ public:
         entryInterval(0), exitInterval(0) {}
     ~QQuickPathAnimationUpdater() {}
 
-        void setValue(qreal v);
+    void setValue(qreal v);
 
     QDeclarativePath *path;
 
@@ -129,22 +123,37 @@ public:
     QDeclarativeNullableValue<qreal> startRotation;
 };
 
+class QQuickPathAnimationPrivate;
+class QQuickPathAnimationAnimator : public QDeclarativeBulkValueAnimator
+{
+public:
+    QQuickPathAnimationAnimator(QQuickPathAnimationPrivate * = 0);
+    ~QQuickPathAnimationAnimator();
+
+    void clearTemplate() { animationTemplate = 0; }
+
+    QQuickPathAnimationUpdater *pathUpdater() { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
+private:
+    QQuickPathAnimationPrivate *animationTemplate;
+};
+
 class QQuickPathAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPathAnimation)
 public:
     QQuickPathAnimationPrivate() : path(0), target(0),
-        rangeIsSet(false), orientation(QQuickPathAnimation::Fixed), entryDuration(0), exitDuration(0), pa(0) {}
+        orientation(QQuickPathAnimation::Fixed), entryDuration(0), exitDuration(0), duration(250) {}
 
     QDeclarativePath *path;
     QQuickItem *target;
-    bool rangeIsSet;
     QQuickPathAnimation::Orientation orientation;
     QPointF anchorPoint;
     qreal entryDuration;
     qreal exitDuration;
     QDeclarativeNullableValue<qreal> endRotation;
-    QDeclarativeBulkValueAnimator *pa;
+    int duration;
+    QEasingCurve easingCurve;
+    QHash<QQuickItem*, QQuickPathAnimationAnimator* > activeAnimations;
 };
 
 

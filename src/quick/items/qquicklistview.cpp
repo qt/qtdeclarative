@@ -168,6 +168,10 @@ public:
         , sectionCriteria(0), currentSectionItem(0), nextSectionItem(0)
         , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
     {}
+    ~QQuickListViewPrivate() {
+        delete highlightPosAnimator;
+        delete highlightSizeAnimator;
+    }
 
     friend class QQuickViewSection;
 };
@@ -787,13 +791,13 @@ void QQuickListViewPrivate::createHighlight()
                 newHighlight->setPosition(static_cast<FxListItemSG*>(currentItem)->itemPosition());
             }
             const QLatin1String posProp(orient == QQuickListView::Vertical ? "y" : "x");
-            highlightPosAnimator = new QSmoothedAnimation(q);
+            highlightPosAnimator = new QSmoothedAnimation;
             highlightPosAnimator->target = QDeclarativeProperty(item, posProp);
             highlightPosAnimator->velocity = highlightMoveSpeed;
             highlightPosAnimator->userDuration = highlightMoveDuration;
 
             const QLatin1String sizeProp(orient == QQuickListView::Vertical ? "height" : "width");
-            highlightSizeAnimator = new QSmoothedAnimation(q);
+            highlightSizeAnimator = new QSmoothedAnimation;
             highlightSizeAnimator->velocity = highlightResizeSpeed;
             highlightSizeAnimator->userDuration = highlightResizeDuration;
             highlightSizeAnimator->target = QDeclarativeProperty(item, sizeProp);

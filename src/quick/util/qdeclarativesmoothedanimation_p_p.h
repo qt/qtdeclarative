@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVESMOOTHEDANIMATION_P_H
-#define QDECLARATIVESMOOTHEDANIMATION_P_H
+#ifndef QDECLARATIVESMOOTHEDANIMATION2_P_H
+#define QDECLARATIVESMOOTHEDANIMATION2_P_H
 
 //
 //  W A R N I N G
@@ -58,18 +58,33 @@
 
 #include "qdeclarativeanimation_p_p.h"
 
-#include <qparallelanimationgroup.h>
+#include "private/qparallelanimationgroupjob_p.h"
 
 #include <private/qobject_p.h>
 #include <QBasicTimer>
 
 QT_BEGIN_NAMESPACE
-
-class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation
+class QSmoothedAnimation;
+class QSmoothedAnimationTimer : public QTimer
 {
+    Q_OBJECT
 public:
-    QSmoothedAnimation(QObject *parent=0);
+    explicit QSmoothedAnimationTimer(QSmoothedAnimation *animation, QObject *parent = 0);
+    ~QSmoothedAnimationTimer();
+public Q_SLOTS:
+    void stopAnimation();
+private:
+    QSmoothedAnimation *m_animation;
+};
 
+class QDeclarativeSmoothedAnimationPrivate;
+class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimationJob
+{
+    Q_DISABLE_COPY(QSmoothedAnimation)
+public:
+    QSmoothedAnimation(QDeclarativeSmoothedAnimationPrivate * = 0);
+
+    ~QSmoothedAnimation();
     qreal to;
     qreal velocity;
     int userDuration;
@@ -86,10 +101,12 @@ public:
     void restart();
     void init();
 
+    void prepareForRestart();
+    void clearTemplate() { animationTemplate = 0; }
+
 protected:
     virtual void updateCurrentTime(int);
-    virtual void updateState(QAbstractAnimation::State, QAbstractAnimation::State);
-    virtual void timerEvent(QTimerEvent *);
+    virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
 
 private:
     qreal easeFollow(qreal);
@@ -112,11 +129,12 @@ private:
     qreal s;  // Total s
 
     int lastTime;
+    bool useDelta;
 
     bool recalc();
     void delayedStop();
-
-    QBasicTimer delayedStopTimer;
+    QSmoothedAnimationTimer *delayedStopTimer;
+    QDeclarativeSmoothedAnimationPrivate *animationTemplate;
 };
 
 class QDeclarativeSmoothedAnimationPrivate : public QDeclarativePropertyAnimationPrivate
@@ -124,13 +142,13 @@ class QDeclarativeSmoothedAnimationPrivate : public QDeclarativePropertyAnimatio
     Q_DECLARE_PUBLIC(QDeclarativeSmoothedAnimation)
 public:
     QDeclarativeSmoothedAnimationPrivate();
+    ~QDeclarativeSmoothedAnimationPrivate();
     void updateRunningAnimations();
 
-    QParallelAnimationGroup *wrapperGroup;
     QSmoothedAnimation *anim;
     QHash<QDeclarativeProperty, QSmoothedAnimation*> activeAnimations;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVESMOOTHEDANIMATION_P_H
+#endif // QDECLARATIVESMOOTHEDANIMATION2_P_H

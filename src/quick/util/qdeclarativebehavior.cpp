@@ -47,21 +47,26 @@
 #include <private/qdeclarativeproperty_p.h>
 #include <private/qdeclarativeguard_p.h>
 #include <private/qdeclarativeengine_p.h>
+#include <private/qabstractanimationjob_p.h>
+#include <private/qdeclarativetransition_p.h>
 
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeBehaviorPrivate : public QObjectPrivate
+class QDeclarativeBehaviorPrivate : public QObjectPrivate, public QAnimation2ChangeListener
 {
     Q_DECLARE_PUBLIC(QDeclarativeBehavior)
 public:
-    QDeclarativeBehaviorPrivate() : animation(0), enabled(true), finalized(false)
+    QDeclarativeBehaviorPrivate() : animation(0), animationInstance(0), enabled(true), finalized(false)
       , blockRunningChanged(false) {}
+
+    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
 
     QDeclarativeProperty property;
     QVariant targetValue;
     QDeclarativeGuard<QDeclarativeAbstractAnimation> animation;
+    QAbstractAnimationJob *animationInstance;
     bool enabled;
     bool finalized;
     bool blockRunningChanged;
@@ -102,6 +107,8 @@ QDeclarativeBehavior::QDeclarativeBehavior(QObject *parent)
 
 QDeclarativeBehavior::~QDeclarativeBehavior()
 {
+    Q_D(QDeclarativeBehavior);
+    delete d->animationInstance;
 }
 
 /*!
@@ -129,21 +136,15 @@ void QDeclarativeBehavior::setAnimation(QDeclarativeAbstractAnimation *animation
     if (d->animation) {
         d->animation->setDefaultTarget(d->property);
         d->animation->setDisableUserControl();
-        FAST_CONNECT(d->animation->qtAnimation(),
-                     SIGNAL(stateChanged(QAbstractAnimation::State,QAbstractAnimation::State)),
-                     this,
-                     SLOT(qtAnimationStateChanged(QAbstractAnimation::State,QAbstractAnimation::State)))
     }
 }
 
 
-void QDeclarativeBehavior::qtAnimationStateChanged(QAbstractAnimation::State newState,QAbstractAnimation::State)
+void QDeclarativeBehaviorPrivate::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState,QAbstractAnimationJob::State)
 {
-    Q_D(QDeclarativeBehavior);
-    if (!d->blockRunningChanged)
-        d->animation->notifyRunningChanged(newState == QAbstractAnimation::Running);
+    if (!blockRunningChanged)
+        animation->notifyRunningChanged(newState == QAbstractAnimationJob::Running);
 }
-
 
 /*!
     \qmlproperty bool QtQuick2::Behavior::enabled
@@ -187,10 +188,10 @@ void QDeclarativeBehavior::write(const QVariant &value)
     const QVariant &currentValue = d->property.read();
     d->targetValue = value;
 
-    if (d->animation->qtAnimation()->duration() != -1
-            && d->animation->qtAnimation()->state() != QAbstractAnimation::Stopped) {
+    if (d->animationInstance && d->animationInstance->duration() != -1
+            && !d->animationInstance->isStopped()) {
         d->blockRunningChanged = true;
-        d->animation->qtAnimation()->stop();
+        d->animationInstance->stop();
     }
 
     QDeclarativeStateOperation::ActionList actions;
@@ -201,8 +202,14 @@ void QDeclarativeBehavior::write(const QVariant &value)
     actions << action;
 
     QList<QDeclarativeProperty> after;
-    d->animation->transition(actions, after, QDeclarativeAbstractAnimation::Forward);
-    d->animation->qtAnimation()->start();
+    QAbstractAnimationJob *prev = d->animationInstance;
+    d->animationInstance = d->animation->transition(actions, after, QDeclarativeAbstractAnimation::Forward);
+    if (d->animationInstance != prev) {
+        d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
+        if (prev)
+            delete prev;
+    }
+    d->animationInstance->start();
     d->blockRunningChanged = false;
     if (!after.contains(d->property))
         QDeclarativePropertyPrivate::write(d->property, value, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
@@ -216,7 +223,10 @@ void QDeclarativeBehavior::setTarget(const QDeclarativeProperty &property)
         d->animation->setDefaultTarget(property);
 
     QDeclarativeEnginePrivate *engPriv = QDeclarativeEnginePrivate::get(qmlEngine(this));
-    engPriv->registerFinalizeCallback(this, this->metaObject()->indexOfSlot("componentFinalized()"));
+    static int finalizedIdx = -1;
+    if (finalizedIdx < 0)
+        finalizedIdx = metaObject()->indexOfSlot("componentFinalized()");
+    engPriv->registerFinalizeCallback(this, finalizedIdx);
 }
 
 void QDeclarativeBehavior::componentFinalized()

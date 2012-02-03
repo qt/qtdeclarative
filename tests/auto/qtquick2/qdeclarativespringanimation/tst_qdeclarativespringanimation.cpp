@@ -88,7 +88,9 @@ void tst_qdeclarativespringanimation::values()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, testFileUrl("springanimation2.qml"));
-    QDeclarativeSpringAnimation *obj = qobject_cast<QDeclarativeSpringAnimation*>(c.create());
+    QObject *root = c.create();
+
+    QDeclarativeSpringAnimation *obj = root->findChild<QDeclarativeSpringAnimation*>();
 
     QVERIFY(obj != 0);
 

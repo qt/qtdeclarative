@@ -59,6 +59,7 @@ class QQuickItemParticle : public QQuickParticlePainter
     Q_PROPERTY(QDeclarativeComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
 public:
     explicit QQuickItemParticle(QQuickItem *parent = 0);
+    ~QQuickItemParticle();
 
     bool fade() const { return m_fade; }
 

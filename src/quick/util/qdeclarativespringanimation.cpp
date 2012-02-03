@@ -43,6 +43,7 @@
 
 #include "qdeclarativeanimation_p_p.h"
 #include <private/qdeclarativeproperty_p.h>
+#include "private/qparallelanimationgroupjob_p.h"
 
 #include <QtCore/qdebug.h>
 
@@ -51,29 +52,39 @@
 #include <limits.h>
 #include <math.h>
 
+#define DELAY_STOP_TIMER_INTERVAL 32
+
 QT_BEGIN_NAMESPACE
 
-
-class QDeclarativeSpringAnimationPrivate : public QDeclarativePropertyAnimationPrivate
+class QDeclarativeSpringAnimationPrivate;
+class Q_AUTOTEST_EXPORT QSpringAnimation : public QAbstractAnimationJob
 {
-    Q_DECLARE_PUBLIC(QDeclarativeSpringAnimation)
+    Q_DISABLE_COPY(QSpringAnimation)
 public:
+    QSpringAnimation(QDeclarativeSpringAnimationPrivate * = 0);
 
+    ~QSpringAnimation();
+    int duration() const;
+    void restart();
+    void init();
 
-    struct SpringAnimation {
-        SpringAnimation()
-            : currentValue(0), to(0), velocity(0), start(0), duration(0) {}
-        qreal currentValue;
-        qreal to;
-        qreal velocity;
-        int start;
-        int duration;
-    };
-    QHash<QDeclarativeProperty, SpringAnimation> activeAnimations;
-
-    qreal maxVelocity;
-    qreal velocityms;
+    qreal currentValue;
+    qreal to;
+    qreal velocity;
+    int startTime;
+    int dura;
     int lastTime;
+    int stopTime;
+    enum Mode {
+        Track,
+        Velocity,
+        Spring
+    };
+    Mode mode;
+    QDeclarativeProperty target;
+
+    qreal velocityms;
+    qreal maxVelocity;
     qreal mass;
     qreal spring;
     qreal damping;
@@ -82,75 +93,161 @@ public:
 
     bool useMass : 1;
     bool haveModulus : 1;
+    bool useDelta : 1;
+    typedef QHash<QDeclarativeProperty, QSpringAnimation*> ActiveAnimationHash;
 
-    enum Mode {
-        Track,
-        Velocity,
-        Spring
-    };
-    Mode mode;
+    void clearTemplate() { animationTemplate = 0; }
 
-    QDeclarativeSpringAnimationPrivate()
-          : maxVelocity(0), velocityms(0), lastTime(0)
-          , mass(1.0), spring(0.), damping(0.), epsilon(0.01)
-          , modulus(0.0), useMass(false), haveModulus(false)
-          , mode(Track), clock(0)
-    { }
+protected:
+    virtual void updateCurrentTime(int time);
+    virtual void updateState(QAbstractAnimationJob::State, QAbstractAnimationJob::State);
 
-    void tick(int time);
-    bool animate(const QDeclarativeProperty &property, SpringAnimation &animation, int elapsed);
-    void updateMode();
-
-    typedef QTickAnimationProxy<QDeclarativeSpringAnimationPrivate, &QDeclarativeSpringAnimationPrivate::tick> Clock;
-    Clock *clock;
+private:
+    QDeclarativeSpringAnimationPrivate *animationTemplate;
 };
 
-void QDeclarativeSpringAnimationPrivate::tick(int time)
+class QDeclarativeSpringAnimationPrivate : public QDeclarativePropertyAnimationPrivate
+{
+    Q_DECLARE_PUBLIC(QDeclarativeSpringAnimation)
+public:
+    QDeclarativeSpringAnimationPrivate()
+    : QDeclarativePropertyAnimationPrivate()
+    , velocityms(0)
+    , maxVelocity(0)
+    , mass(1.0)
+    , spring(0.)
+    , damping(0.)
+    , epsilon(0.01)
+    , modulus(0.0)
+    , useMass(false)
+    , haveModulus(false)
+    , mode(QSpringAnimation::Track)
+    { elapsed.start(); }
+
+    void updateMode();
+    qreal velocityms;
+    qreal maxVelocity;
+    qreal mass;
+    qreal spring;
+    qreal damping;
+    qreal epsilon;
+    qreal modulus;
+
+    bool useMass : 1;
+    bool haveModulus : 1;
+    QSpringAnimation::Mode mode;
+
+    QSpringAnimation::ActiveAnimationHash activeAnimations;
+    QElapsedTimer elapsed;
+};
+
+QSpringAnimation::QSpringAnimation(QDeclarativeSpringAnimationPrivate *priv)
+    : QAbstractAnimationJob()
+    , currentValue(0)
+    , to(0)
+    , velocity(0)
+    , startTime(0)
+    , dura(0)
+    , lastTime(0)
+    , stopTime(-1)
+    , mode(Track)
+    , velocityms(0)
+    , maxVelocity(0)
+    , mass(1.0)
+    , spring(0.)
+    , damping(0.)
+    , epsilon(0.01)
+    , modulus(0.0)
+    , useMass(false)
+    , haveModulus(false)
+    , useDelta(false)
+    , animationTemplate(priv)
+{
+}
+
+QSpringAnimation::~QSpringAnimation()
+{
+    if (animationTemplate) {
+        if (target.object()) {
+            QSpringAnimation::ActiveAnimationHash::iterator it =
+                    animationTemplate->activeAnimations.find(target);
+            if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+                animationTemplate->activeAnimations.erase(it);
+        } else {
+            //target is no longer valid, need to search linearly
+            QSpringAnimation::ActiveAnimationHash::iterator it;
+            for (it = animationTemplate->activeAnimations.begin(); it != animationTemplate->activeAnimations.end(); ++it) {
+                if (it.value() == this) {
+                    animationTemplate->activeAnimations.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+int QSpringAnimation::duration() const
+{
+    return -1;
+}
+
+void QSpringAnimation::restart()
+{
+    if (isRunning() || (stopTime != -1 && (animationTemplate->elapsed.elapsed() - stopTime) < DELAY_STOP_TIMER_INTERVAL)) {
+        useDelta = true;
+        init();
+        lastTime = 0;
+    } else {
+        useDelta = false;
+        //init() will be triggered when group starts
+    }
+}
+
+void QSpringAnimation::init()
+{
+    lastTime = startTime = 0;
+    stopTime = -1;
+}
+
+void QSpringAnimation::updateCurrentTime(int time)
 {
     if (mode == Track) {
-        clock->stop();
+        stop();
         return;
     }
-    int elapsed = time - lastTime;
+
+    int elapsed = useDelta ? QDeclarativeAnimationTimer::instance()->currentDelta() : time - lastTime;
+    if (useDelta) {
+        startTime = time - elapsed;
+        useDelta = false;
+    }
+
     if (!elapsed)
         return;
+
+    int count = elapsed / 16;
 
     if (mode == Spring) {
         if (elapsed < 16) // capped at 62fps.
             return;
-        int count = elapsed / 16;
         lastTime = time - (elapsed - count * 16);
     } else {
         lastTime = time;
     }
 
-    QMutableHashIterator<QDeclarativeProperty, SpringAnimation> it(activeAnimations);
-    while (it.hasNext()) {
-        it.next();
-        if (animate(it.key(), it.value(), elapsed))
-            it.remove();
-    }
+    qreal srcVal = to;
 
-    if (activeAnimations.isEmpty())
-        clock->stop();
-}
-
-bool QDeclarativeSpringAnimationPrivate::animate(const QDeclarativeProperty &property, SpringAnimation &animation, int elapsed)
-{
-    qreal srcVal = animation.to;
-
-    bool stop = false;
+    bool stopped = false;
 
     if (haveModulus) {
-        animation.currentValue = fmod(animation.currentValue, modulus);
+        currentValue = fmod(currentValue, modulus);
         srcVal = fmod(srcVal, modulus);
     }
     if (mode == Spring) {
         // Real men solve the spring DEs using RK4.
         // We'll do something much simpler which gives a result that looks fine.
-        int count = elapsed / 16;
         for (int i = 0; i < count; ++i) {
-            qreal diff = srcVal - animation.currentValue;
+            qreal diff = srcVal - currentValue;
             if (haveModulus && qAbs(diff) > modulus / 2) {
                 if (diff < 0)
                     diff += modulus;
@@ -158,31 +255,31 @@ bool QDeclarativeSpringAnimationPrivate::animate(const QDeclarativeProperty &pro
                     diff -= modulus;
             }
             if (useMass)
-                animation.velocity = animation.velocity + (spring * diff - damping * animation.velocity) / mass;
+                velocity = velocity + (spring * diff - damping * velocity) / mass;
             else
-                animation.velocity = animation.velocity + spring * diff - damping * animation.velocity;
+                velocity = velocity + spring * diff - damping * velocity;
             if (maxVelocity > 0.) {
                 // limit velocity
-                if (animation.velocity > maxVelocity)
-                    animation.velocity = maxVelocity;
-                else if (animation.velocity < -maxVelocity)
-                    animation.velocity = -maxVelocity;
+                if (velocity > maxVelocity)
+                    velocity = maxVelocity;
+                else if (velocity < -maxVelocity)
+                    velocity = -maxVelocity;
             }
-            animation.currentValue += animation.velocity * 16.0 / 1000.0;
+            currentValue += velocity * 16.0 / 1000.0;
             if (haveModulus) {
-                animation.currentValue = fmod(animation.currentValue, modulus);
-                if (animation.currentValue < 0.0)
-                    animation.currentValue += modulus;
+                currentValue = fmod(currentValue, modulus);
+                if (currentValue < 0.0)
+                    currentValue += modulus;
             }
         }
-        if (qAbs(animation.velocity) < epsilon && qAbs(srcVal - animation.currentValue) < epsilon) {
-            animation.velocity = 0.0;
-            animation.currentValue = srcVal;
-            stop = true;
+        if (qAbs(velocity) < epsilon && qAbs(srcVal - currentValue) < epsilon) {
+            velocity = 0.0;
+            currentValue = srcVal;
+            stopped = true;
         }
     } else {
         qreal moveBy = elapsed * velocityms;
-        qreal diff = srcVal - animation.currentValue;
+        qreal diff = srcVal - currentValue;
         if (haveModulus && qAbs(diff) > modulus / 2) {
             if (diff < 0)
                 diff += modulus;
@@ -190,45 +287,54 @@ bool QDeclarativeSpringAnimationPrivate::animate(const QDeclarativeProperty &pro
                 diff -= modulus;
         }
         if (diff > 0) {
-            animation.currentValue += moveBy;
+            currentValue += moveBy;
             if (haveModulus)
-                animation.currentValue = fmod(animation.currentValue, modulus);
+                currentValue = fmod(currentValue, modulus);
         } else {
-            animation.currentValue -= moveBy;
-            if (haveModulus && animation.currentValue < 0.0)
-                animation.currentValue = fmod(animation.currentValue, modulus) + modulus;
+            currentValue -= moveBy;
+            if (haveModulus && currentValue < 0.0)
+                currentValue = fmod(currentValue, modulus) + modulus;
         }
-        if (lastTime - animation.start >= animation.duration) {
-            animation.currentValue = animation.to;
-            stop = true;
+        if (lastTime - startTime >= dura) {
+            currentValue = to;
+            stopped = true;
         }
     }
 
-    qreal old_to = animation.to;
+    qreal old_to = to;
 
-    QDeclarativePropertyPrivate::write(property, animation.currentValue,
+    QDeclarativePropertyPrivate::write(target, currentValue,
                                        QDeclarativePropertyPrivate::BypassInterceptor |
                                        QDeclarativePropertyPrivate::DontRemoveBinding);
 
-    return (stop && old_to == animation.to); // do not stop if we got restarted
+    if (stopped && old_to == to) { // do not stop if we got restarted
+        stopTime = animationTemplate->elapsed.elapsed();
+        stop();
+    }
+}
+
+void QSpringAnimation::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State /*oldState*/)
+{
+    if (newState == QAbstractAnimationJob::Running)
+        init();
 }
 
 void QDeclarativeSpringAnimationPrivate::updateMode()
 {
     if (spring == 0. && maxVelocity == 0.)
-        mode = Track;
+        mode = QSpringAnimation::Track;
     else if (spring > 0.)
-        mode = Spring;
+        mode = QSpringAnimation::Spring;
     else {
-        mode = Velocity;
-        QHash<QDeclarativeProperty, SpringAnimation>::iterator it;
+        mode = QSpringAnimation::Velocity;
+        QSpringAnimation::ActiveAnimationHash::iterator it;
         for (it = activeAnimations.begin(); it != activeAnimations.end(); ++it) {
-            SpringAnimation &animation = *it;
-            animation.start = lastTime;
-            qreal dist = qAbs(animation.currentValue - animation.to);
+            QSpringAnimation *animation = *it;
+            animation->startTime = animation->lastTime;
+            qreal dist = qAbs(animation->currentValue - animation->to);
             if (haveModulus && dist > modulus / 2)
                 dist = modulus - fmod(dist, modulus);
-            animation.duration = dist / velocityms;
+            animation->dura = dist / velocityms;
         }
     }
 }
@@ -264,12 +370,15 @@ void QDeclarativeSpringAnimationPrivate::updateMode()
 QDeclarativeSpringAnimation::QDeclarativeSpringAnimation(QObject *parent)
 : QDeclarativeNumberAnimation(*(new QDeclarativeSpringAnimationPrivate),parent)
 {
-    Q_D(QDeclarativeSpringAnimation);
-    d->clock = new QDeclarativeSpringAnimationPrivate::Clock(d, this);
 }
 
 QDeclarativeSpringAnimation::~QDeclarativeSpringAnimation()
 {
+    Q_D(QDeclarativeSpringAnimation);
+    QSpringAnimation::ActiveAnimationHash::iterator it;
+    for (it = d->activeAnimations.begin(); it != d->activeAnimations.end(); ++it) {
+        it.value()->clearTemplate();
+    }
 }
 
 /*!
@@ -415,48 +524,69 @@ void QDeclarativeSpringAnimation::setMass(qreal mass)
     }
 }
 
-void QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
-                                             QDeclarativeProperties &modified,
-                                             TransitionDirection direction)
+QAbstractAnimationJob* QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
+                                                                   QDeclarativeProperties &modified,
+                                                                   TransitionDirection direction)
 {
     Q_D(QDeclarativeSpringAnimation);
     Q_UNUSED(direction);
 
-    if (d->clock->state() != QAbstractAnimation::Running) {
-        d->lastTime = 0;
-    }
+    QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
 
-    QDeclarativeNumberAnimation::transition(actions, modified, direction);
+    QDeclarativeStateActions dataActions = QDeclarativeNumberAnimation::createTransitionActions(actions, modified);
+    if (!dataActions.isEmpty()) {
+        QSet<QAbstractAnimationJob*> anims;
+        for (int i = 0; i < dataActions.size(); ++i) {
+            QSpringAnimation *animation;
+            bool needsRestart = false;
+            const QDeclarativeProperty &property = dataActions.at(i).property;
+            if (d->activeAnimations.contains(property)) {
+                animation = d->activeAnimations[property];
+                needsRestart = true;
+            } else {
+                animation = new QSpringAnimation(d);
+                d->activeAnimations.insert(property, animation);
+                animation->target = property;
+            }
+            wrapperGroup->appendAnimation(initInstance(animation));
 
-    if (!d->actions)
-        return;
+            animation->to = dataActions.at(i).toValue.toReal();
+            animation->startTime = 0;
+            animation->velocityms = d->velocityms;
+            animation->mass = d->mass;
+            animation->spring = d->spring;
+            animation->damping = d->damping;
+            animation->epsilon = d->epsilon;
+            animation->modulus = d->modulus;
+            animation->useMass = d->useMass;
+            animation->haveModulus = d->haveModulus;
+            animation->mode = d->mode;
+            animation->dura = -1;
+            animation->maxVelocity = d->maxVelocity;
 
-    if (!d->actions->isEmpty()) {
-        for (int i = 0; i < d->actions->size(); ++i) {
-            const QDeclarativeProperty &property = d->actions->at(i).property;
-            QDeclarativeSpringAnimationPrivate::SpringAnimation &animation
-                    = d->activeAnimations[property];
-            animation.to = d->actions->at(i).toValue.toReal();
-            animation.start = d->lastTime;
             if (d->fromIsDefined)
-                animation.currentValue = d->actions->at(i).fromValue.toReal();
+                animation->currentValue = dataActions.at(i).fromValue.toReal();
             else
-                animation.currentValue = property.read().toReal();
-            if (d->mode == QDeclarativeSpringAnimationPrivate::Velocity) {
-                qreal dist = qAbs(animation.currentValue - animation.to);
+                animation->currentValue = property.read().toReal();
+            if (animation->mode == QSpringAnimation::Velocity) {
+                qreal dist = qAbs(animation->currentValue - animation->to);
                 if (d->haveModulus && dist > d->modulus / 2)
                     dist = d->modulus - fmod(dist, d->modulus);
-                animation.duration = dist / d->velocityms;
+                animation->dura = dist / animation->velocityms;
+            }
+
+            if (needsRestart)
+                animation->restart();
+            anims.insert(animation);
+        }
+        foreach (QSpringAnimation *anim, d->activeAnimations.values()){
+            if (!anims.contains(anim)) {
+                anim->clearTemplate();
+                d->activeAnimations.remove(anim->target);
             }
         }
     }
-}
-
-
-QAbstractAnimation *QDeclarativeSpringAnimation::qtAnimation()
-{
-    Q_D(QDeclarativeSpringAnimation);
-    return d->clock;
+    return wrapperGroup;
 }
 
 QT_END_NAMESPACE

@@ -48,8 +48,8 @@
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
-#include <QtCore/qsequentialanimationgroup.h>
-#include <QtCore/qparallelanimationgroup.h>
+#include "private/qsequentialanimationgroupjob_p.h"
+#include "private/qparallelanimationgroupjob_p.h"
 #include <QtGui/qtransform.h>
 
 QT_BEGIN_NAMESPACE
@@ -95,21 +95,6 @@ QT_BEGIN_NAMESPACE
 QQuickParentAnimation::QQuickParentAnimation(QObject *parent)
     : QDeclarativeAnimationGroup(*(new QQuickParentAnimationPrivate), parent)
 {
-    Q_D(QQuickParentAnimation);
-    d->topLevelGroup = new QSequentialAnimationGroup;
-    QDeclarative_setParent_noEvent(d->topLevelGroup, this);
-
-    d->startAction = new QActionAnimation;
-    QDeclarative_setParent_noEvent(d->startAction, d->topLevelGroup);
-    d->topLevelGroup->addAnimation(d->startAction);
-
-    d->ag = new QParallelAnimationGroup;
-    QDeclarative_setParent_noEvent(d->ag, d->topLevelGroup);
-    d->topLevelGroup->addAnimation(d->ag);
-
-    d->endAction = new QActionAnimation;
-    QDeclarative_setParent_noEvent(d->endAction, d->topLevelGroup);
-    d->topLevelGroup->addAnimation(d->endAction);
 }
 
 QQuickParentAnimation::~QQuickParentAnimation()
@@ -219,7 +204,7 @@ QPointF QQuickParentAnimationPrivate::computeTransformOrigin(QQuickItem::Transfo
     }
 }
 
-void QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -385,33 +370,46 @@ void QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
         }
     }
 
+    QSequentialAnimationGroupJob *topLevelGroup = new QSequentialAnimationGroupJob;
+    QActionAnimation *viaAction = d->via ? new QActionAnimation : 0;
+    QActionAnimation *targetAction = new QActionAnimation;
+    //we'll assume the common case by far is to have children, and always create ag
+    QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
+
     if (data->actions.count()) {
-        if (direction == QDeclarativeAbstractAnimation::Forward) {
-            d->startAction->setAnimAction(d->via ? viaData : data, QActionAnimation::DeleteWhenStopped);
-            d->endAction->setAnimAction(d->via ? data : 0, QActionAnimation::DeleteWhenStopped);
+        if (d->via)
+            viaAction->setAnimAction(viaData);
+        targetAction->setAnimAction(data);
+
+        //take care of any child animations
+        bool valid = d->defaultProperty.isValid();
+        QAbstractAnimationJob* anim;
+        for (int ii = 0; ii < d->animations.count(); ++ii) {
+            if (valid)
+                d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
+            anim = d->animations.at(ii)->transition(actions, modified, direction);
+            ag->appendAnimation(anim);
+        }
+
+        //TODO: simplify/clarify logic
+        bool forwards = direction == QDeclarativeAbstractAnimation::Forward;
+        if (forwards) {
+            topLevelGroup->appendAnimation(d->via ? viaAction : targetAction);
+            topLevelGroup->appendAnimation(ag);
+            if (d->via)
+                topLevelGroup->appendAnimation(targetAction);
         } else {
-            d->endAction->setAnimAction(d->via ? viaData : data, QActionAnimation::DeleteWhenStopped);
-            d->startAction->setAnimAction(d->via ? data : 0, QActionAnimation::DeleteWhenStopped);
+            if (d->via)
+                topLevelGroup->appendAnimation(targetAction);
+            topLevelGroup->appendAnimation(ag);
+            topLevelGroup->appendAnimation(d->via ? viaAction : targetAction);
         }
     } else {
         delete data;
         delete viaData;
     }
 
-    //take care of any child animations
-    bool valid = d->defaultProperty.isValid();
-    for (int ii = 0; ii < d->animations.count(); ++ii) {
-        if (valid)
-            d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        d->animations.at(ii)->transition(actions, modified, direction);
-    }
-
-}
-
-QAbstractAnimation *QQuickParentAnimation::qtAnimation()
-{
-    Q_D(QQuickParentAnimation);
-    return d->topLevelGroup;
+    return initInstance(topLevelGroup);
 }
 
 /*!
@@ -442,19 +440,10 @@ QAbstractAnimation *QQuickParentAnimation::qtAnimation()
 QQuickAnchorAnimation::QQuickAnchorAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QQuickAnchorAnimationPrivate), parent)
 {
-    Q_D(QQuickAnchorAnimation);
-    d->va = new QDeclarativeBulkValueAnimator;
-    QDeclarative_setParent_noEvent(d->va, this);
 }
 
 QQuickAnchorAnimation::~QQuickAnchorAnimation()
 {
-}
-
-QAbstractAnimation *QQuickAnchorAnimation::qtAnimation()
-{
-    Q_D(QQuickAnchorAnimation);
-    return d->va;
 }
 
 /*!
@@ -479,7 +468,7 @@ QDeclarativeListProperty<QQuickItem> QQuickAnchorAnimation::targets()
 int QQuickAnchorAnimation::duration() const
 {
     Q_D(const QQuickAnchorAnimation);
-    return d->va->duration();
+    return d->duration;
 }
 
 void QQuickAnchorAnimation::setDuration(int duration)
@@ -490,9 +479,9 @@ void QQuickAnchorAnimation::setDuration(int duration)
     }
 
     Q_D(QQuickAnchorAnimation);
-    if (d->va->duration() == duration)
+    if (d->duration == duration)
         return;
-    d->va->setDuration(duration);
+    d->duration = duration;
     emit durationChanged(duration);
 }
 
@@ -517,20 +506,20 @@ void QQuickAnchorAnimation::setDuration(int duration)
 QEasingCurve QQuickAnchorAnimation::easing() const
 {
     Q_D(const QQuickAnchorAnimation);
-    return d->va->easingCurve();
+    return d->easing;
 }
 
 void QQuickAnchorAnimation::setEasing(const QEasingCurve &e)
 {
     Q_D(QQuickAnchorAnimation);
-    if (d->va->easingCurve() == e)
+    if (d->easing == e)
         return;
 
-    d->va->setEasingCurve(e);
+    d->easing = e;
     emit easingChanged(e);
 }
 
-void QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -539,7 +528,6 @@ void QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
     QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
     data->interpolatorType = QMetaType::QReal;
     data->interpolator = d->interpolator;
-
     data->reverse = direction == Backward ? true : false;
     data->fromSourced = false;
     data->fromDefined = false;
@@ -552,17 +540,15 @@ void QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
         }
     }
 
+    QDeclarativeBulkValueAnimator *animator = new QDeclarativeBulkValueAnimator;
     if (data->actions.count()) {
-        if (!d->rangeIsSet) {
-            d->va->setStartValue(qreal(0));
-            d->va->setEndValue(qreal(1));
-            d->rangeIsSet = true;
-        }
-        d->va->setAnimValue(data, QAbstractAnimation::DeleteWhenStopped);
-        d->va->setFromSourcedValue(&data->fromSourced);
+        animator->setAnimValue(data);
+        animator->setFromSourcedValue(&data->fromSourced);
     } else {
         delete data;
     }
+
+    return initInstance(animator);
 }
 
 /*!
@@ -593,13 +579,15 @@ void QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
 QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QQuickPathAnimationPrivate), parent)
 {
-    Q_D(QQuickPathAnimation);
-    d->pa = new QDeclarativeBulkValueAnimator;
-    QDeclarative_setParent_noEvent(d->pa, this);
 }
 
 QQuickPathAnimation::~QQuickPathAnimation()
 {
+    Q_D(QQuickPathAnimation);
+    QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator it;
+    for (it = d->activeAnimations.begin(); it != d->activeAnimations.end(); ++it) {
+        it.value()->clearTemplate();
+    }
 }
 
 /*!
@@ -611,7 +599,7 @@ QQuickPathAnimation::~QQuickPathAnimation()
 int QQuickPathAnimation::duration() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->pa->duration();
+    return d->duration;
 }
 
 void QQuickPathAnimation::setDuration(int duration)
@@ -622,9 +610,9 @@ void QQuickPathAnimation::setDuration(int duration)
     }
 
     Q_D(QQuickPathAnimation);
-    if (d->pa->duration() == duration)
+    if (d->duration == duration)
         return;
-    d->pa->setDuration(duration);
+    d->duration = duration;
     emit durationChanged(duration);
 }
 
@@ -645,16 +633,16 @@ void QQuickPathAnimation::setDuration(int duration)
 QEasingCurve QQuickPathAnimation::easing() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->pa->easingCurve();
+    return d->easingCurve;
 }
 
 void QQuickPathAnimation::setEasing(const QEasingCurve &e)
 {
     Q_D(QQuickPathAnimation);
-    if (d->pa->easingCurve() == e)
+    if (d->easingCurve == e)
         return;
 
-    d->pa->setEasingCurve(e);
+    d->easingCurve = e;
     emit easingChanged(e);
 }
 
@@ -833,24 +821,37 @@ void QQuickPathAnimation::setEndRotation(qreal rotation)
     emit endRotationChanged(d->endRotation);
 }
 
-
-QAbstractAnimation *QQuickPathAnimation::qtAnimation()
-{
-    Q_D(QQuickPathAnimation);
-    return d->pa;
-}
-
-void QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
                                            QDeclarativeProperties &modified,
                                            TransitionDirection direction)
 {
     Q_D(QQuickPathAnimation);
-    QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater;
+
+    QQuickPathAnimationUpdater prevData;
+    bool havePrevData = false;
+    if (d->activeAnimations.contains(d->target)) {
+        havePrevData = true;
+        prevData = *d->activeAnimations[d->target]->pathUpdater();
+    }
+
+    QList<QQuickItem*> keys = d->activeAnimations.keys();
+    foreach (QQuickItem *item, keys) {
+        QQuickPathAnimationAnimator *anim = d->activeAnimations.value(item);
+        if (anim->state() == QAbstractAnimationJob::Stopped) {
+            anim->clearTemplate();
+            d->activeAnimations.remove(item);
+        }
+    }
+
+    QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater();
+    QQuickPathAnimationAnimator *pa = new QQuickPathAnimationAnimator(d);
+
+    d->activeAnimations[d->target] = pa;
 
     data->orientation = d->orientation;
     data->anchorPoint = d->anchorPoint;
-    data->entryInterval = duration() ? qreal(d->entryDuration) / duration() : qreal(0);
-    data->exitInterval = duration() ? qreal(d->exitDuration) / duration() : qreal(0);
+    data->entryInterval = d->duration ? qreal(d->entryDuration) / d->duration : qreal(0);
+    data->exitInterval = d->duration ? qreal(d->exitDuration) / d->duration : qreal(0);
     data->endRotation = d->endRotation;
     data->reverse = direction == Backward ? true : false;
     data->fromSourced = false;
@@ -879,46 +880,41 @@ void QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
         data->target = d->target;
         data->path = d->path;
         data->path->invalidateSequentialHistory();
-        if (!d->rangeIsSet) {
-            d->pa->setStartValue(qreal(0));
-            d->pa->setEndValue(qreal(1));
-            d->rangeIsSet = true;
-        }
-        /*
-            NOTE: The following block relies on the fact that the previous value hasn't
-            yet been deleted, and has the same target, etc, which may be a bit fragile.
-         */
-        if (d->pa->getAnimValue()) {
-            QQuickPathAnimationUpdater *prevData = static_cast<QQuickPathAnimationUpdater*>(d->pa->getAnimValue());
 
+        if (havePrevData) {
             // get the original start angle that was used (so we can exactly reverse).
-            data->startRotation = prevData->startRotation;
+            data->startRotation = prevData.startRotation;
 
             // treat interruptions specially, otherwise we end up with strange paths
-            if ((data->reverse || prevData->reverse) && prevData->currentV > 0 && prevData->currentV < 1) {
-                if (!data->fromDefined && !data->toDefined && !prevData->painterPath.isEmpty()) {
-                    QPointF pathPos = QDeclarativePath::sequentialPointAt(prevData->painterPath, prevData->pathLength, prevData->attributePoints, prevData->prevBez, prevData->currentV);
-                    if (!prevData->anchorPoint.isNull())
-                        pathPos -= prevData->anchorPoint;
+            if ((data->reverse || prevData.reverse) && prevData.currentV > 0 && prevData.currentV < 1) {
+                if (!data->fromDefined && !data->toDefined && !prevData.painterPath.isEmpty()) {
+                    QPointF pathPos = QDeclarativePath::sequentialPointAt(prevData.painterPath, prevData.pathLength, prevData.attributePoints, prevData.prevBez, prevData.currentV);
+                    if (!prevData.anchorPoint.isNull())
+                        pathPos -= prevData.anchorPoint;
                     if (pathPos == data->target->pos()) {   //only treat as interruption if we interrupted ourself
-                        data->painterPath = prevData->painterPath;
+                        data->painterPath = prevData.painterPath;
                         data->toDefined = data->fromDefined = data->fromSourced = true;
                         data->prevBez.isValid = false;
-                        data->interruptStart = prevData->currentV;
-                        data->startRotation = prevData->startRotation;
-                        data->pathLength = prevData->pathLength;
-                        data->attributePoints = prevData->attributePoints;
+                        data->interruptStart = prevData.currentV;
+                        data->startRotation = prevData.startRotation;
+                        data->pathLength = prevData.pathLength;
+                        data->attributePoints = prevData.attributePoints;
                     }
                 }
             }
         }
-        d->pa->setFromSourcedValue(&data->fromSourced);
-        d->pa->setAnimValue(data, QAbstractAnimation::DeleteWhenStopped);
+        pa->setFromSourcedValue(&data->fromSourced);
+        pa->setAnimValue(data);
     } else {
-        d->pa->setFromSourcedValue(0);
-        d->pa->setAnimValue(0, QAbstractAnimation::DeleteWhenStopped);
+        pa->setFromSourcedValue(0);
+        pa->setAnimValue(0);
+        delete pa;
         delete data;
     }
+
+    pa->setDuration(d->duration);
+    pa->setEasingCurve(d->easingCurve);
+    return initInstance(pa);
 }
 
 void QQuickPathAnimationUpdater::setValue(qreal v)
@@ -955,9 +951,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
         }
     }
 
-    //### could cache properties rather than reconstructing each time
-    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("x")), currentPos.x(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
-    QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("y")), currentPos.y(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
+    target->setPos(currentPos);
 
     //adjust angle according to orientation
     if (!fixed) {
@@ -1009,7 +1003,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
             else if (v > exitStart)
                 angle = endRotation * (v - exitStart) / exitInterval + angle * (exitInterval - (v - exitStart)) / exitInterval;
         }
-        QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, QStringLiteral("rotation")), angle, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
+        target->setRotation(angle);
     }
 
     /*
@@ -1021,6 +1015,21 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
     if ((reverse && v == 0.0) || (!reverse && v == 1.0)) {
         if (!anchorPoint.isNull() && !fixed && qFuzzyIsNull(angle))
             target->setTransformOriginPoint(QPointF());
+    }
+}
+
+QQuickPathAnimationAnimator::QQuickPathAnimationAnimator(QQuickPathAnimationPrivate *priv)
+    : animationTemplate(priv)
+{
+}
+
+QQuickPathAnimationAnimator::~QQuickPathAnimationAnimator()
+{
+    if (animationTemplate && pathUpdater()) {
+        QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator it =
+                animationTemplate->activeAnimations.find(pathUpdater()->target);
+        if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+            animationTemplate->activeAnimations.erase(it);
     }
 }
 

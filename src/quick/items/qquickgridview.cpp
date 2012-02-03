@@ -217,6 +217,11 @@ public:
         , snapMode(QQuickGridView::NoSnap)
         , highlightXAnimator(0), highlightYAnimator(0)
     {}
+    ~QQuickGridViewPrivate()
+    {
+        delete highlightXAnimator;
+        delete highlightYAnimator;
+    }
 };
 
 Qt::Orientation QQuickGridViewPrivate::layoutOrientation() const
@@ -639,10 +644,10 @@ void QQuickGridViewPrivate::createHighlight()
             FxGridItemSG *newHighlight = new FxGridItemSG(item, q, true);
             if (autoHighlight)
                 resetHighlightPosition();
-            highlightXAnimator = new QSmoothedAnimation(q);
+            highlightXAnimator = new QSmoothedAnimation;
             highlightXAnimator->target = QDeclarativeProperty(item, QLatin1String("x"));
             highlightXAnimator->userDuration = highlightMoveDuration;
-            highlightYAnimator = new QSmoothedAnimation(q);
+            highlightYAnimator = new QSmoothedAnimation;
             highlightYAnimator->target = QDeclarativeProperty(item, QLatin1String("y"));
             highlightYAnimator->userDuration = highlightMoveDuration;
 

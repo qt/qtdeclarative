@@ -59,15 +59,13 @@
 #include <qvariant.h>
 #include <qcolor.h>
 #include <qfile.h>
-#include <QParallelAnimationGroup>
-#include <QSequentialAnimationGroup>
+#include "private/qparallelanimationgroupjob_p.h"
+#include "private/qsequentialanimationgroupjob_p.h"
 #include <QtCore/qset.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qsize.h>
 #include <QtCore/qmath.h>
-
-#include <private/qvariantanimation_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,11 +88,19 @@ QDeclarativeAbstractAnimation::QDeclarativeAbstractAnimation(QObject *parent)
 
 QDeclarativeAbstractAnimation::~QDeclarativeAbstractAnimation()
 {
+    Q_D(QDeclarativeAbstractAnimation);
+    delete d->animationInstance;
 }
 
 QDeclarativeAbstractAnimation::QDeclarativeAbstractAnimation(QDeclarativeAbstractAnimationPrivate &dd, QObject *parent)
 : QObject(dd, parent)
 {
+}
+
+QAbstractAnimationJob* QDeclarativeAbstractAnimation::qtAnimation()
+{
+    Q_D(QDeclarativeAbstractAnimation);
+    return d->animationInstance;
 }
 
 /*!
@@ -155,10 +161,16 @@ void QDeclarativeAbstractAnimationPrivate::commence()
 
     QDeclarativeStateActions actions;
     QDeclarativeProperties properties;
-    q->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
 
-    q->qtAnimation()->start();
-    if (q->qtAnimation()->state() == QAbstractAnimation::Stopped) {
+    QAbstractAnimationJob *oldInstance = animationInstance;
+    animationInstance = q->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
+    if (oldInstance != animationInstance) {
+        animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
+        if (oldInstance)
+            delete oldInstance;
+    }
+    animationInstance->start();
+    if (animationInstance->isStopped()) {
         running = false;
         emit q->completed();
     }
@@ -187,7 +199,10 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
         else if (!d->registered) {
             d->registered = true;
             QDeclarativeEnginePrivate *engPriv = QDeclarativeEnginePrivate::get(qmlEngine(this));
-            engPriv->registerFinalizeCallback(this, this->metaObject()->indexOfSlot("componentFinalized()"));
+            static int finalizedIdx = -1;
+            if (finalizedIdx < 0)
+                finalizedIdx = metaObject()->indexOfSlot("componentFinalized()");
+            engPriv->registerFinalizeCallback(this, finalizedIdx);
         }
         return;
     }
@@ -204,29 +219,26 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
     if (d->running) {
         bool supressStart = false;
         if (d->alwaysRunToEnd && d->loopCount != 1
-            && qtAnimation()->state() == QAbstractAnimation::Running) {
+            && d->animationInstance && d->animationInstance->isRunning()) {
             //we've restarted before the final loop finished; restore proper loop count
             if (d->loopCount == -1)
-                qtAnimation()->setLoopCount(d->loopCount);
+                d->animationInstance->setLoopCount(d->loopCount);
             else
-                qtAnimation()->setLoopCount(qtAnimation()->currentLoop() + d->loopCount);
+                d->animationInstance->setLoopCount(d->animationInstance->currentLoop() + d->loopCount);
             supressStart = true;    //we want the animation to continue, rather than restart
-        }
-
-        if (!d->connectedTimeLine) {
-            FAST_CONNECT(qtAnimation(), SIGNAL(finished()), this, SLOT(timelineComplete()))
-            d->connectedTimeLine = true;
         }
         if (!supressStart)
             d->commence();
         emit started();
     } else {
-        if (d->alwaysRunToEnd) {
-            if (d->loopCount != 1)
-                qtAnimation()->setLoopCount(qtAnimation()->currentLoop()+1);    //finish the current loop
-        } else
-            qtAnimation()->stop();
-
+        if (d->animationInstance) {
+            if (d->alwaysRunToEnd) {
+                if (d->loopCount != 1)
+                    d->animationInstance->setLoopCount(d->animationInstance->currentLoop()+1);    //finish the current loop
+            } else {
+                d->animationInstance->stop();
+            }
+        }
         emit completed();
     }
 
@@ -264,13 +276,13 @@ void QDeclarativeAbstractAnimation::setPaused(bool p)
 
     d->paused = p;
 
-    if (!d->componentComplete)
+    if (!d->componentComplete || !d->animationInstance)
         return;
 
     if (d->paused)
-        qtAnimation()->pause();
+        d->animationInstance->pause();
     else
-        qtAnimation()->resume();
+        d->animationInstance->resume();
 
     emit pausedChanged(d->paused);
 }
@@ -371,19 +383,27 @@ void QDeclarativeAbstractAnimation::setLoops(int loops)
         return;
 
     d->loopCount = loops;
-    qtAnimation()->setLoopCount(loops);
     emit loopCountChanged(loops);
 }
 
+int QDeclarativeAbstractAnimation::duration() const
+{
+    Q_D(const QDeclarativeAbstractAnimation);
+    return d->animationInstance ? d->animationInstance->duration() : 0;
+}
 
 int QDeclarativeAbstractAnimation::currentTime()
 {
-    return qtAnimation()->currentLoopTime();
+    Q_D(QDeclarativeAbstractAnimation);
+    return d->animationInstance ? d->animationInstance->currentLoopTime() : 0;
 }
 
 void QDeclarativeAbstractAnimation::setCurrentTime(int time)
 {
-    qtAnimation()->setCurrentTime(time);
+    Q_D(QDeclarativeAbstractAnimation);
+    if (d->animationInstance)
+        d->animationInstance->setCurrentTime(time);
+    //TODO save value for start?
 }
 
 QDeclarativeAnimationGroup *QDeclarativeAbstractAnimation::group() const
@@ -503,8 +523,9 @@ void QDeclarativeAbstractAnimation::restart()
 */
 void QDeclarativeAbstractAnimation::complete()
 {
-    if (isRunning()) {
-         qtAnimation()->setCurrentTime(qtAnimation()->duration());
+    Q_D(QDeclarativeAbstractAnimation);
+    if (isRunning() && d->animationInstance) {
+         d->animationInstance->setCurrentTime(d->animationInstance->duration());
     }
 }
 
@@ -539,22 +560,43 @@ void QDeclarativeAbstractAnimation::setDisableUserControl()
     d->disableUserControl = true;
 }
 
-void QDeclarativeAbstractAnimation::transition(QDeclarativeStateActions &actions,
+void QDeclarativeAbstractAnimation::setEnableUserControl()
+{
+    Q_D(QDeclarativeAbstractAnimation);
+    d->disableUserControl = false;
+
+}
+
+bool QDeclarativeAbstractAnimation::userControlDisabled() const
+{
+    Q_D(const QDeclarativeAbstractAnimation);
+    return d->disableUserControl;
+}
+
+QAbstractAnimationJob* QDeclarativeAbstractAnimation::initInstance(QAbstractAnimationJob *animation)
+{
+    Q_D(QDeclarativeAbstractAnimation);
+    animation->setLoopCount(d->loopCount);
+    return animation;
+}
+
+QAbstractAnimationJob* QDeclarativeAbstractAnimation::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
                                       TransitionDirection direction)
 {
     Q_UNUSED(actions);
     Q_UNUSED(modified);
     Q_UNUSED(direction);
+    return 0;
 }
 
-void QDeclarativeAbstractAnimation::timelineComplete()
+void QDeclarativeAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
 {
-    Q_D(QDeclarativeAbstractAnimation);
-    setRunning(false);
-    if (d->alwaysRunToEnd && d->loopCount != 1) {
+    Q_Q(QDeclarativeAbstractAnimation);
+    q->setRunning(false);
+    if (alwaysRunToEnd && loopCount != 1) {
         //restore the proper loopCount for the next run
-        qtAnimation()->setLoopCount(d->loopCount);
+        animationInstance->setLoopCount(loopCount);
     }
 }
 
@@ -582,19 +624,10 @@ void QDeclarativeAbstractAnimation::timelineComplete()
 QDeclarativePauseAnimation::QDeclarativePauseAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QDeclarativePauseAnimationPrivate), parent)
 {
-    Q_D(QDeclarativePauseAnimation);
-    d->init();
 }
 
 QDeclarativePauseAnimation::~QDeclarativePauseAnimation()
 {
-}
-
-void QDeclarativePauseAnimationPrivate::init()
-{
-    Q_Q(QDeclarativePauseAnimation);
-    pa = new QPauseAnimation;
-    QDeclarative_setParent_noEvent(pa, q);
 }
 
 /*!
@@ -606,7 +639,7 @@ void QDeclarativePauseAnimationPrivate::init()
 int QDeclarativePauseAnimation::duration() const
 {
     Q_D(const QDeclarativePauseAnimation);
-    return d->pa->duration();
+    return d->duration;
 }
 
 void QDeclarativePauseAnimation::setDuration(int duration)
@@ -617,16 +650,22 @@ void QDeclarativePauseAnimation::setDuration(int duration)
     }
 
     Q_D(QDeclarativePauseAnimation);
-    if (d->pa->duration() == duration)
+    if (d->duration == duration)
         return;
-    d->pa->setDuration(duration);
+    d->duration = duration;
     emit durationChanged(duration);
 }
 
-QAbstractAnimation *QDeclarativePauseAnimation::qtAnimation()
+QAbstractAnimationJob* QDeclarativePauseAnimation::transition(QDeclarativeStateActions &actions,
+                                    QDeclarativeProperties &modified,
+                                    TransitionDirection direction)
 {
     Q_D(QDeclarativePauseAnimation);
-    return d->pa;
+    Q_UNUSED(actions);
+    Q_UNUSED(modified);
+    Q_UNUSED(direction);
+
+    return initInstance(new QPauseAnimationJob(d->duration));
 }
 
 /*!
@@ -663,8 +702,8 @@ QDeclarativeColorAnimation::QDeclarativeColorAnimation(QObject *parent)
 {
     Q_D(QDeclarativePropertyAnimation);
     d->interpolatorType = QMetaType::QColor;
-    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
     d->defaultToInterpolatorType = true;
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
 }
 
 QDeclarativeColorAnimation::~QDeclarativeColorAnimation()
@@ -731,7 +770,47 @@ void QDeclarativeColorAnimation::setTo(const QColor &t)
     QDeclarativePropertyAnimation::setTo(t);
 }
 
+QActionAnimation::QActionAnimation()
+    : QAbstractAnimationJob(), animAction(0)
+{
+}
 
+QActionAnimation::QActionAnimation(QAbstractAnimationAction *action)
+    : QAbstractAnimationJob(), animAction(action)
+{
+}
+
+QActionAnimation::~QActionAnimation()
+{
+    delete animAction;
+}
+
+int QActionAnimation::duration() const
+{
+    return 0;
+}
+
+void QActionAnimation::setAnimAction(QAbstractAnimationAction *action)
+{
+    if (isRunning())
+        stop();
+    animAction = action;
+}
+
+void QActionAnimation::updateCurrentTime(int)
+{
+}
+
+void QActionAnimation::updateState(State newState, State oldState)
+{
+    Q_UNUSED(oldState);
+
+    if (newState == Running) {
+        if (animAction) {
+            animAction->doAction();
+        }
+    }
+}
 
 /*!
     \qmlclass ScriptAction QDeclarativeScriptAction
@@ -764,20 +843,14 @@ void QDeclarativeColorAnimation::setTo(const QColor &t)
 QDeclarativeScriptAction::QDeclarativeScriptAction(QObject *parent)
     :QDeclarativeAbstractAnimation(*(new QDeclarativeScriptActionPrivate), parent)
 {
-    Q_D(QDeclarativeScriptAction);
-    d->init();
 }
 
 QDeclarativeScriptAction::~QDeclarativeScriptAction()
 {
 }
 
-void QDeclarativeScriptActionPrivate::init()
-{
-    Q_Q(QDeclarativeScriptAction);
-    rsa = new QActionAnimation(&proxy);
-    QDeclarative_setParent_noEvent(rsa, q);
-}
+QDeclarativeScriptActionPrivate::QDeclarativeScriptActionPrivate()
+    : QDeclarativeAbstractAnimationPrivate(), hasRunScriptScript(false), reversing(false){}
 
 /*!
     \qmlproperty script QtQuick2::ScriptAction::script
@@ -817,6 +890,11 @@ void QDeclarativeScriptAction::setStateChangeScriptName(const QString &name)
     d->name = name;
 }
 
+QAbstractAnimationAction* QDeclarativeScriptActionPrivate::createAction()
+{
+    return new Proxy(this);
+}
+
 void QDeclarativeScriptActionPrivate::execute()
 {
     Q_Q(QDeclarativeScriptAction);
@@ -833,7 +911,7 @@ void QDeclarativeScriptActionPrivate::execute()
     }
 }
 
-void QDeclarativeScriptAction::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeScriptAction::transition(QDeclarativeStateActions &actions,
                                     QDeclarativeProperties &modified,
                                     TransitionDirection direction)
 {
@@ -853,15 +931,8 @@ void QDeclarativeScriptAction::transition(QDeclarativeStateActions &actions,
             break;  //only match one (names should be unique)
         }
     }
+    return initInstance(new QActionAnimation(d->createAction()));
 }
-
-QAbstractAnimation *QDeclarativeScriptAction::qtAnimation()
-{
-    Q_D(QDeclarativeScriptAction);
-    return d->rsa;
-}
-
-
 
 /*!
     \qmlclass PropertyAction QDeclarativePropertyAction
@@ -906,19 +977,10 @@ QAbstractAnimation *QDeclarativeScriptAction::qtAnimation()
 QDeclarativePropertyAction::QDeclarativePropertyAction(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QDeclarativePropertyActionPrivate), parent)
 {
-    Q_D(QDeclarativePropertyAction);
-    d->init();
 }
 
 QDeclarativePropertyAction::~QDeclarativePropertyAction()
 {
-}
-
-void QDeclarativePropertyActionPrivate::init()
-{
-    Q_Q(QDeclarativePropertyAction);
-    spa = new QActionAnimation;
-    QDeclarative_setParent_noEvent(spa, q);
 }
 
 QObject *QDeclarativePropertyAction::target() const
@@ -1023,13 +1085,7 @@ void QDeclarativePropertyAction::setValue(const QVariant &v)
     }
 }
 
-QAbstractAnimation *QDeclarativePropertyAction::qtAnimation()
-{
-    Q_D(QDeclarativePropertyAction);
-    return d->spa;
-}
-
-void QDeclarativePropertyAction::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativePropertyAction::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
                                       TransitionDirection direction)
 {
@@ -1117,11 +1173,13 @@ void QDeclarativePropertyAction::transition(QDeclarativeStateActions &actions,
         }
     }
 
+    QActionAnimation *action = new QActionAnimation;
     if (data->actions.count()) {
-        d->spa->setAnimAction(data, QAbstractAnimation::DeleteWhenStopped);
+        action->setAnimAction(data);
     } else {
         delete data;
     }
+    return initInstance(action);
 }
 
 /*!
@@ -1258,8 +1316,8 @@ QDeclarativeVector3dAnimation::QDeclarativeVector3dAnimation(QObject *parent)
 {
     Q_D(QDeclarativePropertyAnimation);
     d->interpolatorType = QMetaType::QVector3D;
-    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
     d->defaultToInterpolatorType = true;
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
 }
 
 QDeclarativeVector3dAnimation::~QDeclarativeVector3dAnimation()
@@ -1503,7 +1561,6 @@ void QDeclarativeRotationAnimation::setDirection(QDeclarativeRotationAnimation::
         d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
         break;
     }
-
     emit directionChanged();
 }
 
@@ -1524,9 +1581,6 @@ void QDeclarativeAnimationGroupPrivate::append_animation(QDeclarativeListPropert
     QDeclarativeAnimationGroup *q = qobject_cast<QDeclarativeAnimationGroup *>(list->object);
     if (q) {
         a->setGroup(q);
-        // This is an optimization for the parenting that already occurs via addAnimation
-        QDeclarative_setParent_noEvent(a->qtAnimation(), q->d_func()->ag);
-        q->d_func()->ag->addAnimation(a->qtAnimation());
     }
 }
 
@@ -1536,8 +1590,6 @@ void QDeclarativeAnimationGroupPrivate::clear_animation(QDeclarativeListProperty
     if (q) {
         while (q->d_func()->animations.count()) {
             QDeclarativeAbstractAnimation *firstAnim = q->d_func()->animations.at(0);
-            QDeclarative_setParent_noEvent(firstAnim->qtAnimation(), 0);
-            q->d_func()->ag->removeAnimation(firstAnim->qtAnimation());
             firstAnim->setGroup(0);
         }
     }
@@ -1592,26 +1644,19 @@ QDeclarativeListProperty<QDeclarativeAbstractAnimation> QDeclarativeAnimationGro
 QDeclarativeSequentialAnimation::QDeclarativeSequentialAnimation(QObject *parent) :
     QDeclarativeAnimationGroup(parent)
 {
-    Q_D(QDeclarativeAnimationGroup);
-    d->ag = new QSequentialAnimationGroup;
-    QDeclarative_setParent_noEvent(d->ag, this);
 }
 
 QDeclarativeSequentialAnimation::~QDeclarativeSequentialAnimation()
 {
 }
 
-QAbstractAnimation *QDeclarativeSequentialAnimation::qtAnimation()
-{
-    Q_D(QDeclarativeAnimationGroup);
-    return d->ag;
-}
-
-void QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actions,
                                     QDeclarativeProperties &modified,
                                     TransitionDirection direction)
 {
     Q_D(QDeclarativeAnimationGroup);
+
+    QSequentialAnimationGroupJob *ag = new QSequentialAnimationGroupJob;
 
     int inc = 1;
     int from = 0;
@@ -1621,11 +1666,15 @@ void QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actio
     }
 
     bool valid = d->defaultProperty.isValid();
+    QAbstractAnimationJob* anim;
     for (int ii = from; ii < d->animations.count() && ii >= 0; ii += inc) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        d->animations.at(ii)->transition(actions, modified, direction);
+        anim = d->animations.at(ii)->transition(actions, modified, direction);
+        inc == -1 ? ag->prependAnimation(anim) : ag->appendAnimation(anim);
     }
+
+    return initInstance(ag);
 }
 
 
@@ -1661,35 +1710,29 @@ void QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actio
 QDeclarativeParallelAnimation::QDeclarativeParallelAnimation(QObject *parent) :
     QDeclarativeAnimationGroup(parent)
 {
-    Q_D(QDeclarativeAnimationGroup);
-    d->ag = new QParallelAnimationGroup;
-    QDeclarative_setParent_noEvent(d->ag, this);
 }
 
 QDeclarativeParallelAnimation::~QDeclarativeParallelAnimation()
 {
 }
 
-QAbstractAnimation *QDeclarativeParallelAnimation::qtAnimation()
-{
-    Q_D(QDeclarativeAnimationGroup);
-    return d->ag;
-}
-
-void QDeclarativeParallelAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeParallelAnimation::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
                                       TransitionDirection direction)
 {
     Q_D(QDeclarativeAnimationGroup);
+    QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
+
     bool valid = d->defaultProperty.isValid();
+    QAbstractAnimationJob* anim;
     for (int ii = 0; ii < d->animations.count(); ++ii) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        d->animations.at(ii)->transition(actions, modified, direction);
+        anim = d->animations.at(ii)->transition(actions, modified, direction);
+        ag->appendAnimation(anim);
     }
+    return initInstance(ag);
 }
-
-
 
 //convert a variant from string type to another animatable type
 void QDeclarativePropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
@@ -1742,6 +1785,41 @@ void QDeclarativePropertyAnimationPrivate::convertVariant(QVariant &variant, int
         }
         break;
     }
+}
+
+QDeclarativeBulkValueAnimator::QDeclarativeBulkValueAnimator()
+    : QAbstractAnimationJob(), animValue(0), fromSourced(0), m_duration(250)
+{
+}
+
+QDeclarativeBulkValueAnimator::~QDeclarativeBulkValueAnimator()
+{
+    delete animValue;
+}
+
+void QDeclarativeBulkValueAnimator::setAnimValue(QDeclarativeBulkValueUpdater *value)
+{
+    if (isRunning())
+        stop();
+    animValue = value;
+}
+
+void QDeclarativeBulkValueAnimator::updateCurrentTime(int currentTime)
+{
+    if (isStopped())
+        return;
+
+    const qreal progress = easing.valueForProgress(((m_duration == 0) ? qreal(1) : qreal(currentTime) / qreal(m_duration)));
+
+    if (animValue)
+        animValue->setValue(progress);
+}
+
+void QDeclarativeBulkValueAnimator::topLevelAnimationLoopChanged()
+{
+    //check for new from every top-level loop (when the top level animation is started and all subsequent loops)
+    if (fromSourced)
+        *fromSourced = false;
 }
 
 /*!
@@ -1809,26 +1887,15 @@ void QDeclarativePropertyAnimationPrivate::convertVariant(QVariant &variant, int
 QDeclarativePropertyAnimation::QDeclarativePropertyAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QDeclarativePropertyAnimationPrivate), parent)
 {
-    Q_D(QDeclarativePropertyAnimation);
-    d->init();
 }
 
 QDeclarativePropertyAnimation::QDeclarativePropertyAnimation(QDeclarativePropertyAnimationPrivate &dd, QObject *parent)
 : QDeclarativeAbstractAnimation(dd, parent)
 {
-    Q_D(QDeclarativePropertyAnimation);
-    d->init();
 }
 
 QDeclarativePropertyAnimation::~QDeclarativePropertyAnimation()
 {
-}
-
-void QDeclarativePropertyAnimationPrivate::init()
-{
-    Q_Q(QDeclarativePropertyAnimation);
-    va = new QDeclarativeBulkValueAnimator;
-    QDeclarative_setParent_noEvent(va, q);
 }
 
 /*!
@@ -1840,7 +1907,7 @@ void QDeclarativePropertyAnimationPrivate::init()
 int QDeclarativePropertyAnimation::duration() const
 {
     Q_D(const QDeclarativePropertyAnimation);
-    return d->va->duration();
+    return d->duration;
 }
 
 void QDeclarativePropertyAnimation::setDuration(int duration)
@@ -1851,9 +1918,9 @@ void QDeclarativePropertyAnimation::setDuration(int duration)
     }
 
     Q_D(QDeclarativePropertyAnimation);
-    if (d->va->duration() == duration)
+    if (d->duration == duration)
         return;
-    d->va->setDuration(duration);
+    d->duration = duration;
     emit durationChanged(duration);
 }
 
@@ -2122,16 +2189,16 @@ void QDeclarativePropertyAnimation::setTo(const QVariant &t)
 QEasingCurve QDeclarativePropertyAnimation::easing() const
 {
     Q_D(const QDeclarativePropertyAnimation);
-    return d->va->easingCurve();
+    return d->easing;
 }
 
 void QDeclarativePropertyAnimation::setEasing(const QEasingCurve &e)
 {
     Q_D(QDeclarativePropertyAnimation);
-    if (d->va->easingCurve() == e)
+    if (d->easing == e)
         return;
 
-    d->va->setEasingCurve(e);
+    d->easing = e;
     emit easingChanged(e);
 }
 
@@ -2288,28 +2355,23 @@ QDeclarativeListProperty<QObject> QDeclarativePropertyAnimation::exclude()
     return QDeclarativeListProperty<QObject>(this, d->exclude);
 }
 
-QAbstractAnimation *QDeclarativePropertyAnimation::qtAnimation()
-{
-    Q_D(QDeclarativePropertyAnimation);
-    return d->va;
-}
-
 void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
 {
     bool deleted = false;
     wasDeleted = &deleted;
-    if (reverse)    //QVariantAnimation sends us 1->0 when reversed, but we are expecting 0->1
+    if (reverse)
         v = 1 - v;
     for (int ii = 0; ii < actions.count(); ++ii) {
         QDeclarativeAction &action = actions[ii];
 
-        if (v == 1.)
+        if (v == 1.) {
             QDeclarativePropertyPrivate::write(action.property, action.toValue, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
-        else {
+        } else {
             if (!fromSourced && !fromDefined) {
                 action.fromValue = action.property.read();
-                if (interpolatorType)
+                if (interpolatorType) {
                     QDeclarativePropertyAnimationPrivate::convertVariant(action.fromValue, interpolatorType);
+                }
             }
             if (!interpolatorType) {
                 int propType = action.property.propertyType();
@@ -2328,11 +2390,11 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
     fromSourced = true;
 }
 
-void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions,
-                                     QDeclarativeProperties &modified,
-                                     TransitionDirection direction)
+QDeclarativeStateActions QDeclarativePropertyAnimation::createTransitionActions(QDeclarativeStateActions &actions,
+                                                                                QDeclarativeProperties &modified)
 {
     Q_D(QDeclarativePropertyAnimation);
+    QDeclarativeStateActions newActions;
 
     QStringList props = d->properties.isEmpty() ? QStringList() : d->properties.split(QLatin1Char(','));
     for (int ii = 0; ii < props.count(); ++ii)
@@ -2356,13 +2418,6 @@ void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions
         props << d->defaultProperties.split(QLatin1Char(','));
     }
 
-    QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
-    data->interpolatorType = d->interpolatorType;
-    data->interpolator = d->interpolator;
-    data->reverse = direction == Backward ? true : false;
-    data->fromSourced = false;
-    data->fromDefined = d->fromIsDefined;
-
     bool hasExplicit = false;
     //an explicit animation has been specified
     if (d->toIsDefined) {
@@ -2377,7 +2432,7 @@ void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions
                     }
                     myAction.toValue = d->to;
                     d->convertVariant(myAction.toValue, d->interpolatorType ? d->interpolatorType : myAction.property.propertyType());
-                    data->actions << myAction;
+                    newActions << myAction;
                     hasExplicit = true;
                     for (int ii = 0; ii < actions.count(); ++ii) {
                         QDeclarativeAction &action = actions[ii];
@@ -2420,31 +2475,39 @@ void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions
 
             modified << action.property;
 
-            data->actions << myAction;
+            newActions << myAction;
             action.fromValue = myAction.toValue;
         }
     }
-
-    if (data->actions.count()) {
-        if (!d->rangeIsSet) {
-            d->va->setStartValue(qreal(0));
-            d->va->setEndValue(qreal(1));
-            d->rangeIsSet = true;
-        }
-        d->va->setAnimValue(data, QAbstractAnimation::DeleteWhenStopped);
-        d->va->setFromSourcedValue(&data->fromSourced);
-        d->actions = &data->actions;
-    } else {
-        delete data;
-        d->va->setFromSourcedValue(0);  //clear previous data
-        d->va->setAnimValue(0, QAbstractAnimation::DeleteWhenStopped);  //clear previous data
-        d->actions = 0;
-    }
+    return newActions;
 }
 
+QAbstractAnimationJob* QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions,
+                                                                     QDeclarativeProperties &modified,
+                                                                     TransitionDirection direction)
+{
+    Q_D(QDeclarativePropertyAnimation);
 
-QDeclarativeScriptActionPrivate::QDeclarativeScriptActionPrivate()
-    : QDeclarativeAbstractAnimationPrivate(), hasRunScriptScript(false), reversing(false), proxy(this), rsa(0) {}
+    QDeclarativeStateActions dataActions = createTransitionActions(actions, modified);
 
+    QDeclarativeBulkValueAnimator *animator = new QDeclarativeBulkValueAnimator;
+    animator->setDuration(d->duration);
+    animator->setEasingCurve(d->easing);
+
+    if (!dataActions.isEmpty()) {
+        QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
+        data->interpolatorType = d->interpolatorType;
+        data->interpolator = d->interpolator;
+        data->reverse = direction == Backward ? true : false;
+        data->fromSourced = false;
+        data->fromDefined = d->fromIsDefined;
+        data->actions = dataActions;
+        animator->setAnimValue(data);
+        animator->setFromSourcedValue(&data->fromSourced);
+        d->actions = &data->actions; //remove this?
+    }
+
+    return initInstance(animator);
+}
 
 QT_END_NAMESPACE

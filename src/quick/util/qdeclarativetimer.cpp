@@ -42,7 +42,7 @@
 #include "qdeclarativetimer_p.h"
 
 #include <QtCore/qcoreapplication.h>
-#include <QtCore/qpauseanimation.h>
+#include "private/qpauseanimationjob_p.h"
 #include <qdebug.h>
 
 #include <private/qobject_p.h>
@@ -51,15 +51,19 @@ QT_BEGIN_NAMESPACE
 
 
 
-class QDeclarativeTimerPrivate : public QObjectPrivate
+class QDeclarativeTimerPrivate : public QObjectPrivate, public QAnimation2ChangeListener
 {
     Q_DECLARE_PUBLIC(QDeclarativeTimer)
 public:
     QDeclarativeTimerPrivate()
         : interval(1000), running(false), repeating(false), triggeredOnStart(false)
         , classBegun(false), componentComplete(false), firstTick(true) {}
+
+    virtual void animationFinished(QAbstractAnimationJob *);
+    virtual void animationCurrentLoopChanged(QAbstractAnimationJob *)  { Q_Q(QDeclarativeTimer); q->ticked(); }
+
     int interval;
-    QPauseAnimation pause;
+    QPauseAnimationJob pause;
     bool running : 1;
     bool repeating : 1;
     bool triggeredOnStart : 1;
@@ -111,8 +115,7 @@ QDeclarativeTimer::QDeclarativeTimer(QObject *parent)
     : QObject(*(new QDeclarativeTimerPrivate), parent)
 {
     Q_D(QDeclarativeTimer);
-    connect(&d->pause, SIGNAL(currentLoopChanged(int)), this, SLOT(ticked()));
-    connect(&d->pause, SIGNAL(finished()), this, SLOT(finished()));
+    d->pause.addAnimationChangeListener(d, QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentLoop);
     d->pause.setLoopCount(1);
     d->pause.setDuration(d->interval);
 }
@@ -310,15 +313,15 @@ void QDeclarativeTimer::ticked()
     d->firstTick = false;
 }
 
-void QDeclarativeTimer::finished()
+void QDeclarativeTimerPrivate::animationFinished(QAbstractAnimationJob *)
 {
-    Q_D(QDeclarativeTimer);
-    if (d->repeating || !d->running)
+    Q_Q(QDeclarativeTimer);
+    if (repeating || !running)
         return;
-    d->running = false;
-    d->firstTick = false;
-    emit triggered();
-    emit runningChanged();
+    running = false;
+    firstTick = false;
+    emit q->triggered();
+    emit q->runningChanged();
 }
 
 QT_END_NAMESPACE

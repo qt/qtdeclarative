@@ -45,7 +45,6 @@
 #include <qdeclarative.h>
 
 #include <QtCore/qobject.h>
-#include <QtCore/qabstractanimation.h>
 
 #include <private/qtquickglobal_p.h>
 
@@ -101,7 +100,6 @@ private:
 
 private Q_SLOTS:
     void ticked();
-    void finished();
 };
 
 QT_END_NAMESPACE

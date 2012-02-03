@@ -31,3 +31,4 @@ HEADERS += qtdeclarativeversion.h
 include(util/util.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)
+include(animations/animations.pri)

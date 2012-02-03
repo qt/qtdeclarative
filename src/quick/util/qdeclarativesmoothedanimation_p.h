@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeProperty;
 class QDeclarativeSmoothedAnimationPrivate;
-class Q_AUTOTEST_EXPORT QDeclarativeSmoothedAnimation : public QDeclarativeNumberAnimation
+class Q_QUICK_PRIVATE_EXPORT QDeclarativeSmoothedAnimation : public QDeclarativeNumberAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarativeSmoothedAnimation)
@@ -81,11 +81,9 @@ public:
     int maximumEasingTime() const;
     void setMaximumEasingTime(int);
 
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    QAbstractAnimation* qtAnimation();
-
 Q_SIGNALS:
     void velocityChanged();
     void reversingModeChanged();

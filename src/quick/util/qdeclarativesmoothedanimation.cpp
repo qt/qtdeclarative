@@ -57,42 +57,88 @@
 
 QT_BEGIN_NAMESPACE
 
-QSmoothedAnimation::QSmoothedAnimation(QObject *parent)
-    : QAbstractAnimation(parent), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
-      reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
-      trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0)
+
+QSmoothedAnimationTimer::QSmoothedAnimationTimer(QSmoothedAnimation *animation, QObject *parent)
+    : QTimer(parent)
+    , m_animation(animation)
 {
+    connect(this, SIGNAL(timeout()), this, SLOT(stopAnimation()));
+}
+
+QSmoothedAnimationTimer::~QSmoothedAnimationTimer()
+{
+}
+
+void QSmoothedAnimationTimer::stopAnimation()
+{
+    m_animation->stop();
+}
+
+QSmoothedAnimation::QSmoothedAnimation(QDeclarativeSmoothedAnimationPrivate *priv)
+    : QAbstractAnimationJob(), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
+      reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
+      trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
+      useDelta(false), delayedStopTimer(new QSmoothedAnimationTimer(this)), animationTemplate(priv)
+{
+    delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
+    delayedStopTimer->setSingleShot(true);
+}
+
+QSmoothedAnimation::~QSmoothedAnimation()
+{
+    delete delayedStopTimer;
+    if (animationTemplate) {
+        if (target.object()) {
+            QHash<QDeclarativeProperty, QSmoothedAnimation* >::iterator it =
+                    animationTemplate->activeAnimations.find(target);
+            if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+                animationTemplate->activeAnimations.erase(it);
+        } else {
+            //target is no longer valid, need to search linearly
+            QHash<QDeclarativeProperty, QSmoothedAnimation* >::iterator it;
+            for (it = animationTemplate->activeAnimations.begin(); it != animationTemplate->activeAnimations.end(); ++it) {
+                if (it.value() == this) {
+                    animationTemplate->activeAnimations.erase(it);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 void QSmoothedAnimation::restart()
 {
     initialVelocity = trackVelocity;
-    if (state() != QAbstractAnimation::Running)
-        start();
+    if (isRunning())
+        init();
     else
-        init();
+        start();
 }
 
-void QSmoothedAnimation::updateState(QAbstractAnimation::State newState, QAbstractAnimation::State /*oldState*/)
+void QSmoothedAnimation::prepareForRestart()
 {
-    if (newState == QAbstractAnimation::Running)
+    initialVelocity = trackVelocity;
+    if (isRunning()) {
+        //we are joining a new wrapper group while running, our times need to be restarted
+        useDelta = true;
         init();
-}
-
-void QSmoothedAnimation::timerEvent(QTimerEvent *event)
-{
-    if (event->timerId() == delayedStopTimer.timerId()) {
-        delayedStopTimer.stop();
-        stop();
+        lastTime = 0;
     } else {
-        QAbstractAnimation::timerEvent(event);
+        useDelta = false;
+        //we'll be started when the group starts, which will force an init()
     }
+}
+
+void QSmoothedAnimation::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State /*oldState*/)
+{
+    if (newState == QAbstractAnimationJob::Running)
+        init();
 }
 
 void QSmoothedAnimation::delayedStop()
 {
-    if (!delayedStopTimer.isActive())
-        delayedStopTimer.start(DELAY_STOP_TIMER_INTERVAL, this);
+    if (!delayedStopTimer->isActive())
+        delayedStopTimer->start();
 }
 
 int QSmoothedAnimation::duration() const
@@ -196,7 +242,9 @@ qreal QSmoothedAnimation::easeFollow(qreal time_seconds)
 
 void QSmoothedAnimation::updateCurrentTime(int t)
 {
-    qreal time_seconds = qreal(t - lastTime) / 1000.;
+    qreal time_seconds = useDelta ? qreal(QDeclarativeAnimationTimer::instance()->currentDelta()) / 1000. : qreal(t - lastTime) / 1000.;
+    if (useDelta)
+        useDelta = false;
 
     qreal value = easeFollow(time_seconds);
     value *= (invert? -1.0: 1.0);
@@ -212,8 +260,8 @@ void QSmoothedAnimation::init()
         return;
     }
 
-    if (delayedStopTimer.isActive())
-        delayedStopTimer.stop();
+    if (delayedStopTimer->isActive())
+        delayedStopTimer->stop();
 
     initialValue = target.read().toReal();
     lastTime = this->currentTime();
@@ -312,14 +360,22 @@ QDeclarativeSmoothedAnimation::QDeclarativeSmoothedAnimation(QObject *parent)
 
 QDeclarativeSmoothedAnimation::~QDeclarativeSmoothedAnimation()
 {
+
 }
 
 QDeclarativeSmoothedAnimationPrivate::QDeclarativeSmoothedAnimationPrivate()
-    : wrapperGroup(new QParallelAnimationGroup), anim(new QSmoothedAnimation)
+    : anim(0)
 {
-    Q_Q(QDeclarativeSmoothedAnimation);
-    QDeclarative_setParent_noEvent(wrapperGroup, q);
-    QDeclarative_setParent_noEvent(anim, q);
+    anim = new QSmoothedAnimation;
+}
+
+QDeclarativeSmoothedAnimationPrivate::~QDeclarativeSmoothedAnimationPrivate()
+{
+    delete anim;
+    QHash<QDeclarativeProperty, QSmoothedAnimation* >::iterator it;
+    for (it = activeAnimations.begin(); it != activeAnimations.end(); ++it) {
+        it.value()->clearTemplate();
+    }
 }
 
 void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
@@ -333,59 +389,56 @@ void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
     }
 }
 
-QAbstractAnimation* QDeclarativeSmoothedAnimation::qtAnimation()
-{
-    Q_D(QDeclarativeSmoothedAnimation);
-    return d->wrapperGroup;
-}
-
-void QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimationJob* QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
                                                QDeclarativeProperties &modified,
                                                TransitionDirection direction)
 {
+    Q_UNUSED(direction);
     Q_D(QDeclarativeSmoothedAnimation);
-    QDeclarativeNumberAnimation::transition(actions, modified, direction);
 
-    if (!d->actions)
-        return;
+    QDeclarativeStateActions dataActions = QDeclarativePropertyAnimation::createTransitionActions(actions, modified);
 
-    QSet<QAbstractAnimation*> anims;
-    for (int i = 0; i < d->actions->size(); i++) {
-        QSmoothedAnimation *ease;
-        bool needsRestart;
-        if (!d->activeAnimations.contains((*d->actions)[i].property)) {
-            ease = new QSmoothedAnimation();
-            d->wrapperGroup->addAnimation(ease);
-            d->activeAnimations.insert((*d->actions)[i].property, ease);
-            needsRestart = false;
-        } else {
-            ease = d->activeAnimations.value((*d->actions)[i].property);
-            needsRestart = true;
+    QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
+
+    if (!dataActions.isEmpty()) {
+        QSet<QAbstractAnimationJob*> anims;
+        for (int i = 0; i < dataActions.size(); i++) {
+            QSmoothedAnimation *ease;
+            bool isActive;
+            if (!d->activeAnimations.contains(dataActions[i].property)) {
+                ease = new QSmoothedAnimation(d);
+                d->activeAnimations.insert(dataActions[i].property, ease);
+                ease->target = dataActions[i].property;
+                isActive = false;
+            } else {
+                ease = d->activeAnimations.value(dataActions[i].property);
+                isActive = true;
+            }
+            wrapperGroup->appendAnimation(initInstance(ease));
+
+            ease->to = dataActions[i].toValue.toReal();
+
+            // copying public members from main value holder animation
+            ease->maximumEasingTime = d->anim->maximumEasingTime;
+            ease->reversingMode = d->anim->reversingMode;
+            ease->velocity = d->anim->velocity;
+            ease->userDuration = d->anim->userDuration;
+
+            ease->initialVelocity = ease->trackVelocity;
+
+            if (isActive)
+                ease->prepareForRestart();
+            anims.insert(ease);
         }
-        ease->target = (*d->actions)[i].property;
-        ease->to = (*d->actions)[i].toValue.toReal();
 
-        // copying public members from main value holder animation
-        ease->maximumEasingTime = d->anim->maximumEasingTime;
-        ease->reversingMode = d->anim->reversingMode;
-        ease->velocity = d->anim->velocity;
-        ease->userDuration = d->anim->userDuration;
-
-        ease->initialVelocity = ease->trackVelocity;
-
-        if (needsRestart)
-            ease->init();
-        anims.insert(ease);
-    }
-
-    for (int i = d->wrapperGroup->animationCount() - 1; i >= 0 ; --i) {
-        if (!anims.contains(d->wrapperGroup->animationAt(i))) {
-            QSmoothedAnimation *ease = static_cast<QSmoothedAnimation*>(d->wrapperGroup->animationAt(i));
-            d->activeAnimations.remove(ease->target);
-            d->wrapperGroup->takeAnimation(i);
-            delete ease;
+        foreach (QSmoothedAnimation *ease, d->activeAnimations.values()){
+            if (!anims.contains(ease)) {
+                ease->clearTemplate();
+                d->activeAnimations.remove(ease->target);
+            }
         }
     }
+    return wrapperGroup;
 }
 
 /*!
