@@ -73,7 +73,7 @@ Item {
 //![4]
     Image {
         id: background
-        source: "background.svg"
+        source: "background.png"
         MouseArea { anchors.fill: parent; onClicked: toggle() }
     }
 //![4]
@@ -82,7 +82,7 @@ Item {
     Image {
         id: knob
         x: 1; y: 2
-        source: "knob.svg"
+        source: "knob.png"
 
         MouseArea {
             anchors.fill: parent
