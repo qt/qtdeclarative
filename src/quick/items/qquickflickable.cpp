@@ -303,14 +303,14 @@ void QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         else
             timeline.accel(data.move, v, deceleration, maxDistance);
         timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
-        if (!hData.flicking && q->xflick()) {
+        if (!hData.flicking && q->xflick() && (&data == &hData)) {
             hData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingHorizontallyChanged();
             if (!vData.flicking)
                 emit q->flickStarted();
         }
-        if (!vData.flicking && q->yflick()) {
+        if (!vData.flicking && q->yflick() && (&data == &vData)) {
             vData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingVerticallyChanged();
@@ -855,8 +855,17 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     pressPos = event->localPos();
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
-    hData.flicking = false;
-    vData.flicking = false;
+    bool wasFlicking = hData.flicking || vData.flicking;
+    if (hData.flicking) {
+        hData.flicking = false;
+        emit q->flickingHorizontallyChanged();
+    }
+    if (vData.flicking) {
+        vData.flicking = false;
+        emit q->flickingVerticallyChanged();
+    }
+    if (wasFlicking)
+        emit q->flickingChanged();
     lastPosTime = lastPressTime = computeCurrentTime(event);
     QQuickItemPrivate::start(velocityTime);
 }
@@ -897,7 +906,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                     rejectY = false;
                 }
             }
-            if (!rejectY && stealMouse) {
+            if (!rejectY && stealMouse && dy != 0.0) {
                 vData.move.setValue(qRound(newY));
                 vMoved = true;
             }
@@ -929,7 +938,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                     rejectX = false;
                 }
             }
-            if (!rejectX && stealMouse) {
+            if (!rejectX && stealMouse && dx != 0.0) {
                 hData.move.setValue(qRound(newX));
                 hMoved = true;
             }

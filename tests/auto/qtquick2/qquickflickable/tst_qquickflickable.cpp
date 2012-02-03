@@ -456,6 +456,7 @@ void tst_qquickflickable::movingAndDragging()
     QTest::mouseMove(canvas, QPoint(70, 50));
     QTest::mouseMove(canvas, QPoint(60, 50));
 
+    QVERIFY(!flickable->isDraggingVertically());
     QVERIFY(flickable->isDraggingHorizontally());
     QVERIFY(flickable->isDragging());
     QCOMPARE(vDragSpy.count(), 0);
@@ -480,8 +481,49 @@ void tst_qquickflickable::movingAndDragging()
     QCOMPARE(hDragSpy.count(), 2);
     QCOMPARE(dragStartSpy.count(), 1);
     QCOMPARE(dragEndSpy.count(), 1);
-
     // Don't test moving because a flick could occur
+
+#ifdef Q_OS_MAC
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
+#endif
+
+    QTRY_VERIFY(!flickable->isMoving());
+
+    vMoveSpy.clear();
+    hMoveSpy.clear();
+    moveSpy.clear();
+    QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
+    QSignalSpy hFlickSpy(flickable, SIGNAL(flickingHorizontallyChanged()));
+    QSignalSpy flickSpy(flickable, SIGNAL(flickingChanged()));
+
+    // flick then press while it is still moving
+    // flicking == false, moving == true;
+    flick(canvas, QPoint(20,190), QPoint(20, 50), 200);
+    QVERIFY(flickable->verticalVelocity() > 0.0);
+    QVERIFY(flickable->isFlicking());
+    QVERIFY(flickable->isFlickingVertically());
+    QVERIFY(!flickable->isFlickingHorizontally());
+    QVERIFY(flickable->isMoving());
+    QVERIFY(flickable->isMovingVertically());
+    QVERIFY(!flickable->isMovingHorizontally());
+    QCOMPARE(vMoveSpy.count(), 1);
+    QCOMPARE(hMoveSpy.count(), 0);
+    QCOMPARE(moveSpy.count(), 1);
+    QCOMPARE(vFlickSpy.count(), 1);
+    QCOMPARE(hFlickSpy.count(), 0);
+    QCOMPARE(flickSpy.count(), 1);
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(20, 50));
+    QTRY_VERIFY(!flickable->isFlicking());
+    QVERIFY(!flickable->isFlickingVertically());
+    QVERIFY(flickable->isMoving());
+    QVERIFY(flickable->isMovingVertically());
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(20,50));
+    QVERIFY(!flickable->isFlicking());
+    QVERIFY(!flickable->isFlickingVertically());
+    QTRY_VERIFY(!flickable->isMoving());
+    QVERIFY(!flickable->isMovingVertically());
 
     delete canvas;
 }
