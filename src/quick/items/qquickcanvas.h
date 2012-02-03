@@ -96,6 +96,10 @@ public:
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
     QOpenGLFramebufferObject *renderTarget() const;
 
+    void setRenderTarget(uint fboId, const QSize &size);
+    uint renderTargetId() const;
+    QSize renderTargetSize() const;
+
     QDeclarativeIncubationController *incubationController() const;
 
     virtual QAccessibleInterface *accessibleRoot() const;

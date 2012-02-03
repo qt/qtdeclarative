@@ -92,7 +92,7 @@ public:
 
     QSGMaterialShader *prepareMaterial(QSGMaterial *material);
 
-    virtual void renderNextFrame(QSGRenderer *renderer, QOpenGLFramebufferObject *fbo = 0);
+    virtual void renderNextFrame(QSGRenderer *renderer, GLuint fboId);
 
     virtual QSGDistanceFieldGlyphCache *createDistanceFieldGlyphCache(const QRawFont &font);
 

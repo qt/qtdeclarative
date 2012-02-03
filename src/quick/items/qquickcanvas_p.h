@@ -182,6 +182,8 @@ public:
     uint clearBeforeRendering : 1;
 
     QOpenGLFramebufferObject *renderTarget;
+    uint renderTargetId;
+    QSize renderTargetSize;
 
     QHash<int, QQuickItem *> itemForTouchPointId;
 

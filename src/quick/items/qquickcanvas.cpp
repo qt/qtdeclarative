@@ -264,12 +264,18 @@ void QQuickCanvasPrivate::syncSceneGraph()
 void QQuickCanvasPrivate::renderSceneGraph(const QSize &size)
 {
     Q_Q(QQuickCanvas);
+    emit q->beforeRendering();
+    int fboId = 0;
     renderer->setDeviceRect(QRect(QPoint(0, 0), size));
-    renderer->setViewportRect(QRect(QPoint(0, 0), renderTarget ? renderTarget->size() : size));
+    if (renderTargetId) {
+        fboId = renderTargetId;
+        renderer->setViewportRect(QRect(QPoint(0, 0), renderTargetSize));
+    } else {
+        renderer->setViewportRect(QRect(QPoint(0, 0), size));
+    }
     renderer->setProjectionMatrixToDeviceRect();
 
-    emit q->beforeRendering();
-    context->renderNextFrame(renderer, renderTarget);
+    context->renderNextFrame(renderer, fboId);
     emit q->afterRendering();
 }
 
@@ -285,6 +291,7 @@ QQuickCanvasPrivate::QQuickCanvasPrivate()
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
     , renderTarget(0)
+    , renderTargetId(0)
     , incubationController(0)
 {
 }
@@ -1818,7 +1825,52 @@ void QQuickCanvas::setRenderTarget(QOpenGLFramebufferObject *fbo)
     }
 
     d->renderTarget = fbo;
+    if (fbo) {
+        d->renderTargetId = fbo->handle();
+        d->renderTargetSize = fbo->size();
+    } else {
+        d->renderTargetId = 0;
+        d->renderTargetSize = QSize();
+    }
 }
+
+/*!
+    \overload
+ */
+void QQuickCanvas::setRenderTarget(uint fboId, const QSize &size)
+{
+    Q_D(QQuickCanvas);
+    if (d->context && d->context && QThread::currentThread() != d->context->thread()) {
+        qWarning("QQuickCanvas::setRenderThread: Cannot set render target from outside the rendering thread");
+        return;
+    }
+
+    d->renderTargetId = fboId;
+    d->renderTargetSize = size;
+
+    // Unset any previously set instance...
+    d->renderTarget = 0;
+}
+
+
+/*!
+    Returns the FBO id of the render target when set; otherwise returns 0.
+ */
+uint QQuickCanvas::renderTargetId() const
+{
+    Q_D(const QQuickCanvas);
+    return d->renderTargetId;
+}
+
+/*!
+    Returns the size of the currently set render target; otherwise returns an enpty size.
+ */
+QSize QQuickCanvas::renderTargetSize() const
+{
+    Q_D(const QQuickCanvas);
+    return d->renderTargetSize;
+}
+
 
 
 

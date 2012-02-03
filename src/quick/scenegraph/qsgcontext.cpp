@@ -221,10 +221,10 @@ bool QSGContext::isReady() const
 }
 
 
-void QSGContext::renderNextFrame(QSGRenderer *renderer, QOpenGLFramebufferObject *fbo)
+void QSGContext::renderNextFrame(QSGRenderer *renderer, GLuint fboId)
 {
-    if (fbo) {
-        QSGBindableFbo bindable(fbo);
+    if (fboId) {
+        QSGBindableFboId bindable(fboId);
         renderer->renderScene(bindable);
     } else {
         renderer->renderScene();

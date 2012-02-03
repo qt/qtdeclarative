@@ -199,6 +199,15 @@ private:
     QOpenGLFramebufferObject *m_fbo;
 };
 
+class QSGBindableFboId : public QSGBindable
+{
+public:
+    QSGBindableFboId(GLuint);
+    virtual void bind() const;
+private:
+    GLuint m_id;
+};
+
 
 
 QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState::DirtyStates dirty) const

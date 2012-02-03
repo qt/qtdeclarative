@@ -93,6 +93,17 @@ void QSGBindableFbo::bind() const
     m_fbo->bind();
 }
 
+QSGBindableFboId::QSGBindableFboId(GLuint id)
+    : m_id(id)
+{
+}
+
+
+void QSGBindableFboId::bind() const
+{
+    QOpenGLContext::currentContext()->functions()->glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+}
+
 /*!
     \class QSGRenderer
     \brief The renderer class is the abstract baseclass use for rendering the
