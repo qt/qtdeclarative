@@ -736,7 +736,7 @@ QRectF QQuickTextEdit::positionToRectangle(int pos) const
     Q_D(const QQuickTextEdit);
     QTextCursor c(d->document);
     c.setPosition(pos);
-    return d->control->cursorRect(c);
+    return d->control->cursorRect(c).translated(0, d->yoff);
 
 }
 

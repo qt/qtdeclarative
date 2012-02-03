@@ -1104,7 +1104,7 @@ void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
     node->update();
 }
 
-void QQuickTextNode::addTextDocument(const QPointF &, QTextDocument *textDocument,
+void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *textDocument,
                                   const QColor &textColor,
                                   QQuickText::TextStyle style, const QColor &styleColor,
                                   const QColor &selectionColor, const QColor &selectedTextColor,
@@ -1147,7 +1147,7 @@ void QQuickTextNode::addTextDocument(const QPointF &, QTextDocument *textDocumen
                 QVarLengthArray<QTextLayout::FormatRange> colorChanges;
                 mergeFormats(block.layout(), &colorChanges);
 
-                QPointF blockPosition = textDocument->documentLayout()->blockBoundingRect(block).topLeft();
+                QPointF blockPosition = textDocument->documentLayout()->blockBoundingRect(block).topLeft() + position;
                 if (QTextList *textList = block.textList()) {
                     QPointF pos = blockPosition;
                     QTextLayout *layout = block.layout();
