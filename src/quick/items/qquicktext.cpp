@@ -63,8 +63,6 @@
 #include <qmath.h>
 #include <limits.h>
 
-DEFINE_BOOL_CONFIG_OPTION(qmlTextDebug, QML_TEXT_DEBUG)
-
 QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT bool qt_applefontsmoothing_enabled;
@@ -2055,22 +2053,9 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         }
 
         foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
-            if (qmlTextDebug()) {
-                QSGRectangleNode *rectangle = d->sceneGraphContext()->createRectangleNode();
-                rectangle->setRect(QRectF(img->pos.x(), img->pos.y() + bounds.y(),img->size.width(), img->size.height()));
-                rectangle->setColor(QColor("red"));
-                rectangle->update();
-                node->appendChildNode(rectangle);
-            }
             QDeclarativePixmap *pix = img->pix;
-            if (pix && pix->isReady()) {
-                QSGTexture *texture = d->sceneGraphContext()->textureForFactory(pix->textureFactory());
-                QSGImageNode *imgnode = d->sceneGraphContext()->createImageNode();
-                imgnode->setTexture(texture);
-                imgnode->setTargetRect(QRectF(img->pos.x(), img->pos.y() + bounds.y(), pix->width(), pix->height()));
-                node->appendChildNode(imgnode);
-                imgnode->update();
-            }
+            if (pix && pix->isReady())
+                node->addImage(QRectF(img->pos.x(), img->pos.y() + bounds.y(), pix->width(), pix->height()), pix->image());
         }
         return node;
     }
