@@ -68,7 +68,7 @@ public:
 
     bool isRunning() const;
 
-    void transition(const QList<QDeclarativeAction> &, QDeclarativeTransition *transition);
+    void transition(const QList<QDeclarativeAction> &, QDeclarativeTransition *transition, QObject *defaultTarget = 0);
 
     void cancel();
 

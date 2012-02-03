@@ -206,7 +206,8 @@ QPointF QQuickParentAnimationPrivate::computeTransformOrigin(QQuickItem::Transfo
 
 QAbstractAnimationJob* QQuickParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
-                        TransitionDirection direction)
+                        TransitionDirection direction,
+                        QObject *defaultTarget)
 {
     Q_D(QQuickParentAnimation);
 
@@ -387,7 +388,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QDeclarativeStateAction
         for (int ii = 0; ii < d->animations.count(); ++ii) {
             if (valid)
                 d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-            anim = d->animations.at(ii)->transition(actions, modified, direction);
+            anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
             ag->appendAnimation(anim);
         }
 
@@ -521,9 +522,11 @@ void QQuickAnchorAnimation::setEasing(const QEasingCurve &e)
 
 QAbstractAnimationJob* QQuickAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
-                        TransitionDirection direction)
+                        TransitionDirection direction,
+                        QObject *defaultTarget)
 {
     Q_UNUSED(modified);
+    Q_UNUSED(defaultTarget);
     Q_D(QQuickAnchorAnimation);
     QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
     data->interpolatorType = QMetaType::QReal;
@@ -823,15 +826,18 @@ void QQuickPathAnimation::setEndRotation(qreal rotation)
 
 QAbstractAnimationJob* QQuickPathAnimation::transition(QDeclarativeStateActions &actions,
                                            QDeclarativeProperties &modified,
-                                           TransitionDirection direction)
+                                           TransitionDirection direction,
+                                           QObject *defaultTarget)
 {
     Q_D(QQuickPathAnimation);
 
+    QQuickItem *target = d->target ? d->target : qobject_cast<QQuickItem*>(defaultTarget);
+
     QQuickPathAnimationUpdater prevData;
     bool havePrevData = false;
-    if (d->activeAnimations.contains(d->target)) {
+    if (d->activeAnimations.contains(target)) {
         havePrevData = true;
-        prevData = *d->activeAnimations[d->target]->pathUpdater();
+        prevData = *d->activeAnimations[target]->pathUpdater();
     }
 
     QList<QQuickItem*> keys = d->activeAnimations.keys();
@@ -846,7 +852,7 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QDeclarativeStateActions 
     QQuickPathAnimationUpdater *data = new QQuickPathAnimationUpdater();
     QQuickPathAnimationAnimator *pa = new QQuickPathAnimationAnimator(d);
 
-    d->activeAnimations[d->target] = pa;
+    d->activeAnimations[target] = pa;
 
     data->orientation = d->orientation;
     data->anchorPoint = d->anchorPoint;
@@ -863,21 +869,21 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QDeclarativeStateActions 
         QDeclarativeAction &action = actions[i];
         if (action.event)
             continue;
-        if (action.specifiedObject == d->target && action.property.name() == QLatin1String("x")) {
+        if (action.specifiedObject == target && action.property.name() == QLatin1String("x")) {
             data->toX = action.toValue.toReal();
             modified << action.property;
             action.fromValue = action.toValue;
         }
-        if (action.specifiedObject == d->target && action.property.name() == QLatin1String("y")) {
+        if (action.specifiedObject == target && action.property.name() == QLatin1String("y")) {
             data->toY = action.toValue.toReal();
             modified << action.property;
             action.fromValue = action.toValue;
         }
     }
 
-    if (d->target && d->path &&
+    if (target && d->path &&
         (modified.count() > origModifiedSize || data->toDefined)) {
-        data->target = d->target;
+        data->target = target;
         data->path = d->path;
         data->path->invalidateSequentialHistory();
 

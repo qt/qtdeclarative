@@ -217,7 +217,8 @@ void QDeclarativeTransition::setReversed(bool r)
 
 QDeclarativeTransitionInstance *QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &actions,
                             QList<QDeclarativeProperty> &after,
-                            QDeclarativeTransitionManager *manager)
+                            QDeclarativeTransitionManager *manager,
+                            QObject *defaultTarget)
 {
     Q_D(QDeclarativeTransition);
 
@@ -232,7 +233,7 @@ QDeclarativeTransitionInstance *QDeclarativeTransition::prepare(QDeclarativeStat
 
     QAbstractAnimationJob *anim = 0;
     for (int i = start; i != end;) {
-        anim = d->animations.at(i)->transition(actions, after, direction);
+        anim = d->animations.at(i)->transition(actions, after, direction, defaultTarget);
         if (anim)
             d->reversed ? group->prependAnimation(anim) : group->appendAnimation(anim);
         d->reversed ? --i : ++i;

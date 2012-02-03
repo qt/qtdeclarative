@@ -128,7 +128,8 @@ void QDeclarativeTransitionManager::finished()
 }
 
 void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &list,
-                                      QDeclarativeTransition *transition)
+                                      QDeclarativeTransition *transition,
+                                      QObject *defaultTarget)
 {
     cancel();
 
@@ -208,7 +209,7 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
     if (transition) {
         QList<QDeclarativeProperty> touched;
         QDeclarativeTransitionInstance *oldInstance = d->transitionInstance;
-        d->transitionInstance = transition->prepare(applyList, touched, this);
+        d->transitionInstance = transition->prepare(applyList, touched, this, defaultTarget);
         d->transitionInstance->start();
         if (oldInstance && oldInstance != d->transitionInstance)
             delete oldInstance;

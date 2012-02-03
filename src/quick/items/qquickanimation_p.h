@@ -82,7 +82,8 @@ Q_SIGNALS:
 protected:
     virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            QObject *defaultTarget = 0);
 };
 
 class QQuickAnchorAnimationPrivate;
@@ -113,7 +114,8 @@ Q_SIGNALS:
 protected:
     virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            QObject *defaultTarget = 0);
 };
 
 class QQuickItem;
@@ -177,7 +179,8 @@ public:
 protected:
     virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            QObject *defaultTarget = 0);
 Q_SIGNALS:
     void durationChanged(int);
     void easingChanged(const QEasingCurve &);

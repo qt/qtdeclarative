@@ -106,7 +106,8 @@ public:
 
     QDeclarativeTransitionInstance *prepare(QDeclarativeStateOperation::ActionList &actions,
                  QList<QDeclarativeProperty> &after,
-                 QDeclarativeTransitionManager *end);
+                 QDeclarativeTransitionManager *end,
+                 QObject *defaultTarget);
 
     void setReversed(bool r);
 
