@@ -304,7 +304,11 @@ double QJSValuePrivate::toInteger() const
         return 0;
     if (qIsInf(result))
         return result;
-    return (result > 0) ? qFloor(result) : -1 * qFloor(-result);
+
+    // Must use floor explicitly rather than qFloor here. On some
+    // platforms qFloor will cast the value to a single precision float and use
+    // floorf() which results in test failures.
+    return (result > 0) ? floor(result) : -1 * floor(-result);
 }
 
 qint32 QJSValuePrivate::toInt32() const
@@ -324,7 +328,11 @@ quint32 QJSValuePrivate::toUInt32() const
     // some of these operation are invoked in toInteger subcall.
     if (qIsInf(result))
         return 0;
-    return result;
+
+    // The explicit casts are required to avoid undefined behaviour. For example, casting
+    // a negative double directly to an unsigned int on ARM NEON FPU results in the value
+    // being set to zero. Casting to a signed int first ensures well defined behaviour.
+    return (quint32) (qint32) result;
 }
 
 quint16 QJSValuePrivate::toUInt16() const
