@@ -258,7 +258,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
         return dependency;
 
     if (fill == controlItem) {
-        if ((controlItem == item->parentItem()))
+        if (controlItem == item->parentItem())
             dependency |= QQuickItemPrivate::SizeChange;
         else    //sibling
             dependency |= QQuickItemPrivate::GeometryChange;
@@ -266,7 +266,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
     }
 
     if (centerIn == controlItem) {
-        if ((controlItem == item->parentItem()))
+        if (controlItem == item->parentItem())
             dependency |= QQuickItemPrivate::SizeChange;
         else    //sibling
             dependency |= QQuickItemPrivate::GeometryChange;
@@ -276,7 +276,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
     if ((usedAnchors & QQuickAnchors::LeftAnchor && left.item == controlItem) ||
         (usedAnchors & QQuickAnchors::RightAnchor && right.item == controlItem) ||
         (usedAnchors & QQuickAnchors::HCenterAnchor && hCenter.item == controlItem)) {
-        if ((controlItem == item->parentItem()))
+        if (controlItem == item->parentItem())
             dependency |= QQuickItemPrivate::WidthChange;
         else    //sibling
             dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::XChange | QQuickItemPrivate::WidthChange);
@@ -286,7 +286,7 @@ int QQuickAnchorsPrivate::calculateDependency(QQuickItem *controlItem)
         (usedAnchors & QQuickAnchors::BottomAnchor && bottom.item == controlItem) ||
         (usedAnchors & QQuickAnchors::VCenterAnchor && vCenter.item == controlItem) ||
         (usedAnchors & QQuickAnchors::BaselineAnchor && baseline.item == controlItem)) {
-        if ((controlItem == item->parentItem()))
+        if (controlItem == item->parentItem())
             dependency |= QQuickItemPrivate::HeightChange;
         else    //sibling
             dependency |= QFlags<QQuickItemPrivate::GeometryChangeType>(QQuickItemPrivate::YChange | QQuickItemPrivate::HeightChange);

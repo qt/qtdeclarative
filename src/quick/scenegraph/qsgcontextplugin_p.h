@@ -76,7 +76,7 @@ public:
     virtual QStringList keys() const = 0;
     virtual QSGContext *create(const QString &key) const = 0;
 
-    virtual QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image) { return 0; }
+    virtual QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &) { return 0; }
 };
 
 QT_END_NAMESPACE

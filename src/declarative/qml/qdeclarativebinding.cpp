@@ -270,8 +270,6 @@ QDeclarativeBinding::QDeclarativeBinding(const QString &str, bool isRewritten, Q
                                          QObject *parent)
 : QDeclarativeExpression(ctxt, obj, str, isRewritten, url, lineNumber, columnNumber, *new QDeclarativeBindingPrivate)
 {
-    Q_D(QDeclarativeBinding);
-
     setParent(parent);
     setNotifyOnValueChanged(true);
 }

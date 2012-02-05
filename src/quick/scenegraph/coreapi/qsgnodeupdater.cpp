@@ -54,6 +54,10 @@ QSGNodeUpdater::QSGNodeUpdater()
     m_opacity_stack.add(1);
 }
 
+QSGNodeUpdater::~QSGNodeUpdater()
+{
+}
+
 void QSGNodeUpdater::updateStates(QSGNode *n)
 {
     m_current_clip = 0;

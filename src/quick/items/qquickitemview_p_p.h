@@ -56,7 +56,7 @@ class FxViewItem
 {
 public:
     FxViewItem(QQuickItem *, bool own);
-    ~FxViewItem();
+    virtual ~FxViewItem();
 
     // these are positions and sizes along the current direction of scrolling/flicking
     virtual qreal position() const = 0;

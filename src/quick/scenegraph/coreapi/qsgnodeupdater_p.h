@@ -51,6 +51,7 @@ class Q_QUICK_EXPORT QSGNodeUpdater
 {
 public:
     QSGNodeUpdater();
+    virtual ~QSGNodeUpdater();
 
     virtual void updateStates(QSGNode *n);
     virtual bool isNodeBlocked(QSGNode *n, QSGNode *root) const;

@@ -83,6 +83,7 @@ public:
     };
 
     QSGMaterialShader();
+    virtual ~QSGMaterialShader() {};
 
     virtual void activate();
     virtual void deactivate();

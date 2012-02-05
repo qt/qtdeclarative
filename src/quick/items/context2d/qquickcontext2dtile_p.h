@@ -56,7 +56,7 @@ class QQuickContext2DTile
 {
 public:
     QQuickContext2DTile();
-    ~QQuickContext2DTile();
+    virtual ~QQuickContext2DTile();
 
     bool dirty() const {return m_dirty;}
     void markDirty(bool dirty) {m_dirty = dirty;}

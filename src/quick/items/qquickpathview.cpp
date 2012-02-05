@@ -1503,14 +1503,14 @@ void QQuickPathView::refill()
             if (QQuickPathViewAttached *att = d->attached(d->currentItem))
                 att->setOnPath(false);
         } else if (!waiting && d->currentIndex >= 0 && d->currentIndex < d->modelCount) {
-            if (d->currentItem = d->getItem(d->currentIndex, d->currentIndex, false)) {
+            if ((d->currentItem = d->getItem(d->currentIndex, d->currentIndex, false))) {
                 d->updateItem(d->currentItem, d->currentIndex < d->firstIndex ? 0.0 : 1.0);
                 if (QQuickPathViewAttached *att = d->attached(d->currentItem))
                     att->setIsCurrentItem(true);
             }
         }
     } else if (!waiting && !d->currentItem) {
-        if (d->currentItem = d->getItem(d->currentIndex, d->currentIndex, true)) {
+        if ((d->currentItem = d->getItem(d->currentIndex, d->currentIndex, true))) {
             d->currentItem->setFocus(true);
             if (QQuickPathViewAttached *att = d->attached(d->currentItem))
                 att->setIsCurrentItem(true);
@@ -1674,13 +1674,13 @@ void QQuickPathViewPrivate::createCurrentItem()
         return;
     int itemIndex = (currentIndex - firstIndex + modelCount) % modelCount;
     if (itemIndex < items.count()) {
-        if (currentItem = getItem(currentIndex, currentIndex, true)) {
+        if ((currentItem = getItem(currentIndex, currentIndex, true))) {
             currentItem->setFocus(true);
             if (QQuickPathViewAttached *att = attached(currentItem))
                 att->setIsCurrentItem(true);
         }
     } else if (currentIndex >= 0 && currentIndex < modelCount) {
-        if (currentItem = getItem(currentIndex, currentIndex, false)) {
+        if ((currentItem = getItem(currentIndex, currentIndex, false))) {
             updateItem(currentItem, currentIndex < firstIndex ? 0.0 : 1.0);
             if (QQuickPathViewAttached *att = attached(currentItem))
                 att->setIsCurrentItem(true);
