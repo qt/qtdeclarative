@@ -1522,6 +1522,9 @@ QDeclarativeListModel *QDeclarativeListModel::createWithOwner(QDeclarativeListMo
     model->m_agent = newOwner->m_agent;
     model->m_dynamicRoles = newOwner->m_dynamicRoles;
 
+    if (model->m_mainThread && model->m_agent)
+        model->m_agent->addref();
+
     QDeclarativeEngine::setContextForObject(model, QDeclarativeEngine::contextForObject(newOwner));
 
     return model;
