@@ -6,6 +6,9 @@ PUBLICTESTS += \
     nodes \
     qdeclarativepixmapcache
 
+# This test requires the qtconcurrent module
+!contains(QT_CONFIG, concurrent):PUBLICTESTS -= qdeclarativepixmapcache
+
 PRIVATETESTS += \
     qdeclarativeanimations \
     qdeclarativeapplication \
