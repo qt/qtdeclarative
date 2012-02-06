@@ -262,6 +262,11 @@ void tst_qquickitem::simpleFocus()
 {
     QQuickCanvas canvas;
     ensureFocus(&canvas);
+
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-24094: fails on Mac OS X 10.7");
+#endif
+
     QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
 
     QQuickItem *l1c1 = new TestItem(canvas.rootItem());
