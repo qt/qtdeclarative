@@ -989,7 +989,7 @@ QObject *QDeclarativePropertyAction::target() const
     return d->target;
 }
 
-void QDeclarativePropertyAction::setTarget(QObject *o)
+void QDeclarativePropertyAction::setTargetObject(QObject *o)
 {
     Q_D(QDeclarativePropertyAction);
     if (d->target == o)
@@ -2208,7 +2208,7 @@ QObject *QDeclarativePropertyAnimation::target() const
     return d->target;
 }
 
-void QDeclarativePropertyAnimation::setTarget(QObject *o)
+void QDeclarativePropertyAnimation::setTargetObject(QObject *o)
 {
     Q_D(QDeclarativePropertyAnimation);
     if (d->target == o)

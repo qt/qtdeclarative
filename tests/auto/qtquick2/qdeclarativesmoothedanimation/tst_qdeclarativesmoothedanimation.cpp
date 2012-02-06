@@ -131,7 +131,7 @@ void tst_qdeclarativesmoothedanimation::simpleAnimation()
     QDeclarativeSmoothedAnimation *animation = obj->findChild<QDeclarativeSmoothedAnimation*>("anim");
     QVERIFY(animation);
 
-    animation->setTarget(rect);
+    animation->setTargetObject(rect);
     animation->setProperty("x");
     animation->setTo(200);
     animation->setDuration(250);

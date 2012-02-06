@@ -120,7 +120,7 @@ void tst_qdeclarativeanimations::simpleProperty()
 {
     QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     QVERIFY(animation.target() == &rect);
@@ -145,7 +145,7 @@ void tst_qdeclarativeanimations::simpleNumber()
 {
     QQuickRectangle rect;
     QDeclarativeNumberAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     QVERIFY(animation.target() == &rect);
@@ -170,7 +170,7 @@ void tst_qdeclarativeanimations::simpleColor()
 {
     QQuickRectangle rect;
     QDeclarativeColorAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("color");
     animation.setTo(QColor("red"));
     QVERIFY(animation.target() == &rect);
@@ -207,7 +207,7 @@ void tst_qdeclarativeanimations::simpleRotation()
 {
     QQuickRectangle rect;
     QDeclarativeRotationAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("rotation");
     animation.setTo(270);
     QVERIFY(animation.target() == &rect);
@@ -555,7 +555,7 @@ void tst_qdeclarativeanimations::alwaysRunToEnd()
 {
     QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     animation.setDuration(1000);
@@ -575,7 +575,7 @@ void tst_qdeclarativeanimations::complete()
 {
     QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setFrom(1);
     animation.setTo(200);
@@ -596,7 +596,7 @@ void tst_qdeclarativeanimations::resume()
 {
     QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setFrom(10);
     animation.setTo(200);
@@ -623,7 +623,7 @@ void tst_qdeclarativeanimations::dotProperty()
 {
     QQuickRectangle rect;
     QDeclarativeNumberAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("border.width");
     animation.setTo(10);
     animation.start();
@@ -1232,7 +1232,7 @@ void tst_qdeclarativeanimations::alwaysRunToEndRestartBug()
 {
     QQuickRectangle rect;
     QDeclarativePropertyAnimation animation;
-    animation.setTarget(&rect);
+    animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     animation.setDuration(1000);

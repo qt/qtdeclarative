@@ -195,7 +195,7 @@ class Q_QUICK_PRIVATE_EXPORT QDeclarativePropertyAction : public QDeclarativeAbs
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarativePropertyAction)
 
-    Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(QObject *target READ target WRITE setTargetObject NOTIFY targetChanged)
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
     Q_PROPERTY(QString properties READ properties WRITE setProperties NOTIFY propertiesChanged)
     Q_PROPERTY(QDeclarativeListProperty<QObject> targets READ targets)
@@ -207,7 +207,7 @@ public:
     virtual ~QDeclarativePropertyAction();
 
     QObject *target() const;
-    void setTarget(QObject *);
+    void setTargetObject(QObject *);
 
     QString property() const;
     void setProperty(const QString &);
@@ -243,7 +243,7 @@ class Q_QUICK_PRIVATE_EXPORT QDeclarativePropertyAnimation : public QDeclarative
     Q_PROPERTY(QVariant from READ from WRITE setFrom NOTIFY fromChanged)
     Q_PROPERTY(QVariant to READ to WRITE setTo NOTIFY toChanged)
     Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
-    Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(QObject *target READ target WRITE setTargetObject NOTIFY targetChanged)
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
     Q_PROPERTY(QString properties READ properties WRITE setProperties NOTIFY propertiesChanged)
     Q_PROPERTY(QDeclarativeListProperty<QObject> targets READ targets)
@@ -266,7 +266,7 @@ public:
     void setEasing(const QEasingCurve &);
 
     QObject *target() const;
-    void setTarget(QObject *);
+    void setTargetObject(QObject *);
 
     QString property() const;
     void setProperty(const QString &);
