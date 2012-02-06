@@ -48,32 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QT_DISTANCEFIELD_DEFAULT_BASEFONTSIZE 54
-#define QT_DISTANCEFIELD_DEFAULT_TILESIZE 64
-#define QT_DISTANCEFIELD_DEFAULT_SCALE 16
-#define QT_DISTANCEFIELD_DEFAULT_RADIUS 80
-#define QT_DISTANCEFIELD_HIGHGLYPHCOUNT 2000
-
-#define QT_DISTANCEFIELD_BASEFONTSIZE(NarrowOutlineFont) \
-    (NarrowOutlineFont ? QT_DISTANCEFIELD_DEFAULT_BASEFONTSIZE * 2 : \
-                         QT_DISTANCEFIELD_DEFAULT_BASEFONTSIZE)
-#define QT_DISTANCEFIELD_TILESIZE(NarrowOutlineFont) \
-    (NarrowOutlineFont ? QT_DISTANCEFIELD_DEFAULT_TILESIZE * 2 : \
-                         QT_DISTANCEFIELD_DEFAULT_TILESIZE)
-#define QT_DISTANCEFIELD_SCALE(NarrowOutlineFont) \
-    (NarrowOutlineFont ? QT_DISTANCEFIELD_DEFAULT_SCALE / 2 : \
-                         QT_DISTANCEFIELD_DEFAULT_SCALE)
-#define QT_DISTANCEFIELD_RADIUS(NarrowOutlineFont) \
-    (NarrowOutlineFont ? QT_DISTANCEFIELD_DEFAULT_RADIUS / 2 : \
-                         QT_DISTANCEFIELD_DEFAULT_RADIUS)
-
-
 typedef float (*ThresholdFunc)(float glyphScale);
 typedef float (*AntialiasingSpreadFunc)(float glyphScale);
-
-bool qt_fontHasNarrowOutlines(const QRawFont &f);
-QImage qt_renderDistanceFieldGlyph(const QRawFont &font, glyph_t glyph, bool doubleResolution);
-
 
 class QOpenGLShaderProgram;
 class QSGDistanceFieldGlyphCache;

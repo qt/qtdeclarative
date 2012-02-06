@@ -45,6 +45,7 @@
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <private/qrawfont_p.h>
+#include <private/qdistancefield_p.h>
 #include <QtGui/qguiapplication.h>
 #include <qdir.h>
 
