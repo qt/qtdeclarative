@@ -436,10 +436,9 @@
     \brief A var type is a generic property type.
 
     A var is a generic property type capable of storing any data type.
-    It is equivalent to a regular JavaScript variable, except that you
-    cannot assign a JavaScript function to such a property.
-    For example, var properties can store numbers, strings, objects and
-    arrays:
+    It is equivalent to a regular JavaScript variable.
+    For example, var properties can store numbers, strings, objects,
+    arrays and functions:
 
     \qml
     Item {
@@ -454,12 +453,9 @@
         property var aVector3d: Qt.vector3d(100, 100, 100)
         property var anArray: [1, 2, 3, "four", "five", (function() { return "six"; })]
         property var anObject: { "foo": 10, "bar": 20 }
+        property var aFunction: (function() { return "one"; })
     }
     \endqml
-
-    Attempting to assign a JavaScript function to a var property will result in
-    a binding assignment as per other property types.  You can assign a JavaScript
-    array containing a single function element instead.
 
     It is important to note that changes in regular properties of JavaScript
     objects assigned to a var property will \bold{not} trigger updates of bindings
@@ -480,6 +476,11 @@
         }
     }
     \endqml
+
+    If the onCompleted handler instead had \tt{"car = new Object({wheels: 6})"}
+    then the text would be updated to say "The car has 6 wheels"., since the
+    car property itself would be changed, which causes a change notification
+    to be emitted.
 
     A \c var type property can also hold an image or pixmap.
     A \c var which contains a QPixmap or QImage is known as a

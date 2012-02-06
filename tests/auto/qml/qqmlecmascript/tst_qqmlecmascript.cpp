@@ -195,6 +195,7 @@ private slots:
     void functionAssignment_fromJS();
     void functionAssignment_fromJS_data();
     void functionAssignmentfromJS_invalid();
+    void functionAssignment_afterBinding();
     void eval();
     void function();
     void functionException();
@@ -3768,6 +3769,11 @@ void tst_qqmlecmascript::propertyVar_data()
     QTest::newRow("literal property assignment") << testFileUrl("propertyVar.8.qml");
     QTest::newRow("qobject property assignment") << testFileUrl("propertyVar.9.qml");
     QTest::newRow("base class var property assignment") << testFileUrl("propertyVar.10.qml");
+    QTest::newRow("javascript function assignment") << testFileUrl("propertyVar.11.qml");
+    QTest::newRow("javascript special assignment") << testFileUrl("propertyVar.12.qml");
+    QTest::newRow("declarative binding assignment") << testFileUrl("propertyVar.13.qml");
+    QTest::newRow("imperative binding assignment") << testFileUrl("propertyVar.14.qml");
+    QTest::newRow("stored binding assignment") << testFileUrl("propertyVar.15.qml");
 }
 
 void tst_qqmlecmascript::propertyVar()
@@ -5025,8 +5031,12 @@ void tst_qqmlecmascript::functionAssignment_fromBinding()
     QQmlComponent component(&engine, testFileUrl("functionAssignment.1.qml"));
 
     QString url = component.url().toString();
-    QString warning = url + ":4: Unable to assign a function to a property.";
-    QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+    QString w1 = url + ":4: Unable to assign a function to a property of any type other than var.";
+    QString w2 = url + ":5: Invalid use of Qt.binding() in a binding declaration.";
+    QString w3 = url + ":6: Invalid use of Qt.binding() in a binding declaration.";
+    QTest::ignoreMessage(QtWarningMsg, w1.toLatin1().constData());
+    QTest::ignoreMessage(QtWarningMsg, w2.toLatin1().constData());
+    QTest::ignoreMessage(QtWarningMsg, w3.toLatin1().constData());
     
     MyQmlObject *o = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(o != 0);
@@ -5090,6 +5100,22 @@ void tst_qqmlecmascript::functionAssignmentfromJS_invalid()
     warning = url + ":71: Unable to assign QString to int";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     o->setProperty("assignWrongTypeToValueType", true);
+
+    delete o;
+}
+
+void tst_qqmlecmascript::functionAssignment_afterBinding()
+{
+    QQmlComponent component(&engine, testFileUrl("functionAssignment.3.qml"));
+
+    QString url = component.url().toString();
+    QString w1 = url + ":16: Error: Cannot assign JavaScript function to int";
+    QTest::ignoreMessage(QtWarningMsg, w1.toLatin1().constData());
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("t1"), QVariant::fromValue<int>(4)); // should have bound
+    QCOMPARE(o->property("t2"), QVariant::fromValue<int>(2)); // should not have changed
 
     delete o;
 }

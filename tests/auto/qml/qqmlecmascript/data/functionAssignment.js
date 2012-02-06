@@ -1,6 +1,6 @@
 function bindProperty()
 {
-    a = (function(){ return aNumber * 10 })
+    a = Qt.binding(function(){ return aNumber * 10 })
 }
 
 
@@ -13,5 +13,5 @@ var testObj = new TestObject()
 
 function bindPropertyWithThis()
 {
-    a = testObj.bindFunction
+    a = Qt.binding(testObj.bindFunction)
 }

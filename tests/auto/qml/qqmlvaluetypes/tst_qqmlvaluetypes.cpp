@@ -871,17 +871,37 @@ void tst_qqmlvaluetypes::color()
 // Test bindings can write to value types
 void tst_qqmlvaluetypes::bindingAssignment()
 {
+    // binding declaration
+    {
     QQmlComponent component(&engine, testFileUrl("bindingAssignment.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
     QCOMPARE(object->rect().x(), 10);
+    QCOMPARE(object->rect().y(), 15);
 
     object->setProperty("value", QVariant(92));
 
     QCOMPARE(object->rect().x(), 92);
+    QCOMPARE(object->rect().y(), 97);
 
     delete object;
+    }
+
+    // function assignment should fail without crashing
+    {
+    QString warning1 = testFileUrl("bindingAssignment.2.qml").toString() + QLatin1String(":6: Invalid use of Qt.binding() in a binding declaration.");
+    QString warning2 = testFileUrl("bindingAssignment.2.qml").toString() + QLatin1String(":10: Error: Cannot assign JavaScript function to value-type property");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QQmlComponent component(&engine, testFileUrl("bindingAssignment.2.qml"));
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->rect().x(), 5);
+    object->setProperty("value", QVariant(92));
+    QCOMPARE(object->rect().x(), 5);
+    delete object;
+    }
 }
 
 // Test bindings can read from value types

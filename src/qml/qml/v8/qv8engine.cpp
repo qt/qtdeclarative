@@ -147,6 +147,8 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     QV8GCCallback::registerGcPrologueCallback();
     m_strongReferencer = qPersistentNew(v8::Object::New());
 
+    m_bindingFlagKey = qPersistentNew(v8::String::New("qml::binding"));
+
     m_stringWrapper.init();
     m_contextWrapper.init(this);
     m_qobjectWrapper.init(this);
@@ -190,6 +192,8 @@ QV8Engine::~QV8Engine()
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
     m_stringWrapper.destroy();
+
+    qPersistentDispose(m_bindingFlagKey);
 
     m_originalGlobalObject.destroy();
 
@@ -598,6 +602,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("atob"), V8FUNCTION(atob, this));
     qt->Set(v8::String::New("resolvedUrl"), V8FUNCTION(resolvedUrl, this));
     qt->Set(v8::String::New("locale"), V8FUNCTION(locale, this));
+    qt->Set(v8::String::New("binding"), V8FUNCTION(binding, this));
 
     if (m_engine) {
         qt->Set(v8::String::New("application"), newQObject(new QQuickApplication(m_engine)));

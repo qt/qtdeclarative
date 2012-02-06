@@ -357,6 +357,9 @@ public:
     // a QVariant wrapper
     inline v8::Handle<v8::Value> newQVariant(const QVariant &);
 
+    // Return the JS string key for the "function is a binding" flag
+    inline v8::Handle<v8::String> bindingFlagKey() const;
+
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
     // instance (like in WorkerScript).
@@ -460,6 +463,8 @@ protected:
     bool m_ownsV8Context;
     v8::Persistent<v8::Context> m_context;
     QScriptOriginalGlobalObject m_originalGlobalObject;
+
+    v8::Persistent<v8::String> m_bindingFlagKey;
 
     QV8StringWrapper m_stringWrapper;
     QV8ContextWrapper m_contextWrapper;
@@ -607,6 +612,11 @@ v8::Handle<v8::Value> QV8Engine::newValueType(const QVariant &value, QQmlValueTy
 v8::Handle<v8::Value> QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
 {
     return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded);
+}
+
+v8::Handle<v8::String> QV8Engine::bindingFlagKey() const
+{
+    return m_bindingFlagKey;
 }
 
 // XXX Can this be made more optimal?  It is called prior to resolving each and every 

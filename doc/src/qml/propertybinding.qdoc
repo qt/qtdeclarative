@@ -87,7 +87,7 @@ The property binding causes the width of the \c Rectangle to update whenever the
 \c {parent}'s width changes.
 
 Assigning a property value (using the equals sign "\c {=}") does not create a
-property binding.
+property binding (unless explicitly assigned, see below).
 \snippet doc/src/snippets/qml/properties.qml property assignment
 
 Instead of creating a property binding, the assignment simply sets the \c Rectangle
@@ -100,9 +100,9 @@ and if any code explicitly re-sets this value, the property binding is removed.
 \section1 Binding to JavaScript Functions
 
 The \c{property : value} syntax for property binding is QML-specific and cannot
-be used in JavaScript. Instead, to bind a property from JavaScript, assign a \c
-function to the property that returns the required value. The following code
-correctly creates
+be used in JavaScript. Instead, to bind a property from JavaScript, assign the
+result returned by the \c{Qt.binding()} function to the property.  This will cause
+a binding assignment on the specified property.  The following code correctly creates
 the binding in JavaScript rather than QML:
 
 \qml
@@ -110,7 +110,7 @@ Item {
     width: 100
 
     Component.onCompleted: {
-        height = (function() { return width * 2 })
+        height = Qt.binding(function() { return width * 2 })
     }
 }
 \endqml
@@ -124,10 +124,8 @@ binding.
 For example, the \c Component.onCompleted handler below is defined within the
 scope of the \l Item, and references to \c width within this scope would refer
 to the \l Item's width, rather than that of the \l Rectangle. To bind the \l
-Rectangle's \c height to its own \c width, the function needs to explicitly
-refer to \c this.width rather than just \c width. Otherwise, the height of the
-\l Rectangle would be bound to the width of the \l Item and not the \l
-Rectangle.
+Rectangle's \c height to its own \c width, the function passed to Qt.binding()
+needs to explicitly refer to \c this.width rather than just \c width.
 
 \qml
 Item {
@@ -141,7 +139,8 @@ Item {
     }
 
     Component.onCompleted: {
-        rect.height = (function() { return this.width * 2 })
+        rect.height = Qt.binding(function() { return this.width * 2 })
+        console.log("rect.height = " + rect.height) // prints 200
     }
 }
 \endqml

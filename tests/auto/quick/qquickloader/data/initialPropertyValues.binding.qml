@@ -16,6 +16,6 @@ Item {
     }
 
     Component.onCompleted: {
-        loader.setSource("InitialPropertyValuesComponent.qml", {"canary": (function() { return root.bindable })});
+        loader.setSource("InitialPropertyValuesComponent.qml", {"canary": Qt.binding(function() { return root.bindable })});
     }
 }

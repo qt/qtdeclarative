@@ -1316,6 +1316,65 @@ v8::Handle<v8::Value> locale(const v8::Arguments &args)
     return QQmlLocale::locale(v8engine, code);
 }
 
+/*!
+    \qmlmethod Qt::binding(function)
+
+    Returns a JS object representing a binding expression which may be
+    assigned to any property in imperative code to cause a binding
+    assignment.
+
+    There are two main use-cases for the function: firstly, in imperative
+    JavaScript code to cause a binding assignment:
+
+    \snippet doc/src/snippets/declarative/qtBinding.1.qml 0
+
+    and secondly, when defining initial property values of dynamically
+    constructed objects (via Component.createObject() or
+    Loader.setSource()) as being bound to the result of an expression.
+
+    For example, assuming the existence of a DynamicText component:
+    \snippet doc/src/snippets/declarative/DynamicText.qml 0
+
+    the output from:
+    \snippet doc/src/snippets/declarative/qtBinding.2.qml 0
+
+    and from:
+    \snippet doc/src/snippets/declarative/qtBinding.3.qml 0
+
+    should both be:
+    \code
+    Root text extra text
+    Modified root text extra text
+    Dynamic text extra text
+    Modified dynamic text extra text
+    \endcode
+
+    This function cannot be used in property binding declarations
+    (see the documentation on \l{qml-javascript-assignment}{binding
+    declarations and binding assignments}) except when the result is
+    stored in an array bound to a var property.
+
+    \snippet doc/src/snippets/declarative/qtBinding.4.qml 0
+
+    Note: in QtQuick 1.x, all function assignment was treated as
+    binding assignment, so the Qt.binding() function is new in
+    QtQuick 2.0.
+
+    \since QtQuick 2.0
+*/
+v8::Handle<v8::Value> binding(const v8::Arguments &args)
+{
+    QString code;
+    if (args.Length() != 1)
+        V8THROW_ERROR("binding() requires 1 argument");
+    if (!args[0]->IsFunction())
+        V8THROW_TYPE("binding(): argument (binding expression) must be a function");
+
+    v8::Handle<v8::Object> rv = args[0]->ToObject()->Clone();
+    rv->SetHiddenValue(V8ENGINE()->bindingFlagKey(), v8::Boolean::New(true));
+    return rv;
+}
+
 } // namespace QQmlBuiltinFunctions
 
 QT_END_NAMESPACE

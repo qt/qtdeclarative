@@ -37,7 +37,7 @@ Item{
         root.declarativerectangle = a.createObject(root, {"x":17,"y":17, "color":"white", "border.width":3, "innerRect.border.width": 20});
         root.declarativeitem = b.createObject(root, {"x":17,"y":17,"testBool":true,"testInt":17,"testObject":root});
 
-        root.bindingTestObject = c.createObject(root, {'testValue': (function(){return width * 3}) })  // use root.width
-        root.bindingThisTestObject = c.createObject(root, {'testValue': (function(){return this.width * 3}) })  // use width of Item within 'c'
+        root.bindingTestObject = c.createObject(root, {'testValue': Qt.binding(function(){return width * 3}) })  // use root.width
+        root.bindingThisTestObject = c.createObject(root, {'testValue': Qt.binding(function(){return this.width * 3}) })  // use width of Item within 'c'
     }
 }

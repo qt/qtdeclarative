@@ -1486,6 +1486,17 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
 
     if (expression->hasError()) {
         return false;
+    } else if (isVmeProperty) {
+        typedef QQmlVMEMetaObject VMEMO;
+        if (!result.IsEmpty() && result->IsFunction()
+                && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
+            // we explicitly disallow this case to avoid confusion.  Users can still store one
+            // in an array in a var property if they need to, but the common case is user error.
+            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            return false;
+        }
+        VMEMO *vmemo = static_cast<VMEMO *>(const_cast<QMetaObject *>(object->metaObject()));
+        vmemo->setVMEProperty(core.coreIndex, result);
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };
         QMetaObject::metacall(object, QMetaObject::ResetProperty, core.coreIndex, args);
@@ -1495,12 +1506,11 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         expression->delayedError()->error.setDescription(QLatin1String("Unable to assign [undefined] to ") + QLatin1String(QMetaType::typeName(type)));
         return false;
     } else if (result->IsFunction()) {
-        expression->delayedError()->error.setDescription(QLatin1String("Unable to assign a function to a property."));
+        if (!result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty())
+            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+        else
+            expression->delayedError()->error.setDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));
         return false;
-    } else if (isVmeProperty) {
-        typedef QQmlVMEMetaObject VMEMO;
-        VMEMO *vmemo = static_cast<VMEMO *>(const_cast<QMetaObject *>(object->metaObject()));
-        vmemo->setVMEProperty(core.coreIndex, result);
     } else if (!writeValueProperty(object, engine, core, value, context, flags)) {
 
         if (watcher.wasDeleted()) 

@@ -324,6 +324,13 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
         QQmlBinding *newBinding = 0;
 
         if (value->IsFunction()) {
+            if (value->ToObject()->GetHiddenValue(r->engine->bindingFlagKey()).IsEmpty()) {
+                // assigning a JS function to a non-var-property is not allowed.
+                QString error = QLatin1String("Cannot assign JavaScript function to value-type property");
+                v8::ThrowException(v8::Exception::Error(r->engine->toString(error)));
+                return value;
+            }
+
             QQmlContextData *context = r->engine->callingContext();
             v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
 

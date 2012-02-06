@@ -24,7 +24,7 @@ MyQmlObject {
         function myFunction() {
             return aNumber * 10;
         }
-        a = myFunction;
+        a = Qt.binding(myFunction);
     }
 
     property QtObject obj: QtObject {
@@ -34,7 +34,7 @@ MyQmlObject {
         }
     }
     onAssignWithThisChanged: {
-        a = obj.myFunction;
+        a = Qt.binding(obj.myFunction);
     }
 
     onAssignToPropertyFromJsFileChanged: {
@@ -47,8 +47,8 @@ MyQmlObject {
 
     property Text text: Text { }
     onAssignToValueTypeChanged: {
-        text.font.pixelSize = (function() { return aNumber * 10; })
-        a = (function() { return text.font.pixelSize; })
+        text.font.pixelSize = Qt.binding(function() { return aNumber * 10; })
+        a = Qt.binding(function() { return text.font.pixelSize; })
     }
 
 
@@ -57,17 +57,17 @@ MyQmlObject {
     onAssignFuncWithoutReturnChanged: {
         function myFunction() {
         }
-        a = myFunction;
+        a = Qt.binding(myFunction);
     }
 
     onAssignWrongTypeChanged: {
         function myFunction() {
             return 'a string';
         }
-        aNumber = myFunction;
+        aNumber = Qt.binding(myFunction);
     }
 
     onAssignWrongTypeToValueTypeChanged: {
-        text.font.pixelSize = (function() { return 'a string'; })
+        text.font.pixelSize = Qt.binding(function() { return 'a string'; })
     }
 }

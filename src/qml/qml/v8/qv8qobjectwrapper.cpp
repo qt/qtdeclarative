@@ -519,7 +519,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             return v8::Handle<v8::Value>();
     }
 
-    if (result->isFunction()) {
+    if (result->isFunction() && !result->isVMEProperty()) {
         if (result->isVMEFunction()) {
             return ((QQmlVMEMetaObject *)(object->metaObject()))->vmeMethod(result->coreIndex);
         } else if (result->isV8Function()) {
@@ -579,30 +579,46 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
                                  v8::Handle<v8::Value> value)
 {
     QQmlBinding *newBinding = 0;
-
     if (value->IsFunction()) {
-        QQmlContextData *context = engine->callingContext();
-        v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
+        if (value->ToObject()->GetHiddenValue(engine->bindingFlagKey()).IsEmpty()) {
+            if (!property->isVMEProperty()) {
+                // assigning a JS function to a non-var-property is not allowed.
+                QString error = QLatin1String("Cannot assign JavaScript function to ") +
+                                QLatin1String(QMetaType::typeName(property->propType));
+                v8::ThrowException(v8::Exception::Error(engine->toString(error)));
+                return;
+            }
+        } else {
+            // binding assignment.
+            QQmlContextData *context = engine->callingContext();
+            v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
 
-        v8::Local<v8::StackTrace> trace = 
-            v8::StackTrace::CurrentStackTrace(1, (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber | 
-                                                                                     v8::StackTrace::kScriptName));
-        v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
-        int lineNumber = frame->GetLineNumber();
-        int columNumber = frame->GetColumn();
-        QString url = engine->toString(frame->GetScriptName());
+            v8::Local<v8::StackTrace> trace =
+                v8::StackTrace::CurrentStackTrace(1, (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber |
+                                                                                         v8::StackTrace::kScriptName));
+            v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
+            int lineNumber = frame->GetLineNumber();
+            int columNumber = frame->GetColumn();
+            QString url = engine->toString(frame->GetScriptName());
 
-        newBinding = new QQmlBinding(&function, object, context);
-        newBinding->setSourceLocation(url, lineNumber, columNumber);
-        newBinding->setTarget(object, *property, context);
-        newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
-                                     QQmlBinding::RequiresThisObject);
+            newBinding = new QQmlBinding(&function, object, context);
+            newBinding->setSourceLocation(url, lineNumber, columNumber);
+            newBinding->setTarget(object, *property, context);
+            newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
+                                         QQmlBinding::RequiresThisObject);
+        }
     }
 
     QQmlAbstractBinding *oldBinding = 
         QQmlPropertyPrivate::setBinding(object, property->coreIndex, -1, newBinding);
     if (oldBinding)
         oldBinding->destroy();
+
+    if (!newBinding && property->isVMEProperty()) {
+        // allow assignment of "special" values (null, undefined, function) to var properties
+        static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(object->metaObject()))->setVMEProperty(property->coreIndex, value);
+        return;
+    }
 
 #define PROPERTY_STORE(cpptype, value) \
     cpptype o = value; \
