@@ -1891,9 +1891,12 @@ QDeclarativeIncubationController *QQuickCanvas::incubationController() const
     The GL context used for rendering the scene graph will be bound
     at this point.
 
-    Since this signal is emitted from the scene graph rendering thread, the receiver should
-    be on the scene graph thread or the connection should be Qt::DirectConnection.
+    \warning Since this signal is emitted from the scene graph rendering thread, the
+    receiver should be on the scene graph thread or the connection should be Qt::DirectConnection.
 
+    \warning Make very sure that a signal handler for beforeRendering leaves the GL
+    context in the same state as it was when the signal handler was entered. Failing to
+    do so can result in the scene not rendering properly.
 */
 
 /*!
@@ -1906,8 +1909,12 @@ QDeclarativeIncubationController *QQuickCanvas::incubationController() const
 
     The GL context used for rendering the scene graph will be bound at this point.
 
-    Since this signal is emitted from the scene graph rendering thread, the receiver should
-    be on the scene graph thread or the connection should be Qt::DirectConnection.
+    \warning Since this signal is emitted from the scene graph rendering thread, the
+    receiver should be on the scene graph thread or the connection should be Qt::DirectConnection.
+
+    \warning Make very sure that a signal handler for afterRendering() leaves the GL
+    context in the same state as it was when the signal handler was entered. Failing to
+    do so can result in the scene not rendering properly.
  */
 
 
