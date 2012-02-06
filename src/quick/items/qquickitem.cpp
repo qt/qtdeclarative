@@ -1869,6 +1869,17 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     if (parentItem == d->parentItem)
         return;
 
+    if (parentItem) {
+        QQuickItem *itemAncestor = parentItem->parentItem();
+        while (itemAncestor != 0) {
+            if (itemAncestor == this) {
+                qWarning("QQuickItem::setParentItem: Parent is already part of this items subtree.");
+                return;
+            }
+            itemAncestor = itemAncestor->parentItem();
+        }
+    }
+
     d->removeFromDirtyList();
 
     QQuickItem *oldParentItem = d->parentItem;
