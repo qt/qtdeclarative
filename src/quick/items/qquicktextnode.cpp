@@ -1251,7 +1251,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                             fragmentEnd += preeditLength;
                         }
 
-                        engine.addText(block, charFormat, textColor, colorChanges, textPos, fragmentEnd,
+                        textPos = engine.addText(block, charFormat, textColor, colorChanges, textPos, fragmentEnd,
                                        selectionStart, selectionEnd);
                     }
 
