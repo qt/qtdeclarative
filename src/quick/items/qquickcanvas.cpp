@@ -197,10 +197,11 @@ void QQuickCanvas::focusInEvent(QFocusEvent *)
 
 void QQuickCanvasPrivate::polishItems()
 {
-    while (!itemsToPolish.isEmpty()) {
-        QSet<QQuickItem *>::Iterator iter = itemsToPolish.begin();
-        QQuickItem *item = *iter;
-        itemsToPolish.erase(iter);
+    QSet<QQuickItem *> itms = itemsToPolish;
+    itemsToPolish.clear();
+
+    for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
+        QQuickItem *item = *it;
         QQuickItemPrivate::get(item)->polishScheduled = false;
         item->updatePolish();
     }
