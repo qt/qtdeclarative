@@ -138,7 +138,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
-    : QObject(parent)
+    : QObject(parent), m_role(QAccessible::NoRole)
 {
     Q_ASSERT(parent);
     QQuickItem *item = qobject_cast<QQuickItem*>(parent);
