@@ -114,7 +114,7 @@ void QDeclarativeListModelWorkerAgent::release()
     bool del = !m_ref.deref();
 
     if (del)
-        delete this;
+        deleteLater();
 }
 
 void QDeclarativeListModelWorkerAgent::modelDestroyed()
@@ -236,6 +236,7 @@ bool QDeclarativeListModelWorkerAgent::event(QEvent *e)
 
         if (cc)
             emit m_orig->countChanged();
+        return true;
     }
 
     return QObject::event(e);
