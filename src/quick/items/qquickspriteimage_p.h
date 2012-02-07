@@ -53,7 +53,7 @@ class QSGContext;
 class QQuickSprite;
 class QQuickSpriteEngine;
 class QSGGeometryNode;
-class QQuickSpriteMaterial;
+class QQuickSpriteImageMaterial;
 class Q_AUTOTEST_EXPORT QQuickSpriteImage : public QQuickItem
 {
     Q_OBJECT
@@ -127,7 +127,7 @@ private:
     void prepareNextFrame();
     QSGGeometryNode* buildNode();
     QSGGeometryNode *m_node;
-    QQuickSpriteMaterial *m_material;
+    QQuickSpriteImageMaterial *m_material;
     QList<QQuickSprite*> m_sprites;
     QQuickSpriteEngine* m_spriteEngine;
     QTime m_timestamp;

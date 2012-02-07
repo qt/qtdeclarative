@@ -89,16 +89,16 @@ static const char fragmentShaderCode[] =
     "    gl_FragColor = mix(texture2D(texture, fTexS.xy), texture2D(texture, fTexS.zw), progress) * qt_Opacity;\n"
     "}\n";
 
-class QQuickSpriteMaterial : public QSGMaterial
+class QQuickSpriteImageMaterial : public QSGMaterial
 {
 public:
-    QQuickSpriteMaterial();
-    virtual ~QQuickSpriteMaterial();
+    QQuickSpriteImageMaterial();
+    ~QQuickSpriteImageMaterial();
     virtual QSGMaterialType *type() const { static QSGMaterialType type; return &type; }
     virtual QSGMaterialShader *createShader() const;
     virtual int compare(const QSGMaterial *other) const
     {
-        return this - static_cast<const QQuickSpriteMaterial *>(other);
+        return this - static_cast<const QQuickSpriteImageMaterial *>(other);
     }
 
     QSGTexture *texture;
@@ -114,7 +114,7 @@ public:
     float elementHeight;
 };
 
-QQuickSpriteMaterial::QQuickSpriteMaterial()
+QQuickSpriteImageMaterial::QQuickSpriteImageMaterial()
     : animT(0.0f)
     , animX1(0.0f)
     , animY1(0.0f)
@@ -128,15 +128,15 @@ QQuickSpriteMaterial::QQuickSpriteMaterial()
     setFlag(Blending, true);
 }
 
-QQuickSpriteMaterial::~QQuickSpriteMaterial()
+QQuickSpriteImageMaterial::~QQuickSpriteImageMaterial()
 {
     delete texture;
 }
 
-class SpriteMaterialData : public QSGMaterialShader
+class SpriteImageMaterialData : public QSGMaterialShader
 {
 public:
-    SpriteMaterialData(const char * /* vertexFile */ = 0, const char * /* fragmentFile */ = 0)
+    SpriteImageMaterialData(const char * /* vertexFile */ = 0, const char * /* fragmentFile */ = 0)
     {
     }
 
@@ -150,7 +150,7 @@ public:
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
     {
-        QQuickSpriteMaterial *m = static_cast<QQuickSpriteMaterial *>(newEffect);
+        QQuickSpriteImageMaterial *m = static_cast<QQuickSpriteImageMaterial *>(newEffect);
         m->texture->bind();
 
         program()->setUniformValue(m_opacity_id, state.opacity());
@@ -190,11 +190,11 @@ public:
     static float chunkOfBytes[1024];
 };
 
-float SpriteMaterialData::chunkOfBytes[1024];
+float SpriteImageMaterialData::chunkOfBytes[1024];
 
-QSGMaterialShader *QQuickSpriteMaterial::createShader() const
+QSGMaterialShader *QQuickSpriteImageMaterial::createShader() const
 {
-    return new SpriteMaterialData;
+    return new SpriteImageMaterialData;
 }
 
 struct SpriteVertex {
@@ -328,7 +328,7 @@ QSGGeometryNode* QQuickSpriteImage::buildNode()
         return 0;
     }
 
-    m_material = new QQuickSpriteMaterial();
+    m_material = new QQuickSpriteImageMaterial();
 
     QImage image = m_spriteEngine->assembledImage();
     if (image.isNull())
@@ -394,7 +394,6 @@ QSGNode *QQuickSpriteImage::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
 {
     if (m_pleaseReset) {
         delete m_node;
-        delete m_material;
 
         m_node = 0;
         m_material = 0;
