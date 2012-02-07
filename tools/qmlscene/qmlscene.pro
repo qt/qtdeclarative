@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = qmlscene
 DESTDIR= $$QT.declarative.bins
 
-QT += declarative quick
+QT += declarative quick core-private
 !isEmpty(QT.widgets.name): QT += widgets
 
 target.path = $$[QT_INSTALL_BINS]

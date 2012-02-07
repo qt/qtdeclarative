@@ -55,6 +55,8 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 
+#include <private/qabstractanimation_p.h>
+
 #ifdef QT_WIDGETS_LIB
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
@@ -153,6 +155,7 @@ struct Options
         , fullscreen(false)
         , clip(false)
         , versionDetection(true)
+        , slowAnimations(false)
     {
     }
 
@@ -164,6 +167,7 @@ struct Options
     bool scenegraphOnGraphicsview;
     bool clip;
     bool versionDetection;
+    bool slowAnimations;
 };
 
 #if defined(QMLSCENE_BUNDLE)
@@ -342,6 +346,7 @@ static void usage()
     qWarning("  --fullscreen .............................. run fullscreen");
     qWarning("  --no-multisample .......................... Disable multisampling (anti-aliasing)");
     qWarning("  --no-version-detection .................... Do not try to detect the version of the .qml file");
+    qWarning("  --slow-animations ......................... Run all animations in slow motion");
 
     qWarning(" ");
     exit(1);
@@ -365,6 +370,8 @@ int main(int argc, char ** argv)
                 options.clip = true;
             else if (lowerArgument == QLatin1String("--no-version-detection"))
                 options.versionDetection = false;
+            else if (lowerArgument == QLatin1String("--slow-animations"))
+                options.slowAnimations = true;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
                 imports.append(QString::fromLatin1(argv[++i]));
             else if (lowerArgument == QLatin1String("--help")
@@ -383,6 +390,8 @@ int main(int argc, char ** argv)
     app.setApplicationName("QtQmlViewer");
     app.setOrganizationName("Nokia");
     app.setOrganizationDomain("nokia.com");
+
+    QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
 
     if (options.file.isEmpty())
 #if defined(QMLSCENE_BUNDLE)
