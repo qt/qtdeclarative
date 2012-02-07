@@ -337,7 +337,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // Flush the current logging stream.
     QuickTestResult::setProgramName(0);
 
-    saveCoverageTool(argv[0], QuickTestResult::exitCode());
+    saveCoverageTool(argv[0], QuickTestResult::exitCode() != 0);
 
     //Sometimes delete app cause crash here with some qpa plugins,
     //so we comment the follow line out to make them happy.
