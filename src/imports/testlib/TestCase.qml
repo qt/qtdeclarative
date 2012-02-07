@@ -486,6 +486,7 @@ Item {
         if (!qtest_results.skipped) {
             qtest_results.functionType = TestResult.Func
             qtest_runInternal(prop, arg)
+            qtest_results.finishTestData()
             qtest_results.functionType = TestResult.CleanupFunc
             qtest_runInternal("cleanup")
         }
@@ -510,7 +511,9 @@ Item {
                 else
                     qtest_results.startBenchmark(TestResult.RunOnce, qtest_results.dataTag)
                 while (!qtest_results.isBenchmarkDone()) {
-                    if (!qtest_runInternal(prop, arg))
+                    var success = qtest_runInternal(prop, arg)
+                    qtest_results.finishTestData()
+                    if (!success)
                         break
                     qtest_results.nextBenchmark()
                 }

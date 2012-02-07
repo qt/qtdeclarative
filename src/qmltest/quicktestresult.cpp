@@ -355,6 +355,11 @@ void QuickTestResult::clearTestTable()
     d->table = 0;
 }
 
+void QuickTestResult::finishTestData()
+{
+    QTestResult::finishedCurrentTestData();
+}
+
 void QuickTestResult::finishTestFunction()
 {
     QTestResult::finishedCurrentTestFunction();

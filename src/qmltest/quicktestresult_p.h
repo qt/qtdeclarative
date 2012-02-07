@@ -122,6 +122,7 @@ public Q_SLOTS:
     void initTestTable();
     void clearTestTable();
 
+    void finishTestData();
     void finishTestFunction();
 
     void fail(const QString &message, const QUrl &location, int line);

@@ -173,6 +173,7 @@ template <class View> void handleCompileErrors(const QFileInfo &fi, const View &
     // Fail with error 0.
     results.fail(errors.at(0).description(),
                  errors.at(0).url(), errors.at(0).line());
+    results.finishTestData();
     results.finishTestFunction();
     results.setFunctionName(QString());
     results.setFunctionType(QuickTestResult::NoWhere);
