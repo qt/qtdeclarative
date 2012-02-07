@@ -15,6 +15,7 @@ PUBLICTESTS += \
     qdeclarativeinfo \
     qdeclarativelistreference \
     qdeclarativelocale \
+    qdeclarativemetaobject \
     qdeclarativemoduleplugin \
     qdeclarativeqt \
     qdeclarativetranslation \
