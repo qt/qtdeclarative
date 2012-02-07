@@ -104,6 +104,7 @@ private slots:
 
     void implicitSize_data();
     void implicitSize();
+    void contentSize();
 
     void lineLaidOut();
 
@@ -462,7 +463,7 @@ void tst_qquicktext::multilineElide()
     QCOMPARE(myText->lineCount(), 3);
     QCOMPARE(myText->truncated(), true);
 
-    qreal lineHeight = myText->paintedHeight() / 3.;
+    qreal lineHeight = myText->contentHeight() / 3.;
 
     // reduce size and ensure fewer lines are drawn
     myText->setHeight(lineHeight * 2);
@@ -1474,6 +1475,49 @@ void tst_qquicktext::implicitSize()
     delete textObject;
 }
 
+void tst_qquicktext::contentSize()
+{
+    QString componentStr = "import QtQuick 2.0\nText { width: 75; height: 16; font.pixelSize: 10 }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+
+    QSignalSpy spy(textObject, SIGNAL(contentSizeChanged()));
+
+    textObject->setText("The quick red fox jumped over the lazy brown dog");
+
+    QVERIFY(textObject->contentWidth() > textObject->width());
+    QVERIFY(textObject->contentHeight() < textObject->height());
+    QCOMPARE(spy.count(), 1);
+
+    textObject->setWrapMode(QQuickText::WordWrap);
+    QVERIFY(textObject->contentWidth() <= textObject->width());
+    QVERIFY(textObject->contentHeight() > textObject->height());
+    QCOMPARE(spy.count(), 2);
+
+    textObject->setElideMode(QQuickText::ElideRight);
+    QVERIFY(textObject->contentWidth() <= textObject->width());
+    QVERIFY(textObject->contentHeight() < textObject->height());
+    QCOMPARE(spy.count(), 3);
+    int spyCount = 3;
+    qreal elidedWidth = textObject->contentWidth();
+
+    textObject->setText("The quickredfoxjumpedoverthe lazy brown dog");
+    QVERIFY(textObject->contentWidth() <= textObject->width());
+    QVERIFY(textObject->contentHeight() < textObject->height());
+    // this text probably won't have the same elided width, but it's not guaranteed.
+    if (textObject->contentWidth() != elidedWidth)
+        QCOMPARE(spy.count(), ++spyCount);
+    else
+        QCOMPARE(spy.count(), spyCount);
+
+    textObject->setElideMode(QQuickText::ElideNone);
+    QVERIFY(textObject->contentWidth() > textObject->width());
+    QVERIFY(textObject->contentHeight() > textObject->height());
+    QCOMPARE(spy.count(), ++spyCount);
+}
+
 void tst_qquicktext::lineLaidOut()
 {
     QQuickView *canvas = createView(testFile("lineLayout.qml"));
@@ -1585,7 +1629,7 @@ void tst_qquicktext::imgTagsUpdates()
     QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
-    QSignalSpy spy(myText, SIGNAL(paintedSizeChanged()));
+    QSignalSpy spy(myText, SIGNAL(contentSizeChanged()));
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
     QVERIFY(textPrivate != 0);
@@ -1641,8 +1685,8 @@ void tst_qquicktext::fontSizeMode()
     myText->setText(text);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
 
-    qreal originalWidth = myText->paintedWidth();
-    qreal originalHeight = myText->paintedHeight();
+    qreal originalWidth = myText->contentWidth();
+    qreal originalHeight = myText->contentHeight();
 
     // The original text unwrapped should exceed the width of the item.
     QVERIFY(originalWidth > myText->width());
@@ -1655,8 +1699,8 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::HorizontalFit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Font size reduced to fit within the width of the item.
-    qreal horizontalFitWidth = myText->paintedWidth();
-    qreal horizontalFitHeight = myText->paintedHeight();
+    qreal horizontalFitWidth = myText->contentWidth();
+    qreal horizontalFitHeight = myText->contentHeight();
     QVERIFY(horizontalFitWidth <= myText->width() + 2); // rounding
     QVERIFY(horizontalFitHeight <= myText->height() + 2);
 
@@ -1665,20 +1709,20 @@ void tst_qquicktext::fontSizeMode()
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideLeft);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideMiddle);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1687,8 +1731,8 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::VerticalFit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Font size increased to fill the height of the item.
-    qreal verticalFitHeight = myText->paintedHeight();
-    QVERIFY(myText->paintedWidth() > myText->width());
+    qreal verticalFitHeight = myText->contentHeight();
+    QVERIFY(myText->contentWidth() > myText->width());
     QVERIFY(verticalFitHeight <= myText->height() + 2);
     QVERIFY(verticalFitHeight > originalHeight);
 
@@ -1697,20 +1741,20 @@ void tst_qquicktext::fontSizeMode()
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(myText->truncated());
-        QVERIFY(myText->paintedWidth() <= myText->width() + 2);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QVERIFY(myText->contentWidth() <= myText->width() + 2);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideLeft);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(myText->truncated());
-        QVERIFY(myText->paintedWidth() <= myText->width() + 2);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QVERIFY(myText->contentWidth() <= myText->width() + 2);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideMiddle);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(myText->truncated());
-        QVERIFY(myText->paintedWidth() <= myText->width() + 2);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QVERIFY(myText->contentWidth() <= myText->width() + 2);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1719,28 +1763,28 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::Fit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Should be the same as HorizontalFit with no wrapping.
-    QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-    QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+    QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+    QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with Fit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideLeft);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideMiddle);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1750,8 +1794,8 @@ void tst_qquicktext::fontSizeMode()
     myText->setWrapMode(QQuickText::Wrap);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
 
-    originalWidth = myText->paintedWidth();
-    originalHeight = myText->paintedHeight();
+    originalWidth = myText->contentWidth();
+    originalHeight = myText->contentHeight();
 
     // The original text wrapped should exceed the height of the item.
     QVERIFY(originalWidth <= myText->width() + 2);
@@ -1761,16 +1805,16 @@ void tst_qquicktext::fontSizeMode()
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // HorizontalFit should reduce the font size to minimize wrapping, which brings it back to the
     // same size as without text wrapping.
-    QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-    QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+    QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+    QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with HorizontalFit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1779,9 +1823,9 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::VerticalFit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // VerticalFit should reduce the size to the wrapped text within the vertical height.
-    verticalFitHeight = myText->paintedHeight();
-    qreal verticalFitWidth = myText->paintedWidth();
-    QVERIFY(myText->paintedWidth() <= myText->width() + 2);
+    verticalFitHeight = myText->contentHeight();
+    qreal verticalFitWidth = myText->contentWidth();
+    QVERIFY(myText->contentWidth() <= myText->width() + 2);
     QVERIFY(verticalFitHeight <= myText->height() + 2);
     QVERIFY(verticalFitHeight < originalHeight);
 
@@ -1790,8 +1834,8 @@ void tst_qquicktext::fontSizeMode()
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1800,16 +1844,16 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::Fit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Should be the same as VerticalFit with wrapping.
-    QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-    QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+    QCOMPARE(myText->contentWidth(), verticalFitWidth);
+    QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with Fit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1827,16 +1871,16 @@ void tst_qquicktext::fontSizeMode()
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // HorizontalFit should reduce the font size to minimize wrapping, which brings it back to the
     // same size as without text wrapping.
-    QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-    QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+    QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+    QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with HorizontalFit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1845,9 +1889,9 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::VerticalFit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // VerticalFit should reduce the size to the wrapped text within the vertical height.
-    verticalFitHeight = myText->paintedHeight();
-    verticalFitWidth = myText->paintedWidth();
-    QVERIFY(myText->paintedWidth() <= myText->width() + 2);
+    verticalFitHeight = myText->contentHeight();
+    verticalFitWidth = myText->contentWidth();
+    QVERIFY(myText->contentWidth() <= myText->width() + 2);
     QVERIFY(verticalFitHeight <= myText->height() + 2);
     QVERIFY(verticalFitHeight < originalHeight);
 
@@ -1856,8 +1900,8 @@ void tst_qquicktext::fontSizeMode()
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1866,16 +1910,16 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::Fit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Should be the same as VerticalFit with wrapping.
-    QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-    QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+    QCOMPARE(myText->contentWidth(), verticalFitWidth);
+    QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with Fit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1904,8 +1948,8 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setText(text);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
 
-    qreal originalWidth = myText->paintedWidth();
-    qreal originalHeight = myText->paintedHeight();
+    qreal originalWidth = myText->contentWidth();
+    qreal originalHeight = myText->contentHeight();
     QCOMPARE(myText->lineCount(), 2);
 
     // The original text unwrapped should exceed the width and height of the item.
@@ -1920,8 +1964,8 @@ void tst_qquicktext::fontSizeModeMultiline()
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Font size reduced to fit within the width of the item.
     QCOMPARE(myText->lineCount(), 2);
-    qreal horizontalFitWidth = myText->paintedWidth();
-    qreal horizontalFitHeight = myText->paintedHeight();
+    qreal horizontalFitWidth = myText->contentWidth();
+    qreal horizontalFitHeight = myText->contentHeight();
     QVERIFY(horizontalFitWidth <= myText->width() + 2); // rounding
     QVERIFY(horizontalFitHeight > myText->height());
 
@@ -1931,21 +1975,21 @@ void tst_qquicktext::fontSizeModeMultiline()
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(myText->truncated());
         QCOMPARE(myText->lineCount(), 1);
-        QVERIFY(myText->paintedWidth() <= myText->width() + 2);
-        QVERIFY(myText->paintedHeight() <= myText->height() + 2);
+        QVERIFY(myText->contentWidth() <= myText->width() + 2);
+        QVERIFY(myText->contentHeight() <= myText->height() + 2);
 
         // Left or middle eliding wont have any effect.
         myText->setElideMode(QQuickText::ElideLeft);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideMiddle);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-        QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+        QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+        QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1954,8 +1998,8 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setFontSizeMode(QQuickText::VerticalFit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Font size reduced to fit within the height of the item.
-    qreal verticalFitWidth = myText->paintedWidth();
-    qreal verticalFitHeight = myText->paintedHeight();
+    qreal verticalFitWidth = myText->contentWidth();
+    qreal verticalFitHeight = myText->contentHeight();
     QVERIFY(verticalFitWidth <= myText->width() + 2);
     QVERIFY(verticalFitHeight <= myText->height() + 2);
 
@@ -1964,21 +2008,21 @@ void tst_qquicktext::fontSizeModeMultiline()
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QVERIFY(myText->paintedWidth() <= myText->width() + 2);
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QVERIFY(myText->contentWidth() <= myText->width() + 2);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideLeft);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideMiddle);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -1987,28 +2031,28 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setFontSizeMode(QQuickText::Fit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Should be the same as VerticalFit with no wrapping.
-    QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-    QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+    QCOMPARE(myText->contentWidth(), verticalFitWidth);
+    QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with Fit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideLeft);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideMiddle);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -2018,8 +2062,8 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setWrapMode(QQuickText::Wrap);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
 
-    originalWidth = myText->paintedWidth();
-    originalHeight = myText->paintedHeight();
+    originalWidth = myText->contentWidth();
+    originalHeight = myText->contentHeight();
 
     // The original text wrapped should exceed the height of the item.
     QVERIFY(originalWidth <= myText->width() + 2);
@@ -2029,16 +2073,16 @@ void tst_qquicktext::fontSizeModeMultiline()
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // HorizontalFit should reduce the font size to minimize wrapping, which brings it back to the
     // same size as without text wrapping.
-    QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-    QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+    QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+    QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
     if (canElide) {
         // Text will be elided vertically with HorizontalFit
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(myText->truncated());
-        QVERIFY(myText->paintedWidth() <= myText->width() + 2);
-        QVERIFY(myText->paintedHeight() <= myText->height() + 2);
+        QVERIFY(myText->contentWidth() <= myText->width() + 2);
+        QVERIFY(myText->contentHeight() <= myText->height() + 2);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -2047,9 +2091,9 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setFontSizeMode(QQuickText::VerticalFit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // VerticalFit should reduce the size to the wrapped text within the vertical height.
-    verticalFitHeight = myText->paintedHeight();
-    verticalFitWidth = myText->paintedWidth();
-    QVERIFY(myText->paintedWidth() <= myText->width() + 2);
+    verticalFitHeight = myText->contentHeight();
+    verticalFitWidth = myText->contentWidth();
+    QVERIFY(myText->contentWidth() <= myText->width() + 2);
     QVERIFY(verticalFitHeight <= myText->height() + 2);
     QVERIFY(verticalFitHeight < originalHeight);
 
@@ -2058,8 +2102,8 @@ void tst_qquicktext::fontSizeModeMultiline()
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -2068,16 +2112,16 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setFontSizeMode(QQuickText::Fit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Should be the same as VerticalFit with wrapping.
-    QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-    QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+    QCOMPARE(myText->contentWidth(), verticalFitWidth);
+    QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with Fit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -2095,16 +2139,16 @@ void tst_qquicktext::fontSizeModeMultiline()
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // HorizontalFit should reduce the font size to minimize wrapping, which brings it back to the
     // same size as without text wrapping.
-    QCOMPARE(myText->paintedWidth(), horizontalFitWidth);
-    QCOMPARE(myText->paintedHeight(), horizontalFitHeight);
+    QCOMPARE(myText->contentWidth(), horizontalFitWidth);
+    QCOMPARE(myText->contentHeight(), horizontalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with HorizontalFit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(myText->truncated());
-        QVERIFY(myText->paintedWidth() <= myText->width() + 2);
-        QVERIFY(myText->paintedHeight() <= myText->height() + 2);
+        QVERIFY(myText->contentWidth() <= myText->width() + 2);
+        QVERIFY(myText->contentHeight() <= myText->height() + 2);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -2113,9 +2157,9 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setFontSizeMode(QQuickText::VerticalFit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // VerticalFit should reduce the size to the wrapped text within the vertical height.
-    verticalFitHeight = myText->paintedHeight();
-    verticalFitWidth = myText->paintedWidth();
-    QVERIFY(myText->paintedWidth() <= myText->width() + 2);
+    verticalFitHeight = myText->contentHeight();
+    verticalFitWidth = myText->contentWidth();
+    QVERIFY(myText->contentWidth() <= myText->width() + 2);
     QVERIFY(verticalFitHeight <= myText->height() + 2);
     QVERIFY(verticalFitHeight < originalHeight);
 
@@ -2124,8 +2168,8 @@ void tst_qquicktext::fontSizeModeMultiline()
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
@@ -2134,16 +2178,16 @@ void tst_qquicktext::fontSizeModeMultiline()
     myText->setFontSizeMode(QQuickText::Fit);
     QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     // Should be the same as VerticalFit with wrapping.
-    QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-    QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+    QCOMPARE(myText->contentWidth(), verticalFitWidth);
+    QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
     if (canElide) {
         // Elide won't affect the size with Fit.
         myText->setElideMode(QQuickText::ElideRight);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
         QVERIFY(!myText->truncated());
-        QCOMPARE(myText->paintedWidth(), verticalFitWidth);
-        QCOMPARE(myText->paintedHeight(), verticalFitHeight);
+        QCOMPARE(myText->contentWidth(), verticalFitWidth);
+        QCOMPARE(myText->contentHeight(), verticalFitHeight);
 
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);

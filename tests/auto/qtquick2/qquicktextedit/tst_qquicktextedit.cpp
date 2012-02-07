@@ -150,6 +150,7 @@ private slots:
     void pastingRichText_QTBUG_14003();
     void implicitSize_data();
     void implicitSize();
+    void contentSize();
 
     void preeditCursorRectangle();
     void inputMethodComposing();
@@ -2418,6 +2419,34 @@ void tst_qquicktextedit::implicitSize()
     textObject->resetWidth();
     QVERIFY(textObject->width() == textObject->implicitWidth());
     QVERIFY(textObject->height() == textObject->implicitHeight());
+}
+
+void tst_qquicktextedit::contentSize()
+{
+    QString componentStr = "import QtQuick 2.0\nTextEdit { width: 75; height: 16; font.pixelSize: 10 }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit *>(object.data());
+
+    QSignalSpy spy(textObject, SIGNAL(contentSizeChanged()));
+
+    textObject->setText("The quick red fox jumped over the lazy brown dog");
+
+    QVERIFY(textObject->contentWidth() > textObject->width());
+    QVERIFY(textObject->contentHeight() < textObject->height());
+    QCOMPARE(spy.count(), 1);
+
+    textObject->setWrapMode(QQuickTextEdit::WordWrap);
+    QVERIFY(textObject->contentWidth() <= textObject->width());
+    QVERIFY(textObject->contentHeight() > textObject->height());
+    QCOMPARE(spy.count(), 2);
+
+    textObject->setText("The quickredfoxjumpedoverthe lazy brown dog");
+
+    QVERIFY(textObject->contentWidth() > textObject->width());
+    QVERIFY(textObject->contentHeight() > textObject->height());
+    QCOMPARE(spy.count(), 3);
 }
 
 void tst_qquicktextedit::preeditCursorRectangle()

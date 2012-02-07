@@ -72,8 +72,10 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
     Q_PROPERTY(int lineCount READ lineCount NOTIFY lineCountChanged)
     Q_PROPERTY(int length READ length NOTIFY textChanged)
-    Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedSizeChanged)
-    Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedSizeChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal paintedWidth READ contentWidth NOTIFY contentSizeChanged)  // Compatibility
+    Q_PROPERTY(qreal paintedHeight READ contentHeight NOTIFY contentSizeChanged)
     Q_PROPERTY(TextFormat textFormat READ textFormat WRITE setTextFormat NOTIFY textFormatChanged)
     Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly NOTIFY readOnlyChanged)
     Q_PROPERTY(bool cursorVisible READ isCursorVisible WRITE setCursorVisible NOTIFY cursorVisibleChanged)
@@ -212,8 +214,8 @@ public:
 
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
 
-    qreal paintedWidth() const;
-    qreal paintedHeight() const;
+    qreal contentWidth() const;
+    qreal contentHeight() const;
 
     QUrl baseUrl() const;
     void setBaseUrl(const QUrl &url);
@@ -233,7 +235,7 @@ public:
 
 Q_SIGNALS:
     void textChanged();
-    void paintedSizeChanged();
+    void contentSizeChanged();
     void cursorPositionChanged();
     void cursorRectangleChanged();
     void selectionStartChanged();

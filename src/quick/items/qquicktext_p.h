@@ -80,8 +80,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
 
     Q_PROPERTY(TextFormat textFormat READ textFormat WRITE setTextFormat NOTIFY textFormatChanged)
     Q_PROPERTY(TextElideMode elide READ elideMode WRITE setElideMode NOTIFY elideModeChanged) //### elideMode?
-    Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedSizeChanged)
-    Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedSizeChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal paintedWidth READ contentWidth NOTIFY contentSizeChanged)  // Compatibility
+    Q_PROPERTY(qreal paintedHeight READ contentHeight NOTIFY contentSizeChanged)
     Q_PROPERTY(qreal lineHeight READ lineHeight WRITE setLineHeight NOTIFY lineHeightChanged)
     Q_PROPERTY(LineHeightMode lineHeightMode READ lineHeightMode WRITE setLineHeightMode NOTIFY lineHeightModeChanged)
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
@@ -188,8 +190,8 @@ public:
 
     int resourcesLoading() const; // mainly for testing
 
-    qreal paintedWidth() const;
-    qreal paintedHeight() const;
+    qreal contentWidth() const;
+    qreal contentHeight() const;
 
     QRectF boundingRect() const;
     Q_INVOKABLE void doLayout();
@@ -209,7 +211,7 @@ Q_SIGNALS:
     void maximumLineCountChanged();
     void textFormatChanged(TextFormat textFormat);
     void elideModeChanged(TextElideMode mode);
-    void paintedSizeChanged();
+    void contentSizeChanged();
     void lineHeightChanged(qreal lineHeight);
     void lineHeightModeChanged(LineHeightMode mode);
     void fontSizeModeChanged();

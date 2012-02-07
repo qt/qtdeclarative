@@ -133,7 +133,7 @@ public:
     QQuickTextEdit::SelectionMode mouseSelectionMode;
     int lineCount;
     int yoff;
-    QSize paintedSize;
+    QSize contentSize;
 
     enum NodeType {
         NodeIsNull,

@@ -271,7 +271,6 @@ void QQuickTextEdit::setText(const QString &text)
     } else {
         d->control->setPlainText(text);
     }
-    q_textChanged();
 }
 
 /*!
@@ -663,27 +662,27 @@ int QQuickTextEdit::length() const
 }
 
 /*!
-    \qmlproperty real QtQuick2::TextEdit::paintedWidth
+    \qmlproperty real QtQuick2::TextEdit::contentWidth
 
     Returns the width of the text, including the width past the width
     which is covered due to insufficient wrapping if \l wrapMode is set.
 */
-qreal QQuickTextEdit::paintedWidth() const
+qreal QQuickTextEdit::contentWidth() const
 {
     Q_D(const QQuickTextEdit);
-    return d->paintedSize.width();
+    return d->contentSize.width();
 }
 
 /*!
-    \qmlproperty real QtQuick2::TextEdit::paintedHeight
+    \qmlproperty real QtQuick2::TextEdit::contentHeight
 
     Returns the height of the text, including the height past the height
     that is covered if the text does not fit within the set height.
 */
-qreal QQuickTextEdit::paintedHeight() const
+qreal QQuickTextEdit::contentHeight() const
 {
     Q_D(const QQuickTextEdit);
-    return d->paintedSize.height();
+    return d->contentSize.height();
 }
 
 /*!
@@ -1966,8 +1965,11 @@ void QQuickTextEdit::updateSize()
         else
             setImplicitHeight(newHeight);
 
-        d->paintedSize = QSize(newWidth, newHeight);
-        emit paintedSizeChanged();
+        QSize size(newWidth, newHeight);
+        if (d->contentSize != size) {
+            d->contentSize = size;
+            emit contentSizeChanged();
+        }
     } else {
         d->dirty = true;
     }

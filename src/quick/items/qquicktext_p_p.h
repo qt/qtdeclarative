@@ -124,7 +124,7 @@ public:
     bool needToUpdateLayout:1;
 
     QRect layedOutTextRect;
-    QSize paintedSize;
+    QSize contentSize;
     qreal naturalWidth;
     virtual qreal getImplicitWidth() const;
 

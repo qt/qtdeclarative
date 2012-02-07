@@ -2251,6 +2251,32 @@ bool QQuickTextInput::canRedo() const
     return d->canRedo;
 }
 
+/*!
+    \qmlproperty real QtQuick2::TextInput::contentWidth
+
+    Returns the width of the text, including the width past the width
+    which is covered due to insufficient wrapping if \l wrapMode is set.
+*/
+
+qreal QQuickTextInput::contentWidth() const
+{
+    Q_D(const QQuickTextInput);
+    return d->boundingRect.width();
+}
+
+/*!
+    \qmlproperty real QtQuick2::TextInput::contentHeight
+
+    Returns the height of the text, including the height past the height
+    that is covered if the text does not fit within the set height.
+*/
+
+qreal QQuickTextInput::contentHeight() const
+{
+    Q_D(const QQuickTextInput);
+    return d->boundingRect.height();
+}
+
 void QQuickTextInput::moveCursorSelection(int position)
 {
     Q_D(QQuickTextInput);
@@ -2675,6 +2701,8 @@ void QQuickTextInputPrivate::updateLayout()
     if (!q->isComponentComplete())
         return;
 
+    const QRectF previousRect = boundingRect;
+
     QTextOption option = m_textLayout.textOption();
     option.setTextDirection(layoutDirection());
     option.setFlags(QTextOption::IncludeTrailingSpaces);
@@ -2709,6 +2737,8 @@ void QQuickTextInputPrivate::updateLayout()
     q->update();
     q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
 
+    if (previousRect != boundingRect)
+        emit q->contentSizeChanged();
 }
 
 #ifndef QT_NO_CLIPBOARD

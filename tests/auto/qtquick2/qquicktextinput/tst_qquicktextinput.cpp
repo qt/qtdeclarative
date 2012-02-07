@@ -156,6 +156,7 @@ private slots:
     void passwordEchoDelay();
 #endif
     void geometrySignals();
+    void contentSize();
 
     void preeditAutoScroll();
     void preeditCursorRectangle();
@@ -2840,6 +2841,34 @@ void tst_qquicktextinput::geometrySignals()
     QCOMPARE(o->property("bindingWidth").toInt(), 400);
     QCOMPARE(o->property("bindingHeight").toInt(), 500);
     delete o;
+}
+
+void tst_qquicktextinput::contentSize()
+{
+    QString componentStr = "import QtQuick 2.0\nTextInput { width: 75; height: 16; font.pixelSize: 10 }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickTextInput *textObject = qobject_cast<QQuickTextInput *>(object.data());
+
+    QSignalSpy spy(textObject, SIGNAL(contentSizeChanged()));
+
+    textObject->setText("The quick red fox jumped over the lazy brown dog");
+
+    QVERIFY(textObject->contentWidth() > textObject->width());
+    QVERIFY(textObject->contentHeight() < textObject->height());
+    QCOMPARE(spy.count(), 1);
+
+    textObject->setWrapMode(QQuickTextInput::WordWrap);
+    QVERIFY(textObject->contentWidth() <= textObject->width());
+    QVERIFY(textObject->contentHeight() > textObject->height());
+    QCOMPARE(spy.count(), 2);
+
+    textObject->setText("The quickredfoxjumpedoverthe lazy brown dog");
+
+    QVERIFY(textObject->contentWidth() > textObject->width());
+    QVERIFY(textObject->contentHeight() > textObject->height());
+    QCOMPARE(spy.count(), 3);
 }
 
 static void sendPreeditText(const QString &text, int cursor)

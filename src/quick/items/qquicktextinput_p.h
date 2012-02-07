@@ -103,6 +103,8 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
 
 public:
     QQuickTextInput(QQuickItem * parent=0);
@@ -254,6 +256,9 @@ public:
 
     Q_INVOKABLE QString getText(int start, int end) const;
 
+    qreal contentWidth() const;
+    qreal contentHeight() const;
+
 Q_SIGNALS:
     void textChanged();
     void cursorPositionChanged();
@@ -289,6 +294,7 @@ Q_SIGNALS:
     void canRedoChanged();
     void inputMethodComposingChanged();
     void effectiveHorizontalAlignmentChanged();
+    void contentSizeChanged();
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry,

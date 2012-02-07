@@ -377,8 +377,8 @@ void QQuickTextPrivate::updateSize()
     if (text.isEmpty()) {
         qreal fontHeight = fm.height();
         q->setImplicitSize(0, fontHeight);
-        paintedSize = QSize(0, fontHeight);
-        emit q->paintedSizeChanged();
+        contentSize = QSize(0, fontHeight);
+        emit q->contentSizeChanged();
         updateType = UpdatePaintNode;
         q->update();
         return;
@@ -449,9 +449,9 @@ void QQuickTextPrivate::updateSize()
 
     if (iWidth == -1)
         q->setImplicitHeight(size.height());
-    if (paintedSize != size) {
-        paintedSize = size;
-        emit q->paintedSizeChanged();
+    if (contentSize != size) {
+        contentSize = size;
+        emit q->contentSizeChanged();
     }
     updateType = UpdatePaintNode;
     q->update();
@@ -1487,8 +1487,8 @@ void QQuickText::setVAlign(VAlignment align)
     wrap if an explicit width has been set.  wrapMode can be one of:
 
     \list
-    \o Text.NoWrap (default) - no wrapping will be performed. If the text contains insufficient newlines, then \l paintedWidth will exceed a set width.
-    \o Text.WordWrap - wrapping is done on word boundaries only. If a word is too long, \l paintedWidth will exceed a set width.
+    \o Text.NoWrap (default) - no wrapping will be performed. If the text contains insufficient newlines, then \l contentWidth will exceed a set width.
+    \o Text.WordWrap - wrapping is done on word boundaries only. If a word is too long, \l contentWidth will exceed a set width.
     \o Text.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
     \o Text.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
     \endlist
@@ -1914,27 +1914,27 @@ void QQuickText::updatePolish()
 }
 
 /*!
-    \qmlproperty real QtQuick2::Text::paintedWidth
+    \qmlproperty real QtQuick2::Text::contentWidth
 
     Returns the width of the text, including width past the width
     which is covered due to insufficient wrapping if WrapMode is set.
 */
-qreal QQuickText::paintedWidth() const
+qreal QQuickText::contentWidth() const
 {
     Q_D(const QQuickText);
-    return d->paintedSize.width();
+    return d->contentSize.width();
 }
 
 /*!
-    \qmlproperty real QtQuick2::Text::paintedHeight
+    \qmlproperty real QtQuick2::Text::contentHeight
 
     Returns the height of the text, including height past the height
     which is covered due to there being more text than fits in the set height.
 */
-qreal QQuickText::paintedHeight() const
+qreal QQuickText::contentHeight() const
 {
     Q_D(const QQuickText);
-    return d->paintedSize.height();
+    return d->contentSize.height();
 }
 
 /*!
