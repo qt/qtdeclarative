@@ -914,10 +914,22 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
         QString toString = QLatin1String("toString");
         QString destroy = QLatin1String("destroy");
 
+        // As we use hash linking, it is possible that iterating over the values can give duplicates.
+        // To combat this, we must unique'ify our properties.
+        StringCache uniqueHash;
+        if (stringCache.isLinked())
+            uniqueHash.reserve(stringCache.count());
+
         // XXX TODO: Enables fast property accessors.  These more than double the property access 
         // performance, but the  cost of setting up this structure hasn't been measured so 
         // its not guarenteed that this is a win overall.  We need to try and measure the cost.
         for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) {
+            if (stringCache.isLinked()) {
+                if (uniqueHash.contains(iter))
+                    continue;
+                uniqueHash.insert(iter);
+            }
+
             QDeclarativePropertyData *property = *iter;
             if (property->notFullyResolved()) resolve(property);
 

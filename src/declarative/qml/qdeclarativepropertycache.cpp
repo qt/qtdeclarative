@@ -259,6 +259,9 @@ QDeclarativePropertyCache::~QDeclarativePropertyCache()
         args = next;
     }
 
+    // We must clear this prior to releasing the parent incase it is a
+    // linked hash
+    stringCache.clear();
     if (parent) parent->release();
     parent = 0;
     engine = 0;
@@ -289,7 +292,7 @@ QDeclarativePropertyCache *QDeclarativePropertyCache::copy(int reserve)
     cache->propertyIndexCacheStart = propertyIndexCache.count() + propertyIndexCacheStart;
     cache->methodIndexCacheStart = methodIndexCache.count() + methodIndexCacheStart;
     cache->signalHanderIndexCacheStart = signalHandlerIndexCache.count() + signalHanderIndexCacheStart;
-    cache->stringCache.copyAndReserve(stringCache, reserve);
+    cache->stringCache.linkAndReserve(stringCache, reserve);
     cache->allowedRevisionCache = allowedRevisionCache;
     cache->metaObject = metaObject;
 

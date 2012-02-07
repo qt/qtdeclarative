@@ -173,16 +173,20 @@ static inline int primeForNumBits(int numBits)
     return (1 << numBits) + prime_deltas[numBits];
 }
 
-void QStringHashData::rehashToSize(int size)
+void QStringHashData::rehashToSize(int size, IteratorData first,
+                                   IteratorData (*Iterate)(const IteratorData &),
+                                   QStringHashNode *skip)
 {
     short bits = qMax(MinNumBits, (int)numBits);
     while (primeForNumBits(bits) < size) bits++;
 
     if (bits > numBits)
-        rehashToBits(bits);
+        rehashToBits(bits, first, Iterate, skip);
 }
 
-void QStringHashData::rehashToBits(short bits)
+void QStringHashData::rehashToBits(short bits, IteratorData first,
+                                   IteratorData (*Iterate)(const IteratorData &),
+                                   QStringHashNode *skip)
 {
     numBits = qMax(MinNumBits, (int)bits);
 
@@ -192,17 +196,24 @@ void QStringHashData::rehashToBits(short bits)
 
     numBuckets = nb;
 
+#ifdef QSTRINGHASH_LINK_DEBUG
+    if (linkCount)
+        qFatal("QStringHash: Illegal attempt to rehash a linked hash.");
+#endif
+
     delete []  buckets;
     buckets = new QStringHashNode *[numBuckets]; 
     ::memset(buckets, 0, sizeof(QStringHashNode *) * numBuckets);
 
-    QStringHashNode *nodeList = nodes;
-    while (nodeList) {
-        int bucket = nodeList->hash % numBuckets;
-        nodeList->next = buckets[bucket];
-        buckets[bucket] = nodeList;
+    IteratorData nodeList = first;
+    while (nodeList.n) {
+        if (nodeList.n != skip) {
+            int bucket = nodeList.n->hash % numBuckets;
+            nodeList.n->next = buckets[bucket];
+            buckets[bucket] = nodeList.n;
+        }
 
-        nodeList = nodeList->nlist;
+        nodeList = Iterate(nodeList);
     }
 }
 
