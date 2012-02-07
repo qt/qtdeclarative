@@ -298,7 +298,7 @@ void QQuickTextPrivate::updateLayout()
     if (!richText) {
         if (textHasChanged) {
             if (styledText && !text.isEmpty()) {
-                QDeclarativeStyledText::parse(text, layout, imgTags, qmlContext(q), !maximumLineCountValid);
+                QDeclarativeStyledText::parse(text, layout, imgTags, q->baseUrl(), qmlContext(q), !maximumLineCountValid);
             } else {
                 layout.clearAdditionalFormats();
                 QString tmp = text;
@@ -893,7 +893,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
             image->position < line.textStart() + line.textLength()) {
 
             if (!image->pix) {
-                QUrl url = qmlContext(q)->resolvedUrl(image->url);
+                QUrl url = q->baseUrl().resolved(image->url);
                 image->pix = new QDeclarativePixmap(qmlEngine(q), url, image->size);
                 if (image->pix->isLoading()) {
                     image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
@@ -1752,6 +1752,12 @@ void QQuickText::setBaseUrl(const QUrl &url)
 
         if (d->doc)
             d->doc->setBaseUrl(url);
+        if (d->styledText) {
+            d->textHasChanged = true;
+            qDeleteAll(d->imgTags);
+            d->imgTags.clear();
+            d->updateLayout();
+        }
         emit baseUrlChanged();
     }
 }

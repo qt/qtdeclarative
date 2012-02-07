@@ -83,12 +83,14 @@ class Q_AUTOTEST_EXPORT QDeclarativeStyledText
 public:
     static void parse(const QString &string, QTextLayout &layout,
                       QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                      const QUrl &baseUrl,
                       QDeclarativeContext *context,
                       bool preloadImages);
 
 private:
     QDeclarativeStyledText(const QString &string, QTextLayout &layout,
                            QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                           const QUrl &baseUrl,
                            QDeclarativeContext *context,
                            bool preloadImages);
     ~QDeclarativeStyledText();

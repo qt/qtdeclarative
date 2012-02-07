@@ -108,6 +108,8 @@ private slots:
 
     void lineLaidOut();
 
+    void imgTagsBaseUrl_data();
+    void imgTagsBaseUrl();
     void imgTagsAlign_data();
     void imgTagsAlign();
     void imgTagsMultipleImages();
@@ -1547,6 +1549,87 @@ void tst_qquicktext::lineLaidOut()
     }
 
     delete canvas;
+}
+
+void tst_qquicktext::imgTagsBaseUrl_data()
+{
+    QTest::addColumn<QUrl>("src");
+    QTest::addColumn<QUrl>("baseUrl");
+    QTest::addColumn<QUrl>("contextUrl");
+    QTest::addColumn<qreal>("imgHeight");
+
+    QTest::newRow("absolute local")
+            << testFileUrl("images/heart200.png")
+            << QUrl()
+            << QUrl()
+            << 181.;
+    QTest::newRow("relative local context 1")
+            << QUrl("images/heart200.png")
+            << QUrl()
+            << testFileUrl("/app.qml")
+            << 181.;
+    QTest::newRow("relative local context 2")
+            << QUrl("heart200.png")
+            << QUrl()
+            << testFileUrl("images/app.qml")
+            << 181.;
+    QTest::newRow("relative local base 1")
+            << QUrl("images/heart200.png")
+            << testFileUrl("")
+            << testFileUrl("nonexistant/app.qml")
+            << 181.;
+    QTest::newRow("relative local base 2")
+            << QUrl("heart200.png")
+            << testFileUrl("images/")
+            << testFileUrl("nonexistant/app.qml")
+            << 181.;
+    QTest::newRow("base relative to local context")
+            << QUrl("heart200.png")
+            << testFileUrl("images/")
+            << testFileUrl("/app.qml")
+            << 181.;
+
+    QTest::newRow("absolute remote")
+            << QUrl("http://127.0.0.1:14453/images/heart200.png")
+            << QUrl()
+            << QUrl()
+            << 181.;
+    QTest::newRow("relative remote base 1")
+            << QUrl("images/heart200.png")
+            << QUrl("http://127.0.0.1:14453/")
+            << testFileUrl("nonexistant/app.qml")
+            << 181.;
+    QTest::newRow("relative remote base 2")
+            << QUrl("heart200.png")
+            << QUrl("http://127.0.0.1:14453/images/")
+            << testFileUrl("nonexistant/app.qml")
+            << 181.;
+}
+
+void tst_qquicktext::imgTagsBaseUrl()
+{
+    QFETCH(QUrl, src);
+    QFETCH(QUrl, baseUrl);
+    QFETCH(QUrl, contextUrl);
+    QFETCH(qreal, imgHeight);
+
+    TestHTTPServer server(14453);
+    server.serveDirectory(testFile(""));
+
+    QByteArray baseUrlFragment;
+    if (!baseUrl.isEmpty())
+        baseUrlFragment = "; baseUrl: \"" + baseUrl.toEncoded() + "\"";
+    QByteArray componentStr = "import QtQuick 2.0\nText { text: \"This is a test <img src=\\\"" + src.toEncoded() + "\\\">\"" + baseUrlFragment + " }";
+
+    QDeclarativeComponent component(&engine);
+    component.setData(componentStr, contextUrl);
+    QScopedPointer<QObject> object(component.create());
+    QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(textObject);
+
+    QCoreApplication::processEvents();
+
+    QTRY_COMPARE(textObject->height(), imgHeight);
 }
 
 void tst_qquicktext::imgTagsAlign_data()

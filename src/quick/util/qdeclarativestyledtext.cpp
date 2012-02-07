@@ -83,9 +83,10 @@ public:
 
     QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l,
                                   QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                                  const QUrl &baseUrl,
                                   QDeclarativeContext *context,
                                   bool preloadImages)
-        : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), hasNewLine(false), nbImages(0), updateImagePositions(false)
+        : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), baseUrl(baseUrl), hasNewLine(false), nbImages(0), updateImagePositions(false)
         , preFormat(false), prependSpace(false), hasSpace(true), preloadImages(preloadImages), context(context)
     {
     }
@@ -117,6 +118,7 @@ public:
     QList<QDeclarativeStyledTextImgTag*> *imgTags;
     QFont baseFont;
     QStack<List> listStack;
+    QUrl baseUrl;
     bool hasNewLine;
     int nbImages;
     bool updateImagePositions;
@@ -155,9 +157,11 @@ const QChar QDeclarativeStyledTextPrivate::lineFeed(QLatin1Char('\n'));
 const QChar QDeclarativeStyledTextPrivate::space(QLatin1Char(' '));
 
 QDeclarativeStyledText::QDeclarativeStyledText(const QString &string, QTextLayout &layout,
-                                               QList<QDeclarativeStyledTextImgTag*> &imgTags, QDeclarativeContext *context,
+                                               QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                                               const QUrl &baseUrl,
+                                               QDeclarativeContext *context,
                                                bool preloadImages)
-    : d(new QDeclarativeStyledTextPrivate(string, layout, imgTags, context, preloadImages))
+    : d(new QDeclarativeStyledTextPrivate(string, layout, imgTags, baseUrl, context, preloadImages))
 {
 }
 
@@ -167,12 +171,14 @@ QDeclarativeStyledText::~QDeclarativeStyledText()
 }
 
 void QDeclarativeStyledText::parse(const QString &string, QTextLayout &layout,
-                                   QList<QDeclarativeStyledTextImgTag*> &imgTags, QDeclarativeContext *context,
+                                   QList<QDeclarativeStyledTextImgTag*> &imgTags,
+                                   const QUrl &baseUrl,
+                                   QDeclarativeContext *context,
                                    bool preloadImages)
 {
     if (string.isEmpty())
         return;
-    QDeclarativeStyledText styledText(string, layout, imgTags, context, preloadImages);
+    QDeclarativeStyledText styledText(string, layout, imgTags, baseUrl, context, preloadImages);
     styledText.d->parse();
 }
 
@@ -657,7 +663,7 @@ void QDeclarativeStyledTextPrivate::parseImageAttributes(const QChar *&ch, const
             // if we don't know its size but the image is a local image,
             // we load it in the pixmap cache and save its implicit size
             // to avoid a relayout later on.
-            QUrl url = context->resolvedUrl(image->url);
+            QUrl url = baseUrl.resolved(image->url);
             if (url.isLocalFile()) {
                 QDeclarativePixmap *pix = new QDeclarativePixmap(context->engine(), url, image->size);
                 if (pix && pix->isReady()) {

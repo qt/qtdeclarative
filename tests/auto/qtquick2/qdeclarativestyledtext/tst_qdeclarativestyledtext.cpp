@@ -160,7 +160,7 @@ void tst_qdeclarativestyledtext::textOutput()
 
     QTextLayout layout;
     QList<QDeclarativeStyledTextImgTag*> imgTags;
-    QDeclarativeStyledText::parse(input, layout, imgTags, 0, false);
+    QDeclarativeStyledText::parse(input, layout, imgTags, QUrl(), 0, false);
 
     QCOMPARE(layout.text(), output);
 
