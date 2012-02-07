@@ -534,8 +534,8 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         QDeclarativeAccessorProperties::Property *accessorProperty = accessorProperties.property(str);
 
-        // Fast properties may not be overrides
-        Q_ASSERT(accessorProperty == 0 || old == 0);
+        // Fast properties may not be overrides or revisioned
+        Q_ASSERT(accessorProperty == 0 || (old == 0 && data->revision == 0));
 
         if (accessorProperty) {
             data->flags |= QDeclarativePropertyData::HasAccessors;

@@ -146,7 +146,9 @@ public:
     bool isSignalHandler() const { return flags & IsSignalHandler; }
     bool isOverload() const { return flags & IsOverload; }
 
-    bool hasOverride() const { return !(flags & IsValueTypeVirtual) && overrideIndex >= 0; }
+    bool hasOverride() const { return !(flags & IsValueTypeVirtual) &&
+                                      !(flags & HasAccessors) &&
+                                      overrideIndex >= 0; }
 
     // Returns -1 if not a value type virtual property
     inline int getValueTypeCoreIndex() const;
@@ -160,26 +162,32 @@ public:
         int notifyIndex;  // When !IsFunction
         void *arguments;  // When IsFunction && HasArguments
     };
+
     union {
-        struct { // When !IsValueTypeVirtual
-            uint overrideIndexIsProperty : 1;
-            signed int overrideIndex : 31;
-        };
-        struct { // When IsValueTypeVirtual
-            quint16 valueTypeFlags; // flags of the access property on the value type proxy object
-            quint8 valueTypePropType; // The QVariant::Type of access property on the value type
-                                      // proxy object
-            quint8 valueTypeCoreIndex; // The prop index of the access property on the value type
-                                       //proxy object
-        };
-    };
+        struct { // When !HasAccessors
+            qint16 revision;
+            qint16 metaObjectOffset;
 
-    qint16 revision;
-    qint16 metaObjectOffset;
+            union {
+                struct { // When IsValueTypeVirtual
+                    quint16 valueTypeFlags; // flags of the access property on the value type proxy
+                                            // object
+                    quint8 valueTypePropType; // The QVariant::Type of access property on the value
+                                              // type proxy object
+                    quint8 valueTypeCoreIndex; // The prop index of the access property on the value
+                                               // type proxy object
+                };
 
-    struct { // When HasAccessors
-        QDeclarativeAccessors *accessors;
-        intptr_t accessorData;
+                struct { // When !IsValueTypeVirtual
+                    uint overrideIndexIsProperty : 1;
+                    signed int overrideIndex : 31;
+                };
+            };
+        };
+        struct { // When HasAccessors
+            QDeclarativeAccessors *accessors;
+            intptr_t accessorData;
+        };
     };
 
 private:
@@ -306,8 +314,6 @@ QDeclarativePropertyData::QDeclarativePropertyData()
     overrideIndex = -1;
     revision = 0;
     metaObjectOffset = -1; 
-    accessors = 0;
-    accessorData = 0;
     flags = 0;
 }
 
@@ -347,7 +353,7 @@ QDeclarativePropertyCache::overrideData(QDeclarativePropertyData *data) const
 
 bool QDeclarativePropertyCache::isAllowedInRevision(QDeclarativePropertyData *data) const
 {
-    return (data->metaObjectOffset == -1 && data->revision == 0) ||
+    return (data->hasAccessors() || data->metaObjectOffset == -1 && data->revision == 0) ||
            (allowedRevisionCache[data->metaObjectOffset] >= data->revision);
 }
 
