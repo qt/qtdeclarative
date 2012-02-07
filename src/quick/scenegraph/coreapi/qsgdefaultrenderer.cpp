@@ -450,6 +450,7 @@ void QSGDefaultRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
                 m_current_model_view_matrix = *m_currentMatrix;
             else
                 m_current_model_view_matrix.setToIdentity();
+            m_current_determinant = m_current_model_view_matrix.determinant();
             updates |= QSGMaterialShader::RenderState::DirtyMatrix;
         }
 

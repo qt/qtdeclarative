@@ -73,6 +73,7 @@ public:
         QMatrix4x4 modelViewMatrix() const;
         QRect viewportRect() const;
         QRect deviceRect() const;
+        float determinant() const;
 
         QOpenGLContext *context() const;
 

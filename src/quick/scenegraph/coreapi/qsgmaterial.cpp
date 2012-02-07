@@ -334,7 +334,15 @@ float QSGMaterialShader::RenderState::opacity() const
     return static_cast<const QSGRenderer *>(m_data)->currentOpacity();
 }
 
+/*!
+    Returns the modelview determinant to be used for rendering
+ */
 
+float QSGMaterialShader::RenderState::determinant() const
+{
+    Q_ASSERT(m_data);
+    return static_cast<const QSGRenderer *>(m_data)->determinant();
+}
 
 /*!
     Returns the matrix combined of modelview matrix and project matrix.
@@ -350,6 +358,20 @@ QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix() const
 
 /*!
     Returns the model view matrix.
+
+    If the material has the RequiresFullMatrix flag
+    set, this is guaranteed to be the complete transform
+    matrix calculated from the scenegraph.
+
+    However, if this flag is not set, the renderer may
+    choose to alter this matrix. For example, it may
+    pre-transform vertices on the CPU and set this matrix
+    to identity.
+
+    In a situation such as the above, it is still possible
+    to retrieve the actual matrix determinant by setting
+    the RequiresDeterminant flag in the material and
+    calling the determinant() accessor.
  */
 
 QMatrix4x4 QSGMaterialShader::RenderState::modelViewMatrix() const

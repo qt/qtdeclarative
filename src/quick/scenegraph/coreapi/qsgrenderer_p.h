@@ -104,6 +104,7 @@ public:
     QMatrix4x4 currentModelViewMatrix() const { return m_current_model_view_matrix; }
     QMatrix4x4 currentCombinedMatrix() const { return m_current_projection_matrix * m_current_model_view_matrix; }
     qreal currentOpacity() const { return m_current_opacity; }
+    qreal determinant() const { return m_current_determinant; }
 
     void setProjectionMatrixToDeviceRect();
     void setProjectionMatrixToRect(const QRectF &rect);
@@ -153,6 +154,7 @@ protected:
     QMatrix4x4 m_current_projection_matrix;
     QMatrix4x4 m_current_model_view_matrix;
     qreal m_current_opacity;
+    qreal m_current_determinant;
 
     QSGContext *m_context;
 
