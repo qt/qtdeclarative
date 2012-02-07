@@ -56,10 +56,9 @@ class QuickTestResultPrivate;
 class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(FunctionType RunMode)
+    Q_ENUMS(RunMode)
     Q_PROPERTY(QString testCaseName READ testCaseName WRITE setTestCaseName NOTIFY testCaseNameChanged)
     Q_PROPERTY(QString functionName READ functionName WRITE setFunctionName NOTIFY functionNameChanged)
-    Q_PROPERTY(FunctionType functionType READ functionType WRITE setFunctionType NOTIFY functionTypeChanged)
     Q_PROPERTY(QString dataTag READ dataTag WRITE setDataTag NOTIFY dataTagChanged)
     Q_PROPERTY(bool failed READ isFailed)
     Q_PROPERTY(bool dataFailed READ isDataFailed)
@@ -71,16 +70,6 @@ class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
 public:
     QuickTestResult(QObject *parent = 0);
     ~QuickTestResult();
-
-    // Values must match QTestResult::TestLocation.
-    enum FunctionType
-    {
-        NoWhere = 0,
-        DataFunc = 1,
-        InitFunc = 2,
-        Func = 3,
-        CleanupFunc = 4
-    };
 
     // Values must match QBenchmarkIterationController::RunMode.
     enum RunMode
@@ -94,9 +83,6 @@ public:
 
     QString functionName() const;
     void setFunctionName(const QString &name);
-
-    FunctionType functionType() const;
-    void setFunctionType(FunctionType type);
 
     QString dataTag() const;
     void setDataTag(const QString &tag);
@@ -164,7 +150,6 @@ Q_SIGNALS:
     void programNameChanged();
     void testCaseNameChanged();
     void functionNameChanged();
-    void functionTypeChanged();
     void dataTagChanged();
     void skippedChanged();
 

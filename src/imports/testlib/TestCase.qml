@@ -481,16 +481,12 @@ Item {
     }
 
     function qtest_runFunction(prop, arg) {
-        qtest_results.functionType = TestResult.InitFunc
         qtest_runInternal("init")
         if (!qtest_results.skipped) {
-            qtest_results.functionType = TestResult.Func
             qtest_runInternal(prop, arg)
             qtest_results.finishTestData()
-            qtest_results.functionType = TestResult.CleanupFunc
             qtest_runInternal("cleanup")
         }
-        qtest_results.functionType = TestResult.NoWhere
     }
 
     function qtest_runBenchmarkFunction(prop, arg) {
@@ -499,13 +495,11 @@ Item {
             qtest_results.beginDataRun()
             do {
                 // Run the initialization function.
-                qtest_results.functionType = TestResult.InitFunc
                 qtest_runInternal("init")
                 if (qtest_results.skipped)
                     break
 
                 // Execute the benchmark function.
-                qtest_results.functionType = TestResult.Func
                 if (prop.indexOf("benchmark_once_") != 0)
                     qtest_results.startBenchmark(TestResult.RepeatUntilValidMeasurement, qtest_results.dataTag)
                 else
@@ -520,9 +514,7 @@ Item {
                 qtest_results.stopBenchmark()
 
                 // Run the cleanup function.
-                qtest_results.functionType = TestResult.CleanupFunc
                 qtest_runInternal("cleanup")
-                qtest_results.functionType = TestResult.NoWhere
             } while (!qtest_results.measurementAccepted())
             qtest_results.endDataRun()
         } while (qtest_results.needsMoreMeasurements())
@@ -571,7 +563,6 @@ Item {
 
         // Run the initTestCase function.
         qtest_results.functionName = "initTestCase"
-        qtest_results.functionType = TestResult.InitFunc
         var runTests = true
         if (!qtest_runInternal("initTestCase"))
             runTests = false
@@ -603,7 +594,6 @@ Item {
             }
             qtest_results.functionName = prop
             if (datafunc in testCase) {
-                qtest_results.functionType = TestResult.DataFunc
                 if (qtest_runInternal(datafunc)) {
                     var table = qtest_testCaseResult
                     var haveData = false
@@ -637,7 +627,6 @@ Item {
         // Run the cleanupTestCase function.
         qtest_results.skipped = false
         qtest_results.functionName = "cleanupTestCase"
-        qtest_results.functionType = TestResult.CleanupFunc
         qtest_runInternal("cleanupTestCase")
 
         // Complain about missing functions that we were supposed to run.

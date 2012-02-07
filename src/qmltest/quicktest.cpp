@@ -142,7 +142,6 @@ template <class View> void handleCompileErrors(const QFileInfo &fi, const View &
     results.setTestCaseName(fi.baseName());
     results.startLogging();
     results.setFunctionName(QLatin1String("compile"));
-    results.setFunctionType(QuickTestResult::Func);
     // Verbose warning output of all messages and relevant parameters
     QString message;
     QTextStream str(&message);
@@ -176,7 +175,6 @@ template <class View> void handleCompileErrors(const QFileInfo &fi, const View &
     results.finishTestData();
     results.finishTestFunction();
     results.setFunctionName(QString());
-    results.setFunctionType(QuickTestResult::NoWhere);
     results.stopLogging();
 }
 

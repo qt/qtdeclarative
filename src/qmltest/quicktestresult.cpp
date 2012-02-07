@@ -163,17 +163,6 @@ void QuickTestResult::setFunctionName(const QString &name)
     emit functionNameChanged();
 }
 
-QuickTestResult::FunctionType QuickTestResult::functionType() const
-{
-    return FunctionType(QTestResult::currentTestLocation());
-}
-
-void QuickTestResult::setFunctionType(FunctionType type)
-{
-    QTestResult::setCurrentTestLocation(QTestResult::TestLocation(type));
-    emit functionTypeChanged();
-}
-
 /*!
     \qmlproperty string TestResult::dataTag
 
