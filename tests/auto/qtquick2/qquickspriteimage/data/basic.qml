@@ -52,7 +52,7 @@ Rectangle {
             name: "happy"
             source: "squarefacesprite.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
         }
         width: 160
         height: 160

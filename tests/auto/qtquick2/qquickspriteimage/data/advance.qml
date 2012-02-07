@@ -52,13 +52,13 @@ Rectangle {
             name: "firstState"
             source: "squarefacesprite.png"
             frames: 3
-            duration: -1
+            frameSync: true
             to: {"secondState":1}
         }, Sprite {
             name: "secondState"
             source: "squarefacesprite.png"
             frames: 6
-            duration: -1
+            frameSync: true
         } ]
         width: 160
         height: 160
