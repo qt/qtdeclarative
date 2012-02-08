@@ -55,6 +55,8 @@ class QDeclarativeAnimationControllerPrivate;
 class Q_AUTOTEST_EXPORT QDeclarativeAnimationController : public QObject, public QDeclarativeParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QDeclarativeParserStatus)
+
     Q_DECLARE_PRIVATE(QDeclarativeAnimationController)
     Q_CLASSINFO("DefaultProperty", "animation")
 
