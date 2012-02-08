@@ -3237,6 +3237,8 @@ void tst_qdeclarativeecmascript::importScripts_data()
 
 void tst_qdeclarativeecmascript::importScripts()
 {
+    QSKIP("These warnings come out as INFO, not Warning - https://bugreports.qt-project.org/browse/QTBUG-24156");
+
     QFETCH(QUrl, testfile);
     QFETCH(QString, errorMessage);
     QFETCH(QStringList, warningMessages);
