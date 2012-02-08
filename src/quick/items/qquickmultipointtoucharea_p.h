@@ -63,6 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickTouchPoint : public QObject
     Q_PROPERTY(qreal x READ x NOTIFY xChanged)
     Q_PROPERTY(qreal y READ y NOTIFY yChanged)
     Q_PROPERTY(qreal pressure READ pressure NOTIFY pressureChanged)
+    Q_PROPERTY(QVector2D velocity READ velocity NOTIFY velocityChanged)
     Q_PROPERTY(QRectF area READ area NOTIFY areaChanged)
 
     Q_PROPERTY(qreal startX READ startX NOTIFY startXChanged)
@@ -95,6 +96,9 @@ public:
 
     qreal pressure() const { return _pressure; }
     void setPressure(qreal pressure);
+
+    QVector2D velocity() const { return _velocity; }
+    void setVelocity(const QVector2D &velocity);
 
     QRectF area() const { return _area; }
     void setArea(const QRectF &area);
@@ -131,6 +135,7 @@ Q_SIGNALS:
     void xChanged();
     void yChanged();
     void pressureChanged();
+    void velocityChanged();
     void areaChanged();
     void startXChanged();
     void startYChanged();
@@ -145,6 +150,7 @@ private:
     qreal _x;
     qreal _y;
     qreal _pressure;
+    QVector2D _velocity;
     QRectF _area;
     bool _qmlDefined;
     bool _inUse;    //whether the point is currently in use (only valid when _qmlDefined == true)

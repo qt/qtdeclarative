@@ -102,14 +102,19 @@ void QQuickTouchPoint::setY(qreal y)
 
 /*!
     \qmlproperty real QtQuick2::TouchPoint::pressure
+    \qmlproperty vector2d QtQuick2::TouchPoint::velocity
     \qmlproperty rectangle QtQuick2::TouchPoint::area
 
     These properties hold additional information about the current state of the touch point.
 
     \list
     \i \c pressure is a value in the range of 0.0 to 1.0.
+    \i \c velocity is a vector with magnitude reported in pixels per second.
     \i \c area is a rectangle covering the area of the touch point, centered on the current position of the touch point.
     \endlist
+
+    Not all touch devices support velocity. If velocity is not supported, it will be reported
+    as 0,0.
 */
 void QQuickTouchPoint::setPressure(qreal pressure)
 {
@@ -117,6 +122,14 @@ void QQuickTouchPoint::setPressure(qreal pressure)
         return;
     _pressure = pressure;
     emit pressureChanged();
+}
+
+void QQuickTouchPoint::setVelocity(const QVector2D &velocity)
+{
+    if (_velocity == velocity)
+        return;
+    _velocity = velocity;
+    emit velocityChanged();
 }
 
 void QQuickTouchPoint::setArea(const QRectF &area)
@@ -548,6 +561,7 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QT
     dtp->setX(p->pos().x());
     dtp->setY(p->pos().y());
     dtp->setPressure(p->pressure());
+    dtp->setVelocity(p->velocity());
     dtp->setArea(p->rect());
     dtp->setStartX(p->startPos().x());
     dtp->setStartY(p->startPos().y());
