@@ -137,7 +137,7 @@ void QDeclarativeAnimationTimer::startAnimations()
     startAnimationPending = false;
     //force timer to update, which prevents large deltas for our newly added animations
     if (!animations.isEmpty())
-        QUnifiedTimer::instance()->updateAnimationTimers(-1);
+        QUnifiedTimer::instance()->maybeUpdateAnimationsToCurrentTime();
 
     //we transfer the waiting animations into the "really running" state
     animations += animationsToStart;
