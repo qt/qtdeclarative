@@ -138,37 +138,40 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
         const QVariant &v = material->m_uniformValues.at(i).second;
 
         switch (v.type()) {
-        case QVariant::Color:
+        case QMetaType::QColor:
             program()->setUniformValue(m_uniformLocs.at(i), qt_premultiply_color(qvariant_cast<QColor>(v)));
             break;
-        case QVariant::Double:
+        case QMetaType::Float:
+            program()->setUniformValue(m_uniformLocs.at(i), qvariant_cast<float>(v));
+            break;
+        case QMetaType::Double:
             program()->setUniformValue(m_uniformLocs.at(i), (float) qvariant_cast<double>(v));
             break;
-        case QVariant::Transform:
+        case QMetaType::QTransform:
             program()->setUniformValue(m_uniformLocs.at(i), qvariant_cast<QTransform>(v));
             break;
-        case QVariant::Int:
+        case QMetaType::Int:
             program()->setUniformValue(m_uniformLocs.at(i), v.toInt());
             break;
-        case QVariant::Bool:
+        case QMetaType::Bool:
             program()->setUniformValue(m_uniformLocs.at(i), GLint(v.toBool()));
             break;
-        case QVariant::Size:
-        case QVariant::SizeF:
+        case QMetaType::QSize:
+        case QMetaType::QSizeF:
             program()->setUniformValue(m_uniformLocs.at(i), v.toSizeF());
             break;
-        case QVariant::Point:
-        case QVariant::PointF:
+        case QMetaType::QPoint:
+        case QMetaType::QPointF:
             program()->setUniformValue(m_uniformLocs.at(i), v.toPointF());
             break;
-        case QVariant::Rect:
-        case QVariant::RectF:
+        case QMetaType::QRect:
+        case QMetaType::QRectF:
             {
                 QRectF r = v.toRectF();
                 program()->setUniformValue(m_uniformLocs.at(i), r.x(), r.y(), r.width(), r.height());
             }
             break;
-        case QVariant::Vector3D:
+        case QMetaType::QVector3D:
             program()->setUniformValue(m_uniformLocs.at(i), qvariant_cast<QVector3D>(v));
             break;
         default:
