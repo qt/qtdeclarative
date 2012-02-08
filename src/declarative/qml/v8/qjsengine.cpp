@@ -340,7 +340,7 @@ QJSValue QJSEngine::newArray(uint length)
 
 /*!
   Creates a JavaScript object that wraps the given QObject \a
-  object, using the given \a ownership. The given \a options control
+  object, using JavaScriptOwnership. The given \a options control
   various aspects of the interaction with the resulting script object.
 
   Signals and slots, properties and children of \a object are
