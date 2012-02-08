@@ -406,7 +406,9 @@ Q_PROPERTY(int size READ size CONSTANT)
     value. Similarly, setting the length property of the Array to a value larger
     than its current value will result in the Array being padded out to the
     specified length with default-constructed elements rather than Undefined
-    elements.
+    elements.  Finally, the Qt container classes support signed (rather than
+    unsigned) integer indexes; thus, attempting to access any index greater
+    than INT_MAX will fail.
 
     The default-constructed values for each sequence type are as follows:
     \table

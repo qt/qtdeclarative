@@ -1194,6 +1194,10 @@ class MySequenceConversionObject : public QObject
     Q_PROPERTY (QList<QPoint> pointListProperty READ pointListProperty WRITE setPointListProperty NOTIFY pointListPropertyChanged)
     Q_PROPERTY (QList<QVariant> variantListProperty READ variantListProperty WRITE setVariantListProperty NOTIFY variantListPropertyChanged)
 
+    Q_PROPERTY (qint32 maxIndex READ maxIndex CONSTANT)
+    Q_PROPERTY (quint32 tooBigIndex READ tooBigIndex CONSTANT)
+    Q_PROPERTY (qint32 negativeIndex READ negativeIndex CONSTANT)
+
 public:
     MySequenceConversionObject()
     {
@@ -1210,6 +1214,21 @@ public:
     }
 
     ~MySequenceConversionObject() {}
+
+    qint32 maxIndex() const
+    {
+        return INT_MAX;
+    }
+    quint32 tooBigIndex() const
+    {
+        quint32 retn = 7;
+        retn += INT_MAX;
+        return retn;
+    }
+    qint32 negativeIndex() const
+    {
+        return -5;
+    }
 
     QList<int> intListProperty() const { return m_intList; }
     void setIntListProperty(const QList<int> &list) { m_intList = list; emit intListPropertyChanged(); }

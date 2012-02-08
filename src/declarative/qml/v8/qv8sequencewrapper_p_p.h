@@ -101,6 +101,26 @@ protected:
     }
 };
 
+// helper function to generate valid warnings if errors occur during sequence operations.
+static void generateWarning(QV8Engine *engine, const QString& description)
+{
+    if (!engine)
+        return;
+    v8::Local<v8::StackTrace> currStack = v8::StackTrace::CurrentStackTrace(1);
+    if (currStack.IsEmpty())
+        return;
+    v8::Local<v8::StackFrame> currFrame = currStack->GetFrame(0);
+    if (currFrame.IsEmpty())
+        return;
+
+    QDeclarativeError retn;
+    retn.setDescription(description);
+    retn.setLine(currFrame->GetLineNumber());
+    retn.setUrl(QUrl(engine->toString(currFrame->GetScriptName())));
+    QDeclarativeEnginePrivate::warning(engine->engine(), retn);
+}
+
+
 static int convertV8ValueToInt(QV8Engine *, v8::Handle<v8::Value> v)
 {
     return v->Int32Value();
@@ -187,7 +207,7 @@ static QUrl convertV8ValueToUrl(QV8Engine *e, v8::Handle<v8::Value> v)
 
 static v8::Handle<v8::Value> convertUrlToV8Value(QV8Engine *e, const QUrl &v)
 {
-    return e->toString(v.toEncoded());
+    return e->toString(QLatin1String(v.toEncoded().data()));
 }
 
 static QString convertUrlToString(QV8Engine *, const QUrl &v)
@@ -286,7 +306,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                         return 0; \
                     loadReference(); \
                 } \
-                return c.count(); \
+                return static_cast<quint32>(c.count()); \
             } \
             void lengthSetter(v8::Handle<v8::Value> value) \
             { \
@@ -294,28 +314,39 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 if (value.IsEmpty() || !value->IsUint32()) \
                     return; \
                 quint32 newLength = value->Uint32Value(); \
+                /* Qt containers have int (rather than uint) allowable indexes. */ \
+                if (newLength > INT_MAX) { \
+                    generateWarning(engine, QLatin1String("Index out of range during length set")); \
+                    return; \
+                } \
                 /* Read the sequence from the QObject property if we're a reference */ \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return; \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
                 /* Determine whether we need to modify the sequence */ \
-                quint32 count = c.count(); \
-                if (newLength == count) { \
+                qint32 newCount = static_cast<qint32>(newLength); \
+                qint32 count = c.count(); \
+                if (newCount == count) { \
                     return; \
-                } else if (newLength > count) { \
+                } else if (newCount > count) { \
                     /* according to ECMA262r3 we need to insert */ \
                     /* undefined values increasing length to newLength. */ \
                     /* We cannot, so we insert default-values instead. */ \
-                    while (newLength > count++) { \
-                        c.append(DefaultValue); \
+                    while (newCount > count++) { \
+                        QT_TRY { \
+                            c.append(DefaultValue); \
+                        } QT_CATCH (std::bad_alloc &exception) { \
+                            generateWarning(engine, QString(QLatin1String(exception.what()) \
+                                                    + QLatin1String(" during length set"))); \
+                            return; /* failed; don't write back any result. */ \
+                        } \
                     } \
                 } else { \
                     /* according to ECMA262r3 we need to remove */ \
                     /* elements until the sequence is the required length. */ \
-                    while (newLength < count) { \
+                    while (newCount < count) { \
                         count--; \
                         c.removeAt(count); \
                     } \
@@ -323,15 +354,17 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 /* write back if required. */ \
                 if (objectType == QV8SequenceResource::Reference) { \
                     /* write back.  already checked that object is non-null, so skip that check here. */ \
-                    int status = -1; \
-                    QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::DontRemoveBinding; \
-                    void *a[] = { &c, 0, &status, &flags }; \
-                    QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
+                    storeReference(); \
                 } \
                 return; \
             } \
             v8::Handle<v8::Value> indexedSetter(quint32 index, v8::Handle<v8::Value> value) \
             { \
+                /* Qt containers have int (rather than uint) allowable indexes. */ \
+                if (index > INT_MAX) { \
+                    generateWarning(engine, QLatin1String("Index out of range during indexed set")); \
+                    return v8::Undefined(); \
+                } \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return v8::Undefined(); \
@@ -339,18 +372,25 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 } \
                 /* modify the sequence */ \
                 SequenceElementType elementValue = ConversionFromV8fn(engine, value); \
-                quint32 count = c.count(); \
-                if (index == count) { \
+                qint32 count = c.count(); \
+                qint32 signedIdx = static_cast<qint32>(index); \
+                if (signedIdx == count) { \
                     c.append(elementValue); \
-                } else if (index < count) { \
+                } else if (signedIdx < count) { \
                     c[index] = elementValue; \
                 } else { \
                     /* according to ECMA262r3 we need to insert */ \
                     /* the value at the given index, increasing length to index+1. */ \
-                    while (index > count++) { \
-                        c.append(DefaultValue); \
+                    QT_TRY { \
+                        while (signedIdx > count++) { \
+                            c.append(DefaultValue); \
+                        } \
+                        c.append(elementValue); \
+                    } QT_CATCH (std::bad_alloc &exception) { \
+                        generateWarning(engine, QString(QLatin1String(exception.what()) \
+                                                + QLatin1String(" during indexed set"))); \
+                        return v8::Undefined(); /* failed; don't write back any result. */ \
                     } \
-                    c.append(elementValue); \
                 } \
                 /* write back.  already checked that object is non-null, so skip that check here. */ \
                 if (objectType == QV8SequenceResource::Reference) \
@@ -359,34 +399,41 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
             } \
             v8::Handle<v8::Value> indexedGetter(quint32 index) \
             { \
+                /* Qt containers have int (rather than uint) allowable indexes. */ \
+                if (index > INT_MAX) { \
+                    generateWarning(engine, QLatin1String("Index out of range during indexed get")); \
+                    return v8::Undefined(); \
+                } \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return v8::Undefined(); \
                     loadReference(); \
                 } \
-                quint32 count = c.count(); \
-                if (index < count) \
-                    return ConversionToV8fn(engine, c.at(index)); \
+                qint32 count = c.count(); \
+                qint32 signedIdx = static_cast<qint32>(index); \
+                if (signedIdx < count) \
+                    return ConversionToV8fn(engine, c.at(signedIdx)); \
                 return v8::Undefined(); \
             } \
             v8::Handle<v8::Boolean> indexedDeleter(quint32 index) \
             { \
+                /* Qt containers have int (rather than uint) allowable indexes. */ \
+                if (index > INT_MAX) \
+                    return v8::Boolean::New(false); \
+                /* Read in the sequence from the QObject */ \
                 if (objectType == QV8SequenceResource::Reference) { \
                     if (!object) \
                         return v8::Boolean::New(false); \
-                    void *a[] = { &c, 0 }; \
-                    QMetaObject::metacall(object, QMetaObject::ReadProperty, propertyIndex, a); \
+                    loadReference(); \
                 } \
-                if (index < c.count()) { \
+                qint32 signedIdx = static_cast<qint32>(index); \
+                if (signedIdx < c.count()) { \
                     /* according to ECMA262r3 it should be Undefined, */ \
                     /* but we cannot, so we insert a default-value instead. */ \
-                    c.replace(index, DefaultValue); \
+                    c.replace(signedIdx, DefaultValue); \
                     if (objectType == QV8SequenceResource::Reference) { \
                         /* write back.  already checked that object is non-null, so skip that check here. */ \
-                        int status = -1; \
-                        QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::DontRemoveBinding; \
-                        void *a[] = { &c, 0, &status, &flags }; \
-                        QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
+                        storeReference(); \
                     } \
                     return v8::Boolean::New(true); \
                 } \
@@ -399,10 +446,10 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                         return v8::Handle<v8::Array>(); \
                     loadReference(); \
                 } \
-                quint32 count = c.count(); \
+                qint32 count = c.count(); \
                 v8::Local<v8::Array> retn = v8::Array::New(count); \
-                for (quint32 i = 0; i < count; ++i) { \
-                    retn->Set(i, v8::Integer::NewFromUnsigned(i)); \
+                for (qint32 i = 0; i < count; ++i) { \
+                    retn->Set(static_cast<quint32>(i), v8::Integer::NewFromUnsigned(static_cast<quint32>(i))); \
                 } \
                 return retn; \
             } \
@@ -414,8 +461,8 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     loadReference(); \
                 } \
                 QString str; \
-                quint32 count = c.count(); \
-                for (quint32 i = 0; i < count; ++i) { \
+                qint32 count = c.count(); \
+                for (qint32 i = 0; i < count; ++i) { \
                     str += QString(QLatin1String("%1,")).arg(ToStringfn(engine, c[i])); \
                 } \
                 str.chop(1); \
