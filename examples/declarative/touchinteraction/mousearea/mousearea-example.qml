@@ -42,46 +42,105 @@ import QtQuick 2.0
 
 Rectangle {
     id: box
-    width: 350; height: 250
+    width: 400; height: 300
 
     Rectangle {
         id: redSquare
-        width: 80; height: 80
+        width: 120; height: 120
         anchors.top: parent.top; anchors.left: parent.left; anchors.margins: 10
         color: "red"
 
         Text { text: "Click"; font.pixelSize: 16; anchors.centerIn: parent }
 
         MouseArea {
-            anchors.fill: parent 
+            anchors.fill: parent
             hoverEnabled: true
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            property string buttonID
+
+            acceptedButtons: Qt.AllButtons
+            // Value 'All.Buttons' is eqivalent to:
+            // 'Qt::LeftButton | Qt::RightButton | Qt::MiddleButton  .... | Qt::ExtraButton24'
 
             onEntered: info.text = 'Entered'
             onExited: info.text = 'Exited (pressed=' + pressed + ')'
 
             onPressed: {
-                info.text = 'Pressed (button=' + (mouse.button == Qt.RightButton ? 'right' : 'left') 
-                    + ' shift=' + (mouse.modifiers & Qt.ShiftModifier ? 'true' : 'false') + ')'
+                if (mouse.button == Qt.LeftButton)
+                    buttonID = 'LeftButton'
+                else if (mouse.button == Qt.RightButton)
+                    buttonID = 'RightButton'
+                else if (mouse.button == Qt.MidButton)
+                    buttonID = 'MiddleButton'
+                else if (mouse.button == Qt.BackButton)
+                    buttonID = 'BackButton'
+                else if (mouse.button == Qt.ForwardButton)
+                    buttonID = 'ForwardButton'
+                else if (mouse.button == Qt.TaskButton)
+                    buttonID = 'TaskButton'
+                else if (mouse.button == Qt.ExtraButton4)
+                    buttonID = 'ExtraButton4'
+                else if (mouse.button == Qt.ExtraButton5)
+                    buttonID = 'ExtraButton5'
+                else if (mouse.button == Qt.ExtraButton6)
+                    buttonID = 'ExtraButton6'
+                else if (mouse.button == Qt.ExtraButton7)
+                    buttonID = 'ExtraButton7'
+                else if (mouse.button == Qt.ExtraButton8)
+                    buttonID = 'ExtraButton8'
+                else if (mouse.button == Qt.ExtraButton9)
+                    buttonID = 'ExtraButton9'
+                else if (mouse.button == Qt.ExtraButton10)
+                    buttonID = 'ExtraButton10'
+                else if (mouse.button == Qt.ExtraButton11)
+                    buttonID = 'ExtraButton11'
+                else if (mouse.button == Qt.ExtraButton12)
+                    buttonID = 'ExtraButton12'
+                else if (mouse.button == Qt.ExtraButton13)
+                    buttonID = 'ExtraButton13'
+                else if (mouse.button == Qt.ExtraButton14)
+                    buttonID = 'ExtraButton14'
+                else if (mouse.button == Qt.ExtraButton15)
+                    buttonID = 'ExtraButton15'
+                else if (mouse.button == Qt.ExtraButton16)
+                    buttonID = 'ExtraButton16'
+                else if (mouse.button == Qt.ExtraButton17)
+                    buttonID = 'ExtraButton17'
+                else if (mouse.button == Qt.ExtraButton18)
+                    buttonID = 'ExtraButton18'
+                else if (mouse.button == Qt.ExtraButton19)
+                    buttonID = 'ExtraButton19'
+                else if (mouse.button == Qt.ExtraButton20)
+                    buttonID = 'ExtraButton20'
+                else if (mouse.button == Qt.ExtraButton21)
+                    buttonID = 'ExtraButton21'
+                else if (mouse.button == Qt.ExtraButton22)
+                    buttonID = 'ExtraButton22'
+                else if (mouse.button == Qt.ExtraButton23)
+                    buttonID = 'ExtraButton23'
+                else if (mouse.button == Qt.ExtraButton24)
+                    buttonID = 'ExtraButton24'
+
+                info.text = 'Pressed (' + buttonID + ' shift='
+                    + (mouse.modifiers & Qt.ShiftModifier ? 'true' : 'false') + ')'
                 var posInBox = redSquare.mapToItem(box, mouse.x, mouse.y)
                 posInfo.text = + mouse.x + ',' + mouse.y + ' in square'
                         + ' (' + posInBox.x + ',' + posInBox.y + ' in window)'
             }
 
             onReleased: {
-                info.text = 'Released (isClick=' + mouse.isClick + ' wasHeld=' + mouse.wasHeld + ')'
+                btn.text = 'Released (isClick=' + mouse.isClick + ' wasHeld=' + mouse.wasHeld + ')'
                 posInfo.text = ''
             }
 
-            onPressAndHold: info.text = 'Press and hold'
-            onClicked: info.text = 'Clicked (wasHeld=' + mouse.wasHeld + ')'
-            onDoubleClicked: info.text = 'Double clicked'
+            onPressAndHold: btn.text = 'Press and hold'
+            onClicked: btn.text = 'Clicked (wasHeld=' + mouse.wasHeld + ')'
+            onDoubleClicked: btn.text = 'Double clicked'
         }
     }
 
     Rectangle {
         id: blueSquare
-        width: 80; height: 80
+        width: 120; height: 120
         x: box.width - width - 10; y: 10    // making this item draggable, so don't use anchors
         color: "blue"
 
@@ -100,13 +159,18 @@ Rectangle {
 
     Text {
         id: info
-        anchors.bottom: posInfo.top; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 30
+        anchors.bottom: btn.top; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 20
 
         onTextChanged: console.log(text)
     }
 
     Text {
+        id: btn
+        anchors.bottom: posInfo.top; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 20
+    }
+
+    Text {
         id: posInfo
-        anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 30
+        anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 20
     }
 }
