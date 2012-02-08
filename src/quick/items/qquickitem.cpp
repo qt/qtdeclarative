@@ -1824,10 +1824,13 @@ QQuickItem::~QQuickItem()
 
     Q_D(QQuickItem);
 
+    if (d->canvasRefCount > 1)
+        d->canvasRefCount = 1; // Make sure canvas is set to null in next call to derefCanvas().
     if (d->parentItem)
         setParentItem(0);
-    else if (d->canvas && d->itemNodeInstance)
-        QQuickCanvasPrivate::get(d->canvas)->cleanup(d->itemNodeInstance); // cleanup root
+    else if (d->canvas)
+        d->derefCanvas();
+
     // XXX todo - optimize
     while (!d->childItems.isEmpty())
         d->childItems.first()->setParentItem(0);
@@ -1950,19 +1953,25 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         QQuickCanvasPrivate::get(d->canvas)->parentlessItems.remove(this);
     }
 
-    d->parentItem = parentItem;
-
-    QQuickCanvas *parentCanvas = parentItem?QQuickItemPrivate::get(parentItem)->canvas:0;
-    if (d->canvas != parentCanvas) {
-        QQuickItemPrivate::InitializationState initState;
-        initState.clear();
-        d->initCanvas(&initState, parentCanvas);
+    QQuickCanvas *oldParentCanvas = oldParentItem ? QQuickItemPrivate::get(oldParentItem)->canvas : 0;
+    QQuickCanvas *parentCanvas = parentItem ? QQuickItemPrivate::get(parentItem)->canvas : 0;
+    if (oldParentCanvas == parentCanvas) {
+        // Avoid freeing and reallocating resources if the canvas stays the same.
+        d->parentItem = parentItem;
+    } else {
+        if (oldParentCanvas)
+            d->derefCanvas();
+        d->parentItem = parentItem;
+        if (parentCanvas)
+            d->refCanvas(parentCanvas);
     }
 
     d->dirty(QQuickItemPrivate::ParentChanged);
 
     if (d->parentItem)
         QQuickItemPrivate::get(d->parentItem)->addChild(this);
+    else if (d->canvas)
+        QQuickCanvasPrivate::get(d->canvas)->parentlessItems.insert(this);
 
     d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
     d->setEffectiveEnableRecur(0, d->calcEffectiveEnable());
@@ -2175,29 +2184,81 @@ QQuickItem *QQuickItemPrivate::InitializationState::getFocusScope(QQuickItem *it
     return focusScope;
 }
 
-void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
+void QQuickItemPrivate::refCanvas(InitializationState *state, QQuickCanvas *c)
 {
-    Q_Q(QQuickItem);
+    // An item needs a canvas if it is referenced by another item which has a canvas.
+    // Typically the item is referenced by a parent, but can also be referenced by a
+    // ShaderEffect or ShaderEffectSource. 'canvasRefCount' counts how many items with
+    // a canvas is referencing this item. When the reference count goes from zero to one,
+    // or one to zero, the canvas of this item is updated and propagated to the children.
+    // As long as the reference count stays above zero, the canvas is unchanged.
+    // refCanvas() increments the reference count.
+    // derefCanvas() decrements the reference count.
 
-    if (canvas) {
-        removeFromDirtyList();
-        QQuickCanvasPrivate *c = QQuickCanvasPrivate::get(canvas);
-        if (polishScheduled)
-            c->itemsToPolish.remove(q);
-        if (c->mouseGrabberItem == q)
-            c->mouseGrabberItem = 0;
-        if ( hoverEnabled )
-            c->hoverItems.removeAll(q);
-        if (itemNodeInstance)
-            c->cleanup(itemNodeInstance);
-        if (!parentItem)
-            c->parentlessItems.remove(q);
+    Q_Q(QQuickItem);
+    Q_ASSERT((canvas != 0) == (canvasRefCount > 0));
+    Q_ASSERT(c);
+    if (++canvasRefCount > 1) {
+        if (c != canvas)
+            qWarning("QQuickItem: Cannot use same item on different canvases at the same time.");
+        return; // Canvas already set.
     }
 
+    Q_ASSERT(canvas == 0);
     canvas = c;
 
-    if (canvas && polishScheduled)
+    if (polishScheduled)
         QQuickCanvasPrivate::get(canvas)->itemsToPolish.insert(q);
+
+    InitializationState _dummy;
+    InitializationState *childState = state;
+
+    if (q->isFocusScope()) {
+        _dummy.clear(q);
+        childState = &_dummy;
+    }
+
+    if (!parentItem)
+        QQuickCanvasPrivate::get(canvas)->parentlessItems.insert(q);
+
+    for (int ii = 0; ii < childItems.count(); ++ii) {
+        QQuickItem *child = childItems.at(ii);
+        QQuickItemPrivate::get(child)->refCanvas(childState, c);
+    }
+
+    dirty(Canvas);
+
+    if (extra.isAllocated() && extra->screenAttached)
+        extra->screenAttached->canvasChanged(c);
+    itemChange(QQuickItem::ItemSceneChange, c);
+}
+
+void QQuickItemPrivate::derefCanvas()
+{
+    Q_Q(QQuickItem);
+    Q_ASSERT((canvas != 0) == (canvasRefCount > 0));
+
+    if (!canvas)
+        return; // This can happen when destroying recursive shader effect sources.
+
+    if (--canvasRefCount > 0)
+        return; // There are still other references, so don't set canvas to null yet.
+
+    q->releaseResources();
+    removeFromDirtyList();
+    QQuickCanvasPrivate *c = QQuickCanvasPrivate::get(canvas);
+    if (polishScheduled)
+        c->itemsToPolish.remove(q);
+    if (c->mouseGrabberItem == q)
+        c->mouseGrabberItem = 0;
+    if ( hoverEnabled )
+        c->hoverItems.removeAll(q);
+    if (itemNodeInstance)
+        c->cleanup(itemNodeInstance);
+    if (!parentItem)
+        c->parentlessItems.remove(q);
+
+    canvas = 0;
 
     itemNodeInstance = 0;
 
@@ -2211,28 +2272,18 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
     groupNode = 0;
     paintNode = 0;
 
-    InitializationState _dummy;
-    InitializationState *childState = state;
-
-    if (c && q->isFocusScope()) {
-        _dummy.clear(q);
-        childState = &_dummy;
-    }
-
-    if (!parentItem && canvas)
-        QQuickCanvasPrivate::get(canvas)->parentlessItems.insert(q);
-
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItem *child = childItems.at(ii);
-        QQuickItemPrivate::get(child)->initCanvas(childState, c);
+        QQuickItemPrivate::get(child)->derefCanvas();
     }
 
     dirty(Canvas);
 
     if (extra.isAllocated() && extra->screenAttached)
-        extra->screenAttached->canvasChanged(c);
-    itemChange(QQuickItem::ItemSceneChange, c);
+        extra->screenAttached->canvasChanged(0);
+    itemChange(QQuickItem::ItemSceneChange, (QQuickCanvas *)0);
 }
+
 
 /*!
 Returns a transform that maps points from canvas space into item space.
@@ -2346,7 +2397,7 @@ QQuickItemPrivate::QQuickItemPrivate()
 
   dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
 
-  canvas(0), parentItem(0), sortedChildItems(&childItems),
+  canvas(0), canvasRefCount(0), parentItem(0), sortedChildItems(&childItems),
 
   subFocusItem(0),
 
@@ -2988,6 +3039,23 @@ QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     delete oldNode;
     return 0;
+}
+
+/*!
+    This function is called when the item's scene graph resources are no longer needed.
+    It allows items to free its resources, for instance textures, that are not owned by scene graph
+    nodes. Note that scene graph nodes are managed by QQuickCanvas and should not be deleted by
+    this function. Scene graph resources are no longer needed when the parent is set to null and
+    the item is not used by any \l ShaderEffect or \l ShaderEffectSource.
+
+    This function is called from the main thread. Therefore, resources used by the scene graph
+    should not be deleted directly, but by calling \l QObject::deleteLater().
+
+    \note The item destructor still needs to free its scene graph resources if not already done.
+ */
+
+void QQuickItem::releaseResources()
+{
 }
 
 QSGTransformNode *QQuickItemPrivate::createTransformNode()

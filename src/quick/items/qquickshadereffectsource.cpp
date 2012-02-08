@@ -504,6 +504,8 @@ QQuickShaderEffectSource::~QQuickShaderEffectSource()
         QQuickItemPrivate *sd = QQuickItemPrivate::get(m_sourceItem);
         sd->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
         sd->derefFromEffectItem(m_hideSource);
+        if (canvas())
+            sd->derefCanvas();
     }
 }
 
@@ -599,6 +601,9 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
         QQuickItemPrivate *d = QQuickItemPrivate::get(m_sourceItem);
         d->derefFromEffectItem(m_hideSource);
         d->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+        disconnect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+        if (canvas())
+            d->derefCanvas();
     }
     m_sourceItem = item;
 
@@ -608,17 +613,24 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
         // parent, but if the source item is "inline" rather than a reference -- i.e.
         // "sourceItem: Item { }" instead of "sourceItem: foo" -- it will not get a parent.
         // In those cases, 'item' should get the canvas from 'this'.
-        if (!d->parentItem && canvas() && !d->canvas) {
-            QQuickItemPrivate::InitializationState initState;
-            initState.clear();
-            d->initCanvas(&initState, canvas());
-        }
+        if (canvas())
+            d->refCanvas(canvas());
         d->refFromEffectItem(m_hideSource);
         d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+        connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
     }
     update();
     emit sourceItemChanged();
 }
+
+void QQuickShaderEffectSource::sourceItemDestroyed(QObject *item)
+{
+    Q_ASSERT(item == m_sourceItem);
+    m_sourceItem = 0;
+    update();
+    emit sourceItemChanged();
+}
+
 
 /*!
     \qmlproperty rect ShaderEffectSource::sourceRect
@@ -841,22 +853,35 @@ static void get_wrap_mode(QQuickShaderEffectSource::WrapMode mode, QSGTexture::W
 }
 
 
+void QQuickShaderEffectSource::releaseResources()
+{
+    if (m_texture) {
+        m_texture->deleteLater();
+        m_texture = 0;
+    }
+    if (m_provider) {
+        m_provider->deleteLater();
+        m_provider = 0;
+    }
+}
+
 QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     if (!m_sourceItem || m_sourceItem->width() == 0 || m_sourceItem->height() == 0) {
+        if (m_texture)
+            m_texture->setItem(0);
         delete oldNode;
         return 0;
     }
 
     ensureTexture();
 
-    QQuickShaderEffectTexture *tex = qobject_cast<QQuickShaderEffectTexture *>(m_texture);
-    tex->setLive(m_live);
-    tex->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
+    m_texture->setLive(m_live);
+    m_texture->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
     QRectF sourceRect = m_sourceRect.width() == 0 || m_sourceRect.height() == 0
                       ? QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height())
                       : m_sourceRect;
-    tex->setRect(sourceRect);
+    m_texture->setRect(sourceRect);
     QSize textureSize = m_textureSize.isEmpty()
                       ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())))
                       : m_textureSize;
@@ -869,13 +894,13 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     while (textureSize.height() < minTextureSize.height())
         textureSize.rheight() *= 2;
 
-    tex->setSize(textureSize);
-    tex->setRecursive(m_recursive);
-    tex->setFormat(GLenum(m_format));
-    tex->setHasMipmaps(m_mipmap);
+    m_texture->setSize(textureSize);
+    m_texture->setRecursive(m_recursive);
+    m_texture->setFormat(GLenum(m_format));
+    m_texture->setHasMipmaps(m_mipmap);
 
     if (m_grab)
-        tex->scheduleUpdate();
+        m_texture->scheduleUpdate();
     m_grab = false;
 
     QSGTexture::Filtering filtering = QQuickItemPrivate::get(this)->smooth
@@ -924,12 +949,10 @@ void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeDat
 {
     if (change == QQuickItem::ItemSceneChange && m_sourceItem) {
         // See comment in QQuickShaderEffectSource::setSourceItem().
-        QQuickItemPrivate *d = QQuickItemPrivate::get(m_sourceItem);
-        if (!d->parentItem && value.canvas != d->canvas) {
-            QQuickItemPrivate::InitializationState initState;
-            initState.clear();
-            d->initCanvas(&initState, value.canvas);
-        }
+        if (value.canvas)
+            QQuickItemPrivate::get(m_sourceItem)->refCanvas(value.canvas);
+        else
+            QQuickItemPrivate::get(m_sourceItem)->derefCanvas();
     }
     QQuickItem::itemChange(change, value);
 }

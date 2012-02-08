@@ -133,6 +133,7 @@ private Q_SLOTS:
     void updateData();
     void updateGeometry();
     void updateLogAndStatus(const QString &log, int status);
+    void sourceDestroyed(QObject *object);
 
 private:
     friend class QQuickCustomMaterialShader;
@@ -156,7 +157,7 @@ private:
     struct SourceData
     {
         QSignalMapper *mapper;
-        QPointer<QQuickItem> sourceObject;
+        QQuickItem *sourceObject;
         QByteArray name;
     };
     QVector<SourceData> m_sources;

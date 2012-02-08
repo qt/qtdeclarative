@@ -327,6 +327,7 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     rootItem = new QQuickRootItem;
     QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(rootItem);
     rootItemPrivate->canvas = q;
+    rootItemPrivate->canvasRefCount = 1;
     rootItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
     // In the absence of a focus in event on some platforms assume the window will
@@ -799,11 +800,6 @@ QQuickCanvas::~QQuickCanvas()
     Q_D(QQuickCanvas);
 
     d->windowManager->canvasDestroyed(this);
-
-    // ### should we change ~QQuickItem to handle this better?
-    // manually cleanup for the root item (item destructor only handles these when an item is parented)
-    QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(d->rootItem);
-    rootItemPrivate->removeFromDirtyList();
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;

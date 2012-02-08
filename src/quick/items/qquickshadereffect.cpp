@@ -398,11 +398,26 @@ void QQuickShaderEffect::updateLogAndStatus(const QString &log, int status)
     emit statusChanged();
 }
 
+void QQuickShaderEffect::sourceDestroyed(QObject *object)
+{
+    for (int i = 0; i < m_sources.size(); ++i) {
+        SourceData &source = m_sources[i];
+        if (object == source.sourceObject)
+            source.sourceObject = 0;
+    }
+}
+
 void QQuickShaderEffect::setSource(const QVariant &var, int index)
 {
     Q_ASSERT(index >= 0 && index < m_sources.size());
 
     SourceData &source = m_sources[index];
+
+    if (source.sourceObject) {
+        if (canvas())
+            QQuickItemPrivate::get(source.sourceObject)->derefCanvas();
+        disconnect(source.sourceObject, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
+    }
 
     source.sourceObject = 0;
     if (var.isNull()) {
@@ -425,16 +440,13 @@ void QQuickShaderEffect::setSource(const QVariant &var, int index)
     source.sourceObject = item;
 
     if (item) {
-        QQuickItemPrivate *d = QQuickItemPrivate::get(item);
         // 'item' needs a canvas to get a scene graph node. It usually gets one through its
         // parent, but if the source item is "inline" rather than a reference -- i.e.
         // "property variant source: Image { }" instead of "property variant source: foo" -- it
         // will not get a parent. In those cases, 'item' should get the canvas from 'this'.
-        if (!d->parentItem && canvas() && !d->canvas) {
-            QQuickItemPrivate::InitializationState initState;
-            initState.clear();
-            d->initCanvas(&initState, canvas());
-        }
+        if (canvas())
+            QQuickItemPrivate::get(item)->refCanvas(canvas());
+        connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
     }
 }
 
@@ -512,6 +524,11 @@ void QQuickShaderEffect::reset()
     for (int i = 0; i < m_sources.size(); ++i) {
         const SourceData &source = m_sources.at(i);
         delete source.mapper;
+        if (source.sourceObject) {
+            if (canvas())
+                QQuickItemPrivate::get(source.sourceObject)->derefCanvas();
+            disconnect(source.sourceObject, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
+        }
     }
     m_sources.clear();
     m_log.clear();
@@ -817,15 +834,22 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         }
         for (int i = 0; i < oldTextures.size(); ++i) {
             QSGTextureProvider *t = oldTextures.at(i).second;
-            if (t)
+            if (t) {
                 disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
+                disconnect(t, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
+            }
         }
         for (int i = 0; i < m_sources.size(); ++i) {
             const SourceData &source = m_sources.at(i);
             QSGTextureProvider *t = source.sourceObject ? source.sourceObject->textureProvider() : 0;
             textures.append(qMakePair(source.name, t));
-            if (t)
-                connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+            if (t) {
+                Q_ASSERT_X(t->thread() == QThread::currentThread(),
+                           "QQuickShaderEffect::updatePaintNode",
+                           "Texture provider must belong to the rendering thread");
+                connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
+                connect(t, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
+            }
         }
         material->setUniforms(values);
         material->setTextureProviders(textures);
@@ -840,12 +864,15 @@ void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &val
 {
     if (change == QQuickItem::ItemSceneChange) {
         // See comment in QQuickShaderEffect::setSource().
-        for (int i = 0; i < m_sources.size(); ++i) {
-            QQuickItemPrivate *d = QQuickItemPrivate::get(m_sources.at(i).sourceObject);
-            if (!d->parentItem && value.canvas != d->canvas) {
-                QQuickItemPrivate::InitializationState initState;
-                initState.clear();
-                d->initCanvas(&initState, value.canvas);
+        if (value.canvas) {
+            for (int i = 0; i < m_sources.size(); ++i) {
+                if (m_sources.at(i).sourceObject)
+                    QQuickItemPrivate::get(m_sources.at(i).sourceObject)->refCanvas(value.canvas);
+            }
+        } else {
+            for (int i = 0; i < m_sources.size(); ++i) {
+                if (m_sources.at(i).sourceObject)
+                    QQuickItemPrivate::get(m_sources.at(i).sourceObject)->derefCanvas();
             }
         }
     }

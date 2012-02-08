@@ -102,6 +102,7 @@ public:
     void setTextureProviders(const QVector<QPair<QByteArray, QSGTextureProvider *> > &textures);
     const QVector<QPair<QByteArray, QSGTextureProvider *> > &textureProviders() const;
     void updateTextures() const;
+    void invalidateTextureProvider(QSGTextureProvider *provider);
 
 protected:
     friend class QQuickCustomMaterialShader;
@@ -143,6 +144,7 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void markDirtyTexture();
+    void textureProviderDestroyed(QObject *object);
 
 private:
     QQuickShaderEffectMaterial m_material;

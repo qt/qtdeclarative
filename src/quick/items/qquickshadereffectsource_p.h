@@ -228,7 +228,11 @@ Q_SIGNALS:
 
     void scheduledUpdateCompleted();
 
+private Q_SLOTS:
+    void sourceItemDestroyed(QObject *item);
+
 protected:
+    virtual void releaseResources();
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
     virtual void itemGeometryChanged(QQuickItem *item, const QRectF &newRect, const QRectF &oldRect);
@@ -240,7 +244,7 @@ private:
     QQuickShaderEffectSourceTextureProvider *m_provider;
     QQuickShaderEffectTexture *m_texture;
     WrapMode m_wrapMode;
-    QPointer<QQuickItem> m_sourceItem;
+    QQuickItem *m_sourceItem;
     QRectF m_sourceRect;
     QSize m_textureSize;
     Format m_format;
