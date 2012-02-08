@@ -159,7 +159,7 @@ public:
         return m_data.size();
     }
 
-    QSGTexture *createTexture() const {
+    QSGTexture *createTexture(QQuickCanvas *) const {
         EtcTexture *texture = new EtcTexture;
         texture->m_data = m_data;
         texture->m_size = m_size;

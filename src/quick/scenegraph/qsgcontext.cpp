@@ -159,7 +159,7 @@ void QSGContext::invalidate()
 }
 
 
-QSGTexture *QSGContext::textureForFactory(QDeclarativeTextureFactory *factory)
+QSGTexture *QSGContext::textureForFactory(QDeclarativeTextureFactory *factory, QQuickCanvas *canvas)
 {
     Q_D(QSGContext);
     if (!factory)
@@ -170,7 +170,7 @@ QSGTexture *QSGContext::textureForFactory(QDeclarativeTextureFactory *factory)
         if (QDeclarativeDefaultTextureFactory *dtf = qobject_cast<QDeclarativeDefaultTextureFactory *>(factory))
             texture = createTexture(dtf->image());
         else
-            texture = factory->createTexture();
+            texture = factory->createTexture(canvas);
         d->textures.insert(factory, texture);
         connect(factory, SIGNAL(destroyed(QObject *)), this, SLOT(textureFactoryDestroyed(QObject *)));
     }

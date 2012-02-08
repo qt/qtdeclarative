@@ -544,7 +544,7 @@ QSGTextureProvider *QQuickImage::textureProvider() const
         QQuickImagePrivate *dd = const_cast<QQuickImagePrivate *>(d);
         dd->provider = new QQuickImageTextureProvider;
         dd->provider->m_smooth = d->smooth;
-        dd->provider->m_texture = d->sceneGraphContext()->textureForFactory(d->pix.textureFactory());
+        dd->provider->m_texture = d->sceneGraphContext()->textureForFactory(d->pix.textureFactory(), canvas());
     }
 
     return d->provider;
@@ -554,7 +554,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QQuickImage);
 
-    QSGTexture *texture = d->sceneGraphContext()->textureForFactory(d->pix.textureFactory());
+    QSGTexture *texture = d->sceneGraphContext()->textureForFactory(d->pix.textureFactory(), canvas());
 
     // Copy over the current texture state into the texture provider...
     if (d->provider) {

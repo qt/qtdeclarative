@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 // The cache limit describes the maximum "junk" in the cache.
 static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded in qpixmapcache.cpp
 
-QSGTexture *QDeclarativeDefaultTextureFactory::createTexture() const
+QSGTexture *QDeclarativeDefaultTextureFactory::createTexture(QQuickCanvas *) const
 {
     QSGPlainTexture *t = new QSGPlainTexture();
     t->setImage(im);

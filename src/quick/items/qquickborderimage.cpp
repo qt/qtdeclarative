@@ -552,7 +552,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 {
     Q_D(QQuickBorderImage);
 
-    QSGTexture *texture = d->sceneGraphContext()->textureForFactory(d->pix.textureFactory());
+    QSGTexture *texture = d->sceneGraphContext()->textureForFactory(d->pix.textureFactory(), canvas());
 
     if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;

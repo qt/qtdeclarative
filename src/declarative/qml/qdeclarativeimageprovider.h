@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeImageProviderPrivate;
 class QSGTexture;
+class QQuickCanvas;
 
 class Q_DECLARATIVE_EXPORT QDeclarativeTextureFactory : public QObject
 {
@@ -59,7 +60,7 @@ public:
     QDeclarativeTextureFactory();
     ~QDeclarativeTextureFactory();
 
-    virtual QSGTexture *createTexture() const = 0;
+    virtual QSGTexture *createTexture(QQuickCanvas *canvas) const = 0;
     virtual QSize textureSize() const = 0;
     virtual int textureByteCount() const = 0;
 };
