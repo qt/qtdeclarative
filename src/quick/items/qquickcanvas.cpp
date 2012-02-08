@@ -1629,9 +1629,9 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         itemPriv->itemNode()->setMatrix(matrix);
     }
 
-    bool clipEffectivelyChanged = dirty & QQuickItemPrivate::Clip &&
+    bool clipEffectivelyChanged = (dirty & (QQuickItemPrivate::Clip | QQuickItemPrivate::Canvas)) &&
                                   ((item->clip() == false) != (itemPriv->clipNode == 0));
-    bool effectRefEffectivelyChanged = dirty & QQuickItemPrivate::EffectReference &&
+    bool effectRefEffectivelyChanged = (dirty & (QQuickItemPrivate::EffectReference | QQuickItemPrivate::Canvas)) &&
                                   ((itemPriv->effectRefCount == 0) != (itemPriv->rootNode == 0));
 
     if (clipEffectivelyChanged) {
@@ -1731,7 +1731,9 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         itemPriv->clipNode->update();
     }
 
-    if (dirty & (QQuickItemPrivate::OpacityValue | QQuickItemPrivate::Visible | QQuickItemPrivate::HideReference)) {
+    if (dirty & (QQuickItemPrivate::OpacityValue | QQuickItemPrivate::Visible
+                 | QQuickItemPrivate::HideReference | QQuickItemPrivate::Canvas))
+    {
         qreal opacity = itemPriv->explicitVisible && itemPriv->hideRefCount == 0
                       ? itemPriv->opacity : qreal(0);
 
@@ -1777,7 +1779,7 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         }
     }
 
-    if ((dirty & QQuickItemPrivate::PerformanceHints) && itemPriv->groupNode) {
+    if ((dirty & (QQuickItemPrivate::PerformanceHints | QQuickItemPrivate::Canvas)) && itemPriv->groupNode) {
         itemPriv->groupNode->setFlag(QSGNode::ChildrenDoNotOverlap, itemPriv->childrenDoNotOverlap);
         itemPriv->groupNode->setFlag(QSGNode::StaticSubtreeGeometry, itemPriv->staticSubtreeGeometry);
     }
