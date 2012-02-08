@@ -79,14 +79,14 @@ struct QSGAdaptionPluginData
     QString deviceName;
 };
 
-QThreadStorage<QSGAdaptionPluginData> qsg_plugin_data;
-
+Q_GLOBAL_STATIC(QSGAdaptionPluginData, qsg_adaptation_data)
 
 QSGAdaptionPluginData *contextFactory()
 {
-    QSGAdaptionPluginData &plugin = qsg_plugin_data.localData();
-    if (!plugin.tried) {
-        plugin.tried = true;
+    QSGAdaptionPluginData *plugin = qsg_adaptation_data();
+    if (!plugin->tried) {
+
+        plugin->tried = true;
         const QStringList args = QGuiApplication::arguments();
         QString device;
         for (int index = 0; index < args.count(); ++index) {
@@ -100,8 +100,8 @@ QSGAdaptionPluginData *contextFactory()
 
 #if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
         if (!device.isEmpty()) {
-            plugin.factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(device));
-            plugin.deviceName = device;
+            plugin->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(device));
+            plugin->deviceName = device;
         }
 #ifndef QT_NO_DEBUG
         if (!device.isEmpty()) {
@@ -114,7 +114,7 @@ QSGAdaptionPluginData *contextFactory()
 
 #endif // QT_NO_LIBRARY || QT_NO_SETTINGS
     }
-    return &plugin;
+    return plugin;
 }
 
 
