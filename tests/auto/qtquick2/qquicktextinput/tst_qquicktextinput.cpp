@@ -1527,6 +1527,7 @@ void tst_qquicktextinput::positionAt()
     textinputObject->setCursorPosition(0);
 
     {   QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
+        QVERIFY(qGuiApp->focusObject());
         QGuiApplication::sendEvent(qGuiApp->focusObject(), &inputEvent); }
 
     // Check all points within the preedit text return the same position.
@@ -1539,6 +1540,7 @@ void tst_qquicktextinput::positionAt()
     QCOMPARE(textinputObject->positionToRectangle(1).x(), x1);
 
     {   QInputMethodEvent inputEvent;
+        QVERIFY(qGuiApp->focusObject());
         QGuiApplication::sendEvent(qGuiApp->focusObject(), &inputEvent); }
 
     // With wrapping.
