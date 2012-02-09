@@ -307,7 +307,6 @@ public:
     QV8SequenceWrapper *sequenceWrapper() { return &m_sequenceWrapper; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
-    void *sqlDatabaseData() { return m_sqlDatabaseData; }
 
     Deletable *listModelData() { return m_listModelData; }
     void setListModelData(Deletable *d) { if (m_listModelData) delete m_listModelData; m_listModelData = d; }
@@ -473,7 +472,6 @@ protected:
     v8::Persistent<v8::Function> m_freezeObject;
 
     void *m_xmlHttpRequestData;
-    void *m_sqlDatabaseData;
 
     QVector<Deletable *> m_extensionData;
     Deletable *m_listModelData;

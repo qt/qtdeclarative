@@ -53,7 +53,6 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativeapplication_p.h>
 #include <private/qdeclarativexmlhttprequest_p.h>
-#include <private/qdeclarativesqldatabase_p.h>
 #include <private/qdeclarativelocale_p.h>
 
 #include "qscript_impl_p.h"
@@ -121,7 +120,6 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     , m_engine(0)
     , m_ownsV8Context(ownership == QJSEngine::CreateNewContext)
     , m_xmlHttpRequestData(0)
-    , m_sqlDatabaseData(0)
     , m_listModelData(0)
 {
     qMetaTypeId<QJSValue>();
@@ -167,9 +165,7 @@ QV8Engine::~QV8Engine()
         delete m_extensionData[ii];
     m_extensionData.clear();
 
-    qt_rem_qmlsqldatabase(this, m_sqlDatabaseData); 
-    m_sqlDatabaseData = 0;
-    qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData); 
+    qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData);
     m_xmlHttpRequestData = 0;
     delete m_listModelData;
     m_listModelData = 0;
@@ -622,7 +618,6 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
 
     qt_add_sqlexceptions(this);
-    m_sqlDatabaseData = qt_add_qmlsqldatabase(this);
 
     {
     v8::Handle<v8::Value> args[] = { global };

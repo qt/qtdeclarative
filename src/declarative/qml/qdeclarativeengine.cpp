@@ -54,7 +54,6 @@
 #include <private/qdeclarativeenginedebugservice_p.h>
 #include "qdeclarativestringconverters_p.h"
 #include "qdeclarativexmlhttprequest_p.h"
-#include "qdeclarativesqldatabase_p.h"
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativeglobal_p.h"
 #include "qdeclarativelistmodel_p.h"
