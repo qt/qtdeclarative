@@ -41,9 +41,10 @@
 import QtQuick 2.0
 import "../contents"
 import "cache.js" as TwitterUserCache
-Item {
+Rectangle {
     width:360
     height:600
+    color:"black"
     QtObject {
         id:twitterManager
         function getById(id) {
@@ -60,19 +61,32 @@ Item {
     }
     Rectangle {
         id:inputContainer
-        width:parent.width
+        width:parent.width-4
         height:40
-        anchors.top : parent.top
-
+        anchors.top:parent.top
+        anchors.topMargin:4
+        anchors.horizontalCenter:parent.horizontalCenter
+        radius:8
+        border.color:"steelblue"
+        Text {
+            text:inputName.text == "" ? "Enter your twitter name..." : ""
+            id:inputLabel
+            anchors.centerIn:parent
+            font.pointSize:12
+            opacity:.5
+            color:"steelblue"
+        }
         TextInput {
             id:inputName
-            anchors.fill:parent
+            anchors.centerIn:parent
             font.pointSize : 20
             opacity:1
             color:"steelblue"
-            width:200
-            height:40
-            text: "Input your twitter name..."
+            width:parent.width-6
+            height:parent.height-6
+            text:""
+            autoScroll:true
+            focus:true
             selectByMouse:true
             onAccepted : {canvas.twitterName = text; canvas.requestPaint();}
         }
