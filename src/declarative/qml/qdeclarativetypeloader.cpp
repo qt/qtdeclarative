@@ -1571,6 +1571,7 @@ void QDeclarativeTypeData::compile()
     m_compiledData = new QDeclarativeCompiledData(typeLoader()->engine());
     m_compiledData->url = m_imports.baseUrl();
     m_compiledData->name = m_compiledData->url.toString();
+    QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Compiling, QUrl(m_compiledData->name),1,1);
     QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Compiling, m_compiledData->name);
 
     QDeclarativeCompiler compiler(&scriptParser._pool);
