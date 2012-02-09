@@ -42,6 +42,7 @@
 #ifndef QQUICKCONTEXT2DCOMMANDBUFFER_P_H
 #define QQUICKCONTEXT2DCOMMANDBUFFER_P_H
 
+#include <QtCore/qmutex.h>
 #include "qquickcontext2d_p.h"
 #include <QtQuick/private/qdeclarativepixmapcache_p.h>
 
@@ -60,6 +61,9 @@ public:
     ~QQuickContext2DCommandBuffer();
     void reset();
     void clear();
+
+    void lockQueue() { queueLock.lock(); }
+    void unlockQueue() { queueLock.unlock(); }
     inline int size() {return commands.size();}
     inline bool isEmpty() const {return commands.isEmpty(); }
     inline bool hasNext() const {return cmdIdx < commands.size(); }
@@ -257,6 +261,7 @@ private:
     QVector<QBrush> brushes;
     QVector<QPainterPath> pathes;
     QVector<QImage> images;
+    QMutex queueLock;
 };
 
 QT_END_HEADER

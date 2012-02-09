@@ -51,6 +51,9 @@
 #include <QOpenGLFramebufferObjectFormat>
 #include <QtCore/QThread>
 
+
+QT_BEGIN_NAMESPACE
+
 #define QT_MINIMUM_FBO_SIZE 64
 
 static inline int qt_next_power_of_two(int v)
@@ -70,8 +73,7 @@ Q_GLOBAL_STATIC(QThread, globalCanvasThreadRenderInstance)
 
 
 QQuickContext2DTexture::QQuickContext2DTexture()
-    : QSGDynamicTexture()
-    , m_context(0)
+    : m_context(0)
     , m_item(0)
     , m_canvasSize(QSize(1, 1))
     , m_tileSize(QSize(1, 1))
@@ -98,10 +100,12 @@ QSize QQuickContext2DTexture::textureSize() const
 
 void QQuickContext2DTexture::markDirtyTexture()
 {
-    lock();
+    const bool inGrab = m_doGrabImage;
+
     m_dirtyTexture = true;
-    unlock();
-    emit textureChanged();
+    updateTexture();
+    if (!inGrab)
+        emit textureChanged();
 }
 
 bool QQuickContext2DTexture::setCanvasSize(const QSize &size)
@@ -131,20 +135,9 @@ void QQuickContext2DTexture::setSmooth(bool smooth)
 
 void QQuickContext2DTexture::setItem(QQuickCanvasItem* item)
 {
-    if (!item) {
-        lock();
-        m_item = 0;
-        m_context = 0;
-        unlock();
-        wake();
-    } else if (m_item != item) {
-        lock();
-        m_item = item;
-        m_context = item->context();
-        m_state = m_context->state;
-        unlock();
-        connect(this, SIGNAL(textureChanged()), m_item, SIGNAL(painted()));
-    }
+    m_item = item;
+    m_context = (QQuickContext2D*)item->rawContext(); // FIXME
+    m_state = m_context->state;
 }
 
 bool QQuickContext2DTexture::setCanvasWindow(const QRect& r)
@@ -193,37 +186,20 @@ void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize&
         m_tiledCanvas = true;
     }
 
-    bool doDirty = false;
     if (dirtyRect.isValid())
-        doDirty = setDirtyRect(dirtyRect);
-
-    bool windowChanged = setCanvasWindow(canvasWindow);
-    if (windowChanged || doDirty) {
-        if (m_threadRendering)
-            QMetaObject::invokeMethod(this, "paint", Qt::QueuedConnection);
-        else if (supportDirectRendering()) {
-           QMetaObject::invokeMethod(this, "paint", Qt::DirectConnection);
-        }
-    }
+        setDirtyRect(dirtyRect);
 
     setSmooth(smooth);
+
     unlock();
 }
 
 void QQuickContext2DTexture::paintWithoutTiles()
 {
-    QQuickContext2DCommandBuffer* ccb = m_context->buffer();
+    QLockedCommandBuffer ccb = m_context->buffer();
 
-    if (ccb->isEmpty() && m_threadRendering && !m_doGrabImage) {
-        lock();
-        if (m_item)
-            QMetaObject::invokeMethod(m_item, "_doPainting", Qt::QueuedConnection, Q_ARG(QRectF, QRectF(0, 0, m_canvasSize.width(), m_canvasSize.height())));
-        wait();
-        unlock();
-    }
-    if (ccb->isEmpty()) {
+    if (ccb->isEmpty())
         return;
-    }
 
     QPaintDevice* device = beginPainting();
     if (!device) {
@@ -240,11 +216,13 @@ void QQuickContext2DTexture::paintWithoutTiles()
         p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
                                  | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform, false);
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    ccb->replay(&p, m_state);
 
+    ccb->replay(&p, m_state);
     ccb->clear();
-    markDirtyTexture();
+
     endPainting();
+
+    markDirtyTexture();
 }
 
 bool QQuickContext2DTexture::canvasDestroyed()
@@ -260,6 +238,12 @@ void QQuickContext2DTexture::paint()
 {
     if (canvasDestroyed())
         return;
+
+    if (m_threadRendering && QThread::currentThread() != globalCanvasThreadRenderInstance()) {
+        Q_ASSERT(thread() == globalCanvasThreadRenderInstance());
+        QMetaObject::invokeMethod(this, "paint", Qt::QueuedConnection);
+        return;
+    }
 
     if (!m_tiledCanvas) {
         paintWithoutTiles();
@@ -282,19 +266,11 @@ void QQuickContext2DTexture::paint()
                     }
                 }
                 unlock();
-
-                if (dirtyRect.isValid()) {
-                    lock();
-                    if (m_item)
-                        QMetaObject::invokeMethod(m_item, "_doPainting", Qt::QueuedConnection, Q_ARG(QRectF, dirtyRect));
-                    wait();
-                    unlock();
-                }
             }
 
             if (beginPainting()) {
                 QQuickContext2D::State oldState = m_state;
-                QQuickContext2DCommandBuffer* ccb = m_context->buffer();
+                QLockedCommandBuffer ccb = m_context->buffer();
                 foreach (QQuickContext2DTile* tile, m_tiles) {
                     bool dirtyTile = false, dirtyCanvas = false, smooth = false;
 
@@ -485,10 +461,6 @@ int QQuickContext2DFBOTexture::textureId() const
 
 bool QQuickContext2DFBOTexture::updateTexture()
 {
-    if (!m_context->buffer()->isEmpty()) {
-        paint();
-    }
-
     bool textureUpdated = m_dirtyTexture;
 
     m_dirtyTexture = false;
@@ -530,15 +502,15 @@ bool QQuickContext2DFBOTexture::doMultisampling() const
 
 QImage QQuickContext2DFBOTexture::toImage(const QRectF& region)
 {
-#define QML_CONTEXT2D_WAIT_MAX 5000
+    const unsigned long context2d_wait_max = 5000;
 
     m_doGrabImage = true;
-    if (m_item)
+    if (m_item)                 // forces a call to updatePaintNode (repaints)
         m_item->update();
 
     QImage grabbed;
     m_mutex.lock();
-    bool ok = m_condition.wait(&m_mutex, QML_CONTEXT2D_WAIT_MAX);
+    bool ok = m_condition.wait(&m_mutex, context2d_wait_max);
 
     if (!ok)
         grabbed = QImage();
@@ -649,7 +621,7 @@ QQuickContext2DImageTexture::QQuickContext2DImageTexture(bool threadRendering)
         moveToThread(thread);
 
         if (!thread->isRunning()) {
-            qAddPostRoutine(qt_quit_context2d_render_thread);
+            qAddPostRoutine(qt_quit_context2d_render_thread); // XXX: change this method
             thread->start();
         }
     }
@@ -705,13 +677,11 @@ void QQuickContext2DImageTexture::bind()
 
 bool QQuickContext2DImageTexture::updateTexture()
 {
-    lock();
     bool textureUpdated = m_dirtyTexture;
     if (m_dirtyTexture) {
         m_texture->setImage(m_image);
         m_dirtyTexture = false;
     }
-    unlock();
     return textureUpdated;
 }
 
@@ -728,9 +698,9 @@ void QQuickContext2DImageTexture::grabImage(const QRect& r)
     m_grabedImage = m_image.copy(r);
 }
 
-QImage QQuickContext2DImageTexture::toImage(const QRectF& region)
+QImage QQuickContext2DImageTexture::toImage(const QRectF& rect)
 {
-    QRect r = region.isValid() ? region.toRect() : QRect(QPoint(0, 0), m_canvasWindow.size());
+    QRect r = rect.isValid() ? rect.toRect() : QRect(QPoint(0, 0), m_canvasWindow.size());
     if (threadRendering()) {
         wake();
         QMetaObject::invokeMethod(this, "grabImage", Qt::BlockingQueuedConnection, Q_ARG(QRect, r));
@@ -744,17 +714,16 @@ QImage QQuickContext2DImageTexture::toImage(const QRectF& region)
 
 QPaintDevice* QQuickContext2DImageTexture::beginPainting()
 {
-     QQuickContext2DTexture::beginPainting();
+    QQuickContext2DTexture::beginPainting();
 
     if (m_canvasWindow.size().isEmpty())
         return 0;
 
-    lock();
     if (m_image.size() != m_canvasWindow.size()) {
         m_image = QImage(m_canvasWindow.size(), QImage::Format_ARGB32_Premultiplied);
         m_image.fill(0x00000000);
     }
-    unlock();
+
     return &m_image;
 }
 
@@ -776,3 +745,6 @@ void QQuickContext2DImageTexture::compositeTile(QQuickContext2DTile* tile)
         unlock();
     }
 }
+
+QT_END_NAMESPACE
+

@@ -27,7 +27,8 @@ OTHER_FILES += \
     data/tst_pixel.qml \
     data/tst_gradient.qml \
     data/tst_arcto.qml \
-    data/tst_arc.qml
+    data/tst_arc.qml \
+    data/tst_context.qml
 
 
 

@@ -42,9 +42,9 @@
 #include <private/qsgadaptationlayer_p.h>
 #include "qquickcanvasitem_p.h"
 #include <private/qquickitem_p.h>
-#include "qquickcontext2d_p.h"
-#include "qquickcontext2dnode_p.h"
-#include "qquickcontext2dtexture_p.h"
+#include <private/qquickcanvascontext_p.h>
+#include <private/qquickcontext2d_p.h>
+#include <private/qquickcanvasitemnode_p.h>
 #include <QtQuick/private/qdeclarativepixmapcache_p.h>
 
 #include <qdeclarativeinfo.h>
@@ -58,34 +58,36 @@ class QQuickCanvasItemPrivate : public QQuickItemPrivate
 public:
     QQuickCanvasItemPrivate();
     ~QQuickCanvasItemPrivate();
-    QQuickContext2D* context;
-    QQuickContext2DTexture* texture;
+    QQuickCanvasContext* context;
     QSizeF canvasSize;
     QSize tileSize;
     QRectF canvasWindow;
     QRectF dirtyRect;
-    uint renderInThread : 1;
     uint hasCanvasSize :1;
     uint hasTileSize :1;
     uint hasCanvasWindow :1;
-    uint componentCompleted :1;
+    uint available :1;
+    uint contextInitialized :1;
     QQuickCanvasItem::RenderTarget renderTarget;
+    QQuickCanvasItem::RenderStrategy renderStrategy;
+    QString contextType;
     QHash<QUrl, QDeclarativePixmap*> images;
     QUrl baseUrl;
+    QMap<int, v8::Persistent<v8::Function> > animationCallbacks;
 };
 
 QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     : QQuickItemPrivate()
     , context(0)
-    , texture(0)
     , canvasSize(1, 1)
     , tileSize(1, 1)
-    , renderInThread(false)
     , hasCanvasSize(false)
     , hasTileSize(false)
     , hasCanvasWindow(false)
-    , componentCompleted(false)
-    , renderTarget(QQuickCanvasItem::FramebufferObject)
+    , available(false)
+    , contextInitialized(false)
+    , renderTarget(QQuickCanvasItem::Image)
+    , renderStrategy(QQuickCanvasItem::Threaded)
 {
 }
 
@@ -93,6 +95,17 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 {
     qDeleteAll(images);
 }
+
+class QQuickCanvasItemCallback : public QQuickCanvasItemNode::Callback
+{
+public:
+    QQuickCanvasItemCallback(QQuickCanvasItemPrivate *d):item(d) {}
+    void process() const {
+        // on SG render thread
+        item->context->sync();
+    }
+    QQuickCanvasItemPrivate *item;
+};
 
 /*!
     \qmlclass Canvas QQuickCanvasItem
@@ -103,19 +116,20 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \ingroup qml-basic-visual-elements
 
     The Canvas item allows drawing of straight and curved lines, simple and
-    complex shapes, graphs, and referenced graphic images.  It can also add text, colors,
-    shadows, gradients, and patterns, and do low level pixel operations. The Canvas
-    output may be saved as an image file or serialized to a url.
+    complex shapes, graphs, and referenced graphic images.  It can also add
+    text, colors, shadows, gradients, and patterns, and do low level pixel
+    operations. The Canvas output may be saved as an image file or serialized
+    to a URL.
 
-    To define a drawing area in the Canvas item set the \c width and \c height properties.
-    For example, the following code creates a Canvas item which has a drawing area with a height of 100
-    pixels and width of 200 pixels:
+    To define a drawing area in the Canvas item set the \c width and \c height
+    properties.  For example, the following code creates a Canvas item which
+    has a drawing area with a height of 100 pixels and width of 200 pixels:
     \qml
     import QtQuick 2.0
     Canvas {
-      id:mycanvas
-      width:100
-      height:200
+        id: mycanvas
+        width: 100
+        height: 200
     }
     \endqml
 
@@ -123,44 +137,52 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 
     \section1 Threaded Rendering and Render Target
 
-    The Canvas item supports two render targets: \c Canvas.Image and \c Canvas.FramebufferObject.
+    The Canvas item supports two render targets: \c Canvas.Image and
+    \c Canvas.FramebufferObject.
 
-    The \c Canvas.Image render target is a \a QImage object.  This render target supports background
-    thread rendering, allowing complex or long running painting to be executed without blocking the UI.
+    The \c Canvas.Image render target is a \a QImage object.  This render
+    target supports background thread rendering, allowing complex or long
+    running painting to be executed without blocking the UI.
 
-    The Canvas.FramebufferObject render target utilizes OpenGL hardware accelaration rather than rendering into
-    system memory, which in many cases results in faster rendering.
+    The Canvas.FramebufferObject render target utilizes OpenGL hardware
+    acceleration rather than rendering into system memory, which in many cases
+    results in faster rendering.
 
-    The default render target is Canvas.Image and the default renderInThread property is
-    false.
+    The default render target is Canvas.Image and the default renderStrategy is
+    Canvas.Threaded.
 
     \section1 Tiled Canvas
     The Canvas item supports tiled rendering by setting \l canvasSize, \l tileSize
     and \l canvasWindow properties.
 
-    Tiling allows efficient display of a very large virtual via a smaller canvas
-    window. The actual memory consumption is in relatation to the canvas window size.  The painting
-    code can draw within the virtual canvas without handling coordinate system transformations.
+    Tiling allows efficient display of a very large virtual canvas via a smaller
+    canvas window. The actual memory consumption is in relation to the canvas
+    window size.  The painting code can draw within the virtual canvas without
+    handling coordinate system transformations.
 
-    The tiles overlapping with the canvas window may be cached eliminating the need to redraw,
-    which can lead to significantly improved performance in some situations.
+    The tiles overlapping with the canvas window may be cached eliminating the
+    need to redraw, which can lead to significantly improved performance in
+    some situations.
 
     \section1 Pixel Operations
-    All HTML5 2D context pixel operations are supported. In order to ensure improved
-    pixel reading/writing performance the \a Canvas.Image render target should be chosen. The
-    \a Canvas.FramebufferObject render target requires the pixel data to be exchanged between
-    the system memory and the graphic card, which is significantly more expensive.  Rendering
-    may also be synchronized with the V-sync signal (to avoid {en.wikipedia.org/wiki/Screen_tearing}{screen tearing})
-    which will futher impact pixel operations with \c Canvas.FrambufferObject render target.
+    All HTML5 2D context pixel operations are supported. In order to ensure
+    improved pixel reading/writing performance the \a Canvas.Image render
+    target should be chosen. The \a Canvas.FramebufferObject render target
+    requires the pixel data to be exchanged between the system memory and the
+    graphic card, which is significantly more expensive.  Rendering may also be
+    synchronized with the V-sync signal (to avoid
+    {en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
+    impact pixel operations with \c Canvas.FrambufferObject render target.
 
     \section1 Tips for Porting Existing HTML5 Canvas applications
 
-    Although the Canvas item is provides a HTML5 like API, HTML5 canvas applications
-    need to be modified to run in the Canvas item:
+    Although the Canvas item is provides a HTML5 like API, HTML5 canvas
+    applications need to be modified to run in the Canvas item:
     \list
     \o Replace all DOM API calls with QML property bindings or Canvas item methods.
     \o Replace all HTML event handlers with the \a MouseArea item.
-    \o Change setInterval/setTimeout function calls with the \a Timer item.
+    \o Change setInterval/setTimeout function calls with the \a Timer item or
+       the use of requestAnimationFrame.
     \o Place painting code into the \a QtQuick2::Canvas::onPaint handler and trigger
        painting by calling the \c markDirty or \c requestPaint methods.
     \o To draw images, load them by calling the Canvas's loadImage method and then request to paint
@@ -183,14 +205,85 @@ QQuickCanvasItem::~QQuickCanvasItem()
 }
 
 /*!
-    \qmlproperty size QtQuick2::Canvas::canvasSize
-     Holds the logical canvas size that the context paints on.
+    \qmlproperty size QtQuick2::Canvas::available
 
-     By default, the canvas size is the same size as the current canvas item size.
-     By setting the canvasSize, tileSize and canvasWindow, the Canvas
-     item can act as a large virtual canvas with many seperately rendered tile rectangles
-     Only those tiles within the current canvas window are painted by
-     the Canvas render engine.
+    Indicates when Canvas is able to provide a drawing context to operate on.
+*/
+
+bool QQuickCanvasItem::isAvailable() const
+{
+    return d_func()->available;
+}
+
+/*!
+    \qmlproperty string QtQuick2::Canvas::contextType
+    The type of drawing context to use.
+
+    This property is set to the name of the active context type.
+
+    If set explicitly the canvas will attempt to create a context of the
+    named type after becoming available.
+
+    The type name is the same as used in the getContext() call, for the 2d
+    canvas the value will be "2d".
+
+    \sa QtQuick2::Canvas::getContext QtQuick2::Canvas::available
+*/
+
+QString QQuickCanvasItem::contextType() const
+{
+    return d_func()->contextType;
+}
+
+void QQuickCanvasItem::setContextType(const QString &contextType)
+{
+    Q_D(QQuickCanvasItem);
+
+    if (contextType.compare(d->contextType, Qt::CaseInsensitive) == 0)
+        return;
+
+    if (d->contextInitialized) {
+        qmlInfo(this) << "Canvas already initialized with a different context type";
+        return;
+    }
+
+    d->contextType = contextType;
+
+    if (d->available)
+        createContext(contextType);
+
+    emit contextTypeChanged();
+}
+
+/*!
+    \qmlproperty object QtQuick2::Canvas::context
+    Holds the active drawing context.
+
+    If the canvas is ready and there has been a successful call to getContext()
+    or the contextType property has been set with a supported context type,
+    this property will contain the current drawing context, otherwise null.
+*/
+
+QDeclarativeV8Handle QQuickCanvasItem::context() const
+{
+    Q_D(const QQuickCanvasItem);
+    if (d->contextInitialized)
+        return QDeclarativeV8Handle::fromHandle(d->context->v8value());
+
+    return QDeclarativeV8Handle::fromHandle(v8::Null());
+}
+
+/*!
+    \qmlproperty size QtQuick2::Canvas::canvasSize
+    Holds the logical canvas size that the context paints on.
+
+    By default, the canvas size is the same size as the current canvas item
+    size.
+
+    By setting the canvasSize, tileSize and canvasWindow, the Canvas item can
+    act as a large virtual canvas with many separately rendered tile rectangles
+    Only those tiles within the current canvas window are painted by the Canvas
+    render engine.
 
     \sa QtQuick2::Canvas::tileSize QtQuick2::Canvas::canvasWindow
 */
@@ -207,24 +300,26 @@ void QQuickCanvasItem::setCanvasSize(const QSizeF & size)
         d->hasCanvasSize = true;
         d->canvasSize = size;
         emit canvasSizeChanged();
-        polish();
-        update();
+
+        if (d->contextInitialized)
+            polish();
     }
 }
 
 /*!
     \qmlproperty size QtQuick2::Canvas::tileSize
-     Holds the canvas rendering tile size.
+    Holds the canvas rendering tile size.
 
-     The Canvas item enters tiled mode by setting canvasSize, tileSize and
-     the canvasWindow. This can improve rendering performance
-     by rendering and caching tiles instead of rendering the whole canvas every time.
+    The Canvas item enters tiled mode by setting canvasSize, tileSize and the
+    canvasWindow. This can improve rendering performance by rendering and
+    caching tiles instead of rendering the whole canvas every time.
 
-     Memory will be consumed only by those tiles within the current visible region.
+    Memory will be consumed only by those tiles within the current visible
+    region.
 
-     By default the tileSize is the same as the canvasSize.
+    By default the tileSize is the same as the canvasSize.
 
-     \sa QtQuick2::Canvas::canvaasSize QtQuick2::Canvas::canvasWindow
+    \sa QtQuick2::Canvas::canvaasSize QtQuick2::Canvas::canvasWindow
 */
 QSize QQuickCanvasItem::tileSize() const
 {
@@ -240,8 +335,9 @@ void QQuickCanvasItem::setTileSize(const QSize & size)
         d->tileSize = size;
 
         emit tileSizeChanged();
-        polish();
-        update();
+
+        if (d->contextInitialized)
+            polish();
     }
 }
 
@@ -249,11 +345,11 @@ void QQuickCanvasItem::setTileSize(const QSize & size)
     \qmlproperty rect QtQuick2::Canvas::canvasWindow
      Holds the current canvas visible window.
 
-     By default the canvasWindow size is the same as the Canvas item
-     size with the topleft point as (0, 0).
+     By default the canvasWindow size is the same as the Canvas item size with
+     the top-left point as (0, 0).
 
-     If the canvasSize is different to the Canvas item size, the Canvas
-     item can display different visible areas by changing the canvas windowSize
+     If the canvasSize is different to the Canvas item size, the Canvas item
+     can display different visible areas by changing the canvas windowSize
      and/or position.
 
     \sa QtQuick2::Canvas::canvasSize QtQuick2::Canvas::tileSize
@@ -272,54 +368,28 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
 
         d->hasCanvasWindow = true;
         emit canvasWindowChanged();
-        polish();
-        update();
+
+        if (d->contextInitialized)
+            polish();
     }
 }
 
-
-QQuickContext2D* QQuickCanvasItem::context() const
-{
-    Q_D(const QQuickCanvasItem);
-    return d->context;
-}
-/*!
-    \qmlproperty bool QtQuick2::Canvas::renderInThread
-     Holds the current canvas rendering mode.
-
-     Set renderInThread to true to render complex and long
-     running painting in a dedicated background
-     thread, avoiding blocking the main UI.
-
-     \note: Not all renderTargets support background rendering.  If background rendering
-     is not supported by the current renderTarget, the renderInThread
-     property is ignored.
-
-     The default value is false.
-    \sa QtQuick2::Canvas::renderTarget
-*/
-bool QQuickCanvasItem::renderInThread() const
-{
-    Q_D(const QQuickCanvasItem);
-    return d->renderInThread;
-}
 /*!
     \qmlproperty bool QtQuick2::Canvas::renderTarget
-     Holds the current canvas render target.
+    Holds the current canvas render target.
 
-     \list
-     \o Canvas.Image  - render to an in memory image buffer, the render
-                        target supports background rendering.
-     \o Canvas.FramebufferObject - render to an OpenGL frame buffer,
-                                   this render target will ignore the
-                                   renderInThread property. The actual
-                                   rendering happens in the main QML rendering
-                                   process, which may be in a seperate render thread
-                                   or in the main GUI thread depending upon the platform.
-     \endlist
+    \list
+    \o Canvas.Image  - render to an in memory image buffer.
+    \o Canvas.FramebufferObject - render to an OpenGL frame buffer
+    \endlist
 
-     The default render target is \c Canvas.Image.
-    \sa QtQuick2::Canvas::renderInThread
+    This hint is supplied along with renderStrategy to the graphics context to
+    determine the method of rendering. A renderStrategy, renderTarget or a
+    combination may not be supported by a graphics context, in which case the
+    context will choose appropriate options and Canvas will signal the change
+    to the properties.
+
+    The default render target is \c Canvas.Image.
 */
 QQuickCanvasItem::RenderTarget QQuickCanvasItem::renderTarget() const
 {
@@ -327,48 +397,80 @@ QQuickCanvasItem::RenderTarget QQuickCanvasItem::renderTarget() const
     return d->renderTarget;
 }
 
-void QQuickCanvasItem::setRenderTarget(RenderTarget target)
+void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
 {
     Q_D(QQuickCanvasItem);
     if (d->renderTarget != target) {
-        d->renderTarget = target;
+        if (d->contextInitialized)         // target not changeable once context is active
+            return;
 
-        if (d->componentCompleted)
-            createTexture();
+        d->renderTarget = target;
         emit renderTargetChanged();
     }
 }
 
-void QQuickCanvasItem::_doPainting(const QRectF& region)
+/*!
+    \qmlproperty bool QtQuick2::Canvas::renderStrategy
+    Holds the current canvas rendering strategy.
+
+    \list
+    \o Canvas.Immediate - context will perform graphics commands immediately in the main UI thread.
+    \o Canvas.Threaded - context will defer graphics commands to a private rendering thread.
+    \o Canvas.Cooperative - context will defer graphics commands to the applications global render thread.
+    \endlist
+
+    This hint is supplied along with renderTarget to the graphics context to
+    determine the method of rendering. A renderStrategy, renderTarget or a
+    combination may not be supported by a graphics context, in which case the
+    context will choose appropriate options and Canvas will signal the change
+    to the properties.
+
+    Configuration or runtime tests may cause the QML Scene Graph to render in
+    the GUI thread.  Selecting \c Canvas.Cooperative, does not guarantee
+    rendering will occur on a thread separate from the GUI thread.
+
+    The default value is \c Canvas.Threaded.
+
+    \sa QtQuick2::Canvas::renderTarget
+*/
+
+QQuickCanvasItem::RenderStrategy QQuickCanvasItem::renderStrategy() const
 {
-    Q_D(QQuickCanvasItem);
-    emit paint(QDeclarativeV8Handle::fromHandle(d->context->v8value())
-             , QQuickContext2DTexture::tiledRect(region, d->tileSize));
-    if (d->texture)
-        d->texture->wake();
+    return d_func()->renderStrategy;
 }
 
-void QQuickCanvasItem::setRenderInThread(bool renderInThread)
+void QQuickCanvasItem::setRenderStrategy(QQuickCanvasItem::RenderStrategy strategy)
 {
     Q_D(QQuickCanvasItem);
-    if (d->renderInThread != renderInThread) {
-        d->renderInThread = renderInThread;
+    if (d->renderStrategy != strategy) {
+        if (d->contextInitialized)   // Render strategy not changeable once context is active
+            return;
 
-        if (d->componentCompleted)
-            createTexture();
-
-        if (d->renderInThread)
-            connect(this, SIGNAL(painted()), SLOT(update()));
-        else
-            disconnect(this, SIGNAL(painted()), this, SLOT(update()));
-        emit renderInThreadChanged();
-        polish();
-        update();
+        d->renderStrategy = strategy;
+        emit renderStrategyChanged();
     }
 }
 
-void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry,
-                             const QRectF &oldGeometry)
+QQuickCanvasContext* QQuickCanvasItem::rawContext() const
+{
+    return d_func()->context;
+}
+
+void QQuickCanvasItem::sceneGraphInitialized()
+{
+    Q_D(QQuickCanvasItem);
+
+    d->available = true;
+    connect(this, SIGNAL(visibleChanged()), SLOT(checkAnimationCallbacks()));
+    QMetaObject::invokeMethod(this, "availableChanged", Qt::QueuedConnection);
+
+    if (!d->contextType.isNull())
+        QMetaObject::invokeMethod(this, "delayedCreate", Qt::QueuedConnection);
+    else if (receivers(SIGNAL(paint(QRect))) > 0)
+        QMetaObject::invokeMethod(this, "requestPaint", Qt::QueuedConnection);
+}
+
+void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickCanvasItem);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
@@ -387,140 +489,236 @@ void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry,
     }
 
     if (!d->hasCanvasWindow) {
-        d->canvasWindow = newGeometry;
+        d->canvasWindow = QRectF(0, 0, w, h);
         emit canvasWindowChanged();
     }
 
-    polish();
-    update();
+    if (d->available) {
+        polish();
+        update();
+    }
 }
 
 void QQuickCanvasItem::componentComplete()
 {
-    Q_D(QQuickCanvasItem);
     QQuickItem::componentComplete();
 
-    if (!d->context)
-        createContext();
-    createTexture();
-
+    Q_D(QQuickCanvasItem);
     d->baseUrl = qmlEngine(this)->contextForObject(this)->baseUrl();
-    requestPaint();
-    updatePolish(); //force update the canvas sizes to texture for the first time
-    update();
-    d->componentCompleted = true;
+}
+
+void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    QQuickItem::itemChange(change, value);
+    if (change != QQuickItem::ItemSceneChange)
+        return;
+
+    Q_D(QQuickCanvasItem);
+    if (d->available)
+        return;
+
+    if (value.canvas == 0)
+        return;
+
+    d->canvas = value.canvas;
+    if (d->canvas->openglContext() != 0) // available context == initialized
+        sceneGraphInitialized();
+    else
+        connect(d->canvas, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
 }
 
 void QQuickCanvasItem::updatePolish()
 {
-    Q_D(QQuickCanvasItem);
     QQuickItem::updatePolish();
-    if (d->texture) {
-        if (!d->renderInThread && d->dirtyRect.isValid())
-            _doPainting(d->dirtyRect);
 
-        d->texture->canvasChanged(d->canvasSize.toSize()
-                                , d->tileSize
-                                , d->canvasWindow.toAlignedRect()
-                                , d->dirtyRect.toAlignedRect()
-                                , d->smooth);
-        d->dirtyRect = QRectF();
+    Q_D(QQuickCanvasItem);
+
+    if (d->contextInitialized)
+        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth);
+
+    if (d->animationCallbacks.size() > 0 && isVisible()) {
+        QMap<int, v8::Persistent<v8::Function> > animationCallbacks = d->animationCallbacks;
+        d->animationCallbacks.clear();
+
+        foreach (int key, animationCallbacks.keys()) {
+            v8::HandleScope handle_scope;
+            v8::Handle<v8::Object> self = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->newQObject(this).As<v8::Object>();
+            v8::Handle<v8::Value> args[] = { v8::Uint32::New(QDateTime::currentDateTimeUtc().toTime_t()) };
+            v8::Persistent<v8::Function> f = animationCallbacks.value(key);
+            f->Call(self, 1, args);
+            f.Dispose();
+        }
     }
+    else {
+        if (d->dirtyRect.isValid()) {
+            if (d->hasTileSize && d->hasCanvasWindow)
+                emit paint(tiledRect(d->canvasWindow.intersected(d->dirtyRect.toAlignedRect()), d->tileSize));
+            else
+                emit paint(d->dirtyRect.toRect());
+            d->dirtyRect = QRectF();
+        }
+    }
+
+    if (d->contextInitialized)
+        d->context->flush();
 }
 
 QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QQuickCanvasItem);
-    QQuickContext2DNode *node = static_cast<QQuickContext2DNode *>(oldNode);
-    if (!node)
-        node = new QQuickContext2DNode(this);
 
-    node->setTexture(d->texture);
+    if (!d->contextInitialized)
+        return 0;
+
+    QQuickCanvasItemNode *node = static_cast<QQuickCanvasItemNode*>(oldNode);
+    if (!node) {
+        node = new QQuickCanvasItemNode;
+        if (d->renderStrategy == QQuickCanvasItem::Cooperative)
+            node->setCallback(new QQuickCanvasItemCallback(d));
+    }
+
+    node->setTexture(d->context->texture());
     node->setSize(d->canvasWindow.size());
     node->update();
     return node;
 }
 
-void QQuickCanvasItem::createTexture()
+/*!
+    \qmlmethod object QtQuick2::Canvas::getContext(string contextId, any... args)
+
+    Returns a drawing context or null if no context available.
+
+    The \a contextId parameter names the required context. The Canvas element
+    will return a context that implements the required drawing mode. After the
+    first call to getContext any subsequent call to getContext with the same
+    contextId will return the same context object.
+
+    If the context type is not supported or the canvas has previously been
+    requested to provide a different and incompatible context type, null will
+    be returned.
+
+    Canvas only supports a 2d context.
+*/
+
+void QQuickCanvasItem::getContext(QDeclarativeV8Function *args)
 {
     Q_D(QQuickCanvasItem);
 
-    if (!d->texture
-      || d->texture->threadRendering() != d->renderInThread
-      || d->texture->renderTarget() != d->renderTarget) {
-        if (d->texture) {
-            d->texture->deleteLater();
-            d->texture = 0;
-        }
-
-        if (d->renderTarget == QQuickCanvasItem::Image) {
-            d->texture = new QQuickContext2DImageTexture(d->renderInThread);
-        } else if (d->renderTarget == QQuickCanvasItem::FramebufferObject) {
-            d->texture = new QQuickContext2DFBOTexture();
-        }
-
-        if (d->renderInThread && !d->texture->supportThreadRendering()) {
-            qWarning("Canvas: render target does not support thread rendering, force to non-thread rendering mode.");
-            d->renderInThread = false;
-            emit renderInThreadChanged();
-        }
-
-        if (d->renderInThread)
-            connect(d->texture, SIGNAL(textureChanged()), this, SLOT(update()));
-
-        d->texture->setItem(this);
+    if (args->Length() < 1 || !(*args)[0]->IsString()) {
+        qmlInfo(this) << "getContext should be called with a string naming the required context type";
+        args->returnValue(v8::Null());
+        return;
     }
-}
 
-void QQuickCanvasItem::createContext()
-{
-    Q_D(QQuickCanvasItem);
+    if (!d->available) {
+        qmlInfo(this) << "Unable to use getContext() at this time, please wait for available: true";
+        args->returnValue(v8::Null());
+        return;
+    }
 
-    delete d->context;
+    QString contextId = QString::fromUtf16(*v8::String::Value((*args)[0]));
 
-    d->context = new QQuickContext2D(this);
+    if (d->context != 0) {
+        if (d->context->contextNames().contains(contextId, Qt::CaseInsensitive)) {
+            args->returnValue(d->context->v8value());
+            return;
+        }
 
-    QV8Engine *e = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this));
-    d->context->setV8Engine(e);
-}
+        qmlInfo(this) << "Canvas already initialized with a different context type";
+        args->returnValue(v8::Null());
+        return;
+    }
 
-/*!
-  \qmlmethod object QtQuick2::Canvas::getContext(string contextId)
-
-  Currently, the canvas item only supports the 2D context. If the \a contextId
-  parameter isn't provided or is "2d", then the QtQuick2::Context2D object is
-  returned, otherwise returns an invalid value.
-  */
-QDeclarativeV8Handle QQuickCanvasItem::getContext(const QString &contextId)
-{
-    Q_D(QQuickCanvasItem);
-
-    if (contextId.toLower() != QLatin1String("2d"))
-        return QDeclarativeV8Handle::fromHandle(v8::Undefined());
-
-    if (!d->context)
-        createContext();
-    return QDeclarativeV8Handle::fromHandle(d->context->v8value());
+    if (createContext(contextId))
+        args->returnValue(d->context->v8value());
+    else
+        args->returnValue(v8::Null());
 }
 
 /*!
-  \qmlmethod void QtQuick2::Canvas::markDirty(rect region)
+    \qmlmethod long QtQuick2::Canvas::requestAnimationFrame(callback)
 
-    Mark the given \a region as dirty, so that when this region is visible
-    the canvas renderer will redraw it. This will trigger the "onPaint" signal
+    This function schedules callback to be invoked before composing the QtQuick
+    scene.
+*/
+
+void QQuickCanvasItem::requestAnimationFrame(QDeclarativeV8Function *args)
+{
+    if (args->Length() < 1 || !(*args)[0]->IsFunction()) {
+        qmlInfo(this) << "requestAnimationFrame should be called with an animation callback function";
+        args->returnValue(v8::Null());
+        return;
+    }
+
+    Q_D(QQuickCanvasItem);
+
+    static int id = 0;
+
+    d->animationCallbacks.insert(++id, v8::Persistent<v8::Function>::New(((*args)[0]).As<v8::Function>()));
+
+    if (isVisible())
+        polish();
+
+    args->returnValue(v8::Int32::New(id));
+}
+
+/*!
+    \qmlmethod void QtQuick2::Canvas::cancelRequestAnimationFrmae(long handle)
+
+    This function will cancel the animation callback referenced by \a handle.
+*/
+
+void QQuickCanvasItem::cancelRequestAnimationFrame(QDeclarativeV8Function *args)
+{
+    if (args->Length() < 1 || !(*args)[0]->IsInt32()) {
+        qmlInfo(this) << "cancelRequestAnimationFrame should be called with an animation callback id";
+        args->returnValue(v8::Null());
+        return;
+    }
+
+    d_func()->animationCallbacks.remove((*args)[0]->Int32Value());
+}
+
+
+/*!
+    \qmlmethod void QtQuick2::Canvas::requestPaint()
+
+    Request the entire visible region be re-drawn.
+
+    \sa QtQuick::Canvas::markDirty
+*/
+
+void QQuickCanvasItem::requestPaint()
+{
+    markDirty(d_func()->canvasWindow);
+}
+
+/*!
+    \qmlmethod void QtQuick2::Canvas::markDirty(rect area)
+
+    Mark the given \a area as dirty, so that when this area is visible the
+    canvas renderer will redraw it. This will trigger the "onPaint" signal
     handler function.
 
     \sa QtQuick2::Canvas::paint QtQuick2::Canvas::requestPaint
   */
-void QQuickCanvasItem::markDirty(const QRectF& region)
+
+void QQuickCanvasItem::markDirty(const QRectF& rect)
 {
     Q_D(QQuickCanvasItem);
-    d->dirtyRect |= region;
-    if (d->componentCompleted)
-        polish();
-    update();
+    if (!d->available)
+        return;
+
+    d->dirtyRect |= rect;
+
+    polish();
 }
 
+void QQuickCanvasItem::checkAnimationCallbacks()
+{
+    if (d_func()->animationCallbacks.size() > 0 && isVisible())
+        polish();
+}
 
 /*!
   \qmlmethod bool QtQuick2::Canvas::save(string filename)
@@ -642,15 +840,16 @@ bool QQuickCanvasItem::isImageLoaded(const QUrl& url) const
         && d->images.value(fullPathUrl)->isReady();
 }
 
-QImage QQuickCanvasItem::toImage(const QRectF& region) const
+QImage QQuickCanvasItem::toImage(const QRectF& rect) const
 {
     Q_D(const QQuickCanvasItem);
-    if (d->texture) {
-        if (region.isEmpty())
-            return d->texture->toImage(canvasWindow());
+    if (d->contextInitialized) {
+        if (rect.isEmpty())
+            return d->context->toImage(canvasWindow());
         else
-            return d->texture->toImage(region);
+            return d->context->toImage(rect);
     }
+
     return QImage();
 }
 
@@ -696,13 +895,69 @@ QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
     return QLatin1Literal("data:,");
 }
 
+void QQuickCanvasItem::delayedCreate()
+{
+    Q_D(QQuickCanvasItem);
+
+    if (!d->contextInitialized && !d->contextType.isNull())
+        createContext(d->contextType);
+
+    requestPaint();
+}
+
+bool QQuickCanvasItem::createContext(const QString &contextType)
+{
+    Q_D(QQuickCanvasItem);
+
+    if (contextType == QLatin1String("2d")) {
+        if (d->contextType.compare("2d", Qt::CaseInsensitive) != 0)  {
+            d->contextType = QLatin1String("2d");
+            emit contextTypeChanged(); // XXX: can't be in setContextType()
+        }
+        initializeContext(new QQuickContext2D(this));
+        return true;
+    }
+
+    return false;
+}
+
+void QQuickCanvasItem::initializeContext(QQuickCanvasContext *context, const QVariantMap &args)
+{
+    Q_D(QQuickCanvasItem);
+
+    d->context = context;
+    d->context->init(this, args);
+    d->context->setV8Engine(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this)));
+    d->contextInitialized = true;
+    connect(d->context, SIGNAL(textureChanged()), SLOT(update()));
+    connect(d->context, SIGNAL(textureChanged()), SIGNAL(painted()));
+    emit contextChanged();
+}
+
+QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
+{
+    if (window.isEmpty())
+        return QRect();
+
+    const int tw = tileSize.width();
+    const int th = tileSize.height();
+    const int h1 = window.left() / tw;
+    const int v1 = window.top() / th;
+
+    const int htiles = ((window.right() - h1 * tw) + tw - 1)/tw;
+    const int vtiles = ((window.bottom() - v1 * th) + th - 1)/th;
+
+    return QRect(h1 * tw, v1 * th, htiles * tw, vtiles * th);
+}
+
 /*!
-    \qmlsignal QtQuick2::Canvas::onPaint(QtQuick2::Context2D context, rect region)
+    \qmlsignal QtQuick2::Canvas::onPaint(rect region)
 
-    This handler is called to render the \a region.
+    This handler is called to render the \a region. If a context is active it
+    can be referenced from the context property.
 
-    This signal can be triggered by QtQuick2::Canvas::markdirty, QtQuick2::Canvas::requestPaint
-    or by changing the current canvas window.
+    This signal can be triggered by QtQuick2::Canvas::markdirty,
+    QtQuick2::Canvas::requestPaint or by changing the current canvas window.
 */
 
 /*!

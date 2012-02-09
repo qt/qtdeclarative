@@ -45,7 +45,8 @@
 #include <QtQuick/qtquickglobal.h>
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-
+#include <private/qquickcanvascontext_p.h>
+#include <private/qquickcanvasitem_p.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qpainterpath.h>
 #include <QtCore/qstring.h>
@@ -64,11 +65,21 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCanvasItem;
 class QQuickContext2DCommandBuffer;
+class QQuickContext2DTexture;
 class QDeclarativePixmap;
+class QSGTexture;
 
-class Q_QUICK_EXPORT QQuickContext2D
+class QLockedCommandBuffer {
+public:
+    QLockedCommandBuffer(QQuickContext2DCommandBuffer *b);
+    ~QLockedCommandBuffer();
+    QQuickContext2DCommandBuffer* operator->() const;
+private:
+    QQuickContext2DCommandBuffer *m_buffer;
+};
+
+class Q_QUICK_EXPORT QQuickContext2D : public QQuickCanvasContext
 {
 public:
     enum TextBaseLineType { Alphabetic=0, Top, Middle, Bottom, Hanging};
@@ -104,6 +115,16 @@ public:
         GetImageData
     };
 
+    enum ImageFilterMode {
+        Threshold,
+        Mono,
+        GrayScale,
+        Brightness,
+        Invert,
+        Blur,
+        Opaque,
+        Convolute
+    };
 
     struct State {
         State()
@@ -154,14 +175,23 @@ public:
         QQuickContext2D::TextBaseLineType textBaseline;
     };
 
-    QQuickContext2D(QQuickCanvasItem* item);
+    QQuickContext2D(QObject *parent = 0);
     ~QQuickContext2D();
 
-    inline QQuickCanvasItem*  canvas() const {return m_canvas;}
-    inline QQuickContext2DCommandBuffer* buffer() const {return m_buffer;}
+    QStringList contextNames() const;
+    void init(QQuickCanvasItem *canvasItem, const QVariantMap &args);
+    void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
+    void flush();
+    void sync();
+    QSGDynamicTexture *texture() const;
+    QImage toImage(const QRectF& bounds);
 
     v8::Handle<v8::Object> v8value() const;
     void setV8Engine(QV8Engine *eng);
+
+    QQuickCanvasItem* canvas() const { return m_canvas; }
+    QLockedCommandBuffer buffer() const { return m_buffer; }
+    bool bufferValid() const { return m_buffer != 0; }
     void popState();
     void pushState();
     void reset();
@@ -199,6 +229,9 @@ public:
     v8::Handle<v8::Value> m_v8path;
     QV8Engine *m_v8engine;
     v8::Persistent<v8::Object> m_v8value;
+    QQuickContext2DTexture *m_texture;
+    QQuickCanvasItem::RenderTarget m_renderTarget;
+    QQuickCanvasItem::RenderStrategy m_renderStrategy;
 };
 
 

@@ -65,7 +65,7 @@ Item {
       property real rotate : rotateCtrl.value
       smooth:true
       renderTarget:Canvas.Image
-      renderInThread:false
+      renderStrategy: Canvas.Immediate
 
       onLineWidthChanged:requestPaint();
       onFillChanged:requestPaint();

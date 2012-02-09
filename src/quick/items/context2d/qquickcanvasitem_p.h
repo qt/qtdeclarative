@@ -49,38 +49,45 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickContext2D;
+class QQuickCanvasContext;
+
 class QQuickCanvasItemPrivate;
 class Q_QUICK_EXPORT QQuickCanvasItem : public QQuickItem
 {
     Q_OBJECT
     Q_ENUMS(RenderTarget)
-    Q_ENUMS(ImageFilterMode)
+    Q_ENUMS(RenderStrategy)
 
+    Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged);
+    Q_PROPERTY(QString contextType READ contextType WRITE setContextType NOTIFY contextTypeChanged)
+    Q_PROPERTY(QDeclarativeV8Handle context READ context NOTIFY contextChanged);
     Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged)
     Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged)
     Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged)
-    Q_PROPERTY(bool renderInThread READ renderInThread WRITE setRenderInThread NOTIFY renderInThreadChanged)
     Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged)
+    Q_PROPERTY(RenderStrategy renderStrategy READ renderStrategy WRITE setRenderStrategy NOTIFY renderStrategyChanged)
+
 public:
     enum RenderTarget {
         Image,
         FramebufferObject
     };
 
-    enum ImageFilterMode {
-        Threshold,
-        Mono,
-        GrayScale,
-        Brightness,
-        Invert,
-        Blur,
-        Opaque,
-        Convolute
+    enum RenderStrategy {
+        Immediate,
+        Threaded,
+        Cooperative
     };
 
     QQuickCanvasItem(QQuickItem *parent = 0);
     ~QQuickCanvasItem();
+
+    bool isAvailable() const;
+
+    QString contextType() const;
+    void setContextType(const QString &contextType);
+
+    QDeclarativeV8Handle context() const;
 
     QSizeF canvasSize() const;
     void setCanvasSize(const QSizeF &);
@@ -91,54 +98,68 @@ public:
     QRectF canvasWindow() const;
     void setCanvasWindow(const QRectF& rect);
 
-    bool renderInThread() const;
-    void setRenderInThread(bool renderInThread);
-
     RenderTarget renderTarget() const;
     void setRenderTarget(RenderTarget target);
 
-    QQuickContext2D* context() const;
-    QImage toImage(const QRectF& region = QRectF()) const;
+    RenderStrategy renderStrategy() const;
+    void setRenderStrategy(RenderStrategy strategy);
 
+    QQuickCanvasContext* rawContext() const;
+
+    QImage toImage(const QRectF& rect = QRectF()) const;
+
+    Q_INVOKABLE void getContext(QDeclarativeV8Function *args);
+
+    Q_INVOKABLE void requestAnimationFrame(QDeclarativeV8Function *args);
+    Q_INVOKABLE void cancelRequestAnimationFrame(QDeclarativeV8Function *args);
+
+    Q_INVOKABLE void requestPaint();
+    Q_INVOKABLE void markDirty(const QRectF& dirtyRect = QRectF());
+
+    Q_INVOKABLE bool save(const QString &filename) const;
+    Q_INVOKABLE QString toDataURL(const QString& type = QLatin1String("image/png")) const;
     QImage loadedImage(const QUrl& url);
 
 Q_SIGNALS:
-    void paint(QDeclarativeV8Handle context, const QRect &region);
+    void paint(const QRect &region);
     void painted();
+    void availableChanged();
+    void contextTypeChanged();
+    void contextChanged();
     void canvasSizeChanged();
     void tileSizeChanged();
-    void renderInThreadChanged();
-    void textureChanged();
     void canvasWindowChanged();
     void renderTargetChanged();
+    void renderStrategyChanged();
     void imageLoaded();
+
 public Q_SLOTS:
-    QString toDataURL(const QString& type = QLatin1String("image/png")) const;
-    QDeclarativeV8Handle getContext(const QString & = QLatin1String("2d"));
-    void markDirty(const QRectF& region);
-    void requestPaint() {markDirty(canvasWindow());}
-    // Save current canvas to disk
-    bool save(const QString& filename) const;
     void loadImage(const QUrl& url);
     void unloadImage(const QUrl& url);
     bool isImageLoaded(const QUrl& url) const;
     bool isImageLoading(const QUrl& url) const;
     bool isImageError(const QUrl& url) const;
+
 private Q_SLOTS:
-    void _doPainting(const QRectF& region);
+    void sceneGraphInitialized();
+    void checkAnimationCallbacks();
+
 protected:
-    virtual void componentComplete();
-    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
-    virtual void updatePolish();
+    void componentComplete();
+    void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &);
+    void updatePolish();
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+
 private:
-    void createContext();
-    void createTexture();
     Q_DECLARE_PRIVATE(QQuickCanvasItem)
-    friend class QQuickContext2D;
-    friend class QQuickContext2DTexture;
+
+    Q_INVOKABLE void delayedCreate();
+    bool createContext(const QString &contextType);
+    void initializeContext(QQuickCanvasContext *context, const QVariantMap &args = QVariantMap());
+    QRect tiledRect(const QRectF &window, const QSize &tileSize);
 };
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickCanvasItem)

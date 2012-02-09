@@ -57,7 +57,7 @@ Item {
         height:360
         smooth:true
         renderTarget:Canvas.FramebufferObject
-        renderInThread:false
+        renderStrategy: Canvas.Cooperative
         property string strokeStyle:"steelblue"
         property string fillStyle:"yellow"
         property bool fill:true

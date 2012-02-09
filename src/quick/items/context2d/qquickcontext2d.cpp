@@ -42,6 +42,7 @@
 #include "qquickcontext2d_p.h"
 #include "qquickcontext2dcommandbuffer_p.h"
 #include "qquickcanvasitem_p.h"
+#include <private/qquickcontext2dtexture_p.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtGui/qopenglframebufferobject.h>
@@ -67,9 +68,11 @@ QT_BEGIN_NAMESPACE
     \qmlclass Context2D QQuickContext2D
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
-    \brief The Context2D API allows you to draw 2d graphic shapes on the \c Canvas item.
+    \brief The Context2D API allows you to draw 2d graphic shapes on the \c
+    Canvas item.
 
-    The Context2D object can be created by \c Canvas item's \c getContext() method:
+    The Context2D object can be created by \c Canvas item's \c getContext()
+    method:
     \code
     Canvas {
       id:canvas
@@ -79,22 +82,40 @@ QT_BEGIN_NAMESPACE
       }
     }
     \endcode
-    The Context2D API implements the same \l {http://www.w3.org/TR/2dcontext}{W3C Canvas 2D Context API standard}
-    with some enhanced features.
+    The Context2D API implements the same \l
+    {http://www.w3.org/TR/2dcontext}{W3C Canvas 2D Context API standard} with
+    some enhanced features.
 
-    The Context2D API provides the rendering \bold{context} which defines the methods and attributes needed to draw
-    on the \c Canvas item. The following assigns the canvas rendering context to a \c{context}
-    variable:
+    The Context2D API provides the rendering \bold{context} which defines the
+    methods and attributes needed to draw on the \c Canvas item. The following
+    assigns the canvas rendering context to a \c{context} variable:
     \code
     var context = mycanvas.getContext("2d")
     \endcode
 
-    The Context2D API renders the canvas as a coordinate system whose origin (0,0) is
-    at the top left corner, as shown in the figure below. Coordinates increase along
-    the \c{x} axis from left to right and along the \c{y} axis from top to bottom of
-    the canvas.
+    The Context2D API renders the canvas as a coordinate system whose origin
+    (0,0) is at the top left corner, as shown in the figure below. Coordinates
+    increase along the \c{x} axis from left to right and along the \c{y} axis
+    from top to bottom of the canvas.
     \image qml-item-canvas-context.gif
 */
+
+QLockedCommandBuffer::QLockedCommandBuffer(QQuickContext2DCommandBuffer *b)
+    : m_buffer(b)
+{
+    m_buffer->lockQueue();
+}
+
+QLockedCommandBuffer::~QLockedCommandBuffer()
+{
+    m_buffer->unlockQueue();
+}
+
+QQuickContext2DCommandBuffer* QLockedCommandBuffer::operator->() const
+{
+    return m_buffer;
+}
+
 
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
 
@@ -102,10 +123,10 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
 
 #define DEGREES(t) ((t) * 180.0 / Q_PI)
 
-#define CHECK_CONTEXT(r)     if (!r || !r->context || !r->context->buffer()) \
+#define CHECK_CONTEXT(r)     if (!r || !r->context || !r->context->bufferValid()) \
                                 V8THROW_ERROR("Not a Context2D object");
 
-#define CHECK_CONTEXT_SETTER(r)     if (!r || !r->context || !r->context->buffer()) \
+#define CHECK_CONTEXT_SETTER(r)     if (!r || !r->context || !r->context->bufferValid()) \
                                        V8THROW_ERROR_SETTER("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
@@ -2603,19 +2624,19 @@ static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
   \qmlmethod void QtQuick2::CanvasImageData::filter(enumeration mode, args)
    Filters the image data as defined by one of the following modes:
     \list
-    \o Canvas.Threshold - converts the image to black and white pixels depending
+    \o context.Threshold - converts the image to black and white pixels depending
                           if they are above or below the threshold defined by the level parameter.
                           The level must be between 0.0 (black) and 1.0(white).
                           If no level is specified, 0.5 is used.
-    \o Canvas.Mono - converts the image to the 1-bit per pixel format.
-    \o Canvas.GrayScale - converts any colors in the image to grayscale equivalents.
-    \o Canvas.Brightness -increase/decrease a fixed \c adjustment value to each pixel's RGB channel value.
-    \o Canvas.Invert - sets each pixel to its inverse value.
-    \o Canvas.Blur - executes a box blur with the pixel \c radius parameter specifying the range of the blurring for each pixel.
+    \o context.Mono - converts the image to the 1-bit per pixel format.
+    \o context.GrayScale - converts any colors in the image to grayscale equivalents.
+    \o context.Brightness -increase/decrease a fixed \c adjustment value to each pixel's RGB channel value.
+    \o context.Invert - sets each pixel to its inverse value.
+    \o context.Blur - executes a box blur with the pixel \c radius parameter specifying the range of the blurring for each pixel.
                      the default blur \c radius is 3. This filter also accepts another \c quality parameter, if true, the filter will
                      execute 3-passes box blur to simulate the Guassian blur. The default \c quality value is false.
-    \o Canvas.Opaque - sets the alpha channel to entirely opaque.
-    \o Canvas.Convolute - executes a generic {http://en.wikipedia.org/wiki/Convolution}{Convolution} filter, the second
+    \o context.Opaque - sets the alpha channel to entirely opaque.
+    \o context.Convolute - executes a generic {http://en.wikipedia.org/wiki/Convolution}{Convolution} filter, the second
                           parameter contains the convoluton matrix data as a number array.
     \endlist
 
@@ -2632,12 +2653,12 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
     if (args.Length() >= 1) {
         int filterFlag = args[0]->IntegerValue();
         switch (filterFlag) {
-        case QQuickCanvasItem::Mono :
+        case QQuickContext2D::Mono :
         {
             r->image = r->image.convertToFormat(QImage::Format_Mono).convertToFormat(QImage::Format_ARGB32_Premultiplied);
         }
             break;
-        case QQuickCanvasItem::GrayScale :
+        case QQuickContext2D::GrayScale :
         {
             for (int y = 0; y < r->image.height(); ++y) {
               QRgb *row = (QRgb*)r->image.scanLine(y);
@@ -2648,7 +2669,7 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
             }
         }
             break;
-        case QQuickCanvasItem::Threshold :
+        case QQuickContext2D::Threshold :
         {
             qreal threshold = 0.5;
             if (args.Length() > 1)
@@ -2664,7 +2685,7 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
             }
         }
             break;
-        case QQuickCanvasItem::Brightness :
+        case QQuickContext2D::Brightness :
         {
             int adjustment = 1;
             if (args.Length() > 1)
@@ -2680,12 +2701,12 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
             }
         }
             break;
-        case QQuickCanvasItem::Invert :
+        case QQuickContext2D::Invert :
         {
             r->image.invertPixels();
         }
             break;
-        case QQuickCanvasItem::Blur :
+        case QQuickContext2D::Blur :
         {
             int radius = 3;
             bool quality = false;
@@ -2698,7 +2719,7 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
             qt_image_boxblur(r->image, radius, quality);
         }
             break;
-        case QQuickCanvasItem::Opaque :
+        case QQuickContext2D::Opaque :
         {
             for (int y = 0; y < r->image.height(); ++y) {
               QRgb *row = (QRgb*)r->image.scanLine(y);
@@ -2708,7 +2729,7 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
             }
         }
             break;
-        case QQuickCanvasItem::Convolute :
+        case QQuickContext2D::Convolute :
         {
             if (args.Length() > 1 && args[1]->IsArray()) {
                 v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(args[1]);
@@ -3297,12 +3318,11 @@ bool QQuickContext2D::isPointInPath(qreal x, qreal y) const
     return m_path.contains(QPointF(x, y));
 }
 
-QQuickContext2D::QQuickContext2D(QQuickCanvasItem* item)
-    : m_canvas(item)
+QQuickContext2D::QQuickContext2D(QObject *parent)
+    : QQuickCanvasContext(parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
     , m_v8engine(0)
 {
-    reset();
 }
 
 QQuickContext2D::~QQuickContext2D()
@@ -3314,6 +3334,86 @@ v8::Handle<v8::Object> QQuickContext2D::v8value() const
 {
     return m_v8value;
 }
+
+QStringList QQuickContext2D::contextNames() const
+{
+    return QStringList() << QLatin1String("2d");
+}
+
+void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args)
+{
+    Q_UNUSED(args);
+
+    m_canvas = canvasItem;
+    m_renderTarget = canvasItem->renderTarget();
+
+    // For the FBO target we only (currently) support Cooperative
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
+        canvasItem->setRenderStrategy(QQuickCanvasItem::Cooperative);
+    }
+
+    m_renderStrategy = canvasItem->renderStrategy();
+
+    switch (m_renderTarget) {
+    case QQuickCanvasItem::Image:
+        m_texture = new QQuickContext2DImageTexture(m_renderStrategy == QQuickCanvasItem::Threaded); // ?? || Coop
+        break;
+    case QQuickCanvasItem::FramebufferObject:
+        m_texture = new QQuickContext2DFBOTexture;
+        break;
+    }
+
+    m_texture->setItem(canvasItem);
+    m_texture->setCanvasWindow(canvasItem->canvasWindow().toRect());
+    m_texture->setTileSize(canvasItem->tileSize());
+    m_texture->setCanvasSize(canvasItem->canvasSize().toSize());
+    m_texture->setSmooth(canvasItem->smooth());
+
+    connect(m_texture, SIGNAL(textureChanged()), SIGNAL(textureChanged()));
+
+    reset();
+}
+
+void QQuickContext2D::prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth)
+{
+    m_texture->canvasChanged(canvasSize, tileSize, canvasWindow, dirtyRect, smooth);
+}
+
+void QQuickContext2D::flush()
+{
+    switch (m_renderStrategy) {
+    case QQuickCanvasItem::Immediate:
+        // Cause the texture to consume paint commands immediately
+        m_texture->paint();
+        break;
+    case QQuickCanvasItem::Threaded:
+        // wake up thread to consume paint commands
+        m_texture->paint();
+        break;
+    case QQuickCanvasItem::Cooperative:
+        // Add to the update list in SG
+        m_canvas->update(); // FIXME
+        break;
+    }
+}
+
+// On SG render thread
+void QQuickContext2D::sync()
+{
+    if (m_renderStrategy == QQuickCanvasItem::Cooperative)
+        m_texture->paint();
+}
+
+QSGDynamicTexture *QQuickContext2D::texture() const
+{
+    return m_texture;
+}
+
+QImage QQuickContext2D::toImage(const QRectF& bounds)
+{
+    return m_texture->toImage(bounds);
+}
+
 
 QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
 {
@@ -3383,6 +3483,15 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("createImageData"), V8FUNCTION(ctx2d_createImageData, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("getImageData"), V8FUNCTION(ctx2d_getImageData, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("putImageData"), V8FUNCTION(ctx2d_putImageData, engine));
+
+    ft->InstanceTemplate()->Set(v8::String::New("Threshold"), v8::Uint32::New(QQuickContext2D::Threshold), v8::ReadOnly);
+    ft->InstanceTemplate()->Set(v8::String::New("Mono"), v8::Uint32::New(QQuickContext2D::Mono), v8::ReadOnly);
+    ft->InstanceTemplate()->Set(v8::String::New("GrayScale"), v8::Uint32::New(QQuickContext2D::GrayScale), v8::ReadOnly);
+    ft->InstanceTemplate()->Set(v8::String::New("Brightness"), v8::Uint32::New(QQuickContext2D::Brightness), v8::ReadOnly);
+    ft->InstanceTemplate()->Set(v8::String::New("Invert"), v8::Uint32::New(QQuickContext2D::Invert), v8::ReadOnly);
+    ft->InstanceTemplate()->Set(v8::String::New("Blur"), v8::Uint32::New(QQuickContext2D::Blur), v8::ReadOnly);
+    ft->InstanceTemplate()->Set(v8::String::New("Opaque"), v8::Uint32::New(QQuickContext2D::Opaque), v8::ReadOnly);
+    ft->InstanceTemplate()->Set(v8::String::New("Convolute"), v8::Uint32::New(QQuickContext2D::Convolute), v8::ReadOnly);
 
     constructorContext = qPersistentNew(ft->GetFunction());
 

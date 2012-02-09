@@ -45,6 +45,8 @@
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLPaintDevice>
 
+QT_BEGIN_NAMESPACE
+
 QQuickContext2DTile::QQuickContext2DTile()
     : m_dirty(true)
     , m_rect(QRect(0, 0, 1, 1))
@@ -163,3 +165,6 @@ void QQuickContext2DImageTile::setRect(const QRect& r)
     }
     m_device = &m_image;
 }
+
+QT_END_NAMESPACE
+

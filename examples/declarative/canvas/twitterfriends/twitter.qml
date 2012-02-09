@@ -98,7 +98,7 @@ Rectangle {
       anchors.bottom : parent.bottom
       smooth:true
       renderTarget:Canvas.Image
-      renderInThread:false
+      renderStrategy: Canvas.Immediate
 
       property bool layoutChanged:true
       property string twitterName:""

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qquickcontext2dnode_p.h"
+#include "qquickcanvasitemnode_p.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtCore/qmath.h>
@@ -47,9 +47,8 @@
 QT_BEGIN_NAMESPACE
 
 
-QQuickContext2DNode::QQuickContext2DNode(QQuickCanvasItem* item)
+QQuickCanvasItemNode::QQuickCanvasItemNode()
     : QSGGeometryNode()
-    , m_item(item)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
     , m_texture(0)
     , m_size(1, 1)
@@ -59,15 +58,21 @@ QQuickContext2DNode::QQuickContext2DNode(QQuickCanvasItem* item)
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
     setGeometry(&m_geometry);
-    setFlag(UsePreprocess, true);
 }
 
-QQuickContext2DNode::~QQuickContext2DNode()
+QQuickCanvasItemNode::~QQuickCanvasItemNode()
 {
     delete m_texture;
 }
 
-void QQuickContext2DNode::setSize(const QSizeF& size)
+// Must be called before this node is added to SG
+void QQuickCanvasItemNode::setCallback(QQuickCanvasItemNode::Callback *cb)
+{
+    m_cb = cb;
+    setFlag(UsePreprocess, true);
+}
+
+void QQuickCanvasItemNode::setSize(const QSizeF& size)
 {
     if (m_size != size) {
         m_dirtyGeometry = true;
@@ -75,19 +80,13 @@ void QQuickContext2DNode::setSize(const QSizeF& size)
     }
 }
 
-void QQuickContext2DNode::preprocess()
+void QQuickCanvasItemNode::preprocess()
 {
-    bool doDirty = false;
-    QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(m_material.texture());
-    if (t) {
-        doDirty = t->updateTexture();
-    }
-    if (doDirty) {
-        m_dirtyTexture = true;
-        markDirty(DirtyMaterial);
-    }
+    if (m_cb)
+        m_cb->process();
 }
-void QQuickContext2DNode::setTexture(QQuickContext2DTexture* texture)
+
+void QQuickCanvasItemNode::setTexture(QSGDynamicTexture* texture)
 {
     if (texture != m_texture) {
         m_dirtyTexture = true;
@@ -95,7 +94,7 @@ void QQuickContext2DNode::setTexture(QQuickContext2DTexture* texture)
     }
 }
 
-void QQuickContext2DNode::update()
+void QQuickCanvasItemNode::update()
 {
     if (m_dirtyGeometry)
         updateGeometry();
@@ -106,14 +105,14 @@ void QQuickContext2DNode::update()
     m_dirtyTexture = false;
 }
 
-void QQuickContext2DNode::updateTexture()
+void QQuickCanvasItemNode::updateTexture()
 {
     m_material.setTexture(m_texture);
     m_materialO.setTexture(m_texture);
     markDirty(DirtyMaterial);
 }
 
-void QQuickContext2DNode::updateGeometry()
+void QQuickCanvasItemNode::updateGeometry()
 {
     QRectF source = m_texture->normalizedTextureSubRect();
     QSGGeometry::updateTexturedRectGeometry(&m_geometry,
@@ -121,4 +120,6 @@ void QQuickContext2DNode::updateGeometry()
                                             source);
     markDirty(DirtyGeometry);
 }
+
 QT_END_NAMESPACE
+

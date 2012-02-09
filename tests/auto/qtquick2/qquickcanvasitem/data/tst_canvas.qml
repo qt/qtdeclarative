@@ -11,6 +11,7 @@ Rectangle {
             id:c
              width:100;height:100
              onPaint: {
+                 var context = getContext("2d");
                  context.fillStyle = "red";
                  context.fillRect(0, 0, 100, 100);
              }
@@ -18,27 +19,31 @@ Rectangle {
              property int paintedCount:spyPainted.count
              property int canvasSizeChangedCount:spyCanvasSizeChanged.count
              property int tileSizeChangedCount:spyTileSizeChanged.count
-             property int renderInThreadChangedCount:spyRenderInThreadChanged.count
+             property int renderStrategyChangedCount:spyRenderStrategyChanged.count
              property int canvasWindowChangedCount:spyCanvasWindowChanged.count
              property int renderTargetChangedCount:spyRenderTargetChanged.count
              property int imageLoadedCount:spyImageLoaded.count
+             property int availableChangedCount:spyAvailableChanged.count
 
              SignalSpy {id: spyPaint;target:c;signalName: "paint"}
              SignalSpy {id: spyPainted;target:c;signalName: "painted"}
              SignalSpy {id: spyCanvasSizeChanged;target:c;signalName: "canvasSizeChanged"}
              SignalSpy {id: spyTileSizeChanged;target:c;signalName: "tileSizeChanged"}
-             SignalSpy {id: spyRenderInThreadChanged;target:c;signalName: "renderInThreadChanged"}
+             SignalSpy {id: spyRenderStrategyChanged;target:c;signalName: "renderStrategyChanged"}
              SignalSpy {id: spyCanvasWindowChanged;target:c;signalName: "canvasWindowChanged"}
              SignalSpy {id: spyRenderTargetChanged;target:c;signalName: "renderTargetChanged"}
              SignalSpy {id: spyImageLoaded;target:c;signalName: "imageLoaded"}
+             SignalSpy {id: spyAvailableChanged;target:c;signalName: "availableChanged"}
         }
     }
 
    TestCase {
        name: "Canvas"; when: windowShown
        function test_canvasSize() {
-           var c =  canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
            //by default canvasSize is same with canvas' actual size
            // when canvas size changes, canvasSize should be changed as well.
@@ -74,8 +79,10 @@ Rectangle {
            c.destroy();
       }
        function test_tileSize() {
-           var c = canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
            compare(c.tileSize.width, c.width);
            compare(c.tileSize.height, c.height);
@@ -109,8 +116,10 @@ Rectangle {
        }
 
        function test_canvasWindow() {
-           var c = canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
            compare(c.canvasWindow.x, 0);
            compare(c.canvasWindow.y, 0);
            compare(c.canvasWindow.width, c.width);
@@ -135,34 +144,22 @@ Rectangle {
            c.destroy();
 
       }
-       function test_renderTargetAndThread() {
-           var c = canvas.createObject();
+       function test_renderTargetAndStrategy() {
+           var c = canvas.createObject(container);
            verify(c);
-
-           compare(c.renderTarget, Canvas.FramebufferObject);
-           verify(!c.renderInThread);
-           c.renderTarget = Canvas.Image;
-           compare(c.renderTargetChangedCount, 1);
-           compare(c.renderInThreadChangedCount, 0);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
            compare(c.renderTarget, Canvas.Image);
-           verify(!c.renderInThread);
-           c.renderInThread = true;
-           verify(c.renderInThread);
-           compare(c.renderTargetChangedCount, 1);
-           compare(c.renderInThreadChangedCount, 1);
-
-           ignoreWarning("Canvas: render target does not support thread rendering, force to non-thread rendering mode.");
-           c.renderTarget = Canvas.FramebufferObject;
-           verify(!c.renderInThread);
-           compare(c.renderTargetChangedCount, 2);
-           compare(c.renderInThreadChangedCount, 2);
+           compare(c.renderStrategy, Canvas.Threaded);
            c.destroy();
 
       }
        function test_save() {
-           var c = canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
            c.renderTarget = Canvas.Image;
            c.requestPaint();
@@ -188,16 +185,16 @@ Rectangle {
        }
 
        function test_toDataURL(data) {
-           var c = canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
-           c.renderTarget = Canvas.Image;
-           var ctx = c.getContext();
+           var ctx = c.getContext("2d");
            ctx.fillStyle = "red";
            ctx.fillRect(0, 0, c.width, c.height);
-
-           c.requestPaint();
            wait(100);
+
            var dataUrl = c.toDataURL();
            verify(dataUrl != "data:,");
            dataUrl = c.toDataURL("image/invalid");
@@ -205,12 +202,13 @@ Rectangle {
 
            dataUrl = c.toDataURL(data.mimeType);
            verify(dataUrl != "data:,");
+
            ctx.save();
            ctx.fillStyle = "blue";
            ctx.fillRect(0, 0, c.width, c.height);
            ctx.restore();
-           c.requestPaint();
            wait(100);
+
            var dataUrl2 = c.toDataURL(data.mimeType);
            verify (dataUrl2 != "data:,");
            verify (dataUrl2 != dataUrl);
@@ -218,12 +216,14 @@ Rectangle {
 
       }
        function test_paint() {
-           var c = canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
            c.renderTarget = Canvas.Image;
-           c.renderInThread = true;
-           var ctx = c.getContext();
+           c.renderStrategy = Canvas.Immediate;
+           var ctx = c.getContext("2d");
            ctx.fillRect(0, 0, c.width, c.height);
            c.toDataURL();
            wait(100);
@@ -234,8 +234,10 @@ Rectangle {
 
       }
        function test_loadImage() {
-           var c = canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
            c.loadImage("red.png");
            wait(200);
@@ -253,10 +255,12 @@ Rectangle {
       }
 
        function test_getContext() {
-           var c = canvas.createObject();
+           var c = canvas.createObject(container);
            verify(c);
+           wait(100);
+           verify(c.availableChangedCount, 1);
 
-           var ctx = c.getContext();
+           var ctx = c.getContext("2d");
            verify(ctx);
            compare(ctx.canvas, c);
            ctx = c.getContext('2d');

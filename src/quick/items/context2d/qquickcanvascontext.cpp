@@ -39,46 +39,37 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCONTEXT2DNODE_P_H
-#define QQUICKCONTEXT2DNODE_P_H
+#include <private/qquickcanvascontext_p.h>
 
-#include <QtQuick/qsgnode.h>
-#include <QtQuick/qsgtexturematerial.h>
-
-#include "qquickcanvasitem_p.h"
-#include "qquickcontext2dtexture_p.h"
-#include "qquickcontext2d_p.h"
-
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickContext2DNode : public QSGGeometryNode
+QQuickCanvasContext::QQuickCanvasContext(QObject *parent)
+    : QObject(parent)
 {
-public:
-    QQuickContext2DNode(QQuickCanvasItem* item);
-    virtual ~QQuickContext2DNode();
-    void setTexture(QQuickContext2DTexture* texture);
-    void update();
-    void preprocess();
-    void setSize(const QSizeF& size);
-private:
-    void updateTexture();
-    void updateGeometry();
+}
 
-    QQuickCanvasItem* m_item;
-    QSGOpaqueTextureMaterial m_material;
-    QSGTextureMaterial m_materialO;
-    QSGGeometry m_geometry;
-    QQuickContext2DTexture* m_texture;
-    QSizeF m_size;
+QQuickCanvasContext::~QQuickCanvasContext()
+{
+}
 
-    bool m_dirtyGeometry;
-    bool m_dirtyTexture;
-};
+void QQuickCanvasContext::prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth)
+{
+    Q_UNUSED(canvasSize);
+    Q_UNUSED(tileSize);
+    Q_UNUSED(canvasWindow);
+    Q_UNUSED(dirtyRect);
+    Q_UNUSED(smooth);
+}
 
-QT_END_HEADER
+void QQuickCanvasContext::flush()
+{
+}
+
+void QQuickCanvasContext::sync()
+{
+}
 
 QT_END_NAMESPACE
 
-#endif // QQUICKCONTEXT2DNODE_P_H
+

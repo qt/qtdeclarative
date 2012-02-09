@@ -56,7 +56,7 @@ Item {
       height:360
       smooth:true
       renderTarget:Canvas.FramebufferObject
-      renderInThread:false
+      renderStrategy: Canvas.Cooperative
       property string image :"../contents/qt-logo.png"
       Component.onCompleted:loadImage(image);
       onImageLoaded:requestPaint();
@@ -66,12 +66,12 @@ Item {
       if (canvas.isImageLoaded(image)) {
           var pixels = ctx.createImageData(image);
           //pixels.mirror();
-          pixels.filter(Canvas.GrayScale);
-          //pixels.filter(Canvas.Threshold, 100); //default 127
-          //pixels.filter(Canvas.Blur, 20); //default 10
-          //pixels.filter(Canvas.Opaque);
-          //pixels.filter(Canvas.Invert);
-          //pixels.filter(Canvas.Convolute, [0,-1,0,
+          pixels.filter(ctx.GrayScale);
+          //pixels.filter(ctx.Threshold, 100); //default 127
+          //pixels.filter(ctx.Blur, 20); //default 10
+          //pixels.filter(ctx.Opaque);
+          //pixels.filter(ctx.Invert);
+          //pixels.filter(ctx.Convolute, [0,-1,0,
           //                                 -1,5,-1,
           //                                 0,-1,0]);
           //ctx.putImageData(pixels, 0, 0, canvas.width, canvas.height);
