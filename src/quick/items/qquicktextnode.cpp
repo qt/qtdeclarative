@@ -237,6 +237,7 @@ namespace {
         static void insert(QVarLengthArray<BinaryTreeNode> *binaryTree,
                            const QGlyphRun &glyphRun,
                            SelectionState selectionState,
+                           QQuickTextNode::Decorations decorations,
                            const QColor &textColor,
                            const QColor &backgroundColor,
                            const QPointF &position)
@@ -247,7 +248,6 @@ namespace {
             if (qFuzzyIsNull(searchRect.width()) || qFuzzyIsNull(searchRect.height()))
                 return;
 
-            QQuickTextNode::Decorations decorations = QQuickTextNode::NoDecoration;
             decorations |= (glyphRun.underline() ? QQuickTextNode::Underline : QQuickTextNode::NoDecoration);
             decorations |= (glyphRun.overline()  ? QQuickTextNode::Overline  : QQuickTextNode::NoDecoration);
             decorations |= (glyphRun.strikeOut() ? QQuickTextNode::StrikeOut : QQuickTextNode::NoDecoration);
@@ -369,6 +369,11 @@ namespace {
             m_textColor = textColor;
         }
 
+        void setAnchorColor(const QColor &anchorColor)
+        {
+            m_anchorColor = anchorColor;
+        }
+
         void setPosition(const QPointF &position)
         {
             m_position = position;
@@ -400,6 +405,7 @@ namespace {
         QColor m_textColor;
         QColor m_backgroundColor;
         QColor m_selectedTextColor;
+        QColor m_anchorColor;
         QPointF m_position;
 
         QTextLine m_currentLine;
@@ -745,14 +751,14 @@ namespace {
     void SelectionEngine::addUnselectedGlyphs(const QGlyphRun &glyphRun)
     {
         BinaryTreeNode::insert(&m_currentLineTree, glyphRun, BinaryTreeNode::Unselected,
-                               m_textColor, m_backgroundColor, m_position);
+                               QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position);
     }
 
     void SelectionEngine::addSelectedGlyphs(const QGlyphRun &glyphRun)
     {
         int currentSize = m_currentLineTree.size();
         BinaryTreeNode::insert(&m_currentLineTree, glyphRun, BinaryTreeNode::Selected,
-                               m_textColor, m_backgroundColor, m_position);
+                               QQuickTextNode::NoDecoration, m_textColor, m_backgroundColor, m_position);
         m_hasSelection = m_hasSelection || m_currentLineTree.size() > currentSize;
     }
 
@@ -771,11 +777,12 @@ namespace {
                     addGlyphsInRange(currentPosition, range.start - currentPosition,
                                      QColor(), QColor(), selectionStart, selectionEnd);
                 }
-
                 int rangeEnd = qMin(range.start + range.length, currentPosition + remainingLength);
-                QColor rangeColor = range.format.hasProperty(QTextFormat::ForegroundBrush)
-                        ? range.format.foreground().color()
-                        : QColor();
+                QColor rangeColor;
+                if (range.format.hasProperty(QTextFormat::ForegroundBrush))
+                    rangeColor = range.format.foreground().color();
+                else if (range.format.isAnchor())
+                    rangeColor = m_anchorColor;
                 QColor rangeBackgroundColor = range.format.hasProperty(QTextFormat::BackgroundBrush)
                         ? range.format.background().color()
                         : QColor();
@@ -1038,7 +1045,8 @@ void QQuickTextNode::mergeFormats(QTextLayout *textLayout,
     for (int i=0; i<additionalFormats.size(); ++i) {
         QTextLayout::FormatRange additionalFormat = additionalFormats.at(i);
         if (additionalFormat.format.hasProperty(QTextFormat::ForegroundBrush)
-         || additionalFormat.format.hasProperty(QTextFormat::BackgroundBrush)) {
+         || additionalFormat.format.hasProperty(QTextFormat::BackgroundBrush)
+         || additionalFormat.format.isAnchor()) {
             // Merge overlapping formats
             if (!mergedFormats->isEmpty()) {
                 QTextLayout::FormatRange *lastFormat = mergedFormats->data() + mergedFormats->size() - 1;
@@ -1107,6 +1115,7 @@ void QQuickTextNode::addImage(const QRectF &rect, const QImage &image)
 void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *textDocument,
                                   const QColor &textColor,
                                   QQuickText::TextStyle style, const QColor &styleColor,
+                                  const QColor &anchorColor,
                                   const QColor &selectionColor, const QColor &selectedTextColor,
                                   int selectionStart, int selectionEnd)
 {
@@ -1114,6 +1123,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
     engine.setTextColor(textColor);
     engine.setSelectedTextColor(selectedTextColor);
     engine.setSelectionColor(selectionColor);
+    engine.setAnchorColor(anchorColor);
 
     QList<QTextFrame *> frames;
     frames.append(textDocument->rootFrame());
@@ -1244,6 +1254,13 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                         }
                         textPos += text.length();
                     } else {
+                        if (charFormat.foreground().style() != Qt::NoBrush)
+                            engine.setTextColor(charFormat.foreground().color());
+                        else if (charFormat.isAnchor())
+                            engine.setTextColor(anchorColor);
+                        else
+                            engine.setTextColor(textColor);
+
                         int fragmentEnd = textPos + fragment.length();
                         if (preeditPosition >= 0
                          && preeditPosition >= textPos
@@ -1269,6 +1286,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
 
 void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color,
                                 QQuickText::TextStyle style, const QColor &styleColor,
+                                const QColor &anchorColor,
                                 const QColor &selectionColor, const QColor &selectedTextColor,
                                 int selectionStart, int selectionEnd)
 {
@@ -1276,6 +1294,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     engine.setTextColor(color);
     engine.setSelectedTextColor(selectedTextColor);
     engine.setSelectionColor(selectionColor);
+    engine.setAnchorColor(anchorColor);
     engine.setPosition(position);
 
     int preeditLength = textLayout->preeditAreaText().length();

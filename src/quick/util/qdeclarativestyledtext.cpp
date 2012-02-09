@@ -625,7 +625,6 @@ bool QDeclarativeStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, cons
             format.setAnchorHref(attr.second.toString());
             format.setAnchor(true);
             format.setFontUnderline(true);
-            format.setForeground(QColor("blue"));
             valid = true;
         }
     } while (!ch->isNull() && !attr.first.isEmpty());

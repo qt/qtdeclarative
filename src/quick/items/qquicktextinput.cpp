@@ -1752,7 +1752,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
         if (!d->m_textLayout.text().isEmpty() || !d->m_textLayout.preeditAreaText().isEmpty()) {
             node->addTextLayout(offset, &d->m_textLayout, d->color,
-                                QQuickText::Normal, QColor(),
+                                QQuickText::Normal, QColor(), QColor(),
                                 d->selectionColor, d->selectedTextColor,
                                 d->selectionStart(),
                                 d->selectionEnd() - 1); // selectionEnd() returns first char after

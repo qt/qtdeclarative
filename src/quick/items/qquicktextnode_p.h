@@ -82,10 +82,12 @@ public:
     void deleteContent();
     void addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color = QColor(),
                        QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
+                       const QColor &anchorColor = QColor(),
                        const QColor &selectionColor = QColor(), const QColor &selectedTextColor = QColor(),
                        int selectionStart = -1, int selectionEnd = -1);
     void addTextDocument(const QPointF &position, QTextDocument *textDocument, const QColor &color = QColor(),
                          QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
+                         const QColor &anchorColor = QColor(),
                          const QColor &selectionColor = QColor(), const QColor &selectedTextColor = QColor(),
                          int selectionStart = -1, int selectionEnd = -1);
 

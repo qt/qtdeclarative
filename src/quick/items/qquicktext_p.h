@@ -68,6 +68,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QColor linkColor READ linkColor WRITE setLinkColor NOTIFY linkColorChanged)
     Q_PROPERTY(TextStyle style READ style WRITE setStyle NOTIFY styleChanged)
     Q_PROPERTY(QColor styleColor READ styleColor WRITE setStyleColor NOTIFY styleColorChanged)
     Q_PROPERTY(HAlignment horizontalAlignment READ hAlign WRITE setHAlign RESET resetHAlign NOTIFY horizontalAlignmentChanged)
@@ -136,6 +137,9 @@ public:
     QColor color() const;
     void setColor(const QColor &c);
 
+    QColor linkColor() const;
+    void setLinkColor(const QColor &color);
+
     TextStyle style() const;
     void setStyle(TextStyle style);
 
@@ -201,6 +205,7 @@ Q_SIGNALS:
     void linkActivated(const QString &link);
     void fontChanged(const QFont &font);
     void colorChanged(const QColor &color);
+    void linkColorChanged();
     void styleChanged(TextStyle style);
     void styleColorChanged(const QColor &color);
     void horizontalAlignmentChanged(HAlignment alignment);

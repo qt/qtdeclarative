@@ -92,11 +92,11 @@ Component {
 
             }
             Text { id:txt; y:4; x: 56
-                text: '<html><style type="text/css">a:link {color:"#aaccaa"}; a:visited {color:"#336633"}</style>'
+                text: '<html>'
                     + '<a href="app://@'+userName(name)+'"><b>'+userName(name) + "</b></a> from " +source
                     + "<br /><b>" + statusText + "</b></html>";
-                textFormat: Qt.RichText
-                color: "#cccccc"; style: Text.Raised; styleColor: "black"; wrapMode: Text.WordWrap
+                textFormat: Text.StyledText
+                color: "#cccccc"; style: Text.Raised; styleColor: "black"; wrapMode: Text.WordWrap; linkColor: "#aaccaa"
                 anchors.left: image.right; anchors.right: blackRect.right; anchors.leftMargin: 6; anchors.rightMargin: 6
                 onLinkActivated: wrapper.handleLink(link)
             }

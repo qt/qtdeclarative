@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
 QQuickTextPrivate::QQuickTextPrivate()
-: color((QRgb)0), style(QQuickText::Normal), hAlign(QQuickText::AlignLeft),
+: color((QRgb)0), linkColor((QRgb)255), style(QQuickText::Normal), hAlign(QQuickText::AlignLeft),
   vAlign(QQuickText::AlignTop), elideMode(QQuickText::ElideNone),
   format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap), lineHeight(1),
   lineHeightMode(QQuickText::ProportionalHeight), lineCount(1), maximumLineCount(INT_MAX),
@@ -1279,6 +1279,34 @@ void QQuickText::setColor(const QColor &color)
     }
     emit colorChanged(d->color);
 }
+
+/*!
+    \qmlproperty color QtQuick2::Text::linkColor
+
+    The color of links in the text.
+
+    This property works with the StyledText \l textFormat, but not with RichText.
+    Link color in RichText can be specified by including CSS style tags in the
+    text.
+*/
+
+QColor QQuickText::linkColor() const
+{
+    Q_D(const QQuickText);
+    return d->linkColor;
+}
+
+void QQuickText::setLinkColor(const QColor &color)
+{
+    Q_D(QQuickText);
+    if (d->linkColor == color)
+        return;
+
+    d->linkColor = color;
+    update();
+    emit linkColorChanged();
+}
+
 /*!
     \qmlproperty enumeration QtQuick2::Text::style
 
@@ -1894,12 +1922,11 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     if (d->richText) {
         d->ensureDoc();
-        node->addTextDocument(bounds.topLeft(), d->doc, d->color, d->style, d->styleColor);
-
+        node->addTextDocument(bounds.topLeft(), d->doc, d->color, d->style, d->styleColor, d->linkColor);
     } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
-        node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
+        node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor, d->linkColor);
         if (d->elideLayout)
-            node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, d->color, d->style, d->styleColor);
+            node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, d->color, d->style, d->styleColor, d->linkColor);
     }
 
     foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {

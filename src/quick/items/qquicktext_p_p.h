@@ -89,6 +89,7 @@ public:
     QFont font;
     QFont sourceFont;
     QColor  color;
+    QColor  linkColor;
     QQuickText::TextStyle style;
     QColor  styleColor;
     QString activeLink;

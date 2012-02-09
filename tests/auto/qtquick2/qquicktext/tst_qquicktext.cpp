@@ -904,6 +904,7 @@ void tst_qquicktext::color()
 
         QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
         QCOMPARE(textObject->styleColor(), QColor());
+        QCOMPARE(textObject->linkColor(), QColor("blue"));
 
         delete textObject;
     }
@@ -918,6 +919,22 @@ void tst_qquicktext::color()
         QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(i)));
         // default color to black?
         QCOMPARE(textObject->color(), QColor("black"));
+        QCOMPARE(textObject->linkColor(), QColor("blue"));
+
+        delete textObject;
+    }
+
+    for (int i = 0; i < colorStrings.size(); i++)
+    {
+        QString componentStr = "import QtQuick 2.0\nText { linkColor: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+        QCOMPARE(textObject->styleColor(), QColor());
+        // default color to black?
+        QCOMPARE(textObject->color(), QColor("black"));
+        QCOMPARE(textObject->linkColor(), QColor(colorStrings.at(i)));
 
         delete textObject;
     }
@@ -926,13 +943,18 @@ void tst_qquicktext::color()
     {
         for (int j = 0; j < colorStrings.size(); j++)
         {
-            QString componentStr = "import QtQuick 2.0\nText { color: \"" + colorStrings.at(i) + "\"; styleColor: \"" + colorStrings.at(j) + "\"; text: \"Hello World\" }";
+            QString componentStr = "import QtQuick 2.0\nText { "
+                    "color: \"" + colorStrings.at(i) + "\"; "
+                    "styleColor: \"" + colorStrings.at(j) + "\"; "
+                    "linkColor: \"" + colorStrings.at(j) + "\"; "
+                    "text: \"Hello World\" }";
             QDeclarativeComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
             QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
             QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(j)));
+            QCOMPARE(textObject->linkColor(), QColor(colorStrings.at(j)));
 
             delete textObject;
         }
@@ -950,6 +972,69 @@ void tst_qquicktext::color()
         QCOMPARE(textObject->color(), testColor);
 
         delete textObject;
+    } {
+        QString colorStr = "#001234";
+        QColor testColor(colorStr);
+
+        QString componentStr = "import QtQuick 2.0\nText { color: \"" + colorStr + "\"; text: \"Hello World\" }";
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
+
+        QSignalSpy spy(textObject, SIGNAL(colorChanged(QColor)));
+
+        QCOMPARE(textObject->color(), testColor);
+        textObject->setColor(testColor);
+        QCOMPARE(textObject->color(), testColor);
+        QCOMPARE(spy.count(), 0);
+
+        testColor = QColor("black");
+        textObject->setColor(testColor);
+        QCOMPARE(textObject->color(), testColor);
+        QCOMPARE(spy.count(), 1);
+    } {
+        QString colorStr = "#001234";
+        QColor testColor(colorStr);
+
+        QString componentStr = "import QtQuick 2.0\nText { styleColor: \"" + colorStr + "\"; text: \"Hello World\" }";
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
+
+        QSignalSpy spy(textObject, SIGNAL(styleColorChanged(QColor)));
+
+        QCOMPARE(textObject->styleColor(), testColor);
+        textObject->setStyleColor(testColor);
+        QCOMPARE(textObject->styleColor(), testColor);
+        QCOMPARE(spy.count(), 0);
+
+        testColor = QColor("black");
+        textObject->setStyleColor(testColor);
+        QCOMPARE(textObject->styleColor(), testColor);
+        QCOMPARE(spy.count(), 1);
+    } {
+        QString colorStr = "#001234";
+        QColor testColor(colorStr);
+
+        QString componentStr = "import QtQuick 2.0\nText { linkColor: \"" + colorStr + "\"; text: \"Hello World\" }";
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+        QScopedPointer<QObject> object(textComponent.create());
+        QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
+
+        QSignalSpy spy(textObject, SIGNAL(linkColorChanged()));
+
+        QCOMPARE(textObject->linkColor(), testColor);
+        textObject->setLinkColor(testColor);
+        QCOMPARE(textObject->linkColor(), testColor);
+        QCOMPARE(spy.count(), 0);
+
+        testColor = QColor("black");
+        textObject->setLinkColor(testColor);
+        QCOMPARE(textObject->linkColor(), testColor);
+        QCOMPARE(spy.count(), 1);
     }
 }
 
