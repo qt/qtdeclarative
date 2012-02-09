@@ -3202,8 +3202,7 @@ void tst_qdeclarativeecmascript::importScripts_data()
     QTest::newRow("import with imports has it's own activation scope")
             << testFileUrl("jsimportfail/failFive.qml")
             << QString()
-            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Can't find variable: Component"))
-                              << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: Component")))
+            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Can't find variable: Component")))
             << (QStringList() << QLatin1String("componentError"))
             << (QVariantList() << QVariant(0));
 
@@ -3217,7 +3216,7 @@ void tst_qdeclarativeecmascript::importScripts_data()
     QTest::newRow("pragma library imports shouldn't inherit parent imports or scope")
             << testFileUrl("jsimportfail/testImportPragmaLibrary.qml")
             << QString()
-            << QStringList()
+            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: Component")))
             << (QStringList() << QLatin1String("testValue"))
             << (QVariantList() << QVariant(0));
 
@@ -3238,8 +3237,6 @@ void tst_qdeclarativeecmascript::importScripts_data()
 
 void tst_qdeclarativeecmascript::importScripts()
 {
-    QSKIP("These warnings come out as INFO, not Warning - https://bugreports.qt-project.org/browse/QTBUG-24156");
-
     QFETCH(QUrl, testfile);
     QFETCH(QString, errorMessage);
     QFETCH(QStringList, warningMessages);
