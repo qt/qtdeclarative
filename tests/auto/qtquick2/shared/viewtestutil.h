@@ -55,16 +55,22 @@ namespace QQuickViewTestUtil
 
     void flick(QQuickView *canvas, const QPoint &from, const QPoint &to, int duration);
 
+    QList<int> adjustIndexesForAddDisplaced(const QList<int> &indexes, int index, int count);
+    QList<int> adjustIndexesForMove(const QList<int> &indexes, int from, int to, int count);
+    QList<int> adjustIndexesForRemoveDisplaced(const QList<int> &indexes, int index, int count);
+
     struct ListChange {
-        enum { Inserted, Removed, Moved, SetCurrent } type;
+        enum { Inserted, Removed, Moved, SetCurrent, SetContentY } type;
         int index;
         int count;
         int to;     // Move
+        qreal pos;  // setContentY
 
-        static ListChange insert(int index, int count = 1) { ListChange c = { Inserted, index, count, -1 }; return c; }
-        static ListChange remove(int index, int count = 1) { ListChange c = { Removed, index, count, -1 }; return c; }
-        static ListChange move(int index, int to, int count) { ListChange c = { Moved, index, count, to }; return c; }
-        static ListChange setCurrent(int index) { ListChange c = { SetCurrent, index, -1, -1 }; return c; }
+        static ListChange insert(int index, int count = 1) { ListChange c = { Inserted, index, count, -1, 0.0 }; return c; }
+        static ListChange remove(int index, int count = 1) { ListChange c = { Removed, index, count, -1, 0.0 }; return c; }
+        static ListChange move(int index, int to, int count) { ListChange c = { Moved, index, count, to, 0.0 }; return c; }
+        static ListChange setCurrent(int index) { ListChange c = { SetCurrent, index, -1, -1, 0.0 }; return c; }
+        static ListChange setContentY(qreal pos) { ListChange c = { SetContentY, -1, -1, -1, pos }; return c; }
     };
 
     class QmlListModel : public QListModelInterface
@@ -87,7 +93,7 @@ namespace QQuickViewTestUtil
         QVariant data(int index, int role) const;
         QHash<int, QVariant> data(int index, const QList<int> &roles) const;
 
-        void addItem(const QString &name, const QString &number);
+        Q_INVOKABLE void addItem(const QString &name, const QString &number);
         void insertItem(int index, const QString &name, const QString &number);
         void insertItems(int index, const QList<QPair<QString, QString> > &items);
 
@@ -100,6 +106,8 @@ namespace QQuickViewTestUtil
         void modifyItem(int index, const QString &name, const QString &number);
 
         void clear();
+
+        void matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2);
 
     private:
         QList<QPair<QString,QString> > list;
@@ -120,7 +128,7 @@ namespace QQuickViewTestUtil
         QString name(int index) const;
         QString number(int index) const;
 
-        void addItem(const QString &name, const QString &number);
+        Q_INVOKABLE void addItem(const QString &name, const QString &number);
         void addItems(const QList<QPair<QString, QString> > &items);
         void insertItem(int index, const QString &name, const QString &number);
         void insertItems(int index, const QList<QPair<QString, QString> > &items);
@@ -134,13 +142,39 @@ namespace QQuickViewTestUtil
         void modifyItem(int idx, const QString &name, const QString &number);
 
         void clear();
+        void reset();
+
+        void matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2);
 
     private:
         QList<QPair<QString,QString> > list;
     };
 
+    class ListRange
+    {
+    public:
+        ListRange();
+        ListRange(const ListRange &other);
+        ListRange(int start, int end);
+
+        ~ListRange();
+
+        ListRange operator+(const ListRange &other) const;
+        bool operator==(const ListRange &other) const;
+        bool operator!=(const ListRange &other) const;
+
+        bool isValid() const;
+        int count() const;
+
+        QList<QPair<QString,QString> > getModelDataValues(const QmlListModel &model);
+        QList<QPair<QString,QString> > getModelDataValues(const QaimModel &model);
+
+        QList<int> indexes;
+        bool valid;
+    };
 }
 
 Q_DECLARE_METATYPE(QList<QQuickViewTestUtil::ListChange>)
+Q_DECLARE_METATYPE(QQuickViewTestUtil::ListRange)
 
 #endif // QQUICKVIEWTESTUTIL_H

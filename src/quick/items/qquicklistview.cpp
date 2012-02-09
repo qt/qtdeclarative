@@ -94,6 +94,7 @@ public:
     virtual FxViewItem *newViewItem(int index, QQuickItem *item);
     virtual void initializeViewItem(FxViewItem *item);
     virtual void releaseItem(FxViewItem *item);
+    virtual void repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer);
     virtual void repositionPackageItemAt(QQuickItem *item, int index);
     virtual void resetFirstItemPosition(qreal pos = 0.0);
     virtual void adjustFirstItem(qreal forwards, qreal backwards, int);
@@ -104,7 +105,9 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems(int fromModelIndex = 0);
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems);
+
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
+    virtual void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult);
 
     virtual void updateSections();
     QQuickItem *getSectionItem(const QString &section);
@@ -253,9 +256,9 @@ public:
     }
     qreal itemPosition() const {
         if (view->orientation() == QQuickListView::Vertical)
-            return item->y();
+            return itemY();
         else
-            return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-item->x() : item->x());
+            return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-itemX() : itemX());
     }
     qreal size() const {
         if (section)
@@ -273,35 +276,26 @@ public:
     }
     qreal endPosition() const {
         if (view->orientation() == QQuickListView::Vertical) {
-            return item->y() + item->height();
+            return itemY() + item->height();
         } else {
             return (view->effectiveLayoutDirection() == Qt::RightToLeft
-                    ? -item->x()
-                    : item->x() + item->width());
+                    ? -itemX()
+                    : itemX() + item->width());
         }
     }
     void setPosition(qreal pos) {
-        if (view->orientation() == QQuickListView::Vertical) {
-            if (section) {
+        // position the section immediately even if there is a transition
+        if (section) {
+            if (view->orientation() == QQuickListView::Vertical) {
                 section->setY(pos);
-                pos += section->height();
-            }
-            item->setY(pos);
-        } else {
-            if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
-                if (section) {
-                    section->setX(-section->width()-pos);
-                    pos += section->width();
-                }
-                item->setX(-item->width()-pos);
             } else {
-                if (section) {
+                if (view->effectiveLayoutDirection() == Qt::RightToLeft)
+                    section->setX(-section->width()-pos);
+                else
                     section->setX(pos);
-                    pos += section->width();
-                }
-                item->setX(pos);
             }
         }
+        moveTo(pointForPosition(pos));
     }
     void setSize(qreal size) {
         if (view->orientation() == QQuickListView::Vertical)
@@ -310,12 +304,34 @@ public:
             item->setWidth(size);
     }
     bool contains(qreal x, qreal y) const {
-        return (x >= item->x() && x < item->x() + item->width() &&
-                y >= item->y() && y < item->y() + item->height());
+        return (x >= itemX() && x < itemX() + item->width() &&
+                y >= itemY() && y < itemY() + item->height());
+    }
+    QQuickItemView *itemView() const {
+        return view;
     }
 
     QQuickItem *section;
     QQuickListView *view;
+
+private:
+    QPointF pointForPosition(qreal pos) const {
+        if (view->orientation() == QQuickListView::Vertical) {
+            if (section)
+                pos += section->height();
+            return QPointF(itemX(), pos);
+        } else {
+            if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
+                if (section)
+                    pos += section->width();
+                return QPointF(-item->width() - pos, itemY());
+            } else {
+                if (section)
+                    pos += section->width();
+                return QPointF(pos, itemY());
+            }
+        }
+    }
 };
 
 //----------------------------------------------------------------------------
@@ -401,8 +417,9 @@ qreal QQuickListViewPrivate::lastPosition() const
 
 qreal QQuickListViewPrivate::positionAt(int modelIndex) const
 {
-    if (FxViewItem *item = visibleItem(modelIndex))
+    if (FxViewItem *item = visibleItem(modelIndex)) {
         return item->position();
+    }
     if (!visibleItems.isEmpty()) {
         if (modelIndex < visibleIndex) {
             int count = visibleIndex - modelIndex;
@@ -612,7 +629,8 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 #endif
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
-        item->setPosition(pos);
+        if (!(usePopulateTransition && populateTransition)) // pos will be set by layoutVisibleItems()
+            item->setPosition(pos);
         item->item->setVisible(!doBuffer);
         pos += item->size() + spacing;
         visibleItems.append(item);
@@ -631,7 +649,8 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
             break;
         --visibleIndex;
         visiblePos -= item->size() + spacing;
-        item->setPosition(visiblePos);
+        if (!(usePopulateTransition && populateTransition)) // pos will be set by layoutVisibleItems()
+            item->setPosition(visiblePos);
         item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
         changed = true;
@@ -654,6 +673,7 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
            && (item = visibleItems.at(index)) && item->endPosition() < bufferFrom) {
         if (item->attached->delayRemove())
             break;
+
         if (item->size() > 0) {
 #ifdef DEBUG_DELEGATE_LIFECYCLE
             qDebug() << "refill: remove first" << visibleIndex << "top end pos" << item->endPosition();
@@ -663,7 +683,15 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
                 if (item->index != -1)
                     visibleIndex++;
                 visibleItems.removeAt(index);
-                releaseItem(item);
+                if (item->transitionScheduledOrRunning()) {
+#ifdef DEBUG_DELEGATE_LIFECYCLE
+                    qDebug() << "refill not releasing animating item" << item->index << item->item->objectName();
+#endif
+                    item->releaseAfterTransition = true;
+                    releasePendingTransition.append(item);
+                } else {
+                    releaseItem(item);
+                }
                 if (index == 0)
                     break;
                 item = visibleItems.at(--index);
@@ -681,7 +709,15 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
         qDebug() << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position();
 #endif
         visibleItems.removeLast();
-        releaseItem(item);
+        if (item->transitionScheduledOrRunning()) {
+#ifdef DEBUG_DELEGATE_LIFECYCLE
+            qDebug() << "refill not releasing animating item" << item->index << item->item->objectName();
+#endif
+            item->releaseAfterTransition = true;
+            releasePendingTransition.append(item);
+        } else {
+            releaseItem(item);
+        }
         changed = true;
     }
 
@@ -713,11 +749,12 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
         qreal sum = firstItem->size();
         qreal pos = firstItem->position() + firstItem->size() + spacing;
         firstItem->item->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
+
         for (int i=1; i < visibleItems.count(); ++i) {
             FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.at(i));
             if (item->index >= fromModelIndex) {
                 item->setPosition(pos);
-                item->item->setVisible(item->endPosition() >= from && item->position() <= to);
+                item->setVisible(item->endPosition() >= from && item->position() <= to);
             }
             pos += item->size() + spacing;
             sum += item->size();
@@ -726,10 +763,14 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
         averageSize = qRound(sum / visibleItems.count());
 
         // move current item if it is not a visible item.
-        if (currentIndex >= 0 && currentItem && !fixedCurrent) {
+        if (currentIndex >= 0 && currentItem && !fixedCurrent)
             static_cast<FxListItemSG*>(currentItem)->setPosition(positionAt(currentIndex));
-        }
     }
+}
+
+void QQuickListViewPrivate::repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer)
+{
+    static_cast<FxListItemSG *>(item)->setPosition(positionAt(index) + sizeBuffer);
 }
 
 void QQuickListViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
@@ -1132,13 +1173,17 @@ void QQuickListViewPrivate::initializeCurrentItem()
     if (currentItem) {
         FxListItemSG *listItem = static_cast<FxListItemSG *>(currentItem);
 
-        if (currentIndex == visibleIndex - 1 && visibleItems.count()) {
-            // We can calculate exact postion in this case
-            listItem->setPosition(visibleItems.first()->position() - currentItem->size() - spacing);
-        } else {
-            // Create current item now and position as best we can.
-            // Its position will be corrected when it becomes visible.
-            listItem->setPosition(positionAt(currentIndex));
+        // don't reposition the item if it's about to be transitioned to another position
+        FxViewItem *actualItem = visibleItem(currentIndex);
+        if ((!actualItem || !actualItem->transitionScheduledOrRunning())) {
+            if (currentIndex == visibleIndex - 1 && visibleItems.count()) {
+                // We can calculate exact postion in this case
+                listItem->setPosition(visibleItems.first()->position() - currentItem->size() - spacing);
+            } else {
+                // Create current item now and position as best we can.
+                // Its position will be corrected when it becomes visible.
+                listItem->setPosition(positionAt(currentIndex));
+            }
         }
 
         // Avoid showing section delegate twice.  We still need the section heading so that
@@ -1653,27 +1698,34 @@ QQuickListView::~QQuickListView()
 
 /*!
     \qmlattachedproperty bool QtQuick2::ListView::delayRemove
-    This attached property holds whether the delegate may be destroyed.
 
-    It is attached to each instance of the delegate.
+    This attached property holds whether the delegate may be destroyed. It
+    is attached to each instance of the delegate. The default value is false.
 
     It is sometimes necessary to delay the destruction of an item
-    until an animation completes.
-
-    The example delegate below ensures that the animation completes before
-    the item is removed from the list.
+    until an animation completes. The example delegate below ensures that the
+    animation completes before the item is removed from the list.
 
     \snippet doc/src/snippets/declarative/listview/listview.qml delayRemove
+
+    If a \l remove transition has been specified, it will not be applied until
+    delayRemove is returned to \c false.
 */
 
 /*!
     \qmlattachedsignal QtQuick2::ListView::onAdd()
-    This attached handler is called immediately after an item is added to the view.
+    This attached signal handler is called immediately after an item is added to the view.
+
+    If an \l add transition is specified, it is applied immediately after
+    this signal handler is called.
 */
 
 /*!
     \qmlattachedsignal QtQuick2::ListView::onRemove()
     This attached handler is called immediately before an item is removed from the view.
+
+    If a \l remove transition has been specified, it is applied after
+    this signal handler is called, providing that delayRemove is false.
 */
 
 /*!
@@ -2191,6 +2243,231 @@ void QQuickListView::setSnapMode(SnapMode mode)
     \sa footer, headerItem
 */
 
+/*!
+    \qmlproperty Transition QtQuick2::ListView::populate
+    This property holds the transition to apply to items that are initially created for a
+    view.
+
+    This transition is applied to all the items that are created when:
+
+    \list
+    \o The view is first created
+    \o The view's \l model changes
+    \o The view's \l model is \l {QAbstractItemModel::reset}{reset}, if the model is a QAbstractItemModel subclass
+    \endlist
+
+    For example, here is a view that specifies such a transition:
+
+    \code
+    ListView {
+        ...
+        populate: Transition {
+            NumberAnimation { properties: "x,y"; duration: 1000 }
+        }
+    }
+    \endcode
+
+    When the view is initialized, the view will create all the necessary items for the view,
+    then animate them to their correct positions within the view over one second.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \sa add, ViewTransition
+*/
+
+/*!
+    \qmlproperty Transition QtQuick2::ListView::add
+    This property holds the transition to apply to items that are added within the view.
+
+    The transition is applied to items that have been added to the visible area of the view. For
+    example, here is a view that specifies such a transition:
+
+    \code
+    ListView {
+        ...
+        add: Transition {
+            NumberAnimation { properties: "x,y"; from: 100; duration: 1000 }
+        }
+    }
+    \endcode
+
+    Whenever an item is added to the above view, the item will be animated from the position (100,100)
+    to its final x,y position within the view, over one second. The transition only applies to
+    the new items that are added to the view; it does not apply to the items below that are
+    displaced by the addition of the new items. To animate the displaced items, set the \l
+    addDisplaced property.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \note This transition is not applied to the items that are created when the view is initially
+    populated, or when the view's \l model changes. In those cases, the \l populate transition is
+    applied instead.
+
+    \sa addDisplaced, populate, ViewTransition
+*/
+
+/*!
+    \qmlproperty Transition QtQuick2::ListView::addDisplaced
+    This property holds the transition to apply to items in the view that are displaced by other
+    items that have been added to the view.
+
+    The transition is applied to items that are currently visible and have been displaced by newly
+    added items. For example, here is a view that specifies such a transition:
+
+    \code
+    ListView {
+        ...
+        addDisplaced: Transition {
+            NumberAnimation { properties: "x,y"; duration: 1000 }
+        }
+    }
+    \endcode
+
+    Whenever an item is added to the above view, all items beneath the new item are displaced, causing
+    them to move down (or sideways, if horizontally orientated) within the view. As this
+    displacement occurs, the items' movement to their new x,y positions within the view will be
+    animated by a NumberAnimation over one second, as specified. This transition is not applied to
+    the new item that has been added to the view; to animate the added items, set the \l add
+    property.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \note This transition is not applied to the items that are created when the view is initially
+    populated, or when the view's \l model changes. In those cases, the \l populate transition is
+    applied instead.
+
+    \sa add, populate, ViewTransition
+*/
+
+/*!
+    \qmlproperty Transition QtQuick2::ListView::move
+    This property holds the transition to apply to items in the view that are moved by a move
+    operation.
+
+    The transition is applied to items that are moving within the view or are moving
+    into the view as a result of a move operation in the view's model. For example:
+
+    \code
+    ListView {
+        ...
+        move: Transition {
+            NumberAnimation { properties: "x,y"; duration: 1000 }
+        }
+    }
+    \endcode
+
+    Whenever an item is moved within the above view, the item will be animated to its new position in
+    the view over one second. The transition only applies to the items that are the subject of the
+    move operation in the model; it does not apply to the items below them that are displaced by
+    the move operation. To animate the displaced items, set the \l moveDisplaced property.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \sa moveDisplaced, ViewTransition
+*/
+
+/*!
+    \qmlproperty Transition QtQuick2::ListView::moveDisplaced
+    This property holds the transition to apply to items in the view that are displaced by a
+    move operation in the view.
+
+    The transition is applied to items that are currently visible and have been displaced following
+    a move operation in the view's model. For example, here is a view that specifies such a transition:
+
+    \code
+    ListView {
+        ...
+        moveDisplaced: Transition {
+            NumberAnimation { properties: "x,y"; duration: 1000 }
+        }
+    }
+    \endcode
+
+    Whenever an item moves within (or moves into) the above view, all items beneath it are
+    displaced, causing them to move upwards (or sideways, if horizontally orientated) within the
+    view. As this displacement occurs, the items' movement to their new x,y positions within the
+    view will be animated by a NumberAnimation over one second, as specified. This transition is
+    not applied to the item that are actually the subject of the move operation; to animate the
+    moved items, set the \l move property.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \sa move, ViewTransition
+*/
+
+/*!
+    \qmlproperty Transition QtQuick2::ListView::remove
+    This property holds the transition to apply to items that are removed from the view.
+
+    The transition is applied to items that have been removed from the visible area of the view. For
+    example:
+
+    \code
+    ListView {
+        ...
+        remove: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; to: 0; duration: 1000 }
+                NumberAnimation { properties: "x,y"; to: 100; duration: 1000 }
+            }
+        }
+    }
+    \endcode
+
+    Whenever an item is removed from the above view, the item will be animated to the position (100,100)
+    over one second, and in parallel will also change its opacity to 0. The transition
+    only applies to the items that are removed from the view; it does not apply to the items below
+    them that are displaced by the removal of the  items. To animate the displaced items, set the \l
+    removeDisplaced property.
+
+    Note that by the time the transition is applied, the item has already been removed from the
+    model; any references to the model data for the removed index will not be valid.
+
+    Additionally, if the \l delayRemove attached property has been set for a delegate item, the
+    remove transition will not be applied until \l delayRemove becomes false again.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \sa removeDisplaced, ViewTransition
+*/
+
+/*!
+    \qmlproperty Transition QtQuick2::ListView::removeDisplaced
+    This property holds the transition to apply to items in the view that are displaced by the
+    removal of other items in the view.
+
+    The transition is applied to items that are currently visible and have been displaced by
+    the removal of items. For example, here is a view that specifies such a transition:
+
+    \code
+    ListView {
+        ...
+        removeDisplaced: Transition {
+            NumberAnimation { properties: "x,y"; duration: 1000 }
+        }
+    }
+    \endcode
+
+    Whenever an item is removed from the above view, all items beneath it are displaced, causing
+    them to move upwards (or sideways, if horizontally orientated) within the view. As this
+    displacement occurs, the items' movement to their new x,y positions within the view will be
+    animated by a NumberAnimation over one second, as specified. This transition is not applied to
+    the item that has actually been removed from the view; to animate the removed items, set the
+    \l remove property.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \sa remove, ViewTransition
+*/
+
+
 void QQuickListView::viewportMoved()
 {
     Q_D(QQuickListView);
@@ -2385,7 +2662,7 @@ void QQuickListView::updateSections()
     }
 }
 
-bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems)
+bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
     int modelIndex = change.index;
     int count = change.count;
@@ -2450,8 +2727,10 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
                 visibleItems.insert(insertionIdx, item);
                 if (insertionIdx == 0)
                     insertResult->changedFirstItem = true;
-                if (!change.isMove())
+                if (!change.isMove()) {
                     addedItems->append(item);
+                    transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, true);
+                }
                 insertResult->sizeChangesBeforeVisiblePos += item->size() + spacing;
                 pos -= item->size() + spacing;
             }
@@ -2464,6 +2743,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                 item->index = modelIndex + i;
+            bool newItem = !item;
             if (!item)
                 item = createItem(modelIndex + i);
             if (!item)
@@ -2472,8 +2752,15 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             visibleItems.insert(index, item);
             if (index == 0)
                 insertResult->changedFirstItem = true;
-            if (!change.isMove())
+            if (change.isMove()) {
+                // we know this is a move target, since move displaced items that are
+                // shuffled into view due to a move would be added in refill()
+                if (moveTransition && newItem)
+                    movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
+            } else {
                 addedItems->append(item);
+                transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, true);
+            }
             insertResult->sizeChangesAfterVisiblePos += item->size() + spacing;
             pos += item->size() + spacing;
             ++index;
@@ -2484,6 +2771,10 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
         FxViewItem *item = visibleItems.at(index);
         if (item->index != -1)
             item->index += count;
+        if (change.isMove())
+            transitionNextReposition(item, FxViewItemTransitionManager::MoveTransition, false);
+        else
+            transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, false);
     }
 
     updateVisibleIndex();
@@ -2491,6 +2782,34 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
     return visibleItems.count() > prevVisibleCount;
 }
 
+void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)
+{
+    Q_UNUSED(insertionResult);
+
+    int markerItemIndex = -1;
+    for (int i=0; i<visibleItems.count(); i++) {
+        if (visibleItems[i]->index == afterModelIndex) {
+            markerItemIndex = i;
+            break;
+        }
+    }
+    if (markerItemIndex < 0)
+        return;
+
+    const qreal viewEndPos = isContentFlowReversed() ? -position() : position() + size();
+    qreal sizeRemoved = -removalResult.sizeChangesAfterVisiblePos
+            - (removalResult.countChangeAfterVisibleItems * (averageSize + spacing));
+
+    for (int i=markerItemIndex+1; i<visibleItems.count() && visibleItems.at(i)->position() < viewEndPos; i++) {
+        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems[i]);
+        if (!listItem->transitionScheduledOrRunning()) {
+            qreal pos = listItem->position();
+            listItem->setPosition(pos - sizeRemoved);
+            transitionNextReposition(listItem, FxViewItemTransitionManager::RemoveTransition, false);
+            listItem->setPosition(pos);
+        }
+    }
+}
 
 /*!
     \qmlmethod QtQuick2::ListView::positionViewAtIndex(int index, PositionMode mode)

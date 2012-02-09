@@ -134,7 +134,10 @@ a y parameter.
 PathView now has a \c currentItem property
 
 ListView and GridView:
- - now have headerItem and footerItem properties (the instantiated header and footer items).
+ - Can now apply specified transitions whenever items are added, removed or moved in a view.
+   See the documentation for ViewTransition and ListView.add, ListView.addDisplaced,
+   GridView.add, GridView.addDisplaced etc. for details.
+ - These now have headerItem and footerItem properties (the instantiated header and footer items).
  - In RightToLeft layout the preferredHighlightBegin/End are now also reversed.
 
 ListView section.labelPositioning property added to allow keeping the current section label

@@ -97,6 +97,16 @@ namespace QQuickVisualTestUtil
 
         return items;
     }
+
+    template<typename T>
+    QList<T*> findItems(QQuickItem *parent, const QString &objectName, const QList<int> &indexes)
+    {
+        QList<T*> items;
+        for (int i=0; i<indexes.count(); i++)
+            items << qobject_cast<QQuickItem*>(findItem<T>(parent, objectName, indexes[i]));
+        return items;
+    }
+
 }
 
 #endif // QQUICKVISUALTESTUTIL_H

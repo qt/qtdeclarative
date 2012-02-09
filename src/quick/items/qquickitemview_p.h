@@ -48,6 +48,8 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+QT_MODULE(Declarative)
+
 class QDeclarativeChangeSet;
 
 class QQuickItemViewPrivate;
@@ -73,6 +75,14 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(QQuickItem *headerItem READ headerItem NOTIFY headerItemChanged)
     Q_PROPERTY(QDeclarativeComponent *footer READ footer WRITE setFooter NOTIFY footerChanged)
     Q_PROPERTY(QQuickItem *footerItem READ footerItem NOTIFY footerItemChanged)
+
+    Q_PROPERTY(QDeclarativeTransition *populate READ populateTransition WRITE setPopulateTransition NOTIFY populateTransitionChanged)
+    Q_PROPERTY(QDeclarativeTransition *add READ addTransition WRITE setAddTransition NOTIFY addTransitionChanged)
+    Q_PROPERTY(QDeclarativeTransition *addDisplaced READ addDisplacedTransition WRITE setAddDisplacedTransition NOTIFY addDisplacedTransitionChanged)
+    Q_PROPERTY(QDeclarativeTransition *move READ moveTransition WRITE setMoveTransition NOTIFY moveTransitionChanged)
+    Q_PROPERTY(QDeclarativeTransition *moveDisplaced READ moveDisplacedTransition WRITE setMoveDisplacedTransition NOTIFY moveDisplacedTransitionChanged)
+    Q_PROPERTY(QDeclarativeTransition *remove READ removeTransition WRITE setRemoveTransition NOTIFY removeTransitionChanged)
+    Q_PROPERTY(QDeclarativeTransition *removeDisplaced READ removeDisplacedTransition WRITE setRemoveDisplacedTransition NOTIFY removeDisplacedTransitionChanged)
 
     Q_PROPERTY(QDeclarativeComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
     Q_PROPERTY(QQuickItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
@@ -119,6 +129,27 @@ public:
     QDeclarativeComponent *header() const;
     void setHeader(QDeclarativeComponent *);
     QQuickItem *headerItem() const;
+
+    QDeclarativeTransition *populateTransition() const;
+    void setPopulateTransition(QDeclarativeTransition *transition);
+
+    QDeclarativeTransition *addTransition() const;
+    void setAddTransition(QDeclarativeTransition *transition);
+
+    QDeclarativeTransition *addDisplacedTransition() const;
+    void setAddDisplacedTransition(QDeclarativeTransition *transition);
+
+    QDeclarativeTransition *moveTransition() const;
+    void setMoveTransition(QDeclarativeTransition *transition);
+
+    QDeclarativeTransition *moveDisplacedTransition() const;
+    void setMoveDisplacedTransition(QDeclarativeTransition *transition);
+
+    QDeclarativeTransition *removeTransition() const;
+    void setRemoveTransition(QDeclarativeTransition *transition);
+
+    QDeclarativeTransition *removeDisplacedTransition() const;
+    void setRemoveDisplacedTransition(QDeclarativeTransition *transition);
 
     QDeclarativeComponent *highlight() const;
     void setHighlight(QDeclarativeComponent *);
@@ -173,6 +204,14 @@ signals:
     void headerItemChanged();
     void footerItemChanged();
 
+    void populateTransitionChanged();
+    void addTransitionChanged();
+    void addDisplacedTransitionChanged();
+    void moveTransitionChanged();
+    void moveDisplacedTransitionChanged();
+    void removeTransitionChanged();
+    void removeDisplacedTransitionChanged();
+
     void highlightChanged();
     void highlightItemChanged();
     void highlightFollowsCurrentItemChanged();
@@ -199,8 +238,6 @@ protected slots:
     void destroyingItem(QQuickItem *item);
     void animStopped();
     void trackedPositionChanged();
-
-
 
 private:
     Q_DECLARE_PRIVATE(QQuickItemView)
@@ -287,8 +324,53 @@ public:
     QString m_nextSection;
 };
 
+class QQuickViewTransitionAttached : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int index READ index NOTIFY indexChanged)
+    Q_PROPERTY(QQuickItem* item READ item NOTIFY itemChanged)
+    Q_PROPERTY(QPointF destination READ destination NOTIFY destinationChanged)
+
+    Q_PROPERTY(QList<int> targetIndexes READ targetIndexes NOTIFY targetIndexesChanged)
+    Q_PROPERTY(QDeclarativeListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged)
+
+public:
+    QQuickViewTransitionAttached(QObject *parent);
+
+    int index() const { return m_index; }
+    QQuickItem *item() const { return m_item; }
+    QPointF destination() const { return m_destination; }
+
+    QList<int> targetIndexes() const { return m_targetIndexes; }
+    QDeclarativeListProperty<QObject> targetItems();
+
+    static QQuickViewTransitionAttached *qmlAttachedProperties(QObject *);
+
+signals:
+    void indexChanged();
+    void itemChanged();
+    void destinationChanged();
+
+    void targetIndexesChanged();
+    void targetItemsChanged();
+
+private:
+    friend class FxViewItemTransitionManager;
+    int m_index;
+    QQuickItem *m_item;
+    QPointF m_destination;
+
+    QList<int> m_targetIndexes;
+    QList<QObject *> m_targetItems;
+};
+
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickViewTransitionAttached)
+QML_DECLARE_TYPEINFO(QQuickViewTransitionAttached, QML_HAS_ATTACHED_PROPERTIES)
+
 QT_END_HEADER
 
 #endif // QQUICKITEMVIEW_P_H

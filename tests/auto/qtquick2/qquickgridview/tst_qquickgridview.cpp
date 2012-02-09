@@ -50,7 +50,9 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickvisualitemmodel_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
+#include <QtDeclarative/private/qlistmodelinterface_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
@@ -127,6 +129,23 @@ private slots:
     void cacheBuffer();
     void asynchronous();
     void unrequestedVisibility();
+
+    void populateTransitions();
+    void populateTransitions_data();
+    void addTransitions();
+    void addTransitions_data();
+    void moveTransitions();
+    void moveTransitions_data();
+    void removeTransitions();
+    void removeTransitions_data();
+    void multipleTransitions();
+    void multipleTransitions_data();
+
+private:
+    QList<int> toIntList(const QVariantList &list);
+    void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
+    void matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes);
+    void matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems);
 };
 
 tst_QQuickGridView::tst_QQuickGridView()
@@ -500,13 +519,15 @@ void tst_QQuickGridView::insertBeforeVisible()
     QTRY_VERIFY(contentItem != 0);
 
     gridview->setCacheBuffer(cacheBuffer);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // trigger a refill (not just setting contentY) so that the visibleItems grid is updated
     int firstVisibleIndex = 12;     // move to an index where the top item is not visible
     gridview->setContentY(firstVisibleIndex/3 * 60.0);
     gridview->setCurrentIndex(firstVisibleIndex);
-
     qApp->processEvents();
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
     QTRY_COMPARE(gridview->currentIndex(), firstVisibleIndex);
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", firstVisibleIndex);
     QVERIFY(item);
@@ -521,6 +542,7 @@ void tst_QQuickGridView::insertBeforeVisible()
     // now, moving to the top of the view should position the inserted items correctly
     int itemsOffsetAfterMove = (insertCount / 3) * -60.0;
     gridview->setCurrentIndex(0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
     QTRY_COMPARE(gridview->currentIndex(), 0);
     QTRY_COMPARE(gridview->contentY(), 0.0 + itemsOffsetAfterMove);
 
@@ -1283,12 +1305,19 @@ void tst_QQuickGridView::multipleChanges()
             }
             case ListChange::Removed:
                 model.removeItems(changes[i].index, changes[i].count);
+                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 break;
             case ListChange::Moved:
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
+                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 break;
             case ListChange::SetCurrent:
                 gridview->setCurrentIndex(changes[i].index);
+                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+                break;
+            case ListChange::SetContentY:
+                gridview->setContentY(changes[i].pos);
+                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 break;
         }
     }
@@ -2005,10 +2034,10 @@ void tst_QQuickGridView::componentChanges()
     QTRY_VERIFY(gridView);
 
     QDeclarativeComponent component(canvas->engine());
-    component.setData("import QtQuick 2.0; Rectangle { color: \"blue\"; }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 1.0; Rectangle { color: \"blue\"; }", QUrl::fromLocalFile(""));
 
     QDeclarativeComponent delegateComponent(canvas->engine());
-    delegateComponent.setData("import QtQuick 2.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
+    delegateComponent.setData("import QtQuick 1.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
 
     QSignalSpy highlightSpy(gridView, SIGNAL(highlightChanged()));
     QSignalSpy delegateSpy(gridView, SIGNAL(delegateChanged()));
@@ -3769,6 +3798,898 @@ void tst_QQuickGridView::unaligned()
     delete canvas;
 }
 
+void tst_QQuickGridView::populateTransitions()
+{
+    QFETCH(bool, staticallyPopulate);
+    QFETCH(bool, dynamicallyPopulate);
+    QFETCH(bool, usePopulateTransition);
+
+    QPointF transitionFrom(-50, -50);
+    QPointF transitionVia(100, 100);
+    QaimModel model_transitionFrom;
+    QaimModel model_transitionVia;
+
+    QaimModel model;
+    if (staticallyPopulate) {
+        for (int i = 0; i < 30; i++)
+            model.addItem("item" + QString::number(i), "");
+    }
+
+    QQuickView *canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("usePopulateTransition", usePopulateTransition);
+    canvas->rootContext()->setContextProperty("dynamicallyPopulate", dynamicallyPopulate);
+    canvas->rootContext()->setContextProperty("transitionFrom", transitionFrom);
+    canvas->rootContext()->setContextProperty("transitionVia", transitionVia);
+    canvas->rootContext()->setContextProperty("model_transitionFrom", &model_transitionFrom);
+    canvas->rootContext()->setContextProperty("model_transitionVia", &model_transitionVia);
+    canvas->setSource(testFileUrl("populateTransitions.qml"));
+    canvas->show();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QVERIFY(gridview);
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem);
+
+    if (staticallyPopulate || dynamicallyPopulate) {
+        // check the populate transition is run
+        if (usePopulateTransition) {
+            QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 19);
+        } else {
+            QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+            QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
+        }
+        QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
+    } else {
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    }
+
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    if (usePopulateTransition)
+        QCOMPARE(itemCount, gridview->property("countPopulateTransitions").toInt());
+    for (int i=0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    // add an item and check this is done with add transition, not populate
+    model.insertItem(0, "another item", "");
+    QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 1);
+    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(),
+                 (usePopulateTransition && (staticallyPopulate || dynamicallyPopulate)) ? 19 : 0);
+
+    // clear the model
+    canvas->rootContext()->setContextProperty("testModel", QVariant());
+    QTRY_COMPARE(gridview->count(), 0);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
+    gridview->setProperty("countPopulateTransitions", 0);
+    gridview->setProperty("countAddTransitions", 0);
+
+    // set to a valid model and check populate transition is run a second time
+    model.clear();
+    for (int i = 0; i < 30; i++)
+        model.addItem("item" + QString::number(i), "");
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 19 : 0);
+    QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    if (usePopulateTransition)
+        QCOMPARE(itemCount, gridview->property("countPopulateTransitions").toInt());
+    for (int i=0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    // reset model and check populate transition is run again
+    gridview->setProperty("countPopulateTransitions", 0);
+    gridview->setProperty("countAddTransitions", 0);
+    model.reset();
+    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 19 : 0);
+    QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
+
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    if (usePopulateTransition)
+        QCOMPARE(itemCount, gridview->property("countPopulateTransitions").toInt());
+    for (int i=0; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::populateTransitions_data()
+{
+    QTest::addColumn<bool>("staticallyPopulate");
+    QTest::addColumn<bool>("dynamicallyPopulate");
+    QTest::addColumn<bool>("usePopulateTransition");
+
+    QTest::newRow("static") << true << false << true;
+    QTest::newRow("static, no populate") << true << false << false;
+
+    QTest::newRow("dynamic") << false << true << true;
+    QTest::newRow("dynamic, no populate") << false << true << false;
+
+    QTest::newRow("empty to start with") << false << false << true;
+    QTest::newRow("empty to start with, no populate") << false << false << false;
+}
+
+void tst_QQuickGridView::addTransitions()
+{
+    QFETCH(int, initialItemCount);
+    QFETCH(bool, shouldAnimateTargets);
+    QFETCH(qreal, contentY);
+    QFETCH(int, insertionIndex);
+    QFETCH(int, insertionCount);
+    QFETCH(ListRange, expectedDisplacedIndexes);
+
+    // added items should start here
+    QPointF targetItems_transitionFrom(-50, -50);
+
+    // displaced items should pass through this point
+    QPointF displacedItems_transitionVia(100, 100);
+
+    QaimModel model;
+    for (int i = 0; i < initialItemCount; i++)
+        model.addItem("Original item" + QString::number(i), "");
+    QaimModel model_targetItems_transitionFrom;
+    QaimModel model_displacedItems_transitionVia;
+
+    QQuickView *canvas = createView();
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
+    ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
+    ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
+    ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    canvas->setSource(testFileUrl("addTransitions.qml"));
+    canvas->show();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    if (contentY != 0) {
+        gridview->setContentY(contentY);
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    }
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
+
+    // only target items that will become visible should be animated
+    QList<QPair<QString, QString> > newData;
+    QList<QPair<QString, QString> > expectedTargetData;
+    QList<int> targetIndexes;
+    if (shouldAnimateTargets) {
+        for (int i=insertionIndex; i<insertionIndex+insertionCount; i++) {
+            newData << qMakePair(QString("New item %1").arg(i), QString(""));
+
+            // last visible item is the first item of the row beneath the view
+            if (i >= (contentY / 60)*3 && i < qCeil((contentY + gridview->height()) / 60.0)*3) {
+                expectedTargetData << newData.last();
+                targetIndexes << i;
+            }
+        }
+        QVERIFY(expectedTargetData.count() > 0);
+    }
+
+    // start animation
+    if (!newData.isEmpty()) {
+        model.insertItems(insertionIndex, newData);
+        QTRY_COMPARE(model.count(), gridview->count());
+    }
+
+    QList<QQuickItem *> targetItems = findItems<QQuickItem>(contentItem, "wrapper", targetIndexes);
+
+    if (shouldAnimateTargets) {
+        QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+        QTRY_COMPARE(gridview->property("displaceTransitionsDone").toInt(),
+                     expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
+
+        // check the target and displaced items were animated
+        model_targetItems_transitionFrom.matchAgainst(expectedTargetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
+        model_displacedItems_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with displaced anim", "shouldn't have been animated with displaced anim");
+
+        // check attached properties
+        matchItemsAndIndexes(gridview->property("targetTrans_items").toMap(), model, targetIndexes);
+        matchIndexLists(gridview->property("targetTrans_targetIndexes").toList(), targetIndexes);
+        matchItemLists(gridview->property("targetTrans_targetItems").toList(), targetItems);
+        if (expectedDisplacedIndexes.isValid()) {
+            // adjust expectedDisplacedIndexes to their final values after the move
+            QList<int> displacedIndexes = adjustIndexesForAddDisplaced(expectedDisplacedIndexes.indexes, insertionIndex, insertionCount);
+            matchItemsAndIndexes(gridview->property("displacedTrans_items").toMap(), model, displacedIndexes);
+            matchIndexLists(gridview->property("displacedTrans_targetIndexes").toList(), targetIndexes);
+            matchItemLists(gridview->property("displacedTrans_targetItems").toList(), targetItems);
+        }
+    } else {
+        QTRY_COMPARE(model_targetItems_transitionFrom.count(), 0);
+        QTRY_COMPARE(model_displacedItems_transitionVia.count(), 0);
+    }
+
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // verify all items moved to the correct final positions
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QCOMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::addTransitions_data()
+{
+    QTest::addColumn<int>("initialItemCount");
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<bool>("shouldAnimateTargets");
+    QTest::addColumn<int>("insertionIndex");
+    QTest::addColumn<int>("insertionCount");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    // if inserting a full row before visible index, items don't appear or animate in, even if there are > 1 new items
+    QTest::newRow("insert 1, just before start")
+            << 30 << 20.0 << false
+            << 0 << 1 << ListRange();
+    QTest::newRow("insert 1, way before start")
+            << 30 << 20.0 << false
+            << 0 << 1 << ListRange();
+    QTest::newRow("insert multiple, just before start")
+            << 30 << 100.0 << false
+            << 0 << 3 << ListRange();
+    QTest::newRow("insert multiple (< 1 row), just before start")
+            << 30 << 100.0 << false
+            << 0 << 2 << ListRange();
+    QTest::newRow("insert multiple, way before start")
+            << 30 << 100.0 << false
+            << 0 << 3 << ListRange();
+
+    QTest::newRow("insert 1 at start")
+            << 30 << 0.0 << true
+            << 0 << 1 << ListRange(0, 17);
+    QTest::newRow("insert multiple at start")
+            << 30 << 0.0 << true
+            << 0 << 3 << ListRange(0, 17);
+    QTest::newRow("insert multiple (> 1 row) at start")
+            << 30 << 0.0 << true
+            << 0 << 5 << ListRange(0, 17);
+    QTest::newRow("insert 1 at start, content y not 0")
+            << 30 << 60.0 << true  // first visible is index 3
+            << 3 << 1 << ListRange(0 + 3, 17 + 3);
+    QTest::newRow("insert multiple at start, content y not 0")
+            << 30 << 60.0 << true    // first visible is index 3
+            << 3 << 3 << ListRange(0 + 3, 17 + 3);
+    QTest::newRow("insert multiple (> 1 row) at start, content y not 0")
+            << 30 << 60.0 << true    // first visible is index 3
+            << 3 << 5 << ListRange(0 + 3, 17 + 3);
+
+    QTest::newRow("insert 1 at start, to empty grid")
+            << 0 << 0.0 << true
+            << 0 << 1 << ListRange();
+    QTest::newRow("insert multiple at start, to empty grid")
+            << 0 << 0.0 << true
+            << 0 << 3 << ListRange();
+
+    QTest::newRow("insert 1 at middle")
+            << 30 << 0.0 << true
+            << 7 << 1 << ListRange(7, 17);
+    QTest::newRow("insert multiple at middle")
+            << 30 << 0.0 << true
+            << 7 << 3 << ListRange(7, 17);
+    QTest::newRow("insert multiple (> 1 row) at middle")
+            << 30 << 0.0 << true
+            << 7 << 5 << ListRange(7, 17);
+
+    QTest::newRow("insert 1 at bottom")
+            << 30 << 0.0 << true
+            << 17 << 1 << ListRange(17, 17);
+    QTest::newRow("insert multiple at bottom")
+            << 30 << 0.0 << true
+            << 17 << 3 << ListRange(17, 17);
+    QTest::newRow("insert 1 at bottom, content y not 0")
+            << 30 << 20.0 * 3 << true
+            << 17 + 3 << 1 << ListRange(17 + 3, 17 + 3);
+    QTest::newRow("insert multiple at bottom, content y not 0")
+            << 30 << 20.0 * 3 << true
+            << 17 + 3 << 3 << ListRange(17 + 3, 17 + 3);
+
+
+    // items added after the last visible will not be animated in, since they
+    // do not appear in the final view
+    QTest::newRow("insert 1 after end")
+            << 30 << 0.0 << false
+            << 18 << 1 << ListRange();
+    QTest::newRow("insert multiple after end")
+            << 30 << 0.0 << false
+            << 18 << 3 << ListRange();
+}
+
+void tst_QQuickGridView::moveTransitions()
+{
+    QFETCH(int, initialItemCount);
+    QFETCH(qreal, contentY);
+    QFETCH(qreal, itemsOffsetAfterMove);
+    QFETCH(int, moveFrom);
+    QFETCH(int, moveTo);
+    QFETCH(int, moveCount);
+    QFETCH(ListRange, expectedDisplacedIndexes);
+
+    // target and displaced items should pass through these points
+    QPointF targetItems_transitionVia(-50, 50);
+    QPointF displacedItems_transitionVia(100, 100);
+
+    QaimModel model;
+    for (int i = 0; i < initialItemCount; i++)
+        model.addItem("Original item" + QString::number(i), "");
+    QaimModel model_targetItems_transitionVia;
+    QaimModel model_displacedItems_transitionVia;
+
+    QQuickView *canvas = createView();
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("model_targetItems_transitionVia", &model_targetItems_transitionVia);
+    ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
+    ctxt->setContextProperty("targetItems_transitionVia", targetItems_transitionVia);
+    ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    canvas->setSource(testFileUrl("moveTransitions.qml"));
+    canvas->show();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+    QQuickText *name;
+
+    if (contentY != 0) {
+        gridview->setContentY(contentY);
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    }
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
+
+    // Items moving to *or* from visible positions should be animated.
+    // Otherwise, they should not be animated.
+    QList<QPair<QString, QString> > expectedTargetData;
+    QList<int> targetIndexes;
+    for (int i=moveFrom; i<moveFrom+moveCount; i++) {
+        int toIndex = moveTo + (i - moveFrom);
+        int firstVisibleIndex = (contentY / 60) * 3;
+        int lastVisibleIndex = (qCeil((contentY + gridview->height()) / 60.0)*3) - 1;
+        if ((i >= firstVisibleIndex && i <= lastVisibleIndex)
+                || (toIndex >= firstVisibleIndex && toIndex <= lastVisibleIndex)) {
+            expectedTargetData << qMakePair(model.name(i), model.number(i));
+            targetIndexes << i;
+        }
+    }
+    // ViewTransition.index provides the indices that items are moving to, not from
+    targetIndexes = adjustIndexesForMove(targetIndexes, moveFrom, moveTo, moveCount);
+
+    // start animation
+    model.moveItems(moveFrom, moveTo, moveCount);
+
+    QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+    QTRY_COMPARE(gridview->property("displaceTransitionsDone").toInt(),
+                 expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
+
+    QList<QQuickItem *> targetItems = findItems<QQuickItem>(contentItem, "wrapper", targetIndexes);
+
+    // check the target and displaced items were animated
+    model_targetItems_transitionVia.matchAgainst(expectedTargetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
+    model_displacedItems_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with displaced anim", "shouldn't have been animated with displaced anim");
+
+    // check attached properties
+    matchItemsAndIndexes(gridview->property("targetTrans_items").toMap(), model, targetIndexes);
+    matchIndexLists(gridview->property("targetTrans_targetIndexes").toList(), targetIndexes);
+    matchItemLists(gridview->property("targetTrans_targetItems").toList(), targetItems);
+    if (expectedDisplacedIndexes.isValid()) {
+        // adjust expectedDisplacedIndexes to their final values after the move
+        QList<int> displacedIndexes = adjustIndexesForMove(expectedDisplacedIndexes.indexes, moveFrom, moveTo, moveCount);
+        matchItemsAndIndexes(gridview->property("displacedTrans_items").toMap(), model, displacedIndexes);
+        matchIndexLists(gridview->property("displacedTrans_targetIndexes").toList(), targetIndexes);
+        matchItemLists(gridview->property("displacedTrans_targetItems").toList(), targetItems);
+    }
+
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // verify all items moved to the correct final positions
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0 + itemsOffsetAfterMove);
+        name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::moveTransitions_data()
+{
+    QTest::addColumn<int>("initialItemCount");
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+    QTest::addColumn<int>("moveFrom");
+    QTest::addColumn<int>("moveTo");
+    QTest::addColumn<int>("moveCount");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    QTest::newRow("move from above view, outside visible items, move 1") << 30 << 120.0 << 0.0
+            << 1 << 10 << 1 << ListRange(6, 10);
+    QTest::newRow("move from above view, outside visible items, move 1 (first item)") << 30 << 120.0 << 0.0
+            << 0 << 10 << 1 << ListRange(6, 10);
+    QTest::newRow("move from above view, outside visible items, move multiple") << 30 << 120.0 << 60.0
+            << 1 << 10 << 3 << ListRange(13, 23);
+    QTest::newRow("move from above view, mix of visible/non-visible") << 30 << 120.0 << 60.0
+            << 1 << 10 << 6 << (ListRange(7, 15) + ListRange(16, 23));
+    QTest::newRow("move from above view, mix of visible/non-visible (move first)") << 30 << 120.0 << 120.0
+            << 0 << 10 << 6 << ListRange(16, 23);
+
+    QTest::newRow("move within view, move 1 down") << 30 << 0.0 << 0.0
+            << 1 << 10 << 1 << ListRange(2, 10);
+    QTest::newRow("move within view, move 1 down, move first item") << 30 << 0.0 << 0.0
+            << 0 << 10 << 1 << ListRange(1, 10);
+    QTest::newRow("move within view, move 1 down, move first item, contentY not 0") << 30 << 120.0 << 0.0
+            << 0+6 << 10+6 << 1 << ListRange(1+6, 10+6);
+    QTest::newRow("move within view, move 1 down, to last item") << 30 << 0.0 << 0.0
+            << 10 << 17 << 1 << ListRange(11, 17);
+    QTest::newRow("move within view, move first->last") << 30 << 0.0 << 0.0
+            << 0 << 17 << 1 << ListRange(1, 17);
+
+    QTest::newRow("move within view, move multiple down") << 30 << 0.0 << 0.0
+            << 1 << 10 << 3 << ListRange(4, 12);
+    QTest::newRow("move within view, move multiple down, move first item") << 30 << 0.0 << 0.0
+            << 0 << 10 << 3 << ListRange(3, 12);
+    QTest::newRow("move within view, move multiple down, move first item, contentY not 0") << 30 << 60.0 << 0.0
+            << 0+3 << 10+3 << 3 << ListRange(3+3, 12+3);
+    QTest::newRow("move within view, move multiple down, displace last item") << 30 << 0.0 << 0.0
+            << 5 << 15 << 3 << ListRange(8, 17);
+    QTest::newRow("move within view, move multiple down, move first->last") << 30 << 0.0 << 0.0
+            << 0 << 15 << 3 << ListRange(3, 17);
+
+    QTest::newRow("move within view, move 1 up") << 30 << 0.0 << 0.0
+            << 10 << 1 << 1 << ListRange(1, 9);
+    QTest::newRow("move within view, move 1 up, move to first index") << 30 << 0.0 << 0.0
+            << 10 << 0 << 1 << ListRange(0, 9);
+    QTest::newRow("move within view, move 1 up, move to first index, contentY not 0") << 30 << 120.0 << 0.0
+            << 10+6 << 0+6 << 1 << ListRange(0+6, 9+6);
+    QTest::newRow("move within view, move 1 up, move to first index, contentY not on item border") << 30 << 80.0 << 0.0
+            << 10+3 << 0+3 << 1 << ListRange(0+3, 9+3);
+    QTest::newRow("move within view, move 1 up, move last item") << 30 << 0.0 << 0.0
+            << 17 << 10 << 1 << ListRange(10, 16);
+    QTest::newRow("move within view, move 1 up, move last->first") << 30 << 0.0 << 0.0
+            << 17 << 0 << 1 << ListRange(0, 16);
+
+    QTest::newRow("move within view, move multiple up") << 30 << 0.0 << 0.0
+            << 10 << 1 << 3 << ListRange(1, 9);
+    QTest::newRow("move within view, move multiple (> 1 row) up") << 30 << 0.0 << 0.0
+            << 10 << 1 << 5 << ListRange(1, 9);
+    QTest::newRow("move within view, move multiple up, move to first index") << 30 << 0.0 << 0.0
+            << 10 << 0 << 3 << ListRange(0, 9);
+    QTest::newRow("move within view, move multiple up, move to first index, contentY not 0") << 30 << 60.0 << 0.0
+            << 10+3 << 0+3 << 3 << ListRange(0+3, 9+3);
+    QTest::newRow("move within view, move multiple up (> 1 row), move to first index, contentY not on border") << 30 << 80.0 << 0.0
+            << 10+3 << 0+3 << 5 << ListRange(0+3, 9+3);
+    QTest::newRow("move within view, move multiple up, move last item") << 30 << 0.0 << 0.0
+            << 15 << 5 << 3 << ListRange(5, 14);
+    QTest::newRow("move within view, move multiple up, move last->first") << 30 << 0.0 << 0.0
+            << 15 << 0 << 3 << ListRange(0, 14);
+
+    QTest::newRow("move from below view, move 1 up") << 30 << 0.0 << 0.0
+            << 20 << 5 << 1 << ListRange(5, 17);
+    QTest::newRow("move from below view, move 1 up, move to top") << 30 << 0.0 << 0.0
+            << 20 << 0 << 1 << ListRange(0, 17);
+    QTest::newRow("move from below view, move 1 up, move to top, contentY not 0") << 30 << 60.0 << 0.0
+            << 25 << 3 << 1 << ListRange(0+3, 17+3);
+    QTest::newRow("move from below view, move multiple (> 1 row) up") << 30 << 0.0 << 0.0
+            << 20 << 5 << 5 << ListRange(5, 17);
+    QTest::newRow("move from below view, move multiple up, move to top") << 30 << 0.0 << 0.0
+            << 20 << 0 << 3 << ListRange(0, 17);
+    QTest::newRow("move from below view, move multiple up, move to top, contentY not 0") << 30 << 60.0 << 0.0
+            << 25 << 3 << 3 << ListRange(0+3, 17+3);
+
+    QTest::newRow("move from below view, move 1 up, move to bottom") << 30 << 0.0 << 0.0
+            << 20 << 17 << 1 << ListRange(17, 17);
+    QTest::newRow("move from below view, move 1 up, move to bottom, contentY not 0") << 30 << 60.0 << 0.0
+            << 25 << 17+3 << 1 << ListRange(17+3, 17+3);
+    QTest::newRow("move from below view, move multiple up, move to to bottom") << 30 << 0.0 << 0.0
+            << 20 << 17 << 3 << ListRange(17, 17);
+    QTest::newRow("move from below view, move multiple up, move to bottom, contentY not 0") << 30 << 60.0 << 0.0
+            << 25 << 17+3 << 3 << ListRange(17+3, 17+3);
+}
+
+void tst_QQuickGridView::removeTransitions()
+{
+    QFETCH(int, initialItemCount);
+    QFETCH(bool, shouldAnimateTargets);
+    QFETCH(qreal, contentY);
+    QFETCH(int, removalIndex);
+    QFETCH(int, removalCount);
+    QFETCH(ListRange, expectedDisplacedIndexes);
+
+    // added items should end here
+    QPointF targetItems_transitionTo(-50, -50);
+
+    // displaced items should pass through this points
+    QPointF displacedItems_transitionVia(100, 100);
+
+    QaimModel model;
+    for (int i = 0; i < initialItemCount; i++)
+        model.addItem("Original item" + QString::number(i), "");
+    QaimModel model_targetItems_transitionTo;
+    QaimModel model_displacedItems_transitionVia;
+
+    QQuickView *canvas = createView();
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("model_targetItems_transitionTo", &model_targetItems_transitionTo);
+    ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
+    ctxt->setContextProperty("targetItems_transitionTo", targetItems_transitionTo);
+    ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    canvas->setSource(testFileUrl("removeTransitions.qml"));
+    canvas->show();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    if (contentY != 0) {
+        gridview->setContentY(contentY);
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    }
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
+
+    // only target items that are visible should be animated
+    QList<QPair<QString, QString> > expectedTargetData;
+    QList<int> targetIndexes;
+    if (shouldAnimateTargets) {
+        for (int i=removalIndex; i<removalIndex+removalCount; i++) {
+            int firstVisibleIndex = (contentY / 60.0)*3;
+            int lastVisibleIndex = (qCeil((contentY + gridview->height()) / 60.0)*3) - 1;
+            if (i >= firstVisibleIndex && i <= lastVisibleIndex) {
+                expectedTargetData << qMakePair(model.name(i), model.number(i));
+                targetIndexes << i;
+            }
+        }
+        QVERIFY(expectedTargetData.count() > 0);
+    }
+
+    // calculate targetItems and expectedTargets before model changes
+    QList<QQuickItem *> targetItems = findItems<QQuickItem>(contentItem, "wrapper", targetIndexes);
+    QVariantMap expectedTargets;
+    for (int i=0; i<targetIndexes.count(); i++)
+        expectedTargets[model.name(targetIndexes[i])] = targetIndexes[i];
+
+    // start animation
+    model.removeItems(removalIndex, removalCount);
+    QTRY_COMPARE(model.count(), gridview->count());
+
+    if (shouldAnimateTargets || expectedDisplacedIndexes.isValid()) {
+        QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+        QTRY_COMPARE(gridview->property("displaceTransitionsDone").toInt(),
+                     expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
+
+        // check the target and displaced items were animated
+        model_targetItems_transitionTo.matchAgainst(expectedTargetData, "wasn't animated to target 'to' pos", "shouldn't have been animated to target 'to' pos");
+        model_displacedItems_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with displaced anim", "shouldn't have been animated with displaced anim");
+
+        // check attached properties
+        QCOMPARE(gridview->property("targetTrans_items").toMap(), expectedTargets);
+        matchIndexLists(gridview->property("targetTrans_targetIndexes").toList(), targetIndexes);
+        matchItemLists(gridview->property("targetTrans_targetItems").toList(), targetItems);
+        if (expectedDisplacedIndexes.isValid()) {
+            // adjust expectedDisplacedIndexes to their final values after the move
+            QList<int> displacedIndexes = adjustIndexesForRemoveDisplaced(expectedDisplacedIndexes.indexes, removalIndex, removalCount);
+            matchItemsAndIndexes(gridview->property("displacedTrans_items").toMap(), model, displacedIndexes);
+            matchIndexLists(gridview->property("displacedTrans_targetIndexes").toList(), targetIndexes);
+            matchItemLists(gridview->property("displacedTrans_targetItems").toList(), targetItems);
+        }
+    } else {
+        QTRY_COMPARE(model_targetItems_transitionTo.count(), 0);
+        QTRY_COMPARE(model_displacedItems_transitionVia.count(), 0);
+    }
+
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    int itemCount = items.count();
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+        int index = e.evaluate().toInt();
+        if (firstVisibleIndex < 0 && items[i]->y() >= contentY)
+            firstVisibleIndex = index;
+        else if (index < 0)
+            itemCount--;    // exclude deleted items
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // verify all items moved to the correct final positions
+    for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), contentY + ((i-firstVisibleIndex)/3) * 60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::removeTransitions_data()
+{
+    QTest::addColumn<int>("initialItemCount");
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<bool>("shouldAnimateTargets");
+    QTest::addColumn<int>("removalIndex");
+    QTest::addColumn<int>("removalCount");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    // All items that are visible following the remove operation should be animated.
+    // Remove targets that are outside of the view should not be animated.
+
+    // For a GridView, removing any number of items other than a full row before the start
+    // should displace all items in the view
+    QTest::newRow("remove 1 before start")
+            << 30 << 120.0 << false
+            << 2 << 1 << ListRange(6, 24);    // 6-24 are displaced
+    QTest::newRow("remove 1 row, before start")
+            << 30 << 120.0 << false
+            << 3 << 3 << ListRange();
+    QTest::newRow("remove between 1-2 rows, before start")
+            << 30 << 120.0 << false
+            << 0 << 5 << ListRange(6, 25);
+    QTest::newRow("remove 2 rows, before start")
+            << 30 << 120.0 << false
+            << 0 << 6 << ListRange();
+    QTest::newRow("remove mix of before and after start")
+            << 30 << 60.0 << true
+            << 2 << 3 << ListRange(5, 23);  // 5-23 are displaced into view
+
+
+    QTest::newRow("remove 1 from start")
+            << 30 << 0.0 << true
+            << 0 << 1 << ListRange(1, 18);  // 1-18 are displaced into view
+    QTest::newRow("remove multiple from start")
+            << 30 << 0.0 << true
+            << 0 << 3 << ListRange(3, 20);  // 3-18 are displaced into view
+    QTest::newRow("remove 1 from start, content y not 0")
+            << 30 << 60.0 << true
+            << 3 << 1 << ListRange(1 + 3, 18 + 3);
+    QTest::newRow("remove multiple from start, content y not 0")
+            << 30 << 60.0 << true
+            << 3 << 3 << ListRange(3 + 3, 20 + 3);
+
+
+    QTest::newRow("remove 1 from middle")
+            << 30 << 0.0 << true
+            << 5 << 1 << ListRange(6, 18);
+    QTest::newRow("remove multiple from middle")
+            << 30 << 0.0 << true
+            << 5 << 3 << ListRange(8, 20);
+
+
+    QTest::newRow("remove 1 from bottom")
+            << 30 << 0.0 << true
+            << 17 << 1 << ListRange(18, 18);
+    QTest::newRow("remove multiple (1 row) from bottom")
+            << 30 << 0.0 << true
+            << 15 << 3 << ListRange(18, 20);
+    QTest::newRow("remove multiple (> 1 row) from bottom")
+            << 30 << 0.0 << true
+            << 15 << 5 << ListRange(20, 22);
+    QTest::newRow("remove 1 from bottom, content y not 0")
+            << 30 << 60.0 << true
+            << 17 + 3 << 1 << ListRange(18 + 3, 18 + 3);
+    QTest::newRow("remove multiple (1 row) from bottom, content y not 0")
+            << 30 << 60.0 << true
+            << 15 + 3 << 3 << ListRange(18 + 3, 20 + 3);
+
+
+    QTest::newRow("remove 1 after end")
+            << 30 << 0.0 << false
+            << 18 << 1 << ListRange();
+    QTest::newRow("remove multiple after end")
+            << 30 << 0.0 << false
+            << 18 << 3 << ListRange();
+}
+
+void tst_QQuickGridView::multipleTransitions()
+{
+    // Tests that if you interrupt a transition in progress with another action that
+    // cancels the previous transition, the resulting items are still placed correctly.
+
+    QFETCH(int, initialCount);
+    QFETCH(qreal, contentY);
+    QFETCH(QList<ListChange>, changes);
+
+    // add transitions on the left, moves on the right
+    QPointF addTargets_transitionFrom(-50, -50);
+    QPointF addDisplaced_transitionFrom(-50, 50);
+    QPointF moveTargets_transitionFrom(50, -50);
+    QPointF moveDisplaced_transitionFrom(50, 50);
+
+    QmlListModel model;
+    for (int i = 0; i < initialCount; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    QQuickView *canvas = createView();
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("addTargets_transitionFrom", addTargets_transitionFrom);
+    ctxt->setContextProperty("addDisplaced_transitionFrom", addDisplaced_transitionFrom);
+    ctxt->setContextProperty("moveTargets_transitionFrom", moveTargets_transitionFrom);
+    ctxt->setContextProperty("moveDisplaced_transitionFrom", moveDisplaced_transitionFrom);
+    canvas->setSource(testFileUrl("multipleTransitions.qml"));
+    canvas->show();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    int timeBetweenActions = canvas->rootObject()->property("timeBetweenActions").toInt();
+
+    QList<QPair<QString, QString> > targetItems;
+    for (int i=0; i<changes.count(); i++) {
+        switch (changes[i].type) {
+            case ListChange::Inserted:
+            {
+                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
+                    targetItems << qMakePair(QString("new item %1").arg(j), QString::number(j));
+                model.insertItems(changes[i].index, targetItems);
+                QTRY_COMPARE(model.count(), gridview->count());
+                QTRY_VERIFY(gridview->property("runningAddTargets").toBool());
+                QTRY_VERIFY(gridview->property("runningAddDisplaced").toBool());
+                if (i == changes.count() - 1) {
+                    QTRY_VERIFY(!gridview->property("runningAddTargets").toBool());
+                    QTRY_VERIFY(!gridview->property("runningAddDisplaced").toBool());
+                } else {
+                    QTest::qWait(timeBetweenActions);
+                }
+                break;
+            }
+            case ListChange::Removed:
+                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
+                    targetItems << qMakePair(model.name(i), model.number(i));
+                model.removeItems(changes[i].index, changes[i].count);
+                QTRY_COMPARE(model.count(), gridview->count());
+                QTRY_VERIFY(gridview->property("runningRemoveTargets").toBool());
+                QTRY_VERIFY(gridview->property("runningRemoveDisplaced").toBool());
+                if (i == changes.count() - 1) {
+                    QTRY_VERIFY(!gridview->property("runningRemoveTargets").toBool());
+                    QTRY_VERIFY(!gridview->property("runningRemoveDisplaced").toBool());
+                } else {
+                    QTest::qWait(timeBetweenActions);
+                }
+                break;
+            case ListChange::Moved:
+                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
+                    targetItems << qMakePair(model.name(i), model.number(i));
+                model.moveItems(changes[i].index, changes[i].to, changes[i].count);
+                QTRY_VERIFY(gridview->property("runningMoveTargets").toBool());
+                QTRY_VERIFY(gridview->property("runningMoveDisplaced").toBool());
+                if (i == changes.count() - 1) {
+                    QTRY_VERIFY(!gridview->property("runningMoveTargets").toBool());
+                    QTRY_VERIFY(!gridview->property("runningMoveDisplaced").toBool());
+                } else {
+                    QTest::qWait(timeBetweenActions);
+                }
+                break;
+            case ListChange::SetCurrent:
+                gridview->setCurrentIndex(changes[i].index);
+                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+                break;
+            case ListChange::SetContentY:
+                gridview->setContentY(changes[i].pos);
+                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+                break;
+        }
+    }
+    QCOMPARE(gridview->count(), model.count());
+
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // verify all items moved to the correct final positions
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::multipleTransitions_data()
+{
+    QTest::addColumn<int>("initialCount");
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<QList<ListChange> >("changes");
+
+    // the added item and displaced items should move to final dest correctly
+    QTest::newRow("add item, then move it immediately") << 10 << 0.0 << (QList<ListChange>()
+            << ListChange::insert(0, 1)
+            << ListChange::move(0, 3, 1)
+            );
+
+    // items affected by the add should change from move to add transition
+    QTest::newRow("move, then insert item before the moved item") << 20 << 0.0 << (QList<ListChange>()
+            << ListChange::move(1, 10, 3)
+            << ListChange::insert(0, 1)
+            );
+
+    // items should be placed correctly if you trigger a transition then refill for that index
+    QTest::newRow("add at 0, flick down, flick back to top and add at 0 again") << 20 << 0.0 << (QList<ListChange>()
+            << ListChange::insert(0, 1)
+            << ListChange::setContentY(160.0)
+            << ListChange::setContentY(0.0)
+            << ListChange::insert(0, 1)
+            );
+}
+
 void tst_QQuickGridView::cacheBuffer()
 {
     QQuickView *canvas = createView();
@@ -4083,6 +5004,56 @@ void tst_QQuickGridView::unrequestedVisibility()
     QCOMPARE(item->isVisible(), false);
 
     delete canvas;
+}
+
+QList<int> tst_QQuickGridView::toIntList(const QVariantList &list)
+{
+    QList<int> ret;
+    bool ok = true;
+    for (int i=0; i<list.count(); i++) {
+        ret << list[i].toInt(&ok);
+        if (!ok)
+            qWarning() << "tst_QQuickGridView::toIntList(): not a number:" << list[i];
+    }
+
+    return ret;
+}
+
+void tst_QQuickGridView::matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes)
+{
+    for (int i=0; i<indexLists.count(); i++) {
+        QSet<int> current = indexLists[i].value<QList<int> >().toSet();
+        if (current != expectedIndexes.toSet())
+            qDebug() << "Cannot match actual targets" << current << "with expected" << expectedIndexes;
+        QCOMPARE(current, expectedIndexes.toSet());
+    }
+}
+
+void tst_QQuickGridView::matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes)
+{
+    for (QVariantMap::const_iterator it = items.begin(); it != items.end(); ++it) {
+        QVERIFY(it.value().type() == QVariant::Int);
+        QString name = it.key();
+        int itemIndex = it.value().toInt();
+        QVERIFY2(expectedIndexes.contains(itemIndex), QTest::toString(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));
+        if (model.name(itemIndex) != name)
+            qDebug() << itemIndex;
+        QCOMPARE(model.name(itemIndex), name);
+    }
+    QCOMPARE(items.count(), expectedIndexes.count());
+}
+
+void tst_QQuickGridView::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
+{
+    for (int i=0; i<itemLists.count(); i++) {
+        QVariantList current = itemLists[i].toList();
+        for (int j=0; j<current.count(); j++) {
+            QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());
+            QVERIFY2(o, QTest::toString(QString("Invalid actual item at %1").arg(j)));
+            QVERIFY2(expectedItems.contains(o), QTest::toString(QString("Cannot match item %1").arg(j)));
+        }
+        QCOMPARE(current.count(), expectedItems.count());
+    }
 }
 
 QTEST_MAIN(tst_QQuickGridView)
