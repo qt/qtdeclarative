@@ -113,9 +113,12 @@ public:
     QQuickItem *activeFocusItem;
     QQuickItem *mouseGrabberItem;
     QQuickDragGrabber dragGrabber;
+    int touchMouseId;
+    ulong touchMousePressTimestamp;
 
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
+    void translateTouchToMouse(QTouchEvent *event);
     void translateTouchEvent(QTouchEvent *touchEvent);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
     bool deliverInitialMousePressEvent(QQuickItem *, QMouseEvent *);

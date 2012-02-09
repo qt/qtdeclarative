@@ -43,6 +43,7 @@
 #include "qquickflickable_p_p.h"
 #include "qquickcanvas.h"
 #include "qquickcanvas_p.h"
+#include "qquickevents_p_p.h"
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qevent.h>
@@ -907,7 +908,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 }
             }
             if (!rejectY && stealMouse && dy != 0.0) {
-                vData.move.setValue(qRound(newY));
+                vData.move.setValue(newY);
                 vMoved = true;
             }
             if (qAbs(dy) > qApp->styleHints()->startDragDistance())
@@ -939,7 +940,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 }
             }
             if (!rejectX && stealMouse && dx != 0.0) {
-                hData.move.setValue(qRound(newX));
+                hData.move.setValue(newX);
                 hMoved = true;
             }
 
@@ -972,12 +973,23 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         if (elapsed <= 0)
             return;
         lastPosTime = currentTimestamp;
-        qreal dy = event->localPos().y()-lastPos.y();
-        if (q->yflick() && !rejectY)
-            vData.addVelocitySample(dy/elapsed, maxVelocity);
-        qreal dx = event->localPos().x()-lastPos.x();
-        if (q->xflick() && !rejectX)
-            hData.addVelocitySample(dx/elapsed, maxVelocity);
+        QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
+        if (q->yflick() && !rejectY) {
+            if (extended) {
+                vData.addVelocitySample(extended->velocity().y(), maxVelocity);
+            } else {
+                qreal dy = event->localPos().y()-lastPos.y();
+                vData.addVelocitySample(dy/elapsed, maxVelocity);
+            }
+        }
+        if (q->xflick() && !rejectX) {
+            if (extended) {
+                hData.addVelocitySample(extended->velocity().x(), maxVelocity);
+            } else {
+                qreal dx = event->localPos().x()-lastPos.x();
+                hData.addVelocitySample(dx/elapsed, maxVelocity);
+            }
+        }
     }
 
     lastPos = event->localPos();
@@ -1005,7 +1017,11 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool canBoost = false;
 
-    qreal vVelocity = elapsed < 100 ? vData.velocity : 0;
+    qreal vVelocity = 0;
+    if (elapsed < 100 && vData.velocity != 0.) {
+        QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
+        vVelocity = extended ? extended->velocity().y() : vData.velocity;
+    }
     if (vData.atBeginning || vData.atEnd) {
         vVelocity /= 2;
     } else if (vData.continuousFlickVelocity != 0.0
@@ -1016,7 +1032,11 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
         canBoost = true;
     }
 
-    qreal hVelocity = elapsed < 100 ? hData.velocity : 0;
+    qreal hVelocity = 0;
+    if (elapsed < 100 && hData.velocity != 0.) {
+        QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
+        hVelocity = extended ? extended->velocity().x() : hData.velocity;
+    }
     if (hData.atBeginning || hData.atEnd) {
         hVelocity /= 2;
     } else if (hData.continuousFlickVelocity != 0.0
@@ -1155,7 +1175,7 @@ void QQuickFlickablePrivate::captureDelayedPress(QMouseEvent *event)
     if (!isOutermostPressDelay())
         return;
     delayedPressTarget = q->canvas()->mouseGrabberItem();
-    delayedPressEvent = new QMouseEvent(*event);
+    delayedPressEvent = new QQuickMouseEventEx(*event);
     delayedPressEvent->setAccepted(false);
     delayedPressTimer.start(pressDelay, q);
 }
@@ -1746,9 +1766,11 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
     bool disabledItem = grabber && !grabber->isEnabled();
     bool stealThisEvent = d->stealMouse;
     if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
-        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
-                               event->button(), event->buttons(), event->modifiers());
-
+        QQuickMouseEventEx mouseEvent(event->type(), mapFromScene(event->windowPos()),
+                                event->windowPos(), event->screenPos(),
+                                event->button(), event->buttons(), event->modifiers());
+        if (QQuickMouseEventEx::extended(event))
+            mouseEvent.setVelocity(QQuickMouseEventEx::extended(event)->velocity());
         mouseEvent.setTimestamp(event->timestamp());
         mouseEvent.setAccepted(false);
 

@@ -58,6 +58,7 @@
 #include <qdeclarative.h>
 
 #include <QtCore/qobject.h>
+#include <QtGui/qvector2d.h>
 #include <QtGui/qevent.h>
 
 QT_BEGIN_NAMESPACE
@@ -136,6 +137,60 @@ private:
     bool _isClick;
     bool _accepted;
 };
+
+class QQuickMouseEventEx : public QMouseEvent
+{
+public:
+    QQuickMouseEventEx(Type type, const QPointF &pos, Qt::MouseButton button,
+                Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers)
+        : QMouseEvent(type,pos,button,buttons,modifiers)
+    {
+    }
+
+    QQuickMouseEventEx(Type type, const QPointF &pos, const QPointF &globalPos,
+                Qt::MouseButton button, Qt::MouseButtons buttons,
+                Qt::KeyboardModifiers modifiers)
+        : QMouseEvent(type,pos,globalPos,button,buttons,modifiers)
+    {
+    }
+
+    QQuickMouseEventEx(Type type, const QPointF &pos, const QPointF &windowPos, const QPointF &globalPos,
+                Qt::MouseButton button, Qt::MouseButtons buttons,
+                Qt::KeyboardModifiers modifiers)
+        : QMouseEvent(type,pos,windowPos,globalPos,button,buttons,modifiers)
+    {
+    }
+
+    QQuickMouseEventEx(const QMouseEvent &event)
+        : QMouseEvent(event)
+    {
+        if (extended(&event))
+            setVelocity(extended(&event)->velocity());
+    }
+
+    static const QQuickMouseEventEx *extended(const QMouseEvent *e) {
+        const QQuickMouseEventEx *ex = static_cast<const QQuickMouseEventEx*>(e);
+        return reinterpret_cast<const QMouseEvent*>(ex->d) == e ? ex : 0;
+    }
+    static QQuickMouseEventEx *extended(QMouseEvent *e) {
+        QQuickMouseEventEx *ex = static_cast<QQuickMouseEventEx*>(e);
+        return reinterpret_cast<QMouseEvent*>(ex->d) == e ? ex : 0;
+    }
+
+    void setExtended() {
+        d = reinterpret_cast<QEventPrivate*>(this);
+    }
+
+    void setVelocity(const QVector2D &v) {
+        setExtended();
+        _velocity = v;
+    }
+    QVector2D velocity() const { return _velocity; }
+
+private:
+    QVector2D _velocity;
+};
+
 
 QT_END_NAMESPACE
 

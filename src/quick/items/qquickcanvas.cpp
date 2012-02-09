@@ -44,6 +44,7 @@
 
 #include "qquickitem.h"
 #include "qquickitem_p.h"
+#include "qquickevents_p_p.h"
 
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
@@ -60,6 +61,7 @@
 #include <QtGui/qpainter.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
+#include <QtGui/qstylehints.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
 #include <QtDeclarative/qdeclarativeincubator.h>
@@ -68,6 +70,7 @@
 
 QT_BEGIN_NAMESPACE
 
+DEFINE_BOOL_CONFIG_OPTION(qmlTranslateTouchToMouse, QML_TRANSLATE_TOUCH_TO_MOUSE)
 
 void QQuickCanvasPrivate::updateFocusItemTransform()
 {
@@ -283,6 +286,8 @@ QQuickCanvasPrivate::QQuickCanvasPrivate()
     : rootItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
+    , touchMouseId(-1)
+    , touchMousePressTimestamp(0)
     , renderWithoutShowing(false)
     , dirtyItemList(0)
     , context(0)
@@ -346,6 +351,76 @@ void QQuickCanvasPrivate::initRootItem()
             rootItem, SLOT(setHeight(int)));
     rootItem->setWidth(q->width());
     rootItem->setHeight(q->height());
+}
+
+static QQuickMouseEventEx touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p)
+{
+    QQuickMouseEventEx me(type, p.pos(), p.scenePos(), p.screenPos(),
+            Qt::LeftButton, Qt::LeftButton, 0);
+    me.setVelocity(p.velocity());
+    return me;
+}
+
+void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
+{
+    for (int i = 0; i < event->touchPoints().count(); ++i) {
+        QTouchEvent::TouchPoint p = event->touchPoints().at(i);
+        if (touchMouseId == -1 && p.state() & Qt::TouchPointPressed) {
+            bool doubleClick = event->timestamp() - touchMousePressTimestamp
+                            < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
+            touchMousePressTimestamp = event->timestamp();
+            if (doubleClick) {
+                QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
+                me.setTimestamp(event->timestamp());
+                me.setAccepted(false);
+                deliverMouseEvent(&me);
+                if (me.isAccepted()) {
+                    touchMouseId = p.id();
+                    event->setAccepted(true);
+                }
+            }
+            QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
+            me.setTimestamp(event->timestamp());
+            me.setAccepted(false);
+            deliverMouseEvent(&me);
+            if (me.isAccepted()) {
+                touchMouseId = p.id();
+                event->setAccepted(true);
+                break;
+            }
+        } else if (p.id() == touchMouseId) {
+            if (p.state() & Qt::TouchPointMoved) {
+                QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseMove, p);
+                me.setTimestamp(event->timestamp());
+                if (!mouseGrabberItem) {
+                    if (lastMousePosition.isNull())
+                        lastMousePosition = me.windowPos();
+                    QPointF last = lastMousePosition;
+                    lastMousePosition = me.windowPos();
+
+                    bool accepted = me.isAccepted();
+                    bool delivered = deliverHoverEvent(rootItem, me.windowPos(), last, me.modifiers(), accepted);
+                    if (!delivered) {
+                        //take care of any exits
+                        accepted = clearHover();
+                    }
+                    me.setAccepted(accepted);
+                    break;
+                }
+
+                deliverMouseEvent(&me);
+            } else if (p.state() & Qt::TouchPointReleased) {
+                touchMouseId = -1;
+                if (!mouseGrabberItem)
+                    return;
+                QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonRelease, p);
+                me.setTimestamp(event->timestamp());
+                deliverMouseEvent(&me);
+                mouseGrabberItem = 0;
+            }
+            break;
+        }
+    }
 }
 
 void QQuickCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
@@ -752,6 +827,8 @@ bool QQuickCanvas::event(QEvent *e)
         QTouchEvent *touch = static_cast<QTouchEvent *>(e);
         d->translateTouchEvent(touch);
         d->deliverTouchEvent(touch);
+        if (qmlTranslateTouchToMouse())
+            d->translateTouchToMouse(touch);
 
         return touch->isAccepted();
     }
@@ -852,8 +929,11 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
     if (mouseGrabberItem) {
         QQuickItemPrivate *mgPrivate = QQuickItemPrivate::get(mouseGrabberItem);
         const QTransform &transform = mgPrivate->canvasToItemTransform();
-        QMouseEvent me(event->type(), transform.map(event->windowPos()), event->windowPos(), event->screenPos(),
-                       event->button(), event->buttons(), event->modifiers());
+        QQuickMouseEventEx me(event->type(), transform.map(event->windowPos()),
+                                event->windowPos(), event->screenPos(),
+                                event->button(), event->buttons(), event->modifiers());
+        if (QQuickMouseEventEx::extended(event))
+            me.setVelocity(QQuickMouseEventEx::extended(event)->velocity());
         me.accept();
         q->sendEvent(mouseGrabberItem, &me);
         event->setAccepted(me.isAccepted());
@@ -867,7 +947,8 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
 void QQuickCanvas::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
-
+    if (qmlTranslateTouchToMouse())
+        return; // We are using touch events
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mousePressEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -878,7 +959,8 @@ void QQuickCanvas::mousePressEvent(QMouseEvent *event)
 void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
-
+    if (qmlTranslateTouchToMouse())
+        return; // We are using touch events
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mouseReleaseEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -895,6 +977,8 @@ void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
 void QQuickCanvas::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
+    if (qmlTranslateTouchToMouse())
+        return; // We are using touch events
 
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mouseDoubleClickEvent()" << event->pos() << event->button() << event->buttons();
@@ -930,7 +1014,8 @@ bool QQuickCanvasPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
 void QQuickCanvas::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
-
+    if (qmlTranslateTouchToMouse())
+        return; // We are using touch events
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mouseMoveEvent()" << event->pos() << event->button() << event->buttons();
 #endif
