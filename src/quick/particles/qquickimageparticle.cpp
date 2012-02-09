@@ -770,9 +770,9 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
     Acceptable values are
     \list
-    \o None: Particles just appear and disappear.
-    \o Fade: Particles fade in from 0 opacity at the start of their life, and fade out to 0 at the end.
-    \o Scale: Particles scale in from 0 size at the start of their life, and scale back to 0 at the end.
+    \o ImageParticle.None: Particles just appear and disappear.
+    \o ImageParticle.Fade: Particles fade in from 0 opacity at the start of their life, and fade out to 0 at the end.
+    \o ImageParticle.Scale: Particles scale in from 0 size at the start of their life, and scale back to 0 at the end.
     \endlist
 
     Default value is Fade.
