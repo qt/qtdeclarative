@@ -114,7 +114,7 @@ QQuickItem *QQuickParentAnimation::target() const
     return d->target;
 }
 
-void QQuickParentAnimation::setTarget(QQuickItem *target)
+void QQuickParentAnimation::setTargetObject(QQuickItem *target)
 {
     Q_D(QQuickParentAnimation);
     if (target == d->target)
@@ -681,7 +681,7 @@ QQuickItem *QQuickPathAnimation::target() const
     return d->target;
 }
 
-void QQuickPathAnimation::setTarget(QQuickItem *target)
+void QQuickPathAnimation::setTargetObject(QQuickItem *target)
 {
     Q_D(QQuickPathAnimation);
     if (d->target == target)

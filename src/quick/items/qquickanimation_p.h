@@ -57,7 +57,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickParentAnimation : public QDeclarativeAnimatio
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentAnimation)
 
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTargetObject NOTIFY targetChanged)
     Q_PROPERTY(QQuickItem *newParent READ newParent WRITE setNewParent NOTIFY newParentChanged)
     Q_PROPERTY(QQuickItem *via READ via WRITE setVia NOTIFY viaChanged)
 
@@ -66,7 +66,7 @@ public:
     virtual ~QQuickParentAnimation();
 
     QQuickItem *target() const;
-    void setTarget(QQuickItem *);
+    void setTargetObject(QQuickItem *);
 
     QQuickItem *newParent() const;
     void setNewParent(QQuickItem *);
@@ -129,7 +129,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathAnimation : public QDeclarativeAbstractAn
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
     Q_PROPERTY(QDeclarativePath *path READ path WRITE setPath NOTIFY pathChanged)
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTargetObject NOTIFY targetChanged)
     Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
     Q_PROPERTY(QPointF anchorPoint READ anchorPoint WRITE setAnchorPoint NOTIFY anchorPointChanged)
     Q_PROPERTY(int orientationEntryDuration READ orientationEntryDuration WRITE setOrientationEntryDuration NOTIFY orientationEntryDurationChanged)
@@ -159,7 +159,7 @@ public:
     void setPath(QDeclarativePath *);
 
     QQuickItem *target() const;
-    void setTarget(QQuickItem *);
+    void setTargetObject(QQuickItem *);
 
     Orientation orientation() const;
     void setOrientation(Orientation orientation);

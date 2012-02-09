@@ -313,6 +313,7 @@ void QSequentialAnimationGroupJob::activateCurrentAnimation(bool intermediate)
 
 void QSequentialAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimationJob *animation)
 {
+    Q_UNUSED(animation);
     Q_ASSERT(animation == m_currentAnimation);
 
     setUncontrolledAnimationFinishTime(m_currentAnimation, m_currentAnimation->currentTime());
