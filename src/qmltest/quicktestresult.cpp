@@ -192,27 +192,14 @@ void QuickTestResult::setDataTag(const QString &tag)
 /*!
     \qmlproperty bool TestResult::failed
 
-    This property returns true if the current test function has
-    failed; false otherwise.  The fail state is reset when
-    functionName is changed or finishTestFunction() is called.
+    This property returns true if the current test function (or
+    current test data row for a data-driven test) has failed;
+    false otherwise.  The fail state is reset when functionName
+    is changed or finishTestDataCleanup() is called.
 
-    \sa skipped, dataFailed
+    \sa skipped
 */
 bool QuickTestResult::isFailed() const
-{
-    return QTestResult::testFailed();
-}
-
-/*!
-    \qmlproperty bool TestResult::dataFailed
-
-    This property returns true if the current data function has
-    failed; false otherwise.  The fail state is reset when
-    functionName is changed or finishTestFunction() is called.
-
-    \sa failed
-*/
-bool QuickTestResult::isDataFailed() const
 {
     return QTestResult::currentTestFailed();
 }
@@ -347,6 +334,11 @@ void QuickTestResult::clearTestTable()
 void QuickTestResult::finishTestData()
 {
     QTestResult::finishedCurrentTestData();
+}
+
+void QuickTestResult::finishTestDataCleanup()
+{
+    QTestResult::finishedCurrentTestDataCleanup();
 }
 
 void QuickTestResult::finishTestFunction()

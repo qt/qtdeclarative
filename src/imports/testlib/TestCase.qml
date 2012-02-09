@@ -477,7 +477,7 @@ Item {
                              e.fileName, e.lineNumber)
             }
         }
-        return !qtest_results.dataFailed
+        return !qtest_results.failed
     }
 
     function qtest_runFunction(prop, arg) {
@@ -486,6 +486,7 @@ Item {
             qtest_runInternal(prop, arg)
             qtest_results.finishTestData()
             qtest_runInternal("cleanup")
+            qtest_results.finishTestDataCleanup()
         }
     }
 
@@ -515,6 +516,7 @@ Item {
 
                 // Run the cleanup function.
                 qtest_runInternal("cleanup")
+                qtest_results.finishTestDataCleanup()
             } while (!qtest_results.measurementAccepted())
             qtest_results.endDataRun()
         } while (qtest_results.needsMoreMeasurements())
@@ -566,6 +568,8 @@ Item {
         var runTests = true
         if (!qtest_runInternal("initTestCase"))
             runTests = false
+        qtest_results.finishTestData()
+        qtest_results.finishTestDataCleanup()
         qtest_results.finishTestFunction()
 
         // Run the test methods.
@@ -636,6 +640,8 @@ Item {
         // Clean up and exit.
         running = false
         completed = true
+        qtest_results.finishTestData()
+        qtest_results.finishTestDataCleanup()
         qtest_results.finishTestFunction()
         qtest_results.functionName = ""
 

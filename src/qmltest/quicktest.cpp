@@ -173,6 +173,7 @@ template <class View> void handleCompileErrors(const QFileInfo &fi, const View &
     results.fail(errors.at(0).description(),
                  errors.at(0).url(), errors.at(0).line());
     results.finishTestData();
+    results.finishTestDataCleanup();
     results.finishTestFunction();
     results.setFunctionName(QString());
     results.stopLogging();

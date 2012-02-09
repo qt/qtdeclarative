@@ -61,7 +61,6 @@ class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
     Q_PROPERTY(QString functionName READ functionName WRITE setFunctionName NOTIFY functionNameChanged)
     Q_PROPERTY(QString dataTag READ dataTag WRITE setDataTag NOTIFY dataTagChanged)
     Q_PROPERTY(bool failed READ isFailed)
-    Q_PROPERTY(bool dataFailed READ isDataFailed)
     Q_PROPERTY(bool skipped READ isSkipped WRITE setSkipped NOTIFY skippedChanged)
     Q_PROPERTY(int passCount READ passCount)
     Q_PROPERTY(int failCount READ failCount)
@@ -88,7 +87,6 @@ public:
     void setDataTag(const QString &tag);
 
     bool isFailed() const;
-    bool isDataFailed() const;
 
     bool isSkipped() const;
     void setSkipped(bool skip);
@@ -109,6 +107,7 @@ public Q_SLOTS:
     void clearTestTable();
 
     void finishTestData();
+    void finishTestDataCleanup();
     void finishTestFunction();
 
     void fail(const QString &message, const QUrl &location, int line);
