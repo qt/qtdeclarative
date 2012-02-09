@@ -112,7 +112,7 @@ Rectangle {
       onImageLoaded:requestPaint();
       onPaint: {
       var ctx = canvas.getContext('2d');
-      ctx.reset();
+      ctx.save();
       ctx.fillStyle="black";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -135,6 +135,7 @@ Rectangle {
           }
           layoutChanged = false;
       }
+      ctx.restore();
     }
   }
 }

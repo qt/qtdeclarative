@@ -79,7 +79,7 @@ Item {
 
         onPaint: {
             var ctx = getContext("2d");
-            ctx.reset();
+            ctx.save();
             ctx.clearRect(0,0,canvas.width, canvas.height);
             ctx.strokeStyle = canvas.strokeStyle;
             ctx.lineWidth = canvas.lineWidth
@@ -104,6 +104,7 @@ Item {
                 ctx.fill();
             if (canvas.stroke)
                 ctx.stroke();
+            ctx.restore();
         }
     }
 

@@ -96,7 +96,7 @@ Item {
           if (N>100) M=100;
           if (N<0.00000000001) M=0.00000000001;
 
-          ctx.reset();
+          ctx.save();
           ctx.globalAlpha =canvas.alpha;
           ctx.fillStyle = "gray";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -134,6 +134,7 @@ Item {
           ctx.fillStyle = "yellow";
           ctx.font = "Helvetica  16px";
           ctx.fillText("|X-" + Math.round(canvas.px) + "|^" + N + " + |Y-"+Math.round(canvas.py)+"|^" + N + " = |" + Math.round(R) + "|^" + N, canvas.px - 125, canvas.py);
+          ctx.restore();
         }
     }
 

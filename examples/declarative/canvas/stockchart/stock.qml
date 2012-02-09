@@ -688,7 +688,7 @@ Rectangle {
 
             //console.log("painting...  first:" + first + ", last:" + last + " current:" + view.currentIndex);
             var ctx = canvas.getContext("2d");
-            ctx.reset();
+            ctx.save();
 
             ctx.globalCompositeOperation = "source-over";
             ctx.lineWidth = 1;
@@ -720,6 +720,7 @@ Rectangle {
             drawPrice(ctx, first, last, Qt.rgba(0.5, 0.5, 0.5, 1),"close", points, highestPrice);
             drawVolume(ctx, first, last, Qt.rgba(0.3, 0.5, 0.7, 1),"volume", points, highestValume);
             drawKLine(ctx, first, last, points, highestPrice);
+            ctx.restore();
         }
     }
 }

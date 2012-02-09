@@ -92,7 +92,7 @@ Item {
       if (N>100) M=100;
       if (N<0.00000000001) M=0.00000000001;
 
-      ctx.reset();
+      ctx.save();
       ctx.globalAlpha =canvas.alpha;
       ctx.fillStyle = "gray";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -129,6 +129,7 @@ Item {
       ctx.clip();
 
       ctx.drawImage(canvas.imagefile, 0, 0);
+      ctx.restore();
     }
   }
 

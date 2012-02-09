@@ -82,7 +82,7 @@ Item {
 
     onPaint: {
       var ctx = canvas.getContext('2d');
-      ctx.reset();
+      ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = canvas.alpha;
       ctx.strokeStyle = canvas.strokeStyle;
@@ -103,6 +103,7 @@ Item {
          ctx.fill();
       if (canvas.stroke)
          ctx.stroke();
+      ctx.restore();
     }
   }
 
