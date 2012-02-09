@@ -41,7 +41,6 @@
 import QtQuick 2.0
 import People 1.0
 
-// ![0]
 BirthdayParty {
     host: Person {
         name: "Bob Jones"
@@ -53,6 +52,7 @@ BirthdayParty {
         Person { name: "Anne Brown" }
     ]
 
-    Component.onCompleted: invite("William Green")
-}
 // ![0]
+    Component.onCompleted: invite("William Green")
+// ![0]
+}

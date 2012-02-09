@@ -75,12 +75,15 @@ public:
     int guestCount() const;
     Person *guest(int) const;
 
+    //! [static attached]
     static BirthdayPartyAttached *qmlAttachedProperties(QObject *);
+    //! [static attached]
 private:
     Person *m_host;
     QList<Person *> m_guests;
 };
 
+//! [declare attached]
 QML_DECLARE_TYPEINFO(BirthdayParty, QML_HAS_ATTACHED_PROPERTIES)
-
+//! [declare attached]
 #endif // BIRTHDAYPARTY_H

@@ -1,0 +1,208 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qml-c++models.qdoc
+\title Exposing C++ Models
+\brief exposing Qt C++ models to the runtime
+
+Models can be defined in C++ and then made available to QML. This is useful
+for exposing existing C++ data models or otherwise complex datasets to QML.
+
+A C++ model class can be defined as a \l QStringList, a \l QList<QObject*> or a
+\l QAbstractItemModel. The first two are useful for exposing simpler datasets,
+while QAbstractItemModel provides a more flexible solution for more complex
+models.
+
+
+\section1 QStringList-based Model
+
+    A model may be a simple \l QStringList, which provides the contents of the list
+    via the \i modelData role.
+
+    Here is a ListView with a delegate that references its model item's
+    value using the \c modelData role:
+
+    \snippet examples/declarative/modelviews/stringlistmodel/view.qml 0
+
+    A Qt application can load this QML document and set the value of \c myModel
+    to a QStringList:
+
+    \snippet examples/declarative/modelviews/stringlistmodel/main.cpp 0
+
+    The complete example is available in Qt's \l {declarative/modelviews/stringlistmodel}{examples/declarative/modelviews/stringlistmodel} directory.
+
+    \bold{Note:} There is no way for the view to know that the contents of a QStringList
+    have changed.  If the QStringList changes, it will be necessary to reset
+    the model by calling QDeclarativeContext::setContextProperty() again.
+
+
+\section1 QObjectList-based model
+
+    A list of QObject* values can also be used as a model. A QList<QObject*> provides
+    the properties of the objects in the list as roles.
+
+    The following application creates a \c DataObject class that with
+    Q_PROPERTY values that will be accessible as named roles when a
+    QList<DataObject*> is exposed to QML:
+
+    \snippet examples/declarative/modelviews/objectlistmodel/dataobject.h 0
+    \dots 4
+    \snippet examples/declarative/modelviews/objectlistmodel/dataobject.h 1
+    \codeline
+    \snippet examples/declarative/modelviews/objectlistmodel/main.cpp 0
+    \dots
+
+    The QObject* is available as the \c modelData property.  As a convenience,
+    the properties of the object are also made available directly in the
+    delegate's context. Here, \c view.qml references the \c DataModel properties in
+    the ListView delegate:
+
+    \snippet examples/declarative/modelviews/objectlistmodel/view.qml 0
+
+    Note the use of the fully qualified access to the \c color property.
+    The properties of the object are not replicated in the \c model
+    object, since they are easily available via the \c modelData
+    object.
+
+    The complete example is available in Qt's \l {declarative/modelviews/objectlistmodel}{examples/declarative/modelviews/objectlistmodel} directory.
+
+    Note: There is no way for the view to know that the contents of a QList
+    have changed.  If the QList changes, it will be necessary to reset
+    the model by calling QDeclarativeContext::setContextProperty() again.
+
+
+\section1 QAbstractItemModel
+
+    A model can be defined by subclassing QAbstractItemModel. This is the
+    best approach if you have a more complex model that cannot be supported
+    by the other approaches. A QAbstractItemModel can also automatically
+    notify a QML view when the model data has changed.
+
+    The roles of a QAbstractItemModel subclass can be exposed to QML by calling
+    QAbstractItemModel::setRoleNames(). The default role names set by Qt are:
+
+    \table
+    \header
+    \o Qt Role
+    \o QML Role Name
+    \row
+    \o Qt::DisplayRole
+    \o display
+    \row
+    \o Qt::DecorationRole
+    \o decoration
+    \endtable
+
+    Here is an application with a QAbstractListModel subclass named \c AnimalModel
+    that has \i type and \i size roles. It calls QAbstractItemModel::setRoleNames() to set the
+    role names for accessing the properties via QML:
+
+    \snippet examples/declarative/modelviews/abstractitemmodel/model.h 0
+    \dots
+    \snippet examples/declarative/modelviews/abstractitemmodel/model.h 1
+    \dots
+    \snippet examples/declarative/modelviews/abstractitemmodel/model.h 2
+    \codeline
+    \snippet examples/declarative/modelviews/abstractitemmodel/model.cpp 0
+    \codeline
+    \snippet examples/declarative/modelviews/abstractitemmodel/main.cpp 0
+    \dots
+
+    This model is displayed by a ListView delegate that accesses the \i type and \i size
+    roles:
+
+    \snippet examples/declarative/modelviews/abstractitemmodel/view.qml 0
+
+    QML views are automatically updated when the model changes. Remember the model
+    must follow the standard rules for model changes and notify the view when
+    the model has changed by using QAbstractItemModel::dataChanged(),
+    QAbstractItemModel::beginInsertRows(), etc. See the \l {Model subclassing reference} for
+    more information.
+
+    The complete example is available in Qt's \l {declarative/modelviews/abstractitemmodel}{examples/declarative/modelviews/abstractitemmodel} directory.
+
+    QAbstractItemModel presents a hierarchy of tables, but the views currently provided by QML
+    can only display list data.
+    In order to display child lists of a hierarchical model
+    the VisualDataModel element provides several properties and functions for use
+    with models of type QAbstractItemModel:
+
+    \list
+    \o \i hasModelChildren role property to determine whether a node has child nodes.
+    \o \l VisualDataModel::rootIndex allows the root node to be specified
+    \o \l VisualDataModel::modelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
+    \o \l VisualDataModel::parentModelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
+    \endlist
+
+\section1 Exposing C++ Data Models to QML
+
+The above examples use QDeclarativeContext::setContextProperty() to set
+model values directly in QML components. An alternative to this is to
+register the C++ model class as a QML type from a QML C++ plugin using
+QDeclarativeExtensionPlugin. This would allow the model classes to be
+created directly as elements within QML:
+
+\table
+\row
+
+\o
+\code
+class MyModelPlugin : public QDeclarativeExtensionPlugin
+{
+public:
+    void registerTypes(const char *uri)
+    {
+        qmlRegisterType<MyModel>(uri, 1, 0,
+                "MyModel");
+    }
+}
+
+Q_EXPORT_PLUGIN2(mymodelplugin, MyModelPlugin);
+\endcode
+
+\o
+\qml
+MyModel {
+    id: myModel
+    ListElement { someProperty: "some value" }
+}
+\endqml
+
+\qml
+ListView {
+    width: 200; height: 250
+    model: myModel
+    delegate: Text { text: someProperty }
+}
+\endqml
+
+\endtable
+
+See \l {Tutorial: Writing QML extensions with C++} for details on writing QML C++
+plugins.
+
+*/

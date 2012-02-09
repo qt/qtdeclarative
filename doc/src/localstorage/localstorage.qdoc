@@ -1,0 +1,123 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qml-localstorage.html
+\title QML Local Storage
+\brief SQL storage for QML
+
+The local storage API provides a JavaScript interface to an SQL relational
+database. The QtQuick.LocalStorage module contains the API and it may be given
+a namespace.
+
+\code
+import QtQuick.LocalStorage 2.0 as SQL
+\endcode
+\section2 Database API
+
+The \c openDatabaseSync() and related functions
+provide the ability to access local storage in an SQL database.
+
+These databases are user-specific and QML-specific, but accessible to all QML applications.
+They are stored in the \c Databases subdirectory
+of QDeclarativeEngine::offlineStoragePath(), currently as SQLite databases.
+
+Database connections are automatically closed during Javascript garbage collection.
+
+The API can be used from JavaScript functions in your QML:
+
+\snippet declarative/sqllocalstorage/hello.qml 0
+
+The API conforms to the Synchronous API of the HTML5 Web Database API,
+\link http://www.w3.org/TR/2009/WD-webdatabase-20091029/ W3C Working Draft 29 October 2009\endlink.
+
+The \l{declarative/sqllocalstorage}{SQL Local Storage example} demonstrates the basics of
+using the Local Storage API.
+
+\section3 db = openDatabaseSync(identifier, version, description, estimated_size, callback(db))
+
+Returns the database identified by \i identifier. If the database does not already exist, it
+is created, and the function \i callback is called with the database as a parameter. \i description
+and \i estimated_size are written to the INI file (described below), but are otherwise currently
+unused.
+
+May throw exception with code property SQLException.DATABASE_ERR, or SQLException.VERSION_ERR.
+
+When a database is first created, an INI file is also created specifying its characteristics:
+
+\table
+\header \o \bold {Key} \o \bold {Value}
+\row \o Name \o The name of the database passed to \c openDatabase()
+\row \o Version \o The version of the database passed to \c openDatabase()
+\row \o Description \o The description of the database passed to \c openDatabase()
+\row \o EstimatedSize \o The estimated size (in bytes) of the database passed to \c openDatabase()
+\row \o Driver \o Currently "QSQLITE"
+\endtable
+
+This data can be used by application tools.
+
+\section3 db.changeVersion(from, to, callback(tx))
+
+This method allows you to perform a \i{Scheme Upgrade}.
+
+If the current version of \i db is not \i from, then an exception is thrown.
+
+Otherwise, a database transaction is created and passed to \i callback. In this function,
+you can call \i executeSql on \i tx to upgrade the database.
+
+May throw exception with code property SQLException.DATABASE_ERR or SQLException.UNKNOWN_ERR.
+
+\section3 db.transaction(callback(tx))
+
+This method creates a read/write transaction and passed to \i callback. In this function,
+you can call \i executeSql on \i tx to read and modify the database.
+
+If the callback throws exceptions, the transaction is rolled back.
+
+\section3 db.readTransaction(callback(tx))
+
+This method creates a read-only transaction and passed to \i callback. In this function,
+you can call \i executeSql on \i tx to read the database (with SELECT statements).
+
+\section3 results = tx.executeSql(statement, values)
+
+This method executes a SQL \i statement, binding the list of \i values to SQL positional parameters ("?").
+
+It returns a results object, with the following properties:
+
+\table
+\header \o \bold {Type} \o \bold {Property} \o \bold {Value} \o \bold {Applicability}
+\row \o int \o rows.length \o The number of rows in the result \o SELECT
+\row \o var \o rows.item(i) \o Function that returns row \i i of the result \o SELECT
+\row \o int \o rowsAffected \o The number of rows affected by a modification \o UPDATE, DELETE
+\row \o string \o insertId \o The id of the row inserted \o INSERT
+\endtable
+
+May throw exception with code property SQLException.DATABASE_ERR, SQLException.SYNTAX_ERR, or SQLException.UNKNOWN_ERR.
+
+
+
+*/

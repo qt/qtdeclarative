@@ -44,30 +44,34 @@ import People 1.0
 BirthdayParty {
     host: Boy {
         name: "Bob Jones"
-        shoe { size: 12; color: "white"; brand: "Nike"; price: 90.0 }
+        shoe { size: 12; color: "white"; brand: "Bikey"; price: 90.0 }
     }
 
-    Boy { 
-        name: "Leo Hodges" 
-        shoe { size: 10; color: "black"; brand: "Reebok"; price: 59.95 }
+    Boy {
+        name: "Leo Hodges"
+//![grouped]
+        shoe { size: 10; color: "black"; brand: "Thebok"; price: 59.95 }
+//![grouped]
     }
     // ![1]
-    Boy { 
-        name: "Jack Smith" 
-        shoe { 
+    Boy {
+        name: "Jack Smith"
+        shoe {
             size: 8
             color: "blue"
-            brand: "Puma" 
-            price: 19.95 
+            brand: "Luma"
+            price: 19.95
         }
     }
     // ![1]
-    Girl { 
-        name: "Anne Brown" 
+    Girl {
+        name: "Anne Brown"
+//![ungrouped]
         shoe.size: 7
         shoe.color: "red"
-        shoe.brand: "Marc Jacobs"
-        shoe.price: 699.99 
+        shoe.brand: "Job Macobs"
+        shoe.price: 699.99
+//![ungrouped]
     }
 }
 // ![0]

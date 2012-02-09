@@ -48,8 +48,10 @@ int main(int argc, char ** argv)
 {
     QCoreApplication app(argc, argv);
 
+//![register list]
     qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
     qmlRegisterType<Person>("People", 1,0, "Person");
+//![register list]
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl("qrc:example.qml"));

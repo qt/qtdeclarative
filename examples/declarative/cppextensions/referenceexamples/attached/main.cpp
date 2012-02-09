@@ -70,12 +70,13 @@ int main(int argc, char ** argv)
         for (int ii = 0; ii < party->guestCount(); ++ii) {
             Person *guest = party->guest(ii);
 
+            //! [query rsvp]
             QDate rsvpDate;
-            QObject *attached = 
-                qmlAttachedPropertiesObject<BirthdayParty>(guest, false);
+            QObject *attached = qmlAttachedPropertiesObject<BirthdayParty>(guest, false);
+
             if (attached)
                 rsvpDate = attached->property("rsvp").toDate();
-
+            //! [query rsvp]
             if (rsvpDate.isNull())
                 qWarning() << "   " << guest->name() << "RSVP date: Hasn't RSVP'd";
             else

@@ -49,11 +49,14 @@ int main(int argc, char ** argv)
     QCoreApplication app(argc, argv);
 
     qmlRegisterType<BirthdayParty>("People", 1,0, "BirthdayParty");
-// ![0]
+    //![0]
     qmlRegisterType<Person>();
-// ![0]
+    //![0]
+
+    //![register boy girl]
     qmlRegisterType<Boy>("People", 1,0, "Boy");
     qmlRegisterType<Girl>("People", 1,0, "Girl");
+    //![register boy girl]
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl("qrc:example.qml"));

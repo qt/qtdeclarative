@@ -69,13 +69,14 @@ public:
     Boy(QObject * parent = 0);
 };
 
-
+//! [girl class]
 class Girl : public Person
 {
     Q_OBJECT
 public:
     Girl(QObject * parent = 0);
 };
+//! [girl class]
 
 // ![0]
 

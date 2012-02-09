@@ -1,0 +1,307 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\page qtquick-codesamples.html
+\title Qt Quick Code Samples
+\brief Building UIs with QML
+\ingroup all-examples
+\ingroup qtquick
+\target qtquick-samples
+\inqmlmodule QtQuick 2
+
+These are code samples that show how to use various aspects of Qt Quick. Larger
+compound interfaces are grouped as applications as they demonstrate more Qt
+Quick features.
+
+To run the sample applications, open them in Qt Creator or use the included
+\l {QML Viewer} tool.
+
+Some of these code samples have a corresponding \l{qtquick-tutorials}{tutorial}.
+The Qt Quick features are covered in the \l {qtquick-overviews}{main page}.
+This set of code samples are part of the collection of \l{Qt Examples}.
+
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+    Qt Quick Applications
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/calculator}{Calculator}
+        \image qml-calculator-example-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/flickr}{Flickr Mobile}
+        \image qml-flickr-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/minehunt}{Minehunt}
+        \image qml-minehunt-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/photoviewer}{Photo Viewer}
+        \image qml-photoviewer-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/rssnews}{RSS News Reader}
+        \image qml-rssnews-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/samegame}{Same Game}
+        \image qml-samegame-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/snake}{Snake}
+        \image qml-snake-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/twitter}{Twitter}
+        \image qml-twitter-demo-small.png
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \l{demos/declarative/webbrowser}{Web Browser}
+        \image qml-webbrowser-demo-small.png
+    \enddiv
+\enddiv
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+    QML Examples
+    \enddiv
+    Code samples demonstrate a general use for QML features. Some showcase
+    how elements or properties can be used in an application.
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        QML Features
+        \enddiv
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Mouse and Keyboard Input
+        \enddiv
+        \list
+        \o \l{declarative/text/fonts}{Fonts}
+        \o \l{declarative/text/textselection}{Text Selection}
+        \o \l{declarative/keyinteraction/focus}{Keyboard Focus}
+        \o \l{declarative/touchinteraction/mousearea}{MouseArea}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        States and Transitions
+        \enddiv
+        \list
+        \o \l{declarative/animation/states}{States}
+        \o \l{declarative/animation/basics}{Animation Essentials}
+        \o \l{declarative/animation/behaviors}{Behaviors}
+        \o \l{declarative/animation/easing}{Easing}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        UI Components
+        \enddiv
+        \list
+        \o \l{declarative/ui-components/dialcontrol}{Dial Control}
+        \o \l{declarative/ui-components/flipable}{Flipable}
+        \o \l{declarative/ui-components/progressbar}{Progress Bar}
+        \o \l{declarative/ui-components/scrollbar}{Scroll Bar}
+        \o \l{declarative/ui-components/searchbox}{Search Box}
+        \o \l{declarative/ui-components/slideswitch}{Slide Switch}
+        \o \l{declarative/ui-components/spinner}{Spinner}
+        \o \l{declarative/ui-components/tabwidget}{Tab Widget}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Positioners and Layout
+        \enddiv
+        \list
+        \o \l{declarative/positioners}{Row and Column}
+        \o \l{declarative/righttoleft/layoutmirroring}{Layout Mirroring}
+        \o \l{declarative/righttoleft/layoutdirection}{Layout Direction}
+        \o \l{declarative/righttoleft/textalignment}{Text Alignment}
+        \o \l{declarative/screenorientation}{Screen Orientation}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Data with Models and Views
+        \enddiv
+        \list
+        \o \l{declarative/modelviews/gridview}{GridView}
+        \o \l{declarative/modelviews/listview}{ListView}
+        \o \l{declarative/modelviews/pathview}{PathView}
+        \o \l{declarative/modelviews/package}{Package}
+        \o \l{declarative/modelviews/visualitemmodel}{VisualItemModel}
+        \o \l{declarative/modelviews/stringlistmodel}{String ListModel}
+        \o \l{declarative/modelviews/objectlistmodel}{Object ListModel}
+        \o \l{declarative/modelviews/abstractitemmodel}{AbstractItemModel}
+        \o \l{declarative/modelviews/webview}{WebView}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Advance UI Components
+        \enddiv
+        \list
+        \o \l{declarative/modelviews/parallax}{Parallax}
+        \o \l{declarative/toys/clocks}{Clocks}
+        \o \l{declarative/toys/corkboards}{Corkboards}
+        \o \l{declarative/toys/dynamicscene}{Dynamic Scene}
+        \o \l{declarative/toys/tic-tac-toe}{Tic Tac Toe}
+        \o \l{declarative/toys/tvtennis}{TV Tennis}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Image Elements
+        \enddiv
+        \list
+        \o \l{declarative/imageelements/borderimage}{BorderImage}
+        \o \l{declarative/imageelements/image}{Image}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Loading Resources
+        \enddiv
+        \list
+        \o \l{declarative/sqllocalstorage}{SQL Local Storage}
+        \o \l{declarative/xml/xmlhttprequest}{XmlHttpRequest}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Localization
+        \enddiv
+        \list
+        \o \l{declarative/i18n}{Translation}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Threading
+        \enddiv
+        \list
+        \o \l{declarative/threading/threadedlistmodel}{Threaded ListModel}
+        \o \l{declarative/threading/workerscript}{WorkerScript Element}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Graphical Effects
+        \enddiv
+        \list
+        \o \l{declarative/shadereffects}{Shader Effects}
+        \endlist
+    \enddiv
+\enddiv
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+        QDeclarative Examples
+    \enddiv
+    These examples show how a QML based UI could interact with the
+    QDeclarative module.
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        From Qt C++ to QML
+        \enddiv
+        \list
+        \o \l {declarative/cppextensions/referenceexamples/adding}{Exporting C++ Classes}
+        \o \l {declarative/cppextensions/referenceexamples/properties}{Exporting Qt C++ Properties}
+        \o \l {declarative/cppextensions/referenceexamples/coercion}{C++ Inheritance and Coercion}
+        \o \l {declarative/cppextensions/referenceexamples/default}{Default Property}
+        \o \l {declarative/cppextensions/referenceexamples/grouped}{Grouped Properties}
+        \o \l {declarative/cppextensions/referenceexamples/attached}{Attached Properties}
+        \o \l {declarative/cppextensions/referenceexamples/signal}{Signal Support}
+        \o \l {declarative/cppextensions/referenceexamples/methods}{Methods Support}
+        \o \l {declarative/cppextensions/referenceexamples/valuesource}{Property Value Source}
+        \o \l {declarative/cppextensions/referenceexamples/binding}{Binding}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Plugins and Resources
+        \enddiv
+        \list
+        \o \l{declarative/cppextensions/plugins}{Plugins}
+        \o \l{declarative/cppextensions/imageprovider}{Image Provider}
+        \o \l{declarative/cppextensions/networkaccessmanagerfactory}{Network Access Manager}
+        \o \l{src/imports/folderlistmodel}{Folder List Model} - a C++ model plugin
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+        Qt UI and QML Integration
+        \enddiv
+        \list
+        \o \l{declarative-cppextensions-qgraphicslayouts.html}{QGraphicsLayouts}
+        \o \l{declarative/cppextensions/qwidgets}{QWidgets}
+        \endlist
+    \enddiv
+\enddiv
+
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+        Learning and Resources
+    \enddiv
+    The Qt Developer Network contains additional content such as learning
+    videos, a wiki, and a forum for posting questions.
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Elements and Components
+        \enddiv
+        \list
+        \o \l{QML Elements}
+        \o \l{external: Qt Mobility QML Plugins}{QML Plugins}
+        \o \l{external: Qt Quick Components for Symbian}{Symbian Components}
+        \o MeeGo Components
+        \o \l{QtWebKit QML Module}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Qt Developer Network
+        \enddiv
+        \list
+        \o \l{Qt eLearning}{Training Materials}
+        \o \l{Forums on Qt Developer Network}{Forums}
+        \o \l{Wiki on Qt Developer Network}{Wiki}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Reference
+        \enddiv
+        \list
+        \o \l{All Classes}{Qt API}
+        \o \l{external: Qt Creator Manual}{Qt Creator Manual}
+        \o \l{Develop with Qt}
+        \endlist
+    \enddiv
+\enddiv
+*/

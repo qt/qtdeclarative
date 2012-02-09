@@ -41,7 +41,7 @@
 #define PERSON_H
 
 #include <QObject>
-// ![0]
+//![0]
 class Person : public QObject
 {
     Q_OBJECT
@@ -60,6 +60,6 @@ private:
     QString m_name;
     int m_shoeSize;
 };
-// ![0]
+//![0]
 
 #endif // PERSON_H

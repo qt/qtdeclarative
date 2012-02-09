@@ -1,0 +1,131 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-basicelements.html
+\ingroup qml-features
+\title Qt Quick Basic Elements
+\brief introduction to the Qt Quick Elements
+
+Qt Quick includes \i elements for placing components. These can be combined
+to form other components.
+
+\code
+import QtQuick 2.0
+\endcode
+\section1 Basic Elements
+This is a list of some of the elements readily available for users.
+\list
+\o \l {Item}
+\o \l {Rectangle}
+\o \l {Image}
+\o \l {Text}
+\o \l {TextInput}
+\o \l {TextEdit}
+\o \l {FocusScope}
+\o \l {Component}
+\o \l {MouseArea}
+\endlist
+
+For a complete list of QML elements, please visit the \l {QML Elements} page.
+
+\section1 Item Element
+
+Many QML elements inherit \l Item properties. \c Item possesses important properties
+such as \c focus, \c children, and dimension properties such as \c width and
+\c height. Although \c Item has physical properties, it is not a visual element.
+Using \c Item as the top-level QML element (as the screen) will not produce a
+visual result, use the \l {Rectangle} element instead. Use the \c Item to create
+opacity effects, such as when creating an invisible container to hold other
+components.
+
+\section1 Rectangle Element
+
+The \l Rectangle element is the basic visual element, for displaying different
+types of items onto the screen. The \c Rectangle is customizable and utilizes
+other elements such as \l Gradient and \l BorderImage for displaying advanced
+customized graphics.
+
+\section1 Image Element
+
+To insert an image into a QML scene, merely declare an \l Image element. The
+\c Image element can load images in formats supported by Qt.
+
+\section1 Text Elements
+
+The \l Text and \l TextEdit elements display formatted text onto the screen.
+\c TextEdit features multi-line editing while the \l TextInput element is for
+single line text input.
+
+\keyword qml-top-level-component
+\section1 Using Elements as the Top-Level Component
+
+For creating components, there are different
+elements that could be used as the top-level component. To display a simple scene,
+a \l Rectangle as the top-level component may suffice. \l Rectangle,
+\l FocusScope, \l Component, \l {QML:QtObject} {QtObject}, \l Item, are some of
+the commonly used elements as the top-level component.
+
+When importing components, the top-level component is important because the
+top-level component's properties are the only properties exposed to the parent.
+
+For example, a \c Button component may be implemented using different elements as
+its top-level component. When this component is loaded into another QML scene,
+the component will retain the top-level component's properties. If a non-visual
+component is the top-level component, the visual properties should be aliased to
+the top-level to display the component properly.
+
+For more information on how to build upon QML elements, see the
+\l{QML Components} document.
+
+\section1 Additional Elements
+
+The \l{QML Local Storage}{SQL Local Storage API} provides a JavaScript interface to an SQL relational
+database. The import statement needs a namespace
+
+\code
+import QtQuick.LocalStorage 2.0 as SQL
+\endcode
+
+The \l{QML Module QtQuick.Particles 2}{QtQuick.Particles} module provides a
+particle system for additional graphics. The
+\l{qml-particlesystem.html}{Using the Qt Quick Particle System} article outlines
+the system features.
+\code
+import QtQuick.Particles 2.0
+\endcode
+
+\section1 Extending and Importing Elements
+
+Components may use the basic elements to create new components or to add
+functionality to existing components. In addition, external component sets
+may exist to perform logic or provide plugins.
+
+To extend existing elements or to create a custom component, the articles
+\l{Creating QML Types} and \l{The QML Engine} contain information about
+registering new types into the QML engine.
+*/

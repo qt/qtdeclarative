@@ -1,0 +1,160 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\title What's New in Qt Quick 2
+\page qtquick2-whatsnew.html
+\inqmlmodule QtQuick 2
+
+\section1 Qt 5.0.0 includes QtQuick 2.0
+
+QtQuick 2.0 is a major update.
+
+\section2 SceneGraph renderer
+
+QtQuick 2 is based on an OpenGL scenegraph.  The following
+classes replace their equivalents in QtQuick 1:
+
+\list
+\o QQuickView
+\o QQuickCanvas
+\o QQuickItem
+\o QQuickPaintedItem
+\endlist
+
+\section2 QML Engine/Language Improvements
+
+JS engine changed to V8. For most QML users this should not make a visible difference beyond performance improvements, however a lot of undefined behavior semantics may have changed as well. As always, it is recommended not to rely on undefined behavior.
+
+Parser and compiler optimizations.
+
+New binding optimizer.
+
+ValueType improvements:
+ - QColor is now a value type.  The red, green, blue and alpha channels can be accessed via "r", "g", "b" and "a" properties
+ - Improved support for QVector4D, now constructible in QML via Qt.vector4d()
+
+Arbitrary functionality may be provided in a namespace through a Module API.  See \l{qmlRegisterModuleApi()} for more information.
+
+JavaScript (.js) files may now import QML modules and other JavaScript files.  See \l{Importing One JavaScript File From Another} for more information.
+
+A new property type "var" has been added which obsoletes the old "variant" property type.
+Properties of the "var" type may hold JavaScript references.  See \l{QML Basic Types} for more information.
+
+QML properties of type \c var and \c variant can now hold pixmaps.  See \l{Scarce Resources in JavaScript} for more information
+
+QDeclarativeExpression can now be directly (and more efficiently) constructed from a
+QDeclarativeScriptString.
+
+Support for certain sequence types (QList<int>, QList<qreal>, QList<bool>, QList<QUrl>, QList<QString> and QStringList) has been improved.
+QObjects can define Q_PROPERTYs of these types which can be accessed transparently from JavaScript.  See the section on
+sequences in \l{Extending QML Functionalities using C++} for more information.
+
+\section2 Canvas Item
+
+The new \l Canvas item provides a HTML5 canvas like API, with some enhancements:
+1) Supports 2 render targets: Canvas.Image and Canvas.FramebufferObject
+2) Supports background thread rendering
+3) Supports tiled canvas rendering
+
+The Canvas item supports most of the HTML5 context2d APIs, the API details please look at the canvas item documentation.
+
+
+\section2 Particle System
+
+The \l{QtQuick.Particles 2}{QtQuick.Particles} module contains elements that can be composed to form 2D particle system.
+
+
+\section2 Element API/Behavior Changes
+
+New \l SpriteImage element renders animated sprites and can transition between animations.
+It uses the \l Sprite element to represent each animation.
+
+MouseArea now propagates clicked, doubleClicked and pressAndHold differently to pressed.
+These will now be propagated to the highest-stacking-order enabled MouseArea which has a handler for them.
+You can still ignore these events in the handler to let them pass through.
+This behavior is triggered with the new property propagateComposedEvents.
+
+The Binding element can now be used as a value source, and will also restore any previously
+set binding when its \i when clause becomes false.
+
+Flickable: added dragging, draggingHorizontally and draggingVerically properties.
+Added topMargin, bottomMargin, leftMargin, rightMargin, xOrigin, yOrigin properties.
+
+Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
+fillMode (Image.Pad) that does not transform the image.
+Setting Image sourceSize.width and sourceSize.height will now fit the image to the size, maintaining aspect.
+
+Grid now has rowSpacing and columnSpacing properties.
+
+Positioners now have attached properties that can be used to determine a subitem's location within a
+container such as Column or Row: Positioner.index, Positioner.isFirstItem, Positioner.isLastItem.
+
+Loader improvements:
+ - "active" property added to Loader, to allow delaying instantiation of a Loader element's item property
+ - "setSource(JSObject)" method added to Loader to allow initial property values to be specified (similar to Component.createObject())
+ - now only emits the \c sourceChanged signal when the source is changed and the
+\c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one of the properties was changed.
+
+Text improvements:
+ - a \c onLineLaidOut handler is called for every line during the layout process. This gives the opportunity to position and resize a line as it is being laid out.
+ - a \c doLayout method was added to trigger the layout from Javascript.
+ - now automatically switch to StyledText instead of RichText if textFormat is set to AutoText.
+
+TextEdit:
+ - the default value of the textFormat property is now PlainText instead of AutoText.
+
+TextInput has new wrapMode and verticalAlignment properties, and the positionAt function now takes
+a y parameter.
+
+PathView now has a \c currentItem property
+
+ListView and GridView:
+ - now have headerItem and footerItem properties (the instantiated header and footer items).
+ - In RightToLeft layout the preferredHighlightBegin/End are now also reversed.
+
+ListView section.labelPositioning property added to allow keeping the current section label
+at the start and/or next section label at the end of the view.
+
+A new property type ("var") has been introduced which obsoletes "variant" properties in QML.
+Properties of this type are equivalent to regular JavaScript variables.  See the documentation
+on \l{QML Basic Types} for more information about "var" properties.
+
+New elements have been added for contructing paths: PathArc, PathCurve, PathSvg.
+
+\section2 QtQuick 1 is now a separate library and module
+
+Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem
+requires adding the "quick1" module to the .pro file, e.g. QT += quick1
+
+QDeclarativeView and QDeclarativeItem headers are now in the QtQuick 1 module, i.e.
+#include <QtQuick1/QDeclarativeView>
+#include <QtQuick1/QDeclarativeItem>
+
+\sa {What's New in Qt Quick 1}{What's New in Qt Quick 1}
+
+*/

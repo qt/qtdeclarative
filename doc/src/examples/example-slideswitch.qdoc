@@ -25,16 +25,14 @@
 **
 ****************************************************************************/
 
-/*!
-\page qdeclarativeexampletoggleswitch.html
-\inqmlmodule QtQuick 2
-\title QML Example - Toggle Switch
-\example declarative/ui-components/slideswitch
-\brief A reusable switch component in QML
 
+/*!
+\page qmlexampletoggleswitch.html
+\title QML Example - Toggle Switch
+\brief A reusable switch component made in QML
 This example shows how to create a reusable switch component in QML.
 
-The code for this example can be found in the \c $QTDIR/examples/declarative/ui-components/slideswitch directory.
+The code for this example can be found in the \c examples/declarative/ui-components/slideswitch directory.
 
 The elements that compose the switch are:
 
@@ -116,7 +114,7 @@ states (\i on and \i off).
 This second function is called when the knob is released and we want to make sure that the knob does not end up between states
 (neither \i on nor \i off). If it is the case call the \c toggle() function otherwise we do nothing.
 
-For more information on scripts see \l{Integrating JavaScript}.
+For more information on scripts see \l{JavaScript Expressions in QML}.
 
 \section2 Transition
 \snippet examples/declarative/ui-components/slideswitch/content/Switch.qml 7

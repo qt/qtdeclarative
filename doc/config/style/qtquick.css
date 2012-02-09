@@ -679,3 +679,85 @@
     }
 }
 /* end of print media */
+
+
+/* modify the TOC layouts */
+div.toc ul {
+    padding-left: 20px;
+}
+div.toc li {
+    padding-left: 4px;
+}
+/* Remove the border around images*/
+a img
+{
+    border:none;
+}
+
+/*Add styling to the front pages*/
+
+.threecolumn_area
+{
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+.threecolumn_piece
+{
+    display: inline-block;
+    margin-left: 78px;
+    margin-top: 8px;
+    padding: 0;
+    vertical-align: top;
+    width: 25.5%;
+}
+div.threecolumn_piece ul {
+    list-style-type: none;
+    padding-left: 0px;
+    margin-top: 2px;
+}
+div.threecolumn_piece p {
+    margin-bottom: 7px;
+    color: #5C626E;
+    text-decoration: none;
+    font-weight: bold;
+}
+div.threecolumn_piece li {
+    padding-left: 0px;
+    margin-bottom: 5px;
+}
+div.threecolumn_piece a {
+    font-weight: normal;
+}
+/* Add style to guide page*/
+.fourcolumn_area
+{
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+.fourcolumn_piece
+{
+    display: inline-block;
+    margin-left: 35px;
+    margin-top: 8px;
+    padding: 0;
+    vertical-align: top;
+    width: 21.3%;
+}
+div.fourcolumn_piece ul {
+    list-style-type: none;
+    padding-left: 0px;
+    margin-top: 2px;
+}
+div.fourcolumn_piece p {
+    margin-bottom: 7px;
+    color: #40444D;
+    text-decoration: none;
+    font-weight: bold;
+}
+div.fourcolumn_piece li {
+    padding-left: 0px;
+    margin-bottom: 5px;
+}
+div.fourcolumn_piece a {
+    font-weight: normal;
+}
