@@ -391,12 +391,13 @@ void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
 
 QAbstractAnimationJob* QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
                                                QDeclarativeProperties &modified,
-                                               TransitionDirection direction)
+                                               TransitionDirection direction,
+                                               QObject *defaultTarget)
 {
     Q_UNUSED(direction);
     Q_D(QDeclarativeSmoothedAnimation);
 
-    QDeclarativeStateActions dataActions = QDeclarativePropertyAnimation::createTransitionActions(actions, modified);
+    QDeclarativeStateActions dataActions = QDeclarativePropertyAnimation::createTransitionActions(actions, modified, defaultTarget);
 
     QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
 

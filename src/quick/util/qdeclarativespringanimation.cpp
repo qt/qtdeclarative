@@ -526,14 +526,15 @@ void QDeclarativeSpringAnimation::setMass(qreal mass)
 
 QAbstractAnimationJob* QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
                                                                    QDeclarativeProperties &modified,
-                                                                   TransitionDirection direction)
+                                                                   TransitionDirection direction,
+                                                                   QObject *defaultTarget)
 {
     Q_D(QDeclarativeSpringAnimation);
     Q_UNUSED(direction);
 
     QParallelAnimationGroupJob *wrapperGroup = new QParallelAnimationGroupJob();
 
-    QDeclarativeStateActions dataActions = QDeclarativeNumberAnimation::createTransitionActions(actions, modified);
+    QDeclarativeStateActions dataActions = QDeclarativeNumberAnimation::createTransitionActions(actions, modified, defaultTarget);
     if (!dataActions.isEmpty()) {
         QSet<QAbstractAnimationJob*> anims;
         for (int i = 0; i < dataActions.size(); ++i) {

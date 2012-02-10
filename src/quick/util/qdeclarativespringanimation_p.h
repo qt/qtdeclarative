@@ -89,7 +89,8 @@ public:
 
     virtual QAbstractAnimationJob* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            QObject *defaultTarget = 0);
 
 Q_SIGNALS:
     void modulusChanged();
