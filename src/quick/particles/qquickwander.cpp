@@ -109,12 +109,13 @@ WanderData* QQuickWanderAffector::getData(int idx)
     return d;
 }
 
-void QQuickWanderAffector::reset(int systemIdx)
-{
-    if (m_wanderData.contains(systemIdx))
-        delete m_wanderData[systemIdx];
-    m_wanderData.remove(systemIdx);
-}
+// TODO: see below
+//void QQuickWanderAffector::reset(int systemIdx)
+//{
+//    if (m_wanderData.contains(systemIdx))
+//        delete m_wanderData[systemIdx];
+//    m_wanderData.remove(systemIdx);
+//}
 
 bool QQuickWanderAffector::affectParticle(QQuickParticleData* data, qreal dt)
 {

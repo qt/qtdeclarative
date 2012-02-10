@@ -75,7 +75,7 @@ public:
 
     explicit QQuickWanderAffector(QQuickItem *parent = 0);
     ~QQuickWanderAffector();
-    virtual void reset(int systemIdx);
+//    virtual void reset(int systemIdx);
 
     qreal xVariance() const
     {
