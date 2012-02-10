@@ -78,7 +78,7 @@ public:
     v8::Persistent<v8::Script> initialProperties;
     v8::Persistent<v8::Function> forceCompletion;
 };
-static V8_DEFINE_EXTENSION(QDeclarativeComponentExtension, componentExtension);
+V8_DEFINE_EXTENSION(QDeclarativeComponentExtension, componentExtension);
 
 /*
     Try to do what's necessary for a reasonable display of the type

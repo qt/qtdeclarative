@@ -113,7 +113,7 @@ private:
 }
 
 #define V8_DEFINE_EXTENSION(dataclass, datafunction) \
-    inline dataclass *datafunction(QV8Engine *engine) \
+    static inline dataclass *datafunction(QV8Engine *engine) \
     { \
         static int extensionId = -1; \
         if (extensionId == -1) { \
