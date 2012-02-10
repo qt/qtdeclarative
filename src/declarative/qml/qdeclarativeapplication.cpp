@@ -86,7 +86,11 @@ Qt::LayoutDirection QDeclarativeApplication::layoutDirection() const
 
 QObject *QDeclarativeApplication::inputPanel() const
 {
-    qWarning() << "Qt.application.inputPanel is deprecated, use Qt.inputMethod instead";
+    static bool warned = false;
+    if (!warned) {
+        qWarning() << "Qt.application.inputPanel is deprecated, use Qt.inputMethod instead";
+        warned = true;
+    }
     return qApp ? qApp->inputMethod() : 0;
 }
 
