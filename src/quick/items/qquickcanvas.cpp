@@ -824,6 +824,7 @@ bool QQuickCanvas::event(QEvent *e)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
     {
         QTouchEvent *touch = static_cast<QTouchEvent *>(e);
         d->translateTouchEvent(touch);
@@ -1165,7 +1166,11 @@ bool QQuickCanvasPrivate::deliverTouchEvent(QTouchEvent *event)
         qWarning("touchUpdateEvent");
     else if (event->type() == QEvent::TouchEnd)
         qWarning("touchEndEvent");
+    else if (event->type() == QEvent::TouchCancel)
+        qWarning("touchCancelEvent");
 #endif
+
+    Q_Q(QQuickCanvas);
 
     QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > updatedPoints;
 
@@ -1177,6 +1182,21 @@ bool QQuickCanvasPrivate::deliverTouchEvent(QTouchEvent *event)
         else
             event->ignore();
         return event->isAccepted();
+    }
+
+    if (event->type() == QTouchEvent::TouchCancel) {
+        // A TouchCancel event will typically not contain any points.
+        // Deliver it to all items that have active touches.
+        QSet<QQuickItem *> cancelDelivered;
+        foreach (QQuickItem *item, itemForTouchPointId) {
+            if (cancelDelivered.contains(item))
+                continue;
+            cancelDelivered.insert(item);
+            q->sendEvent(item, event);
+        }
+        // The next touch event can only be a TouchBegin so clean up.
+        itemForTouchPointId.clear();
+        return true;
     }
 
     const QList<QTouchEvent::TouchPoint> &touchPoints = event->touchPoints();
@@ -1497,6 +1517,7 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
         // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
         if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
             e->accept();

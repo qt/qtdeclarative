@@ -74,7 +74,8 @@ static QTouchEvent::TouchPoint makeTouchPoint(QQuickItem *item, const QPointF &p
     return tp;
 }
 
-static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states, const QList<QTouchEvent::TouchPoint>& touchPoints)
+static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states = 0,
+                                    const QList<QTouchEvent::TouchPoint>& touchPoints = QList<QTouchEvent::TouchPoint>())
 {
     TouchEventData d = { type, 0, w, states, touchPoints };
     return d;
@@ -197,6 +198,7 @@ private slots:
     void touchEvent_basic();
     void touchEvent_propagation();
     void touchEvent_propagation_data();
+    void touchEvent_cancel();
 
     void clearCanvas();
 
@@ -473,6 +475,37 @@ void tst_qquickcanvas::touchEvent_propagation_data()
     QTest::newRow("disable events") << false << true << 1.0;
     QTest::newRow("disable item") << true << false << 1.0;
     QTest::newRow("opacity of 0") << true << true << 0.0;
+}
+
+void tst_qquickcanvas::touchEvent_cancel()
+{
+    TestTouchItem::clearMousePressCounter();
+
+    QQuickCanvas *canvas = new QQuickCanvas;
+    canvas->resize(250, 250);
+    canvas->move(100, 100);
+    canvas->show();
+
+    TestTouchItem *item = new TestTouchItem(canvas->rootItem());
+    item->setPos(QPointF(50, 50));
+    item->setSize(QSizeF(150, 150));
+
+    QPointF pos(10, 10);
+    QTest::touchEvent(canvas, touchDevice).press(0, item->mapToScene(pos).toPoint(),canvas);
+    QCoreApplication::processEvents();
+
+    QTRY_COMPARE(item->lastEvent.touchPoints.count(), 1);
+    TouchEventData d = makeTouchData(QEvent::TouchBegin, canvas, Qt::TouchPointPressed, makeTouchPoint(item,pos));
+    COMPARE_TOUCH_DATA(item->lastEvent, d);
+    item->reset();
+
+    QWindowSystemInterface::handleTouchCancelEvent(0, touchDevice);
+    QCoreApplication::processEvents();
+    d = makeTouchData(QEvent::TouchCancel, canvas);
+    COMPARE_TOUCH_DATA(item->lastEvent, d);
+
+    delete item;
+    delete canvas;
 }
 
 void tst_qquickcanvas::clearCanvas()
