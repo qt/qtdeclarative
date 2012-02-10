@@ -992,6 +992,7 @@ void QQuickRenderThreadSingleContextWindowManager::startRendering()
     inSync = false;
 
     lockInGui();
+    animationRunning = animationDriver->isRunning();
     start(); // Start the render thread...
     wait();
     unlockInGui();
