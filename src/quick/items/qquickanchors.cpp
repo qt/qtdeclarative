@@ -51,24 +51,14 @@ QT_BEGIN_NAMESPACE
 //TODO: should we cache relationships, so we don't have to check each time (parent-child or sibling)?
 //TODO: support non-parent, non-sibling (need to find lowest common ancestor)
 
-static qreal hcenter(QQuickItem *item)
+static inline qreal hcenter(QQuickItem *item)
 {
-    qreal width = item->width();
-    int iw = width;
-    if (iw % 2)
-        return (width + 1) / 2;
-    else
-        return width / 2;
+    return item->width() / 2;
 }
 
-static qreal vcenter(QQuickItem *item)
+static inline qreal vcenter(QQuickItem *item)
 {
-    qreal height = item->height();
-    int ih = height;
-    if (ih % 2)
-        return (height + 1) / 2;
-    else
-        return height / 2;
+    return item->height() / 2;
 }
 
 //### const item?

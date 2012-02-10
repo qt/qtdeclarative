@@ -9,4 +9,10 @@ Rectangle {
         anchors.verticalCenterOffset: 30
         anchors.horizontalCenterOffset: 10
     }
+
+    Rectangle {
+        objectName: "centered2"
+        width: 11; height: 11; color: "green"
+        anchors.centerIn: parent;
+    }
 }
