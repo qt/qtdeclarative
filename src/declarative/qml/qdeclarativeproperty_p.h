@@ -110,6 +110,7 @@ public:
     static bool write(QObject *, const QDeclarativePropertyData &, const QVariant &,
                       QDeclarativeContextData *, WriteFlags flags = 0);
     static void findAliasTarget(QObject *, int, QObject **, int *);
+
     static QDeclarativeAbstractBinding *setBinding(QObject *, int coreIndex,
                                                    int valueTypeIndex /* -1 */,
                                                    QDeclarativeAbstractBinding *,

@@ -59,7 +59,7 @@ static QDeclarativeJavaScriptExpression::VTable QV8Bindings_Binding_jsvtable = {
 };
 
 QV8Bindings::Binding::Binding()
-: QDeclarativeJavaScriptExpression(&QV8Bindings_Binding_jsvtable), object(0), parent(0)
+: QDeclarativeJavaScriptExpression(&QV8Bindings_Binding_jsvtable), target(0), parent(0)
 {
 }
 
@@ -82,6 +82,16 @@ void QV8Bindings::refresh()
 void QV8Bindings::Binding::refresh()
 {
     update();
+}
+
+int QV8Bindings::Binding::propertyIndex() const
+{
+    return instruction->property.encodedIndex();
+}
+
+QObject *QV8Bindings::Binding::object() const
+{
+    return target;
 }
 
 void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
@@ -120,7 +130,7 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         bool needsErrorData = false;
         if (!watcher.wasDeleted() && !hasError()) {
             typedef QDeclarativePropertyPrivate PP;
-            needsErrorData = !PP::writeBinding(object, instruction->property, context, this, result,
+            needsErrorData = !PP::writeBinding(target, instruction->property, context, this, result,
                                                isUndefined, flags);
         }
 
@@ -147,7 +157,7 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         ep->dereferenceScarceResources(); 
 
     } else {
-        QDeclarativeProperty p = QDeclarativePropertyPrivate::restore(object, instruction->property,
+        QDeclarativeProperty p = QDeclarativePropertyPrivate::restore(target, instruction->property,
                                                                       context);
         QDeclarativeBindingPrivate::printBindingLoopError(p);
     }
@@ -245,8 +255,7 @@ QV8Bindings::configBinding(QObject *target, QObject *scope,
     QV8Bindings::Binding *rv = bindings + i->value;
 
     rv->instruction = i;
-
-    rv->object = target;
+    rv->target = target;
     rv->setScopeObject(scope);
     rv->setUseSharedContext(true);
     rv->setNotifyOnValueChanged(true);

@@ -80,8 +80,13 @@ public:
     enum Type { PropertyBinding, ValueTypeProxy };
     virtual Type bindingType() const { return PropertyBinding; }
 
-    QObject *object() const;
-    int propertyIndex() const;
+    // Should return the encoded property index for the binding.  Should return this value
+    // even if the binding is not enabled or added to an object.
+    // Encoding is:  coreIndex | (valueTypeIndex << 24)
+    virtual int propertyIndex() const = 0;
+    // Should return the object for the binding.  Should return this object even if the
+    // binding is not enabled or added to the object.
+    virtual QObject *object() const = 0;
 
     void setEnabled(bool e) { setEnabled(e, QDeclarativePropertyPrivate::DontRemoveBinding); }
     virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags) = 0;
@@ -89,7 +94,7 @@ public:
     void update() { update(QDeclarativePropertyPrivate::DontRemoveBinding); }
     virtual void update(QDeclarativePropertyPrivate::WriteFlags) = 0;
 
-    void addToObject(QObject *, int);
+    void addToObject();
     void removeFromObject();
 
     static inline Pointer getPointer(QDeclarativeAbstractBinding *p);
@@ -98,6 +103,11 @@ protected:
     virtual ~QDeclarativeAbstractBinding();
     void clear();
 
+    // Called by QDeclarativePropertyPrivate to "move" a binding to a different property.
+    // This is only used for alias properties, and only used by QDeclarativeBinding not
+    // V8 or V4 bindings.  The default implementation qFatal()'s to ensure that the
+    // method is never called for V4 or V8 bindings.
+    virtual void retargetBinding(QObject *, int);
 private:
     Pointer weakPointer();
 
@@ -107,9 +117,6 @@ private:
     friend class QDeclarativePropertyPrivate;
     friend class QDeclarativeVME;
     friend class QtSharedPointer::ExternalRefCount<QDeclarativeAbstractBinding>;
-
-    QObject *m_object;
-    int m_propertyIndex;
 
     typedef QSharedPointer<QDeclarativeAbstractBinding> SharedPointer;
     // To save memory, we also store the rarely used weakPointer() instance in here
@@ -128,6 +135,8 @@ public:
 
     virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags);
     virtual void update(QDeclarativePropertyPrivate::WriteFlags);
+    virtual int propertyIndex() const;
+    virtual QObject *object() const;
 
     QDeclarativeAbstractBinding *binding(int propertyIndex);
 
@@ -148,7 +157,8 @@ private:
 
 class QDeclarativeContext;
 class QDeclarativeBindingPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeBinding : public QDeclarativeExpression, public QDeclarativeAbstractBinding
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeBinding : public QDeclarativeExpression,
+                                                         public QDeclarativeAbstractBinding
 {
 Q_OBJECT
 public:
@@ -174,10 +184,15 @@ public:
     virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
     virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
     virtual QString expression() const;
+    virtual int propertyIndex() const;
+    virtual QObject *object() const;
+    virtual void retargetBinding(QObject *, int);
 
     typedef int Identifier;
     static Identifier Invalid;
-    static QDeclarativeBinding *createBinding(Identifier, QObject *, QDeclarativeContext *, const QString &, int, QObject *parent=0);
+    static QDeclarativeBinding *createBinding(Identifier, QObject *, QDeclarativeContext *,
+                                              const QString &, int, QObject *parent=0);
+
 
 public Q_SLOTS:
     void update() { update(QDeclarativePropertyPrivate::DontRemoveBinding); }

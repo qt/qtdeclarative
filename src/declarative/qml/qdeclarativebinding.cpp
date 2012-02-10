@@ -56,7 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 QDeclarativeAbstractBinding::QDeclarativeAbstractBinding()
-: m_object(0), m_propertyIndex(-1), m_prevBinding(0), m_nextBinding(0)
+: m_prevBinding(0), m_nextBinding(0)
 {
 }
 
@@ -89,21 +89,16 @@ being bound.
 
 However, it does not enable the binding itself or call update() on it.
 */
-void QDeclarativeAbstractBinding::addToObject(QObject *object, int index)
+void QDeclarativeAbstractBinding::addToObject()
 {
-    Q_ASSERT(object);
-
-    if (m_object == object && m_propertyIndex == index)
-        return;
-
-    removeFromObject();
-
     Q_ASSERT(!m_prevBinding);
 
-    m_object = object;
-    m_propertyIndex = index;
+    QObject *obj = object();
+    Q_ASSERT(obj);
 
-    QDeclarativeData *data = QDeclarativeData::get(object, true);
+    int index = propertyIndex();
+
+    QDeclarativeData *data = QDeclarativeData::get(obj, true);
 
     if (index & 0xFF000000) {
         // Value type
@@ -121,8 +116,12 @@ void QDeclarativeAbstractBinding::addToObject(QObject *object, int index)
         }
 
         if (!proxy) {
-            proxy = new QDeclarativeValueTypeProxyBinding(object, coreIndex);
-            proxy->addToObject(object, coreIndex);
+            proxy = new QDeclarativeValueTypeProxyBinding(obj, coreIndex);
+
+            Q_ASSERT(proxy->propertyIndex() == coreIndex);
+            Q_ASSERT(proxy->object() == obj);
+
+            proxy->addToObject();
         }
 
         m_nextBinding = proxy->m_bindings;
@@ -136,7 +135,7 @@ void QDeclarativeAbstractBinding::addToObject(QObject *object, int index)
         m_prevBinding = &data->bindings;
         data->bindings = this;
 
-        data->setBindingBit(m_object, index);
+        data->setBindingBit(obj, index);
     }
 }
 
@@ -157,13 +156,10 @@ void QDeclarativeAbstractBinding::removeFromObject()
             // Value type - we don't remove the proxy from the object.  It will sit their happily
             // doing nothing until it is removed by a write, a binding change or it is reused
             // to hold more sub-bindings.
-        } else if (m_object) {
-            QDeclarativeData *data = QDeclarativeData::get(m_object, false);
+        } else if (QObject *obj = object()) {
+            QDeclarativeData *data = QDeclarativeData::get(obj, false);
             if (data) data->clearBindingBit(index);
         }
-
-        m_object = 0;
-        m_propertyIndex = -1;
     }
 }
 
@@ -187,19 +183,14 @@ void QDeclarativeAbstractBinding::clear()
     }
 }
 
+void QDeclarativeAbstractBinding::retargetBinding(QObject *, int)
+{
+    qFatal("QDeclarativeAbstractBinding::retargetBinding() called on illegal binding.");
+}
+
 QString QDeclarativeAbstractBinding::expression() const
 {
     return QLatin1String("<Unknown>");
-}
-
-QObject *QDeclarativeAbstractBinding::object() const
-{
-    return m_object;
-}
-
-int QDeclarativeAbstractBinding::propertyIndex() const
-{
-    return m_propertyIndex;
 }
 
 void QDeclarativeAbstractBinding::setEnabled(bool enabled, QDeclarativePropertyPrivate::WriteFlags flags)
@@ -216,7 +207,7 @@ void QDeclarativeBindingPrivate::refresh()
 }
 
 QDeclarativeBindingPrivate::QDeclarativeBindingPrivate()
-: updating(false), enabled(false)
+: updating(false), enabled(false), target(), targetProperty(0)
 {
 }
 
@@ -298,6 +289,8 @@ void QDeclarativeBinding::setTarget(const QDeclarativeProperty &prop)
 {
     Q_D(QDeclarativeBinding);
     d->property = prop;
+    d->target = d->property.object();
+    d->targetProperty = QDeclarativePropertyPrivate::get(d->property)->core.encodedIndex();
 
     update();
 }
@@ -308,6 +301,8 @@ void QDeclarativeBinding::setTarget(QObject *object,
 {
     Q_D(QDeclarativeBinding);
     d->property = QDeclarativePropertyPrivate::restore(object, core, ctxt);
+    d->target = d->property.object();
+    d->targetProperty = QDeclarativePropertyPrivate::get(d->property)->core.encodedIndex();
 
     update();
 }
@@ -442,6 +437,25 @@ QString QDeclarativeBinding::expression() const
     return QDeclarativeExpression::expression();
 }
 
+int QDeclarativeBinding::propertyIndex() const
+{
+    Q_D(const QDeclarativeBinding);
+    return d->targetProperty;
+}
+
+QObject *QDeclarativeBinding::object() const
+{
+    Q_D(const QDeclarativeBinding);
+    return d->target;
+}
+
+void QDeclarativeBinding::retargetBinding(QObject *t, int i)
+{
+    Q_D(QDeclarativeBinding);
+    d->target = t;
+    d->targetProperty = i;
+}
+
 QDeclarativeValueTypeProxyBinding::QDeclarativeValueTypeProxyBinding(QObject *o, int index)
 : m_object(o), m_index(index), m_bindings(0)
 {
@@ -522,6 +536,16 @@ void QDeclarativeValueTypeProxyBinding::removeBindings(quint32 mask)
             binding = binding->m_nextBinding;
         }
     }
+}
+
+int QDeclarativeValueTypeProxyBinding::propertyIndex() const
+{
+    return m_index;
+}
+
+QObject *QDeclarativeValueTypeProxyBinding::object() const
+{
+    return m_object;
 }
 
 QT_END_NAMESPACE

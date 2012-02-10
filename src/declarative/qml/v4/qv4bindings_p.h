@@ -90,6 +90,8 @@ private:
         virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void destroy();
+        virtual int propertyIndex() const;
+        virtual QObject *object() const;
 
         int index:30;
         bool enabled:1;

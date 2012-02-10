@@ -96,8 +96,10 @@ public:
         virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void destroy();
+        virtual int propertyIndex() const;
+        virtual QObject *object() const;
 
-        QObject *object;
+        QObject *target;
         QV8Bindings *parent;
 
         // To save memory, we store flags inside the instruction pointer.

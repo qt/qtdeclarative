@@ -3609,7 +3609,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
         bool isSharable = false;
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
-        if (isSharable && !binding.property->isAlias /* See above re alias */ &&
+        if (isSharable && !binding.property->isValueTypeSubProperty && !binding.property->isAlias /* See above re alias */ &&
             binding.property->type != qMetaTypeId<QDeclarativeBinding*>()) {
             binding.dataType = BindingReference::V8;
             sharedBindings.append(b);

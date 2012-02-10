@@ -694,8 +694,8 @@ QDeclarativePropertyPrivate::binding(const QDeclarativeProperty &that)
 */
 QDeclarativeAbstractBinding *
 QDeclarativePropertyPrivate::setBinding(const QDeclarativeProperty &that,
-                                            QDeclarativeAbstractBinding *newBinding, 
-                                            WriteFlags flags) 
+                                        QDeclarativeAbstractBinding *newBinding,
+                                        WriteFlags flags)
 {
     if (!that.d || !that.isProperty() || !that.d->object) {
         if (newBinding)
@@ -703,9 +703,21 @@ QDeclarativePropertyPrivate::setBinding(const QDeclarativeProperty &that,
         return 0;
     }
 
-    return that.d->setBinding(that.d->object, that.d->core.coreIndex, 
-                              that.d->core.getValueTypeCoreIndex(),
-                              newBinding, flags);
+    if (newBinding) {
+        // In the case that the new binding is provided, we must target the property it
+        // is associated with.  If we don't do this, retargetBinding() can fail.
+        QObject *object = newBinding->object();
+        int pi = newBinding->propertyIndex();
+
+        int core = pi & 0xFFFFFF;
+        int vt = (pi & 0xFF000000)?(pi >> 24):-1;
+
+        return setBinding(object, core, vt, newBinding, flags);
+    } else {
+        return setBinding(that.d->object, that.d->core.coreIndex,
+                          that.d->core.getValueTypeCoreIndex(),
+                          newBinding, flags);
+    }
 }
 
 QDeclarativeAbstractBinding *
@@ -727,7 +739,8 @@ QDeclarativePropertyPrivate::binding(QObject *object, int coreIndex, int valueTy
 
         // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
         Q_ASSERT(valueTypeIndex == -1 || aValueTypeIndex == -1);
-        return binding(aObject, aCoreIndex, (valueTypeIndex == -1)?aValueTypeIndex:valueTypeIndex);
+        aValueTypeIndex = (valueTypeIndex == -1)?aValueTypeIndex:valueTypeIndex;
+        return binding(aObject, aCoreIndex, aValueTypeIndex);
     }
 
     if (!data->hasBindingBit(coreIndex))
@@ -804,8 +817,8 @@ QDeclarativePropertyPrivate::setBinding(QObject *object, int coreIndex, int valu
 
             // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
             Q_ASSERT(valueTypeIndex == -1 || aValueTypeIndex == -1);
-            return setBinding(aObject, aCoreIndex, (valueTypeIndex == -1)?aValueTypeIndex:valueTypeIndex,
-                              newBinding, flags);
+            aValueTypeIndex = (valueTypeIndex == -1)?aValueTypeIndex:valueTypeIndex;
+            return setBinding(aObject, aCoreIndex, aValueTypeIndex, newBinding, flags);
         }
     }
 
@@ -829,7 +842,13 @@ QDeclarativePropertyPrivate::setBinding(QObject *object, int coreIndex, int valu
     }
 
     if (newBinding) {
-        newBinding->addToObject(object, index);
+        if (newBinding->propertyIndex() != index || newBinding->object() != object)
+            newBinding->retargetBinding(object, index);
+
+        Q_ASSERT(newBinding->propertyIndex() == index);
+        Q_ASSERT(newBinding->object() == object);
+
+        newBinding->addToObject();
         newBinding->setEnabled(true, flags);
     }
 
@@ -858,8 +877,8 @@ QDeclarativePropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, 
 
             // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
             Q_ASSERT(valueTypeIndex == -1 || aValueTypeIndex == -1);
-            return setBindingNoEnable(aObject, aCoreIndex, (valueTypeIndex == -1)?aValueTypeIndex:valueTypeIndex,
-                                      newBinding);
+            aValueTypeIndex = (valueTypeIndex == -1)?aValueTypeIndex:valueTypeIndex;
+            return setBindingNoEnable(aObject, aCoreIndex, aValueTypeIndex, newBinding);
         }
     }
 
@@ -880,8 +899,15 @@ QDeclarativePropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, 
     if (binding) 
         binding->removeFromObject();
 
-    if (newBinding) 
-        newBinding->addToObject(object, index);
+    if (newBinding) {
+        if (newBinding->propertyIndex() != index || newBinding->object() != object)
+            newBinding->retargetBinding(object, index);
+
+        Q_ASSERT(newBinding->propertyIndex() == index);
+        Q_ASSERT(newBinding->object() == object);
+
+        newBinding->addToObject();
+    }
 
     return binding;
 }

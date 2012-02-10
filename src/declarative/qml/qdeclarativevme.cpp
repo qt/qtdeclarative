@@ -769,7 +769,11 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             bind->m_mePtr = &bindValues.top();
             bind->setTarget(target, instr.property, CTXT);
 
-            bind->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(instr.property));
+            typedef QDeclarativePropertyPrivate QDPP;
+            Q_ASSERT(bind->propertyIndex() == QDPP::bindingIndex(instr.property));
+            Q_ASSERT(bind->object() == target);
+
+            bind->addToObject();
         QML_END_INSTR(StoreBinding)
 
         QML_BEGIN_INSTR(StoreBindingOnAlias)
@@ -810,7 +814,11 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                                                 instr.line, instr.column);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
-            binding->addToObject(target, property);
+
+            Q_ASSERT(binding->propertyIndex() == property);
+            Q_ASSERT(binding->object() == target);
+
+            binding->addToObject();
         QML_END_INSTR(StoreV4Binding)
 
         QML_BEGIN_INSTR(StoreV8Binding)
@@ -827,7 +835,12 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             if (binding) {
                 bindValues.push(binding);
                 binding->m_mePtr = &bindValues.top();
-                binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(instr.property));
+
+                typedef QDeclarativePropertyPrivate QDPP;
+                Q_ASSERT(binding->propertyIndex() == QDPP::bindingIndex(instr.property));
+                Q_ASSERT(binding->object() == target);
+
+                binding->addToObject();
             }
         QML_END_INSTR(StoreV8Binding)
 

@@ -79,6 +79,9 @@ private:
     bool enabled:1;
     int columnNumber;
     QDeclarativeProperty property; 
+
+    QObject *target;
+    int targetProperty;
 };
 
 QT_END_NAMESPACE

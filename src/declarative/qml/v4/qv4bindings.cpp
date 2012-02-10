@@ -254,6 +254,16 @@ void QV4Bindings::Binding::destroy()
     parent->release();
 }
 
+int QV4Bindings::Binding::propertyIndex() const
+{
+    return property;
+}
+
+QObject *QV4Bindings::Binding::object() const
+{
+    return target;
+}
+
 void QV4Bindings::Subscription::subscriptionCallback(QDeclarativeNotifierEndpoint *e) 
 {
     Subscription *s = static_cast<Subscription *>(e);

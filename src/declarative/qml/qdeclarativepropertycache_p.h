@@ -153,6 +153,10 @@ public:
     // Returns -1 if not a value type virtual property
     inline int getValueTypeCoreIndex() const;
 
+    // Returns the "encoded" index for use with bindings.  Encoding is:
+    //     coreIndex | (valueTypeCoreIndex << 24)
+    inline int encodedIndex() const;
+
     union {
         int propType;             // When !NotFullyResolved
         const char *propTypeName; // When NotFullyResolved
@@ -337,6 +341,11 @@ bool QDeclarativePropertyData::operator==(const QDeclarativePropertyRawData &oth
 int QDeclarativePropertyRawData::getValueTypeCoreIndex() const
 {
     return isValueTypeVirtual()?valueTypeCoreIndex:-1;
+}
+
+int QDeclarativePropertyRawData::encodedIndex() const
+{
+    return isValueTypeVirtual()?(coreIndex | (valueTypeCoreIndex << 24)):coreIndex;
 }
 
 QDeclarativePropertyData *
