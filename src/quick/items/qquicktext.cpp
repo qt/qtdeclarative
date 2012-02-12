@@ -773,6 +773,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         }
 
         layout.endLayout();
+        br.moveTop(0);
 
         if (once) {
             naturalWidth = layout.maximumWidth();
