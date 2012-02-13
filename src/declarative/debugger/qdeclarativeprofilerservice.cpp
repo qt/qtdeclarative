@@ -124,6 +124,11 @@ bool QDeclarativeProfilerService::stopProfiling()
     return profilerInstance()->stopProfilingImpl();
 }
 
+void QDeclarativeProfilerService::sendStartedProfilingMessage()
+{
+    profilerInstance()->sendStartedProfilingMessageImpl();
+}
+
 void QDeclarativeProfilerService::addEvent(EventType t)
 {
     profilerInstance()->addEventImpl(t);
@@ -174,7 +179,7 @@ bool QDeclarativeProfilerService::startProfilingImpl()
     bool success = false;
     if (!profilingEnabled()) {
         setProfilingEnabled(true);
-        addEventImpl(StartTrace);
+        sendStartedProfilingMessageImpl();
         success = true;
     }
     return success;
@@ -189,6 +194,15 @@ bool QDeclarativeProfilerService::stopProfilingImpl()
         success = true;
     }
     return success;
+}
+
+void QDeclarativeProfilerService::sendStartedProfilingMessageImpl()
+{
+    if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
+        return;
+
+    QDeclarativeProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)StartTrace, QString(), -1, -1, 0, 0};
+    QDeclarativeDebugService::sendMessage(ed.toByteArray());
 }
 
 void QDeclarativeProfilerService::addEventImpl(EventType event)

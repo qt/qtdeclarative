@@ -130,6 +130,7 @@ public:
 
     static bool startProfiling();
     static bool stopProfiling();
+    static void sendStartedProfilingMessage();
     static void addEvent(EventType);
     static void startRange(RangeType);
     static void rangeData(RangeType, const QString &);
@@ -151,6 +152,7 @@ protected:
 private:
     bool startProfilingImpl();
     bool stopProfilingImpl();
+    void sendStartedProfilingMessageImpl();
     void addEventImpl(EventType);
     void startRangeImpl(RangeType);
     void rangeDataImpl(RangeType, const QString &);
