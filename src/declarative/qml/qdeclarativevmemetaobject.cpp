@@ -406,27 +406,27 @@ void QDeclarativeVMEMetaObjectEndpoint::vmecallback(QDeclarativeNotifierEndpoint
 
 void QDeclarativeVMEMetaObjectEndpoint::tryConnect()
 {
-    if (metaObject.flag())
-        return;
-
     int aliasId = this - metaObject->aliasEndpoints;
 
-    QDeclarativeVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
-    if (!d->isObjectAlias()) {
-        QDeclarativeContextData *ctxt = metaObject->ctxt;
-        QObject *target = ctxt->idValues[d->contextIdx].data();
-        if (!target)
-            return;
+    if (metaObject.flag()) {
+        // This is actually notify
+        int sigIdx = metaObject->methodOffset + aliasId + metaObject->metaData->propertyCount;
+        QMetaObject::activate(metaObject->object, sigIdx, 0);
+    } else {
+        QDeclarativeVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
+        if (!d->isObjectAlias()) {
+            QDeclarativeContextData *ctxt = metaObject->ctxt;
+            QObject *target = ctxt->idValues[d->contextIdx].data();
+            if (!target)
+                return;
 
-        QMetaProperty prop = target->metaObject()->property(d->propertyIndex());
-        if (prop.hasNotifySignal()) {
-            int sigIdx = metaObject->methodOffset + aliasId + metaObject->metaData->propertyCount;
-            QDeclarativePropertyPrivate::connect(target, prop.notifySignalIndex(),
-                                                 metaObject->object, sigIdx);
+            QMetaProperty prop = target->metaObject()->property(d->propertyIndex());
+            if (prop.hasNotifySignal())
+                connect(target, prop.notifySignalIndex());
         }
-    }
 
-    metaObject.setFlag();
+        metaObject.setFlag();
+    }
 }
 
 QDeclarativeVMEMetaObject::QDeclarativeVMEMetaObject(QObject *obj,
