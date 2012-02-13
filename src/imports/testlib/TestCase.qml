@@ -75,10 +75,10 @@ Item {
     property bool qtest_prevWhen: true
     property int qtest_testId: -1
     property bool qtest_componentCompleted : false
-    property variant qtest_testCaseResult
-    property variant qtest_results: qtest_results_normal
+    property var qtest_testCaseResult
+    property var qtest_results: qtest_results_normal
     TestResult { id: qtest_results_normal }
-    property variant qtest_events: qtest_events_normal
+    property var qtest_events: qtest_events_normal
     TestEvent { id: qtest_events_normal }
 
     function fail(msg) {

@@ -52,7 +52,7 @@ Item {
 
     // Public API.
 
-    property variant target: null
+    property var target: null
     property string signalName: ""
     property int count: 0
 
@@ -86,7 +86,7 @@ Item {
         qtest_update()
     }
 
-    property variant qtest_prevTarget: null
+    property var qtest_prevTarget: null
     property string qtest_prevSignalName: ""
     property int qtest_expectedCount: 0
 
