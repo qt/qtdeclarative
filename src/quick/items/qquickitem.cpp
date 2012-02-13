@@ -442,8 +442,8 @@ QQuickItemKeyFilter::QQuickItemKeyFilter(QQuickItem *item)
 {
     QQuickItemPrivate *p = item?QQuickItemPrivate::get(item):0;
     if (p) {
-        m_next = p->keyHandler;
-        p->keyHandler = this;
+        m_next = p->extra.value().keyHandler;
+        p->extra->keyHandler = this;
     }
 }
 
@@ -1505,7 +1505,7 @@ QQuickLayoutMirroringAttached::QQuickLayoutMirroringAttached(QObject *parent) : 
 {
     if (QQuickItem *item = qobject_cast<QQuickItem*>(parent)) {
         itemPrivate = QQuickItemPrivate::get(item);
-        itemPrivate->attachedLayoutDirection = this;
+        itemPrivate->extra.value().layoutDirectionAttached = this;
     } else
         qmlInfo(parent) << tr("LayoutDirection attached property only works with Items");
 }
@@ -1598,8 +1598,8 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
             emit _anchors->mirroredChanged();
         }
         mirrorChange();
-        if (attachedLayoutDirection) {
-            emit attachedLayoutDirection->enabledChanged();
+        if (extra.isAllocated() && extra->layoutDirectionAttached) {
+            emit extra->layoutDirectionAttached->enabledChanged();
         }
     }
 }
@@ -1824,11 +1824,14 @@ QQuickItem::~QQuickItem()
     }
 
     d->changeListeners.clear();
-    delete d->_anchorLines; d->_anchorLines = 0;
+
+    if (d->extra.isAllocated()) {
+        delete d->extra->contents; d->extra->contents = 0;
+        delete d->extra->layer; d->extra->layer = 0;
+    }
+
     delete d->_anchors; d->_anchors = 0;
     delete d->_stateGroup; d->_stateGroup = 0;
-    delete d->_contents; d->_contents = 0;
-    delete d->_layer;
 }
 
 /*!
@@ -2055,7 +2058,7 @@ QList<QQuickItem *> QQuickItemPrivate::paintOrderChildItems() const
     // the childItems list.  This is by far the most common case.
     bool haveZ = false;
     for (int i = 0; i < childItems.count(); ++i) {
-        if (QQuickItemPrivate::get(childItems.at(i))->z != 0.) {
+        if (QQuickItemPrivate::get(childItems.at(i))->z() != 0.) {
             haveZ = true;
             break;
         }
@@ -2150,12 +2153,16 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
         QQuickCanvasPrivate::get(canvas)->itemsToPolish.insert(q);
 
     itemNodeInstance = 0;
-    opacityNode = 0;
-    clipNode = 0;
-    rootNode = 0;
+
+    if (extra.isAllocated()) {
+        extra->opacityNode = 0;
+        extra->clipNode = 0;
+        extra->rootNode = 0;
+        extra->beforePaintNode = 0;
+    }
+
     groupNode = 0;
     paintNode = 0;
-    beforePaintNode = 0;
 
     InitializationState _dummy;
     InitializationState *childState = state;
@@ -2185,8 +2192,8 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
 
     dirty(Canvas);
 
-    if (screenAttached)
-        screenAttached->canvasChanged(c);
+    if (extra.isAllocated() && extra->screenAttached)
+        extra->screenAttached->canvasChanged(c);
     itemChange(QQuickItem::ItemSceneChange, c);
 }
 
@@ -2225,11 +2232,11 @@ void QQuickItemPrivate::itemToParentTransform(QTransform &t) const
         t = m.toTransform();
     }
 
-    if (scale != 1. || rotation != 0.) {
+    if (scale() != 1. || rotation() != 0.) {
         QPointF tp = computeTransformOrigin();
         t.translate(tp.x(), tp.y());
-        t.scale(scale, scale);
-        t.rotate(rotation);
+        t.scale(scale(), scale());
+        t.rotate(rotation());
         t.translate(-tp.x(), -tp.y());
     }
 }
@@ -2290,9 +2297,8 @@ bool QQuickItem::isComponentComplete() const
 }
 
 QQuickItemPrivate::QQuickItemPrivate()
-: _anchors(0), _contents(0), baselineOffset(0), _anchorLines(0), _stateGroup(0), origin(QQuickItem::Center),
-
-  flags(0), widthValid(false), heightValid(false), componentComplete(true),
+: _anchors(0), _stateGroup(0),
+  flags(0), widthValid(false), heightValid(false), baselineOffsetValid(false), componentComplete(true),
   keepMouse(false), keepTouch(false), hoverEnabled(false), smooth(false), focus(false), activeFocus(false), notifiedFocus(false),
   notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true),
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
@@ -2301,22 +2307,17 @@ QQuickItemPrivate::QQuickItemPrivate()
   staticSubtreeGeometry(false),
   isAccessible(false),
 
+  dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
+
   canvas(0), parentItem(0), sortedChildItems(&childItems),
 
   subFocusItem(0),
 
   x(0), y(0), width(0), height(0), implicitWidth(0), implicitHeight(0),
-  z(0), scale(1), rotation(0), opacity(1),
 
-  attachedLayoutDirection(0), acceptedMouseButtons(0),
+  baselineOffset(0),
 
-  keyHandler(0),
-
-  dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
-
-  itemNodeInstance(0), opacityNode(0), clipNode(0), rootNode(0), groupNode(0), paintNode(0)
-  , beforePaintNode(0), effectRefCount(0), hideRefCount(0)
-  , screenAttached(0), _layer(0)
+  itemNodeInstance(0), groupNode(0), paintNode(0)
 {
 }
 
@@ -2341,7 +2342,7 @@ void QQuickItemPrivate::init(QQuickItem *parent)
 
     registerAccessorProperties();
 
-    baselineOffset.invalidate();
+    baselineOffsetValid = false;
 
     if (parent) {
         q->setParentItem(parent);
@@ -2529,7 +2530,9 @@ QQuickItem *QQuickItemPrivate::visibleChildren_at(QDeclarativeListProperty<QQuic
 int QQuickItemPrivate::transform_count(QDeclarativeListProperty<QQuickTransform> *prop)
 {
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
-    return QQuickItemPrivate::get(that)->transforms.count();
+    QQuickItemPrivate *p = QQuickItemPrivate::get(that);
+
+    return p->transforms.count();
 }
 
 void QQuickTransform::appendToItem(QQuickItem *item)
@@ -2838,14 +2841,6 @@ QQuickAnchors *QQuickItemPrivate::anchors() const
     return _anchors;
 }
 
-QQuickItemPrivate::AnchorLines *QQuickItemPrivate::anchorLines() const
-{
-    Q_Q(const QQuickItem);
-    if (!_anchorLines) _anchorLines =
-        new AnchorLines(const_cast<QQuickItem *>(q));
-    return _anchorLines;
-}
-
 void QQuickItemPrivate::siblingOrderChanged()
 {
     Q_Q(QQuickItem);
@@ -2868,12 +2863,12 @@ QDeclarativeListProperty<QObject> QQuickItemPrivate::data()
 QRectF QQuickItem::childrenRect()
 {
     Q_D(QQuickItem);
-    if (!d->_contents) {
-        d->_contents = new QQuickContents(this);
+    if (!d->extra.isAllocated() || !d->extra->contents) {
+        d->extra.value().contents = new QQuickContents(this);
         if (d->componentComplete)
-            d->_contents->complete();
+            d->extra->contents->complete();
     }
-    return d->_contents->rectF();
+    return d->extra->contents->rectF();
 }
 
 QList<QQuickItem *> QQuickItem::childItems() const
@@ -2971,6 +2966,11 @@ void QQuickItem::sendAccessibilityUpdate()
 {
 }
 
+void QQuickItemPrivate::addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
+{
+    changeListeners.append(ChangeListener(listener, types));
+}
+
 void QQuickItemPrivate::removeItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
 {
     ChangeListener change(listener, types);
@@ -2987,7 +2987,8 @@ void QQuickItemPrivate::updateOrAddGeometryChangeListener(QQuickItemChangeListen
         changeListeners.append(change);
 }
 
-void QQuickItemPrivate::updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types)
+void QQuickItemPrivate::updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener,
+                                                             GeometryChangeTypes types)
 {
     ChangeListener change(listener, types);
     if (types == NoChange) {
@@ -3130,8 +3131,8 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
     case Qt::ImMaximumTextLength:
     case Qt::ImAnchorPosition:
     case Qt::ImPreferredLanguage:
-        if (d->keyHandler)
-            v = d->keyHandler->inputMethodQuery(query);
+        if (d->extra.isAllocated() && d->extra->keyHandler)
+            v = d->extra->keyHandler->inputMethodQuery(query);
     default:
         break;
     }
@@ -3141,46 +3142,54 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 
 QQuickAnchorLine QQuickItemPrivate::left() const
 {
-    return anchorLines()->left;
+    Q_Q(const QQuickItem);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Left);
 }
 
 QQuickAnchorLine QQuickItemPrivate::right() const
 {
-    return anchorLines()->right;
+    Q_Q(const QQuickItem);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Right);
 }
 
 QQuickAnchorLine QQuickItemPrivate::horizontalCenter() const
 {
-    return anchorLines()->hCenter;
+    Q_Q(const QQuickItem);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::HCenter);
 }
 
 QQuickAnchorLine QQuickItemPrivate::top() const
 {
-    return anchorLines()->top;
+    Q_Q(const QQuickItem);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Top);
 }
 
 QQuickAnchorLine QQuickItemPrivate::bottom() const
 {
-    return anchorLines()->bottom;
+    Q_Q(const QQuickItem);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Bottom);
 }
 
 QQuickAnchorLine QQuickItemPrivate::verticalCenter() const
 {
-    return anchorLines()->vCenter;
+    Q_Q(const QQuickItem);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::VCenter);
 }
 
 QQuickAnchorLine QQuickItemPrivate::baseline() const
 {
-    return anchorLines()->baseline;
+    Q_Q(const QQuickItem);
+    return QQuickAnchorLine(const_cast<QQuickItem *>(q), QQuickAnchorLine::Baseline);
 }
 
 qreal QQuickItem::baselineOffset() const
 {
     Q_D(const QQuickItem);
-    if (!d->baselineOffset.isValid()) {
-        return 0.0;
-    } else
+    if (d->baselineOffsetValid) {
         return d->baselineOffset;
+    } else {
+        return 0.0;
+    }
 }
 
 void QQuickItem::setBaselineOffset(qreal offset)
@@ -3190,6 +3199,7 @@ void QQuickItem::setBaselineOffset(qreal offset)
         return;
 
     d->baselineOffset = offset;
+    d->baselineOffsetValid = true;
 
     for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         const QQuickItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
@@ -3404,8 +3414,8 @@ void QQuickItem::classBegin()
         d->_stateGroup->classBegin();
     if (d->_anchors)
         d->_anchors->classBegin();
-    if (d->_layer)
-        d->_layer->classBegin();
+    if (d->extra.isAllocated() && d->extra->layer)
+        d->extra->layer->classBegin();
 }
 
 void QQuickItem::componentComplete()
@@ -3419,13 +3429,14 @@ void QQuickItem::componentComplete()
         QQuickAnchorsPrivate::get(d->_anchors)->updateOnComplete();
     }
 
-    if (d->_layer)
-        d->_layer->componentComplete();
+    if (d->extra.isAllocated() && d->extra->layer)
+        d->extra->layer->componentComplete();
 
-    if (d->keyHandler)
-        d->keyHandler->componentComplete();
-    if (d->_contents)
-        d->_contents->complete();
+    if (d->extra.isAllocated() && d->extra->keyHandler)
+        d->extra->keyHandler->componentComplete();
+
+    if (d->extra.isAllocated() && d->extra->contents)
+        d->extra->contents->complete();
 }
 
 QDeclarativeStateGroup *QQuickItemPrivate::_states()
@@ -3442,27 +3453,9 @@ QDeclarativeStateGroup *QQuickItemPrivate::_states()
     return _stateGroup;
 }
 
-QQuickItemPrivate::AnchorLines::AnchorLines(QQuickItem *q)
-{
-    left.item = q;
-    left.anchorLine = QQuickAnchorLine::Left;
-    right.item = q;
-    right.anchorLine = QQuickAnchorLine::Right;
-    hCenter.item = q;
-    hCenter.anchorLine = QQuickAnchorLine::HCenter;
-    top.item = q;
-    top.anchorLine = QQuickAnchorLine::Top;
-    bottom.item = q;
-    bottom.anchorLine = QQuickAnchorLine::Bottom;
-    vCenter.item = q;
-    vCenter.anchorLine = QQuickAnchorLine::VCenter;
-    baseline.item = q;
-    baseline.anchorLine = QQuickAnchorLine::Baseline;
-}
-
 QPointF QQuickItemPrivate::computeTransformOrigin() const
 {
-    switch (origin) {
+    switch (origin()) {
     default:
     case QQuickItem::TopLeft:
         return QPointF(0, 0);
@@ -3487,8 +3480,8 @@ QPointF QQuickItemPrivate::computeTransformOrigin() const
 
 void QQuickItemPrivate::transformChanged()
 {
-    if (_layer)
-        _layer->updateMatrix();
+    if (extra.isAllocated() && extra->layer)
+        extra->layer->updateMatrix();
 }
 
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
@@ -3496,11 +3489,11 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
     Q_Q(QQuickItem);
 
     Q_ASSERT(e->isAccepted());
-    if (keyHandler) {
+    if (extra.isAllocated() && extra->keyHandler) {
         if (e->type() == QEvent::KeyPress)
-            keyHandler->keyPressed(e, false);
+            extra->keyHandler->keyPressed(e, false);
         else
-            keyHandler->keyReleased(e, false);
+            extra->keyHandler->keyReleased(e, false);
 
         if (e->isAccepted())
             return;
@@ -3516,13 +3509,13 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
     if (e->isAccepted())
         return;
 
-    if (keyHandler) {
+    if (extra.isAllocated() && extra->keyHandler) {
         e->accept();
 
         if (e->type() == QEvent::KeyPress)
-            keyHandler->keyPressed(e, true);
+            extra->keyHandler->keyPressed(e, true);
         else
-            keyHandler->keyReleased(e, true);
+            extra->keyHandler->keyReleased(e, true);
     }
 }
 
@@ -3531,8 +3524,8 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
     Q_Q(QQuickItem);
 
     Q_ASSERT(e->isAccepted());
-    if (keyHandler) {
-        keyHandler->inputMethodEvent(e, false);
+    if (extra.isAllocated() && extra->keyHandler) {
+        extra->keyHandler->inputMethodEvent(e, false);
 
         if (e->isAccepted())
             return;
@@ -3545,10 +3538,10 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
     if (e->isAccepted())
         return;
 
-    if (keyHandler) {
+    if (extra.isAllocated() && extra->keyHandler) {
         e->accept();
 
-        keyHandler->inputMethodEvent(e, true);
+        extra->keyHandler->inputMethodEvent(e, true);
     }
 }
 
@@ -3665,52 +3658,52 @@ QRectF QQuickItem::boundingRect() const
 QQuickItem::TransformOrigin QQuickItem::transformOrigin() const
 {
     Q_D(const QQuickItem);
-    return d->origin;
+    return d->origin();
 }
 
 void QQuickItem::setTransformOrigin(TransformOrigin origin)
 {
     Q_D(QQuickItem);
-    if (origin == d->origin)
+    if (origin == d->origin())
         return;
 
-    d->origin = origin;
+    d->extra.value().origin = origin;
     d->dirty(QQuickItemPrivate::TransformOrigin);
 
-    emit transformOriginChanged(d->origin);
+    emit transformOriginChanged(d->origin());
 }
 
 QPointF QQuickItem::transformOriginPoint() const
 {
     Q_D(const QQuickItem);
-    if (!d->transformOriginPoint.isNull())
-        return d->transformOriginPoint;
+    if (d->extra.isAllocated() && !d->extra->userTransformOriginPoint.isNull())
+        return d->extra->userTransformOriginPoint;
     return d->computeTransformOrigin();
 }
 
 void QQuickItem::setTransformOriginPoint(const QPointF &point)
 {
     Q_D(QQuickItem);
-    if (d->transformOriginPoint == point)
+    if (d->extra.value().userTransformOriginPoint == point)
         return;
 
-    d->transformOriginPoint = point;
+    d->extra->userTransformOriginPoint = point;
     d->dirty(QQuickItemPrivate::TransformOrigin);
 }
 
 qreal QQuickItem::z() const
 {
     Q_D(const QQuickItem);
-    return d->z;
+    return d->z();
 }
 
 void QQuickItem::setZ(qreal v)
 {
     Q_D(QQuickItem);
-    if (d->z == v)
+    if (d->z() == v)
         return;
 
-    d->z = v;
+    d->extra.value().z = v;
 
     d->dirty(QQuickItemPrivate::ZValue);
     if (d->parentItem) {
@@ -3720,8 +3713,8 @@ void QQuickItem::setZ(qreal v)
 
     emit zChanged();
 
-    if (d->_layer)
-        d->_layer->updateZ();
+    if (d->extra.isAllocated() && d->extra->layer)
+        d->extra->layer->updateZ();
 }
 
 
@@ -3854,16 +3847,16 @@ void QQuickItem::setZ(qreal v)
 qreal QQuickItem::rotation() const
 {
     Q_D(const QQuickItem);
-    return d->rotation;
+    return d->rotation();
 }
 
 void QQuickItem::setRotation(qreal r)
 {
     Q_D(QQuickItem);
-    if (d->rotation == r)
+    if (d->rotation() == r)
         return;
 
-    d->rotation = r;
+    d->extra.value().rotation = r;
 
     d->dirty(QQuickItemPrivate::BasicTransform);
 
@@ -3875,16 +3868,16 @@ void QQuickItem::setRotation(qreal r)
 qreal QQuickItem::scale() const
 {
     Q_D(const QQuickItem);
-    return d->scale;
+    return d->scale();
 }
 
 void QQuickItem::setScale(qreal s)
 {
     Q_D(QQuickItem);
-    if (d->scale == s)
+    if (d->scale() == s)
         return;
 
-    d->scale = s;
+    d->extra.value().scale = s;
 
     d->dirty(QQuickItemPrivate::BasicTransform);
 
@@ -3894,16 +3887,16 @@ void QQuickItem::setScale(qreal s)
 qreal QQuickItem::opacity() const
 {
     Q_D(const QQuickItem);
-    return d->opacity;
+    return d->opacity();
 }
 
 void QQuickItem::setOpacity(qreal o)
 {
     Q_D(QQuickItem);
-    if (d->opacity == o)
+    if (d->opacity() == o)
         return;
 
-    d->opacity = o;
+    d->extra.value().opacity = o;
 
     d->dirty(QQuickItemPrivate::OpacityValue);
 
@@ -4127,27 +4120,27 @@ void QQuickItemPrivate::removeFromDirtyList()
 
 void QQuickItemPrivate::refFromEffectItem(bool hide)
 {
-    ++effectRefCount;
-    if (1 == effectRefCount) {
+    ++extra.value().effectRefCount;
+    if (1 == extra->effectRefCount) {
         dirty(EffectReference);
         if (parentItem) QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
     }
     if (hide) {
-        if (++hideRefCount == 1)
+        if (++extra->hideRefCount == 1)
             dirty(HideReference);
     }
 }
 
 void QQuickItemPrivate::derefFromEffectItem(bool unhide)
 {
-    Q_ASSERT(effectRefCount);
-    --effectRefCount;
-    if (0 == effectRefCount) {
+    Q_ASSERT(extra->effectRefCount);
+    --extra->effectRefCount;
+    if (0 == extra->effectRefCount) {
         dirty(EffectReference);
         if (parentItem) QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
     }
     if (unhide) {
-        if (--hideRefCount == 0)
+        if (--extra->hideRefCount == 0)
             dirty(HideReference);
     }
 }
@@ -4687,13 +4680,20 @@ QQuickItem *QQuickItem::scopedFocusItem() const
 Qt::MouseButtons QQuickItem::acceptedMouseButtons() const
 {
     Q_D(const QQuickItem);
-    return d->acceptedMouseButtons;
+    return d->acceptedMouseButtons();
 }
 
 void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
 {
     Q_D(QQuickItem);
-    d->acceptedMouseButtons = buttons;
+    if (buttons & Qt::LeftButton)
+        d->extra.setFlag();
+    else
+        d->extra.clearFlag();
+
+    buttons &= ~Qt::LeftButton;
+    if (buttons || d->extra.isAllocated())
+        d->extra.value().acceptedMouseButtons = buttons;
 }
 
 bool QQuickItem::filtersChildMouseEvents() const
@@ -5379,7 +5379,8 @@ qint64 QQuickItemPrivate::restart(QElapsedTimer &t)
 bool QQuickItem::isTextureProvider() const
 {
     Q_D(const QQuickItem);
-    return d->_layer && d->_layer->effectSource() ? d->_layer->effectSource()->isTextureProvider() : false;
+    return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
+           d->extra->layer->effectSource()->isTextureProvider() : false;
 }
 
 /*!
@@ -5394,22 +5395,19 @@ bool QQuickItem::isTextureProvider() const
 QSGTextureProvider *QQuickItem::textureProvider() const
 {
     Q_D(const QQuickItem);
-    return d->_layer && d->_layer->effectSource() ? d->_layer->effectSource()->textureProvider() : 0;
+    return d->extra.isAllocated() && d->extra->layer && d->extra->layer->effectSource() ?
+           d->extra->layer->effectSource()->textureProvider() : 0;
 }
-
-
 
 QQuickItemLayer *QQuickItemPrivate::layer() const
 {
-    if (!_layer) {
-        _layer = new QQuickItemLayer(const_cast<QQuickItem *>(q_func()));
+    if (!extra.isAllocated() || !extra->layer) {
+        extra.value().layer = new QQuickItemLayer(const_cast<QQuickItem *>(q_func()));
         if (!componentComplete)
-            _layer->classBegin();
+            extra->layer->classBegin();
     }
-    return _layer;
+    return extra->layer;
 }
-
-
 
 QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     : m_item(item)
@@ -5852,8 +5850,18 @@ void QQuickItemLayer::updateMatrix()
     l->setScale(m_item->scale());
     l->setRotation(m_item->rotation());
     ld->transforms = QQuickItemPrivate::get(m_item)->transforms;
-    ld->origin = QQuickItemPrivate::get(m_item)->origin;
+    if (ld->origin() != QQuickItemPrivate::get(m_item)->origin())
+        ld->extra.value().origin = QQuickItemPrivate::get(m_item)->origin();
     ld->dirty(QQuickItemPrivate::Transform);
+}
+
+QQuickItemPrivate::ExtraData::ExtraData()
+: z(0), scale(1), rotation(0), opacity(1),
+  contents(0), screenAttached(0), layoutDirectionAttached(0),
+  keyHandler(0), layer(0), effectRefCount(0), hideRefCount(0),
+  opacityNode(0), clipNode(0), rootNode(0), beforePaintNode(0),
+  acceptedMouseButtons(0), origin(QQuickItem::Center)
+{
 }
 
 QT_END_NAMESPACE

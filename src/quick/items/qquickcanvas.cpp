@@ -893,7 +893,7 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
     Q_Q(QQuickCanvas);
 
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity == 0.0)
+    if (itemPrivate->opacity() == 0.0)
         return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -911,7 +911,7 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
             return true;
     }
 
-    if (itemPrivate->acceptedMouseButtons & event->button()) {
+    if (itemPrivate->acceptedMouseButtons() & event->button()) {
         QPointF p = item->mapFromScene(event->windowPos());
         if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
             QMouseEvent me(event->type(), p, event->windowPos(), event->screenPos(),
@@ -1063,7 +1063,7 @@ bool QQuickCanvasPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
                                          Qt::KeyboardModifiers modifiers, bool &accepted)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity == 0.0)
+    if (itemPrivate->opacity() == 0.0)
         return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -1131,7 +1131,7 @@ bool QQuickCanvasPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 {
     Q_Q(QQuickCanvas);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity == 0.0)
+    if (itemPrivate->opacity() == 0.0)
         return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -1266,7 +1266,7 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     Q_Q(QQuickCanvas);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
-    if (itemPrivate->opacity == 0.0)
+    if (itemPrivate->opacity() == 0.0)
         return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -1426,7 +1426,7 @@ bool QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     Q_Q(QQuickCanvas);
     bool accepted = false;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity == 0.0 || !item->isVisible() || !item->isEnabled())
+    if (itemPrivate->opacity() == 0.0 || !item->isVisible() || !item->isEnabled())
         return false;
 
     QPointF p = item->mapFromScene(event->pos());
@@ -1568,8 +1568,12 @@ void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
     if (p->itemNodeInstance) {
         delete p->itemNodeInstance;
         p->itemNodeInstance = 0;
-        p->opacityNode = 0;
-        p->clipNode = 0;
+
+        if (p->extra.isAllocated()) {
+            p->extra->opacityNode = 0;
+            p->extra->clipNode = 0;
+        }
+
         p->groupNode = 0;
         p->paintNode = 0;
     }
@@ -1623,8 +1627,8 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
     itemPriv->dirtyAttributes = 0;
 
     if ((dirty & QQuickItemPrivate::TransformUpdateMask) ||
-        (dirty & QQuickItemPrivate::Size && itemPriv->origin != QQuickItem::TopLeft &&
-         (itemPriv->scale != 1. || itemPriv->rotation != 0.))) {
+        (dirty & QQuickItemPrivate::Size && itemPriv->origin() != QQuickItem::TopLeft &&
+         (itemPriv->scale() != 1. || itemPriv->rotation() != 0.))) {
 
         QMatrix4x4 matrix;
 
@@ -1634,13 +1638,13 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         for (int ii = itemPriv->transforms.count() - 1; ii >= 0; --ii)
             itemPriv->transforms.at(ii)->applyTo(&matrix);
 
-        if (itemPriv->scale != 1. || itemPriv->rotation != 0.) {
+        if (itemPriv->scale() != 1. || itemPriv->rotation() != 0.) {
             QPointF origin = item->transformOriginPoint();
             matrix.translate(origin.x(), origin.y());
-            if (itemPriv->scale != 1.)
-                matrix.scale(itemPriv->scale, itemPriv->scale);
-            if (itemPriv->rotation != 0.)
-                matrix.rotate(itemPriv->rotation, 0, 0, 1);
+            if (itemPriv->scale() != 1.)
+                matrix.scale(itemPriv->scale(), itemPriv->scale());
+            if (itemPriv->rotation() != 0.)
+                matrix.rotate(itemPriv->rotation(), 0, 0, 1);
             matrix.translate(-origin.x(), -origin.y());
         }
 
@@ -1648,32 +1652,35 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
     }
 
     bool clipEffectivelyChanged = (dirty & (QQuickItemPrivate::Clip | QQuickItemPrivate::Canvas)) &&
-                                  ((item->clip() == false) != (itemPriv->clipNode == 0));
+                                  ((item->clip() == false) != (itemPriv->clipNode() == 0));
+    int effectRefCount = itemPriv->extra.isAllocated()?itemPriv->extra->effectRefCount:0;
     bool effectRefEffectivelyChanged = (dirty & (QQuickItemPrivate::EffectReference | QQuickItemPrivate::Canvas)) &&
-                                  ((itemPriv->effectRefCount == 0) != (itemPriv->rootNode == 0));
+                                  ((effectRefCount == 0) != (itemPriv->rootNode() == 0));
 
     if (clipEffectivelyChanged) {
-        QSGNode *parent = itemPriv->opacityNode ? (QSGNode *) itemPriv->opacityNode : (QSGNode *)itemPriv->itemNode();
-        QSGNode *child = itemPriv->rootNode ? (QSGNode *)itemPriv->rootNode : (QSGNode *)itemPriv->groupNode;
+        QSGNode *parent = itemPriv->opacityNode() ? (QSGNode *) itemPriv->opacityNode() :
+                                                    (QSGNode *)itemPriv->itemNode();
+        QSGNode *child = itemPriv->rootNode() ? (QSGNode *)itemPriv->rootNode() :
+                                                (QSGNode *)itemPriv->groupNode;
 
         if (item->clip()) {
-            Q_ASSERT(itemPriv->clipNode == 0);
-            itemPriv->clipNode = new QQuickDefaultClipNode(item->boundingRect());
-            itemPriv->clipNode->update();
+            Q_ASSERT(itemPriv->clipNode() == 0);
+            itemPriv->extra.value().clipNode = new QQuickDefaultClipNode(item->boundingRect());
+            itemPriv->clipNode()->update();
 
             if (child)
                 parent->removeChildNode(child);
-            parent->appendChildNode(itemPriv->clipNode);
+            parent->appendChildNode(itemPriv->clipNode());
             if (child)
-                itemPriv->clipNode->appendChildNode(child);
+                itemPriv->clipNode()->appendChildNode(child);
 
         } else {
-            Q_ASSERT(itemPriv->clipNode != 0);
-            parent->removeChildNode(itemPriv->clipNode);
+            Q_ASSERT(itemPriv->clipNode() != 0);
+            parent->removeChildNode(itemPriv->clipNode());
             if (child)
-                itemPriv->clipNode->removeChildNode(child);
-            delete itemPriv->clipNode;
-            itemPriv->clipNode = 0;
+                itemPriv->clipNode()->removeChildNode(child);
+            delete itemPriv->clipNode();
+            itemPriv->extra->clipNode = 0;
             if (child)
                 parent->appendChildNode(child);
         }
@@ -1683,29 +1690,29 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         itemPriv->childContainerNode()->removeAllChildNodes();
 
     if (effectRefEffectivelyChanged) {
-        QSGNode *parent = itemPriv->clipNode;
+        QSGNode *parent = itemPriv->clipNode();
         if (!parent)
-            parent = itemPriv->opacityNode;
+            parent = itemPriv->opacityNode();
         if (!parent)
             parent = itemPriv->itemNode();
         QSGNode *child = itemPriv->groupNode;
 
-        if (itemPriv->effectRefCount) {
-            Q_ASSERT(itemPriv->rootNode == 0);
-            itemPriv->rootNode = new QSGRootNode;
+        if (itemPriv->extra.isAllocated() && itemPriv->extra->effectRefCount) {
+            Q_ASSERT(itemPriv->rootNode() == 0);
+            itemPriv->extra->rootNode = new QSGRootNode;
 
             if (child)
                 parent->removeChildNode(child);
-            parent->appendChildNode(itemPriv->rootNode);
+            parent->appendChildNode(itemPriv->rootNode());
             if (child)
-                itemPriv->rootNode->appendChildNode(child);
+                itemPriv->rootNode()->appendChildNode(child);
         } else {
-            Q_ASSERT(itemPriv->rootNode != 0);
-            parent->removeChildNode(itemPriv->rootNode);
+            Q_ASSERT(itemPriv->rootNode() != 0);
+            parent->removeChildNode(itemPriv->rootNode());
             if (child)
-                itemPriv->rootNode->removeChildNode(child);
-            delete itemPriv->rootNode;
-            itemPriv->rootNode = 0;
+                itemPriv->rootNode()->removeChildNode(child);
+            delete itemPriv->rootNode();
+            itemPriv->extra->rootNode = 0;
             if (child)
                 parent->appendChildNode(child);
         }
@@ -1721,21 +1728,26 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
 
         for (; ii < orderedChildren.count() && orderedChildren.at(ii)->z() < 0; ++ii) {
             QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
-            if (!childPrivate->explicitVisible && !childPrivate->effectRefCount)
+            if (!childPrivate->explicitVisible &&
+                (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
                 continue;
             if (childPrivate->itemNode()->parent())
                 childPrivate->itemNode()->parent()->removeChildNode(childPrivate->itemNode());
 
             itemPriv->childContainerNode()->appendChildNode(childPrivate->itemNode());
         }
-        itemPriv->beforePaintNode = itemPriv->groupNode ? itemPriv->groupNode->lastChild() : 0;
+
+        QSGNode *beforePaintNode = itemPriv->groupNode ? itemPriv->groupNode->lastChild() : 0;
+        if (beforePaintNode || itemPriv->extra.isAllocated())
+            itemPriv->extra.value().beforePaintNode = beforePaintNode;
 
         if (itemPriv->paintNode)
             itemPriv->childContainerNode()->appendChildNode(itemPriv->paintNode);
 
         for (; ii < orderedChildren.count(); ++ii) {
             QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
-            if (!childPrivate->explicitVisible && !childPrivate->effectRefCount)
+            if (!childPrivate->explicitVisible &&
+                (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
                 continue;
             if (childPrivate->itemNode()->parent())
                 childPrivate->itemNode()->parent()->removeChildNode(childPrivate->itemNode());
@@ -1744,35 +1756,35 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         }
     }
 
-    if ((dirty & QQuickItemPrivate::Size) && itemPriv->clipNode) {
-        itemPriv->clipNode->setRect(item->boundingRect());
-        itemPriv->clipNode->update();
+    if ((dirty & QQuickItemPrivate::Size) && itemPriv->clipNode()) {
+        itemPriv->clipNode()->setRect(item->boundingRect());
+        itemPriv->clipNode()->update();
     }
 
     if (dirty & (QQuickItemPrivate::OpacityValue | QQuickItemPrivate::Visible
                  | QQuickItemPrivate::HideReference | QQuickItemPrivate::Canvas))
     {
-        qreal opacity = itemPriv->explicitVisible && itemPriv->hideRefCount == 0
-                      ? itemPriv->opacity : qreal(0);
+        qreal opacity = itemPriv->explicitVisible && (!itemPriv->extra.isAllocated() || itemPriv->extra->hideRefCount == 0)
+                      ? itemPriv->opacity() : qreal(0);
 
-        if (opacity != 1 && !itemPriv->opacityNode) {
-            itemPriv->opacityNode = new QSGOpacityNode;
+        if (opacity != 1 && !itemPriv->opacityNode()) {
+            itemPriv->extra.value().opacityNode = new QSGOpacityNode;
 
             QSGNode *parent = itemPriv->itemNode();
-            QSGNode *child = itemPriv->clipNode;
+            QSGNode *child = itemPriv->clipNode();
             if (!child)
-                child = itemPriv->rootNode;
+                child = itemPriv->rootNode();
             if (!child)
                 child = itemPriv->groupNode;
 
             if (child)
                 parent->removeChildNode(child);
-            parent->appendChildNode(itemPriv->opacityNode);
+            parent->appendChildNode(itemPriv->opacityNode());
             if (child)
-                itemPriv->opacityNode->appendChildNode(child);
+                itemPriv->opacityNode()->appendChildNode(child);
         }
-        if (itemPriv->opacityNode)
-            itemPriv->opacityNode->setOpacity(opacity);
+        if (itemPriv->opacityNode())
+            itemPriv->opacityNode()->setOpacity(opacity);
     }
 
     if (dirty & QQuickItemPrivate::ContentUpdateMask) {
@@ -1786,8 +1798,8 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
                      itemPriv->paintNode->parent() == itemPriv->childContainerNode());
 
             if (itemPriv->paintNode && itemPriv->paintNode->parent() == 0) {
-                if (itemPriv->beforePaintNode)
-                    itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, itemPriv->beforePaintNode);
+                if (itemPriv->extra.isAllocated() && itemPriv->extra->beforePaintNode)
+                    itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, itemPriv->extra->beforePaintNode);
                 else
                     itemPriv->childContainerNode()->prependChildNode(itemPriv->paintNode);
             }
@@ -1806,9 +1818,9 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
     // Check consistency.
     const QSGNode *nodeChain[] = {
         itemPriv->itemNodeInstance,
-        itemPriv->opacityNode,
-        itemPriv->clipNode,
-        itemPriv->rootNode,
+        itemPriv->opacityNode(),
+        itemPriv->clipNode(),
+        itemPriv->rootNode(),
         itemPriv->groupNode,
         itemPriv->paintNode,
     };

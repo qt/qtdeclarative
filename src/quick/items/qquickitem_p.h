@@ -69,6 +69,7 @@
 #include <private/qdeclarativenullablevalue_p_p.h>
 #include <private/qdeclarativenotifier_p.h>
 #include <private/qdeclarativeglobal_p.h>
+#include <private/qlazilyallocated_p.h>
 
 #include <qdeclarative.h>
 #include <qdeclarativecontext.h>
@@ -292,25 +293,6 @@ public:
     static QQuickTransform *transform_at(QDeclarativeListProperty<QQuickTransform> *list, int);
     static void transform_clear(QDeclarativeListProperty<QQuickTransform> *list);
 
-    QQuickAnchors *anchors() const;
-    mutable QQuickAnchors *_anchors;
-    QQuickContents *_contents;
-
-    QDeclarativeNullableValue<qreal> baselineOffset;
-
-    struct AnchorLines {
-        AnchorLines(QQuickItem *);
-        QQuickAnchorLine left;
-        QQuickAnchorLine right;
-        QQuickAnchorLine hCenter;
-        QQuickAnchorLine top;
-        QQuickAnchorLine bottom;
-        QQuickAnchorLine vCenter;
-        QQuickAnchorLine baseline;
-    };
-    mutable AnchorLines *_anchorLines;
-    AnchorLines *anchorLines() const;
-
     enum ChangeType {
         Geometry = 0x01,
         SiblingOrder = 0x02,
@@ -345,21 +327,61 @@ public:
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
 
-    void addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types) {
-        changeListeners.append(ChangeListener(listener, types));
-    }
+    struct ExtraData {
+        ExtraData();
+
+        qreal z;
+        qreal scale;
+        qreal rotation;
+        qreal opacity;
+
+        QQuickContents *contents;
+        QQuickScreenAttached *screenAttached;
+        QQuickLayoutMirroringAttached* layoutDirectionAttached;
+        QQuickItemKeyFilter *keyHandler;
+        mutable QQuickItemLayer *layer;
+        QPointF userTransformOriginPoint;
+
+        int effectRefCount;
+        int hideRefCount;
+
+        QSGOpacityNode *opacityNode;
+        QQuickDefaultClipNode *clipNode;
+        QSGRootNode *rootNode;
+        QSGNode *beforePaintNode;
+
+        // Although acceptedMouseButtons is inside ExtraData, we actually store
+        // the LeftButton flag in the extra.flag() bit.  This is because it is
+        // extremely common to set acceptedMouseButtons to LeftButton, but very
+        // rare to use any of the other buttons.
+        Qt::MouseButtons acceptedMouseButtons;
+
+        QQuickItem::TransformOrigin origin:5;
+    };
+    QLazilyAllocated<ExtraData> extra;
+
+    QQuickAnchors *anchors() const;
+    mutable QQuickAnchors *_anchors;
+
+    inline Qt::MouseButtons acceptedMouseButtons() const;
+
+    QPODVector<QQuickItemPrivate::ChangeListener,4> changeListeners;
+
+    void addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types);
     void removeItemChangeListener(QQuickItemChangeListener *, ChangeTypes types);
     void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
     void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
-    QPODVector<ChangeListener,4> changeListeners;
 
     QDeclarativeStateGroup *_states();
     QDeclarativeStateGroup *_stateGroup;
 
-    QQuickItem::TransformOrigin origin:5;
+    inline QQuickItem::TransformOrigin origin() const;
+
+    // Bit 0
     quint32 flags:5;
     bool widthValid:1;
     bool heightValid:1;
+    bool baselineOffsetValid:1;
     bool componentComplete:1;
     bool keepMouse:1;
     bool keepTouch:1;
@@ -368,6 +390,7 @@ public:
     bool focus:1;
     bool activeFocus:1;
     bool notifiedFocus:1;
+    // Bit 16
     bool notifiedActiveFocus:1;
     bool filtersChildMouseEvents:1;
     bool explicitVisible:1;
@@ -383,103 +406,9 @@ public:
     bool childrenDoNotOverlap:1;
     bool staticSubtreeGeometry:1;
     bool isAccessible:1;
+    // bool dummy:1
+    // Bit 32
 
-    QQuickCanvas *canvas;
-    QSGContext *sceneGraphContext() const { Q_ASSERT(canvas); return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
-
-    QQuickItem *parentItem;
-    QDeclarativeNotifier parentNotifier;
-
-    QList<QQuickItem *> childItems;
-    mutable QList<QQuickItem *> *sortedChildItems;
-    QList<QQuickItem *> paintOrderChildItems() const;
-    void addChild(QQuickItem *);
-    void removeChild(QQuickItem *);
-    void siblingOrderChanged();
-
-    inline void markSortedChildrenDirty(QQuickItem *child) {
-        // If sortedChildItems == &childItems then all in childItems have z == 0
-        // and we don't need to invalidate if the changed item also has z == 0.
-        if (child->z() != 0. || sortedChildItems != &childItems) {
-            if (sortedChildItems != &childItems)
-                delete sortedChildItems;
-            sortedChildItems = 0;
-        }
-    }
-
-    class InitializationState {
-    public:
-        QQuickItem *getFocusScope(QQuickItem *item);
-        void clear();
-        void clear(QQuickItem *focusScope);
-    private:
-        QQuickItem *focusScope;
-    };
-    void initCanvas(InitializationState *, QQuickCanvas *);
-
-    QQuickItem *subFocusItem;
-
-    QTransform canvasToItemTransform() const;
-    QTransform itemToCanvasTransform() const;
-    void itemToParentTransform(QTransform &) const;
-
-    qreal x;
-    qreal y;
-    qreal width;
-    qreal height;
-    qreal implicitWidth;
-    qreal implicitHeight;
-
-    qreal z;
-    qreal scale;
-    qreal rotation;
-    qreal opacity;
-
-    QQuickLayoutMirroringAttached* attachedLayoutDirection;
-
-    Qt::MouseButtons acceptedMouseButtons;
-
-    void setAccessibleFlagAndListener();
-
-    QPointF transformOriginPoint;
-
-    virtual qreal getImplicitWidth() const;
-    virtual qreal getImplicitHeight() const;
-    virtual void implicitWidthChanged();
-    virtual void implicitHeightChanged();
-
-    void resolveLayoutMirror();
-    void setImplicitLayoutMirror(bool mirror, bool inherit);
-    void setLayoutMirror(bool mirror);
-    bool isMirrored() const {
-        return effectiveLayoutMirror;
-    }
-
-    void emitChildrenRectChanged(const QRectF &rect) {
-        Q_Q(QQuickItem);
-        emit q->childrenRectChanged(rect);
-    }
-
-    QPointF computeTransformOrigin() const;
-    QList<QQuickTransform *> transforms;
-    virtual void transformChanged();
-
-    QQuickItemKeyFilter *keyHandler;
-    void deliverKeyEvent(QKeyEvent *);
-    void deliverInputMethodEvent(QInputMethodEvent *);
-    void deliverFocusEvent(QFocusEvent *);
-    void deliverMouseEvent(QMouseEvent *);
-    void deliverWheelEvent(QWheelEvent *);
-    void deliverTouchEvent(QTouchEvent *);
-    void deliverHoverEvent(QHoverEvent *);
-    void deliverDragEvent(QEvent *);
-
-    bool calcEffectiveVisible() const;
-    bool setEffectiveVisibleRecur(bool);
-    bool calcEffectiveEnable() const;
-    void setEffectiveEnableRecur(QQuickItem *scope, bool);
-
-    // XXX todo
     enum DirtyType {
         TransformOrigin         = 0x00000001,
         Transform               = 0x00000002,
@@ -505,12 +434,13 @@ public:
         // When you add an attribute here, don't forget to update
         // dirtyToString()
 
-        TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position | Size | Canvas,
+        TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position |
+                                  Size | Canvas,
         ComplexTransformUpdateMask     = Transform | Canvas,
         ContentUpdateMask       = Size | Content | Smooth | Canvas,
         ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Canvas
-
     };
+
     quint32 dirtyAttributes;
     QString dirtyToString() const;
     void dirty(DirtyType);
@@ -518,6 +448,90 @@ public:
     void removeFromDirtyList();
     QQuickItem *nextDirtyItem;
     QQuickItem**prevDirtyItem;
+
+    QQuickCanvas *canvas;
+    inline QSGContext *sceneGraphContext() const;
+
+    QQuickItem *parentItem;
+    QDeclarativeNotifier parentNotifier;
+
+    QList<QQuickItem *> childItems;
+    mutable QList<QQuickItem *> *sortedChildItems;
+    QList<QQuickItem *> paintOrderChildItems() const;
+    void addChild(QQuickItem *);
+    void removeChild(QQuickItem *);
+    void siblingOrderChanged();
+
+    inline void markSortedChildrenDirty(QQuickItem *child);
+
+    class InitializationState {
+    public:
+        QQuickItem *getFocusScope(QQuickItem *item);
+        void clear();
+        void clear(QQuickItem *focusScope);
+    private:
+        QQuickItem *focusScope;
+    };
+    void initCanvas(InitializationState *, QQuickCanvas *);
+
+    QQuickItem *subFocusItem;
+
+    QTransform canvasToItemTransform() const;
+    QTransform itemToCanvasTransform() const;
+    void itemToParentTransform(QTransform &) const;
+
+    qreal x;
+    qreal y;
+    qreal width;
+    qreal height;
+    qreal implicitWidth;
+    qreal implicitHeight;
+
+    qreal baselineOffset;
+
+    QList<QQuickTransform *> transforms;
+
+    inline qreal z() const { return extra.isAllocated()?extra->z:0; }
+    inline qreal scale() const { return extra.isAllocated()?extra->scale:1; }
+    inline qreal rotation() const { return extra.isAllocated()?extra->rotation:0; }
+    inline qreal opacity() const { return extra.isAllocated()?extra->opacity:1; }
+
+    void setAccessibleFlagAndListener();
+
+    virtual qreal getImplicitWidth() const;
+    virtual qreal getImplicitHeight() const;
+    virtual void implicitWidthChanged();
+    virtual void implicitHeightChanged();
+
+    void resolveLayoutMirror();
+    void setImplicitLayoutMirror(bool mirror, bool inherit);
+    void setLayoutMirror(bool mirror);
+    bool isMirrored() const {
+        return effectiveLayoutMirror;
+    }
+
+    void emitChildrenRectChanged(const QRectF &rect) {
+        Q_Q(QQuickItem);
+        emit q->childrenRectChanged(rect);
+    }
+
+    QPointF computeTransformOrigin() const;
+    virtual void transformChanged();
+
+    void deliverKeyEvent(QKeyEvent *);
+    void deliverInputMethodEvent(QInputMethodEvent *);
+    void deliverFocusEvent(QFocusEvent *);
+    void deliverMouseEvent(QMouseEvent *);
+    void deliverWheelEvent(QWheelEvent *);
+    void deliverTouchEvent(QTouchEvent *);
+    void deliverHoverEvent(QHoverEvent *);
+    void deliverDragEvent(QEvent *);
+
+    bool calcEffectiveVisible() const;
+    bool setEffectiveVisibleRecur(bool);
+    bool calcEffectiveEnable() const;
+    void setEffectiveEnableRecur(QQuickItem *scope, bool);
+
 
     inline QSGTransformNode *itemNode();
     inline QSGNode *childContainerNode();
@@ -531,13 +545,13 @@ public:
          - groupNode
      */
 
+    QSGOpacityNode *opacityNode() const { return extra.isAllocated()?extra->opacityNode:0; }
+    QQuickDefaultClipNode *clipNode() const { return extra.isAllocated()?extra->clipNode:0; }
+    QSGRootNode *rootNode() const { return extra.isAllocated()?extra->rootNode:0; }
+
     QSGTransformNode *itemNodeInstance;
-    QSGOpacityNode *opacityNode;
-    QQuickDefaultClipNode *clipNode;
-    QSGRootNode *rootNode;
     QSGNode *groupNode;
     QSGNode *paintNode;
-    QSGNode *beforePaintNode;
 
     virtual QSGTransformNode *createTransformNode();
 
@@ -545,16 +559,10 @@ public:
     // it should insert a root node.
     void refFromEffectItem(bool hide);
     void derefFromEffectItem(bool unhide);
-    int effectRefCount;
-    int hideRefCount;
 
     void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &);
 
     virtual void mirrorChange() {}
-
-    QQuickScreenAttached *screenAttached;
-
-    mutable QQuickItemLayer *_layer;
 
     static qint64 consistentTime;
     static void setConsistentTime(qint64 t);
@@ -820,6 +828,34 @@ private:
     static const SigMap sigMap[];
 };
 
+Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
+{
+    return extra.flag()?Qt::LeftButton:Qt::MouseButton(0) |
+           (extra.isAllocated()?extra->acceptedMouseButtons:Qt::MouseButtons(0));
+}
+
+QSGContext *QQuickItemPrivate::sceneGraphContext() const
+{
+    Q_ASSERT(canvas);
+    return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context;
+}
+
+void QQuickItemPrivate::markSortedChildrenDirty(QQuickItem *child)
+{
+    // If sortedChildItems == &childItems then all in childItems have z == 0
+    // and we don't need to invalidate if the changed item also has z == 0.
+    if (child->z() != 0. || sortedChildItems != &childItems) {
+        if (sortedChildItems != &childItems)
+            delete sortedChildItems;
+        sortedChildItems = 0;
+    }
+}
+
+QQuickItem::TransformOrigin QQuickItemPrivate::origin() const
+{
+    return extra.isAllocated()?extra->origin:QQuickItem::Center;
+}
+
 QSGTransformNode *QQuickItemPrivate::itemNode()
 {
     if (!itemNodeInstance) {
@@ -837,12 +873,12 @@ QSGNode *QQuickItemPrivate::childContainerNode()
 {
     if (!groupNode) {
         groupNode = new QSGNode();
-        if (rootNode)
-            rootNode->appendChildNode(groupNode);
-        else if (clipNode)
-            clipNode->appendChildNode(groupNode);
-        else if (opacityNode)
-            opacityNode->appendChildNode(groupNode);
+        if (rootNode())
+            rootNode()->appendChildNode(groupNode);
+        else if (clipNode())
+            clipNode()->appendChildNode(groupNode);
+        else if (opacityNode())
+            opacityNode()->appendChildNode(groupNode);
         else
             itemNode()->appendChildNode(groupNode);
         groupNode->setFlag(QSGNode::ChildrenDoNotOverlap, childrenDoNotOverlap);

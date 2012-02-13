@@ -75,13 +75,13 @@ void DesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
     QQuickItemPrivate::get(referencedItem)->refFromEffectItem(hide);
     QQuickCanvasPrivate::get(referencedItem->canvas())->updateDirtyNode(referencedItem);
 
-    Q_ASSERT(QQuickItemPrivate::get(referencedItem)->rootNode);
+    Q_ASSERT(QQuickItemPrivate::get(referencedItem)->rootNode());
 
     if (!m_itemTextureHash.contains(referencedItem)) {
         QQuickShaderEffectTexture *texture = new QQuickShaderEffectTexture(referencedItem);
 
         texture->setLive(true);
-        texture->setItem(QQuickItemPrivate::get(referencedItem)->rootNode);
+        texture->setItem(QQuickItemPrivate::get(referencedItem)->rootNode());
         texture->setRect(referencedItem->boundingRect());
         texture->setSize(referencedItem->boundingRect().size().toSize());
         texture->setRecursive(true);

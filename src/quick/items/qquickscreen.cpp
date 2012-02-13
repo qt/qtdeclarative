@@ -95,7 +95,7 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     m_attachee = qobject_cast<QQuickItem*>(attachee);
 
     if (m_attachee) {
-        QQuickItemPrivate::get(m_attachee)->screenAttached = this;
+        QQuickItemPrivate::get(m_attachee)->extra.value().screenAttached = this;
 
         if (m_attachee->canvas()) //It might not be assigned to a canvas yet
             canvasChanged(m_attachee->canvas());

@@ -62,8 +62,6 @@ QT_BEGIN_NAMESPACE
 class QQuickAnchorLine
 {
 public:
-    QQuickAnchorLine() : item(0), anchorLine(Invalid) {}
-
     enum AnchorLine {
         Invalid = 0x0,
         Left = 0x01,
@@ -76,6 +74,9 @@ public:
         Horizontal_Mask = Left | Right | HCenter,
         Vertical_Mask = Top | Bottom | VCenter | Baseline
     };
+
+    QQuickAnchorLine() : item(0), anchorLine(Invalid) {}
+    QQuickAnchorLine(QQuickItem *i, AnchorLine l) : item(i), anchorLine(l) {}
 
     QQuickItem *item;
     AnchorLine anchorLine;

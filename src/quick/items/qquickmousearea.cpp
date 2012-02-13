@@ -251,7 +251,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     //But specific to MouseArea, so doesn't belong in canvas
     Q_Q(const QQuickMouseArea);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity == 0.0)
+    if (itemPrivate->opacity() == 0.0)
         return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -270,7 +270,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     }
 
     QQuickMouseArea* ma = qobject_cast<QQuickMouseArea*>(item);
-    if (ma && ma != q && itemPrivate->acceptedMouseButtons & ev->button()) {
+    if (ma && ma != q && itemPrivate->acceptedMouseButtons() & ev->button()) {
         switch (sig) {
         case Click:
             if (!ma->d_func()->isClickConnected())
