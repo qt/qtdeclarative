@@ -312,12 +312,6 @@ Item {
         throw new Error("QtQuickTest::skip")
     }
 
-    function skipAll(msg) {
-        msg = "The skipAll function is no longer available. Please update this test by changing skipAll to skip."
-        qtest_results.fail(msg, util.callerFile(), util.callerLine())
-        throw new Error("QtQuickTest::skip")
-    }
-
     function expectFail(tag, msg) {
         if (tag === undefined) {
             warn("tag argument missing from expectFail()")
