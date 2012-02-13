@@ -2590,166 +2590,6 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
 }
 
 /*!
-  \qmlmethod void QtQuick2::CanvasImageData::mirrr( bool horizontal = false, bool vertical = true)
-  Mirrors the image data in place in the  \c horizontal and/or the \c vertical direction depending on
-  whether horizontal and vertical are set to true or false.
-  The default \c horizontal value is false, the default \c vertical value is true.
-*/
-static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
-{
-    bool horizontal = false, vertical = true;
-    QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
-
-    if (!r) {
-        //error
-        return v8::Undefined();
-    }
-
-    if (args.Length() > 2) {
-      //error
-      return v8::Undefined();
-    }
-
-    if (args.Length() == 1) {
-        horizontal = args[0]->BooleanValue();
-    } else if (args.Length() == 2) {
-        horizontal = args[0]->BooleanValue();
-        vertical = args[1]->BooleanValue();
-    }
-    r->image = r->image.mirrored(horizontal, vertical);
-    return args.This();
-}
-
-/*!
-  \qmlmethod void QtQuick2::CanvasImageData::filter(enumeration mode, args)
-   Filters the image data as defined by one of the following modes:
-    \list
-    \o context.Threshold - converts the image to black and white pixels depending
-                          if they are above or below the threshold defined by the level parameter.
-                          The level must be between 0.0 (black) and 1.0(white).
-                          If no level is specified, 0.5 is used.
-    \o context.Mono - converts the image to the 1-bit per pixel format.
-    \o context.GrayScale - converts any colors in the image to grayscale equivalents.
-    \o context.Brightness -increase/decrease a fixed \c adjustment value to each pixel's RGB channel value.
-    \o context.Invert - sets each pixel to its inverse value.
-    \o context.Blur - executes a box blur with the pixel \c radius parameter specifying the range of the blurring for each pixel.
-                     the default blur \c radius is 3. This filter also accepts another \c quality parameter, if true, the filter will
-                     execute 3-passes box blur to simulate the Guassian blur. The default \c quality value is false.
-    \o context.Opaque - sets the alpha channel to entirely opaque.
-    \o context.Convolute - executes a generic {http://en.wikipedia.org/wiki/Convolution}{Convolution} filter, the second
-                          parameter contains the convoluton matrix data as a number array.
-    \endlist
-
-*/
-static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
-{
-    QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
-
-    if (!r) {
-        //error
-        return v8::Undefined();
-    }
-
-    if (args.Length() >= 1) {
-        int filterFlag = args[0]->IntegerValue();
-        switch (filterFlag) {
-        case QQuickContext2D::Mono :
-        {
-            r->image = r->image.convertToFormat(QImage::Format_Mono).convertToFormat(QImage::Format_ARGB32_Premultiplied);
-        }
-            break;
-        case QQuickContext2D::GrayScale :
-        {
-            for (int y = 0; y < r->image.height(); ++y) {
-              QRgb *row = (QRgb*)r->image.scanLine(y);
-              for (int x = 0; x < r->image.width(); ++x) {
-                  unsigned char* rgb = ((unsigned char*)&row[x]);
-                  rgb[0] = rgb[1] = rgb[2] = qGray(rgb[0], rgb[1], rgb[2]);
-              }
-            }
-        }
-            break;
-        case QQuickContext2D::Threshold :
-        {
-            qreal threshold = 0.5;
-            if (args.Length() > 1)
-                threshold = args[1]->NumberValue();
-
-            for (int y = 0; y < r->image.height(); ++y) {
-              QRgb *row = (QRgb*)r->image.scanLine(y);
-              for (int x = 0; x < r->image.width(); ++x) {
-                  unsigned char* rgb = ((unsigned char*)&row[x]);
-                  unsigned char v = qGray(rgb[0], rgb[1], rgb[2]) >= threshold*255 ? 255 : 0;
-                  rgb[0] = rgb[1] = rgb[2] = v;
-              }
-            }
-        }
-            break;
-        case QQuickContext2D::Brightness :
-        {
-            int adjustment = 1;
-            if (args.Length() > 1)
-                adjustment = args[1]->IntegerValue();
-
-            for (int y = 0; y < r->image.height(); ++y) {
-              QRgb *row = (QRgb*)r->image.scanLine(y);
-              for (int x = 0; x < r->image.width(); ++x) {
-                ((unsigned char*)&row[x])[0] += adjustment;
-                ((unsigned char*)&row[x])[1] += adjustment;
-                ((unsigned char*)&row[x])[2] += adjustment;
-              }
-            }
-        }
-            break;
-        case QQuickContext2D::Invert :
-        {
-            r->image.invertPixels();
-        }
-            break;
-        case QQuickContext2D::Blur :
-        {
-            int radius = 3;
-            bool quality = false;
-
-            if (args.Length() > 1)
-                radius = args[1]->IntegerValue() / 2;
-            if (args.Length() > 2)
-                quality = args[2]->BooleanValue();
-
-            qt_image_boxblur(r->image, radius, quality);
-        }
-            break;
-        case QQuickContext2D::Opaque :
-        {
-            for (int y = 0; y < r->image.height(); ++y) {
-              QRgb *row = (QRgb*)r->image.scanLine(y);
-              for (int x = 0; x < r->image.width(); ++x) {
-                ((unsigned char*)&row[x])[3] = 255;
-              }
-            }
-        }
-            break;
-        case QQuickContext2D::Convolute :
-        {
-            if (args.Length() > 1 && args[1]->IsArray()) {
-                v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(args[1]);
-                QVector<qreal> weights;
-                for (uint32_t i = 0; i < array->Length(); ++i)
-                    weights.append(array->Get(i)->NumberValue());
-                r->image = qt_image_convolute_filter(r->image, weights);
-            } else {
-                //error
-            }
-        }
-            break;
-        default:
-            break;
-        }
-    }
-
-    return args.This();
-}
-/*!
   \qmlclass QtQuick2::CanvasPixelArray
   The CanvasPixelArray object provides ordered, indexed access to the color components of each pixel of the image data.
   The CanvasPixelArray can be accessed as normal Javascript array.
@@ -3484,15 +3324,6 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("getImageData"), V8FUNCTION(ctx2d_getImageData, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("putImageData"), V8FUNCTION(ctx2d_putImageData, engine));
 
-    ft->InstanceTemplate()->Set(v8::String::New("Threshold"), v8::Uint32::New(QQuickContext2D::Threshold), v8::ReadOnly);
-    ft->InstanceTemplate()->Set(v8::String::New("Mono"), v8::Uint32::New(QQuickContext2D::Mono), v8::ReadOnly);
-    ft->InstanceTemplate()->Set(v8::String::New("GrayScale"), v8::Uint32::New(QQuickContext2D::GrayScale), v8::ReadOnly);
-    ft->InstanceTemplate()->Set(v8::String::New("Brightness"), v8::Uint32::New(QQuickContext2D::Brightness), v8::ReadOnly);
-    ft->InstanceTemplate()->Set(v8::String::New("Invert"), v8::Uint32::New(QQuickContext2D::Invert), v8::ReadOnly);
-    ft->InstanceTemplate()->Set(v8::String::New("Blur"), v8::Uint32::New(QQuickContext2D::Blur), v8::ReadOnly);
-    ft->InstanceTemplate()->Set(v8::String::New("Opaque"), v8::Uint32::New(QQuickContext2D::Opaque), v8::ReadOnly);
-    ft->InstanceTemplate()->Set(v8::String::New("Convolute"), v8::Uint32::New(QQuickContext2D::Convolute), v8::ReadOnly);
-
     constructorContext = qPersistentNew(ft->GetFunction());
 
     v8::Local<v8::FunctionTemplate> ftGradient = v8::FunctionTemplate::New();
@@ -3514,8 +3345,6 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("width"), ctx2d_imageData_width, 0, v8::External::Wrap(engine));
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("height"), ctx2d_imageData_height, 0, v8::External::Wrap(engine));
     ftImageData->InstanceTemplate()->SetAccessor(v8::String::New("data"), ctx2d_imageData_data, 0, v8::External::Wrap(engine));
-    ftImageData->PrototypeTemplate()->Set(v8::String::New("mirror"), V8FUNCTION(ctx2d_imageData_mirror, engine));
-    ftImageData->PrototypeTemplate()->Set(v8::String::New("filter"), V8FUNCTION(ctx2d_imageData_filter, engine));
     ftImageData->InstanceTemplate()->SetInternalFieldCount(1);
     constructorImageData = qPersistentNew(ftImageData->GetFunction());
 }

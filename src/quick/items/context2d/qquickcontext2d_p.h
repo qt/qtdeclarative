@@ -55,7 +55,7 @@
 
 
 
-#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
+//#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
 
 #ifdef QQUICKCONTEXT2D_DEBUG
 #include <QElapsedTimer>
@@ -113,17 +113,6 @@ public:
         StrokeText,
         DrawImage,
         GetImageData
-    };
-
-    enum ImageFilterMode {
-        Threshold,
-        Mono,
-        GrayScale,
-        Brightness,
-        Invert,
-        Blur,
-        Opaque,
-        Convolute
     };
 
     struct State {
