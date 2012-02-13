@@ -992,7 +992,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
                 errorstr += QLatin1String("\n    ") + error.toString();
                 v8::Local<v8::Object> qmlerror = v8::Object::New();
                 qmlerror->Set(v8::String::New("lineNumber"), v8::Integer::New(error.line()));
-                qmlerror->Set(v8::String::New("columnNumber"), v8::Integer::New(error.line()));
+                qmlerror->Set(v8::String::New("columnNumber"), v8::Integer::New(error.column()));
                 qmlerror->Set(v8::String::New("fileName"), engine->toString(error.url().toString()));
                 qmlerror->Set(v8::String::New("message"), engine->toString(error.description()));
                 qmlerrors->Set(ii, qmlerror);
