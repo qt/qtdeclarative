@@ -46,14 +46,29 @@ Item {
         anchors.fill: parent
         color: "white"
     }
-    SpriteImage {
+    AnimatedSprite {
+        id: sprite
         anchors.fill: parent
-        Sprite{
-            source: "content/speaker.png"
-            frames: 60
-            frameSync: true
-            frameWidth: 170
-            frameHeight: 170
+        source: "content/speaker.png"
+        frameCount: 60
+        frameSync: true
+        frameWidth: 170
+        frameHeight: 170
+        loops: 3
+    }
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: {
+            if (!sprite.running)
+                sprite.start();
+            if (!sprite.paused)
+                sprite.pause();
+            if ( mouse.button == Qt.LeftButton ) {
+                sprite.advance(1);
+            } else {
+                sprite.advance(-1);
+            }
         }
     }
 }

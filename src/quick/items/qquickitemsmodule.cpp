@@ -78,6 +78,7 @@
 #include <QtQuick/private/qquickcontext2d_p.h>
 #include "qquicksprite_p.h"
 #include "qquickspriteimage_p.h"
+#include "qquickanimatedsprite_p.h"
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
@@ -200,6 +201,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");
 
     qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
+    qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");
     qmlRegisterType<QQuickSpriteImage>("QtQuick", 2, 0, "SpriteImage");
 
     qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");

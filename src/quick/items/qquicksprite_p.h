@@ -279,6 +279,7 @@ private slots:
 private:
     friend class QQuickImageParticle;
     friend class QQuickSpriteImage;
+    friend class QQuickAnimatedSprite;
     friend class QQuickSpriteEngine;
     friend class QQuickStochasticEngine;
     int m_generatedCount;
