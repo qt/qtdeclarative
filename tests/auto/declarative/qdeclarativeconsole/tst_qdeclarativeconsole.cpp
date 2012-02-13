@@ -97,10 +97,11 @@ void tst_qdeclarativeconsole::tracing()
 {
     QUrl testUrl = testFileUrl("tracing.qml");
 
-    QString trace1 = QString::fromLatin1("tracing (%1:%2:%3)\n").arg(testUrl.toString()).arg(50).arg(17);
-    QString trace2 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(54).arg(9);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace1));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace2));
+    QString traceText =
+            QString::fromLatin1("tracing (%1:%2:%3)\n").arg(testUrl.toString()).arg(50).arg(17) +
+            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(54).arg(9);
+
+    QTest::ignoreMessage(QtDebugMsg, qPrintable(traceText));
 
     QDeclarativeComponent component(&engine, testUrl);
     QObject *object = component.create();
@@ -127,14 +128,15 @@ void tst_qdeclarativeconsole::assert()
     QUrl testUrl = testFileUrl("assert.qml");
 
     // assert()
-    QTest::ignoreMessage(QtCriticalMsg, "This will fail");
-    QTest::ignoreMessage(QtCriticalMsg, "This will fail too");
-    QString trace1 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(54).arg(17);
-    QString trace2 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(59).arg(9);
-    QString trace3 = QString::fromLatin1("assertFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(47).arg(17);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace1));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace2));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace3));
+    QString assert1 = "This will fail\n" +
+            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(54).arg(17);
+
+    QString assert2 = "This will fail too\n" +
+            QString::fromLatin1("assertFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(47).arg(17) +
+            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(59).arg(9);
+
+    QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert1));
+    QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert2));
 
     QDeclarativeComponent component(&engine, testUrl);
     QObject *object = component.create();
@@ -147,14 +149,15 @@ void tst_qdeclarativeconsole::exception()
     QUrl testUrl = testFileUrl("exception.qml");
 
     // exception()
-    QTest::ignoreMessage(QtCriticalMsg, "Exception 1");
-    QTest::ignoreMessage(QtCriticalMsg, "Exception 2");
-    QString trace1 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(51).arg(21);
-    QString trace2 = QString::fromLatin1("onCompleted (%1:%2:%3)\n").arg(testUrl.toString()).arg(56).arg(9);
-    QString trace3 = QString::fromLatin1("exceptionFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(46).arg(17);
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace1));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace2));
-    QTest::ignoreMessage(QtDebugMsg, qPrintable(trace3));
+    QString exception1 = "Exception 1\n" +
+            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(51).arg(21);
+
+    QString exception2 = "Exception 2\n" +
+            QString::fromLatin1("exceptionFail (%1:%2:%3)\n").arg(testUrl.toString()).arg(46).arg(17) +
+            QString::fromLatin1("onCompleted (%1:%2:%3)").arg(testUrl.toString()).arg(56).arg(9);
+
+    QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception1));
+    QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception2));
 
     QDeclarativeComponent component(&engine, testUrl);
     QObject *object = component.create();
