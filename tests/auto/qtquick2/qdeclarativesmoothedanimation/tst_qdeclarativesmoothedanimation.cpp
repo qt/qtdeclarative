@@ -59,6 +59,7 @@ private slots:
     void simpleAnimation();
     void valueSource();
     void behavior();
+    void deleteOnUpdate();
 
 private:
     QDeclarativeEngine engine;
@@ -214,6 +215,24 @@ void tst_qdeclarativesmoothedanimation::behavior()
 
     QTRY_COMPARE(theRect->x(), qreal(200));
     QTRY_COMPARE(theRect->y(), qreal(200));
+
+    delete rect;
+}
+
+void tst_qdeclarativesmoothedanimation::deleteOnUpdate()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, testFileUrl("deleteOnUpdate.qml"));
+
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QDeclarativeSmoothedAnimation *anim = rect->findChild<QDeclarativeSmoothedAnimation*>("anim");
+    QVERIFY(anim);
+
+    //don't crash
+    QTest::qWait(500);
 
     delete rect;
 }

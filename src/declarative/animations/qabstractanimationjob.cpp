@@ -43,6 +43,7 @@
 
 #include "private/qabstractanimationjob_p.h"
 #include "private/qanimationgroupjob_p.h"
+#include "private/qanimationjobutil_p.h"
 
 #define DEFAULT_TIMER_INTERVAL 16
 
@@ -321,12 +322,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
     if (newState == Running && oldState == Stopped && !m_group)
         topLevelAnimationLoopChanged();
 
-    bool wasDeleted = false;
-    m_wasDeleted = &wasDeleted;
-    updateState(newState, oldState);
-    if (wasDeleted)
-        return;
-    m_wasDeleted = 0;
+    RETURN_IF_DELETED(updateState(newState, oldState));
 
     if (newState != m_state) //this is to be safe if updateState changes the state
         return;
@@ -438,7 +434,7 @@ void QAbstractAnimationJob::setCurrentTime(int msecs)
     if (m_currentLoop != oldLoop && !m_group)   //### verify Running as well?
         topLevelAnimationLoopChanged();
 
-    updateCurrentTime(m_currentTime);
+    RETURN_IF_DELETED(updateCurrentTime(m_currentTime));
 
     if (m_currentLoop != oldLoop)
         currentLoopChanged(m_currentLoop);

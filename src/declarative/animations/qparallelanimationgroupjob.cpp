@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "private/qparallelanimationgroupjob_p.h"
+#include "private/qanimationjobutil_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -84,7 +85,7 @@ void QParallelAnimationGroupJob::updateCurrentTime(int /*currentTime*/)
         if (dura > 0) {
             for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
                 if (!animation->isStopped())
-                    animation->setCurrentTime(dura);   // will stop
+                    RETURN_IF_DELETED(animation->setCurrentTime(dura));   // will stop
             }
         }
     } else if (m_currentLoop < m_previousLoop) {
@@ -93,7 +94,7 @@ void QParallelAnimationGroupJob::updateCurrentTime(int /*currentTime*/)
             //we need to make sure the animation is in the right state
             //and then rewind it
             applyGroupState(animation);
-            animation->setCurrentTime(0);
+            RETURN_IF_DELETED(animation->setCurrentTime(0));
             animation->stop();
         }
     }
@@ -110,7 +111,7 @@ void QParallelAnimationGroupJob::updateCurrentTime(int /*currentTime*/)
         }
 
         if (animation->state() == state()) {
-            animation->setCurrentTime(m_currentTime);
+            RETURN_IF_DELETED(animation->setCurrentTime(m_currentTime));
             if (dura > 0 && m_currentTime > dura)
                 animation->stop();
         }
