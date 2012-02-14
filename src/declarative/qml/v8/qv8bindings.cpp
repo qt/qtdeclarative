@@ -53,8 +53,13 @@
 
 QT_BEGIN_NAMESPACE
 
+static QDeclarativeJavaScriptExpression::VTable QV8Bindings_Binding_jsvtable = {
+    QV8Bindings::Binding::expressionIdentifier,
+    QV8Bindings::Binding::expressionChanged
+};
+
 QV8Bindings::Binding::Binding()
-: object(0), parent(0)
+: QDeclarativeJavaScriptExpression(&QV8Bindings_Binding_jsvtable), object(0), parent(0)
 {
 }
 
@@ -147,14 +152,17 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     }
 }
 
-QString QV8Bindings::Binding::expressionIdentifier()
+QString QV8Bindings::Binding::expressionIdentifier(QDeclarativeJavaScriptExpression *e)
 {
-    return parent->url.toString() + QLatin1String(":") + QString::number(instruction->line);
+    Binding *This = static_cast<Binding *>(e);
+    return This->parent->url.toString() + QLatin1String(":") +
+           QString::number(This->instruction->line);
 }
 
-void QV8Bindings::Binding::expressionChanged()
+void QV8Bindings::Binding::expressionChanged(QDeclarativeJavaScriptExpression *e)
 {
-    update(QDeclarativePropertyPrivate::DontRemoveBinding);
+    Binding *This = static_cast<Binding *>(e);
+    This->update(QDeclarativePropertyPrivate::DontRemoveBinding);
 }
 
 void QV8Bindings::Binding::destroy()

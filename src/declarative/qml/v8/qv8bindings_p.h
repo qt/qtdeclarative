@@ -81,9 +81,6 @@ public:
     // Inherited from QDeclarativeAbstractExpression
     virtual void refresh();
 
-private:
-    Q_DISABLE_COPY(QV8Bindings)
-
     struct Binding : public QDeclarativeJavaScriptExpression,
                      public QDeclarativeAbstractBinding {
         Binding();
@@ -91,9 +88,9 @@ private:
         void update() { QDeclarativeAbstractBinding::update(); }
         void refresh();
 
-        // Inherited from QDeclarativeJavaScriptExpression
-        inline virtual QString expressionIdentifier();
-        virtual void expressionChanged();
+        // "Inherited" from QDeclarativeJavaScriptExpression
+        static QString expressionIdentifier(QDeclarativeJavaScriptExpression *);
+        static void expressionChanged(QDeclarativeJavaScriptExpression *);
 
         // Inherited from QDeclarativeAbstractBinding
         virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
@@ -113,6 +110,9 @@ private:
         inline bool updatingFlag() const { return instruction.flag2(); }
         inline void setUpdatingFlag(bool v) { instruction.setFlag2Value(v); }
     };
+
+private:
+    Q_DISABLE_COPY(QV8Bindings)
 
     QUrl url;
     int bindingsCount;

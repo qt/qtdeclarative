@@ -184,7 +184,6 @@ public Q_SLOTS:
 
 protected:
     ~QDeclarativeBinding();
-    void expressionChanged();
 
 private:
     Q_DECLARE_PRIVATE(QDeclarativeBinding)

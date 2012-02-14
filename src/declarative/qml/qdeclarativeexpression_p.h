@@ -60,6 +60,7 @@
 #include <private/qflagpointer_p.h>
 #include <private/qdeletewatcher_p.h>
 #include <private/qdeclarativeguard_p.h>
+#include <private/qpointervaluepair_p.h>
 #include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -122,11 +123,20 @@ private:
     QDeclarativeDelayedError **prevError;
 };
 
-class QDeclarativeJavaScriptExpression // : public QDeclarativeDelayedError
+class QDeclarativeJavaScriptExpression
 {
 public:
-    QDeclarativeJavaScriptExpression();
-    virtual ~QDeclarativeJavaScriptExpression();
+    // Although this looks crazy, we implement our own "vtable" here, rather than relying on
+    // C++ virtuals, to save memory.  By doing it ourselves, we can overload the storage
+    // location that is use for the vtable to also store the rarely used delayed error.
+    // If we use C++ virtuals, we can't do this and it consts us an extra sizeof(void *) in
+    // memory for every expression.
+    struct VTable {
+        QString (*expressionIdentifier)(QDeclarativeJavaScriptExpression *);
+        void (*expressionChanged)(QDeclarativeJavaScriptExpression *);
+    };
+
+    QDeclarativeJavaScriptExpression(VTable *vtable);
 
     v8::Local<v8::Value> evaluate(QDeclarativeContextData *, v8::Handle<v8::Function>,
                                   bool *isUndefined);
@@ -143,8 +153,6 @@ public:
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
 
-    virtual void expressionChanged() {}
-
     class DeleteWatcher {
     public:
         inline DeleteWatcher(QDeclarativeJavaScriptExpression *);
@@ -158,15 +166,17 @@ public:
     };
 
     inline bool hasError() const;
+    inline bool hasDelayedError() const;
     QDeclarativeError error() const;
     void clearError();
     QDeclarativeDelayedError *delayedError();
 
 protected:
-    inline virtual QString expressionIdentifier();
+    ~QDeclarativeJavaScriptExpression();
 
 private:
     typedef QDeclarativeJavaScriptExpressionGuard Guard;
+    friend class QDeclarativeJavaScriptExpressionGuard;
 
     struct GuardCapture : public QDeclarativeEnginePrivate::PropertyCapture {
         GuardCapture(QDeclarativeEngine *engine, QDeclarativeJavaScriptExpression *e)
@@ -186,7 +196,8 @@ private:
         QStringList *errorString;
     };
 
-    QDeclarativeDelayedError *m_delayedError;
+    QPointerValuePair<VTable, QDeclarativeDelayedError> m_vtable;
+
     // We store some flag bits in the following flag pointers.
     //    m_scopeObject:flag1 - requiresThisObject
     //    activeGuards:flag1  - notifyOnValueChanged
@@ -219,7 +230,6 @@ public:
     static inline QDeclarativeExpression *get(QDeclarativeExpressionPrivate *expr);
 
     void _q_notify();
-    virtual void expressionChanged();
 
     static void exceptionToError(v8::Handle<v8::Message>, QDeclarativeError &);
     static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
@@ -238,7 +248,10 @@ public:
     bool expressionFunctionRewritten:1;
     bool extractExpressionFromFunction:1;
 
-    inline virtual QString expressionIdentifier();
+    // "Inherited" from QDeclarativeJavaScriptExpression
+    static QString expressionIdentifier(QDeclarativeJavaScriptExpression *);
+    static void expressionChanged(QDeclarativeJavaScriptExpression *);
+    virtual void expressionChanged();
 
     QString expression;
     QByteArray expressionUtf8;
@@ -343,12 +356,12 @@ void QDeclarativeJavaScriptExpression::setScopeObject(QObject *v)
 
 bool QDeclarativeJavaScriptExpression::hasError() const
 {
-    return m_delayedError && m_delayedError->error.isValid();
+    return m_vtable.hasValue() && m_vtable.constValue()->error.isValid();
 }
 
-QString QDeclarativeJavaScriptExpression::expressionIdentifier() 
-{ 
-    return QString();
+bool QDeclarativeJavaScriptExpression::hasDelayedError() const
+{
+    return m_vtable.hasValue();
 }
 
 QDeclarativeExpressionPrivate *QDeclarativeExpressionPrivate::get(QDeclarativeExpression *expr)
@@ -361,11 +374,6 @@ QDeclarativeExpression *QDeclarativeExpressionPrivate::get(QDeclarativeExpressio
     return expr->q_func();
 }
 
-QString QDeclarativeExpressionPrivate::expressionIdentifier()
-{
-    return QLatin1String("\"") + expression + QLatin1String("\"");
-}
-
 QDeclarativeJavaScriptExpressionGuard::QDeclarativeJavaScriptExpressionGuard(QDeclarativeJavaScriptExpression *e)
 : expression(e), next(0)
 { 
@@ -374,7 +382,10 @@ QDeclarativeJavaScriptExpressionGuard::QDeclarativeJavaScriptExpressionGuard(QDe
 
 void QDeclarativeJavaScriptExpressionGuard::endpointCallback(QDeclarativeNotifierEndpoint *e)
 {
-    static_cast<QDeclarativeJavaScriptExpressionGuard *>(e)->expression->expressionChanged();
+    QDeclarativeJavaScriptExpression *expression =
+        static_cast<QDeclarativeJavaScriptExpressionGuard *>(e)->expression;
+
+    expression->m_vtable->expressionChanged(expression);
 }
 
 QDeclarativeJavaScriptExpressionGuard *

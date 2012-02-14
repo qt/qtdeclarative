@@ -68,19 +68,24 @@ bool QDeclarativeDelayedError::addError(QDeclarativeEnginePrivate *e)
     return true;
 }
 
-QDeclarativeJavaScriptExpression::QDeclarativeJavaScriptExpression()
-: m_delayedError(0)
+QDeclarativeJavaScriptExpression::QDeclarativeJavaScriptExpression(VTable *v)
+: m_vtable(v)
 {
 }
 
 QDeclarativeJavaScriptExpression::~QDeclarativeJavaScriptExpression()
 {
     clearGuards();
-    delete m_delayedError;
 }
 
+static QDeclarativeJavaScriptExpression::VTable QDeclarativeExpressionPrivate_jsvtable = {
+    QDeclarativeExpressionPrivate::expressionIdentifier,
+    QDeclarativeExpressionPrivate::expressionChanged
+};
+
 QDeclarativeExpressionPrivate::QDeclarativeExpressionPrivate()
-: expressionFunctionValid(true), expressionFunctionRewritten(false),
+: QDeclarativeJavaScriptExpression(&QDeclarativeExpressionPrivate_jsvtable),
+  expressionFunctionValid(true), expressionFunctionRewritten(false),
   extractExpressionFromFunction(false), line(-1), dataRef(0)
 {
 }
@@ -580,10 +585,10 @@ QDeclarativeJavaScriptExpression::evaluate(QDeclarativeContextData *context,
             if (!message.IsEmpty()) {
                 QDeclarativeExpressionPrivate::exceptionToError(message, delayedError()->error);
             } else {
-                if (m_delayedError) m_delayedError->error = QDeclarativeError();
+                if (hasDelayedError()) delayedError()->error = QDeclarativeError();
             }
         } else {
-            if (m_delayedError) m_delayedError->error = QDeclarativeError();
+            if (hasDelayedError()) delayedError()->error = QDeclarativeError();
         }
     }
 
@@ -636,7 +641,7 @@ void QDeclarativeJavaScriptExpression::GuardCapture::captureProperty(QObject *o,
             if (!errorString) {
                 errorString = new QStringList;
                 QString preamble = QLatin1String("QDeclarativeExpression: Expression ") +
-                                   expression->expressionIdentifier() +
+                                   expression->m_vtable->expressionIdentifier(expression) +
                                    QLatin1String(" depends on non-NOTIFYable properties:");
                 errorString->append(preamble);
             }
@@ -672,23 +677,21 @@ void QDeclarativeJavaScriptExpression::GuardCapture::captureProperty(QObject *o,
 
 void QDeclarativeJavaScriptExpression::clearError()
 {
-    if (m_delayedError) {
-        m_delayedError->error = QDeclarativeError();
-        m_delayedError->removeError();
+    if (m_vtable.hasValue()) {
+        m_vtable.value().error = QDeclarativeError();
+        m_vtable.value().removeError();
     }
 }
 
 QDeclarativeError QDeclarativeJavaScriptExpression::error() const
 {
-    if (m_delayedError) return m_delayedError->error;
+    if (m_vtable.hasValue()) return m_vtable.constValue()->error;
     else return QDeclarativeError();
 }
 
 QDeclarativeDelayedError *QDeclarativeJavaScriptExpression::delayedError()
 {
-    if (!m_delayedError)
-        m_delayedError = new QDeclarativeDelayedError;
-    return m_delayedError;
+    return &m_vtable.value();
 }
 
 void QDeclarativeJavaScriptExpression::clearGuards()
@@ -902,10 +905,22 @@ QDeclarativeError QDeclarativeExpression::error() const
     calling QDeclarativeExpression::evaluate()) before this signal will be emitted.
 */
 
+void QDeclarativeExpressionPrivate::expressionChanged(QDeclarativeJavaScriptExpression *e)
+{
+    QDeclarativeExpressionPrivate *This = static_cast<QDeclarativeExpressionPrivate *>(e);
+    This->expressionChanged();
+}
+
 void QDeclarativeExpressionPrivate::expressionChanged()
 {
     Q_Q(QDeclarativeExpression);
     emit q->valueChanged();
+}
+
+QString QDeclarativeExpressionPrivate::expressionIdentifier(QDeclarativeJavaScriptExpression *e)
+{
+    QDeclarativeExpressionPrivate *This = static_cast<QDeclarativeExpressionPrivate *>(e);
+    return QLatin1String("\"") + This->expression + QLatin1String("\"");
 }
 
 QDeclarativeAbstractExpression::QDeclarativeAbstractExpression()
