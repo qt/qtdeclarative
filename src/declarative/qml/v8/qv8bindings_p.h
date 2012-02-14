@@ -54,8 +54,10 @@
 //
 
 #include <private/qdeclarativepropertycache_p.h>
+#include <private/qdeclarativeinstruction_p.h>
 #include <private/qdeclarativeexpression_p.h>
 #include <private/qdeclarativebinding_p.h>
+#include <private/qflagpointer_p.h>
 
 QT_BEGIN_HEADER
 
@@ -73,9 +75,8 @@ public:
                 QDeclarativeContextData *context);
     virtual ~QV8Bindings();
 
-    QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, 
-                                               const QDeclarativePropertyData &prop,
-                                               int line, int column);
+    QDeclarativeAbstractBinding *configBinding(QObject *target, QObject *scope,
+                                               const QDeclarativeInstruction::instr_assignBinding *);
 
     // Inherited from QDeclarativeAbstractExpression
     virtual void refresh();
@@ -99,20 +100,25 @@ private:
         virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void destroy();
 
-        int index:30;
-        bool enabled:1;
-        bool updating:1;
-        int line;
-        int column;
         QObject *object;
-        QDeclarativePropertyData property;
         QV8Bindings *parent;
+
+        // To save memory, we store flags inside the instruction pointer.
+        //    flag1: enabled
+        //    flag2: updating
+        QFlagPointer<const QDeclarativeInstruction::instr_assignBinding> instruction;
+
+        inline bool enabledFlag() const { return instruction.flag(); }
+        inline void setEnabledFlag(bool v) { instruction.setFlagValue(v); }
+        inline bool updatingFlag() const { return instruction.flag2(); }
+        inline void setUpdatingFlag(bool v) { instruction.setFlag2Value(v); }
     };
 
     QUrl url;
     int bindingsCount;
     Binding *bindings;
     v8::Persistent<v8::Array> functions;
+    QDeclarativeCompiledData *cdata;
 };
 
 QT_END_NAMESPACE

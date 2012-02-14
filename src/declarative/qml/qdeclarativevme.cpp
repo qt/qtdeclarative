@@ -822,10 +822,8 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
                 QML_NEXT_INSTR(StoreV8Binding);
 
-            QDeclarativeAbstractBinding *binding = 
-                CTXT->v8bindings->configBinding(instr.value, target, scope, 
-                                                instr.property, instr.line,
-                                                instr.column);
+            QDeclarativeAbstractBinding *binding = CTXT->v8bindings->configBinding(target, scope,
+                                                                                   &instr);
             if (binding) {
                 bindValues.push(binding);
                 binding->m_mePtr = &bindValues.top();
