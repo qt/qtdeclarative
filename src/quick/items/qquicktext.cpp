@@ -1760,6 +1760,20 @@ void QQuickText::setElideMode(QQuickText::TextElideMode mode)
     This property specifies a base URL which is used to resolve relative URLs
     within the text.
 
+    Urls are resolved to be within the same directory as the target of the base
+    URL meaning any portion of the path after the last '/' will be ignored.
+
+    \table
+    \header \o Base URL \o Relative URL \o Resolved URL
+    \row \o http://qt-project.org/ \o images/logo.png \o http://qt-project.org/images/logo.png
+    \row \o http://qt-project.org/index.html \o images/logo.png \o http://qt-project.org/images/logo.png
+    \row \o http://qt-project.org/content \o images/logo.png \o http://qt-project.org/content/images/logo.png
+    \row \o http://qt-project.org/content/ \o images/logo.png \o http://qt-project.org/content/images/logo.png
+    \row \o http://qt-project.org/content/index.html \o images/logo.png \o http://qt-project.org/content/images/logo.png
+    \row \o http://qt-project.org/content/index.html \o ../images/logo.png \o http://qt-project.org/images/logo.png
+    \row \o http://qt-project.org/content/index.html \o /images/logo.png \o http://qt-project.org/images/logo.png
+    \endtable
+
     By default is the url of the Text element.
 */
 
