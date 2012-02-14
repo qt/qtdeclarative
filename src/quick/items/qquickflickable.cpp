@@ -1838,7 +1838,7 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
-    if (!isVisible() || !d->interactive || !isEnabled())
+    if (!isVisible() || !isEnabled())
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::MouseButtonPress:
