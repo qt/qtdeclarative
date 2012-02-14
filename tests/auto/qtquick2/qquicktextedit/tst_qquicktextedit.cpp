@@ -134,6 +134,7 @@ private slots:
 
     void linkActivated();
 
+    void cursorDelegate_data();
     void cursorDelegate();
     void cursorVisible();
     void delegateLoading_data();
@@ -1813,9 +1814,18 @@ void tst_qquicktextedit::linkActivated()
     QCOMPARE(spy.count(), 2);
 }
 
+void tst_qquicktextedit::cursorDelegate_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::newRow("out of line") << testFileUrl("cursorTest.qml");
+    QTest::newRow("in line") << testFileUrl("cursorTestInline.qml");
+    QTest::newRow("external") << testFileUrl("cursorTestExternal.qml");
+}
+
 void tst_qquicktextedit::cursorDelegate()
 {
-    QQuickView view(testFileUrl("cursorTest.qml"));
+    QFETCH(QUrl, source);
+    QQuickView view(source);
     view.show();
     view.requestActivateWindow();
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");

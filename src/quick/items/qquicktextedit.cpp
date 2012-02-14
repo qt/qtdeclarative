@@ -960,7 +960,7 @@ void QQuickTextEdit::setCursorDelegate(QDeclarativeComponent* c)
 void QQuickTextEdit::loadCursorDelegate()
 {
     Q_D(QQuickTextEdit);
-    if (d->cursorComponent->isLoading())
+    if (d->cursorComponent->isLoading() || !isComponentComplete())
         return;
     QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
     QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
@@ -1164,7 +1164,8 @@ void QQuickTextEdit::componentComplete()
         updateSize();
         d->dirty = false;
     }
-
+    if (d->cursorComponent && d->cursorComponent->isReady())
+        loadCursorDelegate();
 }
 /*!
     \qmlproperty bool QtQuick2::TextEdit::selectByMouse

@@ -136,6 +136,7 @@ private slots:
     void inputMethods();
 
     void passwordCharacter();
+    void cursorDelegate_data();
     void cursorDelegate();
     void cursorVisible();
     void cursorRectangle();
@@ -2306,9 +2307,18 @@ void tst_qquicktextinput::passwordCharacter()
     delete textInput;
 }
 
+void tst_qquicktextinput::cursorDelegate_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::newRow("out of line") << testFileUrl("cursorTest.qml");
+    QTest::newRow("in line") << testFileUrl("cursorTestInline.qml");
+    QTest::newRow("external") << testFileUrl("cursorTestExternal.qml");
+}
+
 void tst_qquicktextinput::cursorDelegate()
 {
-    QQuickView view(testFileUrl("cursorTest.qml"));
+    QFETCH(QUrl, source);
+    QQuickView view(source);
     view.show();
     view.requestActivateWindow();
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
