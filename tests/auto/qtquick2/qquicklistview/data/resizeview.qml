@@ -3,6 +3,9 @@ import QtQuick 2.0
 Rectangle {
     id: root
 
+    width: 240
+    height: 240
+
     property real initialHeight
 
     ListView {
