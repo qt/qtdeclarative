@@ -131,6 +131,13 @@ Elements that animate properties based on data types
 \o \l {RotationAnimation} - Animates rotations
 \o \l {ParentAnimation} - Animates parent changes
 \o \l {AnchorAnimation} - Animates anchor changes
+\o \l {PathAnimation} - Animates position along a path
+\endlist
+
+Elements that provide lower-level animation control
+\list
+\o \l {PathInterpolator} - Allows manual animation along a path
+\o \l {AnimationController} - Allows manual control of animation progress
 \endlist
 
 \section1 Models and Data Handling
