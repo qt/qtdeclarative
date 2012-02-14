@@ -750,7 +750,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
         QML_END_INSTR(BeginObject)
 
         QML_BEGIN_INSTR(InitV8Bindings)
-            CTXT->v8bindings = new QV8Bindings(instr.programIndex, instr.line, COMP, CTXT);
+            CTXT->v8bindings = new QV8Bindings(&PROGRAMS[instr.programIndex], instr.line, CTXT);
         QML_END_INSTR(InitV8Bindings)
 
         QML_BEGIN_INSTR(StoreBinding)

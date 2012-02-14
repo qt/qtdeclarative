@@ -914,8 +914,9 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
     if (!compileState->v8BindingProgram.isEmpty()) {
         Instruction::InitV8Bindings bindings;
         int index = output->programs.count();
-        output->programs.append(compileState->v8BindingProgram);
-        output->v8bindings.append(v8::Persistent<v8::Array>());
+
+        typedef QDeclarativeCompiledData::V8Program V8Program;
+        output->programs.append(V8Program(compileState->v8BindingProgram, output));
 
         bindings.programIndex = index;
         bindings.line = compileState->v8BindingProgramLine;
@@ -1472,8 +1473,9 @@ void QDeclarativeCompiler::genComponent(QDeclarativeScript::Object *obj)
     if (!compileState->v8BindingProgram.isEmpty()) {
         Instruction::InitV8Bindings bindings;
         int index = output->programs.count();
-        output->programs.append(compileState->v8BindingProgram);
-        output->v8bindings.append(v8::Persistent<v8::Array>());
+
+        typedef QDeclarativeCompiledData::V8Program V8Program;
+        output->programs.append(V8Program(compileState->v8BindingProgram, output));
 
         bindings.programIndex = index;
         bindings.line = compileState->v8BindingProgramLine;

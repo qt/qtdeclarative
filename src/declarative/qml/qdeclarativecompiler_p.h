@@ -105,14 +105,22 @@ public:
     };
     QList<TypeReference> types;
 
-    QList<v8::Persistent<v8::Array> > v8bindings;
+    struct V8Program {
+        V8Program(const QByteArray &p, QDeclarativeCompiledData *c)
+        : program(p), cdata(c) {}
+
+        QByteArray program;
+        v8::Persistent<v8::Array> bindings;
+        QDeclarativeCompiledData *cdata;
+    };
+
+    QList<V8Program> programs;
 
     const QMetaObject *root;
     QAbstractDynamicMetaObject rootData;
     QDeclarativePropertyCache *rootPropertyCache;
     QList<QString> primitives;
     QList<QByteArray> datas;
-    QList<QByteArray> programs;
     QByteArray bytecode;
     QList<QDeclarativePropertyCache *> propertyCaches;
     QList<QDeclarativeIntegerCache *> contextCaches;

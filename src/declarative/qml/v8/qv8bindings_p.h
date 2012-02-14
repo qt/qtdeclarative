@@ -56,6 +56,7 @@
 #include <private/qdeclarativepropertycache_p.h>
 #include <private/qdeclarativeinstruction_p.h>
 #include <private/qdeclarativeexpression_p.h>
+#include <private/qdeclarativecompiler_p.h>
 #include <private/qdeclarativebinding_p.h>
 #include <private/qflagpointer_p.h>
 
@@ -66,12 +67,11 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeCompiledData;
 
 class QV8BindingsPrivate;
-class QV8Bindings : public QDeclarativeAbstractExpression, 
-                    public QDeclarativeRefCount
+class QV8Bindings : public QDeclarativeAbstractExpression
 {
 public:
-    QV8Bindings(int index, int line,
-                QDeclarativeCompiledData *compiled,
+    QV8Bindings(QDeclarativeCompiledData::V8Program *,
+                int line,
                 QDeclarativeContextData *context);
     virtual ~QV8Bindings();
 
@@ -111,15 +111,31 @@ public:
         inline void setUpdatingFlag(bool v) { instruction.setFlag2Value(v); }
     };
 
+    inline void addref();
+    inline void release();
+
 private:
     Q_DISABLE_COPY(QV8Bindings)
 
-    QUrl url;
-    int bindingsCount;
+    const QUrl &url() const;
+    const QString &urlString() const;
+    v8::Persistent<v8::Array> &functions() const;
+
+    QDeclarativeCompiledData::V8Program *program;
     Binding *bindings;
-    v8::Persistent<v8::Array> functions;
-    QDeclarativeCompiledData *cdata;
+    int refCount;
 };
+
+void QV8Bindings::addref()
+{
+    ++refCount;
+}
+
+void QV8Bindings::release()
+{
+    if (0 == --refCount)
+        delete this;
+}
 
 QT_END_NAMESPACE
 

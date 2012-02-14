@@ -145,9 +145,8 @@ QDeclarativeCompiledData::~QDeclarativeCompiledData()
 
 void QDeclarativeCompiledData::clear()
 {
-    for (int ii = 0; ii < v8bindings.count(); ++ii)
-        qPersistentDispose(v8bindings[ii]);
-    v8bindings.clear();
+    for (int ii = 0; ii < programs.count(); ++ii)
+        qPersistentDispose(programs[ii].bindings);
 }
 
 const QMetaObject *QDeclarativeCompiledData::TypeReference::metaObject() const
