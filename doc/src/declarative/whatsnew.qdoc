@@ -107,6 +107,7 @@ Added topMargin, bottomMargin, leftMargin, rightMargin, xOrigin, yOrigin propert
 
 Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
 fillMode (Image.Pad) that does not transform the image.
+Setting Image sourceSize.width and sourceSize.height will now fit the image to the size, maintaining aspect.
 
 Grid now has rowSpacing and columnSpacing properties.
 

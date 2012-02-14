@@ -323,20 +323,22 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
         force_scale = true;
     }
 
-    bool scaled = false;
     if (requestSize.width() > 0 || requestSize.height() > 0) {
         QSize s = imgio.size();
+        qreal ratio = 0.0;
         if (requestSize.width() && (force_scale || requestSize.width() < s.width())) {
-            if (requestSize.height() <= 0)
-                s.setHeight(s.height()*requestSize.width()/s.width());
-            s.setWidth(requestSize.width()); scaled = true;
+            ratio = qreal(requestSize.width())/s.width();
         }
         if (requestSize.height() && (force_scale || requestSize.height() < s.height())) {
-            if (requestSize.width() <= 0)
-                s.setWidth(s.width()*requestSize.height()/s.height());
-            s.setHeight(requestSize.height()); scaled = true;
+            qreal hr = qreal(requestSize.height())/s.height();
+            if (ratio == 0.0 || hr < ratio)
+                ratio = hr;
         }
-        if (scaled) { imgio.setScaledSize(s); }
+        if (ratio > 0.0) {
+            s.setHeight(qRound(s.height() * ratio));
+            s.setWidth(qRound(s.width() * ratio));
+            imgio.setScaledSize(s);
+        }
     }
 
     if (impsize)

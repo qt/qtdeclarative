@@ -404,6 +404,10 @@ qreal QQuickImage::paintedHeight() const
     other dimension is set in proportion to preserve the source image's aspect ratio.
     (The \l fillMode is independent of this.)
 
+    If both the sourceSize.width and sourceSize.height are set the image will be scaled
+    down to fit within the specified size, maintaining the image's aspect ratio.  The actual
+    size of the image after scaling is available via \l implicitWidth and \l implicitHeight.
+
     If the source is an intrinsically scalable image (eg. SVG), this property
     determines the size of the loaded image regardless of intrinsic size.
     Avoid changing this property dynamically; rendering an SVG is \e slow compared
@@ -413,7 +417,7 @@ qreal QQuickImage::paintedHeight() const
     be no greater than this property specifies. For some formats (currently only JPEG),
     the whole image will never actually be loaded into memory.
 
-    Since QtQuick 1.1 the sourceSize can be cleared to the natural size of the image
+    sourceSize can be cleared to the natural size of the image
     by setting sourceSize to \c undefined.
 
     \note \e {Changing this property dynamically causes the image source to be reloaded,

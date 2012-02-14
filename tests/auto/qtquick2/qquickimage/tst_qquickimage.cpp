@@ -95,6 +95,8 @@ private slots:
     void sourceSize_QTBUG_16389();
     void nullPixmapPaint();
     void imageCrash_QTBUG_22125();
+    void sourceSize_data();
+    void sourceSize();
 
 private:
     QDeclarativeEngine engine;
@@ -498,6 +500,8 @@ void tst_qquickimage::tiling_QTBUG_6716()
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }
+
+    delete canvas;
 }
 
 void tst_qquickimage::tiling_QTBUG_6716_data()
@@ -674,6 +678,8 @@ void tst_qquickimage::nullPixmapPaint()
     qInstallMsgHandler(previousMsgHandler);
     QVERIFY(numberOfWarnings == 0);
     delete image;
+
+    delete canvas;
 }
 
 void tst_qquickimage::imageCrash_QTBUG_22125()
@@ -696,6 +702,46 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
     QTest::qWait(520); // Delay mode delays for 500 ms.
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
+}
+
+void tst_qquickimage::sourceSize_data()
+{
+    QTest::addColumn<int>("sourceWidth");
+    QTest::addColumn<int>("sourceHeight");
+    QTest::addColumn<qreal>("implicitWidth");
+    QTest::addColumn<qreal>("implicitHeight");
+
+    QTest::newRow("unscaled") << 0 << 0 << 300.0 << 300.0;
+    QTest::newRow("scale width") << 100 << 0 << 100.0 << 100.0;
+    QTest::newRow("scale height") << 0 << 150 << 150.0 << 150.0;
+    QTest::newRow("larger sourceSize") << 400 << 400 << 300.0 << 300.0;
+}
+
+void tst_qquickimage::sourceSize()
+{
+    QFETCH(int, sourceWidth);
+    QFETCH(int, sourceHeight);
+    QFETCH(qreal, implicitWidth);
+    QFETCH(qreal, implicitHeight);
+
+    QQuickView *canvas = new QQuickView(0);
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("srcWidth", sourceWidth);
+    ctxt->setContextProperty("srcHeight", sourceHeight);
+
+    canvas->setSource(testFileUrl("sourceSize.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickImage *image = qobject_cast<QQuickImage*>(canvas->rootObject());
+    QVERIFY(image);
+
+    QCOMPARE(image->sourceSize().width(), sourceWidth);
+    QCOMPARE(image->sourceSize().height(), sourceHeight);
+    QCOMPARE(image->implicitWidth(), implicitWidth);
+    QCOMPARE(image->implicitHeight(), implicitHeight);
+
+    delete canvas;
 }
 
 QTEST_MAIN(tst_qquickimage)
