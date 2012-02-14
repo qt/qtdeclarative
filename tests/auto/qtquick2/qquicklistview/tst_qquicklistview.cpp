@@ -1953,7 +1953,6 @@ void tst_QQuickListView::sectionsDelegate()
 void tst_QQuickListView::sectionsPositioning()
 {
     QQuickView *canvas = createView();
-    canvas->show();
 
     QmlListModel model;
     for (int i = 0; i < 30; i++)
@@ -1963,14 +1962,15 @@ void tst_QQuickListView::sectionsPositioning()
     ctxt->setContextProperty("testModel", &model);
 
     canvas->setSource(testFileUrl("listview-sections_delegate.qml"));
+    canvas->show();
     qApp->processEvents();
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart | QQuickViewSection::NextLabelAtEnd)));
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
-
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     for (int i = 0; i < 3; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "sect_" + QString::number(i));
@@ -1988,10 +1988,12 @@ void tst_QQuickListView::sectionsPositioning()
 
     // move down a little and check that section header is at top
     listview->setContentY(10);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     QCOMPARE(topItem->y(), 0.);
 
     // push the top header up
     listview->setContentY(110);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     topItem = findVisibleChild(contentItem, "sect_0"); // section header
     QVERIFY(topItem);
     QCOMPARE(topItem->y(), 100.);
@@ -2006,11 +2008,13 @@ void tst_QQuickListView::sectionsPositioning()
 
     // Move past section 0
     listview->setContentY(120);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     topItem = findVisibleChild(contentItem, "sect_0"); // section header
     QVERIFY(!topItem);
 
     // Push section footer down
     listview->setContentY(70);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     bottomItem = findVisibleChild(contentItem, "sect_4"); // section footer
     QVERIFY(bottomItem);
     QCOMPARE(bottomItem->y(), 380.);
@@ -2038,6 +2042,7 @@ void tst_QQuickListView::sectionsPositioning()
 
     // remove section boundary
     listview->setContentY(120);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     model.removeItem(5);
     QTRY_COMPARE(listview->count(), model.count());
     for (int i = 0; i < 3; ++i) {
@@ -2052,24 +2057,28 @@ void tst_QQuickListView::sectionsPositioning()
 
     // Change the next section
     listview->setContentY(0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     bottomItem = findVisibleChild(contentItem, "sect_3"); // section footer
     QVERIFY(bottomItem);
     QTRY_COMPARE(bottomItem->y(), 300.);
 
     model.modifyItem(14, "New", "new");
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QTRY_VERIFY(bottomItem = findVisibleChild(contentItem, "sect_new")); // section footer
     QTRY_COMPARE(bottomItem->y(), 300.);
 
     // Turn sticky footer off
-    listview->setContentY(40);
+    listview->setContentY(20);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart)));
     item = findVisibleChild(contentItem, "sect_new"); // inline label restored
     QVERIFY(item);
-    QCOMPARE(item->y(), 360.);
+    QCOMPARE(item->y(), 340.);
 
     // Turn sticky header off
     listview->setContentY(30);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels)));
     item = findVisibleChild(contentItem, "sect_aaa"); // inline label restored
     QVERIFY(item);
