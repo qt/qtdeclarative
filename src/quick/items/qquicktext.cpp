@@ -75,8 +75,8 @@ QQuickTextPrivate::QQuickTextPrivate()
   vAlign(QQuickText::AlignTop), elideMode(QQuickText::ElideNone),
   format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap), lineHeight(1),
   lineHeightMode(QQuickText::ProportionalHeight), lineCount(1), maximumLineCount(INT_MAX),
-  maximumLineCountValid(false), fontSizeMode(QQuickText::FixedSize), minimumPixelSize(12),
-  minimumPointSize(12), updateOnComponentComplete(true),
+  maximumLineCountValid(false), fontSizeMode(QQuickText::FixedSize), multilengthEos(-1),
+  minimumPixelSize(12), minimumPointSize(12), updateOnComponentComplete(true),
   richText(false), styledText(false), singleline(false), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), textHasChanged(true),
@@ -301,7 +301,8 @@ void QQuickTextPrivate::updateLayout()
                 QDeclarativeStyledText::parse(text, layout, imgTags, q->baseUrl(), qmlContext(q), !maximumLineCountValid);
             } else {
                 layout.clearAdditionalFormats();
-                QString tmp = text;
+                multilengthEos = text.indexOf(QLatin1Char('\x9c'));
+                QString tmp = multilengthEos != -1 ? text.mid(0, multilengthEos) : text;
                 tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
                 layout.setText(tmp);
             }
@@ -653,7 +654,7 @@ QRect QQuickTextPrivate::setupTextLayout()
     const bool verticalFit = fontSizeMode & QQuickText::VerticalFit
             && (q->heightValid() || (maximumLineCountValid && canWrap));
     const bool pixelSize = font.pixelSize() != -1;
-    const QString layoutText = layout.text();
+    QString layoutText = layout.text();
 
     int largeFont = pixelSize ? font.pixelSize() : font.pointSize();
     int smallFont = fontSizeMode != QQuickText::FixedSize
@@ -674,7 +675,9 @@ QRect QQuickTextPrivate::setupTextLayout()
 
     naturalWidth = 0;
 
-    do {
+    int eos = multilengthEos;
+
+    for (;;) {
         if (!once) {
             if (pixelSize)
                 scaledFont.setPixelSize(scaledFontSize);
@@ -796,6 +799,16 @@ QRect QQuickTextPrivate::setupTextLayout()
             }
         }
 
+        if (eos != -1 && elide) {
+            int start = eos + 1;
+            eos = text.indexOf(QLatin1Char('\x9c'),  start);
+            layoutText = text.mid(start, eos != -1 ? eos - start : -1);
+            layoutText.replace(QLatin1Char('\n'), QChar::LineSeparator);
+            layout.setText(layoutText);
+            textHasChanged = true;
+            continue;
+        }
+
         QRectF unelidedRect = br.united(line.naturalTextRect());
 
         if (horizontalFit) {
@@ -826,7 +839,13 @@ QRect QQuickTextPrivate::setupTextLayout()
                     break;
             }
         }
-    } while (horizontalFit || verticalFit);
+
+        if (!horizontalFit && !verticalFit)
+            break;
+    }
+
+    if (eos != multilengthEos)
+        truncated = true;
 
     if (elide) {
         if (!elideLayout)
@@ -1878,7 +1897,7 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
             goto geomChangeDone; // Multiline eliding not affected if we're already at max line count and we get higher.
     }
 
-    if (d->updateOnComponentComplete) {
+    if (d->updateOnComponentComplete || d->textHasChanged) {
         // We need to re-elide
         d->updateLayout();
     } else {

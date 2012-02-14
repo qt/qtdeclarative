@@ -104,6 +104,7 @@ public:
     int maximumLineCount;
     int maximumLineCountValid;
     QQuickText::FontSizeMode fontSizeMode;
+    int multilengthEos;
     int minimumPixelSize;
     int minimumPointSize;
     QPointF elidePos;

@@ -120,6 +120,8 @@ private slots:
     void fontSizeMode();
     void fontSizeModeMultiline_data();
     void fontSizeModeMultiline();
+    void multilengthStrings_data();
+    void multilengthStrings();
 
 private:
     QStringList standard;
@@ -2360,6 +2362,70 @@ void tst_qquicktext::fontSizeModeMultiline()
         myText->setElideMode(QQuickText::ElideNone);
         QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
     }
+}
+
+void tst_qquicktext::multilengthStrings_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::newRow("No Wrap") << testFile("multilengthStrings.qml");
+    QTest::newRow("Wrap") << testFile("multilengthStringsWrapped.qml");
+}
+
+void tst_qquicktext::multilengthStrings()
+{
+    QFETCH(QString, source);
+
+    QScopedPointer<QQuickView> canvas(createView(source));
+    canvas->show();
+
+    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(myText != 0);
+
+    const QString longText = "the quick brown fox jumped over the lazy dog";
+    const QString mediumText = "the brown fox jumped over the dog";
+    const QString shortText = "fox jumped dog";
+
+    myText->setText(longText);
+    QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
+    const qreal longWidth = myText->contentWidth();
+    const qreal longHeight = myText->contentHeight();
+
+    myText->setText(mediumText);
+    QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
+    const qreal mediumWidth = myText->contentWidth();
+    const qreal mediumHeight = myText->contentHeight();
+
+    myText->setText(shortText);
+    QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
+    const qreal shortWidth = myText->contentWidth();
+    const qreal shortHeight = myText->contentHeight();
+
+    myText->setElideMode(QQuickText::ElideRight);
+    myText->setText(longText + QLatin1Char('\x9c') + mediumText + QLatin1Char('\x9c') + shortText);
+
+    myText->setSize(QSizeF(longWidth, longHeight));
+    QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
+
+    QCOMPARE(myText->contentWidth(), longWidth);
+    QCOMPARE(myText->contentHeight(), longHeight);
+    QCOMPARE(myText->truncated(), false);
+
+    myText->setSize(QSizeF(mediumWidth, mediumHeight));
+    QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
+
+    QCOMPARE(myText->contentWidth(), mediumWidth);
+    QCOMPARE(myText->contentHeight(), mediumHeight);
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("Wrap", "QTBUG-24310", Continue);
+#endif
+    QCOMPARE(myText->truncated(), true);
+
+    myText->setSize(QSizeF(shortWidth, shortHeight));
+    QTRY_COMPARE(QQuickItemPrivate::get(myText)->polishScheduled, false);
+
+    QCOMPARE(myText->contentWidth(), shortWidth);
+    QCOMPARE(myText->contentHeight(), shortHeight);
+    QCOMPARE(myText->truncated(), true);
 }
 
 QTEST_MAIN(tst_qquicktext)
