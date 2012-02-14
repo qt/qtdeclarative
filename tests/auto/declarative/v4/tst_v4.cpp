@@ -70,6 +70,7 @@ private slots:
     void subscriptionsInConditionalExpressions();
     void qtbug_21883();
     void qtbug_22816();
+    void stringComparison();
 
 private:
     QDeclarativeEngine engine;
@@ -269,6 +270,37 @@ void tst_v4::qtbug_22816()
     QVERIFY(o != 0);
     QCOMPARE(o->property("test1").toBool(), false);
     QCOMPARE(o->property("test2").toBool(), false);
+    delete o;
+}
+
+void tst_v4::stringComparison()
+{
+    QDeclarativeComponent component(&engine, testFileUrl("stringComparison.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test1").toBool(), true);
+    QCOMPARE(o->property("test2").toBool(), true);
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("test4").toBool(), true);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QCOMPARE(o->property("test6").toBool(), true);
+    QCOMPARE(o->property("test7").toBool(), true);
+    QCOMPARE(o->property("test8").toBool(), true);
+    QCOMPARE(o->property("test9").toBool(), true);
+    QCOMPARE(o->property("test10").toBool(), true);
+    QCOMPARE(o->property("test11").toBool(), true);
+    QCOMPARE(o->property("test12").toBool(), true);
+    QCOMPARE(o->property("test13").toBool(), true);
+    QCOMPARE(o->property("test14").toBool(), true);
+    QCOMPARE(o->property("test15").toBool(), true);
+    QCOMPARE(o->property("test16").toBool(), true);
+    QCOMPARE(o->property("test17").toBool(), true);
+    QCOMPARE(o->property("test18").toBool(), true);
+    QCOMPARE(o->property("test19").toBool(), true);
+    QCOMPARE(o->property("test20").toBool(), true);
+    QCOMPARE(o->property("test21").toBool(), true);
+    QCOMPARE(o->property("test22").toBool(), true);
     delete o;
 }
 
