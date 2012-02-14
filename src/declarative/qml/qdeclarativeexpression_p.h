@@ -178,6 +178,7 @@ public:
     void init(QDeclarativeContextData *, const QString &, QObject *);
     void init(QDeclarativeContextData *, v8::Handle<v8::Function>, QObject *);
     void init(QDeclarativeContextData *, const QString &, bool, QObject *, const QString &, int, int);
+    void init(QDeclarativeContextData *, const QByteArray &, bool, QObject *, const QString &, int, int);
 
     QVariant value(QObject *secondaryScope = 0, bool *isUndefined = 0);
 
@@ -191,8 +192,14 @@ public:
 
     static void exceptionToError(v8::Handle<v8::Message>, QDeclarativeError &);
     static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
-                                                     const QString &code, const QString &filename, int line,
+                                                     const QString &code, const QString &filename,
+                                                     int line,
                                                      v8::Persistent<v8::Object> *qmlscope = 0);
+    static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope,
+                                                     const char *code, int codeLength,
+                                                     const QString &filename, int line,
+                                                     v8::Persistent<v8::Object> *qmlscope = 0);
+
     static QDeclarativeExpression *create(QDeclarativeContextData *, QObject *, const QString &, bool,
                                           const QString &, int, int);
 
@@ -203,6 +210,7 @@ public:
     inline virtual QString expressionIdentifier();
 
     QString expression;
+    QByteArray expressionUtf8;
 
     v8::Persistent<v8::Object> v8qmlscope;
     v8::Persistent<v8::Function> v8function;

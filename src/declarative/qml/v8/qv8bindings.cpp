@@ -156,7 +156,7 @@ void QV8Bindings::Binding::destroy()
     parent->release();
 }
 
-QV8Bindings::QV8Bindings(const QString &program, int index, int line,
+QV8Bindings::QV8Bindings(int index, int line,
                          QDeclarativeCompiledData *compiled, 
                          QDeclarativeContextData *context)
 : bindingsCount(0), bindings(0)
@@ -171,7 +171,8 @@ QV8Bindings::QV8Bindings(const QString &program, int index, int line,
         bool compileFailed = false;
         {
             v8::TryCatch try_catch;
-            script = engine->qmlModeCompile(program, compiled->name, line);
+            const QByteArray &program = compiled->programs.at(index);
+            script = engine->qmlModeCompile(program.constData(), program.length(), compiled->name, line);
             if (try_catch.HasCaught()) {
                 // The binding was not compiled.  There are some exceptional cases which the
                 // expression rewriter does not rewrite properly (e.g., \r-terminated lines
@@ -192,6 +193,7 @@ QV8Bindings::QV8Bindings(const QString &program, int index, int line,
             v8::Local<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
             if (result->IsArray()) {
                 compiled->v8bindings[index] = qPersistentNew(v8::Local<v8::Array>::Cast(result));
+                compiled->programs[index].clear(); // We don't need the source anymore
             }
         }
     }

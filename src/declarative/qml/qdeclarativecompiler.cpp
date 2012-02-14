@@ -913,8 +913,11 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
 
     if (!compileState->v8BindingProgram.isEmpty()) {
         Instruction::InitV8Bindings bindings;
-        bindings.program = output->indexForString(compileState->v8BindingProgram);
-        bindings.programIndex = compileState->v8BindingProgramIndex;
+        int index = output->programs.count();
+        output->programs.append(compileState->v8BindingProgram);
+        output->v8bindings.append(v8::Persistent<v8::Array>());
+
+        bindings.programIndex = index;
         bindings.line = compileState->v8BindingProgramLine;
         output->addInstruction(bindings);
     }
@@ -1346,9 +1349,8 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 
             Instruction::StoreSignal store;
             store.signalIndex = prop->index;
-            const QString &rewrite =
-                    rewriteSignalHandler(v->value, prop->name().toString());
-            store.value = output->indexForString(rewrite);
+            const QString &rewrite = rewriteSignalHandler(v->value, prop->name().toString());
+            store.value = output->indexForByteArray(rewrite.toUtf8());
             store.context = v->signalExpressionContextStack;
             store.line = v->location.start.line;
             store.column = v->location.start.column;
@@ -1469,8 +1471,11 @@ void QDeclarativeCompiler::genComponent(QDeclarativeScript::Object *obj)
 
     if (!compileState->v8BindingProgram.isEmpty()) {
         Instruction::InitV8Bindings bindings;
-        bindings.program = output->indexForString(compileState->v8BindingProgram);
-        bindings.programIndex = compileState->v8BindingProgramIndex;
+        int index = output->programs.count();
+        output->programs.append(compileState->v8BindingProgram);
+        output->v8bindings.append(v8::Persistent<v8::Array>());
+
+        bindings.programIndex = index;
         bindings.line = compileState->v8BindingProgramLine;
         output->addInstruction(bindings);
     }
@@ -3049,8 +3054,9 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
                 }
                 funcScript += QLatin1Char(')') + s->body + QLatin1Char(')');
 
+                QByteArray utf8 = funcScript.toUtf8();
                 VMD::MethodData methodData = { s->parameterNames.count(), 0, 
-                                               funcScript.length(), 
+                                               utf8.length(),
                                                s->location.start.line };
 
                 VMD *vmd = (QDeclarativeVMEMetaData *)dynamicData.data();
@@ -3060,9 +3066,9 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
                 md = methodData;
                 md.bodyOffset = dynamicData.size();
 
-                dynamicData.append((const char *)funcScript.constData(),
-                                   (funcScript.length() * sizeof(QChar)));
+                dynamicData.append((const char *)utf8.constData(), utf8.length());
             }
+
 
             methodIndex++;
         }
@@ -3626,29 +3632,28 @@ bool QDeclarativeCompiler::completeComponentBuild()
         int startLineNumber = sharedBindings.at(0)->value->location.start.line;
         int lineNumber = startLineNumber;
 
-        QString functionArray(QLatin1String("["));
+        QByteArray functionArray("[", 1);
         for (int ii = 0; ii < sharedBindings.count(); ++ii) {
+
             JSBindingReference *reference = sharedBindings.at(ii);
             QDeclarativeScript::Value *value = reference->value;
             const QString &expression = reference->rewrittenExpression;
 
-            if (ii != 0) functionArray += QLatin1String(",");
+            if (ii != 0) functionArray.append(",", 1);
 
             while (lineNumber < value->location.start.line) {
                 lineNumber++;
-                functionArray += QLatin1String("\n");
+                functionArray.append("\n", 1);
             }
 
-            functionArray += expression;
+            functionArray += expression.toUtf8();
             lineNumber += expression.count(QLatin1Char('\n'));
             reference->compiledIndex = ii;
         }
-        functionArray += QLatin1String("]");
+        functionArray.append("]", 1);
 
         compileState->v8BindingProgram = functionArray;
         compileState->v8BindingProgramLine = startLineNumber;
-        compileState->v8BindingProgramIndex = output->v8bindings.count();
-        output->v8bindings.append(v8::Persistent<v8::Array>());
     }
 
     if (bindingCompiler.isValid()) 

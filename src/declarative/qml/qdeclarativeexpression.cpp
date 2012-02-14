@@ -135,6 +135,76 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QS
     setScopeObject(me);
 }
 
+void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QByteArray &expr,
+                                         bool isRewritten, QObject *me, const QString &srcUrl,
+                                         int lineNumber, int columnNumber)
+{
+    url = srcUrl;
+    line = lineNumber;
+    column = columnNumber;
+
+    if (isRewritten) {
+        expressionFunctionValid = true;
+        expressionFunctionRewritten = true;
+        v8function = evalFunction(ctxt, me, expr.constData(), expr.length(),
+                                  srcUrl, lineNumber, &v8qmlscope);
+        setUseSharedContext(false);
+
+        expressionUtf8 = expr;
+    } else {
+        expression = QString::fromUtf8(expr);
+
+        expressionFunctionValid = false;
+        expressionFunctionRewritten = isRewritten;
+    }
+
+    QDeclarativeAbstractExpression::setContext(ctxt);
+    setScopeObject(me);
+}
+
+// Callee owns the persistent handle
+v8::Persistent<v8::Function>
+QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObject *scope,
+                                            const char *code, int codeLength,
+                                            const QString &filename, int line,
+                                            v8::Persistent<v8::Object> *qmlscope)
+{
+    QDeclarativeEngine *engine = ctxt->engine;
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+
+    v8::HandleScope handle_scope;
+    v8::Context::Scope ctxtscope(ep->v8engine()->context());
+
+    v8::TryCatch tc;
+    v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
+    v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, codeLength, filename, line);
+    if (tc.HasCaught()) {
+        QDeclarativeError error;
+        error.setDescription(QLatin1String("Exception occurred during function compilation"));
+        error.setLine(line);
+        error.setUrl(QUrl::fromLocalFile(filename));
+        v8::Local<v8::Message> message = tc.Message();
+        if (!message.IsEmpty())
+            QDeclarativeExpressionPrivate::exceptionToError(message, error);
+        ep->warning(error);
+        return v8::Persistent<v8::Function>();
+    }
+    v8::Local<v8::Value> result = script->Run(scopeobject);
+    if (tc.HasCaught()) {
+        QDeclarativeError error;
+        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
+        error.setLine(line);
+        error.setUrl(QUrl::fromLocalFile(filename));
+        v8::Local<v8::Message> message = tc.Message();
+        if (!message.IsEmpty())
+            QDeclarativeExpressionPrivate::exceptionToError(message, error);
+        ep->warning(error);
+        return v8::Persistent<v8::Function>();
+    }
+    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
+    return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
+}
+
 // Callee owns the persistent handle
 v8::Persistent<v8::Function> 
 QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
@@ -144,8 +214,6 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     QDeclarativeEngine *engine = ctxt->engine;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
-    // XXX TODO: Implement script caching, like we used to do with QScriptProgram in the
-    // QtScript days
     v8::HandleScope handle_scope;
     v8::Context::Scope ctxtscope(ep->v8engine()->context());
 
@@ -179,7 +247,9 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
 }
 
-QDeclarativeExpression *QDeclarativeExpressionPrivate::create(QDeclarativeContextData *ctxt, QObject *object, const QString &expr, bool isRewritten,
+QDeclarativeExpression *
+QDeclarativeExpressionPrivate::create(QDeclarativeContextData *ctxt, QObject *object,
+                                      const QString &expr, bool isRewritten,
                                       const QString &url, int lineNumber, int columnNumber)
 {
     return new QDeclarativeExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber, *new QDeclarativeExpressionPrivate);
@@ -227,6 +297,18 @@ QDeclarativeExpression::QDeclarativeExpression()
 /*!  \internal */
 QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, 
                                                QObject *object, const QString &expr, bool isRewritten,
+                                               const QString &url, int lineNumber, int columnNumber,
+                                               QDeclarativeExpressionPrivate &dd)
+: QObject(dd, 0)
+{
+    Q_D(QDeclarativeExpression);
+    d->init(ctxt, expr, isRewritten, object, url, lineNumber, columnNumber);
+}
+
+/*!  \internal */
+QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt,
+                                               QObject *object, const QByteArray &expr,
+                                               bool isRewritten,
                                                const QString &url, int lineNumber, int columnNumber,
                                                QDeclarativeExpressionPrivate &dd)
 : QObject(dd, 0)
@@ -380,8 +462,11 @@ QString QDeclarativeExpression::expression() const
         v8::Context::Scope scope(v8engine->context());
 
         return v8engine->toString(v8::Handle<v8::Value>(d->v8function));
+    } else if (!d->expressionUtf8.isEmpty()) {
+        return QString::fromUtf8(d->expressionUtf8);
+    } else {
+        return d->expression;
     }
-    return d->expression;
 }
 
 /*!
@@ -393,6 +478,7 @@ void QDeclarativeExpression::setExpression(const QString &expression)
 
     d->resetNotifyOnValueChanged();
     d->expression = expression;
+    d->expressionUtf8.clear();
     d->expressionFunctionValid = false;
     d->expressionFunctionRewritten = false;
     qPersistentDispose(d->v8function);

@@ -370,7 +370,7 @@ private:
     friend class QDeclarativeScriptBlob;
 
     bool m_loaded;
-    QString m_programSource;
+    QByteArray m_programSource;
     v8::Persistent<v8::Script> m_program;
     v8::Persistent<v8::Object> m_value;
 };

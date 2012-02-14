@@ -205,7 +205,7 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "ASSIGN_CUSTOMTYPE\t" << instr->assignCustomType.propertyIndex << "\t" << instr->assignCustomType.primitive << "\t" << instr->assignCustomType.type;
         break;
     case QDeclarativeInstruction::InitV8Bindings:
-        qWarning().nospace() << idx << "\t\t" << "INIT_V8_BINDING\t" << instr->initV8Bindings.program << "\t" << instr->initV8Bindings.programIndex << "\t" << instr->initV8Bindings.line;
+        qWarning().nospace() << idx << "\t\t" << "INIT_V8_BINDING\t" << instr->initV8Bindings.programIndex << "\t" << instr->initV8Bindings.line;
         break;
     case QDeclarativeInstruction::StoreBinding:
         qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;

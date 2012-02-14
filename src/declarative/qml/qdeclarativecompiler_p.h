@@ -112,6 +112,7 @@ public:
     QDeclarativePropertyCache *rootPropertyCache;
     QList<QString> primitives;
     QList<QByteArray> datas;
+    QList<QByteArray> programs;
     QByteArray bytecode;
     QList<QDeclarativePropertyCache *> propertyCaches;
     QList<QDeclarativeIntegerCache *> contextCaches;
@@ -256,9 +257,8 @@ namespace QDeclarativeCompilerTypes {
         bool nested;
 
         QByteArray compiledBindingData;
-        QString v8BindingProgram;
+        QByteArray v8BindingProgram;
         int v8BindingProgramLine;
-        int v8BindingProgramIndex;
 
         DepthStack objectDepth;
         DepthStack listDepth;

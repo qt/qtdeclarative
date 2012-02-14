@@ -330,6 +330,9 @@ public:
     v8::Local<v8::Script> qmlModeCompile(const QString &source, 
                                          const QString &fileName = QString(), 
                                          int lineNumber = 1);
+    v8::Local<v8::Script> qmlModeCompile(const char *source, int sourceLength = -1,
+                                         const QString &fileName = QString(),
+                                         int lineNumber = 1);
 
     // Return the QML global "scope" object for the \a ctxt context and \a scope object.
     inline v8::Local<v8::Object> qmlScope(QDeclarativeContextData *ctxt, QObject *scope);

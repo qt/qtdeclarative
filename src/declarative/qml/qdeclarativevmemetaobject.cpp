@@ -790,15 +790,14 @@ v8::Handle<v8::Function> QDeclarativeVMEMetaObject::method(int index)
     if (v8methods[index].IsEmpty()) {
         QDeclarativeVMEMetaData::MethodData *data = metaData->methodData() + index;
 
-        const QChar *body = 
-            (const QChar *)(((const char*)metaData) + data->bodyOffset);
-
-        QString code = QString::fromRawData(body, data->bodyLength);
+        const char *body = ((const char*)metaData) + data->bodyOffset;
+        int bodyLength = data->bodyLength;
 
         // XXX We should evaluate all methods in a single big script block to 
         // improve the call time between dynamic methods defined on the same
         // object
-        v8methods[index] = QDeclarativeExpressionPrivate::evalFunction(ctxt, object, code, ctxt->url.toString(),
+        v8methods[index] = QDeclarativeExpressionPrivate::evalFunction(ctxt, object, body, bodyLength,
+                                                                       ctxt->url.toString(),
                                                                        data->lineNumber);
     }
 

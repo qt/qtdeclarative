@@ -416,7 +416,9 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
 }
 
 // A handle scope and context must be entered
-v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source, const QString &fileName, int lineNumber)
+v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
+                                                const QString &fileName,
+                                                int lineNumber)
 {
     v8::Local<v8::String> v8source = m_stringWrapper.toString(source);
     v8::Local<v8::String> v8fileName = m_stringWrapper.toString(fileName);
@@ -424,6 +426,26 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source, const QSt
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
     v8::Local<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(), 
+                                                       v8::Script::QmlMode);
+
+    return script;
+}
+
+// A handle scope and context must be entered.
+// source can be either ascii or utf8.
+v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLength,
+                                                const QString &fileName,
+                                                int lineNumber)
+{
+    if (sourceLength == -1)
+        sourceLength = strlen(source);
+
+    v8::Local<v8::String> v8source = v8::String::New(source, sourceLength);
+    v8::Local<v8::String> v8fileName = m_stringWrapper.toString(fileName);
+
+    v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
+
+    v8::Local<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
                                                        v8::Script::QmlMode);
 
     return script;

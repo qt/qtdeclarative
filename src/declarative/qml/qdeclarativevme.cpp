@@ -341,6 +341,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 #define TYPES COMP->types
 #define PRIMITIVES COMP->primitives
 #define DATAS COMP->datas
+#define PROGRAMS COMP->programs
 #define PROPERTYCACHES COMP->propertyCaches
 #define SCRIPTS COMP->scripts
 #define URLS COMP->urls
@@ -711,7 +712,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 
             QDeclarativeBoundSignal *bs = new QDeclarativeBoundSignal(target, signal, target);
             QDeclarativeExpression *expr = 
-                new QDeclarativeExpression(CTXT, context, PRIMITIVES.at(instr.value), true, COMP->name, instr.line, instr.column, *new QDeclarativeExpressionPrivate);
+                new QDeclarativeExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column, *new QDeclarativeExpressionPrivate);
             bs->setExpression(expr);
         QML_END_INSTR(StoreSignal)
 
@@ -749,8 +750,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
         QML_END_INSTR(BeginObject)
 
         QML_BEGIN_INSTR(InitV8Bindings)
-            CTXT->v8bindings = new QV8Bindings(PRIMITIVES.at(instr.program), instr.programIndex, 
-                                                       instr.line, COMP, CTXT);
+            CTXT->v8bindings = new QV8Bindings(instr.programIndex, instr.line, COMP, CTXT);
         QML_END_INSTR(InitV8Bindings)
 
         QML_BEGIN_INSTR(StoreBinding)
@@ -1073,11 +1073,14 @@ void QDeclarativeScriptData::initialize(QDeclarativeEngine *engine)
     QV8Engine *v8engine = ep->v8engine();
 
     // If compilation throws an error, a surrounding v8::TryCatch will record it.
-    v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_programSource, url.toString(), 1);
+    v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_programSource.constData(),
+                                                             m_programSource.length(), url.toString(),
+                                                             1);
     if (program.IsEmpty())
         return;
 
     m_program = qPersistentNew<v8::Script>(program);
+    m_programSource.clear(); // We don't need this anymore
 
     addToEngine(engine);
 

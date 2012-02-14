@@ -1893,7 +1893,7 @@ void QDeclarativeScriptBlob::done()
     m_imports.populateCache(m_scriptData->importCache, engine);
 
     m_scriptData->pragmas = m_pragmas;
-    m_scriptData->m_programSource = m_source;
+    m_scriptData->m_programSource = m_source.toUtf8();
 }
 
 QDeclarativeQmldirData::QDeclarativeQmldirData(const QUrl &url)

@@ -100,6 +100,8 @@ protected:
                            QDeclarativeExpressionPrivate &dd);
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &, bool,
                            const QString &, int, int, QDeclarativeExpressionPrivate &dd);
+    QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QByteArray &, bool,
+                           const QString &, int, int, QDeclarativeExpressionPrivate &dd);
 
 private:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &);
