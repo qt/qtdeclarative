@@ -65,7 +65,7 @@ HEADERS += \
     $$PWD/qquickimplicitsizeitem_p_p.h \
     $$PWD/qquickspriteengine_p.h \
     $$PWD/qquicksprite_p.h \
-    $$PWD/qquickspriteimage_p.h \
+    $$PWD/qquickspritesequence_p.h \
     $$PWD/qquickanimatedsprite_p.h \
     $$PWD/qquickdrag_p.h \
     $$PWD/qquickdroparea_p.h \
@@ -117,7 +117,7 @@ SOURCES += \
     $$PWD/qquickimplicitsizeitem.cpp \
     $$PWD/qquickspriteengine.cpp \
     $$PWD/qquicksprite.cpp \
-    $$PWD/qquickspriteimage.cpp \
+    $$PWD/qquickspritesequence.cpp \
     $$PWD/qquickanimatedsprite.cpp \
     $$PWD/qquickaccessibleattached.cpp \
     $$PWD/qquickdrag.cpp \

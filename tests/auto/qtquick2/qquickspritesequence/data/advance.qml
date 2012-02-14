@@ -46,14 +46,20 @@ Rectangle {
     width: 320
     height: 320
 
-    SpriteImage {
+    SpriteSequence {
         objectName: "sprite"
-        sprites: Sprite {
-            name: "happy"
+        sprites: [Sprite {
+            name: "firstState"
             source: "squarefacesprite.png"
-            frames: 6
-            frameDuration: 120
-        }
+            frameCount: 3
+            frameSync: true
+            to: {"secondState":1}
+        }, Sprite {
+            name: "secondState"
+            source: "squarefacesprite.png"
+            frameCount: 6
+            frameSync: true
+        } ]
         width: 160
         height: 160
     }

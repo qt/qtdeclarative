@@ -50,7 +50,7 @@ Rectangle {
         objectName: "sprite"
         loops: 3
         source: "squarefacesprite.png"
-        frames: 6
+        frameCount: 6
         frameDuration: 120
         width: 160
         height: 160

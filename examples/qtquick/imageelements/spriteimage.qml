@@ -53,7 +53,7 @@ Item {
         ScriptAction { script: {image.goalSprite = ""; image.jumpTo("still");} }
         PropertyAction { target: image; property: "y"; value: 0 }
     }
-    SpriteImage {
+    SpriteSequence {
         id: image
         width: 256
         height: 256
@@ -63,7 +63,7 @@ Item {
         Sprite{
             name: "still"
             source: "content/BearSheet.png"
-            frames: 1
+            frameCount: 1
             frameWidth: 256
             frameHeight: 256
             frameDuration: 100
@@ -72,7 +72,7 @@ Item {
         Sprite{
             name: "blink"
             source: "content/BearSheet.png"
-            frames: 3
+            frameCount: 3
             frameX: 256
             frameY: 1536
             frameWidth: 256
@@ -83,7 +83,7 @@ Item {
         Sprite{
             name: "floating"
             source: "content/BearSheet.png"
-            frames: 9
+            frameCount: 9
             frameX: 0
             frameY: 0
             frameWidth: 256
@@ -94,7 +94,7 @@ Item {
         Sprite{
             name: "flailing"
             source: "content/BearSheet.png"
-            frames: 8
+            frameCount: 8
             frameX: 0
             frameY: 768
             frameWidth: 256
@@ -105,7 +105,7 @@ Item {
         Sprite{
             name: "falling"
             source: "content/BearSheet.png"
-            frames: 5
+            frameCount: 5
             frameY: 1280
             frameWidth: 256
             frameHeight: 256

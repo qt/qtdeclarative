@@ -105,20 +105,20 @@ Item {
                 id: spinState
                 name: "spinning"
                 source: "../images/meteor.png"
-                frames: 35
+                frameCount: 35
                 frameDuration: 40
                 randomStart: true
                 to: {"explode":0, "spinning":1}
             },Sprite {
                 name: "explode"
                 source: "../images/_explo.png"
-                frames: 22
+                frameCount: 22
                 frameDuration: 40
                 to: {"nullFrame":1}
             },Sprite {//Not sure if this is needed, but seemed easiest
                 name: "nullFrame"
                 source: "../images/nullRock.png"
-                frames: 1
+                frameCount: 1
                 frameDuration: 1000
             }
         ]

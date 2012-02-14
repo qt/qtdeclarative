@@ -127,19 +127,19 @@ Item {
                 id: spinState
                 name: "spinning"
                 source: "pics/meteor.png"
-                frames: 35
+                frameCount: 35
                 frameDuration: 40
                 to: {"death":0, "spinning":1}
             },Sprite {
                 name: "death"
                 source: "pics/meteor_explo.png"
-                frames: 22
+                frameCount: 22
                 frameDuration: 40
                 to: {"null":1}
             }, Sprite {
                 name: "null"
                 source: "pics/nullRock.png"
-                frames: 1
+                frameCount: 1
                 frameDuration: 1000
             }
         ]

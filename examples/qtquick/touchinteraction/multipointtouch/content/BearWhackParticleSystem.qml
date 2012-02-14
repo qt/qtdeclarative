@@ -151,7 +151,7 @@ ParticleSystem {
         Sprite{
             name: "floating"
             source: "Bear1.png"
-            frames: 9
+            frameCount: 9
             frameWidth: 256
             frameHeight: 256
             frameDuration: 80
@@ -160,7 +160,7 @@ ParticleSystem {
         Sprite{
             name: "flailing"
             source: "Bear2.png"
-            frames: 8
+            frameCount: 8
             frameWidth: 256
             frameHeight: 256
             frameDuration: 80
@@ -169,7 +169,7 @@ ParticleSystem {
         Sprite{
             name: "falling"
             source: "Bear3.png"
-            frames: 5
+            frameCount: 5
             frameWidth: 256
             frameHeight: 256
             frameDuration: 80

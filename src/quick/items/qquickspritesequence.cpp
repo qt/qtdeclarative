@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qquickspriteimage_p.h"
+#include "qquickspritesequence_p.h"
 #include "qquicksprite_p.h"
 #include "qquickspriteengine_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
@@ -90,16 +90,16 @@ static const char fragmentShaderCode[] =
     "    gl_FragColor = mix(texture2D(texture, fTexS.xy), texture2D(texture, fTexS.zw), progress) * qt_Opacity;\n"
     "}\n";
 
-class QQuickSpriteImageMaterial : public QSGMaterial
+class QQuickSpriteSequenceMaterial : public QSGMaterial
 {
 public:
-    QQuickSpriteImageMaterial();
-    ~QQuickSpriteImageMaterial();
+    QQuickSpriteSequenceMaterial();
+    ~QQuickSpriteSequenceMaterial();
     virtual QSGMaterialType *type() const { static QSGMaterialType type; return &type; }
     virtual QSGMaterialShader *createShader() const;
     virtual int compare(const QSGMaterial *other) const
     {
-        return this - static_cast<const QQuickSpriteImageMaterial *>(other);
+        return this - static_cast<const QQuickSpriteSequenceMaterial *>(other);
     }
 
     QSGTexture *texture;
@@ -115,7 +115,7 @@ public:
     float elementHeight;
 };
 
-QQuickSpriteImageMaterial::QQuickSpriteImageMaterial()
+QQuickSpriteSequenceMaterial::QQuickSpriteSequenceMaterial()
     : animT(0.0f)
     , animX1(0.0f)
     , animY1(0.0f)
@@ -129,15 +129,15 @@ QQuickSpriteImageMaterial::QQuickSpriteImageMaterial()
     setFlag(Blending, true);
 }
 
-QQuickSpriteImageMaterial::~QQuickSpriteImageMaterial()
+QQuickSpriteSequenceMaterial::~QQuickSpriteSequenceMaterial()
 {
     delete texture;
 }
 
-class SpriteImageMaterialData : public QSGMaterialShader
+class SpriteSequenceMaterialData : public QSGMaterialShader
 {
 public:
-    SpriteImageMaterialData(const char * /* vertexFile */ = 0, const char * /* fragmentFile */ = 0)
+    SpriteSequenceMaterialData(const char * /* vertexFile */ = 0, const char * /* fragmentFile */ = 0)
     {
     }
 
@@ -151,7 +151,7 @@ public:
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
     {
-        QQuickSpriteImageMaterial *m = static_cast<QQuickSpriteImageMaterial *>(newEffect);
+        QQuickSpriteSequenceMaterial *m = static_cast<QQuickSpriteSequenceMaterial *>(newEffect);
         m->texture->bind();
 
         program()->setUniformValue(m_opacity_id, state.opacity());
@@ -191,11 +191,11 @@ public:
     static float chunkOfBytes[1024];
 };
 
-float SpriteImageMaterialData::chunkOfBytes[1024];
+float SpriteSequenceMaterialData::chunkOfBytes[1024];
 
-QSGMaterialShader *QQuickSpriteImageMaterial::createShader() const
+QSGMaterialShader *QQuickSpriteSequenceMaterial::createShader() const
 {
-    return new SpriteImageMaterialData;
+    return new SpriteSequenceMaterialData;
 }
 
 struct SpriteVertex {
@@ -211,21 +211,21 @@ struct SpriteVertices {
 };
 
 /*!
-    \qmlclass SpriteImage QQuickSpriteImage
+    \qmlclass SpriteSequence QQuickSpriteSequence
     \inqmlmodule QtQuick 2
     \inherits Item
-    \brief The SpriteImage element draws a sprite animation
+    \brief The SpriteSequence element draws a sprite animation
 
 */
 /*!
-    \qmlproperty bool QtQuick2::SpriteImage::running
+    \qmlproperty bool QtQuick2::SpriteSequence::running
 
     Whether the sprite is animating or not.
 
     Default is true
 */
 /*!
-    \qmlproperty bool QtQuick2::SpriteImage::interpolate
+    \qmlproperty bool QtQuick2::SpriteSequence::interpolate
 
     If true, interpolation will occur between sprite frames to make the
     animation appear smoother.
@@ -233,12 +233,12 @@ struct SpriteVertices {
     Default is true.
 */
 /*!
-    \qmlproperty string QtQuick2::SpriteImage::goalSprite
+    \qmlproperty string QtQuick2::SpriteSequence::goalSprite
 
     The name of the Sprite which is currently animating.
 */
 /*!
-    \qmlproperty string QtQuick2::SpriteImage::goalSprite
+    \qmlproperty string QtQuick2::SpriteSequence::goalSprite
 
     The name of the Sprite which the animation should move to.
 
@@ -250,19 +250,19 @@ struct SpriteVertices {
     If it is possible to return to the goalState from the starting point of the goalState
     it will continue to do so until goalState is set to "" or an unreachable state.
 */
-/*! \qmlmethod void QtQuick2::SpriteImage::jumpTo(string sprite)
+/*! \qmlmethod void QtQuick2::SpriteSequence::jumpTo(string sprite)
 
     This function causes the sprite to jump to the specified state immediately, intermediate
     states are not played.
 */
 /*!
-    \qmlproperty list<Sprite> QtQuick2::SpriteImage::sprites
+    \qmlproperty list<Sprite> QtQuick2::SpriteSequence::sprites
 
     The sprite or sprites to draw. Sprites will be scaled to the size of this element.
 */
 
 //TODO: Implicitly size element to size of first sprite?
-QQuickSpriteImage::QQuickSpriteImage(QQuickItem *parent) :
+QQuickSpriteSequence::QQuickSpriteSequence(QQuickItem *parent) :
     QQuickItem(parent)
     , m_node(0)
     , m_material(0)
@@ -278,14 +278,14 @@ QQuickSpriteImage::QQuickSpriteImage(QQuickItem *parent) :
             this, SLOT(update()));
 }
 
-void QQuickSpriteImage::jumpTo(const QString &sprite)
+void QQuickSpriteSequence::jumpTo(const QString &sprite)
 {
     if (!m_spriteEngine)
         return;
     m_spriteEngine->setGoal(m_spriteEngine->stateIndex(sprite), 0, true);
 }
 
-void QQuickSpriteImage::setGoalSprite(const QString &sprite)
+void QQuickSpriteSequence::setGoalSprite(const QString &sprite)
 {
     if (m_goalState != sprite){
         m_goalState = sprite;
@@ -294,12 +294,12 @@ void QQuickSpriteImage::setGoalSprite(const QString &sprite)
     }
 }
 
-QDeclarativeListProperty<QQuickSprite> QQuickSpriteImage::sprites()
+QDeclarativeListProperty<QQuickSprite> QQuickSpriteSequence::sprites()
 {
     return QDeclarativeListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
 }
 
-void QQuickSpriteImage::createEngine()
+void QQuickSpriteSequence::createEngine()
 {
     //TODO: delay until component complete
     if (m_spriteEngine)
@@ -311,18 +311,18 @@ void QQuickSpriteImage::createEngine()
     reset();
 }
 
-static QSGGeometry::Attribute SpriteImage_Attributes[] = {
+static QSGGeometry::Attribute SpriteSequence_Attributes[] = {
     QSGGeometry::Attribute::create(0, 2, GL_FLOAT),         // tex
 };
 
-static QSGGeometry::AttributeSet SpriteImage_AttributeSet =
+static QSGGeometry::AttributeSet SpriteSequence_AttributeSet =
 {
     1, // Attribute Count
     2 * sizeof(float),
-    SpriteImage_Attributes
+    SpriteSequence_Attributes
 };
 
-QSGGeometryNode* QQuickSpriteImage::buildNode()
+QSGGeometryNode* QQuickSpriteSequence::buildNode()
 {
     if (!m_spriteEngine) {
         qmlInfo(this) << "No sprite engine...";
@@ -336,7 +336,7 @@ QSGGeometryNode* QQuickSpriteImage::buildNode()
         return 0;
     }
 
-    m_material = new QQuickSpriteImageMaterial();
+    m_material = new QQuickSpriteSequenceMaterial();
 
     QImage image = m_spriteEngine->assembledImage();
     if (image.isNull())
@@ -359,7 +359,7 @@ QSGGeometryNode* QQuickSpriteImage::buildNode()
 
     int vCount = 4;
     int iCount = 6;
-    QSGGeometry *g = new QSGGeometry(SpriteImage_AttributeSet, vCount, iCount);
+    QSGGeometry *g = new QSGGeometry(SpriteSequence_AttributeSet, vCount, iCount);
     g->setDrawingMode(GL_TRIANGLES);
 
     SpriteVertices *p = (SpriteVertices *) g->vertexData();
@@ -393,12 +393,12 @@ QSGGeometryNode* QQuickSpriteImage::buildNode()
     return m_node;
 }
 
-void QQuickSpriteImage::reset()
+void QQuickSpriteSequence::reset()
 {
     m_pleaseReset = true;
 }
 
-QSGNode *QQuickSpriteImage::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
+QSGNode *QQuickSpriteSequence::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
 {
     if (m_pleaseReset) {
         delete m_node;
@@ -419,7 +419,7 @@ QSGNode *QQuickSpriteImage::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
     return m_node;
 }
 
-void QQuickSpriteImage::prepareNextFrame()
+void QQuickSpriteSequence::prepareNextFrame()
 {
     if (m_node == 0)
         m_node = buildNode();

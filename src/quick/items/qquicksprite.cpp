@@ -145,7 +145,7 @@ QT_BEGIN_NAMESPACE
     will repeat itself after completing.
 */
 /*!
-    \qmlproperty int QtQuick2::Sprite::frames
+    \qmlproperty int QtQuick2::Sprite::frameCount
 
     Number of frames in this sprite.
 */

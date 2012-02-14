@@ -65,31 +65,31 @@ Item {
         system: sys
         sprites: [Sprite {
                 source: "../images/realLeaf1.png"
-                frames: 1
+                frameCount: 1
                 frameDuration: 1
                 to: {"a":1, "b":1, "c":1, "d":1}
             }, Sprite {
                 name: "a"
                 source: "../images/realLeaf1.png"
-                frames: 1
+                frameCount: 1
                 frameDuration: 10000
             },
             Sprite {
                 name: "b"
                 source: "../images/realLeaf2.png"
-                frames: 1
+                frameCount: 1
                 frameDuration: 10000
             },
             Sprite {
                 name: "c"
                 source: "../images/realLeaf3.png"
-                frames: 1
+                frameCount: 1
                 frameDuration: 10000
             },
             Sprite {
                 name: "d"
                 source: "../images/realLeaf4.png"
-                frames: 1
+                frameCount: 1
                 frameDuration: 10000
             }
         ]

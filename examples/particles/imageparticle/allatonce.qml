@@ -54,7 +54,7 @@ Rectangle {
             Sprite {
                 name: "bear"
                 source: "../images/bear_tiles.png"
-                frames: 13
+                frameCount: 13
                 frameDuration: 120
             }
         ]

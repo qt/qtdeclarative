@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSPRITEIMAGE_P_H
-#define QQUICKSPRITEIMAGE_P_H
+#ifndef QQUICKSPRITESEQUENCE_P_H
+#define QQUICKSPRITESEQUENCE_P_H
 
 #include <QtQuick/QQuickItem>
 #include <QTime>
@@ -53,8 +53,8 @@ class QSGContext;
 class QQuickSprite;
 class QQuickSpriteEngine;
 class QSGGeometryNode;
-class QQuickSpriteImageMaterial;
-class Q_AUTOTEST_EXPORT QQuickSpriteImage : public QQuickItem
+class QQuickSpriteSequenceMaterial;
+class Q_AUTOTEST_EXPORT QQuickSpriteSequence : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
@@ -66,7 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickSpriteImage : public QQuickItem
     Q_CLASSINFO("DefaultProperty", "sprites")
 
 public:
-    explicit QQuickSpriteImage(QQuickItem *parent = 0);
+    explicit QQuickSpriteSequence(QQuickItem *parent = 0);
 
     QDeclarativeListProperty<QQuickSprite> sprites();
 
@@ -127,7 +127,7 @@ private:
     void prepareNextFrame();
     QSGGeometryNode* buildNode();
     QSGGeometryNode *m_node;
-    QQuickSpriteImageMaterial *m_material;
+    QQuickSpriteSequenceMaterial *m_material;
     QList<QQuickSprite*> m_sprites;
     QQuickSpriteEngine* m_spriteEngine;
     QTime m_timestamp;
@@ -145,4 +145,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QQUICKSPRITEIMAGE_P_H
+#endif // QQUICKSPRITESEQUENCE_P_H

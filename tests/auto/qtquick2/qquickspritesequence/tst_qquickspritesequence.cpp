@@ -38,29 +38,61 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include <QtTest/QtTest>
+#include "../../shared/util.h"
+#include <QtQuick/qquickview.h>
+#include <private/qquickspritesequence_p.h>
 
-import QtQuick 2.0
+class tst_qquickspritesequence : public QDeclarativeDataTest
+{
+    Q_OBJECT
+public:
+    tst_qquickspritesequence(){}
 
-Rectangle {
-    color: "black"
-    width: 320
-    height: 320
+private slots:
+    void test_properties();
+    void test_framerateAdvance();//Separate codepath for QQuickSpriteEngine
+};
 
-    SpriteImage {
-        objectName: "sprite"
-        sprites: [Sprite {
-            name: "firstState"
-            source: "squarefacesprite.png"
-            frames: 3
-            frameSync: true
-            to: {"secondState":1}
-        }, Sprite {
-            name: "secondState"
-            source: "squarefacesprite.png"
-            frames: 6
-            frameSync: true
-        } ]
-        width: 160
-        height: 160
-    }
+void tst_qquickspritesequence::test_properties()
+{
+    QQuickView *canvas = new QQuickView(0);
+
+    canvas->setSource(testFileUrl("basic.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QVERIFY(canvas->rootObject());
+    QQuickSpriteSequence* sprite = canvas->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
+    QVERIFY(sprite);
+
+    QVERIFY(sprite->running());
+    QVERIFY(sprite->interpolate());
+
+    sprite->setRunning(false);
+    QVERIFY(!sprite->running());
+    sprite->setInterpolate(false);
+    QVERIFY(!sprite->interpolate());
+
+    delete canvas;
 }
+
+void tst_qquickspritesequence::test_framerateAdvance()
+{
+    QQuickView *canvas = new QQuickView(0);
+
+    canvas->setSource(testFileUrl("advance.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QVERIFY(canvas->rootObject());
+    QQuickSpriteSequence* sprite = canvas->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
+    QVERIFY(sprite);
+
+    QTRY_COMPARE(sprite->currentSprite(), QLatin1String("secondState"));
+    delete canvas;
+}
+
+QTEST_MAIN(tst_qquickspritesequence)
+
+#include "tst_qquickspritesequence.moc"

@@ -53,7 +53,7 @@ QUICKTESTS =  \
     qquickpositioners \
     qquickrepeater \
     qquickshadereffect \
-    qquickspriteimage \
+    qquickspritesequence \
     qquicktext \
     qquicktextedit \
     qquicktextinput \

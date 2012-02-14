@@ -108,7 +108,7 @@ Rectangle {
             id: spinState
             name: "spinning"
             source: "../images/meteor.png"
-            frames: 35
+            frameCount: 35
             frameDuration: 60
         }
     }

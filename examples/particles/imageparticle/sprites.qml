@@ -47,11 +47,11 @@ Rectangle {
     height: 800
     id: root
 
-    SpriteImage {
+    SpriteSequence {
         sprites: Sprite {
                 name: "bear"
                 source: "../images/bear_tiles.png"
-                frames: 13
+                frameCount: 13
                 frameDuration: 120
             }
         width: 250
@@ -71,25 +71,25 @@ Rectangle {
         sprites: [Sprite {
             name: "happy"
             source: "../images/starfish_1.png"
-            frames: 1
+            frameCount: 1
             frameDuration: 260
             to: {"happy": 1, "silly": 1, "angry": 1}
         }, Sprite {
             name: "angry"
             source: "../images/starfish_0.png"
-            frames: 1
+            frameCount: 1
             frameDuration: 260
             to: {"happy": 1, "silly": 1, "angry": 1}
         }, Sprite {
             name: "silly"
             source: "../images/starfish_2.png"
-            frames: 1
+            frameCount: 1
             frameDuration: 260
             to: {"happy": 1, "silly": 1, "noticedbear": 0}
         }, Sprite {
             name: "noticedbear"
             source: "../images/starfish_3.png"
-            frames: 1
+            frameCount: 1
             frameDuration: 2600
         }]
     }

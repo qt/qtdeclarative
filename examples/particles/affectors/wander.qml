@@ -51,7 +51,7 @@ Rectangle {
         sprites: Sprite {
             name: "snow"
             source: "../images/snowflake.png"
-            frames: 51
+            frameCount: 51
             frameDuration: 40
             frameDurationVariation: 8
         }

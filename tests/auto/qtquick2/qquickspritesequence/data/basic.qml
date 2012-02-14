@@ -38,61 +38,23 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QtTest/QtTest>
-#include "../../shared/util.h"
-#include <QtQuick/qquickview.h>
-#include <private/qquickspriteimage_p.h>
 
-class tst_qquickspriteimage : public QDeclarativeDataTest
-{
-    Q_OBJECT
-public:
-    tst_qquickspriteimage(){}
+import QtQuick 2.0
 
-private slots:
-    void test_properties();
-    void test_framerateAdvance();//Separate codepath for QQuickSpriteEngine
-};
+Rectangle {
+    color: "black"
+    width: 320
+    height: 320
 
-void tst_qquickspriteimage::test_properties()
-{
-    QQuickView *canvas = new QQuickView(0);
-
-    canvas->setSource(testFileUrl("basic.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
-
-    QVERIFY(canvas->rootObject());
-    QQuickSpriteImage* sprite = canvas->rootObject()->findChild<QQuickSpriteImage*>("sprite");
-    QVERIFY(sprite);
-
-    QVERIFY(sprite->running());
-    QVERIFY(sprite->interpolate());
-
-    sprite->setRunning(false);
-    QVERIFY(!sprite->running());
-    sprite->setInterpolate(false);
-    QVERIFY(!sprite->interpolate());
-
-    delete canvas;
+    SpriteSequence {
+        objectName: "sprite"
+        sprites: Sprite {
+            name: "happy"
+            source: "squarefacesprite.png"
+            frameCount: 6
+            frameDuration: 120
+        }
+        width: 160
+        height: 160
+    }
 }
-
-void tst_qquickspriteimage::test_framerateAdvance()
-{
-    QQuickView *canvas = new QQuickView(0);
-
-    canvas->setSource(testFileUrl("advance.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
-
-    QVERIFY(canvas->rootObject());
-    QQuickSpriteImage* sprite = canvas->rootObject()->findChild<QQuickSpriteImage*>("sprite");
-    QVERIFY(sprite);
-
-    QTRY_COMPARE(sprite->currentSprite(), QLatin1String("secondState"));
-    delete canvas;
-}
-
-QTEST_MAIN(tst_qquickspriteimage)
-
-#include "tst_qquickspriteimage.moc"

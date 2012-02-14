@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_qquickspriteimage
-SOURCES += tst_qquickspriteimage.cpp
+TARGET = tst_qquickspritesequence
+SOURCES += tst_qquickspritesequence.cpp
 
 include (../../shared/util.pri)
 
