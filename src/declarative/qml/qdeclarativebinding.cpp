@@ -56,14 +56,14 @@
 QT_BEGIN_NAMESPACE
 
 QDeclarativeAbstractBinding::QDeclarativeAbstractBinding()
-: m_object(0), m_propertyIndex(-1), m_mePtr(0), m_prevBinding(0), m_nextBinding(0)
+: m_object(0), m_propertyIndex(-1), m_prevBinding(0), m_nextBinding(0)
 {
 }
 
 QDeclarativeAbstractBinding::~QDeclarativeAbstractBinding()
 {
     Q_ASSERT(m_prevBinding == 0);
-    Q_ASSERT(m_mePtr == 0);
+    Q_ASSERT(*m_mePtr == 0);
 }
 
 /*!
@@ -173,16 +173,16 @@ static void bindingDummyDeleter(QDeclarativeAbstractBinding *)
 
 QDeclarativeAbstractBinding::Pointer QDeclarativeAbstractBinding::weakPointer()
 {
-    if (m_selfPointer.isNull())
-        m_selfPointer = QSharedPointer<QDeclarativeAbstractBinding>(this, bindingDummyDeleter);
+    if (m_mePtr.value().isNull())
+        m_mePtr.value() = QSharedPointer<QDeclarativeAbstractBinding>(this, bindingDummyDeleter);
 
-    return m_selfPointer.toWeakRef();
+    return m_mePtr.value().toWeakRef();
 }
 
 void QDeclarativeAbstractBinding::clear()
 {
-    if (m_mePtr) {
-        *m_mePtr = 0;
+    if (!m_mePtr.isNull()) {
+        **m_mePtr = 0;
         m_mePtr = 0;
     }
 }

@@ -62,6 +62,8 @@
 #include <QtCore/QObject>
 #include <QtCore/QMetaProperty>
 
+#include <private/qpointervaluepair_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeAbstractBinding
@@ -90,7 +92,7 @@ public:
     void addToObject(QObject *, int);
     void removeFromObject();
 
-    static Pointer getPointer(QDeclarativeAbstractBinding *p) { return p ? p->weakPointer() : Pointer(); }
+    static inline Pointer getPointer(QDeclarativeAbstractBinding *p);
 
 protected:
     virtual ~QDeclarativeAbstractBinding();
@@ -108,10 +110,13 @@ private:
 
     QObject *m_object;
     int m_propertyIndex;
-    QDeclarativeAbstractBinding **m_mePtr;
+
+    typedef QSharedPointer<QDeclarativeAbstractBinding> SharedPointer;
+    // To save memory, we also store the rarely used weakPointer() instance in here
+    QPointerValuePair<QDeclarativeAbstractBinding*, SharedPointer> m_mePtr;
+
     QDeclarativeAbstractBinding **m_prevBinding;
     QDeclarativeAbstractBinding  *m_nextBinding;
-    QSharedPointer<QDeclarativeAbstractBinding> m_selfPointer;
 };
 
 class QDeclarativeValueTypeProxyBinding : public QDeclarativeAbstractBinding
@@ -186,6 +191,12 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativeBinding::EvaluateFlags)
+
+QDeclarativeAbstractBinding::Pointer
+QDeclarativeAbstractBinding::getPointer(QDeclarativeAbstractBinding *p)
+{
+    return p ? p->weakPointer() : Pointer();
+}
 
 QT_END_NAMESPACE
 
