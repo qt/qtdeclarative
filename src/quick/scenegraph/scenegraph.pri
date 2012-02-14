@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/coreapi/qsgnode.h \
     $$PWD/coreapi/qsgnodeupdater_p.h \
     $$PWD/coreapi/qsgrenderer_p.h \
+    $$PWD/coreapi/qsgrendernode_p.h \
     $$PWD/coreapi/qsggeometry_p.h
 
 SOURCES += \
@@ -16,7 +17,8 @@ SOURCES += \
     $$PWD/coreapi/qsgmaterial.cpp \
     $$PWD/coreapi/qsgnode.cpp \
     $$PWD/coreapi/qsgnodeupdater.cpp \
-    $$PWD/coreapi/qsgrenderer.cpp
+    $$PWD/coreapi/qsgrenderer.cpp \
+    $$PWD/coreapi/qsgrendernode.cpp
 
 # Util API
 HEADERS += \

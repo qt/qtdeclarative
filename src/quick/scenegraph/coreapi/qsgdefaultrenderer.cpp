@@ -62,8 +62,15 @@ int geometryNodesDrawn;
 
 QT_BEGIN_NAMESPACE
 
-static bool nodeLessThan(QSGGeometryNode *a, QSGGeometryNode *b)
+static bool nodeLessThan(QSGNode *nodeA, QSGNode *nodeB)
 {
+    if (nodeA->type() != nodeB->type())
+        return nodeA->type() < nodeB->type();
+    if (nodeA->type() != QSGNode::GeometryNodeType)
+        return nodeA < nodeB;
+    QSGGeometryNode *a = static_cast<QSGGeometryNode *>(nodeA);
+    QSGGeometryNode *b = static_cast<QSGGeometryNode *>(nodeA);
+
     // Sort by clip...
     if (a->clipList() != b->clipList())
         return a->clipList() < b->clipList();
@@ -83,8 +90,15 @@ static bool nodeLessThan(QSGGeometryNode *a, QSGGeometryNode *b)
     return a->matrix() < b->matrix();
 }
 
-static bool nodeLessThanWithRenderOrder(QSGGeometryNode *a, QSGGeometryNode *b)
+static bool nodeLessThanWithRenderOrder(QSGNode *nodeA, QSGNode *nodeB)
 {
+    if (nodeA->type() != nodeB->type())
+        return nodeA->type() < nodeB->type();
+    if (nodeA->type() != QSGNode::GeometryNodeType)
+        return nodeA < nodeB;
+    QSGGeometryNode *a = static_cast<QSGGeometryNode *>(nodeA);
+    QSGGeometryNode *b = static_cast<QSGGeometryNode *>(nodeA);
+
     // Sort by clip...
     if (a->clipList() != b->clipList())
         return a->clipList() < b->clipList();
@@ -112,23 +126,23 @@ static bool nodeLessThanWithRenderOrder(QSGGeometryNode *a, QSGGeometryNode *b)
 }
 
 
-QSGDefaultRenderer::IndexGeometryNodePair::IndexGeometryNodePair(int i, QSGGeometryNode *node)
-    : QPair<int, QSGGeometryNode *>(i, node)
+QSGDefaultRenderer::IndexNodePair::IndexNodePair(int i, QSGNode *node)
+    : QPair<int, QSGNode *>(i, node)
 {
 }
 
-bool QSGDefaultRenderer::IndexGeometryNodePair::operator < (const QSGDefaultRenderer::IndexGeometryNodePair &other) const
+bool QSGDefaultRenderer::IndexNodePair::operator < (const QSGDefaultRenderer::IndexNodePair &other) const
 {
     return nodeLessThan(second, other.second);
 }
 
 
-QSGDefaultRenderer::IndexGeometryNodePairHeap::IndexGeometryNodePairHeap()
+QSGDefaultRenderer::IndexNodePairHeap::IndexNodePairHeap()
     : v(64)
 {
 }
 
-void QSGDefaultRenderer::IndexGeometryNodePairHeap::insert(const QSGDefaultRenderer::IndexGeometryNodePair &x)
+void QSGDefaultRenderer::IndexNodePairHeap::insert(const QSGDefaultRenderer::IndexNodePair &x)
 {
     int i = v.size();
     v.add(x);
@@ -138,9 +152,9 @@ void QSGDefaultRenderer::IndexGeometryNodePairHeap::insert(const QSGDefaultRende
     }
 }
 
-QSGDefaultRenderer::IndexGeometryNodePair QSGDefaultRenderer::IndexGeometryNodePairHeap::pop()
+QSGDefaultRenderer::IndexNodePair QSGDefaultRenderer::IndexNodePairHeap::pop()
 {
-    IndexGeometryNodePair x = top();
+    IndexNodePair x = top();
     if (v.size() > 1)
         qSwap(v.first(), v.last());
     v.pop_back();
@@ -163,9 +177,11 @@ QSGDefaultRenderer::QSGDefaultRenderer(QSGContext *context)
     , m_opaqueNodes(64)
     , m_transparentNodes(64)
     , m_tempNodes(64)
+    , m_renderGroups(4)
     , m_rebuild_lists(false)
     , m_needs_sorting(false)
     , m_sort_front_to_back(false)
+    , m_render_node_added(false)
     , m_currentRenderOrder(1)
 {
     QStringList args = qApp->arguments();
@@ -250,22 +266,30 @@ void QSGDefaultRenderer::render()
     if (m_rebuild_lists) {
         m_opaqueNodes.reset();
         m_transparentNodes.reset();
+        m_renderGroups.reset();
         m_currentRenderOrder = 1;
         buildLists(rootNode());
         m_rebuild_lists = false;
+        m_render_node_added = false;
+        RenderGroup group = { m_opaqueNodes.size(), m_transparentNodes.size() };
+        m_renderGroups.add(group);
     }
 
 #ifdef RENDERER_DEBUG
     int debugtimeLists = debugTimer.elapsed();
 #endif
 
-
     if (m_needs_sorting) {
         if (!m_opaqueNodes.isEmpty()) {
-            qSort(&m_opaqueNodes.first(), &m_opaqueNodes.first() + m_opaqueNodes.size(),
-                  m_sort_front_to_back
-                  ? nodeLessThanWithRenderOrder
-                  : nodeLessThan);
+            bool (*lessThan)(QSGNode *, QSGNode *);
+            lessThan = m_sort_front_to_back ? nodeLessThanWithRenderOrder : nodeLessThan;
+            int start = 0;
+            for (int i = 0; i < m_renderGroups.size(); ++i) {
+                int end = m_renderGroups.at(i).opaqueEnd;
+                if (end != start)
+                    qSort(&m_opaqueNodes.first() + start, &m_opaqueNodes.first() + end, lessThan);
+                start = end;
+            }
         }
         m_needs_sorting = false;
     }
@@ -277,42 +301,47 @@ void QSGDefaultRenderer::render()
     m_renderOrderMatrix.setToIdentity();
     m_renderOrderMatrix.scale(1, 1, qreal(1) / m_currentRenderOrder);
 
-    glDisable(GL_BLEND);
-    glDepthMask(true);
+    int opaqueStart = 0;
+    int transparentStart = 0;
+    for (int i = 0; i < m_renderGroups.size(); ++i) {
+        int opaqueEnd = m_renderGroups.at(i).opaqueEnd;
+        int transparentEnd = m_renderGroups.at(i).transparentEnd;
+
+        glDisable(GL_BLEND);
+        glDepthMask(true);
 #ifdef QML_RUNTIME_TESTING
-    if (m_render_opaque_nodes)
+        if (m_render_opaque_nodes)
 #endif
-    {
+        {
 #if defined (QML_RUNTIME_TESTING)
-        if (dumpTree)
-            qDebug() << "Opaque Nodes:";
+            if (dumpTree)
+                qDebug() << "Opaque Nodes:";
 #endif
-        renderNodes(m_opaqueNodes);
+            if (opaqueEnd != opaqueStart)
+                renderNodes(&m_opaqueNodes.first() + opaqueStart, opaqueEnd - opaqueStart);
+        }
+
+        glEnable(GL_BLEND);
+        glDepthMask(false);
+#ifdef QML_RUNTIME_TESTING
+        if (m_render_alpha_nodes)
+#endif
+        {
+#if defined (QML_RUNTIME_TESTING)
+            if (dumpTree)
+                qDebug() << "Alpha Nodes:";
+#endif
+            if (transparentEnd != transparentStart)
+                renderNodes(&m_transparentNodes.first() + transparentStart, transparentEnd - transparentStart);
+        }
+
+        opaqueStart = opaqueEnd;
+        transparentStart = transparentEnd;
     }
 
 #ifdef RENDERER_DEBUG
-    int debugtimeOpaque = debugTimer.elapsed();
-    int opaqueNodes = geometryNodesDrawn;
-    int opaqueMaterialChanges = materialChanges;
+    int debugtimeRender = debugTimer.elapsed();
 #endif
-
-    glEnable(GL_BLEND);
-    glDepthMask(false);
-#ifdef QML_RUNTIME_TESTING
-    if (m_render_alpha_nodes)
-#endif
-    {
-#if defined (QML_RUNTIME_TESTING)
-        if (dumpTree)
-            qDebug() << "Alpha Nodes:";
-#endif
-        renderNodes(m_transparentNodes);
-    }
-
-#ifdef RENDERER_DEBUG
-    int debugtimeAlpha = debugTimer.elapsed();
-#endif
-
 
     if (m_currentProgram)
         m_currentProgram->deactivate();
@@ -320,17 +349,16 @@ void QSGDefaultRenderer::render()
 #ifdef RENDERER_DEBUG
     if (debugTimer.elapsed() > DEBUG_THRESHOLD) {
         printf(" --- Renderer breakdown:\n"
-               "     - setup=%d, clear=%d, building=%d, sorting=%d, opaque=%d, alpha=%d\n"
-               "     - material changes: opaque=%d, alpha=%d, total=%d\n"
-               "     - geometry ndoes: opaque=%d, alpha=%d, total=%d\n",
+               "     - setup=%d, clear=%d, building=%d, sorting=%d, render=%d\n"
+               "     - material changes: total=%d\n"
+               "     - geometry nodes: total=%d\n",
                debugtimeSetup,
                debugtimeClear - debugtimeSetup,
                debugtimeLists - debugtimeClear,
                debugtimeSorting - debugtimeLists,
-               debugtimeOpaque - debugtimeSorting,
-               debugtimeAlpha - debugtimeOpaque,
-               opaqueMaterialChanges, materialChanges - opaqueMaterialChanges, materialChanges,
-               opaqueNodes, geometryNodesDrawn - opaqueNodes, geometryNodesDrawn);
+               debugtimeRender - debugtimeSorting,
+               materialChanges,
+               geometryNodesDrawn);
     }
 #endif
 
@@ -365,10 +393,21 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
             geomNode->setRenderOrder(m_currentRenderOrder - 1);
             m_transparentNodes.add(geomNode);
         } else {
+            if (m_render_node_added) {
+                // Start new group of nodes so that this opaque node is render on top of the
+                // render node.
+                RenderGroup group = { m_opaqueNodes.size(), m_transparentNodes.size() };
+                m_renderGroups.add(group);
+                m_render_node_added = false;
+            }
             geomNode->setRenderOrder(m_currentRenderOrder);
             m_opaqueNodes.add(geomNode);
             m_currentRenderOrder += 2;
         }
+    } else if (node->type() == QSGNode::RenderNodeType) {
+        QSGRenderNode *renderNode = static_cast<QSGRenderNode *>(node);
+        m_transparentNodes.add(renderNode);
+        m_render_node_added = true;
     }
 
     if (!node->firstChild())
@@ -384,6 +423,7 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
         QVarLengthArray<int, 16> beginIndices;
         QVarLengthArray<int, 16> endIndices;
         int baseCount = m_transparentNodes.size();
+        int baseGroupCount = m_renderGroups.size();
         int count = 0;
         for (QSGNode *c = node->firstChild(); c; c = c->nextSibling()) {
             beginIndices.append(m_transparentNodes.size());
@@ -393,21 +433,22 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
         }
 
         int childNodeCount = m_transparentNodes.size() - baseCount;
-        if (childNodeCount) {
+        // Don't reorder if new render groups were added.
+        if (m_renderGroups.size() == baseGroupCount && childNodeCount) {
             m_tempNodes.reset();
             m_tempNodes.reserve(childNodeCount);
             while (childNodeCount) {
                 for (int i = 0; i < count; ++i) {
                     if (beginIndices[i] != endIndices[i])
-                        m_heap.insert(IndexGeometryNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
+                        m_heap.insert(IndexNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
                 }
                 while (!m_heap.isEmpty()) {
-                    IndexGeometryNodePair pair = m_heap.pop();
+                    IndexNodePair pair = m_heap.pop();
                     m_tempNodes.add(pair.second);
                     --childNodeCount;
                     int i = pair.first;
                     if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), pair.second))
-                        m_heap.insert(IndexGeometryNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
+                        m_heap.insert(IndexNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
                 }
             }
             Q_ASSERT(m_tempNodes.size() == m_transparentNodes.size() - baseCount);
@@ -420,105 +461,182 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
     }
 }
 
-void QSGDefaultRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
+void QSGDefaultRenderer::renderNodes(QSGNode *const *nodes, int count)
 {
     const float scale = 1.0f / m_currentRenderOrder;
-    int count = list.size();
     int currentRenderOrder = 0x80000000;
-    m_current_projection_matrix.setColumn(2, scale * projectionMatrix().column(2));
+    ClipType currentClipType = NoClip;
+    QMatrix4x4 projection = projectionMatrix();
+    m_current_projection_matrix.setColumn(2, scale * projection.column(2));
 
     //int clipChangeCount = 0;
     //int programChangeCount = 0;
     //int materialChangeCount = 0;
 
     for (int i = 0; i < count; ++i) {
-        QSGGeometryNode *geomNode = list.at(i);
+        if (nodes[i]->type() == QSGNode::RenderNodeType) {
+            QSGRenderNode *renderNode = static_cast<QSGRenderNode *>(nodes[i]);
 
-        QSGMaterialShader::RenderState::DirtyStates updates;
-
-#if defined (QML_RUNTIME_TESTING)
-        static bool dumpTree = qApp->arguments().contains(QLatin1String("--dump-tree"));
-        if (dumpTree)
-            qDebug() << geomNode;
-#endif
-
-        bool changeMatrix = m_currentMatrix != geomNode->matrix();
-
-        if (changeMatrix) {
-            m_currentMatrix = geomNode->matrix();
-            if (m_currentMatrix)
-                m_current_model_view_matrix = *m_currentMatrix;
-            else
-                m_current_model_view_matrix.setToIdentity();
-            m_current_determinant = m_current_model_view_matrix.determinant();
-            updates |= QSGMaterialShader::RenderState::DirtyMatrix;
-        }
-
-        bool changeOpacity = m_current_opacity != geomNode->inheritedOpacity();
-        if (changeOpacity) {
-            updates |= QSGMaterialShader::RenderState::DirtyOpacity;
-            m_current_opacity = geomNode->inheritedOpacity();
-        }
-
-        Q_ASSERT(geomNode->activeMaterial());
-
-        QSGMaterial *material = geomNode->activeMaterial();
-        QSGMaterialShader *program = m_context->prepareMaterial(material);
-        Q_ASSERT(program->program()->isLinked());
-
-        bool changeClip = geomNode->clipList() != m_currentClip;
-        QSGRenderer::ClipType clipType = QSGRenderer::NoClip;
-        if (changeClip) {
-            // The clip function relies on there not being any depth testing..
-            glDisable(GL_DEPTH_TEST);
-            clipType = updateStencilClip(geomNode->clipList());
-            glEnable(GL_DEPTH_TEST);
-            m_currentClip = geomNode->clipList();
-#ifdef FORCE_NO_REORDER
-            glDepthMask(false);
-#else
-            glDepthMask((material->flags() & QSGMaterial::Blending) == 0 && m_current_opacity == 1);
-#endif
-            //++clipChangeCount;
-        }
-
-        bool changeProgram = (changeClip && clipType == QSGRenderer::StencilClip) || m_currentProgram != program;
-        if (changeProgram) {
             if (m_currentProgram)
                 m_currentProgram->deactivate();
-            m_currentProgram = program;
-            m_currentProgram->activate();
-            //++programChangeCount;
-            updates |= (QSGMaterialShader::RenderState::DirtyMatrix | QSGMaterialShader::RenderState::DirtyOpacity);
+            m_currentMaterial = 0;
+            m_currentProgram = 0;
+            m_currentMatrix = 0;
+            currentRenderOrder = 0x80000000;
+
+            bool changeClip = renderNode->clipList() != m_currentClip;
+            // The clip function relies on there not being any depth testing..
+            glDisable(GL_DEPTH_TEST);
+            if (changeClip) {
+                currentClipType = updateStencilClip(renderNode->clipList());
+                m_currentClip = renderNode->clipList();
+                //++clipChangeCount;
+            }
+
+            glDepthMask(false);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+            QSGRenderNode::RenderState state;
+            state.projectionMatrix = &projection;
+            state.scissorEnabled = currentClipType & ScissorClip;
+            state.stencilEnabled = currentClipType & StencilClip;
+            state.scissorRect = m_current_scissor_rect;
+            state.stencilValue = m_current_stencil_value;
+
+            renderNode->render(state);
+
+            QSGRenderNode::StateFlags changes = renderNode->changedStates();
+            if (changes & QSGRenderNode::ViewportState) {
+                QRect r = viewportRect();
+                glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
+            }
+            if (changes & QSGRenderNode::StencilState) {
+                glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                glStencilMask(0xff);
+                glDisable(GL_STENCIL_TEST);
+            }
+            if (changes & (QSGRenderNode::StencilState | QSGRenderNode::ScissorState)) {
+                glDisable(GL_SCISSOR_TEST);
+                m_currentClip = 0;
+                currentClipType = NoClip;
+            }
+            if (changes & QSGRenderNode::DepthState) {
+#if defined(QT_OPENGL_ES)
+                glClearDepthf(0);
+#else
+                glClearDepth(0);
+#endif
+                if (m_clear_mode & QSGRenderer::ClearDepthBuffer) {
+                    glDepthMask(true);
+                    glClear(GL_DEPTH_BUFFER_BIT);
+                }
+                glDepthMask(false);
+                glDepthFunc(GL_GREATER);
+            }
+            if (changes & QSGRenderNode::ColorState)
+                bindable()->reactivate();
+            if (changes & QSGRenderNode::BlendState) {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            if (changes & QSGRenderNode::CullState) {
+                glFrontFace(isMirrored() ? GL_CW : GL_CCW);
+                glDisable(GL_CULL_FACE);
+            }
+
+            glEnable(GL_DEPTH_TEST);
+
+            m_current_model_view_matrix.setToIdentity();
+            m_current_determinant = 1;
+        } else if (nodes[i]->type() == QSGNode::GeometryNodeType) {
+            QSGGeometryNode *geomNode = static_cast<QSGGeometryNode *>(nodes[i]);
+
+            QSGMaterialShader::RenderState::DirtyStates updates;
+
+#if defined (QML_RUNTIME_TESTING)
+            static bool dumpTree = qApp->arguments().contains(QLatin1String("--dump-tree"));
+            if (dumpTree)
+                qDebug() << geomNode;
+#endif
+
+            bool changeMatrix = m_currentMatrix != geomNode->matrix();
+
+            if (changeMatrix) {
+                m_currentMatrix = geomNode->matrix();
+                if (m_currentMatrix)
+                    m_current_model_view_matrix = *m_currentMatrix;
+                else
+                    m_current_model_view_matrix.setToIdentity();
+                m_current_determinant = m_current_model_view_matrix.determinant();
+                updates |= QSGMaterialShader::RenderState::DirtyMatrix;
+            }
+
+            bool changeOpacity = m_current_opacity != geomNode->inheritedOpacity();
+            if (changeOpacity) {
+                updates |= QSGMaterialShader::RenderState::DirtyOpacity;
+                m_current_opacity = geomNode->inheritedOpacity();
+            }
+
+            Q_ASSERT(geomNode->activeMaterial());
+
+            QSGMaterial *material = geomNode->activeMaterial();
+            QSGMaterialShader *program = m_context->prepareMaterial(material);
+            Q_ASSERT(program->program()->isLinked());
+
+            bool changeClip = geomNode->clipList() != m_currentClip;
+            if (changeClip) {
+                // The clip function relies on there not being any depth testing..
+                glDisable(GL_DEPTH_TEST);
+                currentClipType = updateStencilClip(geomNode->clipList());
+                glEnable(GL_DEPTH_TEST);
+                m_currentClip = geomNode->clipList();
+#ifdef FORCE_NO_REORDER
+                glDepthMask(false);
+#else
+                glDepthMask((material->flags() & QSGMaterial::Blending) == 0 && m_current_opacity == 1);
+#endif
+                //++clipChangeCount;
+            }
+
+            bool changeProgram = (changeClip && (currentClipType & StencilClip)) || m_currentProgram != program;
+            if (changeProgram) {
+                if (m_currentProgram)
+                    m_currentProgram->deactivate();
+                m_currentProgram = program;
+                m_currentProgram->activate();
+                //++programChangeCount;
+                updates |= (QSGMaterialShader::RenderState::DirtyMatrix | QSGMaterialShader::RenderState::DirtyOpacity);
 
 #ifdef RENDERER_DEBUG
-            materialChanges++;
+                materialChanges++;
 #endif
-        }
+            }
 
-        bool changeRenderOrder = currentRenderOrder != geomNode->renderOrder();
-        if (changeRenderOrder) {
-            currentRenderOrder = geomNode->renderOrder();
-            m_current_projection_matrix.setColumn(3, projectionMatrix().column(3)
-                                                  + currentRenderOrder
-                                                  * m_current_projection_matrix.column(2));
-            updates |= QSGMaterialShader::RenderState::DirtyMatrix;
-        }
+            bool changeRenderOrder = currentRenderOrder != geomNode->renderOrder();
+            if (changeRenderOrder) {
+                currentRenderOrder = geomNode->renderOrder();
+                m_current_projection_matrix.setColumn(3, projection.column(3)
+                                                      + currentRenderOrder
+                                                      * m_current_projection_matrix.column(2));
+                updates |= QSGMaterialShader::RenderState::DirtyMatrix;
+            }
 
-        if (changeProgram || m_currentMaterial != material) {
-            program->updateState(state(updates), material, changeProgram ? 0 : m_currentMaterial);
-            m_currentMaterial = material;
-            //++materialChangeCount;
-        }
+            if (changeProgram || m_currentMaterial != material) {
+                program->updateState(state(updates), material, changeProgram ? 0 : m_currentMaterial);
+                m_currentMaterial = material;
+                //++materialChangeCount;
+            }
 
-        //glDepthRange((geomNode->renderOrder() + 0.1) * scale, (geomNode->renderOrder() + 0.9) * scale);
+            //glDepthRange((geomNode->renderOrder() + 0.1) * scale, (geomNode->renderOrder() + 0.9) * scale);
 
-        const QSGGeometry *g = geomNode->geometry();
-        draw(program, g);
+            const QSGGeometry *g = geomNode->geometry();
+            draw(program, g);
 
 #ifdef RENDERER_DEBUG
-        geometryNodesDrawn++;
+            geometryNodesDrawn++;
 #endif
+        }
     }
     //qDebug("Clip: %i, shader program: %i, material: %i times changed while drawing %s items",
     //    clipChangeCount, programChangeCount, materialChangeCount,

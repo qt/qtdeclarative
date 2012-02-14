@@ -138,6 +138,7 @@ QSGRenderer::QSGRenderer(QSGContext *context)
     , m_clear_mode(ClearColorBuffer | ClearDepthBuffer)
     , m_current_opacity(1)
     , m_current_determinant(1)
+    , m_current_stencil_value(0)
     , m_context(context)
     , m_root_node(0)
     , m_node_updater(0)
@@ -425,13 +426,12 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
         return NoClip;
     }
 
-    bool stencilEnabled = false;
-    bool scissorEnabled = false;
+    ClipType clipType = NoClip;
 
     glDisable(GL_SCISSOR_TEST);
 
-    int clipDepth = 0;
-    QRect clipRect;
+    m_current_stencil_value = 0;
+    m_current_scissor_rect = QRect();
     while (clip) {
         QMatrix4x4 m = m_current_projection_matrix;
         if (clip->matrix())
@@ -470,17 +470,17 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
             GLint ix2 = qRound((fx2 + 1) * m_device_rect.width() * qreal(0.5));
             GLint iy2 = qRound((fy2 + 1) * m_device_rect.height() * qreal(0.5));
 
-            if (!scissorEnabled) {
-                clipRect = QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
+            if (!(clipType & ScissorClip)) {
+                m_current_scissor_rect = QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
                 glEnable(GL_SCISSOR_TEST);
-                scissorEnabled = true;
+                clipType |= ScissorClip;
             } else {
-                clipRect &= QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
+                m_current_scissor_rect &= QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
             }
-
-            glScissor(clipRect.x(), clipRect.y(), clipRect.width(), clipRect.height());
+            glScissor(m_current_scissor_rect.x(), m_current_scissor_rect.y(),
+                      m_current_scissor_rect.width(), m_current_scissor_rect.height());
         } else {
-            if (!stencilEnabled) {
+            if (!(clipType & StencilClip)) {
                 if (!m_clip_program.isLinked()) {
                     m_clip_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
                         "attribute highp vec4 vCoord;       \n"
@@ -497,20 +497,28 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
                     m_clip_matrix_id = m_clip_program.uniformLocation("matrix");
                 }
 
-                glStencilMask(0xff); // write mask
                 glClearStencil(0);
                 glClear(GL_STENCIL_BUFFER_BIT);
                 glEnable(GL_STENCIL_TEST);
                 glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                 glDepthMask(GL_FALSE);
 
+                if (m_vertex_buffer_bound) {
+                    glBindBuffer(GL_ARRAY_BUFFER, 0);
+                    m_vertex_buffer_bound = false;
+                }
+                if (m_index_buffer_bound) {
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+                    m_index_buffer_bound = false;
+                }
+
                 m_clip_program.bind();
                 m_clip_program.enableAttributeArray(0);
 
-                stencilEnabled = true;
+                clipType |= StencilClip;
             }
 
-            glStencilFunc(GL_EQUAL, clipDepth, 0xff); // stencil test, ref, test mask
+            glStencilFunc(GL_EQUAL, m_current_stencil_value, 0xff); // stencil test, ref, test mask
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR); // stencil fail, z fail, z pass
 
             const QSGGeometry *g = clip->geometry();
@@ -525,26 +533,22 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
                 glDrawArrays(g->drawingMode(), 0, g->vertexCount());
             }
 
-            ++clipDepth;
+            ++m_current_stencil_value;
         }
 
         clip = clip->clipList();
     }
 
-    if (stencilEnabled) {
+    if (clipType & StencilClip) {
         m_clip_program.disableAttributeArray(0);
-        glStencilFunc(GL_EQUAL, clipDepth, 0xff); // stencil test, ref, test mask
+        glStencilFunc(GL_EQUAL, m_current_stencil_value, 0xff); // stencil test, ref, test mask
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // stencil fail, z fail, z pass
-        glStencilMask(0); // write mask
         bindable()->reactivate();
     } else {
         glDisable(GL_STENCIL_TEST);
     }
 
-    if (!scissorEnabled)
-        glDisable(GL_SCISSOR_TEST);
-
-    return stencilEnabled ? StencilClip : ScissorClip;
+    return clipType;
 }
 
 

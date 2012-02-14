@@ -42,10 +42,20 @@
 #ifndef NODEUPDATER_P_H
 #define NODEUPDATER_P_H
 
-#include "qsgnode.h"
+#include <QtQuick/qtquickglobal.h>
 #include <QtGui/private/qdatabuffer_p.h>
 
+QT_BEGIN_HEADER
+
 QT_BEGIN_NAMESPACE
+
+class QSGNode;
+class QSGTransformNode;
+class QSGClipNode;
+class QSGOpacityNode;
+class QSGGeometryNode;
+class QMatrix4x4;
+class QSGRenderNode;
 
 class Q_QUICK_EXPORT QSGNodeUpdater
 {
@@ -68,6 +78,8 @@ protected:
     void leaveOpacityNode(QSGOpacityNode *o);
     void enterGeometryNode(QSGGeometryNode *);
     void leaveGeometryNode(QSGGeometryNode *);
+    void enterRenderNode(QSGRenderNode *);
+    void leaveRenderNode(QSGRenderNode *);
 
     void visitNode(QSGNode *n);
     void visitChildren(QSGNode *n);
@@ -83,5 +95,7 @@ protected:
 };
 
 QT_END_NAMESPACE
+
+QT_END_HEADER
 
 #endif // NODEUPDATER_P_H

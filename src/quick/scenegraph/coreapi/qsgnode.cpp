@@ -90,7 +90,7 @@ QSGNode::QSGNode()
     , m_lastChild(0)
     , m_nextSibling(0)
     , m_previousSibling(0)
-    , m_subtreeGeometryCount(0)
+    , m_subtreeRenderableCount(0)
     , m_nodeFlags(OwnedByParent)
     , m_dirtyState(0)
 {
@@ -104,7 +104,7 @@ QSGNode::QSGNode(NodeType type)
     , m_lastChild(0)
     , m_nextSibling(0)
     , m_previousSibling(0)
-    , m_subtreeGeometryCount(type == GeometryNodeType ? 1 : 0)
+    , m_subtreeRenderableCount(type == GeometryNodeType || type == RenderNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
     , m_dirtyState(0)
 {
@@ -173,7 +173,7 @@ QSGNode::~QSGNode()
 
 bool QSGNode::isSubtreeBlocked() const
 {
-    return m_subtreeGeometryCount == 0;
+    return m_subtreeRenderableCount == 0;
 }
 
 /*!
@@ -471,16 +471,16 @@ void QSGNode::markDirty(DirtyState bits)
 
     DirtyState subtreeBits = DirtyState((bits & DirtyPropagationMask) << 16);
 
-    int geometryCountDiff = 0;
+    int renderableCountDiff = 0;
     if (bits & DirtyNodeAdded)
-        geometryCountDiff += m_subtreeGeometryCount;
+        renderableCountDiff += m_subtreeRenderableCount;
     if (bits & DirtyNodeRemoved)
-        geometryCountDiff -= m_subtreeGeometryCount;
+        renderableCountDiff -= m_subtreeRenderableCount;
 
     QSGNode *p = m_parent;
     while (p) {
         p->m_dirtyState |= subtreeBits;
-        p->m_subtreeGeometryCount += geometryCountDiff;
+        p->m_subtreeRenderableCount += renderableCountDiff;
         if (p->type() == RootNodeType)
             static_cast<QSGRootNode *>(p)->notifyNodeChange(this, bits);
         p = p->m_parent;

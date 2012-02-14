@@ -45,6 +45,7 @@
 #include "qsgrenderer_p.h"
 
 #include <QtGui/private/qdatabuffer_p.h>
+#include "qsgrendernode_p.h"
 
 QT_BEGIN_HEADER
 
@@ -54,28 +55,28 @@ class QSGDefaultRenderer : public QSGRenderer
 {
     Q_OBJECT
 public:
-    class IndexGeometryNodePair : public QPair<int, QSGGeometryNode *>
+    class IndexNodePair : public QPair<int, QSGNode *>
     {
     public:
-        IndexGeometryNodePair(int i, QSGGeometryNode *n);
-        bool operator < (const IndexGeometryNodePair &other) const;
+        IndexNodePair(int i, QSGNode *n);
+        bool operator < (const IndexNodePair &other) const;
     };
 
 
     // Minimum heap.
-    class IndexGeometryNodePairHeap
+    class IndexNodePairHeap
     {
     public:
-        IndexGeometryNodePairHeap();
-        void insert(const IndexGeometryNodePair &x);
-        const IndexGeometryNodePair &top() const { return v.first(); }
-        IndexGeometryNodePair pop();
+        IndexNodePairHeap();
+        void insert(const IndexNodePair &x);
+        const IndexNodePair &top() const { return v.first(); }
+        IndexNodePair pop();
         bool isEmpty() const { return v.isEmpty(); }
     private:
         static int parent(int i) { return (i - 1) >> 1; }
         static int left(int i) { return (i << 1) | 1; }
         static int right(int i) { return (i + 1) << 1; }
-        QDataBuffer<IndexGeometryNodePair> v;
+        QDataBuffer<IndexNodePair> v;
     };
 
     QSGDefaultRenderer(QSGContext *context);
@@ -89,21 +90,24 @@ public:
 
 private:
     void buildLists(QSGNode *node);
-    void renderNodes(const QDataBuffer<QSGGeometryNode *> &list);
+    void renderNodes(QSGNode *const *nodes, int count);
 
     const QSGClipNode *m_currentClip;
     QSGMaterial *m_currentMaterial;
     QSGMaterialShader *m_currentProgram;
     const QMatrix4x4 *m_currentMatrix;
     QMatrix4x4 m_renderOrderMatrix;
-    QDataBuffer<QSGGeometryNode *> m_opaqueNodes;
-    QDataBuffer<QSGGeometryNode *> m_transparentNodes;
-    QDataBuffer<QSGGeometryNode *> m_tempNodes;
-    IndexGeometryNodePairHeap m_heap;
+    QDataBuffer<QSGNode *> m_opaqueNodes;
+    QDataBuffer<QSGNode *> m_transparentNodes;
+    QDataBuffer<QSGNode *> m_tempNodes;
+    struct RenderGroup { int opaqueEnd, transparentEnd; };
+    QDataBuffer<RenderGroup> m_renderGroups;
+    IndexNodePairHeap m_heap;
 
     bool m_rebuild_lists;
     bool m_needs_sorting;
     bool m_sort_front_to_back;
+    bool m_render_node_added;
     int m_currentRenderOrder;
 
 #ifdef QML_RUNTIME_TESTING

@@ -4,6 +4,7 @@ PUBLICTESTS += \
     examples \
     geometry \
     nodes \
+    rendernode \
     qdeclarativepixmapcache
 
 # This test requires the qtconcurrent module

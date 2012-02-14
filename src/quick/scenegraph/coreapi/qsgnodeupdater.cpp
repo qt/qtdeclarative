@@ -40,6 +40,8 @@
 ****************************************************************************/
 
 #include "qsgnodeupdater_p.h"
+#include "qsgnode.h"
+#include "qsgrendernode_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -204,6 +206,26 @@ void QSGNodeUpdater::leaveGeometryNode(QSGGeometryNode *g)
 #endif
 }
 
+void QSGNodeUpdater::enterRenderNode(QSGRenderNode *r)
+{
+#ifdef QSG_UPDATER_DEBUG
+    qDebug() << "enter render:" << r;
+#endif
+
+    r->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.last();
+    r->m_clip_list = m_current_clip;
+    r->setInheritedOpacity(m_opacity_stack.last());
+}
+
+void QSGNodeUpdater::leaveRenderNode(QSGRenderNode *r)
+{
+#ifdef QSG_UPDATER_DEBUG
+    qDebug() << "leave render" << r;
+#else
+    Q_UNUSED(r)
+#endif
+}
+
 void QSGNodeUpdater::enterOpacityNode(QSGOpacityNode *o)
 {
     if (o->dirtyState() & QSGNode::DirtyOpacity)
@@ -262,6 +284,12 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
         enterGeometryNode(g);
         visitChildren(g);
         leaveGeometryNode(g);
+        break; }
+    case QSGNode::RenderNodeType: {
+        QSGRenderNode *r = static_cast<QSGRenderNode *>(n);
+        enterRenderNode(r);
+        visitChildren(r);
+        leaveRenderNode(r);
         break; }
     case QSGNode::ClipNodeType: {
         QSGClipNode *c = static_cast<QSGClipNode *>(n);

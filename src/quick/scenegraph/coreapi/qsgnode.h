@@ -71,6 +71,9 @@ public:
         TransformNodeType,
         ClipNodeType,
         OpacityNodeType,
+#ifndef Q_QDOC
+        RenderNodeType, // internal
+#endif
         UserNodeType = 1024
     };
 
@@ -165,7 +168,7 @@ private:
     QSGNode *m_lastChild;
     QSGNode *m_nextSibling;
     QSGNode *m_previousSibling;
-    int m_subtreeGeometryCount;
+    int m_subtreeRenderableCount;
 
     Flags m_nodeFlags;
     DirtyState m_dirtyState;

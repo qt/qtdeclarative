@@ -70,12 +70,13 @@ class Q_QUICK_EXPORT QSGRenderer : public QObject, public QOpenGLFunctions
 {
     Q_OBJECT
 public:
-    enum ClipType
+    enum ClipTypeBit
     {
-        NoClip,
-        ScissorClip,
-        StencilClip
+        NoClip = 0x00,
+        ScissorClip = 0x01,
+        StencilClip = 0x02
     };
+    Q_DECLARE_FLAGS(ClipType, ClipTypeBit)
 
     enum ClearModeBit
     {
@@ -155,6 +156,8 @@ protected:
     QMatrix4x4 m_current_model_view_matrix;
     qreal m_current_opacity;
     qreal m_current_determinant;
+    QRect m_current_scissor_rect;
+    int m_current_stencil_value;
 
     QSGContext *m_context;
 
