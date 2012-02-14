@@ -15,6 +15,8 @@ HEADERS +=  \
     $$PWD/qrecyclepool_p.h \
     $$PWD/qflagpointer_p.h \
     $$PWD/qdeclarativetrace_p.h \
+    $$PWD/qpointervaluepair_p.h \
+    $$PWD/qlazilyallocated_p.h \
 
 SOURCES += \
     $$PWD/qintrusivelist.cpp \

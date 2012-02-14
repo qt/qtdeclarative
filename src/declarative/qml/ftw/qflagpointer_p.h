@@ -69,10 +69,12 @@ public:
     inline bool flag() const;
     inline void setFlag();
     inline void clearFlag();
+    inline void setFlagValue(bool);
 
     inline bool flag2() const;
     inline void setFlag2();
     inline void clearFlag2();
+    inline void setFlag2Value(bool);
 
     inline QFlagPointer<T> &operator=(const QFlagPointer &o);
     inline QFlagPointer<T> &operator=(T *);
@@ -81,11 +83,43 @@ public:
     inline T *operator*() const;
 
 private:
-    intptr_t ptr_value;
+    quintptr ptr_value;
 
-    static const intptr_t FlagBit = 0x1;
-    static const intptr_t Flag2Bit = 0x2;
-    static const intptr_t FlagsMask = FlagBit | Flag2Bit;
+    static const quintptr FlagBit = 0x1;
+    static const quintptr Flag2Bit = 0x2;
+    static const quintptr FlagsMask = FlagBit | Flag2Bit;
+};
+
+template<typename T, typename T2>
+class QBiPointer {
+public:
+    inline QBiPointer();
+    inline QBiPointer(T *);
+    inline QBiPointer(T2 *);
+    inline QBiPointer(const QBiPointer<T, T2> &o);
+
+    inline bool isNull() const;
+    inline bool isT1() const;
+    inline bool isT2() const;
+
+    inline bool flag() const;
+    inline void setFlag();
+    inline void clearFlag();
+    inline void setFlagValue(bool);
+
+    inline QBiPointer<T, T2> &operator=(const QBiPointer<T, T2> &o);
+    inline QBiPointer<T, T2> &operator=(T *);
+    inline QBiPointer<T, T2> &operator=(T2 *);
+
+    inline T *asT1() const;
+    inline T2 *asT2() const;
+
+private:
+    quintptr ptr_value;
+
+    static const quintptr FlagBit = 0x1;
+    static const quintptr Flag2Bit = 0x2;
+    static const quintptr FlagsMask = FlagBit | Flag2Bit;
 };
 
 template<typename T>
@@ -96,7 +130,7 @@ QFlagPointer<T>::QFlagPointer()
 
 template<typename T>
 QFlagPointer<T>::QFlagPointer(T *v)
-: ptr_value(intptr_t(v))
+: ptr_value(quintptr(v))
 {
     Q_ASSERT((ptr_value & FlagsMask) == 0);
 }
@@ -132,6 +166,13 @@ void QFlagPointer<T>::clearFlag()
 }
 
 template<typename T>
+void QFlagPointer<T>::setFlagValue(bool v)
+{
+    if (v) setFlag();
+    else clearFlag();
+}
+
+template<typename T>
 bool QFlagPointer<T>::flag2() const
 {
     return ptr_value & Flag2Bit;
@@ -150,6 +191,13 @@ void QFlagPointer<T>::clearFlag2()
 }
 
 template<typename T>
+void QFlagPointer<T>::setFlag2Value(bool v)
+{
+    if (v) setFlag2();
+    else clearFlag2();
+}
+
+template<typename T>
 QFlagPointer<T> &QFlagPointer<T>::operator=(const QFlagPointer &o)
 {
     ptr_value = o.ptr_value;
@@ -159,9 +207,9 @@ QFlagPointer<T> &QFlagPointer<T>::operator=(const QFlagPointer &o)
 template<typename T>
 QFlagPointer<T> &QFlagPointer<T>::operator=(T *o)
 {
-    Q_ASSERT((intptr_t(o) & FlagsMask) == 0);
+    Q_ASSERT((quintptr(o) & FlagsMask) == 0);
 
-    ptr_value = intptr_t(o) | (ptr_value & FlagsMask);
+    ptr_value = quintptr(o) | (ptr_value & FlagsMask);
     return *this;
 }
 
@@ -175,6 +223,114 @@ template<typename T>
 T *QFlagPointer<T>::operator*() const
 {
     return (T *)(ptr_value & ~FlagsMask);
+}
+
+template<typename T, typename T2>
+QBiPointer<T, T2>::QBiPointer()
+: ptr_value(0)
+{
+}
+
+template<typename T, typename T2>
+QBiPointer<T, T2>::QBiPointer(T *v)
+: ptr_value(quintptr(v))
+{
+    Q_ASSERT((quintptr(v) & FlagsMask) == 0);
+}
+
+template<typename T, typename T2>
+QBiPointer<T, T2>::QBiPointer(T2 *v)
+: ptr_value(quintptr(v) | Flag2Bit)
+{
+    Q_ASSERT((quintptr(v) & FlagsMask) == 0);
+}
+
+template<typename T, typename T2>
+QBiPointer<T, T2>::QBiPointer(const QBiPointer<T, T2> &o)
+: ptr_value(o.ptr_value)
+{
+}
+
+template<typename T, typename T2>
+bool QBiPointer<T, T2>::isNull() const
+{
+    return 0 == (ptr_value & (~FlagsMask));
+}
+
+template<typename T, typename T2>
+bool QBiPointer<T, T2>::isT1() const
+{
+    return !(ptr_value & Flag2Bit);
+}
+
+template<typename T, typename T2>
+bool QBiPointer<T, T2>::isT2() const
+{
+    return ptr_value & Flag2Bit;
+}
+
+template<typename T, typename T2>
+bool QBiPointer<T, T2>::flag() const
+{
+    return ptr_value & FlagBit;
+}
+
+template<typename T, typename T2>
+void QBiPointer<T, T2>::setFlag()
+{
+    ptr_value |= FlagBit;
+}
+
+template<typename T, typename T2>
+void QBiPointer<T, T2>::clearFlag()
+{
+    ptr_value &= ~FlagBit;
+}
+
+template<typename T, typename T2>
+void QBiPointer<T, T2>::setFlagValue(bool v)
+{
+    if (v) setFlag();
+    else clearFlag();
+}
+
+template<typename T, typename T2>
+QBiPointer<T, T2> &QBiPointer<T, T2>::operator=(const QBiPointer<T, T2> &o)
+{
+    ptr_value = o.ptr_value;
+    return *this;
+}
+
+template<typename T, typename T2>
+QBiPointer<T, T2> &QBiPointer<T, T2>::operator=(T *o)
+{
+    Q_ASSERT((quintptr(o) & FlagsMask) == 0);
+
+    ptr_value = quintptr(o) | (ptr_value & FlagBit);
+    return *this;
+}
+
+template<typename T, typename T2>
+QBiPointer<T, T2> &QBiPointer<T, T2>::operator=(T2 *o)
+{
+    Q_ASSERT((quintptr(o) & FlagsMask) == 0);
+
+    ptr_value = quintptr(o) | (ptr_value & FlagBit) | Flag2Bit;
+    return *this;
+}
+
+template<typename T, typename T2>
+T *QBiPointer<T, T2>::asT1() const
+{
+    Q_ASSERT(isT1());
+    return (T *)(ptr_value & ~FlagsMask);
+}
+
+template<typename T, typename T2>
+T2 *QBiPointer<T, T2>::asT2() const
+{
+    Q_ASSERT(isT2());
+    return (T2 *)(ptr_value & ~FlagsMask);
 }
 
 QT_END_NAMESPACE
