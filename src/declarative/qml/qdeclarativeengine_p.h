@@ -111,7 +111,8 @@ public:
     inline QDeclarativeJavaScriptExpressionGuard(QDeclarativeJavaScriptExpression *);
 
     static inline void endpointCallback(QDeclarativeNotifierEndpoint *);
-    static inline QDeclarativeJavaScriptExpressionGuard *New(QDeclarativeJavaScriptExpression *e);
+    static inline QDeclarativeJavaScriptExpressionGuard *New(QDeclarativeJavaScriptExpression *e,
+                                                             QDeclarativeEngine *engine);
     inline void Delete();
 
     QDeclarativeJavaScriptExpression *expression;

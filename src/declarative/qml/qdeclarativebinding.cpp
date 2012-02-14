@@ -347,7 +347,7 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         prof.addDetail(expression());
         d->updating = true;
 
-        QDeleteWatcher watcher(d);
+        QDeclarativeAbstractExpression::DeleteWatcher watcher(d);
 
         if (d->property.propertyType() == qMetaTypeId<QDeclarativeBinding *>()) {
 
@@ -374,8 +374,9 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
             trace.event("writing binding result");
 
             bool needsErrorData = false;
-            if (!watcher.wasDeleted() && !d->error.isValid()) 
-                needsErrorData = !QDeclarativePropertyPrivate::writeBinding(d->property, d, result, 
+            if (!watcher.wasDeleted() && !d->hasError())
+                needsErrorData = !QDeclarativePropertyPrivate::writeBinding(d->property, d->context(),
+                                                                            d, result,
                                                                             isUndefined, flags);
 
             if (!watcher.wasDeleted()) {
@@ -385,15 +386,15 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
                     int line = d->line;
                     if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
 
-                    d->error.setUrl(url);
-                    d->error.setLine(line);
-                    d->error.setColumn(-1);
+                    d->delayedError()->error.setUrl(url);
+                    d->delayedError()->error.setLine(line);
+                    d->delayedError()->error.setColumn(-1);
                 }
 
-                if (d->error.isValid()) {
-                    if (!d->addError(ep)) ep->warning(this->error());
+                if (d->hasError()) {
+                    if (!d->delayedError()->addError(ep)) ep->warning(this->error());
                 } else {
-                    d->removeError();
+                    d->clearError();
                 }
 
             }

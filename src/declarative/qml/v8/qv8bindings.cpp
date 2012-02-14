@@ -67,6 +67,12 @@ void QV8Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::Write
     }
 }
 
+void QV8Bindings::refresh()
+{
+    for (int ii = 0; ii < bindingsCount; ++ii)
+        bindings[ii].refresh();
+}
+
 void QV8Bindings::Binding::refresh()
 {
     update();
@@ -84,7 +90,7 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 
     QDeclarativeBindingProfiler prof(parent->url.toString(), line, column);
 
-    QDeclarativeContextData *context = QDeclarativeAbstractExpression::context();
+    QDeclarativeContextData *context = parent->context();
     if (!context || !context->isValid())
         return;
 
@@ -94,19 +100,21 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 
         bool isUndefined = false;
 
-        QDeleteWatcher watcher(this);
+        DeleteWatcher watcher(this);
         ep->referenceScarceResources(); 
 
         v8::HandleScope handle_scope;
         v8::Context::Scope scope(ep->v8engine()->context());
-        v8::Local<v8::Value> result = evaluate(v8::Handle<v8::Function>::Cast(parent->functions->Get(index)), 
-                                               &isUndefined);
+        v8::Local<v8::Value> result =
+            evaluate(context, v8::Handle<v8::Function>::Cast(parent->functions->Get(index)),
+                     &isUndefined);
 
         trace.event("writing V8 result");
         bool needsErrorData = false;
-        if (!watcher.wasDeleted() && !error.isValid()) {
+        if (!watcher.wasDeleted() && !hasError()) {
             typedef QDeclarativePropertyPrivate PP;
-            needsErrorData = !PP::writeBinding(object, property, this, result, isUndefined, flags);
+            needsErrorData = !PP::writeBinding(object, property, context, this, result,
+                                               isUndefined, flags);
         }
 
         if (!watcher.wasDeleted()) {
@@ -115,15 +123,15 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
                 QUrl url = QUrl(parent->url);
                 if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
 
-                error.setUrl(url);
-                error.setLine(line);
-                error.setColumn(-1);
+                delayedError()->error.setUrl(url);
+                delayedError()->error.setLine(line);
+                delayedError()->error.setColumn(-1);
             }
 
-            if (error.isValid()) {
-                if (!addError(ep)) ep->warning(error);
+            if (hasError()) {
+                if (!delayedError()->addError(ep)) ep->warning(delayedError()->error);
             } else {
-                removeError();
+                clearError();
             }
 
             updating = false;
@@ -152,7 +160,7 @@ void QV8Bindings::Binding::destroy()
     enabled = false;
     removeFromObject();
     clear();
-    removeError();
+    clearError();
     parent->release();
 }
 
@@ -230,7 +238,6 @@ QDeclarativeAbstractBinding *QV8Bindings::configBinding(int index, QObject *targ
     rv->index = index;
     rv->object = target;
     rv->property = p;
-    rv->setContext(context());
     rv->setScopeObject(scope);
     rv->setUseSharedContext(true);
     rv->setNotifyOnValueChanged(true);

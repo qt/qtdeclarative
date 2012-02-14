@@ -57,13 +57,14 @@
 
 #include <private/qv8engine_p.h>
 #include <private/qfieldlist_p.h>
+#include <private/qflagpointer_p.h>
 #include <private/qdeletewatcher_p.h>
 #include <private/qdeclarativeguard_p.h>
 #include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeAbstractExpression : public QDeleteWatchable
+class QDeclarativeAbstractExpression
 {
 public:
     QDeclarativeAbstractExpression();
@@ -76,11 +77,24 @@ public:
 
     virtual void refresh();
 
+    class DeleteWatcher {
+    public:
+        inline DeleteWatcher(QDeclarativeAbstractExpression *);
+        inline ~DeleteWatcher();
+        inline bool wasDeleted() const;
+    private:
+        friend class QDeclarativeAbstractExpression;
+        QDeclarativeContextData *_c;
+        QDeclarativeAbstractExpression **_w;
+        QDeclarativeAbstractExpression *_s;
+    };
+
 private:
     friend class QDeclarativeContext;
     friend class QDeclarativeContextData;
     friend class QDeclarativeContextPrivate;
-    QDeclarativeContextData *m_context;
+
+    QBiPointer<QDeclarativeContextData, DeleteWatcher> m_context;
     QDeclarativeAbstractExpression **m_prevExpression;
     QDeclarativeAbstractExpression  *m_nextExpression;
 };
@@ -108,14 +122,14 @@ private:
     QDeclarativeDelayedError **prevError;
 };
 
-class QDeclarativeJavaScriptExpression : public QDeclarativeAbstractExpression, 
-                                         public QDeclarativeDelayedError
+class QDeclarativeJavaScriptExpression // : public QDeclarativeDelayedError
 {
 public:
     QDeclarativeJavaScriptExpression();
     virtual ~QDeclarativeJavaScriptExpression();
 
-    v8::Local<v8::Value> evaluate(v8::Handle<v8::Function>, bool *isUndefined);
+    v8::Local<v8::Value> evaluate(QDeclarativeContextData *, v8::Handle<v8::Function>,
+                                  bool *isUndefined);
 
     inline bool requiresThisObject() const;
     inline void setRequiresThisObject(bool v);
@@ -131,22 +145,33 @@ public:
 
     virtual void expressionChanged() {}
 
+    class DeleteWatcher {
+    public:
+        inline DeleteWatcher(QDeclarativeJavaScriptExpression *);
+        inline ~DeleteWatcher();
+        inline bool wasDeleted() const;
+    private:
+        friend class QDeclarativeJavaScriptExpression;
+        QObject *_c;
+        QDeclarativeJavaScriptExpression **_w;
+        QDeclarativeJavaScriptExpression *_s;
+    };
+
+    inline bool hasError() const;
+    QDeclarativeError error() const;
+    void clearError();
+    QDeclarativeDelayedError *delayedError();
+
 protected:
     inline virtual QString expressionIdentifier();
 
 private:
-    quint32 m_requiresThisObject:1;
-    quint32 m_useSharedContext:1;
-    quint32 m_notifyOnValueChanged:1;
-    quint32 m_dummy:29;
-
-    QObject *m_scopeObject;
-
     typedef QDeclarativeJavaScriptExpressionGuard Guard;
 
     struct GuardCapture : public QDeclarativeEnginePrivate::PropertyCapture {
-        GuardCapture(QDeclarativeJavaScriptExpression *e) : expression(e), errorString(0) {
-        }
+        GuardCapture(QDeclarativeEngine *engine, QDeclarativeJavaScriptExpression *e)
+        : engine(engine), expression(e), errorString(0) { }
+
         ~GuardCapture()  {
             Q_ASSERT(guards.isEmpty());
             Q_ASSERT(errorString == 0);
@@ -155,20 +180,26 @@ private:
         virtual void captureProperty(QDeclarativeNotifier *);
         virtual void captureProperty(QObject *, int, int);
 
+        QDeclarativeEngine *engine;
         QDeclarativeJavaScriptExpression *expression;
         QFieldList<Guard, &Guard::next> guards;
         QStringList *errorString;
     };
 
-    QFieldList<Guard, &Guard::next> activeGuards;
-    GuardCapture *guardCapture;
+    QDeclarativeDelayedError *m_delayedError;
+    // We store some flag bits in the following flag pointers.
+    //    m_scopeObject:flag1 - requiresThisObject
+    //    activeGuards:flag1  - notifyOnValueChanged
+    //    activeGuards:flag2  - useSharedContext
+    QBiPointer<QObject, DeleteWatcher> m_scopeObject;
+    QForwardFieldList<Guard, &Guard::next> activeGuards;
 
     void clearGuards();
 };
 
 class QDeclarativeExpression;
 class QString;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeExpressionPrivate : public QObjectPrivate, public QDeclarativeJavaScriptExpression
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeExpressionPrivate : public QObjectPrivate, public QDeclarativeJavaScriptExpression, public QDeclarativeAbstractExpression
 {
     Q_DECLARE_PUBLIC(QDeclarativeExpression)
 public:
@@ -223,39 +254,96 @@ public:
     QDeclarativeRefCount *dataRef;
 };
 
+QDeclarativeAbstractExpression::DeleteWatcher::DeleteWatcher(QDeclarativeAbstractExpression *e)
+: _c(0), _w(0), _s(e)
+{
+    if (e->m_context.isT1()) {
+        _w = &_s;
+        _c = e->m_context.asT1();
+        e->m_context = this;
+    } else {
+        // Another watcher is already registered
+        _w = &e->m_context.asT2()->_s;
+    }
+}
+
+QDeclarativeAbstractExpression::DeleteWatcher::~DeleteWatcher()
+{
+    Q_ASSERT(*_w == 0 || (*_w == _s && _s->m_context.isT2()));
+    if (*_w && _s->m_context.asT2() == this)
+        _s->m_context = _c;
+}
+
+bool QDeclarativeAbstractExpression::DeleteWatcher::wasDeleted() const
+{
+    return *_w == 0;
+}
+
+QDeclarativeJavaScriptExpression::DeleteWatcher::DeleteWatcher(QDeclarativeJavaScriptExpression *e)
+: _c(0), _w(0), _s(e)
+{
+    if (e->m_scopeObject.isT1()) {
+        _w = &_s;
+        _c = e->m_scopeObject.asT1();
+        e->m_scopeObject = this;
+    } else {
+        // Another watcher is already registered
+        _w = &e->m_scopeObject.asT2()->_s;
+    }
+}
+
+QDeclarativeJavaScriptExpression::DeleteWatcher::~DeleteWatcher()
+{
+    Q_ASSERT(*_w == 0 || (*_w == _s && _s->m_scopeObject.isT2()));
+    if (*_w && _s->m_scopeObject.asT2() == this)
+        _s->m_scopeObject = _c;
+}
+
+bool QDeclarativeJavaScriptExpression::DeleteWatcher::wasDeleted() const
+{
+    return *_w == 0;
+}
+
 bool QDeclarativeJavaScriptExpression::requiresThisObject() const 
 { 
-    return m_requiresThisObject; 
+    return m_scopeObject.flag();
 }
 
 void QDeclarativeJavaScriptExpression::setRequiresThisObject(bool v) 
 { 
-    m_requiresThisObject = v; 
+    m_scopeObject.setFlagValue(v);
 }
 
 bool QDeclarativeJavaScriptExpression::useSharedContext() const 
 { 
-    return m_useSharedContext; 
+    return activeGuards.flag2();
 }
 
 void QDeclarativeJavaScriptExpression::setUseSharedContext(bool v) 
 { 
-    m_useSharedContext = v; 
+    activeGuards.setFlag2Value(v);
 }
 
 bool QDeclarativeJavaScriptExpression::notifyOnValueChanged() const 
 { 
-    return m_notifyOnValueChanged; 
+    return activeGuards.flag();
 }
 
 QObject *QDeclarativeJavaScriptExpression::scopeObject() const 
 { 
-    return m_scopeObject; 
+    if (m_scopeObject.isT1()) return m_scopeObject.asT1();
+    else return m_scopeObject.asT2()->_c;
 }
 
 void QDeclarativeJavaScriptExpression::setScopeObject(QObject *v) 
 { 
-    m_scopeObject = v; 
+    if (m_scopeObject.isT1()) m_scopeObject = v;
+    else m_scopeObject.asT2()->_c = v;
+}
+
+bool QDeclarativeJavaScriptExpression::hasError() const
+{
+    return m_delayedError && m_delayedError->error.isValid();
 }
 
 QString QDeclarativeJavaScriptExpression::expressionIdentifier() 
@@ -290,10 +378,11 @@ void QDeclarativeJavaScriptExpressionGuard::endpointCallback(QDeclarativeNotifie
 }
 
 QDeclarativeJavaScriptExpressionGuard *
-QDeclarativeJavaScriptExpressionGuard::New(QDeclarativeJavaScriptExpression *e)
+QDeclarativeJavaScriptExpressionGuard::New(QDeclarativeJavaScriptExpression *e,
+                                           QDeclarativeEngine *engine)
 {
     Q_ASSERT(e);
-    return QDeclarativeEnginePrivate::get(e->context()->engine)->jsExpressionGuardPool.New(e);
+    return QDeclarativeEnginePrivate::get(engine)->jsExpressionGuardPool.New(e);
 }
 
 void QDeclarativeJavaScriptExpressionGuard::Delete()

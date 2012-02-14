@@ -1393,6 +1393,7 @@ bool QDeclarativePropertyPrivate::write(QObject *object,
 // Returns true if successful, false if an error description was set on expression
 bool QDeclarativePropertyPrivate::writeBinding(QObject *object, 
                                                const QDeclarativePropertyData &core,
+                                               QDeclarativeContextData *context,
                                                QDeclarativeJavaScriptExpression *expression, 
                                                v8::Handle<v8::Value> result, bool isUndefined,
                                                WriteFlags flags)
@@ -1400,7 +1401,6 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
     Q_ASSERT(object);
     Q_ASSERT(core.coreIndex != -1);
 
-    QDeclarativeContextData *context = expression->context();
     QDeclarativeEngine *engine = context->engine;
     QV8Engine *v8engine = QDeclarativeEnginePrivate::getV8Engine(engine);
 
@@ -1442,7 +1442,7 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
 
     int type = core.isValueTypeVirtual()?core.valueTypePropType:core.propType;
 
-    QDeleteWatcher watcher(expression);
+    QDeclarativeJavaScriptExpression::DeleteWatcher watcher(expression);
 
     QVariant value;
     bool isVmeProperty = core.isVMEProperty();
@@ -1458,7 +1458,7 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
         value = v8engine->toVariant(result, type);
     }
 
-    if (expression->error.isValid()) {
+    if (expression->hasError()) {
         return false;
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };
@@ -1466,11 +1466,10 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
         writeValueProperty(object, engine, core, QVariant(), context, flags);
     } else if (isUndefined) {
-        expression->error.setDescription(QLatin1String("Unable to assign [undefined] to ") +
-                                         QLatin1String(QMetaType::typeName(type))); 
+        expression->delayedError()->error.setDescription(QLatin1String("Unable to assign [undefined] to ") + QLatin1String(QMetaType::typeName(type)));
         return false;
     } else if (result->IsFunction()) {
-        expression->error.setDescription(QLatin1String("Unable to assign a function to a property."));
+        expression->delayedError()->error.setDescription(QLatin1String("Unable to assign a function to a property."));
         return false;
     } else if (isVmeProperty) {
         typedef QDeclarativeVMEMetaObject VMEMO;
@@ -1485,10 +1484,10 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
         if (value.userType() == QVariant::Invalid) valueType = "null";
         else valueType = QMetaType::typeName(value.userType());
 
-        expression->error.setDescription(QLatin1String("Unable to assign ") +
-                                         QLatin1String(valueType) +
-                                         QLatin1String(" to ") +
-                                         QLatin1String(QMetaType::typeName(type)));
+        expression->delayedError()->error.setDescription(QLatin1String("Unable to assign ") +
+                                                         QLatin1String(valueType) +
+                                                         QLatin1String(" to ") +
+                                                         QLatin1String(QMetaType::typeName(type)));
         return false;
     }
 
@@ -1496,6 +1495,7 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
 }
 
 bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that, 
+                                               QDeclarativeContextData *context,
                                                QDeclarativeJavaScriptExpression *expression, 
                                                v8::Handle<v8::Value> result, bool isUndefined,
                                                WriteFlags flags)
@@ -1509,7 +1509,7 @@ bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that,
     if (!object)
         return true;
 
-    return writeBinding(object, pp->core, expression, result, isUndefined, flags);
+    return writeBinding(object, pp->core, context, expression, result, isUndefined, flags);
 }
 
 const QMetaObject *QDeclarativePropertyPrivate::rawMetaObjectForType(QDeclarativeEnginePrivate *engine, int userType)

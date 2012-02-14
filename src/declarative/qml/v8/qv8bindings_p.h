@@ -77,6 +77,9 @@ public:
                                                const QDeclarativePropertyData &prop,
                                                int line, int column);
 
+    // Inherited from QDeclarativeAbstractExpression
+    virtual void refresh();
+
 private:
     Q_DISABLE_COPY(QV8Bindings)
 
@@ -85,6 +88,7 @@ private:
         Binding();
 
         void update() { QDeclarativeAbstractBinding::update(); }
+        void refresh();
 
         // Inherited from QDeclarativeJavaScriptExpression
         inline virtual QString expressionIdentifier();
@@ -94,7 +98,6 @@ private:
         virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void destroy();
-        virtual void refresh();
 
         int index:30;
         bool enabled:1;

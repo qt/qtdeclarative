@@ -579,9 +579,10 @@ void QDeclarativeContextData::clearContext()
     while (expression) {
         QDeclarativeAbstractExpression *nextExpression = expression->m_nextExpression;
 
-        expression->m_context = 0;
         expression->m_prevExpression = 0;
         expression->m_nextExpression = 0;
+
+        expression->setContext(0);
 
         expression = nextExpression;
     }
@@ -656,7 +657,7 @@ void QDeclarativeContextData::setParent(QDeclarativeContextData *p, bool parentT
 
 void QDeclarativeContextData::refreshExpressionsRecursive(QDeclarativeAbstractExpression *expression)
 {
-    QDeleteWatcher w(expression);
+    QDeclarativeAbstractExpression::DeleteWatcher w(expression);
 
     if (expression->m_nextExpression)
         refreshExpressionsRecursive(expression->m_nextExpression);

@@ -69,15 +69,14 @@ bool QDeclarativeDelayedError::addError(QDeclarativeEnginePrivate *e)
 }
 
 QDeclarativeJavaScriptExpression::QDeclarativeJavaScriptExpression()
-: m_requiresThisObject(0), m_useSharedContext(0), m_notifyOnValueChanged(0), 
-  m_scopeObject(0), guardCapture(0)
+: m_delayedError(0)
 {
 }
 
 QDeclarativeJavaScriptExpression::~QDeclarativeJavaScriptExpression()
 {
-    if (guardCapture) guardCapture->expression = 0;
     clearGuards();
+    delete m_delayedError;
 }
 
 QDeclarativeExpressionPrivate::QDeclarativeExpressionPrivate()
@@ -512,7 +511,7 @@ void QDeclarativeExpressionPrivate::exceptionToError(v8::Handle<v8::Message> mes
 
 void QDeclarativeJavaScriptExpression::setNotifyOnValueChanged(bool v)
 {
-    m_notifyOnValueChanged = v;
+    activeGuards.setFlagValue(v);
     if (!v) clearGuards();
 }
 
@@ -521,26 +520,28 @@ void QDeclarativeJavaScriptExpression::resetNotifyOnValueChanged()
     clearGuards();
 }
 
-v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::Function> function, bool *isUndefined)
+v8::Local<v8::Value>
+QDeclarativeJavaScriptExpression::evaluate(QDeclarativeContextData *context,
+                                           v8::Handle<v8::Function> function, bool *isUndefined)
 {
-    Q_ASSERT(context() && context()->engine);
+    Q_ASSERT(context && context->engine);
 
     if (function.IsEmpty() || function->IsUndefined()) {
         if (isUndefined) *isUndefined = true;
         return v8::Local<v8::Value>();
     }
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context()->engine);
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context->engine);
 
     Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
-    GuardCapture capture(this);
+    GuardCapture capture(context->engine, this);
 
     QDeclarativeEnginePrivate::PropertyCapture *lastPropertyCapture = ep->propertyCapture;
     ep->propertyCapture = notifyOnValueChanged()?&capture:0;
 
 
     if (notifyOnValueChanged())
-        capture.guards.copyAndClear(activeGuards);
+        capture.guards.copyAndClearPrepend(activeGuards);
 
     QDeclarativeContextData *lastSharedContext = 0;
     QObject *lastSharedScope = 0;
@@ -549,12 +550,12 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
 
     // All code that follows must check with watcher before it accesses data members 
     // incase we have been deleted.
-    QDeleteWatcher watcher(this);
+    DeleteWatcher watcher(this);
 
     if (sharedContext) {
         lastSharedContext = ep->sharedContext;
         lastSharedScope = ep->sharedScope;
-        ep->sharedContext = context();
+        ep->sharedContext = context;
         ep->sharedScope = scopeObject();
     }
 
@@ -577,12 +578,12 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
             v8::Context::Scope scope(ep->v8engine()->context());
             v8::Local<v8::Message> message = try_catch.Message();
             if (!message.IsEmpty()) {
-                QDeclarativeExpressionPrivate::exceptionToError(message, error);
+                QDeclarativeExpressionPrivate::exceptionToError(message, delayedError()->error);
             } else {
-                error = QDeclarativeError();
+                if (m_delayedError) m_delayedError->error = QDeclarativeError();
             }
         } else {
-            error = QDeclarativeError();
+            if (m_delayedError) m_delayedError->error = QDeclarativeError();
         }
     }
 
@@ -620,11 +621,11 @@ void QDeclarativeJavaScriptExpression::GuardCapture::captureProperty(QDeclarativ
             g->cancelNotify();
             Q_ASSERT(g->isConnected(n));
         } else {
-            g = Guard::New(expression);
+            g = Guard::New(expression, engine);
             g->connect(n);
         }
 
-        expression->activeGuards.append(g);
+        expression->activeGuards.prepend(g);
     }
 }
 
@@ -660,13 +661,34 @@ void QDeclarativeJavaScriptExpression::GuardCapture::captureProperty(QObject *o,
                 g->cancelNotify();
                 Q_ASSERT(g->isConnected(o, n));
             } else {
-                g = Guard::New(expression);
+                g = Guard::New(expression, engine);
                 g->connect(o, n);
             }
 
-            expression->activeGuards.append(g);
+            expression->activeGuards.prepend(g);
         }
     }
+}
+
+void QDeclarativeJavaScriptExpression::clearError()
+{
+    if (m_delayedError) {
+        m_delayedError->error = QDeclarativeError();
+        m_delayedError->removeError();
+    }
+}
+
+QDeclarativeError QDeclarativeJavaScriptExpression::error() const
+{
+    if (m_delayedError) return m_delayedError->error;
+    else return QDeclarativeError();
+}
+
+QDeclarativeDelayedError *QDeclarativeJavaScriptExpression::delayedError()
+{
+    if (!m_delayedError)
+        m_delayedError = new QDeclarativeDelayedError;
+    return m_delayedError;
 }
 
 void QDeclarativeJavaScriptExpression::clearGuards()
@@ -700,11 +722,11 @@ v8::Local<v8::Value> QDeclarativeExpressionPrivate::v8value(QObject *secondarySc
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context()->engine);
         QObject *restoreSecondaryScope = 0;
         restoreSecondaryScope = ep->v8engine()->contextWrapper()->setSecondaryScope(v8qmlscope, secondaryScope);
-        result = evaluate(v8function, isUndefined);
+        result = evaluate(context(), v8function, isUndefined);
         ep->v8engine()->contextWrapper()->setSecondaryScope(v8qmlscope, restoreSecondaryScope);
         return result;
     } else {
-        return evaluate(v8function, isUndefined);
+        return evaluate(context(), v8function, isUndefined);
     }
 }
 
@@ -844,7 +866,7 @@ QObject *QDeclarativeExpression::scopeObject() const
 bool QDeclarativeExpression::hasError() const
 {
     Q_D(const QDeclarativeExpression);
-    return d->error.isValid();
+    return d->hasError();
 }
 
 /*!
@@ -856,7 +878,7 @@ bool QDeclarativeExpression::hasError() const
 void QDeclarativeExpression::clearError()
 {
     Q_D(QDeclarativeExpression);
-    d->error = QDeclarativeError();
+    d->clearError();
 }
 
 /*!
@@ -869,7 +891,7 @@ void QDeclarativeExpression::clearError()
 QDeclarativeError QDeclarativeExpression::error() const
 {
     Q_D(const QDeclarativeExpression);
-    return d->error;
+    return d->error();
 }
 
 /*!
@@ -887,7 +909,7 @@ void QDeclarativeExpressionPrivate::expressionChanged()
 }
 
 QDeclarativeAbstractExpression::QDeclarativeAbstractExpression()
-: m_context(0), m_prevExpression(0), m_nextExpression(0)
+: m_prevExpression(0), m_nextExpression(0)
 {
 }
 
@@ -898,11 +920,15 @@ QDeclarativeAbstractExpression::~QDeclarativeAbstractExpression()
         if (m_nextExpression) 
             m_nextExpression->m_prevExpression = m_prevExpression;
     }
+
+    if (m_context.isT2())
+        m_context.asT2()->_s = 0;
 }
 
 QDeclarativeContextData *QDeclarativeAbstractExpression::context() const
 {
-    return m_context;
+    if (m_context.isT1()) return m_context.asT1();
+    else return m_context.asT2()->_c;
 }
 
 void QDeclarativeAbstractExpression::setContext(QDeclarativeContextData *context)
@@ -915,14 +941,15 @@ void QDeclarativeAbstractExpression::setContext(QDeclarativeContextData *context
         m_nextExpression = 0;
     }
 
-    m_context = context;
+    if (m_context.isT1()) m_context = context;
+    else m_context.asT2()->_c = context;
 
-    if (m_context) {
-        m_nextExpression = m_context->expressions;
+    if (context) {
+        m_nextExpression = context->expressions;
         if (m_nextExpression) 
             m_nextExpression->m_prevExpression = &m_nextExpression;
         m_prevExpression = &context->expressions;
-        m_context->expressions = this;
+        context->expressions = this;
     }
 }
 
@@ -932,7 +959,7 @@ void QDeclarativeAbstractExpression::refresh()
 
 bool QDeclarativeAbstractExpression::isValid() const
 {
-    return m_context != 0;
+    return context() != 0;
 }
 
 QT_END_NAMESPACE

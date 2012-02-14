@@ -143,10 +143,12 @@ public:
                                                        QDeclarativeExpression *) ;
     static bool write(const QDeclarativeProperty &that, const QVariant &, WriteFlags);
     static bool writeBinding(const QDeclarativeProperty &that, 
+                             QDeclarativeContextData *context,
                              QDeclarativeJavaScriptExpression *expression, 
                              v8::Handle<v8::Value> result, bool isUndefined,
                              WriteFlags flags);
     static bool writeBinding(QObject *, const QDeclarativePropertyData &,
+                             QDeclarativeContextData *context,
                              QDeclarativeJavaScriptExpression *expression, 
                              v8::Handle<v8::Value> result, bool isUndefined,
                              WriteFlags flags);
