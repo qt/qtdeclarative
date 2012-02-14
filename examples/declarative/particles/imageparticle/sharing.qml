@@ -133,7 +133,6 @@ Rectangle {
             source: "../images/flower.png"
             alpha: 0.1
             color: "white"
-            opacityTable: "opacity.png"
             rotationVariation: 180
             z: -1
         }
