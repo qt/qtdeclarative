@@ -71,6 +71,7 @@ private slots:
     void clickThrough();
     void hoverPosition();
     void hoverPropagation();
+    void hoverVisible();
 
 private:
     QQuickView *createView();
@@ -767,6 +768,35 @@ void tst_QQuickMouseArea::hoverPropagation()
     QGuiApplication::sendEvent(canvas, &moveEvent2);
     QCOMPARE(root->property("point1").toBool(), false);
     QCOMPARE(root->property("point2").toBool(), true);
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::hoverVisible()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("hoverVisible.qml"));
+
+    QQuickItem *root = canvas->rootObject();
+    QVERIFY(root != 0);
+
+    QQuickMouseArea *mouseTracker = canvas->rootObject()->findChild<QQuickMouseArea*>("mousetracker");
+    QVERIFY(mouseTracker != 0);
+
+    QSignalSpy enteredSpy(mouseTracker, SIGNAL(entered()));
+
+    QTest::mouseMove(canvas,QPoint(10,32));
+
+    QCOMPARE(mouseTracker->hovered(), false);
+    QCOMPARE(enteredSpy.count(), 0);
+
+    mouseTracker->setVisible(true);
+
+    QCOMPARE(mouseTracker->hovered(), true);
+    QCOMPARE(enteredSpy.count(), 1);
+
+    QEXPECT_FAIL("", "QTBUG-24282", Continue);
+    QCOMPARE(QPointF(mouseTracker->mouseX(), mouseTracker->mouseY()), QPointF(10,32));
 
     delete canvas;
 }

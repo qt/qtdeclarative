@@ -168,7 +168,7 @@ public:
         ItemChildAddedChange,      // value.item
         ItemChildRemovedChange,    // value.item
         ItemSceneChange,           // value.canvas
-        ItemVisibleHasChanged,     // value.realValue
+        ItemVisibleHasChanged,     // value.boolValue
         ItemParentHasChanged,      // value.item
         ItemOpacityHasChanged,     // value.realValue
         ItemActiveFocusHasChanged, // value.boolValue

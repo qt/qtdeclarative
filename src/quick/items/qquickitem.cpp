@@ -4009,11 +4009,7 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     for (int ii = 0; ii < childItems.count(); ++ii)
         childVisibilityChanged |= QQuickItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
 
-    for (int ii = 0; ii < changeListeners.count(); ++ii) {
-        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
-        if (change.types & QQuickItemPrivate::Visibility)
-            change.listener->itemVisibilityChanged(q);
-    }
+    itemChange(QQuickItem::ItemVisibleHasChanged, effectiveVisible);
 
     if (isAccessible)
         QAccessible::updateAccessibility(QAccessibleEvent(effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide, q, 0));
