@@ -77,7 +77,7 @@ public:
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QQuickTextEdit::PlainText), document(0), wrapMode(QQuickTextEdit::NoWrap),
       mouseSelectionMode(QQuickTextEdit::SelectCharacters),
-      lineCount(0), yoff(0), updateType(UpdatePaintNode)
+      lineCount(0), yoff(0), inputMethodHints(Qt::ImhNone), updateType(UpdatePaintNode)
     {
     }
 
@@ -132,6 +132,7 @@ public:
     int lineCount;
     int yoff;
     QSize contentSize;
+    Qt::InputMethodHints inputMethodHints;
 
     enum UpdateType {
         UpdateNone,

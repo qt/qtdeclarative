@@ -1948,14 +1948,23 @@ void tst_qquicktextinput::inputMethods()
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(canvas.rootObject());
     QVERIFY(input != 0);
     QVERIFY(input->inputMethodHints() & Qt::ImhNoPredictiveText);
+    QSignalSpy inputMethodHintSpy(input, SIGNAL(inputMethodHintsChanged()));
     input->setInputMethodHints(Qt::ImhUppercaseOnly);
     QVERIFY(input->inputMethodHints() & Qt::ImhUppercaseOnly);
+    QCOMPARE(inputMethodHintSpy.count(), 1);
+    input->setInputMethodHints(Qt::ImhUppercaseOnly);
+    QCOMPARE(inputMethodHintSpy.count(), 1);
+
+    // default value
+    QQuickTextInput plainInput;
+    QCOMPARE(plainInput.inputMethodHints(), Qt::ImhNone);
 
     input->setFocus(true);
     QVERIFY(input->hasActiveFocus() == true);
     // test that input method event is committed
     QInputMethodEvent event;
     event.setCommitString( "My ", -12, 0);
+    QTRY_COMPARE(qGuiApp->focusObject(), input);
     QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
     QCOMPARE(input->text(), QString("My Hello world!"));
 
@@ -2589,7 +2598,7 @@ void tst_qquicktextinput::echoMode()
     //Normal
     ref &= ~Qt::ImhHiddenText;
     ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    QCOMPARE(input->inputMethodHints(), ref);
+    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
     input->setEchoMode(QQuickTextInput::NoEcho);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String(""));
@@ -2597,14 +2606,17 @@ void tst_qquicktextinput::echoMode()
     //NoEcho
     ref |= Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    QCOMPARE(input->inputMethodHints(), ref);
+    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
     input->setEchoMode(QQuickTextInput::Password);
     //Password
     ref |= Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String("********"));
-    QCOMPARE(input->inputMethodHints(), ref);
+    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
+    // clearing input hints do not clear bits set by echo mode
+    input->setInputMethodHints(Qt::ImhNone);
+    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
     input->setPasswordCharacter(QChar('Q'));
     QCOMPARE(input->passwordCharacter(), QLatin1String("Q"));
     QCOMPARE(input->text(), initial);
@@ -2613,7 +2625,7 @@ void tst_qquicktextinput::echoMode()
     //PasswordEchoOnEdit
     ref &= ~Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    QCOMPARE(input->inputMethodHints(), ref);
+    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String("QQQQQQQQ"));
     QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), QLatin1String("QQQQQQQQ"));

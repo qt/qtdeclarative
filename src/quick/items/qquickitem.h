@@ -309,8 +309,6 @@ public:
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 
-    Qt::InputMethodHints inputMethodHints() const;
-    void setInputMethodHints(Qt::InputMethodHints hints);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 
     struct UpdatePaintNodeData {

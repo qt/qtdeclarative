@@ -1131,6 +1131,24 @@ void QQuickTextEdit::setTextMargin(qreal margin)
     \endlist
 */
 
+Qt::InputMethodHints QQuickTextEdit::inputMethodHints() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->inputMethodHints;
+}
+
+void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
+{
+    Q_D(QQuickTextEdit);
+
+    if (hints == d->inputMethodHints)
+        return;
+
+    d->inputMethodHints = hints;
+    updateInputMethod(Qt::ImHints);
+    emit inputMethodHintsChanged();
+}
+
 void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {

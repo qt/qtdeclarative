@@ -88,7 +88,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool activeFocusOnPress READ focusOnPress WRITE setFocusOnPress NOTIFY activeFocusOnPressChanged)
     Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged)
     Q_PROPERTY(qreal textMargin READ textMargin WRITE setTextMargin NOTIFY textMarginChanged)
-    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints)
+    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
@@ -190,6 +190,9 @@ public:
     qreal textMargin() const;
     void setTextMargin(qreal margin);
 
+    Qt::InputMethodHints inputMethodHints() const;
+    void setInputMethodHints(Qt::InputMethodHints hints);
+
     bool selectByMouse() const;
     void setSelectByMouse(bool);
 
@@ -265,6 +268,7 @@ Q_SIGNALS:
     void inputMethodComposingChanged();
     void effectiveHorizontalAlignmentChanged();
     void baseUrlChanged();
+    void inputMethodHintsChanged();
 
 public Q_SLOTS:
     void selectAll();

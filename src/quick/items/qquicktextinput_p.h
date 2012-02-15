@@ -88,7 +88,7 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(QValidator* validator READ validator WRITE setValidator NOTIFY validatorChanged)
 #endif
     Q_PROPERTY(QString inputMask READ inputMask WRITE setInputMask NOTIFY inputMaskChanged)
-    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ imHints WRITE setIMHints)
+    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
 
     Q_PROPERTY(bool acceptableInput READ hasAcceptableInput NOTIFY acceptableInputChanged)
     Q_PROPERTY(EchoMode echoMode READ echoMode WRITE setEchoMode NOTIFY echoModeChanged)
@@ -251,8 +251,8 @@ public:
 
     bool isInputMethodComposing() const;
 
-    Qt::InputMethodHints imHints() const;
-    void setIMHints(Qt::InputMethodHints hints);
+    Qt::InputMethodHints inputMethodHints() const;
+    void setInputMethodHints(Qt::InputMethodHints hints);
 
     Q_INVOKABLE QString getText(int start, int end) const;
 
@@ -295,6 +295,7 @@ Q_SIGNALS:
     void inputMethodComposingChanged();
     void effectiveHorizontalAlignmentChanged();
     void contentSizeChanged();
+    void inputMethodHintsChanged();
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry,

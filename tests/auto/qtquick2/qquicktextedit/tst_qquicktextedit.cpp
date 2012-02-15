@@ -1715,8 +1715,15 @@ void tst_qquicktextedit::inputMethodHints()
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(textEditObject != 0);
     QVERIFY(textEditObject->inputMethodHints() & Qt::ImhNoPredictiveText);
+    QSignalSpy inputMethodHintSpy(textEditObject, SIGNAL(inputMethodHintsChanged()));
     textEditObject->setInputMethodHints(Qt::ImhUppercaseOnly);
     QVERIFY(textEditObject->inputMethodHints() & Qt::ImhUppercaseOnly);
+    QCOMPARE(inputMethodHintSpy.count(), 1);
+    textEditObject->setInputMethodHints(Qt::ImhUppercaseOnly);
+    QCOMPARE(inputMethodHintSpy.count(), 1);
+
+    QQuickTextEdit plainTextEdit;
+    QCOMPARE(plainTextEdit.inputMethodHints(), Qt::ImhNone);
 }
 
 void tst_qquicktextedit::positionAt()

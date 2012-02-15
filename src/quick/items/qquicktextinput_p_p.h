@@ -103,6 +103,7 @@ public:
         , wrapMode(QQuickTextInput::NoWrap)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , inputMethodHints(Qt::ImhNone)
+        , effectiveInputMethodHints(Qt::ImhNone)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
         , m_passwordCharacter(QLatin1Char('*'))
         , focused(false)
@@ -228,6 +229,7 @@ public:
     QQuickTextInput::WrapMode wrapMode;
     QQuickTextInput::SelectionMode mouseSelectionMode;
     Qt::InputMethodHints inputMethodHints;
+    Qt::InputMethodHints effectiveInputMethodHints;
     Qt::LayoutDirection m_layoutDirection;
 
     QChar m_blank;

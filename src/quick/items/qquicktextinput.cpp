@@ -1110,7 +1110,8 @@ void QQuickTextInputPrivate::updateInputMethodHints()
         hints &= ~Qt::ImhHiddenText;
     if (m_echoMode != QQuickTextInput::Normal)
         hints |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    q->setInputMethodHints(hints);
+    effectiveInputMethodHints = hints;
+    q->updateInputMethod(Qt::ImHints);
 }
 /*!
     \qmlproperty enumeration QtQuick2::TextInput::echoMode
@@ -1190,19 +1191,22 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     \endlist
 */
 
-Qt::InputMethodHints QQuickTextInput::imHints() const
+Qt::InputMethodHints QQuickTextInput::inputMethodHints() const
 {
     Q_D(const QQuickTextInput);
     return d->inputMethodHints;
 }
 
-void QQuickTextInput::setIMHints(Qt::InputMethodHints hints)
+void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
 {
     Q_D(QQuickTextInput);
-    if (d->inputMethodHints == hints)
+
+    if (hints == d->inputMethodHints)
         return;
+
     d->inputMethodHints = hints;
     d->updateInputMethodHints();
+    emit inputMethodHintsChanged();
 }
 
 /*!
@@ -1781,7 +1785,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
     case Qt::ImEnabled:
         return QVariant((bool)(flags() & ItemAcceptsInputMethod));
     case Qt::ImHints:
-        return QVariant((int)inputMethodHints());
+        return QVariant((int) d->effectiveInputMethodHints);
     case Qt::ImCursorRectangle:
         return cursorRectangle();
     case Qt::ImFont:

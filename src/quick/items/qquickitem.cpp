@@ -2309,7 +2309,6 @@ QQuickItemPrivate::QQuickItemPrivate()
   z(0), scale(1), rotation(0), opacity(1),
 
   attachedLayoutDirection(0), acceptedMouseButtons(0),
-  imHints(Qt::ImhNone),
 
   keyHandler(0),
 
@@ -3113,24 +3112,6 @@ void QQuickItem::windowDeactivateEvent()
     }
 }
 
-Qt::InputMethodHints QQuickItem::inputMethodHints() const
-{
-    Q_D(const QQuickItem);
-    return d->imHints;
-}
-
-void QQuickItem::setInputMethodHints(Qt::InputMethodHints hints)
-{
-    Q_D(QQuickItem);
-    d->imHints = hints;
-
-    if (!d->canvas || d->canvas->activeFocusItem() != this)
-        return;
-
-    if (qApp->focusObject() == this)
-        qApp->inputMethod()->update(Qt::ImHints);
-}
-
 QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 {
     Q_D(const QQuickItem);
@@ -3141,8 +3122,6 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
         v = (bool)(flags() & ItemAcceptsInputMethod);
         break;
     case Qt::ImHints:
-        v = (int)inputMethodHints();
-        break;
     case Qt::ImCursorRectangle:
     case Qt::ImFont:
     case Qt::ImCursorPosition:

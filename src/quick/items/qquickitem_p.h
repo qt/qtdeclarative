@@ -439,7 +439,6 @@ public:
     QQuickLayoutMirroringAttached* attachedLayoutDirection;
 
     Qt::MouseButtons acceptedMouseButtons;
-    Qt::InputMethodHints imHints;
 
     void setAccessibleFlagAndListener();
 
