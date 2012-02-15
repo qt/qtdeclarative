@@ -58,7 +58,6 @@
 #include "qquickimplicitsizeitem_p_p.h"
 
 #include <QtDeclarative/qdeclarative.h>
-#include <QtGui/qpixmap.h>
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
@@ -73,12 +72,12 @@ public:
       : color("black"), hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop),
       documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
       persistentSelection(false), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
-      canPasteValid(false), hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
+      canPasteValid(false), hAlignImplicit(true), rightToLeftText(false),
       textCached(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QQuickTextEdit::PlainText), document(0), wrapMode(QQuickTextEdit::NoWrap),
       mouseSelectionMode(QQuickTextEdit::SelectCharacters),
-      lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0), updateType(UpdatePaintNode)
+      lineCount(0), yoff(0), updateType(UpdatePaintNode)
     {
     }
 
@@ -118,7 +117,6 @@ public:
     bool canPasteValid:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
-    bool useImageFallback:1;
     bool textCached:1;
 
     qreal textMargin;
@@ -134,15 +132,6 @@ public:
     int lineCount;
     int yoff;
     QSize contentSize;
-
-    enum NodeType {
-        NodeIsNull,
-        NodeIsTexture,
-        NodeIsText
-    };
-    NodeType nodeType;
-    QSGTexture *texture;
-    QPixmap pixmapCache;
 
     enum UpdateType {
         UpdateNone,

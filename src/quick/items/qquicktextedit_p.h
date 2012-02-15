@@ -296,7 +296,6 @@ private Q_SLOTS:
 
 private:
     void updateTotalLines();
-    void updateImageCache(const QRectF &rect = QRectF());
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry,

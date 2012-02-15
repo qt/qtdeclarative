@@ -58,13 +58,9 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qdeclarativeproperty_p.h>
 #include <private/qtextengine_p.h>
-#include <QtQuick/private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
-
-DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-DEFINE_BOOL_CONFIG_OPTION(qmlEnableImageCache, QML_ENABLE_TEXT_IMAGE_CACHE)
 
 /*!
     \qmlclass TextEdit QQuickTextEdit
@@ -267,7 +263,6 @@ void QQuickTextEdit::setText(const QString &text)
 #else
         d->control->setPlainText(text);
 #endif
-        d->useImageFallback = qmlEnableImageCache();
     } else {
         d->control->setPlainText(text);
     }
@@ -334,7 +329,6 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     } else if (!wasRich && d->richText) {
         d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
         updateSize();
-        d->useImageFallback = qmlEnableImageCache();
     }
 #endif
 
@@ -1155,9 +1149,6 @@ void QQuickTextEdit::componentComplete()
     QQuickImplicitSizeItem::componentComplete();
 
     d->document->setBaseUrl(baseUrl(), d->richText);
-    if (d->richText)
-        d->useImageFallback = qmlEnableImageCache();
-
     if (d->dirty) {
         d->determineHorizontalAlignment();
         d->updateDefaultTextOption();
@@ -1580,37 +1571,6 @@ QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 
 }
 
-void QQuickTextEdit::updateImageCache(const QRectF &)
-{
-    Q_D(QQuickTextEdit);
-
-    // Do we really need the image cache?
-    if (!d->richText || !d->useImageFallback) {
-        if (!d->pixmapCache.isNull())
-            d->pixmapCache = QPixmap();
-        return;
-    }
-
-    if (width() != d->pixmapCache.width() || height() != d->pixmapCache.height())
-        d->pixmapCache = QPixmap(width(), height());
-
-    if (d->pixmapCache.isNull())
-        return;
-
-    // ### Use supplied rect, clear area and update only this part (for cursor updates)
-    QRectF bounds = QRectF(0, 0, width(), height());
-    d->pixmapCache.fill(Qt::transparent);
-    {
-        QPainter painter(&d->pixmapCache);
-
-        painter.setRenderHint(QPainter::TextAntialiasing);
-        painter.translate(0, d->yoff);
-
-        d->control->drawContents(&painter, bounds);
-    }
-
-}
-
 void QQuickTextEdit::triggerPreprocess()
 {
     Q_D(QQuickTextEdit);
@@ -1633,30 +1593,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     d->updateType = QQuickTextEditPrivate::UpdateNone;
 
     QSGNode *currentNode = oldNode;
-    if (d->richText && d->useImageFallback) {
-        QSGImageNode *node = 0;
-        if (oldNode == 0 || d->nodeType != QQuickTextEditPrivate::NodeIsTexture) {
-            delete oldNode;
-            node = QQuickItemPrivate::get(this)->sceneGraphContext()->createImageNode();
-            d->texture = new QSGPlainTexture();
-            d->nodeType = QQuickTextEditPrivate::NodeIsTexture;
-            currentNode = node;
-        } else {
-            node = static_cast<QSGImageNode *>(oldNode);
-        }
-
-        qobject_cast<QSGPlainTexture *>(d->texture)->setImage(d->pixmapCache.toImage());
-        node->setTexture(0);
-        node->setTexture(d->texture);
-
-        node->setTargetRect(QRectF(0, 0, d->pixmapCache.width(), d->pixmapCache.height()));
-        node->setSourceRect(QRectF(0, 0, 1, 1));
-        node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-        node->setVerticalWrapMode(QSGTexture::ClampToEdge);
-        node->setFiltering(QSGTexture::Linear); // Nonsmooth text just ugly, so don't do that..
-        node->update();
-
-    } else if (oldNode == 0 || d->documentDirty) {
+    if (oldNode == 0 || d->documentDirty) {
         d->documentDirty = false;
 
 #if defined(Q_OS_MAC)
@@ -1667,10 +1604,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 #endif
 
         QQuickTextNode *node = 0;
-        if (oldNode == 0 || d->nodeType != QQuickTextEditPrivate::NodeIsText) {
-            delete oldNode;
+        if (oldNode == 0) {
             node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
-            d->nodeType = QQuickTextEditPrivate::NodeIsText;
             currentNode = node;
         } else {
             node = static_cast<QQuickTextNode *>(oldNode);
@@ -1696,7 +1631,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 #endif
     }
 
-    if (d->nodeType == QQuickTextEditPrivate::NodeIsText && d->cursorComponent == 0 && !isReadOnly()) {
+    if (d->cursorComponent == 0 && !isReadOnly()) {
         QQuickTextNode *node = static_cast<QQuickTextNode *>(currentNode);
 
         QColor color = (!d->cursorVisible || !d->control->cursorOn())
@@ -1983,7 +1918,6 @@ void QQuickTextEdit::updateDocument()
     d->documentDirty = true;
 
     if (isComponentComplete()) {
-        updateImageCache();
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
@@ -1993,7 +1927,6 @@ void QQuickTextEdit::updateCursor()
 {
     Q_D(QQuickTextEdit);
     if (isComponentComplete()) {
-        updateImageCache(d->control->cursorRect());
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
@@ -2045,16 +1978,11 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
 
     QTextOption::WrapMode oldWrapMode = opt.wrapMode();
     opt.setWrapMode(QTextOption::WrapMode(wrapMode));
+    opt.setUseDesignMetrics(true);
 
-    bool oldUseDesignMetrics = opt.useDesignMetrics();
-    bool useDesignMetrics = !qmlDisableDistanceField();
-    opt.setUseDesignMetrics(useDesignMetrics);
-
-    if (oldWrapMode == opt.wrapMode()
-            && oldAlignment == opt.alignment()
-            && oldUseDesignMetrics == useDesignMetrics) {
+    if (oldWrapMode == opt.wrapMode() && oldAlignment == opt.alignment())
         return;
-    }
+
     document->setDefaultTextOption(opt);
 }
 
