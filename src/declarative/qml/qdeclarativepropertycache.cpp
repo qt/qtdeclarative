@@ -50,6 +50,8 @@
 
 #include <QtCore/qdebug.h>
 
+#include <ctype.h> // for toupper
+
 Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 

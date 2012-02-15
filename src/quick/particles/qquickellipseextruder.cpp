@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qquickellipseextruder_p.h"
+#include <stdlib.h>
 #include <cmath>
 QT_BEGIN_NAMESPACE
 /*!

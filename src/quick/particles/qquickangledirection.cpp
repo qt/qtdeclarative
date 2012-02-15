@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qquickangledirection_p.h"
+#include <stdlib.h>
 #include <cmath>
 QT_BEGIN_NAMESPACE
 const qreal CONV = 0.017453292519943295;

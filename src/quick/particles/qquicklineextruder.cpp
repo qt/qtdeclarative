@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 #include "qquicklineextruder_p.h"
+#include <stdlib.h>
 #include <cmath>
 
 /*!
