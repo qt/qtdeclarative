@@ -54,6 +54,7 @@
 
 #include <QGuiApplication>
 #include <QOpenGLContext>
+#include <QtGui/qopenglframebufferobject.h>
 
 #include <QQmlImageProvider>
 #include <private/qqmlglobal_p.h>
@@ -96,6 +97,7 @@ class QSGContextPrivate : public QObjectPrivate
 public:
     QSGContextPrivate()
         : gl(0)
+        , depthStencilBufferManager(0)
         , distanceFieldCacheManager(0)
     #ifndef QT_OPENGL_ES
         , distanceFieldAntialiasing(QSGGlyphNode::HighQualitySubPixelAntialiasing)
@@ -117,7 +119,7 @@ public:
     QHash<QSGMaterialType *, QSGMaterialShader *> materials;
     QMutex textureMutex;
     QHash<QQuickTextureFactory *, QSGTexture *> textures;
-
+    QSGDepthStencilBufferManager *depthStencilBufferManager;
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
 
     QSGDistanceFieldGlyphNode::AntialiasingMode distanceFieldAntialiasing;
@@ -179,6 +181,8 @@ void QSGContext::invalidate()
     d->textureMutex.unlock();
     qDeleteAll(d->materials.values());
     d->materials.clear();
+    delete d->depthStencilBufferManager;
+    d->depthStencilBufferManager = 0;
     delete d->distanceFieldCacheManager;
     d->distanceFieldCacheManager = 0;
 
@@ -409,6 +413,42 @@ QSize QSGContext::minimumFBOSize() const
 #endif
 }
 
+
+
+/*!
+    Returns a shared pointer to a depth stencil buffer that can be used with \a fbo.
+  */
+QSharedPointer<QSGDepthStencilBuffer> QSGContext::depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo)
+{
+    Q_D(QSGContext);
+    if (!d->gl)
+        return QSharedPointer<QSGDepthStencilBuffer>();
+    QSGDepthStencilBufferManager *manager = depthStencilBufferManager();
+    QSGDepthStencilBuffer::Format format;
+    format.size = fbo->size();
+    format.samples = fbo->format().samples();
+    format.attachments = QSGDepthStencilBuffer::DepthAttachment | QSGDepthStencilBuffer::StencilAttachment;
+    QSharedPointer<QSGDepthStencilBuffer> buffer = manager->bufferForFormat(format);
+    if (buffer.isNull()) {
+        buffer = QSharedPointer<QSGDepthStencilBuffer>(new QSGDefaultDepthStencilBuffer(d->gl, format));
+        manager->insertBuffer(buffer);
+    }
+    return buffer;
+}
+
+/*!
+    Returns a pointer to the context's depth/stencil buffer manager. This is useful for custom
+    implementations of \l depthStencilBufferForFbo().
+  */
+QSGDepthStencilBufferManager *QSGContext::depthStencilBufferManager()
+{
+    Q_D(QSGContext);
+    if (!d->gl)
+        return 0;
+    if (!d->depthStencilBufferManager)
+        d->depthStencilBufferManager = new QSGDepthStencilBufferManager(d->gl);
+    return d->depthStencilBufferManager;
+}
 
 
 /*!

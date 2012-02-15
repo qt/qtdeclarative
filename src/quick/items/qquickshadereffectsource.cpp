@@ -54,6 +54,39 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFboOverlay, QML_FBO_OVERLAY)
 
+namespace
+{
+    class BindableFbo : public QSGBindable
+    {
+    public:
+        BindableFbo(QOpenGLFramebufferObject *fbo, QSGDepthStencilBuffer *depthStencil);
+        virtual ~BindableFbo();
+        virtual void bind() const;
+    private:
+        QOpenGLFramebufferObject *m_fbo;
+        QSGDepthStencilBuffer *m_depthStencil;
+    };
+
+    BindableFbo::BindableFbo(QOpenGLFramebufferObject *fbo, QSGDepthStencilBuffer *depthStencil)
+        : m_fbo(fbo)
+        , m_depthStencil(depthStencil)
+    {
+    }
+
+    BindableFbo::~BindableFbo()
+    {
+        if (m_depthStencil)
+            m_depthStencil->detach();
+    }
+
+    void BindableFbo::bind() const
+    {
+        m_fbo->bind();
+        if (m_depthStencil)
+            m_depthStencil->attach();
+    }
+}
+
 class QQuickShaderEffectSourceTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
@@ -239,6 +272,7 @@ void QQuickShaderEffectTexture::grab()
         delete m_fbo;
         delete m_secondaryFbo;
         m_fbo = m_secondaryFbo = 0;
+        m_depthStencilBuffer.clear();
         m_dirtyTexture = false;
         if (m_grab)
             emit scheduledUpdateCompleted();
@@ -272,13 +306,12 @@ void QQuickShaderEffectTexture::grab()
             delete m_secondaryFbo;
             QOpenGLFramebufferObjectFormat format;
 
-            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
             format.setInternalTextureFormat(m_format);
             format.setSamples(8);
             m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
+            m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
         } else {
             QOpenGLFramebufferObjectFormat format;
-            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
             format.setInternalTextureFormat(m_format);
             format.setMipmap(m_mipmap);
             if (m_recursive) {
@@ -287,6 +320,7 @@ void QQuickShaderEffectTexture::grab()
                 m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
                 glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
                 updateBindOptions(true);
+                m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
             } else {
                 delete m_fbo;
                 delete m_secondaryFbo;
@@ -294,6 +328,7 @@ void QQuickShaderEffectTexture::grab()
                 m_secondaryFbo = 0;
                 glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
                 updateBindOptions(true);
+                m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_fbo);
             }
         }
     }
@@ -336,7 +371,7 @@ void QQuickShaderEffectTexture::grab()
     m_renderer->setClearColor(Qt::transparent);
 
     if (m_multisampling) {
-        m_renderer->renderScene(QSGBindableFbo(m_secondaryFbo));
+        m_renderer->renderScene(BindableFbo(m_secondaryFbo, m_depthStencilBuffer.data()));
 
         if (deleteFboLater) {
             delete m_fbo;
@@ -354,7 +389,7 @@ void QQuickShaderEffectTexture::grab()
         QOpenGLFramebufferObject::blitFramebuffer(m_fbo, r, m_secondaryFbo, r);
     } else {
         if (m_recursive) {
-            m_renderer->renderScene(QSGBindableFbo(m_secondaryFbo));
+            m_renderer->renderScene(BindableFbo(m_secondaryFbo, m_depthStencilBuffer.data()));
 
             if (deleteFboLater) {
                 delete m_fbo;
@@ -368,7 +403,7 @@ void QQuickShaderEffectTexture::grab()
             }
             qSwap(m_fbo, m_secondaryFbo);
         } else {
-            m_renderer->renderScene(QSGBindableFbo(m_fbo));
+            m_renderer->renderScene(BindableFbo(m_fbo, m_depthStencilBuffer.data()));
         }
     }
 

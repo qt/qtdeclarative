@@ -136,6 +136,7 @@ private:
     QSGRenderer *m_renderer;
     QOpenGLFramebufferObject *m_fbo;
     QOpenGLFramebufferObject *m_secondaryFbo;
+    QSharedPointer<QSGDepthStencilBuffer> m_depthStencilBuffer;
 
 #ifdef QSG_DEBUG_FBO_OVERLAY
     QSGRectangleNode *m_debugOverlay;

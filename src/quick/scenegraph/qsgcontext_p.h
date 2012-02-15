@@ -51,6 +51,7 @@
 #include <private/qrawfont_p.h>
 
 #include <QtQuick/qsgnode.h>
+#include <QtQuick/private/qsgdepthstencilbuffer_p.h>
 
 QT_BEGIN_HEADER
 
@@ -104,6 +105,8 @@ public:
 
     virtual QSGTexture *createTexture(const QImage &image = QImage()) const;
     virtual QSize minimumFBOSize() const;
+    virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
+    QSGDepthStencilBufferManager *depthStencilBufferManager();
 
     virtual QSurfaceFormat defaultSurfaceFormat() const;
 
