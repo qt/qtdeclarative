@@ -206,7 +206,6 @@ QDeclarativeTransition::QDeclarativeTransition(QObject *parent)
 
 QDeclarativeTransition::~QDeclarativeTransition()
 {
-    Q_D(QDeclarativeTransition);
 }
 
 void QDeclarativeTransition::setReversed(bool r)

@@ -7,4 +7,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 #temporary
-QT += core-private gui-private declarative-private quick-private qtquick1-private widgets-private v8-private testlib
+QT += core-private gui-private declarative-private quick-private widgets-private v8-private testlib

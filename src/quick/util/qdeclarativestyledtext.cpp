@@ -690,9 +690,9 @@ void QDeclarativeStyledTextPrivate::parseImageAttributes(const QChar *&ch, const
 
     QFontMetricsF fm(layout.font());
     QString padding(qFloor(imgWidth / fm.width(QChar::Nbsp)), QChar::Nbsp);
-    textOut += QChar(' ');
+    textOut += QLatin1Char(' ');
     textOut += padding;
-    textOut += QChar(' ');
+    textOut += QLatin1Char(' ');
 }
 
 QPair<QStringRef,QStringRef> QDeclarativeStyledTextPrivate::parseAttribute(const QChar *&ch, const QString &textIn)

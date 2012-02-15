@@ -200,7 +200,7 @@ void QParallelAnimationGroupJob::updateDirection(QAbstractAnimationJob::Directio
 
 void QParallelAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimationJob *animation)
 {
-    Q_ASSERT(animation && animation->duration() == -1 || animation->loopCount() < 0);
+    Q_ASSERT(animation && (animation->duration() == -1 || animation->loopCount() < 0));
     int uncontrolledRunningCount = 0;
 
     for (QAbstractAnimationJob *child = firstChild(); child; child = child->nextSibling()) {

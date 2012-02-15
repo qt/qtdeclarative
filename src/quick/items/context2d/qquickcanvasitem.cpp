@@ -910,7 +910,7 @@ bool QQuickCanvasItem::createContext(const QString &contextType)
     Q_D(QQuickCanvasItem);
 
     if (contextType == QLatin1String("2d")) {
-        if (d->contextType.compare("2d", Qt::CaseInsensitive) != 0)  {
+        if (d->contextType.compare(QLatin1String("2d"), Qt::CaseInsensitive) != 0)  {
             d->contextType = QLatin1String("2d");
             emit contextTypeChanged(); // XXX: can't be in setContextType()
         }

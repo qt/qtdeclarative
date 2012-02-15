@@ -105,6 +105,8 @@ QString QAccessibleQuickView::text(QAccessible::Text text) const
     if (text == QAccessible::DebugDescription) {
         return QString::fromAscii(object()->metaObject()->className()) ;
     }
+#else
+    Q_UNUSED(text)
 #endif
     return view()->windowTitle();
 }
