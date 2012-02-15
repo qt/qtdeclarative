@@ -589,6 +589,28 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
 #endif
 }
 
+QString QQuickTextPrivate::elidedText(int lineWidth, const QTextLine &line, QTextLine *nextLine) const
+{
+    if (nextLine) {
+        nextLine->setLineWidth(INT_MAX);
+        return layout.engine()->elidedText(
+                Qt::TextElideMode(elideMode),
+                lineWidth,
+                0,
+                line.textStart(),
+                line.textLength() + nextLine->textLength());
+    } else {
+        QString elideText = layout.text().mid(line.textStart(), line.textLength());
+        elideText[elideText.length() - 1] = elideChar;
+        // Appending the elide character may push the line over the maximum width
+        // in which case the elided text will need to be elided.
+        QFontMetricsF metrics(layout.font());
+        if (metrics.width(elideChar) + line.naturalTextWidth() >= lineWidth)
+            elideText = metrics.elidedText(elideText, Qt::TextElideMode(elideMode), lineWidth);
+        return elideText;
+    }
+}
+
 /*!
     Lays out the QQuickTextPrivate::layout QTextLayout in the constraints of the QQuickText.
 
@@ -677,6 +699,8 @@ QRect QQuickTextPrivate::setupTextLayout()
 
     int eos = multilengthEos;
 
+    // Repeated layouts with reduced font sizes or abbreviated strings may be required if the text
+    // doesn't fit within the element dimensions.
     for (;;) {
         if (!once) {
             if (pixelSize)
@@ -705,22 +729,25 @@ QRect QQuickTextPrivate::setupTextLayout()
                 setLineGeometry(line, lineWidth, height);
             }
 
+            // Elide the previous line if the accumulated height of the text exceeds the height
+            // of the element.
             if (multilineElide && height > q->height() && visibleCount > 1) {
+                elide = true;
+                if (eos != -1)  // There's an abbreviated string available, skip the rest as it's
+                    break;      // all going to be discarded.
+
                 truncated = true;
                 truncateHeight = true;
                 height = preLayoutHeight;
 
-                elide = true;
                 characterCount = line.textStart() + line.textLength();
 
                 QTextLine previousLine = layout.lineAt(visibleCount - 2);
-                elideText = layoutText.mid(previousLine.textStart(), previousLine.textLength());
-                if (layoutText.at(line.textStart() - 1) != QChar::LineSeparator) {
-                    line.setLineWidth(INT_MAX);
-                    elideText += layoutText.mid(line.textStart(), line.textLength());
-                } else {
-                    elideText[elideText.length() - 1] = elideChar;
-                }
+                elideText = layoutText.at(line.textStart() - 1) != QChar::LineSeparator
+                        ? elidedText(lineWidth, previousLine, &line)
+                        : elidedText(lineWidth, previousLine);
+                // The previous line is the last one visible so move the current one off somewhere
+                // out of the way and back everything up one line.
                 line.setLineWidth(0);
                 line.setPosition(QPointF(FLT_MAX, FLT_MAX));
                 line = previousLine;
@@ -733,10 +760,19 @@ QRect QQuickTextPrivate::setupTextLayout()
             if (!nextLine.isValid()) {
                 characterCount = line.textStart() + line.textLength();
                 if (singlelineElide && visibleCount == 1 && line.naturalTextWidth() > lineWidth) {
+                    // Elide a single line of  text if its width exceeds the element width.
+                    elide = true;
+                    if (eos != -1) // There's an abbreviated string available.
+                        break;
+
                     truncated = true;
                     height = preLayoutHeight;
-                    elide = true;
-                    elideText = layoutText.mid(line.textStart(), line.textLength());
+                    elideText = layout.engine()->elidedText(
+                            Qt::TextElideMode(elideMode),
+                            lineWidth,
+                            0,
+                            line.textStart(),
+                            line.textLength());
                 } else {
                     br = br.united(line.naturalTextRect());
                 }
@@ -748,21 +784,20 @@ QRect QQuickTextPrivate::setupTextLayout()
                 if (!wrappedLine)
                     ++unwrappedLineCount;
 
+                // Stop if the maximum number of lines has been reached and elide the last line
+                // if enabled.
                 if (visibleCount == maximumLineCount) {
                     truncated = true;
                     characterCount = nextLine.textStart() + nextLine.textLength();
 
                     if (multilineElide) {
-                        height = preLayoutHeight;
                         elide = true;
-                        elideText = layoutText.mid(line.textStart(), line.textLength());
-                        if (wrappedLine) {
-                            nextLine.setLineWidth(INT_MAX);
-                            elideText += layoutText.mid(nextLine.textStart(), nextLine.textLength());
-                        } else {
-                            elideText[elideText.length() - 1] = elideChar;
-                        }
-                        elideText += elideChar;
+                        if (eos != -1)  // There's an abbreviated string available
+                            break;
+                        height = preLayoutHeight;
+                        elideText = wrappedLine
+                                ? elidedText(lineWidth, line, &nextLine)
+                                : elidedText(lineWidth, line);
                     } else {
                         br = br.united(line.naturalTextRect());
                     }
@@ -778,6 +813,7 @@ QRect QQuickTextPrivate::setupTextLayout()
         layout.endLayout();
         br.moveTop(0);
 
+        // Save the implicitWidth of the text on the first layout only.
         if (once) {
             naturalWidth = layout.maximumWidth();
             once = false;
@@ -799,6 +835,8 @@ QRect QQuickTextPrivate::setupTextLayout()
             }
         }
 
+        // If the next needs to be elided and there's an abbreviated string available
+        // go back and do another layout with the abbreviated string.
         if (eos != -1 && elide) {
             int start = eos + 1;
             eos = text.indexOf(QLatin1Char('\x9c'),  start);
@@ -809,6 +847,10 @@ QRect QQuickTextPrivate::setupTextLayout()
             continue;
         }
 
+        if (!horizontalFit && !verticalFit)
+            break;
+
+        // Try and find a font size that better fits the dimensions of the element.
         QRectF unelidedRect = br.united(line.naturalTextRect());
 
         if (horizontalFit) {
@@ -840,8 +882,6 @@ QRect QQuickTextPrivate::setupTextLayout()
             }
         }
 
-        if (!horizontalFit && !verticalFit)
-            break;
     }
 
     if (eos != multilengthEos)
@@ -853,7 +893,6 @@ QRect QQuickTextPrivate::setupTextLayout()
         elideLayout->setFont(layout.font());
         elideLayout->setTextOption(layout.textOption());
         elideLayout->setText(elideText);
-        elideLayout->setText(elideLayout->engine()->elidedText(Qt::TextElideMode(elideMode), lineWidth));
         elideLayout->beginLayout();
 
         QTextLine elidedLine = elideLayout->createLine();

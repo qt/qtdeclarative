@@ -83,6 +83,7 @@ public:
     QTextDocument *textDocument();
     bool isLineLaidOutConnected();
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
+    QString elidedText(int lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
 
     QString text;
     QUrl baseUrl;
