@@ -6,4 +6,6 @@ KeyTestItem {
     Keys.onPressed: keysTestObject.keyPress(event.key, event.text, event.modifiers)
     Keys.onReleased: { keysTestObject.keyRelease(event.key, event.text, event.modifiers); event.accepted = true; }
     Keys.priority: keysTestObject.processLast ? Keys.AfterItem : Keys.BeforeItem
+
+    property int priorityTest: Keys.priority
 }

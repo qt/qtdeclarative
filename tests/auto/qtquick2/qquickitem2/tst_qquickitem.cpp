@@ -44,10 +44,13 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtQuick/qquickview.h>
+#include <QtGui/private/qinputmethod_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuick/private/qquicktextinput_p.h>
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
+#include "../../shared/platforminputcontext.h"
 
 using namespace QQuickVisualTestUtil;
 
@@ -59,8 +62,11 @@ public:
 
 private slots:
     void initTestCase();
+    void cleanup();
+
     void keys();
     void keysProcessingOrder();
+    void keysim();
     void keyNavigation();
     void keyNavigation_RightToLeft();
     void keyNavigation_skipNotVisible();
@@ -86,6 +92,7 @@ private slots:
     void implicitSize();
     void qtbug_16871();
     void visibleChildren();
+    void parentLoop();
 private:
     QDeclarativeEngine engine;
 };
@@ -180,6 +187,12 @@ void tst_QQuickItem::initTestCase()
 {
     QDeclarativeDataTest::initTestCase();
     qmlRegisterType<KeyTestItem>("Test",1,0,"KeyTestItem");
+}
+
+void tst_QQuickItem::cleanup()
+{
+    QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
+    inputMethodPrivate->testContext = 0;
 }
 
 void tst_QQuickItem::keys()
@@ -320,6 +333,8 @@ void tst_QQuickItem::keysProcessingOrder()
     KeyTestItem *testItem = qobject_cast<KeyTestItem*>(canvas->rootObject());
     QVERIFY(testItem);
 
+    QCOMPARE(testItem->property("priorityTest").toInt(), 0);
+
     QKeyEvent key(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "A", false, 1);
     QGuiApplication::sendEvent(canvas, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_A));
@@ -330,6 +345,8 @@ void tst_QQuickItem::keysProcessingOrder()
     testObject->reset();
 
     testObject->setProcessLast(true);
+
+    QCOMPARE(testItem->property("priorityTest").toInt(), 1);
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "A", false, 1);
     QGuiApplication::sendEvent(canvas, &key);
@@ -354,6 +371,36 @@ void tst_QQuickItem::keysProcessingOrder()
 
     delete canvas;
     delete testObject;
+}
+
+void tst_QQuickItem::keysim()
+{
+    PlatformInputContext platformInputContext;
+    QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
+    inputMethodPrivate->testContext = &platformInputContext;
+
+    QQuickView *canvas = new QQuickView(0);
+    canvas->setBaseSize(QSize(240,320));
+
+    canvas->setSource(testFileUrl("keysim.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+
+    QVERIFY(canvas->rootObject());
+    QVERIFY(canvas->rootObject()->hasFocus() && canvas->rootObject()->hasActiveFocus());
+
+    QQuickTextInput *input = canvas->rootObject()->findChild<QQuickTextInput*>();
+    QVERIFY(input);
+
+    QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>());
+    QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev);
+
+    QEXPECT_FAIL("", "QTBUG-24280", Continue);
+    QCOMPARE(input->text(), QLatin1String("Hello world!"));
+
+    delete canvas;
 }
 
 QQuickItemPrivate *childPrivate(QQuickItem *rootItem, const char * itemString)
@@ -1303,6 +1350,27 @@ void tst_QQuickItem::visibleChildren()
     QCOMPARE(root->property("test8_3").toBool(), true);
     QCOMPARE(root->property("test8_4").toBool(), true);
     QCOMPARE(root->property("test8_5").toBool(), true);
+
+    delete canvas;
+}
+
+void tst_QQuickItem::parentLoop()
+{
+    QQuickView *canvas = new QQuickView(0);
+
+    QTest::ignoreMessage(QtWarningMsg, "QQuickItem::setParentItem: Parent is already part of this items subtree.");
+    canvas->setSource(testFileUrl("parentLoop.qml"));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QVERIFY(root);
+
+    QQuickItem *item1 = root->findChild<QQuickItem*>("item1");
+    QVERIFY(item1);
+    QCOMPARE(item1->parentItem(), root);
+
+    QQuickItem *item2 = root->findChild<QQuickItem*>("item2");
+    QVERIFY(item2);
+    QCOMPARE(item2->parentItem(), item1);
 
     delete canvas;
 }
