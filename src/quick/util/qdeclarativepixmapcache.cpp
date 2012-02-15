@@ -695,6 +695,8 @@ public:
     void unreferencePixmap(QDeclarativePixmapData *);
     void referencePixmap(QDeclarativePixmapData *);
 
+    void purgeCache();
+
 protected:
     virtual void timerEvent(QTimerEvent *);
 
@@ -825,6 +827,16 @@ void QDeclarativePixmapStore::timerEvent(QTimerEvent *)
         killTimer(m_timerId);
         m_timerId = -1;
     }
+}
+
+void QDeclarativePixmapStore::purgeCache()
+{
+    shrinkCache(m_unreferencedCost);
+}
+
+void QDeclarativePixmap::purgeCache()
+{
+    pixmapStore()->purgeCache();
 }
 
 QDeclarativePixmapReply::QDeclarativePixmapReply(QDeclarativePixmapData *d)

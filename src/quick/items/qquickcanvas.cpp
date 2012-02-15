@@ -66,6 +66,8 @@
 #include <QtCore/qabstractanimation.h>
 #include <QtDeclarative/qdeclarativeincubator.h>
 
+#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+
 #include <private/qdeclarativeprofilerservice_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -747,6 +749,21 @@ QQuickCanvas::~QQuickCanvas()
 
     delete d->rootItem; d->rootItem = 0;
 }
+
+
+
+/*!
+    This function tries to release redundant resources currently held by the QML scene.
+ */
+
+void QQuickCanvas::releaseResources()
+{
+    Q_D(QQuickCanvas);
+    d->windowManager->releaseResources();
+    QDeclarativePixmap::purgeCache();
+}
+
+
 
 /*!
   Returns the invisible root item of the scene.

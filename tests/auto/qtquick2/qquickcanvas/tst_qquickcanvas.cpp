@@ -685,7 +685,9 @@ void tst_qquickcanvas::headless()
 
     // Hide the canvas and verify signal emittion and GL context deletion
     canvas->hide();
-    QCOMPARE(invalidated.size(), 1);
+    canvas->releaseResources();
+
+    QTRY_COMPARE(invalidated.size(), 1);
     QVERIFY(canvas->openglContext() == 0);
 
     // Destroy the native windowing system buffers

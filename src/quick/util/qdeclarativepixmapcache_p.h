@@ -126,6 +126,8 @@ public:
     bool connectDownloadProgress(QObject *, const char *);
     bool connectDownloadProgress(QObject *, int);
 
+    static void purgeCache();
+
 private:
     Q_DISABLE_COPY(QDeclarativePixmap)
     QDeclarativePixmapData *d;

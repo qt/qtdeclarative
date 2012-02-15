@@ -67,6 +67,8 @@ public:
 
     virtual QSGContext *sceneGraphContext() const = 0;
 
+    virtual void releaseResources() = 0;
+
     // ### make this less of a singleton
     static QQuickWindowManager *instance();
 };

@@ -124,6 +124,9 @@ Q_SIGNALS:
     void afterRendering();
     void clearColorChanged(const QColor &);
 
+public slots:
+    void releaseResources();
+
 protected:
     QQuickCanvas(QQuickCanvasPrivate &dd, QWindow *parent = 0);
 
