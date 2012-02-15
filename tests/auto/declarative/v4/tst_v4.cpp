@@ -71,6 +71,8 @@ private slots:
     void qtbug_21883();
     void qtbug_22816();
     void stringComparison();
+    void unaryMinus();
+    void unaryPlus();
 
 private:
     QDeclarativeEngine engine;
@@ -301,6 +303,48 @@ void tst_v4::stringComparison()
     QCOMPARE(o->property("test20").toBool(), true);
     QCOMPARE(o->property("test21").toBool(), true);
     QCOMPARE(o->property("test22").toBool(), true);
+    delete o;
+}
+
+void tst_v4::unaryMinus()
+{
+    QDeclarativeComponent component(&engine, testFileUrl("unaryMinus.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toReal(), qreal(-18));
+    QCOMPARE(o->property("test2").toInt(), -18);
+    QCOMPARE(o->property("test3").toReal(), qreal(3.7));
+    QCOMPARE(o->property("test4").toInt(), 4);
+    QCOMPARE(o->property("test5").toReal(), qreal(3.3));
+    QCOMPARE(o->property("test6").toInt(), 3);
+    QCOMPARE(o->property("test7").toReal(), qreal(7));
+    QCOMPARE(o->property("test8").toInt(), 7);
+    QCOMPARE(o->property("test9").toReal(), qreal(-4.4));
+    QCOMPARE(o->property("test10").toInt(), -4);
+
+    delete o;
+}
+
+void tst_v4::unaryPlus()
+{
+    QDeclarativeComponent component(&engine, testFileUrl("unaryPlus.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toReal(), qreal(18));
+    QCOMPARE(o->property("test2").toInt(), 18);
+    QCOMPARE(o->property("test3").toReal(), qreal(-3.7));
+    QCOMPARE(o->property("test4").toInt(), -4);
+    QCOMPARE(o->property("test5").toReal(), qreal(-3.3));
+    QCOMPARE(o->property("test6").toInt(), -3);
+    QCOMPARE(o->property("test7").toReal(), qreal(-7));
+    QCOMPARE(o->property("test8").toInt(), -7);
+    QCOMPARE(o->property("test9").toReal(), qreal(4.4));
+    QCOMPARE(o->property("test10").toInt(), 4);
+
     delete o;
 }
 

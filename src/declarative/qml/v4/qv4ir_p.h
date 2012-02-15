@@ -306,7 +306,7 @@ struct Unop: Expr {
 
     void init(AluOp op, Expr *expr)
     {
-        this->typeForOp(op, expr);
+        this->type = this->typeForOp(op, expr);
         this->op = op;
         this->expr = expr;
     }
