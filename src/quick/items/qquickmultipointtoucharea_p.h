@@ -251,6 +251,7 @@ protected:
     bool sendMouseEvent(QMouseEvent *event);
     bool shouldFilter(QEvent *event);
     void grabGesture();
+    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
 private:
     void ungrab();

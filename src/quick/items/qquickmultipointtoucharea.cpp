@@ -41,12 +41,16 @@
 
 #include "qquickmultipointtoucharea_p.h"
 #include <QtQuick/qquickcanvas.h>
+#include <private/qsgadaptationlayer_p.h>
+#include <private/qquickitem_p.h>
 #include <QEvent>
 #include <QMouseEvent>
 #include <math.h>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
+
+DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
 /*!
     \qmlclass TouchPoint QQuickTouchPoint
@@ -307,6 +311,9 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
     setFiltersChildMouseEvents(true);
+    if (qmlVisualTouchDebugging()) {
+        setFlag(QQuickItem::ItemHasContents);
+    }
 }
 
 QQuickMultiPointTouchArea::~QQuickMultiPointTouchArea()
@@ -736,6 +743,22 @@ bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
     }
     ungrab();
     return false;
+}
+
+QSGNode *QQuickMultiPointTouchArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
+{
+    Q_UNUSED(data);
+
+    if (!qmlVisualTouchDebugging())
+        return 0;
+
+    QSGRectangleNode *rectangle = static_cast<QSGRectangleNode *>(oldNode);
+    if (!rectangle) rectangle = QQuickItemPrivate::get(this)->sceneGraphContext()->createRectangleNode();
+
+    rectangle->setRect(QRectF(0, 0, width(), height()));
+    rectangle->setColor(QColor(255, 0, 0, 50));
+    rectangle->update();
+    return rectangle;
 }
 
 QT_END_NAMESPACE

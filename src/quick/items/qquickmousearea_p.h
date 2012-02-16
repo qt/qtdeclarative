@@ -207,6 +207,7 @@ protected:
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     virtual void itemChange(ItemChange change, const ItemChangeData& value);
+    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
 private:
     void handlePress();

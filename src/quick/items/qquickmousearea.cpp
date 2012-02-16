@@ -52,6 +52,9 @@
 #include <float.h>
 
 QT_BEGIN_NAMESPACE
+
+DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
+
 static const int PressAndHoldDelay = 800;
 
 QQuickDrag::QQuickDrag(QObject *parent)
@@ -198,6 +201,9 @@ void QQuickMouseAreaPrivate::init()
     Q_Q(QQuickMouseArea);
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFiltersChildMouseEvents(true);
+    if (qmlVisualTouchDebugging()) {
+        q->setFlag(QQuickItem::ItemHasContents);
+    }
 }
 
 void QQuickMouseAreaPrivate::saveEvent(QMouseEvent *event)
@@ -1163,6 +1169,23 @@ QQuickDrag *QQuickMouseArea::drag()
     if (!d->drag)
         d->drag = new QQuickDrag;
     return d->drag;
+}
+
+QSGNode *QQuickMouseArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
+{
+    Q_UNUSED(data);
+    Q_D(QQuickMouseArea);
+
+    if (!qmlVisualTouchDebugging())
+        return 0;
+
+    QSGRectangleNode *rectangle = static_cast<QSGRectangleNode *>(oldNode);
+    if (!rectangle) rectangle = d->sceneGraphContext()->createRectangleNode();
+
+    rectangle->setRect(QRectF(0, 0, width(), height()));
+    rectangle->setColor(QColor(255, 0, 0, 50));
+    rectangle->update();
+    return rectangle;
 }
 
 QT_END_NAMESPACE
