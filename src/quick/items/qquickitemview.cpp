@@ -2455,14 +2455,14 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         if (!currentIndexCleared)
             updateCurrent(currentChanges.newCurrentIndex);
     }
+
+    if (!visibleAffected)
+        visibleAffected = !currentChanges.pendingChanges.changes().isEmpty();
     currentChanges.reset();
 
     updateSections();
     if (prevItemCount != itemCount)
         emit q->countChanged();
-
-    if (!visibleAffected)
-        visibleAffected = !currentChanges.pendingChanges.changes().isEmpty();
     if (!visibleAffected && viewportChanged)
         updateViewport();
 
