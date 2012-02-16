@@ -143,6 +143,7 @@ public:
     // Helper functions for the C++ main() shell.
     static void parseArgs(int argc, char *argv[]);
     static void setProgramName(const char *name);
+    static void setCurrentAppname(const char *appname);
     static int exitCode();
 
 Q_SIGNALS:

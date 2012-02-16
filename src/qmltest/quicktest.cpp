@@ -68,36 +68,6 @@
 #include <QtCore/QTranslator>
 QT_BEGIN_NAMESPACE
 
-static void installCoverageTool(const char * appname, const char * testname)
-{
-#ifdef __COVERAGESCANNER__
-    // Install Coverage Tool
-    __coveragescanner_install(appname);
-    __coveragescanner_testname(testname);
-    __coveragescanner_clear();
-#else
-    Q_UNUSED(appname);
-    Q_UNUSED(testname);
-#endif
-}
-
-static void saveCoverageTool(const char * appname, bool testfailed)
-{
-#ifdef __COVERAGESCANNER__
-    // install again to make sure the filename is correct.
-    // without this, a plugin or similar may have changed the filename.
-    __coveragescanner_install(appname);
-    __coveragescanner_teststate(testfailed ? "FAILED" : "PASSED");
-    __coveragescanner_save();
-    __coveragescanner_testname("");
-    __coveragescanner_clear();
-#else
-    Q_UNUSED(appname);
-    Q_UNUSED(testfailed);
-#endif
-}
-
-
 class QTestRootObject : public QObject
 {
     Q_OBJECT
@@ -224,10 +194,13 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     argc = outargc;
 
     // Parse the command-line arguments.
-    QuickTestResult::parseArgs(argc, argv);
+
+    // Setting currentAppname and currentTestObjectName (via setProgramName) are needed
+    // for the code coverage analysis. Must be done before parseArgs is called.
+    QuickTestResult::setCurrentAppname(argv[0]);
     QuickTestResult::setProgramName(name);
 
-    installCoverageTool(argv[0], name);
+    QuickTestResult::parseArgs(argc, argv);
 
     QTranslator translator;
     if (!translationFile.isEmpty()) {
@@ -337,8 +310,6 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
 
     // Flush the current logging stream.
     QuickTestResult::setProgramName(0);
-
-    saveCoverageTool(argv[0], QuickTestResult::exitCode() != 0);
 
     //Sometimes delete app cause crash here with some qpa plugins,
     //so we comment the follow line out to make them happy.

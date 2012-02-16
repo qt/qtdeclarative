@@ -564,6 +564,11 @@ void QuickTestResult::setProgramName(const char *name)
     QTestResult::setCurrentTestObject(globalProgramName);
 }
 
+void QuickTestResult::setCurrentAppname(const char *appname)
+{
+    QTestResult::setCurrentAppname(appname);
+}
+
 int QuickTestResult::exitCode()
 {
 #if defined(QTEST_NOEXITCODE)
