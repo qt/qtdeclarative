@@ -104,6 +104,7 @@ private slots:
     void asynchronous_clear();
 
     void parented();
+    void sizeBound();
 
 private:
     QDeclarativeEngine engine;
@@ -955,6 +956,27 @@ void tst_QQuickLoader::parented()
 
     QCOMPARE(item->width(), 300.);
     QCOMPARE(item->height(), 300.);
+
+    delete root;
+}
+
+void tst_QQuickLoader::sizeBound()
+{
+    QDeclarativeComponent component(&engine, testFileUrl("sizebound.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(root);
+    QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
+    QVERIFY(loader != 0);
+
+    QVERIFY(loader->item());
+
+    QCOMPARE(loader->width(), 50.0);
+    QCOMPARE(loader->height(), 60.0);
+
+    QMetaObject::invokeMethod(root, "switchComponent");
+
+    QCOMPARE(loader->width(), 80.0);
+    QCOMPARE(loader->height(), 90.0);
 
     delete root;
 }

@@ -569,12 +569,14 @@ void QQuickLoaderPrivate::incubatorStateChanged(QDeclarativeIncubator::Status st
         QObject *obj = incubator->object();
         item = qobject_cast<QQuickItem*>(obj);
         if (item) {
+            emit q->itemChanged();
             initResize();
         } else {
             qmlInfo(q) << QQuickLoader::tr("Loader does not support loading non-visual elements.");
             delete itemContext;
             itemContext = 0;
             delete obj;
+            emit q->itemChanged();
         }
         incubator->clear();
     } else if (status == QDeclarativeIncubator::Error) {
@@ -584,6 +586,7 @@ void QQuickLoaderPrivate::incubatorStateChanged(QDeclarativeIncubator::Status st
         itemContext = 0;
         delete incubator->object();
         source = QUrl();
+        emit q->itemChanged();
     }
     if (loadingFromSource)
         emit q->sourceChanged();
@@ -591,7 +594,6 @@ void QQuickLoaderPrivate::incubatorStateChanged(QDeclarativeIncubator::Status st
         emit q->sourceComponentChanged();
     emit q->statusChanged();
     emit q->progressChanged();
-    emit q->itemChanged();
     emit q->loaded();
     disposeInitialPropertyValues(); // cleanup
 }
