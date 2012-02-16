@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,7 +44,7 @@
 
 #include "qquickitemview_p.h"
 
-#include <private/qdeclarativeguard_p.h>
+#include <private/qqmlguard_p.h>
 
 QT_BEGIN_HEADER
 
@@ -131,7 +131,7 @@ Q_SIGNALS:
     void viewChanged();
 
 public:
-    QDeclarativeGuard<QQuickGridView> m_view;
+    QQmlGuard<QQuickGridView> m_view;
 };
 
 

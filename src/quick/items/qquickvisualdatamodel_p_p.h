@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,10 +44,10 @@
 
 #include "qquickvisualdatamodel_p.h"
 
-#include <QtDeclarative/qdeclarativecontext.h>
-#include <QtDeclarative/qdeclarativeincubator.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlincubator.h>
 
-#include <private/qdeclarativeopenmetaobject_p.h>
+#include <private/qqmlopenmetaobject_p.h>
 
 //
 //  W A R N I N G
@@ -62,9 +62,9 @@
 
 QT_BEGIN_NAMESPACE
 
-typedef QDeclarativeListCompositor Compositor;
+typedef QQuickListCompositor Compositor;
 
-class QQuickVisualDataModelItemMetaType : public QDeclarativeRefCount
+class QQuickVisualDataModelItemMetaType : public QQmlRefCount
 {
 public:
     QQuickVisualDataModelItemMetaType(QV8Engine *engine, QQuickVisualDataModel *model, const QStringList &groupNames);
@@ -85,7 +85,7 @@ public:
             v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info);
 
-    QDeclarativeGuard<QQuickVisualDataModel> model;
+    QQmlGuard<QQuickVisualDataModel> model;
     const int groupCount;
     const int memberPropertyOffset;
     const int indexPropertyOffset;
@@ -136,8 +136,8 @@ Q_SIGNALS:
 
 public:
     QQuickVisualDataModelItemMetaType * const metaType;
-    QDeclarativeGuard<QQuickVisualAdaptorModel> model;
-    QDeclarativeGuard<QObject> object;
+    QQmlGuard<QQuickVisualAdaptorModel> model;
+    QQmlGuard<QObject> object;
     QQuickVisualDataModelAttached *attached;
     v8::Persistent<v8::Object> indexHandle;
     v8::Persistent<v8::Value> modelHandle;
@@ -145,17 +145,17 @@ public:
     int objectRef;
     int scriptRef;
     int groups;
-    int index[QDeclarativeListCompositor::MaximumGroupCount];
+    int index[QQuickListCompositor::MaximumGroupCount];
     QVDMIncubationTask *incubationTask;
 };
 
 
 class QQuickVisualDataModelPrivate;
-class QVDMIncubationTask : public QDeclarativeIncubator
+class QVDMIncubationTask : public QQmlIncubator
 {
 public:
     QVDMIncubationTask(QQuickVisualDataModelPrivate *l, IncubationMode mode)
-        : QDeclarativeIncubator(mode)
+        : QQmlIncubator(mode)
         , incubating(0)
         , incubatingContext(0)
         , vdm(l) {}
@@ -164,7 +164,7 @@ public:
     virtual void setInitialState(QObject *);
 
     QQuickVisualDataModelItem *incubating;
-    QDeclarativeContext *incubatingContext;
+    QQmlContext *incubatingContext;
 
 private:
     QQuickVisualDataModelPrivate *vdm;
@@ -174,10 +174,10 @@ private:
 class QQuickVisualDataGroupEmitter
 {
 public:
-    virtual void emitModelUpdated(const QDeclarativeChangeSet &changeSet, bool reset) = 0;
-    virtual void createdPackage(int, QDeclarativePackage *) {}
-    virtual void initPackage(int, QDeclarativePackage *) {}
-    virtual void destroyingPackage(QDeclarativePackage *) {}
+    virtual void emitModelUpdated(const QQuickChangeSet &changeSet, bool reset) = 0;
+    virtual void createdPackage(int, QQuickPackage *) {}
+    virtual void initPackage(int, QQuickPackage *) {}
+    virtual void destroyingPackage(QQuickPackage *) {}
 
     QIntrusiveListNode emitterNode;
 };
@@ -198,18 +198,18 @@ public:
     void emitChanges(QV8Engine *engine);
     void emitModelUpdated(bool reset);
 
-    void createdPackage(int index, QDeclarativePackage *package);
-    void initPackage(int index, QDeclarativePackage *package);
-    void destroyingPackage(QDeclarativePackage *package);
+    void createdPackage(int index, QQuickPackage *package);
+    void initPackage(int index, QQuickPackage *package);
+    void destroyingPackage(QQuickPackage *package);
 
     bool parseIndex(const v8::Local<v8::Value> &value, int *index, Compositor::Group *group) const;
     bool parseGroupArgs(
-            QDeclarativeV8Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
+            QQmlV8Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
 
     Compositor::Group group;
-    QDeclarativeGuard<QQuickVisualDataModel> model;
+    QQmlGuard<QQuickVisualDataModel> model;
     QQuickVisualDataGroupEmitterList emitters;
-    QDeclarativeChangeSet changeSet;
+    QQuickChangeSet changeSet;
     QString name;
     bool defaultInclude;
 };
@@ -220,7 +220,7 @@ class QQuickVisualDataModelPrivate : public QObjectPrivate, public QQuickVisualD
 {
     Q_DECLARE_PUBLIC(QQuickVisualDataModel)
 public:
-    QQuickVisualDataModelPrivate(QDeclarativeContext *);
+    QQuickVisualDataModelPrivate(QQmlContext *);
     ~QQuickVisualDataModelPrivate();
 
     static QQuickVisualDataModelPrivate *get(QQuickVisualDataModel *m) {
@@ -234,13 +234,13 @@ public:
     void destroy(QObject *object);
     QQuickVisualDataModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
-    void emitCreatedPackage(QQuickVisualDataModelItem *cacheItem, QDeclarativePackage *package);
-    void emitInitPackage(QQuickVisualDataModelItem *cacheItem, QDeclarativePackage *package);
+    void emitCreatedPackage(QQuickVisualDataModelItem *cacheItem, QQuickPackage *package);
+    void emitInitPackage(QQuickVisualDataModelItem *cacheItem, QQuickPackage *package);
     void emitCreatedItem(QQuickVisualDataModelItem *cacheItem, QQuickItem *item) {
         emit q_func()->createdItem(cacheItem->index[m_compositorGroup], item); }
     void emitInitItem(QQuickVisualDataModelItem *cacheItem, QQuickItem *item) {
         emit q_func()->initItem(cacheItem->index[m_compositorGroup], item); }
-    void emitDestroyingPackage(QDeclarativePackage *package);
+    void emitDestroyingPackage(QQuickPackage *package);
     void emitDestroyingItem(QQuickItem *item) { emit q_func()->destroyingItem(item); }
 
     void updateFilterGroup();
@@ -251,12 +251,12 @@ public:
 
     void itemsInserted(
             const QVector<Compositor::Insert> &inserts,
-            QVarLengthArray<QVector<QDeclarativeChangeSet::Insert>, Compositor::MaximumGroupCount> *translatedInserts,
+            QVarLengthArray<QVector<QQuickChangeSet::Insert>, Compositor::MaximumGroupCount> *translatedInserts,
             QHash<int, QList<QQuickVisualDataModelItem *> > *movedItems = 0);
     void itemsInserted(const QVector<Compositor::Insert> &inserts);
     void itemsRemoved(
             const QVector<Compositor::Remove> &removes,
-            QVarLengthArray<QVector<QDeclarativeChangeSet::Remove>, Compositor::MaximumGroupCount> *translatedRemoves,
+            QVarLengthArray<QVector<QQuickChangeSet::Remove>, Compositor::MaximumGroupCount> *translatedRemoves,
             QHash<int, QList<QQuickVisualDataModelItem *> > *movedItems = 0);
     void itemsRemoved(const QVector<Compositor::Remove> &removes);
     void itemsMoved(
@@ -264,29 +264,29 @@ public:
     void itemsChanged(const QVector<Compositor::Change> &changes);
     template <typename T> static v8::Local<v8::Array> buildChangeList(const QVector<T> &changes);
     void emitChanges();
-    void emitModelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
+    void emitModelUpdated(const QQuickChangeSet &changeSet, bool reset);
 
     bool insert(Compositor::insert_iterator &before, const v8::Local<v8::Object> &object, int groups);
 
-    static void group_append(QDeclarativeListProperty<QQuickVisualDataGroup> *property, QQuickVisualDataGroup *group);
-    static int group_count(QDeclarativeListProperty<QQuickVisualDataGroup> *property);
-    static QQuickVisualDataGroup *group_at(QDeclarativeListProperty<QQuickVisualDataGroup> *property, int index);
+    static void group_append(QQmlListProperty<QQuickVisualDataGroup> *property, QQuickVisualDataGroup *group);
+    static int group_count(QQmlListProperty<QQuickVisualDataGroup> *property);
+    static QQuickVisualDataGroup *group_at(QQmlListProperty<QQuickVisualDataGroup> *property, int index);
 
     void releaseIncubator(QVDMIncubationTask *incubationTask);
-    void incubatorStatusChanged(QVDMIncubationTask *incubationTask, QDeclarativeIncubator::Status status);
+    void incubatorStatusChanged(QVDMIncubationTask *incubationTask, QQmlIncubator::Status status);
     void setInitialState(QVDMIncubationTask *incubationTask, QObject *o);
 
     QQuickVisualAdaptorModel *m_adaptorModel;
-    QDeclarativeComponent *m_delegate;
+    QQmlComponent *m_delegate;
     QQuickVisualDataModelItemMetaType *m_cacheMetaType;
-    QDeclarativeGuard<QDeclarativeContext> m_context;
+    QQmlGuard<QQmlContext> m_context;
 
     QList<QQuickVisualDataModelItem *> m_cache;
     QQuickVisualDataModelParts *m_parts;
     QQuickVisualDataGroupEmitterList m_pendingParts;
 
-    QDeclarativeListCompositor m_compositor;
-    QDeclarativeListCompositor::Group m_compositorGroup;
+    QQuickListCompositor m_compositor;
+    QQuickListCompositor::Group m_compositorGroup;
     bool m_complete : 1;
     bool m_delegateValidated : 1;
     bool m_reset : 1;
@@ -321,7 +321,7 @@ public:
     void setFilterGroup(const QString &group);
     void resetFilterGroup();
     void updateFilterGroup();
-    void updateFilterGroup(Compositor::Group group, const QDeclarativeChangeSet &changeSet);
+    void updateFilterGroup(Compositor::Group group, const QQuickChangeSet &changeSet);
 
     int count() const;
     bool isValid() const;
@@ -332,18 +332,18 @@ public:
 
     int indexOf(QQuickItem *item, QObject *objectContext) const;
 
-    void emitModelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
+    void emitModelUpdated(const QQuickChangeSet &changeSet, bool reset);
 
-    void createdPackage(int index, QDeclarativePackage *package);
-    void initPackage(int index, QDeclarativePackage *package);
-    void destroyingPackage(QDeclarativePackage *package);
+    void createdPackage(int index, QQuickPackage *package);
+    void initPackage(int index, QQuickPackage *package);
+    void destroyingPackage(QQuickPackage *package);
 
 Q_SIGNALS:
     void filterGroupChanged();
 
 private:
     QQuickVisualDataModel *m_model;
-    QHash<QObject *, QDeclarativePackage *> m_packaged;
+    QHash<QObject *, QQuickPackage *> m_packaged;
     QString m_part;
     QString m_filterGroup;
     QList<QByteArray> m_watchedRoles;
@@ -353,11 +353,11 @@ private:
 
 class QMetaPropertyBuilder;
 
-class QQuickVisualDataModelPartsMetaObject : public QDeclarativeOpenMetaObject
+class QQuickVisualDataModelPartsMetaObject : public QQmlOpenMetaObject
 {
 public:
     QQuickVisualDataModelPartsMetaObject(QObject *parent)
-    : QDeclarativeOpenMetaObject(parent) {}
+    : QQmlOpenMetaObject(parent) {}
 
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
     virtual QVariant initialValue(int);
@@ -387,15 +387,15 @@ private:
     QQuickVisualDataModelItemMetaType *metaType;
 };
 
-class QQuickVisualDataModelContext : public QDeclarativeContext
+class QQuickVisualDataModelContext : public QQmlContext
 {
     Q_OBJECT
 public:
     QQuickVisualDataModelContext(
             QQuickVisualDataModelItem *cacheItem,
-            QDeclarativeContext *parentContext,
+            QQmlContext *parentContext,
             QObject *parent = 0)
-        : QDeclarativeContext(parentContext, parent)
+        : QQmlContext(parentContext, parent)
         , cacheItem(cacheItem)
     {
         ++cacheItem->scriptRef;

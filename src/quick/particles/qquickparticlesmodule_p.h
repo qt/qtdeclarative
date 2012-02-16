@@ -42,7 +42,7 @@
 #ifndef QQuickPARTICLESMODULE_H
 #define QQuickPARTICLESMODULE_H
 
-#include <qdeclarative.h>
+#include <qqml.h>
 
 QT_BEGIN_HEADER
 

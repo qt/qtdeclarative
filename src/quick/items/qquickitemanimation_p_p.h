@@ -1,0 +1,161 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** GNU Lesser General Public License Usage
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights. These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
+**
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef QQUICKANIMATION_P_H
+#define QQUICKANIMATION_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qquickitemanimation_p.h"
+
+#include <private/qquickpath_p.h>
+#include <private/qquickanimation_p_p.h>
+
+QT_BEGIN_NAMESPACE
+
+class QQuickParentAnimationPrivate : public QQuickAnimationGroupPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickParentAnimation)
+public:
+ QQuickParentAnimationPrivate()
+    : QQuickAnimationGroupPrivate(), target(0), newParent(0), via(0) {}
+
+    QQuickItem *target;
+    QQuickItem *newParent;
+    QQuickItem *via;
+
+    QPointF computeTransformOrigin(QQuickItem::TransformOrigin origin, qreal width, qreal height) const;
+};
+
+class QQuickAnchorAnimationPrivate : public QQuickAbstractAnimationPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickAnchorAnimation)
+public:
+    QQuickAnchorAnimationPrivate() : interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)), duration(250) {}
+
+    QVariantAnimation::Interpolator interpolator;
+    int duration;
+    QEasingCurve easing;
+    QList<QQuickItem*> targets;
+};
+
+class QQuickPathAnimationUpdater : public QQuickBulkValueUpdater
+{
+public:
+    QQuickPathAnimationUpdater() : path(0), target(0), reverse(false),
+        fromSourced(false), fromDefined(false), toDefined(false),
+        toX(0), toY(0), currentV(0), orientation(QQuickPathAnimation::Fixed),
+        entryInterval(0), exitInterval(0) {}
+    ~QQuickPathAnimationUpdater() {}
+
+    void setValue(qreal v);
+
+    QQuickPath *path;
+
+    QPainterPath painterPath;
+    QQuickCachedBezier prevBez;
+    qreal pathLength;
+    QList<QQuickPath::AttributePoint> attributePoints;
+
+    QQuickItem *target;
+    bool reverse;
+    bool fromSourced;
+    bool fromDefined;
+    bool toDefined;
+    qreal toX;
+    qreal toY;
+    qreal currentV;
+    QQmlNullableValue<qreal> interruptStart;
+    //TODO: bundle below into common struct
+    QQuickPathAnimation::Orientation orientation;
+    QPointF anchorPoint;
+    qreal entryInterval;
+    qreal exitInterval;
+    QQmlNullableValue<qreal> endRotation;
+    QQmlNullableValue<qreal> startRotation;
+};
+
+class QQuickPathAnimationPrivate;
+class QQuickPathAnimationAnimator : public QQuickBulkValueAnimator
+{
+public:
+    QQuickPathAnimationAnimator(QQuickPathAnimationPrivate * = 0);
+    ~QQuickPathAnimationAnimator();
+
+    void clearTemplate() { animationTemplate = 0; }
+
+    QQuickPathAnimationUpdater *pathUpdater() { return static_cast<QQuickPathAnimationUpdater*>(getAnimValue()); }
+private:
+    QQuickPathAnimationPrivate *animationTemplate;
+};
+
+class QQuickPathAnimationPrivate : public QQuickAbstractAnimationPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickPathAnimation)
+public:
+    QQuickPathAnimationPrivate() : path(0), target(0),
+        orientation(QQuickPathAnimation::Fixed), entryDuration(0), exitDuration(0), duration(250) {}
+
+    QQuickPath *path;
+    QQuickItem *target;
+    QQuickPathAnimation::Orientation orientation;
+    QPointF anchorPoint;
+    qreal entryDuration;
+    qreal exitDuration;
+    QQmlNullableValue<qreal> endRotation;
+    int duration;
+    QEasingCurve easingCurve;
+    QHash<QQuickItem*, QQuickPathAnimationAnimator* > activeAnimations;
+};
+
+
+QT_END_NAMESPACE
+
+#endif // QQUICKANIMATION_P_H

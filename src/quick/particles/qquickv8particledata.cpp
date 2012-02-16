@@ -497,9 +497,9 @@ QQuickV8ParticleData::~QQuickV8ParticleData()
     qPersistentDispose(m_v8Value);
 }
 
-QDeclarativeV8Handle QQuickV8ParticleData::v8Value()
+QQmlV8Handle QQuickV8ParticleData::v8Value()
 {
-    return QDeclarativeV8Handle::fromHandle(m_v8Value);
+    return QQmlV8Handle::fromHandle(m_v8Value);
 }
 
 QT_END_NAMESPACE

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -57,17 +57,17 @@
 #include "qquickitem_p.h"
 #include "qquickvisualdatamodel_p.h"
 
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqml.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qcoreapplication.h>
 
-#include <private/qdeclarativeanimation_p_p.h>
-#include <private/qdeclarativeguard_p.h>
-#include <private/qdeclarativetimeline_p_p.h>
+#include <private/qquickanimation_p_p.h>
+#include <private/qqmlguard_p.h>
+#include <private/qquicktimeline_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeOpenMetaObjectType;
+class QQmlOpenMetaObjectType;
 class QQuickPathViewAttached;
 class QQuickPathViewPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
@@ -114,7 +114,7 @@ public:
     QQuickItem *getItem(int modelIndex, qreal z = 0, bool onPath=true);
     void releaseItem(QQuickItem *item);
     QQuickPathViewAttached *attached(QQuickItem *item);
-    QDeclarativeOpenMetaObjectType *attachedType();
+    QQmlOpenMetaObjectType *attachedType();
     void clear();
     void updateMappedRange();
     qreal positionOfIndex(qreal index) const;
@@ -143,9 +143,9 @@ public:
     void addVelocitySample(qreal v);
     qreal calcVelocity() const;
 
-    QDeclarativePath *path;
+    QQuickPath *path;
     int currentIndex;
-    QDeclarativeGuard<QQuickItem> currentItem;
+    QQmlGuard<QQuickItem> currentItem;
     qreal currentItemOffset;
     qreal startPc;
     QPointF startPoint;
@@ -169,24 +169,24 @@ public:
     QPointF lastPos;
     qreal dragMargin;
     qreal deceleration;
-    QDeclarativeTimeLine tl;
-    QDeclarativeTimeLineValueProxy<QQuickPathViewPrivate> moveOffset;
+    QQuickTimeLine tl;
+    QQuickTimeLineValueProxy<QQuickPathViewPrivate> moveOffset;
     int firstIndex;
     int pathItems;
     int requestedIndex;
     qreal requestedZ;
     QList<QQuickItem *> items;
     QList<QQuickItem *> itemCache;
-    QDeclarativeGuard<QQuickVisualModel> model;
+    QQmlGuard<QQuickVisualModel> model;
     QVariant modelVariant;
     enum MovementReason { Other, SetIndex, Mouse };
     MovementReason moveReason;
     enum MovementDirection { Shortest, Negative, Positive };
     MovementDirection moveDirection;
-    QDeclarativeOpenMetaObjectType *attType;
-    QDeclarativeComponent *highlightComponent;
+    QQmlOpenMetaObjectType *attType;
+    QQmlComponent *highlightComponent;
     QQuickItem *highlightItem;
-    QDeclarativeTimeLineValueProxy<QQuickPathViewPrivate> moveHighlight;
+    QQuickTimeLineValueProxy<QQuickPathViewPrivate> moveHighlight;
     qreal highlightPosition;
     qreal highlightRangeStart;
     qreal highlightRangeEnd;

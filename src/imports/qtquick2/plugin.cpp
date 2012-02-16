@@ -39,23 +39,23 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative/qdeclarativeextensionplugin.h>
+#include <QtQml/qqmlextensionplugin.h>
 
 #include <private/qtquick2_p.h>
 
 QT_BEGIN_NAMESPACE
 
 //![class decl]
-class QtQuick2Plugin : public QDeclarativeExtensionPlugin
+class QtQuick2Plugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface/1.0")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 public:
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
         Q_UNUSED(uri);
-        QDeclarativeQtQuick2Module::defineModule();
+        QQmlQtQuick2Module::defineModule();
     }
 };
 //![class decl]

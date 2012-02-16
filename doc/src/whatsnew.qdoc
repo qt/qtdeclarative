@@ -67,8 +67,8 @@ Properties of the "var" type may hold JavaScript references.  See \l{QML Basic T
 
 QML properties of type \c var and \c variant can now hold pixmaps.  See \l{Scarce Resources in JavaScript} for more information
 
-QDeclarativeExpression can now be directly (and more efficiently) constructed from a
-QDeclarativeScriptString.
+QQmlExpression can now be directly (and more efficiently) constructed from a
+QQmlScriptString.
 
 Support for certain sequence types (QList<int>, QList<qreal>, QList<bool>, QList<QUrl>, QList<QString> and QStringList) has been improved.
 QObjects can define Q_PROPERTYs of these types which can be accessed transparently from JavaScript.  See the section on

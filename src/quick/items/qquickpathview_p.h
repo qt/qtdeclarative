@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,13 +44,13 @@
 
 #include "qquickitem.h"
 
-#include <private/qdeclarativepath_p.h>
+#include <private/qquickpath_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeChangeSet;
+class QQuickChangeSet;
 
 class QQuickPathViewPrivate;
 class QQuickPathViewAttached;
@@ -59,12 +59,12 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
-    Q_PROPERTY(QDeclarativePath *path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged)
     Q_PROPERTY(qreal offset READ offset WRITE setOffset NOTIFY offsetChanged)
 
-    Q_PROPERTY(QDeclarativeComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
+    Q_PROPERTY(QQmlComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
     Q_PROPERTY(QQuickItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
 
     Q_PROPERTY(qreal preferredHighlightBegin READ preferredHighlightBegin WRITE setPreferredHighlightBegin NOTIFY preferredHighlightBeginChanged)
@@ -80,7 +80,7 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(bool flicking READ isFlicking NOTIFY flickingChanged)
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
-    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount NOTIFY pathItemCountChanged)
 
     Q_ENUMS(HighlightRangeMode)
@@ -92,8 +92,8 @@ public:
     QVariant model() const;
     void setModel(const QVariant &);
 
-    QDeclarativePath *path() const;
-    void setPath(QDeclarativePath *);
+    QQuickPath *path() const;
+    void setPath(QQuickPath *);
 
     int currentIndex() const;
     void setCurrentIndex(int idx);
@@ -103,8 +103,8 @@ public:
     qreal offset() const;
     void setOffset(qreal offset);
 
-    QDeclarativeComponent *highlight() const;
-    void setHighlight(QDeclarativeComponent *highlight);
+    QQmlComponent *highlight() const;
+    void setHighlight(QQmlComponent *highlight);
     QQuickItem *highlightItem();
 
     enum HighlightRangeMode { NoHighlightRange, ApplyRange, StrictlyEnforceRange };
@@ -134,8 +134,8 @@ public:
 
     int count() const;
 
-    QDeclarativeComponent *delegate() const;
-    void setDelegate(QDeclarativeComponent *);
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *);
 
     int pathItemCount() const;
     void setPathItemCount(int);
@@ -186,7 +186,7 @@ private Q_SLOTS:
     void refill();
     void ticked();
     void movementEnding();
-    void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
+    void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
     void createdItem(int index, QQuickItem *item);
     void initItem(int index, QQuickItem *item);
     void destroyingItem(QQuickItem *item);
@@ -198,7 +198,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickPathView)
 };
 
-class QDeclarativeOpenMetaObject;
+class QQmlOpenMetaObject;
 class QQuickPathViewAttached : public QObject
 {
     Q_OBJECT
@@ -241,7 +241,7 @@ private:
     friend class QQuickPathViewPrivate;
     friend class QQuickPathView;
     QQuickPathView *m_view;
-    QDeclarativeOpenMetaObject *m_metaobject;
+    QQmlOpenMetaObject *m_metaobject;
     bool m_onPath : 1;
     bool m_isCurrent : 1;
 };

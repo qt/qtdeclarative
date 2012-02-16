@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,12 +44,12 @@
 
 #ifndef QT_NO_MOVIE
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qmovie.h>
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
 
-#include <private/qdeclarativeengine_p.h>
+#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
     \bold Note: Unlike images, animated images are not cached or shared internally.
 
     \clearfloat
-    \snippet doc/src/snippets/declarative/animatedimage.qml document
+    \snippet doc/src/snippets/qml/animatedimage.qml document
 
     \sa BorderImage, Image
 */
@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
     AnimatedImage can handle any image format supported by Qt, loaded from any
     URL scheme supported by Qt.
 
-    \sa QDeclarativeImageProvider
+    \sa QQmlImageProvider
 */
 
 /*!
@@ -264,7 +264,7 @@ void QQuickAnimatedImage::load()
         if (d->progress != oldProgress)
             emit progressChanged(d->progress);
     } else {
-        QString lf = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(d->url);
+        QString lf = QQmlEnginePrivate::urlToLocalFileOrQrc(d->url);
         if (!lf.isEmpty()) {
             //### should be unified with movieRequestFinished
             d->_movie = new QMovie(lf);

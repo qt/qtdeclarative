@@ -1,11 +1,11 @@
 load(qt_module)
 
 TARGET = qmldbg_qtquick2
-QT       += declarative-private quick-private core-private gui-private opengl-private v8-private
+QT       += qml-private quick-private core-private gui-private opengl-private v8-private
 
 load(qt_plugin)
 
-DESTDIR  = $$QT.declarative.plugins/qmltooling
+DESTDIR  = $$QT.qml.plugins/qmltooling
 
 INCLUDEPATH *= $$PWD $$PWD/../shared
 
@@ -24,7 +24,7 @@ HEADERS += \
     qquickviewinspector.h \
     ../shared/abstracttool.h \
     ../shared/abstractviewinspector.h \
-    ../shared/qdeclarativeinspectorprotocol.h \
+    ../shared/qqmlinspectorprotocol.h \
     ../shared/qmlinspectorconstants.h
 
 target.path += $$[QT_INSTALL_PLUGINS]/qmltooling

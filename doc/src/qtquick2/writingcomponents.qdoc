@@ -55,14 +55,14 @@ For example, one of the simplest and most common components you can build in QML
 button-type component. Below, we implement this component as a \l Rectangle with a clickable
 \l MouseArea, in a file named \c Button.qml:
 
-\snippet doc/src/snippets/declarative/qml-extending-types/components/Button.qml 0
+\snippet doc/src/snippets/qml/qml-extending-types/components/Button.qml 0
 
 Now this component can be reused by another file within the same directory. Since the file is
 named \c Button.qml, the component is referred to as \c Button:
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qml-extending-types/components/application.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/components/application.qml 0
 \o \image qml-extending-types.png
 \endtable
 
@@ -73,7 +73,7 @@ customize the \c width, \c height, \c radius and \c color properties of \c Butto
 
 
 If \c Button.qml was not in the same directory, \c application.qml would need to load it as a
-\l {Modules}{module} from a specific filesystem path or \l{QDeclarativeExtensionPlugin}{plugin}.
+\l {Modules}{module} from a specific filesystem path or \l{QQmlExtensionPlugin}{plugin}.
 Also, note the letter case of the component file name is significant on some (notably UNIX)
 filesystems. It is recommended the file name case matches the case of the QML component name
 exactly - for example, \c Box.qml and not \c BoX.qml - regardless of the platform to which the
@@ -119,8 +119,8 @@ an \c ImageViewer object and read or modify the \c currentImage value:
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qml-extending-types/properties/ImageViewer.qml 0
-\o \snippet doc/src/snippets/declarative/qml-extending-types/properties/application.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/properties/ImageViewer.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/properties/application.qml 0
 \endtable
 
 It is optional for a property to have a default value. The default value is a convenient shortcut, and is
@@ -195,7 +195,7 @@ property name.
 For example, the following \c onMyNumberChanged signal handler is automatically called whenever the
 \c myNumber property changes:
 
-\snippet doc/src/snippets/declarative/qml-extending-types/properties/property-signals.qml 0
+\snippet doc/src/snippets/qml/qml-extending-types/properties/property-signals.qml 0
 
 
 \section2 Default properties
@@ -266,7 +266,7 @@ declaring the alias, and, optionally, <property> refers to a property on that ob
 For example, below is a \c Button.qml component with a \c buttonText aliased property which is
 connected to the child Text object's \c text property:
 
-\snippet doc/src/snippets/declarative/qml-extending-types/properties/alias.qml 0
+\snippet doc/src/snippets/qml/qml-extending-types/properties/alias.qml 0
 
 The following code would create a \c Button with a defined text string for the
 child \l Text object:
@@ -290,8 +290,8 @@ been changed to an alias to the child \l Image object:
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qml-extending-types/properties/alias/ImageViewer.qml 0
-\o \snippet doc/src/snippets/declarative/qml-extending-types/properties/alias/application.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/properties/alias/ImageViewer.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/properties/alias/application.qml 0
 \endtable
 
 Instead of being limited to setting the \l Image source, \c application.qml can now directly
@@ -335,7 +335,7 @@ It is possible for an aliased property to have the same name as an existing prop
 the following component has a \c color alias property, named the same as the built-in
 \l {Rectangle::color} property:
 
-\snippet doc/src/snippets/declarative/qml-extending-types/properties/alias-override.qml 0
+\snippet doc/src/snippets/qml/qml-extending-types/properties/alias-override.qml 0
 
 Any objects that use this component and refer to its \c color property will be
 referring to the alias rather than the ordinary \l {Rectangle::color} property. Internally,
@@ -366,7 +366,7 @@ the parameters by name.
 
 Here is an example of a component with a \c say() method that accepts a single \c text argument:
 
-\snippet doc/src/snippets/declarative/qml-extending-types/methods/app.qml 0
+\snippet doc/src/snippets/qml/qml-extending-types/methods/app.qml 0
 
 A method can be connected to a signal so that it is automatically invoked whenever the signal
 is emitted. See \l {Connecting signals to methods and other signals} below.
@@ -422,8 +422,8 @@ signal is received by \c application.qml through an \c onButtonClicked signal ha
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qml-extending-types/signals/basic.qml 0
-\o \snippet doc/src/snippets/declarative/qml-extending-types/signals/no-parameters.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/signals/basic.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/signals/no-parameters.qml 0
 \endtable
 
 If the signal has parameters, they are accessible by parameter name in the signal handler.
@@ -431,8 +431,8 @@ In the example below, \c buttonClicked is emitted with \c xPos and \c yPos param
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qml-extending-types/signals/Button.qml 0
-\o \snippet doc/src/snippets/declarative/qml-extending-types/signals/parameters.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/signals/Button.qml 0
+\o \snippet doc/src/snippets/qml/qml-extending-types/signals/parameters.qml 0
 \endtable
 
 
@@ -446,7 +446,7 @@ to be received by a method instead of a \l {Signal Handlers}{signal handler}.
 
 For example, the \c application.qml above could be rewritten as:
 
-\snippet doc/src/snippets/declarative/qml-extending-types/signals/connectslots.qml 0
+\snippet doc/src/snippets/qml/qml-extending-types/signals/connectslots.qml 0
 
 The \c myMethod() method will be called whenever the \c buttonClicked signal is received.
 
@@ -458,7 +458,7 @@ or \l {Integrating JavaScript}{integrating JavaScript code}, then you will find 
 objects dynamically, and connects the \c buttonClicked signal of each object to the
 \c myMethod() function:
 
-\snippet doc/src/snippets/declarative/qml-extending-types/signals/connectdynamic.qml 0
+\snippet doc/src/snippets/qml/qml-extending-types/signals/connectdynamic.qml 0
 
 In the same way, you could connect a signal to methods defined in a dynamically
 created object, or \l {Receiving QML Signals in JavaScript}{connect a signal to a JavaScript method}.

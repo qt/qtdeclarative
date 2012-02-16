@@ -41,19 +41,19 @@
 
 #include "util.h"
 
-#include <QtDeclarative/QDeclarativeComponent>
-#include <QtDeclarative/QDeclarativeError>
-#include <QtDeclarative/QDeclarativeContext>
-#include <QtDeclarative/QDeclarativeEngine>
+#include <QtQml/QQmlComponent>
+#include <QtQml/QQmlError>
+#include <QtQml/QQmlContext>
+#include <QtQml/QQmlEngine>
 #include <QtCore/QTextStream>
 
-QDeclarativeDataTest *QDeclarativeDataTest::m_instance = 0;
+QQmlDataTest *QQmlDataTest::m_instance = 0;
 
-QDeclarativeDataTest::QDeclarativeDataTest() :
+QQmlDataTest::QQmlDataTest() :
 #ifdef QT_TESTCASE_BUILDDIR
-    m_dataDirectory(QTest::qFindTestData("data", QT_DECLARATIVETEST_DATADIR, 0, QT_TESTCASE_BUILDDIR)),
+    m_dataDirectory(QTest::qFindTestData("data", QT_QMLTEST_DATADIR, 0, QT_TESTCASE_BUILDDIR)),
 #else
-    m_dataDirectory(QTest::qFindTestData("data", QT_DECLARATIVETEST_DATADIR, 0)),
+    m_dataDirectory(QTest::qFindTestData("data", QT_QMLTEST_DATADIR, 0)),
 #endif
 
     m_dataDirectoryUrl(QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/')))
@@ -61,33 +61,33 @@ QDeclarativeDataTest::QDeclarativeDataTest() :
     m_instance = this;
 }
 
-QDeclarativeDataTest::~QDeclarativeDataTest()
+QQmlDataTest::~QQmlDataTest()
 {
     m_instance = 0;
 }
 
-void QDeclarativeDataTest::initTestCase()
+void QQmlDataTest::initTestCase()
 {
     QVERIFY2(!m_dataDirectory.isEmpty(), "'data' directory not found");
     m_directory = QFileInfo(m_dataDirectory).absolutePath();
     QVERIFY2(QDir::setCurrent(m_directory), qPrintable(QLatin1String("Could not chdir to ") + m_directory));
 }
 
-QString QDeclarativeDataTest::testFile(const QString &fileName) const
+QString QQmlDataTest::testFile(const QString &fileName) const
 {
     if (m_directory.isEmpty())
-        qFatal("QDeclarativeDataTest::initTestCase() not called.");
+        qFatal("QQmlDataTest::initTestCase() not called.");
     QString result = m_dataDirectory;
     result += QLatin1Char('/');
     result += fileName;
     return result;
 }
 
-QByteArray QDeclarativeDataTest::msgComponentError(const QDeclarativeComponent &c,
-                                                   const QDeclarativeEngine *engine /* = 0 */)
+QByteArray QQmlDataTest::msgComponentError(const QQmlComponent &c,
+                                                   const QQmlEngine *engine /* = 0 */)
 {
     QString result;
-    const QList<QDeclarativeError> errors = c.errors();
+    const QList<QQmlError> errors = c.errors();
     QTextStream str(&result);
     str << "Component '" << c.url().toString() << "' has " << errors.size()
         << " errors: '";
@@ -98,7 +98,7 @@ QByteArray QDeclarativeDataTest::msgComponentError(const QDeclarativeComponent &
 
     }
     if (!engine)
-        if (QDeclarativeContext *context = c.creationContext())
+        if (QQmlContext *context = c.creationContext())
             engine = context->engine();
     if (engine) {
         str << " Import paths: (" << engine->importPathList().join(QStringLiteral(", "))

@@ -1,8 +1,8 @@
 TEMPLATE = app
 TARGET   = qmlprofiler
-DESTDIR = $$QT.declarative.bins
+DESTDIR = $$QT.qml.bins
 
-QT += declarative declarative-private network
+QT += qml qml-private network
 
 target.path = $$[QT_INSTALL_BINS]
 INSTALLS += target

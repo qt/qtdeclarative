@@ -36,16 +36,16 @@
     C++ code as plugins. Plugins are imported and labeled as modules and
     its content are available as components.
 
-    QDeclarativeExtensionPlugin is a plugin interface that makes it possible to
+    QQmlExtensionPlugin is a plugin interface that makes it possible to
     create QML extensions that can be loaded dynamically into QML applications.
     These extensions allow custom QML types to be made available to the
     QML engine.
 
     To write a QML extension plugin:
     \list 1
-    \o Subclass QDeclarativeExtensionPlugin
-    \o Implement QDeclarativeExtensionPlugin's
-    \l{QDeclarativeExtensionPlugin::}{registerTypes()} method
+    \o Subclass QQmlExtensionPlugin
+    \o Implement QQmlExtensionPlugin's
+    \l{QQmlExtensionPlugin::}{registerTypes()} method
     \o Register types with qmlRegisterType()
     \o Export the class using the Q_EXPORT_PLUGIN2() macro
     \o Write a project file for the plugin
@@ -67,8 +67,8 @@
     \dots
 
     A plugin class, \c QExampleQMLPlugin, is a subclass of
-    \l QDeclarativeExtensionPlugin and it implements the
-    \l{QDeclarativeExtensionPlugin::}{registerTypes()} method.
+    \l QQmlExtensionPlugin and it implements the
+    \l{QQmlExtensionPlugin::}{registerTypes()} method.
 
     In the registerTypes() method, the plugin class can
     \l{register-c++-type}{register} the \c TimeModel class to the declarative

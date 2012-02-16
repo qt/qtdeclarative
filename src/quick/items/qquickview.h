@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,15 +44,15 @@
 
 #include <QtQuick/qquickcanvas.h>
 #include <QtCore/qurl.h>
-#include <QtDeclarative/qdeclarativedebug.h>
+#include <QtQml/qqmldebug.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeEngine;
-class QDeclarativeContext;
-class QDeclarativeError;
+class QQmlEngine;
+class QQmlContext;
+class QQmlError;
 class QQuickItem;
 
 class QQuickViewPrivate;
@@ -70,8 +70,8 @@ public:
 
     QUrl source() const;
 
-    QDeclarativeEngine* engine() const;
-    QDeclarativeContext* rootContext() const;
+    QQmlEngine* engine() const;
+    QQmlContext* rootContext() const;
 
     QQuickItem *rootObject() const;
 
@@ -82,7 +82,7 @@ public:
     enum Status { Null, Ready, Loading, Error };
     Status status() const;
 
-    QList<QDeclarativeError> errors() const;
+    QList<QQmlError> errors() const;
 
     QSize sizeHint() const;
     QSize initialSize() const;

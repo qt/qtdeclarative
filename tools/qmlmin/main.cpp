@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include <private/qdeclarativejsengine_p.h>
-#include <private/qdeclarativejslexer_p.h>
-#include <private/qdeclarativejsparser_p.h>
+#include <private/qqmljsengine_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtCore/QFile>
@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 //
 // QML/JS minifier
 //
-namespace QDeclarativeJS {
+namespace QQmlJS {
 
 enum RegExpFlag {
     Global     = 0x01,
@@ -66,7 +66,7 @@ enum RegExpFlag {
 
 class QmlminLexer: protected Lexer, public Directives
 {
-    QDeclarativeJS::Engine _engine;
+    QQmlJS::Engine _engine;
     QString _fileName;
     QString _directives;
 
@@ -492,7 +492,7 @@ bool Tokenize::parse(int startToken)
     return false;
 }
 
-} // end of QDeclarativeJS namespace
+} // end of QQmlJS namespace
 
 static void usage(bool showHelp = false)
 {
@@ -571,7 +571,7 @@ int runQmlmin(int argc, char *argv[])
     const QString code = QString::fromUtf8(file.readAll()); // QML files are UTF-8 encoded.
     file.close();
 
-    QDeclarativeJS::Minify minify;
+    QQmlJS::Minify minify;
     if (! minify(fileName, code)) {
         std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "' (not a valid QML/JS file)" << std::endl;
         return EXIT_FAILURE;
@@ -580,13 +580,13 @@ int runQmlmin(int argc, char *argv[])
     //
     // verify the output
     //
-    QDeclarativeJS::Minify secondMinify;
+    QQmlJS::Minify secondMinify;
     if (! secondMinify(fileName, minify.minifiedCode()) || secondMinify.minifiedCode() != minify.minifiedCode()) {
         std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "'" << std::endl;
         return EXIT_FAILURE;
     }
 
-    QDeclarativeJS::Tokenize originalTokens, minimizedTokens;
+    QQmlJS::Tokenize originalTokens, minimizedTokens;
     originalTokens(fileName, code);
     minimizedTokens(fileName, minify.minifiedCode());
 

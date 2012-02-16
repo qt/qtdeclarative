@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,7 +48,7 @@
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qpointer.h>
-#include <QtDeclarative/qdeclarativeengine.h>
+#include <QtQml/qqmlengine.h>
 #include "qquickcanvas_p.h"
 
 #include "qquickitemchangelistener_p.h"
@@ -57,10 +57,10 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeContext;
-class QDeclarativeError;
+class QQmlContext;
+class QQmlError;
 class QQuickItem;
-class QDeclarativeComponent;
+class QQmlComponent;
 
 class QQuickViewPrivate : public QQuickCanvasPrivate,
                        public QQuickItemChangeListener
@@ -87,8 +87,8 @@ public:
 
     QUrl source;
 
-    QDeclarativeEngine engine;
-    QDeclarativeComponent *component;
+    QQmlEngine engine;
+    QQmlComponent *component;
     QBasicTimer resizetimer;
 
     QQuickView::ResizeMode resizeMode;

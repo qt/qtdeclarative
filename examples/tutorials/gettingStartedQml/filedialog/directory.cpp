@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -72,7 +72,7 @@ int Directory::filesCount() const
 /*
 Function called to append data onto list property
 */
-void appendFiles(QDeclarativeListProperty<File> * property, File * file)
+void appendFiles(QQmlListProperty<File> * property, File * file)
 {
     Q_UNUSED(property);
     Q_UNUSED(file);
@@ -82,7 +82,7 @@ void appendFiles(QDeclarativeListProperty<File> * property, File * file)
 /*
 Function called to retrieve file in the list using an index
 */
-File* fileAt(QDeclarativeListProperty<File> * property, int index)
+File* fileAt(QQmlListProperty<File> * property, int index)
 {
     return static_cast< QList<File *> *>(property->data)->at(index);
 }
@@ -90,7 +90,7 @@ File* fileAt(QDeclarativeListProperty<File> * property, int index)
 /*
 Returns the number of files in the list
 */
-int filesSize(QDeclarativeListProperty<File> * property) 
+int filesSize(QQmlListProperty<File> * property) 
 {
     return static_cast< QList<File *> *>(property->data)->size();
 }
@@ -98,18 +98,18 @@ int filesSize(QDeclarativeListProperty<File> * property)
 /*
 Function called to empty the list property contents
 */
-void clearFilesPtr(QDeclarativeListProperty<File> *property)
+void clearFilesPtr(QQmlListProperty<File> *property)
 {
     return static_cast< QList<File *> *>(property->data)->clear();
 }
 
 /*
-Returns the list of files as a QDeclarativeListProperty.
+Returns the list of files as a QQmlListProperty.
 */
-QDeclarativeListProperty<File> Directory::files()
+QQmlListProperty<File> Directory::files()
 {
     refresh();
-    return QDeclarativeListProperty<File>( this, &m_fileList, &appendFiles, &filesSize, &fileAt,  &clearFilesPtr );
+    return QQmlListProperty<File>( this, &m_fileList, &appendFiles, &filesSize, &fileAt,  &clearFilesPtr );
 }
 
 /*

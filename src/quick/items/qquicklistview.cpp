@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,14 +43,14 @@
 #include "qquickitemview_p_p.h"
 #include "qquickvisualitemmodel_p.h"
 
-#include <QtDeclarative/qdeclarativeexpression.h>
-#include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlexpression.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QtCore/qmath.h>
 #include <QtCore/qcoreapplication.h>
 
-#include <private/qdeclarativesmoothedanimation_p_p.h>
+#include <private/qquicksmoothedanimation_p_p.h>
 #include <private/qlistmodelinterface_p.h>
 #include "qplatformdefs.h"
 
@@ -106,7 +106,7 @@ public:
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems(int fromModelIndex = 0);
 
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
+    virtual bool applyInsertionChange(const QQuickChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
     virtual void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult);
 
     virtual void updateSections();
@@ -132,7 +132,7 @@ public:
     virtual void fixupPosition();
     virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
     virtual void flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                        QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity);
+                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity);
 
     QQuickListView::Orientation orient;
     qreal visiblePos;
@@ -205,7 +205,7 @@ void QQuickViewSection::setCriteria(QQuickViewSection::SectionCriteria criteria)
     }
 }
 
-void QQuickViewSection::setDelegate(QDeclarativeComponent *delegate)
+void QQuickViewSection::setDelegate(QQmlComponent *delegate)
 {
     if (delegate != m_delegate) {
         m_delegate = delegate;
@@ -833,7 +833,7 @@ void QQuickListViewPrivate::createHighlight()
             }
             const QLatin1String posProp(orient == QQuickListView::Vertical ? "y" : "x");
             highlightPosAnimator = new QSmoothedAnimation;
-            highlightPosAnimator->target = QDeclarativeProperty(item, posProp);
+            highlightPosAnimator->target = QQmlProperty(item, posProp);
             highlightPosAnimator->velocity = highlightMoveSpeed;
             highlightPosAnimator->userDuration = highlightMoveDuration;
 
@@ -841,7 +841,7 @@ void QQuickListViewPrivate::createHighlight()
             highlightSizeAnimator = new QSmoothedAnimation;
             highlightSizeAnimator->velocity = highlightResizeSpeed;
             highlightSizeAnimator->userDuration = highlightResizeDuration;
-            highlightSizeAnimator->target = QDeclarativeProperty(item, sizeProp);
+            highlightSizeAnimator->target = QQmlProperty(item, sizeProp);
 
             highlight = newHighlight;
             changed = true;
@@ -896,22 +896,22 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
         sectionItem = sectionCache[i];
         sectionCache[i] = 0;
         sectionItem->setVisible(true);
-        QDeclarativeContext *context = QDeclarativeEngine::contextForObject(sectionItem)->parentContext();
+        QQmlContext *context = QQmlEngine::contextForObject(sectionItem)->parentContext();
         context->setContextProperty(QLatin1String("section"), section);
     } else {
-        QDeclarativeContext *creationContext = sectionCriteria->delegate()->creationContext();
-        QDeclarativeContext *context = new QDeclarativeContext(
+        QQmlContext *creationContext = sectionCriteria->delegate()->creationContext();
+        QQmlContext *context = new QQmlContext(
                 creationContext ? creationContext : qmlContext(q));
         context->setContextProperty(QLatin1String("section"), section);
         QObject *nobj = sectionCriteria->delegate()->beginCreate(context);
         if (nobj) {
-            QDeclarative_setParent_noEvent(context, nobj);
+            QQml_setParent_noEvent(context, nobj);
             sectionItem = qobject_cast<QQuickItem *>(nobj);
             if (!sectionItem) {
                 delete nobj;
             } else {
                 sectionItem->setZ(2);
-                QDeclarative_setParent_noEvent(sectionItem, contentItem);
+                QQml_setParent_noEvent(sectionItem, contentItem);
                 sectionItem->setParentItem(contentItem);
             }
         } else {
@@ -949,7 +949,7 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
             listItem->section = getSectionItem(listItem->attached->m_section);
             listItem->setPosition(pos);
         } else {
-            QDeclarativeContext *context = QDeclarativeEngine::contextForObject(listItem->section)->parentContext();
+            QQmlContext *context = QQmlEngine::contextForObject(listItem->section)->parentContext();
             context->setContextProperty(QLatin1String("section"), listItem->attached->m_section);
         }
     } else if (listItem->section) {
@@ -1002,7 +1002,7 @@ void QQuickListViewPrivate::updateStickySections()
         if (!currentSectionItem) {
             currentSectionItem = getSectionItem(currentSection);
         } else if (currentStickySection != currentSection) {
-            QDeclarativeContext *context = QDeclarativeEngine::contextForObject(currentSectionItem)->parentContext();
+            QQmlContext *context = QQmlEngine::contextForObject(currentSectionItem)->parentContext();
             context->setContextProperty(QLatin1String("section"), currentSection);
         }
         currentStickySection = currentSection;
@@ -1035,7 +1035,7 @@ void QQuickListViewPrivate::updateStickySections()
         if (!nextSectionItem) {
             nextSectionItem = getSectionItem(nextSection);
         } else if (nextStickySection != nextSection) {
-            QDeclarativeContext *context = QDeclarativeEngine::contextForObject(nextSectionItem)->parentContext();
+            QQmlContext *context = QQmlEngine::contextForObject(nextSectionItem)->parentContext();
             context->setContextProperty(QLatin1String("section"), nextSection);
         }
         nextStickySection = nextSection;
@@ -1414,7 +1414,7 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
 }
 
 void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                                        QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity)
+                                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
 {
     Q_Q(QQuickListView);
 
@@ -1528,7 +1528,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             }
             timeline.reset(data.move);
             timeline.accel(data.move, v, accel, maxDistance + overshootDist);
-            timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
+            timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
             if (!hData.flicking && q->xflick()) {
                 hData.flicking = true;
                 emit q->flickingChanged();
@@ -1569,7 +1569,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             }
             timeline.reset(data.move);
             timeline.accelDistance(data.move, v, -dist);
-            timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
+            timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
         }
     } else {
         correctFlick = false;
@@ -1601,13 +1601,13 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     The following example shows the definition of a simple list model defined
     in a file called \c ContactModel.qml:
 
-    \snippet doc/src/snippets/declarative/listview/ContactModel.qml 0
+    \snippet doc/src/snippets/qml/listview/ContactModel.qml 0
 
     Another component can display this model data in a ListView, like this:
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml import
+    \snippet doc/src/snippets/qml/listview/listview.qml import
     \codeline
-    \snippet doc/src/snippets/declarative/listview/listview.qml classdocs simple
+    \snippet doc/src/snippets/qml/listview/listview.qml classdocs simple
 
     \image listview-simple.png
 
@@ -1618,7 +1618,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     An improved list view is shown below. The delegate is visually improved and is moved
     into a separate \c contactDelegate component.
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml classdocs advanced
+    \snippet doc/src/snippets/qml/listview/listview.qml classdocs advanced
     \image listview-highlight.png
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
@@ -1633,7 +1633,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     this attached property directly as \c ListView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.ListView.isCurrentItem.
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml isCurrentItem
+    \snippet doc/src/snippets/qml/listview/listview.qml isCurrentItem
 
     \note Views do not enable \e clip automatically.  If the view
     is not clipped by another item or the screen, it will be necessary
@@ -1659,7 +1659,7 @@ QQuickListView::~QQuickListView()
 
     This property may be used to adjust the appearance of the current item, for example:
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml isCurrentItem
+    \snippet doc/src/snippets/qml/listview/listview.qml isCurrentItem
 */
 
 /*!
@@ -1706,7 +1706,7 @@ QQuickListView::~QQuickListView()
     until an animation completes. The example delegate below ensures that the
     animation completes before the item is removed from the list.
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml delayRemove
+    \snippet doc/src/snippets/qml/listview/listview.qml delayRemove
 
     If a \l remove transition has been specified, it will not be applied until
     delayRemove is returned to \c false.
@@ -1816,7 +1816,7 @@ QQuickListView::~QQuickListView()
 
     Here is a highlight with its motion defined by a \l {SpringAnimation} item:
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml highlightFollowsCurrentItem
+    \snippet doc/src/snippets/qml/listview/listview.qml highlightFollowsCurrentItem
 
     Note that the highlight animation also affects the way that the view
     is scrolled.  This is because the view moves to maintain the
@@ -2662,7 +2662,7 @@ void QQuickListView::updateSections()
     }
 }
 
-bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
+bool QQuickListViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
     int modelIndex = change.index;
     int count = change.count;

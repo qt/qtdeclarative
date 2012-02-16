@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -56,7 +56,7 @@
 #include "qquickimplicitsizeitem_p_p.h"
 #include "qquickimagebase_p.h"
 
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -76,7 +76,7 @@ public:
     {
     }
 
-    QDeclarativePixmap pix;
+    QQuickPixmap pix;
     QQuickImageBase::Status status;
     QUrl url;
     qreal progress;

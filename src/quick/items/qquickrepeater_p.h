@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,7 +48,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeChangeSet;
+class QQuickChangeSet;
 
 class QQuickRepeaterPrivate;
 class Q_AUTOTEST_EXPORT QQuickRepeater : public QQuickItem
@@ -56,7 +56,7 @@ class Q_AUTOTEST_EXPORT QQuickRepeater : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
-    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
 
@@ -67,8 +67,8 @@ public:
     QVariant model() const;
     void setModel(const QVariant &);
 
-    QDeclarativeComponent *delegate() const;
-    void setDelegate(QDeclarativeComponent *);
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *);
 
     int count() const;
 
@@ -93,7 +93,7 @@ protected:
 private Q_SLOTS:
     void createdItem(int index, QQuickItem *item);
     void initItem(int, QQuickItem *item);
-    void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
+    void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
 
 private:
     Q_DISABLE_COPY(QQuickRepeater)

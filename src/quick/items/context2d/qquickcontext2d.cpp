@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,17 +49,17 @@
 
 #include <QtCore/qdebug.h>
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qdeclarativesvgparser_p.h>
-#include <private/qdeclarativepath_p.h>
+#include <private/qquicksvgparser_p.h>
+#include <private/qquickpath_p.h>
 
 #include <private/qquickimage_p_p.h>
 
 #include <QtGui/qguiapplication.h>
-#include <qdeclarativeinfo.h>
+#include <qqmlinfo.h>
 #include <QtCore/qmath.h>
 #include <private/qv8engine_p.h>
 
-#include <qdeclarativeengine.h>
+#include <qqmlengine.h>
 #include <private/qv8domerrors_p.h>
 #include <QtCore/qnumeric.h>
 
@@ -1586,12 +1586,12 @@ static void ctx2d_path_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
 
     r->context->beginPath();
     if (value->IsObject()) {
-        QDeclarativePath* path = qobject_cast<QDeclarativePath*>(engine->toQObject(value));
+        QQuickPath* path = qobject_cast<QQuickPath*>(engine->toQObject(value));
         if (path)
             r->context->m_path = path->path();
     } else {
         QString path = engine->toString(value->ToString());
-        QDeclarativeSvgParser::parsePathDataFast(path, r->context->m_path);
+        QQuickSvgParser::parsePathDataFast(path, r->context->m_path);
     }
     r->context->m_v8path = value;
 }

@@ -42,7 +42,7 @@
 #ifndef SPRITEGOALAFFECTOR_H
 #define SPRITEGOALAFFECTOR_H
 #include "qquickparticleaffector_p.h"
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_HEADER
 

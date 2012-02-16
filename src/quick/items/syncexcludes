@@ -6,6 +6,6 @@ qdeclarativelayoutitem.cpp
 qdeclarativelayoutitem_p.h
 qdeclarativefocuspanel.cpp
 qdeclarativefocuspanel_p.h
-qdeclarativepath_p.h
-qdeclarativepath_p_p.h
+qquickpath_p.h
+qquickpath_p_p.h
 qdeclarativepath.cpp

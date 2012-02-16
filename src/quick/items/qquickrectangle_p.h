@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -111,14 +111,14 @@ class Q_AUTOTEST_EXPORT QQuickGradient : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QDeclarativeListProperty<QQuickGradientStop> stops READ stops)
+    Q_PROPERTY(QQmlListProperty<QQuickGradientStop> stops READ stops)
     Q_CLASSINFO("DefaultProperty", "stops")
 
 public:
     QQuickGradient(QObject *parent=0);
     ~QQuickGradient();
 
-    QDeclarativeListProperty<QQuickGradientStop> stops();
+    QQmlListProperty<QQuickGradientStop> stops();
 
     const QGradient *gradient() const;
 

@@ -62,13 +62,13 @@ class Q_AUTOTEST_EXPORT QQuickSpriteImage : public QQuickItem
     Q_PROPERTY(QString goalSprite READ goalSprite WRITE setGoalSprite NOTIFY goalSpriteChanged)
     Q_PROPERTY(QString currentSprite READ currentSprite NOTIFY currentSpriteChanged)
     //###try to share similar spriteEngines for less overhead?
-    Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
+    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
     Q_CLASSINFO("DefaultProperty", "sprites")
 
 public:
     explicit QQuickSpriteImage(QQuickItem *parent = 0);
 
-    QDeclarativeListProperty<QQuickSprite> sprites();
+    QQmlListProperty<QQuickSprite> sprites();
 
     bool running() const
     {

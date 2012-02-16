@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -58,13 +58,13 @@ class QSGTexture;
 class QInputMethodEvent;
 class QQuickCanvasPrivate;
 class QOpenGLFramebufferObject;
-class QDeclarativeIncubationController;
+class QQmlIncubationController;
 class QInputMethodEvent;
 
 class Q_QUICK_EXPORT QQuickCanvas : public QWindow
 {
     Q_OBJECT
-    Q_PRIVATE_PROPERTY(QQuickCanvas::d_func(), QDeclarativeListProperty<QObject> data READ data DESIGNABLE false)
+    Q_PRIVATE_PROPERTY(QQuickCanvas::d_func(), QQmlListProperty<QObject> data READ data DESIGNABLE false)
     Q_PROPERTY(QColor color READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
     Q_CLASSINFO("DefaultProperty", "data")
     Q_DECLARE_PRIVATE(QQuickCanvas)
@@ -100,7 +100,7 @@ public:
     uint renderTargetId() const;
     QSize renderTargetSize() const;
 
-    QDeclarativeIncubationController *incubationController() const;
+    QQmlIncubationController *incubationController() const;
 
     virtual QAccessibleInterface *accessibleRoot() const;
 

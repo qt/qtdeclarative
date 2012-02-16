@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -65,14 +65,14 @@
 #include "qquickclipnode_p.h"
 
 #include <private/qpodvector_p.h>
-#include <QtQuick/private/qdeclarativestate_p.h>
-#include <private/qdeclarativenullablevalue_p_p.h>
-#include <private/qdeclarativenotifier_p.h>
-#include <private/qdeclarativeglobal_p.h>
+#include <QtQuick/private/qquickstate_p.h>
+#include <private/qqmlnullablevalue_p_p.h>
+#include <private/qqmlnotifier_p.h>
+#include <private/qqmlglobal_p.h>
 #include <private/qlazilyallocated_p.h>
 
-#include <qdeclarative.h>
-#include <qdeclarativecontext.h>
+#include <qqml.h>
+#include <qqmlcontext.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qdebug.h>
@@ -149,7 +149,7 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QQuickShaderEffectSource::WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
     Q_PROPERTY(QQuickShaderEffectSource::Format format READ format WRITE setFormat NOTIFY formatChanged)
     Q_PROPERTY(QByteArray samplerName READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(QDeclarativeComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
+    Q_PROPERTY(QQmlComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
 public:
     QQuickItemLayer(QQuickItem *item);
     ~QQuickItemLayer();
@@ -181,8 +181,8 @@ public:
     QByteArray name() const { return m_name; }
     void setName(const QByteArray &name);
 
-    QDeclarativeComponent *effect() const { return m_effectComponent; }
-    void setEffect(QDeclarativeComponent *effect);
+    QQmlComponent *effect() const { return m_effectComponent; }
+    void setEffect(QQmlComponent *effect);
 
     QQuickShaderEffectSource *effectSource() const { return m_effectSource; }
 
@@ -203,7 +203,7 @@ signals:
     void mipmapChanged(bool mipmap);
     void wrapModeChanged(QQuickShaderEffectSource::WrapMode mode);
     void nameChanged(const QByteArray &name);
-    void effectChanged(QDeclarativeComponent *component);
+    void effectChanged(QQmlComponent *component);
     void smoothChanged(bool smooth);
     void formatChanged(QQuickShaderEffectSource::Format format);
     void sourceRectChanged(const QRectF &sourceRect);
@@ -224,7 +224,7 @@ private:
     QSize m_size;
     QRectF m_sourceRect;
     QByteArray m_name;
-    QDeclarativeComponent *m_effectComponent;
+    QQmlComponent *m_effectComponent;
     QQuickItem *m_effect;
     QQuickShaderEffectSource *m_effectSource;
 };
@@ -243,13 +243,13 @@ public:
     ~QQuickItemPrivate();
     void init(QQuickItem *parent);
 
-    QDeclarativeListProperty<QObject> data();
-    QDeclarativeListProperty<QObject> resources();
-    QDeclarativeListProperty<QQuickItem> children();
-    QDeclarativeListProperty<QQuickItem> visibleChildren();
+    QQmlListProperty<QObject> data();
+    QQmlListProperty<QObject> resources();
+    QQmlListProperty<QQuickItem> children();
+    QQmlListProperty<QQuickItem> visibleChildren();
 
-    QDeclarativeListProperty<QDeclarativeState> states();
-    QDeclarativeListProperty<QDeclarativeTransition> transitions();
+    QQmlListProperty<QQuickState> states();
+    QQmlListProperty<QQuickTransition> transitions();
 
     QString state() const;
     void setState(const QString &);
@@ -265,33 +265,33 @@ public:
     QQuickItemLayer *layer() const;
 
     // data property
-    static void data_append(QDeclarativeListProperty<QObject> *, QObject *);
-    static int data_count(QDeclarativeListProperty<QObject> *);
-    static QObject *data_at(QDeclarativeListProperty<QObject> *, int);
-    static void data_clear(QDeclarativeListProperty<QObject> *);
+    static void data_append(QQmlListProperty<QObject> *, QObject *);
+    static int data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static void data_clear(QQmlListProperty<QObject> *);
 
     // resources property
-    static QObject *resources_at(QDeclarativeListProperty<QObject> *, int);
-    static void resources_append(QDeclarativeListProperty<QObject> *, QObject *);
-    static int resources_count(QDeclarativeListProperty<QObject> *);
-    static void resources_clear(QDeclarativeListProperty<QObject> *);
+    static QObject *resources_at(QQmlListProperty<QObject> *, int);
+    static void resources_append(QQmlListProperty<QObject> *, QObject *);
+    static int resources_count(QQmlListProperty<QObject> *);
+    static void resources_clear(QQmlListProperty<QObject> *);
 
     // children property
-    static void children_append(QDeclarativeListProperty<QQuickItem> *, QQuickItem *);
-    static int children_count(QDeclarativeListProperty<QQuickItem> *);
-    static QQuickItem *children_at(QDeclarativeListProperty<QQuickItem> *, int);
-    static void children_clear(QDeclarativeListProperty<QQuickItem> *);
+    static void children_append(QQmlListProperty<QQuickItem> *, QQuickItem *);
+    static int children_count(QQmlListProperty<QQuickItem> *);
+    static QQuickItem *children_at(QQmlListProperty<QQuickItem> *, int);
+    static void children_clear(QQmlListProperty<QQuickItem> *);
 
     // visibleChildren property
-    static void visibleChildren_append(QDeclarativeListProperty<QQuickItem> *prop, QQuickItem *o);
-    static int visibleChildren_count(QDeclarativeListProperty<QQuickItem> *prop);
-    static QQuickItem *visibleChildren_at(QDeclarativeListProperty<QQuickItem> *prop, int index);
+    static void visibleChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *o);
+    static int visibleChildren_count(QQmlListProperty<QQuickItem> *prop);
+    static QQuickItem *visibleChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
 
     // transform property
-    static int transform_count(QDeclarativeListProperty<QQuickTransform> *list);
-    static void transform_append(QDeclarativeListProperty<QQuickTransform> *list, QQuickTransform *);
-    static QQuickTransform *transform_at(QDeclarativeListProperty<QQuickTransform> *list, int);
-    static void transform_clear(QDeclarativeListProperty<QQuickTransform> *list);
+    static int transform_count(QQmlListProperty<QQuickTransform> *list);
+    static void transform_append(QQmlListProperty<QQuickTransform> *list, QQuickTransform *);
+    static QQuickTransform *transform_at(QQmlListProperty<QQuickTransform> *list, int);
+    static void transform_clear(QQmlListProperty<QQuickTransform> *list);
 
     enum ChangeType {
         Geometry = 0x01,
@@ -372,8 +372,8 @@ public:
     void updateOrAddGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
     void updateOrRemoveGeometryChangeListener(QQuickItemChangeListener *listener, GeometryChangeTypes types);
 
-    QDeclarativeStateGroup *_states();
-    QDeclarativeStateGroup *_stateGroup;
+    QQuickStateGroup *_states();
+    QQuickStateGroup *_stateGroup;
 
     inline QQuickItem::TransformOrigin origin() const;
 
@@ -453,7 +453,7 @@ public:
     inline QSGContext *sceneGraphContext() const;
 
     QQuickItem *parentItem;
-    QDeclarativeNotifier parentNotifier;
+    QQmlNotifier parentNotifier;
 
     QList<QQuickItem *> childItems;
     mutable QList<QQuickItem *> *sortedChildItems;
@@ -723,7 +723,7 @@ class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
     Q_DECLARE_PRIVATE(QQuickKeysAttached)
 
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QQuickItem> forwardTo READ forwardTo)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> forwardTo READ forwardTo)
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
     Q_ENUMS(Priority)
@@ -745,9 +745,9 @@ public:
     Priority priority() const;
     void setPriority(Priority);
 
-    QDeclarativeListProperty<QQuickItem> forwardTo() {
+    QQmlListProperty<QQuickItem> forwardTo() {
         Q_D(QQuickKeysAttached);
-        return QDeclarativeListProperty<QQuickItem>(this, d->targets);
+        return QQmlListProperty<QQuickItem>(this, d->targets);
     }
 
     virtual void componentComplete();

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -72,7 +72,7 @@ class QSGEngine;
 class QOpenGLContext;
 class QOpenGLFramebufferObject;
 
-class QDeclarativeTextureFactory;
+class QQuickTextureFactory;
 
 class Q_QUICK_EXPORT QSGContext : public QObject
 {
@@ -106,7 +106,7 @@ public:
 
     virtual QSurfaceFormat defaultSurfaceFormat() const;
 
-    QSGTexture *textureForFactory(QDeclarativeTextureFactory *factory, QQuickCanvas *canvas);
+    QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickCanvas *canvas);
 
     static QSGContext *createDefaultContext();
 
@@ -121,7 +121,7 @@ public:
 
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
-    static QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image);
+    static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);
 
 
 public slots:

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,9 +42,9 @@
 #include "qquickflipable_p.h"
 #include "qquickitem_p.h"
 
-#include <private/qdeclarativeguard_p.h>
+#include <private/qqmlguard_p.h>
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,9 +78,9 @@ public:
     void setBackTransform();
 
     QQuickFlipable::Side current;
-    QDeclarativeGuard<QQuickLocalTransform> backTransform;
-    QDeclarativeGuard<QQuickItem> front;
-    QDeclarativeGuard<QQuickItem> back;
+    QQmlGuard<QQuickLocalTransform> backTransform;
+    QQmlGuard<QQuickItem> front;
+    QQmlGuard<QQuickItem> back;
 
     bool sideDirty;
     bool wantBackXFlipped;
@@ -113,7 +113,7 @@ public:
     degrees to produce the flipping effect. When \c flipped is false, the
     item reverts to the default state, in which the \c angle value is 0.
 
-    \snippet doc/src/snippets/declarative/flipable/flipable.qml 0
+    \snippet doc/src/snippets/qml/flipable/flipable.qml 0
 
     \image flipable.gif
 

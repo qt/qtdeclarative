@@ -44,13 +44,13 @@
 
 // This is a dummy header for defining the interface of "TestCase.qml" to qdoc.
 
-#include <QtDeclarative/qdeclarativeitem.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class TestCase : public QDeclarativeItem
+class TestCase : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
@@ -60,7 +60,7 @@ class TestCase : public QDeclarativeItem
     Q_PROPERTY(bool running READ running NOTIFY runningChanged)
     Q_PROPERTY(bool windowShown READ windowShown NOTIFY windowShownChanged)
 public:
-    TestCase(QDeclarativeItem *parent) : QDeclarativeItem(parent) {}
+    TestCase(QQuickItem *parent) : QQuickItem(parent) {}
     ~TestCase()
 
     QString name() const;

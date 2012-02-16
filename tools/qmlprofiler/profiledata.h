@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,7 +42,7 @@
 #ifndef PROFILEDATA_H
 #define PROFILEDATA_H
 
-#include <QtDeclarative/private/qdeclarativeprofilerservice_p.h>
+#include <QtQml/private/qqmlprofilerservice_p.h>
 
 #include <QtCore/QObject>
 #include <QtCore/QHash>
@@ -87,7 +87,7 @@ struct DeclarativeEvent
     QString eventHashStr;
     QString details;
     EventLocation location;
-    QDeclarativeProfilerService::RangeType eventType;
+    QQmlProfilerService::RangeType eventType;
     QHash <QString, DeclarativeEventSub *> parentHash;
     QHash <QString, DeclarativeEventSub *> childrenHash;
     qint64 duration;
@@ -205,7 +205,7 @@ signals:
 
 public slots:
     void clear();
-    void addDeclarativeEvent(QDeclarativeProfilerService::RangeType type,
+    void addDeclarativeEvent(QQmlProfilerService::RangeType type,
                              qint64 startTime, qint64 length,
                              const QStringList &data,
                              const EventLocation &location);
@@ -222,7 +222,7 @@ public slots:
     void setTraceEndTime( qint64 time );
     void setTraceStartTime( qint64 time );
 
-    void rewriteDetailsString(QDeclarativeProfilerService::RangeType eventType,
+    void rewriteDetailsString(QQmlProfilerService::RangeType eventType,
                               const EventLocation &location,
                               const QString &newString);
     void finishedRewritingDetails();

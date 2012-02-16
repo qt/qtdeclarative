@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,12 +43,13 @@
 #include "qquicktext_p_p.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
+#include <private/qqmlglobal_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include "qquicktextnode_p.h"
 #include "qquickimage_p_p.h"
 #include <QtQuick/private/qsgtexture_p.h>
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qpainter.h>
@@ -59,8 +60,8 @@
 #include <QtGui/qinputmethod.h>
 
 #include <private/qtextengine_p.h>
-#include <private/qdeclarativestyledtext_p.h>
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <private/qquickstyledtext_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 
 #include <qmath.h>
 #include <limits.h>
@@ -111,11 +112,11 @@ QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
 
 QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl &name)
 {
-    QDeclarativeContext *context = qmlContext(parent());
+    QQmlContext *context = qmlContext(parent());
     QUrl url = m_baseUrl.resolved(name);
 
     if (type == QTextDocument::ImageResource) {
-        QDeclarativePixmap *p = loadPixmap(context, url);
+        QQuickPixmap *p = loadPixmap(context, url);
         return p->image();
     }
 
@@ -152,10 +153,10 @@ QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
 
         QSizeF size(width, height);
         if (!hasWidth || !hasHeight) {
-            QDeclarativeContext *context = qmlContext(parent());
+            QQmlContext *context = qmlContext(parent());
             QUrl url = m_baseUrl.resolved(QUrl(imageFormat.name()));
 
-            QDeclarativePixmap *p = loadPixmap(context, url);
+            QQuickPixmap *p = loadPixmap(context, url);
             if (!p->isReady()) {
                 if (!hasWidth)
                     size.setWidth(16);
@@ -190,10 +191,10 @@ void QQuickTextDocumentWithImageResources::drawObject(
 
 QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format)
 {
-    QDeclarativeContext *context = qmlContext(parent());
+    QQmlContext *context = qmlContext(parent());
     QUrl url = m_baseUrl.resolved(QUrl(format.name()));
 
-    QDeclarativePixmap *p = loadPixmap(context, url);
+    QQuickPixmap *p = loadPixmap(context, url);
     return p->image();
 }
 
@@ -206,14 +207,14 @@ void QQuickTextDocumentWithImageResources::setBaseUrl(const QUrl &url, bool clea
     }
 }
 
-QDeclarativePixmap *QQuickTextDocumentWithImageResources::loadPixmap(
-        QDeclarativeContext *context, const QUrl &url)
+QQuickPixmap *QQuickTextDocumentWithImageResources::loadPixmap(
+        QQmlContext *context, const QUrl &url)
 {
 
-    QHash<QUrl, QDeclarativePixmap *>::Iterator iter = m_resources.find(url);
+    QHash<QUrl, QQuickPixmap *>::Iterator iter = m_resources.find(url);
 
     if (iter == m_resources.end()) {
-        QDeclarativePixmap *p = new QDeclarativePixmap(context->engine(), url);
+        QQuickPixmap *p = new QQuickPixmap(context->engine(), url);
         iter = m_resources.insert(url, p);
 
         if (p->isLoading()) {
@@ -222,7 +223,7 @@ QDeclarativePixmap *QQuickTextDocumentWithImageResources::loadPixmap(
         }
     }
 
-    QDeclarativePixmap *p = *iter;
+    QQuickPixmap *p = *iter;
     if (p->isError()) {
         if (!errors.contains(url)) {
             errors.insert(url);
@@ -234,7 +235,7 @@ QDeclarativePixmap *QQuickTextDocumentWithImageResources::loadPixmap(
 
 void QQuickTextDocumentWithImageResources::clearResources()
 {
-    foreach (QDeclarativePixmap *pixmap, m_resources)
+    foreach (QQuickPixmap *pixmap, m_resources)
         pixmap->clear(this);
     qDeleteAll(m_resources);
     m_resources.clear();
@@ -298,7 +299,7 @@ void QQuickTextPrivate::updateLayout()
     if (!richText) {
         if (textHasChanged) {
             if (styledText && !text.isEmpty()) {
-                QDeclarativeStyledText::parse(text, layout, imgTags, q->baseUrl(), qmlContext(q), !maximumLineCountValid);
+                QQuickStyledText::parse(text, layout, imgTags, q->baseUrl(), qmlContext(q), !maximumLineCountValid);
             } else {
                 layout.clearAdditionalFormats();
                 multilengthEos = text.indexOf(QLatin1Char('\x9c'));
@@ -341,7 +342,7 @@ void QQuickText::imageDownloadFinished()
 
     if (d->nbActiveDownloads == 0) {
         bool needToUpdateLayout = false;
-        foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
+        foreach (QQuickStyledTextImgTag *img, d->visibleImgTags) {
             if (!img->size.isValid()) {
                 img->size = img->pix->implicitSize();
                 needToUpdateLayout = true;
@@ -945,15 +946,15 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
     qreal textHeight = line.height();
     qreal totalLineHeight = textHeight;
 
-    QList<QDeclarativeStyledTextImgTag *> imagesInLine;
+    QList<QQuickStyledTextImgTag *> imagesInLine;
 
-    foreach (QDeclarativeStyledTextImgTag *image, imgTags) {
+    foreach (QQuickStyledTextImgTag *image, imgTags) {
         if (image->position >= line.textStart() &&
             image->position < line.textStart() + line.textLength()) {
 
             if (!image->pix) {
                 QUrl url = q->baseUrl().resolved(image->url);
-                image->pix = new QDeclarativePixmap(qmlEngine(q), url, image->size);
+                image->pix = new QQuickPixmap(qmlEngine(q), url, image->size);
                 if (image->pix->isLoading()) {
                     image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
                     nbActiveDownloads++;
@@ -970,9 +971,9 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
             }
 
             qreal ih = qreal(image->size.height());
-            if (image->align == QDeclarativeStyledTextImgTag::Top)
+            if (image->align == QQuickStyledTextImgTag::Top)
                 image->pos.setY(0);
-            else if (image->align == QDeclarativeStyledTextImgTag::Middle)
+            else if (image->align == QQuickStyledTextImgTag::Middle)
                 image->pos.setY((textHeight / 2.0) - (ih / 2.0));
             else
                 image->pos.setY(textHeight - ih);
@@ -981,7 +982,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
         }
     }
 
-    foreach (QDeclarativeStyledTextImgTag *image, imagesInLine) {
+    foreach (QQuickStyledTextImgTag *image, imagesInLine) {
         totalLineHeight = qMax(totalLineHeight, textTop + image->pos.y() + image->size.height());
         image->pos.setX(line.cursorToX(image->position));
         image->pos.setY(image->pos.y() + height + textTop);
@@ -1117,7 +1118,7 @@ QQuickText::~QQuickText()
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
 
-    \snippet doc/src/snippets/declarative/text/onLinkActivated.qml 0
+    \snippet doc/src/snippets/qml/text/onLinkActivated.qml 0
 
     The example code will display the text
     "The main website is at \l{http://qt.nokia.com}{Nokia Qt DF}."
@@ -1841,7 +1842,7 @@ QUrl QQuickText::baseUrl() const
 {
     Q_D(const QQuickText);
     if (d->baseUrl.isEmpty()) {
-        if (QDeclarativeContext *context = qmlContext(this))
+        if (QQmlContext *context = qmlContext(this))
             const_cast<QQuickTextPrivate *>(d)->baseUrl = context->baseUrl();
     }
     return d->baseUrl;
@@ -1867,7 +1868,7 @@ void QQuickText::setBaseUrl(const QUrl &url)
 
 void QQuickText::resetBaseUrl()
 {
-    if (QDeclarativeContext *context = qmlContext(this))
+    if (QQmlContext *context = qmlContext(this))
         setBaseUrl(context->baseUrl());
     else
         setBaseUrl(QUrl());
@@ -2008,8 +2009,8 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, color, d->style, styleColor, linkColor);
     }
 
-    foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
-        QDeclarativePixmap *pix = img->pix;
+    foreach (QQuickStyledTextImgTag *img, d->visibleImgTags) {
+        QQuickPixmap *pix = img->pix;
         if (pix && pix->isReady())
             node->addImage(QRectF(img->pos.x(), img->pos.y() + bounds.y(), pix->width(), pix->height()), pix->image());
     }

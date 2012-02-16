@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,7 +44,7 @@
 
 #include "qquickimplicitsizeitem_p.h"
 
-#include <QtQuick/private/qdeclarativestate_p.h>
+#include <QtQuick/private/qquickstate_p.h>
 #include <private/qpodvector_p.h>
 
 #include <QtCore/qobject.h>
@@ -92,8 +92,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeIte
     Q_OBJECT
 
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
-    Q_PROPERTY(QDeclarativeTransition *move READ move WRITE setMove NOTIFY moveChanged)
-    Q_PROPERTY(QDeclarativeTransition *add READ add WRITE setAdd NOTIFY addChanged)
+    Q_PROPERTY(QQuickTransition *move READ move WRITE setMove NOTIFY moveChanged)
+    Q_PROPERTY(QQuickTransition *add READ add WRITE setAdd NOTIFY addChanged)
 public:
     enum PositionerType { None = 0x0, Horizontal = 0x1, Vertical = 0x2, Both = 0x3 };
     QQuickBasePositioner(PositionerType, QQuickItem *parent);
@@ -102,11 +102,11 @@ public:
     qreal spacing() const;
     void setSpacing(qreal);
 
-    QDeclarativeTransition *move() const;
-    void setMove(QDeclarativeTransition *);
+    QQuickTransition *move() const;
+    void setMove(QQuickTransition *);
 
-    QDeclarativeTransition *add() const;
-    void setAdd(QDeclarativeTransition *);
+    QQuickTransition *add() const;
+    void setAdd(QQuickTransition *);
 
     static QQuickPositionerAttached *qmlAttachedProperties(QObject *obj);
 

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,12 +42,12 @@
 #include "abstractviewinspector.h"
 
 #include "abstracttool.h"
-#include "qdeclarativeinspectorprotocol.h"
+#include "qqmlinspectorprotocol.h"
 
-#include <QtDeclarative/QDeclarativeEngine>
-#include <QtDeclarative/QDeclarativeComponent>
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlComponent>
 #include <QtCore/private/qabstractanimation_p.h>
-#include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
+#include <QtQml/private/qqmlinspectorservice_p.h>
 
 #include <QtGui/QMouseEvent>
 
@@ -61,7 +61,7 @@ AbstractViewInspector::AbstractViewInspector(QObject *parent) :
     m_designModeBehavior(false),
     m_animationPaused(false),
     m_slowDownFactor(1.0),
-    m_debugService(QDeclarativeInspectorService::instance())
+    m_debugService(QQmlInspectorService::instance())
 {
 }
 
@@ -78,8 +78,8 @@ void AbstractViewInspector::createQmlObject(const QString &qml, QObject *parent,
         imports += QLatin1Char('\n');
     }
 
-    QDeclarativeContext *parentContext = declarativeEngine()->contextForObject(parent);
-    QDeclarativeComponent component(declarativeEngine());
+    QQmlContext *parentContext = declarativeEngine()->contextForObject(parent);
+    QQmlComponent component(declarativeEngine());
     QByteArray constructedQml = QString(imports + qml).toLatin1();
 
     component.setData(constructedQml, QUrl::fromLocalFile(filename));
@@ -316,7 +316,7 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
         for (int i = 0; i < itemCount; ++i) {
             int debugId = -1;
             ds >> debugId;
-            if (QObject *obj = QDeclarativeDebugService::objectForId(debugId))
+            if (QObject *obj = QQmlDebugService::objectForId(debugId))
                 selectedObjects << obj;
         }
 
@@ -363,22 +363,22 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
         QString filename;
         QStringList imports;
         ds >> qml >> parentId >> imports >> filename;
-        createQmlObject(qml, QDeclarativeDebugService::objectForId(parentId),
+        createQmlObject(qml, QQmlDebugService::objectForId(parentId),
                         imports, filename);
         break;
     }
     case InspectorProtocol::DestroyObject: {
         int debugId;
         ds >> debugId;
-        if (QObject *obj = QDeclarativeDebugService::objectForId(debugId))
+        if (QObject *obj = QQmlDebugService::objectForId(debugId))
             obj->deleteLater();
         break;
     }
     case InspectorProtocol::MoveObject: {
         int debugId, newParent;
         ds >> debugId >> newParent;
-        reparentQmlObject(QDeclarativeDebugService::objectForId(debugId),
-                          QDeclarativeDebugService::objectForId(newParent));
+        reparentQmlObject(QQmlDebugService::objectForId(debugId),
+                          QQmlDebugService::objectForId(newParent));
         break;
     }
     case InspectorProtocol::ObjectIdList: {
@@ -424,7 +424,7 @@ void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
        << objects.length();
 
     foreach (QObject *object, objects) {
-        int id = QDeclarativeDebugService::idForObject(object);
+        int id = QQmlDebugService::idForObject(object);
         ds << id;
     }
 
@@ -497,7 +497,7 @@ void AbstractViewInspector::sendColorChanged(const QColor &color)
 
 QString AbstractViewInspector::idStringForObject(QObject *obj) const
 {
-    const int id = QDeclarativeDebugService::idForObject(obj);
+    const int id = QQmlDebugService::idForObject(obj);
     return m_stringIdForObjectId.value(id);
 }
 

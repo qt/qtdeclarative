@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -136,7 +136,7 @@ QSGContext *QSGContext::createDefaultContext()
 
 
 /*!
-    \fn QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image)
+    \fn QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image)
 
     Calls into the scene graph adaptation if available and creates a texture
     factory. The primary purpose of this function is to reimplement hardware
@@ -144,7 +144,7 @@ QSGContext *QSGContext::createDefaultContext()
     the image providers thread.
  */
 
-QDeclarativeTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &image)
+QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &image)
 {
     QSGAdaptionPluginData *plugin = contextFactory();
     if (plugin->factory)

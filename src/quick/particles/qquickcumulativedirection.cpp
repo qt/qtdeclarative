@@ -54,9 +54,9 @@ QQuickCumulativeDirection::QQuickCumulativeDirection(QObject *parent):QQuickDire
 {
 }
 
-QDeclarativeListProperty<QQuickDirection> QQuickCumulativeDirection::directions()
+QQmlListProperty<QQuickDirection> QQuickCumulativeDirection::directions()
 {
-    return QDeclarativeListProperty<QQuickDirection>(this, m_directions);//TODO: Proper list property
+    return QQmlListProperty<QQuickDirection>(this, m_directions);//TODO: Proper list property
 }
 
 const QPointF QQuickCumulativeDirection::sample(const QPointF &from)

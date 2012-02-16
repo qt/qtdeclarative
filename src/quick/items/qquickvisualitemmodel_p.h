@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,7 +43,7 @@
 #define QQUICKVISUALITEMMODEL_P_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
 QT_BEGIN_HEADER
@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
-class QDeclarativeChangeSet;
+class QQuickChangeSet;
 
 class Q_QUICK_EXPORT QQuickVisualModel : public QObject
 {
@@ -76,7 +76,7 @@ public:
 
 Q_SIGNALS:
     void countChanged();
-    void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
+    void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
     void createdItem(int index, QQuickItem *item);
     void initItem(int index, QQuickItem *item);
     void destroyingItem(QQuickItem *item);
@@ -96,7 +96,7 @@ class Q_QUICK_EXPORT QQuickVisualItemModel : public QQuickVisualModel
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickVisualItemModel)
 
-    Q_PROPERTY(QDeclarativeListProperty<QQuickItem> children READ children NOTIFY childrenChanged DESIGNABLE false)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> children READ children NOTIFY childrenChanged DESIGNABLE false)
     Q_CLASSINFO("DefaultProperty", "children")
 
 public:
@@ -112,7 +112,7 @@ public:
 
     virtual int indexOf(QQuickItem *item, QObject *objectContext) const;
 
-    QDeclarativeListProperty<QQuickItem> children();
+    QQmlListProperty<QQuickItem> children();
 
     static QQuickVisualItemModelAttached *qmlAttachedProperties(QObject *obj);
 

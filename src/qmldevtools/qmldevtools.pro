@@ -17,4 +17,4 @@ HEADERS += qtqmldevtoolsversion.h
 
 unix|win32-g++*:QMAKE_PKGCONFIG_REQUIRES = QtCore
 
-include($$QT.declarative.sources/qml/parser/parser.pri)
+include($$QT.qml.sources/qml/parser/parser.pri)

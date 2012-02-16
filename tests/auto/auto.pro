@@ -1,7 +1,7 @@
 TEMPLATE=subdirs
 SUBDIRS=\
-    declarative \
-    qtquick2 \
+    qml \
+    quick \
     particles \
     qmldevtools
 

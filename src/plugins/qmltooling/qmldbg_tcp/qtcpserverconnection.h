@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,25 +43,25 @@
 #define QTCPSERVERCONNECTION_H
 
 #include <QtWidgets/QStylePlugin>
-#include <QtDeclarative/private/qdeclarativedebugserverconnection_p.h>
+#include <QtQml/private/qqmldebugserverconnection_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeDebugServer;
+class QQmlDebugServer;
 class QTcpServerConnectionPrivate;
-class QTcpServerConnection : public QObject, public QDeclarativeDebugServerConnection
+class QTcpServerConnection : public QObject, public QQmlDebugServerConnection
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QTcpServerConnection)
     Q_DISABLE_COPY(QTcpServerConnection)
-    Q_INTERFACES(QDeclarativeDebugServerConnection)
+    Q_INTERFACES(QQmlDebugServerConnection)
 
 
 public:
     QTcpServerConnection();
     ~QTcpServerConnection();
 
-    void setServer(QDeclarativeDebugServer *server);
+    void setServer(QQmlDebugServer *server);
     void setPort(int port, bool bock);
 
     bool isConnected() const;

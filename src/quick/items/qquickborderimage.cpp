@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,10 +43,11 @@
 #include "qquickborderimage_p_p.h"
 #include "qquickninepatchnode_p.h"
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtCore/qfile.h>
 
-#include <private/qdeclarativeengine_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -97,7 +98,7 @@ QT_BEGIN_NAMESPACE
     used to determine the parts of the image that will lie inside the unscaled corner
     areas and the parts that will be stretched horizontally and vertically.
 
-    \snippet doc/src/snippets/declarative/borderimage/normal-image.qml normal image
+    \snippet doc/src/snippets/qml/borderimage/normal-image.qml normal image
 
     \clearfloat
     \beginfloatleft
@@ -111,7 +112,7 @@ QT_BEGIN_NAMESPACE
     is set to \l{BorderImage::verticalTileMode}{BorderImage.Stretch}, the parts of image
     in regions 4 and 6 are stretched vertically.
 
-    \snippet doc/src/snippets/declarative/borderimage/borderimage-scaled.qml scaled border image
+    \snippet doc/src/snippets/qml/borderimage/borderimage-scaled.qml scaled border image
 
     \clearfloat
     \beginfloatleft
@@ -125,7 +126,7 @@ QT_BEGIN_NAMESPACE
     \l{BorderImage::verticalTileMode}{BorderImage.Repeat}, the parts of image in regions
     4 and 6 are tiled so that they fill the space at the left and right of the element.
 
-    \snippet doc/src/snippets/declarative/borderimage/borderimage-tiled.qml tiled border image
+    \snippet doc/src/snippets/qml/borderimage/borderimage-tiled.qml tiled border image
 
     \clearfloat
     In some situations, the width of regions 2 and 8 may not be an exact multiple of the width
@@ -256,7 +257,7 @@ QQuickBorderImage::~QQuickBorderImage()
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QDeclarativeImageProvider
+    \sa QQmlImageProvider
 */
 
 /*!
@@ -305,7 +306,7 @@ void QQuickBorderImage::load()
     } else {
         d->status = Loading;
         if (d->url.path().endsWith(QLatin1String("sci"))) {
-            QString lf = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(d->url);
+            QString lf = QQmlEnginePrivate::urlToLocalFileOrQrc(d->url);
             if (!lf.isEmpty()) {
                 QFile file(lf);
                 file.open(QIODevice::ReadOnly);
@@ -317,11 +318,11 @@ void QQuickBorderImage::load()
             }
         } else {
 
-            QDeclarativePixmap::Options options;
+            QQuickPixmap::Options options;
             if (d->async)
-                options |= QDeclarativePixmap::Asynchronous;
+                options |= QQuickPixmap::Asynchronous;
             if (d->cache)
-                options |= QDeclarativePixmap::Cache;
+                options |= QQuickPixmap::Cache;
             d->pix.clear(this);
             d->pix.load(qmlEngine(this), d->url, options);
 
@@ -448,11 +449,11 @@ void QQuickBorderImage::setGridScaledImage(const QQuickGridScaledImage& sci)
 
         d->sciurl = d->url.resolved(QUrl(sci.pixmapUrl()));
 
-        QDeclarativePixmap::Options options;
+        QQuickPixmap::Options options;
         if (d->async)
-            options |= QDeclarativePixmap::Asynchronous;
+            options |= QQuickPixmap::Asynchronous;
         if (d->cache)
-            options |= QDeclarativePixmap::Cache;
+            options |= QQuickPixmap::Cache;
         d->pix.clear(this);
         d->pix.load(qmlEngine(this), d->sciurl, options);
 

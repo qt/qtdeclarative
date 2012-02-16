@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,8 +43,8 @@
 #define QQUICKITEM_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
@@ -81,10 +81,10 @@ private:
 };
 
 class QQuickItemLayer;
-class QDeclarativeV8Function;
-class QDeclarativeState;
+class QQmlV8Function;
+class QQuickState;
 class QQuickAnchorLine;
-class QDeclarativeTransition;
+class QQuickTransition;
 class QQuickKeyEvent;
 class QQuickAnchors;
 class QQuickItemPrivate;
@@ -95,15 +95,15 @@ class QSGNode;
 class QSGTransformNode;
 class QSGTextureProvider;
 
-class Q_QUICK_EXPORT QQuickItem : public QObject, public QDeclarativeParserStatus
+class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 
     Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged DESIGNABLE false FINAL)
-    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QObject> data READ data DESIGNABLE false)
-    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QObject> resources READ resources DESIGNABLE false)
-    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QQuickItem> children READ children NOTIFY childrenChanged DESIGNABLE false)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QObject> data READ data DESIGNABLE false)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QObject> resources READ resources DESIGNABLE false)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QQuickItem> children READ children NOTIFY childrenChanged DESIGNABLE false)
 
     Q_PROPERTY(QPointF pos READ pos FINAL)
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
@@ -115,10 +115,10 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QDeclarativeParserStatu
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
-    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QQuickItem> visibleChildren READ visibleChildren NOTIFY visibleChildrenChanged DESIGNABLE false)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QQuickItem> visibleChildren READ visibleChildren NOTIFY visibleChildrenChanged DESIGNABLE false)
 
-    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QDeclarativeState> states READ states DESIGNABLE false)
-    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QDeclarativeListProperty<QDeclarativeTransition> transitions READ transitions DESIGNABLE false)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QQuickState> states READ states DESIGNABLE false)
+    Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QQuickTransition> transitions READ transitions DESIGNABLE false)
     Q_PROPERTY(QString state READ state WRITE setState NOTIFY stateChanged)
     Q_PROPERTY(QRectF childrenRect READ childrenRect NOTIFY childrenRectChanged DESIGNABLE false FINAL)
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickAnchors * anchors READ anchors DESIGNABLE false CONSTANT FINAL)
@@ -140,7 +140,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QDeclarativeParserStatu
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin NOTIFY transformOriginChanged)
     Q_PROPERTY(QPointF transformOriginPoint READ transformOriginPoint)  // XXX todo - notify?
-    Q_PROPERTY(QDeclarativeListProperty<QQuickTransform> transform READ transform DESIGNABLE false FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickTransform> transform READ transform DESIGNABLE false FINAL)
 
     Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
@@ -215,7 +215,7 @@ public:
     qreal baselineOffset() const;
     void setBaselineOffset(qreal);
 
-    QDeclarativeListProperty<QQuickTransform> transform();
+    QQmlListProperty<QQuickTransform> transform();
 
     qreal x() const;
     qreal y() const;
@@ -303,8 +303,8 @@ public:
 
     void polish();
 
-    Q_INVOKABLE void mapFromItem(QDeclarativeV8Function*) const;
-    Q_INVOKABLE void mapToItem(QDeclarativeV8Function*) const;
+    Q_INVOKABLE void mapFromItem(QQmlV8Function*) const;
+    Q_INVOKABLE void mapToItem(QQmlV8Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 

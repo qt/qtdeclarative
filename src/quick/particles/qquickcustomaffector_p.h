@@ -101,7 +101,7 @@ public:
 
 
 signals:
-    void affectParticles(QDeclarativeV8Handle particles, qreal dt);
+    void affectParticles(QQmlV8Handle particles, qreal dt);
 
     void positionChanged(QQuickDirection * arg);
 

@@ -62,10 +62,10 @@ respective element documentation.
 The \l {Validators}{validator} elements enforce the type and format of
 \l TextInput objects.
 
-\snippet doc/src/snippets/declarative/texthandling.qml int validator
+\snippet doc/src/snippets/qml/texthandling.qml int validator
 The validator elements bind to \c {TextInput}'s \c validator property.
 
-\snippet doc/src/snippets/declarative/texthandling.qml regexp validator
+\snippet doc/src/snippets/qml/texthandling.qml regexp validator
 The regular expression in the snippet will only allow the inputted text to be
 \c {fruit basket}.
 

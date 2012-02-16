@@ -2,11 +2,11 @@ TARGET  = qmllocalstorageplugin
 TARGETPATH = QtQuick/LocalStorage
 include(../qimportbase.pri)
 
-QT += sql declarative declarative-private v8-private core-private
+QT += sql qml qml-private v8-private core-private
 
 SOURCES += plugin.cpp
 
-DESTDIR = $$QT.declarative.imports/$$TARGETPATH
+DESTDIR = $$QT.qml.imports/$$TARGETPATH
 target.path = $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
 
 qmldir.files += $$PWD/qmldir

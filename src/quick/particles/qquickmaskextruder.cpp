@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qquickmaskextruder_p.h"
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlinfo.h>
 #include <QImage>
 #include <QDebug>
 QT_BEGIN_NAMESPACE

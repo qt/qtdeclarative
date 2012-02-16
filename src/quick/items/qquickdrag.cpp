@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,7 +45,7 @@
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
 #include <private/qv8engine_p.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 
 QT_BEGIN_NAMESPACE
@@ -76,8 +76,8 @@ public:
 
     QQuickDragGrabber dragGrabber;
 
-    QDeclarativeGuard<QObject> source;
-    QDeclarativeGuard<QObject> target;
+    QQmlGuard<QObject> source;
+    QQmlGuard<QObject> target;
     QQuickItem *attachedItem;
     QQuickDragMimeData *mimeData;
     Qt::DropAction proposedAction;
@@ -106,7 +106,7 @@ public:
     However, dragging is not limited to mouse drags, anything that can move an item
     can generate drag events, this can include touch events, animations and bindings.
 
-    \snippet doc/src/snippets/declarative/drag.qml 0
+    \snippet doc/src/snippets/qml/drag.qml 0
 
     A drag can be terminated either by canceling it with Drag.cancel() or setting
     Drag.active to false, or it can be terminated with a drop event by calling
@@ -377,7 +377,7 @@ void QQuickDragAttachedPrivate::start(Qt::DropActions supportedActions)
     property for the started sequence.
 */
 
-void QQuickDragAttached::start(QDeclarativeV8Function *args)
+void QQuickDragAttached::start(QQmlV8Function *args)
 {
     Q_D(QQuickDragAttached);
     if (d->inEvent) {

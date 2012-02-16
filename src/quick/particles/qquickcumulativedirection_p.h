@@ -42,7 +42,7 @@
 #ifndef QQuickCUMULATIVEDIRECTION_P_H
 #define QQuickCUMULATIVEDIRECTION_P_H
 #include "qquickdirection_p.h"
-#include <QDeclarativeListProperty>
+#include <QQmlListProperty>
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -50,11 +50,11 @@ QT_BEGIN_NAMESPACE
 class QQuickCumulativeDirection : public QQuickDirection
 {
     Q_OBJECT
-    Q_PROPERTY(QDeclarativeListProperty<QQuickDirection> directions READ directions)
+    Q_PROPERTY(QQmlListProperty<QQuickDirection> directions READ directions)
     Q_CLASSINFO("DefaultProperty", "directions")
 public:
     explicit QQuickCumulativeDirection(QObject *parent = 0);
-    QDeclarativeListProperty<QQuickDirection> directions();
+    QQmlListProperty<QQuickDirection> directions();
     const QPointF sample(const QPointF &from);
 private:
     QList<QQuickDirection*> m_directions;

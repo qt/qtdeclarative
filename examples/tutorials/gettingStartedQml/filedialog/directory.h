@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -46,7 +46,7 @@
 #include <QDir>
 #include <QStringList>
 #include <QTextStream>
-#include <QDeclarativeListProperty>
+#include <QQmlListProperty>
 #include <QObject>
 
 class Directory : public QObject {
@@ -57,7 +57,7 @@ class Directory : public QObject {
     Q_PROPERTY(int filesCount READ filesCount)
 
     //list property containing file names as QString
-    Q_PROPERTY(QDeclarativeListProperty<File> files READ files CONSTANT )
+    Q_PROPERTY(QQmlListProperty<File> files READ files CONSTANT )
 
     //file name of the text file to read/write
     Q_PROPERTY(QString filename READ filename WRITE setFilename NOTIFY filenameChanged)
@@ -72,7 +72,7 @@ class Directory : public QObject {
         int filesCount() const;
         QString filename() const;
         QString fileContent() const;
-        QDeclarativeListProperty<File> files();
+        QQmlListProperty<File> files();
 
         //properties' write functions
         void setFilename(const QString &str);

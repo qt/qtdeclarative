@@ -1197,7 +1197,7 @@ arrange a set of Rectangle items. The Repeater item creates a series of 24
 rectangles for the Grid item to position in a 5 by 5 arrangement.
 
 \clearfloat
-\snippet doc/src/snippets/declarative/repeaters/repeater-grid-index.qml document
+\snippet doc/src/snippets/qml/repeaters/repeater-grid-index.qml document
 
 The number of items created by a Repeater is held by its \l{Repeater::}{count}
 property. It is not possible to set this property to determine the number of

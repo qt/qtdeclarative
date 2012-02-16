@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -61,8 +61,8 @@
 #include "qquickvisualdatamodel_p.h"
 #include "qquickgridview_p.h"
 #include "qquickpathview_p.h"
-#include <private/qdeclarativepath_p.h>
-#include <private/qdeclarativepathinterpolator_p.h>
+#include <private/qquickpath_p.h>
+#include <private/qquickpathinterpolator_p.h>
 #include "qquickpositioners_p.h"
 #include "qquickrepeater_p.h"
 #include "qquickloader_p.h"
@@ -70,7 +70,7 @@
 #include "qquickflipable_p.h"
 #include "qquicktranslate_p.h"
 #include "qquickstateoperations_p.h"
-#include "qquickanimation_p.h"
+#include "qquickitemanimation_p.h"
 #include <private/qquickshadereffect_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 //#include <private/qquickpincharea_p.h>
@@ -81,21 +81,21 @@
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
-#include <private/qdeclarativemetatype_p.h>
+#include <private/qqmlmetatype_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
-static QDeclarativePrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
+static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
     if (!item)
-        return QDeclarativePrivate::IncompatibleObject;
+        return QQmlPrivate::IncompatibleObject;
 
     QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent);
     if (!parentItem)
-        return QDeclarativePrivate::IncompatibleParent;
+        return QQmlPrivate::IncompatibleParent;
 
     item->setParentItem(parentItem);
-    return QDeclarativePrivate::Parented;
+    return QQmlPrivate::Parented;
 }
 
 static bool compareQQuickAnchorLines(const void *p1, const void *p2)
@@ -107,8 +107,8 @@ static bool compareQQuickAnchorLines(const void *p1, const void *p2)
 
 static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 {
-    QDeclarativePrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
-    QDeclarativePrivate::qmlregister(QDeclarativePrivate::AutoParentRegistration, &autoparent);
+    QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquickitem_autoParent };
+    QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
     QQuickItemPrivate::registerAccessorProperties();
 
 #ifdef QT_NO_MOVIE
@@ -121,7 +121,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickFlickable>(uri,major,minor,"Flickable");
     qmlRegisterType<QQuickFlipable>(uri,major,minor,"Flipable");
     qmlRegisterType<QQuickFlow>(uri,major,minor,"Flow");
-//    qmlRegisterType<QDeclarativeFocusPanel>(uri,major,minor,"FocusPanel");
+//    qmlRegisterType<QQuickFocusPanel>(uri,major,minor,"FocusPanel");
     qmlRegisterType<QQuickFocusScope>(uri,major,minor,"FocusScope");
     qmlRegisterType<QQuickGradient>(uri,major,minor,"Gradient");
     qmlRegisterType<QQuickGradientStop>(uri,major,minor,"GradientStop");
@@ -132,15 +132,15 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickListView>(uri,major,minor,"ListView");
     qmlRegisterType<QQuickLoader>(uri,major,minor,"Loader");
     qmlRegisterType<QQuickMouseArea>(uri,major,minor,"MouseArea");
-    qmlRegisterType<QDeclarativePath>(uri,major,minor,"Path");
-    qmlRegisterType<QDeclarativePathAttribute>(uri,major,minor,"PathAttribute");
-    qmlRegisterType<QDeclarativePathCubic>(uri,major,minor,"PathCubic");
-    qmlRegisterType<QDeclarativePathLine>(uri,major,minor,"PathLine");
-    qmlRegisterType<QDeclarativePathPercent>(uri,major,minor,"PathPercent");
-    qmlRegisterType<QDeclarativePathQuad>(uri,major,minor,"PathQuad");
-    qmlRegisterType<QDeclarativePathCatmullRomCurve>("QtQuick",2,0,"PathCurve");
-    qmlRegisterType<QDeclarativePathArc>("QtQuick",2,0,"PathArc");
-    qmlRegisterType<QDeclarativePathSvg>("QtQuick",2,0,"PathSvg");
+    qmlRegisterType<QQuickPath>(uri,major,minor,"Path");
+    qmlRegisterType<QQuickPathAttribute>(uri,major,minor,"PathAttribute");
+    qmlRegisterType<QQuickPathCubic>(uri,major,minor,"PathCubic");
+    qmlRegisterType<QQuickPathLine>(uri,major,minor,"PathLine");
+    qmlRegisterType<QQuickPathPercent>(uri,major,minor,"PathPercent");
+    qmlRegisterType<QQuickPathQuad>(uri,major,minor,"PathQuad");
+    qmlRegisterType<QQuickPathCatmullRomCurve>("QtQuick",2,0,"PathCurve");
+    qmlRegisterType<QQuickPathArc>("QtQuick",2,0,"PathArc");
+    qmlRegisterType<QQuickPathSvg>("QtQuick",2,0,"PathSvg");
     qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");
     qmlRegisterUncreatableType<QQuickBasePositioner>(uri,major,minor,"Positioner",
                                                   QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
@@ -168,8 +168,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickKeyEvent>();
     qmlRegisterType<QQuickMouseEvent>();
     qmlRegisterType<QQuickTransform>();
-    qmlRegisterType<QDeclarativePathElement>();
-    qmlRegisterType<QDeclarativeCurve>();
+    qmlRegisterType<QQuickPathElement>();
+    qmlRegisterType<QQuickCurve>();
     qmlRegisterType<QQuickScaleGrid>();
     qmlRegisterType<QQuickTextLine>();
 #ifndef QT_NO_VALIDATOR
@@ -179,7 +179,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPen>();
     qmlRegisterType<QQuickFlickableVisibleArea>();
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
-    QDeclarativeMetaType::setQQuickAnchorLineCompareFunction(compareQQuickAnchorLines);
+    QQmlMetaType::setQQuickAnchorLineCompareFunction(compareQQuickAnchorLines);
 
     qmlRegisterUncreatableType<QQuickKeyNavigationAttached>(uri,major,minor,"KeyNavigation",QQuickKeyNavigationAttached::tr("KeyNavigation is only available via attached properties"));
     qmlRegisterUncreatableType<QQuickKeysAttached>(uri,major,minor,"Keys",QQuickKeysAttached::tr("Keys is only available via attached properties"));
@@ -208,7 +208,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QQuickParentAnimation>(uri, major, minor,"ParentAnimation");
     qmlRegisterType<QQuickPathAnimation>("QtQuick",2,0,"PathAnimation");
-    qmlRegisterType<QDeclarativePathInterpolator>("QtQuick",2,0,"PathInterpolator");
+    qmlRegisterType<QQuickPathInterpolator>("QtQuick",2,0,"PathInterpolator");
 
     qmlRegisterType<QQuickDropArea>("QtQuick", 2, 0, "DropArea");
     qmlRegisterType<QQuickDropEvent>();

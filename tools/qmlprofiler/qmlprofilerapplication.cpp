@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -104,8 +104,8 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
 
     connect(&m_declarativeProfilerClient, SIGNAL(enabledChanged()), this, SLOT(traceClientEnabled()));
     connect(&m_declarativeProfilerClient, SIGNAL(recordingChanged(bool)), this, SLOT(recordingChanged()));
-    connect(&m_declarativeProfilerClient, SIGNAL(range(QDeclarativeProfilerService::RangeType,qint64,qint64,QStringList,EventLocation)),
-            &m_profileData, SLOT(addDeclarativeEvent(QDeclarativeProfilerService::RangeType,qint64,qint64,QStringList,EventLocation)));
+    connect(&m_declarativeProfilerClient, SIGNAL(range(QQmlProfilerService::RangeType,qint64,qint64,QStringList,EventLocation)),
+            &m_profileData, SLOT(addDeclarativeEvent(QQmlProfilerService::RangeType,qint64,qint64,QStringList,EventLocation)));
     connect(&m_declarativeProfilerClient, SIGNAL(traceFinished(qint64)), &m_profileData, SLOT(setTraceEndTime(qint64)));
     connect(&m_declarativeProfilerClient, SIGNAL(traceStarted(qint64)), &m_profileData, SLOT(setTraceStartTime(qint64)));
     connect(&m_declarativeProfilerClient, SIGNAL(frame(qint64,int,int)), &m_profileData, SLOT(addFrameEvent(qint64,int,int)));
@@ -414,7 +414,7 @@ void QmlProfilerApplication::logStatus(const QString &status)
 void QmlProfilerApplication::declarativeComplete()
 {
     m_declarativeDataReady = true;
-    if (m_v8profilerClient.state() != QDeclarativeDebugClient::Enabled ||
+    if (m_v8profilerClient.state() != QQmlDebugClient::Enabled ||
             m_v8DataReady) {
         m_profileData.complete();
         // once complete is sent, reset the flag
@@ -425,7 +425,7 @@ void QmlProfilerApplication::declarativeComplete()
 void QmlProfilerApplication::v8Complete()
 {
     m_v8DataReady = true;
-    if (m_declarativeProfilerClient.state() != QDeclarativeDebugClient::Enabled ||
+    if (m_declarativeProfilerClient.state() != QQmlDebugClient::Enabled ||
             m_declarativeDataReady) {
         m_profileData.complete();
         // once complete is sent, reset the flag

@@ -44,15 +44,15 @@
 #include <QtTest/qtestsystem.h>
 #include "qtestoptions_p.h"
 #include <QApplication>
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/qdeclarativecontext.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcontext.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
 #include <QtQuick/qquickview.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
-#include <QtDeclarative/qjsvalue.h>
-#include <QtDeclarative/qjsengine.h>
+#include <QtQml/qjsvalue.h>
+#include <QtQml/qjsengine.h>
 #include <QtGui/qopengl.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qfileinfo.h>
@@ -107,7 +107,7 @@ static inline QString stripQuotes(const QString &s)
 template <class View> void handleCompileErrors(const QFileInfo &fi, const View &view)
 {
     // Error compiling the test - flag failure in the log and continue.
-    const QList<QDeclarativeError> errors = view.errors();
+    const QList<QQmlError> errors = view.errors();
     QuickTestResult results;
     results.setTestCaseName(fi.baseName());
     results.startLogging();
@@ -117,7 +117,7 @@ template <class View> void handleCompileErrors(const QFileInfo &fi, const View &
     QTextStream str(&message);
     str << "\n  " << QDir::toNativeSeparators(fi.absoluteFilePath()) << " produced "
         << errors.size() << " error(s):\n";
-    foreach (const QDeclarativeError &e, errors) {
+    foreach (const QQmlError &e, errors) {
         str << "    ";
         if (e.url().isLocalFile()) {
             str << e.url().toLocalFile();
@@ -129,7 +129,7 @@ template <class View> void handleCompileErrors(const QFileInfo &fi, const View &
         str << ": " << e.description() << '\n';
     }
     str << "  Working directory: " << QDir::toNativeSeparators(QDir::current().absolutePath()) << '\n';
-    if (QDeclarativeEngine *engine = view.engine()) {
+    if (QQmlEngine *engine = view.engine()) {
         str << "  View: " << view.metaObject()->className() << ", import paths:\n";
         foreach (const QString &i, engine->importPathList())
             str << "    '" << QDir::toNativeSeparators(i) << "'\n";
@@ -254,7 +254,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     }
 
     // Scan through all of the "tst_*.qml" files and run each of them
-    // in turn with a QDeclarativeView.
+    // in turn with a QQuickView.
 #ifdef QUICK_TEST_SCENEGRAPH
     if (qtQuick2) {
         QQuickView view;

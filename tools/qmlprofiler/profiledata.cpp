@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -52,7 +52,7 @@ using namespace Constants;
 
 DeclarativeEvent::DeclarativeEvent()
 {
-    eventType = QDeclarativeProfilerService::MaximumRangeType;
+    eventType = QQmlProfilerService::MaximumRangeType;
     eventId = -1;
     duration = 0;
     calls = 0;
@@ -204,22 +204,22 @@ bool compareStartIndexes(const DeclarativeEventEndTime &t1,
     return t1.startTimeIndex < t2.startTimeIndex;
 }
 
-QString declarativeEventType(QDeclarativeProfilerService::RangeType typeEnum)
+QString declarativeEventType(QQmlProfilerService::RangeType typeEnum)
 {
     switch (typeEnum) {
-    case QDeclarativeProfilerService::Painting:
+    case QQmlProfilerService::Painting:
         return QLatin1String(TYPE_PAINTING_STR);
         break;
-    case QDeclarativeProfilerService::Compiling:
+    case QQmlProfilerService::Compiling:
         return QLatin1String(TYPE_COMPILING_STR);
         break;
-    case QDeclarativeProfilerService::Creating:
+    case QQmlProfilerService::Creating:
         return QLatin1String(TYPE_CREATING_STR);
         break;
-    case QDeclarativeProfilerService::Binding:
+    case QQmlProfilerService::Binding:
         return QLatin1String(TYPE_BINDING_STR);
         break;
-    case QDeclarativeProfilerService::HandlingSignal:
+    case QQmlProfilerService::HandlingSignal:
         return QLatin1String(TYPE_HANDLINGSIGNAL_STR);
         break;
     default:
@@ -227,32 +227,32 @@ QString declarativeEventType(QDeclarativeProfilerService::RangeType typeEnum)
     }
 }
 
-QDeclarativeProfilerService::RangeType declarativeEventType(const QString &typeString)
+QQmlProfilerService::RangeType declarativeEventType(const QString &typeString)
 {
     if (typeString == QLatin1String(TYPE_PAINTING_STR)) {
-        return QDeclarativeProfilerService::Painting;
+        return QQmlProfilerService::Painting;
     } else if (typeString == QLatin1String(TYPE_COMPILING_STR)) {
-        return QDeclarativeProfilerService::Compiling;
+        return QQmlProfilerService::Compiling;
     } else if (typeString == QLatin1String(TYPE_CREATING_STR)) {
-        return QDeclarativeProfilerService::Creating;
+        return QQmlProfilerService::Creating;
     } else if (typeString == QLatin1String(TYPE_BINDING_STR)) {
-        return QDeclarativeProfilerService::Binding;
+        return QQmlProfilerService::Binding;
     } else if (typeString == QLatin1String(TYPE_HANDLINGSIGNAL_STR)) {
-        return QDeclarativeProfilerService::HandlingSignal;
+        return QQmlProfilerService::HandlingSignal;
     } else {
         bool isNumber = false;
         int type = typeString.toUInt(&isNumber);
         if (isNumber) {
-            return (QDeclarativeProfilerService::RangeType)type;
+            return (QQmlProfilerService::RangeType)type;
         } else {
-            return QDeclarativeProfilerService::MaximumRangeType;
+            return QQmlProfilerService::MaximumRangeType;
         }
     }
 }
 
 QString getHashStringForDeclarativeEvent(
         EventLocation location,
-        QDeclarativeProfilerService::RangeType eventType)
+        QQmlProfilerService::RangeType eventType)
 {
     return QString("%1:%2:%3:%4").arg(location.filename,
                                       QString::number(location.line),
@@ -383,7 +383,7 @@ const V8Events& ProfileData::getV8Events() const
 }
 
 void ProfileData::addDeclarativeEvent(
-        QDeclarativeProfilerService::RangeType type, qint64 startTime, qint64 length,
+        QQmlProfilerService::RangeType type, qint64 startTime, qint64 length,
         const QStringList &data, const EventLocation &location)
 {
     const QChar colon = QLatin1Char(':');
@@ -408,7 +408,7 @@ void ProfileData::addDeclarativeEvent(
 
     // backwards compatibility: "compiling" events don't have a proper location in older
     // version of the protocol, but the filename is passed in the details string
-    if (type == QDeclarativeProfilerService::Compiling && eventLocation.filename.isEmpty()) {
+    if (type == QQmlProfilerService::Compiling && eventLocation.filename.isEmpty()) {
         eventLocation.filename = details;
         eventLocation.line = 1;
         eventLocation.column = 1;
@@ -544,7 +544,7 @@ void ProfileData::addFrameEvent(qint64 time, int framerate, int animationcount)
         newEvent = new DeclarativeEvent;
         newEvent->displayname = displayName;
         newEvent->eventHashStr = eventHashStr;
-        newEvent->eventType = QDeclarativeProfilerService::Painting;
+        newEvent->eventType = QQmlProfilerService::Painting;
         newEvent->details = details;
         d->m_eventDescriptions.insert(eventHashStr, newEvent);
     }
@@ -651,7 +651,7 @@ void ProfileDataPrivate::clearDeclarativeRootEvent()
     m_qmlRootEvent.location = EventLocation();
     m_qmlRootEvent.eventHashStr = m_rootEventName;
     m_qmlRootEvent.details = m_rootEventDesc;
-    m_qmlRootEvent.eventType = QDeclarativeProfilerService::Binding;
+    m_qmlRootEvent.eventType = QQmlProfilerService::Binding;
     m_qmlRootEvent.duration = 0;
     m_qmlRootEvent.calls = 0;
     m_qmlRootEvent.minTime = 0;
@@ -721,7 +721,7 @@ void ProfileData::compileStatistics(qint64 startTime, qint64 endTime)
             continue;
         }
 
-        if (eventDescription->eventType == QDeclarativeProfilerService::Painting) {
+        if (eventDescription->eventType == QQmlProfilerService::Painting) {
             // skip animation/paint events
             continue;
         }
@@ -948,7 +948,7 @@ void ProfileData::findAnimationLimits()
 
     for (int i = 0; i < d->m_startTimeSortedList.count(); i++) {
         if (d->m_startTimeSortedList[i].description->eventType ==
-                QDeclarativeProfilerService::Painting &&
+                QQmlProfilerService::Painting &&
                 d->m_startTimeSortedList[i].animationCount >= 0) {
             int animationcount = d->m_startTimeSortedList[i].animationCount;
             if (d->m_lastFrameEvent) {
@@ -974,7 +974,7 @@ void ProfileData::computeNestingLevels()
     int level = MIN_LEVEL;
     endtimesPerLevel[MIN_LEVEL] = 0;
 
-    for (int i = 0; i < QDeclarativeProfilerService::MaximumRangeType; i++) {
+    for (int i = 0; i < QQmlProfilerService::MaximumRangeType; i++) {
         nestingLevels << MIN_LEVEL;
         QHash <int, qint64> dummyHash;
         dummyHash[MIN_LEVEL] = 0;
@@ -985,7 +985,7 @@ void ProfileData::computeNestingLevels()
         qint64 st = d->m_startTimeSortedList[i].startTime;
         int type = d->m_startTimeSortedList[i].description->eventType;
 
-        if (type == QDeclarativeProfilerService::Painting) {
+        if (type == QQmlProfilerService::Painting) {
             // animation/paint events have level 1 by definition,
             // but are not considered parents of other events for
             // statistical purposes
@@ -1075,8 +1075,8 @@ void ProfileData::reloadDetails()
 {
     // request binding/signal details from the AST
     foreach (DeclarativeEvent *event, d->m_eventDescriptions.values()) {
-        if (event->eventType != QDeclarativeProfilerService::Binding &&
-                event->eventType != QDeclarativeProfilerService::HandlingSignal)
+        if (event->eventType != QQmlProfilerService::Binding &&
+                event->eventType != QQmlProfilerService::HandlingSignal)
             continue;
 
         // This skips anonymous bindings in Qt4.8 (we don't have valid location data for them)
@@ -1146,7 +1146,7 @@ void ProfileData::findBindingLoops(qint64 startTime, qint64 endTime)
 }
 
 void ProfileData::rewriteDetailsString(
-        QDeclarativeProfilerService::RangeType eventType,
+        QQmlProfilerService::RangeType eventType,
         const EventLocation &location, const QString &newString)
 {
     QString eventHashStr = getHashStringForDeclarativeEvent(location,
@@ -1366,7 +1366,7 @@ bool ProfileData::save(const QString &filename)
                               QString::number(d->m_eventDescriptions.keys().indexOf(
                                                   rangedEvent.description->eventHashStr)));
         if (rangedEvent.description->eventType ==
-                QDeclarativeProfilerService::Painting && rangedEvent.animationCount >= 0) {
+                QQmlProfilerService::Painting && rangedEvent.animationCount >= 0) {
             // animation frame
             stream.writeAttribute("framerate",
                                   QString::number(rangedEvent.frameRate));
@@ -1825,7 +1825,7 @@ QString ProfileData::getDetails(int index) const
 {
     // special: animations
     if (d->m_startTimeSortedList[index].description->eventType ==
-            QDeclarativeProfilerService::Painting &&
+            QQmlProfilerService::Painting &&
             d->m_startTimeSortedList[index].animationCount >= 0)
         return tr("%1 animations at %2 FPS").arg(
                     QString::number(d->m_startTimeSortedList[index].animationCount),

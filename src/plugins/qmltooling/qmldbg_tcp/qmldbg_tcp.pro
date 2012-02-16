@@ -1,12 +1,12 @@
 load(qt_module)
 
 TARGET = qmldbg_tcp
-QT       += declarative-private network
+QT       += qml-private network
 
 load(qt_plugin)
 
-DESTDIR = $$QT.declarative.plugins/qmltooling
-QTDIR_build:REQUIRES += "contains(QT_CONFIG, declarative)"
+DESTDIR = $$QT.qml.plugins/qmltooling
+QTDIR_build:REQUIRES += "contains(QT_CONFIG, qml)"
 
 SOURCES += \
     qtcpserverconnection.cpp

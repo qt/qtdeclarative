@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,7 +44,7 @@
 #include "qquickitem_p.h"
 #include "qquickcanvas.h"
 
-#include <private/qdeclarativeengine_p.h>
+#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -74,8 +74,8 @@ public:
     QRegExp keyRegExp;
     QPointF dragPosition;
     QQuickDropAreaDrag *drag;
-    QDeclarativeGuard<QObject> source;
-    QDeclarativeGuard<QMimeData> mimeData;
+    QQmlGuard<QObject> source;
+    QQmlGuard<QMimeData> mimeData;
 };
 
 QQuickDropAreaPrivate::QQuickDropAreaPrivate()
@@ -409,7 +409,7 @@ QStringList QQuickDropEvent::keys() const
     If an \a action is specified it will overwrite the value of the \l action property.
 */
 
-void QQuickDropEvent::accept(QDeclarativeV8Function *args)
+void QQuickDropEvent::accept(QQmlV8Function *args)
 {
     Qt::DropAction action = event->dropAction();
 

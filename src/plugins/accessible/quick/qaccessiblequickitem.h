@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,13 +44,13 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>
-#include "qdeclarativeaccessible.h"
+#include "qqmlaccessible.h"
 
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_ACCESSIBILITY
 
-class QAccessibleQuickItem : public QDeclarativeAccessible
+class QAccessibleQuickItem : public QQmlAccessible
 {
 public:
     QAccessibleQuickItem(QQuickItem *item);

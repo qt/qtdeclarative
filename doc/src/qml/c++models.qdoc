@@ -57,7 +57,7 @@ models.
 
     \bold{Note:} There is no way for the view to know that the contents of a QStringList
     have changed.  If the QStringList changes, it will be necessary to reset
-    the model by calling QDeclarativeContext::setContextProperty() again.
+    the model by calling QQmlContext::setContextProperty() again.
 
 
 \section1 QObjectList-based model
@@ -92,7 +92,7 @@ models.
 
     Note: There is no way for the view to know that the contents of a QList
     have changed.  If the QList changes, it will be necessary to reset
-    the model by calling QDeclarativeContext::setContextProperty() again.
+    the model by calling QQmlContext::setContextProperty() again.
 
 
 \section1 QAbstractItemModel
@@ -160,10 +160,10 @@ models.
 
 \section1 Exposing C++ Data Models to QML
 
-The above examples use QDeclarativeContext::setContextProperty() to set
+The above examples use QQmlContext::setContextProperty() to set
 model values directly in QML components. An alternative to this is to
 register the C++ model class as a QML type from a QML C++ plugin using
-QDeclarativeExtensionPlugin. This would allow the model classes to be
+QQmlExtensionPlugin. This would allow the model classes to be
 created directly as elements within QML:
 
 \table
@@ -171,7 +171,7 @@ created directly as elements within QML:
 
 \o
 \code
-class MyModelPlugin : public QDeclarativeExtensionPlugin
+class MyModelPlugin : public QQmlExtensionPlugin
 {
 public:
     void registerTypes(const char *uri)

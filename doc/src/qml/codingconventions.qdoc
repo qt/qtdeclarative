@@ -52,7 +52,7 @@ For better readability, we separate these different parts with an empty line.
 
 For example, a hypothetical \i photo QML object would look like this:
 
-\snippet doc/src/snippets/declarative/codingconventions/photo.qml 0
+\snippet doc/src/snippets/qml/codingconventions/photo.qml 0
 
 
 \section1 Grouped Properties
@@ -62,11 +62,11 @@ we use the \i {group notation} rather than the \i {dot notation} to improve read
 
 For example, this:
 
-\snippet doc/src/snippets/declarative/codingconventions/dotproperties.qml 0
+\snippet doc/src/snippets/qml/codingconventions/dotproperties.qml 0
 
 can be written like this:
 
-\snippet doc/src/snippets/declarative/codingconventions/dotproperties.qml 1
+\snippet doc/src/snippets/qml/codingconventions/dotproperties.qml 1
 
 
 \section1 Private Properties
@@ -78,7 +78,7 @@ the implementation. As a convention, private properties begin with two
 accessible but is not meant for public use. Note that QML and JavaScript will
 grant the user access to these properties.
 
-\snippet doc/src/snippets/declarative/codingconventions/private.qml 0
+\snippet doc/src/snippets/qml/codingconventions/private.qml 0
 
 
 \section1 Lists
@@ -89,30 +89,30 @@ For example, it is very common for a component to only have one state.
 
 In this case, instead of:
 
-\snippet doc/src/snippets/declarative/codingconventions/lists.qml 0
+\snippet doc/src/snippets/qml/codingconventions/lists.qml 0
 
 we will write this:
 
-\snippet doc/src/snippets/declarative/codingconventions/lists.qml 1
+\snippet doc/src/snippets/qml/codingconventions/lists.qml 1
 
 
 \section1 JavaScript Code
 
 If the script is a single expression, we recommend writing it inline:
 
-\snippet doc/src/snippets/declarative/codingconventions/javascript.qml 0
+\snippet doc/src/snippets/qml/codingconventions/javascript.qml 0
 
 If the script is only a couple of lines long, we generally use a block:
 
-\snippet doc/src/snippets/declarative/codingconventions/javascript.qml 1
+\snippet doc/src/snippets/qml/codingconventions/javascript.qml 1
 
 If the script is more than a couple of lines long or can be used by different objects, we recommend creating a function and calling it like this:
 
-\snippet doc/src/snippets/declarative/codingconventions/javascript.qml 2
+\snippet doc/src/snippets/qml/codingconventions/javascript.qml 2
 
 For long scripts, we will put the functions in their own JavaScript file and import it like this:
 
-\snippet doc/src/snippets/declarative/codingconventions/javascript-imports.qml 0
+\snippet doc/src/snippets/qml/codingconventions/javascript-imports.qml 0
 
 */
 

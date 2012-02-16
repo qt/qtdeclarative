@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,10 +43,10 @@
 #include "qquickrepeater_p_p.h"
 #include "qquickvisualdatamodel_p.h"
 
-#include <private/qdeclarativeglobal_p.h>
-#include <private/qdeclarativelistaccessor_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qquicklistaccessor_p.h>
 #include <private/qlistmodelinterface_p.h>
-#include <private/qdeclarativechangeset_p.h>
+#include <private/qquickchangeset_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,9 +79,9 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     The following Repeater creates three instances of a \l Rectangle item within
     a \l Row:
 
-    \snippet doc/src/snippets/declarative/repeaters/repeater.qml import
+    \snippet doc/src/snippets/qml/repeaters/repeater.qml import
     \codeline
-    \snippet doc/src/snippets/declarative/repeaters/repeater.qml simple
+    \snippet doc/src/snippets/qml/repeaters/repeater.qml simple
 
     \image repeater-simple.png
 
@@ -96,7 +96,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     a Repeater to be used inside a layout. For example, the following Repeater's
     items are stacked between a red rectangle and a blue rectangle:
 
-    \snippet doc/src/snippets/declarative/repeaters/repeater.qml layout
+    \snippet doc/src/snippets/qml/repeaters/repeater.qml layout
 
     \image repeater.png
 
@@ -186,8 +186,8 @@ void QQuickRepeater::setModel(const QVariant &model)
 
     clear();
     if (d->model) {
-        disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
-                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
+        disconnect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
         disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
         disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
 //        disconnect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
@@ -212,8 +212,8 @@ void QQuickRepeater::setModel(const QVariant &model)
             dataModel->setModel(model);
     }
     if (d->model) {
-        connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
-                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
+        connect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
         connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
         connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
 //        connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
@@ -235,7 +235,7 @@ void QQuickRepeater::setModel(const QVariant &model)
 
     \table
     \row
-    \o \snippet doc/src/snippets/declarative/repeaters/repeater.qml index
+    \o \snippet doc/src/snippets/qml/repeaters/repeater.qml index
     \o \image repeater-index.png
     \endtable
 
@@ -246,7 +246,7 @@ void QQuickRepeater::setModel(const QVariant &model)
 
     \table
     \row
-    \o \snippet doc/src/snippets/declarative/repeaters/repeater.qml modeldata
+    \o \snippet doc/src/snippets/qml/repeaters/repeater.qml modeldata
     \o \image repeater-modeldata.png
     \endtable
 
@@ -256,7 +256,7 @@ void QQuickRepeater::setModel(const QVariant &model)
 
     \sa {QML Data Models}
  */
-QDeclarativeComponent *QQuickRepeater::delegate() const
+QQmlComponent *QQuickRepeater::delegate() const
 {
     Q_D(const QQuickRepeater);
     if (d->model) {
@@ -267,7 +267,7 @@ QDeclarativeComponent *QQuickRepeater::delegate() const
     return 0;
 }
 
-void QQuickRepeater::setDelegate(QDeclarativeComponent *delegate)
+void QQuickRepeater::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQuickRepeater);
     if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model))
@@ -379,7 +379,7 @@ void QQuickRepeaterPrivate::createItems()
                 break;
             }
             deletables[ii] = item;
-            QDeclarative_setParent_noEvent(item, q->parentItem());
+            QQml_setParent_noEvent(item, q->parentItem());
             item->setParentItem(q->parentItem());
             if (ii > 0 && deletables.at(ii-1)) {
                 item->stackAfter(deletables.at(ii-1));
@@ -408,11 +408,11 @@ void QQuickRepeater::createdItem(int, QQuickItem *)
 
 void QQuickRepeater::initItem(int, QQuickItem *item)
 {
-    QDeclarative_setParent_noEvent(item, parentItem());
+    QQml_setParent_noEvent(item, parentItem());
     item->setParentItem(parentItem());
 }
 
-void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
+void QQuickRepeater::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
 {
     Q_D(QQuickRepeater);
 
@@ -426,7 +426,7 @@ void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
 
     int difference = 0;
     QHash<int, QVector<QPointer<QQuickItem> > > moved;
-    foreach (const QDeclarativeChangeSet::Remove &remove, changeSet.removes()) {
+    foreach (const QQuickChangeSet::Remove &remove, changeSet.removes()) {
         int index = qMin(remove.index, d->deletables.count());
         int count = qMin(remove.index + remove.count, d->deletables.count()) - index;
         if (remove.isMove()) {
@@ -447,7 +447,7 @@ void QQuickRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
     }
 
     d->createFrom = -1;
-    foreach (const QDeclarativeChangeSet::Insert &insert, changeSet.inserts()) {
+    foreach (const QQuickChangeSet::Insert &insert, changeSet.inserts()) {
         int index = qMin(insert.index, d->deletables.count());
         if (insert.isMove()) {
             QVector<QPointer<QQuickItem> > items = moved.value(insert.moveId);

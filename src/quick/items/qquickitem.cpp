@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,15 +42,15 @@
 #include "qquickitem.h"
 
 #include "qquickcanvas.h"
-#include <QtDeclarative/qjsengine.h>
+#include <QtQml/qjsengine.h>
 #include "qquickcanvas_p.h"
 
 #include "qquickevents_p_p.h"
 #include "qquickscreen_p.h"
 
-#include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qpen.h>
 #include <QtGui/qcursor.h>
 #include <QtGui/qguiapplication.h>
@@ -59,13 +59,14 @@
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
 
-#include <private/qdeclarativeengine_p.h>
-#include <QtQuick/private/qdeclarativestategroup_p.h>
-#include <private/qdeclarativeopenmetaobject_p.h>
-#include <QtQuick/private/qdeclarativestate_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qqmlengine_p.h>
+#include <QtQuick/private/qquickstategroup_p.h>
+#include <private/qqmlopenmetaobject_p.h>
+#include <QtQuick/private/qquickstate_p.h>
 #include <private/qlistmodelinterface_p.h>
 #include <private/qquickitem_p.h>
-#include <private/qdeclarativeaccessors_p.h>
+#include <private/qqmlaccessors_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
 #include <float.h>
@@ -74,7 +75,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static void QQuickItem_parentNotifier(QObject *o, intptr_t, QDeclarativeNotifier **n)
+static void QQuickItem_parentNotifier(QObject *o, intptr_t, QQmlNotifier **n)
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(static_cast<QQuickItem *>(o));
     *n = &d->parentNotifier;
@@ -86,11 +87,11 @@ QML_PRIVATE_ACCESSOR(QQuickItem, qreal, y, y)
 QML_PRIVATE_ACCESSOR(QQuickItem, qreal, width, width)
 QML_PRIVATE_ACCESSOR(QQuickItem, qreal, height, height)
 
-static QDeclarativeAccessors QQuickItem_parent = { QQuickItem_parentRead, QQuickItem_parentNotifier };
-static QDeclarativeAccessors QQuickItem_x = { QQuickItem_xRead, 0 };
-static QDeclarativeAccessors QQuickItem_y = { QQuickItem_yRead, 0 };
-static QDeclarativeAccessors QQuickItem_width = { QQuickItem_widthRead, 0 };
-static QDeclarativeAccessors QQuickItem_height = { QQuickItem_heightRead, 0 };
+static QQmlAccessors QQuickItem_parent = { QQuickItem_parentRead, QQuickItem_parentNotifier };
+static QQmlAccessors QQuickItem_x = { QQuickItem_xRead, 0 };
+static QQmlAccessors QQuickItem_y = { QQuickItem_yRead, 0 };
+static QQmlAccessors QQuickItem_width = { QQuickItem_widthRead, 0 };
+static QQmlAccessors QQuickItem_height = { QQuickItem_heightRead, 0 };
 
 QML_DECLARE_PROPERTIES(QQuickItem) {
     { QML_PROPERTY_NAME(parent), 0, &QQuickItem_parent },
@@ -233,7 +234,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     rotations you must specify the axis to rotate around in addition to the origin point.
 
     The following example shows various 3D-like rotations applied to an \l Image.
-    \snippet doc/src/snippets/declarative/rotation.qml 0
+    \snippet doc/src/snippets/qml/rotation.qml 0
 
     \image axisrotation.png
 
@@ -491,7 +492,7 @@ void QQuickItemKeyFilter::componentComplete()
 
     The following example provides key navigation for a 2x2 grid of items:
 
-    \snippet doc/src/snippets/declarative/keynavigation.qml 0
+    \snippet doc/src/snippets/qml/keynavigation.qml 0
 
     The top-left item initially receives focus by setting \l {Item::}{focus} to
     \c true. When an arrow key is pressed, the focus will move to the
@@ -912,13 +913,13 @@ bool QQuickKeysAttachedPrivate::isConnected(const char *signalName)
     be used to test for a certain key; in this case, the left cursor
     key:
 
-    \snippet doc/src/snippets/declarative/keys/keys-pressed.qml key item
+    \snippet doc/src/snippets/qml/keys/keys-pressed.qml key item
 
     Some keys may alternatively be handled via specific signal properties,
     for example \e onSelectPressed.  These handlers automatically set
     \e event.accepted to true.
 
-    \snippet doc/src/snippets/declarative/keys/keys-handler.qml key item
+    \snippet doc/src/snippets/qml/keys/keys-handler.qml key item
 
     See \l{Qt::Key}{Qt.Key} for the list of keyboard codes.
 
@@ -1460,7 +1461,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     from left to right by default, they are now positioned from right to left instead, as demonstrated
     by the numbering and opacity of the items:
 
-    \snippet doc/src/snippets/declarative/layoutmirroring.qml 0
+    \snippet doc/src/snippets/qml/layoutmirroring.qml 0
 
     \image layoutmirroring.png
 
@@ -2351,7 +2352,7 @@ void QQuickItemPrivate::init(QQuickItem *parent)
     }
 }
 
-void QQuickItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObject *o)
+void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     if (!o)
         return;
@@ -2410,14 +2411,14 @@ void QQuickItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QOb
     specify it.
  */
 
-int QQuickItemPrivate::data_count(QDeclarativeListProperty<QObject> *prop)
+int QQuickItemPrivate::data_count(QQmlListProperty<QObject> *prop)
 {
     Q_UNUSED(prop);
     // XXX todo
     return 0;
 }
 
-QObject *QQuickItemPrivate::data_at(QDeclarativeListProperty<QObject> *prop, int i)
+QObject *QQuickItemPrivate::data_at(QQmlListProperty<QObject> *prop, int i)
 {
     Q_UNUSED(prop);
     Q_UNUSED(i);
@@ -2425,13 +2426,13 @@ QObject *QQuickItemPrivate::data_at(QDeclarativeListProperty<QObject> *prop, int
     return 0;
 }
 
-void QQuickItemPrivate::data_clear(QDeclarativeListProperty<QObject> *prop)
+void QQuickItemPrivate::data_clear(QQmlListProperty<QObject> *prop)
 {
     Q_UNUSED(prop);
     // XXX todo
 }
 
-QObject *QQuickItemPrivate::resources_at(QDeclarativeListProperty<QObject> *prop, int index)
+QObject *QQuickItemPrivate::resources_at(QQmlListProperty<QObject> *prop, int index)
 {
     const QObjectList children = prop->object->children();
     if (index < children.count())
@@ -2440,18 +2441,18 @@ QObject *QQuickItemPrivate::resources_at(QDeclarativeListProperty<QObject> *prop
         return 0;
 }
 
-void QQuickItemPrivate::resources_append(QDeclarativeListProperty<QObject> *prop, QObject *o)
+void QQuickItemPrivate::resources_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     // XXX todo - do we really want this behavior?
     o->setParent(prop->object);
 }
 
-int QQuickItemPrivate::resources_count(QDeclarativeListProperty<QObject> *prop)
+int QQuickItemPrivate::resources_count(QQmlListProperty<QObject> *prop)
 {
     return prop->object->children().count();
 }
 
-void QQuickItemPrivate::resources_clear(QDeclarativeListProperty<QObject> *prop)
+void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)
 {
     // XXX todo - do we really want this behavior?
     const QObjectList children = prop->object->children();
@@ -2459,7 +2460,7 @@ void QQuickItemPrivate::resources_clear(QDeclarativeListProperty<QObject> *prop)
         children.at(index)->setParent(0);
 }
 
-QQuickItem *QQuickItemPrivate::children_at(QDeclarativeListProperty<QQuickItem> *prop, int index)
+QQuickItem *QQuickItemPrivate::children_at(QQmlListProperty<QQuickItem> *prop, int index)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     if (index >= p->childItems.count() || index < 0)
@@ -2468,7 +2469,7 @@ QQuickItem *QQuickItemPrivate::children_at(QDeclarativeListProperty<QQuickItem> 
         return p->childItems.at(index);
 }
 
-void QQuickItemPrivate::children_append(QDeclarativeListProperty<QQuickItem> *prop, QQuickItem *o)
+void QQuickItemPrivate::children_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *o)
 {
     if (!o)
         return;
@@ -2480,13 +2481,13 @@ void QQuickItemPrivate::children_append(QDeclarativeListProperty<QQuickItem> *pr
     o->setParentItem(that);
 }
 
-int QQuickItemPrivate::children_count(QDeclarativeListProperty<QQuickItem> *prop)
+int QQuickItemPrivate::children_count(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     return p->childItems.count();
 }
 
-void QQuickItemPrivate::children_clear(QDeclarativeListProperty<QQuickItem> *prop)
+void QQuickItemPrivate::children_clear(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
@@ -2494,13 +2495,13 @@ void QQuickItemPrivate::children_clear(QDeclarativeListProperty<QQuickItem> *pro
         p->childItems.at(0)->setParentItem(0);
 }
 
-void QQuickItemPrivate::visibleChildren_append(QDeclarativeListProperty<QQuickItem>*, QQuickItem *self)
+void QQuickItemPrivate::visibleChildren_append(QQmlListProperty<QQuickItem>*, QQuickItem *self)
 {
     // do nothing
     qmlInfo(self) << "QQuickItem: visibleChildren property is readonly and cannot be assigned to.";
 }
 
-int QQuickItemPrivate::visibleChildren_count(QDeclarativeListProperty<QQuickItem> *prop)
+int QQuickItemPrivate::visibleChildren_count(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     int visibleCount = 0;
@@ -2512,7 +2513,7 @@ int QQuickItemPrivate::visibleChildren_count(QDeclarativeListProperty<QQuickItem
     return visibleCount;
 }
 
-QQuickItem *QQuickItemPrivate::visibleChildren_at(QDeclarativeListProperty<QQuickItem> *prop, int index)
+QQuickItem *QQuickItemPrivate::visibleChildren_at(QQmlListProperty<QQuickItem> *prop, int index)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     const int childCount = p->childItems.count();
@@ -2527,7 +2528,7 @@ QQuickItem *QQuickItemPrivate::visibleChildren_at(QDeclarativeListProperty<QQuic
     return 0;
 }
 
-int QQuickItemPrivate::transform_count(QDeclarativeListProperty<QQuickTransform> *prop)
+int QQuickItemPrivate::transform_count(QQmlListProperty<QQuickTransform> *prop)
 {
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
@@ -2573,7 +2574,7 @@ void QQuickTransform::prependToItem(QQuickItem *item)
     p->dirty(QQuickItemPrivate::Transform);
 }
 
-void QQuickItemPrivate::transform_append(QDeclarativeListProperty<QQuickTransform> *prop, QQuickTransform *transform)
+void QQuickItemPrivate::transform_append(QQmlListProperty<QQuickTransform> *prop, QQuickTransform *transform)
 {
     if (!transform)
         return;
@@ -2582,7 +2583,7 @@ void QQuickItemPrivate::transform_append(QDeclarativeListProperty<QQuickTransfor
     transform->appendToItem(that);
 }
 
-QQuickTransform *QQuickItemPrivate::transform_at(QDeclarativeListProperty<QQuickTransform> *prop, int idx)
+QQuickTransform *QQuickItemPrivate::transform_at(QQmlListProperty<QQuickTransform> *prop, int idx)
 {
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
@@ -2593,7 +2594,7 @@ QQuickTransform *QQuickItemPrivate::transform_at(QDeclarativeListProperty<QQuick
         return p->transforms.at(idx);
 }
 
-void QQuickItemPrivate::transform_clear(QDeclarativeListProperty<QQuickTransform> *prop)
+void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
 {
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
@@ -2852,9 +2853,9 @@ void QQuickItemPrivate::siblingOrderChanged()
     }
 }
 
-QDeclarativeListProperty<QObject> QQuickItemPrivate::data()
+QQmlListProperty<QObject> QQuickItemPrivate::data()
 {
-    return QDeclarativeListProperty<QObject>(q_func(), 0, QQuickItemPrivate::data_append,
+    return QQmlListProperty<QObject>(q_func(), 0, QQuickItemPrivate::data_append,
                                              QQuickItemPrivate::data_count,
                                              QQuickItemPrivate::data_at,
                                              QQuickItemPrivate::data_clear);
@@ -3233,7 +3234,7 @@ void QQuickItem::polish()
     }
 }
 
-void QQuickItem::mapFromItem(QDeclarativeV8Function *args) const
+void QQuickItem::mapFromItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
         v8::Local<v8::Value> item = (*args)[0];
@@ -3276,7 +3277,7 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
     return t;
 }
 
-void QQuickItem::mapToItem(QDeclarativeV8Function *args) const
+void QQuickItem::mapToItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
         v8::Local<v8::Value> item = (*args)[0];
@@ -3332,17 +3333,17 @@ QQuickItem *QQuickItem::childAt(qreal x, qreal y) const
     return 0;
 }
 
-QDeclarativeListProperty<QObject> QQuickItemPrivate::resources()
+QQmlListProperty<QObject> QQuickItemPrivate::resources()
 {
-    return QDeclarativeListProperty<QObject>(q_func(), 0, QQuickItemPrivate::resources_append,
+    return QQmlListProperty<QObject>(q_func(), 0, QQuickItemPrivate::resources_append,
                                              QQuickItemPrivate::resources_count,
                                              QQuickItemPrivate::resources_at,
                                              QQuickItemPrivate::resources_clear);
 }
 
-QDeclarativeListProperty<QQuickItem> QQuickItemPrivate::children()
+QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 {
-    return QDeclarativeListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::children_append,
+    return QQmlListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::children_append,
                                              QQuickItemPrivate::children_count,
                                              QQuickItemPrivate::children_at,
                                              QQuickItemPrivate::children_clear);
@@ -3355,20 +3356,20 @@ QDeclarativeListProperty<QQuickItem> QQuickItemPrivate::children()
   Note that a child's visibility may have changed explicitly, or because the visibility
   of this (it's parent) item or another grandparent changed.
 */
-QDeclarativeListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
+QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
 {
-    return QDeclarativeListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::visibleChildren_append,
+    return QQmlListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::visibleChildren_append,
                                              QQuickItemPrivate::visibleChildren_count,
                                              QQuickItemPrivate::visibleChildren_at);
 
 }
 
-QDeclarativeListProperty<QDeclarativeState> QQuickItemPrivate::states()
+QQmlListProperty<QQuickState> QQuickItemPrivate::states()
 {
     return _states()->statesProperty();
 }
 
-QDeclarativeListProperty<QDeclarativeTransition> QQuickItemPrivate::transitions()
+QQmlListProperty<QQuickTransition> QQuickItemPrivate::transitions()
 {
     return _states()->transitionsProperty();
 }
@@ -3398,9 +3399,9 @@ void QQuickItem::setState(const QString &state)
     d->setState(state);
 }
 
-QDeclarativeListProperty<QQuickTransform> QQuickItem::transform()
+QQmlListProperty<QQuickTransform> QQuickItem::transform()
 {
-    return QDeclarativeListProperty<QQuickTransform>(this, 0, QQuickItemPrivate::transform_append,
+    return QQmlListProperty<QQuickTransform>(this, 0, QQuickItemPrivate::transform_append,
                                                      QQuickItemPrivate::transform_count,
                                                      QQuickItemPrivate::transform_at,
                                                      QQuickItemPrivate::transform_clear);
@@ -3439,11 +3440,11 @@ void QQuickItem::componentComplete()
         d->extra->contents->complete();
 }
 
-QDeclarativeStateGroup *QQuickItemPrivate::_states()
+QQuickStateGroup *QQuickItemPrivate::_states()
 {
     Q_Q(QQuickItem);
     if (!_stateGroup) {
-        _stateGroup = new QDeclarativeStateGroup;
+        _stateGroup = new QQuickStateGroup;
         if (!componentComplete)
             _stateGroup->classBegin();
         FAST_CONNECT(_stateGroup, SIGNAL(stateChanged(QString)),
@@ -5566,7 +5567,7 @@ void QQuickItemLayer::deactivateEffect()
     \sa samplerName
  */
 
-void QQuickItemLayer::setEffect(QDeclarativeComponent *component)
+void QQuickItemLayer::setEffect(QQmlComponent *component)
 {
     if (component == m_effectComponent)
         return;

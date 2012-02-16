@@ -42,17 +42,17 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QSettings>
 #include <QtWidgets/QApplication>
-#include <QtDeclarative/QDeclarativeView>
-#include <QtDeclarative/QDeclarativeEngine>
-#include <QtDeclarative/QDeclarativeNetworkAccessManagerFactory>
+#include <QtQuick/QQuickView>
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlNetworkAccessManagerFactory>
 #include <QtNetwork/QNetworkConfiguration>
 #include <QtNetwork/QNetworkConfigurationManager>
 #include <QtNetwork/QNetworkAccessManager>
-#include <QtDeclarative/QDeclarativeEngine>
+#include <QtQml/QQmlEngine>
 
 // Factory to create QNetworkAccessManagers that use the saved network configuration; otherwise
 // the system default.
-class NetworkAccessManagerFactory : public QDeclarativeNetworkAccessManagerFactory
+class NetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
 public:
     ~NetworkAccessManagerFactory() { }
@@ -92,10 +92,10 @@ int main(int argc, char *argv[])
     NetworkAccessManagerFactory networkAccessManagerFactory;
 
     const QString mainQmlApp = QLatin1String("flickr.qml");
-    QDeclarativeView view;
+    QQuickView view;
     view.engine()->setNetworkAccessManagerFactory(&networkAccessManagerFactory);
     view.setSource(QUrl(mainQmlApp));
-    view.setResizeMode(QDeclarativeView::SizeRootObjectToView);
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
     QObject::connect(view.engine(), SIGNAL(quit()), &application, SLOT(quit()));
     view.setGeometry(QRect(100, 100, 360, 640));
     view.show();

@@ -43,7 +43,7 @@
 #include <private/qquickvisualitemmodel_p.h>
 #include <QtQuick/qsgnode.h>
 #include <QTimer>
-#include <QDeclarativeComponent>
+#include <QQmlComponent>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE

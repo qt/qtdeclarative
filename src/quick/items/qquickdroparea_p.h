@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,7 +44,7 @@
 
 #include "qquickitem.h"
 
-#include <private/qdeclarativeguard_p.h>
+#include <private/qqmlguard_p.h>
 #include <private/qv8engine_p.h>
 
 #include <QtGui/qevent.h>
@@ -82,7 +82,7 @@ public:
     bool accepted() const { return event->isAccepted(); }
     void setAccepted(bool accepted) { event->setAccepted(accepted); }
 
-    Q_INVOKABLE void accept(QDeclarativeV8Function *);
+    Q_INVOKABLE void accept(QQmlV8Function *);
 
 private:
     QQuickDropAreaPrivate *d;

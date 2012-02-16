@@ -42,7 +42,7 @@
 #ifndef TURBULENCEAFFECTOR_H
 #define TURBULENCEAFFECTOR_H
 #include "qquickparticleaffector_p.h"
-#include <QDeclarativeListProperty>
+#include <QQmlListProperty>
 
 QT_BEGIN_HEADER
 

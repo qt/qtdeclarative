@@ -1,8 +1,8 @@
 TEMPLATE = app
 CONFIG += qt uic console
-DESTDIR = $$QT.declarative.bins
+DESTDIR = $$QT.qml.bins
 
-QT += declarative declarative-private quick-private core-private
+QT += qml qml-private quick-private core-private
 
 TARGET = qmlplugindump
 

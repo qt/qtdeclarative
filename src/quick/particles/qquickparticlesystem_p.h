@@ -50,8 +50,8 @@
 #include <QSignalMapper>
 #include <private/qquicksprite_p.h>
 #include <QAbstractAnimation>
-#include <QtDeclarative/qdeclarative.h>
-#include <private/qv8engine_p.h> //For QDeclarativeV8Handle
+#include <QtQml/qqml.h>
+#include <private/qv8engine_p.h> //For QQmlV8Handle
 
 QT_BEGIN_HEADER
 
@@ -224,7 +224,7 @@ public:
     float lifeLeft();
     float curSize();
     void clone(const QQuickParticleData& other);//Not =, leaves meta-data like index
-    QDeclarativeV8Handle v8Value();
+    QQmlV8Handle v8Value();
     void extendLife(float time);
 private:
     QQuickV8ParticleData* v8Datum;
@@ -314,7 +314,7 @@ public:
     void registerParticleAffector(QQuickParticleAffector* a);
     void registerParticleGroup(QQuickParticleGroup* g);
 
-    static void statePropertyRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);
+    static void statePropertyRedirect(QQmlListProperty<QObject> *prop, QObject *value);
     static void stateRedirect(QQuickParticleGroup* group, QQuickParticleSystem* sys, QObject *value);
     bool isPaused() const
     {

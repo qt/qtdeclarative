@@ -11,7 +11,7 @@ QT.quick.sources = $$QT_MODULE_BASE/src/quick
 QT.quick.libs = $$QT_MODULE_LIB_BASE
 QT.quick.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.quick.imports = $$QT_MODULE_IMPORT_BASE
-QT.quick.depends = declarative
+QT.quick.depends = qml
 QT.quick.DEFINES = QT_QUICK_LIB
 
 QT_CONFIG += quick

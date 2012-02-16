@@ -96,20 +96,20 @@ QQuickParticleGroup::QQuickParticleGroup(QObject* parent)
 
 }
 
-void delayedRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value)
+void delayedRedirect(QQmlListProperty<QObject> *prop, QObject *value)
 {
     QQuickParticleGroup* pg = qobject_cast<QQuickParticleGroup*>(prop->object);
     if (pg)
         pg->delayRedirect(value);
 }
 
-QDeclarativeListProperty<QObject> QQuickParticleGroup::particleChildren()
+QQmlListProperty<QObject> QQuickParticleGroup::particleChildren()
 {
     QQuickParticleSystem* system = qobject_cast<QQuickParticleSystem*>(parent());
     if (system)
-        return QDeclarativeListProperty<QObject>(this, 0, &QQuickParticleSystem::statePropertyRedirect);
+        return QQmlListProperty<QObject>(this, 0, &QQuickParticleSystem::statePropertyRedirect);
     else
-        return QDeclarativeListProperty<QObject>(this, 0, &delayedRedirect);
+        return QQmlListProperty<QObject>(this, 0, &delayedRedirect);
 }
 
 void QQuickParticleGroup::setSystem(QQuickParticleSystem* arg)

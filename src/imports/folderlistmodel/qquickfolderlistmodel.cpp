@@ -1,0 +1,529 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the examples of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** GNU Lesser General Public License Usage
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights. These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
+**
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+//![code]
+#include "qquickfolderlistmodel.h"
+#include <QDirModel>
+#include <QDebug>
+#include <qqmlcontext.h>
+
+#ifndef QT_NO_DIRMODEL
+
+QT_BEGIN_NAMESPACE
+
+class QQuickFolderListModelPrivate
+{
+public:
+    QQuickFolderListModelPrivate()
+        : sortField(QQuickFolderListModel::Name), sortReversed(false), count(0), showDirs(true), showDots(false), showOnlyReadable(false), insideRefresh(false) {
+        nameFilters << QLatin1String("*");
+    }
+
+    void updateSorting() {
+        QDir::SortFlags flags = 0;
+        switch(sortField) {
+        case QQuickFolderListModel::Unsorted:
+            flags |= QDir::Unsorted;
+            break;
+        case QQuickFolderListModel::Name:
+            flags |= QDir::Name;
+            break;
+        case QQuickFolderListModel::Time:
+            flags |= QDir::Time;
+            break;
+        case QQuickFolderListModel::Size:
+            flags |= QDir::Size;
+            break;
+        case QQuickFolderListModel::Type:
+            flags |= QDir::Type;
+            break;
+        }
+
+        if (sortReversed)
+            flags |= QDir::Reversed;
+
+        model.setSorting(flags);
+    }
+
+    QDirModel model;
+    QUrl folder;
+    QStringList nameFilters;
+    QModelIndex folderIndex;
+    QQuickFolderListModel::SortField sortField;
+    bool sortReversed;
+    int count;
+    bool showDirs;
+    bool showDots;
+    bool showOnlyReadable;
+    bool insideRefresh;
+};
+
+/*!
+    \qmlclass FolderListModel QQuickFolderListModel
+    \ingroup qml-working-with-data
+    \brief The FolderListModel provides a model of the contents of a file system folder.
+
+    FolderListModel provides access to information about the contents of a folder
+    in the local file system, exposing a list of files to views and other data components.
+
+    \note This type is made available by importing the \c Qt.labs.folderlistmodel module.
+    \e{Elements in the Qt.labs module are not guaranteed to remain compatible
+    in future versions.}
+
+    \bold{import Qt.labs.folderlistmodel 1.0}
+
+    The \l folder property specifies the folder to access. Information about the
+    files and directories in the folder is supplied via the model's interface.
+    Components access names and paths via the following roles:
+
+    \list
+    \o fileName
+    \o filePath
+    \endlist
+
+    Additionally a file entry can be differentiated from a folder entry via the
+    isFolder() method.
+
+    \section1 Filtering
+
+    Various properties can be set to filter the number of files and directories
+    exposed by the model.
+
+    The \l nameFilters property can be set to contain a list of wildcard filters
+    that are applied to names of files and directories, causing only those that
+    match the filters to be exposed.
+
+    Directories can be included or excluded using the \l showDirs property, and
+    navigation directories can also be excluded by setting the \l showDotAndDotDot
+    property to false.
+
+    It is sometimes useful to limit the files and directories exposed to those
+    that the user can access. The \l showOnlyReadable property can be set to
+    enable this feature.
+
+    \section1 Example Usage
+
+    The following example shows a FolderListModel being used to provide a list
+    of QML files in a \l ListView:
+
+    \snippet doc/src/snippets/qml/folderlistmodel.qml 0
+
+    \section1 Path Separators
+
+    Qt uses "/" as a universal directory separator in the same way that "/" is
+    used as a path separator in URLs. If you always use "/" as a directory
+    separator, Qt will translate your paths to conform to the underlying
+    operating system.
+
+    \sa {QML Data Models}
+*/
+
+QQuickFolderListModel::QQuickFolderListModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+    QHash<int, QByteArray> roles;
+    roles[FileNameRole] = "fileName";
+    roles[FilePathRole] = "filePath";
+    setRoleNames(roles);
+
+    d = new QQuickFolderListModelPrivate;
+    d->model.setFilter(QDir::AllDirs | QDir::Files | QDir::Drives | QDir::NoDotAndDotDot);
+    connect(&d->model, SIGNAL(rowsInserted(const QModelIndex&,int,int))
+            , this, SLOT(inserted(const QModelIndex&,int,int)));
+    connect(&d->model, SIGNAL(rowsRemoved(const QModelIndex&,int,int))
+            , this, SLOT(removed(const QModelIndex&,int,int)));
+    connect(&d->model, SIGNAL(dataChanged(const QModelIndex&,const QModelIndex&))
+            , this, SLOT(handleDataChanged(const QModelIndex&,const QModelIndex&)));
+    connect(&d->model, SIGNAL(modelReset()), this, SLOT(refresh()));
+    connect(&d->model, SIGNAL(layoutChanged()), this, SLOT(refresh()));
+}
+
+QQuickFolderListModel::~QQuickFolderListModel()
+{
+    delete d;
+}
+
+QVariant QQuickFolderListModel::data(const QModelIndex &index, int role) const
+{
+    QVariant rv;
+    QModelIndex modelIndex = d->model.index(index.row(), 0, d->folderIndex);
+    if (modelIndex.isValid()) {
+        if (role == FileNameRole)
+            rv = d->model.data(modelIndex, QDirModel::FileNameRole).toString();
+        else if (role == FilePathRole)
+            rv = QUrl::fromLocalFile(d->model.data(modelIndex, QDirModel::FilePathRole).toString());
+    }
+    return rv;
+}
+
+/*!
+    \qmlproperty int FolderListModel::count
+
+    Returns the number of items in the current folder that match the
+    filter criteria.
+*/
+int QQuickFolderListModel::rowCount(const QModelIndex &parent) const
+{
+    Q_UNUSED(parent);
+    return d->count;
+}
+
+/*!
+    \qmlproperty string FolderListModel::folder
+
+    The \a folder property holds a URL for the folder that the model is
+    currently providing.
+
+    The value is a URL expressed as a string, and must be a \c file: or \c qrc:
+    URL, or a relative URL.
+
+    By default, the value is an invalid URL.
+*/
+QUrl QQuickFolderListModel::folder() const
+{
+    return d->folder;
+}
+
+void QQuickFolderListModel::setFolder(const QUrl &folder)
+{
+    if (folder == d->folder)
+        return;
+
+    QModelIndex index = d->model.index(folder.toLocalFile()); // This can modify the filtering rules.
+    if ((index.isValid() && d->model.isDir(index)) || folder.toLocalFile().isEmpty()) {
+        d->folder = folder;
+        QMetaObject::invokeMethod(this, "resetFiltering", Qt::QueuedConnection); // resetFiltering will invoke refresh().
+        emit folderChanged();
+    }
+}
+
+void QQuickFolderListModel::resetFiltering()
+{
+    // ensure that we reset the filtering rules, because the QDirModel::index()
+    // function isn't quite as const as it claims to be.
+    QDir::Filters filt = d->model.filter();
+
+    if (d->showDirs)
+        filt |= (QDir::AllDirs | QDir::Drives);
+    else
+        filt &= ~(QDir::AllDirs | QDir::Drives);
+
+    if (d->showDots)
+        filt &= ~QDir::NoDotAndDotDot;
+    else
+        filt |= QDir::NoDotAndDotDot;
+
+    if (d->showOnlyReadable)
+        filt |= QDir::Readable;
+    else
+        filt &= ~QDir::Readable;
+
+    d->model.setFilter(filt); // this causes a refresh().
+}
+
+/*!
+    \qmlproperty url FolderListModel::parentFolder
+
+    Returns the URL of the parent of of the current \l folder.
+*/
+QUrl QQuickFolderListModel::parentFolder() const
+{
+    QString localFile = d->folder.toLocalFile();
+    if (!localFile.isEmpty()) {
+        QDir dir(localFile);
+#if defined(Q_OS_WIN)
+        if (dir.isRoot())
+            dir.setPath("");
+        else
+#endif
+            dir.cdUp();
+        localFile = dir.path();
+    } else {
+        int pos = d->folder.path().lastIndexOf(QLatin1Char('/'));
+        if (pos == -1)
+            return QUrl();
+        localFile = d->folder.path().left(pos);
+    }
+    return QUrl::fromLocalFile(localFile);
+}
+
+/*!
+    \qmlproperty list<string> FolderListModel::nameFilters
+
+    The \a nameFilters property contains a list of file name filters.
+    The filters may include the ? and * wildcards.
+
+    The example below filters on PNG and JPEG files:
+
+    \qml
+    FolderListModel {
+        nameFilters: [ "*.png", "*.jpg" ]
+    }
+    \endqml
+
+    \note Directories are not excluded by filters.
+*/
+QStringList QQuickFolderListModel::nameFilters() const
+{
+    return d->nameFilters;
+}
+
+void QQuickFolderListModel::setNameFilters(const QStringList &filters)
+{
+    d->nameFilters = filters;
+    d->model.setNameFilters(d->nameFilters);
+}
+
+void QQuickFolderListModel::classBegin()
+{
+}
+
+void QQuickFolderListModel::componentComplete()
+{
+    if (!d->folder.isValid() || d->folder.toLocalFile().isEmpty() || !QDir().exists(d->folder.toLocalFile()))
+        setFolder(QUrl(QLatin1String("file://")+QDir::currentPath()));
+
+    if (!d->folderIndex.isValid())
+        QMetaObject::invokeMethod(this, "refresh", Qt::QueuedConnection);
+}
+
+/*!
+    \qmlproperty enumeration FolderListModel::sortField
+
+    The \a sortField property contains field to use for sorting.  sortField
+    may be one of:
+    \list
+    \o Unsorted - no sorting is applied.  The order is system default.
+    \o Name - sort by filename
+    \o Time - sort by time modified
+    \o Size - sort by file size
+    \o Type - sort by file type (extension)
+    \endlist
+
+    \sa sortReversed
+*/
+QQuickFolderListModel::SortField QQuickFolderListModel::sortField() const
+{
+    return d->sortField;
+}
+
+void QQuickFolderListModel::setSortField(SortField field)
+{
+    if (field != d->sortField) {
+        d->sortField = field;
+        d->updateSorting();
+    }
+}
+
+/*!
+    \qmlproperty bool FolderListModel::sortReversed
+
+    If set to true, reverses the sort order.  The default is false.
+
+    \sa sortField
+*/
+bool QQuickFolderListModel::sortReversed() const
+{
+    return d->sortReversed;
+}
+
+void QQuickFolderListModel::setSortReversed(bool rev)
+{
+    if (rev != d->sortReversed) {
+        d->sortReversed = rev;
+        d->updateSorting();
+    }
+}
+
+/*!
+    \qmlmethod bool FolderListModel::isFolder(int index)
+
+    Returns true if the entry \a index is a folder; otherwise
+    returns false.
+*/
+bool QQuickFolderListModel::isFolder(int index) const
+{
+    if (index != -1) {
+        QModelIndex idx = d->model.index(index, 0, d->folderIndex);
+        if (idx.isValid())
+            return d->model.isDir(idx);
+    }
+    return false;
+}
+
+void QQuickFolderListModel::refresh()
+{
+    if (d->insideRefresh)
+        return;
+    d->insideRefresh = true;
+
+    d->folderIndex = QModelIndex();
+    if (d->count) {
+        emit beginRemoveRows(QModelIndex(), 0, d->count-1);
+        d->count = 0;
+        emit endRemoveRows();
+    }
+
+    d->folderIndex = d->model.index(d->folder.toLocalFile());
+    int newcount = d->model.rowCount(d->folderIndex);
+    if (newcount) {
+        emit beginInsertRows(QModelIndex(), 0, newcount-1);
+        d->count = newcount;
+        emit endInsertRows();
+    }
+
+    d->insideRefresh = false; // finished refreshing.
+}
+
+void QQuickFolderListModel::inserted(const QModelIndex &index, int start, int end)
+{
+    if (index == d->folderIndex) {
+        emit beginInsertRows(QModelIndex(), start, end);
+        d->count = d->model.rowCount(d->folderIndex);
+        emit endInsertRows();
+    }
+}
+
+void QQuickFolderListModel::removed(const QModelIndex &index, int start, int end)
+{
+    if (index == d->folderIndex) {
+        emit beginRemoveRows(QModelIndex(), start, end);
+        d->count = d->model.rowCount(d->folderIndex);
+        emit endRemoveRows();
+    }
+}
+
+void QQuickFolderListModel::handleDataChanged(const QModelIndex &start, const QModelIndex &end)
+{
+    if (start.parent() == d->folderIndex)
+        emit dataChanged(index(start.row(),0), index(end.row(),0));
+}
+
+/*!
+    \qmlproperty bool FolderListModel::showDirs
+
+    If true, directories are included in the model; otherwise only files
+    are included.
+
+    By default, this property is true.
+
+    Note that the nameFilters are not applied to directories.
+
+    \sa showDotAndDotDot
+*/
+bool QQuickFolderListModel::showDirs() const
+{
+    return d->model.filter() & QDir::AllDirs;
+}
+
+void  QQuickFolderListModel::setShowDirs(bool on)
+{
+    if (!(d->model.filter() & QDir::AllDirs) == !on)
+        return;
+    if (on) {
+        d->showDirs = true;
+        d->model.setFilter(d->model.filter() | QDir::AllDirs | QDir::Drives);
+    } else {
+        d->showDirs = false;
+        d->model.setFilter(d->model.filter() & ~(QDir::AllDirs | QDir::Drives));
+    }
+}
+
+/*!
+    \qmlproperty bool FolderListModel::showDotAndDotDot
+
+    If true, the "." and ".." directories are included in the model; otherwise
+    they are excluded.
+
+    By default, this property is false.
+
+    \sa showDirs
+*/
+bool QQuickFolderListModel::showDotAndDotDot() const
+{
+    return !(d->model.filter() & QDir::NoDotAndDotDot);
+}
+
+void  QQuickFolderListModel::setShowDotAndDotDot(bool on)
+{
+    if (!(d->model.filter() & QDir::NoDotAndDotDot) == on)
+        return;
+    if (on) {
+        d->showDots = true;
+        d->model.setFilter(d->model.filter() & ~QDir::NoDotAndDotDot);
+    } else {
+        d->showDots = false;
+        d->model.setFilter(d->model.filter() | QDir::NoDotAndDotDot);
+    }
+}
+
+/*!
+    \qmlproperty bool FolderListModel::showOnlyReadable
+
+    If true, only readable files and directories are shown; otherwise all files
+    and directories are shown.
+
+    By default, this property is false.
+
+    \sa showDirs
+*/
+bool QQuickFolderListModel::showOnlyReadable() const
+{
+    return d->model.filter() & QDir::Readable;
+}
+
+void QQuickFolderListModel::setShowOnlyReadable(bool on)
+{
+    if (!(d->model.filter() & QDir::Readable) == !on)
+        return;
+    if (on) {
+        d->showOnlyReadable = true;
+        d->model.setFilter(d->model.filter() | QDir::Readable);
+    } else {
+        d->showOnlyReadable = false;
+        d->model.setFilter(d->model.filter() & ~QDir::Readable);
+    }
+}
+
+//![code]
+QT_END_NAMESPACE
+
+#endif // QT_NO_DIRMODEL

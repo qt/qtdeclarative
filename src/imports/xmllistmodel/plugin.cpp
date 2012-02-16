@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,22 +39,22 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative/qdeclarativeextensionplugin.h>
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
-#include "qdeclarativexmllistmodel_p.h"
+#include "qqmlxmllistmodel_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QmlXmlListModelPlugin : public QDeclarativeExtensionPlugin
+class QmlXmlListModelPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
 public:
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.XmlListModel"));
-        qmlRegisterType<QDeclarativeXmlListModel>(uri,2,0,"XmlListModel");
-        qmlRegisterType<QDeclarativeXmlListModelRole>(uri,2,0,"XmlRole");
+        qmlRegisterType<QQuickXmlListModel>(uri,2,0,"XmlListModel");
+        qmlRegisterType<QQuickXmlListModelRole>(uri,2,0,"XmlRole");
     }
 };
 

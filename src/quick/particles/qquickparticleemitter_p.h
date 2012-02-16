@@ -121,7 +121,7 @@ public:
     void setSpeedFromMovement(qreal s);
     virtual void componentComplete();
 signals:
-    void emitParticles(QDeclarativeV8Handle particles);
+    void emitParticles(QQmlV8Handle particles);
     void particlesPerSecondChanged(qreal);
     void particleDurationChanged(int);
     void enabledChanged(bool);

@@ -3,5 +3,5 @@ INSTALLS        += target
 
 INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
-SOURCES += $$PWD/qdeclarativeaccessible.cpp
-HEADERS += $$PWD/qdeclarativeaccessible.h
+SOURCES += $$PWD/qqmlaccessible.cpp
+HEADERS += $$PWD/qqmlaccessible.h

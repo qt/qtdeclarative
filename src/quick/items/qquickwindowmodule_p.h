@@ -42,7 +42,7 @@
 #ifndef QQUICKWINDOWMODULE_H
 #define QQUICKWINDOWMODULE_H
 
-#include <qdeclarative.h>
+#include <qqml.h>
 
 QT_BEGIN_HEADER
 

@@ -1,14 +1,14 @@
 %modules = ( # path to module name map
-    "QtDeclarative" => "$basedir/src/declarative",
+    "QtQml" => "$basedir/src/qml",
     "QtQuick" => "$basedir/src/quick",
     "QtQuickTest" => "$basedir/src/qmltest",
     "QtQmlDevTools" => "$basedir/src/qmldevtools",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
-    "QtQmlDevTools" => "../declarative/qml/parser",
+    "QtQmlDevTools" => "../qml/qml/parser",
 );
 %classnames = (
-    "qtdeclarativeversion.h" => "QtDeclarativeVersion",
+    "qtqmlversion.h" => "QtQmlVersion",
 );
 %mastercontent = (
     "gui" => "#include <QtGui/QtGui>\n",
@@ -17,7 +17,7 @@
     "testlib" => "#include <QtTest/QtTest>\n",
 );
 %modulepris = (
-    "QtDeclarative" => "$basedir/modules/qt_declarative.pri",
+    "QtQml" => "$basedir/modules/qt_qml.pri",
     "QtQuick" => "$basedir/modules/qt_quick.pri",
     "QtQuickTest" => "$basedir/modules/qt_qmltest.pri",
     "QtQmlDevTools" => "$basedir/modules/qt_qmldevtools.pri",

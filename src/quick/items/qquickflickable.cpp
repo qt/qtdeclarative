@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,7 +45,9 @@
 #include "qquickcanvas_p.h"
 #include "qquickevents_p_p.h"
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <private/qqmlglobal_p.h>
+
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
@@ -204,7 +206,7 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
 void QQuickFlickablePrivate::init()
 {
     Q_Q(QQuickFlickable);
-    QDeclarative_setParent_noEvent(contentItem, q);
+    QQml_setParent_noEvent(contentItem, q);
     contentItem->setParentItem(q);
     FAST_CONNECT(&timeline, SIGNAL(completed()), q, SLOT(movementEnding()))
     q->setAcceptedMouseButtons(Qt::LeftButton);
@@ -277,7 +279,7 @@ void QQuickFlickablePrivate::flickY(qreal velocity)
 }
 
 void QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal,
-                                         QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity)
+                                         QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
 {
     Q_Q(QQuickFlickable);
     qreal maxDistance = -1;
@@ -303,7 +305,7 @@ void QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
             timeline.accel(data.move, v, deceleration);
         else
             timeline.accel(data.move, v, deceleration, maxDistance);
-        timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
+        timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
         if (!hData.flicking && q->xflick() && (&data == &hData)) {
             hData.flicking = true;
             emit q->flickingChanged();
@@ -507,7 +509,7 @@ is finished.
     The following example shows a small view onto a large image in which the
     user can drag or flick the image in order to view different parts of it.
 
-    \snippet doc/src/snippets/declarative/flickable.qml document
+    \snippet doc/src/snippets/qml/flickable.qml document
 
     \clearfloat
 
@@ -569,9 +571,9 @@ is finished.
 
     These properties are typically used to draw a scrollbar. For example:
 
-    \snippet doc/src/snippets/declarative/flickableScrollbar.qml 0
+    \snippet doc/src/snippets/qml/flickableScrollbar.qml 0
     \dots 8
-    \snippet doc/src/snippets/declarative/flickableScrollbar.qml 1
+    \snippet doc/src/snippets/qml/flickableScrollbar.qml 1
 
     \sa {declarative/ui-components/scrollbar}{scrollbar example}
 */
@@ -1302,7 +1304,7 @@ void QQuickFlickable::viewportMoved()
         qreal maxDistance = d->overShootDistance(height());
         d->timeline.reset(d->vData.move);
         d->timeline.accel(d->vData.move, -d->vData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
-        d->timeline.callback(QDeclarativeTimeLineCallback(&d->vData.move, d->fixupY_callback, d));
+        d->timeline.callback(QQuickTimeLineCallback(&d->vData.move, d->fixupY_callback, d));
     }
     if (!d->hData.inOvershoot && !d->hData.fixingUp && d->hData.flicking
             && (d->hData.move.value() > minXExtent() || d->hData.move.value() < maxXExtent())
@@ -1312,7 +1314,7 @@ void QQuickFlickable::viewportMoved()
         qreal maxDistance = d->overShootDistance(width());
         d->timeline.reset(d->hData.move);
         d->timeline.accel(d->hData.move, -d->hData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
-        d->timeline.callback(QDeclarativeTimeLineCallback(&d->hData.move, d->fixupX_callback, d));
+        d->timeline.callback(QQuickTimeLineCallback(&d->hData.move, d->fixupX_callback, d));
     }
 
     d->lastFlickablePosition = QPointF(d->hData.move.value(), d->vData.move.value());
@@ -1386,7 +1388,7 @@ void QQuickFlickable::cancelFlick()
     movementEnding();
 }
 
-void QQuickFlickablePrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObject *o)
+void QQuickFlickablePrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     QQuickItem *i = qobject_cast<QQuickItem *>(o);
     if (i) {
@@ -1396,33 +1398,33 @@ void QQuickFlickablePrivate::data_append(QDeclarativeListProperty<QObject> *prop
     }
 }
 
-int QQuickFlickablePrivate::data_count(QDeclarativeListProperty<QObject> *)
+int QQuickFlickablePrivate::data_count(QQmlListProperty<QObject> *)
 {
     // XXX todo
     return 0;
 }
 
-QObject *QQuickFlickablePrivate::data_at(QDeclarativeListProperty<QObject> *, int)
+QObject *QQuickFlickablePrivate::data_at(QQmlListProperty<QObject> *, int)
 {
     // XXX todo
     return 0;
 }
 
-void QQuickFlickablePrivate::data_clear(QDeclarativeListProperty<QObject> *)
+void QQuickFlickablePrivate::data_clear(QQmlListProperty<QObject> *)
 {
     // XXX todo
 }
 
-QDeclarativeListProperty<QObject> QQuickFlickable::flickableData()
+QQmlListProperty<QObject> QQuickFlickable::flickableData()
 {
     Q_D(QQuickFlickable);
-    return QDeclarativeListProperty<QObject>(this, (void *)d, QQuickFlickablePrivate::data_append,
+    return QQmlListProperty<QObject>(this, (void *)d, QQuickFlickablePrivate::data_append,
                                              QQuickFlickablePrivate::data_count,
                                              QQuickFlickablePrivate::data_at,
                                              QQuickFlickablePrivate::data_clear);
 }
 
-QDeclarativeListProperty<QQuickItem> QQuickFlickable::flickableChildren()
+QQmlListProperty<QQuickItem> QQuickFlickable::flickableChildren()
 {
     Q_D(QQuickFlickable);
     return QQuickItemPrivate::get(d->contentItem)->children();
@@ -1475,7 +1477,7 @@ void QQuickFlickable::setBoundsBehavior(BoundsBehavior b)
     The following snippet shows how these properties are used to display
     an image that is larger than the Flickable item itself:
 
-    \snippet doc/src/snippets/declarative/flickable.qml document
+    \snippet doc/src/snippets/qml/flickable.qml document
 
     In some cases, the the content dimensions can be automatically set
     using the \l {Item::childrenRect.width}{childrenRect.width}

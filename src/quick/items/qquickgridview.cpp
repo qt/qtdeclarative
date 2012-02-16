@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,7 +44,7 @@
 #include "qquickflickable_p_p.h"
 #include "qquickitemview_p_p.h"
 
-#include <private/qdeclarativesmoothedanimation_p_p.h>
+#include <private/qquicksmoothedanimation_p_p.h>
 #include <private/qlistmodelinterface_p.h>
 
 #include <QtGui/qevent.h>
@@ -193,7 +193,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems(int fromModelIndex = 0);
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
+    virtual bool applyInsertionChange(const QQuickChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
     virtual void translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult);
     virtual bool needsRefillForAddedOrRemovedIndex(int index) const;
 
@@ -211,7 +211,7 @@ public:
     virtual void fixupPosition();
     virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
     virtual void flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                        QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity);
+                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity);
 
     QQuickGridView::Flow flow;
     qreal cellWidth;
@@ -692,10 +692,10 @@ void QQuickGridViewPrivate::createHighlight()
             if (autoHighlight)
                 resetHighlightPosition();
             highlightXAnimator = new QSmoothedAnimation;
-            highlightXAnimator->target = QDeclarativeProperty(item, QLatin1String("x"));
+            highlightXAnimator->target = QQmlProperty(item, QLatin1String("x"));
             highlightXAnimator->userDuration = highlightMoveDuration;
             highlightYAnimator = new QSmoothedAnimation;
-            highlightYAnimator->target = QDeclarativeProperty(item, QLatin1String("y"));
+            highlightYAnimator->target = QQmlProperty(item, QLatin1String("y"));
             highlightYAnimator->userDuration = highlightMoveDuration;
 
             highlight = newHighlight;
@@ -960,7 +960,7 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
 }
 
 void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                                        QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity)
+                                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
 {
     Q_Q(QQuickGridView);
     data.fixingUp = false;
@@ -1060,7 +1060,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         }
         timeline.reset(data.move);
         timeline.accel(data.move, v, accel, maxDistance + overshootDist);
-        timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
+        timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
         if (!hData.flicking && q->xflick()) {
             hData.flicking = true;
             emit q->flickingChanged();
@@ -1103,7 +1103,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     The following example shows the definition of a simple list model defined
     in a file called \c ContactModel.qml:
 
-    \snippet doc/src/snippets/declarative/gridview/ContactModel.qml 0
+    \snippet doc/src/snippets/qml/gridview/ContactModel.qml 0
 
     \div {class="float-right"}
     \inlineimage gridview-simple.png
@@ -1117,9 +1117,9 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     (containing \l Image and \l Text elements) for its delegate.
 
     \clearfloat
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml import
+    \snippet doc/src/snippets/qml/gridview/gridview.qml import
     \codeline
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml classdocs simple
+    \snippet doc/src/snippets/qml/gridview/gridview.qml classdocs simple
 
     \div {class="float-right"}
     \inlineimage gridview-highlight.png
@@ -1132,7 +1132,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     into a separate \c contactDelegate component.
 
     \clearfloat
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml classdocs advanced
+    \snippet doc/src/snippets/qml/gridview/gridview.qml classdocs advanced
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
     and \c focus is set to \c true to enable keyboard navigation for the grid view.
@@ -1146,7 +1146,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     this attached property directly as \c GridView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.GridView.isCurrentItem.
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml isCurrentItem
+    \snippet doc/src/snippets/qml/gridview/gridview.qml isCurrentItem
 
     \note Views do not set the \l{Item::}{clip} property automatically.
     If the view is not clipped by another item or the screen, it will be necessary
@@ -1190,7 +1190,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     It is attached to each instance of the delegate.
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml isCurrentItem
+    \snippet doc/src/snippets/qml/gridview/gridview.qml isCurrentItem
 */
 
 /*!
@@ -1202,7 +1202,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     until an animation completes. The example delegate below ensures that the
     animation completes before the item is removed from the list.
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml delayRemove
+    \snippet doc/src/snippets/qml/gridview/gridview.qml delayRemove
 
     If a \l remove transition has been specified, it will not be applied until
     delayRemove is returned to \c false.
@@ -1310,7 +1310,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     Here is a highlight with its motion defined by a \l {SpringAnimation} item:
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml highlightFollowsCurrentItem
+    \snippet doc/src/snippets/qml/gridview/gridview.qml highlightFollowsCurrentItem
 */
 
 
@@ -2051,7 +2051,7 @@ void QQuickGridView::moveCurrentIndexRight()
     }
 }
 
-bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
+bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
     Q_Q(QQuickGridView);
 

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,11 +43,11 @@
 #include "qquickitem.h"
 
 #include <QtCore/qcoreapplication.h>
-#include <QtDeclarative/qdeclarativecontext.h>
-#include <QtDeclarative/qdeclarativeengine.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlengine.h>
 
-#include <private/qdeclarativechangeset_p.h>
-#include <private/qdeclarativeglobal_p.h>
+#include <private/qquickchangeset_p.h>
+#include <private/qqmlglobal_p.h>
 #include <private/qobject_p.h>
 
 #include <QtCore/qhash.h>
@@ -64,18 +64,18 @@ class QQuickVisualItemModelPrivate : public QObjectPrivate
 public:
     QQuickVisualItemModelPrivate() : QObjectPrivate() {}
 
-    static void children_append(QDeclarativeListProperty<QQuickItem> *prop, QQuickItem *item) {
-        QDeclarative_setParent_noEvent(item, prop->object);
+    static void children_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *item) {
+        QQml_setParent_noEvent(item, prop->object);
         static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.append(Item(item));
         static_cast<QQuickVisualItemModelPrivate *>(prop->data)->itemAppended();
         static_cast<QQuickVisualItemModelPrivate *>(prop->data)->emitChildrenChanged();
     }
 
-    static int children_count(QDeclarativeListProperty<QQuickItem> *prop) {
+    static int children_count(QQmlListProperty<QQuickItem> *prop) {
         return static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.count();
     }
 
-    static QQuickItem *children_at(QDeclarativeListProperty<QQuickItem> *prop, int index) {
+    static QQuickItem *children_at(QQmlListProperty<QQuickItem> *prop, int index) {
         return static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.at(index).item;
     }
 
@@ -83,7 +83,7 @@ public:
         Q_Q(QQuickVisualItemModel);
         QQuickVisualItemModelAttached *attached = QQuickVisualItemModelAttached::properties(children.last().item);
         attached->setIndex(children.count()-1);
-        QDeclarativeChangeSet changeSet;
+        QQuickChangeSet changeSet;
         changeSet.insert(children.count() - 1, 1);
         emit q->modelUpdated(changeSet, false);
         emit q->countChanged();
@@ -165,10 +165,10 @@ QQuickVisualItemModel::QQuickVisualItemModel(QObject *parent)
     It is attached to each instance of the delegate.
 */
 
-QDeclarativeListProperty<QQuickItem> QQuickVisualItemModel::children()
+QQmlListProperty<QQuickItem> QQuickVisualItemModel::children()
 {
     Q_D(QQuickVisualItemModel);
-    return QDeclarativeListProperty<QQuickItem>(this, d, d->children_append,
+    return QQmlListProperty<QQuickItem>(this, d, d->children_append,
                                                       d->children_count, d->children_at);
 }
 
@@ -206,7 +206,7 @@ QQuickVisualModel::ReleaseFlags QQuickVisualItemModel::release(QQuickItem *item)
         if (d->children[idx].deref()) {
             // XXX todo - the original did item->scene()->removeItem().  Why?
             item->setParentItem(0);
-            QDeclarative_setParent_noEvent(item, this);
+            QQml_setParent_noEvent(item, this);
         }
     }
     return 0;
@@ -217,7 +217,7 @@ QString QQuickVisualItemModel::stringValue(int index, const QString &name)
     Q_D(QQuickVisualItemModel);
     if (index < 0 || index >= d->children.count())
         return QString();
-    return QDeclarativeEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
+    return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
 }
 
 int QQuickVisualItemModel::indexOf(QQuickItem *item, QObject *) const

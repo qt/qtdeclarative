@@ -5,12 +5,12 @@ include(../qimportbase.pri)
 SOURCES += \
     plugin.cpp
 
-QT += quick-private declarative-private
+QT += quick-private qml-private
 
 OTHER_FILES += \
     qmldir
 
-DESTDIR = $$QT.declarative.imports/$$TARGETPATH
+DESTDIR = $$QT.qml.imports/$$TARGETPATH
 target.path = $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
 
 qmldir.files += $$PWD/qmldir

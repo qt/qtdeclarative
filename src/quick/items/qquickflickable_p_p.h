@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -57,12 +57,12 @@
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
 
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqml.h>
 #include <QtCore/qdatetime.h>
 #include "qplatformdefs.h"
 
-#include <private/qdeclarativetimeline_p_p.h>
-#include <private/qdeclarativeanimation_p_p.h>
+#include <private/qquicktimeline_p_p.h>
+#include <private/qquickanimation_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -80,13 +80,13 @@ public:
     QQuickFlickablePrivate();
     void init();
 
-    struct Velocity : public QDeclarativeTimeLineValue
+    struct Velocity : public QQuickTimeLineValue
     {
         Velocity(QQuickFlickablePrivate *p)
             : parent(p) {}
         virtual void setValue(qreal v) {
             if (v != value()) {
-                QDeclarativeTimeLineValue::setValue(v);
+                QQuickTimeLineValue::setValue(v);
                 parent->updateVelocity();
             }
         }
@@ -119,7 +119,7 @@ public:
         void addVelocitySample(qreal v, qreal maxVelocity);
         void updateVelocity();
 
-        QDeclarativeTimeLineValueProxy<QQuickFlickablePrivate> move;
+        QQuickTimeLineValueProxy<QQuickFlickablePrivate> move;
         qreal viewSize;
         qreal pressPos;
         qreal dragStartOffset;
@@ -148,7 +148,7 @@ public:
     void flickX(qreal velocity);
     void flickY(qreal velocity);
     virtual void flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                        QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity);
+                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity);
 
     void fixupX();
     void fixupY();
@@ -176,7 +176,7 @@ public:
     AxisData hData;
     AxisData vData;
 
-    QDeclarativeTimeLine timeline;
+    QQuickTimeLine timeline;
     bool hMoved : 1;
     bool vMoved : 1;
     bool stealMouse : 1;
@@ -209,7 +209,7 @@ public:
 
     void updateVelocity();
     int vTime;
-    QDeclarativeTimeLine velocityTimeline;
+    QQuickTimeLine velocityTimeline;
     QQuickFlickableVisibleArea *visibleArea;
     QQuickFlickable::FlickableDirection flickableDirection;
     QQuickFlickable::BoundsBehavior boundsBehavior;
@@ -221,10 +221,10 @@ public:
     qint64 computeCurrentTime(QInputEvent *event);
 
     // flickableData property
-    static void data_append(QDeclarativeListProperty<QObject> *, QObject *);
-    static int data_count(QDeclarativeListProperty<QObject> *);
-    static QObject *data_at(QDeclarativeListProperty<QObject> *, int);
-    static void data_clear(QDeclarativeListProperty<QObject> *);
+    static void data_append(QQmlListProperty<QObject> *, QObject *);
+    static int data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static void data_clear(QQmlListProperty<QObject> *);
 };
 
 class QQuickFlickableVisibleArea : public QObject

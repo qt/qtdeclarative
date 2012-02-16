@@ -41,17 +41,17 @@
 
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QApplication>
-#include <QtDeclarative/QDeclarativeView>
-#include <QtDeclarative/QDeclarativeEngine>
+#include <QtQuick/QQuickView>
+#include <QtQml/QQmlEngine>
 
 int main(int argc, char *argv[])
 {
     QApplication application(argc, argv);
 
     const QString mainQmlApp = QLatin1String("calculator.qml");
-    QDeclarativeView view;
+    QQuickView view;
     view.setSource(QUrl(mainQmlApp));
-    view.setResizeMode(QDeclarativeView::SizeRootObjectToView);
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
     QObject::connect(view.engine(), SIGNAL(quit()), &application, SLOT(quit()));
 
 #if defined(QT_KEYPAD_NAVIGATION)

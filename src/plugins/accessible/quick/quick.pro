@@ -4,7 +4,7 @@ TARGET  = qtaccessiblequick
 load(qt_plugin)
 include ($$PWD/../shared/qaccessiblebase.pri)
 
-QT += core-private gui-private v8-private declarative-private quick-private
+QT += core-private gui-private v8-private qml-private quick-private
 DESTDIR = $$QT.gui.plugins/accessible
 
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, accessibility)"

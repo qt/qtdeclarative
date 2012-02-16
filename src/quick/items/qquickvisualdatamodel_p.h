@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,7 +42,7 @@
 #ifndef QQUICKVISUALDATAMODEL_P_H
 #define QQUICKVISUALDATAMODEL_P_H
 
-#include <private/qdeclarativelistcompositor_p.h>
+#include <private/qquicklistcompositor_p.h>
 #include <private/qquickvisualitemmodel_p.h>
 
 #include <QtCore/qabstractitemmodel.h>
@@ -50,7 +50,7 @@
 
 
 #include <private/qv8engine_p.h>
-#include <private/qdeclarativeglobal_p.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_HEADER
 
@@ -58,33 +58,33 @@ Q_DECLARE_METATYPE(QModelIndex)
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeChangeSet;
-class QDeclarativeComponent;
-class QDeclarativePackage;
-class QDeclarativeV8Function;
+class QQuickChangeSet;
+class QQmlComponent;
+class QQuickPackage;
+class QQmlV8Function;
 class QQuickVisualDataGroup;
 class QQuickVisualDataModelAttached;
 class QQuickVisualDataModelPrivate;
 
 
-class Q_QUICK_EXPORT QQuickVisualDataModel : public QQuickVisualModel, public QDeclarativeParserStatus
+class Q_QUICK_EXPORT QQuickVisualDataModel : public QQuickVisualModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickVisualDataModel)
 
     Q_PROPERTY(QVariant model READ model WRITE setModel)
-    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate)
     Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
     Q_PROPERTY(QQuickVisualDataGroup *items READ items CONSTANT)
     Q_PROPERTY(QQuickVisualDataGroup *persistedItems READ persistedItems CONSTANT)
-    Q_PROPERTY(QDeclarativeListProperty<QQuickVisualDataGroup> groups READ groups CONSTANT)
+    Q_PROPERTY(QQmlListProperty<QQuickVisualDataGroup> groups READ groups CONSTANT)
     Q_PROPERTY(QObject *parts READ parts CONSTANT)
     Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 public:
     QQuickVisualDataModel();
-    QQuickVisualDataModel(QDeclarativeContext *, QObject *parent=0);
+    QQuickVisualDataModel(QQmlContext *, QObject *parent=0);
     virtual ~QQuickVisualDataModel();
 
     void classBegin();
@@ -93,8 +93,8 @@ public:
     QVariant model() const;
     void setModel(const QVariant &);
 
-    QDeclarativeComponent *delegate() const;
-    void setDelegate(QDeclarativeComponent *);
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *);
 
     QVariant rootIndex() const;
     void setRootIndex(const QVariant &root);
@@ -117,7 +117,7 @@ public:
 
     QQuickVisualDataGroup *items();
     QQuickVisualDataGroup *persistedItems();
-    QDeclarativeListProperty<QQuickVisualDataGroup> groups();
+    QQmlListProperty<QQuickVisualDataGroup> groups();
     QObject *parts();
 
     bool event(QEvent *);
@@ -159,23 +159,23 @@ public:
     bool defaultInclude() const;
     void setDefaultInclude(bool include);
 
-    Q_INVOKABLE QDeclarativeV8Handle get(int index);
+    Q_INVOKABLE QQmlV8Handle get(int index);
 
 public Q_SLOTS:
-    void insert(QDeclarativeV8Function *);
-    void create(QDeclarativeV8Function *);
-    void resolve(QDeclarativeV8Function *);
-    void remove(QDeclarativeV8Function *);
-    void addGroups(QDeclarativeV8Function *);
-    void removeGroups(QDeclarativeV8Function *);
-    void setGroups(QDeclarativeV8Function *);
-    void move(QDeclarativeV8Function *);
+    void insert(QQmlV8Function *);
+    void create(QQmlV8Function *);
+    void resolve(QQmlV8Function *);
+    void remove(QQmlV8Function *);
+    void addGroups(QQmlV8Function *);
+    void removeGroups(QQmlV8Function *);
+    void setGroups(QQmlV8Function *);
+    void move(QQmlV8Function *);
 
 Q_SIGNALS:
     void countChanged();
     void nameChanged();
     void defaultIncludeChanged();
-    void changed(const QDeclarativeV8Handle &removed, const QDeclarativeV8Handle &inserted);
+    void changed(const QQmlV8Handle &removed, const QQmlV8Handle &inserted);
 private:
     Q_DECLARE_PRIVATE(QQuickVisualDataGroup)
 };
@@ -194,7 +194,7 @@ public:
         , m_previousGroups(0)
         , m_modelChanged(false)
     {
-        QDeclarative_setParent_noEvent(this, parent);
+        QQml_setParent_noEvent(this, parent);
     }
     ~QQuickVisualDataModelAttached() { attachedProperties.remove(parent()); }
 
@@ -229,7 +229,7 @@ Q_SIGNALS:
 public:
     QQuickVisualDataModelItem *m_cacheItem;
     int m_previousGroups;
-    int m_previousIndex[QDeclarativeListCompositor::MaximumGroupCount];
+    int m_previousIndex[QQuickListCompositor::MaximumGroupCount];
     bool m_modelChanged;
 
     static QHash<QObject*, QQuickVisualDataModelAttached*> attachedProperties;

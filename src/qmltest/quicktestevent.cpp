@@ -41,7 +41,7 @@
 
 #include "quicktestevent_p.h"
 #include <QtTest/qtestkeyboard.h>
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqml.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickcanvas.h>
@@ -279,7 +279,7 @@ QWindow *QuickTestEvent::eventWindow()
 #endif
     return 0;
     /*
-    QDeclarativeItem *item = qobject_cast<QDeclarativeItem *>(parent());
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
     if (!item)
         return 0;
     QGraphicsScene *s = item->scene();

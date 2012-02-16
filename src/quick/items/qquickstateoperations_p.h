@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,28 +45,28 @@
 #include "qquickitem.h"
 #include "qquickanchors_p.h"
 
-#include <QtQuick/private/qdeclarativestate_p.h>
+#include <QtQuick/private/qquickstate_p.h>
 
-#include <QtDeclarative/qdeclarativescriptstring.h>
+#include <QtQml/qqmlscriptstring.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QQuickParentChangePrivate;
-class Q_AUTOTEST_EXPORT QQuickParentChange : public QDeclarativeStateOperation, public QDeclarativeActionEvent
+class Q_AUTOTEST_EXPORT QQuickParentChange : public QQuickStateOperation, public QQuickActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentChange)
 
     Q_PROPERTY(QQuickItem *target READ object WRITE setObject)
     Q_PROPERTY(QQuickItem *parent READ parent WRITE setParent)
-    Q_PROPERTY(QDeclarativeScriptString x READ x WRITE setX)
-    Q_PROPERTY(QDeclarativeScriptString y READ y WRITE setY)
-    Q_PROPERTY(QDeclarativeScriptString width READ width WRITE setWidth)
-    Q_PROPERTY(QDeclarativeScriptString height READ height WRITE setHeight)
-    Q_PROPERTY(QDeclarativeScriptString scale READ scale WRITE setScale)
-    Q_PROPERTY(QDeclarativeScriptString rotation READ rotation WRITE setRotation)
+    Q_PROPERTY(QQmlScriptString x READ x WRITE setX)
+    Q_PROPERTY(QQmlScriptString y READ y WRITE setY)
+    Q_PROPERTY(QQmlScriptString width READ width WRITE setWidth)
+    Q_PROPERTY(QQmlScriptString height READ height WRITE setHeight)
+    Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale)
+    Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation)
 public:
     QQuickParentChange(QObject *parent=0);
     ~QQuickParentChange();
@@ -79,39 +79,39 @@ public:
 
     QQuickItem *originalParent() const;
 
-    QDeclarativeScriptString x() const;
-    void setX(QDeclarativeScriptString x);
+    QQmlScriptString x() const;
+    void setX(QQmlScriptString x);
     bool xIsSet() const;
 
-    QDeclarativeScriptString y() const;
-    void setY(QDeclarativeScriptString y);
+    QQmlScriptString y() const;
+    void setY(QQmlScriptString y);
     bool yIsSet() const;
 
-    QDeclarativeScriptString width() const;
-    void setWidth(QDeclarativeScriptString width);
+    QQmlScriptString width() const;
+    void setWidth(QQmlScriptString width);
     bool widthIsSet() const;
 
-    QDeclarativeScriptString height() const;
-    void setHeight(QDeclarativeScriptString height);
+    QQmlScriptString height() const;
+    void setHeight(QQmlScriptString height);
     bool heightIsSet() const;
 
-    QDeclarativeScriptString scale() const;
-    void setScale(QDeclarativeScriptString scale);
+    QQmlScriptString scale() const;
+    void setScale(QQmlScriptString scale);
     bool scaleIsSet() const;
 
-    QDeclarativeScriptString rotation() const;
-    void setRotation(QDeclarativeScriptString rotation);
+    QQmlScriptString rotation() const;
+    void setRotation(QQmlScriptString rotation);
     bool rotationIsSet() const;
 
     virtual ActionList actions();
 
     virtual void saveOriginals();
-    //virtual void copyOriginals(QDeclarativeActionEvent*);
+    //virtual void copyOriginals(QQuickActionEvent*);
     virtual void execute(Reason reason = ActualChange);
     virtual bool isReversable();
     virtual void reverse(Reason reason = ActualChange);
     virtual EventType type() const;
-    virtual bool override(QDeclarativeActionEvent*other);
+    virtual bool override(QQuickActionEvent*other);
     virtual void rewind();
     virtual void saveCurrentValues();
 };
@@ -122,13 +122,13 @@ class Q_AUTOTEST_EXPORT QQuickAnchorSet : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QDeclarativeScriptString left READ left WRITE setLeft RESET resetLeft)
-    Q_PROPERTY(QDeclarativeScriptString right READ right WRITE setRight RESET resetRight)
-    Q_PROPERTY(QDeclarativeScriptString horizontalCenter READ horizontalCenter WRITE setHorizontalCenter RESET resetHorizontalCenter)
-    Q_PROPERTY(QDeclarativeScriptString top READ top WRITE setTop RESET resetTop)
-    Q_PROPERTY(QDeclarativeScriptString bottom READ bottom WRITE setBottom RESET resetBottom)
-    Q_PROPERTY(QDeclarativeScriptString verticalCenter READ verticalCenter WRITE setVerticalCenter RESET resetVerticalCenter)
-    Q_PROPERTY(QDeclarativeScriptString baseline READ baseline WRITE setBaseline RESET resetBaseline)
+    Q_PROPERTY(QQmlScriptString left READ left WRITE setLeft RESET resetLeft)
+    Q_PROPERTY(QQmlScriptString right READ right WRITE setRight RESET resetRight)
+    Q_PROPERTY(QQmlScriptString horizontalCenter READ horizontalCenter WRITE setHorizontalCenter RESET resetHorizontalCenter)
+    Q_PROPERTY(QQmlScriptString top READ top WRITE setTop RESET resetTop)
+    Q_PROPERTY(QQmlScriptString bottom READ bottom WRITE setBottom RESET resetBottom)
+    Q_PROPERTY(QQmlScriptString verticalCenter READ verticalCenter WRITE setVerticalCenter RESET resetVerticalCenter)
+    Q_PROPERTY(QQmlScriptString baseline READ baseline WRITE setBaseline RESET resetBaseline)
     //Q_PROPERTY(QQuickItem *fill READ fill WRITE setFill RESET resetFill)
     //Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn)
 
@@ -145,32 +145,32 @@ public:
     QQuickAnchorSet(QObject *parent=0);
     virtual ~QQuickAnchorSet();
 
-    QDeclarativeScriptString left() const;
-    void setLeft(const QDeclarativeScriptString &edge);
+    QQmlScriptString left() const;
+    void setLeft(const QQmlScriptString &edge);
     void resetLeft();
 
-    QDeclarativeScriptString right() const;
-    void setRight(const QDeclarativeScriptString &edge);
+    QQmlScriptString right() const;
+    void setRight(const QQmlScriptString &edge);
     void resetRight();
 
-    QDeclarativeScriptString horizontalCenter() const;
-    void setHorizontalCenter(const QDeclarativeScriptString &edge);
+    QQmlScriptString horizontalCenter() const;
+    void setHorizontalCenter(const QQmlScriptString &edge);
     void resetHorizontalCenter();
 
-    QDeclarativeScriptString top() const;
-    void setTop(const QDeclarativeScriptString &edge);
+    QQmlScriptString top() const;
+    void setTop(const QQmlScriptString &edge);
     void resetTop();
 
-    QDeclarativeScriptString bottom() const;
-    void setBottom(const QDeclarativeScriptString &edge);
+    QQmlScriptString bottom() const;
+    void setBottom(const QQmlScriptString &edge);
     void resetBottom();
 
-    QDeclarativeScriptString verticalCenter() const;
-    void setVerticalCenter(const QDeclarativeScriptString &edge);
+    QQmlScriptString verticalCenter() const;
+    void setVerticalCenter(const QQmlScriptString &edge);
     void resetVerticalCenter();
 
-    QDeclarativeScriptString baseline() const;
-    void setBaseline(const QDeclarativeScriptString &edge);
+    QQmlScriptString baseline() const;
+    void setBaseline(const QQmlScriptString &edge);
     void resetBaseline();
 
     QQuickItem *fill() const;
@@ -224,7 +224,7 @@ private:
 };
 
 class QQuickAnchorChangesPrivate;
-class Q_AUTOTEST_EXPORT QQuickAnchorChanges : public QDeclarativeStateOperation, public QDeclarativeActionEvent
+class Q_AUTOTEST_EXPORT QQuickAnchorChanges : public QQuickStateOperation, public QQuickActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorChanges)
@@ -247,16 +247,16 @@ public:
     virtual bool isReversable();
     virtual void reverse(Reason reason = ActualChange);
     virtual EventType type() const;
-    virtual bool override(QDeclarativeActionEvent*other);
+    virtual bool override(QQuickActionEvent*other);
     virtual bool changesBindings();
     virtual void saveOriginals();
     virtual bool needsCopy() { return true; }
-    virtual void copyOriginals(QDeclarativeActionEvent*);
+    virtual void copyOriginals(QQuickActionEvent*);
     virtual void clearBindings();
     virtual void rewind();
     virtual void saveCurrentValues();
 
-    QList<QDeclarativeAction> additionalActions();
+    QList<QQuickAction> additionalActions();
     virtual void saveTargetValues();
 };
 

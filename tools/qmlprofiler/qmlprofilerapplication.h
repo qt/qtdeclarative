@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -103,7 +103,7 @@ private:
     bool m_verbose;
     bool m_quitAfterSave;
 
-    QDeclarativeDebugConnection m_connection;
+    QQmlDebugConnection m_connection;
     DeclarativeProfileClient m_declarativeProfilerClient;
     V8ProfileClient m_v8profilerClient;
     ProfileData m_profileData;

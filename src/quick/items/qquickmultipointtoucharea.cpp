@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -309,7 +309,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 
     In the following example, we have two small rectangles that follow our touch points.
 
-    \snippet doc/src/snippets/declarative/multipointtoucharea/multipointtoucharea.qml 0
+    \snippet doc/src/snippets/qml/multipointtoucharea/multipointtoucharea.qml 0
 
     By default this property holds an empty list.
 

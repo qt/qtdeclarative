@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #ifndef QT_NO_DECLARATIVE
-#include <QtDeclarative/QtDeclarative>
+#include <QtQml/QtQml>
 #endif
 
 #ifndef Q_OS_MAC

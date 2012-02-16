@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -67,7 +67,7 @@ class QQuickItem;
 class QQuickShaderEffectTexture;
 class QImage;
 class QTransform;
-class QDeclarativeContext;
+class QQmlContext;
 class QQuickView;
 
 
@@ -122,7 +122,7 @@ public:
     static bool hasAnchor(QQuickItem *item, const QString &name);
     static QQuickItem *anchorFillTargetItem(QQuickItem *item);
     static QQuickItem *anchorCenterInTargetItem(QQuickItem *item);
-    static QPair<QString, QObject*> anchorLineTarget(QQuickItem *item, const QString &name, QDeclarativeContext *context);
+    static QPair<QString, QObject*> anchorLineTarget(QQuickItem *item, const QString &name, QQmlContext *context);
     static void resetAnchor(QQuickItem *item, const QString &name);
 
 
@@ -132,7 +132,7 @@ public:
 
     static int borderWidth(QQuickItem *item);
 
-    static void refreshExpressions(QDeclarativeContext *context);
+    static void refreshExpressions(QQmlContext *context);
 
     static void setRootItem(QQuickView *view, QQuickItem *item);
 

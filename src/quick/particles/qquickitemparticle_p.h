@@ -44,7 +44,7 @@
 #include "qquickparticlepainter_p.h"
 #include <QPointer>
 #include <QSet>
-#include <private/qdeclarativeanimation_p_p.h>
+#include <private/qquickanimation_p_p.h>
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -56,7 +56,7 @@ class QQuickItemParticle : public QQuickParticlePainter
 {
     Q_OBJECT
     Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged)
-    Q_PROPERTY(QDeclarativeComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
 public:
     explicit QQuickItemParticle(QQuickItem *parent = 0);
     ~QQuickItemParticle();
@@ -66,7 +66,7 @@ public:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
     static QQuickItemParticleAttached *qmlAttachedProperties(QObject *object);
-    QDeclarativeComponent* delegate() const
+    QQmlComponent* delegate() const
     {
         return m_delegate;
     }
@@ -74,7 +74,7 @@ public:
 signals:
     void fadeChanged();
 
-    void delegateChanged(QDeclarativeComponent* arg);
+    void delegateChanged(QQmlComponent* arg);
 
 public slots:
     //TODO: Add a follow mode, where moving the delegate causes the logical particle to go with it?
@@ -84,7 +84,7 @@ public slots:
     void give(QQuickItem* item);//give from modelparticle
 
     void setFade(bool arg){if (arg == m_fade) return; m_fade = arg; emit fadeChanged();}
-    void setDelegate(QDeclarativeComponent* arg)
+    void setDelegate(QQmlComponent* arg)
     {
         if (m_delegate != arg) {
             m_delegate = arg;
@@ -108,7 +108,7 @@ private:
     QSet<QQuickItem*> m_stasis;
     qreal m_lastT;
     int m_activeCount;
-    QDeclarativeComponent* m_delegate;
+    QQmlComponent* m_delegate;
 
     typedef QTickAnimationProxy<QQuickItemParticle, &QQuickItemParticle::tick> Clock;
     Clock *clock;

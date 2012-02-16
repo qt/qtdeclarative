@@ -39,15 +39,15 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative/qdeclarativeextensionplugin.h>
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qjsvalue.h>
-#include <QtDeclarative/qjsengine.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qjsvalue.h>
+#include <QtQml/qjsengine.h>
 #include "QtQuickTest/private/quicktestresult_p.h"
 #include "QtQuickTest/private/quicktestevent_p.h"
 #include "private/qtestoptions_p.h"
 #include "QtQuick/qquickitem.h"
-#include <QtDeclarative/private/qdeclarativeengine_p.h>
+#include <QtQml/private/qqmlengine_p.h>
 
 QML_DECLARE_TYPE(QuickTestResult)
 QML_DECLARE_TYPE(QuickTestEvent)
@@ -81,15 +81,15 @@ Q_SIGNALS:
     void wrapperChanged();
 public Q_SLOTS:
 
-    QDeclarativeV8Handle typeName(const QVariant& v) const
+    QQmlV8Handle typeName(const QVariant& v) const
     {
         QString name(v.typeName());
         //qDebug() << "type:" << name  << " string value:" << v.toString() << " value:" << v;
         if (v.canConvert<QObject*>()) {
-            QDeclarativeType *type = 0;
+            QQmlType *type = 0;
             const QMetaObject *mo = v.value<QObject*>()->metaObject();
             while (!type && mo) {
-                type = QDeclarativeMetaType::qmlType(mo);
+                type = QQmlMetaType::qmlType(mo);
                 mo = mo->superClass();
             }
             if (type) {
@@ -97,22 +97,22 @@ public Q_SLOTS:
             }
         }
 
-        return QDeclarativeV8Handle::fromHandle(v8::String::New(name.toUtf8()));
+        return QQmlV8Handle::fromHandle(v8::String::New(name.toUtf8()));
     }
 
     bool compare(const QVariant& act, const QVariant& exp) const {
         return act == exp;
     }
 
-    QDeclarativeV8Handle callerFile(int frameIndex = 0) const
+    QQmlV8Handle callerFile(int frameIndex = 0) const
     {
         v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
         int count = stacks->GetFrameCount();
         if (count >= frameIndex + 1) {
             v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 1);
-            return QDeclarativeV8Handle::fromHandle(frame->GetScriptNameOrSourceURL());
+            return QQmlV8Handle::fromHandle(frame->GetScriptNameOrSourceURL());
         }
-        return QDeclarativeV8Handle();
+        return QQmlV8Handle();
     }
     int callerLine(int frameIndex = 0) const
     {
@@ -132,7 +132,7 @@ QML_DECLARE_TYPE(QuickTestUtil)
 
 QT_BEGIN_NAMESPACE
 
-class QTestQmlModule : public QDeclarativeExtensionPlugin
+class QTestQmlModule : public QQmlExtensionPlugin
 {
     Q_OBJECT
 public:
@@ -144,7 +144,7 @@ public:
         qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
     }
 
-    void initializeEngine(QDeclarativeEngine *, const char *)
+    void initializeEngine(QQmlEngine *, const char *)
     {
     }
 };

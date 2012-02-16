@@ -42,11 +42,11 @@
 #define QQuickPARTICLEGROUP
 #include <private/qquickspriteengine_p.h>
 #include "qquickparticlesystem_p.h"
-#include "qdeclarativeparserstatus.h"
+#include "qqmlparserstatus.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickParticleGroup : public QQuickStochasticState, public QDeclarativeParserStatus
+class QQuickParticleGroup : public QQuickStochasticState, public QQmlParserStatus
 {
     Q_OBJECT
     //### Would setting limits per group be useful? Or clutter the API?
@@ -55,14 +55,14 @@ class QQuickParticleGroup : public QQuickStochasticState, public QDeclarativePar
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
 
     //Intercept children requests and assign to the group & system
-    Q_PROPERTY(QDeclarativeListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
+    Q_PROPERTY(QQmlListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
     Q_CLASSINFO("DefaultProperty", "particleChildren")
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
     explicit QQuickParticleGroup(QObject* parent = 0);
 
-    QDeclarativeListProperty<QObject> particleChildren();
+    QQmlListProperty<QObject> particleChildren();
 
     int maximumAlive() const
     {

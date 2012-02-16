@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qquicksprite_p.h"
-#include <qdeclarative.h>
+#include <qqml.h>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE

@@ -45,8 +45,8 @@
 #include <QObject>
 #include <QUrl>
 #include <QVariantMap>
-#include <QDeclarativeListProperty>
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QQmlListProperty>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 #include "qquickspriteengine_p.h"
 
 QT_BEGIN_HEADER
@@ -298,7 +298,7 @@ private:
     int m_frameDuration;
     int m_frameDurationVariation;
     bool m_frameSync;
-    QDeclarativePixmap m_pix;
+    QQuickPixmap m_pix;
 };
 
 QT_END_NAMESPACE
