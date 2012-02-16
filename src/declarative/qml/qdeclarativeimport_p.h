@@ -80,7 +80,7 @@ public:
     ~QDeclarativeImports();
     QDeclarativeImports &operator=(const QDeclarativeImports &);
 
-    void setBaseUrl(const QUrl &url);
+    void setBaseUrl(const QUrl &url, const QString &urlString = QString());
     QUrl baseUrl() const;
 
     bool resolveType(const QString& type,

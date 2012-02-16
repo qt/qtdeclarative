@@ -1644,7 +1644,7 @@ int QDeclarativeCompiler::translationContextIndex()
 {
     if (cachedTranslationContextIndex == -1) {
         // This code must match that in the qsTr() implementation
-        QString path = output->url.toString();
+        const QString &path = output->name;
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) :
                                              QString();

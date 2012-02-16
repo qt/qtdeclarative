@@ -464,6 +464,7 @@ void QDeclarativeContext::setBaseUrl(const QUrl &baseUrl)
     Q_D(QDeclarativeContext);
 
     d->data->url = baseUrl;
+    d->data->urlString = baseUrl.toString();
 }
 
 /*!

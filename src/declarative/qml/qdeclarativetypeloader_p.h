@@ -113,6 +113,7 @@ public:
 
     QUrl url() const;
     QUrl finalUrl() const;
+    QString finalUrlString() const;
 
     QList<QDeclarativeError> errors() const;
 
@@ -166,6 +167,7 @@ private:
 
     QUrl m_url;
     QUrl m_finalUrl;
+    mutable QString m_finalUrlString;
 
     // List of QDeclarativeDataBlob's that are waiting for me to complete.
     QList<QDeclarativeDataBlob *> m_waitingOnMe;
@@ -355,6 +357,7 @@ public:
     ~QDeclarativeScriptData();
 
     QUrl url;
+    QString urlString;
     QDeclarativeTypeNameCache *importCache;
     QList<QDeclarativeScriptBlob *> scripts;
     QDeclarativeScript::Object::ScriptBlock::Pragmas pragmas;

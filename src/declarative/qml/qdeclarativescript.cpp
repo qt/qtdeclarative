@@ -1287,12 +1287,17 @@ public:
 };
 }
 
-bool QDeclarativeScript::Parser::parse(const QByteArray &qmldata, const QUrl &url)
+bool QDeclarativeScript::Parser::parse(const QByteArray &qmldata, const QUrl &url,
+                                       const QString &urlString)
 {
     clear();
 
-    const QString fileName = url.toString();
-    _scriptFile = fileName;
+    if (urlString.isEmpty()) {
+        _scriptFile = url.toString();
+    } else {
+       // Q_ASSERT(urlString == url.toString());
+        _scriptFile = urlString;
+    }
 
     QTextStream stream(qmldata, QIODevice::ReadOnly);
 #ifndef QT_NO_TEXTCODEC
@@ -1300,7 +1305,7 @@ bool QDeclarativeScript::Parser::parse(const QByteArray &qmldata, const QUrl &ur
 #endif
     QString *code = _pool.NewString(stream.readAll());
 
-    data = new QDeclarativeScript::ParserJsASTData(fileName);
+    data = new QDeclarativeScript::ParserJsASTData(_scriptFile);
 
     Lexer lexer(&data->engine);
     lexer.setCode(*code, /*line = */ 1);

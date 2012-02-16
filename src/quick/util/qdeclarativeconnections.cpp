@@ -277,7 +277,7 @@ void QDeclarativeConnections::connectSignals()
             if (ddata) {
                 ctxtdata = ddata->outerContext;
                 if (ctxtdata && !ctxtdata->url.isEmpty())
-                    location = ddata->outerContext->url.toString();
+                    location = ddata->outerContext->urlString;
             }
 
             QDeclarativeExpression *expression = ctxtdata ?

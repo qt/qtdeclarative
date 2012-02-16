@@ -796,8 +796,9 @@ v8::Handle<v8::Function> QDeclarativeVMEMetaObject::method(int index)
         // XXX We should evaluate all methods in a single big script block to 
         // improve the call time between dynamic methods defined on the same
         // object
-        v8methods[index] = QDeclarativeExpressionPrivate::evalFunction(ctxt, object, body, bodyLength,
-                                                                       ctxt->url.toString(),
+        v8methods[index] = QDeclarativeExpressionPrivate::evalFunction(ctxt, object, body,
+                                                                       bodyLength,
+                                                                       ctxt->urlString,
                                                                        data->lineNumber);
     }
 

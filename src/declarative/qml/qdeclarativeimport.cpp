@@ -171,10 +171,16 @@ QDeclarativeImports::~QDeclarativeImports()
 /*!
   Sets the base URL to be used for all relative file imports added.
 */
-void QDeclarativeImports::setBaseUrl(const QUrl& url)
+void QDeclarativeImports::setBaseUrl(const QUrl& url, const QString &urlString)
 {
     d->baseUrl = url;
-    d->base = url.toString();
+
+    if (urlString.isEmpty()) {
+        d->base = url.toString();
+    } else {
+        //Q_ASSERT(url.toString() == urlString);
+        d->base = urlString;
+    }
 }
 
 /*!

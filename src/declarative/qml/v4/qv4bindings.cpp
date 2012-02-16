@@ -299,7 +299,7 @@ void QV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags 
     trace.addDetail("Line", binding->line);
     trace.addDetail("Column", binding->column);
 
-    QDeclarativeBindingProfiler prof(context->url.toString(), binding->line, binding->column);
+    QDeclarativeBindingProfiler prof(context->urlString, binding->line, binding->column);
 
     if (binding->updating) {
         QString name;

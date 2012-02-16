@@ -477,7 +477,8 @@ public:
     Parser();
     ~Parser();
 
-    bool parse(const QByteArray &data, const QUrl &url = QUrl());
+    bool parse(const QByteArray &data, const QUrl &url = QUrl(),
+               const QString &urlString = QString());
 
     QList<TypeReference*> referencedTypes() const;
 

@@ -163,6 +163,7 @@ public:
 
     // Context base url
     QUrl url;
+    QString urlString;
 
     // List of imports that apply to this context
     QDeclarativeTypeNameCache *imports;

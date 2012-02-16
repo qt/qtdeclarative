@@ -420,6 +420,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             CTXT = new QDeclarativeContextData;
             CTXT->isInternal = true;
             CTXT->url = COMP->url;
+            CTXT->urlString = COMP->name;
             CTXT->imports = COMP->importCache;
             CTXT->imports->addref();
             CTXT->setParent(parentCtxt);
@@ -1085,8 +1086,7 @@ void QDeclarativeScriptData::initialize(QDeclarativeEngine *engine)
 
     // If compilation throws an error, a surrounding v8::TryCatch will record it.
     v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_programSource.constData(),
-                                                             m_programSource.length(), url.toString(),
-                                                             1);
+                                                             m_programSource.length(), urlString, 1);
     if (program.IsEmpty())
         return;
 
@@ -1122,6 +1122,7 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
     else
         ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
     ctxt->url = script->url;
+    ctxt->urlString = script->urlString;
 
     // For backward compatibility, if there are no imports, we need to use the
     // imports from the parent context.  See QTBUG-17518.

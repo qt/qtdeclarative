@@ -388,6 +388,18 @@ QUrl QDeclarativeDataBlob::finalUrl() const
 }
 
 /*!
+Returns the finalUrl() as a string.
+*/
+QString QDeclarativeDataBlob::finalUrlString() const
+{
+    Q_ASSERT(isCompleteOrError() || (m_manager && m_manager->m_thread->isThisThread()));
+    if (m_finalUrlString.isEmpty())
+        m_finalUrlString = m_finalUrl.toString();
+
+    return m_finalUrlString;
+}
+
+/*!
 Return the errors on this blob.
 
 May only be called from the load thread, or after the blob isCompleteOrError().
@@ -1508,12 +1520,12 @@ void QDeclarativeTypeData::completed()
 
 void QDeclarativeTypeData::dataReceived(const QByteArray &data)
 {
-    if (!scriptParser.parse(data, finalUrl())) {
+    if (!scriptParser.parse(data, finalUrl(), finalUrlString())) {
         setError(scriptParser.errors());
         return;
     }
 
-    m_imports.setBaseUrl(finalUrl());
+    m_imports.setBaseUrl(finalUrl(), finalUrlString());
 
     foreach (const QDeclarativeScript::Import &import, scriptParser.imports()) {
         if (import.type == QDeclarativeScript::Import::File && import.qualifier.isEmpty()) {
@@ -1569,8 +1581,8 @@ void QDeclarativeTypeData::compile()
     QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Compiling);
 
     m_compiledData = new QDeclarativeCompiledData(typeLoader()->engine());
-    m_compiledData->url = m_imports.baseUrl();
-    m_compiledData->name = m_compiledData->url.toString();
+    m_compiledData->url = finalUrl();
+    m_compiledData->name = finalUrlString();
     QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Compiling, QUrl(m_compiledData->name),1,1);
     QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Compiling, m_compiledData->name);
 
@@ -1817,7 +1829,7 @@ void QDeclarativeScriptBlob::dataReceived(const QByteArray &data)
     QDeclarativeScript::Parser::JavaScriptMetaData metadata =
         QDeclarativeScript::Parser::extractMetaData(m_source);
 
-    m_imports.setBaseUrl(finalUrl());
+    m_imports.setBaseUrl(finalUrl(), finalUrlString());
 
     m_pragmas = metadata.pragmas;
 
@@ -1881,6 +1893,7 @@ void QDeclarativeScriptBlob::done()
     QDeclarativeEngine *engine = typeLoader()->engine();
     m_scriptData = new QDeclarativeScriptData();
     m_scriptData->url = finalUrl();
+    m_scriptData->urlString = finalUrlString();
     m_scriptData->importCache = new QDeclarativeTypeNameCache();
 
     for (int ii = 0; !isError() && ii < m_scripts.count(); ++ii) {
