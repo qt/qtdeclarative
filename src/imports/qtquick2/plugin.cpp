@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 class QtQuick2Plugin : public QDeclarativeExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface/1.0")
 public:
     virtual void registerTypes(const char *uri)
     {
@@ -61,8 +62,3 @@ public:
 QT_END_NAMESPACE
 
 #include "plugin.moc"
-
-//![plugin export decl]
-Q_EXPORT_PLUGIN2(qtquick2plugin, QT_PREPEND_NAMESPACE(QtQuick2Plugin));
-//![plugin export decl]
-
