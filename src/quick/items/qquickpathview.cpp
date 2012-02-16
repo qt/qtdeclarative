@@ -55,6 +55,17 @@
 #include <QtCore/qmath.h>
 #include <math.h>
 
+// The number of samples to use in calculating the velocity of a flick
+#ifndef QML_FLICK_SAMPLEBUFFER
+#define QML_FLICK_SAMPLEBUFFER 3
+#endif
+
+// The number of samples to discard when calculating the flick velocity.
+// Touch panels often produce inaccurate results as the finger is lifted.
+#ifndef QML_FLICK_DISCARDSAMPLES
+#define QML_FLICK_DISCARDSAMPLES 1
+#endif
+
 QT_BEGIN_NAMESPACE
 
 inline qreal qmlMod(qreal x, qreal y)
@@ -377,8 +388,8 @@ void QQuickPathViewPrivate::updateItem(QQuickItem *item, qreal percent)
             att->setValue(attr.toUtf8(), path->attributeAt(attr, percent));
     }
     QPointF pf = path->pointAt(percent);
-    item->setX(qRound(pf.x() - item->width()/2));
-    item->setY(qRound(pf.y() - item->height()/2));
+    item->setX(pf.x() - item->width()/2);
+    item->setY(pf.y() - item->height()/2);
 }
 
 void QQuickPathViewPrivate::regenerate()
@@ -1118,12 +1129,29 @@ void QQuickPathView::setPathItemCount(int i)
 
 QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercent) const
 {
-    //XXX maybe do recursively at increasing resolution.
+    qreal samples = qMin(path->path().length()/5, qreal(500.0));
+    qreal res = path->path().length()/samples;
+
     qreal mindist = 1e10; // big number
     QPointF nearPoint = path->pointAt(0);
     qreal nearPc = 0;
-    for (qreal i=1; i < 1000; i++) {
-        QPointF pt = path->pointAt(i/1000.0);
+
+    // get rough pos
+    for (qreal i=1; i < samples; i++) {
+        QPointF pt = path->pointAt(i/samples);
+        QPointF diff = pt - point;
+        qreal dist = diff.x()*diff.x() + diff.y()*diff.y();
+        if (dist < mindist) {
+            nearPoint = pt;
+            nearPc = i;
+            mindist = dist;
+        }
+    }
+
+    // now refine
+    qreal approxPc = nearPc;
+    for (qreal i = approxPc-1.0; i < approxPc+1.0; i += 1/(2*res)) {
+        QPointF pt = path->pointAt(i/samples);
         QPointF diff = pt - point;
         qreal dist = diff.x()*diff.x() + diff.y()*diff.y();
         if (dist < mindist) {
@@ -1134,9 +1162,30 @@ QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercen
     }
 
     if (nearPercent)
-        *nearPercent = nearPc / 1000.0;
+        *nearPercent = nearPc / samples;
 
     return nearPoint;
+}
+
+void QQuickPathViewPrivate::addVelocitySample(qreal v)
+{
+    velocityBuffer.append(v);
+    if (velocityBuffer.count() > QML_FLICK_SAMPLEBUFFER)
+        velocityBuffer.remove(0);
+}
+
+qreal QQuickPathViewPrivate::calcVelocity() const
+{
+    qreal velocity = 0;
+    if (velocityBuffer.count() > QML_FLICK_DISCARDSAMPLES) {
+        int count = velocityBuffer.count()-QML_FLICK_DISCARDSAMPLES;
+        for (int i = 0; i < count; ++i) {
+            qreal v = velocityBuffer.at(i);
+            velocity += v;
+        }
+        velocity /= count;
+    }
+    return velocity;
 }
 
 void QQuickPathView::mousePressEvent(QMouseEvent *event)
@@ -1155,6 +1204,7 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
     Q_Q(QQuickPathView);
     if (!interactive || !items.count())
         return;
+    velocityBuffer.clear();
     QPointF scenePoint = q->mapToScene(event->localPos());
     int idx = 0;
     for (; idx < items.count(); ++idx) {
@@ -1227,6 +1277,7 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
             lastElapsed = QQuickItemPrivate::restart(lastPosTime);
             lastDist = diff;
             startPc = newPc;
+            addVelocitySample(diff / (qreal(lastElapsed) / 1000.));
         }
         if (!moving) {
             moving = true;
@@ -1256,18 +1307,18 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
     if (!interactive || !lastPosTime.isValid())
         return;
 
-    qreal elapsed = qreal(lastElapsed + QQuickItemPrivate::elapsed(lastPosTime)) / 1000.;
-    qreal velocity = elapsed > 0. ? lastDist / elapsed : 0;
-    if (model && modelCount && qAbs(velocity) > 1.) {
+    qreal velocity = calcVelocity();
+    if (model && modelCount && qAbs(velocity) > 0.5) {
         qreal count = pathItems == -1 ? modelCount : pathItems;
         if (qAbs(velocity) > count * 2) // limit velocity
             velocity = (velocity > 0 ? count : -count) * 2;
         // Calculate the distance to be travelled
         qreal v2 = velocity*velocity;
         qreal accel = deceleration/10;
-        // + 0.25 to encourage moving at least one item in the flick direction
-        qreal dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2.0) + 0.25));
+        qreal dist = 0;
         if (haveHighlightRange && highlightRangeMode == QQuickPathView::StrictlyEnforceRange) {
+            // + 0.25 to encourage moving at least one item in the flick direction
+            dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2.0) + 0.25));
             // round to nearest item.
             if (velocity > 0.)
                 dist = qRound(dist + offset) - offset;
@@ -1280,6 +1331,8 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
             } else {
                 accel = v2 / (2.0f * qAbs(dist));
             }
+        } else {
+            dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2.0)));
         }
         offsetAdj = 0.0;
         moveOffset.setValue(offset);

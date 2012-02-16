@@ -718,7 +718,7 @@ void tst_QQuickPathView::pathMoved()
     for (int i=0; i<model.count(); i++) {
         QQuickRectangle *curItem = findItem<QQuickRectangle>(pathview, "wrapper", i);
         QPointF itemPos(path->pointAt(0.25 + i*0.25));
-        QCOMPARE(curItem->pos() + offset, QPointF(qRound(itemPos.x()), qRound(itemPos.y())));
+        QCOMPARE(curItem->pos() + offset, QPointF(itemPos.x(), itemPos.y()));
     }
 
     pathview->setOffset(0.0);
@@ -1279,8 +1279,6 @@ void tst_QQuickPathView::changePreferredHighlight()
     QDeclarativePath *path = qobject_cast<QDeclarativePath*>(pathview->path());
     QVERIFY(path);
     QPointF start = path->pointAt(0.5);
-    start.setX(qRound(start.x()));
-    start.setY(qRound(start.y()));
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(firstItem->width()/2);
     offset.setY(firstItem->height()/2);
@@ -1289,8 +1287,6 @@ void tst_QQuickPathView::changePreferredHighlight()
     pathview->setPreferredHighlightBegin(0.8);
     pathview->setPreferredHighlightEnd(0.8);
     start = path->pointAt(0.8);
-    start.setX(qRound(start.x()));
-    start.setY(qRound(start.y()));
     QTRY_COMPARE(firstItem->pos() + offset, start);
     QCOMPARE(pathview->currentIndex(), 0);
 
@@ -1345,7 +1341,6 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     QVERIFY(path);
 
     QPointF start = path->pointAt(0.5);
-    start = QPointF(qRound(start.x()), qRound(start.y()));
     QPointF offset;//Center of item is at point, but pos is from corner
     offset.setX(item->width()/2);
     offset.setY(item->height()/2);
@@ -1442,7 +1437,7 @@ void tst_QQuickPathView::asynchronous()
     for (int i=0; i<5; i++) {
         QQuickItem *curItem = findItem<QQuickItem>(pathview, "wrapper", i);
         QPointF itemPos(path->pointAt(0.2 + i*0.2));
-        QCOMPARE(curItem->pos() + offset, QPointF(qRound(itemPos.x()), qRound(itemPos.y())));
+        QCOMPARE(curItem->pos() + offset, itemPos);
     }
 
     delete canvas;

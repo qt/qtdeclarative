@@ -140,6 +140,8 @@ public:
     void updateItem(QQuickItem *, qreal);
     void snapToCurrent();
     QPointF pointNear(const QPointF &point, qreal *nearPercent=0) const;
+    void addVelocitySample(qreal v);
+    qreal calcVelocity() const;
 
     QDeclarativePath *path;
     int currentIndex;
@@ -191,6 +193,7 @@ public:
     QQuickPathView::HighlightRangeMode highlightRangeMode;
     int highlightMoveDuration;
     int modelCount;
+    QPODVector<qreal,10> velocityBuffer;
 };
 
 QT_END_NAMESPACE

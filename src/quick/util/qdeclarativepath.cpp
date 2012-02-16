@@ -654,12 +654,31 @@ QPointF QDeclarativePath::pointAt(qreal p) const
         if (d->_pointCache.isEmpty())
             return QPointF();
     }
-    int idx = qRound(p*d->_pointCache.size());
-    if (idx >= d->_pointCache.size())
-        idx = d->_pointCache.size() - 1;
-    else if (idx < 0)
-        idx = 0;
-    return d->_pointCache.at(idx);
+
+    const int pointCacheSize = d->_pointCache.size();
+    qreal idxf = p*pointCacheSize;
+    int idx1 = qFloor(idxf);
+    qreal delta = idxf - idx1;
+    if (idx1 >= pointCacheSize)
+        idx1 = pointCacheSize - 1;
+    else if (idx1 < 0)
+        idx1 = 0;
+
+    if (delta == 0.0)
+        return d->_pointCache.at(idx1);
+
+    // interpolate between the two points.
+    int idx2 = qCeil(idxf);
+    if (idx2 >= pointCacheSize)
+        idx2 = pointCacheSize - 1;
+    else if (idx2 < 0)
+        idx2 = 0;
+
+    QPointF p1 = d->_pointCache.at(idx1);
+    QPointF p2 = d->_pointCache.at(idx2);
+    QPointF pos = p1 * (1.0-delta) + p2 * delta;
+
+    return pos;
 }
 
 qreal QDeclarativePath::attributeAt(const QString &name, qreal percent) const
