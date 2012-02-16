@@ -540,12 +540,20 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     if (vData.extentsChanged) {
         vData.extentsChanged = false;
-        emit q->originYChanged();
+        qreal originY = q->originY();
+        if (vData.origin != originY) {
+            vData.origin = originY;
+            emit q->originYChanged();
+        }
     }
 
     if (hData.extentsChanged) {
         hData.extentsChanged = false;
-        emit q->originXChanged();
+        qreal originX = q->originX();
+        if (hData.origin != originX) {
+            hData.origin = originX;
+            emit q->originXChanged();
+        }
     }
 
     if (atBoundaryChange)

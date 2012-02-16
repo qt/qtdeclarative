@@ -102,6 +102,7 @@ public:
             : move(fp, func)
             , transitionToBounds(0)
             , viewSize(-1), startMargin(0), endMargin(0)
+            , origin(0)
             , transitionTo(0)
             , continuousFlickVelocity(0), vTime(0)
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
@@ -146,6 +147,7 @@ public:
         qreal flickTarget;
         qreal startMargin;
         qreal endMargin;
+        qreal origin;
         qreal transitionTo;
         qreal continuousFlickVelocity;
         QElapsedTimer velocityTime;
