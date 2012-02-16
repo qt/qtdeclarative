@@ -394,7 +394,6 @@ public:
     };
 
     QDeclarativeScript::Object::ScriptBlock::Pragmas pragmas() const;
-    QString scriptSource() const;
 
     QDeclarativeTypeLoader *typeLoader() const;
     const QDeclarativeImports &imports() const;

@@ -1799,11 +1799,6 @@ QDeclarativeScript::Object::ScriptBlock::Pragmas QDeclarativeScriptBlob::pragmas
     return m_pragmas;
 }
 
-QString QDeclarativeScriptBlob::scriptSource() const
-{
-    return m_source;
-}
-
 QDeclarativeTypeLoader *QDeclarativeScriptBlob::typeLoader() const
 {
     return m_typeLoader;
@@ -1907,6 +1902,7 @@ void QDeclarativeScriptBlob::done()
 
     m_scriptData->pragmas = m_pragmas;
     m_scriptData->m_programSource = m_source.toUtf8();
+    m_source.clear();
 }
 
 QDeclarativeQmldirData::QDeclarativeQmldirData(const QUrl &url)
