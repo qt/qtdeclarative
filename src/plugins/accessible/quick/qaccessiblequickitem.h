@@ -63,7 +63,6 @@ public:
     QAccessibleInterface *parent() const;
     QAccessibleInterface *child(int index) const;
     int childCount() const;
-    int navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const;
     int indexOfChild(const QAccessibleInterface *iface) const;
     QList<QQuickItem *> childItems() const;
 

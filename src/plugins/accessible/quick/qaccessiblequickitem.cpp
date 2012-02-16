@@ -118,15 +118,6 @@ QAccessibleInterface *QAccessibleQuickItem::child(int index) const
     return QAccessible::queryAccessibleInterface(child);
 }
 
-int QAccessibleQuickItem::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
-{
-    Q_UNUSED(rel);
-    Q_UNUSED(entry);
-    Q_UNUSED(target);
-    *target = 0;
-    return -1;
-}
-
 int QAccessibleQuickItem::indexOfChild(const QAccessibleInterface *iface) const
 {
     QList<QQuickItem*> kids = childItems();

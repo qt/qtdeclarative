@@ -63,7 +63,6 @@ public:
     QRect rect() const;
 
     int childCount() const;
-    int navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const;
     int indexOfChild(const QAccessibleInterface *iface) const;
     QString text(QAccessible::Text text) const;
     QAccessibleInterface *childAt(int x, int y) const;

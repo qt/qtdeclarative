@@ -91,14 +91,6 @@ QRect QAccessibleQuickView::rect() const
     return QRect(view()->x(), view()->y(), view()->width(), view()->height());
 }
 
-int QAccessibleQuickView::navigate(QAccessible::RelationFlag rel, int entry, QAccessibleInterface **target) const
-{
-    Q_UNUSED(rel);
-    Q_UNUSED(entry);
-    Q_UNUSED(target);
-    return -1;
-}
-
 QString QAccessibleQuickView::text(QAccessible::Text text) const
 {
 #ifdef Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
