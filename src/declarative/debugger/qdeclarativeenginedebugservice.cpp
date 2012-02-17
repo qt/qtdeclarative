@@ -176,12 +176,25 @@ QVariant QDeclarativeEngineDebugService::valueContents(const QVariant &value) co
 {
     int userType = value.userType();
 
+    //QObject * is not streamable.
+    //Convert all such instances to a String value
+
     if (value.type() == QVariant::List) {
         QVariantList contents;
         QVariantList list = value.toList();
         int count = list.size();
         for (int i = 0; i < count; i++)
             contents << valueContents(list.at(i));
+        return contents;
+    }
+
+    if (value.type() == QVariant::Map) {
+        QVariantMap contents;
+        QMapIterator<QString, QVariant> i(value.toMap());
+         while (i.hasNext()) {
+             i.next();
+             contents.insert(i.key(), valueContents(i.value()));
+         }
         return contents;
     }
 

@@ -317,11 +317,15 @@ void tst_QDeclarativeEngineDebug::initTestCase()
                 "}"
                 "property variant varObj\n"
                 "property variant varObjList: []\n"
+                "property variant varObjMap\n"
                 "Component.onCompleted: {\n"
                     "varObj = blueRect;\n"
                     "var list = varObjList;\n"
                     "list[0] = blueRect;\n"
                     "varObjList = list;\n"
+                    "var map = new Object;\n"
+                    "map.rect = blueRect;\n"
+                    "varObjMap = map;\n"
                 "}\n"
                 "NonScriptPropertyElement {\n"
                 "}\n"
@@ -852,6 +856,9 @@ void tst_QDeclarativeEngineDebug::queryExpressionResult_data()
     QTest::newRow("bad expr") << "aeaef" << qVariantFromValue(QString("<undefined>"));
     QTest::newRow("QObject*") << "varObj" << qVariantFromValue(QString("<unnamed object>"));
     QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QString("<unknown value>"));
+    QVariantMap map;
+    map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
+    QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);
 }
 
 void tst_QDeclarativeEngineDebug::tst_QDeclarativeDebugFileReference()
