@@ -679,6 +679,9 @@ void tst_qdeclarativestates::anchorChanges()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
+    QCOMPARE(aChanges->anchors()->left().script(), QLatin1String("undefined"));
+    QCOMPARE(aChanges->anchors()->right().script(), QLatin1String("container.right"));
+
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), qreal(150));
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
@@ -739,6 +742,9 @@ void tst_qdeclarativestates::anchorChanges3()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
+    QCOMPARE(aChanges->anchors()->top().script(), QLatin1String("container.top"));
+    QCOMPARE(aChanges->anchors()->bottom().script(), QLatin1String("bottomGuideline.bottom"));
+
     rectPrivate->setState("reanchored");
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
     QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->left().item, QQuickItemPrivate::get(leftGuideline)->left().item);
@@ -789,6 +795,9 @@ void tst_qdeclarativestates::anchorChanges4()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
+    QCOMPARE(aChanges->anchors()->horizontalCenter().script(), QLatin1String("bottomGuideline.horizontalCenter"));
+    QCOMPARE(aChanges->anchors()->verticalCenter().script(), QLatin1String("leftGuideline.verticalCenter"));
+
     QQuickItemPrivate::get(rect)->setState("reanchored");
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
     QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->horizontalCenter().item, QQuickItemPrivate::get(bottomGuideline)->horizontalCenter().item);
@@ -824,12 +833,14 @@ void tst_qdeclarativestates::anchorChanges5()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
+    QCOMPARE(aChanges->anchors()->baseline().script(), QLatin1String("leftGuideline.baseline"));
+
     QQuickItemPrivate::get(rect)->setState("reanchored");
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
-    //QCOMPARE(aChanges->anchors()->horizontalCenter().item, bottomGuideline->horizontalCenter().item);
-    //QCOMPARE(aChanges->anchors()->horizontalCenter().anchorLine, bottomGuideline->horizontalCenter().anchorLine);
-    //QCOMPARE(aChanges->anchors()->baseline().item, leftGuideline->baseline().item);
-    //QCOMPARE(aChanges->anchors()->baseline().anchorLine, leftGuideline->baseline().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->horizontalCenter().item, QQuickItemPrivate::get(bottomGuideline)->horizontalCenter().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->horizontalCenter().anchorLine, QQuickItemPrivate::get(bottomGuideline)->horizontalCenter().anchorLine);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->baseline().item, QQuickItemPrivate::get(leftGuideline)->baseline().item);
+    QCOMPARE(QQuickItemPrivate::get(aChanges->object())->anchors()->baseline().anchorLine, QQuickItemPrivate::get(leftGuideline)->baseline().anchorLine);
 
     delete rect;
 }

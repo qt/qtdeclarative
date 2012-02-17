@@ -573,7 +573,6 @@ void QQuickAnchorSet::resetTop()
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors &= ~QQuickAnchors::TopAnchor;
-    d->topScript = QDeclarativeScriptString();
     d->resetAnchors |= QQuickAnchors::TopAnchor;
 }
 
@@ -596,7 +595,6 @@ void QQuickAnchorSet::resetBottom()
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors &= ~QQuickAnchors::BottomAnchor;
-    d->bottomScript = QDeclarativeScriptString();
     d->resetAnchors |= QQuickAnchors::BottomAnchor;
 }
 
@@ -619,7 +617,6 @@ void QQuickAnchorSet::resetVerticalCenter()
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors &= ~QQuickAnchors::VCenterAnchor;
-    d->vCenterScript = QDeclarativeScriptString();
     d->resetAnchors |= QQuickAnchors::VCenterAnchor;
 }
 
@@ -642,7 +639,6 @@ void QQuickAnchorSet::resetBaseline()
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors &= ~QQuickAnchors::BaselineAnchor;
-    d->baselineScript = QDeclarativeScriptString();
     d->resetAnchors |= QQuickAnchors::BaselineAnchor;
 }
 
@@ -665,7 +661,6 @@ void QQuickAnchorSet::resetLeft()
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors &= ~QQuickAnchors::LeftAnchor;
-    d->leftScript = QDeclarativeScriptString();
     d->resetAnchors |= QQuickAnchors::LeftAnchor;
 }
 
@@ -688,7 +683,6 @@ void QQuickAnchorSet::resetRight()
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors &= ~QQuickAnchors::RightAnchor;
-    d->rightScript = QDeclarativeScriptString();
     d->resetAnchors |= QQuickAnchors::RightAnchor;
 }
 
@@ -711,7 +705,6 @@ void QQuickAnchorSet::resetHorizontalCenter()
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors &= ~QQuickAnchors::HCenterAnchor;
-    d->hCenterScript = QDeclarativeScriptString();
     d->resetAnchors |= QQuickAnchors::HCenterAnchor;
 }
 
