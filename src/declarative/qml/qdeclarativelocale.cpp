@@ -556,6 +556,19 @@ static v8::Handle<v8::Value> locale_get_weekDays(v8::Local<v8::String>, const v8
     return result;
 }
 
+static v8::Handle<v8::Value> locale_get_uiLanguages(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    GET_LOCALE_DATA_RESOURCE(info.This());
+
+    QStringList langs = r->locale.uiLanguages();
+    v8::Handle<v8::Array> result = v8::Array::New(langs.size());
+    for (int i = 0; i < langs.size(); ++i) {
+        result->Set(i, r->engine->toString(langs.at(i)));
+    }
+
+    return result;
+}
+
 static v8::Handle<v8::Value> locale_currencySymbol(const v8::Arguments &args)
 {
     GET_LOCALE_DATA_RESOURCE(args.This());
@@ -717,6 +730,7 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("weekDays"), locale_get_weekDays);
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("measurementSystem"), locale_get_measurementSystem);
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("textDirection"), locale_get_textDirection);
+    ft->PrototypeTemplate()->SetAccessor(v8::String::New("uiLanguages"), locale_get_uiLanguages);
 
     constructor = qPersistentNew(ft->GetFunction());
 }
@@ -998,6 +1012,17 @@ v8::Handle<v8::Value> QDeclarativeLocale::locale(QV8Engine *v8engine, const QStr
     \sa firstDayOfWeek
 */
 
+/*!
+    \qmlproperty Array<string> QtQuick2::Locale::uiLanguages
+
+    Returns an ordered list of locale names for translation purposes in
+    preference order.
+
+    The return value represents locale names that the user expects to see the
+    UI translation in.
+
+    The first item in the list is the most preferred one.
+*/
 
 /*!
     \qmlproperty enumeration QtQuick2::Locale::textDirection

@@ -23,4 +23,5 @@ QtObject {
     property var measurementSystem: locale.measurementSystem
     property var textDirection: locale.textDirection
     property var weekDays: locale.weekDays
+    property var uiLanguages: locale.uiLanguages
 }

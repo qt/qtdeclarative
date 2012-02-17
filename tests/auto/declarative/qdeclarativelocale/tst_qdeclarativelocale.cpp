@@ -70,6 +70,8 @@ private slots:
     void standaloneDayName();
     void weekDays_data();
     void weekDays();
+    void uiLanguages_data();
+    void uiLanguages();
     void dateFormat_data();
     void dateFormat();
     void dateTimeFormat_data();
@@ -458,6 +460,45 @@ void tst_qdeclarativelocale::weekDays()
         if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
             day = 0;
         QCOMPARE(day, qmlDays.at(i).toInt());
+    }
+
+    delete obj;
+}
+
+void tst_qdeclarativelocale::uiLanguages_data()
+{
+    QTest::addColumn<QString>("locale");
+
+    QTest::newRow("en_US") << "en_US";
+    QTest::newRow("de_DE") << "de_DE";
+    QTest::newRow("ar_SA") << "ar_SA";
+    QTest::newRow("hi_IN") << "hi_IN";
+    QTest::newRow("zh_CN") << "zh_CN";
+    QTest::newRow("th_TH") << "th_TH";
+}
+
+void tst_qdeclarativelocale::uiLanguages()
+{
+    QFETCH(QString, locale);
+
+    QDeclarativeComponent c(&engine, testFileUrl("properties.qml"));
+
+    QObject *obj = c.create();
+    QVERIFY(obj);
+
+    QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
+        Q_ARG(QVariant, QVariant(locale)));
+
+    QVariant val = obj->property("uiLanguages");
+    QVERIFY(val.type() == QVariant::List);
+
+    QList<QVariant> qmlLangs = val.toList();
+    QStringList langs = QLocale(locale).uiLanguages();
+
+    QVERIFY(langs.count() == qmlLangs.count());
+
+    for (int i = 0; i < langs.count(); ++i) {
+        QCOMPARE(langs.at(i), qmlLangs.at(i).toString());
     }
 
     delete obj;
