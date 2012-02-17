@@ -88,9 +88,11 @@ class Q_AUTOTEST_EXPORT QDeclarativeActionEvent
 {
 public:
     virtual ~QDeclarativeActionEvent();
-    virtual QString typeName() const;
 
+    enum EventType { Script, SignalHandler, ParentChange, AnchorChanges };
     enum Reason { ActualChange, FastForward };
+
+    virtual EventType type() const = 0;
 
     virtual void execute(Reason reason = ActualChange);
     virtual bool isReversable();

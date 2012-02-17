@@ -263,7 +263,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QDeclarativeStateAction
     if (!hasExplicit)
     for (int i = 0; i < actions.size(); ++i) {
         QDeclarativeAction &action = actions[i];
-        if (action.event && action.event->typeName() == QLatin1String("ParentChange")
+        if (action.event && action.event->type() == QDeclarativeActionEvent::ParentChange
             && (!d->target || static_cast<QQuickParentChange*>(action.event)->object() == d->target)) {
 
             QQuickParentChange *pc = static_cast<QQuickParentChange*>(action.event);
@@ -537,7 +537,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QDeclarativeStateAction
 
     for (int ii = 0; ii < actions.count(); ++ii) {
         QDeclarativeAction &action = actions[ii];
-        if (action.event && action.event->typeName() == QLatin1String("AnchorChanges")
+        if (action.event && action.event->type() == QDeclarativeActionEvent::AnchorChanges
             && (d->targets.isEmpty() || d->targets.contains(static_cast<QQuickAnchorChanges*>(action.event)->object()))) {
             data->actions << static_cast<QQuickAnchorChanges*>(action.event)->additionalActions();
         }

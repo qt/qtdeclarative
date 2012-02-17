@@ -144,7 +144,7 @@ public:
         delete ownedExpression;
     }
 
-    virtual QString typeName() const { return QLatin1String("ReplaceSignalHandler"); }
+    virtual EventType type() const { return SignalHandler; }
 
     QDeclarativeProperty property;
     QDeclarativeExpression *expression;
@@ -196,7 +196,7 @@ public:
     virtual bool override(QDeclarativeActionEvent*other) {
         if (other == this)
             return true;
-        if (other->typeName() != typeName())
+        if (other->type() != type())
             return false;
         if (static_cast<QDeclarativeReplaceSignalHandler*>(other)->property == property)
             return true;

@@ -929,7 +929,7 @@ QAbstractAnimationJob* QDeclarativeScriptAction::transition(QDeclarativeStateAct
     for (int ii = 0; ii < actions.count(); ++ii) {
         QDeclarativeAction &action = actions[ii];
 
-        if (action.event && action.event->typeName() == QLatin1String("StateChangeScript")
+        if (action.event && action.event->type() == QDeclarativeActionEvent::Script
             && static_cast<QDeclarativeStateChangeScript*>(action.event)->name() == d->name) {
             d->runScriptScript = static_cast<QDeclarativeStateChangeScript*>(action.event)->script();
             d->hasRunScriptScript = true;

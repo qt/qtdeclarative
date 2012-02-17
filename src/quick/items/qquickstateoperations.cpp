@@ -465,15 +465,15 @@ void QQuickParentChange::reverse(Reason)
     d->doChange(d->origParent, d->origStackBefore);
 }
 
-QString QQuickParentChange::typeName() const
+QDeclarativeActionEvent::EventType QQuickParentChange::type() const
 {
-    return QLatin1String("ParentChange");
+    return ParentChange;
 }
 
 bool QQuickParentChange::override(QDeclarativeActionEvent*other)
 {
     Q_D(QQuickParentChange);
-    if (other->typeName() != QLatin1String("ParentChange"))
+    if (other->type() != ParentChange)
         return false;
     if (QQuickParentChange *otherPC = static_cast<QQuickParentChange*>(other))
         return (d->target == otherPC->object());
@@ -1116,9 +1116,9 @@ void QQuickAnchorChanges::reverse(Reason reason)
         d->target->setY(d->origY);
 }
 
-QString QQuickAnchorChanges::typeName() const
+QDeclarativeActionEvent::EventType QQuickAnchorChanges::type() const
 {
-    return QLatin1String("AnchorChanges");
+    return AnchorChanges;
 }
 
 QList<QDeclarativeAction> QQuickAnchorChanges::additionalActions()
@@ -1278,7 +1278,7 @@ void QQuickAnchorChanges::clearBindings()
 
 bool QQuickAnchorChanges::override(QDeclarativeActionEvent*other)
 {
-    if (other->typeName() != QLatin1String("AnchorChanges"))
+    if (other->type() != AnchorChanges)
         return false;
     if (static_cast<QDeclarativeActionEvent*>(this) == other)
         return true;

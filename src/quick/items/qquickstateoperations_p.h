@@ -111,7 +111,7 @@ public:
     virtual void execute(Reason reason = ActualChange);
     virtual bool isReversable();
     virtual void reverse(Reason reason = ActualChange);
-    virtual QString typeName() const;
+    virtual EventType type() const;
     virtual bool override(QDeclarativeActionEvent*other);
     virtual void rewind();
     virtual void saveCurrentValues();
@@ -247,7 +247,7 @@ public:
     virtual void execute(Reason reason = ActualChange);
     virtual bool isReversable();
     virtual void reverse(Reason reason = ActualChange);
-    virtual QString typeName() const;
+    virtual EventType type() const;
     virtual bool override(QDeclarativeActionEvent*other);
     virtual bool changesBindings();
     virtual void saveOriginals();

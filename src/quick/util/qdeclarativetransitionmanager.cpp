@@ -258,7 +258,7 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
     if (stateChangeDebug()) {
         foreach(const QDeclarativeAction &action, applyList) {
             if (action.event)
-                qWarning() << "    No transition for event:" << action.event->typeName();
+                qWarning() << "    No transition for event:" << action.event->type();
             else
                 qWarning() << "    No transition for:" << action.property.object()
                            << action.property.name() << "From:" << action.fromValue 

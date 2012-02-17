@@ -86,11 +86,6 @@ QDeclarativeActionEvent::~QDeclarativeActionEvent()
 {
 }
 
-QString QDeclarativeActionEvent::typeName() const
-{
-    return QString();
-}
-
 void QDeclarativeActionEvent::execute(Reason)
 {
 }
@@ -594,7 +589,7 @@ void QDeclarativeState::apply(QDeclarativeTransition *trans, QDeclarativeState *
             bool found = false;
             for (int jj = 0; jj < d->revertList.count(); ++jj) {
                 QDeclarativeActionEvent *event = d->revertList.at(jj).event();
-                if (event && event->typeName() == action.event->typeName()) {
+                if (event && event->type() == action.event->type()) {
                     if (action.event->override(event)) {
                         found = true;
 
@@ -656,7 +651,7 @@ void QDeclarativeState::apply(QDeclarativeTransition *trans, QDeclarativeState *
                 continue;
             for (int jj = 0; !found && jj < applyList.count(); ++jj) {
                 const QDeclarativeAction &action = applyList.at(jj);
-                if (action.event && action.event->typeName() == event->typeName()) {
+                if (action.event && action.event->type() == event->type()) {
                     if (action.event->override(event))
                         found = true;
                 }
@@ -702,7 +697,7 @@ void QDeclarativeState::apply(QDeclarativeTransition *trans, QDeclarativeState *
     if (stateChangeDebug()) {
         foreach(const QDeclarativeAction &action, applyList) {
             if (action.event)
-                qWarning() << "    QDeclarativeAction event:" << action.event->typeName();
+                qWarning() << "    QDeclarativeAction event:" << action.event->type();
             else
                 qWarning() << "    QDeclarativeAction:" << action.property.object()
                            << action.property.name() << "From:" << action.fromValue 

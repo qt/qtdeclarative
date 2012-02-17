@@ -64,7 +64,7 @@ public:
 
     virtual ActionList actions();
 
-    virtual QString typeName() const;
+    virtual EventType type() const;
 
     QDeclarativeScriptString script() const;
     void setScript(const QDeclarativeScriptString &);

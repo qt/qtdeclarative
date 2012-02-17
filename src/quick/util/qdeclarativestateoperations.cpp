@@ -146,11 +146,10 @@ QDeclarativeStateChangeScript::ActionList QDeclarativeStateChangeScript::actions
     return rv;
 }
 
-QString QDeclarativeStateChangeScript::typeName() const
+QDeclarativeActionEvent::EventType QDeclarativeStateChangeScript::type() const
 {
-    return QLatin1String("StateChangeScript");
+    return Script;
 }
-
 
 #include <moc_qdeclarativestateoperations_p.cpp>
 
