@@ -666,6 +666,7 @@ QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
     }
 
     const int lineWidth = q->widthValid() ? q->width() : INT_MAX;
+    const qreal maxHeight = q->heightValid() ? q->height() : FLT_MAX;
     const bool customLayout = isLineLaidOutConnected();
     const bool wasTruncated = truncated;
 
@@ -715,6 +716,7 @@ QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         }
         layout.beginLayout();
 
+
         bool wrapped = false;
         bool truncateHeight = false;
         truncated = false;
@@ -735,7 +737,7 @@ QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
 
             // Elide the previous line if the accumulated height of the text exceeds the height
             // of the element.
-            if (multilineElide && height > q->height() && visibleCount > 1) {
+            if (multilineElide && height > maxHeight && visibleCount > 1) {
                 elide = true;
                 if (eos != -1)  // There's an abbreviated string available, skip the rest as it's
                     break;      // all going to be discarded.
@@ -873,7 +875,7 @@ QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         }
 
         if (verticalFit) {
-            if (truncateHeight || (q->heightValid() && unelidedRect.height() > q->height())) {
+            if (truncateHeight || unelidedRect.height() > maxHeight) {
                 largeFont = scaledFontSize - 1;
                 scaledFontSize = (smallFont + largeFont + 1) / 2;
                 if (smallFont > largeFont)

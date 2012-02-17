@@ -1,7 +1,7 @@
 import QtQuick 2.0
 
 Text {
-    width: 200; height: 200
+    width: 200
     wrapMode: Text.WordWrap
     elide: Text.ElideRight
     maximumLineCount: 3

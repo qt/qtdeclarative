@@ -471,6 +471,12 @@ void tst_qquicktext::multilineElide()
 
     qreal lineHeight = myText->contentHeight() / 3.;
 
+    // Set a valid height greater than the truncated content height and ensure the line count is
+    // unchanged.
+    myText->setHeight(200);
+    QCOMPARE(myText->lineCount(), 3);
+    QCOMPARE(myText->truncated(), true);
+
     // reduce size and ensure fewer lines are drawn
     myText->setHeight(lineHeight * 2);
     QCOMPARE(myText->lineCount(), 2);
