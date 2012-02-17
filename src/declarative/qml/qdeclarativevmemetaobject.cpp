@@ -480,6 +480,7 @@ QDeclarativeVMEMetaObject::~QDeclarativeVMEMetaObject()
     for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii) {
         qPersistentDispose(v8methods[ii]);
     }
+    delete [] v8methods;
 
     if (metaData->varPropertyCount)
         qPersistentDispose(varProperties); // if not weak, will not have been cleaned up by the callback.
