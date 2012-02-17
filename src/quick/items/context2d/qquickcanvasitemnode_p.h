@@ -59,18 +59,11 @@ class QSGDynamicTexture;
 class QQuickCanvasItemNode : public QSGGeometryNode
 {
 public:
-    class Callback {
-    public:
-        virtual void process() const = 0;
-    };
-
     QQuickCanvasItemNode();
     ~QQuickCanvasItemNode();
 
-    void setCallback(Callback *cb);
     void setTexture(QSGDynamicTexture *texture);
     void update();
-    void preprocess();
     void setSize(const QSizeF& size);
 
 private:
@@ -85,7 +78,6 @@ private:
 
     bool m_dirtyGeometry;
     bool m_dirtyTexture;
-    Callback *m_cb;
 };
 
 QT_END_HEADER

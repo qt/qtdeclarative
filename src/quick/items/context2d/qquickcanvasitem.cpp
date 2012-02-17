@@ -96,16 +96,6 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     qDeleteAll(images);
 }
 
-class QQuickCanvasItemCallback : public QQuickCanvasItemNode::Callback
-{
-public:
-    QQuickCanvasItemCallback(QQuickCanvasItemPrivate *d):item(d) {}
-    void process() const {
-        // on SG render thread
-        item->context->sync();
-    }
-    QQuickCanvasItemPrivate *item;
-};
 
 /*!
     \qmlclass Canvas QQuickCanvasItem
@@ -573,9 +563,10 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     QQuickCanvasItemNode *node = static_cast<QQuickCanvasItemNode*>(oldNode);
     if (!node) {
         node = new QQuickCanvasItemNode;
-        if (d->renderStrategy == QQuickCanvasItem::Cooperative)
-            node->setCallback(new QQuickCanvasItemCallback(d));
     }
+
+    if (d->renderStrategy == QQuickCanvasItem::Cooperative)
+        d->context->sync();
 
     node->setTexture(d->context->texture());
     node->setSize(d->canvasWindow.size());

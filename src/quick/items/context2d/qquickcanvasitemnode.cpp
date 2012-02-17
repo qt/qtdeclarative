@@ -65,25 +65,12 @@ QQuickCanvasItemNode::~QQuickCanvasItemNode()
     delete m_texture;
 }
 
-// Must be called before this node is added to SG
-void QQuickCanvasItemNode::setCallback(QQuickCanvasItemNode::Callback *cb)
-{
-    m_cb = cb;
-    setFlag(UsePreprocess, true);
-}
-
 void QQuickCanvasItemNode::setSize(const QSizeF& size)
 {
     if (m_size != size) {
         m_dirtyGeometry = true;
         m_size = size;
     }
-}
-
-void QQuickCanvasItemNode::preprocess()
-{
-    if (m_cb)
-        m_cb->process();
 }
 
 void QQuickCanvasItemNode::setTexture(QSGDynamicTexture* texture)
