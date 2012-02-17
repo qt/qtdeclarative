@@ -185,6 +185,8 @@ void QV8ProfilerService::startProfiling(const QString &title)
     v8::HandleScope handle_scope;
     v8::Handle<v8::String> v8title = v8::String::New(reinterpret_cast<const uint16_t*>(title.data()), title.size());
     v8::CpuProfiler::StartProfiling(v8title);
+
+    d->m_ongoing.append(title);
 }
 
 void QV8ProfilerService::stopProfiling(const QString &title)
