@@ -629,7 +629,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 #endif
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
-        if (!(usePopulateTransition && populateTransition)) // pos will be set by layoutVisibleItems()
+        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(pos);
         item->item->setVisible(!doBuffer);
         pos += item->size() + spacing;
@@ -649,7 +649,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
             break;
         --visibleIndex;
         visiblePos -= item->size() + spacing;
-        if (!(usePopulateTransition && populateTransition)) // pos will be set by layoutVisibleItems()
+        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(visiblePos);
         item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
@@ -2755,7 +2755,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             if (change.isMove()) {
                 // we know this is a move target, since move displaced items that are
                 // shuffled into view due to a move would be added in refill()
-                if (moveTransition && newItem)
+                if (canTransition(FxViewItemTransitionManager::MoveTransition, true) && newItem)
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);

@@ -1464,51 +1464,61 @@ void QQuickItemViewPrivate::applyPendingChanges()
         layout();
 }
 
+bool QQuickItemViewPrivate::canTransition(FxViewItemTransitionManager::TransitionType type, bool asTarget) const
+{
+    switch (type) {
+    case FxViewItemTransitionManager::NoTransition:
+        return false;
+    case FxViewItemTransitionManager::PopulateTransition:
+        return usePopulateTransition
+                && populateTransition && populateTransition->enabled();
+    case FxViewItemTransitionManager::AddTransition:
+        if (asTarget)
+            return addTransition && addTransition->enabled();
+        else
+            return addDisplacedTransition && addDisplacedTransition->enabled();
+    case FxViewItemTransitionManager::MoveTransition:
+        if (asTarget)
+            return moveTransition && moveTransition->enabled();
+        else
+            return moveDisplacedTransition && moveDisplacedTransition->enabled();
+    case FxViewItemTransitionManager::RemoveTransition:
+        if (asTarget)
+            return removeTransition && removeTransition->enabled();
+        else
+            return removeDisplacedTransition && removeDisplacedTransition->enabled();
+    }
+}
+
 bool QQuickItemViewPrivate::hasItemTransitions() const
 {
-    return populateTransition
-            || addTransition || addDisplacedTransition
-            || moveTransition || moveDisplacedTransition
-            || removeTransition || removeDisplacedTransition;
+    return canTransition(FxViewItemTransitionManager::PopulateTransition, true)
+            || canTransition(FxViewItemTransitionManager::AddTransition, true)
+            || canTransition(FxViewItemTransitionManager::AddTransition, false)
+            || canTransition(FxViewItemTransitionManager::MoveTransition, true)
+            || canTransition(FxViewItemTransitionManager::MoveTransition, false)
+            || canTransition(FxViewItemTransitionManager::RemoveTransition, true)
+            || canTransition(FxViewItemTransitionManager::RemoveTransition, false);
 }
 
 void QQuickItemViewPrivate::transitionNextReposition(FxViewItem *item, FxViewItemTransitionManager::TransitionType type, bool isTarget)
 {
-    switch (type) {
-    case FxViewItemTransitionManager::NoTransition:
-        return;
-    case FxViewItemTransitionManager::PopulateTransition:
-        if (populateTransition) {
-            item->setNextTransition(FxViewItemTransitionManager::PopulateTransition, isTarget);
-            return;
-        }
-        break;
-    case FxViewItemTransitionManager::AddTransition:
-        if (!usePopulateTransition) {
-            if ((isTarget && addTransition) || (!isTarget && addDisplacedTransition)) {
-                item->setNextTransition(type, isTarget);
-                return;
-            }
-        }
-        break;
-    case FxViewItemTransitionManager::MoveTransition:
-        if ((isTarget && moveTransition) || (!isTarget && moveDisplacedTransition)) {
-            item->setNextTransition(type, isTarget);
-            return;
-        }
-        break;
-    case FxViewItemTransitionManager::RemoveTransition:
-        if ((isTarget && removeTransition) || (!isTarget && removeDisplacedTransition)) {
-            item->setNextTransition(type, isTarget);
-            return;
-        }
-        break;
+    bool matchedTransition = false;
+    if (type == FxViewItemTransitionManager::AddTransition) {
+        // don't run add transitions for added items while populating
+        matchedTransition = !usePopulateTransition && canTransition(type, isTarget);
+    } else {
+        matchedTransition = canTransition(type, isTarget);
     }
 
-    // the requested transition type is not valid, but the item is scheduled/in another
-    // transition, so cancel it to allow the item to move directly to the correct pos
-    if (item->transitionScheduledOrRunning())
-        item->stopTransition();
+    if (matchedTransition) {
+        item->setNextTransition(type, isTarget);
+    } else {
+        // the requested transition type is not valid, but the item is scheduled/in another
+        // transition, so cancel it to allow the item to move directly to the correct pos
+        if (item->transitionScheduledOrRunning())
+            item->stopTransition();
+    }
 }
 
 int QQuickItemViewPrivate::findMoveKeyIndex(QDeclarativeChangeSet::MoveKey key, const QVector<QDeclarativeChangeSet::Remove> &changes) const
@@ -1590,7 +1600,7 @@ void QQuickItemView::destroyRemoved()
             it != d->visibleItems.end();) {
         FxViewItem *item = *it;
         if (item->index == -1 && item->attached->delayRemove() == false) {
-            if (d->removeTransition) {
+            if (d->canTransition(FxViewItemTransitionManager::RemoveTransition, true)) {
                 // don't remove from visibleItems until next layout()
                 d->runDelayedRemoveTransition = true;
                 QObject::disconnect(item->attached, SIGNAL(delayRemoveChanged()), this, SLOT(destroyRemoved()));
@@ -2253,7 +2263,7 @@ void QQuickItemViewPrivate::layout()
         return;
     }
 
-    if (runDelayedRemoveTransition && removeDisplacedTransition) {
+    if (runDelayedRemoveTransition && canTransition(FxViewItemTransitionManager::RemoveTransition, false)) {
         // assume that any items moving now are moving due to the remove - if they schedule
         // a different transition, that will override this one anyway
         for (int i=0; i<visibleItems.count(); i++)
@@ -2271,7 +2281,7 @@ void QQuickItemViewPrivate::layout()
     }
     forceLayout = false;
 
-    if (usePopulateTransition && populateTransition) {
+    if (canTransition(FxViewItemTransitionManager::PopulateTransition, true)) {
         for (int i=0; i<visibleItems.count(); i++)
             transitionNextReposition(visibleItems.at(i), FxViewItemTransitionManager::PopulateTransition, true);
     }
@@ -2295,8 +2305,10 @@ void QQuickItemViewPrivate::layout()
     if (hasItemTransitions()) {
         // items added in the last refill() may need to be transitioned in - e.g. a remove
         // causes items to slide up into view
-        if (moveDisplacedTransition || removeDisplacedTransition)
+        if (canTransition(FxViewItemTransitionManager::MoveTransition, false)
+                || canTransition(FxViewItemTransitionManager::RemoveTransition, false)) {
             translateAndTransitionItemsAfter(lastIndexInView, insertionPosChanges, removalPosChanges);
+        }
 
         prepareVisibleItemTransitions();
 
@@ -2421,7 +2433,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     // for each item that was moved directly into the view as a result of a move(),
     // find the index it was moved from in order to set its initial position, so that we
     // can transition it from this "original" position to its new position in the view
-    if (moveTransition) {
+    if (canTransition(FxViewItemTransitionManager::MoveTransition, true)) {
         for (int i=0; i<movingIntoView.count(); i++) {
             int fromIndex = findMoveKeyIndex(movingIntoView[i].moveKey, removals);
             if (fromIndex >= 0) {
@@ -2618,13 +2630,10 @@ void QQuickItemViewPrivate::prepareVisibleItemTransitions()
 
 void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *> *removedItems)
 {
-    if (!removeTransition && !removeDisplacedTransition)
-        return;
-
     removeTransitionIndexes.clear();
     removeTransitionTargets.clear();
 
-    if (removeTransition) {
+    if (canTransition(FxViewItemTransitionManager::RemoveTransition, true)) {
         for (QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *>::Iterator it = removedItems->begin();
              it != removedItems->end(); ) {
             bool isRemove = it.key().moveId < 0;

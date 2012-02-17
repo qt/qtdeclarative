@@ -485,7 +485,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 #endif
         if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, doBuffer))))
             break;
-        if (!(usePopulateTransition && populateTransition)) // pos will be set by layoutVisibleItems()
+        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos);
         item->item->setVisible(!doBuffer);
         visibleItems.append(item);
@@ -523,7 +523,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
         --visibleIndex;
-        if (!(usePopulateTransition && populateTransition)) // pos will be set by layoutVisibleItems()
+        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos);
         item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
@@ -2176,7 +2176,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             if (change.isMove()) {
                 // we know this is a move target, since move displaced items that are
                 // shuffled into view due to a move would be added in refill()
-                if (moveTransition && newItem)
+                if (canTransition(FxViewItemTransitionManager::MoveTransition, true) && newItem)
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);

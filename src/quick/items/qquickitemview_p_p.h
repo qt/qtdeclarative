@@ -247,6 +247,7 @@ public:
     void prepareRemoveTransitions(QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
 
+    bool canTransition(FxViewItemTransitionManager::TransitionType type, bool asTarget) const;
     bool hasItemTransitions() const;
     void transitionNextReposition(FxViewItem *item, FxViewItemTransitionManager::TransitionType type, bool isTarget);
     int findMoveKeyIndex(QDeclarativeChangeSet::MoveKey key, const QVector<QDeclarativeChangeSet::Remove> &changes) const;
