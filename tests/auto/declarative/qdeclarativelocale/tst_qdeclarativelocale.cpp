@@ -106,6 +106,9 @@ private slots:
     void numberFromLocaleString();
     void numberConstToLocaleString();
 
+    void stringLocaleCompare_data();
+    void stringLocaleCompare();
+
 private:
     void addPropertyData(const QString &l);
     QVariant getProperty(QObject *obj, const QString &locale, const QString &property);
@@ -1135,6 +1138,44 @@ void tst_qdeclarativelocale::numberConstToLocaleString()
     QLocale l("en_US");
     QCOMPARE(obj->property("const1").toString(), l.toString(1234.56, 'f', 2));
     QCOMPARE(obj->property("const2").toString(), l.toString(1234., 'f', 2));
+}
+
+void tst_qdeclarativelocale::stringLocaleCompare_data()
+{
+    QTest::addColumn<QString>("string1");
+    QTest::addColumn<QString>("string2");
+
+    QTest::newRow("before") << "a" << "b";
+    QTest::newRow("equal") << "a" << "a";
+    QTest::newRow("after") << "b" << "a";
+
+    // Copied from QString::localeAwareCompare tests
+    // We don't actually change locale - we just care that String.localeCompare()
+    // matches QString::localeAwareCompare();
+    QTest::newRow("swedish1") << QString("\xe5") << QString("\xe4");
+    QTest::newRow("swedish2") << QString("\xe4") << QString("\xf6");
+    QTest::newRow("swedish3") << QString("\xe5") << QString("\xf6");
+    QTest::newRow("swedish4") << QString("z") << QString("\xe5");
+
+    QTest::newRow("german1") << QString("z") << QString("\xe4");
+    QTest::newRow("german2") << QString("\xe4") << QString("\xf6");
+    QTest::newRow("german3") << QString("z") << QString("\xf6");
+}
+
+void tst_qdeclarativelocale::stringLocaleCompare()
+{
+    QFETCH(QString, string1);
+    QFETCH(QString, string2);
+
+    QDeclarativeComponent c(&engine, testFileUrl("localeCompare.qml"));
+
+    QObject *obj = c.create();
+    QVERIFY(obj);
+
+    obj->setProperty("string1", string1);
+    obj->setProperty("string2", string2);
+
+    QCOMPARE(obj->property("comparison").toInt(), QString::localeAwareCompare(string1, string2));
 }
 
 QTEST_MAIN(tst_qdeclarativelocale)

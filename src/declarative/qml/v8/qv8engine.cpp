@@ -636,6 +636,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 #undef STRING_ARG
     }
 
+    QDeclarativeLocale::registerStringLocaleCompare(this);
     QDeclarativeDateExtension::registerExtension(this);
     QDeclarativeNumberExtension::registerExtension(this);
 

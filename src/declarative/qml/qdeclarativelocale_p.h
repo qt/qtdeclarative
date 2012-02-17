@@ -119,8 +119,12 @@ public:
 
     static v8::Handle<v8::Value> locale(QV8Engine *v8engine, const QString &lang);
 
+    static void registerStringLocaleCompare(QV8Engine *engine);
+
 private:
     QDeclarativeLocale();
+
+    static v8::Handle<v8::Value> localeCompare(const v8::Arguments &args);
 };
 
 

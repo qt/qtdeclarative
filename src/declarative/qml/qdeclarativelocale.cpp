@@ -834,6 +834,36 @@ v8::Handle<v8::Value> QDeclarativeLocale::locale(QV8Engine *v8engine, const QStr
     return v8Value;
 }
 
+static const char *localeCompareFunction =
+    "(function(localeCompareFunc) { "
+    "  var orig_localeCompare;"
+    "  orig_localeCompare = String.prototype.localeCompare;"
+    "  String.prototype.localeCompare = (function() {"
+    "    var val = localeCompareFunc.apply(this, arguments);"
+    "    if (val == undefined) val = orig_localeCompare.call(this);"
+    "    return val;"
+    "  })"
+    "})";
+
+void QDeclarativeLocale::registerStringLocaleCompare(QV8Engine *engine)
+{
+    registerFunction(engine, localeCompareFunction, localeCompare);
+}
+
+v8::Handle<v8::Value> QDeclarativeLocale::localeCompare(const v8::Arguments &args)
+{
+    if (args.Length() != 1 || (!args[0]->IsString() && !args[0]->IsStringObject()))
+        return v8::Undefined();
+
+    if (!args.This()->IsString() && !args.This()->IsStringObject())
+        return v8::Undefined();
+
+    QString thisString = QJSConverter::toString(args.This()->ToString());
+    QString thatString = QJSConverter::toString(args[0]->ToString());
+
+    return v8::Integer::New(QString::localeAwareCompare(thisString, thatString));
+}
+
 /*!
     \enum QtQuick2::Locale::FormatType
 
