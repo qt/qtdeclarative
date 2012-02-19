@@ -130,9 +130,11 @@ Qt::ScreenOrientation QQuickScreenAttached::orientation() const
     return m_screen->orientation();
 }
 
-int QQuickScreenAttached::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
+int QQuickScreenAttached::angleBetween(int a, int b)
 {
-    return m_screen->angleBetween(a,b);
+    if (!m_screen)
+        return Qt::PrimaryOrientation;
+    return m_screen->angleBetween((Qt::ScreenOrientation)a,(Qt::ScreenOrientation)b);
 }
 
 void QQuickScreenAttached::canvasChanged(QQuickCanvas* c)//Called by QQuickItemPrivate::initCanvas

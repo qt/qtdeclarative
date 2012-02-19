@@ -73,7 +73,8 @@ public:
     Qt::ScreenOrientation primaryOrientation() const;
     Qt::ScreenOrientation orientation() const;
 
-    Q_INVOKABLE int angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b);
+    //Treats int as Qt::ScreenOrientation, due to QTBUG-20639
+    Q_INVOKABLE int angleBetween(int a, int b);
 
     void canvasChanged(QQuickCanvas*);
 
