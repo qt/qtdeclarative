@@ -208,8 +208,8 @@ void tst_QDebugMessageService::retrieveDebugOutput()
 
     int maxTries = 2;
     while ((m_client->logBuffer.size() < 2)
-           && (maxTries-- > 0))
-        QVERIFY(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput())));
+           || (maxTries-- > 0))
+        QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()), 1000);
 
     QVERIFY(m_client->logBuffer.size() >= 2);
 
@@ -223,8 +223,8 @@ void tst_QDebugMessageService::retrieveDebugOutputExtended()
 
     int maxTries = 2;
     while ((m_client->logBuffer.size() < 2)
-           && (maxTries-- > 0))
-        QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()));
+           || (maxTries-- > 0))
+        QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()), 1000);
 
     QVERIFY(m_client->logBuffer.size() >= 2);
 
