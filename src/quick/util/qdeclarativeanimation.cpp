@@ -728,7 +728,7 @@ QDeclarativeColorAnimation::~QDeclarativeColorAnimation()
         ]
 
         transition: Transition {
-            NumberAnimation { from: "#c0c0c0"; duration: 2000 }
+            ColorAnimation { from: "#c0c0c0"; duration: 2000 }
         }
     }
     \endqml
