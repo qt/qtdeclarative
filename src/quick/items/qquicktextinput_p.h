@@ -267,9 +267,9 @@ Q_SIGNALS:
     void selectedTextChanged();
     void accepted();
     void acceptableInputChanged();
-    void colorChanged(const QColor &color);
-    void selectionColorChanged(const QColor &color);
-    void selectedTextColorChanged(const QColor &color);
+    void colorChanged();
+    void selectionColorChanged();
+    void selectedTextColorChanged();
     void fontChanged(const QFont &font);
     void horizontalAlignmentChanged(HAlignment alignment);
     void verticalAlignmentChanged(VAlignment alignment);

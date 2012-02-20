@@ -77,35 +77,32 @@ class Q_AUTOTEST_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPr
     Q_DECLARE_PUBLIC(QQuickTextInput)
 public:
     QQuickTextInputPrivate()
-        : color((QRgb)0)
-        , styleColor((QRgb)0)
+        : cursorItem(0)
         , textNode(0)
         , m_maskData(0)
+        , color(QRgb(0xFF000000))
+        , selectionColor(QRgb(0xFF000080))
+        , selectedTextColor(QRgb(0xFFFFFFFF))
         , hscroll(0)
         , vscroll(0)
         , m_cursor(0)
         , m_preeditCursor(0)
-        , m_cursorWidth(1)
         , m_blinkPeriod(0)
         , m_blinkTimer(0)
-        , m_deleteAllTimer(0)
-        , m_ascent(0)
         , m_maxLength(32767)
         , m_lastCursorPos(-1)
-        , m_modifiedState(0)
         , m_undoState(0)
         , m_selstart(0)
         , m_selend(0)
-        , style(QQuickText::Normal)
+        , inputMethodHints(Qt::ImhNone)
         , hAlign(QQuickTextInput::AlignLeft)
         , vAlign(QQuickTextInput::AlignTop)
         , wrapMode(QQuickTextInput::NoWrap)
+        , m_echoMode(QQuickTextInput::Normal)
+        , updateType(UpdatePaintNode)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
-        , inputMethodHints(Qt::ImhNone)
-        , effectiveInputMethodHints(Qt::ImhNone)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
         , m_passwordCharacter(QLatin1Char('*'))
-        , focused(false)
         , focusOnPress(true)
         , cursorVisible(false)
         , autoScroll(true)
@@ -121,7 +118,6 @@ public:
         , m_hideCursor(false)
         , m_separator(0)
         , m_readOnly(0)
-        , m_echoMode(QQuickTextInput::Normal)
         , m_textDirty(0)
         , m_preeditDirty(0)
         , m_selDirty(0)
@@ -129,7 +125,6 @@ public:
         , m_acceptableInput(1)
         , m_blinkStatus(0)
         , m_passwordEchoEditing(false)
-        , updateType(UpdatePaintNode)
     {
     }
 
@@ -145,9 +140,10 @@ public:
     bool setHAlign(QQuickTextInput::HAlignment, bool forceAlign = false);
     void mirrorChange();
     bool sendMouseEventToInputContext(QMouseEvent *event);
-    void updateInputMethodHints();
+    Qt::InputMethodHints effectiveInputMethodHints() const;
     void hideCursor();
     void showCursor();
+
 
     struct MaskInputData {
         enum Casemode { NoCaseMode, Upper, Lower };
@@ -173,68 +169,70 @@ public:
         DrawAll = DrawText | DrawSelections | DrawCursor
     };
 
+    QElapsedTimer tripleClickTimer;
+    QRectF boundingRect;
+    QPointF pressPos;
+    QPointF tripleClickStartPoint;
+
+    QDeclarativeGuard<QDeclarativeComponent> cursorComponent;
+#ifndef QT_NO_VALIDATOR
+    QDeclarativeGuard<QValidator> m_validator;
+#endif
+
     QTextLayout m_textLayout;
     QString m_text;
     QString m_inputMask;
     QString m_cancelText;
     QString m_tentativeCommit;
-    QPalette m_palette;
     QFont font;
     QFont sourceFont;
-    QColor  color;
-    QColor  selectionColor;
-    QColor  selectedTextColor;
-    QColor  styleColor;
-    QPointer<QDeclarativeComponent> cursorComponent;
-    QPointer<QQuickItem> cursorItem;
-#ifndef QT_NO_VALIDATOR
-    QPointer<QValidator> m_validator;
-#endif
-    QPointF pressPos;
+
+    QQuickItem *cursorItem;
     QQuickTextNode *textNode;
     MaskInputData *m_maskData;
-    QElapsedTimer tripleClickTimer;
-    QPoint tripleClickStartPoint;
+
     QList<int> m_transactions;
     QVector<Command> m_history;
-    QRectF boundingRect;
 
+    QColor color;
+    QColor selectionColor;
+    QColor selectedTextColor;
+
+#ifdef QT_GUI_PASSWORD_ECHO_DELAY
+    QBasicTimer m_passwordEchoTimer;
+#endif
     int lastSelectionStart;
     int lastSelectionEnd;
-    int oldHeight;
-    int oldWidth;
     int hscroll;
     int vscroll;
     int m_cursor;
     int m_preeditCursor;
-    int m_cursorWidth;
     int m_blinkPeriod; // 0 for non-blinking cursor
     int m_blinkTimer;
-    int m_deleteAllTimer;
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
-    QBasicTimer m_passwordEchoTimer;
-#endif
-    int m_ascent;
     int m_maxLength;
     int m_lastCursorPos;
-    int m_modifiedState;
     int m_undoState;
     int m_selstart;
     int m_selend;
 
-    QQuickText::TextStyle style;
+    enum UpdateType {
+        UpdateNone,
+        UpdateOnlyPreprocess,
+        UpdatePaintNode
+    };
+
+    Qt::InputMethodHints inputMethodHints;
     QQuickTextInput::HAlignment hAlign;
     QQuickTextInput::VAlignment vAlign;
     QQuickTextInput::WrapMode wrapMode;
+    QQuickTextInput::EchoMode m_echoMode;
+    UpdateType updateType;
     QQuickTextInput::SelectionMode mouseSelectionMode;
-    Qt::InputMethodHints inputMethodHints;
-    Qt::InputMethodHints effectiveInputMethodHints;
     Qt::LayoutDirection m_layoutDirection;
 
     QChar m_blank;
     QChar m_passwordCharacter;
 
-    bool focused:1;
     bool focusOnPress:1;
     bool cursorVisible:1;
     bool autoScroll:1;
@@ -247,25 +245,17 @@ public:
     bool selectPressed:1;
     bool textLayoutDirty:1;
     bool persistentSelection:1;
+    bool m_hideCursor : 1; // used to hide the m_cursor inside preedit areas
+    bool m_separator : 1;
+    bool m_readOnly : 1;
+    bool m_textDirty : 1;
+    bool m_preeditDirty : 1;
+    bool m_selDirty : 1;
+    bool m_validInput : 1;
+    bool m_acceptableInput : 1;
+    bool m_blinkStatus : 1;
+    bool m_passwordEchoEditing : 1;
 
-    uint m_hideCursor : 1; // used to hide the m_cursor inside preedit areas
-    uint m_separator : 1;
-    uint m_readOnly : 1;
-    uint m_echoMode : 2;
-    uint m_textDirty : 1;
-    uint m_preeditDirty : 1;
-    uint m_selDirty : 1;
-    uint m_validInput : 1;
-    uint m_acceptableInput : 1;
-    uint m_blinkStatus : 1;
-    uint m_passwordEchoEditing;
-
-    enum UpdateType {
-        UpdateNone,
-        UpdateOnlyPreprocess,
-        UpdatePaintNode
-    };
-    UpdateType updateType;
 
     static inline QQuickTextInputPrivate *get(QQuickTextInput *t) {
         return t->d_func();
@@ -291,10 +281,7 @@ public:
 
     bool isUndoAvailable() const { return !m_readOnly && m_undoState; }
     bool isRedoAvailable() const { return !m_readOnly && m_undoState < (int)m_history.size(); }
-    void clearUndo() { m_history.clear(); m_modifiedState = m_undoState = 0; }
-
-    bool isModified() const { return m_modifiedState != m_undoState; }
-    void setModified(bool modified) { m_modifiedState = modified ? -1 : m_undoState; }
+    void clearUndo() { m_history.clear(); m_undoState = 0; }
 
     bool allSelected() const { return !m_text.isEmpty() && m_selstart == 0 && m_selend == (int)m_text.length(); }
     bool hasSelectedText() const { return !m_text.isEmpty() && m_selend > m_selstart; }
@@ -413,7 +400,6 @@ public:
     void processKeyEvent(QKeyEvent* ev);
 
     void setCursorBlinkPeriod(int msec);
-    void resetCursorBlinkTimer();
 
     void updateLayout();
 

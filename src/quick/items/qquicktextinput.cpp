@@ -330,7 +330,7 @@ void QQuickTextInput::setColor(const QColor &c)
         d->textLayoutDirty = true;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
-        emit colorChanged(c);
+        emit colorChanged();
     }
 }
 
@@ -353,13 +353,12 @@ void QQuickTextInput::setSelectionColor(const QColor &color)
         return;
 
     d->selectionColor = color;
-    d->m_palette.setColor(QPalette::Highlight, d->selectionColor);
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     }
-    emit selectionColorChanged(color);
+    emit selectionColorChanged();
 }
 /*!
     \qmlproperty color QtQuick2::TextInput::selectedTextColor
@@ -379,13 +378,12 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
         return;
 
     d->selectedTextColor = color;
-    d->m_palette.setColor(QPalette::HighlightedText, d->selectedTextColor);
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
     }
-    emit selectedTextColorChanged(color);
+    emit selectedTextColorChanged();
 }
 
 /*!
@@ -694,7 +692,7 @@ QRect QQuickTextInput::cursorRectangle() const
     return QRect(
             qRound(l.cursorToX(c) - d->hscroll),
             qRound(l.y() - d->vscroll),
-            d->m_cursorWidth,
+            1,
             qCeil(l.height()));
 }
 
@@ -1100,9 +1098,8 @@ bool QQuickTextInput::hasAcceptableInput() const
     state.
 */
 
-void QQuickTextInputPrivate::updateInputMethodHints()
+Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
 {
-    Q_Q(QQuickTextInput);
     Qt::InputMethodHints hints = inputMethodHints;
     if (m_echoMode == QQuickTextInput::Password || m_echoMode == QQuickTextInput::NoEcho)
         hints |= Qt::ImhHiddenText;
@@ -1110,8 +1107,7 @@ void QQuickTextInputPrivate::updateInputMethodHints()
         hints &= ~Qt::ImhHiddenText;
     if (m_echoMode != QQuickTextInput::Normal)
         hints |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    effectiveInputMethodHints = hints;
-    q->updateInputMethod(Qt::ImHints);
+    return hints;
 }
 /*!
     \qmlproperty enumeration QtQuick2::TextInput::echoMode
@@ -1139,7 +1135,7 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     d->cancelPasswordEchoTimer();
     d->m_echoMode = echo;
     d->m_passwordEchoEditing = false;
-    d->updateInputMethodHints();
+    updateInputMethod(Qt::ImHints);
     d->updateDisplayText();
     updateCursorRectangle();
 
@@ -1205,7 +1201,7 @@ void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
         return;
 
     d->inputMethodHints = hints;
-    d->updateInputMethodHints();
+    updateInputMethod(Qt::ImHints);
     emit inputMethodHintsChanged();
 }
 
@@ -1238,6 +1234,7 @@ void QQuickTextInput::setCursorDelegate(QDeclarativeComponent* c)
     if (!c) {
         //note that the components are owned by something else
         delete d->cursorItem;
+        d->cursorItem = 0;
     } else {
         d->startCreatingCursor();
     }
@@ -1309,7 +1306,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         pos += d->preeditAreaText().length();
     QTextLine l = d->m_textLayout.lineForTextPosition(pos);
     return l.isValid()
-            ? QRectF(l.cursorToX(pos) - d->hscroll, l.y() - d->vscroll, d->m_cursorWidth, l.height())
+            ? QRectF(l.cursorToX(pos) - d->hscroll, l.y() - d->vscroll, 1, l.height())
             : QRectF();
 }
 
@@ -1461,7 +1458,7 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
-        QPoint distanceVector = d->pressPos.toPoint() - d->tripleClickStartPoint;
+        QPointF distanceVector = d->pressPos - d->tripleClickStartPoint;
         if (d->hasPendingTripleClick()
             && distanceVector.manhattanLength() < qApp->styleHints()->startDragDistance()) {
             event->setAccepted(true);
@@ -1746,10 +1743,10 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node->setMatrix(QMatrix4x4());
 
         QPoint offset = QPoint(0,0);
-        QFontMetrics fm = QFontMetrics(d->font);
-        if (d->autoScroll) {
+        if (d->autoScroll && d->m_textLayout.lineCount() > 0) {
+            QFontMetrics fm = QFontMetrics(d->font);
             // the y offset is there to keep the baseline constant in case we have script changes in the text.
-            offset = -QPoint(d->hscroll, d->vscroll + d->m_ascent - fm.ascent());
+            offset = -QPoint(d->hscroll, d->vscroll + qRound(d->m_textLayout.lineAt(0).ascent()) - fm.ascent());
         } else {
             offset = -QPoint(d->hscroll, d->vscroll);
         }
@@ -1785,7 +1782,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
     case Qt::ImEnabled:
         return QVariant((bool)(flags() & ItemAcceptsInputMethod));
     case Qt::ImHints:
-        return QVariant((int) d->effectiveInputMethodHints);
+        return QVariant((int) d->effectiveInputMethodHints());
     case Qt::ImCursorRectangle:
         return cursorRectangle();
     case Qt::ImFont:
@@ -2480,7 +2477,6 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
     Q_D(QQuickTextInput);
     if (change == ItemActiveFocusHasChanged) {
         bool hasFocus = value.boolValue;
-        d->focused = hasFocus;
         setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
 #ifdef QT_GUI_PASSWORD_ECHO_DELAY
         if (!hasFocus && (d->m_passwordEchoEditing || d->m_passwordEchoTimer.isActive())) {
@@ -2537,8 +2533,6 @@ void QQuickTextInputPrivate::init()
 
     lastSelectionStart = 0;
     lastSelectionEnd = 0;
-    selectedTextColor = m_palette.color(QPalette::HighlightedText);
-    selectionColor = m_palette.color(QPalette::Highlight);
     determineHorizontalAlignment();
 
     if (!qmlDisableDistanceField()) {
@@ -2605,7 +2599,7 @@ QRectF QQuickTextInput::boundingRect() const
 {
     Q_D(const QQuickTextInput);
 
-    int cursorWidth = d->cursorItem ? d->cursorItem->width() : d->m_cursorWidth;
+    int cursorWidth = d->cursorItem ? d->cursorItem->width() : 1;
 
     // Could include font max left/right bearings to either side of rectangle.
     QRectF r = QQuickImplicitSizeItem::boundingRect();
@@ -2734,7 +2728,6 @@ void QQuickTextInputPrivate::updateLayout()
     option.setWrapMode(QTextOption::NoWrap);
     m_textLayout.setTextOption(option);
 
-    m_ascent = qRound(firstLine.ascent());
     textLayoutDirty = true;
 
     updateType = UpdatePaintNode;
@@ -3222,8 +3215,6 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
                 return false;
             internalUndo(validateFromState);
             m_history.resize(m_undoState);
-            if (m_modifiedState > m_undoState)
-                m_modifiedState = -1;
             m_validInput = true;
             m_acceptableInput = wasAcceptable;
             m_textDirty = false;
@@ -3282,7 +3273,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
         m_text = txt.isEmpty() ? txt : txt.left(m_maxLength);
     }
     m_history.clear();
-    m_modifiedState =  m_undoState = 0;
+    m_undoState = 0;
     m_cursor = (pos < 0 || pos > m_text.length()) ? m_text.length() : pos;
     m_textDirty = (oldText != m_text);
 
@@ -3904,10 +3895,6 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
 
         q->updateCursorRectangle();
         emit q->cursorPositionChanged();
-        // XXX todo - not in 4.8?
-    #if 0
-        resetCursorBlinkTimer();
-    #endif
 
         if (!hasSelectedText()) {
             if (lastSelectionStart != m_cursor) {
@@ -3951,16 +3938,6 @@ void QQuickTextInputPrivate::setCursorBlinkPeriod(int msec)
     m_blinkPeriod = msec;
 }
 
-void QQuickTextInputPrivate::resetCursorBlinkTimer()
-{
-    Q_Q(QQuickTextInput);
-    if (m_blinkPeriod == 0 || m_blinkTimer == 0)
-        return;
-    q->killTimer(m_blinkTimer);
-    m_blinkTimer = q->startTimer(m_blinkPeriod / 2);
-    m_blinkStatus = 1;
-}
-
 void QQuickTextInput::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextInput);
@@ -3968,10 +3945,6 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
         d->m_blinkStatus = !d->m_blinkStatus;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
-    } else if (event->timerId() == d->m_deleteAllTimer) {
-        killTimer(d->m_deleteAllTimer);
-        d->m_deleteAllTimer = 0;
-        d->clear();
 #ifdef QT_GUI_PASSWORD_ECHO_DELAY
     } else if (event->timerId() == d->m_passwordEchoTimer.timerId()) {
         d->m_passwordEchoTimer.stop();
