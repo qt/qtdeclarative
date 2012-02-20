@@ -1570,8 +1570,6 @@ void tst_qdeclarativeecmascript::compileInvalidBinding()
 {
     // QTBUG-23387: ensure that invalid bindings don't cause a crash.
     QDeclarativeComponent component(&engine, testFileUrl("v8bindingException.qml"));
-    QString warning = component.url().toString() + ":16: SyntaxError: Unexpected token ILLEGAL";
-    QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     QObject *object = component.create();
     QVERIFY(object != 0);
     delete object;
@@ -5287,12 +5285,21 @@ void tst_qdeclarativeecmascript::qtbug_21864()
 
 void tst_qdeclarativeecmascript::rewriteMultiLineStrings()
 {
-    // QTBUG-23387
-    QDeclarativeComponent component(&engine, testFileUrl("rewriteMultiLineStrings.qml"));
-    QObject *o = component.create();
-    QVERIFY(o != 0);
-    QTRY_COMPARE(o->property("test").toBool(), true);
-    delete o;
+    {
+        // QTBUG-23387
+        QDeclarativeComponent component(&engine, testFileUrl("rewriteMultiLineStrings.qml"));
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+        QTRY_COMPARE(o->property("test").toBool(), true);
+        delete o;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, testFileUrl("rewriteMultiLineStrings_crlf.1.qml"));
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+        delete o;
+    }
 }
 
 void tst_qdeclarativeecmascript::qobjectConnectionListExceptionHandling()

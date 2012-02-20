@@ -126,11 +126,12 @@ private:
 
 class RewriteSignalHandler: protected AST::Visitor
 {
-    QList<int> _strStarts;
-    QList<int> _strLens;
+    TextWriter *_writer;
+    const QString *_code;
     int _position;
 
 public:
+    RewriteSignalHandler();
     QString operator()(QDeclarativeJS::AST::Node *node, const QString &code, const QString &name);
 
 protected:
