@@ -48,6 +48,7 @@
 #include <QtCore/private/qabstractanimation_p.h>
 
 #include <QtGui/QOpenGLContext>
+#include <QtGui/QPlatformIntegration>
 #include <QtGui/private/qguiapplication_p.h>
 
 #include <QtDeclarative/private/qdeclarativeglobal_p.h>

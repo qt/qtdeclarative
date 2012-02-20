@@ -55,6 +55,7 @@
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputMethod>
+#include <QtGui/QCursor>
 
 #include <private/qabstractanimation_p.h>
 
