@@ -170,8 +170,8 @@ void tst_qdeclarativefolderlistmodel::refresh()
 
     flm->setProperty("sortReversed", true);
 
-    QCOMPARE(removeStart, 0);
-    QCOMPARE(removeEnd, count-1);
+    QTRY_COMPARE(removeStart, 0);
+    QTRY_COMPARE(removeEnd, count-1); // wait for refresh
 }
 
 QTEST_MAIN(tst_qdeclarativefolderlistmodel)
