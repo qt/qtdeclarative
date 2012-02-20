@@ -1,4 +1,3 @@
-// Commit: 84c47bbb133304d7ef35642fa1fbb17619d4a43d
 /****************************************************************************
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
