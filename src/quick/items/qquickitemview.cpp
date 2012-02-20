@@ -1468,7 +1468,7 @@ bool QQuickItemViewPrivate::canTransition(FxViewItemTransitionManager::Transitio
 {
     switch (type) {
     case FxViewItemTransitionManager::NoTransition:
-        return false;
+        break;
     case FxViewItemTransitionManager::PopulateTransition:
         return usePopulateTransition
                 && populateTransition && populateTransition->enabled();
@@ -1488,6 +1488,7 @@ bool QQuickItemViewPrivate::canTransition(FxViewItemTransitionManager::Transitio
         else
             return removeDisplacedTransition && removeDisplacedTransition->enabled();
     }
+    return false;
 }
 
 bool QQuickItemViewPrivate::hasItemTransitions() const

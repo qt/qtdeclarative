@@ -362,7 +362,7 @@ QDeclarativePropertyCache::overrideData(QDeclarativePropertyData *data) const
 
 bool QDeclarativePropertyCache::isAllowedInRevision(QDeclarativePropertyData *data) const
 {
-    return (data->hasAccessors() || data->metaObjectOffset == -1 && data->revision == 0) ||
+    return (data->hasAccessors() || (data->metaObjectOffset == -1 && data->revision == 0)) ||
            (allowedRevisionCache[data->metaObjectOffset] >= data->revision);
 }
 
