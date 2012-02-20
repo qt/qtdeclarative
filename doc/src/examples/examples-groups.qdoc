@@ -32,31 +32,12 @@
     \brief This is an internationalization example
 */
 /*!
-    \title QML Examples - Shader Effects
-    \example declarative/shadereffects
-    \image qml-shadereffects-example.png
-    \brief This is a shader effects example
-
-    This example demonstrates a couple of visual effects that you can perform
-    with shaders in QtQuick 2.0
-*/
-/*!
     \title QML Examples - Positioners
     \example declarative/positioners
     \brief This is a positioners example
     \image qml-positioners-example.png
 
     This example demonstrates the positioners and some of their animations.
-*/
-/*!
-    \title QML Examples - Animation
-    \example declarative/animation
-    \brief This is a collection of QML examples
-    \image qml-animations-example.png
-
-    This is a collection of small QML examples relating to animation. Each example is
-    a small QML file, usually containing or emphasizing a particular element or
-    feature. You can run and observe the behavior of each example.
 */
 /*!
     \title QML Examples - Image Elements

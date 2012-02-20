@@ -1,20 +1,6 @@
 # This file is used to ignore files which are generated in the Qt build system
 # ----------------------------------------------------------------------------
 
-examples/*/*/*
-!examples/*/*/*[.]*
-!examples/*/*/README
-examples/*/*/*[.]app
-!examples/declarative/*
-!examples/tutorials/*
-!examples/tutorials/*/*
-!examples/ja_JP/*/*
-demos/*/*
-!demos/spectrum/*
-demos/spectrum/bin
-!demos/*/*[.]*
-demos/*/*[.]app
-!demos/declarative/*
 config.tests/*/*/*
 !config.tests/*/*/*[.]*
 config.tests/*/*/*[.]app

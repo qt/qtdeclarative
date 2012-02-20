@@ -27,13 +27,6 @@
 
 
 /*!
-    \title QML Example - Calculator
-    \example declarative/calculator
-    \brief This is an example application written in QML.
-    \image qml-calculator-demo-small.png
-*/
-
-/*!
     \title QML Example - Samegame
     \example declarative/samegame
     \brief This example demonstrates creating a game with javascript game logic.
