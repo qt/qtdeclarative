@@ -905,7 +905,7 @@ void tst_qquicktext::color()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
-        QCOMPARE(textObject->styleColor(), QColor());
+        QCOMPARE(textObject->styleColor(), QColor("black"));
         QCOMPARE(textObject->linkColor(), QColor("blue"));
 
         delete textObject;
@@ -933,8 +933,7 @@ void tst_qquicktext::color()
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
-        QCOMPARE(textObject->styleColor(), QColor());
-        // default color to black?
+        QCOMPARE(textObject->styleColor(), QColor("black"));
         QCOMPARE(textObject->color(), QColor("black"));
         QCOMPARE(textObject->linkColor(), QColor(colorStrings.at(i)));
 
@@ -984,7 +983,7 @@ void tst_qquicktext::color()
         QScopedPointer<QObject> object(textComponent.create());
         QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
-        QSignalSpy spy(textObject, SIGNAL(colorChanged(QColor)));
+        QSignalSpy spy(textObject, SIGNAL(colorChanged()));
 
         QCOMPARE(textObject->color(), testColor);
         textObject->setColor(testColor);
@@ -1005,7 +1004,7 @@ void tst_qquicktext::color()
         QScopedPointer<QObject> object(textComponent.create());
         QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
-        QSignalSpy spy(textObject, SIGNAL(styleColorChanged(QColor)));
+        QSignalSpy spy(textObject, SIGNAL(styleColorChanged()));
 
         QCOMPARE(textObject->styleColor(), testColor);
         textObject->setStyleColor(testColor);

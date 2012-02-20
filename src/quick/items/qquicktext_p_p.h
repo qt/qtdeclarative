@@ -84,33 +84,57 @@ public:
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
     QString elidedText(int lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
 
+    QRect layedOutTextRect;
+
+    qreal lineHeight;
+
     QString text;
+    QString activeLink;
     QUrl baseUrl;
     QFont font;
     QFont sourceFont;
-    QColor  color;
-    QColor  linkColor;
-    QQuickText::TextStyle style;
-    QColor  styleColor;
-    QString activeLink;
+    QList<QDeclarativeStyledTextImgTag*> imgTags;
+    QList<QDeclarativeStyledTextImgTag*> visibleImgTags;
+
+    QTextLayout layout;
+    QTextLayout *elideLayout;
+    QQuickTextLine *textLine;
+    QQuickTextDocumentWithImageResources *doc;
+
+#if defined(Q_OS_MAC)
+    QList<QRectF> linesRects;
+    QThread *layoutThread;
+    QThread *paintingThread;
+#endif
+
+    QRgb color;
+    QRgb linkColor;
+    QRgb styleColor;
+
+    int lineCount;
+    int maximumLineCount;
+    int multilengthEos;
+    int minimumPixelSize;
+    int minimumPointSize;
+    int nbActiveDownloads;
+
+    enum UpdateType {
+        UpdateNone,
+        UpdatePreprocess,
+        UpdatePaintNode
+    };
+
     QQuickText::HAlignment hAlign;
     QQuickText::VAlignment vAlign;
     QQuickText::TextElideMode elideMode;
     QQuickText::TextFormat format;
     QQuickText::WrapMode wrapMode;
-    qreal lineHeight;
     QQuickText::LineHeightMode lineHeightMode;
-    int lineCount;
-    int maximumLineCount;
-    int maximumLineCountValid;
+    QQuickText::TextStyle style;
     QQuickText::FontSizeMode fontSizeMode;
-    int multilengthEos;
-    int minimumPixelSize;
-    int minimumPointSize;
-    QPointF elidePos;
+    UpdateType updateType;
 
-    static const QChar elideChar;
-
+    bool maximumLineCountValid:1;
     bool updateOnComponentComplete:1;
     bool updateLayoutOnPolish:1;
     bool richText:1;
@@ -125,42 +149,20 @@ public:
     bool textHasChanged:1;
     bool needToUpdateLayout:1;
 
-    QRect layedOutTextRect;
-    QSize contentSize;
-    qreal naturalWidth;
+    static const QChar elideChar;
+
     virtual qreal getImplicitWidth() const;
 
     void ensureDoc();
-    QQuickTextDocumentWithImageResources *doc;
 
-    QRect setupTextLayout();
+    QRect setupTextLayout(qreal *const naturalWidth);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset = 0);
     bool isLinkActivatedConnected();
     QString anchorAt(const QPointF &pos);
-    QTextLayout layout;
-    QTextLayout *elideLayout;
-    QQuickTextLine *textLine;
 
     static inline QQuickTextPrivate *get(QQuickText *t) {
         return t->d_func();
     }
-
-    enum UpdateType {
-        UpdateNone,
-        UpdatePreprocess,
-        UpdatePaintNode
-    };
-    UpdateType updateType;
-
-    QList<QDeclarativeStyledTextImgTag*> imgTags;
-    QList<QDeclarativeStyledTextImgTag*> visibleImgTags;
-    int nbActiveDownloads;
-
-#if defined(Q_OS_MAC)
-    QList<QRectF> linesRects;
-    QThread *layoutThread;
-    QThread *paintingThread;
-#endif
 };
 
 class QDeclarativePixmap;

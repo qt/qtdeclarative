@@ -203,10 +203,10 @@ Q_SIGNALS:
     void textChanged(const QString &text);
     void linkActivated(const QString &link);
     void fontChanged(const QFont &font);
-    void colorChanged(const QColor &color);
+    void colorChanged();
     void linkColorChanged();
     void styleChanged(TextStyle style);
-    void styleColorChanged(const QColor &color);
+    void styleColorChanged();
     void horizontalAlignmentChanged(HAlignment alignment);
     void verticalAlignmentChanged(VAlignment alignment);
     void wrapModeChanged();

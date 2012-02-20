@@ -71,21 +71,21 @@ QT_BEGIN_NAMESPACE
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
 QQuickTextPrivate::QQuickTextPrivate()
-: color((QRgb)0), linkColor((QRgb)255), style(QQuickText::Normal), hAlign(QQuickText::AlignLeft),
-  vAlign(QQuickText::AlignTop), elideMode(QQuickText::ElideNone),
-  format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap), lineHeight(1),
-  lineHeightMode(QQuickText::ProportionalHeight), lineCount(1), maximumLineCount(INT_MAX),
-  maximumLineCountValid(false), fontSizeMode(QQuickText::FixedSize), multilengthEos(-1),
-  minimumPixelSize(12), minimumPointSize(12), updateOnComponentComplete(true),
-  richText(false), styledText(false), singleline(false), internalWidthUpdate(false),
-  requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
-  layoutTextElided(false), textHasChanged(true),
-  needToUpdateLayout(false), naturalWidth(0), doc(0), elideLayout(0), textLine(0),
-  updateType(UpdatePaintNode), nbActiveDownloads(0)
-
+    : lineHeight(1)
+    , elideLayout(0), textLine(0), doc(0)
 #if defined(Q_OS_MAC)
-, layoutThread(0), paintingThread(0)
+    , layoutThread(0), paintingThread(0)
 #endif
+    , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
+    , lineCount(1), maximumLineCount(INT_MAX), multilengthEos(-1), minimumPixelSize(12), minimumPointSize(12), nbActiveDownloads(0)
+    , hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop), elideMode(QQuickText::ElideNone)
+    , format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap)
+    , lineHeightMode(QQuickText::ProportionalHeight), style(QQuickText::Normal)
+    , fontSizeMode(QQuickText::FixedSize), updateType(UpdatePaintNode)
+    , maximumLineCountValid(false), updateOnComponentComplete(true), richText(false)
+    , styledText(false), singleline(false), internalWidthUpdate(false), requireImplicitWidth(false)
+    , truncated(false), hAlignImplicit(true), rightToLeftText(false)
+    , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false)
 {
 }
 
@@ -378,23 +378,25 @@ void QQuickTextPrivate::updateSize()
     if (text.isEmpty()) {
         qreal fontHeight = fm.height();
         q->setImplicitSize(0, fontHeight);
-        contentSize = QSize(0, fontHeight);
+        layedOutTextRect = QRect(0, 0, 0, fontHeight);
         emit q->contentSizeChanged();
         updateType = UpdatePaintNode;
         q->update();
         return;
     }
 
+    qreal naturalWidth = 0;
+
     int dy = q->height();
     QSize size(0, 0);
-
+    QSize previousSize = layedOutTextRect.size();
 #if defined(Q_OS_MAC)
     layoutThread = QThread::currentThread();
 #endif
 
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
-        QRect textRect = setupTextLayout();
+        QRect textRect = setupTextLayout(&naturalWidth);
         layedOutTextRect = textRect;
         size = textRect.size();
         dy -= size.height();
@@ -450,10 +452,8 @@ void QQuickTextPrivate::updateSize()
 
     if (iWidth == -1)
         q->setImplicitHeight(size.height());
-    if (contentSize != size) {
-        contentSize = size;
+    if (layedOutTextRect.size() != previousSize)
         emit q->contentSizeChanged();
-    }
     updateType = UpdatePaintNode;
     q->update();
 }
@@ -618,7 +618,7 @@ QString QQuickTextPrivate::elidedText(int lineWidth, const QTextLine &line, QTex
     already absolutely positioned horizontally).
 */
 
-QRect QQuickTextPrivate::setupTextLayout()
+QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
 {
     Q_Q(QQuickText);
     layout.setCacheEnabled(true);
@@ -652,7 +652,7 @@ QRect QQuickTextPrivate::setupTextLayout()
                     break;
             }
             layout.endLayout();
-            naturalWidth = layout.maximumWidth();
+            *naturalWidth = layout.maximumWidth();
             layout.clearLayout();
         }
 
@@ -695,7 +695,7 @@ QRect QQuickTextPrivate::setupTextLayout()
     QString elideText;
     bool once = true;
 
-    naturalWidth = 0;
+    *naturalWidth = 0;
 
     int eos = multilengthEos;
 
@@ -815,7 +815,7 @@ QRect QQuickTextPrivate::setupTextLayout()
 
         // Save the implicitWidth of the text on the first layout only.
         if (once) {
-            naturalWidth = layout.maximumWidth();
+            *naturalWidth = layout.maximumWidth();
             once = false;
 
             if (requireImplicitWidth
@@ -831,7 +831,7 @@ QRect QQuickTextPrivate::setupTextLayout()
                     if (!line.isValid())
                         break;
                 }
-                naturalWidth = qMax(naturalWidth, widthLayout.maximumWidth());
+                *naturalWidth = qMax(*naturalWidth, widthLayout.maximumWidth());
             }
         }
 
@@ -1322,21 +1322,22 @@ void QQuickText::setText(const QString &n)
 QColor QQuickText::color() const
 {
     Q_D(const QQuickText);
-    return d->color;
+    return QColor::fromRgba(d->color);
 }
 
 void QQuickText::setColor(const QColor &color)
 {
     Q_D(QQuickText);
-    if (d->color == color)
+    QRgb rgb = color.rgba();
+    if (d->color == rgb)
         return;
 
-    d->color = color;
+    d->color = rgb;
     if (isComponentComplete())  {
         d->updateType = QQuickTextPrivate::UpdatePaintNode;
         update();
     }
-    emit colorChanged(d->color);
+    emit colorChanged();
 }
 
 /*!
@@ -1352,16 +1353,17 @@ void QQuickText::setColor(const QColor &color)
 QColor QQuickText::linkColor() const
 {
     Q_D(const QQuickText);
-    return d->linkColor;
+    return QColor::fromRgba(d->linkColor);
 }
 
 void QQuickText::setLinkColor(const QColor &color)
 {
     Q_D(QQuickText);
-    if (d->linkColor == color)
+    QRgb rgb = color.rgba();
+    if (d->linkColor == rgb)
         return;
 
-    d->linkColor = color;
+    d->linkColor = rgb;
     update();
     emit linkColorChanged();
 }
@@ -1428,21 +1430,22 @@ void QQuickText::setStyle(QQuickText::TextStyle style)
 QColor QQuickText::styleColor() const
 {
     Q_D(const QQuickText);
-    return d->styleColor;
+    return QColor::fromRgba(d->styleColor);
 }
 
 void QQuickText::setStyleColor(const QColor &color)
 {
     Q_D(QQuickText);
-    if (d->styleColor == color)
+    QRgb rgb = color.rgba();
+    if (d->styleColor == rgb)
         return;
 
-    d->styleColor = color;
+    d->styleColor = rgb;
     if (isComponentComplete()) {
         d->updateType = QQuickTextPrivate::UpdatePaintNode;
         update();
     }
-    emit styleColorChanged(d->styleColor);
+    emit styleColorChanged();
 }
 
 /*!
@@ -1662,7 +1665,6 @@ void QQuickText::resetMaximumLineCount()
 {
     Q_D(QQuickText);
     setMaximumLineCount(INT_MAX);
-    d->elidePos = QPointF();
     if (d->truncated != false) {
         d->truncated = false;
         emit truncatedChanged();
@@ -1993,13 +1995,17 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     node->deleteContent();
     node->setMatrix(QMatrix4x4());
 
+    const QColor color = QColor::fromRgba(d->color);
+    const QColor styleColor = QColor::fromRgba(d->styleColor);
+    const QColor linkColor = QColor::fromRgba(d->linkColor);
+
     if (d->richText) {
         d->ensureDoc();
-        node->addTextDocument(bounds.topLeft(), d->doc, d->color, d->style, d->styleColor, d->linkColor);
+        node->addTextDocument(bounds.topLeft(), d->doc, color, d->style, styleColor, linkColor);
     } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
-        node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor, d->linkColor);
+        node->addTextLayout(QPoint(0, bounds.y()), &d->layout, color, d->style, styleColor, linkColor);
         if (d->elideLayout)
-            node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, d->color, d->style, d->styleColor, d->linkColor);
+            node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, color, d->style, styleColor, linkColor);
     }
 
     foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
@@ -2028,7 +2034,7 @@ void QQuickText::updatePolish()
 qreal QQuickText::contentWidth() const
 {
     Q_D(const QQuickText);
-    return d->contentSize.width();
+    return d->layedOutTextRect.width();
 }
 
 /*!
@@ -2040,7 +2046,7 @@ qreal QQuickText::contentWidth() const
 qreal QQuickText::contentHeight() const
 {
     Q_D(const QQuickText);
-    return d->contentSize.height();
+    return d->layedOutTextRect.height();
 }
 
 /*!
