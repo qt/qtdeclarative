@@ -165,7 +165,7 @@ void FxViewItem::startTransition()
     if (nextTransitionType == FxViewItemTransitionManager::NoTransition)
         return;
 
-    if (!transition || transition->m_type != nextTransitionType || transition->m_type != isTransitionTarget) {
+    if (!transition || transition->m_type != nextTransitionType || transition->m_isTarget != isTransitionTarget) {
         delete transition;
         transition = new FxViewItemTransitionManager;
     }
