@@ -2095,8 +2095,7 @@ void tst_QQuickListView::sectionsPositioning()
     listview->setContentY(20);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart)));
-    item = findVisibleChild(contentItem, "sect_new"); // inline label restored
-    QVERIFY(item);
+    QTRY_VERIFY(item = findVisibleChild(contentItem, "sect_new")); // inline label restored
     QCOMPARE(item->y(), 340.);
 
     // Turn sticky header off

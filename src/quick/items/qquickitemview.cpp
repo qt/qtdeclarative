@@ -2754,6 +2754,8 @@ void QQuickItemView::initItem(int index, QQuickItem *item)
     Q_D(QQuickItemView);
     item->setZ(1);
     if (d->requestedIndex == index) {
+        if (d->requestedAsync)
+            item->setVisible(false);
         item->setParentItem(contentItem());
         QDeclarative_setParent_noEvent(item, contentItem());
         d->requestedItem = d->newViewItem(index, item);
