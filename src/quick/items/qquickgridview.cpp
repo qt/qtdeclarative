@@ -127,9 +127,6 @@ public:
         return (x >= itemX() && x < itemX() + view->cellWidth() &&
                 y >= itemY() && y < itemY() + view->cellHeight());
     }
-    QQuickItemView *itemView() const {
-        return view;
-    }
 
     QQuickGridView *view;
 
@@ -485,7 +482,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 #endif
         if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, doBuffer))))
             break;
-        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
+        if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos);
         item->item->setVisible(!doBuffer);
         visibleItems.append(item);
@@ -523,7 +520,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
         --visibleIndex;
-        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
+        if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos);
         item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
@@ -1674,6 +1671,10 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     the new item that has been added to the view; to animate the added items, set the \l add
     property.
 
+    If an item is displaced by multiple types of operations at the same time, it is not
+    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
+    will be applied.
+
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
 
@@ -1736,6 +1737,10 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     animated by a NumberAnimation over one second, as specified. This transition is not applied to
     the items that are the actual subjects of the move operation; to animate the moved items, set
     the \l move property.
+
+    If an item is displaced by multiple types of operations at the same time, it is not
+    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
+    will be applied.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -1803,6 +1808,10 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     animated by a NumberAnimation over one second, as specified. This transition is not applied to
     the item that has actually been removed from the view; to animate the removed items, set the
     \l remove property.
+
+    If an item is displaced by multiple types of operations at the same time, it is not
+    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
+    will be applied.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2112,10 +2121,12 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
         FxViewItem *item = visibleItems.at(i);
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
-            if (change.isMove())
-                transitionNextReposition(item, FxViewItemTransitionManager::MoveTransition, false);
-            else
-                transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, false);
+            if (transitioner) {
+                if (change.isMove())
+                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, false);
+                else
+                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, false);
+            }
         }
     }
 
@@ -2146,7 +2157,8 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
-                    transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, true);
+                    if (transitioner)
+                        transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += rowSize();
             }
@@ -2179,11 +2191,12 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             if (change.isMove()) {
                 // we know this is a move target, since move displaced items that are
                 // shuffled into view due to a move would be added in refill()
-                if (canTransition(FxViewItemTransitionManager::MoveTransition, true) && newItem)
+                if (newItem && transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true))
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);
-                transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, true);
+                if (transitioner)
+                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
             }
             insertResult->sizeChangesAfterVisiblePos += rowSize();
 
@@ -2204,6 +2217,9 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 
 void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)
 {
+    if (!transitioner)
+        return;
+
     int markerItemIndex = -1;
     for (int i=0; i<visibleItems.count(); i++) {
         if (visibleItems[i]->index == afterModelIndex) {
@@ -2231,7 +2247,7 @@ void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
             qreal origColPos = gridItem->rowPos();
             int indexDiff = gridItem->index - countItemsRemoved;
             gridItem->setPosition((indexDiff % columns) * colSize(), (indexDiff / columns) * rowSize());
-            transitionNextReposition(gridItem, FxViewItemTransitionManager::RemoveTransition, false);
+            transitioner->transitionNextReposition(gridItem, QQuickItemViewTransitioner::RemoveTransition, false);
             gridItem->setPosition(origRowPos, origColPos);
         }
     }

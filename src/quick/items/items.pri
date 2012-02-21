@@ -72,6 +72,7 @@ HEADERS += \
     $$PWD/qquickmultipointtoucharea_p.h \
     $$PWD/qquickitemview_p.h \
     $$PWD/qquickitemview_p_p.h \
+    $$PWD/qquickitemviewtransition_p.h \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowmodule_p.h \
     $$PWD/qquickwindowmanager_p.h
@@ -124,6 +125,7 @@ SOURCES += \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
     $$PWD/qquickitemview.cpp \
+    $$PWD/qquickitemviewtransition.cpp \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
     $$PWD/qquickwindowmanager.cpp

@@ -46,293 +46,17 @@ QT_BEGIN_NAMESPACE
 
 
 FxViewItem::FxViewItem(QQuickItem *i, bool own)
-    : item(i), ownItem(own), releaseAfterTransition(false)
-    , isTransitionTarget(false)
-    , nextTransitionToSet(false)
-    , index(-1)
-    , transition(0)
-    , nextTransitionType(FxViewItemTransitionManager::NoTransition)
+    : QQuickViewItem(i), ownItem(own), releaseAfterTransition(false)
 {
 }
 
 FxViewItem::~FxViewItem()
 {
-    if (transition)
-        transition->m_item = 0;
-    delete transition;
-
     if (ownItem && item) {
         item->setParentItem(0);
         item->deleteLater();
         item = 0;
     }
-}
-
-qreal FxViewItem::itemX() const
-{
-    if (nextTransitionType != FxViewItemTransitionManager::NoTransition)
-        return nextTransitionToSet ? nextTransitionTo.x() : item->x();
-    else if (transition && transition->isActive())
-        return transition->m_toPos.x();
-    else
-        return item->x();
-}
-
-qreal FxViewItem::itemY() const
-{
-    // If item is transitioning to some pos, return that dest pos.
-    // If item was redirected to some new pos before the current transition finished,
-    // return that new pos.
-    if (nextTransitionType != FxViewItemTransitionManager::NoTransition)
-        return nextTransitionToSet ? nextTransitionTo.y() : item->y();
-    else if (transition && transition->isActive())
-        return transition->m_toPos.y();
-    else
-        return item->y();
-}
-
-void FxViewItem::setVisible(bool visible)
-{
-    if (!visible && transitionScheduledOrRunning())
-        return;
-    item->setVisible(visible);
-}
-
-void FxViewItem::setNextTransition(FxViewItemTransitionManager::TransitionType type, bool isTargetItem)
-{
-    // Don't reset nextTransitionToSet - once it is set, it cannot be changed
-    // until the animation finishes since the itemX() and itemY() may be used
-    // to calculate positions for transitions for other items in the view.
-    nextTransitionType = type;
-    isTransitionTarget = isTargetItem;
-}
-
-bool FxViewItem::transitionScheduledOrRunning() const
-{
-    return (transition && transition->isActive())
-            || nextTransitionType != FxViewItemTransitionManager::NoTransition;
-}
-
-bool FxViewItem::prepareTransition(const QRectF &viewBounds)
-{
-    bool doTransition = false;
-
-    switch (nextTransitionType) {
-    case FxViewItemTransitionManager::NoTransition:
-    {
-        return false;
-    }
-    case FxViewItemTransitionManager::PopulateTransition:
-    {
-        return true;
-    }
-    case FxViewItemTransitionManager::AddTransition:
-    case FxViewItemTransitionManager::RemoveTransition:
-        // For Add targets, do transition if item is moving into visible area
-        // For Remove targets, do transition if item is currently in visible area
-        if (isTransitionTarget) {
-            doTransition = (nextTransitionType == FxViewItemTransitionManager::AddTransition)
-                    ? viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()))
-                    : viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()));
-            if (!doTransition)
-                item->setPos(nextTransitionTo);
-        } else {
-            if (viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()))
-                    || viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()))) {
-                doTransition = (nextTransitionTo != item->pos());
-            } else {
-                item->setPos(nextTransitionTo);
-            }
-        }
-        break;
-    case FxViewItemTransitionManager::MoveTransition:
-        // do transition if moving from or into visible area
-        if (nextTransitionTo != item->pos()) {
-            doTransition = viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()))
-                    || viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()));
-            if (!doTransition)
-                item->setPos(nextTransitionTo);
-        }
-        break;
-    }
-
-    if (!doTransition)
-        resetTransitionData();
-    return doTransition;
-}
-
-void FxViewItem::startTransition()
-{
-    if (nextTransitionType == FxViewItemTransitionManager::NoTransition)
-        return;
-
-    if (!transition || transition->m_type != nextTransitionType || transition->m_isTarget != isTransitionTarget) {
-        delete transition;
-        transition = new FxViewItemTransitionManager;
-    }
-
-    // if item is not already moving somewhere, set it to not move anywhere
-    // so that removed items do not move to the default (0,0)
-    if (!nextTransitionToSet)
-        moveTo(item->pos());
-
-    transition->startTransition(this, nextTransitionType, nextTransitionTo, isTransitionTarget);
-    nextTransitionType = FxViewItemTransitionManager::NoTransition;
-}
-
-void FxViewItem::stopTransition()
-{
-    if (transition) {
-        transition->cancel();
-        delete transition;
-        transition = 0;
-    }
-    resetTransitionData();
-    finishedTransition();
-}
-
-void FxViewItem::finishedTransition()
-{
-    nextTransitionToSet = false;
-    nextTransitionTo = QPointF();
-
-    if (releaseAfterTransition) {
-        QQuickItemViewPrivate *vp = static_cast<QQuickItemViewPrivate*>(QObjectPrivate::get(itemView()));
-        vp->releasePendingTransition.removeOne(this);
-        vp->releaseItem(this);
-    }
-}
-
-void FxViewItem::resetTransitionData()
-{
-    nextTransitionType = FxViewItemTransitionManager::NoTransition;
-    isTransitionTarget = false;
-    nextTransitionTo = QPointF();
-    nextTransitionToSet = false;
-}
-
-bool FxViewItem::isPendingRemoval() const
-{
-    if (nextTransitionType == FxViewItemTransitionManager::RemoveTransition)
-        return isTransitionTarget;
-    if (transition && transition->isActive() && transition->m_type == FxViewItemTransitionManager::RemoveTransition)
-        return transition->m_isTarget;
-    return false;
-}
-
-void FxViewItem::moveTo(const QPointF &pos)
-{
-    if (transitionScheduledOrRunning()) {
-        nextTransitionTo = pos;
-        nextTransitionToSet = true;
-    } else {
-        item->setPos(pos);
-    }
-}
-
-
-FxViewItemTransitionManager::FxViewItemTransitionManager()
-    : m_active(false), m_item(0), m_type(FxViewItemTransitionManager::NoTransition), m_isTarget(false)
-{
-}
-
-FxViewItemTransitionManager::~FxViewItemTransitionManager()
-{
-}
-
-bool FxViewItemTransitionManager::isActive() const
-{
-    return m_active;
-}
-
-void FxViewItemTransitionManager::startTransition(FxViewItem *item, FxViewItemTransitionManager::TransitionType type, const QPointF &to, bool isTargetItem)
-{
-    if (!item) {
-        qWarning("startTransition(): invalid item");
-        return;
-    }
-
-    QQuickItemViewPrivate *vp = static_cast<QQuickItemViewPrivate*>(QObjectPrivate::get(item->itemView()));
-
-    QDeclarativeTransition *trans = 0;
-    switch (type) {
-    case NoTransition:
-        break;
-    case PopulateTransition:
-        trans = vp->populateTransition;
-        break;
-    case AddTransition:
-        trans = isTargetItem ? vp->addTransition : vp->addDisplacedTransition;
-        break;
-    case MoveTransition:
-        trans = isTargetItem ? vp->moveTransition : vp->moveDisplacedTransition;
-        break;
-    case RemoveTransition:
-        trans = isTargetItem ? vp->removeTransition : vp->removeDisplacedTransition;
-        break;
-    }
-
-    if (!trans) {
-        qWarning("QQuickItemView: invalid view transition!");
-        return;
-    }
-
-    m_active = true;
-    m_item = item;
-    m_toPos = to;
-    m_type = type;
-    m_isTarget = isTargetItem;
-
-    QQuickViewTransitionAttached *attached =
-            static_cast<QQuickViewTransitionAttached*>(qmlAttachedPropertiesObject<QQuickViewTransitionAttached>(trans));
-    if (attached) {
-        attached->m_index = item->index;
-        attached->m_item = item->item;
-        attached->m_destination = to;
-        switch (type) {
-        case NoTransition:
-            break;
-        case PopulateTransition:
-        case AddTransition:
-            attached->m_targetIndexes = vp->addTransitionIndexes;
-            attached->m_targetItems = vp->addTransitionTargets;
-            break;
-        case MoveTransition:
-            attached->m_targetIndexes = vp->moveTransitionIndexes;
-            attached->m_targetItems = vp->moveTransitionTargets;
-            break;
-        case RemoveTransition:
-            attached->m_targetIndexes = vp->removeTransitionIndexes;
-            attached->m_targetItems = vp->removeTransitionTargets;
-            break;
-        }
-        emit attached->indexChanged();
-        emit attached->itemChanged();
-        emit attached->destinationChanged();
-        emit attached->targetIndexesChanged();
-        emit attached->targetItemsChanged();
-    }
-
-    QDeclarativeStateOperation::ActionList actions;
-    actions << QDeclarativeAction(item->item, QLatin1String("x"), QVariant(to.x()));
-    actions << QDeclarativeAction(item->item, QLatin1String("y"), QVariant(to.y()));
-
-    QDeclarativeTransitionManager::transition(actions, trans, item->item);
-}
-
-void FxViewItemTransitionManager::finished()
-{
-    QDeclarativeTransitionManager::finished();
-
-    m_active = false;
-
-    if (m_item)
-        m_item->finishedTransition();
-    m_item = 0;
-    m_toPos.setX(0);
-    m_toPos.setY(0);
-    m_type = NoTransition;
-    m_isTarget = false;
 }
 
 
@@ -412,363 +136,6 @@ void QQuickItemViewChangeSet::reset()
     currentChanged = false;
     currentRemoved = false;
 }
-
-
-QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
-    : QObject(parent), m_index(-1), m_item(0)
-{
-}
-/*!
-    \qmlclass ViewTransition QQuickViewTransitionAttached
-    \inqmlmodule QtQuick 2
-    \ingroup qml-view-elements
-    \brief The ViewTransition attached property provides details on items under transition in a view.
-
-    With ListView and GridView, it is possible to specify transitions that should be applied whenever
-    the items in the view change as a result of modifications to the view's model. They both have the
-    following properties that can be set to the appropriate transitions to be run for various
-    operations:
-
-    \list
-    \o \c add and \c addDisplaced - the transitions to run when items are added to the view
-    \o \c remove and \c removeDisplaced - the transitions to run when items are removed from the view
-    \o \c move and \c moveDisplaced - the transitions to run when items are moved within the view
-       (i.e. as a result of a move operation in the model)
-    \o \c populate - the transition to run when a view is created, or when the model changes
-    \endlist
-
-    Such view transitions additionally have access to a ViewTransition attached property that
-    provides details of the items that are under transition and the operation that triggered the
-    transition. Since view transitions are run once per item, these details can be used to customise
-    each transition for each individual item.
-
-    The ViewTransition attached property provides the following properties specific to the item to
-    which the transition is applied:
-
-    \list
-    \o ViewTransition.item - the item that is under transition
-    \o ViewTransition.index - the index of this item
-    \o ViewTransition.destination - the (x,y) point to which this item is moving for the relevant view operation
-    \endlist
-
-    In addition, ViewTransition provides properties specific to the items which are the target
-    of the operation that triggered the transition:
-
-    \list
-    \o ViewTransition.targetIndexes - the indexes of the target items
-    \o ViewTransition.targetItems - the target items themselves
-    \endlist
-
-    View transitions can be written without referring to any of the attributes listed
-    above. These attributes merely provide extra details that are useful for customising view
-    transitions.
-
-    Following is an introduction to view transitions and the ways in which the ViewTransition
-    attached property can be used to augment view transitions.
-
-
-    \section2 View transitions: a simple example
-
-    Here is a basic example of the use of view transitions. The view below specifies transitions for
-    the \c add and \c addDisplaced properties, which will be run when items are added to the view:
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-basic.qml 0
-
-    When the space key is pressed, adding an item to the model, the new item will fade in and
-    increase in scale over 400 milliseconds as it is added to the view. Also, any item that is
-    displaced by the addition of a new item will animate to its new position in the view over
-    400 milliseconds, as specified by the \c addDisplaced transition.
-
-    If five items were inserted in succession at index 0, the effect would be this:
-
-    \image viewtransitions-basic.gif
-
-    Notice that the NumberAnimation objects above do not need to specify a \c target to animate
-    the appropriate item. Also, the NumberAnimation in the \c addTransition does not need to specify
-    the \c to value to move the item to its correct position in the view. This is because the view
-    implicitly sets the \c target and \c to values with the correct item and final item position
-    values if these properties are not explicitly defined.
-
-    At its simplest, a view transition may just animate an item to its new position following a
-    view operation, just as the \c addDisplaced transition does above, or animate some item properties,
-    as in the \c add transition above. Additionally, a view transition may make use of the
-    ViewTransition attached property to customise animation behavior for different items. Following
-    are some examples of how this can be achieved.
-
-
-    \section2 Using the ViewTransition attached property
-
-    As stated, the various ViewTransition properties provide details specific to the individual item
-    being transitioned as well as the operation that triggered the transition. In the animation above,
-    five items are inserted in succession at index 0. When the fifth and final insertion takes place,
-    adding "Item 4" to the view, the \c add transition is run once (for the inserted item) and the
-    \c addDisplaced transition is run four times (once for each of the four existing items in the view).
-
-    At this point, if we examined the \c addDisplaced transition that was run for the bottom displaced
-    item ("Item 0"), the ViewTransition property values provided to this transition would be as follows:
-
-    \table
-    \header
-        \o Property
-        \o Value
-        \o Explanation
-    \row
-        \o ViewTransition.item
-        \o "Item 0" delegate instance
-        \o The "Item 0" \l Rectangle object itself
-    \row
-        \o ViewTransition.index
-        \o \c int value of 4
-        \o The index of "Item 0" within the model following the add operation
-    \row
-        \o ViewTransition.destination
-        \o \l point value of (0, 120)
-        \o The position that "Item 0" is moving to
-    \row
-        \o ViewTransition.targetIndexes
-        \o \c int array, just contains the integer "0" (zero)
-        \o The index of "Item 4", the new item added to the view
-    \row
-        \o ViewTransition.targetItems
-        \o object array, just contains the "Item 4" delegate instance
-        \o The "Item 4" \l Rectangle object - the new item added to the view
-    \endtable
-
-    The ViewTransition.targetIndexes and ViewTransition.targetItems lists provide the items and
-    indexes of all delegate instances that are the targets of the relevant operation. For an add
-    operation, these are all the items that are added into the view; for a remove, these are all
-    the items removed from the view, and so on. (Note these lists will only contain references to
-    items that have been created within the view or its cached items; targets that are not within
-    the visible area of the view or within the item cache will not be accessible.)
-
-    So, while the ViewTransition.item, ViewTransition.index and ViewTransition.destination values
-    vary for each individual transition that is run, the ViewTransition.targetIndexes and
-    ViewTransition.targetItems values are the same for every \c add and \c addDisplaced transition
-    that is triggered by a particular add operation.
-
-
-    \section3 Delaying animations based on index
-
-    Since each view transition is run once for each item affected by the transition, the ViewTransition
-    properties can be used within a transition to define custom behavior for each item's transition.
-    For example, the ListView in the previous example could use this information to create a ripple-type
-    effect on the movement of the displaced items.
-
-    This can be achieved by modifying the \c addDisplaced transition so that it delays the animation of
-    each displaced item based on the difference between its index (provided by ViewTransition.index)
-    and the first removed index (provided by ViewTransition.targetIndexes):
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-delayedbyindex.qml 0
-
-    Each displaced item delays its animation by an additional 100 milliseconds, producing a subtle
-    ripple-type effect when items are displaced by the add, like this:
-
-    \image viewtransitions-delayedbyindex.gif
-
-
-    \section3 Animating items to intermediate positions
-
-    The ViewTransition.item property gives a reference to the item to which the transition is being
-    applied. This can be used to access any of the item's attributes, custom \c property values,
-    and so on.
-
-    Below is a modification of the \c addDisplaced transition from the previous example. It adds a
-    ParallelAnimation with nested NumberAnimation objects that reference ViewTransition.item to access
-    each item's \c x and \c y values at the start of their transitions. This allows each item to
-    animate to an intermediate position relative to its starting point for the transition, before
-    animating to its final position in the view:
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-intermediatemove.qml 0
-
-    Now, a displaced item will first move to a position of (20, 50) relative to its starting
-    position, and then to its final, correct position in the view:
-
-    \image viewtransitions-intermediatemove.gif
-
-    Since the final NumberAnimation does not specify a \c to value, the view implicitly sets this
-    value to the item's final position in the view, and so this last animation will move this item
-    to the correct place. If the transition requires the final position of the item for some calculation,
-    this is accessible through ViewTransition.destination.
-
-    Instead of using multiple NumberAnimations, you could use a PathAnimation to animate an item over
-    a curved path. For example, the \c add transition in the previous example could be augmented with
-    a PathAnimation as follows: to animate newly added items along a path:
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-pathanim.qml 0
-
-    This animates newly added items along a path. Notice that each path is specified relative to
-    each item's final destination point, so that items inserted at different indexes start their
-    paths from different positions:
-
-    \image viewtransitions-pathanim.gif
-
-
-    \section2 Handling interrupted animations
-
-    A view transition may be interrupted at any time if a different view transition needs to be
-    applied while the original transition is in progress. For example, say Item A is inserted at index 0
-    and undergoes an "add" transition; then, Item B is inserted at index 0 in quick succession before
-    Item A's transition has finished. Since Item B is inserted before Item A, it will displace Item
-    A, causing the view to interrupt Item A's "add" transition mid-way and start an "addDisplaced"
-    transition on Item A instead.
-
-    For simple animations that simply animate an item's movement to its final destination, this
-    interruption is unlikely to require additional consideration. However, if a transition changes other
-    properties, this interruption may cause unwanted side effects. Consider the first example on this
-    page, repeated below for convenience:
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-basic.qml 0
-
-    If multiple items are added in rapid succession, without waiting for a previous transition
-    to finish, this is the result:
-
-    \image viewtransitions-interruptedbad.gif
-
-    Each newly added item undergoes an \c add transition, but before the transition can finish,
-    another item is added, displacing the previously added item. Because of this, the \c add
-    transition on the previously added item is interrupted and an \c addDisplaced transition is
-    started on the item instead. Due to the interruption, the \c opacity and \c scale animations
-    have not completed, thus producing items with opacity and scale that are below 1.0.
-
-    To fix this, the \c addDisplaced transition should additionally ensure the item properties are
-    set to the end values specified in the \c add transition, effectively resetting these values
-    whenever an item is displaced. In this case, it means setting the item opacity and scale to 1.0:
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-interruptedgood.qml 0
-
-    Now, when an item's \c add transition is interrupted, its opacity and scale are animated to 1.0
-    upon displacement, avoiding the erroneous visual effects from before:
-
-    \image viewtransitions-interruptedgood.gif
-
-    The same principle applies to any combination of view transitions. An added item may be moved
-    before its add transition finishes, or a moved item may be removed before its moved transition
-    finishes, and so on; so, the rule of thumb is that every transition should handle the same set of
-    properties.
-
-
-    \section2 Restrictions regarding ScriptAction
-
-    When a view transition is initialized, any property bindings that refer to the ViewTransition
-    attached property are evaluated in preparation for the transition. Due to the nature of the
-    internal construction of a view transition, the attributes of the ViewTransition attached
-    property are only valid for the relevant item when the transition is initialized, and may not be
-    valid when the transition is actually run.
-
-    Therefore, a ScriptAction within a view transition should not refer to the ViewTransition
-    attached property, as it may not refer to the expected values at the time that the ScriptAction
-    is actually invoked. Consider the following example:
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-scriptactionbad.qml 0
-
-    When the space key is pressed, three items are moved from index 5 to index 1. For each moved
-    item, the \c moveTransition sequence presumably animates the item's color to "yellow", then
-    animates it to its final position, then changes the item color back to "lightsteelblue" using a
-    ScriptAction. However, when run, the transition does not produce the intended result:
-
-    \image viewtransitions-scriptactionbad.gif
-
-    Only the last moved item is returned to the "lightsteelblue" color; the others remain yellow. This
-    is because the ScriptAction is not run until after the transition has already been initialized, by
-    which time the ViewTransition.item value has changed to refer to a different item; the item that
-    the script had intended to refer to is not the one held by ViewTransition.item at the time the
-    ScriptAction is actually invoked.
-
-    In this instance, to avoid this issue, the view could set the property using a PropertyAction
-    instead:
-
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-scriptactiongood.qml 0
-
-    When the transition is initialized, the PropertyAction \c target will be set to the respective
-    ViewTransition.item for the transition and will later run with the correct item target as
-    expected.
-  */
-
-/*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::index
-
-    This attached property holds the index of the item that is being
-    transitioned.
-
-    Note that if the item is being moved, this property holds the index that
-    the item is moving to, not from.
-*/
-
-/*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::item
-
-    This attached property holds the the item that is being transitioned.
-
-    \warning This item should not be kept and referred to outside of the transition
-    as it may become invalid as the view changes.
-*/
-
-/*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::destination
-
-    This attached property holds the final destination position for the transitioned
-    item within the view.
-
-    This property value is a \l point with \c x and \c y properties.
-*/
-
-/*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::targetIndexes
-
-    This attached property holds a list of the indexes of the items in view
-    that are the target of the relevant operation.
-
-    The targets are the items that are the subject of the operation. For
-    an add operation, these are the items being added; for a remove, these
-    are the items being removed; for a move, these are the items being
-    moved.
-
-    For example, if the transition was triggered by an insert operation
-    that added two items at index 1 and 2, this targetIndexes list would
-    have the value [1,2].
-
-    \note The targetIndexes list only contains the indexes of items that are actually
-    in view, or will be in the view once the relevant operation completes.
-
-    \sa QtQuick2::ViewTransition::targetIndexes
-*/
-
-/*!
-    \qmlattachedproperty list QtQuick2::ViewTransition::targetItems
-
-    This attached property holds the list of items in view that are the
-    target of the relevant operation.
-
-    The targets are the items that are the subject of the operation. For
-    an add operation, these are the items being added; for a remove, these
-    are the items being removed; for a move, these are the items being
-    moved.
-
-    For example, if the transition was triggered by an insert operation
-    that added two items at index 1 and 2, this targetItems list would
-    contain these two items.
-
-    \note The targetItems list only contains items that are actually
-    in view, or will be in the view once the relevant operation completes.
-
-    \warning The objects in this list should not be kept and referred to
-    outside of the transition as the items may become invalid. The targetItems
-    are only valid when the Transition is initially created; this also means
-    they should not be used by ScriptAction objects in the Transition, which are
-    not evaluated until the transition is run.
-
-    \sa QtQuick2::ViewTransition::targetIndexes
-*/
-QDeclarativeListProperty<QObject> QQuickViewTransitionAttached::targetItems()
-{
-    return QDeclarativeListProperty<QObject>(this, m_targetItems);
-}
-
-QQuickViewTransitionAttached *QQuickViewTransitionAttached::qmlAttachedProperties(QObject *obj)
-{
-    return new QQuickViewTransitionAttached(obj);
-}
-
 
 //-----------------------------------
 
@@ -868,9 +235,9 @@ void QQuickItemView::setModel(const QVariant &model)
             }
             d->updateViewport();
 
-            if (d->populateTransition) {
+            if (d->transitioner && d->transitioner->populateTransition) {
                 d->forceLayout = true;
-                d->usePopulateTransition = true;
+                d->transitioner->setPopulateTransitionEnabled(true);
                 polish();
             }
         }
@@ -1229,14 +596,15 @@ void QQuickItemView::setHighlightMoveDuration(int duration)
 QDeclarativeTransition *QQuickItemView::populateTransition() const
 {
     Q_D(const QQuickItemView);
-    return d->populateTransition;
+    return d->transitioner ? d->transitioner->populateTransition : 0;
 }
 
 void QQuickItemView::setPopulateTransition(QDeclarativeTransition *transition)
 {
     Q_D(QQuickItemView);
-    if (d->populateTransition != transition) {
-        d->populateTransition = transition;
+    d->createTransitioner();
+    if (d->transitioner->populateTransition != transition) {
+        d->transitioner->populateTransition = transition;
         emit populateTransitionChanged();
     }
 }
@@ -1244,14 +612,15 @@ void QQuickItemView::setPopulateTransition(QDeclarativeTransition *transition)
 QDeclarativeTransition *QQuickItemView::addTransition() const
 {
     Q_D(const QQuickItemView);
-    return d->addTransition;
+    return d->transitioner ? d->transitioner->addTransition : 0;
 }
 
 void QQuickItemView::setAddTransition(QDeclarativeTransition *transition)
 {
     Q_D(QQuickItemView);
-    if (d->addTransition != transition) {
-        d->addTransition = transition;
+    d->createTransitioner();
+    if (d->transitioner->addTransition != transition) {
+        d->transitioner->addTransition = transition;
         emit addTransitionChanged();
     }
 }
@@ -1259,14 +628,15 @@ void QQuickItemView::setAddTransition(QDeclarativeTransition *transition)
 QDeclarativeTransition *QQuickItemView::addDisplacedTransition() const
 {
     Q_D(const QQuickItemView);
-    return d->addDisplacedTransition;
+    return d->transitioner ? d->transitioner->addDisplacedTransition : 0;
 }
 
 void QQuickItemView::setAddDisplacedTransition(QDeclarativeTransition *transition)
 {
     Q_D(QQuickItemView);
-    if (d->addDisplacedTransition != transition) {
-        d->addDisplacedTransition = transition;
+    d->createTransitioner();
+    if (d->transitioner->addDisplacedTransition != transition) {
+        d->transitioner->addDisplacedTransition = transition;
         emit addDisplacedTransitionChanged();
     }
 }
@@ -1274,14 +644,15 @@ void QQuickItemView::setAddDisplacedTransition(QDeclarativeTransition *transitio
 QDeclarativeTransition *QQuickItemView::moveTransition() const
 {
     Q_D(const QQuickItemView);
-    return d->moveTransition;
+    return d->transitioner ? d->transitioner->moveTransition : 0;
 }
 
 void QQuickItemView::setMoveTransition(QDeclarativeTransition *transition)
 {
     Q_D(QQuickItemView);
-    if (d->moveTransition != transition) {
-        d->moveTransition = transition;
+    d->createTransitioner();
+    if (d->transitioner->moveTransition != transition) {
+        d->transitioner->moveTransition = transition;
         emit moveTransitionChanged();
     }
 }
@@ -1289,14 +660,15 @@ void QQuickItemView::setMoveTransition(QDeclarativeTransition *transition)
 QDeclarativeTransition *QQuickItemView::moveDisplacedTransition() const
 {
     Q_D(const QQuickItemView);
-    return d->moveDisplacedTransition;
+    return d->transitioner ? d->transitioner->moveDisplacedTransition : 0;
 }
 
 void QQuickItemView::setMoveDisplacedTransition(QDeclarativeTransition *transition)
 {
     Q_D(QQuickItemView);
-    if (d->moveDisplacedTransition != transition) {
-        d->moveDisplacedTransition = transition;
+    d->createTransitioner();
+    if (d->transitioner->moveDisplacedTransition != transition) {
+        d->transitioner->moveDisplacedTransition = transition;
         emit moveDisplacedTransitionChanged();
     }
 }
@@ -1304,14 +676,15 @@ void QQuickItemView::setMoveDisplacedTransition(QDeclarativeTransition *transiti
 QDeclarativeTransition *QQuickItemView::removeTransition() const
 {
     Q_D(const QQuickItemView);
-    return d->removeTransition;
+    return d->transitioner ? d->transitioner->removeTransition : 0;
 }
 
 void QQuickItemView::setRemoveTransition(QDeclarativeTransition *transition)
 {
     Q_D(QQuickItemView);
-    if (d->removeTransition != transition) {
-        d->removeTransition = transition;
+    d->createTransitioner();
+    if (d->transitioner->removeTransition != transition) {
+        d->transitioner->removeTransition = transition;
         emit removeTransitionChanged();
     }
 }
@@ -1319,14 +692,15 @@ void QQuickItemView::setRemoveTransition(QDeclarativeTransition *transition)
 QDeclarativeTransition *QQuickItemView::removeDisplacedTransition() const
 {
     Q_D(const QQuickItemView);
-    return d->removeDisplacedTransition;
+    return d->transitioner ? d->transitioner->removeDisplacedTransition : 0;
 }
 
 void QQuickItemView::setRemoveDisplacedTransition(QDeclarativeTransition *transition)
 {
     Q_D(QQuickItemView);
-    if (d->removeDisplacedTransition != transition) {
-        d->removeDisplacedTransition = transition;
+    d->createTransitioner();
+    if (d->transitioner->removeDisplacedTransition != transition) {
+        d->transitioner->removeDisplacedTransition = transition;
         emit removeDisplacedTransitionChanged();
     }
 }
@@ -1465,64 +839,6 @@ void QQuickItemViewPrivate::applyPendingChanges()
         layout();
 }
 
-bool QQuickItemViewPrivate::canTransition(FxViewItemTransitionManager::TransitionType type, bool asTarget) const
-{
-    switch (type) {
-    case FxViewItemTransitionManager::NoTransition:
-        break;
-    case FxViewItemTransitionManager::PopulateTransition:
-        return usePopulateTransition
-                && populateTransition && populateTransition->enabled();
-    case FxViewItemTransitionManager::AddTransition:
-        if (asTarget)
-            return addTransition && addTransition->enabled();
-        else
-            return addDisplacedTransition && addDisplacedTransition->enabled();
-    case FxViewItemTransitionManager::MoveTransition:
-        if (asTarget)
-            return moveTransition && moveTransition->enabled();
-        else
-            return moveDisplacedTransition && moveDisplacedTransition->enabled();
-    case FxViewItemTransitionManager::RemoveTransition:
-        if (asTarget)
-            return removeTransition && removeTransition->enabled();
-        else
-            return removeDisplacedTransition && removeDisplacedTransition->enabled();
-    }
-    return false;
-}
-
-bool QQuickItemViewPrivate::hasItemTransitions() const
-{
-    return canTransition(FxViewItemTransitionManager::PopulateTransition, true)
-            || canTransition(FxViewItemTransitionManager::AddTransition, true)
-            || canTransition(FxViewItemTransitionManager::AddTransition, false)
-            || canTransition(FxViewItemTransitionManager::MoveTransition, true)
-            || canTransition(FxViewItemTransitionManager::MoveTransition, false)
-            || canTransition(FxViewItemTransitionManager::RemoveTransition, true)
-            || canTransition(FxViewItemTransitionManager::RemoveTransition, false);
-}
-
-void QQuickItemViewPrivate::transitionNextReposition(FxViewItem *item, FxViewItemTransitionManager::TransitionType type, bool isTarget)
-{
-    bool matchedTransition = false;
-    if (type == FxViewItemTransitionManager::AddTransition) {
-        // don't run add transitions for added items while populating
-        matchedTransition = !usePopulateTransition && canTransition(type, isTarget);
-    } else {
-        matchedTransition = canTransition(type, isTarget);
-    }
-
-    if (matchedTransition) {
-        item->setNextTransition(type, isTarget);
-    } else {
-        // the requested transition type is not valid, but the item is scheduled/in another
-        // transition, so cancel it to allow the item to move directly to the correct pos
-        if (item->transitionScheduledOrRunning())
-            item->stopTransition();
-    }
-}
-
 int QQuickItemViewPrivate::findMoveKeyIndex(QDeclarativeChangeSet::MoveKey key, const QVector<QDeclarativeChangeSet::Remove> &changes) const
 {
     for (int i=0; i<changes.count(); i++) {
@@ -1583,8 +899,8 @@ void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
         // start new transitions
         bool prevDisableLayout = disableLayout;
         if (!disableLayout) {
-            FxViewItem *actualItem = hasItemTransitions() ? visibleItem(currentIndex) : 0;
-            if (actualItem && actualItem->transition && actualItem->transition->isRunning())
+            FxViewItem *actualItem = transitioner ? visibleItem(currentIndex) : 0;
+            if (actualItem && actualItem->transitionRunning())
                 disableLayout = true;
         }
         updateHighlight();
@@ -1602,7 +918,7 @@ void QQuickItemView::destroyRemoved()
             it != d->visibleItems.end();) {
         FxViewItem *item = *it;
         if (item->index == -1 && item->attached->delayRemove() == false) {
-            if (d->canTransition(FxViewItemTransitionManager::RemoveTransition, true)) {
+            if (d->transitioner && d->transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)) {
                 // don't remove from visibleItems until next layout()
                 d->runDelayedRemoveTransition = true;
                 QObject::disconnect(item->attached, SIGNAL(delayRemoveChanged()), this, SLOT(destroyRemoved()));
@@ -1626,7 +942,8 @@ void QQuickItemView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
 {
     Q_D(QQuickItemView);
     if (reset) {
-        d->usePopulateTransition = true;
+        if (d->transitioner)
+            d->transitioner->setPopulateTransitionEnabled(true);
         d->moveReason = QQuickItemViewPrivate::SetIndex;
         d->regenerate();
         if (d->highlight && d->currentItem) {
@@ -1636,7 +953,7 @@ void QQuickItemView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
         }
         d->moveReason = QQuickItemViewPrivate::Other;
         emit countChanged();
-        if (d->populateTransition) {
+        if (d->transitioner && d->transitioner->populateTransition) {
             d->forceLayout = true;
             polish();
         }
@@ -1936,7 +1253,8 @@ void QQuickItemView::componentComplete()
     d->updateFooter();
     d->updateViewport();
     d->setPosition(d->contentStartOffset());
-    d->usePopulateTransition = true;
+    if (d->transitioner)
+        d->transitioner->setPopulateTransitionEnabled(true);
 
     if (d->isValid()) {
         d->refill();
@@ -1972,17 +1290,19 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , highlightRangeStart(0), highlightRangeEnd(0)
     , highlightMoveDuration(150)
     , headerComponent(0), header(0), footerComponent(0), footer(0)
-    , populateTransition(0)
-    , addTransition(0), addDisplacedTransition(0)
-    , moveTransition(0), moveDisplacedTransition(0)
-    , removeTransition(0), removeDisplacedTransition(0)
+    , transitioner(0)
     , minExtent(0), maxExtent(0)
     , ownModel(false), wrap(false)
     , disableLayout(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
     , fillCacheBuffer(false), inRequest(false), requestedAsync(false)
-    , usePopulateTransition(false), runDelayedRemoveTransition(false)
+    , runDelayedRemoveTransition(false)
 {
+}
+
+QQuickItemViewPrivate::~QQuickItemViewPrivate()
+{
+    delete transitioner;
 }
 
 bool QQuickItemViewPrivate::isValid() const
@@ -2267,15 +1587,17 @@ void QQuickItemViewPrivate::layout()
     if (!isValid() && !visibleItems.count()) {
         clear();
         setPosition(contentStartOffset());
-        usePopulateTransition = false;
+        if (transitioner)
+            transitioner->setPopulateTransitionEnabled(false);
         return;
     }
 
-    if (runDelayedRemoveTransition && canTransition(FxViewItemTransitionManager::RemoveTransition, false)) {
+    if (runDelayedRemoveTransition && transitioner
+            && transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false)) {
         // assume that any items moving now are moving due to the remove - if they schedule
         // a different transition, that will override this one anyway
         for (int i=0; i<visibleItems.count(); i++)
-            transitionNextReposition(visibleItems[i], FxViewItemTransitionManager::RemoveTransition, false);
+            transitioner->transitionNextReposition(visibleItems[i], QQuickItemViewTransitioner::RemoveTransition, false);
     }
 
     ChangeResult insertionPosChanges;
@@ -2289,9 +1611,9 @@ void QQuickItemViewPrivate::layout()
     }
     forceLayout = false;
 
-    if (canTransition(FxViewItemTransitionManager::PopulateTransition, true)) {
+    if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) {
         for (int i=0; i<visibleItems.count(); i++)
-            transitionNextReposition(visibleItems.at(i), FxViewItemTransitionManager::PopulateTransition, true);
+            transitioner->transitionNextReposition(visibleItems.at(i), QQuickItemViewTransitioner::PopulateTransition, true);
     }
     layoutVisibleItems();
 
@@ -2310,11 +1632,11 @@ void QQuickItemViewPrivate::layout()
     updateViewport();
     updateUnrequestedPositions();
 
-    if (hasItemTransitions()) {
+    if (transitioner) {
         // items added in the last refill() may need to be transitioned in - e.g. a remove
         // causes items to slide up into view
-        if (canTransition(FxViewItemTransitionManager::MoveTransition, false)
-                || canTransition(FxViewItemTransitionManager::RemoveTransition, false)) {
+        if (transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, false)
+                || transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false)) {
             translateAndTransitionItemsAfter(lastIndexInView, insertionPosChanges, removalPosChanges);
         }
 
@@ -2324,8 +1646,7 @@ void QQuickItemViewPrivate::layout()
         for (QList<FxViewItem*>::Iterator it = releasePendingTransition.begin();
              it != releasePendingTransition.end(); ) {
             FxViewItem *item = *it;
-            if ( (item->transition && item->transition->isActive())
-                 || prepareNonVisibleItemTransition(item, viewBounds)) {
+            if (item->transitionRunning() || prepareNonVisibleItemTransition(item, viewBounds)) {
                 ++it;
             } else {
                 releaseItem(item);
@@ -2334,11 +1655,12 @@ void QQuickItemViewPrivate::layout()
         }
 
         for (int i=0; i<visibleItems.count(); i++)
-            visibleItems[i]->startTransition();
+            visibleItems[i]->startTransition(transitioner);
         for (int i=0; i<releasePendingTransition.count(); i++)
-            releasePendingTransition[i]->startTransition();
+            releasePendingTransition[i]->startTransition(transitioner);
+        transitioner->setPopulateTransitionEnabled(false);
     }
-    usePopulateTransition = false;
+
     runDelayedRemoveTransition = false;
 }
 
@@ -2441,7 +1763,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     // for each item that was moved directly into the view as a result of a move(),
     // find the index it was moved from in order to set its initial position, so that we
     // can transition it from this "original" position to its new position in the view
-    if (canTransition(FxViewItemTransitionManager::MoveTransition, true)) {
+    if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true)) {
         for (int i=0; i<movingIntoView.count(); i++) {
             int fromIndex = findMoveKeyIndex(movingIntoView[i].moveKey, removals);
             if (fromIndex >= 0) {
@@ -2449,7 +1771,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
                     repositionItemAt(movingIntoView[i].item, fromIndex, -totalInsertionResult->sizeChangesAfterVisiblePos);
                 else
                     repositionItemAt(movingIntoView[i].item, fromIndex, totalInsertionResult->sizeChangesAfterVisiblePos);
-                transitionNextReposition(movingIntoView[i].item, FxViewItemTransitionManager::MoveTransition, true);
+                transitioner->transitionNextReposition(movingIntoView[i].item, QQuickItemViewTransitioner::MoveTransition, true);
             }
         }
     }
@@ -2513,10 +1835,12 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QDeclarativeChangeSet::Remo
         } else if (item->index >= removal.index + removal.count) {
             // after removed items
             item->index -= removal.count;
-            if (removal.isMove())
-                transitionNextReposition(item, FxViewItemTransitionManager::MoveTransition, false);
-            else
-                transitionNextReposition(item, FxViewItemTransitionManager::RemoveTransition, false);
+            if (transitioner) {
+                if (removal.isMove())
+                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, false);
+                else
+                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::RemoveTransition, false);
+            }
             ++it;
         } else {
             // removed item
@@ -2550,7 +1874,8 @@ void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QDeclarativeChang
     }
     if (removal.isMove()) {
         currentChanges.removedItems.insert(removal.moveKey(item->index), item);
-        transitionNextReposition(item, FxViewItemTransitionManager::MoveTransition, true);
+        if (transitioner)
+            transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, true);
     } else {
         // track item so it is released later
         currentChanges.removedItems.insertMulti(QDeclarativeChangeSet::MoveKey(), item);
@@ -2598,16 +1923,24 @@ void QQuickItemViewPrivate::repositionFirstItem(FxViewItem *prevVisibleItemsFirs
     }
 }
 
+void QQuickItemViewPrivate::createTransitioner()
+{
+    if (!transitioner) {
+        transitioner = new QQuickItemViewTransitioner;
+        transitioner->setChangeListener(this);
+    }
+}
+
 void QQuickItemViewPrivate::prepareVisibleItemTransitions()
 {
     Q_Q(QQuickItemView);
-    if (!hasItemTransitions())
+    if (!transitioner)
         return;
 
-    addTransitionIndexes.clear();
-    addTransitionTargets.clear();
-    moveTransitionIndexes.clear();
-    moveTransitionTargets.clear();
+    transitioner->addTransitionIndexes.clear();
+    transitioner->addTransitionTargets.clear();
+    transitioner->moveTransitionIndexes.clear();
+    transitioner->moveTransitionTargets.clear();
 
     QRectF viewBounds(0, position(), q->width(), q->height());
     for (int i=0; i<visibleItems.count(); i++) {
@@ -2616,18 +1949,18 @@ void QQuickItemViewPrivate::prepareVisibleItemTransitions()
             continue;
         if (visibleItems[i]->isTransitionTarget) {
             switch (visibleItems[i]->nextTransitionType) {
-            case FxViewItemTransitionManager::NoTransition:
+            case QQuickItemViewTransitioner::NoTransition:
                 break;
-            case FxViewItemTransitionManager::PopulateTransition:
-            case FxViewItemTransitionManager::AddTransition:
-                addTransitionIndexes.append(visibleItems[i]->index);
-                addTransitionTargets.append(visibleItems[i]->item);
+            case QQuickItemViewTransitioner::PopulateTransition:
+            case QQuickItemViewTransitioner::AddTransition:
+                transitioner->addTransitionIndexes.append(visibleItems[i]->index);
+                transitioner->addTransitionTargets.append(visibleItems[i]->item);
                 break;
-            case FxViewItemTransitionManager::MoveTransition:
-                moveTransitionIndexes.append(visibleItems[i]->index);
-                moveTransitionTargets.append(visibleItems[i]->item);
+            case QQuickItemViewTransitioner::MoveTransition:
+                transitioner->moveTransitionIndexes.append(visibleItems[i]->index);
+                transitioner->moveTransitionTargets.append(visibleItems[i]->item);
                 break;
-            case FxViewItemTransitionManager::RemoveTransition:
+            case QQuickItemViewTransitioner::RemoveTransition:
                 // removed targets won't be in visibleItems, handle these
                 // in prepareNonVisibleItemTransition()
                 break;
@@ -2638,10 +1971,13 @@ void QQuickItemViewPrivate::prepareVisibleItemTransitions()
 
 void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *> *removedItems)
 {
-    removeTransitionIndexes.clear();
-    removeTransitionTargets.clear();
+    if (!transitioner)
+        return;
 
-    if (canTransition(FxViewItemTransitionManager::RemoveTransition, true)) {
+    transitioner->removeTransitionIndexes.clear();
+    transitioner->removeTransitionTargets.clear();
+
+    if (transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)) {
         for (QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *>::Iterator it = removedItems->begin();
              it != removedItems->end(); ) {
             bool isRemove = it.key().moveId < 0;
@@ -2649,7 +1985,7 @@ void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QDeclarativeChangeSet
                 FxViewItem *item = *it;
                 item->releaseAfterTransition = true;
                 releasePendingTransition.append(item);
-                transitionNextReposition(item, FxViewItemTransitionManager::RemoveTransition, true);
+                transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::RemoveTransition, true);
                 it = removedItems->erase(it);
             } else {
                 ++it;
@@ -2665,23 +2001,35 @@ bool QQuickItemViewPrivate::prepareNonVisibleItemTransition(FxViewItem *item, co
     // removed, or moved to outside of the view, as well as those that are
     // displaced to a position outside of the view due to an insert or move.
 
-    if (item->nextTransitionType == FxViewItemTransitionManager::MoveTransition)
+    if (!transitioner)
+        return false;
+
+    if (item->nextTransitionType == QQuickItemViewTransitioner::MoveTransition)
         repositionItemAt(item, item->index, 0);
     if (!item->prepareTransition(viewBounds))
         return false;
 
     if (item->isTransitionTarget) {
-        if (item->nextTransitionType == FxViewItemTransitionManager::MoveTransition) {
-            moveTransitionIndexes.append(item->index);
-            moveTransitionTargets.append(item->item);
-        } else if (item->nextTransitionType == FxViewItemTransitionManager::RemoveTransition) {
-            removeTransitionIndexes.append(item->index);
-            removeTransitionTargets.append(item->item);
+        if (item->nextTransitionType == QQuickItemViewTransitioner::MoveTransition) {
+            transitioner->moveTransitionIndexes.append(item->index);
+            transitioner->moveTransitionTargets.append(item->item);
+        } else if (item->nextTransitionType == QQuickItemViewTransitioner::RemoveTransition) {
+            transitioner->removeTransitionIndexes.append(item->index);
+            transitioner->removeTransitionTargets.append(item->item);
         }
     }
 
     item->releaseAfterTransition = true;
     return true;
+}
+
+void QQuickItemViewPrivate::viewItemTransitionFinished(QQuickViewItem *i)
+{
+    FxViewItem *item = static_cast<FxViewItem *>(i);
+    if (item->releaseAfterTransition) {
+        releasePendingTransition.removeOne(item);
+        releaseItem(item);
+    }
 }
 
 /*

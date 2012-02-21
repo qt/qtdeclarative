@@ -316,9 +316,6 @@ public:
         return (x >= itemX() && x < itemX() + item->width() &&
                 y >= itemY() && y < itemY() + item->height());
     }
-    QQuickItemView *itemView() const {
-        return view;
-    }
 
     QQuickListView *view;
 
@@ -643,7 +640,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 #endif
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
-        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
+        if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(pos);
         item->item->setVisible(!doBuffer);
         pos += item->size() + spacing;
@@ -663,7 +660,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
             break;
         --visibleIndex;
         visiblePos -= item->size() + spacing;
-        if (!canTransition(FxViewItemTransitionManager::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
+        if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(visiblePos);
         item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
@@ -2341,6 +2338,10 @@ void QQuickListView::setSnapMode(SnapMode mode)
     the new item that has been added to the view; to animate the added items, set the \l add
     property.
 
+    If an item is displaced by multiple types of operations at the same time, it is not
+    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
+    will be applied.
+
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
 
@@ -2404,6 +2405,10 @@ void QQuickListView::setSnapMode(SnapMode mode)
     animated by a NumberAnimation over one second, as specified. This transition is not applied to
     the items that are the actual subjects of the move operation; to animate the moved items, set
     the \l move property.
+
+    If an item is displaced by multiple types of operations at the same time, it is not
+    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
+    will be applied.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2471,6 +2476,10 @@ void QQuickListView::setSnapMode(SnapMode mode)
     animated by a NumberAnimation over one second, as specified. This transition is not applied to
     the item that has actually been removed from the view; to animate the removed items, set the
     \l remove property.
+
+    If an item is displaced by multiple types of operations at the same time, it is not
+    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
+    will be applied.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2740,7 +2749,8 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
-                    transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, true);
+                    if (transitioner)
+                        transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += item->size() + spacing;
                 pos -= item->size() + spacing;
@@ -2766,11 +2776,12 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
             if (change.isMove()) {
                 // we know this is a move target, since move displaced items that are
                 // shuffled into view due to a move would be added in refill()
-                if (canTransition(FxViewItemTransitionManager::MoveTransition, true) && newItem)
+                if (newItem && transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true))
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);
-                transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, true);
+                if (transitioner)
+                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
             }
             insertResult->sizeChangesAfterVisiblePos += item->size() + spacing;
             pos += item->size() + spacing;
@@ -2782,10 +2793,12 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
         FxViewItem *item = visibleItems.at(index);
         if (item->index != -1)
             item->index += count;
-        if (change.isMove())
-            transitionNextReposition(item, FxViewItemTransitionManager::MoveTransition, false);
-        else
-            transitionNextReposition(item, FxViewItemTransitionManager::AddTransition, false);
+        if (transitioner) {
+            if (change.isMove())
+                transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, false);
+            else
+                transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, false);
+        }
     }
 
     updateVisibleIndex();
@@ -2796,6 +2809,9 @@ bool QQuickListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::In
 void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)
 {
     Q_UNUSED(insertionResult);
+
+    if (!transitioner)
+        return;
 
     int markerItemIndex = -1;
     for (int i=0; i<visibleItems.count(); i++) {
@@ -2816,7 +2832,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
         if (!listItem->transitionScheduledOrRunning()) {
             qreal pos = listItem->position();
             listItem->setPosition(pos - sizeRemoved);
-            transitionNextReposition(listItem, FxViewItemTransitionManager::RemoveTransition, false);
+            transitioner->transitionNextReposition(listItem, QQuickItemViewTransitioner::RemoveTransition, false);
             listItem->setPosition(pos);
         }
     }

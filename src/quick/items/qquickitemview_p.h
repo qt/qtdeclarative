@@ -324,52 +324,8 @@ public:
     QString m_nextSection;
 };
 
-class QQuickViewTransitionAttached : public QObject
-{
-    Q_OBJECT
-
-    Q_PROPERTY(int index READ index NOTIFY indexChanged)
-    Q_PROPERTY(QQuickItem* item READ item NOTIFY itemChanged)
-    Q_PROPERTY(QPointF destination READ destination NOTIFY destinationChanged)
-
-    Q_PROPERTY(QList<int> targetIndexes READ targetIndexes NOTIFY targetIndexesChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged)
-
-public:
-    QQuickViewTransitionAttached(QObject *parent);
-
-    int index() const { return m_index; }
-    QQuickItem *item() const { return m_item; }
-    QPointF destination() const { return m_destination; }
-
-    QList<int> targetIndexes() const { return m_targetIndexes; }
-    QDeclarativeListProperty<QObject> targetItems();
-
-    static QQuickViewTransitionAttached *qmlAttachedProperties(QObject *);
-
-signals:
-    void indexChanged();
-    void itemChanged();
-    void destinationChanged();
-
-    void targetIndexesChanged();
-    void targetItemsChanged();
-
-private:
-    friend class FxViewItemTransitionManager;
-    int m_index;
-    QQuickItem *m_item;
-    QPointF m_destination;
-
-    QList<int> m_targetIndexes;
-    QList<QObject *> m_targetItems;
-};
-
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickViewTransitionAttached)
-QML_DECLARE_TYPEINFO(QQuickViewTransitionAttached, QML_HAS_ATTACHED_PROPERTIES)
 
 QT_END_HEADER
 

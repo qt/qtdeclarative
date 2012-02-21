@@ -61,6 +61,7 @@
 #include "qquickvisualdatamodel_p.h"
 #include "qquickgridview_p.h"
 #include "qquickpathview_p.h"
+#include "qquickitemviewtransition_p.h"
 #include <private/qdeclarativepath_p.h>
 #include <private/qdeclarativepathinterpolator_p.h>
 #include "qquickpositioners_p.h"
