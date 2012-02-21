@@ -54,7 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeBehaviorPrivate : public QObjectPrivate, public QAnimation2ChangeListener
+class QDeclarativeBehaviorPrivate : public QObjectPrivate, public QAnimationJobChangeListener
 {
     Q_DECLARE_PUBLIC(QDeclarativeBehavior)
 public:

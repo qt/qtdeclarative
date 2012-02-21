@@ -528,12 +528,12 @@ void QAbstractAnimationJob::currentLoopChanged(int currentLoop)
     }
 }
 
-void QAbstractAnimationJob::addAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimationJob::ChangeTypes changes)
+void QAbstractAnimationJob::addAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes changes)
 {
     changeListeners.append(ChangeListener(listener, changes));
 }
 
-void QAbstractAnimationJob::removeAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimationJob::ChangeTypes changes)
+void QAbstractAnimationJob::removeAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes changes)
 {
     changeListeners.removeOne(ChangeListener(listener, changes));
 }

@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QAnimationGroupJob;
-class QAnimation2ChangeListener;
+class QAnimationJobChangeListener;
 class Q_DECLARATIVE_EXPORT QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QAbstractAnimationJob)
@@ -107,8 +107,8 @@ public:
     };
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
-    void addAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
-    void removeAnimationChangeListener(QAnimation2ChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
+    void addAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
+    void removeAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
 
     QAbstractAnimationJob *nextSibling() const { return m_nextSibling; }
     QAbstractAnimationJob *previousSibling() const { return m_previousSibling; }
@@ -144,8 +144,8 @@ protected:
     bool *m_wasDeleted;
 
     struct ChangeListener {
-        ChangeListener(QAnimation2ChangeListener *l, QAbstractAnimationJob::ChangeTypes t) : listener(l), types(t) {}
-        QAnimation2ChangeListener *listener;
+        ChangeListener(QAnimationJobChangeListener *l, QAbstractAnimationJob::ChangeTypes t) : listener(l), types(t) {}
+        QAnimationJobChangeListener *listener;
         QAbstractAnimationJob::ChangeTypes types;
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
@@ -158,7 +158,7 @@ protected:
     friend class QAnimationGroupJob;
 };
 
-class Q_AUTOTEST_EXPORT QAnimation2ChangeListener
+class Q_AUTOTEST_EXPORT QAnimationJobChangeListener
 {
 public:
     virtual void animationFinished(QAbstractAnimationJob *) {}

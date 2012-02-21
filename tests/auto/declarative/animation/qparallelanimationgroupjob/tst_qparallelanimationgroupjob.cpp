@@ -128,7 +128,7 @@ private:
     int id;
 };
 
-class StateChangeListener: public QAnimation2ChangeListener
+class StateChangeListener: public QAnimationJobChangeListener
 {
 public:
     virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
@@ -142,7 +142,7 @@ public:
     QList<QAbstractAnimationJob::State> states;
 };
 
-class FinishedListener: public QAnimation2ChangeListener
+class FinishedListener: public QAnimationJobChangeListener
 {
 public:
     FinishedListener() : m_count(0) {}
