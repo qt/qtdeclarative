@@ -176,6 +176,11 @@ public:
         connect(animationDriver, SIGNAL(stopped()), this, SLOT(animationStopped()));
     }
 
+    ~QQuickRenderThreadSingleContextWindowManager()
+    {
+        releaseResources();
+    }
+
     QSGContext *sceneGraphContext() const { return sg; }
 
     void show(QQuickCanvas *canvas);
@@ -286,6 +291,10 @@ class QQuickTrivialWindowManager : public QObject, public QQuickWindowManager
 {
 public:
     QQuickTrivialWindowManager();
+    ~QQuickTrivialWindowManager()
+    {
+        releaseResources();
+    }
 
     void show(QQuickCanvas *canvas);
     void hide(QQuickCanvas *canvas);
@@ -786,7 +795,6 @@ void QQuickRenderThreadSingleContextWindowManager::releaseResourcesInThread()
 #ifdef THREAD_DEBUG
     printf("                RenderThread: releasing resources...\n");
 #endif
-
     QQuickCanvas *canvas = masterCanvas();
     QWindow *tmpSurface = 0;
 
@@ -822,7 +830,7 @@ void QQuickRenderThreadSingleContextWindowManager::releaseResources()
         runToReleaseResources = true;
         start();
 
-        while (gl) {
+        while (isRunning()) {
             wait();
         }
     }
@@ -1217,7 +1225,7 @@ void QQuickTrivialWindowManager::canvasDestroyed(QQuickCanvas *canvas)
 
 void QQuickTrivialWindowManager::releaseResources()
 {
-    if (m_windows.size() == 0) {
+    if (m_windows.size() == 0 && gl) {
         QQuickCanvas *canvas = masterCanvas();
         QWindow *tmpSurface = 0;
 
