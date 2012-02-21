@@ -85,14 +85,16 @@ public:
                       QList<QDeclarativeStyledTextImgTag*> &imgTags,
                       const QUrl &baseUrl,
                       QDeclarativeContext *context,
-                      bool preloadImages);
+                      bool preloadImages,
+                      bool *fontSizeModified);
 
 private:
     QDeclarativeStyledText(const QString &string, QTextLayout &layout,
                            QList<QDeclarativeStyledTextImgTag*> &imgTags,
                            const QUrl &baseUrl,
                            QDeclarativeContext *context,
-                           bool preloadImages);
+                           bool preloadImages,
+                           bool *fontSizeModified);
     ~QDeclarativeStyledText();
 
     QDeclarativeStyledTextPrivate *d;

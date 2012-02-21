@@ -85,7 +85,7 @@ QQuickTextPrivate::QQuickTextPrivate()
     , maximumLineCountValid(false), updateOnComponentComplete(true), richText(false)
     , styledText(false), singleline(false), internalWidthUpdate(false), requireImplicitWidth(false)
     , truncated(false), hAlignImplicit(true), rightToLeftText(false)
-    , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false)
+    , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false), formatModifiesFontSize(false)
 {
 }
 
@@ -298,7 +298,11 @@ void QQuickTextPrivate::updateLayout()
     if (!richText) {
         if (textHasChanged) {
             if (styledText && !text.isEmpty()) {
-                QDeclarativeStyledText::parse(text, layout, imgTags, q->baseUrl(), qmlContext(q), !maximumLineCountValid);
+                layout.setFont(font);
+                // needs temporary bool because formatModifiesFontSize is in a bit-field
+                bool fontSizeModified = false;
+                QDeclarativeStyledText::parse(text, layout, imgTags, q->baseUrl(), qmlContext(q), !maximumLineCountValid, &fontSizeModified);
+                formatModifiesFontSize = fontSizeModified;
             } else {
                 layout.clearAdditionalFormats();
                 multilengthEos = text.indexOf(QLatin1Char('\x9c'));
@@ -1252,8 +1256,13 @@ void QQuickText::setFont(const QFont &font)
         d->font.setPointSizeF(size/2.0);
     }
 
-    if (oldFont != d->font)
+    if (oldFont != d->font) {
+        // if the format changes the size of the text
+        // with headings or <font> tag, we need to re-parse
+        if (d->formatModifiesFontSize)
+            d->textHasChanged = true;
         d->updateLayout();
+    }
 
     emit fontChanged(d->sourceFont);
 }

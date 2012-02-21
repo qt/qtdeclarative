@@ -148,6 +148,7 @@ public:
     bool layoutTextElided:1;
     bool textHasChanged:1;
     bool needToUpdateLayout:1;
+    bool formatModifiesFontSize:1;
 
     static const QChar elideChar;
 

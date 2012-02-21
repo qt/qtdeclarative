@@ -122,6 +122,8 @@ private slots:
     void fontSizeModeMultiline();
     void multilengthStrings_data();
     void multilengthStrings();
+    void fontFormatSizes_data();
+    void fontFormatSizes();
 
 private:
     QStringList standard;
@@ -2425,6 +2427,76 @@ void tst_qquicktext::multilengthStrings()
     QCOMPARE(myText->contentWidth(), shortWidth);
     QCOMPARE(myText->contentHeight(), shortHeight);
     QCOMPARE(myText->truncated(), true);
+}
+
+void tst_qquicktext::fontFormatSizes_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("textWithTag");
+    QTest::addColumn<bool>("fontIsBigger");
+
+    QTest::newRow("fs1") << "Hello world!" << "Hello <font size=\"1\">world</font>!" << false;
+    QTest::newRow("fs2") << "Hello world!" << "Hello <font size=\"2\">world</font>!" << false;
+    QTest::newRow("fs3") << "Hello world!" << "Hello <font size=\"3\">world</font>!" << false;
+    QTest::newRow("fs4") << "Hello world!" << "Hello <font size=\"4\">world</font>!" << true;
+    QTest::newRow("fs5") << "Hello world!" << "Hello <font size=\"5\">world</font>!" << true;
+    QTest::newRow("fs6") << "Hello world!" << "Hello <font size=\"6\">world</font>!" << true;
+    QTest::newRow("fs7") << "Hello world!" << "Hello <font size=\"7\">world</font>!" << true;
+    QTest::newRow("h1") << "This is<br/>a font<br/> size test." << "This is <h1>a font</h1> size test." << true;
+    QTest::newRow("h2") << "This is<br/>a font<br/> size test." << "This is <h2>a font</h2> size test." << true;
+    QTest::newRow("h3") << "This is<br/>a font<br/> size test." << "This is <h3>a font</h3> size test." << true;
+    QTest::newRow("h4") << "This is<br/>a font<br/> size test." << "This is <h4>a font</h4> size test." << true;
+    QTest::newRow("h5") << "This is<br/>a font<br/> size test." << "This is <h5>a font</h5> size test." << false;
+    QTest::newRow("h6") << "This is<br/>a font<br/> size test." << "This is <h6>a font</h6> size test." << false;
+}
+
+void tst_qquicktext::fontFormatSizes()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, textWithTag);
+    QFETCH(bool, fontIsBigger);
+
+    QQuickView *view = new QQuickView;
+    {
+        view->setSource(testFileUrl("pointFontSizes.qml"));
+        view->show();
+
+        QQuickText *qtext = view->rootObject()->findChild<QQuickText*>("text");
+        QQuickText *qtextWithTag = view->rootObject()->findChild<QQuickText*>("textWithTag");
+        QVERIFY(qtext != 0);
+        QVERIFY(qtextWithTag != 0);
+
+        qtext->setText(text);
+        qtextWithTag->setText(textWithTag);
+
+        for (int size = 6; size < 100; size += 4) {
+            view->rootObject()->setProperty("pointSize", size);
+            if (fontIsBigger)
+                QVERIFY(qtext->height() <= qtextWithTag->height());
+            else
+                QVERIFY(qtext->height() >= qtextWithTag->height());
+        }
+    }
+
+    {
+        view->setSource(testFileUrl("pixelFontSizes.qml"));
+        QQuickText *qtext = view->rootObject()->findChild<QQuickText*>("text");
+        QQuickText *qtextWithTag = view->rootObject()->findChild<QQuickText*>("textWithTag");
+        QVERIFY(qtext != 0);
+        QVERIFY(qtextWithTag != 0);
+
+        qtext->setText(text);
+        qtextWithTag->setText(textWithTag);
+
+        for (int size = 6; size < 100; size += 4) {
+            view->rootObject()->setProperty("pixelSize", size);
+            if (fontIsBigger)
+                QVERIFY(qtext->height() <= qtextWithTag->height());
+            else
+                QVERIFY(qtext->height() >= qtextWithTag->height());
+        }
+    }
+    delete view;
 }
 
 QTEST_MAIN(tst_qquicktext)
