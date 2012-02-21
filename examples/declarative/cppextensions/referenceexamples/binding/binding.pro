@@ -1,10 +1,5 @@
-TEMPLATE = app
-TARGET = binding
-DEPENDPATH += .
-INCLUDEPATH += .
 QT += declarative
 
-# Input
 SOURCES += main.cpp \
            person.cpp \
            birthdayparty.cpp \
@@ -12,6 +7,7 @@ SOURCES += main.cpp \
 HEADERS += person.h \
            birthdayparty.h \
            happybirthdaysong.h
+
 RESOURCES += binding.qrc
 target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/extending/binding
 sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS binding.pro

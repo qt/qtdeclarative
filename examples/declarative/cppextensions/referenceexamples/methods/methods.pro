@@ -1,10 +1,5 @@
-TEMPLATE = app
-TARGET = methods
-DEPENDPATH += .
-INCLUDEPATH += .
 QT += declarative
 
-# Input
 SOURCES += main.cpp \
            person.cpp \
            birthdayparty.cpp 
