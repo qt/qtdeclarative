@@ -399,9 +399,6 @@ void QQuickTextEdit::setColor(const QColor &color)
         return;
 
     d->color = color;
-    QPalette pal = d->control->palette();
-    pal.setColor(QPalette::Text, color);
-    d->control->setPalette(pal);
     updateDocument();
     emit colorChanged(d->color);
 }
@@ -424,9 +421,6 @@ void QQuickTextEdit::setSelectionColor(const QColor &color)
         return;
 
     d->selectionColor = color;
-    QPalette pal = d->control->palette();
-    pal.setColor(QPalette::Highlight, color);
-    d->control->setPalette(pal);
     updateDocument();
     emit selectionColorChanged(d->selectionColor);
 }
@@ -449,9 +443,6 @@ void QQuickTextEdit::setSelectedTextColor(const QColor &color)
         return;
 
     d->selectedTextColor = color;
-    QPalette pal = d->control->palette();
-    pal.setColor(QPalette::HighlightedText, color);
-    d->control->setPalette(pal);
     updateDocument();
     emit selectedTextColorChanged(d->selectedTextColor);
 }
@@ -1634,10 +1625,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
         QRectF bounds = boundingRect();
 
-        QColor selectionColor = d->control->palette().color(QPalette::Highlight);
-        QColor selectedTextColor = d->control->palette().color(QPalette::HighlightedText);
         node->addTextDocument(bounds.topLeft(), d->document, d->color, QQuickText::Normal, QColor(),
-                              selectionColor, selectedTextColor, selectionStart(),
+                              d->selectionColor, d->selectedTextColor, selectionStart(),
                               selectionEnd() - 1);  // selectionEnd() returns first char after
                                                     // selection
 
@@ -1756,31 +1745,21 @@ void QQuickTextEditPrivate::init()
     document = new QQuickTextDocumentWithImageResources(q);
 
     control = new QQuickTextControl(document, q);
-    control->setView(q);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
     control->setAcceptRichText(false);
     control->setCursorIsFocusIndicator(true);
 
-    // QQuickTextControl follows the default text color
-    // defined by the platform, declarative text
-    // should be black by default
-    QPalette pal = control->palette();
-    if (pal.color(QPalette::Text) != color) {
-        pal.setColor(QPalette::Text, color);
-        control->setPalette(pal);
-    }
-
-    QObject::connect(control, SIGNAL(updateRequest(QRectF)), q, SLOT(updateDocument()));
-    QObject::connect(control, SIGNAL(updateCursorRequest()), q, SLOT(updateCursor()));
-    QObject::connect(control, SIGNAL(textChanged()), q, SLOT(q_textChanged()));
-    QObject::connect(control, SIGNAL(selectionChanged()), q, SIGNAL(selectionChanged()));
-    QObject::connect(control, SIGNAL(selectionChanged()), q, SLOT(updateSelectionMarkers()));
-    QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SLOT(updateSelectionMarkers()));
-    QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SIGNAL(cursorPositionChanged()));
-    QObject::connect(control, SIGNAL(cursorRectangleChanged()), q, SLOT(moveCursorDelegate()));
-    QObject::connect(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
+    FAST_CONNECT(control, SIGNAL(updateRequest(QRectF)), q, SLOT(updateDocument()));
+    FAST_CONNECT(control, SIGNAL(updateCursorRequest()), q, SLOT(updateCursor()));
+    FAST_CONNECT(control, SIGNAL(textChanged()), q, SLOT(q_textChanged()));
+    FAST_CONNECT(control, SIGNAL(selectionChanged()), q, SIGNAL(selectionChanged()));
+    FAST_CONNECT(control, SIGNAL(selectionChanged()), q, SLOT(updateSelectionMarkers()));
+    FAST_CONNECT(control, SIGNAL(cursorPositionChanged()), q, SLOT(updateSelectionMarkers()));
+    FAST_CONNECT(control, SIGNAL(cursorPositionChanged()), q, SIGNAL(cursorPositionChanged()));
+    FAST_CONNECT(control, SIGNAL(cursorRectangleChanged()), q, SLOT(moveCursorDelegate()));
+    FAST_CONNECT(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
-    QObject::connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
+    FAST_CONNECT(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
 #endif
     FAST_CONNECT(document, SIGNAL(undoAvailable(bool)), q, SIGNAL(canUndoChanged()));
     FAST_CONNECT(document, SIGNAL(redoAvailable(bool)), q, SIGNAL(canRedoChanged()));

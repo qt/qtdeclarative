@@ -903,10 +903,7 @@ void tst_qquicktextedit::color()
         QVERIFY(textEditObject);
         QVERIFY(textEditPrivate);
         QVERIFY(textEditPrivate->control);
-
-        QPalette pal = textEditPrivate->control->palette();
         QCOMPARE(textEditPrivate->color, QColor("black"));
-        QCOMPARE(textEditPrivate->color, pal.color(QPalette::Text));
     }
     //test normal
     for (int i = 0; i < colorStrings.size(); i++)
