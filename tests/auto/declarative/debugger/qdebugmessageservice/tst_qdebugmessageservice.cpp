@@ -81,13 +81,19 @@ struct LogEntry {
 
     QtMsgType type;
     QString message;
+    int version;
+    int line;
+    QString file;
+    QString function;
 
     QString toString() const { return QString::number(type) + ": " + message; }
 };
 
 bool operator==(const LogEntry &t1, const LogEntry &t2)
 {
-    return t1.type == t2.type && t1.message == t2.message;
+    return t1.type == t2.type && t1.message == t2.message
+            && t1.line == t2.line && t1.file == t2.file
+            && t1.function == t2.function;
 }
 
 class QDeclarativeDebugMsgClient : public QDeclarativeDebugClient
@@ -127,13 +133,22 @@ void QDeclarativeDebugMsgClient::messageReceived(const QByteArray &data)
     if (command == "MESSAGE") {
         int type;
         QByteArray message;
-        ds >> type >> message;
+        QByteArray file;
+        QByteArray function;
+        int line;
+        int version;
+        ds >> type >> message >> version >> file >> line >> function;
         QVERIFY(ds.atEnd());
 
         QVERIFY(type >= QtDebugMsg);
         QVERIFY(type <= QtFatalMsg);
 
-        logBuffer << LogEntry((QtMsgType)type, QString::fromUtf8(message));
+        LogEntry entry((QtMsgType)type, QString::fromUtf8(message));
+        entry.line = line;
+        entry.version = version;
+        entry.file = QString::fromLatin1(file);
+        entry.function = QString::fromLatin1(function);
+        logBuffer << entry;
         emit debugOutput();
     } else {
         QFAIL("Unknown message");
@@ -210,8 +225,19 @@ void tst_QDebugMessageService::retrieveDebugOutput()
 
     QVERIFY(m_client->logBuffer.size() >= 2);
 
-    QVERIFY(m_client->logBuffer.contains(LogEntry(QtDebugMsg, QLatin1String("console.log"))));
-    QVERIFY(m_client->logBuffer.contains(LogEntry(QtDebugMsg, QLatin1String("console.count: 1"))));
+    const QString path =
+            QUrl::fromLocalFile(QDeclarativeDataTest::instance()->testFile(QMLFILE)).toString();
+    LogEntry entry1(QtDebugMsg, QLatin1String("console.log"));
+    entry1.line = 48;
+    entry1.file = path;
+    entry1.function = QLatin1String("onCompleted");
+    LogEntry entry2(QtDebugMsg, QLatin1String("console.count: 1"));
+    entry2.line = 49;
+    entry2.file = path;
+    entry2.function = QLatin1String("onCompleted");
+
+    QVERIFY(m_client->logBuffer.contains(entry1));
+    QVERIFY(m_client->logBuffer.contains(entry2));
 }
 
 QTEST_MAIN(tst_QDebugMessageService)

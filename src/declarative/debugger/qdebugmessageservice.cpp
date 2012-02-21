@@ -46,9 +46,10 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QDebugMessageService, declarativeDebugMessageService)
 
-void DebugMessageHandler(QtMsgType type, const char *buf)
+void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
+                         const char *buf)
 {
-    QDebugMessageService::instance()->sendDebugMessage(type, buf);
+    QDebugMessageService::instance()->sendDebugMessage(type, ctxt, buf);
 }
 
 class QDebugMessageServicePrivate : public QDeclarativeDebugServicePrivate
@@ -60,7 +61,7 @@ public:
     {
     }
 
-    QtMsgHandler oldMsgHandler;
+    QMessageHandler oldMsgHandler;
     QDeclarativeDebugService::State prevState;
 };
 
@@ -72,7 +73,7 @@ QDebugMessageService::QDebugMessageService(QObject *parent) :
 
     registerService();
     if (state() == Enabled) {
-        d->oldMsgHandler = qInstallMsgHandler(DebugMessageHandler);
+        d->oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
         d->prevState = Enabled;
     }
 }
@@ -82,7 +83,9 @@ QDebugMessageService *QDebugMessageService::instance()
     return declarativeDebugMessageService();
 }
 
-void QDebugMessageService::sendDebugMessage(QtMsgType type, const char *buf)
+void QDebugMessageService::sendDebugMessage(QtMsgType type,
+                                            const QMessageLogContext &ctxt,
+                                            const char *buf)
 {
     Q_D(QDebugMessageService);
 
@@ -92,10 +95,12 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type, const char *buf)
     QByteArray message;
     QDataStream ws(&message, QIODevice::WriteOnly);
     ws << QByteArray("MESSAGE") << type << QString::fromLocal8Bit(buf).toUtf8();
+    ws << ctxt.version << QString::fromLatin1(ctxt.file).toUtf8();
+    ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();
 
     sendMessage(message);
     if (d->oldMsgHandler)
-        (*d->oldMsgHandler)(type, buf);
+        (*d->oldMsgHandler)(type, ctxt, buf);
 }
 
 void QDebugMessageService::stateChanged(State state)
@@ -103,13 +108,13 @@ void QDebugMessageService::stateChanged(State state)
     Q_D(QDebugMessageService);
 
     if (state != Enabled && d->prevState == Enabled) {
-        QtMsgHandler handler = qInstallMsgHandler(d->oldMsgHandler);
+        QMessageHandler handler = qInstallMessageHandler(d->oldMsgHandler);
         // has our handler been overwritten in between?
         if (handler != DebugMessageHandler)
-            qInstallMsgHandler(handler);
+            qInstallMessageHandler(handler);
 
     } else if (state == Enabled && d->prevState != Enabled) {
-        d->oldMsgHandler = qInstallMsgHandler(DebugMessageHandler);
+        d->oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
 
     }
 

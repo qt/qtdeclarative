@@ -55,6 +55,8 @@
 
 #include "qdeclarativedebugservice_p.h"
 
+#include <QtCore/qlogging.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -71,7 +73,8 @@ public:
 
     static QDebugMessageService *instance();
 
-    void sendDebugMessage(QtMsgType type, const char *buf);
+    void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt,
+                          const char *buf);
 
 protected:
     void stateChanged(State);
