@@ -9,6 +9,8 @@ HEADERS += TextBalloonPlugin/plugin.h \
 
 SOURCES += textballoon.cpp
 
+OTHER_FILES += textballoon.json
+
 DESTDIR = TextBalloonPlugin
 
 qdeclarativesources.files += \

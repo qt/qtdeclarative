@@ -62,7 +62,7 @@ struct Q_QUICK_EXPORT QSGContextFactoryInterface : public QFactoryInterface
 };
 
 #define QSGContextFactoryInterface_iid \
-        "com.trolltech.Qt.QSGContextFactoryInterface"
+        "org.qt-project.Qt.QSGContextFactoryInterface"
 Q_DECLARE_INTERFACE(QSGContextFactoryInterface, QSGContextFactoryInterface_iid)
 
 class Q_QUICK_EXPORT QSGContextPlugin : public QObject, public QSGContextFactoryInterface

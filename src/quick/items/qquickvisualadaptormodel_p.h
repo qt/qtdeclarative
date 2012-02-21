@@ -121,7 +121,9 @@ public:
     virtual QObject *proxiedObject() = 0;
 };
 
-Q_DECLARE_INTERFACE(QQuickVisualAdaptorModelProxyInterface, "com.trolltech.qml.QQuickVisualAdaptorModelProxyInterface")
+#define QQuickVisualAdaptorModelProxyInterface_iid "org.qt-project.Qt.QQuickVisualAdaptorModelProxyInterface"
+
+Q_DECLARE_INTERFACE(QQuickVisualAdaptorModelProxyInterface, QQuickVisualAdaptorModelProxyInterface_iid)
 
 QT_END_NAMESPACE
 

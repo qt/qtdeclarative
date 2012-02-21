@@ -6,6 +6,8 @@ QT += sql declarative declarative-private v8-private core-private
 
 SOURCES += plugin.cpp
 
+OTHER_FILES += localstorage.json
+
 DESTDIR = $$QT.declarative.imports/$$TARGETPATH
 target.path = $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
 

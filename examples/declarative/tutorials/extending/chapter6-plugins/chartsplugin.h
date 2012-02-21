@@ -46,6 +46,8 @@
 class ChartsPlugin : public QDeclarativeExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "chartsplugin.json")
+
 public:
     void registerTypes(const char *uri);
 };

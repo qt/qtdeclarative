@@ -49,6 +49,5 @@ void ChartsPlugin::registerTypes(const char *uri)
     qmlRegisterType<PieSlice>(uri, 1, 0, "PieSlice");
 }
 
-Q_EXPORT_PLUGIN2(chartsplugin, ChartsPlugin);
 //![0]
 

@@ -57,7 +57,10 @@ public:
     virtual ~QDeclarativePropertyValueSource();
     virtual void setTarget(const QDeclarativeProperty &) = 0;
 };
-Q_DECLARE_INTERFACE(QDeclarativePropertyValueSource, "com.trolltech.qml.QDeclarativePropertyValueSource")
+
+#define QDeclarativePropertyValueSource_iid "org.qt-project.Qt.QDeclarativePropertyValueSource"
+
+Q_DECLARE_INTERFACE(QDeclarativePropertyValueSource, QDeclarativePropertyValueSource_iid)
 
 QT_END_NAMESPACE
 

@@ -75,7 +75,9 @@ public:
     virtual bool waitForMessage() = 0;
 };
 
-Q_DECLARE_INTERFACE(QDeclarativeDebugServerConnection, "com.trolltech.Qt.QDeclarativeDebugServerConnection/1.0")
+#define QDeclarativeDebugServerConnection_iid "org.qt-project.Qt.QDeclarativeDebugServerConnection"
+
+Q_DECLARE_INTERFACE(QDeclarativeDebugServerConnection, QDeclarativeDebugServerConnection_iid)
 
 QT_END_NAMESPACE
 

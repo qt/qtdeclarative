@@ -84,5 +84,3 @@ void QtQuick2Plugin::clientMessage(const QByteArray &message)
 
 } // namespace QtQuick2
 } // namespace QmlJSDebugger
-
-Q_EXPORT_PLUGIN2(qmldbg_qtquick2, QmlJSDebugger::QtQuick2::QtQuick2Plugin)

@@ -50,6 +50,8 @@ QT_BEGIN_NAMESPACE
 class QmlFolderListModelPlugin : public QDeclarativeExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "folderlistmodel.json")
+
 public:
     virtual void registerTypes(const char *uri)
     {
@@ -64,8 +66,3 @@ public:
 QT_END_NAMESPACE
 
 #include "plugin.moc"
-
-//![plugin export decl]
-Q_EXPORT_PLUGIN2(qmlfolderlistmodelplugin, QT_PREPEND_NAMESPACE(QmlFolderListModelPlugin));
-//![plugin export decl]
-

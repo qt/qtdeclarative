@@ -651,6 +651,8 @@ static QObject *module_api_factory(QDeclarativeEngine *engine, QJSEngine *script
 class QDeclarativeLocalStoragePlugin : public QDeclarativeExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "localstorage.json")
+
 public:
     QDeclarativeLocalStoragePlugin()
     {
@@ -664,5 +666,3 @@ public:
 };
 
 #include "plugin.moc"
-
-Q_EXPORT_PLUGIN2(plugin, QDeclarativeLocalStoragePlugin);

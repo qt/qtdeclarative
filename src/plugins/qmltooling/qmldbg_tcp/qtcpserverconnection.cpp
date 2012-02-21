@@ -193,7 +193,5 @@ void QTcpServerConnection::invalidPacket()
     qWarning("QDeclarativeDebugServer: Received a corrupted packet! Giving up ...");
 }
 
-Q_EXPORT_PLUGIN2(tcpserver, QTcpServerConnection)
-
 QT_END_NAMESPACE
 

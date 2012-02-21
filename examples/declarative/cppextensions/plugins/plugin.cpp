@@ -141,6 +141,8 @@ MinuteTimer *TimeModel::timer=0;
 class QExampleQmlPlugin : public QDeclarativeExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "plugin.json")
+
 public:
     void registerTypes(const char *uri)
     {
@@ -151,7 +153,3 @@ public:
 //![plugin]
 
 #include "plugin.moc"
-
-//![export]
-Q_EXPORT_PLUGIN2(qmlqtimeexampleplugin, QExampleQmlPlugin);
-//![export]

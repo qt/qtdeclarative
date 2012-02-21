@@ -46,11 +46,10 @@
 class TextBalloonPlugin : public QDeclarativeExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "textballoon.json")
 public:
     void registerTypes(const char *uri)
     {
         qmlRegisterType<TextBalloon>(uri, 1, 0, "TextBalloon");
     }
 };
-
-Q_EXPORT_PLUGIN2(qmltextballoonplugin, TextBalloonPlugin);

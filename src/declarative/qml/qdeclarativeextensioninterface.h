@@ -65,8 +65,13 @@ public:
     virtual void initializeEngine(QDeclarativeEngine *engine, const char *uri) = 0;
 };
 
+#define QDeclarativeTypesExtensionInterface_iid "org.qt-project.Qt.QDeclarativeTypesExtensionInterface"
+
 Q_DECLARE_INTERFACE(QDeclarativeTypesExtensionInterface, "org.qt-project.Qt.QDeclarativeTypesExtensionInterface/1.0")
-Q_DECLARE_INTERFACE(QDeclarativeExtensionInterface, "org.qt-project.Qt.QDeclarativeExtensionInterface/1.0")
+
+#define QDeclarativeExtensionInterface_iid "org.qt-project.Qt.QDeclarativeExtensionInterface"
+
+Q_DECLARE_INTERFACE(QDeclarativeExtensionInterface, QDeclarativeExtensionInterface_iid)
 
 QT_END_NAMESPACE
 
