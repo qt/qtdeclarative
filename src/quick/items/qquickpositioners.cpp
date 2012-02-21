@@ -94,8 +94,9 @@ QQuickBasePositioner::QQuickBasePositioner(PositionerType at, QQuickItem *parent
 
     Note that the subclass is responsible for adding the spacing in between items.
 
-    Positioning is usually delayed until before a frame is rendered, to batch multiple repositioning
-    changes into one calculation.
+    Positioning is batched and synchronized with painting to reduce the number of
+    calculations needed. This means that positioners may not reposition items immediately
+    when changes occur, but it will have moved by the next frame.
 */
 
 QQuickBasePositioner::QQuickBasePositioner(QQuickBasePositionerPrivate &dd, PositionerType at, QQuickItem *parent)
@@ -357,9 +358,32 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     \ingroup qml-positioning-elements
     \brief The Positioner type provides attached properties that contain details on where an item exists in a positioner.
 
-    Positioner items (such as Column, Row, Flow and Grid) provide automatic layout
-    for child items. Attaching this property allows a child item to determine
-    where it exists within the positioner.
+    Positioner is an attached property that is attached to the top-level child item within a
+    Column, Row, Flow or Grid. It provides properties that allow a child item to determine
+    where it exists within the layout of its parent Column, Row, Flow or Grid.
+
+    For example, below is a \l Grid with 16 child rectangles, as created through a \l Repeater.
+    Each \l Rectangle displays its index in the Grid using \l Positioner.index, and the first
+    item is colored differently by taking \l Positioner.isFirstItem into account:
+
+    \code
+    Grid {
+        Repeater {
+            model: 16
+
+            Rectangle {
+                id: rect
+                width: 30; height: 30
+                border.width: 1
+                color: Positioner.isFirstItem ? "yellow" : "lightsteelblue"
+
+                Text { text: rect.Positioner.index }
+            }
+        }
+    }
+    \endcode
+
+    \image positioner-example.png
 */
 
 QQuickPositionerAttached::QQuickPositionerAttached(QObject *parent) : QObject(parent), m_index(-1), m_isFirstItem(false), m_isLastItem(false)
@@ -411,74 +435,56 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 }
 
 /*!
-  \qmlclass Column QQuickColumn
+    \qmlclass Column QQuickColumn
     \inqmlmodule QtQuick 2
-  \ingroup qml-positioning-elements
-  \brief The Column item arranges its children vertically.
-  \inherits Item
+    \ingroup qml-positioning-elements
+    \brief The Column element positions its children in a column.
+    \inherits Item
 
-  The Column item positions its child items so that they are vertically
-  aligned and not overlapping.
+    Column is an element that positions its child items along a single column.
+    It can be used as a convenient way to vertically position a series of items without
+    using \l {Anchor-based Layout in QML}{anchors}.
 
-  Spacing between items can be added using the \l spacing property.
-  Transitions can be used for cases where items managed by a Column are
-  added or moved. These are stored in the \l add and \l move properties
-  respectively.
+    Below is a Column that contains three rectangles of various sizes:
 
-  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
-  related items.
+    \snippet doc/src/snippets/declarative/column/vertical-positioner.qml document
 
-  \section1 Example Usage
+    The Column automatically positions these items in a vertical formation, like this:
 
-  The following example positions differently shaped rectangles using a Column
-  item.
+    \image verticalpositioner_example.png
 
-  \image verticalpositioner_example.png
+    If an item within a Column is not \l {Item::}{visible}, or if it has a width or
+    height of 0, the item will not be laid out and it will not be visible within the
+    column. Also, since a Column automatically positions its children vertically, a child
+    item within a Column should not set its \l {Item::y}{y} position or vertically
+    anchor itself using the \l {Item::anchors.top}{top}, \l {Item::anchors.bottom}{bottom},
+    \l {Item::anchors.verticalCenter}{anchors.verticalCenter}, \l {Item::anchors.fill}{fill}
+    or \l {Item::anchors.centerIn}{centerIn} anchors. If you need to perform these actions,
+    consider positioning the items without the use of a Column.
 
-  \snippet doc/src/snippets/declarative/column/vertical-positioner.qml document
+    Note that items in a Column can use the \l Positioner attached property to access
+    more information about its position within the Column.
 
-  \section1 Using Transitions
+    For more information on using Column and other related positioner-type elements, see
+    \l{Item Layouts}.
 
-  Transitions can be used to animate items that are added to, moved within,
-  or removed from a Column item. The \l add and \l move properties can be set to
-  the transitions that will be applied when items are added to, removed from,
-  or re-positioned within a Column item.
 
-  The use of transitions with positioners is described in more detail in the
-  \l{Using QML Positioner and Repeater Items#Using Transitions}{Using QML
-  Positioner and Repeater Items} document.
+    \section1 Using Transitions
 
-  \image verticalpositioner_transition.gif
+    A Column animate items using specific transitions when items are added to or moved
+    within a Column.
 
-  \qml
-  Column {
-      spacing: 2
-      add: Transition {
-          // Define an animation for adding a new item...
-      }
-      move: Transition {
-          // Define an animation for moving items within the column...
-      }
-      // ...
-  }
-  \endqml
+    For example, the Column below sets the \l move property to a specific \l Transition:
 
-  \section1 Limitations
+    \snippet doc/src/snippets/declarative/column/column-transitions.qml document
 
-  Note that the positioner assumes that the x and y positions of its children
-  will not change. If you manually change the x or y properties in script, bind
-  the x or y properties, use anchors on a child of a positioner, or have the
-  height of a child depend on the position of a child, then the
-  positioner may exhibit strange behavior. If you need to perform any of these
-  actions, consider positioning the items without the use of a Column.
+    When the Space key is pressed, the \l {Item::visible}{visible} value of the green
+    \l Rectangle is toggled. As it appears and disappears, the blue \l Rectangle moves within
+    the Column, and the \l move transition is automatically applied to the blue \l Rectangle:
 
-  Items with a width or height of 0 will not be positioned.
+    \image verticalpositioner_transition.gif
 
-  Positioning is batched and syncronized with painting to reduce the number of
-  calculations needed. This means that positioners may not reposition items immediately
-  when changes occur, but it will have moved by the next frame.
-
-  \sa Row, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
+    \sa Row, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Column::add
@@ -490,33 +496,21 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     For a positioner, adding an item can mean that either the object
     has been created or reparented, and thus is now a child or the
-    positioner, or that the object has had its opacity increased from
-    zero, and thus is now visible.
+    positioner, or that the object has changed its \l visible property
+    from false to true, and thus is now visible.
 
     \sa move
 */
 /*!
     \qmlproperty Transition QtQuick2::Column::move
 
-    This property holds the transition to apply when moving an item
-    within the positioner.  Positioner transitions will only affect
+    This property holds the transition to apply to any item that has moved
+    within the positioner. Positioner transitions will only affect
     the position (x, y) of items.
 
-    This transition can be performed when other items are added or removed
-    from the positioner, or when items resize themselves.
-
-    \image positioner-move.gif
-
-    \qml
-    Column {
-        move: Transition {
-            NumberAnimation {
-                properties: "y"
-                duration: 1000
-            }
-        }
-    }
-    \endqml
+    This transition is applied to items that are displaced as a result of the
+    addition or removal of other items in the positioner, or when items move due to
+    a move operation in a related model, or when items resize themselves.
 
     \sa add, {declarative/positioners}{Positioners example}
 */
@@ -581,53 +575,41 @@ void QQuickColumn::reportConflictingAnchors()
     }
 }
 /*!
-  \qmlclass Row QQuickRow
+    \qmlclass Row QQuickRow
     \inqmlmodule QtQuick 2
-  \ingroup qml-positioning-elements
-  \brief The Row item arranges its children horizontally.
-  \inherits Item
+    \ingroup qml-positioning-elements
+    \brief The Row element positions its children in a row.
+    \inherits Item
 
-  The Row item positions its child items so that they are horizontally
-  aligned and not overlapping.
+    Row is an element that positions its child items along a single row.
+    It can be used as a convenient way to horizontally position a series of items without
+    using \l {Anchor-based Layout in QML}{anchors}.
 
-  Use \l spacing to set the spacing between items in a Row, and use the
-  \l add and \l move properties to set the transitions that should be applied
-  when items are added to, removed from, or re-positioned within the Row.
+    Below is a Row that contains three rectangles of various sizes:
 
-  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
-  related items.
+    \snippet doc/src/snippets/declarative/row/row.qml document
 
-  \section1 Example Usage
+    The Row automatically positions these items in a horizontal formation, like this:
 
-  The following example lays out differently shaped rectangles using a Row.
+    \image horizontalpositioner_example.png
 
-  \image horizontalpositioner_example.png
+    If an item within a Row is not \l {Item::}{visible}, or if it has a width or
+    height of 0, the item will not be laid out and it will not be visible within the
+    row. Also, since a Row automatically positions its children horizontally, a child
+    item within a Row should not set its \l {Item::x}{x} position or horizontally
+    anchor itself using the \l {Item::anchors.left}{left}, \l {Item::anchors.right}{right},
+    \l {Item::anchors.horizontalCenter}{anchors.horizontalCenter}, \l {Item::anchors.fill}{fill}
+    or \l {Item::anchors.centerIn}{centerIn} anchors. If you need to perform these actions,
+    consider positioning the items without the use of a Row.
 
-  \snippet doc/src/snippets/declarative/row/row.qml document
+    Note that items in a Row can use the \l Positioner attached property to access
+    more information about its position within the Row.
 
-  \section1 Using Transitions
+    For more information on using Row and other related positioner-type elements, see
+    \l{Item Layouts}.
 
-  Transitions can be used to animate items that are added to, moved within,
-  or removed from a Grid item. The \l add and \l move properties can be set to
-  the transitions that will be applied when items are added to, removed from,
-  or re-positioned within a Row item.
 
-  \section1 Limitations
-
-  Note that the positioner assumes that the x and y positions of its children
-  will not change. If you manually change the x or y properties in script, bind
-  the x or y properties, use anchors on a child of a positioner, or have the
-  width of a child depend on the position of a child, then the
-  positioner may exhibit strange behavior. If you need to perform any of these
-  actions, consider positioning the items without the use of a Row.
-
-  Items with a width or height of 0 will not be positioned.
-
-  Positioning is batched and syncronized with painting to reduce the number of
-  calculations needed. This means that positioners may not reposition items immediately
-  when changes occur, but it will have moved by the next frame.
-
-  \sa Column, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
+    \sa Column, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Row::add
@@ -639,20 +621,21 @@ void QQuickColumn::reportConflictingAnchors()
 
     For a positioner, adding an item can mean that either the object
     has been created or reparented, and thus is now a child or the
-    positioner, or that the object has had its opacity increased from
-    zero, and thus is now visible.
+    positioner, or that the object has changed its \l visible property
+    from false to true, and thus is now visible.
 
     \sa move
 */
 /*!
     \qmlproperty Transition QtQuick2::Row::move
 
-    This property holds the transition to be applied when moving an
-    item within the positioner. Positioner transitions will only affect
+    This property holds the transition to apply to any item that has moved
+    within the positioner. Positioner transitions will only affect
     the position (x, y) of items.
 
-    This transition can be performed when other items are added or removed
-    from the positioner, or when items resize themselves.
+    This transition is applied to items that are displaced as a result of the
+    addition or removal of other items in the positioner, or when items move due to
+    a move operation in a related model, or when items resize themselves.
 
     \qml
     Row {
@@ -720,7 +703,7 @@ void QQuickRow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 }
 /*!
     \qmlproperty enumeration QtQuick2::Row::effectiveLayoutDirection
-    This property holds the effective layout direction of the row positioner.
+    This property holds the effective layout direction of the row.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
     the visual layout direction of the row positioner will be mirrored. However, the
@@ -808,62 +791,42 @@ void QQuickRow::reportConflictingAnchors()
 }
 
 /*!
-  \qmlclass Grid QQuickGrid
+    \qmlclass Grid QQuickGrid
     \inqmlmodule QtQuick 2
-  \ingroup qml-positioning-elements
-  \brief The Grid item positions its children in a grid.
-  \inherits Item
+    \ingroup qml-positioning-elements
+    \brief The Grid element positions its children in grid formation.
+    \inherits Item
 
-  The Grid item positions its child items so that they are
-  aligned in a grid and are not overlapping.
+    Grid is an element that positions its child items in grid formation.
 
-  The grid positioner calculates a grid of rectangular cells of sufficient
-  size to hold all items, placing the items in the cells, from left to right
-  and top to bottom. Each item is positioned in the top-left corner of its
-  cell with position (0, 0).
+    A Grid creates a grid of cells that is large enough to hold all of its
+    child items, and places these items in the cells from left to right
+    and top to bottom. Each item is positioned at the top-left corner of its
+    cell with position (0, 0).
 
-  A Grid defaults to four columns, and as many rows as are necessary to
-  fit all child items. The number of rows and columns can be constrained
-  by setting the \l rows and \l columns properties.
+    A Grid defaults to four columns, and creates as many rows as are necessary to
+    fit all of its child items. The number of rows and columns can be constrained
+    by setting the \l rows and \l columns properties.
 
-  Spacing can be added between child items by setting the \l spacing
-  property. The amount of spacing applied will be the same in the
-  horizontal and vertical directions.
+    For example, below is a Grid that contains five rectangles of various sizes:
 
-  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
-  related items.
+    \snippet doc/src/snippets/declarative/grid/grid.qml document
 
-  \section1 Example Usage
+    The Grid automatically positions the child items in a grid formation:
 
-  The following example demonstrates this.
+    \image gridLayout_example.png
 
-  \image gridLayout_example.png
+    If an item within a Column is not \l {Item::}{visible}, or if it has a width or
+    height of 0, the item will not be laid out and it will not be visible within the
+    column. Also, since a Grid automatically positions its children, a child
+    item within a Grid should not set its \l {Item::x}{x} or \l {Item::y}{y} positions
+    or anchor itself with any of the \l {Item::anchors}{anchor} properties.
 
-  \snippet doc/src/snippets/declarative/grid/grid.qml document
+    For more information on using Grid and other related positioner-type elements, see
+    \l{Item Layouts}.
 
-  \section1 Using Transitions
 
-  Transitions can be used to animate items that are added to, moved within,
-  or removed from a Grid item. The \l add and \l move properties can be set to
-  the transitions that will be applied when items are added to, removed from,
-  or re-positioned within a Grid item.
-
-  \section1 Limitations
-
-  Note that the positioner assumes that the x and y positions of its children
-  will not change. If you manually change the x or y properties in script, bind
-  the x or y properties, use anchors on a child of a positioner, or have the
-  width or height of a child depend on the position of a child, then the
-  positioner may exhibit strange behavior. If you need to perform any of these
-  actions, consider positioning the items without the use of a Grid.
-
-  Items with a width or height of 0 will not be positioned.
-
-  Positioning is batched and syncronized with painting to reduce the number of
-  calculations needed. This means that positioners may not reposition items immediately
-  when changes occur, but it will have moved by the next frame.
-
-  \sa Flow, Row, Column, Positioner, {declarative/positioners}{Positioners example}
+    \sa Flow, Row, Column, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Grid::add
@@ -875,20 +838,21 @@ void QQuickRow::reportConflictingAnchors()
 
     For a positioner, adding an item can mean that either the object
     has been created or reparented, and thus is now a child or the
-    positioner, or that the object has had its opacity increased from
-    zero, and thus is now visible.
+    positioner, or that the object has changed its \l visible property
+    from false to true, and thus is now visible.
 
     \sa move
 */
 /*!
     \qmlproperty Transition QtQuick2::Grid::move
 
-    This property holds the transition to be applied when moving an
-    item within the positioner. Positioner transitions will only affect
+    This property holds the transition to apply to any item that has moved
+    within the positioner. Positioner transitions will only affect
     the position (x, y) of items.
 
-    This transition can be performed when other items are added or removed
-    from the positioner, or when items resize themselves.
+    This transition is applied to items that are displaced as a result of the
+    addition or removal of other items in the positioner, or when items move due to
+    a move operation in a related model, or when items resize themselves.
 
     \qml
     Grid {
@@ -907,7 +871,8 @@ void QQuickRow::reportConflictingAnchors()
   \qmlproperty int QtQuick2::Grid::spacing
 
   The spacing is the amount in pixels left empty between adjacent
-  items. The default spacing is 0.
+  items. The amount of spacing applied will be the same in the
+  horizontal and vertical directions. The default spacing is 0.
 
   The below example places a Grid containing a red, a blue and a
   green rectangle on a gray background. The area the grid positioner
@@ -1063,7 +1028,7 @@ void QQuickGrid::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 
 /*!
     \qmlproperty enumeration QtQuick2::Grid::effectiveLayoutDirection
-    This property holds the effective layout direction of the grid positioner.
+    This property holds the effective layout direction of the grid.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
     the visual layout direction of the grid positioner will be mirrored. However, the
@@ -1242,57 +1207,32 @@ void QQuickGrid::reportConflictingAnchors()
 }
 
 /*!
-  \qmlclass Flow QQuickFlow
+    \qmlclass Flow QQuickFlow
     \inqmlmodule QtQuick 2
-  \ingroup qml-positioning-elements
-  \brief The Flow item arranges its children side by side, wrapping as necessary.
-  \inherits Item
+    \ingroup qml-positioning-elements
+    \brief The Flow element positions its children side by side, wrapping as necessary.
+    \inherits Item
 
-  The Flow item positions its child items like words on a page, wrapping them
-  to create rows or columns of items that do not overlap.
+    The Flow item positions its child items like words on a page, wrapping them
+    to create rows or columns of items.
 
-  Spacing between items can be added using the \l spacing property.
-  Transitions can be used for cases where items managed by a Column are
-  added or moved. These are stored in the \l add and \l move properties
-  respectively.
+    Below is a Flow that contains various \l Text items:
 
-  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
-  related items.
+    \snippet doc/src/snippets/declarative/flow.qml flow item
 
-  \section1 Example Usage
+    The Flow item automatically positions the child \l Text items side by
+    side, wrapping as necessary:
 
-  The following example positions \l Text items within a parent item using
-  a Flow item.
+    \image qml-flow-snippet.png
 
-  \image qml-flow-snippet.png
+    If an item within a Flow is not \l {Item::}{visible}, or if it has a width or
+    height of 0, the item will not be laid out and it will not be visible within the
+    Flow. Also, since a Flow automatically positions its children, a child
+    item within a Flow should not set its \l {Item::x}{x} or \l {Item::y}{y} positions
+    or anchor itself with any of the \l {Item::anchors}{anchor} properties.
 
-  \snippet doc/src/snippets/declarative/flow.qml flow item
-
-  \section1 Using Transitions
-
-  Transitions can be used to animate items that are added to, moved within,
-  or removed from a Flow item. The \l add and \l move properties can be set to
-  the transitions that will be applied when items are added to, removed from,
-  or re-positioned within a Flow item.
-
-  The use of transitions with positioners is described in more detail in the
-  \l{Using QML Positioner and Repeater Items#Using Transitions}{Using QML
-  Positioner and Repeater Items} document.
-
-  \section1 Limitations
-
-  Note that the positioner assumes that the x and y positions of its children
-  will not change. If you manually change the x or y properties in script, bind
-  the x or y properties, use anchors on a child of a positioner, or have the
-  width or height of a child depend on the position of a child, then the
-  positioner may exhibit strange behavior.  If you need to perform any of these
-  actions, consider positioning the items without the use of a Flow.
-
-  Items with a width or height of 0 will not be positioned.
-
-  Positioning is batched and syncronized with painting to reduce the number of
-  calculations needed. This means that positioners may not reposition items immediately
-  when changes occur, but it will have moved by the next frame.
+    For more information on using Flow and other related positioner-type elements, see
+    \l{Item Layouts}.
 
   \sa Column, Row, Grid, Positioner, {declarative/positioners}{Positioners example}
 */
@@ -1306,20 +1246,21 @@ void QQuickGrid::reportConflictingAnchors()
 
     For a positioner, adding an item can mean that either the object
     has been created or reparented, and thus is now a child or the
-    positioner, or that the object has had its opacity increased from
-    zero, and thus is now visible.
+    positioner, or that the object has changed its \l visible property
+    from false to true, and thus is now visible.
 
     \sa move
 */
 /*!
     \qmlproperty Transition QtQuick2::Flow::move
 
-    This property holds the transition to be applied when moving an
-    item within the positioner. Positioner transitions will only affect
+    This property holds the transition to apply to any item that has moved
+    within the positioner. Positioner transitions will only affect
     the position (x, y) of items.
 
-    This transition can be performed when other items are added or removed
-    from the positioner, or when items resize themselves.
+    This transition is applied to items that are displaced as a result of the
+    addition or removal of other items in the positioner, or when items move due to
+    a move operation in a related model, or when items resize themselves.
 
     \qml
     Flow {
@@ -1433,7 +1374,7 @@ void QQuickFlow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 
 /*!
     \qmlproperty enumeration QtQuick2::Flow::effectiveLayoutDirection
-    This property holds the effective layout direction of the flow positioner.
+    This property holds the effective layout direction of the flow.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
     the visual layout direction of the grid positioner will be mirrored. However, the
