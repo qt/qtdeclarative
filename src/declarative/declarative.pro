@@ -6,7 +6,7 @@ QPRO_PWD   = $$PWD
 CONFIG += module
 MODULE_PRI += ../../modules/qt_declarative.pri
 
-QT = core-private gui gui-private network sql v8-private
+QT = core-private gui gui-private network v8-private
 
 DEFINES   += QT_BUILD_DECLARATIVE_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000
