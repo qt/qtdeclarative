@@ -1855,6 +1855,8 @@ void tst_QQuickListView::sections(const QUrl &source)
 
 void tst_QQuickListView::sectionsDelegate()
 {
+    QSKIP("QTBUG-24395");
+
     QQuickView *canvas = createView();
     canvas->show();
 
