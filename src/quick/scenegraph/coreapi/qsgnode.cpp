@@ -435,9 +435,7 @@ void QSGNode::setFlag(Flag f, bool enabled)
         return;
     m_nodeFlags ^= f;
     Q_ASSERT(int(UsePreprocess) == int(DirtyUsePreprocess));
-    Q_ASSERT(int(ChildrenDoNotOverlap) == int(DirtyChildrenDoNotOverlap));
-    Q_ASSERT(int(StaticSubtreeGeometry) == int(DirtyStaticSubtreeGeometry));
-    int changedFlag = f & (UsePreprocess | ChildrenDoNotOverlap | StaticSubtreeGeometry);
+    int changedFlag = f & UsePreprocess;
     if (changedFlag)
         markDirty(DirtyState(changedFlag));
 }
@@ -458,10 +456,7 @@ void QSGNode::setFlags(Flags f, bool enabled)
     else
         m_nodeFlags &= ~f;
     Q_ASSERT(int(UsePreprocess) == int(DirtyUsePreprocess));
-    Q_ASSERT(int(ChildrenDoNotOverlap) == int(DirtyChildrenDoNotOverlap));
-    Q_ASSERT(int(StaticSubtreeGeometry) == int(DirtyStaticSubtreeGeometry));
-    int changedFlags = (oldFlags ^ m_nodeFlags)
-                       & (UsePreprocess | ChildrenDoNotOverlap | StaticSubtreeGeometry);
+    int changedFlags = (oldFlags ^ m_nodeFlags) & UsePreprocess;
     if (changedFlags)
         markDirty(DirtyState(changedFlags));
 }

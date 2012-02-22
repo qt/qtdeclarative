@@ -83,7 +83,6 @@ public:
     void init(QQuickBasePositioner::PositionerType at)
     {
         type = at;
-        childrenDoNotOverlap = true;
     }
 
     qreal spacing;

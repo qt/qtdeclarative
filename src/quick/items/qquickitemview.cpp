@@ -1547,7 +1547,6 @@ int QQuickItemViewPrivate::mapFromModel(int modelIndex) const
 void QQuickItemViewPrivate::init()
 {
     Q_Q(QQuickItemView);
-    QQuickItemPrivate::get(contentItem)->childrenDoNotOverlap = true;
     q->setFlag(QQuickItem::ItemIsFocusScope);
     QObject::connect(q, SIGNAL(movementEnded()), q, SLOT(animStopped()));
     q->setFlickableDirection(QQuickFlickable::VerticalFlick);

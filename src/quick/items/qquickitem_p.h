@@ -405,10 +405,8 @@ public:
     bool isMirrorImplicit:1;
     bool inheritMirrorFromParent:1;
     bool inheritMirrorFromItem:1;
-    bool childrenDoNotOverlap:1;
-    bool staticSubtreeGeometry:1;
     bool isAccessible:1;
-    // bool dummy:1
+    // bool dummy:3
     // Bit 32
 
     enum DirtyType {
@@ -432,7 +430,6 @@ public:
         EffectReference         = 0x00008000,
         Visible                 = 0x00010000,
         HideReference           = 0x00020000,
-        PerformanceHints        = 0x00040000,
         // When you add an attribute here, don't forget to update
         // dirtyToString()
 
@@ -895,8 +892,6 @@ QSGNode *QQuickItemPrivate::childContainerNode()
             opacityNode()->appendChildNode(groupNode);
         else
             itemNode()->appendChildNode(groupNode);
-        groupNode->setFlag(QSGNode::ChildrenDoNotOverlap, childrenDoNotOverlap);
-        groupNode->setFlag(QSGNode::StaticSubtreeGeometry, staticSubtreeGeometry);
 #ifdef QML_RUNTIME_TESTING
         groupNode->description = QLatin1String("group");
 #endif

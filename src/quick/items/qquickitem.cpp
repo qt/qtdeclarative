@@ -2433,8 +2433,7 @@ QQuickItemPrivate::QQuickItemPrivate()
   notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true),
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
-  inheritMirrorFromParent(false), inheritMirrorFromItem(false), childrenDoNotOverlap(false),
-  staticSubtreeGeometry(false),
+  inheritMirrorFromParent(false), inheritMirrorFromItem(false),
   isAccessible(false),
 
   dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
@@ -4314,7 +4313,6 @@ QString QQuickItemPrivate::dirtyToString() const
     DIRTY_TO_STRING(EffectReference);
     DIRTY_TO_STRING(Visible);
     DIRTY_TO_STRING(HideReference);
-    DIRTY_TO_STRING(PerformanceHints);
 
     return rv;
 }

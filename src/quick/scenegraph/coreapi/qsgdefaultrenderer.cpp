@@ -125,58 +125,10 @@ static bool nodeLessThanWithRenderOrder(QSGNode *nodeA, QSGNode *nodeB)
     return a->matrix() < b->matrix();
 }
 
-
-QSGDefaultRenderer::IndexNodePair::IndexNodePair(int i, QSGNode *node)
-    : QPair<int, QSGNode *>(i, node)
-{
-}
-
-bool QSGDefaultRenderer::IndexNodePair::operator < (const QSGDefaultRenderer::IndexNodePair &other) const
-{
-    return nodeLessThan(second, other.second);
-}
-
-
-QSGDefaultRenderer::IndexNodePairHeap::IndexNodePairHeap()
-    : v(64)
-{
-}
-
-void QSGDefaultRenderer::IndexNodePairHeap::insert(const QSGDefaultRenderer::IndexNodePair &x)
-{
-    int i = v.size();
-    v.add(x);
-    while (i != 0 && v.at(i) < v.at(parent(i))) {
-        qSwap(v.at(parent(i)), v.at(i));
-        i = parent(i);
-    }
-}
-
-QSGDefaultRenderer::IndexNodePair QSGDefaultRenderer::IndexNodePairHeap::pop()
-{
-    IndexNodePair x = top();
-    if (v.size() > 1)
-        qSwap(v.first(), v.last());
-    v.pop_back();
-    int i = 0;
-    while (left(i) < v.size()) {
-        int low = left(i);
-        if (right(i) < v.size() && v.at(right(i)) < v.at(low))
-            low = right(i);
-        if (!(v.at(low) < v.at(i)))
-            break;
-        qSwap(v.at(i), v.at(low));
-        i = low;
-    }
-    return x;
-}
-
-
 QSGDefaultRenderer::QSGDefaultRenderer(QSGContext *context)
     : QSGRenderer(context)
     , m_opaqueNodes(64)
     , m_transparentNodes(64)
-    , m_tempNodes(64)
     , m_renderGroups(4)
     , m_rebuild_lists(false)
     , m_needs_sorting(false)
@@ -197,7 +149,7 @@ void QSGDefaultRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
     const quint32 rebuildBits = QSGNode::DirtyNodeAdded | QSGNode::DirtyNodeRemoved
                                 | QSGNode::DirtyMaterial | QSGNode::DirtyOpacity
-                                | QSGNode::DirtyForceUpdate | QSGNode::DirtyChildrenDoNotOverlap;
+                                | QSGNode::DirtyForceUpdate;
 
     if (state & rebuildBits)
         m_rebuild_lists = true;
@@ -410,52 +362,8 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
     if (!node->firstChild())
         return;
 
-#ifdef FORCE_NO_REORDER
-    static bool reorder = false;
-#else
-    static bool reorder = qApp->arguments().contains(QLatin1String("--reorder"));
-#endif
-
-    if (reorder && node->firstChild() != node->lastChild() && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
-        QVarLengthArray<int, 16> beginIndices;
-        QVarLengthArray<int, 16> endIndices;
-        int baseCount = m_transparentNodes.size();
-        int baseGroupCount = m_renderGroups.size();
-        int count = 0;
-        for (QSGNode *c = node->firstChild(); c; c = c->nextSibling()) {
-            beginIndices.append(m_transparentNodes.size());
-            buildLists(c);
-            endIndices.append(m_transparentNodes.size());
-            ++count;
-        }
-
-        int childNodeCount = m_transparentNodes.size() - baseCount;
-        // Don't reorder if new render groups were added.
-        if (m_renderGroups.size() == baseGroupCount && childNodeCount) {
-            m_tempNodes.reset();
-            m_tempNodes.reserve(childNodeCount);
-            while (childNodeCount) {
-                for (int i = 0; i < count; ++i) {
-                    if (beginIndices[i] != endIndices[i])
-                        m_heap.insert(IndexNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
-                }
-                while (!m_heap.isEmpty()) {
-                    IndexNodePair pair = m_heap.pop();
-                    m_tempNodes.add(pair.second);
-                    --childNodeCount;
-                    int i = pair.first;
-                    if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), pair.second))
-                        m_heap.insert(IndexNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
-                }
-            }
-            Q_ASSERT(m_tempNodes.size() == m_transparentNodes.size() - baseCount);
-
-            memcpy(&m_transparentNodes.at(baseCount), &m_tempNodes.at(0), m_tempNodes.size() * sizeof(QSGGeometryNode *));
-        }
-    } else {
-        for (QSGNode *c = node->firstChild(); c; c = c->nextSibling())
-            buildLists(c);
-    }
+    for (QSGNode *c = node->firstChild(); c; c = c->nextSibling())
+        buildLists(c);
 }
 
 void QSGDefaultRenderer::renderNodes(QSGNode *const *nodes, int count)

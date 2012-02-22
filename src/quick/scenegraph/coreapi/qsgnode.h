@@ -81,8 +81,6 @@ public:
         // Lower 16 bites reserved for general node
         OwnedByParent               = 0x0001,
         UsePreprocess               = 0x0002,
-        ChildrenDoNotOverlap        = 0x0004,
-        StaticSubtreeGeometry       = 0x0008, // Subtree nodes have fixed matrix and vertex data.
 
         // Upper 16 bits reserved for node subclasses
 
@@ -95,8 +93,6 @@ public:
 
     enum DirtyStateBit {
         DirtyUsePreprocess          = UsePreprocess,
-        DirtyChildrenDoNotOverlap   = ChildrenDoNotOverlap,
-        DirtyStaticSubtreeGeometry  = StaticSubtreeGeometry,
 
         DirtyMatrix                 = 0x0100,
         DirtyClipList               = 0x0200,

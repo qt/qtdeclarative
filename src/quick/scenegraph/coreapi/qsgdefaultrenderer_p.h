@@ -55,30 +55,6 @@ class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderer : public QSGRenderer
 {
     Q_OBJECT
 public:
-    class IndexNodePair : public QPair<int, QSGNode *>
-    {
-    public:
-        IndexNodePair(int i, QSGNode *n);
-        bool operator < (const IndexNodePair &other) const;
-    };
-
-
-    // Minimum heap.
-    class IndexNodePairHeap
-    {
-    public:
-        IndexNodePairHeap();
-        void insert(const IndexNodePair &x);
-        const IndexNodePair &top() const { return v.first(); }
-        IndexNodePair pop();
-        bool isEmpty() const { return v.isEmpty(); }
-    private:
-        static int parent(int i) { return (i - 1) >> 1; }
-        static int left(int i) { return (i << 1) | 1; }
-        static int right(int i) { return (i + 1) << 1; }
-        QDataBuffer<IndexNodePair> v;
-    };
-
     QSGDefaultRenderer(QSGContext *context);
 
     void render();
@@ -98,10 +74,8 @@ private:
     const QMatrix4x4 *m_currentMatrix;
     QDataBuffer<QSGNode *> m_opaqueNodes;
     QDataBuffer<QSGNode *> m_transparentNodes;
-    QDataBuffer<QSGNode *> m_tempNodes;
     struct RenderGroup { int opaqueEnd, transparentEnd; };
     QDataBuffer<RenderGroup> m_renderGroups;
-    IndexNodePairHeap m_heap;
 
     bool m_rebuild_lists;
     bool m_needs_sorting;

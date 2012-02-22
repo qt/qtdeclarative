@@ -2040,11 +2040,6 @@ void QQuickCanvasPrivate::updateDirtyNode(QQuickItem *item)
         }
     }
 
-    if ((dirty & (QQuickItemPrivate::PerformanceHints | QQuickItemPrivate::Canvas)) && itemPriv->groupNode) {
-        itemPriv->groupNode->setFlag(QSGNode::ChildrenDoNotOverlap, itemPriv->childrenDoNotOverlap);
-        itemPriv->groupNode->setFlag(QSGNode::StaticSubtreeGeometry, itemPriv->staticSubtreeGeometry);
-    }
-
 #ifndef QT_NO_DEBUG
     // Check consistency.
     const QSGNode *nodeChain[] = {
