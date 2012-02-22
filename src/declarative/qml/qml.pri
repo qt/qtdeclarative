@@ -118,7 +118,6 @@ HEADERS += \
     $$PWD/qlistmodelinterface_p.h \
     $$PWD/qdeclarativecomponentattached_p.h
 
-QT += sql
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(ftw/ftw.pri)
