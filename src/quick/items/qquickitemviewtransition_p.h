@@ -99,6 +99,7 @@ public:
     QDeclarativeTransition *moveDisplacedTransition;
     QDeclarativeTransition *removeTransition;
     QDeclarativeTransition *removeDisplacedTransition;
+    QDeclarativeTransition *displacedTransition;
 
 private:
     friend class QQuickItemViewTransitionJob;

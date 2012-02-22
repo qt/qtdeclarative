@@ -90,13 +90,25 @@ void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickIt
         trans = m_transitioner->populateTransition;
         break;
     case QQuickItemViewTransitioner::AddTransition:
-        trans = isTargetItem ? m_transitioner->addTransition : m_transitioner->addDisplacedTransition;
+        if (isTargetItem)
+            trans = m_transitioner->addTransition;
+        else
+            trans = (m_transitioner->addDisplacedTransition && m_transitioner->addDisplacedTransition->enabled()) ?
+                        m_transitioner->addDisplacedTransition : m_transitioner->displacedTransition;
         break;
     case QQuickItemViewTransitioner::MoveTransition:
-        trans = isTargetItem ? m_transitioner->moveTransition : m_transitioner->moveDisplacedTransition;
+        if (isTargetItem)
+            trans = m_transitioner->moveTransition;
+        else
+            trans = (m_transitioner->moveDisplacedTransition && m_transitioner->moveDisplacedTransition->enabled()) ?
+                        m_transitioner->moveDisplacedTransition : m_transitioner->displacedTransition;
         break;
     case QQuickItemViewTransitioner::RemoveTransition:
-        trans = isTargetItem ? m_transitioner->removeTransition : m_transitioner->removeDisplacedTransition;
+        if (isTargetItem)
+            trans = m_transitioner->removeTransition;
+        else
+            trans = (m_transitioner->removeDisplacedTransition && m_transitioner->removeDisplacedTransition->enabled()) ?
+                        m_transitioner->removeDisplacedTransition : m_transitioner->displacedTransition;
         break;
     }
 
@@ -169,6 +181,7 @@ QQuickItemViewTransitioner::QQuickItemViewTransitioner()
     , addTransition(0), addDisplacedTransition(0)
     , moveTransition(0), moveDisplacedTransition(0)
     , removeTransition(0), removeDisplacedTransition(0)
+    , displacedTransition(0)
     , changeListener(0)
     , usePopulateTransition(false)
 {
@@ -176,6 +189,12 @@ QQuickItemViewTransitioner::QQuickItemViewTransitioner()
 
 bool QQuickItemViewTransitioner::canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const
 {
+    if (!asTarget
+            && type != QQuickItemViewTransitioner::NoTransition && type != QQuickItemViewTransitioner::PopulateTransition
+            && displacedTransition && displacedTransition->enabled()) {
+        return true;
+    }
+
     switch (type) {
     case QQuickItemViewTransitioner::NoTransition:
         break;
@@ -428,11 +447,16 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     operations:
 
     \list
-    \o \c add and \c addDisplaced - the transitions to run when items are added to the view
-    \o \c remove and \c removeDisplaced - the transitions to run when items are removed from the view
-    \o \c move and \c moveDisplaced - the transitions to run when items are moved within the view
-       (i.e. as a result of a move operation in the model)
     \o \c populate - the transition to run when a view is created, or when the model changes
+    \o \c add - the transition to apply to items that are added to the view
+    \o \c remove - the transition to apply to items that are removed from the view
+    \o \c move - the transition to apply to items that are moved within the view (i.e. as a result
+       of a move operation in the model)
+    \o \c displaced - the generic transition to be applied to any items that are displaced by an
+       add, move or remove operation
+    \o \c addDisplaced, \c removeDisplaced and \c moveDisplaced - the transitions to be applied when
+       items are displaced by add, move, or remove operations, respectively (these override the
+       generic displaced transition if specified)
     \endlist
 
     Such view transitions additionally have access to a ViewTransition attached property that
@@ -468,14 +492,14 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \section2 View transitions: a simple example
 
     Here is a basic example of the use of view transitions. The view below specifies transitions for
-    the \c add and \c addDisplaced properties, which will be run when items are added to the view:
+    the \c add and \c displaced properties, which will be run when items are added to the view:
 
     \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-basic.qml 0
 
     When the space key is pressed, adding an item to the model, the new item will fade in and
     increase in scale over 400 milliseconds as it is added to the view. Also, any item that is
     displaced by the addition of a new item will animate to its new position in the view over
-    400 milliseconds, as specified by the \c addDisplaced transition.
+    400 milliseconds, as specified by the \c displaced transition.
 
     If five items were inserted in succession at index 0, the effect would be this:
 
@@ -488,7 +512,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     values if these properties are not explicitly defined.
 
     At its simplest, a view transition may just animate an item to its new position following a
-    view operation, just as the \c addDisplaced transition does above, or animate some item properties,
+    view operation, just as the \c displaced transition does above, or animate some item properties,
     as in the \c add transition above. Additionally, a view transition may make use of the
     ViewTransition attached property to customise animation behavior for different items. Following
     are some examples of how this can be achieved.
@@ -500,9 +524,9 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     being transitioned as well as the operation that triggered the transition. In the animation above,
     five items are inserted in succession at index 0. When the fifth and final insertion takes place,
     adding "Item 4" to the view, the \c add transition is run once (for the inserted item) and the
-    \c addDisplaced transition is run four times (once for each of the four existing items in the view).
+    \c displaced transition is run four times (once for each of the four existing items in the view).
 
-    At this point, if we examined the \c addDisplaced transition that was run for the bottom displaced
+    At this point, if we examined the \c displaced transition that was run for the bottom displaced
     item ("Item 0"), the ViewTransition property values provided to this transition would be as follows:
 
     \table
@@ -541,7 +565,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 
     So, while the ViewTransition.item, ViewTransition.index and ViewTransition.destination values
     vary for each individual transition that is run, the ViewTransition.targetIndexes and
-    ViewTransition.targetItems values are the same for every \c add and \c addDisplaced transition
+    ViewTransition.targetItems values are the same for every \c add and \c displaced transition
     that is triggered by a particular add operation.
 
 
@@ -552,7 +576,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     For example, the ListView in the previous example could use this information to create a ripple-type
     effect on the movement of the displaced items.
 
-    This can be achieved by modifying the \c addDisplaced transition so that it delays the animation of
+    This can be achieved by modifying the \c displaced transition so that it delays the animation of
     each displaced item based on the difference between its index (provided by ViewTransition.index)
     and the first removed index (provided by ViewTransition.targetIndexes):
 
@@ -570,7 +594,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     applied. This can be used to access any of the item's attributes, custom \c property values,
     and so on.
 
-    Below is a modification of the \c addDisplaced transition from the previous example. It adds a
+    Below is a modification of the \c displaced transition from the previous example. It adds a
     ParallelAnimation with nested NumberAnimation objects that reference ViewTransition.item to access
     each item's \c x and \c y values at the start of their transitions. This allows each item to
     animate to an intermediate position relative to its starting point for the transition, before
@@ -607,7 +631,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     applied while the original transition is in progress. For example, say Item A is inserted at index 0
     and undergoes an "add" transition; then, Item B is inserted at index 0 in quick succession before
     Item A's transition has finished. Since Item B is inserted before Item A, it will displace Item
-    A, causing the view to interrupt Item A's "add" transition mid-way and start an "addDisplaced"
+    A, causing the view to interrupt Item A's "add" transition mid-way and start a "displaced"
     transition on Item A instead.
 
     For simple animations that simply animate an item's movement to its final destination, this
@@ -624,11 +648,11 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 
     Each newly added item undergoes an \c add transition, but before the transition can finish,
     another item is added, displacing the previously added item. Because of this, the \c add
-    transition on the previously added item is interrupted and an \c addDisplaced transition is
+    transition on the previously added item is interrupted and a \c displaced transition is
     started on the item instead. Due to the interruption, the \c opacity and \c scale animations
     have not completed, thus producing items with opacity and scale that are below 1.0.
 
-    To fix this, the \c addDisplaced transition should additionally ensure the item properties are
+    To fix this, the \c displaced transition should additionally ensure the item properties are
     set to the end values specified in the \c add transition, effectively resetting these values
     whenever an item is displaced. In this case, it means setting the item opacity and scale to 1.0:
 

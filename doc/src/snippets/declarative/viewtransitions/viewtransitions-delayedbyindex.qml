@@ -60,12 +60,12 @@ ListView {
     }
 
 //! [0]
-    addDisplaced: Transition {
-        id: addDispTrans
+    displaced: Transition {
+        id: dispTrans
         SequentialAnimation {
             PauseAnimation {
-                duration: (addDispTrans.ViewTransition.index -
-                        addDispTrans.ViewTransition.targetIndexes[0]) * 100
+                duration: (dispTrans.ViewTransition.index -
+                        dispTrans.ViewTransition.targetIndexes[0]) * 100
             }
             NumberAnimation { properties: "x,y"; duration: 400; easing.type: Easing.OutBounce }
         }

@@ -60,7 +60,7 @@ ListView {
     }
 
 //! [0]
-    addDisplaced: Transition {
+    displaced: Transition {
         NumberAnimation { properties: "x,y"; duration: 400; easing.type: Easing.OutBounce }
 
         // ensure opacity and scale values return to 1.0

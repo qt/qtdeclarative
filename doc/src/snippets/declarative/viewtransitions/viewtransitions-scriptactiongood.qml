@@ -73,7 +73,7 @@ ListView {
     }
 //! [0]
 
-    moveDisplaced: Transition {
+    displaced: Transition {
         NumberAnimation { properties: "x,y"; duration: 400; easing.type: Easing.OutBounce }
     }
 

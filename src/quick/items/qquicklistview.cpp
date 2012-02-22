@@ -2301,8 +2301,8 @@ void QQuickListView::setSnapMode(SnapMode mode)
     Whenever an item is added to the above view, the item will be animated from the position (100,100)
     to its final x,y position within the view, over one second. The transition only applies to
     the new items that are added to the view; it does not apply to the items below that are
-    displaced by the addition of the new items. To animate the displaced items, set the \l
-    addDisplaced property.
+    displaced by the addition of the new items. To animate the displaced items, set the \l displaced
+    or \l addDisplaced properties.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2338,9 +2338,10 @@ void QQuickListView::setSnapMode(SnapMode mode)
     the new item that has been added to the view; to animate the added items, set the \l add
     property.
 
-    If an item is displaced by multiple types of operations at the same time, it is not
-    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
-    will be applied.
+    If an item is displaced by multiple types of operations at the same time, it is not defined as to
+    whether the addDisplaced, moveDisplaced or removeDisplaced transition will be applied. Additionally,
+    if it is not necessary to specify different transitions depending on whether an item is displaced
+    by an add, move or remove operation, consider setting the \l displaced property instead.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2349,7 +2350,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     populated, or when the view's \l model changes. In those cases, the \l populate transition is
     applied instead.
 
-    \sa add, populate, ViewTransition
+    \sa displaced, add, populate, ViewTransition
 */
 
 /*!
@@ -2373,7 +2374,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     respective items in the view will be animated to their new positions in the view over one
     second. The transition only applies to the items that are the subject of the move operation
     in the model; it does not apply to items below them that are displaced by the move operation.
-    To animate the displaced items, set the \l moveDisplaced property.
+    To animate the displaced items, set the \l displaced or \l moveDisplaced properties.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2406,14 +2407,15 @@ void QQuickListView::setSnapMode(SnapMode mode)
     the items that are the actual subjects of the move operation; to animate the moved items, set
     the \l move property.
 
-    If an item is displaced by multiple types of operations at the same time, it is not
-    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
-    will be applied.
+    If an item is displaced by multiple types of operations at the same time, it is not defined as to
+    whether the addDisplaced, moveDisplaced or removeDisplaced transition will be applied. Additionally,
+    if it is not necessary to specify different transitions depending on whether an item is displaced
+    by an add, move or remove operation, consider setting the \l displaced property instead.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
 
-    \sa move, ViewTransition
+    \sa displaced, move, ViewTransition
 */
 
 /*!
@@ -2438,8 +2440,8 @@ void QQuickListView::setSnapMode(SnapMode mode)
     Whenever an item is removed from the above view, the item will be animated to the position (100,100)
     over one second, and in parallel will also change its opacity to 0. The transition
     only applies to the items that are removed from the view; it does not apply to the items below
-    them that are displaced by the removal of the items. To animate the displaced items, set the \l
-    removeDisplaced property.
+    them that are displaced by the removal of the items. To animate the displaced items, set the
+    \l displaced or \l removeDisplaced properties.
 
     Note that by the time the transition is applied, the item has already been removed from the
     model; any references to the model data for the removed index will not be valid.
@@ -2477,16 +2479,52 @@ void QQuickListView::setSnapMode(SnapMode mode)
     the item that has actually been removed from the view; to animate the removed items, set the
     \l remove property.
 
-    If an item is displaced by multiple types of operations at the same time, it is not
-    defined as to whether the addDisplaced, moveDisplaced or removeDisplaced transition
-    will be applied.
+    If an item is displaced by multiple types of operations at the same time, it is not defined as to
+    whether the addDisplaced, moveDisplaced or removeDisplaced transition will be applied. Additionally,
+    if it is not necessary to specify different transitions depending on whether an item is displaced
+    by an add, move or remove operation, consider setting the \l displaced property instead.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
 
-    \sa remove, ViewTransition
+    \sa displaced, remove, ViewTransition
 */
 
+/*!
+    \qmlproperty Transition QtQuick2::ListView::displaced
+    This property holds the generic transition to apply to items that have been displaced by
+    any model operation that affects the view.
+
+    This is a convenience for specifying the generic transition to be applied to any items
+    that are displaced by an add, move or remove operation, without having to specify the
+    individual addDisplaced, moveDisplaced and removeDisplaced properties. For example, here
+    is a view that specifies a displaced transition:
+
+    \code
+    ListView {
+        ...
+        displaced: Transition {
+            NumberAnimation { properties: "x,y"; duration: 1000 }
+        }
+    }
+    \endcode
+
+    When any item is added, moved or removed within the above view, the items below it are
+    displaced, causing them to move down (or sideways, if horizontally orientated) within the
+    view. As this displacement occurs, the items' movement to their new x,y positions within
+    the view will be animated by a NumberAnimation over one second, as specified.
+
+    If a view specifies this generic displaced transition as well as a specific addDisplaced,
+    moveDisplaced or removeDisplaced transition, the more specific transition will be used
+    instead of the generic displaced transition when the relevant operation occurs, providing that
+    the more specific transition has not been disabled (by setting \l {Transition::enabled}{enabled}
+    to false). If it has indeed been disabled, the generic displaced transition is applied instead.
+
+    For more details and examples on how to use view transitions, see the ViewTransition
+    documentation.
+
+    \sa addDisplaced, moveDisplaced, removeDisplaced, ViewTransition
+*/
 
 void QQuickListView::viewportMoved()
 {

@@ -83,6 +83,7 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(QDeclarativeTransition *moveDisplaced READ moveDisplacedTransition WRITE setMoveDisplacedTransition NOTIFY moveDisplacedTransitionChanged)
     Q_PROPERTY(QDeclarativeTransition *remove READ removeTransition WRITE setRemoveTransition NOTIFY removeTransitionChanged)
     Q_PROPERTY(QDeclarativeTransition *removeDisplaced READ removeDisplacedTransition WRITE setRemoveDisplacedTransition NOTIFY removeDisplacedTransitionChanged)
+    Q_PROPERTY(QDeclarativeTransition *displaced READ displacedTransition WRITE setDisplacedTransition NOTIFY displacedTransitionChanged)
 
     Q_PROPERTY(QDeclarativeComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
     Q_PROPERTY(QQuickItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
@@ -151,6 +152,9 @@ public:
     QDeclarativeTransition *removeDisplacedTransition() const;
     void setRemoveDisplacedTransition(QDeclarativeTransition *transition);
 
+    QDeclarativeTransition *displacedTransition() const;
+    void setDisplacedTransition(QDeclarativeTransition *transition);
+
     QDeclarativeComponent *highlight() const;
     void setHighlight(QDeclarativeComponent *);
 
@@ -211,6 +215,7 @@ signals:
     void moveDisplacedTransitionChanged();
     void removeTransitionChanged();
     void removeDisplacedTransitionChanged();
+    void displacedTransitionChanged();
 
     void highlightChanged();
     void highlightItemChanged();

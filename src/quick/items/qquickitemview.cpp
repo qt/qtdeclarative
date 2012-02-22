@@ -705,6 +705,22 @@ void QQuickItemView::setRemoveDisplacedTransition(QDeclarativeTransition *transi
     }
 }
 
+QDeclarativeTransition *QQuickItemView::displacedTransition() const
+{
+    Q_D(const QQuickItemView);
+    return d->transitioner ? d->transitioner->displacedTransition : 0;
+}
+
+void QQuickItemView::setDisplacedTransition(QDeclarativeTransition *transition)
+{
+    Q_D(QQuickItemView);
+    d->createTransitioner();
+    if (d->transitioner->displacedTransition != transition) {
+        d->transitioner->displacedTransition = transition;
+        emit displacedTransitionChanged();
+    }
+}
+
 void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
 {
     Q_Q(QQuickItemView);
