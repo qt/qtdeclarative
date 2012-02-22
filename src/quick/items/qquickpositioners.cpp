@@ -129,7 +129,7 @@ int QQuickBasePositioner::spacing() const
 void QQuickBasePositioner::setSpacing(int s)
 {
     Q_D(QQuickBasePositioner);
-    if (s==d->spacing)
+    if (s == d->spacing)
         return;
     d->spacing = s;
     d->setPositioningDirty();
@@ -177,7 +177,7 @@ void QQuickBasePositioner::componentComplete()
 void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_D(QQuickBasePositioner);
-    if (change == ItemChildAddedChange){
+    if (change == ItemChildAddedChange) {
         d->setPositioningDirty();
     } else if (change == ItemChildRemovedChange) {
         QQuickItem *child = value.item;
@@ -348,7 +348,7 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     if (prevLastProperty && prevLastProperty != lastProperty)
         prevLastProperty->setIsLastItem(false);
     if (lastProperty)
-      lastProperty->setIsLastItem(true);
+        lastProperty->setIsLastItem(true);
 }
 
 /*!
@@ -1092,24 +1092,24 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
     if (m_columns <= 0 && m_rows <= 0){
         c = 4;
         r = (numVisible+3)/4;
-    } else if (m_rows <= 0){
+    } else if (m_rows <= 0) {
         r = (numVisible+(m_columns-1))/m_columns;
-    } else if (m_columns <= 0){
+    } else if (m_columns <= 0) {
         c = (numVisible+(m_rows-1))/m_rows;
     }
 
-    if (r==0 || c==0)
+    if (r == 0 || c == 0)
         return; //Nothing to do
 
     QList<int> maxColWidth;
     QList<int> maxRowHeight;
     int childIndex =0;
     if (m_flow == LeftToRight) {
-        for (int i=0; i < r; i++){
-            for (int j=0; j < c; j++){
-                if (j==0)
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                if (j == 0)
                     maxRowHeight << 0;
-                if (i==0)
+                if (i == 0)
                     maxColWidth << 0;
 
                 if (childIndex == visibleItems.count())
@@ -1123,11 +1123,11 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
             }
         }
     } else {
-        for (int j=0; j < c; j++){
-            for (int i=0; i < r; i++){
-                if (j==0)
+        for (int j = 0; j < c; j++) {
+            for (int i = 0; i < r; i++) {
+                if (j == 0)
                     maxRowHeight << 0;
-                if (i==0)
+                if (i == 0)
                     maxColWidth << 0;
 
                 if (childIndex == visibleItems.count())
@@ -1184,7 +1184,7 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
         int childXOffset = xoffset;
         if (!d->isLeftToRight())
             childXOffset -= child.item->width();
-        if ((child.item->x() != childXOffset) || (child.item->y() != yoffset)){
+        if ((child.item->x() != childXOffset) || (child.item->y() != yoffset)) {
             positionX(childXOffset, child);
             positionY(yoffset, child);
         }
@@ -1195,8 +1195,8 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
             else
                 xoffset -= maxColWidth[curCol]+columnSpacing;
             curCol++;
-            curCol%=c;
-            if (!curCol){
+            curCol %= c;
+            if (!curCol) {
                 yoffset += maxRowHeight[curRow]+rowSpacing;
                 if (d->isLeftToRight())
                     xoffset = 0;
@@ -1207,15 +1207,15 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
                     break;
             }
         } else {
-            yoffset+=maxRowHeight[curRow]+rowSpacing;
+            yoffset += maxRowHeight[curRow]+rowSpacing;
             curRow++;
-            curRow%=r;
-            if (!curRow){
+            curRow %= r;
+            if (!curRow) {
                 if (d->isLeftToRight())
                     xoffset += maxColWidth[curCol]+columnSpacing;
                 else
                     xoffset -= maxColWidth[curCol]+columnSpacing;
-                yoffset=0;
+                yoffset = 0;
                 curCol++;
                 if (curCol>=c)
                     break;

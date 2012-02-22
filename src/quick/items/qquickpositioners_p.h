@@ -199,10 +199,10 @@ class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
 public:
     QQuickGrid(QQuickItem *parent=0);
 
-    int rows() const {return m_rows;}
+    int rows() const { return m_rows; }
     void setRows(const int rows);
 
-    int columns() const {return m_columns;}
+    int columns() const { return m_columns; }
     void setColumns(const int columns);
 
     int rowSpacing() const { return m_rowSpacing; }
