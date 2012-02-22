@@ -81,7 +81,6 @@ struct LogEntry {
 
     QtMsgType type;
     QString message;
-    int version;
     int line;
     QString file;
     QString function;
@@ -136,8 +135,7 @@ void QDeclarativeDebugMsgClient::messageReceived(const QByteArray &data)
         QByteArray file;
         QByteArray function;
         int line;
-        int version;
-        ds >> type >> message >> version >> file >> line >> function;
+        ds >> type >> message >> file >> line >> function;
         QVERIFY(ds.atEnd());
 
         QVERIFY(type >= QtDebugMsg);
@@ -145,9 +143,8 @@ void QDeclarativeDebugMsgClient::messageReceived(const QByteArray &data)
 
         LogEntry entry((QtMsgType)type, QString::fromUtf8(message));
         entry.line = line;
-        entry.version = version;
-        entry.file = QString::fromLatin1(file);
-        entry.function = QString::fromLatin1(function);
+        entry.file = QString::fromUtf8(file);
+        entry.function = QString::fromUtf8(function);
         logBuffer << entry;
         emit debugOutput();
     } else {

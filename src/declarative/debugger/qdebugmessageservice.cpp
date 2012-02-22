@@ -95,7 +95,7 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
     QByteArray message;
     QDataStream ws(&message, QIODevice::WriteOnly);
     ws << QByteArray("MESSAGE") << type << QString::fromLocal8Bit(buf).toUtf8();
-    ws << ctxt.version << QString::fromLatin1(ctxt.file).toUtf8();
+    ws << QString::fromLatin1(ctxt.file).toUtf8();
     ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();
 
     sendMessage(message);
