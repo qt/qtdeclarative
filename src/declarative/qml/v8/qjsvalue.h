@@ -68,7 +68,7 @@ public:
     QJSValue(const QString &value);
     QJSValue(const QLatin1String &value);
 #ifndef QT_NO_CAST_FROM_ASCII
-    QT_ASCII_CAST_WARN_CONSTRUCTOR QJSValue(const char *str);
+    QT_ASCII_CAST_WARN QJSValue(const char *str);
 #endif
 
     QJSValue &operator=(const QJSValue &other);
