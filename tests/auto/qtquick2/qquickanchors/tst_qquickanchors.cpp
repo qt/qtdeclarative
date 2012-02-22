@@ -459,10 +459,6 @@ void tst_qquickanchors::crash1()
 {
     QUrl source(testFileUrl("crash1.qml"));
 
-    QString expect = source.toString() + ":3:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function.";
-
-    QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
-
     QQuickView *view = new QQuickView(source);
     qApp->processEvents();
 

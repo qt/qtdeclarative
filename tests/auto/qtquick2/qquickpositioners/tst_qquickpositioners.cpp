@@ -1179,93 +1179,93 @@ void tst_qquickpositioners::test_conflictinganchors()
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
 
-    component.setData("import QtQuick 2.0\nColumn { Item {} }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QVERIFY(warningMessage.isEmpty());
     delete item;
 
-    component.setData("import QtQuick 2.0\nRow { Item {} }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nRow { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QVERIFY(warningMessage.isEmpty());
     delete item;
 
-    component.setData("import QtQuick 2.0\nGrid { Item {} }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nGrid { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QVERIFY(warningMessage.isEmpty());
     delete item;
 
-    component.setData("import QtQuick 2.0\nFlow { Item {} }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nFlow { Item { width: 100; height: 100; } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QVERIFY(warningMessage.isEmpty());
     delete item;
 
-    component.setData("import QtQuick 2.0\nColumn { Item { anchors.top: parent.top } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; anchors.top: parent.top } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nColumn { Item { anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Column: Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column. Column will not function."));
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nColumn { Item { anchors.left: parent.left } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nColumn { Item { width: 100; height: 100; anchors.left: parent.left } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QVERIFY(warningMessage.isEmpty());
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nRow { Item { anchors.left: parent.left } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nRow { Item { width: 100; height: 100; anchors.left: parent.left } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nRow { Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nRow { width: 100; height: 100; Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Row: Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row. Row will not function."));
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nRow { Item { anchors.top: parent.top } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nRow { Item { width: 100; height: 100; anchors.top: parent.top } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QVERIFY(warningMessage.isEmpty());
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nGrid { Item { anchors.horizontalCenter: parent.horizontalCenter } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nGrid { Item { width: 100; height: 100; anchors.horizontalCenter: parent.horizontalCenter } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nGrid { Item { anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nGrid { Item { width: 100; height: 100; anchors.centerIn: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Grid: Cannot specify anchors for items inside Grid. Grid will not function."));
     warningMessage.clear();
     delete item;
 
-    component.setData("import QtQuick 2.0\nFlow { Item { anchors.verticalCenter: parent.verticalCenter } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nFlow { Item { width: 100; height: 100; anchors.verticalCenter: parent.verticalCenter } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
     delete item;
 
-    component.setData("import QtQuick 2.0\nFlow { Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\nFlow {  width: 100; height: 100; Item { anchors.fill: parent } }", QUrl::fromLocalFile(""));
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));

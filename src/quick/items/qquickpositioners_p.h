@@ -91,7 +91,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeIte
 {
     Q_OBJECT
 
-    Q_PROPERTY(int spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
     Q_PROPERTY(QDeclarativeTransition *move READ move WRITE setMove NOTIFY moveChanged)
     Q_PROPERTY(QDeclarativeTransition *add READ add WRITE setAdd NOTIFY addChanged)
 public:
@@ -99,8 +99,8 @@ public:
     QQuickBasePositioner(PositionerType, QQuickItem *parent);
     ~QQuickBasePositioner();
 
-    int spacing() const;
-    void setSpacing(int);
+    qreal spacing() const;
+    void setSpacing(qreal);
 
     QDeclarativeTransition *move() const;
     void setMove(QDeclarativeTransition *);
@@ -141,8 +141,9 @@ protected:
     };
 
     QPODVector<PositionedItem,8> positionedItems;
-    void positionX(int,const PositionedItem &target);
-    void positionY(int,const PositionedItem &target);
+    QPODVector<PositionedItem,8> unpositionedItems;//Still 'in' the positioner, just not positioned
+    void positionX(qreal,const PositionedItem &target);
+    void positionY(qreal,const PositionedItem &target);
 
 private:
     Q_DISABLE_COPY(QQuickBasePositioner)
@@ -190,8 +191,8 @@ class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
     Q_OBJECT
     Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
     Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged)
-    Q_PROPERTY(int rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged)
-    Q_PROPERTY(int columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged)
+    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged RESET resetRowSpacing)
+    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged RESET resetColumnSpacing)
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
@@ -205,11 +206,13 @@ public:
     int columns() const { return m_columns; }
     void setColumns(const int columns);
 
-    int rowSpacing() const { return m_rowSpacing; }
-    void setRowSpacing(int);
+    qreal rowSpacing() const { return m_rowSpacing; }
+    void setRowSpacing(qreal);
+    void resetRowSpacing() { m_useRowSpacing = false; }
 
-    int columnSpacing() const { return m_columnSpacing; }
-    void setColumnSpacing(int);
+    qreal columnSpacing() const { return m_columnSpacing; }
+    void setColumnSpacing(qreal);
+    void resetColumnSpacing() { m_useColumnSpacing = false; }
 
     Q_ENUMS(Flow)
     enum Flow { LeftToRight, TopToBottom };
@@ -236,8 +239,10 @@ protected:
 private:
     int m_rows;
     int m_columns;
-    int m_rowSpacing;
-    int m_columnSpacing;
+    qreal m_rowSpacing;
+    qreal m_columnSpacing;
+    bool m_useRowSpacing;
+    bool m_useColumnSpacing;
     Flow m_flow;
     Q_DISABLE_COPY(QQuickGrid)
 };

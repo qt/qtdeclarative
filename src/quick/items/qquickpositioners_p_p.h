@@ -84,7 +84,7 @@ public:
         childrenDoNotOverlap = true;
     }
 
-    int spacing;
+    qreal spacing;
 
     QQuickBasePositioner::PositionerType type;
     QDeclarativeTransition *moveTransition;

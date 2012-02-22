@@ -121,13 +121,13 @@ void QQuickBasePositioner::updatePolish()
         prePositioning();
 }
 
-int QQuickBasePositioner::spacing() const
+qreal QQuickBasePositioner::spacing() const
 {
     Q_D(const QQuickBasePositioner);
     return d->spacing;
 }
 
-void QQuickBasePositioner::setSpacing(int s)
+void QQuickBasePositioner::setSpacing(qreal s)
 {
     Q_D(QQuickBasePositioner);
     if (s == d->spacing)
@@ -210,32 +210,39 @@ void QQuickBasePositioner::prePositioning()
 
     QPODVector<PositionedItem,8> oldItems;
     positionedItems.copyAndClear(oldItems);
+    for (int ii = 0; ii < unpositionedItems.count(); ii++)
+        oldItems.append(unpositionedItems[ii]);
+    unpositionedItems.clear();
+
     for (int ii = 0; ii < children.count(); ++ii) {
         QQuickItem *child = children.at(ii);
         QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
-        PositionedItem *item = 0;
         PositionedItem posItem(child);
         int wIdx = oldItems.find(posItem);
         if (wIdx < 0) {
             d->watchChanges(child);
-            positionedItems.append(posItem);
-            item = &positionedItems[positionedItems.count()-1];
-            item->isNew = true;
-            if (!childPrivate->explicitVisible || !child->width() || !child->height())
-                item->isVisible = false;
+            posItem.isNew = true;
+            if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
+                posItem.isVisible = false;
+                unpositionedItems.append(posItem);
+            } else {
+                positionedItems.append(posItem);
+            }
         } else {
-            item = &oldItems[wIdx];
+            PositionedItem *item = &oldItems[wIdx];
             // Items are only omitted from positioning if they are explicitly hidden
             // i.e. their positioning is not affected if an ancestor is hidden.
             if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 item->isVisible = false;
+                unpositionedItems.append(*item);
             } else if (!item->isVisible) {
                 item->isVisible = true;
                 item->isNew = true;
+                positionedItems.append(*item);
             } else {
                 item->isNew = false;
+                positionedItems.append(*item);
             }
-            positionedItems.append(*item);
         }
     }
     QSizeF contentSize(0,0);
@@ -251,7 +258,7 @@ void QQuickBasePositioner::prePositioning()
     setImplicitSize(contentSize.width(), contentSize.height());
 }
 
-void QQuickBasePositioner::positionX(int x, const PositionedItem &target)
+void QQuickBasePositioner::positionX(qreal x, const PositionedItem &target)
 {
     Q_D(QQuickBasePositioner);
     if (d->type == Horizontal || d->type == Both) {
@@ -269,7 +276,7 @@ void QQuickBasePositioner::positionX(int x, const PositionedItem &target)
     }
 }
 
-void QQuickBasePositioner::positionY(int y, const PositionedItem &target)
+void QQuickBasePositioner::positionY(qreal y, const PositionedItem &target)
 {
     Q_D(QQuickBasePositioner);
     if (d->type == Vertical || d->type == Both) {
@@ -515,7 +522,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int QtQuick2::Column::spacing
+  \qmlproperty real QtQuick2::Column::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The default spacing is 0.
@@ -529,12 +536,11 @@ QQuickColumn::QQuickColumn(QQuickItem *parent)
 
 void QQuickColumn::doPositioning(QSizeF *contentSize)
 {
-    int voffset = 0;
+    //Precondition: All items in the positioned list have a valid item pointer and should be positioned
+    qreal voffset = 0;
 
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         const PositionedItem &child = positionedItems.at(ii);
-        if (!child.item || !child.isVisible)
-            continue;
 
         if (child.item->y() != voffset)
             positionY(voffset, child);
@@ -652,7 +658,7 @@ void QQuickColumn::reportConflictingAnchors()
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int QtQuick2::Row::spacing
+  \qmlproperty real QtQuick2::Row::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The default spacing is 0.
@@ -719,14 +725,13 @@ Qt::LayoutDirection QQuickRow::effectiveLayoutDirection() const
 
 void QQuickRow::doPositioning(QSizeF *contentSize)
 {
+    //Precondition: All items in the positioned list have a valid item pointer and should be positioned
     QQuickBasePositionerPrivate *d = static_cast<QQuickBasePositionerPrivate* >(QQuickBasePositionerPrivate::get(this));
-    int hoffset = 0;
+    qreal hoffset = 0;
 
-    QList<int> hoffsets;
+    QList<qreal> hoffsets;
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         const PositionedItem &child = positionedItems.at(ii);
-        if (!child.item || !child.isVisible)
-            continue;
 
         if (d->isLeftToRight()) {
             if (child.item->x() != hoffset)
@@ -749,7 +754,7 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
         return;
 
     //Right to Left layout
-    int end = 0;
+    qreal end = 0;
     if (!widthValid())
         end = contentSize->width();
     else
@@ -758,8 +763,6 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
     int acc = 0;
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         const PositionedItem &child = positionedItems.at(ii);
-        if (!child.item || !child.isVisible)
-            continue;
         hoffset = end - hoffsets[acc++] - child.item->width();
         if (child.item->x() != hoffset)
             positionX(hoffset, child);
@@ -868,7 +871,7 @@ void QQuickRow::reportConflictingAnchors()
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int QtQuick2::Grid::spacing
+  \qmlproperty qreal QtQuick2::Grid::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The amount of spacing applied will be the same in the
@@ -885,8 +888,15 @@ void QQuickRow::reportConflictingAnchors()
 
   \sa rows, columns
 */
-QQuickGrid::QQuickGrid(QQuickItem *parent) :
-    QQuickBasePositioner(Both, parent), m_rows(-1), m_columns(-1), m_rowSpacing(-1), m_columnSpacing(-1), m_flow(LeftToRight)
+QQuickGrid::QQuickGrid(QQuickItem *parent)
+    : QQuickBasePositioner(Both, parent)
+    , m_rows(-1)
+    , m_columns(-1)
+    , m_rowSpacing(-1)
+    , m_columnSpacing(-1)
+    , m_useRowSpacing(false)
+    , m_useColumnSpacing(false)
+    , m_flow(LeftToRight)
 {
 }
 
@@ -954,35 +964,45 @@ void QQuickGrid::setFlow(Flow flow)
 }
 
 /*!
-    \qmlproperty int QtQuick2::Grid::rowSpacing
+    \qmlproperty qreal QtQuick2::Grid::rowSpacing
 
     This property holds the spacing in pixels between rows.
+
+    If this property is not set, then spacing is used for the row spacing.
+
+    By default this property is not set.
 
     \sa columnSpacing
     \since QtQuick2.0
 */
-void QQuickGrid::setRowSpacing(const int rowSpacing)
+void QQuickGrid::setRowSpacing(const qreal rowSpacing)
 {
     if (rowSpacing == m_rowSpacing)
         return;
     m_rowSpacing = rowSpacing;
+    m_useRowSpacing = true;
     prePositioning();
     emit rowSpacingChanged();
 }
 
 /*!
-    \qmlproperty int QtQuick2::Grid::columnSpacing
+    \qmlproperty qreal QtQuick2::Grid::columnSpacing
 
     This property holds the spacing in pixels between columns.
+
+    If this property is not set, then spacing is used for the column spacing.
+
+    By default this property is not set.
 
     \sa rowSpacing
     \since QtQuick2.0
 */
-void QQuickGrid::setColumnSpacing(const int columnSpacing)
+void QQuickGrid::setColumnSpacing(const qreal columnSpacing)
 {
     if (columnSpacing == m_columnSpacing)
         return;
     m_columnSpacing = columnSpacing;
+    m_useColumnSpacing = true;
     prePositioning();
     emit columnSpacingChanged();
 }
@@ -1043,18 +1063,13 @@ Qt::LayoutDirection QQuickGrid::effectiveLayoutDirection() const
 
 void QQuickGrid::doPositioning(QSizeF *contentSize)
 {
+    //Precondition: All items in the positioned list have a valid item pointer and should be positioned
     QQuickBasePositionerPrivate *d = static_cast<QQuickBasePositionerPrivate*>(QQuickBasePositionerPrivate::get(this));
     int c = m_columns;
     int r = m_rows;
-    //Is allocating the extra QPODVector too much overhead?
-    QPODVector<PositionedItem, 8> visibleItems;//we aren't concerned with invisible items
-    visibleItems.reserve(positionedItems.count());
-    for (int i=0; i<positionedItems.count(); i++)
-        if (positionedItems[i].item && positionedItems[i].isVisible)
-            visibleItems.append(positionedItems[i]);
+    int numVisible = positionedItems.count();
 
-    int numVisible = visibleItems.count();
-    if (m_columns <= 0 && m_rows <= 0){
+    if (m_columns <= 0 && m_rows <= 0) {
         c = 4;
         r = (numVisible+3)/4;
     } else if (m_rows <= 0) {
@@ -1066,8 +1081,8 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
     if (r == 0 || c == 0)
         return; //Nothing to do
 
-    QList<int> maxColWidth;
-    QList<int> maxRowHeight;
+    QList<qreal> maxColWidth;
+    QList<qreal> maxRowHeight;
     int childIndex =0;
     if (m_flow == LeftToRight) {
         for (int i = 0; i < r; i++) {
@@ -1077,10 +1092,10 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
                 if (i == 0)
                     maxColWidth << 0;
 
-                if (childIndex == visibleItems.count())
+                if (childIndex == numVisible)
                     break;
 
-                const PositionedItem &child = visibleItems.at(childIndex++);
+                const PositionedItem &child = positionedItems.at(childIndex++);
                 if (child.item->width() > maxColWidth[j])
                     maxColWidth[j] = child.item->width();
                 if (child.item->height() > maxRowHeight[i])
@@ -1095,10 +1110,10 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
                 if (i == 0)
                     maxColWidth << 0;
 
-                if (childIndex == visibleItems.count())
+                if (childIndex == numVisible)
                     break;
 
-                const PositionedItem &child = visibleItems.at(childIndex++);
+                const PositionedItem &child = positionedItems.at(childIndex++);
                 if (child.item->width() > maxColWidth[j])
                     maxColWidth[j] = child.item->width();
                 if (child.item->height() > maxRowHeight[i])
@@ -1107,23 +1122,18 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
         }
     }
 
-    int columnSpacing = m_columnSpacing;
-    if (columnSpacing == -1)
-        columnSpacing = spacing();
+    qreal columnSpacing = m_useColumnSpacing ? m_columnSpacing : spacing();
+    qreal rowSpacing = m_useRowSpacing ? m_rowSpacing : spacing();
 
-    int rowSpacing = m_rowSpacing;
-    if (rowSpacing == -1)
-        rowSpacing = spacing();
-
-    int widthSum = 0;
-    for (int j=0; j < maxColWidth.size(); j++){
+    qreal widthSum = 0;
+    for (int j = 0; j < maxColWidth.size(); j++) {
         if (j)
             widthSum += columnSpacing;
         widthSum += maxColWidth[j];
     }
 
-    int heightSum = 0;
-    for (int i=0; i < maxRowHeight.size(); i++){
+    qreal heightSum = 0;
+    for (int i = 0; i < maxRowHeight.size(); i++) {
         if (i)
             heightSum += rowSpacing;
         heightSum += maxRowHeight[i];
@@ -1138,15 +1148,15 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
     else
         end = widthSum;
 
-    int xoffset=0;
+    qreal xoffset = 0;
     if (!d->isLeftToRight())
         xoffset = end;
-    int yoffset=0;
+    qreal yoffset = 0;
     int curRow =0;
     int curCol =0;
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        const PositionedItem &child = visibleItems.at(i);
-        int childXOffset = xoffset;
+    for (int i = 0; i < positionedItems.count(); ++i) {
+        const PositionedItem &child = positionedItems.at(i);
+        qreal childXOffset = xoffset;
         if (!d->isLeftToRight())
             childXOffset -= child.item->width();
         if ((child.item->x() != childXOffset) || (child.item->y() != yoffset)) {
@@ -1277,7 +1287,7 @@ void QQuickGrid::reportConflictingAnchors()
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int QtQuick2::Flow::spacing
+  \qmlproperty real QtQuick2::Flow::spacing
 
   spacing is the amount in pixels left empty between each adjacent
   item, and defaults to 0.
@@ -1390,17 +1400,16 @@ Qt::LayoutDirection QQuickFlow::effectiveLayoutDirection() const
 
 void QQuickFlow::doPositioning(QSizeF *contentSize)
 {
+    //Precondition: All items in the positioned list have a valid item pointer and should be positioned
     Q_D(QQuickFlow);
 
-    int hoffset = 0;
-    int voffset = 0;
-    int linemax = 0;
-    QList<int> hoffsets;
+    qreal hoffset = 0;
+    qreal voffset = 0;
+    qreal linemax = 0;
+    QList<qreal> hoffsets;
 
     for (int i = 0; i < positionedItems.count(); ++i) {
         const PositionedItem &child = positionedItems.at(i);
-        if (!child.item || !child.isVisible)
-            continue;
 
         if (d->flow == LeftToRight)  {
             if (widthValid() && hoffset && hoffset + child.item->width() > width()) {
@@ -1431,17 +1440,17 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
         if (d->flow == LeftToRight)  {
             hoffset += child.item->width();
             hoffset += spacing();
-            linemax = qMax(linemax, qCeil(child.item->height()));
+            linemax = qMax(linemax, child.item->height());
         } else {
             voffset += child.item->height();
             voffset += spacing();
-            linemax = qMax(linemax, qCeil(child.item->width()));
+            linemax = qMax(linemax, child.item->width());
         }
     }
     if (d->isLeftToRight())
         return;
 
-    int end;
+    qreal end;
     if (widthValid())
         end = width();
     else
@@ -1449,8 +1458,6 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
     int acc = 0;
     for (int i = 0; i < positionedItems.count(); ++i) {
         const PositionedItem &child = positionedItems.at(i);
-        if (!child.item || !child.isVisible)
-            continue;
         hoffset = end - hoffsets[acc++] - child.item->width();
         if (child.item->x() != hoffset)
             positionX(hoffset, child);
