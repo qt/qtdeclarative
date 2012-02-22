@@ -235,6 +235,7 @@ private slots:
     void rewriteMultiLineStrings();
     void revisionErrors();
     void revision();
+    void invokableWithQObjectDerived();
 
     void automaticSemicolon();
     void unaryExpression();
@@ -6014,6 +6015,45 @@ void tst_qdeclarativeecmascript::tryStatement()
         QVERIFY(object != 0);
 
         QCOMPARE(object->value(), 1);
+    }
+}
+
+class CppInvokableWithQObjectDerived : public QObject
+{
+    Q_OBJECT
+public:
+    CppInvokableWithQObjectDerived() {}
+    ~CppInvokableWithQObjectDerived() {}
+
+    Q_INVOKABLE MyQmlObject *createMyQmlObject(QString data)
+    {
+        MyQmlObject *obj = new MyQmlObject();
+        obj->setStringProperty(data);
+        return obj;
+    }
+
+    Q_INVOKABLE QString getStringProperty(MyQmlObject *obj)
+    {
+        return obj->stringProperty();
+    }
+};
+
+void tst_qdeclarativeecmascript::invokableWithQObjectDerived()
+{
+    CppInvokableWithQObjectDerived invokable;
+
+    {
+    QDeclarativeEngine engine;
+    engine.rootContext()->setContextProperty("invokable", &invokable);
+
+    QDeclarativeComponent component(&engine, testFileUrl("qobjectDerivedArgument.qml"));
+
+    QObject *object = component.create();
+
+    QVERIFY(object != 0);
+    QVERIFY(object->property("result").value<bool>() == true);
+
+    delete object;
     }
 }
 
