@@ -305,9 +305,17 @@ void QQuickTextPrivate::updateLayout()
                 formatModifiesFontSize = fontSizeModified;
             } else {
                 layout.clearAdditionalFormats();
-                multilengthEos = text.indexOf(QLatin1Char('\x9c'));
-                QString tmp = multilengthEos != -1 ? text.mid(0, multilengthEos) : text;
-                tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
+                QString tmp = text;
+                multilengthEos = tmp.indexOf(QLatin1Char('\x9c'));
+                if (multilengthEos != -1) {
+                    tmp = tmp.mid(0, multilengthEos);
+                    tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
+                } else if (tmp.contains(QLatin1Char('\n'))) {
+                    // Replace always does a detach.  Checking for the new line character first
+                    // means iterating over those items again if found but prevents a realloc
+                    // otherwise.
+                    tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
+                }
                 layout.setText(tmp);
             }
             textHasChanged = false;
