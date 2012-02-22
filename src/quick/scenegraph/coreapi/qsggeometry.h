@@ -181,7 +181,7 @@ private:
     uint m_vertex_usage_pattern : 2;
     uint m_dirty_index_data : 1;
     uint m_dirty_vertex_data : 1;
-    uint m_reserved_bits : 27;
+    uint m_reserved_bits : 25;
 
     float m_prealloc[16];
 
