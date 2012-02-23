@@ -2245,10 +2245,11 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
 /*!
     \qmlproperty Transition QtQuick2::ListView::populate
-    This property holds the transition to apply to items that are initially created for a
-    view.
 
-    This transition is applied to all the items that are created when:
+    This property holds the transition to apply to the items that are initially created
+    for a view.
+
+    It is applied to all items that are created when:
 
     \list
     \o The view is first created
@@ -2278,10 +2279,10 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
 /*!
     \qmlproperty Transition QtQuick2::ListView::add
-    This property holds the transition to apply to items that are added within the view.
 
-    The transition is applied to items that have been added to the visible area of the view. For
-    example, here is a view that specifies such a transition:
+    This property holds the transition to apply to items that are added to the view.
+
+    For example, here is a view that specifies such a transition:
 
     \code
     ListView {
@@ -2310,11 +2311,11 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
 /*!
     \qmlproperty Transition QtQuick2::ListView::addDisplaced
-    This property holds the transition to apply to items in the view that are displaced by other
-    items that have been added to the view.
 
-    The transition is applied to items that are currently visible and have been displaced by newly
-    added items. For example, here is a view that specifies such a transition:
+    This property holds the transition to apply to items within the view that are displaced by
+    the addition of other items to the view.
+
+    For example, here is a view that specifies such a transition:
 
     \code
     ListView {
@@ -2344,11 +2345,11 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
 /*!
     \qmlproperty Transition QtQuick2::ListView::move
-    This property holds the transition to apply to items in the view that are moved by a move
-    operation.
 
-    The transition is applied to items that are moving within the view or are moving
-    into the view as a result of a move operation in the view's model. For example:
+    This property holds the transition to apply to items in the view that are being moved due
+    to a move operation in the view's \l model.
+
+    For example, here is a view that specifies such a transition:
 
     \code
     ListView {
@@ -2359,10 +2360,11 @@ void QQuickListView::setSnapMode(SnapMode mode)
     }
     \endcode
 
-    Whenever an item is moved within the above view, the item will be animated to its new position in
-    the view over one second. The transition only applies to the items that are the subject of the
-    move operation in the model; it does not apply to the items below them that are displaced by
-    the move operation. To animate the displaced items, set the \l moveDisplaced property.
+    Whenever the \l model performs a move operation to move a particular set of indexes, the
+    respective items in the view will be animated to their new positions in the view over one
+    second. The transition only applies to the items that are the subject of the move operation
+    in the model; it does not apply to items below them that are displaced by the move operation.
+    To animate the displaced items, set the \l moveDisplaced property.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2372,11 +2374,11 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
 /*!
     \qmlproperty Transition QtQuick2::ListView::moveDisplaced
-    This property holds the transition to apply to items in the view that are displaced by a
-    move operation in the view.
 
-    The transition is applied to items that are currently visible and have been displaced following
-    a move operation in the view's model. For example, here is a view that specifies such a transition:
+    This property holds the transition to apply to items that are displaced by a move operation in
+    the view's \l model.
+
+    For example, here is a view that specifies such a transition:
 
     \code
     ListView {
@@ -2387,12 +2389,13 @@ void QQuickListView::setSnapMode(SnapMode mode)
     }
     \endcode
 
-    Whenever an item moves within (or moves into) the above view, all items beneath it are
-    displaced, causing them to move upwards (or sideways, if horizontally orientated) within the
-    view. As this displacement occurs, the items' movement to their new x,y positions within the
-    view will be animated by a NumberAnimation over one second, as specified. This transition is
-    not applied to the item that are actually the subject of the move operation; to animate the
-    moved items, set the \l move property.
+    Whenever the \l model performs a move operation to move a particular set of indexes, the items
+    between the source and destination indexes of the move operation are displaced, causing them
+    to move upwards or downwards (or sideways, if horizontally orientated) within the view. As this
+    displacement occurs, the items' movement to their new x,y positions within the view will be
+    animated by a NumberAnimation over one second, as specified. This transition is not applied to
+    the items that are the actual subjects of the move operation; to animate the moved items, set
+    the \l move property.
 
     For more details and examples on how to use view transitions, see the ViewTransition
     documentation.
@@ -2402,10 +2405,10 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
 /*!
     \qmlproperty Transition QtQuick2::ListView::remove
+
     This property holds the transition to apply to items that are removed from the view.
 
-    The transition is applied to items that have been removed from the visible area of the view. For
-    example:
+    For example, here is a view that specifies such a transition:
 
     \code
     ListView {
@@ -2422,7 +2425,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     Whenever an item is removed from the above view, the item will be animated to the position (100,100)
     over one second, and in parallel will also change its opacity to 0. The transition
     only applies to the items that are removed from the view; it does not apply to the items below
-    them that are displaced by the removal of the  items. To animate the displaced items, set the \l
+    them that are displaced by the removal of the items. To animate the displaced items, set the \l
     removeDisplaced property.
 
     Note that by the time the transition is applied, the item has already been removed from the
@@ -2439,11 +2442,11 @@ void QQuickListView::setSnapMode(SnapMode mode)
 
 /*!
     \qmlproperty Transition QtQuick2::ListView::removeDisplaced
+
     This property holds the transition to apply to items in the view that are displaced by the
     removal of other items in the view.
 
-    The transition is applied to items that are currently visible and have been displaced by
-    the removal of items. For example, here is a view that specifies such a transition:
+    For example, here is a view that specifies such a transition:
 
     \code
     ListView {
