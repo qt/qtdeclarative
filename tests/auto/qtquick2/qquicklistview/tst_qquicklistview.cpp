@@ -125,6 +125,7 @@ private slots:
     void qAbstractItemModel_sections();
     void sectionsPositioning();
     void sectionsDelegate();
+    void sectionPropertyChange();
     void cacheBuffer();
     void positionViewAtIndex();
     void resetModel();
@@ -2095,9 +2096,9 @@ void tst_QQuickListView::sectionsPositioning()
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     model.removeItem(5);
     QTRY_COMPARE(listview->count(), model.count());
-    for (int i = 0; i < 3; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem,
-                "sect_" + (i == 0 ? QString("aaa") : QString::number(i)));
+    for (int i = 1; i < 3; ++i) {
+        QQuickItem *item = findVisibleChild(contentItem,
+                "sect_" + QString::number(i));
         QVERIFY(item);
         QTRY_COMPARE(item->y(), qreal(i*20*6));
     }
@@ -2131,6 +2132,52 @@ void tst_QQuickListView::sectionsPositioning()
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels)));
     QTRY_VERIFY(item = findVisibleChild(contentItem, "sect_aaa")); // inline label restored
     QCOMPARE(item->y(), 0.);
+
+    delete canvas;
+}
+
+void tst_QQuickListView::sectionPropertyChange()
+{
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("sectionpropertychange.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
+
+    QMetaObject::invokeMethod(canvas->rootObject(), "switchGroups");
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
+
+    QMetaObject::invokeMethod(canvas->rootObject(), "switchGroups");
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
 
     delete canvas;
 }

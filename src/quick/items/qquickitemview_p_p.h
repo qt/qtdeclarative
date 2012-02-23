@@ -117,15 +117,15 @@ public:
 
     QQuickItem *item;
     bool ownItem;
-    int index;
     bool releaseAfterTransition;
+    bool isTransitionTarget;
+    bool nextTransitionToSet;
+    int index;
     QQuickItemViewAttached *attached;
 
     FxViewItemTransitionManager *transition;
     QPointF nextTransitionTo;
     FxViewItemTransitionManager::TransitionType nextTransitionType;
-    bool isTransitionTarget;
-    bool nextTransitionToSet;
 
 protected:
     void moveTo(const QPointF &pos);
@@ -225,7 +225,7 @@ public:
     void mirrorChange();
 
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
-    virtual void releaseItem(FxViewItem *item);
+    virtual bool releaseItem(FxViewItem *item);
 
     QQuickItem *createHighlightItem();
     QQuickItem *createComponentItem(QDeclarativeComponent *component, bool receiveItemGeometryChanges, bool createDefault = false);

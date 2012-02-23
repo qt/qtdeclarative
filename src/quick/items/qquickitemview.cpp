@@ -46,11 +46,12 @@ QT_BEGIN_NAMESPACE
 
 
 FxViewItem::FxViewItem(QQuickItem *i, bool own)
-    : item(i), ownItem(own), index(-1), releaseAfterTransition(false)
-    , transition(0)
-    , nextTransitionType(FxViewItemTransitionManager::NoTransition)
+    : item(i), ownItem(own), releaseAfterTransition(false)
     , isTransitionTarget(false)
     , nextTransitionToSet(false)
+    , index(-1)
+    , transition(0)
+    , nextTransitionType(FxViewItemTransitionManager::NoTransition)
 {
 }
 
@@ -2768,21 +2769,23 @@ void QQuickItemView::destroyingItem(QQuickItem *item)
     d->unrequestedItems.remove(item);
 }
 
-void QQuickItemViewPrivate::releaseItem(FxViewItem *item)
+bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
 {
     Q_Q(QQuickItemView);
     if (!item || !model)
-        return;
+        return true;
     if (trackedItem == item)
         trackedItem = 0;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item->item);
     itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
-    if (model->release(item->item) == 0) {
+    QQuickVisualModel::ReleaseFlags flags = model->release(item->item);
+    if (flags == 0) {
         // item was not destroyed, and we no longer reference it.
         item->item->setVisible(false);
         unrequestedItems.insert(item->item, model->indexOf(item->item, q));
     }
     delete item;
+    return flags != QQuickVisualModel::Referenced;
 }
 
 QQuickItem *QQuickItemViewPrivate::createHighlightItem()

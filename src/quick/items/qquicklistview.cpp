@@ -93,7 +93,7 @@ public:
 
     virtual FxViewItem *newViewItem(int index, QQuickItem *item);
     virtual void initializeViewItem(FxViewItem *item);
-    virtual void releaseItem(FxViewItem *item);
+    virtual bool releaseItem(FxViewItem *item);
     virtual void repositionItemAt(FxViewItem *item, int index, qreal sizeBuffer);
     virtual void repositionPackageItemAt(QQuickItem *item, int index);
     virtual void resetFirstItemPosition(qreal pos = 0.0);
@@ -236,7 +236,7 @@ void QQuickViewSection::setLabelPositioning(int l)
 class FxListItemSG : public FxViewItem
 {
 public:
-    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own) : FxViewItem(i, own), section(0), view(v) {
+    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own) : FxViewItem(i, own), view(v) {
         attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
         if (attached)
             static_cast<QQuickListViewAttached*>(attached)->setView(view);
@@ -244,12 +244,21 @@ public:
 
     ~FxListItemSG() {}
 
+    inline QQuickItem *section() const {
+        return attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : 0;
+    }
+    void setSection(QQuickItem *s) {
+        if (!attached)
+            attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
+        static_cast<QQuickListViewAttached*>(attached)->m_sectionItem = s;
+    }
+
     qreal position() const {
-        if (section) {
+        if (section()) {
             if (view->orientation() == QQuickListView::Vertical)
-                return section->y();
+                return section()->y();
             else
-                return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -section->width()-section->x() : section->x());
+                return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -section()->width()-section()->x() : section()->x());
         } else {
             return itemPosition();
         }
@@ -261,8 +270,8 @@ public:
             return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-itemX() : itemX());
     }
     qreal size() const {
-        if (section)
-            return (view->orientation() == QQuickListView::Vertical ? item->height()+section->height() : item->width()+section->width());
+        if (section())
+            return (view->orientation() == QQuickListView::Vertical ? item->height()+section()->height() : item->width()+section()->width());
         else
             return (view->orientation() == QQuickListView::Vertical ? item->height() : item->width());
     }
@@ -270,8 +279,8 @@ public:
         return (view->orientation() == QQuickListView::Vertical ? item->height() : item->width());
     }
     qreal sectionSize() const {
-        if (section)
-            return (view->orientation() == QQuickListView::Vertical ? section->height() : section->width());
+        if (section())
+            return (view->orientation() == QQuickListView::Vertical ? section()->height() : section()->width());
         return 0.0;
     }
     qreal endPosition() const {
@@ -285,14 +294,14 @@ public:
     }
     void setPosition(qreal pos) {
         // position the section immediately even if there is a transition
-        if (section) {
+        if (section()) {
             if (view->orientation() == QQuickListView::Vertical) {
-                section->setY(pos);
+                section()->setY(pos);
             } else {
                 if (view->effectiveLayoutDirection() == Qt::RightToLeft)
-                    section->setX(-section->width()-pos);
+                    section()->setX(-section()->width()-pos);
                 else
-                    section->setX(pos);
+                    section()->setX(pos);
             }
         }
         moveTo(pointForPosition(pos));
@@ -311,23 +320,22 @@ public:
         return view;
     }
 
-    QQuickItem *section;
     QQuickListView *view;
 
 private:
     QPointF pointForPosition(qreal pos) const {
         if (view->orientation() == QQuickListView::Vertical) {
-            if (section)
-                pos += section->height();
+            if (section())
+                pos += section()->height();
             return QPointF(itemX(), pos);
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
-                if (section)
-                    pos += section->width();
+                if (section())
+                    pos += section()->width();
                 return QPointF(-item->width() - pos, itemY());
             } else {
-                if (section)
-                    pos += section->width();
+                if (section())
+                    pos += section()->width();
                 return QPointF(pos, itemY());
             }
         }
@@ -566,25 +574,31 @@ void QQuickListViewPrivate::initializeViewItem(FxViewItem *item)
     }
 }
 
-void QQuickListViewPrivate::releaseItem(FxViewItem *item)
+bool QQuickListViewPrivate::releaseItem(FxViewItem *item)
 {
-    if (item) {
-        FxListItemSG* listItem = static_cast<FxListItemSG*>(item);
-        if (listItem->section) {
-            int i = 0;
-            do {
-                if (!sectionCache[i]) {
-                    sectionCache[i] = listItem->section;
-                    sectionCache[i]->setVisible(false);
-                    listItem->section = 0;
-                    break;
-                }
-                ++i;
-            } while (i < sectionCacheSize);
-            delete listItem->section;
-        }
+    if (!item || !model)
+        return true;
+
+    QQuickListViewAttached *att = static_cast<QQuickListViewAttached*>(item->attached);
+
+    bool released = QQuickItemViewPrivate::releaseItem(item);
+    if (released && att && att->m_sectionItem) {
+        // We hold no more references to this item
+        int i = 0;
+        do {
+            if (!sectionCache[i]) {
+                sectionCache[i] = att->m_sectionItem;
+                sectionCache[i]->setVisible(false);
+                att->m_sectionItem = 0;
+                break;
+            }
+            ++i;
+        } while (i < sectionCacheSize);
+        delete att->m_sectionItem;
+        att->m_sectionItem = 0;
     }
-    QQuickItemViewPrivate::releaseItem(item);
+
+    return released;
 }
 
 bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
@@ -944,18 +958,18 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
     if (listItem->attached->m_prevSection != listItem->attached->m_section
             && (sectionCriteria->labelPositioning() & QQuickViewSection::InlineLabels
                 || (listItem->index == 0 && sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart))) {
-        if (!listItem->section) {
+        if (!listItem->section()) {
             qreal pos = listItem->position();
-            listItem->section = getSectionItem(listItem->attached->m_section);
+            listItem->setSection(getSectionItem(listItem->attached->m_section));
             listItem->setPosition(pos);
         } else {
-            QDeclarativeContext *context = QDeclarativeEngine::contextForObject(listItem->section)->parentContext();
+            QDeclarativeContext *context = QDeclarativeEngine::contextForObject(listItem->section())->parentContext();
             context->setContextProperty(QLatin1String("section"), listItem->attached->m_section);
         }
-    } else if (listItem->section) {
+    } else if (listItem->section()) {
         qreal pos = listItem->position();
-        releaseSectionItem(listItem->section);
-        listItem->section = 0;
+        releaseSectionItem(listItem->section());
+        listItem->setSection(0);
         listItem->setPosition(pos);
     }
 }
@@ -972,7 +986,7 @@ void QQuickListViewPrivate::updateStickySections()
     QQuickItem *lastSectionItem = 0;
     int index = 0;
     while (index < visibleItems.count()) {
-        if (QQuickItem *section = static_cast<FxListItemSG *>(visibleItems.at(index))->section) {
+        if (QQuickItem *section = static_cast<FxListItemSG *>(visibleItems.at(index))->section()) {
             // Find the current section header and last visible section header
             // and hide them if they will overlap a static section header.
             qreal sectionPos = orient == QQuickListView::Vertical ? section->y() : section->x();
@@ -1173,9 +1187,9 @@ void QQuickListViewPrivate::initializeCurrentItem()
     if (currentItem) {
         FxListItemSG *listItem = static_cast<FxListItemSG *>(currentItem);
 
-        // don't reposition the item if it's about to be transitioned to another position
+        // don't reposition the item if it is already in the visibleItems list
         FxViewItem *actualItem = visibleItem(currentIndex);
-        if ((!actualItem || !actualItem->transitionScheduledOrRunning())) {
+        if (!actualItem) {
             if (currentIndex == visibleIndex - 1 && visibleItems.count()) {
                 // We can calculate exact postion in this case
                 listItem->setPosition(visibleItems.first()->position() - currentItem->size() - spacing);
@@ -1185,12 +1199,6 @@ void QQuickListViewPrivate::initializeCurrentItem()
                 listItem->setPosition(positionAt(currentIndex));
             }
         }
-
-        // Avoid showing section delegate twice.  We still need the section heading so that
-        // currentItem positioning works correctly.
-        // This is slightly sub-optimal, but section heading caching minimizes the impact.
-        if (listItem->section)
-            listItem->section->setVisible(false);
 
         if (visibleItems.isEmpty())
             averageSize = listItem->size();
