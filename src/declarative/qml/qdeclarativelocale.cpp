@@ -524,7 +524,10 @@ v8::Handle<v8::Value> QDeclarativeNumberExtension::fromLocaleString(const v8::Ar
 static v8::Handle<v8::Value> locale_get_firstDayOfWeek(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     GET_LOCALE_DATA_RESOURCE(info.This());
-    return v8::Integer::New(r->locale.firstDayOfWeek());
+    int fdow = int(r->locale.firstDayOfWeek());
+    if (fdow == 7)
+        fdow = 0; // Qt::Sunday = 7, but Sunday is 0 in JS Date
+    return v8::Integer::New(fdow);
 }
 
 static v8::Handle<v8::Value> locale_get_measurementSystem(v8::Local<v8::String>, const v8::AccessorInfo &info)
