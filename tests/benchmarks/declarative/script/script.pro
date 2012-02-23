@@ -1,10 +1,11 @@
 CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_script
-QT += declarative testlib
 macx:CONFIG -= app_bundle
 CONFIG += release
 
 SOURCES += tst_script.cpp
+
+QT += core-private gui-private v8-private declarative-private quick-private testlib
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"

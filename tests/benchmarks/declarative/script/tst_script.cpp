@@ -43,10 +43,9 @@
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativeobjectscriptclass_p.h>
-#include <private/qdeclarativerectangle_p.h>
-#include <QScriptEngine>
-#include <QScriptValue>
+#include <private/qquickrectangle_p.h>
+#include <QJSEngine>
+#include <QJSValue>
 
 class tst_script : public QObject
 {
@@ -58,10 +57,13 @@ private slots:
     void initTestCase();
 
     void property_js();
-    void property_getter();
     void property_getter_js();
-    void property_getter_qobject();
-    void property_getter_qmetaproperty();
+#if 0
+   //no native functions for now
+   void property_getter();
+   void property_getter_qobject();
+   void property_getter_qmetaproperty();
+#endif
     void property_qobject();
     void property_qmlobject();
 
@@ -69,12 +71,18 @@ private slots:
     void setproperty_qmlobject();
 
     void function_js();
+#if 0
+    //no native functions for now
     void function_cpp();
+#endif
     void function_qobject();
     void function_qmlobject();
 
     void function_args_js();
+#if 0
+    //no native functions for now
     void function_args_cpp();
+#endif
     void function_args_qobject();
     void function_args_qmlobject();
 
@@ -82,6 +90,8 @@ private slots:
     void signal_qml();
     void signal_args();
     void signal_unusedArgs();
+    void signal_heavyArgsAccess();
+    void signal_heavyIdAccess();
 
     void slot_simple();
     void slot_simple_js();
@@ -144,7 +154,7 @@ TestObject::TestObject(QObject *parent)
 {
 }
 
-int TestObject::x() 
+int TestObject::x()
 {
     return m_x++;
 }
@@ -166,14 +176,14 @@ void tst_script::initTestCase()
 
 void tst_script::property_js()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
-    QScriptValue v = engine.newObject();
+    QJSValue v = engine.newObject();
     v.setProperty(QLatin1String("x"), 10);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(PROPERTY_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(PROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -181,23 +191,24 @@ void tst_script::property_js()
     }
 }
 
-static QScriptValue property_getter_method(QScriptContext *, QScriptEngine *engine) 
+#if 0
+static QJSValue property_getter_method(QScriptContext *, QJSEngine *engine)
 {
     static int x = 0;
-    return QScriptValue(engine,x++);
+    return QJSValue(engine,x++);
 }
 
 void tst_script::property_getter()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
-    QScriptValue v = engine.newObject();
-    v.setProperty(QLatin1String("x"), engine.newFunction(property_getter_method), 
-                  QScriptValue::PropertyGetter);
+    QJSValue v = engine.newObject();
+    v.setProperty(QLatin1String("x"), engine.newFunction(property_getter_method),
+                  QJSValue::PropertyGetter);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(PROPERTY_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(PROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -206,44 +217,44 @@ void tst_script::property_getter()
 }
 
 static TestObject *property_getter_qobject_object = 0;
-static QScriptValue property_getter_qobject_method(QScriptContext *, QScriptEngine *) 
+static QJSValue property_getter_qobject_method(QScriptContext *, QJSEngine *)
 {
     static int idx = -1;
-    if (idx == -1) 
+    if (idx == -1)
         idx = TestObject::staticMetaObject.indexOfProperty("x");
 
     int value = 0;
     void *args[] = { &value, 0 };
     QMetaObject::metacall(property_getter_qobject_object, QMetaObject::ReadProperty, idx, args);
 
-    return QScriptValue(value);
+    return QJSValue(value);
 }
 
-static QScriptValue property_getter_qmetaproperty_method(QScriptContext *, QScriptEngine *) 
+static QJSValue property_getter_qmetaproperty_method(QScriptContext *, QJSEngine *)
 {
     static int idx = -1;
-    if (idx == -1) 
+    if (idx == -1)
         idx = TestObject::staticMetaObject.indexOfProperty("x");
 
     int value = 0;
     value = property_getter_qobject_object->metaObject()->property(idx).read(property_getter_qobject_object).toInt();
 
-    return QScriptValue(value);
+    return QJSValue(value);
 }
 
 void tst_script::property_getter_qobject()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
     TestObject to;
     property_getter_qobject_object = &to;
-    QScriptValue v = engine.newObject();
-    v.setProperty(QLatin1String("x"), engine.newFunction(property_getter_qobject_method), 
-                  QScriptValue::PropertyGetter);
+    QJSValue v = engine.newObject();
+    v.setProperty(QLatin1String("x"), engine.newFunction(property_getter_qobject_method),
+                  QJSValue::PropertyGetter);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(PROPERTY_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(PROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -254,17 +265,17 @@ void tst_script::property_getter_qobject()
 
 void tst_script::property_getter_qmetaproperty()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
     TestObject to;
     property_getter_qobject_object = &to;
-    QScriptValue v = engine.newObject();
-    v.setProperty(QLatin1String("x"), engine.newFunction(property_getter_qmetaproperty_method), 
-                  QScriptValue::PropertyGetter);
+    QJSValue v = engine.newObject();
+    v.setProperty(QLatin1String("x"), engine.newFunction(property_getter_qmetaproperty_method),
+                  QJSValue::PropertyGetter);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(PROPERTY_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(PROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -272,17 +283,17 @@ void tst_script::property_getter_qmetaproperty()
     }
     property_getter_qobject_object = 0;
 }
-
+#endif
 
 void tst_script::property_getter_js()
 {
-    QScriptEngine engine;
-    
-    QScriptValue v = engine.evaluate("(function() { var o = new Object; o._x = 0; o.__defineGetter__(\"x\", function() { return this._x++; }); return o; })").call();
+    QJSEngine engine;
 
-    QScriptValueList args;
+    QJSValue v = engine.evaluate("(function() { var o = new Object; o._x = 0; o.__defineGetter__(\"x\", function() { return this._x++; }); return o; })").call();
+
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(PROPERTY_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(PROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -292,14 +303,14 @@ void tst_script::property_getter_js()
 
 void tst_script::property_qobject()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
     TestObject to;
-    QScriptValue v = engine.newQObject(&to);
+    QJSValue v = engine.newQObject(&to);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(PROPERTY_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(PROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -311,14 +322,15 @@ void tst_script::property_qmlobject()
 {
     QDeclarativeEngine qmlengine;
 
-    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(&qmlengine);
     TestObject to;
+    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(&qmlengine);
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(engine->context());
+    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
 
-    QScriptValue v = QDeclarativeEnginePrivate::get(&qmlengine)->objectClass->newQObject(&to);
-
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine->evaluate(PROPERTY_PROGRAM).call(engine->globalObject(), args);
+    QJSValue prog = qmlengine.evaluate(PROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -335,14 +347,14 @@ void tst_script::property_qmlobject()
 
 void tst_script::setproperty_js()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
-    QScriptValue v = engine.newObject();
+    QJSValue v = engine.newObject();
     v.setProperty(QLatin1String("x"), 0);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(SETPROPERTY_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(SETPROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -354,14 +366,16 @@ void tst_script::setproperty_qmlobject()
 {
     QDeclarativeEngine qmlengine;
 
-    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(&qmlengine);
     TestObject to;
 
-    QScriptValue v = QDeclarativeEnginePrivate::get(&qmlengine)->objectClass->newQObject(&to);
+    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(&qmlengine);
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(engine->context());
+    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine->evaluate(SETPROPERTY_PROGRAM).call(engine->globalObject(), args);
+    QJSValue prog = qmlengine.evaluate(SETPROPERTY_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -380,13 +394,13 @@ void tst_script::setproperty_qmlobject()
 
 void tst_script::function_js()
 {
-    QScriptEngine engine;
-    
-    QScriptValue v = engine.evaluate("(function() { var o = new Object; o._x = 0; o.method = (function() { return this._x++; }); return o; })").call();
+    QJSEngine engine;
 
-    QScriptValueList args;
+    QJSValue v = engine.evaluate("(function() { var o = new Object; o._x = 0; o.method = (function() { return this._x++; }); return o; })").call();
+
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(FUNCTION_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(FUNCTION_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -394,39 +408,41 @@ void tst_script::function_js()
     }
 }
 
-static QScriptValue function_method(QScriptContext *, QScriptEngine *) 
+#if 0
+static QJSValue function_method(QScriptContext *, QJSEngine *)
 {
     static int x = 0;
-    return QScriptValue(x++);
+    return QJSValue(x++);
 }
 
 void tst_script::function_cpp()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
-    QScriptValue v = engine.newObject();
+    QJSValue v = engine.newObject();
     v.setProperty(QLatin1String("method"), engine.newFunction(function_method));
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(FUNCTION_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(FUNCTION_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
         prog.call();
     }
 }
+#endif
 
 void tst_script::function_qobject()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
     TestObject to;
-    QScriptValue v = engine.newQObject(&to);
+    QJSValue v = engine.newQObject(&to);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(FUNCTION_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(FUNCTION_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -438,14 +454,16 @@ void tst_script::function_qmlobject()
 {
     QDeclarativeEngine qmlengine;
 
-    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(&qmlengine);
     TestObject to;
 
-    QScriptValue v = QDeclarativeEnginePrivate::get(&qmlengine)->objectClass->newQObject(&to);
+    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(&qmlengine);
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(engine->context());
+    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine->evaluate(FUNCTION_PROGRAM).call(engine->globalObject(), args);
+    QJSValue prog = qmlengine.evaluate(FUNCTION_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -464,13 +482,13 @@ void tst_script::function_qmlobject()
 
 void tst_script::function_args_js()
 {
-    QScriptEngine engine;
-    
-    QScriptValue v = engine.evaluate("(function() { var o = new Object; o._x = 0; o.methodArgs = (function(a) { return a + this._x++; }); return o; })").call();
+    QJSEngine engine;
 
-    QScriptValueList args;
+    QJSValue v = engine.evaluate("(function() { var o = new Object; o._x = 0; o.methodArgs = (function(a) { return a + this._x++; }); return o; })").call();
+
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(FUNCTION_ARGS_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(FUNCTION_ARGS_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -478,39 +496,41 @@ void tst_script::function_args_js()
     }
 }
 
-static QScriptValue function_args_method(QScriptContext *ctxt, QScriptEngine *) 
+#if 0
+static QJSValue function_args_method(QScriptContext *ctxt, QJSEngine *)
 {
     static int x = 0;
-    return QScriptValue(ctxt->argument(0).toNumber() + x++);
+    return QJSValue(ctxt->argument(0).toNumber() + x++);
 }
 
 void tst_script::function_args_cpp()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
-    QScriptValue v = engine.newObject();
+    QJSValue v = engine.newObject();
     v.setProperty(QLatin1String("methodArgs"), engine.newFunction(function_args_method));
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(FUNCTION_ARGS_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(FUNCTION_ARGS_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
         prog.call();
     }
 }
+#endif
 
 void tst_script::function_args_qobject()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
     TestObject to;
-    QScriptValue v = engine.newQObject(&to);
+    QJSValue v = engine.newQObject(&to);
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine.evaluate(FUNCTION_ARGS_PROGRAM).call(engine.globalObject(), args);
+    QJSValue prog = engine.evaluate(FUNCTION_ARGS_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -522,14 +542,16 @@ void tst_script::function_args_qmlobject()
 {
     QDeclarativeEngine qmlengine;
 
-    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(&qmlengine);
     TestObject to;
 
-    QScriptValue v = QDeclarativeEnginePrivate::get(&qmlengine)->objectClass->newQObject(&to);
+    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(&qmlengine);
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(engine->context());
+    QJSValue v = engine->scriptValueFromInternal(engine->qobjectWrapper()->newQObject(&to));
 
-    QScriptValueList args;
+    QJSValueList args;
     args << v;
-    QScriptValue prog = engine->evaluate(FUNCTION_ARGS_PROGRAM).call(engine->globalObject(), args);
+    QJSValue prog = qmlengine.evaluate(FUNCTION_ARGS_PROGRAM).call(args);
     prog.call();
 
     QBENCHMARK {
@@ -583,6 +605,34 @@ void tst_script::signal_unusedArgs()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, TEST_FILE("signal_unusedArgs.qml"));
+    TestObject *object = qobject_cast<TestObject *>(component.create());
+    QVERIFY(object != 0);
+
+    QBENCHMARK {
+        object->emitMySignalWithArgs(11);
+    }
+
+    delete object;
+}
+
+void tst_script::signal_heavyArgsAccess()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, TEST_FILE("signal_heavyArgsAccess.qml"));
+    TestObject *object = qobject_cast<TestObject *>(component.create());
+    QVERIFY(object != 0);
+
+    QBENCHMARK {
+        object->emitMySignalWithArgs(11);
+    }
+
+    delete object;
+}
+
+void tst_script::signal_heavyIdAccess()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, TEST_FILE("signal_heavyIdAccess.qml"));
     TestObject *object = qobject_cast<TestObject *>(component.create());
     QVERIFY(object != 0);
 
@@ -662,7 +712,7 @@ void tst_script::block()
     QFETCH(QString, methodName);
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, TEST_FILE("block.qml"));
-    QDeclarativeRectangle *rect = qobject_cast<QDeclarativeRectangle *>(component.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(component.create());
     QVERIFY(rect != 0);
 
     int index = rect->metaObject()->indexOfMethod(methodName.toUtf8());
@@ -685,9 +735,9 @@ void tst_script::block()
 
 void tst_script::global_property_js()
 {
-    QScriptEngine engine;
+    QJSEngine engine;
 
-    QScriptValue prog = engine.evaluate(GLOBALPROPERTY_PROGRAM);
+    QJSValue prog = engine.evaluate(GLOBALPROPERTY_PROGRAM);
     prog.call();
 
     QBENCHMARK {
@@ -699,8 +749,7 @@ void tst_script::global_property_qml()
 {
     QDeclarativeEngine qmlengine;
 
-    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(&qmlengine);
-    QScriptValue prog = engine->evaluate(GLOBALPROPERTY_PROGRAM);
+    QJSValue prog = qmlengine.evaluate(GLOBALPROPERTY_PROGRAM);
     prog.call();
 
     QBENCHMARK {
@@ -712,7 +761,7 @@ void tst_script::global_property_qml_js()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, TEST_FILE("global_prop.qml"));
-    QDeclarativeRectangle *rect = qobject_cast<QDeclarativeRectangle *>(component.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(component.create());
     QVERIFY(rect != 0);
 
     int index = rect->metaObject()->indexOfMethod("triggered()");
@@ -730,7 +779,7 @@ void tst_script::scriptfile_property()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, TEST_FILE("global_prop.qml"));
-    QDeclarativeRectangle *rect = qobject_cast<QDeclarativeRectangle *>(component.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(component.create());
     QVERIFY(rect != 0);
 
     int index = rect->metaObject()->indexOfMethod("incrementTriggered()");
