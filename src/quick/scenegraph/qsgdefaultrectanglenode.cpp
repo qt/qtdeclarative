@@ -54,7 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGDefaultRectangleNode::QSGDefaultRectangleNode(QSGContext *context)
+QSGDefaultRectangleNode::QSGDefaultRectangleNode()
     : m_border(0)
     , m_radius(0)
     , m_pen_width(0)
@@ -62,7 +62,6 @@ QSGDefaultRectangleNode::QSGDefaultRectangleNode(QSGContext *context)
     , m_gradient_is_opaque(true)
     , m_dirty_geometry(false)
     , m_default_geometry(QSGGeometry::defaultAttributes_Point2D(), 4)
-    , m_context(context)
 {
     setGeometry(&m_default_geometry);
     setMaterial(&m_fill_material);
