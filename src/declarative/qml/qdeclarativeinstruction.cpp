@@ -190,7 +190,7 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "STORE_INTERFACE\t\t" << instr->storeObject.propertyIndex;
         break;
     case QDeclarativeInstruction::StoreSignal:
-        qWarning().nospace() << idx << "\t\t" << "STORE_SIGNAL\t\t" << instr->storeSignal.signalIndex << "\t" << instr->storeSignal.value << "\t\t" << primitives.at(instr->storeSignal.value);
+        qWarning().nospace() << idx << "\t\t" << "STORE_SIGNAL\t\t" << instr->storeSignal.signalIndex << "\t" << instr->storeSignal.value;
         break;
     case QDeclarativeInstruction::StoreImportedScript:
         qWarning().nospace() << idx << "\t\t" << "STORE_IMPORTED_SCRIPT\t" << instr->storeScript.value;
@@ -199,7 +199,7 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "STORE_SCRIPT_STRING\t" << instr->storeScriptString.propertyIndex << "\t" << instr->storeScriptString.value << "\t" << instr->storeScriptString.scope << "\t" << instr->storeScriptString.bindingId;
         break;
     case QDeclarativeInstruction::AssignSignalObject:
-        qWarning().nospace() << idx << "\t\t" << "ASSIGN_SIGNAL_OBJECT\t" << instr->assignSignalObject.signal << "\t\t\t" << primitives.at(instr->assignSignalObject.signal);
+        qWarning().nospace() << idx << "\t\t" << "ASSIGN_SIGNAL_OBJECT\t" << instr->assignSignalObject.signal;
         break;
     case QDeclarativeInstruction::AssignCustomType:
         qWarning().nospace() << idx << "\t\t" << "ASSIGN_CUSTOMTYPE\t" << instr->assignCustomType.propertyIndex << "\t" << instr->assignCustomType.primitive << "\t" << instr->assignCustomType.type;
