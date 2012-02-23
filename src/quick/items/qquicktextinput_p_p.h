@@ -77,14 +77,14 @@ class Q_AUTOTEST_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPr
     Q_DECLARE_PUBLIC(QQuickTextInput)
 public:
     QQuickTextInputPrivate()
-        : cursorItem(0)
+        : hscroll(0)
+        , vscroll(0)
+        , cursorItem(0)
         , textNode(0)
         , m_maskData(0)
         , color(QRgb(0xFF000000))
         , selectionColor(QRgb(0xFF000080))
         , selectedTextColor(QRgb(0xFFFFFFFF))
-        , hscroll(0)
-        , vscroll(0)
         , m_cursor(0)
         , m_preeditCursor(0)
         , m_blinkPeriod(0)
@@ -179,6 +179,9 @@ public:
     QDeclarativeGuard<QValidator> m_validator;
 #endif
 
+    qreal hscroll;
+    qreal vscroll;
+
     QTextLayout m_textLayout;
     QString m_text;
     QString m_inputMask;
@@ -203,8 +206,6 @@ public:
 #endif
     int lastSelectionStart;
     int lastSelectionEnd;
-    int hscroll;
-    int vscroll;
     int m_cursor;
     int m_preeditCursor;
     int m_blinkPeriod; // 0 for non-blinking cursor
@@ -295,7 +296,7 @@ public:
     int selectionStart() const { return hasSelectedText() ? m_selstart : -1; }
     int selectionEnd() const { return hasSelectedText() ? m_selend : -1; }
 
-    int positionAt(int x, int y, QTextLine::CursorPosition position) const;
+    int positionAt(qreal x, qreal y, QTextLine::CursorPosition position) const;
     int positionAt(const QPointF &point, QTextLine::CursorPosition position = QTextLine::CursorBetweenCharacters) const {
         return positionAt(point.x(), point.y(), position);
     }

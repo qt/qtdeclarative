@@ -2341,12 +2341,12 @@ void tst_qquicktextinput::cursorDelegate()
     //Test Delegate gets moved
     for (int i=0; i<= textInputObject->text().length(); i++) {
         textInputObject->setCursorPosition(i);
-        QCOMPARE(textInputObject->cursorRectangle().x(), qRound(delegateObject->x()));
-        QCOMPARE(textInputObject->cursorRectangle().y(), qRound(delegateObject->y()));
+        QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
     }
     textInputObject->setCursorPosition(0);
-    QCOMPARE(textInputObject->cursorRectangle().x(), qRound(delegateObject->x()));
-    QCOMPARE(textInputObject->cursorRectangle().y(), qRound(delegateObject->y()));
+    QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
     //Test Delegate gets deleted
     textInputObject->setCursorDelegate(0);
     QVERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
@@ -2404,9 +2404,6 @@ void tst_qquicktextinput::cursorVisible()
     QCOMPARE(spy.count(), 7);
 }
 
-static QRect round(const QRectF &r) {
-    return QRect(qRound(r.left()), qRound(r.top()), qCeil(r.width()), qCeil(r.height())); }
-
 void tst_qquicktextinput::cursorRectangle()
 {
 
@@ -2430,7 +2427,7 @@ void tst_qquicktextinput::cursorRectangle()
     input.setWidth(line.cursorToX(5, QTextLine::Leading));
     input.setHeight(qCeil(line.height() * 3 / 2));
 
-    QRect r;
+    QRectF r;
 
     // some tolerance for different fonts.
 #ifdef Q_OS_LINUX
@@ -2445,28 +2442,28 @@ void tst_qquicktextinput::cursorRectangle()
 
         QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
         QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     // Check the cursor rectangle remains within the input bounding rect when auto scrolling.
-    QVERIFY(r.left() < input.width());
+    QVERIFY(r.left() < input.width() + error);
     QVERIFY(r.right() >= input.width() - error);
 
     for (int i = 6; i < text.length(); ++i) {
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     for (int i = text.length() - 2; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
-        QCOMPARE(r.top(), 0);
+        QCOMPARE(r.top(), 0.);
         QVERIFY(r.right() >= 0);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     // Check position with word wrap.
@@ -2478,24 +2475,24 @@ void tst_qquicktextinput::cursorRectangle()
 
         QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
         QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
-        QCOMPARE(r.top(), 0);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(r.top(), 0.);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     input.setCursorPosition(6);
     r = input.cursorRectangle();
-    QCOMPARE(r.left(), 0);
+    QCOMPARE(r.left(), 0.);
     QVERIFY(r.top() > line.height() - error);
-    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-    QCOMPARE(round(input.positionToRectangle(6)), r);
+    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+    QCOMPARE(input.positionToRectangle(6), r);
 
     for (int i = 7; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.top() > line.height() - error);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     // Check vertical scrolling with word wrap.
@@ -2506,40 +2503,40 @@ void tst_qquicktextinput::cursorRectangle()
 
         QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
         QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
-        QCOMPARE(r.top(), 0);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(round(input.positionToRectangle(i))), r);
+        QCOMPARE(r.top(), 0.);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     input.setCursorPosition(6);
     r = input.cursorRectangle();
-    QCOMPARE(r.left(), 0);
+    QCOMPARE(r.left(), 0.);
     QVERIFY(r.bottom() >= input.height() - error);
-    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-    QCOMPARE(round(input.positionToRectangle(6)), r);
+    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+    QCOMPARE(input.positionToRectangle(6), r);
 
     for (int i = 7; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height() - error);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     for (int i = text.length() - 2; i >= 6; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height() - error);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     for (int i = 5; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
-        QCOMPARE(r.top(), 0);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
-        QCOMPARE(round(input.positionToRectangle(i)), r);
+        QCOMPARE(r.top(), 0.);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
     }
 
     input.setText("Hi!");
@@ -3228,14 +3225,14 @@ void tst_qquicktextinput::cursorRectangleSize()
     qApp->sendEvent(qApp->focusObject(), &event);
     QRectF cursorRectFromQuery = event.value(Qt::ImCursorRectangle).toRectF();
 
-    QRect cursorRectFromItem = textInput->cursorRectangle();
+    QRectF cursorRectFromItem = textInput->cursorRectangle();
     QRectF cursorRectFromPositionToRectangle = textInput->positionToRectangle(textInput->cursorPosition());
 
     // item and input query cursor rectangles match
-    QCOMPARE(cursorRectFromItem, cursorRectFromQuery.toRect());
+    QCOMPARE(cursorRectFromItem, cursorRectFromQuery);
 
     // item cursor rectangle and positionToRectangle calculations match
-    QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
+    QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle);
 
     // item-canvas transform and input item transform match
     QCOMPARE(QQuickItemPrivate::get(textInput)->itemToCanvasTransform(), qApp->inputMethod()->inputItemTransform());

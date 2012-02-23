@@ -732,10 +732,10 @@ QRectF QQuickTextEdit::positionToRectangle(int pos) const
     Position 0 is before the first character, position 1 is after the first character
     but before the second, and so on until position \l {text}.length, which is after all characters.
 */
-int QQuickTextEdit::positionAt(int x, int y) const
+int QQuickTextEdit::positionAt(qreal x, qreal y) const
 {
     Q_D(const QQuickTextEdit);
-    int r = d->document->documentLayout()->hitTest(QPoint(x,y-d->yoff), Qt::FuzzyHit);
+    int r = d->document->documentLayout()->hitTest(QPointF(x,y-d->yoff), Qt::FuzzyHit);
     QTextCursor cursor = d->control->textCursor();
     if (r > cursor.position()) {
         // The cursor position includes positions within the preedit text, but only positions in the
@@ -1290,10 +1290,10 @@ Qt::TextInteractionFlags QQuickTextEdit::textInteractionFlags() const
     automatically when it changes.  The width of the delegate is unaffected by changes in the
     cursor rectangle.
 */
-QRect QQuickTextEdit::cursorRectangle() const
+QRectF QQuickTextEdit::cursorRectangle() const
 {
     Q_D(const QQuickTextEdit);
-    return d->control->cursorRect().toRect().translated(0,d->yoff);
+    return d->control->cursorRect().translated(0, d->yoff);
 }
 
 bool QQuickTextEdit::event(QEvent *event)
@@ -1863,11 +1863,11 @@ void QQuickTextEdit::updateSize()
         } else {
             d->document->setTextWidth(-1);
         }
-        QFontMetrics fm = QFontMetrics(d->font);
-        int dy = height();
-        dy -= (int)d->document->size().height();
+        QFontMetricsF fm(d->font);
+        qreal dy = height();
+        dy -= d->document->size().height();
 
-        int nyoff;
+        qreal nyoff;
         if (heightValid()) {
             if (d->vAlign == AlignBottom)
                 nyoff = dy;
@@ -1883,7 +1883,7 @@ void QQuickTextEdit::updateSize()
         setBaselineOffset(fm.ascent() + d->yoff + d->textMargin);
 
         //### need to comfirm cost of always setting these
-        int newWidth = qCeil(d->document->idealWidth());
+        qreal newWidth = d->document->idealWidth();
         if (!widthValid() && d->document->textWidth() != newWidth)
             d->document->setTextWidth(newWidth); // ### Text does not align if width is not set (QTextDoc bug)
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
@@ -1892,13 +1892,13 @@ void QQuickTextEdit::updateSize()
             iWidth = newWidth;
         else if (d->requireImplicitWidth)
             iWidth = naturalWidth;
-        qreal newHeight = d->document->isEmpty() ? fm.height() : (int)d->document->size().height();
+        qreal newHeight = d->document->isEmpty() ? fm.height() : d->document->size().height();
         if (iWidth > -1)
             setImplicitSize(iWidth, newHeight);
         else
             setImplicitHeight(newHeight);
 
-        QSize size(newWidth, newHeight);
+        QSizeF size(newWidth, newHeight);
         if (d->contentSize != size) {
             d->contentSize = size;
             emit contentSizeChanged();
