@@ -82,9 +82,9 @@ public:
     QTextDocument *textDocument();
     bool isLineLaidOutConnected();
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
-    QString elidedText(int lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
+    QString elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
 
-    QRect layedOutTextRect;
+    QRectF layedOutTextRect;
 
     qreal lineHeight;
 
@@ -156,7 +156,7 @@ public:
 
     void ensureDoc();
 
-    QRect setupTextLayout(qreal *const naturalWidth);
+    QRectF setupTextLayout(qreal *const naturalWidth);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset = 0);
     bool isLinkActivatedConnected();
     QString anchorAt(const QPointF &pos);

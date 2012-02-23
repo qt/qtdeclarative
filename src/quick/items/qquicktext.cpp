@@ -386,7 +386,7 @@ void QQuickTextPrivate::updateSize()
             return;
     }
 
-    QFontMetrics fm(font);
+    QFontMetricsF fm(font);
     if (text.isEmpty()) {
         qreal fontHeight = fm.height();
         q->setImplicitSize(0, fontHeight);
@@ -399,16 +399,16 @@ void QQuickTextPrivate::updateSize()
 
     qreal naturalWidth = 0;
 
-    int dy = q->height();
-    QSize size(0, 0);
-    QSize previousSize = layedOutTextRect.size();
+    qreal dy = q->height();
+    QSizeF size(0, 0);
+    QSizeF previousSize = layedOutTextRect.size();
 #if defined(Q_OS_MAC)
     layoutThread = QThread::currentThread();
 #endif
 
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
-        QRect textRect = setupTextLayout(&naturalWidth);
+        QRectF textRect = setupTextLayout(&naturalWidth);
         layedOutTextRect = textRect;
         size = textRect.size();
         dy -= size.height();
@@ -436,12 +436,12 @@ void QQuickTextPrivate::updateSize()
             doc->setTextWidth(q->width());
         else
             doc->setTextWidth(doc->idealWidth()); // ### Text does not align if width is not set (QTextDoc bug)
-        dy -= (int)doc->size().height();
-        QSize dsize = doc->size().toSize();
-        layedOutTextRect = QRect(QPoint(0,0), dsize);
-        size = QSize(int(doc->idealWidth()),dsize.height());
+        dy -= doc->size().height();
+        QSizeF dsize = doc->size();
+        layedOutTextRect = QRectF(QPointF(0,0), dsize);
+        size = QSizeF(doc->idealWidth(),dsize.height());
     }
-    int yoff = 0;
+    qreal yoff = 0;
 
     if (q->heightValid()) {
         if (vAlign == QQuickText::AlignBottom)
@@ -601,13 +601,13 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
 #endif
 }
 
-QString QQuickTextPrivate::elidedText(int lineWidth, const QTextLine &line, QTextLine *nextLine) const
+QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine) const
 {
     if (nextLine) {
         nextLine->setLineWidth(INT_MAX);
         return layout.engine()->elidedText(
                 Qt::TextElideMode(elideMode),
-                lineWidth,
+                QFixed::fromReal(lineWidth),
                 0,
                 line.textStart(),
                 line.textLength() + nextLine->textLength());
@@ -630,7 +630,7 @@ QString QQuickTextPrivate::elidedText(int lineWidth, const QTextLine &line, QTex
     already absolutely positioned horizontally).
 */
 
-QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
+QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
 {
     Q_Q(QQuickText);
     layout.setCacheEnabled(true);
@@ -673,8 +673,9 @@ QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         return QRect(0, 0, 0, height);
     }
 
-    const int lineWidth = q->widthValid() ? q->width() : INT_MAX;
+    const qreal lineWidth = q->widthValid() ? q->width() : FLT_MAX;
     const qreal maxHeight = q->heightValid() ? q->height() : FLT_MAX;
+
     const bool customLayout = isLineLaidOutConnected();
     const bool wasTruncated = truncated;
 
@@ -783,7 +784,7 @@ QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
                     height = preLayoutHeight;
                     elideText = layout.engine()->elidedText(
                             Qt::TextElideMode(elideMode),
-                            lineWidth,
+                            QFixed::fromReal(lineWidth),
                             0,
                             line.textStart(),
                             line.textLength());
@@ -941,7 +942,7 @@ QRect QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
     if (truncated != wasTruncated)
         emit q->truncatedChanged();
 
-    return QRect(qRound(br.x()), qRound(br.y()), qCeil(br.width()), qCeil(br.height()));
+    return br;
 }
 
 void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height)
@@ -1897,7 +1898,7 @@ QRectF QQuickText::boundingRect() const
 {
     Q_D(const QQuickText);
 
-    QRect rect = d->layedOutTextRect;
+    QRectF rect = d->layedOutTextRect;
     if (d->style != Normal)
         rect.adjust(-1, 0, 1, 2);
 
@@ -1915,7 +1916,7 @@ QRectF QQuickText::boundingRect() const
         break;
     }
 
-    return QRectF(rect);
+    return rect;
 }
 
 /*! \internal */

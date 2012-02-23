@@ -295,11 +295,10 @@ void tst_qquicktext::width()
 
             layout.endLayout();
 
-            metricWidth = qCeil(layout.boundingRect().width());
+            metricWidth = layout.boundingRect().width();
         } else {
             QFontMetricsF fm(f);
-            qreal metricWidth = fm.size(Qt::TextExpandTabs && Qt::TextShowMnemonic, standard.at(i)).width();
-            metricWidth = qCeil(metricWidth);
+            metricWidth = fm.size(Qt::TextExpandTabs && Qt::TextShowMnemonic, standard.at(i)).width();
         }
 
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + standard.at(i) + "\" }";
@@ -2422,9 +2421,6 @@ void tst_qquicktext::multilengthStrings()
 
     QCOMPARE(myText->contentWidth(), mediumWidth);
     QCOMPARE(myText->contentHeight(), mediumHeight);
-#ifdef Q_OS_MAC
-    QEXPECT_FAIL("Wrap", "QTBUG-24310", Continue);
-#endif
     QCOMPARE(myText->truncated(), true);
 
     myText->setSize(QSizeF(shortWidth, shortHeight));
