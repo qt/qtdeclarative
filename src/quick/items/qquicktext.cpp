@@ -71,21 +71,32 @@ QT_BEGIN_NAMESPACE
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
 QQuickTextPrivate::QQuickTextPrivate()
-    : lineHeight(1)
-    , elideLayout(0), textLine(0), doc(0)
+    : elideLayout(0), textLine(0)
 #if defined(Q_OS_MAC)
     , layoutThread(0), paintingThread(0)
 #endif
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
-    , lineCount(1), maximumLineCount(INT_MAX), multilengthEos(-1), minimumPixelSize(12), minimumPointSize(12), nbActiveDownloads(0)
-    , hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop), elideMode(QQuickText::ElideNone)
+    , lineCount(1), multilengthEos(-1)
+    , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
     , format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap)
-    , lineHeightMode(QQuickText::ProportionalHeight), style(QQuickText::Normal)
-    , fontSizeMode(QQuickText::FixedSize), updateType(UpdatePaintNode)
+    , style(QQuickText::Normal)
+    , updateType(UpdatePaintNode)
     , maximumLineCountValid(false), updateOnComponentComplete(true), richText(false)
     , styledText(false), singleline(false), internalWidthUpdate(false), requireImplicitWidth(false)
     , truncated(false), hAlignImplicit(true), rightToLeftText(false)
     , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false), formatModifiesFontSize(false)
+{
+}
+
+QQuickTextPrivate::ExtraData::ExtraData()
+    : lineHeight(1.0)
+    , doc(0)
+    , minimumPixelSize(12)
+    , minimumPointSize(12)
+    , nbActiveDownloads(0)
+    , maximumLineCount(INT_MAX)
+    , lineHeightMode(QQuickText::ProportionalHeight)
+    , fontSizeMode(QQuickText::FixedSize)
 {
 }
 
@@ -323,10 +334,10 @@ void QQuickTextPrivate::updateLayout()
     } else {
         ensureDoc();
         QTextBlockFormat::LineHeightTypes type;
-        type = lineHeightMode == QQuickText::FixedHeight ? QTextBlockFormat::FixedHeight : QTextBlockFormat::ProportionalHeight;
+        type = lineHeightMode() == QQuickText::FixedHeight ? QTextBlockFormat::FixedHeight : QTextBlockFormat::ProportionalHeight;
         QTextBlockFormat blockFormat;
-        blockFormat.setLineHeight((lineHeightMode == QQuickText::FixedHeight ? lineHeight : lineHeight * 100), type);
-        for (QTextBlock it = doc->begin(); it != doc->end(); it = it.next()) {
+        blockFormat.setLineHeight((lineHeightMode() == QQuickText::FixedHeight ? lineHeight() : lineHeight() * 100), type);
+        for (QTextBlock it = extra->doc->begin(); it != extra->doc->end(); it = it.next()) {
             QTextCursor cursor(it);
             cursor.mergeBlockFormat(blockFormat);
         }
@@ -345,13 +356,13 @@ void QQuickText::imageDownloadFinished()
 {
     Q_D(QQuickText);
 
-    (d->nbActiveDownloads)--;
+    (d->extra->nbActiveDownloads)--;
 
     // when all the remote images have been downloaded,
     // if one of the sizes was not specified at parsing time
     // we use the implicit size from pixmapcache and re-layout.
 
-    if (d->nbActiveDownloads == 0) {
+    if (d->extra.isAllocated() && d->extra->nbActiveDownloads == 0) {
         bool needToUpdateLayout = false;
         foreach (QDeclarativeStyledTextImgTag *img, d->visibleImgTags) {
             if (!img->size.isValid()) {
@@ -415,7 +426,7 @@ void QQuickTextPrivate::updateSize()
     } else {
         singleline = false; // richtext can't elide or be optimized for single-line case
         ensureDoc();
-        doc->setDefaultFont(font);
+        extra->doc->setDefaultFont(font);
         QQuickText::HAlignment horizontalAlignment = q->effectiveHAlign();
         if (rightToLeftText) {
             if (horizontalAlignment == QQuickText::AlignLeft)
@@ -427,19 +438,19 @@ void QQuickTextPrivate::updateSize()
         option.setAlignment((Qt::Alignment)int(horizontalAlignment | vAlign));
         option.setWrapMode(QTextOption::WrapMode(wrapMode));
         option.setUseDesignMetrics(true);
-        doc->setDefaultTextOption(option);
+        extra->doc->setDefaultTextOption(option);
         if (requireImplicitWidth && q->widthValid()) {
-            doc->setTextWidth(-1);
-            naturalWidth = doc->idealWidth();
+            extra->doc->setTextWidth(-1);
+            naturalWidth = extra->doc->idealWidth();
         }
         if (wrapMode != QQuickText::NoWrap && q->widthValid())
-            doc->setTextWidth(q->width());
+            extra->doc->setTextWidth(q->width());
         else
-            doc->setTextWidth(doc->idealWidth()); // ### Text does not align if width is not set (QTextDoc bug)
-        dy -= doc->size().height();
-        QSizeF dsize = doc->size();
+            extra->doc->setTextWidth(extra->doc->idealWidth()); // ### Text does not align if width is not set (QTextDoc bug)
+        dy -= extra->doc->size().height();
+        QSizeF dsize = extra->doc->size();
         layedOutTextRect = QRectF(QPointF(0,0), dsize);
-        size = QSizeF(doc->idealWidth(),dsize.height());
+        size = QSizeF(extra->doc->idealWidth(),dsize.height());
     }
     qreal yoff = 0;
 
@@ -581,8 +592,8 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
             textLine->setWidth(q->width());
         else
             textLine->setWidth(INT_MAX);
-        if (lineHeight != 1.0)
-            textLine->setHeight((lineHeightMode == QQuickText::FixedHeight) ? lineHeight : line.height() * lineHeight);
+        if (lineHeight() != 1.0)
+            textLine->setHeight((lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : line.height() * lineHeight());
 
         emit q->lineLaidOut(textLine);
 
@@ -658,7 +669,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
             // Layout to determine the implicit width.
             layout.beginLayout();
 
-            for (int i = 0; i < maximumLineCount; ++i) {
+            for (int i = 0; i < maximumLineCount(); ++i) {
                 QTextLine line = layout.createLine();
                 if (!line.isValid())
                     break;
@@ -669,7 +680,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         }
 
         QFontMetrics fm(font);
-        qreal height = (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : fm.height() * lineHeight;
+        qreal height = (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : fm.height() * lineHeight();
         return QRect(0, 0, 0, height);
     }
 
@@ -686,15 +697,15 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
             && (q->heightValid() || maximumLineCountValid);
     const bool canWrap = wrapMode != QQuickText::NoWrap && q->widthValid();
 
-    const bool horizontalFit = fontSizeMode & QQuickText::HorizontalFit && q->widthValid();
-    const bool verticalFit = fontSizeMode & QQuickText::VerticalFit
+    const bool horizontalFit = fontSizeMode() & QQuickText::HorizontalFit && q->widthValid();
+    const bool verticalFit = fontSizeMode() & QQuickText::VerticalFit
             && (q->heightValid() || (maximumLineCountValid && canWrap));
     const bool pixelSize = font.pixelSize() != -1;
     QString layoutText = layout.text();
 
     int largeFont = pixelSize ? font.pixelSize() : font.pointSize();
-    int smallFont = fontSizeMode != QQuickText::FixedSize
-            ? qMin(pixelSize ? minimumPixelSize : minimumPointSize, largeFont)
+    int smallFont = fontSizeMode() != QQuickText::FixedSize
+            ? qMin(pixelSize ? minimumPixelSize() : minimumPointSize(), largeFont)
             : largeFont;
     int scaledFontSize = largeFont;
 
@@ -732,6 +743,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         elide = false;
         int characterCount = 0;
         int unwrappedLineCount = 1;
+        int maxLineCount = maximumLineCount();
         height = 0;
         br = QRectF();
         line = layout.createLine();
@@ -767,7 +779,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
                 line.setPosition(QPointF(FLT_MAX, FLT_MAX));
                 line = previousLine;
                 --visibleCount;
-                height -= (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : previousLine.height() * lineHeight;
+                height -= (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : previousLine.height() * lineHeight();
                 break;
             }
 
@@ -801,7 +813,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
 
                 // Stop if the maximum number of lines has been reached and elide the last line
                 // if enabled.
-                if (visibleCount == maximumLineCount) {
+                if (visibleCount == maxLineCount) {
                     truncated = true;
                     characterCount = nextLine.textStart() + nextLine.textLength();
 
@@ -835,13 +847,13 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
 
             if (requireImplicitWidth
                     && characterCount < layoutText.length()
-                    && unwrappedLineCount < maximumLineCount) {
+                    && unwrappedLineCount < maxLineCount) {
                 // Use a new layout to get the maximum width for the remaining text.  Using a
                 // different layout excludes the truncated text from rendering.
                 QTextLayout widthLayout(layoutText.mid(characterCount), scaledFont);
                 widthLayout.setTextOption(layout.textOption());
 
-                for (; unwrappedLineCount <= maximumLineCount; ++unwrappedLineCount) {
+                for (; unwrappedLineCount <= maxLineCount; ++unwrappedLineCount) {
                     QTextLine line = widthLayout.createLine();
                     if (!line.isValid())
                         break;
@@ -952,7 +964,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
 
     if (imgTags.isEmpty()) {
         line.setPosition(QPointF(line.position().x(), height));
-        height += (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : line.height() * lineHeight;
+        height += (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : line.height() * lineHeight();
         return;
     }
 
@@ -971,7 +983,9 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
                 image->pix = new QDeclarativePixmap(qmlEngine(q), url, image->size);
                 if (image->pix->isLoading()) {
                     image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
-                    nbActiveDownloads++;
+                    if (!extra.isAllocated() || !extra->nbActiveDownloads)
+                        extra.value().nbActiveDownloads = 0;
+                    extra->nbActiveDownloads++;
                 } else if (image->pix->isReady()) {
                     if (!image->size.isValid()) {
                         image->size = image->pix->implicitSize();
@@ -1004,7 +1018,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
     }
 
     line.setPosition(QPointF(line.position().x(), height + textTop));
-    height += (lineHeightMode == QQuickText::FixedHeight) ? lineHeight : totalLineHeight * lineHeight;
+    height += (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : totalLineHeight * lineHeight();
 }
 
 /*!
@@ -1012,12 +1026,12 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
 */
 void QQuickTextPrivate::ensureDoc()
 {
-    if (!doc) {
+    if (!extra.isAllocated() || !extra->doc) {
         Q_Q(QQuickText);
-        doc = new QQuickTextDocumentWithImageResources(q);
-        doc->setDocumentMargin(0);
-        doc->setBaseUrl(q->baseUrl());
-        FAST_CONNECT(doc, SIGNAL(imagesLoaded()), q, SLOT(q_imagesLoaded()));
+        extra.value().doc = new QQuickTextDocumentWithImageResources(q);
+        extra->doc->setDocumentMargin(0);
+        extra->doc->setBaseUrl(q->baseUrl());
+        FAST_CONNECT(extra->doc, SIGNAL(imagesLoaded()), q, SLOT(q_imagesLoaded()));
     }
 }
 
@@ -1304,8 +1318,8 @@ void QQuickText::setText(const QString &n)
     if (isComponentComplete()) {
         if (d->richText) {
             d->ensureDoc();
-            d->doc->setText(n);
-            d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->extra->doc->setText(n);
+            d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -1569,11 +1583,6 @@ void QQuickTextPrivate::mirrorChange()
     }
 }
 
-QTextDocument *QQuickTextPrivate::textDocument()
-{
-    return doc;
-}
-
 QQuickText::VAlignment QQuickText::vAlign() const
 {
     Q_D(const QQuickText);
@@ -1666,7 +1675,7 @@ bool QQuickText::truncated() const
 int QQuickText::maximumLineCount() const
 {
     Q_D(const QQuickText);
-    return d->maximumLineCount;
+    return d->maximumLineCount();
 }
 
 void QQuickText::setMaximumLineCount(int lines)
@@ -1674,8 +1683,8 @@ void QQuickText::setMaximumLineCount(int lines)
     Q_D(QQuickText);
 
     d->maximumLineCountValid = lines==INT_MAX ? false : true;
-    if (d->maximumLineCount != lines) {
-        d->maximumLineCount = lines;
+    if (d->maximumLineCount() != lines) {
+        d->extra.value().maximumLineCount = lines;
         d->updateLayout();
         emit maximumLineCountChanged();
     }
@@ -1777,8 +1786,8 @@ void QQuickText::setTextFormat(TextFormat format)
     if (isComponentComplete()) {
         if (!wasRich && d->richText) {
             d->ensureDoc();
-            d->doc->setText(d->text);
-            d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->extra->doc->setText(d->text);
+            d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -1831,7 +1840,7 @@ void QQuickText::setElideMode(QQuickText::TextElideMode mode)
     d->elideMode = mode;
     d->updateLayout();
 
-    emit elideModeChanged(d->elideMode);
+    emit elideModeChanged(mode);
 }
 
 /*!
@@ -1873,8 +1882,10 @@ void QQuickText::setBaseUrl(const QUrl &url)
     if (baseUrl() != url) {
         d->baseUrl = url;
 
-        if (d->doc)
-            d->doc->setBaseUrl(url);
+        if (d->richText) {
+            d->ensureDoc();
+            d->extra->doc->setBaseUrl(url);
+        }
         if (d->styledText) {
             d->textHasChanged = true;
             qDeleteAll(d->imgTags);
@@ -1933,7 +1944,7 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     bool leftAligned = effectiveHAlign() == QQuickText::AlignLeft;
     bool wrapped = d->wrapMode != QQuickText::NoWrap;
     bool elide = d->elideMode != QQuickText::ElideNone;
-    bool scaleFont = d->fontSizeMode != QQuickText::FixedSize && (widthValid() || heightValid());
+    bool scaleFont = d->fontSizeMode() != QQuickText::FixedSize && (widthValid() || heightValid());
 
     if ((!widthChanged && !heightChanged) || d->internalWidthUpdate)
         goto geomChangeDone;
@@ -1954,7 +1965,7 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     if (d->elideMode == QQuickText::ElideRight && wrapped && newGeometry.height() > oldGeometry.height() && !scaleFont) {
         if (!d->truncated)
             goto geomChangeDone; // Multiline eliding not affected if we're not currently truncated and we get higher.
-        if (d->maximumLineCountValid && d->lineCount == d->maximumLineCount)
+        if (d->maximumLineCountValid && d->lineCount == d->maximumLineCount())
             goto geomChangeDone; // Multiline eliding not affected if we're already at max line count and we get higher.
     }
 
@@ -2021,7 +2032,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     if (d->richText) {
         d->ensureDoc();
-        node->addTextDocument(bounds.topLeft(), d->doc, color, d->style, styleColor, linkColor);
+        node->addTextDocument(bounds.topLeft(), d->extra->doc, color, d->style, styleColor, linkColor);
     } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
         node->addTextLayout(QPoint(0, bounds.y()), &d->layout, color, d->style, styleColor, linkColor);
         if (d->elideLayout)
@@ -2081,17 +2092,17 @@ qreal QQuickText::contentHeight() const
 qreal QQuickText::lineHeight() const
 {
     Q_D(const QQuickText);
-    return d->lineHeight;
+    return d->lineHeight();
 }
 
 void QQuickText::setLineHeight(qreal lineHeight)
 {
     Q_D(QQuickText);
 
-    if ((d->lineHeight == lineHeight) || (lineHeight < 0.0))
+    if ((d->lineHeight() == lineHeight) || (lineHeight < 0.0))
         return;
 
-    d->lineHeight = lineHeight;
+    d->extra.value().lineHeight = lineHeight;
     d->updateLayout();
     emit lineHeightChanged(lineHeight);
 }
@@ -2111,16 +2122,16 @@ void QQuickText::setLineHeight(qreal lineHeight)
 QQuickText::LineHeightMode QQuickText::lineHeightMode() const
 {
     Q_D(const QQuickText);
-    return d->lineHeightMode;
+    return d->lineHeightMode();
 }
 
 void QQuickText::setLineHeightMode(LineHeightMode mode)
 {
     Q_D(QQuickText);
-    if (mode == d->lineHeightMode)
+    if (mode == d->lineHeightMode())
         return;
 
-    d->lineHeightMode = mode;
+    d->extra.value().lineHeightMode = mode;
     d->updateLayout();
 
     emit lineHeightModeChanged(mode);
@@ -2154,18 +2165,18 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
 QQuickText::FontSizeMode QQuickText::fontSizeMode() const
 {
     Q_D(const QQuickText);
-    return d->fontSizeMode;
+    return d->fontSizeMode();
 }
 
 void QQuickText::setFontSizeMode(FontSizeMode mode)
 {
     Q_D(QQuickText);
-    if (d->fontSizeMode == mode)
+    if (d->fontSizeMode() == mode)
         return;
 
     polish();
 
-    d->fontSizeMode = mode;
+    d->extra.value().fontSizeMode = mode;
     emit fontSizeModeChanged();
 }
 
@@ -2182,18 +2193,18 @@ void QQuickText::setFontSizeMode(FontSizeMode mode)
 int QQuickText::minimumPixelSize() const
 {
     Q_D(const QQuickText);
-    return d->minimumPixelSize;
+    return d->minimumPixelSize();
 }
 
 void QQuickText::setMinimumPixelSize(int size)
 {
     Q_D(QQuickText);
-    if (d->minimumPixelSize == size)
+    if (d->minimumPixelSize() == size)
         return;
 
-    if (d->fontSizeMode != FixedSize && (widthValid() || heightValid()))
+    if (d->fontSizeMode() != FixedSize && (widthValid() || heightValid()))
         polish();
-    d->minimumPixelSize = size;
+    d->extra.value().minimumPixelSize = size;
     emit minimumPixelSizeChanged();
 }
 
@@ -2210,18 +2221,18 @@ void QQuickText::setMinimumPixelSize(int size)
 int QQuickText::minimumPointSize() const
 {
     Q_D(const QQuickText);
-    return d->minimumPointSize;
+    return d->minimumPointSize();
 }
 
 void QQuickText::setMinimumPointSize(int size)
 {
     Q_D(QQuickText);
-    if (d->minimumPointSize == size)
+    if (d->minimumPointSize() == size)
         return;
 
-    if (d->fontSizeMode != FixedSize && (widthValid() || heightValid()))
+    if (d->fontSizeMode() != FixedSize && (widthValid() || heightValid()))
         polish();
-    d->minimumPointSize = size;
+    d->extra.value().minimumPointSize = size;
     emit minimumPointSizeChanged();
 }
 
@@ -2231,7 +2242,9 @@ void QQuickText::setMinimumPointSize(int size)
 int QQuickText::resourcesLoading() const
 {
     Q_D(const QQuickText);
-    return d->doc ? d->doc->resourcesLoading() : 0;
+    if (d->richText && d->extra.isAllocated() && d->extra->doc)
+        return d->extra->doc->resourcesLoading();
+    return 0;
 }
 
 /*! \internal */
@@ -2241,8 +2254,8 @@ void QQuickText::componentComplete()
     if (d->updateOnComponentComplete) {
         if (d->richText) {
             d->ensureDoc();
-            d->doc->setText(d->text);
-            d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->extra->doc->setText(d->text);
+            d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -2289,15 +2302,21 @@ void QQuickText::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickText);
 
+    QString link;
     if (d->isLinkActivatedConnected()) {
         if (d->styledText)
-            d->activeLink = d->anchorAt(event->localPos());
-        else if (d->richText && d->doc)
-            d->activeLink = d->doc->documentLayout()->anchorAt(event->localPos());
+            link = d->anchorAt(event->localPos());
+        else if (d->richText) {
+            d->ensureDoc();
+            link = d->extra->doc->documentLayout()->anchorAt(event->localPos());
+        }
     }
 
-    if (d->activeLink.isEmpty())
+    if (link.isEmpty()) {
         event->setAccepted(false);
+    } else {
+        d->extra.value().activeLink = link;
+    }
 
     // ### may malfunction if two of the same links are clicked & dragged onto each other)
 
@@ -2317,12 +2336,14 @@ void QQuickText::mouseReleaseEvent(QMouseEvent *event)
     if (d->isLinkActivatedConnected()) {
         if (d->styledText)
             link = d->anchorAt(event->localPos());
-        else if (d->richText && d->doc)
-            link = d->doc->documentLayout()->anchorAt(event->localPos());
+        else if (d->richText) {
+            d->ensureDoc();
+            link = d->extra->doc->documentLayout()->anchorAt(event->localPos());
+        }
     }
 
-    if (!link.isEmpty() && d->activeLink == link)
-        emit linkActivated(d->activeLink);
+    if (!link.isEmpty() && d->extra.isAllocated() && d->extra->activeLink == link)
+        emit linkActivated(d->extra->activeLink);
     else
         event->setAccepted(false);
 

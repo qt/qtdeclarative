@@ -60,6 +60,7 @@
 #include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qtextlayout.h>
 #include <private/qdeclarativestyledtext_p.h>
+#include <private/qlazilyallocated_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,17 +80,28 @@ public:
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickText::HAlignment, bool forceAlign = false);
     void mirrorChange();
-    QTextDocument *textDocument();
     bool isLineLaidOutConnected();
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
     QString elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
 
     QRectF layedOutTextRect;
 
-    qreal lineHeight;
+    struct ExtraData {
+        ExtraData();
+
+        qreal lineHeight;
+        QQuickTextDocumentWithImageResources *doc;
+        QString activeLink;
+        int minimumPixelSize;
+        int minimumPointSize;
+        int nbActiveDownloads;
+        int maximumLineCount;
+        QQuickText::LineHeightMode lineHeightMode;
+        QQuickText::FontSizeMode fontSizeMode;
+    };
+    QLazilyAllocated<ExtraData> extra;
 
     QString text;
-    QString activeLink;
     QUrl baseUrl;
     QFont font;
     QFont sourceFont;
@@ -99,7 +111,6 @@ public:
     QTextLayout layout;
     QTextLayout *elideLayout;
     QQuickTextLine *textLine;
-    QQuickTextDocumentWithImageResources *doc;
 
 #if defined(Q_OS_MAC)
     QList<QRectF> linesRects;
@@ -112,11 +123,7 @@ public:
     QRgb styleColor;
 
     int lineCount;
-    int maximumLineCount;
     int multilengthEos;
-    int minimumPixelSize;
-    int minimumPointSize;
-    int nbActiveDownloads;
 
     enum UpdateType {
         UpdateNone,
@@ -124,14 +131,12 @@ public:
         UpdatePaintNode
     };
 
+    QQuickText::TextElideMode elideMode;
     QQuickText::HAlignment hAlign;
     QQuickText::VAlignment vAlign;
-    QQuickText::TextElideMode elideMode;
     QQuickText::TextFormat format;
     QQuickText::WrapMode wrapMode;
-    QQuickText::LineHeightMode lineHeightMode;
     QQuickText::TextStyle style;
-    QQuickText::FontSizeMode fontSizeMode;
     UpdateType updateType;
 
     bool maximumLineCountValid:1;
@@ -161,9 +166,13 @@ public:
     bool isLinkActivatedConnected();
     QString anchorAt(const QPointF &pos);
 
-    static inline QQuickTextPrivate *get(QQuickText *t) {
-        return t->d_func();
-    }
+    inline qreal lineHeight() const { return extra.isAllocated() ? extra->lineHeight : 1.0; }
+    inline int maximumLineCount() const { return extra.isAllocated() ? extra->maximumLineCount : INT_MAX; }
+    inline QQuickText::LineHeightMode lineHeightMode() const { return extra.isAllocated() ? extra->lineHeightMode : QQuickText::ProportionalHeight; }
+    inline QQuickText::FontSizeMode fontSizeMode() const { return extra.isAllocated() ? extra->fontSizeMode : QQuickText::FixedSize; }
+    inline int minimumPixelSize() const { return extra.isAllocated() ? extra->minimumPixelSize : 12; }
+    inline int minimumPointSize() const { return extra.isAllocated() ? extra->minimumPointSize : 12; }
+    static inline QQuickTextPrivate *get(QQuickText *t) { return t->d_func(); }
 };
 
 class QDeclarativePixmap;

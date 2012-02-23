@@ -326,8 +326,9 @@ void tst_qquicktext::width()
 
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
         QVERIFY(textPrivate != 0);
+        QVERIFY(textPrivate->extra.isAllocated());
 
-        QTextDocument *doc = textPrivate->textDocument();
+        QTextDocument *doc = textPrivate->extra->doc;
         QVERIFY(doc != 0);
 
         QCOMPARE(int(textObject->width()), int(doc->idealWidth()));
@@ -677,19 +678,20 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     // implicitly aligned rich text should follow the reading direction of text
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
-    QVERIFY(textPrivate->textDocument()->defaultTextOption().alignment() & Qt::AlignLeft);
+    QVERIFY(textPrivate->extra.isAllocated());
+    QVERIFY(textPrivate->extra->doc->defaultTextOption().alignment() & Qt::AlignLeft);
 
     // explicitly left aligned rich text
     text->setHAlign(QQuickText::AlignLeft);
     QCOMPARE(text->hAlign(), QQuickText::AlignLeft);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
-    QVERIFY(textPrivate->textDocument()->defaultTextOption().alignment() & Qt::AlignRight);
+    QVERIFY(textPrivate->extra->doc->defaultTextOption().alignment() & Qt::AlignRight);
 
     // explicitly right aligned rich text
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
-    QVERIFY(textPrivate->textDocument()->defaultTextOption().alignment() & Qt::AlignLeft);
+    QVERIFY(textPrivate->extra->doc->defaultTextOption().alignment() & Qt::AlignLeft);
 
     text->setText(textString);
     text->setTextFormat(QQuickText::PlainText);
@@ -1623,8 +1625,7 @@ void tst_qquicktext::lineLaidOut()
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
     QVERIFY(textPrivate != 0);
 
-    QTextDocument *doc = textPrivate->textDocument();
-    QVERIFY(doc == 0);
+    QVERIFY(!textPrivate->extra.isAllocated());
 
 #if defined(Q_OS_MAC)
     QVERIFY(myText->lineCount() == textPrivate->linesRects.count());
