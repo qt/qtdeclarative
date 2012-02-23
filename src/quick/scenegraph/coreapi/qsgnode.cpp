@@ -777,9 +777,9 @@ QSGClipNode::~QSGClipNode()
     Sets whether this clip node has a rectangular clip to \a rectHint.
 
     This is an optimization hint which means that the renderer can
-    use scissoring instead of stencil, which is significnatly faster.
+    use scissoring instead of stencil, which is significantly faster.
 
-    When this hint is and it is applicable, the clip region will be
+    When this hint is set and it is applicable, the clip region will be
     generated from clipRect() rather than geometry().
  */
 
@@ -791,7 +791,7 @@ void QSGClipNode::setIsRectangular(bool rectHint)
 
 
 /*!
-    \fn void QSGClipNode::clipRect() const
+    \fn QRectF QSGClipNode::clipRect() const
 
     Returns the clip rect of this node.
  */
