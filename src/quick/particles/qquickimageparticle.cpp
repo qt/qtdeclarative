@@ -1237,6 +1237,9 @@ void QQuickImageParticle::clearShadows()
 //Only call if you need to, may initialize the whole array first time
 QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datum)
 {
+    //Will return datum if the datum is a sentinel or uninitialized, to centralize that one check
+    if (datum->systemIndex == -1)
+        return datum;
     QQuickParticleGroupData* gd = m_system->groupData[datum->group];
     if (!m_shadowData.contains(datum->group)) {
         QVector<QQuickParticleData*> data;
