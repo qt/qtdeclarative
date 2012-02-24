@@ -3267,6 +3267,13 @@ void tst_qdeclarativeecmascript::importScripts_data()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
             << (QVariantList() << QVariant(18));
+
+    QTest::newRow("import module api into js import")
+            << testFileUrl("jsimport/testImportModuleApi.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(20));
 }
 
 void tst_qdeclarativeecmascript::importScripts()
