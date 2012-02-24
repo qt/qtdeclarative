@@ -96,10 +96,11 @@ void tst_qmlmin::initTestCase()
     // Add invalid files (i.e. files with syntax errors)
     invalidFiles << "tests/auto/qtquick2/qquickloader/data/InvalidSourceComponent.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/dynamicObjectProperties.2.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/signal.2.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/signal.3.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/signal.5.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/property.4.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/empty.qml";
-    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/signal.2.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/missingObject.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/insertedSemicolon.1.qml";
     invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/nonexistantProperty.5.qml";

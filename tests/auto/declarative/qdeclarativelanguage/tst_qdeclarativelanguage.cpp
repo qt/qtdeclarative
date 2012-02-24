@@ -354,6 +354,7 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("signal.2") << "signal.2.qml" << "signal.2.errors.txt" << false;
     QTest::newRow("signal.3") << "signal.3.qml" << "signal.3.errors.txt" << false;
     QTest::newRow("signal.4") << "signal.4.qml" << "signal.4.errors.txt" << false;
+    QTest::newRow("signal.5") << "signal.5.qml" << "signal.5.errors.txt" << false;
 
     QTest::newRow("method.1") << "method.1.qml" << "method.1.errors.txt" << false;
 

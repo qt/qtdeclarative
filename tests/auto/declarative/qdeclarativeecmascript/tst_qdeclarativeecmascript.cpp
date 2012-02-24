@@ -376,6 +376,27 @@ void tst_qdeclarativeecmascript::signalAssignment()
         QCOMPARE(object->string(), QString("pass 19 Hello world! 10.25 3 2"));
         delete object;
     }
+
+    {
+        QDeclarativeComponent component(&engine, testFileUrl("signalAssignment.3.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->string(), QString());
+        emit object->unnamedArgumentSignal(19, 10.25, "Hello world!");
+        QEXPECT_FAIL("", "QTBUG-24481", Continue);
+        QCOMPARE(object->string(), QString("pass 19 Hello world!"));
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, testFileUrl("signalAssignment.4.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->string(), QString());
+        emit object->signalWithGlobalName(19);
+        QCOMPARE(object->string(), QString("pass 5"));
+        delete object;
+    }
 }
 
 void tst_qdeclarativeecmascript::methods()
