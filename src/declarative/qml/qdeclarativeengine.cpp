@@ -355,7 +355,8 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 
 QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
 {
-    Q_ASSERT(inProgressCreations == 0);
+    if (inProgressCreations)
+        qWarning() << QDeclarativeEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
 
     while (cleanup) {
         QDeclarativeCleanup *c = cleanup;

@@ -746,6 +746,7 @@ QQuickCanvas::~QQuickCanvas()
     QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(d->rootItem);
     rootItemPrivate->removeFromDirtyList();
 
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
 
     delete d->rootItem; d->rootItem = 0;
