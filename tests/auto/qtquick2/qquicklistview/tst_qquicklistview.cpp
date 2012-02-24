@@ -490,6 +490,7 @@ void tst_QQuickListView::inserted_more()
     canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -643,6 +644,7 @@ void tst_QQuickListView::insertBeforeVisible()
     canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -733,6 +735,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     canvas->setSource(source);
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -922,6 +925,7 @@ void tst_QQuickListView::removed_more(const QUrl &source)
     canvas->setSource(source);
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1143,6 +1147,7 @@ void tst_QQuickListView::moved(const QUrl &source)
     canvas->setSource(source);
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1369,6 +1374,7 @@ void tst_QQuickListView::multipleChanges()
     canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -4813,6 +4819,7 @@ void tst_QQuickListView::populateTransitions()
     canvas->rootContext()->setContextProperty("model_transitionVia", &model_transitionVia);
     canvas->setSource(testFileUrl("populateTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QVERIFY(listview);
@@ -4950,6 +4957,7 @@ void tst_QQuickListView::addTransitions()
     ctxt->setContextProperty("testObject", testObject);
     canvas->setSource(testFileUrl("addTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5144,6 +5152,7 @@ void tst_QQuickListView::moveTransitions()
     ctxt->setContextProperty("testObject", testObject);
     canvas->setSource(testFileUrl("moveTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5346,6 +5355,7 @@ void tst_QQuickListView::removeTransitions()
     ctxt->setContextProperty("testObject", testObject);
     canvas->setSource(testFileUrl("removeTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5537,6 +5547,7 @@ void tst_QQuickListView::multipleTransitions()
     ctxt->setContextProperty("moveDisplaced_transitionFrom", moveDisplaced_transitionFrom);
     canvas->setSource(testFileUrl("multipleTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5603,20 +5614,9 @@ void tst_QQuickListView::multipleTransitions()
     }
     QCOMPARE(listview->count(), model.count());
 
-    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
-        if (items[i]->y() >= contentY) {
-            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
-            firstVisibleIndex = e.evaluate().toInt();
-            break;
-        }
-    }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
-
     // verify all items moved to the correct final positions
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);

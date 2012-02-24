@@ -10,7 +10,7 @@ Rectangle {
     // interrupting transitions will still produce the correct result)
     property int timeBetweenActions: duration / 2
 
-    property int duration: 100
+    property int duration: 300
 
     property int count: list.count
 
