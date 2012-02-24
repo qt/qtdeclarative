@@ -52,6 +52,8 @@ class QSGContext;
 class QQuickWindowManager
 {
 public:
+    virtual ~QQuickWindowManager();
+
     virtual void show(QQuickCanvas *canvas) = 0;
     virtual void hide(QQuickCanvas *canvas) = 0;
 
