@@ -93,6 +93,7 @@ private slots:
     void returnValues();
     void varAssignment();
     void bindingsSpliceCorrectly();
+    void nonValueTypeComparison();
 
 private:
     QDeclarativeEngine engine;
@@ -1299,6 +1300,18 @@ void tst_qdeclarativevaluetypes::bindingsSpliceCorrectly()
 
     delete object;
     }
+}
+
+void tst_qdeclarativevaluetypes::nonValueTypeComparison()
+{
+    QDeclarativeComponent component(&engine, testFileUrl("nonValueTypeComparison.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test1").toBool(), true);
+    QCOMPARE(object->property("test2").toBool(), true);
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qdeclarativevaluetypes)

@@ -75,12 +75,14 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
     if (lhs == rhs)
         return true;
 
+    if (lhs.IsEmpty() || rhs.IsEmpty())
+        return false;
+
     QV8ObjectResource *lhsr = static_cast<QV8ObjectResource*>(lhs->GetExternalResource());
     QV8ObjectResource *rhsr = static_cast<QV8ObjectResource*>(rhs->GetExternalResource());
 
-    Q_ASSERT(lhsr->engine == rhsr->engine);
-
     if (lhsr && rhsr) {
+        Q_ASSERT(lhsr->engine == rhsr->engine);
         QV8ObjectResource::ResourceType lhst = lhsr->resourceType();
         QV8ObjectResource::ResourceType rhst = rhsr->resourceType();
 
