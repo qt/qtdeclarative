@@ -40,6 +40,7 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
+#include <QtGui/QStyleHints>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
@@ -86,6 +87,7 @@ private slots:
     void flickVelocity();
     void margins();
     void cancelOnMouseGrab();
+    void clickAndDragWhenTransformed();
 
 private:
     QQmlEngine engine;
@@ -1133,6 +1135,52 @@ void tst_qquickflickable::cancelOnMouseGrab()
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 10));
 }
 
+void tst_qquickflickable::clickAndDragWhenTransformed()
+{
+    QQuickView *canvas = new QQuickView;
+    canvas->setSource(testFileUrl("transformedFlickable.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickFlickable *flickable = canvas->rootObject()->findChild<QQuickFlickable*>("flickable");
+    QVERIFY(flickable != 0);
+
+    // click outside child rect
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(190, 190));
+    QTest::qWait(10);
+    QCOMPARE(flickable->property("itemPressed").toBool(), false);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(190, 190));
+
+    // click inside child rect
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(200, 200));
+    QTest::qWait(10);
+    QCOMPARE(flickable->property("itemPressed").toBool(), true);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(200, 200));
+
+    const int threshold = qApp->styleHints()->startDragDistance();
+
+    // drag outside bounds
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(160, 160));
+    QTest::qWait(10);
+    QTest::mouseMove(canvas, QPoint(160 + threshold * 2, 160));
+    QTest::mouseMove(canvas, QPoint(160 + threshold * 3, 160));
+    QCOMPARE(flickable->isDragging(), false);
+    QCOMPARE(flickable->property("itemPressed").toBool(), false);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(180, 160));
+
+    // drag inside bounds
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(200, 140));
+    QTest::qWait(10);
+    QTest::mouseMove(canvas, QPoint(200 + threshold * 2, 140));
+    QTest::mouseMove(canvas, QPoint(200 + threshold * 3, 140));
+    QCOMPARE(flickable->isDragging(), true);
+    QCOMPARE(flickable->property("itemPressed").toBool(), false);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(220, 140));
+
+    delete canvas;
+}
 
 QTEST_MAIN(tst_qquickflickable)
 
