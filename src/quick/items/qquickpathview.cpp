@@ -1300,12 +1300,10 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
     if (!interactive || !items.count() || !model || !modelCount)
         return;
     velocityBuffer.clear();
-    QPointF scenePoint = q->mapToScene(event->localPos());
     int idx = 0;
     for (; idx < items.count(); ++idx) {
-        QRectF rect = items.at(idx)->boundingRect();
-        rect = items.at(idx)->mapRectToScene(rect);
-        if (rect.contains(scenePoint))
+        QQuickItem *item = items.at(idx);
+        if (item->contains(item->mapFromScene(event->windowPos())))
             break;
     }
     if (idx == items.count() && dragMargin == 0.)  // didn't click on an item
@@ -1470,12 +1468,13 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
 bool QQuickPathView::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QQuickPathView);
-    QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
+    QPointF localPos = mapFromScene(event->windowPos());
+
     QQuickCanvas *c = canvas();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
+        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 

@@ -292,6 +292,8 @@ public:
     bool keepTouchGrab() const;
     void setKeepTouchGrab(bool);
 
+    Q_INVOKABLE virtual bool contains(const QPointF &point) const;
+
     QTransform itemTransform(QQuickItem *, bool *) const;
     QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     QPointF mapToScene(const QPointF &point) const;

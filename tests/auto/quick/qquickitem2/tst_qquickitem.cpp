@@ -93,6 +93,9 @@ private slots:
     void qtbug_16871();
     void visibleChildren();
     void parentLoop();
+    void contains_data();
+    void contains();
+
 private:
     QQmlEngine engine;
 };
@@ -178,6 +181,69 @@ public:
 
 QML_DECLARE_TYPE(KeyTestItem);
 
+class HollowTestItem : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(bool circle READ isCircle WRITE setCircle)
+    Q_PROPERTY(qreal holeRadius READ holeRadius WRITE setHoleRadius)
+
+public:
+    HollowTestItem(QQuickItem *parent = 0)
+        : QQuickItem(parent),
+          m_isPressed(false),
+          m_isHovered(false),
+          m_isCircle(false),
+          m_holeRadius(50)
+    {
+        setAcceptHoverEvents(true);
+        setAcceptedMouseButtons(Qt::LeftButton);
+    }
+
+    bool isPressed() const { return m_isPressed; }
+    bool isHovered() const { return m_isHovered; }
+
+    bool isCircle() const { return m_isCircle; }
+    void setCircle(bool circle) { m_isCircle = circle; }
+
+    qreal holeRadius() const { return m_holeRadius; }
+    void setHoleRadius(qreal radius) { m_holeRadius = radius; }
+
+    bool contains(const QPointF &point) const {
+        const qreal w = width();
+        const qreal h = height();
+        const qreal r = m_holeRadius;
+
+        // check boundaries
+        if (!QRectF(0, 0, w, h).contains(point))
+            return false;
+
+        // square shape
+        if (!m_isCircle)
+            return !QRectF(w / 2 - r, h / 2 - r, r * 2, r * 2).contains(point);
+
+        // circle shape
+        const qreal dx = point.x() - (w / 2);
+        const qreal dy = point.y() - (h / 2);
+        const qreal dd = (dx * dx) + (dy * dy);
+        const qreal outerRadius = qMin<qreal>(w / 2, h / 2);
+        return dd > (r * r) && dd <= outerRadius * outerRadius;
+    }
+
+protected:
+    void hoverEnterEvent(QHoverEvent *) { m_isHovered = true; }
+    void hoverLeaveEvent(QHoverEvent *) { m_isHovered = false; }
+    void mousePressEvent(QMouseEvent *) { m_isPressed = true; }
+    void mouseReleaseEvent(QMouseEvent *) { m_isPressed = false; }
+
+private:
+    bool m_isPressed;
+    bool m_isHovered;
+    bool m_isCircle;
+    qreal m_holeRadius;
+};
+
+QML_DECLARE_TYPE(HollowTestItem);
+
 
 tst_QQuickItem::tst_QQuickItem()
 {
@@ -187,6 +253,7 @@ void tst_QQuickItem::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qmlRegisterType<KeyTestItem>("Test",1,0,"KeyTestItem");
+    qmlRegisterType<HollowTestItem>("Test", 1, 0, "HollowTestItem");
 }
 
 void tst_QQuickItem::cleanup()
@@ -1374,6 +1441,110 @@ void tst_QQuickItem::parentLoop()
 
     delete canvas;
 }
+
+void tst_QQuickItem::contains_data()
+{
+    QTest::addColumn<bool>("circleTest");
+    QTest::addColumn<bool>("insideTarget");
+    QTest::addColumn<QList<QPoint> >("points");
+
+    QList<QPoint> points;
+
+    points << QPoint(176, 176)
+           << QPoint(176, 226)
+           << QPoint(226, 176)
+           << QPoint(226, 226)
+           << QPoint(150, 200)
+           << QPoint(200, 150)
+           << QPoint(200, 250)
+           << QPoint(250, 200);
+    QTest::newRow("hollow square: testing points inside") << false << true << points;
+
+    points.clear();
+    points << QPoint(162, 162)
+           << QPoint(162, 242)
+           << QPoint(242, 162)
+           << QPoint(242, 242)
+           << QPoint(200, 200)
+           << QPoint(175, 200)
+           << QPoint(200, 175)
+           << QPoint(200, 228)
+           << QPoint(228, 200)
+           << QPoint(200, 122)
+           << QPoint(122, 200)
+           << QPoint(200, 280)
+           << QPoint(280, 200);
+    QTest::newRow("hollow square: testing points outside") << false << false << points;
+
+    points.clear();
+    points << QPoint(174, 174)
+           << QPoint(174, 225)
+           << QPoint(225, 174)
+           << QPoint(225, 225)
+           << QPoint(165, 200)
+           << QPoint(200, 165)
+           << QPoint(200, 235)
+           << QPoint(235, 200);
+    QTest::newRow("hollow circle: testing points inside") << true << true << points;
+
+    points.clear();
+    points << QPoint(160, 160)
+           << QPoint(160, 240)
+           << QPoint(240, 160)
+           << QPoint(240, 240)
+           << QPoint(200, 200)
+           << QPoint(185, 185)
+           << QPoint(185, 216)
+           << QPoint(216, 185)
+           << QPoint(216, 216)
+           << QPoint(145, 200)
+           << QPoint(200, 145)
+           << QPoint(255, 200)
+           << QPoint(200, 255);
+    QTest::newRow("hollow circle: testing points outside") << true << false << points;
+}
+
+void tst_QQuickItem::contains()
+{
+    QFETCH(bool, circleTest);
+    QFETCH(bool, insideTarget);
+    QFETCH(QList<QPoint>, points);
+
+    QQuickView *canvas = new QQuickView(0);
+    canvas->rootContext()->setContextProperty("circleShapeTest", circleTest);
+    canvas->setBaseSize(QSize(400, 400));
+    canvas->setSource(testFileUrl("hollowTestItem.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+
+    QQuickItem *root = qobject_cast<QQuickItem *>(canvas->rootObject());
+    QVERIFY(root);
+
+    HollowTestItem *hollowItem = root->findChild<HollowTestItem *>("hollowItem");
+    QVERIFY(hollowItem);
+
+    foreach (const QPoint &point, points) {
+        // check mouse hover
+        QTest::mouseMove(canvas, point);
+        QTest::qWait(10);
+        QCOMPARE(hollowItem->isHovered(), insideTarget);
+
+        // check mouse press
+        QTest::mousePress(canvas, Qt::LeftButton, 0, point);
+        QTest::qWait(10);
+        QCOMPARE(hollowItem->isPressed(), insideTarget);
+
+        // check mouse release
+        QTest::mouseRelease(canvas, Qt::LeftButton, 0, point);
+        QTest::qWait(10);
+        QCOMPARE(hollowItem->isPressed(), false);
+    }
+
+    delete canvas;
+}
+
 
 QTEST_MAIN(tst_QQuickItem)
 

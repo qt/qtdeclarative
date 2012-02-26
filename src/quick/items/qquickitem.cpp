@@ -4886,9 +4886,7 @@ bool QQuickItem::isUnderMouse() const
         return false;
 
     QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
-    if (QRectF(0, 0, width(), height()).contains(mapFromScene(cursorPos))) // ### refactor: d->canvas->mapFromGlobal(cursorPos))))
-        return true;
-    return false;
+    return contains(mapFromScene(cursorPos)); // ### refactor: d->canvas->mapFromGlobal(cursorPos))))
 }
 
 bool QQuickItem::acceptHoverEvents() const
@@ -5053,6 +5051,24 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 {
     Q_D(QQuickItem);
     d->keepTouch = keep;
+}
+
+/*!
+  Returns true if this item contains \a point, which is in local coordinates;
+  returns false otherwise.
+
+  This function can be overwritten in order to handle point collisions in items
+  with custom shapes. The default implementation checks if the point is inside
+  the item's bounding rect.
+
+  Note that it's normally used to check if the item is under the mouse cursor,
+  and for that reason, the implementation of this function should be as light-weight
+  as possible.
+*/
+bool QQuickItem::contains(const QPointF &point) const
+{
+    Q_D(const QQuickItem);
+    return QRectF(0, 0, d->width, d->height).contains(point);
 }
 
 /*!

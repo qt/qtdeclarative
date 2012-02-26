@@ -503,13 +503,13 @@ void QQuickPinchArea::mouseUngrabEvent()
 bool QQuickPinchArea::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QQuickPinchArea);
-    QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
+    QPointF localPos = mapFromScene(event->windowPos());
 
     QQuickCanvas *c = canvas();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
+        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 

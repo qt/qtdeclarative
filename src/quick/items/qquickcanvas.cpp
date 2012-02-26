@@ -1039,7 +1039,7 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(event->windowPos());
-        if (!QRectF(0, 0, item->width(), item->height()).contains(p))
+        if (!item->contains(p))
             return false;
     }
 
@@ -1054,7 +1054,7 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
 
     if (itemPrivate->acceptedMouseButtons() & event->button()) {
         QPointF p = item->mapFromScene(event->windowPos());
-        if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
+        if (item->contains(p)) {
             QMouseEvent me(event->type(), p, event->windowPos(), event->screenPos(),
                            event->button(), event->buttons(), event->modifiers());
             me.accept();
@@ -1218,7 +1218,7 @@ bool QQuickCanvasPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(scenePos);
-        if (!QRectF(0, 0, item->width(), item->height()).contains(p))
+        if (!item->contains(p))
             return false;
     }
 
@@ -1233,7 +1233,7 @@ bool QQuickCanvasPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
 
     if (itemPrivate->hoverEnabled) {
         QPointF p = item->mapFromScene(scenePos);
-        if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
+        if (item->contains(p)) {
             if (!hoverItems.isEmpty() && hoverItems[0] == item) {
                 //move
                 accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
@@ -1286,7 +1286,7 @@ bool QQuickCanvasPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(event->posF());
-        if (!QRectF(0, 0, item->width(), item->height()).contains(p))
+        if (!item->contains(p))
             return false;
     }
 
@@ -1300,7 +1300,8 @@ bool QQuickCanvasPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     }
 
     QPointF p = item->mapFromScene(event->posF());
-    if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
+
+    if (item->contains(p)) {
         QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
                           event->orientation(), event->buttons(), event->modifiers());
         wheel.accept();
@@ -1422,10 +1423,9 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
         return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        QRectF bounds(0, 0, item->width(), item->height());
         for (int i=0; i<newPoints.count(); i++) {
             QPointF p = item->mapFromScene(newPoints[i].scenePos());
-            if (!bounds.contains(p))
+            if (!item->contains(p))
                 return false;
         }
     }
@@ -1441,12 +1441,11 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
 
     QList<QTouchEvent::TouchPoint> matchingPoints;
     if (newPoints.count() > 0 && acceptedNewPoints->count() < newPoints.count()) {
-        QRectF bounds(0, 0, item->width(), item->height());
         for (int i=0; i<newPoints.count(); i++) {
             if (acceptedNewPoints->contains(newPoints[i].id()))
                 continue;
             QPointF p = item->mapFromScene(newPoints[i].scenePos());
-            if (bounds.contains(p))
+            if (item->contains(p))
                 matchingPoints << newPoints[i];
         }
     }
@@ -1537,7 +1536,7 @@ void QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
                 moveEvent->setAccepted(true);
                 for (++grabItem; grabItem != grabber->end();) {
                     QPointF p = (**grabItem)->mapFromScene(moveEvent->pos());
-                    if (QRectF(0, 0, (**grabItem)->width(), (**grabItem)->height()).contains(p)) {
+                    if ((**grabItem)->contains(p)) {
                         QDragMoveEvent translatedEvent(
                                 p.toPoint(),
                                 moveEvent->possibleActions(),
@@ -1582,7 +1581,7 @@ bool QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
         return false;
 
     QPointF p = item->mapFromScene(event->pos());
-    if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
+    if (item->contains(p)) {
         if (event->type() == QEvent::DragMove || itemPrivate->flags & QQuickItem::ItemAcceptsDrops) {
             QDragMoveEvent translatedEvent(
                     p.toPoint(),

@@ -1772,14 +1772,14 @@ void QQuickFlickable::mouseUngrabEvent()
 bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
-    QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
+    QPointF localPos = mapFromScene(event->windowPos());
 
     QQuickCanvas *c = canvas();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool disabledItem = grabber && !grabber->isEnabled();
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
-        QQuickMouseEventEx mouseEvent(event->type(), mapFromScene(event->windowPos()),
+    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
+        QQuickMouseEventEx mouseEvent(event->type(), localPos,
                                 event->windowPos(), event->screenPos(),
                                 event->button(), event->buttons(), event->modifiers());
         QQuickMouseEventEx *eventEx = QQuickMouseEventEx::extended(event);

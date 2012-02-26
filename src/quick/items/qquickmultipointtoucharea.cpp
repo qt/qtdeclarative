@@ -644,13 +644,13 @@ void QQuickMultiPointTouchArea::touchUngrabEvent()
 
 bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
 {
-    QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
+    QPointF localPos = mapFromScene(event->windowPos());
 
     QQuickCanvas *c = canvas();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = _stealMouse;
-    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
+        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 
@@ -724,25 +724,23 @@ bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool disabledItem = grabber && !grabber->isEnabled();
     bool stealThisEvent = _stealMouse;
-    bool contains = false;
+    bool containsPoint = false;
     if (!stealThisEvent) {
         switch (event->type()) {
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
         case QEvent::MouseButtonRelease: {
                 QMouseEvent *me = static_cast<QMouseEvent*>(event);
-                QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
-                contains = myRect.contains(me->windowPos());
+                containsPoint = contains(mapFromScene(me->windowPos()));
             }
             break;
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
         case QEvent::TouchEnd: {
                 QTouchEvent *te = static_cast<QTouchEvent*>(event);
-                QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
                 foreach (const QTouchEvent::TouchPoint &point, te->touchPoints()) {
-                    if (myRect.contains(point.scenePos())) {
-                        contains = true;
+                    if (contains(mapFromScene(point.scenePos()))) {
+                        containsPoint = true;
                         break;
                     }
                 }
@@ -752,7 +750,7 @@ bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
             break;
         }
     }
-    if ((stealThisEvent || contains) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
+    if ((stealThisEvent || containsPoint) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
         return true;
     }
     ungrab();

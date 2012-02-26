@@ -263,7 +263,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(sp);
-        if (!QRectF(0, 0, item->width(), item->height()).contains(p))
+        if (!item->contains(p))
             return false;
     }
 
@@ -293,7 +293,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
             break;
         }
         QPointF p = item->mapFromScene(sp);
-        if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
+        if (item->contains(p)) {
             ev->setX(p.x());
             ev->setY(p.y());
             ev->setAccepted(true);//It is connected, they have to explicitly ignore to let it slide
@@ -725,10 +725,10 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 
     // ### we should skip this if these signals aren't used
     // ### can GV handle this for us?
-    bool contains = boundingRect().contains(d->lastPos);
-    if (d->hovered && !contains)
+    const bool isInside = contains(d->lastPos);
+    if (d->hovered && !isInside)
         setHovered(false);
-    else if (!d->hovered && contains)
+    else if (!d->hovered && isInside)
         setHovered(true);
 
     if (d->drag && d->drag->target()) {
@@ -921,13 +921,13 @@ void QQuickMouseArea::mouseUngrabEvent()
 bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QQuickMouseArea);
-    QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
+    QPointF localPos = mapFromScene(event->windowPos());
 
     QQuickCanvas *c = canvas();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
+        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 
