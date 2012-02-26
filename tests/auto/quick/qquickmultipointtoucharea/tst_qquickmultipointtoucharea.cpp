@@ -72,6 +72,8 @@ private slots:
     void inFlickable();
     void inFlickable2();
     void invisible();
+    void transformedTouchArea_data();
+    void transformedTouchArea();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -784,6 +786,65 @@ void tst_QQuickMultiPointTouchArea::invisible()
     delete canvas;
 }
 
+void tst_QQuickMultiPointTouchArea::transformedTouchArea_data()
+{
+    QTest::addColumn<QPoint>("p1");
+    QTest::addColumn<QPoint>("p2");
+    QTest::addColumn<QPoint>("p3");
+    QTest::addColumn<int>("total1");
+    QTest::addColumn<int>("total2");
+    QTest::addColumn<int>("total3");
+
+    QTest::newRow("1st point inside")
+        << QPoint(140, 200) << QPoint(260, 260) << QPoint(0, 140) << 1 << 1 << 1;
+
+    QTest::newRow("2nd point inside")
+        << QPoint(260, 260) << QPoint(200, 200) << QPoint(0, 0) << 0 << 1 << 1;
+
+    QTest::newRow("3rd point inside")
+        << QPoint(140, 260) << QPoint(260, 140) << QPoint(200, 140) << 0 << 0 << 1;
+
+    QTest::newRow("all points inside")
+        << QPoint(200, 140) << QPoint(200, 260) << QPoint(140, 200) << 1 << 2 << 3;
+
+    QTest::newRow("all points outside")
+        << QPoint(140, 140) << QPoint(260, 260) << QPoint(260, 140) << 0 << 0 << 0;
+
+    QTest::newRow("1st and 2nd points inside")
+        << QPoint(200, 260) << QPoint(200, 140) << QPoint(140, 140) << 1 << 2 << 2;
+
+    QTest::newRow("1st and 3rd points inside")
+        << QPoint(200, 200) << QPoint(0, 0) << QPoint(200, 260) << 1 << 1 << 2;
+}
+
+void tst_QQuickMultiPointTouchArea::transformedTouchArea()
+{
+    QFETCH(QPoint, p1);
+    QFETCH(QPoint, p2);
+    QFETCH(QPoint, p3);
+    QFETCH(int, total1);
+    QFETCH(int, total2);
+    QFETCH(int, total3);
+
+    QQuickView *canvas = createAndShowView("transformedMultiPointTouchArea.qml");
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMultiPointTouchArea *area = canvas->rootObject()->findChild<QQuickMultiPointTouchArea *>("touchArea");
+    QVERIFY(area != 0);
+
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(canvas, device);
+
+    sequence.press(0, p1).commit();
+    QCOMPARE(area->property("pointCount").toInt(), total1);
+
+    sequence.stationary(0).press(1, p2).commit();
+    QCOMPARE(area->property("pointCount").toInt(), total2);
+
+    sequence.stationary(0).stationary(1).press(2, p3).commit();
+    QCOMPARE(area->property("pointCount").toInt(), total3);
+
+    delete canvas;
+}
 
 QQuickView *tst_QQuickMultiPointTouchArea::createAndShowView(const QString &file)
 {
