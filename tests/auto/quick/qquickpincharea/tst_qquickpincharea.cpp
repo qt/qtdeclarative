@@ -41,6 +41,7 @@
 
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
+#include <QtGui/QStyleHints>
 #include <private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>
@@ -60,6 +61,8 @@ private slots:
     void scale();
     void pan();
     void retouch();
+    void transformedPinchArea_data();
+    void transformedPinchArea();
 
 private:
     QQuickView *createView();
@@ -409,6 +412,68 @@ void tst_QQuickPinchArea::retouch()
         QVERIFY(!root->property("pinchActive").toBool());
         QCOMPARE(startedSpy.count(), 2);
         QCOMPARE(finishedSpy.count(), 1);
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickPinchArea::transformedPinchArea_data()
+{
+    QTest::addColumn<QPoint>("p1");
+    QTest::addColumn<QPoint>("p2");
+    QTest::addColumn<bool>("shouldPinch");
+
+    QTest::newRow("checking inner pinch 1")
+        << QPoint(200, 140) << QPoint(200, 260) << true;
+
+    QTest::newRow("checking inner pinch 2")
+        << QPoint(140, 200) << QPoint(200, 140) << true;
+
+    QTest::newRow("checking inner pinch 3")
+        << QPoint(140, 200) << QPoint(260, 200) << true;
+
+    QTest::newRow("checking outer pinch 1")
+        << QPoint(140, 140) << QPoint(260, 260) << false;
+
+    QTest::newRow("checking outer pinch 2")
+        << QPoint(140, 140) << QPoint(200, 200) << false;
+
+    QTest::newRow("checking outer pinch 3")
+        << QPoint(140, 260) << QPoint(260, 260) << false;
+}
+
+void tst_QQuickPinchArea::transformedPinchArea()
+{
+    QFETCH(QPoint, p1);
+    QFETCH(QPoint, p2);
+    QFETCH(bool, shouldPinch);
+
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("transformedPinchArea.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(canvas->rootObject() != 0);
+    qApp->processEvents();
+
+    QQuickPinchArea *pinchArea = canvas->rootObject()->findChild<QQuickPinchArea*>("pinchArea");
+    QVERIFY(pinchArea != 0);
+
+    const int threshold = qApp->styleHints()->startDragDistance();
+
+    {
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(canvas, device);
+        // start pinch
+        pinchSequence.press(0, p1, canvas).commit();
+        // In order for the stationary point to remember its previous position,
+        // we have to reuse the same pinchSequence object.
+        pinchSequence.stationary(0).press(1, p2, canvas).commit();
+        pinchSequence.stationary(0).move(1, p2 + QPoint(threshold * 2, 0), canvas).commit();
+        QCOMPARE(pinchArea->property("pinching").toBool(), shouldPinch);
+
+        // release pinch
+        pinchSequence.release(0, p1, canvas).release(1, p2, canvas).commit();
+        QCOMPARE(pinchArea->property("pinching").toBool(), false);
     }
 
     delete canvas;
