@@ -80,6 +80,8 @@ private slots:
     void hoverVisible();
     void disableAfterPress();
     void onWheel();
+    void transformedMouseArea_data();
+    void transformedMouseArea();
 
 private:
     void acceptedButton_data();
@@ -1113,6 +1115,63 @@ void tst_QQuickMouseArea::onWheel()
     QCOMPARE(root->property("mouseX").toReal(), qreal(10));
     QCOMPARE(root->property("mouseY").toReal(), qreal(32));
     QCOMPARE(root->property("controlPressed").toBool(), true);
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::transformedMouseArea_data()
+{
+    QTest::addColumn<bool>("insideTarget");
+    QTest::addColumn<QList<QPoint> >("points");
+
+    QList<QPoint> pointsInside;
+    pointsInside << QPoint(200, 140)
+                 << QPoint(140, 200)
+                 << QPoint(200, 200)
+                 << QPoint(260, 200)
+                 << QPoint(200, 260);
+    QTest::newRow("checking points inside") << true << pointsInside;
+
+    QList<QPoint> pointsOutside;
+    pointsOutside << QPoint(140, 140)
+                  << QPoint(260, 140)
+                  << QPoint(120, 200)
+                  << QPoint(280, 200)
+                  << QPoint(140, 260)
+                  << QPoint(260, 260);
+    QTest::newRow("checking points outside") << false << pointsOutside;
+}
+
+void tst_QQuickMouseArea::transformedMouseArea()
+{
+    QFETCH(bool, insideTarget);
+    QFETCH(QList<QPoint>, points);
+
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("transformedMouseArea.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMouseArea *mouseArea = canvas->rootObject()->findChild<QQuickMouseArea *>("mouseArea");
+    QVERIFY(mouseArea != 0);
+
+    foreach (const QPoint &point, points) {
+        // check hover
+        QTest::mouseMove(canvas, point);
+        QTest::qWait(10);
+        QCOMPARE(mouseArea->property("containsMouse").toBool(), insideTarget);
+
+        // check mouse press
+        QTest::mousePress(canvas, Qt::LeftButton, 0, point);
+        QTest::qWait(10);
+        QCOMPARE(mouseArea->property("pressed").toBool(), insideTarget);
+
+        // check mouse release
+        QTest::mouseRelease(canvas, Qt::LeftButton, 0, point);
+        QTest::qWait(10);
+        QCOMPARE(mouseArea->property("pressed").toBool(), false);
+    }
 
     delete canvas;
 }
