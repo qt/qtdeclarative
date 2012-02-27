@@ -112,8 +112,11 @@ Setting Image sourceSize.width and sourceSize.height will now fit the image to t
 Grid now has rowSpacing and columnSpacing properties. Spacing properties on positioners are now real numbers instead
 of integers.
 
-Positioners now have attached properties that can be used to determine a subitem's location within a
-container such as Column or Row: Positioner.index, Positioner.isFirstItem, Positioner.isLastItem.
+Positioner (Row, Column, Grid, Flow) improvements:
+\list
+\o Transitions used for \c add and \c move now have improved features: they can access a ViewTransition attached property (see the ViewTransition documentation for examples) and can now animate arbitrary item properties (instead of being restricted to animating an item's position).
+\o Items in a positioner now have attached properties that can be used to determine a subitem's location: Positioner.index, Positioner.isFirstItem, Positioner.isLastItem.
+\endlist
 
 Loader improvements:
  - "active" property added to Loader, to allow delaying instantiation of a Loader element's item property

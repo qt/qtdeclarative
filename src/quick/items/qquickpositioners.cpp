@@ -109,6 +109,7 @@ QQuickBasePositioner::QQuickBasePositioner(QQuickBasePositionerPrivate &dd, Posi
 QQuickBasePositioner::~QQuickBasePositioner()
 {
     Q_D(QQuickBasePositioner);
+    delete d->transitioner;
     for (int i = 0; i < positionedItems.count(); ++i)
         d->unwatchChanges(positionedItems.at(i).item);
     for (int i = 0; i < unpositionedItems.count(); ++i)
@@ -142,31 +143,36 @@ void QQuickBasePositioner::setSpacing(qreal s)
 QDeclarativeTransition *QQuickBasePositioner::move() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->moveTransition;
+    return d->transitioner ? d->transitioner->displacedTransition : 0;
 }
 
 void QQuickBasePositioner::setMove(QDeclarativeTransition *mt)
 {
     Q_D(QQuickBasePositioner);
-    if (mt == d->moveTransition)
+    if (!d->transitioner)
+        d->transitioner = new QQuickItemViewTransitioner;
+    if (mt == d->transitioner->displacedTransition)
         return;
-    d->moveTransition = mt;
+
+    d->transitioner->displacedTransition = mt;
     emit moveChanged();
 }
 
 QDeclarativeTransition *QQuickBasePositioner::add() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->addTransition;
+    return d->transitioner ? d->transitioner->addTransition : 0;
 }
 
 void QQuickBasePositioner::setAdd(QDeclarativeTransition *add)
 {
     Q_D(QQuickBasePositioner);
-    if (add == d->addTransition)
+    if (!d->transitioner)
+        d->transitioner = new QQuickItemViewTransitioner;
+    if (add == d->transitioner->addTransition)
         return;
 
-    d->addTransition = add;
+    d->transitioner->addTransition = add;
     emit addChanged();
 }
 
@@ -218,6 +224,7 @@ void QQuickBasePositioner::prePositioning()
     for (int ii = 0; ii < unpositionedItems.count(); ii++)
         oldItems.append(unpositionedItems[ii]);
     unpositionedItems.clear();
+    int addedIndex = -1;
 
     for (int ii = 0; ii < children.count(); ++ii) {
         QQuickItem *child = children.at(ii);
@@ -229,9 +236,22 @@ void QQuickBasePositioner::prePositioning()
             posItem.isNew = true;
             if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 posItem.isVisible = false;
+                posItem.index = -1;
                 unpositionedItems.append(posItem);
             } else {
+                posItem.index = positionedItems.count();
                 positionedItems.append(posItem);
+
+                if (d->transitioner) {
+                    if (addedIndex < 0)
+                        addedIndex = posItem.index;
+                    PositionedItem *theItem = &positionedItems[positionedItems.count()-1];
+
+                    d->transitioner->transitionNextReposition(theItem,
+                            QQuickItemViewTransitioner::AddTransition, true);
+                    d->transitioner->addTransitionIndexes << posItem.index;
+                    d->transitioner->addTransitionTargets << posItem.item;
+                }
             }
         } else {
             PositionedItem *item = &oldItems[wIdx];
@@ -239,75 +259,93 @@ void QQuickBasePositioner::prePositioning()
             // i.e. their positioning is not affected if an ancestor is hidden.
             if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 item->isVisible = false;
+                item->index = -1;
                 unpositionedItems.append(*item);
             } else if (!item->isVisible) {
+                // item changed from non-visible to visible, treat it as a "new" item
                 item->isVisible = true;
                 item->isNew = true;
+                item->index = positionedItems.count();
                 positionedItems.append(*item);
+
+                if (d->transitioner) {
+                    if (addedIndex < 0)
+                        addedIndex = item->index;
+                    d->transitioner->transitionNextReposition(&positionedItems[positionedItems.count()-1],
+                            QQuickItemViewTransitioner::AddTransition, true);
+                    d->transitioner->addTransitionIndexes << item->index;
+                    d->transitioner->addTransitionTargets << item->item;
+                }
             } else {
                 item->isNew = false;
+                item->index = positionedItems.count();
                 positionedItems.append(*item);
             }
         }
     }
+
+    if (d->transitioner) {
+        for (int i=0; i<positionedItems.count(); i++) {
+            if (!positionedItems[i].isNew) {
+                if (addedIndex >= 0) {
+                    d->transitioner->transitionNextReposition(&positionedItems[i], QQuickItemViewTransitioner::AddTransition, false);
+                } else {
+                    // just queue the item for a move-type displace - if the item hasn't
+                    // moved anywhere, it won't be transitioned anyway
+                    d->transitioner->transitionNextReposition(&positionedItems[i], QQuickItemViewTransitioner::MoveTransition, false);
+                }
+            }
+        }
+    }
+
     QSizeF contentSize(0,0);
     reportConflictingAnchors();
     if (!d->anchorConflict) {
         doPositioning(&contentSize);
         updateAttachedProperties();
     }
-    if (!d->addActions.isEmpty() || !d->moveActions.isEmpty())
-        finishApplyTransitions();
+
+    if (d->transitioner) {
+        QRectF viewBounds;
+        for (int i=0; i<positionedItems.count(); i++) {
+            if (positionedItems[i].prepareTransition(viewBounds))
+                positionedItems[i].startTransition(d->transitioner);
+        }
+        d->transitioner->addTransitionIndexes.clear();
+        d->transitioner->addTransitionTargets.clear();
+    }
+
     d->doingPositioning = false;
+
     //Set implicit size to the size of its children
     setImplicitSize(contentSize.width(), contentSize.height());
 }
 
-void QQuickBasePositioner::positionX(qreal x, const PositionedItem &target)
+void QQuickBasePositioner::positionItem(qreal x, qreal y, PositionedItem *target)
 {
     Q_D(QQuickBasePositioner);
-    if (d->type == Horizontal || d->type == Both) {
-        if (target.isNew) {
-            if (!d->addTransition || !d->addTransition->enabled())
-                target.item->setX(x);
-            else
-                d->addActions << QDeclarativeAction(target.item, QLatin1String("x"), QVariant(x));
-        } else if (x != target.item->x()) {
-            if (!d->moveTransition || !d->moveTransition->enabled())
-                target.item->setX(x);
-            else
-                d->moveActions << QDeclarativeAction(target.item, QLatin1String("x"), QVariant(x));
-        }
+    if ( (target->itemX() != x || target->itemY() != y)
+            && d->type == Both) {
+        target->moveTo(QPointF(x, y));
     }
 }
 
-void QQuickBasePositioner::positionY(qreal y, const PositionedItem &target)
+void QQuickBasePositioner::positionItemX(qreal x, PositionedItem *target)
 {
     Q_D(QQuickBasePositioner);
-    if (d->type == Vertical || d->type == Both) {
-        if (target.isNew) {
-            if (!d->addTransition || !d->addTransition->enabled())
-                target.item->setY(y);
-            else
-                d->addActions << QDeclarativeAction(target.item, QLatin1String("y"), QVariant(y));
-        } else if (y != target.item->y()) {
-            if (!d->moveTransition || !d->moveTransition->enabled())
-                target.item->setY(y);
-            else
-                d->moveActions << QDeclarativeAction(target.item, QLatin1String("y"), QVariant(y));
-        }
+    if (target->itemX() != x
+            && (d->type == Horizontal || d->type == Both)) {
+        target->moveTo(QPointF(x, target->itemY()));
     }
 }
 
-void QQuickBasePositioner::finishApplyTransitions()
+void QQuickBasePositioner::positionItemY(qreal y, PositionedItem *target)
 {
     Q_D(QQuickBasePositioner);
-    // Note that if a transition is not set the transition manager will
-    // apply the changes directly, in the case add/move aren't set
-    d->addTransitionManager.transition(d->addActions, d->addTransition);
-    d->moveTransitionManager.transition(d->moveActions, d->moveTransition);
-    d->addActions.clear();
-    d->moveActions.clear();
+    if (target->itemY() != y
+            && (d->type == Vertical || d->type == Both)) {
+        target->moveTo(QPointF(target->itemX(), y));
+    }
 }
 
 QQuickPositionerAttached *QQuickBasePositioner::qmlAttachedProperties(QObject *obj)
@@ -501,30 +539,42 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 /*!
     \qmlproperty Transition QtQuick2::Column::add
 
-    This property holds the transition to be applied when adding an
-    item to the positioner. The transition will only be applied to the
-    added item(s).  Positioner transitions will only affect the
-    position (x, y) of items.
+    This property holds the transition to be run for items that are added to this
+    positioner. For a positioner, this applies to:
 
-    For a positioner, adding an item can mean that either the object
-    has been created or reparented, and thus is now a child or the
-    positioner, or that the object has changed its \l visible property
-    from false to true, and thus is now visible.
+    \list
+    \o Items that are created or reparented as a child of the positioner
+    \o Child items that change their \l visible property from false to true, and thus
+       are now visible
+    \endlist
 
-    \sa move
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Column::move
 
-    This property holds the transition to apply to any item that has moved
-    within the positioner. Positioner transitions will only affect
-    the position (x, y) of items.
+    This property holds the transition to run for items that have moved within the
+    positioner. For a positioner, this applies to:
 
-    This transition is applied to items that are displaced as a result of the
-    addition or removal of other items in the positioner, or when items move due to
-    a move operation in a related model, or when items resize themselves.
+    \list
+    \o Child items that move when they are displaced due to the addition, removal or
+       rearrangement of other items in the positioner
+    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \endlist
 
-    \sa add, {declarative/positioners}{Positioners example}
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being moved. Note, however, that for this move transition, the
+    ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
+    this transition is triggered by the addition of other items in the positioner; in other
+    cases, these lists will be empty.
+
+    See the \l ViewTransition documentation for more details and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
   \qmlproperty real QtQuick2::Column::spacing
@@ -545,11 +595,8 @@ void QQuickColumn::doPositioning(QSizeF *contentSize)
     qreal voffset = 0;
 
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
-        const PositionedItem &child = positionedItems.at(ii);
-
-        if (child.item->y() != voffset)
-            positionY(voffset, child);
-
+        PositionedItem &child = positionedItems[ii];
+        positionItemY(voffset, &child);
         contentSize->setWidth(qMax(contentSize->width(), child.item->width()));
 
         voffset += child.item->height();
@@ -625,42 +672,42 @@ void QQuickColumn::reportConflictingAnchors()
 /*!
     \qmlproperty Transition QtQuick2::Row::add
 
-    This property holds the transition to be applied when adding an
-    item to the positioner. The transition will only be applied to the
-    added item(s).  Positioner transitions will only affect the
-    position (x, y) of items.
+    This property holds the transition to be run for items that are added to this
+    positioner. For a positioner, this applies to:
 
-    For a positioner, adding an item can mean that either the object
-    has been created or reparented, and thus is now a child or the
-    positioner, or that the object has changed its \l visible property
-    from false to true, and thus is now visible.
+    \list
+    \o Items that are created or reparented as a child of the positioner
+    \o Child items that change their \l visible property from false to true, and thus
+       are now visible
+    \endlist
 
-    \sa move
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Row::move
 
-    This property holds the transition to apply to any item that has moved
-    within the positioner. Positioner transitions will only affect
-    the position (x, y) of items.
+    This property holds the transition to run for items that have moved within the
+    positioner. For a positioner, this applies to:
 
-    This transition is applied to items that are displaced as a result of the
-    addition or removal of other items in the positioner, or when items move due to
-    a move operation in a related model, or when items resize themselves.
+    \list
+    \o Child items that move when they are displaced due to the addition, removal or
+       rearrangement of other items in the positioner
+    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \endlist
 
-    \qml
-    Row {
-        id: positioner
-        move: Transition {
-            NumberAnimation {
-                properties: "x"
-                duration: 1000
-            }
-        }
-    }
-    \endqml
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being moved. Note, however, that for this move transition, the
+    ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
+    this transition is triggered by the addition of other items in the positioner; in other
+    cases, these lists will be empty.
 
-    \sa add, {declarative/positioners}{Positioners example}
+    See the \l ViewTransition documentation for more details and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
   \qmlproperty real QtQuick2::Row::spacing
@@ -736,11 +783,10 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
 
     QList<qreal> hoffsets;
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
-        const PositionedItem &child = positionedItems.at(ii);
+        PositionedItem &child = positionedItems[ii];
 
         if (d->isLeftToRight()) {
-            if (child.item->x() != hoffset)
-                positionX(hoffset, child);
+            positionItemX(hoffset, &child);
         } else {
             hoffsets << hoffset;
         }
@@ -767,10 +813,9 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
 
     int acc = 0;
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
-        const PositionedItem &child = positionedItems.at(ii);
+        PositionedItem &child = positionedItems[ii];
         hoffset = end - hoffsets[acc++] - child.item->width();
-        if (child.item->x() != hoffset)
-            positionX(hoffset, child);
+        positionItemX(hoffset, &child);
     }
 }
 
@@ -839,41 +884,42 @@ void QQuickRow::reportConflictingAnchors()
 /*!
     \qmlproperty Transition QtQuick2::Grid::add
 
-    This property holds the transition to be applied when adding an
-    item to the positioner. The transition will only be applied to the
-    added item(s).  Positioner transitions will only affect the
-    position (x, y) of items.
+    This property holds the transition to be run for items that are added to this
+    positioner. For a positioner, this applies to:
 
-    For a positioner, adding an item can mean that either the object
-    has been created or reparented, and thus is now a child or the
-    positioner, or that the object has changed its \l visible property
-    from false to true, and thus is now visible.
+    \list
+    \o Items that are created or reparented as a child of the positioner
+    \o Child items that change their \l visible property from false to true, and thus
+       are now visible
+    \endlist
 
-    \sa move
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Grid::move
 
-    This property holds the transition to apply to any item that has moved
-    within the positioner. Positioner transitions will only affect
-    the position (x, y) of items.
+    This property holds the transition to run for items that have moved within the
+    positioner. For a positioner, this applies to:
 
-    This transition is applied to items that are displaced as a result of the
-    addition or removal of other items in the positioner, or when items move due to
-    a move operation in a related model, or when items resize themselves.
+    \list
+    \o Child items that move when they are displaced due to the addition, removal or
+       rearrangement of other items in the positioner
+    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \endlist
 
-    \qml
-    Grid {
-        move: Transition {
-            NumberAnimation {
-                properties: "x,y"
-                duration: 1000
-            }
-        }
-    }
-    \endqml
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being moved. Note, however, that for this move transition, the
+    ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
+    this transition is triggered by the addition of other items in the positioner; in other
+    cases, these lists will be empty.
 
-    \sa add, {declarative/positioners}{Positioners example}
+    See the \l ViewTransition documentation for more details and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
   \qmlproperty qreal QtQuick2::Grid::spacing
@@ -1160,14 +1206,11 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
     int curRow =0;
     int curCol =0;
     for (int i = 0; i < positionedItems.count(); ++i) {
-        const PositionedItem &child = positionedItems.at(i);
+        PositionedItem &child = positionedItems[i];
         qreal childXOffset = xoffset;
         if (!d->isLeftToRight())
             childXOffset -= child.item->width();
-        if ((child.item->x() != childXOffset) || (child.item->y() != yoffset)) {
-            positionX(childXOffset, child);
-            positionY(yoffset, child);
-        }
+        positionItem(childXOffset, yoffset, &child);
 
         if (m_flow == LeftToRight) {
             if (d->isLeftToRight())
@@ -1254,42 +1297,42 @@ void QQuickGrid::reportConflictingAnchors()
 /*!
     \qmlproperty Transition QtQuick2::Flow::add
 
-    This property holds the transition to be applied when adding an
-    item to the positioner. The transition will only be applied to the
-    added item(s).  Positioner transitions will only affect the
-    position (x, y) of items.
+    This property holds the transition to be run for items that are added to this
+    positioner. For a positioner, this applies to:
 
-    For a positioner, adding an item can mean that either the object
-    has been created or reparented, and thus is now a child or the
-    positioner, or that the object has changed its \l visible property
-    from false to true, and thus is now visible.
+    \list
+    \o Items that are created or reparented as a child of the positioner
+    \o Child items that change their \l visible property from false to true, and thus
+       are now visible
+    \endlist
 
-    \sa move
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Flow::move
 
-    This property holds the transition to apply to any item that has moved
-    within the positioner. Positioner transitions will only affect
-    the position (x, y) of items.
+    This property holds the transition to run for items that have moved within the
+    positioner. For a positioner, this applies to:
 
-    This transition is applied to items that are displaced as a result of the
-    addition or removal of other items in the positioner, or when items move due to
-    a move operation in a related model, or when items resize themselves.
+    \list
+    \o Child items that move when they are displaced due to the addition, removal or
+       rearrangement of other items in the positioner
+    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \endlist
 
-    \qml
-    Flow {
-        id: positioner
-        move: Transition {
-            NumberAnimation {
-                properties: "x,y"
-                ease: "easeOutBounce"
-            }
-        }
-    }
-    \endqml
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being moved. Note, however, that for this move transition, the
+    ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
+    this transition is triggered by the addition of other items in the positioner; in other
+    cases, these lists will be empty.
 
-    \sa add, {declarative/positioners}{Positioners example}
+    See the \l ViewTransition documentation for more details and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
   \qmlproperty real QtQuick2::Flow::spacing
@@ -1414,7 +1457,7 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
     QList<qreal> hoffsets;
 
     for (int i = 0; i < positionedItems.count(); ++i) {
-        const PositionedItem &child = positionedItems.at(i);
+        PositionedItem &child = positionedItems[i];
 
         if (d->flow == LeftToRight)  {
             if (widthValid() && hoffset && hoffset + child.item->width() > width()) {
@@ -1431,13 +1474,11 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
         }
 
         if (d->isLeftToRight()) {
-            if (child.item->x() != hoffset)
-                positionX(hoffset, child);
+            positionItem(hoffset, voffset, &child);
         } else {
             hoffsets << hoffset;
+            positionItemY(voffset, &child);
         }
-        if (child.item->y() != voffset)
-            positionY(voffset, child);
 
         contentSize->setWidth(qMax(contentSize->width(), hoffset + child.item->width()));
         contentSize->setHeight(qMax(contentSize->height(), voffset + child.item->height()));
@@ -1462,10 +1503,9 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
         end = contentSize->width();
     int acc = 0;
     for (int i = 0; i < positionedItems.count(); ++i) {
-        const PositionedItem &child = positionedItems.at(i);
+        PositionedItem &child = positionedItems[i];
         hoffset = end - hoffsets[acc++] - child.item->width();
-        if (child.item->x() != hoffset)
-            positionX(hoffset, child);
+        positionItemX(hoffset, &child);
     }
 }
 

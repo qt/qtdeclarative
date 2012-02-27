@@ -43,6 +43,7 @@
 #define QQUICKPOSITIONERS_P_H
 
 #include "qquickimplicitsizeitem_p.h"
+#include "qquickitemviewtransition_p.h"
 
 #include <QtQuick/private/qdeclarativestate_p.h>
 #include <private/qpodvector_p.h>
@@ -96,6 +97,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeIte
     Q_PROPERTY(QDeclarativeTransition *add READ add WRITE setAdd NOTIFY addChanged)
 public:
     enum PositionerType { None = 0x0, Horizontal = 0x1, Vertical = 0x2, Both = 0x3 };
+
     QQuickBasePositioner(PositionerType, QQuickItem *parent);
     ~QQuickBasePositioner();
 
@@ -116,7 +118,6 @@ protected:
     QQuickBasePositioner(QQuickBasePositionerPrivate &dd, PositionerType at, QQuickItem *parent);
     virtual void componentComplete();
     virtual void itemChange(ItemChange, const ItemChangeData &);
-    void finishApplyTransitions();
 
     virtual void updatePolish();
 
@@ -131,19 +132,22 @@ protected Q_SLOTS:
 protected:
     virtual void doPositioning(QSizeF *contentSize)=0;
     virtual void reportConflictingAnchors()=0;
-    class PositionedItem {
+
+    class PositionedItem : public QQuickViewItem
+    {
     public :
-        PositionedItem(QQuickItem *i) : item(i), isNew(false), isVisible(true) {}
+        PositionedItem(QQuickItem *i) : QQuickViewItem(i), isNew(false), isVisible(true) {}
         bool operator==(const PositionedItem &other) const { return other.item == item; }
-        QQuickItem *item;
+
         bool isNew;
         bool isVisible;
     };
 
     QPODVector<PositionedItem,8> positionedItems;
     QPODVector<PositionedItem,8> unpositionedItems;//Still 'in' the positioner, just not positioned
-    void positionX(qreal,const PositionedItem &target);
-    void positionY(qreal,const PositionedItem &target);
+    void positionItem(qreal x, qreal y, PositionedItem *target);
+    void positionItemX(qreal, PositionedItem *target);
+    void positionItemY(qreal, PositionedItem *target);
 
 private:
     Q_DISABLE_COPY(QQuickBasePositioner)

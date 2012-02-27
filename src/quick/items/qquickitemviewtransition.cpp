@@ -377,6 +377,12 @@ bool QQuickViewItem::prepareTransition(const QRectF &viewBounds)
 {
     bool doTransition = false;
 
+    // If item is not already moving somewhere, set it to not move anywhere.
+    // This ensures that removed targets don't transition to the default (0,0) and that
+    // items set for other transition types only transition if they actually move somewhere.
+    if (nextTransitionType != QQuickItemViewTransitioner::NoTransition && !nextTransitionToSet)
+        moveTo(item->pos());
+
     switch (nextTransitionType) {
     case QQuickItemViewTransitioner::NoTransition:
     {
@@ -390,7 +396,12 @@ bool QQuickViewItem::prepareTransition(const QRectF &viewBounds)
     case QQuickItemViewTransitioner::RemoveTransition:
         // For Add targets, do transition if item is moving into visible area
         // For Remove targets, do transition if item is currently in visible area
-        if (isTransitionTarget) {
+        if (viewBounds.isNull()) {
+            if (isTransitionTarget)
+                doTransition = true;
+            else
+                doTransition = (nextTransitionTo != item->pos());
+        } else if (isTransitionTarget) {
             doTransition = (nextTransitionType == QQuickItemViewTransitioner::AddTransition)
                     ? viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()))
                     : viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()));
@@ -408,7 +419,8 @@ bool QQuickViewItem::prepareTransition(const QRectF &viewBounds)
     case QQuickItemViewTransitioner::MoveTransition:
         // do transition if moving from or into visible area
         if (nextTransitionTo != item->pos()) {
-            doTransition = viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()))
+            doTransition = viewBounds.isNull()
+                    || viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()))
                     || viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()));
             if (!doTransition)
                 item->setPos(nextTransitionTo);
@@ -503,7 +515,19 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
        generic displaced transition if specified)
     \endlist
 
-    Such view transitions additionally have access to a ViewTransition attached property that
+    For the \l Row, \l Column, \l Grid and \l Flow positioner elements, which operate with collections of child
+    items rather than data models, the following properties are used instead:
+
+    \list
+    \o \c add - the transition to apply to items that are created for the positioner, added to
+       or reparented to the positioner, or items that have become \l {Item::}{visible}
+    \o \c move - the transition to apply to items that have moved within the positioner, including
+       when they are displaced due to the addition or removal of other items, or when items are otherwise
+       rearranged within the positioner, or when items are repositioned due to the resizing of other
+       items in the positioner
+    \endlist
+
+    View transitions have access to a ViewTransition attached property that
     provides details of the items that are under transition and the operation that triggered the
     transition. Since view transitions are run once per item, these details can be used to customise
     each transition for each individual item.
@@ -524,6 +548,10 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \o ViewTransition.targetIndexes - the indexes of the target items
     \o ViewTransition.targetItems - the target items themselves
     \endlist
+
+    (Note that for the \l Row, \l Column, \l Grid and \l Flow positioner elements, the \c move transition only
+    provides these two additional details when the transition is triggered by the addition of items
+    to a positioner.)
 
     View transitions can be written without referring to any of the attributes listed
     above. These attributes merely provide extra details that are useful for customising view

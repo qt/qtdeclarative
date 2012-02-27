@@ -66,6 +66,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickItemViewTransitioner;
+
 class QQuickBasePositionerPrivate : public QQuickImplicitSizeItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickBasePositioner)
@@ -73,7 +75,7 @@ class QQuickBasePositionerPrivate : public QQuickImplicitSizeItemPrivate, public
 public:
     QQuickBasePositionerPrivate()
         : spacing(0), type(QQuickBasePositioner::None)
-        , moveTransition(0), addTransition(0), positioningDirty(false)
+        , transitioner(0), positioningDirty(false)
         , doingPositioning(false), anchorConflict(false), layoutDirection(Qt::LeftToRight)
     {
     }
@@ -87,12 +89,7 @@ public:
     qreal spacing;
 
     QQuickBasePositioner::PositionerType type;
-    QDeclarativeTransition *moveTransition;
-    QDeclarativeTransition *addTransition;
-    QDeclarativeStateOperation::ActionList addActions;
-    QDeclarativeStateOperation::ActionList moveActions;
-    QDeclarativeTransitionManager addTransitionManager;
-    QDeclarativeTransitionManager moveTransitionManager;
+    QQuickItemViewTransitioner *transitioner;
 
     void watchChanges(QQuickItem *other);
     void unwatchChanges(QQuickItem* other);
