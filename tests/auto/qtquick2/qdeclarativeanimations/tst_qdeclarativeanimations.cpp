@@ -45,6 +45,7 @@
 #include <QtDeclarative/private/qanimationgroupjob_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qdeclarativeanimation_p.h>
+#include <QtQuick/private/qdeclarativeanimation_p_p.h>
 #include <QtQuick/private/qdeclarativetransition_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qdeclarativepathinterpolator_p.h>
@@ -105,6 +106,7 @@ private slots:
     void pauseBindingBug();
     void pauseBug();
     void loopingBug();
+    void anchorBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1312,6 +1314,19 @@ void tst_qdeclarativeanimations::loopingBug()
     QCOMPARE(rect->rotation(), qreal(90));
 
     delete obj;
+}
+
+//QTBUG-24532
+void tst_qdeclarativeanimations::anchorBug()
+{
+    QQuickAnchorAnimation animation;
+    animation.setDuration(5000);
+    animation.setEasing(QEasingCurve(QEasingCurve::InOutBack));
+    animation.start();
+    animation.pause();
+
+    QCOMPARE(animation.qtAnimation()->duration(), 5000);
+    QCOMPARE(static_cast<QDeclarativeBulkValueAnimator*>(animation.qtAnimation())->easingCurve(), QEasingCurve(QEasingCurve::InOutBack));
 }
 
 QTEST_MAIN(tst_qdeclarativeanimations)
