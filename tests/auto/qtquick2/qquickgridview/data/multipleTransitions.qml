@@ -10,7 +10,7 @@ Rectangle {
     // interrupting transitions will still produce the correct result)
     property int timeBetweenActions: duration / 2
 
-    property int duration: 100
+    property int duration: 300
 
     property int count: grid.count
 
@@ -46,6 +46,8 @@ Rectangle {
         property bool runningAddDisplaced: false
         property bool runningMoveTargets: false
         property bool runningMoveDisplaced: false
+        property bool runningRemoveTargets: false
+        property bool runningRemoveDisplaced: false
 
         objectName: "grid"
         width: 240
@@ -101,6 +103,30 @@ Rectangle {
                     NumberAnimation { properties: "y"; from: moveDisplaced_transitionFrom.y; duration: root.duration }
                 }
                 ScriptAction { script: grid.runningMoveDisplaced = false }
+            }
+        }
+
+        remove: Transition {
+            id: removeTargets
+            SequentialAnimation {
+                ScriptAction { script: grid.runningRemoveTargets = true }
+                ParallelAnimation {
+                    NumberAnimation { properties: "x"; to: removeTargets_transitionTo.x; duration: root.duration }
+                    NumberAnimation { properties: "y"; to: removeTargets_transitionTo.y; duration: root.duration }
+                }
+                ScriptAction { script: grid.runningRemoveTargets = false }
+            }
+        }
+
+        removeDisplaced: Transition {
+            id: removeDisplaced
+            SequentialAnimation {
+                ScriptAction { script: grid.runningRemoveDisplaced = true }
+                ParallelAnimation {
+                    NumberAnimation { properties: "x"; from: removeDisplaced_transitionFrom.x; duration: root.duration }
+                    NumberAnimation { properties: "y"; from: removeDisplaced_transitionFrom.y; duration: root.duration }
+                }
+                ScriptAction { script: grid.runningRemoveDisplaced = false }
             }
         }
     }

@@ -383,6 +383,9 @@ bool QQuickViewItem::prepareTransition(const QRectF &viewBounds)
     if (nextTransitionType != QQuickItemViewTransitioner::NoTransition && !nextTransitionToSet)
         moveTo(item->pos());
 
+    // For move transitions (both target and displaced) and displaced transitions of other
+    // types, only run the transition if the item is actually moving to another position.
+
     switch (nextTransitionType) {
     case QQuickItemViewTransitioner::NoTransition:
     {
@@ -394,14 +397,14 @@ bool QQuickViewItem::prepareTransition(const QRectF &viewBounds)
     }
     case QQuickItemViewTransitioner::AddTransition:
     case QQuickItemViewTransitioner::RemoveTransition:
-        // For Add targets, do transition if item is moving into visible area
-        // For Remove targets, do transition if item is currently in visible area
         if (viewBounds.isNull()) {
             if (isTransitionTarget)
                 doTransition = true;
             else
-                doTransition = (nextTransitionTo != item->pos());
+                doTransition = transitionWillChangePosition();
         } else if (isTransitionTarget) {
+            // For Add targets, do transition if item is moving into visible area
+            // For Remove targets, do transition if item is currently in visible area
             doTransition = (nextTransitionType == QQuickItemViewTransitioner::AddTransition)
                     ? viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()))
                     : viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()));
@@ -410,7 +413,7 @@ bool QQuickViewItem::prepareTransition(const QRectF &viewBounds)
         } else {
             if (viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()))
                     || viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()))) {
-                doTransition = (nextTransitionTo != item->pos());
+                doTransition = transitionWillChangePosition();
             } else {
                 item->setPos(nextTransitionTo);
             }
@@ -418,7 +421,7 @@ bool QQuickViewItem::prepareTransition(const QRectF &viewBounds)
         break;
     case QQuickItemViewTransitioner::MoveTransition:
         // do transition if moving from or into visible area
-        if (nextTransitionTo != item->pos()) {
+        if (transitionWillChangePosition()) {
             doTransition = viewBounds.isNull()
                     || viewBounds.intersects(QRectF(item->x(), item->y(), item->width(), item->height()))
                     || viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()));
@@ -470,6 +473,13 @@ void QQuickViewItem::setNextTransition(QQuickItemViewTransitioner::TransitionTyp
     // to calculate positions for transitions for other items in the view.
     nextTransitionType = type;
     isTransitionTarget = isTargetItem;
+}
+
+bool QQuickViewItem::transitionWillChangePosition() const
+{
+    if (transitionRunning() && transition->m_toPos != nextTransitionTo)
+        return true;
+    return nextTransitionTo != item->pos();
 }
 
 void QQuickViewItem::finishedTransition()

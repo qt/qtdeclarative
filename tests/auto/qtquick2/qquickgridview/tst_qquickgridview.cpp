@@ -4776,12 +4776,15 @@ void tst_QQuickGridView::multipleTransitions()
     QFETCH(int, initialCount);
     QFETCH(qreal, contentY);
     QFETCH(QList<ListChange>, changes);
+    QFETCH(bool, rippleAddDisplaced);
 
     // add transitions on the left, moves on the right
     QPointF addTargets_transitionFrom(-50, -50);
     QPointF addDisplaced_transitionFrom(-50, 50);
     QPointF moveTargets_transitionFrom(50, -50);
     QPointF moveDisplaced_transitionFrom(50, 50);
+    QPointF removeTargets_transitionTo(-100, 300);
+    QPointF removeDisplaced_transitionFrom(100, 300);
 
     QmlListModel model;
     for (int i = 0; i < initialCount; i++)
@@ -4794,14 +4797,23 @@ void tst_QQuickGridView::multipleTransitions()
     ctxt->setContextProperty("addDisplaced_transitionFrom", addDisplaced_transitionFrom);
     ctxt->setContextProperty("moveTargets_transitionFrom", moveTargets_transitionFrom);
     ctxt->setContextProperty("moveDisplaced_transitionFrom", moveDisplaced_transitionFrom);
+    ctxt->setContextProperty("removeTargets_transitionTo", removeTargets_transitionTo);
+    ctxt->setContextProperty("removeDisplaced_transitionFrom", removeDisplaced_transitionFrom);
+    ctxt->setContextProperty("rippleAddDisplaced", rippleAddDisplaced);
     canvas->setSource(testFileUrl("multipleTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    if (contentY != 0) {
+        gridview->setContentY(contentY);
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    }
 
     int timeBetweenActions = canvas->rootObject()->property("timeBetweenActions").toInt();
 
@@ -4894,18 +4906,21 @@ void tst_QQuickGridView::multipleTransitions_data()
     QTest::addColumn<int>("initialCount");
     QTest::addColumn<qreal>("contentY");
     QTest::addColumn<QList<ListChange> >("changes");
+    QTest::addColumn<bool>("rippleAddDisplaced");
 
     // the added item and displaced items should move to final dest correctly
     QTest::newRow("add item, then move it immediately") << 10 << 0.0 << (QList<ListChange>()
-            << ListChange::insert(0, 1)
-            << ListChange::move(0, 3, 1)
-            );
+             << ListChange::insert(0, 1)
+             << ListChange::move(0, 3, 1)
+             )
+             << false;
 
     // items affected by the add should change from move to add transition
     QTest::newRow("move, then insert item before the moved item") << 20 << 0.0 << (QList<ListChange>()
             << ListChange::move(1, 10, 3)
             << ListChange::insert(0, 1)
-            );
+            )
+            << false;
 
     // items should be placed correctly if you trigger a transition then refill for that index
     QTest::newRow("add at 0, flick down, flick back to top and add at 0 again") << 20 << 0.0 << (QList<ListChange>()
@@ -4913,7 +4928,14 @@ void tst_QQuickGridView::multipleTransitions_data()
             << ListChange::setContentY(160.0)
             << ListChange::setContentY(0.0)
             << ListChange::insert(0, 1)
-            );
+            )
+            << false;
+
+    QTest::newRow("insert then remove same index, with ripple effect on add displaced") << 20 << 0.0 << (QList<ListChange>()
+            << ListChange::insert(1, 1)
+            << ListChange::remove(1, 1)
+            )
+            << true;
 }
 
 void tst_QQuickGridView::cacheBuffer()

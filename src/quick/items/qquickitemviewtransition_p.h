@@ -152,6 +152,7 @@ private:
     friend class QQuickItemViewTransitioner;
     friend class QQuickItemViewTransitionJob;
     void setNextTransition(QQuickItemViewTransitioner::TransitionType, bool isTargetItem);
+    bool transitionWillChangePosition() const;
     void finishedTransition();
     void resetTransitionData();
 };
