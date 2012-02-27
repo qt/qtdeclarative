@@ -1272,6 +1272,8 @@ void tst_QQuickGridView::moved_data()
 
 void tst_QQuickGridView::multipleChanges()
 {
+    QSKIP("QTBUG-24523");
+
     QFETCH(int, startCount);
     QFETCH(QList<ListChange>, changes);
     QFETCH(int, newCount);

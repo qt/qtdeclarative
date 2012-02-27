@@ -5566,6 +5566,8 @@ void tst_QQuickListView::removeTransitions_data()
 
 void tst_QQuickListView::multipleTransitions()
 {
+    QSKIP("QTBUG-24523");
+
     // Tests that if you interrupt a transition in progress with another action that
     // cancels the previous transition, the resulting items are still placed correctly.
 
