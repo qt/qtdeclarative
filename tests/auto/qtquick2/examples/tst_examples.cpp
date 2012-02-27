@@ -88,10 +88,11 @@ tst_examples::tst_examples()
     // Add files to exclude here
     excludedFiles << "doc/src/snippets/declarative/listmodel.qml"; //Just a ListModel, no root QQuickItem
 
-    // Add directories you want excluded here
-    excludedDirs << "examples/shared"; //Not an example
-    excludedDirs << "examples/qtquick/text/fonts"; // QTBUG-21415
+    // Add directories you want excluded here (don't add examples/, because they install to examples/qtdeclarative/)
+    excludedDirs << "shared"; //Not an example
+    excludedDirs << "qtquick/text/fonts"; // QTBUG-21415
     excludedDirs << "doc/src/snippets/declarative/path"; //No root QQuickItem
+    excludedDirs << "tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
     // These snippets are not expected to run on their own.
     excludedDirs << "doc/src/snippets/declarative/visualdatamodel_rootindex";
@@ -99,15 +100,15 @@ tst_examples::tst_examples()
     excludedDirs << "doc/src/snippets/declarative/imports";
 
 #ifdef QT_NO_WEBKIT
-    excludedDirs << "examples/qtquick/modelviews/webview";
-    excludedDirs << "examples/demos/webbrowser";
+    excludedDirs << "qtquick/modelviews/webview";
+    excludedDirs << "demos/webbrowser";
     excludedDirs << "doc/src/snippets/declarative/webview";
 #endif
 
 #ifdef QT_NO_XMLPATTERNS
-    excludedDirs << "examples/demos/twitter";
-    excludedDirs << "examples/demos/flickr";
-    excludedDirs << "examples/demos/photoviewer";
+    excludedDirs << "demos/twitter";
+    excludedDirs << "demos/flickr";
+    excludedDirs << "demos/photoviewer";
 #endif
 }
 
