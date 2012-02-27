@@ -450,6 +450,21 @@ QQuickVisualDataModel::ReleaseFlags QQuickVisualDataModel::release(QQuickItem *i
     return stat;
 }
 
+// Cancel a requested async item
+void QQuickVisualDataModel::cancel(int index)
+{
+    Q_D(QQuickVisualDataModel);
+    if (!d->m_delegate || index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
+        qWarning() << "VisualDataModel::cancel: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
+        return;
+    }
+
+    Compositor::iterator it = d->m_compositor.find(d->m_compositorGroup, index);
+    QQuickVisualDataModelItem *cacheItem = it->inCache() ? d->m_cache.at(it.cacheIndex) : 0;
+    if (cacheItem && cacheItem->incubationTask)
+        d->releaseIncubator(cacheItem->incubationTask);
+}
+
 void QQuickVisualDataModelPrivate::group_append(
         QDeclarativeListProperty<QQuickVisualDataGroup> *property, QQuickVisualDataGroup *group)
 {
@@ -708,8 +723,10 @@ void QQuickVisualDataModelPrivate::incubatorStatusChanged(QVDMIncubationTask *in
         incubationTask->incubatingContext = 0;
         if (!cacheItem->isReferenced()) {
             int cidx = m_cache.indexOf(cacheItem);
-            m_compositor.clearFlags(Compositor::Cache, cidx, 1, Compositor::CacheFlag);
-            m_cache.removeAt(cidx);
+            if (cidx >= 0) {
+                m_compositor.clearFlags(Compositor::Cache, cidx, 1, Compositor::CacheFlag);
+                m_cache.removeAt(cidx);
+            }
             delete cacheItem;
             Q_ASSERT(m_cache.count() == m_compositor.count(Compositor::Cache));
         }

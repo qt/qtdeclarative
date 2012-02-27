@@ -193,6 +193,7 @@ public:
     void resize(QQuickCanvas *canvas, const QSize &size);
     void handleDeferredUpdate();
     void maybeUpdate(QQuickCanvas *canvas);
+    void wakeup();
 
     void startRendering();
     void stopRendering();
@@ -202,7 +203,7 @@ public:
 
     void initialize();
 
-    bool *allowMainThreadProcessing() { return &allowMainThreadProcessingFlag; }
+    volatile bool *allowMainThreadProcessing() { return &allowMainThreadProcessingFlag; }
 
     bool event(QEvent *);
 
@@ -243,7 +244,7 @@ private:
     QMutex mutex;
     QWaitCondition condition;
 
-    bool allowMainThreadProcessingFlag;
+    volatile bool allowMainThreadProcessingFlag;
 
     int isGuiLocked;
     uint animationRunning: 1;
@@ -299,12 +300,13 @@ public:
     void paint(QQuickCanvas *canvas);
     QImage grab(QQuickCanvas *canvas);
     void resize(QQuickCanvas *canvas, const QSize &size);
+    void wakeup();
 
     void maybeUpdate(QQuickCanvas *canvas);
 
     void releaseResources() { }
 
-    bool *allowMainThreadProcessing();
+    volatile bool *allowMainThreadProcessing();
 
     QSGContext *sceneGraphContext() const;
 
@@ -1129,6 +1131,14 @@ void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickCanvas *)
 
 }
 
+void QQuickRenderThreadSingleContextWindowManager::wakeup()
+{
+    lockInGui();
+    if (isRenderBlocked)
+        wake();
+    unlockInGui();
+}
+
 QQuickTrivialWindowManager::QQuickTrivialWindowManager()
     : gl(0)
     , eventPending(false)
@@ -1268,9 +1278,11 @@ void QQuickTrivialWindowManager::maybeUpdate(QQuickCanvas *canvas)
     }
 }
 
+void QQuickTrivialWindowManager::wakeup()
+{
+}
 
-
-bool *QQuickTrivialWindowManager::allowMainThreadProcessing()
+volatile bool *QQuickTrivialWindowManager::allowMainThreadProcessing()
 {
     return 0;
 }

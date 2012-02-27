@@ -94,11 +94,10 @@ protected:
     {
         if (e->type() == QEvent::User) {
             Q_ASSERT(m_eventSent);
-
-            bool *amtp = m_canvas->windowManager->allowMainThreadProcessing();
+            volatile bool *amtp = m_canvas->windowManager->allowMainThreadProcessing();
             while (incubatingObjectCount()) {
                 if (amtp)
-                    incubateWhile(amtp);
+                    incubateWhile(amtp, 2);
                 else
                     incubateFor(5);
                 QCoreApplication::processEvents();
@@ -115,6 +114,8 @@ protected:
             m_eventSent = true;
             QCoreApplication::postEvent(this, new QEvent(QEvent::User));
         }
+        // If no animations are running, the renderer may be waiting
+        m_canvas->windowManager->wakeup();
     }
 
 private:

@@ -2162,6 +2162,12 @@ void QQuickItemViewPrivate::clear()
     createHighlight();
     trackedItem = 0;
 
+    if (requestedIndex >= 0 && requestedAsync) {
+        if (model)
+            model->cancel(requestedIndex);
+        requestedIndex = -1;
+    }
+
     markExtentsDirty();
     itemCount = 0;
 }

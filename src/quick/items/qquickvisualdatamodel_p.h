@@ -106,6 +106,7 @@ public:
     bool isValid() const { return delegate() != 0; }
     QQuickItem *item(int index, bool asynchronous=false);
     ReleaseFlags release(QQuickItem *item);
+    void cancel(int index);
     virtual QString stringValue(int index, const QString &role);
     virtual void setWatchedRoles(QList<QByteArray> roles);
 

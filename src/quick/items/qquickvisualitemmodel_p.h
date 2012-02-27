@@ -69,6 +69,7 @@ public:
     virtual bool isValid() const = 0;
     virtual QQuickItem *item(int index, bool asynchronous=false) = 0;
     virtual ReleaseFlags release(QQuickItem *item) = 0;
+    virtual void cancel(int) {}
     virtual QString stringValue(int, const QString &) = 0;
     virtual void setWatchedRoles(QList<QByteArray> roles) = 0;
 

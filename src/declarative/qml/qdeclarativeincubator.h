@@ -110,7 +110,7 @@ public:
     int incubatingObjectCount() const;
 
     void incubateFor(int msecs);
-    void incubateWhile(bool *flag);
+    void incubateWhile(volatile bool *flag, int msecs=0);
 
 protected:
     virtual void incubatingObjectCountChanged(int);
