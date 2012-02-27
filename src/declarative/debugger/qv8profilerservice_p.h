@@ -85,6 +85,7 @@ public:
         V8Complete,
         V8SnapshotChunk,
         V8SnapshotComplete,
+        V8Started,
 
         V8MaximumMessage
     };

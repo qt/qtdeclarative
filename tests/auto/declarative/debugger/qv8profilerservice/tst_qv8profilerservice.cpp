@@ -91,6 +91,7 @@ public:
     QList<QByteArray> snapshotMessages;
 
 signals:
+    void started();
     void complete();
     void snapshot();
 
@@ -158,6 +159,9 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
     case QV8ProfilerService::V8SnapshotComplete:
         emit snapshot();
         break;
+    case QV8ProfilerService::V8Started:
+        emit started();
+        break;
     default:
         QString failMessage = QString("Unknown message type: %1").arg(messageType);
         QFAIL(qPrintable(failMessage));
@@ -208,6 +212,8 @@ void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
     QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
+    QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(started())),
+             "No start signal received in time.");
     m_client->stopProfiling("");
     QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
@@ -225,6 +231,8 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
         QFAIL(qPrintable(failMsg));
     }
     m_client->startProfiling("");
+    QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(started())),
+             "No start signal received in time.");
     m_client->stopProfiling("");
     QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
@@ -236,6 +244,8 @@ void tst_QV8ProfilerService::nonBlockingConnect()
     QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
+    QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(started())),
+             "No start signal received in time.");
     m_client->stopProfiling("");
     QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
@@ -257,6 +267,8 @@ void tst_QV8ProfilerService::profileOnExit()
     QTRY_COMPARE(m_client->state(), QDeclarativeDebugClient::Enabled);
 
     m_client->startProfiling("");
+    QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(started())),
+             "No start signal received in time.");
 
     QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
@@ -270,6 +282,8 @@ void tst_QV8ProfilerService::console()
 
     m_client->stopProfiling("");
 
+    QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(started())),
+             "No start signal received in time.");
     QVERIFY2(QDeclarativeDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
     QVERIFY(!m_client->traceMessages.isEmpty());

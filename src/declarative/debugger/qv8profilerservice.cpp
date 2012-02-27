@@ -187,6 +187,13 @@ void QV8ProfilerService::startProfiling(const QString &title)
     v8::CpuProfiler::StartProfiling(v8title);
 
     d->m_ongoing.append(title);
+
+    // indicate profiling started
+    QByteArray data;
+    QDataStream ds(&data, QIODevice::WriteOnly);
+    ds << (int)QV8ProfilerService::V8Started;
+
+    sendMessage(data);
 }
 
 void QV8ProfilerService::stopProfiling(const QString &title)
@@ -205,6 +212,13 @@ void QV8ProfilerService::stopProfiling(const QString &title)
         // can happen at start
         const v8::CpuProfileNode *rootNode = cpuProfile->GetTopDownRoot();
         d->printProfileTree(rootNode);
+    } else {
+        // indicate completion, even without data
+        QByteArray data;
+        QDataStream ds(&data, QIODevice::WriteOnly);
+        ds << (int)QV8ProfilerService::V8Complete;
+
+        sendMessage(data);
     }
 }
 
