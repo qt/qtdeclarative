@@ -42,8 +42,8 @@ import QtQuick 2.0
 
 GridView {
     id: root
-    width: 360; height: 360
-    cellWidth: 90; cellHeight: 90
+    width: 320; height: 480
+    cellWidth: 80; cellHeight: 80
 
     model: VisualDataModel {
         id: visualModel
@@ -61,10 +61,18 @@ GridView {
             ListElement { color: "aquamarine" }
             ListElement { color: "indigo" }
             ListElement { color: "black" }
-            ListElement { color: "chartreuse" }
+            ListElement { color: "lightsteelblue" }
             ListElement { color: "violet" }
             ListElement { color: "grey" }
             ListElement { color: "springgreen" }
+            ListElement { color: "salmon" }
+            ListElement { color: "blanchedalmond" }
+            ListElement { color: "forestgreen" }
+            ListElement { color: "pink" }
+            ListElement { color: "navy" }
+            ListElement { color: "goldenrod" }
+            ListElement { color: "crimson" }
+            ListElement { color: "teal" }
         }
 
         delegate: MouseArea {
@@ -72,12 +80,12 @@ GridView {
 
             property int visualIndex: VisualDataModel.itemsIndex
 
-            width: 90; height: 90
+            width: 80; height: 80
             drag.target: icon
 
             Rectangle {
                 id: icon
-                width: 80; height: 80
+                width: 72; height: 72
                 anchors {
                     horizontalCenter: parent.horizontalCenter;
                     verticalCenter: parent.verticalCenter
@@ -87,8 +95,8 @@ GridView {
 
                 Drag.active: delegateRoot.pressed
                 Drag.source: delegateRoot
-                Drag.hotSpot.x: 40
-                Drag.hotSpot.y: 40
+                Drag.hotSpot.x: 36
+                Drag.hotSpot.y: 36
 
                 states: [
                     State {

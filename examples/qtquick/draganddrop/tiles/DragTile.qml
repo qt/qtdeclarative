@@ -44,12 +44,12 @@ Item {
     id: root
     property string colorKey
 
-    width: 100; height: 100
+    width: 64; height: 64
 
     MouseArea {
         id: mouseArea
 
-        width: 100; height: 100
+        width: 64; height: 64
         anchors.centerIn: parent
 
         drag.target: tile
@@ -59,20 +59,21 @@ Item {
         Rectangle {
             id: tile
 
-            width: 100; height: 100
+            width: 64; height: 64
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.horizontalCenter: parent.horizontalCenter
 
-            anchors.horizontalCenter: parent.horizontalCenter; anchors.verticalCenter: parent.verticalCenter
             color: colorKey
 
             Drag.keys: [ colorKey ]
             Drag.active: mouseArea.drag.active
-            Drag.hotSpot.x: 50
-            Drag.hotSpot.y: 50
+            Drag.hotSpot.x: 32
+            Drag.hotSpot.y: 32
 
             Text {
                 anchors.fill: parent
                 color: "white"
-                font.pixelSize: 90
+                font.pixelSize: 48
                 text: modelData + 1
                 horizontalAlignment:Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

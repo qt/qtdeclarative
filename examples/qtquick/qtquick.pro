@@ -1,8 +1,8 @@
 TEMPLATE = subdirs
 SUBDIRS = accessibility \
-            animation
+            animation \
+            draganddrop
             #canvas \
-            #draganddrop \
             #imageelements \
             #keyinteraction \
             #modelviews \

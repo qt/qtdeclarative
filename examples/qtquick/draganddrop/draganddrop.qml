@@ -39,71 +39,30 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "../../shared" as Examples
 
-Rectangle {
-    id: root
+/*!
+    \title QtQuick Examples - Drag and Drop
+    \example qtquick/draganddrop
+    \brief This is a collection of QML drag and drop examples
+    \image qml-draganddrop-example.png
 
-    width: 320
+    This is a collection of small QML examples relating to drag and drop functionality.
+
+    Tiles adds drag and drog to simple rectangles, which you can drag into a specific grid.
+
+    GridView adds drag and drog to a GridView, allowing you to reorder the list.
+*/
+
+Item {
     height: 480
-
-    color: "black"
-
-    Grid {
-        id: redDestination
-
-        anchors.left: redSource.right; anchors.top: parent.top;
-        anchors.margins: 5
-        width: 64*3
-        height: 64*3
-        opacity: 0.5
-        columns: 3
-
-        Repeater {
-            model: 9;
-            delegate: DropTile { colorKey: "red" }
-        }
-    }
-
-    Grid {
-        anchors.right: blueSource.left; anchors.bottom: parent.bottom;
-        anchors.margins: 5
-        width: 64*3
-        height: 64*3
-
-        opacity: 0.5
-
-        columns: 3
-
-        Repeater {
-            model: 9
-            delegate: DropTile { colorKey: "blue" }
-        }
-    }
-
-    Column {
-        id: redSource
-
-        anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
-        anchors.margins: 5
-        width: 64
-        spacing: -16
-
-        Repeater {
-            model: 9
-            delegate: DragTile { colorKey: "red" }
-        }
-    }
-    Column {
-        id: blueSource
-
-        anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom
-        anchors.margins: 5
-        width: 64
-        spacing: -16
-
-        Repeater {
-            model: 9
-            delegate: DragTile { colorKey: "blue" }
+    width: 320
+    Examples.LauncherList {
+        id: ll
+        anchors.fill: parent
+        Component.onCompleted: {
+            addExample("Tiles", "",  Qt.resolvedUrl("tiles/tiles.qml"));
+            addExample("GridView", "", Qt.resolvedUrl("views/gridview.qml"));
         }
     }
 }

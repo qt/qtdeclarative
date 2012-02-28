@@ -46,7 +46,7 @@ DropArea {
     property string colorKey
     property alias dropProxy: dragTarget
 
-    width: 100; height: 100
+    width: 64; height: 64
     keys: [ colorKey ]
 
     Rectangle {
