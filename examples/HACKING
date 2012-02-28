@@ -7,13 +7,13 @@ Snippets are snatches of QML code that won't even run on their own. They don't b
 Examples
 ---
 
-Examples are large blocks of QML code that demonstrate a feature. You should be able to launch an example and visually see the feature take effect. Examples should be written in a small form, and should automatically activate any features. Ideally, when you run an example, you see the feature demonstrate itself over and over until you get bored and close the application using your platform's close window mechanism. Examples shouldn't contain their own close buttons or start screen, explanatory text should be kept to a minimum (show, not tell), and reserve interaction for demonstrating interactive elements). The code should be held to a high level of quality, and should be understandable by people new to QML.
+Examples are large blocks of QML code that demonstrate a feature. You should be able to launch an example and visually see the feature take effect. Examples should be written in a small form, and should automatically activate any features. Ideally, when you run an example, you see the feature demonstrate itself over and over until you get bored and close the application using your platform's close window mechanism. Examples shouldn't contain their own close buttons or start screen, explanatory text should be kept to a minimum (show, not tell), and reserve interaction for demonstrating interactive elements. The code should be held to a high level of quality, and should be understandable by people new to QML.
 
 Unless the demonstrated feature uses it, assume no interface devices other than a screen that can show a 320x480 rectangle and a generic pointing device (with the shared subset of mouse/touch functionality).
 
-Groups of similar examples should be placed in one folder with a single launcher application, which uses the QtQuick.Examples module for common components.
+Groups of similar examples should be placed in one folder with a single launcher application, which uses the shared folder of common components.
 
-The example, or launcher application in case of groups, should contain a qdoc comment explaining the example. The example or launcher should be buildable as a full C++ application and runnable with the standard qml file launcher.
+The example, or launcher application in case of groups, should contain a qdoc comment explaining the example. The example or launcher should be buildable as a full C++ application and runnable with the standard qml file launcher. Usually this will consist primarily of using the macro found in shared.h.
 
 Demos
 ---
