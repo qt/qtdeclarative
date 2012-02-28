@@ -40,16 +40,6 @@
     This example demonstrates the positioners and some of their animations.
 */
 /*!
-    \title QML Examples - Image Elements
-    \example declarative/imageelements
-    \brief This is a collection of QML examples
-    \image qml-imageelements-example.png
-
-    This is a collection of small QML examples relating to image elements. Each example is
-    a small QML file, usually containing or emphasizing a particular element or
-    feature. You can run and observe the behavior of each example.
-*/
-/*!
     \title QML Examples - Models and Views
     \example declarative/modelviews
     \brief This is a collection of QML examples

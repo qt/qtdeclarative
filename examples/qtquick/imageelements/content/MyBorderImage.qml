@@ -53,7 +53,7 @@ Item {
     property int maxHeight
     property int margin
 
-    width: 240; height: 240
+    width: 240; height: 200
 
     BorderImage {
         id: image; anchors.centerIn: parent

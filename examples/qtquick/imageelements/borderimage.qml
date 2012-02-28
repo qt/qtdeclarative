@@ -46,32 +46,48 @@ Rectangle {
     width: 320
     height: 480
 
+    BorderImageSelector {
+        id: selector
+        curIdx: 0
+        maxIdx: 3
+        gridWidth: 240
+        flickable: mainFlickable
+        width: parent.width
+        height: 64
+    }
+
     Flickable {
-        anchors.fill: parent
+        id: mainFlickable
+        width: parent.width
+        anchors.bottom: parent.bottom
+        anchors.top: selector.bottom
+        interactive: false //Animated through selector control
+        contentX: -120
+        Behavior on contentX { NumberAnimation {}}
         contentWidth: 1030
-        contentHeight: 540
+        contentHeight: 420
         Grid {
             anchors.centerIn: parent; spacing: 20
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 240
+                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
                 source: "content/colors.png"; margin: 30
             }
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 240
+                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
                 source: "content/colors.png"; margin: 30
                 horizontalMode: BorderImage.Repeat; verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 240
+                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
                 source: "content/colors.png"; margin: 30
                 horizontalMode: BorderImage.Stretch; verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 240
+                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
                 source: "content/colors.png"; margin: 30
                 horizontalMode: BorderImage.Round; verticalMode: BorderImage.Round
             }

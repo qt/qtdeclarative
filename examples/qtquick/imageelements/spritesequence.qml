@@ -40,8 +40,8 @@
 import QtQuick 2.0
 
 Item {
-    width: 480
-    height: 1280
+    width: 320
+    height: 480
     MouseArea {
         onClicked: anim.start();
         anchors.fill: parent
@@ -49,7 +49,7 @@ Item {
     SequentialAnimation {
         id: anim
         ScriptAction { script: image.goalSprite = "falling"; }
-        NumberAnimation { target: image; property: "y"; to: 1480; duration: 12000; }
+        NumberAnimation { target: image; property: "y"; to: 480; duration: 12000; }
         ScriptAction { script: {image.goalSprite = ""; image.jumpTo("still");} }
         PropertyAction { target: image; property: "y"; value: 0 }
     }

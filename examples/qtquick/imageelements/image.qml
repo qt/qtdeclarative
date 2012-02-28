@@ -44,29 +44,23 @@ import "content"
 Rectangle {
     width: 320
     height: 480
-    Flickable {
+    Grid {
+        property int cellWidth: (width - (spacing * (columns - 1))) / columns
+        property int cellHeight: (height - (spacing * (rows - 1))) / rows
+
         anchors.fill: parent
-        contentWidth: 490
-        contentHeight: 285
+        anchors.margins: 30
 
-        Grid {
-            property int cellWidth: (width - (spacing * (columns - 1))) / columns
-            property int cellHeight: (height - (spacing * (rows - 1))) / rows
+        columns: 2
+        rows: 3
+        spacing: 30
 
-            anchors.fill: parent
-            anchors.margins: 30
+        ImageCell { mode: Image.Stretch; caption: "Stretch" }
+        ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
+        ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
 
-            columns: 3
-            rows: 2
-            spacing: 30
-
-            ImageCell { mode: Image.Stretch; caption: "Stretch" }
-            ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
-            ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
-
-            ImageCell { mode: Image.Tile; caption: "Tile" }
-            ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
-            ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
-        }
+        ImageCell { mode: Image.Tile; caption: "Tile" }
+        ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
+        ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
     }
 }

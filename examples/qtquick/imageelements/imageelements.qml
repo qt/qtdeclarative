@@ -41,9 +41,28 @@
 import QtQuick 2.0
 import "../../shared"
 
+/*!
+    \title QML Examples - Image Elements
+    \example declarative/imageelements
+    \brief This is a collection of QML examples
+    \image qml-imageelements-example.png
+
+    This is a collection of small QML examples relating to image elements.
+
+    BorderImage shows off the various scaling modes of the BorderImage item.
+
+    Image shows off the various tiling modes of the Image item.
+
+    Shadows shows how to create a drop shadow for a rectangle using a BorderImage.
+
+    AnimatedSprite shows a simple use for the AnimatedSprite element.
+
+    SpriteSequence demonstrates using the SpriteSequence element to draw an animated and slightly interactive bear.
+*/
+
 Item {
     height: 480
-    width: 640
+    width: 320
     LauncherList {
         id: ll
         anchors.fill: parent
@@ -51,8 +70,8 @@ Item {
             addExample("BorderImage", "An image with scaled borders",  Qt.resolvedUrl("borderimage.qml"));
             addExample("Image", "A showcase of the options available to Image", Qt.resolvedUrl("image.qml"));
             addExample("Shadows", "Rectangles with a drop-shadow effect", Qt.resolvedUrl("shadows.qml"));
-            addExample("Simple Sprite", "A simple sprite-based animation", Qt.resolvedUrl("simplesprite.qml"));
-            addExample("Sprite Image", "A sprite-based animation with complex transitions", Qt.resolvedUrl("spriteimage.qml"));
+            addExample("AnimatedSprite", "A simple sprite-based animation", Qt.resolvedUrl("animatedsprite.qml"));
+            addExample("SpriteSequence", "A sprite-based animation with complex transitions", Qt.resolvedUrl("spritesequence.qml"));
         }
     }
 }
