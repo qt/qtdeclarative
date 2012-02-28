@@ -45,6 +45,10 @@ GridView {
     width: 320; height: 480
     cellWidth: 80; cellHeight: 80
 
+    displaced: Transition {
+        NumberAnimation { properties: "x,y"; easing.type: Easing.OutQuad }
+    }
+
     model: VisualDataModel {
         id: visualModel
         model: ListModel {
@@ -93,7 +97,7 @@ GridView {
                 color: model.color
                 radius: 3
 
-                Drag.active: delegateRoot.pressed
+                Drag.active: delegateRoot.drag.active
                 Drag.source: delegateRoot
                 Drag.hotSpot.x: 36
                 Drag.hotSpot.y: 36
