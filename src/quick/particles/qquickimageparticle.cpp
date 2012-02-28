@@ -1342,6 +1342,10 @@ void QQuickImageParticle::finishBuildParticleNodes()
             }
         }
     }
+#ifdef Q_OS_WIN
+    if (perfLevel < Deformable) //QTBUG-24540 , point sprite 'extension' isn't working on windows.
+        perfLevel = Deformable;
+#endif
 
     if (perfLevel >= Colored  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset
