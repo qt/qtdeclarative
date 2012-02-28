@@ -111,6 +111,8 @@ QQuickBasePositioner::~QQuickBasePositioner()
     Q_D(QQuickBasePositioner);
     for (int i = 0; i < positionedItems.count(); ++i)
         d->unwatchChanges(positionedItems.at(i).item);
+    for (int i = 0; i < unpositionedItems.count(); ++i)
+        d->unwatchChanges(unpositionedItems.at(i).item);
     positionedItems.clear();
 }
 
@@ -187,6 +189,9 @@ void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &v
         if (idx >= 0) {
             d->unwatchChanges(child);
             positionedItems.remove(idx);
+        } else if ((idx = unpositionedItems.find(posItem)) >= 0) {
+            d->unwatchChanges(child);
+            unpositionedItems.remove(idx);
         }
         d->setPositioningDirty();
     }
