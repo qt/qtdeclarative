@@ -42,7 +42,7 @@ import QtQuick 2.0
 
 Rectangle {
     id: page
-    width: 640; height: 480
+    width: 320; height: 480;
     color: "Black"
 
     // Make a ball to bounce

@@ -58,6 +58,8 @@ import "../../shared" as Examples
 
     Wiggly Text demonstrates using more complex behaviors to animate and wiggle some text around as you drag it.
 
+    Tv Tennis demonstrates using more complex behaviors to get paddles following a ball for an infinite game.
+
     Easing Curves shows off all the easing curves available in Qt Quick animations.
 
     States demonstrates how the properties of an item can vary between states.
@@ -80,6 +82,7 @@ Item {
             addExample("PropertyAnimation", "Interpolates between numbers", Qt.resolvedUrl("basics/property-animation.qml"));
             addExample("Behaviors", "Animates procedural movement", Qt.resolvedUrl("behaviors/behavior-example.qml"));
             addExample("Wiggly Text", "Text that wiggles as you drag it", Qt.resolvedUrl("behaviors/wigglytext.qml"));
+            addExample("Tv Tennis", "Paddles that follow a ball", Qt.resolvedUrl("behaviors/tvtennis.qml"));
             addExample("Easing Curves", "Compare available easing curves", Qt.resolvedUrl("easing/easing.qml"));
             addExample("States", "Simple states", Qt.resolvedUrl("states/states.qml"));
             addExample("Transitions", "Simple states with animated transitions", Qt.resolvedUrl("states/transitions.qml"));
