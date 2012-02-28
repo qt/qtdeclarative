@@ -461,8 +461,28 @@ void QQuickVisualDataModel::cancel(int index)
 
     Compositor::iterator it = d->m_compositor.find(d->m_compositorGroup, index);
     QQuickVisualDataModelItem *cacheItem = it->inCache() ? d->m_cache.at(it.cacheIndex) : 0;
-    if (cacheItem && cacheItem->incubationTask)
-        d->releaseIncubator(cacheItem->incubationTask);
+    if (cacheItem) {
+        if (cacheItem->incubationTask) {
+            delete cacheItem->incubationTask->incubatingContext;
+            cacheItem->incubationTask->incubatingContext = 0;
+            d->releaseIncubator(cacheItem->incubationTask);
+            cacheItem->incubationTask = 0;
+        }
+        if (cacheItem->object && !cacheItem->isObjectReferenced()) {
+            d->destroy(cacheItem->object);
+            if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(cacheItem->object))
+                d->emitDestroyingPackage(package);
+            else if (QQuickItem *item = qobject_cast<QQuickItem *>(cacheItem->object))
+                d->emitDestroyingItem(item);
+            cacheItem->object = 0;
+        }
+        if (!cacheItem->isReferenced()) {
+            d->m_compositor.clearFlags(Compositor::Cache, it.cacheIndex, 1, Compositor::CacheFlag);
+            d->m_cache.removeAt(it.cacheIndex);
+            delete cacheItem;
+            Q_ASSERT(d->m_cache.count() == d->m_compositor.count(Compositor::Cache));
+        }
+    }
 }
 
 void QQuickVisualDataModelPrivate::group_append(
