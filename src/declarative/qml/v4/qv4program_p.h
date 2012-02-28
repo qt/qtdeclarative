@@ -96,6 +96,7 @@ enum QDeclarativeRegisterType {
     QStringType = FirstCleanupType,
     QUrlType,
     QVariantType,
+    QColorType
 };
 
 const char *QV4Program::data() const 

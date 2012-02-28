@@ -69,6 +69,9 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
     case QMetaType::QUrl:
         return IR::UrlType;
 
+    case QMetaType::QColor:
+        return IR::ColorType;
+
     default:
         if (t == QDeclarativeMetaType::QQuickAnchorLineMetaTypeId()) {
             return IR::SGAnchorLineType;

@@ -50,6 +50,7 @@
 #include <private/qdeclarativeprofilerservice_p.h>
 #include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativetrace_p.h>
+#include <private/qdeclarativestringconverters_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qnumeric.h>
@@ -86,9 +87,11 @@ struct Register {
     QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
     QString *getstringptr() { return (QString *)typeDataPtr(); }
     QUrl *geturlptr() { return (QUrl *)typeDataPtr(); }
+    QColor *getcolorptr() { return (QColor *)typeDataPtr(); }
     const QVariant *getvariantptr() const { return (QVariant *)typeDataPtr(); }
     const QString *getstringptr() const { return (QString *)typeDataPtr(); }
     const QUrl *geturlptr() const { return (QUrl *)typeDataPtr(); }
+    const QColor *getcolorptr() const { return (QColor *)typeDataPtr(); }
 
     void *typeDataPtr() { return (void *)&data; }
     void *typeMemory() { return (void *)data; }
@@ -112,6 +115,7 @@ struct Register {
     inline void cleanup();
     inline void cleanupString();
     inline void cleanupUrl();
+    inline void cleanupColor();
     inline void cleanupVariant();
 
     inline void copy(const Register &other);
@@ -135,6 +139,8 @@ void Register::cleanup()
             getstringptr()->~QString();
         } else if (dataType == QUrlType) {
             geturlptr()->~QUrl();
+        } else if (dataType == QColorType) {
+            getcolorptr()->~QColor();
         } else if (dataType == QVariantType) {
             getvariantptr()->~QVariant();
         }
@@ -154,6 +160,12 @@ void Register::cleanupUrl()
     setUndefined();
 }
 
+void Register::cleanupColor()
+{
+    getcolorptr()->~QColor();
+    setUndefined();
+}
+
 void Register::cleanupVariant()
 {
     getvariantptr()->~QVariant();
@@ -168,6 +180,8 @@ void Register::copy(const Register &other)
             new (getstringptr()) QString(*other.getstringptr());
         else if (other.dataType == QUrlType)
             new (geturlptr()) QUrl(*other.geturlptr());
+        else if (other.dataType == QColorType)
+            new (getcolorptr()) QColor(*other.getcolorptr());
         else if (other.dataType == QVariantType)
             new (getvariantptr()) QVariant(*other.getvariantptr());
     } 
@@ -181,6 +195,8 @@ void Register::init(Type type)
             new (getstringptr()) QString();
         else if (dataType == QUrlType)
             new (geturlptr()) QUrl();
+        else if (dataType == QColorType)
+            new (getcolorptr()) QColor();
         else if (dataType == QVariantType)
             new (getvariantptr()) QVariant();
     }
@@ -663,6 +679,11 @@ inline quint32 QV4Bindings::toUint32(qreal n)
     MARK_REGISTER(reg); \
 }
 
+#define COLOR_REGISTER(reg) { \
+    registers[(reg)].settype(QColorType); \
+    MARK_REGISTER(reg); \
+}
+
 #define VARIANT_REGISTER(reg) { \
     registers[(reg)].settype(QVariantType); \
     MARK_REGISTER(reg); \
@@ -1023,6 +1044,27 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertStringToUrl, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertStringToColor, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QString tmp(*src.getstringptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupString();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            QColor *colorPtr = output.getcolorptr();
+            new (colorPtr) QColor(QDeclarativeStringConverters::colorFromString(tmp));
+
+            COLOR_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertStringToUrl, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertUrlToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1059,6 +1101,40 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         }
     }
     QML_V4_END_INSTR(ConvertUrlToString, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertColorToBool, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            // for compatibility with color behavior in v8, always true
+            output.setbool(true);
+        }
+    }
+    QML_V4_END_INSTR(ConvertColorToBool, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertColorToString, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QColor tmp(*src.getcolorptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupColor();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            // to maintain behaviour with QtQuick 1.0, we just output normal toString() value.
+            new (output.getstringptr()) QString(QVariant(tmp).toString());
+            STRING_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertColorToString, unaryop)
 
     QML_V4_BEGIN_INSTR(ResolveUrl, unaryop)
     {
