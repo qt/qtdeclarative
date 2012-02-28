@@ -58,7 +58,7 @@ class Q_DECLARATIVE_EXPORT QDeclarativeTextureFactory : public QObject
 {
 public:
     QDeclarativeTextureFactory();
-    ~QDeclarativeTextureFactory();
+    virtual ~QDeclarativeTextureFactory();
 
     virtual QSGTexture *createTexture(QQuickCanvas *canvas) const = 0;
     virtual QSize textureSize() const = 0;

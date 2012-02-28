@@ -762,6 +762,8 @@ void QDeclarativePixmapStore::unreferencePixmap(QDeclarativePixmapData *data)
 
     data->nextUnreferenced = m_unreferencedPixmaps;
     data->prevUnreferencedPtr = &m_unreferencedPixmaps;
+    if (!m_destroying) // the texture factories may have been cleaned up already.
+        m_unreferencedCost += data->cost();
 
     m_unreferencedPixmaps = data;
     if (m_unreferencedPixmaps->nextUnreferenced) {
@@ -771,8 +773,6 @@ void QDeclarativePixmapStore::unreferencePixmap(QDeclarativePixmapData *data)
 
     if (!m_lastUnreferencedPixmap)
         m_lastUnreferencedPixmap = data;
-
-    m_unreferencedCost += data->cost();
 
     shrinkCache(-1); // Shrink the cache incase it has become larger than cache_limit
 
@@ -810,8 +810,10 @@ void QDeclarativePixmapStore::shrinkCache(int remove)
         data->prevUnreferencedPtr = 0;
         data->prevUnreferenced = 0;
 
-        remove -= data->cost();
-        m_unreferencedCost -= data->cost();
+        if (!m_destroying) {
+            remove -= data->cost();
+            m_unreferencedCost -= data->cost();
+        }
         data->removeFromCache();
         delete data;
     }
