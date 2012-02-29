@@ -42,17 +42,17 @@ import QtQuick 2.0
 import "../contents"
 Item {
   id:container
-  width:360
-  height:600
+  width:320
+  height:480
 
   Column {
     spacing:5
     anchors.fill:parent
-    Text { font.pointSize:25; text:"Rounded rectangle"; anchors.horizontalCenter:parent.horizontalCenter}
+    Text { font.pointSize:15; text:"Rounded rectangle"; anchors.horizontalCenter:parent.horizontalCenter}
     Canvas {
         id:canvas
-        width:360
-        height:360
+        width:320
+        height:280
         smooth:true
         renderTarget:Canvas.Image
         renderStrategy: Canvas.Immediate
@@ -110,15 +110,15 @@ Item {
 
     Rectangle {
         id:controls
-        width:360
-        height:160
+        width:320
+        height:150
         Column {
           spacing:3
-          Slider {id:lineWidthCtrl; width:300; height:30; min:1; max:10; init:2; name:"Line width"}
-          Slider {id:rxCtrl; width:300; height:30; min:5; max:30; init:10; name:"rectx"}
-          Slider {id:ryCtrl; width:300; height:30; min:5; max:30; init:10; name:"recty"}
-          Slider {id:rCtrl; width:300; height:30; min:10; max:100; init:40; name:"Radius"}
-          Slider {id:alphaCtrl; width:300; height:30; min:0; max:1; init:1; name:"Alpha"}
+          Slider {id:lineWidthCtrl; width:300; height:20; min:1; max:10; init:2; name:"Line width"}
+          Slider {id:rxCtrl; width:300; height:20; min:5; max:30; init:10; name:"rectx"}
+          Slider {id:ryCtrl; width:300; height:20; min:5; max:30; init:10; name:"recty"}
+          Slider {id:rCtrl; width:300; height:20; min:10; max:100; init:40; name:"Radius"}
+          Slider {id:alphaCtrl; width:300; height:20; min:0; max:1; init:1; name:"Alpha"}
         }
     }
   }

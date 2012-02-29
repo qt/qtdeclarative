@@ -39,7 +39,6 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "../contents"
 import "cache.js" as TwitterUserCache
 Rectangle {
     width:360

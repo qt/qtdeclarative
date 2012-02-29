@@ -39,49 +39,47 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "../../shared" as Examples
+
+/*!
+    \title QtQuick Examples - Canvas
+    \example quick/canvas
+    \brief This is a collection of QML Canvas examples.
+
+    This is a collection of small QML examples relating to Canvas item. Each example is
+    a small QML file emphasizing a particular element or feature.
+
+    Red heart demonstrates using a bezierCurve API to stroke and fill a red heart.
+
+    Talk bubble demonstrates using a quadraticCurveTo API to stroke and fill a customized talk bubble,
+    this example also demonstrates the fillText API.
+
+    Squircle demonstrates using a collection of simple moveTo/lineTo path APIs to draw a smooth squircle.
+
+    Rounded rectangle demonstrates using a collection if lineTo/arcTo path APIs to draw a rounded rectangle.
+
+    Smile face demonstrates using several complex path APIs to draw an fill a smile face.
+
+    Clip demonstrates using clip API to clip a given image.
+
+    Tiger demonstrates using SVG path API to draw a tiger with a collection of SVG path strings.
+
+*/
 
 Item {
-    id: container
-
-    signal clicked
-
-    property string text
-    width: buttonText.width + 28
-    height: buttonText.height + 14
-
-    BorderImage {
-        id: buttonImage
-        source: "images/toolbutton.sci"
-        width: container.width - 10
-        height: container.height
-    }
-    BorderImage {
-        id: pressed
-        opacity: 0
-        source: "images/toolbutton.sci"
-        width: container.width - 10
-        height: container.height
-    }
-    MouseArea {
-        id: mouseRegion
-        anchors.fill: buttonImage
-        onClicked: { container.clicked(); }
-    }
-    Text {
-        id: buttonText
-        color: "white"
-        anchors.centerIn: buttonImage
-        font.bold: true
-        font.pointSize: 15
-        text: container.text
-        style: Text.Raised
-        styleColor: "black"
-    }
-    states: [
-        State {
-            name: "Pressed"
-            when: mouseRegion.pressed == true
-            PropertyChanges { target: pressed; opacity: 1 }
+    height: 480
+    width: 320
+    Examples.LauncherList {
+        id: ll
+        anchors.fill: parent
+        Component.onCompleted: {
+            addExample("Red heart", "Draws a red heart with bezier curves",  Qt.resolvedUrl("bezierCurve/bezierCurve.qml"));
+            addExample("Talk bubble", "Draws a talk bubble with quadratic curves",  Qt.resolvedUrl("quadraticCurveTo/quadraticCurveTo.qml"));
+            addExample("Squircle", "Draws a smooth squircle with simple lines",  Qt.resolvedUrl("squircle/squircle.qml"));
+            addExample("Rounded rectangle", "Draws a rounded rectangle with lines and arcs",  Qt.resolvedUrl("roundedrect/roundedrect.qml"));
+            addExample("Smile face", "Draws a smile face with complex paths",  Qt.resolvedUrl("smile/smile.qml"));
+            addExample("Clip", "Shows the canvas clip feature",  Qt.resolvedUrl("clip/clip.qml"));
+            addExample("Tiger", "Draw a tiger with a collection of SVG paths",  Qt.resolvedUrl("tiger/tiger.qml"));
         }
-    ]
+    }
 }
