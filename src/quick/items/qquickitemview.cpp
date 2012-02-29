@@ -1318,6 +1318,8 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
 
 QQuickItemViewPrivate::~QQuickItemViewPrivate()
 {
+    if (transitioner)
+        transitioner->setChangeListener(0);
     delete transitioner;
 }
 
