@@ -12,4 +12,4 @@ include (../../../shared/util.pri)
 
 CONFIG += parallel_test declarative_debug
 
-QT += declarative-private testlib
+QT += core-private v8-private declarative-private testlib

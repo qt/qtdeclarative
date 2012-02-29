@@ -1578,13 +1578,12 @@ void QDeclarativeTypeData::downloadProgressChanged(qreal p)
 void QDeclarativeTypeData::compile()
 {
     Q_ASSERT(m_compiledData == 0);
-    QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Compiling);
 
     m_compiledData = new QDeclarativeCompiledData(typeLoader()->engine());
     m_compiledData->url = finalUrl();
     m_compiledData->name = finalUrlString();
-    QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Compiling, m_compiledData->name,1,1);
-    QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Compiling, m_compiledData->name);
+
+    QDeclarativeCompilingProfiler prof(m_compiledData->name);
 
     QDeclarativeCompiler compiler(&scriptParser._pool);
     if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
@@ -1592,7 +1591,6 @@ void QDeclarativeTypeData::compile()
         m_compiledData->release();
         m_compiledData = 0;
     }
-    QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Compiling);
 }
 
 void QDeclarativeTypeData::resolveTypes()

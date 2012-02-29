@@ -52,23 +52,10 @@
 
 QT_BEGIN_NAMESPACE
 
+// instance will be set, unset in constructor. Allows static methods to be inlined.
+QDeclarativeProfilerService *QDeclarativeProfilerService::instance = 0;
 Q_GLOBAL_STATIC(QDeclarativeProfilerService, profilerInstance)
 
-QDeclarativeBindingProfiler::QDeclarativeBindingProfiler(const QString &url, int line, int column)
-{
-    QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Binding);
-    QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Binding, url, line, column);
-}
-
-QDeclarativeBindingProfiler::~QDeclarativeBindingProfiler()
-{
-    QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Binding);
-}
-
-void QDeclarativeBindingProfiler::addDetail(const QString &details)
-{
-    QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Binding, details);
-}
 
 // convert to a QByteArray that can be sent to the debug client
 // use of QDataStream can skew results
@@ -106,12 +93,13 @@ QDeclarativeProfilerService::QDeclarativeProfilerService()
 
 QDeclarativeProfilerService::~QDeclarativeProfilerService()
 {
+    instance = 0;
 }
 
 void QDeclarativeProfilerService::initialize()
 {
     // just make sure that the service is properly registered
-    profilerInstance();
+    instance = profilerInstance();
 }
 
 bool QDeclarativeProfilerService::startProfiling()
@@ -132,31 +120,6 @@ void QDeclarativeProfilerService::sendStartedProfilingMessage()
 void QDeclarativeProfilerService::addEvent(EventType t)
 {
     profilerInstance()->addEventImpl(t);
-}
-
-void QDeclarativeProfilerService::startRange(RangeType t)
-{
-    profilerInstance()->startRangeImpl(t);
-}
-
-void QDeclarativeProfilerService::rangeData(RangeType t, const QString &data)
-{
-    profilerInstance()->rangeDataImpl(t, data);
-}
-
-void QDeclarativeProfilerService::rangeLocation(RangeType t, const QString &fileName, int line, int column)
-{
-    profilerInstance()->rangeLocationImpl(t, fileName, line, column);
-}
-
-void QDeclarativeProfilerService::rangeLocation(RangeType t, const QUrl &fileName, int line, int column)
-{
-    profilerInstance()->rangeLocationImpl(t, fileName, line, column);
-}
-
-void QDeclarativeProfilerService::endRange(RangeType t)
-{
-    profilerInstance()->endRangeImpl(t);
 }
 
 void QDeclarativeProfilerService::animationFrame(qint64 delta)
@@ -209,7 +172,7 @@ void QDeclarativeProfilerService::addEventImpl(EventType event)
     processMessage(ed);
 }
 
-void QDeclarativeProfilerService::startRangeImpl(RangeType range)
+void QDeclarativeProfilerService::startRange(RangeType range)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -218,7 +181,7 @@ void QDeclarativeProfilerService::startRangeImpl(RangeType range)
     processMessage(rd);
 }
 
-void QDeclarativeProfilerService::rangeDataImpl(RangeType range, const QString &rData)
+void QDeclarativeProfilerService::rangeData(RangeType range, const QString &rData)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -227,7 +190,7 @@ void QDeclarativeProfilerService::rangeDataImpl(RangeType range, const QString &
     processMessage(rd);
 }
 
-void QDeclarativeProfilerService::rangeDataImpl(RangeType range, const QUrl &rData)
+void QDeclarativeProfilerService::rangeData(RangeType range, const QUrl &rData)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -236,7 +199,7 @@ void QDeclarativeProfilerService::rangeDataImpl(RangeType range, const QUrl &rDa
     processMessage(rd);
 }
 
-void QDeclarativeProfilerService::rangeLocationImpl(RangeType range, const QString &fileName, int line, int column)
+void QDeclarativeProfilerService::rangeLocation(RangeType range, const QString &fileName, int line, int column)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -245,7 +208,7 @@ void QDeclarativeProfilerService::rangeLocationImpl(RangeType range, const QStri
     processMessage(rd);
 }
 
-void QDeclarativeProfilerService::rangeLocationImpl(RangeType range, const QUrl &fileName, int line, int column)
+void QDeclarativeProfilerService::rangeLocation(RangeType range, const QUrl &fileName, int line, int column)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -254,7 +217,7 @@ void QDeclarativeProfilerService::rangeLocationImpl(RangeType range, const QUrl 
     processMessage(rd);
 }
 
-void QDeclarativeProfilerService::endRangeImpl(RangeType range)
+void QDeclarativeProfilerService::endRange(RangeType range)
 {
     if (!QDeclarativeDebugService::isDebuggingEnabled() || !m_enabled)
         return;

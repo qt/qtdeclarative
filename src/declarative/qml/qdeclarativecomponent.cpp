@@ -739,13 +739,14 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
 
     QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(engine);
 
-    bool isRoot = enginePriv->inProgressCreations == 0;
+    if (enginePriv->inProgressCreations == 0) {
+        // only track root, since further ones might not be properly nested
+        profiler = new QDeclarativeObjectCreatingProfiler();
+    }
+
     enginePriv->inProgressCreations++;
     state.errors.clear();
     state.completePending = true;
-
-    if (isRoot) 
-        QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Creating);
 
     enginePriv->referenceScarceResources();
     state.vme.init(context, cc, start, creationContext);
@@ -762,13 +763,12 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
         if (!context->isInternal)
             context->asQDeclarativeContextPrivate()->instances.append(rv);
         QDeclarativeEngineDebugService::instance()->objectCreated(engine, rv);
-        if (isRoot) {
-            QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Creating,
-                                              buildTypeNameForDebug(rv->metaObject()));
+
+        if (profiler && profiler->enabled) {
+            profiler->setTypeName(buildTypeNameForDebug(rv->metaObject()));
             QDeclarativeData *data = QDeclarativeData::get(rv);
             Q_ASSERT(data);
-            QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Creating,
-                                                  cc->url, data->lineNumber, data->columnNumber);
+            profiler->setLocation(cc->url, data->lineNumber, data->columnNumber);
         }
     }
 
@@ -824,7 +824,8 @@ void QDeclarativeComponentPrivate::completeCreate()
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
         complete(ep, &state);
 
-        QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Creating);
+        delete profiler;
+        profiler = 0;
     }
 }
 

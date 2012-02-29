@@ -57,6 +57,7 @@
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qstringbuilder.h>
 
 QT_BEGIN_HEADER
 
@@ -83,13 +84,6 @@ Q_DECLARE_TYPEINFO(QDeclarativeProfilerData, Q_MOVABLE_TYPE);
 class QUrl;
 class QDeclarativeEngine;
 
-// RAII
-class Q_AUTOTEST_EXPORT QDeclarativeBindingProfiler {
-public:
-    QDeclarativeBindingProfiler(const QString &url, int line, int column);
-    ~QDeclarativeBindingProfiler();
-    void addDetail(const QString &details);
-};
 
 class Q_DECLARATIVE_EXPORT QDeclarativeProfilerService : public QDeclarativeDebugService
 {
@@ -132,11 +126,6 @@ public:
     static bool stopProfiling();
     static void sendStartedProfilingMessage();
     static void addEvent(EventType);
-    static void startRange(RangeType);
-    static void rangeData(RangeType, const QString &);
-    static void rangeLocation(RangeType, const QString &, int, int);
-    static void rangeLocation(RangeType, const QUrl &, int, int);
-    static void endRange(RangeType);
     static void animationFrame(qint64);
 
     static void sendProfilingData();
@@ -153,13 +142,15 @@ private:
     bool stopProfilingImpl();
     void sendStartedProfilingMessageImpl();
     void addEventImpl(EventType);
-    void startRangeImpl(RangeType);
-    void rangeDataImpl(RangeType, const QString &);
-    void rangeDataImpl(RangeType, const QUrl &);
-    void rangeLocationImpl(RangeType, const QString &, int, int);
-    void rangeLocationImpl(RangeType, const QUrl &, int, int);
-    void endRangeImpl(RangeType);
     void animationFrameImpl(qint64);
+
+    void startRange(RangeType);
+    void rangeData(RangeType, const QString &);
+    void rangeData(RangeType, const QUrl &);
+    void rangeLocation(RangeType, const QString &, int, int);
+    void rangeLocation(RangeType, const QUrl &, int, int);
+    void endRange(RangeType);
+
 
     bool profilingEnabled();
     void setProfilingEnabled(bool enable);
@@ -172,6 +163,135 @@ private:
     bool m_messageReceived;
     QVector<QDeclarativeProfilerData> m_data;
     QMutex m_mutex;
+
+    static QDeclarativeProfilerService *instance;
+
+    friend struct QDeclarativeBindingProfiler;
+    friend struct QDeclarativeHandlingSignalProfiler;
+    friend struct QDeclarativeObjectCreatingProfiler;
+    friend struct QDeclarativeCompilingProfiler;
+};
+
+//
+// RAII helper structs
+//
+
+struct QDeclarativeBindingProfiler {
+    QDeclarativeBindingProfiler(const QString &url, int line, int column)
+    {
+        QDeclarativeProfilerService *instance = QDeclarativeProfilerService::instance;
+        enabled = instance ? instance->profilingEnabled() : false;
+        if (enabled) {
+            instance->startRange(QDeclarativeProfilerService::Binding);
+            instance->rangeLocation(QDeclarativeProfilerService::Binding, url, line, column);
+        }
+    }
+
+    ~QDeclarativeBindingProfiler()
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->endRange(QDeclarativeProfilerService::Binding);
+    }
+
+    void addDetail(const QString &details)
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->rangeData(QDeclarativeProfilerService::Binding,
+                                                             details);
+    }
+\
+    bool enabled;
+};
+
+struct QDeclarativeHandlingSignalProfiler {
+    QDeclarativeHandlingSignalProfiler()
+    {
+        enabled = QDeclarativeProfilerService::instance
+                ? QDeclarativeProfilerService::instance->profilingEnabled() : false;
+        if (enabled) {
+            QDeclarativeProfilerService::instance->startRange(
+                        QDeclarativeProfilerService::HandlingSignal);
+        }
+    }
+
+    void setSignalInfo(const QString &name, const QString &expression)
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->rangeData(
+                        QDeclarativeProfilerService::HandlingSignal,
+                        name % QLatin1String(": ") % expression);
+    }
+
+    void setLocation(const QString &file, int line, int column)
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->rangeLocation(
+                        QDeclarativeProfilerService::HandlingSignal, file, line, column);
+    }
+
+    ~QDeclarativeHandlingSignalProfiler()
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->endRange(
+                        QDeclarativeProfilerService::HandlingSignal);
+    }
+
+    bool enabled;
+};
+
+struct QDeclarativeObjectCreatingProfiler {
+    QDeclarativeObjectCreatingProfiler()
+    {
+        QDeclarativeProfilerService *instance = QDeclarativeProfilerService::instance;
+        enabled = instance ?
+                    instance->profilingEnabled() : false;
+        if (enabled)
+            instance->startRange(QDeclarativeProfilerService::Creating);
+    }
+
+    void setTypeName(const QString &typeName)
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->rangeData(
+                        QDeclarativeProfilerService::Creating, typeName);
+    }
+
+    void setLocation(const QUrl &url, int line, int column)
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->rangeLocation(
+                        QDeclarativeProfilerService::Creating, url, line, column);
+    }
+
+    ~QDeclarativeObjectCreatingProfiler()
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->endRange(QDeclarativeProfilerService::Creating);
+    }
+
+    bool enabled;
+};
+
+struct QDeclarativeCompilingProfiler {
+    QDeclarativeCompilingProfiler(const QString &name)
+    {
+        QDeclarativeProfilerService *instance = QDeclarativeProfilerService::instance;
+        enabled = instance ?
+                    instance->profilingEnabled() : false;
+        if (enabled) {
+            instance->startRange(QDeclarativeProfilerService::Compiling);
+            instance->rangeLocation(QDeclarativeProfilerService::Compiling, name, 1, 1);
+            instance->rangeData(QDeclarativeProfilerService::Compiling, name);
+        }
+    }
+
+    ~QDeclarativeCompilingProfiler()
+    {
+        if (enabled)
+            QDeclarativeProfilerService::instance->endRange(QDeclarativeProfilerService::Compiling);
+    }
+
+    bool enabled;
 };
 
 QT_END_NAMESPACE

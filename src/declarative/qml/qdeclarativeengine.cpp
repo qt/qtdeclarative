@@ -966,13 +966,13 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
     QDeclarativeData *data = QDeclarativeData::get(object);
 
     if (data && data->deferredComponent) {
-        if (QDeclarativeDebugService::isDebuggingEnabled()) {
-            QDeclarativeProfilerService::startRange(QDeclarativeProfilerService::Creating);
+        QDeclarativeObjectCreatingProfiler prof;
+        if (prof.enabled) {
             QDeclarativeType *type = QDeclarativeMetaType::qmlType(object->metaObject());
-            QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(object->metaObject()->className());
-            QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Creating, typeName);
+            prof.setTypeName(type ? type->qmlTypeName()
+                                  : QString::fromUtf8(object->metaObject()->className()));
             if (data->outerContext)
-                QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Creating, data->outerContext->url, data->lineNumber, data->columnNumber);
+                prof.setLocation(data->outerContext->url, data->lineNumber, data->columnNumber);
         }
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(data->context->engine);
 
@@ -983,7 +983,6 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
         data->deferredComponent = 0;
 
         QDeclarativeComponentPrivate::complete(ep, &state);
-        QDeclarativeProfilerService::endRange(QDeclarativeProfilerService::Creating);
     }
 }
 

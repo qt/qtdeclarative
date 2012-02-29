@@ -62,6 +62,7 @@
 #include "qdeclarativevme_p.h"
 #include "qdeclarativeerror.h"
 #include "qdeclarative.h"
+#include "../debugger/qdeclarativeprofilerservice_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -83,7 +84,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeComponentPrivate : public QObject
     Q_DECLARE_PUBLIC(QDeclarativeComponent)
         
 public:
-    QDeclarativeComponentPrivate() : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0) {}
+    QDeclarativeComponentPrivate() : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), profiler(0) {}
 
     QObject *beginCreate(QDeclarativeContextData *);
     void completeCreate();
@@ -116,6 +117,7 @@ public:
 
     QDeclarativeEngine *engine;
     QDeclarativeGuardedContextData creationContext;
+    QDeclarativeObjectCreatingProfiler *profiler;
 
     void clear();
 
