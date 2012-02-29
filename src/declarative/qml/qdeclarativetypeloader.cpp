@@ -1583,7 +1583,7 @@ void QDeclarativeTypeData::compile()
     m_compiledData = new QDeclarativeCompiledData(typeLoader()->engine());
     m_compiledData->url = finalUrl();
     m_compiledData->name = finalUrlString();
-    QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Compiling, QUrl(m_compiledData->name),1,1);
+    QDeclarativeProfilerService::rangeLocation(QDeclarativeProfilerService::Compiling, m_compiledData->name,1,1);
     QDeclarativeProfilerService::rangeData(QDeclarativeProfilerService::Compiling, m_compiledData->name);
 
     QDeclarativeCompiler compiler(&scriptParser._pool);
