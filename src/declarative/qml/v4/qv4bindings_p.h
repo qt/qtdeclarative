@@ -96,6 +96,8 @@ private:
         int index:30;
         bool enabled:1;
         bool updating:1;
+        // Encoding of property is coreIndex | (propType << 16) | (valueTypeIndex << 24)
+        // propType and valueTypeIndex are only set if the property is a value type property
         int property;
         QObject *scope;
         int line;

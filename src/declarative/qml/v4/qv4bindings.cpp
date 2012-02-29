@@ -256,7 +256,8 @@ void QV4Bindings::Binding::destroy()
 
 int QV4Bindings::Binding::propertyIndex() const
 {
-    return property;
+    //mask out the type information set for value types
+    return property & 0xFF00FFFF;
 }
 
 QObject *QV4Bindings::Binding::object() const
