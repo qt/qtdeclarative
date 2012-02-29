@@ -144,11 +144,6 @@ void QDeclarativeProfilerService::rangeData(RangeType t, const QString &data)
     profilerInstance()->rangeDataImpl(t, data);
 }
 
-void QDeclarativeProfilerService::rangeData(RangeType t, const QUrl &data)
-{
-    profilerInstance()->rangeDataImpl(t, data);
-}
-
 void QDeclarativeProfilerService::rangeLocation(RangeType t, const QString &fileName, int line, int column)
 {
     profilerInstance()->rangeLocationImpl(t, fileName, line, column);

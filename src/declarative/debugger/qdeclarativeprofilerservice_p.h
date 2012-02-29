@@ -134,7 +134,6 @@ public:
     static void addEvent(EventType);
     static void startRange(RangeType);
     static void rangeData(RangeType, const QString &);
-    static void rangeData(RangeType, const QUrl &);
     static void rangeLocation(RangeType, const QString &, int, int);
     static void rangeLocation(RangeType, const QUrl &, int, int);
     static void endRange(RangeType);
