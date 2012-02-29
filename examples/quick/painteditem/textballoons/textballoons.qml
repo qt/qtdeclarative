@@ -42,9 +42,14 @@
 import QtQuick 2.0
 import TextBalloonPlugin 1.0
 
+/*!
+    \title QtQuick Examples - Painted Text Balloons
+    \example quick/painteditem/textballoons
+    \brief This is a simple example that draws text balloons using QPainter
+*/
 Item {
     height: 480
-    width: 640
+    width: 320
 
     //! [0]
     ListModel {
@@ -53,7 +58,7 @@ Item {
             balloonWidth: 200
         }
         ListElement {
-            balloonWidth: 350
+            balloonWidth: 120
         }
     }
 
@@ -95,7 +100,7 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             onClicked: {
-                balloonModel.append({"balloonWidth": Math.floor(Math.random() * 300 + 100)})
+                balloonModel.append({"balloonWidth": Math.floor(Math.random() * 200 + 100)})
                 balloonView.positionViewAtIndex(balloonView.count -1, ListView.End)
             }
             onEntered: {
