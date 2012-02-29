@@ -163,8 +163,6 @@ void QQuickItemViewTransitionJob::finished()
 {
     QDeclarativeTransitionManager::finished();
 
-    if (m_item)
-        m_item->finishedTransition();
     if (m_transitioner)
         m_transitioner->finishedTransition(m_item);
 
@@ -245,8 +243,11 @@ void QQuickItemViewTransitioner::transitionNextReposition(QQuickViewItem *item, 
 
 void QQuickItemViewTransitioner::finishedTransition(QQuickViewItem *item)
 {
-    if (changeListener)
-        changeListener->viewItemTransitionFinished(item);
+    if (item) {
+        item->finishedTransition();
+        if (changeListener)
+            changeListener->viewItemTransitionFinished(item);
+    }
 }
 
 
