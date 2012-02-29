@@ -233,7 +233,11 @@ int QSGDistanceFieldTextMaterial::compare(const QSGMaterial *o) const
     }
     QRgb c1 = m_color.rgba();
     QRgb c2 = other->m_color.rgba();
-    return int(c2 < c1) - int(c1 < c2);
+    if (c1 != c2)
+        return int(c2 < c1) - int(c1 < c2);
+    int t0 = m_texture ? m_texture->textureId : -1;
+    int t1 = other->m_texture ? other->m_texture->textureId : -1;
+    return t0 - t1;
 }
 
 
