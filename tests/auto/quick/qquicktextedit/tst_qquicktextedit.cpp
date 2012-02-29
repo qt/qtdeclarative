@@ -55,7 +55,6 @@
 #include <QFontMetrics>
 #include <QtQuick/QQuickView>
 #include <QDir>
-#include <QStyle>
 #include <QInputMethod>
 #include <QClipboard>
 #include <QMimeData>

@@ -47,7 +47,6 @@
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
-#include <QtOpenGL/QGLShaderProgram>
 #include "../../shared/util.h"
 
 //#define OLDWAY

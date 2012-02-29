@@ -1,5 +1,5 @@
 TARGET = app
-QT += qml quick widgets
+QT += qml quick
 
 CONFIG += declarative_debug
 macx:CONFIG -= app_bundle

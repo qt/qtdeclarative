@@ -47,10 +47,9 @@
 #include <private/qquicktext_p_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <QFontMetrics>
-#include <QGraphicsSceneMouseEvent>
 #include <qmath.h>
 #include <QtQuick/QQuickView>
-#include <private/qapplication_p.h>
+#include <private/qguiapplication_p.h>
 #include <limits.h>
 #include <QtGui/QMouseEvent>
 #include "../../shared/util.h"

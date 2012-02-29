@@ -50,7 +50,6 @@
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
-#include <QtOpenGL/QGLShaderProgram>
 
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;

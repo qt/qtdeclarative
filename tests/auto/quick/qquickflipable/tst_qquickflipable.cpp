@@ -47,7 +47,6 @@
 #include <QFontMetrics>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <math.h>
-#include <QtOpenGL/QGLShaderProgram>
 #include "../../shared/util.h"
 
 class tst_qquickflipable : public QQmlDataTest
