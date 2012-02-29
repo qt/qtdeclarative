@@ -82,7 +82,9 @@ public:
     void mirrorChange();
     bool isLineLaidOutConnected();
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
+
     QString elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
+    void elideFormats(int start, int length, int offset, QList<QTextLayout::FormatRange> *elidedFormats);
 
     QRectF layedOutTextRect;
 

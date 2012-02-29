@@ -612,6 +612,22 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
 #endif
 }
 
+void QQuickTextPrivate::elideFormats(
+        const int start, const int length, int offset, QList<QTextLayout::FormatRange> *elidedFormats)
+{
+    const int end = start + length;
+    QList<QTextLayout::FormatRange> formats = layout.additionalFormats();
+    for (int i = 0; i < formats.count(); ++i) {
+        QTextLayout::FormatRange format = formats.at(i);
+        const int formatLength = qMin(format.start + format.length, end) - qMax(format.start, start);
+        if (formatLength > 0) {
+            format.start = qMax(offset, format.start - start + offset);
+            format.length = formatLength;
+            elidedFormats->append(format);
+        }
+    }
+}
+
 QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine) const
 {
     if (nextLine) {
@@ -624,12 +640,15 @@ QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QT
                 line.textLength() + nextLine->textLength());
     } else {
         QString elideText = layout.text().mid(line.textStart(), line.textLength());
-        elideText[elideText.length() - 1] = elideChar;
-        // Appending the elide character may push the line over the maximum width
-        // in which case the elided text will need to be elided.
-        QFontMetricsF metrics(layout.font());
-        if (metrics.width(elideChar) + line.naturalTextWidth() >= lineWidth)
-            elideText = metrics.elidedText(elideText, Qt::TextElideMode(elideMode), lineWidth);
+        if (!styledText) {
+            // QFontMetrics won't help eliding styled text.
+            elideText[elideText.length() - 1] = elideChar;
+            // Appending the elide character may push the line over the maximum width
+            // in which case the elided text will need to be elided.
+            QFontMetricsF metrics(layout.font());
+            if (metrics.width(elideChar) + line.naturalTextWidth() >= lineWidth)
+                elideText = metrics.elidedText(elideText, Qt::TextElideMode(elideMode), lineWidth);
+        }
         return elideText;
     }
 }
@@ -690,9 +709,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
     const bool customLayout = isLineLaidOutConnected();
     const bool wasTruncated = truncated;
 
-    const bool singlelineElide = !styledText && elideMode != QQuickText::ElideNone && q->widthValid();
-    const bool multilineElide = !styledText
-            && elideMode == QQuickText::ElideRight
+    const bool singlelineElide = elideMode != QQuickText::ElideNone && q->widthValid();
+    const bool multilineElide = elideMode == QQuickText::ElideRight
             && q->widthValid()
             && (q->heightValid() || maximumLineCountValid);
     const bool canWrap = wrapMode != QQuickText::NoWrap && q->widthValid();
@@ -719,6 +737,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
     qreal height = 0;
     QString elideText;
     bool once = true;
+    int elideStart = 0;
+    int elideEnd = 0;
 
     *naturalWidth = 0;
 
@@ -773,6 +793,9 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
                 elideText = layoutText.at(line.textStart() - 1) != QChar::LineSeparator
                         ? elidedText(lineWidth, previousLine, &line)
                         : elidedText(lineWidth, previousLine);
+                elideStart = previousLine.textStart();
+                // elideEnd isn't required for right eliding.
+
                 // The previous line is the last one visible so move the current one off somewhere
                 // out of the way and back everything up one line.
                 line.setLineWidth(0);
@@ -800,6 +823,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
                             0,
                             line.textStart(),
                             line.textLength());
+                    elideStart = line.textStart();
+                    elideEnd = elideStart + line.textLength();
                 } else {
                     br = br.united(line.naturalTextRect());
                 }
@@ -825,6 +850,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
                         elideText = wrappedLine
                                 ? elidedText(lineWidth, line, &nextLine)
                                 : elidedText(lineWidth, line);
+                        elideStart = line.textStart();
+                        // elideEnd isn't required for right eliding.
                     } else {
                         br = br.united(line.naturalTextRect());
                     }
@@ -917,6 +944,33 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
     if (elide) {
         if (!elideLayout)
             elideLayout = new QTextLayout;
+        if (styledText) {
+            QList<QTextLayout::FormatRange> formats;
+            switch (elideMode) {
+            case QQuickText::ElideRight:
+                elideFormats(elideStart, elideText.length() - 1, 0, &formats);
+                break;
+            case QQuickText::ElideLeft:
+                elideFormats(elideEnd - elideText.length() + 1, elideText.length() - 1, 1, &formats);
+                break;
+            case QQuickText::ElideMiddle: {
+                const int index = elideText.indexOf(elideChar);
+                if (index != -1) {
+                    elideFormats(elideStart, index, 0, &formats);
+                    elideFormats(
+                            elideEnd - elideText.length() + index + 1,
+                            elideText.length() - index - 1,
+                            index + 1,
+                            &formats);
+                }
+                break;
+            }
+            default:
+                break;
+            }
+            elideLayout->setAdditionalFormats(formats);
+        }
+
         elideLayout->setFont(layout.font());
         elideLayout->setTextOption(layout.textOption());
         elideLayout->setText(elideText);

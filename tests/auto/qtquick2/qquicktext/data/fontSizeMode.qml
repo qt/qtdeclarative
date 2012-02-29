@@ -19,6 +19,4 @@ Item {
         font.pixelSize: 30
         font.family: "Helvetica"
     }
-
-    TextInput { focus: true; objectName: "input" }
 }
