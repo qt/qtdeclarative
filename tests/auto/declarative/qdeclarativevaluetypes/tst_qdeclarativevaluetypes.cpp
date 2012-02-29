@@ -951,7 +951,6 @@ void tst_qdeclarativevaluetypes::autoBindingRemoval()
         delete object;
     }
 
-    /*
     {
         QDeclarativeComponent component(&engine, testFileUrl("autoBindingRemoval.2.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
@@ -976,6 +975,8 @@ void tst_qdeclarativevaluetypes::autoBindingRemoval()
 
     {
         QDeclarativeComponent component(&engine, testFileUrl("autoBindingRemoval.3.qml"));
+        QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QRect";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -993,7 +994,6 @@ void tst_qdeclarativevaluetypes::autoBindingRemoval()
 
         delete object;
     }
-*/
 }
 
 // Test that property value sources assign to value types
