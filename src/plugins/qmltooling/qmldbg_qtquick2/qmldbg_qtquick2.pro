@@ -1,7 +1,7 @@
 load(qt_module)
 
 TARGET = qmldbg_qtquick2
-QT       += qml-private quick-private core-private gui-private opengl-private v8-private
+QT       += qml-private quick-private core-private gui-private v8-private
 
 load(qt_plugin)
 
