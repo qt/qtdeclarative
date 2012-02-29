@@ -119,8 +119,6 @@ QString QQuickTextInput::text() const
     Q_D(const QQuickTextInput);
 
     QString content = d->m_text;
-    if (!d->m_tentativeCommit.isEmpty())
-        content.insert(d->m_cursor, d->m_tentativeCommit);
     QString res = d->m_maskData ? d->stripString(content) : content;
     return (res.isNull() ? QString::fromLatin1("") : res);
 }
@@ -132,7 +130,6 @@ void QQuickTextInput::setText(const QString &s)
         return;
     if (d->composeMode())
         qApp->inputMethod()->reset();
-    d->m_tentativeCommit.clear();
     d->internalSetText(s, -1, false);
 }
 
@@ -2496,7 +2493,6 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
         }
 
         if (!hasFocus) {
-            d->commitPreedit();
             if (!d->persistentSelection)
                 d->deselect();
             disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
@@ -2831,21 +2827,16 @@ void QQuickTextInputPrivate::paste(QClipboard::Mode clipboardMode)
 
 /*!
     \internal
-
-    Exits preedit mode and commits parts marked as tentative commit
 */
 void QQuickTextInputPrivate::commitPreedit()
 {
     if (!composeMode())
         return;
 
-    qApp->inputMethod()->reset();
+    qApp->inputMethod()->commit();
 
-    if (!m_tentativeCommit.isEmpty()) {
-        internalInsert(m_tentativeCommit);
-        m_tentativeCommit.clear();
-        finishChange(-1, true/*not used, not documented*/, false);
-    }
+    if (!composeMode())
+        return;
 
     m_preeditCursor = 0;
     m_textLayout.setPreeditArea(-1, QString());
@@ -3160,14 +3151,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
         q->updateCursorRectangle();
     }
 
-    bool tentativeCommitChanged = m_tentativeCommit != event->tentativeCommitString();
-
-    if (tentativeCommitChanged) {
-        m_textDirty = true;
-        m_tentativeCommit = event->tentativeCommitString();
-    }
-
-    if (isGettingInput || tentativeCommitChanged)
+    if (isGettingInput)
         finishChange(priorState);
 
     if (selectionChange) {
@@ -3237,15 +3221,6 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
                     return true;
                 }
                 m_cursor = cursorCopy;
-
-                if (!m_tentativeCommit.isEmpty()) {
-                    textCopy.insert(m_cursor, m_tentativeCommit);
-                    bool validInput = m_validator->validate(textCopy, cursorCopy) != QValidator::Invalid;
-                    if (!validInput)
-                        m_tentativeCommit.clear();
-                }
-            } else {
-                m_tentativeCommit.clear();
             }
         }
 #endif
