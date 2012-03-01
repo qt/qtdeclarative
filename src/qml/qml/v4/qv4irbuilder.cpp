@@ -823,16 +823,18 @@ bool QV4IRBuilder::visit(AST::NotExpression *ast)
 void QV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult right)
 {
     if (IR::Type t = maxType(left.type(), right.type())) {
-        implicitCvt(left, t);
-        implicitCvt(right, t);
+        if (!left->asConst() && !right->asConst()) {
+            // the implicit conversions are needed only
+            // when compiling non-constant expressions.
+            implicitCvt(left, t);
+            implicitCvt(right, t);
+        }
 
         if (_expr.hint == ExprResult::cx) {
             _expr.format = ExprResult::cx;
             _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
         } else {
-            IR::Expr *code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
-            _expr.code = _block->TEMP(code->type);
-            _block->MOVE(_expr.code, code);
+            _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
         }
     }
 }
