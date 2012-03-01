@@ -6,7 +6,7 @@ QPRO_PWD   = $$PWD
 CONFIG += module
 MODULE_PRI += ../../modules/qt_qml.pri
 
-QT = core-private gui gui-private network v8-private
+QT = core-private network v8-private
 
 DEFINES   += QT_BUILD_QML_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 

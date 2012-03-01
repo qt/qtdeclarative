@@ -43,12 +43,12 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QDebug>
-#include <private/qqmlvaluetype_p.h>
+#include <private/qquickvaluetypes_p.h>
 #include "../../shared/util.h"
 #include "testtypes.h"
 
 QT_BEGIN_NAMESPACE
-extern int qt_defaultDpi();
+extern int qt_defaultDpi(void);
 QT_END_NAMESPACE
 
 class tst_qqmlvaluetypes : public QQmlDataTest
@@ -1129,13 +1129,13 @@ void tst_qqmlvaluetypes::cppClasses()
     CPP_TEST(QQmlSizeFValueType, QSizeF(-100.7, 18.2));
     CPP_TEST(QQmlRectValueType, QRect(13, 39, 10928, 88));
     CPP_TEST(QQmlRectFValueType, QRectF(88.2, -90.1, 103.2, 118));
-    CPP_TEST(QQmlVector2DValueType, QVector2D(19.7, 1002));
-    CPP_TEST(QQmlVector3DValueType, QVector3D(18.2, 19.7, 1002));
-    CPP_TEST(QQmlVector4DValueType, QVector4D(18.2, 19.7, 1002, 54));
-    CPP_TEST(QQmlQuaternionValueType, QQuaternion(18.2, 19.7, 1002, 54));
-    CPP_TEST(QQmlMatrix4x4ValueType,
+    CPP_TEST(QQuickVector2DValueType, QVector2D(19.7, 1002));
+    CPP_TEST(QQuickVector3DValueType, QVector3D(18.2, 19.7, 1002));
+    CPP_TEST(QQuickVector4DValueType, QVector4D(18.2, 19.7, 1002, 54));
+    CPP_TEST(QQuickQuaternionValueType, QQuaternion(18.2, 19.7, 1002, 54));
+    CPP_TEST(QQuickMatrix4x4ValueType,
              QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
-    CPP_TEST(QQmlFontValueType, QFont("Helvetica"));
+    CPP_TEST(QQuickFontValueType, QFont("Helvetica"));
 
 }
 

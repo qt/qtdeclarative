@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,49 +39,50 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKAPPLICATION_P_H
-#define QQUICKAPPLICATION_P_H
-
-#include <QtCore/QObject>
+#include <qtest.h>
 #include <qqml.h>
-#include <private/qtqmlglobal_p.h>
 
-QT_BEGIN_HEADER
+#include <private/qqmlglobal_p.h>
 
-QT_BEGIN_NAMESPACE
-
-
-class QQuickApplicationPrivate;
-class Q_QML_PRIVATE_EXPORT QQuickApplication : public QObject
+class tst_qqmlglobal : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged)
-    Q_PROPERTY(QObject *inputPanel READ inputPanel CONSTANT)
-
 public:
-    explicit QQuickApplication(QObject *parent = 0);
-    virtual ~QQuickApplication();
-    bool active() const;
-    Qt::LayoutDirection layoutDirection() const;
-    QT_DEPRECATED QObject *inputPanel() const;
+    tst_qqmlglobal() {}
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event);
+private slots:
+    void initTestCase();
 
-Q_SIGNALS:
-    void activeChanged();
-    void layoutDirectionChanged();
-
-private:
-    Q_DISABLE_COPY(QQuickApplication)
-    Q_DECLARE_PRIVATE(QQuickApplication)
+    void valueTypeProviderWarning();
+    void colorProviderWarning();
+    void guiProviderWarning();
 };
 
-QT_END_NAMESPACE
+void tst_qqmlglobal::initTestCase()
+{
+}
 
-QML_DECLARE_TYPE(QQuickApplication)
+void tst_qqmlglobal::valueTypeProviderWarning()
+{
+    const QLatin1String expected("Warning: QQml_valueTypeProvider: no value type provider has been set! ");
+    QTest::ignoreMessage(QtWarningMsg, expected.data());
+    QQml_valueTypeProvider();
+}
 
-QT_END_HEADER
+void tst_qqmlglobal::colorProviderWarning()
+{
+    const QLatin1String expected("Warning: QQml_colorProvider: no color provider has been set! ");
+    QTest::ignoreMessage(QtWarningMsg, expected.data());
+    QQml_colorProvider();
+}
 
-#endif // QQUICKAPPLICATION_P_H
+void tst_qqmlglobal::guiProviderWarning()
+{
+    const QLatin1String expected("Warning: QQml_guiProvider: no GUI provider has been set! ");
+    QTest::ignoreMessage(QtWarningMsg, expected.data());
+    QQml_guiProvider();
+}
+
+QTEST_MAIN(tst_qqmlglobal)
+
+#include "tst_qqmlglobal.moc"

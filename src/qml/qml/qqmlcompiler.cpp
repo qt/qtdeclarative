@@ -63,7 +63,6 @@
 #include "qqmlbinding_p.h"
 #include <private/qv4compiler_p.h>
 
-#include <QColor>
 #include <QDebug>
 #include <QPointF>
 #include <QSizeF>
@@ -350,16 +349,16 @@ bool QQmlCompiler::testLiteralAssignment(QQmlScript::Property *prop,
             break;
         case QVariant::Vector3D:
             {
-            bool ok;
-            QQmlStringConverters::vector3DFromString(value.asString(), &ok);
-            if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 3D vector expected"));
+            QQmlInstruction::instr_storeVector3D::QVector3D v3;
+            if (!QQmlStringConverters::createFromString(QMetaType::QVector3D, value.asString(), &v3, sizeof(v3)))
+                COMPILE_EXCEPTION(v, tr("Invalid property assignment: 3D vector expected"));
             }
             break;
         case QVariant::Vector4D:
             {
-            bool ok;
-            QQmlStringConverters::vector4DFromString(value.asString(), &ok);
-            if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 4D vector expected"));
+            QQmlInstruction::instr_storeVector4D::QVector4D v4;
+            if (!QQmlStringConverters::createFromString(QMetaType::QVector4D, value.asString(), &v4, sizeof(v4)))
+                COMPILE_EXCEPTION(v, tr("Invalid property assignment: 4D vector expected"));
             }
             break;
         default:
@@ -564,9 +563,8 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
         case QVariant::Color:
             {
             Instruction::StoreColor instr;
-            QColor c = QQmlStringConverters::colorFromString(v->value.asString());
             instr.propertyIndex = prop->index;
-            instr.value = c.rgba();
+            instr.value = QQmlStringConverters::rgbaFromString(v->value.asString());
             output->addInstruction(instr);
             }
             break;
@@ -685,25 +683,16 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
         case QVariant::Vector3D:
             {
             Instruction::StoreVector3D instr;
-            bool ok;
-            QVector3D vector = QQmlStringConverters::vector3DFromString(v->value.asString(), &ok);
             instr.propertyIndex = prop->index;
-            instr.vector.xp = vector.x();
-            instr.vector.yp = vector.y();
-            instr.vector.zp = vector.z();
+            QQmlStringConverters::createFromString(QMetaType::QVector3D, v->value.asString(), &instr.vector, sizeof(instr.vector));
             output->addInstruction(instr);
             }
             break;
     case QVariant::Vector4D:
             {
             Instruction::StoreVector4D instr;
-            bool ok;
-            QVector4D vector = QQmlStringConverters::vector4DFromString(v->value.asString(), &ok);
             instr.propertyIndex = prop->index;
-            instr.vector.xp = vector.x();
-            instr.vector.yp = vector.y();
-            instr.vector.zp = vector.z();
-            instr.vector.wp = vector.w();
+            QQmlStringConverters::createFromString(QMetaType::QVector4D, v->value.asString(), &instr.vector, sizeof(instr.vector));
             output->addInstruction(instr);
             }
             break;

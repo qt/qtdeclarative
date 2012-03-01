@@ -40,10 +40,9 @@
 ****************************************************************************/
 
 #include "qqmlstringconverters_p.h"
+#include <private/qqmlglobal_p.h>
+#include <private/qqmlinstruction_p.h>
 
-#include <QtGui/qcolor.h>
-#include <QtGui/qvector3d.h>
-#include <QtGui/qvector4d.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qsize.h>
@@ -52,52 +51,20 @@
 
 QT_BEGIN_NAMESPACE
 
-static uchar fromHex(const uchar c, const uchar c2)
-{
-    uchar rv = 0;
-    if (c >= '0' && c <= '9')
-        rv += (c - '0') * 16;
-    else if (c >= 'A' && c <= 'F')
-        rv += (c - 'A' + 10) * 16;
-    else if (c >= 'a' && c <= 'f')
-        rv += (c - 'a' + 10) * 16;
-
-    if (c2 >= '0' && c2 <= '9')
-        rv += (c2 - '0');
-    else if (c2 >= 'A' && c2 <= 'F')
-        rv += (c2 - 'A' + 10);
-    else if (c2 >= 'a' && c2 <= 'f')
-        rv += (c2 - 'a' + 10);
-
-    return rv;
-}
-
-static uchar fromHex(const QString &s, int idx)
-{
-    uchar c = s.at(idx).toAscii();
-    uchar c2 = s.at(idx + 1).toAscii();
-    return fromHex(c, c2);
-}
-
 QVariant QQmlStringConverters::variantFromString(const QString &s)
 {
     if (s.isEmpty())
         return QVariant(s);
+
     bool ok = false;
     QRectF r = rectFFromString(s, &ok);
     if (ok) return QVariant(r);
-    QColor c = colorFromString(s, &ok);
-    if (ok) return QVariant(c);
     QPointF p = pointFFromString(s, &ok);
     if (ok) return QVariant(p);
     QSizeF sz = sizeFFromString(s, &ok);
     if (ok) return QVariant(sz);
-    QVector3D v = vector3DFromString(s, &ok);
-    if (ok) return QVariant::fromValue(v);
-    QVector4D v4 = vector4DFromString(s, &ok);
-    if (ok) return QVariant::fromValue(v4);
 
-    return QVariant(s);
+    return QQml_valueTypeProvider()->createVariantFromString(s);
 }
 
 QVariant QQmlStringConverters::variantFromString(const QString &s, int preferredType, bool *ok)
@@ -107,8 +74,6 @@ QVariant QQmlStringConverters::variantFromString(const QString &s, int preferred
         return QVariant(int(qRound(s.toDouble(ok))));
     case QMetaType::UInt:
         return QVariant(uint(qRound(s.toDouble(ok))));
-    case QMetaType::QColor:
-        return QVariant::fromValue(colorFromString(s, ok));
 #ifndef QT_NO_DATESTRING
     case QMetaType::QDate:
         return QVariant::fromValue(dateFromString(s, ok));
@@ -129,30 +94,19 @@ QVariant QQmlStringConverters::variantFromString(const QString &s, int preferred
         return QVariant::fromValue(rectFFromString(s, ok));
     case QMetaType::QRect:
         return QVariant::fromValue(rectFFromString(s, ok).toRect());
-    case QMetaType::QVector3D:
-        return QVariant::fromValue(vector3DFromString(s, ok));
-    case QMetaType::QVector4D:
-        return QVariant::fromValue(vector4DFromString(s, ok));
     default:
-        if (ok) *ok = false;
-        return QVariant();
+        return QQml_valueTypeProvider()->createVariantFromString(preferredType, s, ok);
     }
 }
 
-QColor QQmlStringConverters::colorFromString(const QString &s, bool *ok)
+QVariant QQmlStringConverters::colorFromString(const QString &s, bool *ok)
 {
-    if (s.length() == 9 && s.startsWith(QLatin1Char('#'))) {
-        uchar a = fromHex(s, 1);
-        uchar r = fromHex(s, 3);
-        uchar g = fromHex(s, 5);
-        uchar b = fromHex(s, 7);
-        if (ok) *ok = true;
-        return QColor(r, g, b, a);
-    } else {
-        QColor rv(s);
-        if (ok) *ok = rv.isValid();
-        return rv;
-    }
+    return QQml_colorProvider()->colorFromString(s, ok);
+}
+
+unsigned QQmlStringConverters::rgbaFromString(const QString &s, bool *ok)
+{
+    return QQml_colorProvider()->rgbaFromString(s, ok);
 }
 
 #ifndef QT_NO_DATESTRING
@@ -254,58 +208,95 @@ QRectF QQmlStringConverters::rectFFromString(const QString &s, bool *ok)
     return QRectF(x, y, width, height);
 }
 
-//expects input of "x,y,z"
-QVector3D QQmlStringConverters::vector3DFromString(const QString &s, bool *ok)
+bool QQmlStringConverters::createFromString(int type, const QString &s, void *data, size_t n)
 {
-    if (s.count(QLatin1Char(',')) != 2) {
-        if (ok)
-            *ok = false;
-        return QVector3D();
+    Q_ASSERT(data);
+
+    bool ok = false;
+
+    switch (type) {
+    case QMetaType::Int:
+        {
+        Q_ASSERT(n >= sizeof(int));
+        int *p = reinterpret_cast<int *>(data);
+        *p = int(qRound(s.toDouble(&ok)));
+        return ok;
+        }
+    case QMetaType::UInt:
+        {
+        Q_ASSERT(n >= sizeof(uint));
+        uint *p = reinterpret_cast<uint *>(data);
+        *p = uint(qRound(s.toDouble(&ok)));
+        return ok;
+        }
+#ifndef QT_NO_DATESTRING
+    case QMetaType::QDate:
+        {
+        Q_ASSERT(n >= sizeof(QDate));
+        QDate *p = reinterpret_cast<QDate *>(data);
+        *p = dateFromString(s, &ok);
+        return ok;
+        }
+    case QMetaType::QTime:
+        {
+        Q_ASSERT(n >= sizeof(QTime));
+        QTime *p = reinterpret_cast<QTime *>(data);
+        *p = timeFromString(s, &ok);
+        return ok;
+        }
+    case QMetaType::QDateTime:
+        {
+        Q_ASSERT(n >= sizeof(QDateTime));
+        QDateTime *p = reinterpret_cast<QDateTime *>(data);
+        *p = dateTimeFromString(s, &ok);
+        return ok;
+        }
+#endif // QT_NO_DATESTRING
+    case QMetaType::QPointF:
+        {
+        Q_ASSERT(n >= sizeof(QPointF));
+        QPointF *p = reinterpret_cast<QPointF *>(data);
+        *p = pointFFromString(s, &ok);
+        return ok;
+        }
+    case QMetaType::QPoint:
+        {
+        Q_ASSERT(n >= sizeof(QPoint));
+        QPoint *p = reinterpret_cast<QPoint *>(data);
+        *p = pointFFromString(s, &ok).toPoint();
+        return ok;
+        }
+    case QMetaType::QSizeF:
+        {
+        Q_ASSERT(n >= sizeof(QSizeF));
+        QSizeF *p = reinterpret_cast<QSizeF *>(data);
+        *p = sizeFFromString(s, &ok);
+        return ok;
+        }
+    case QMetaType::QSize:
+        {
+        Q_ASSERT(n >= sizeof(QSize));
+        QSize *p = reinterpret_cast<QSize *>(data);
+        *p = sizeFFromString(s, &ok).toSize();
+        return ok;
+        }
+    case QMetaType::QRectF:
+        {
+        Q_ASSERT(n >= sizeof(QRectF));
+        QRectF *p = reinterpret_cast<QRectF *>(data);
+        *p = rectFFromString(s, &ok);
+        return ok;
+        }
+    case QMetaType::QRect:
+        {
+        Q_ASSERT(n >= sizeof(QRect));
+        QRect *p = reinterpret_cast<QRect *>(data);
+        *p = rectFFromString(s, &ok).toRect();
+        return ok;
+        }
+    default:
+        return QQml_valueTypeProvider()->createValueFromString(type, s, data, n);
     }
-
-    bool xGood, yGood, zGood;
-    int index = s.indexOf(QLatin1Char(','));
-    int index2 = s.indexOf(QLatin1Char(','), index+1);
-    qreal xCoord = s.left(index).toDouble(&xGood);
-    qreal yCoord = s.mid(index+1, index2-index-1).toDouble(&yGood);
-    qreal zCoord = s.mid(index2+1).toDouble(&zGood);
-    if (!xGood || !yGood || !zGood) {
-        if (ok)
-            *ok = false;
-        return QVector3D();
-    }
-
-    if (ok)
-        *ok = true;
-    return QVector3D(xCoord, yCoord, zCoord);
-}
-
-//expects input of "x,y,z,w"
-QVector4D QQmlStringConverters::vector4DFromString(const QString &s, bool *ok)
-{
-    if (s.count(QLatin1Char(',')) != 3) {
-        if (ok)
-            *ok = false;
-        return QVector4D();
-    }
-
-    bool xGood, yGood, zGood, wGood;
-    int index = s.indexOf(QLatin1Char(','));
-    int index2 = s.indexOf(QLatin1Char(','), index+1);
-    int index3 = s.indexOf(QLatin1Char(','), index2+1);
-    qreal xCoord = s.left(index).toDouble(&xGood);
-    qreal yCoord = s.mid(index+1, index2-index-1).toDouble(&yGood);
-    qreal zCoord = s.mid(index2+1, index3-index2-1).toDouble(&zGood);
-    qreal wCoord = s.mid(index3+1).toDouble(&wGood);
-    if (!xGood || !yGood || !zGood || !wGood) {
-        if (ok)
-            *ok = false;
-        return QVector4D();
-    }
-
-    if (ok)
-        *ok = true;
-    return QVector4D(xCoord, yCoord, zCoord, wCoord);
 }
 
 QT_END_NAMESPACE

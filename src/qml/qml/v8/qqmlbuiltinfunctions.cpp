@@ -51,6 +51,7 @@
 
 #include <private/qv8profilerservice_p.h>
 #include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlglobal_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qdatetime.h>
@@ -61,12 +62,6 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qcoreapplication.h>
-
-#include <QtGui/qcolor.h>
-#include <QtGui/qvector3d.h>
-#include <QtGui/qvector4d.h>
-#include <QtGui/qdesktopservices.h>
-#include <QtGui/qfontdatabase.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -417,7 +412,7 @@ v8::Handle<v8::Value> rgba(const v8::Arguments &args)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return V8ENGINE()->fromVariant(QVariant::fromValue(QColor::fromRgbF(r, g, b, a)));
+    return V8ENGINE()->fromVariant(QQml_colorProvider()->fromRgbF(r, g, b, a));
 }
 
 /*!
@@ -446,7 +441,7 @@ v8::Handle<v8::Value> hsla(const v8::Arguments &args)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return V8ENGINE()->fromVariant(QVariant::fromValue(QColor::fromHslF(h, s, l, a)));
+    return V8ENGINE()->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a));
 }
 
 /*!
@@ -508,11 +503,13 @@ v8::Handle<v8::Value> vector3d(const v8::Arguments &args)
     if (args.Length() != 3)
         V8THROW_ERROR("Qt.vector(): Invalid arguments");
 
-    double x = args[0]->ToNumber()->Value();
-    double y = args[1]->ToNumber()->Value();
-    double z = args[2]->ToNumber()->Value();
+    float xyz[3];
+    xyz[0] = args[0]->ToNumber()->Value();
+    xyz[1] = args[1]->ToNumber()->Value();
+    xyz[2] = args[2]->ToNumber()->Value();
 
-    return V8ENGINE()->fromVariant(QVariant::fromValue(QVector3D(x, y, z)));
+    const void *params[] = { xyz };
+    return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params));
 }
 
 /*!
@@ -524,12 +521,14 @@ v8::Handle<v8::Value> vector4d(const v8::Arguments &args)
     if (args.Length() != 4)
         V8THROW_ERROR("Qt.vector4d(): Invalid arguments");
 
-    double x = args[0]->NumberValue();
-    double y = args[1]->NumberValue();
-    double z = args[2]->NumberValue();
-    double w = args[3]->NumberValue();
+    float xyzw[4];
+    xyzw[0] = args[0]->ToNumber()->Value();
+    xyzw[1] = args[1]->ToNumber()->Value();
+    xyzw[2] = args[2]->ToNumber()->Value();
+    xyzw[3] = args[3]->ToNumber()->Value();
 
-    return V8ENGINE()->fromVariant(QVariant::fromValue(QVector4D(x, y, z, w)));
+    const void *params[] = { xyzw };
+    return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
 }
 
 /*!
@@ -551,17 +550,14 @@ v8::Handle<v8::Value> lighter(const v8::Arguments &args)
     if (args.Length() != 1 && args.Length() != 2)
         V8THROW_ERROR("Qt.lighter(): Invalid arguments");
 
-    QColor color;
     QVariant v = V8ENGINE()->toVariant(args[0], -1);
-    if (v.userType() == QVariant::Color) {
-        color = v.value<QColor>();
-    } else if (v.userType() == QVariant::String) {
+    if (v.userType() == QVariant::String) {
         bool ok = false;
-        color = QQmlStringConverters::colorFromString(v.toString(), &ok);
+        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
         if (!ok) {
             return v8::Null();
         }
-    } else {
+    } else if (v.userType() != QVariant::Color) {
         return v8::Null();
     }
 
@@ -569,8 +565,7 @@ v8::Handle<v8::Value> lighter(const v8::Arguments &args)
     if (args.Length() == 2)
         factor = args[1]->ToNumber()->Value();
 
-    color = color.lighter(int(qRound(factor*100.)));
-    return V8ENGINE()->fromVariant(QVariant::fromValue(color));
+    return V8ENGINE()->fromVariant(QQml_colorProvider()->lighter(v, factor));
 }
 
 /*!
@@ -593,17 +588,14 @@ v8::Handle<v8::Value> darker(const v8::Arguments &args)
     if (args.Length() != 1 && args.Length() != 2)
         V8THROW_ERROR("Qt.darker(): Invalid arguments");
 
-    QColor color;
     QVariant v = V8ENGINE()->toVariant(args[0], -1);
-    if (v.userType() == QVariant::Color) {
-        color = v.value<QColor>();
-    } else if (v.userType() == QVariant::String) {
+    if (v.userType() == QVariant::String) {
         bool ok = false;
-        color = QQmlStringConverters::colorFromString(v.toString(), &ok);
+        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
         if (!ok) {
             return v8::Null();
         }
-    } else {
+    } else if (v.userType() != QVariant::Color) {
         return v8::Null();
     }
 
@@ -611,8 +603,7 @@ v8::Handle<v8::Value> darker(const v8::Arguments &args)
     if (args.Length() == 2)
         factor = args[1]->ToNumber()->Value();
 
-    color = color.darker(int(qRound(factor*100.)));
-    return V8ENGINE()->fromVariant(QVariant::fromValue(color));
+    return V8ENGINE()->fromVariant(QQml_colorProvider()->darker(v, factor));
 }
 
 /*!
@@ -645,53 +636,30 @@ v8::Handle<v8::Value> tint(const v8::Arguments &args)
         V8THROW_ERROR("Qt.tint(): Invalid arguments");
 
     // base color
-    QColor color;
-    QVariant v = V8ENGINE()->toVariant(args[0], -1);
-    if (v.userType() == QVariant::Color) {
-        color = v.value<QColor>();
-    } else if (v.userType() == QVariant::String) {
+    QVariant v1 = V8ENGINE()->toVariant(args[0], -1);
+    if (v1.userType() == QVariant::String) {
         bool ok = false;
-        color = QQmlStringConverters::colorFromString(v.toString(), &ok);
+        v1 = QQmlStringConverters::colorFromString(v1.toString(), &ok);
         if (!ok) {
             return v8::Null();
         }
-    } else {
+    } else if (v1.userType() != QVariant::Color) {
         return v8::Null();
     }
 
     // tint color
-    QColor tintColor;
-    v = V8ENGINE()->toVariant(args[1], -1);
-    if (v.userType() == QVariant::Color) {
-        tintColor = v.value<QColor>();
-    } else if (v.userType() == QVariant::String) {
+    QVariant v2 = V8ENGINE()->toVariant(args[1], -1);
+    if (v2.userType() == QVariant::String) {
         bool ok = false;
-        tintColor = QQmlStringConverters::colorFromString(v.toString(), &ok);
+        v2 = QQmlStringConverters::colorFromString(v2.toString(), &ok);
         if (!ok) {
             return v8::Null();
         }
-    } else {
+    } else if (v2.userType() != QVariant::Color) {
         return v8::Null();
     }
 
-    // tint the base color and return the final color
-    QColor finalColor;
-    int a = tintColor.alpha();
-    if (a == 0xFF)
-        finalColor = tintColor;
-    else if (a == 0x00)
-        finalColor = color;
-    else {
-        qreal a = tintColor.alphaF();
-        qreal inv_a = 1.0 - a;
-
-        finalColor.setRgbF(tintColor.redF() * a + color.redF() * inv_a,
-                           tintColor.greenF() * a + color.greenF() * inv_a,
-                           tintColor.blueF() * a + color.blueF() * inv_a,
-                           a + inv_a * color.alphaF());
-    }
-
-    return V8ENGINE()->fromVariant(QVariant::fromValue(finalColor));
+    return V8ENGINE()->fromVariant(QQml_colorProvider()->tint(v1, v2));
 }
 
 /*!
@@ -908,11 +876,8 @@ v8::Handle<v8::Value> openUrlExternally(const v8::Arguments &args)
     if (args.Length() != 1)
         return V8ENGINE()->fromVariant(false);
 
-    bool ret = false;
-#ifndef QT_NO_DESKTOPSERVICES
-    ret = QDesktopServices::openUrl(V8ENGINE()->toVariant(resolvedUrl(args), -1).toUrl());
-#endif
-    return V8ENGINE()->fromVariant(ret);
+    QUrl url(V8ENGINE()->toVariant(resolvedUrl(args), -1).toUrl());
+    return V8ENGINE()->fromVariant(QQml_guiProvider()->openUrlExternally(url));
 }
 
 /*!
@@ -945,8 +910,7 @@ v8::Handle<v8::Value> fontFamilies(const v8::Arguments &args)
     if (args.Length() != 0)
         V8THROW_ERROR("Qt.fontFamilies(): Invalid arguments");
 
-    QFontDatabase database;
-    return V8ENGINE()->fromVariant(database.families());
+    return V8ENGINE()->fromVariant(QVariant(QQml_guiProvider()->fontFamilies()));
 }
 
 /*!

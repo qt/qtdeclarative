@@ -53,6 +53,7 @@
 // We mean it.
 //
 
+#include "qqml.h"
 #include "qqmlproperty.h"
 #include "qqmlproperty_p.h"
 #include "qqmlnullablevalue_p_p.h"
@@ -61,13 +62,6 @@
 #include <QtCore/qrect.h>
 #include <QtCore/qeasingcurve.h>
 #include <QtCore/qvariant.h>
-#include <QtGui/qvector2d.h>
-#include <QtGui/qvector3d.h>
-#include <QtGui/qvector4d.h>
-#include <QtGui/qmatrix4x4.h>
-#include <QtGui/qquaternion.h>
-#include <QtGui/qfont.h>
-#include <QtGui/qcolor.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -84,7 +78,63 @@ public:
     virtual QString toString() const = 0;
     virtual bool isEqual(const QVariant &value) const = 0;
 
-    inline void onLoad();
+    virtual void onLoad() {}
+
+protected:
+    inline void readProperty(QObject *obj, int idx, void *p)
+    {
+        void *a[] = { p, 0 };
+        QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
+        onLoad();
+    }
+
+    inline void writeProperty(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags, void *p)
+    {
+        int status = -1;
+        void *a[] = { p, 0, &status, &flags };
+        QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
+    }
+};
+
+template <typename T>
+class QQmlValueTypeBase : public QQmlValueType
+{
+public:
+    typedef T ValueType;
+
+    QQmlValueTypeBase(QObject *parent)
+        : QQmlValueType(parent)
+    {
+    }
+
+    virtual void read(QObject *obj, int idx)
+    {
+        readProperty(obj, idx, &v);
+    }
+
+    virtual void write(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags)
+    {
+        writeProperty(obj, idx, flags, &v);
+    }
+
+    virtual QVariant value()
+    {
+        return QVariant(v);
+    }
+
+    virtual void setValue(const QVariant &value)
+    {
+        v = qvariant_cast<T>(value);
+        onLoad();
+    }
+
+    virtual bool isEqual(const QVariant &other) const
+    {
+        return QVariant(v) == other;
+    }
+
+protected:
+    ValueType v;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory
@@ -99,16 +149,27 @@ public:
     static void registerValueTypes();
 
     QQmlValueType *operator[](int idx) const {
-        if (idx >= (int)QVariant::UserType) return 0;
-        else return valueTypes[idx];
+        if (idx >= (int)QVariant::UserType)
+            return 0;
+
+        QQmlValueType *rv = valueTypes[idx];
+        if (!rv) {
+            // Table update is not thread-safe, but the potential for leaks is
+            // so small that the cost of protection is unwarranted
+            if ((rv = valueType(idx))) {
+                valueTypes[idx] = rv;
+            }
+        }
+        return rv;
     }
 
 private:
-    QQmlValueType *valueTypes[QVariant::UserType - 1]; 
+    mutable QQmlValueType *valueTypes[QVariant::UserType - 1];
 };
 
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlPointFValueType : public QQmlValueType
+// These exports of these value types are obsolete since QtQuick1 no longer
+// needs them - they should become Q_AUTOTEST_EXPORT
+class Q_QML_PRIVATE_EXPORT QQmlPointFValueType : public QQmlValueTypeBase<QPointF>
 {
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
@@ -116,24 +177,15 @@ class Q_QML_PRIVATE_EXPORT QQmlPointFValueType : public QQmlValueType
 public:
     QQmlPointFValueType(QObject *parent = 0);
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
 
     qreal x() const;
     qreal y() const;
     void setX(qreal);
     void setY(qreal);
-
-private:
-    QPointF point;
 };
 
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlPointValueType : public QQmlValueType
+class Q_QML_PRIVATE_EXPORT QQmlPointValueType : public QQmlValueTypeBase<QPoint>
 {
     Q_PROPERTY(int x READ x WRITE setX)
     Q_PROPERTY(int y READ y WRITE setY)
@@ -141,24 +193,15 @@ class Q_QML_PRIVATE_EXPORT QQmlPointValueType : public QQmlValueType
 public:
     QQmlPointValueType(QObject *parent = 0);
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
 
     int x() const;
     int y() const;
     void setX(int);
     void setY(int);
-
-private:
-    QPoint point;
 };
 
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlSizeFValueType : public QQmlValueType
+class Q_QML_PRIVATE_EXPORT QQmlSizeFValueType : public QQmlValueTypeBase<QSizeF>
 {
     Q_PROPERTY(qreal width READ width WRITE setWidth)
     Q_PROPERTY(qreal height READ height WRITE setHeight)
@@ -166,24 +209,15 @@ class Q_QML_PRIVATE_EXPORT QQmlSizeFValueType : public QQmlValueType
 public:
     QQmlSizeFValueType(QObject *parent = 0);
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
 
     qreal width() const;
     qreal height() const;
     void setWidth(qreal);
     void setHeight(qreal);
-
-private:
-    QSizeF size;
 };
 
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlSizeValueType : public QQmlValueType
+class Q_QML_PRIVATE_EXPORT QQmlSizeValueType : public QQmlValueTypeBase<QSize>
 {
     Q_PROPERTY(int width READ width WRITE setWidth)
     Q_PROPERTY(int height READ height WRITE setHeight)
@@ -191,24 +225,15 @@ class Q_QML_PRIVATE_EXPORT QQmlSizeValueType : public QQmlValueType
 public:
     QQmlSizeValueType(QObject *parent = 0);
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
 
     int width() const;
     int height() const;
     void setWidth(int);
     void setHeight(int);
-
-private:
-    QSize size;
 };
 
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlRectFValueType : public QQmlValueType
+class Q_QML_PRIVATE_EXPORT QQmlRectFValueType : public QQmlValueTypeBase<QRectF>
 {
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
@@ -218,12 +243,7 @@ class Q_QML_PRIVATE_EXPORT QQmlRectFValueType : public QQmlValueType
 public:
     QQmlRectFValueType(QObject *parent = 0);
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
 
     qreal x() const;
     qreal y() const;
@@ -234,13 +254,9 @@ public:
     qreal height() const;
     void setWidth(qreal);
     void setHeight(qreal);
-
-private:
-    QRectF rect;
 };
 
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlRectValueType : public QQmlValueType
+class Q_QML_PRIVATE_EXPORT QQmlRectValueType : public QQmlValueTypeBase<QRect>
 {
     Q_PROPERTY(int x READ x WRITE setX)
     Q_PROPERTY(int y READ y WRITE setY)
@@ -250,12 +266,7 @@ class Q_QML_PRIVATE_EXPORT QQmlRectValueType : public QQmlValueType
 public:
     QQmlRectValueType(QObject *parent = 0);
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
 
     int x() const;
     int y() const;
@@ -266,190 +277,9 @@ public:
     int height() const;
     void setWidth(int);
     void setHeight(int);
-
-private:
-    QRect rect;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlVector2DValueType : public QQmlValueType
-{
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_OBJECT
-public:
-    QQmlVector2DValueType(QObject *parent = 0);
-
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
-    virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
-
-    qreal x() const;
-    qreal y() const;
-    void setX(qreal);
-    void setY(qreal);
-
-private:
-    QVector2D vector;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlVector3DValueType : public QQmlValueType
-{
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal z READ z WRITE setZ)
-    Q_OBJECT
-public:
-    QQmlVector3DValueType(QObject *parent = 0);
-
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
-    virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
-
-    qreal x() const;
-    qreal y() const;
-    qreal z() const;
-    void setX(qreal);
-    void setY(qreal);
-    void setZ(qreal);
-
-private:
-    QVector3D vector;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlVector4DValueType : public QQmlValueType
-{
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal z READ z WRITE setZ)
-    Q_PROPERTY(qreal w READ w WRITE setW)
-    Q_OBJECT
-public:
-    QQmlVector4DValueType(QObject *parent = 0);
-
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
-    virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
-
-    qreal x() const;
-    qreal y() const;
-    qreal z() const;
-    qreal w() const;
-    void setX(qreal);
-    void setY(qreal);
-    void setZ(qreal);
-    void setW(qreal);
-
-private:
-    QVector4D vector;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlQuaternionValueType : public QQmlValueType
-{
-    Q_PROPERTY(qreal scalar READ scalar WRITE setScalar)
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal z READ z WRITE setZ)
-    Q_OBJECT
-public:
-    QQmlQuaternionValueType(QObject *parent = 0);
-
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
-    virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
-
-    qreal scalar() const;
-    qreal x() const;
-    qreal y() const;
-    qreal z() const;
-    void setScalar(qreal);
-    void setX(qreal);
-    void setY(qreal);
-    void setZ(qreal);
-
-private:
-    QQuaternion quaternion;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlMatrix4x4ValueType : public QQmlValueType
-{
-    Q_PROPERTY(qreal m11 READ m11 WRITE setM11)
-    Q_PROPERTY(qreal m12 READ m12 WRITE setM12)
-    Q_PROPERTY(qreal m13 READ m13 WRITE setM13)
-    Q_PROPERTY(qreal m14 READ m14 WRITE setM14)
-    Q_PROPERTY(qreal m21 READ m21 WRITE setM21)
-    Q_PROPERTY(qreal m22 READ m22 WRITE setM22)
-    Q_PROPERTY(qreal m23 READ m23 WRITE setM23)
-    Q_PROPERTY(qreal m24 READ m24 WRITE setM24)
-    Q_PROPERTY(qreal m31 READ m31 WRITE setM31)
-    Q_PROPERTY(qreal m32 READ m32 WRITE setM32)
-    Q_PROPERTY(qreal m33 READ m33 WRITE setM33)
-    Q_PROPERTY(qreal m34 READ m34 WRITE setM34)
-    Q_PROPERTY(qreal m41 READ m41 WRITE setM41)
-    Q_PROPERTY(qreal m42 READ m42 WRITE setM42)
-    Q_PROPERTY(qreal m43 READ m43 WRITE setM43)
-    Q_PROPERTY(qreal m44 READ m44 WRITE setM44)
-    Q_OBJECT
-public:
-    QQmlMatrix4x4ValueType(QObject *parent = 0);
-
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
-    virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
-
-    qreal m11() const { return matrix(0, 0); }
-    qreal m12() const { return matrix(0, 1); }
-    qreal m13() const { return matrix(0, 2); }
-    qreal m14() const { return matrix(0, 3); }
-    qreal m21() const { return matrix(1, 0); }
-    qreal m22() const { return matrix(1, 1); }
-    qreal m23() const { return matrix(1, 2); }
-    qreal m24() const { return matrix(1, 3); }
-    qreal m31() const { return matrix(2, 0); }
-    qreal m32() const { return matrix(2, 1); }
-    qreal m33() const { return matrix(2, 2); }
-    qreal m34() const { return matrix(2, 3); }
-    qreal m41() const { return matrix(3, 0); }
-    qreal m42() const { return matrix(3, 1); }
-    qreal m43() const { return matrix(3, 2); }
-    qreal m44() const { return matrix(3, 3); }
-
-    void setM11(qreal value) { matrix(0, 0) = value; }
-    void setM12(qreal value) { matrix(0, 1) = value; }
-    void setM13(qreal value) { matrix(0, 2) = value; }
-    void setM14(qreal value) { matrix(0, 3) = value; }
-    void setM21(qreal value) { matrix(1, 0) = value; }
-    void setM22(qreal value) { matrix(1, 1) = value; }
-    void setM23(qreal value) { matrix(1, 2) = value; }
-    void setM24(qreal value) { matrix(1, 3) = value; }
-    void setM31(qreal value) { matrix(2, 0) = value; }
-    void setM32(qreal value) { matrix(2, 1) = value; }
-    void setM33(qreal value) { matrix(2, 2) = value; }
-    void setM34(qreal value) { matrix(2, 3) = value; }
-    void setM41(qreal value) { matrix(3, 0) = value; }
-    void setM42(qreal value) { matrix(3, 1) = value; }
-    void setM43(qreal value) { matrix(3, 2) = value; }
-    void setM44(qreal value) { matrix(3, 3) = value; }
-
-private:
-    QMatrix4x4 matrix;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlEasingValueType : public QQmlValueType
+class Q_QML_PRIVATE_EXPORT QQmlEasingValueType : public QQmlValueTypeBase<QEasingCurve>
 {
     Q_OBJECT
     Q_ENUMS(Type)
@@ -489,12 +319,7 @@ public:
 
     QQmlEasingValueType(QObject *parent = 0);
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
     virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
 
     Type type() const;
     qreal amplitude() const;
@@ -506,128 +331,35 @@ public:
     void setPeriod(qreal);
     void setBezierCurve(const QVariantList &);
     QVariantList bezierCurve() const;
-
-
-private:
-    QEasingCurve easing;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlFontValueType : public QQmlValueType
+template<typename T>
+int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
-    Q_OBJECT
-    Q_ENUMS(FontWeight)
-    Q_ENUMS(Capitalization)
+    QByteArray name(T::staticMetaObject.className());
 
-    Q_PROPERTY(QString family READ family WRITE setFamily)
-    Q_PROPERTY(bool bold READ bold WRITE setBold)
-    Q_PROPERTY(FontWeight weight READ weight WRITE setWeight)
-    Q_PROPERTY(bool italic READ italic WRITE setItalic)
-    Q_PROPERTY(bool underline READ underline WRITE setUnderline)
-    Q_PROPERTY(bool overline READ overline WRITE setOverline)
-    Q_PROPERTY(bool strikeout READ strikeout WRITE setStrikeout)
-    Q_PROPERTY(qreal pointSize READ pointSize WRITE setPointSize)
-    Q_PROPERTY(int pixelSize READ pixelSize WRITE setPixelSize)
-    Q_PROPERTY(Capitalization capitalization READ capitalization WRITE setCapitalization)
-    Q_PROPERTY(qreal letterSpacing READ letterSpacing WRITE setLetterSpacing)
-    Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing)
+    QByteArray pointerName(name + '*');
 
-public:
-    enum FontWeight { Light = QFont::Light,
-                       Normal = QFont::Normal,
-                       DemiBold = QFont::DemiBold,
-                       Bold = QFont::Bold,
-                       Black = QFont::Black };
-    enum Capitalization { MixedCase = QFont::MixedCase,
-                           AllUppercase = QFont::AllUppercase,
-                           AllLowercase = QFont::AllLowercase,
-                           SmallCaps = QFont::SmallCaps,
-                           Capitalize = QFont::Capitalize };
+    QQmlPrivate::RegisterType type = {
+        0,
 
-    QQmlFontValueType(QObject *parent = 0);
+        qRegisterMetaType<T *>(pointerName.constData()), 0, 0, 0,
 
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
-    virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
+        QString(),
 
-    QString family() const;
-    void setFamily(const QString &);
+        uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
 
-    bool bold() const;
-    void setBold(bool b);
+        0, 0,
 
-    FontWeight weight() const;
-    void setWeight(FontWeight);
+        0, 0, 0,
 
-    bool italic() const;
-    void setItalic(bool b);
+        0, 0,
 
-    bool underline() const;
-    void setUnderline(bool b);
+        0,
+        0
+    };
 
-    bool overline() const;
-    void setOverline(bool b);
-
-    bool strikeout() const;
-    void setStrikeout(bool b);
-
-    qreal pointSize() const;
-    void setPointSize(qreal size);
-
-    int pixelSize() const;
-    void setPixelSize(int size);
-
-    Capitalization capitalization() const;
-    void setCapitalization(Capitalization);
-
-    qreal letterSpacing() const;
-    void setLetterSpacing(qreal spacing);
-
-    qreal wordSpacing() const;
-    void setWordSpacing(qreal spacing);
-
-    void onLoad();
-private:
-    QFont font;
-    bool pixelSizeSet;
-    bool pointSizeSet;
-    mutable QQmlNullableValue<int> dpi;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlColorValueType : public QQmlValueType
-{
-    Q_PROPERTY(qreal r READ r WRITE setR)
-    Q_PROPERTY(qreal g READ g WRITE setG)
-    Q_PROPERTY(qreal b READ b WRITE setB)
-    Q_PROPERTY(qreal a READ a WRITE setA)
-    Q_OBJECT
-public:
-    QQmlColorValueType(QObject *parent = 0);
-
-    virtual void read(QObject *, int);
-    virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags);
-    virtual QVariant value();
-    virtual void setValue(const QVariant &value);
-    virtual QString toString() const;
-    virtual bool isEqual(const QVariant &value) const;
-
-    qreal r() const;
-    qreal g() const;
-    qreal b() const;
-    qreal a() const;
-    void setR(qreal);
-    void setG(qreal);
-    void setB(qreal);
-    void setA(qreal);
-
-private:
-    QColor color;
-};
-
-void QQmlValueType::onLoad()
-{
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
 QT_END_NAMESPACE

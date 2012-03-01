@@ -68,7 +68,6 @@
 #include "qqmlvaluetypeproxybinding_p.h"
 
 #include <QStack>
-#include <QColor>
 #include <QPointF>
 #include <QSizeF>
 #include <QRectF>
@@ -267,6 +266,17 @@ static QVariant variantFromString(const QString &string)
         QMetaObject::metacall(target, QMetaObject::WriteProperty, instr.propertyIndex, a); \
     QML_END_INSTR(name)
 
+#define QML_STORE_PROVIDER_VALUE(name, type, value) \
+    QML_BEGIN_INSTR(name) \
+        struct { void *data[4]; } buffer; \
+        if (QQml_valueTypeProvider()->storeValueType(type, &value, &buffer, sizeof(buffer))) { \
+            void *a[] = { reinterpret_cast<void *>(&buffer), 0, &status, &flags }; \
+            QObject *target = objects.top(); \
+            CLEAN_PROPERTY(target, instr.propertyIndex); \
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, instr.propertyIndex, a); \
+        } \
+    QML_END_INSTR(name)
+
 #define QML_STORE_LIST(name, cpptype, value) \
     QML_BEGIN_INSTR(name) \
         cpptype v; \
@@ -366,7 +376,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_STORE_VALUE(StoreDouble, double, instr.value);
         QML_STORE_VALUE(StoreBool, bool, instr.value);
         QML_STORE_VALUE(StoreInteger, int, instr.value);
-        QML_STORE_VALUE(StoreColor, QColor, QColor::fromRgba(instr.value));
+        QML_STORE_PROVIDER_VALUE(StoreColor, QMetaType::QColor, instr.value);
         QML_STORE_VALUE(StoreDate, QDate, QDate::fromJulianDay(instr.value));
         QML_STORE_VALUE(StoreDateTime, QDateTime,
                         QDateTime(QDate::fromJulianDay(instr.date), *(QTime *)&instr.time));
@@ -377,8 +387,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_STORE_POINTER(StoreSizeF, (QSizeF *)&instr.size);
         QML_STORE_POINTER(StoreRect, (QRect *)&instr.rect);
         QML_STORE_POINTER(StoreRectF, (QRectF *)&instr.rect);
-        QML_STORE_POINTER(StoreVector3D, (QVector3D *)&instr.vector);
-        QML_STORE_POINTER(StoreVector4D, (QVector4D *)&instr.vector);
+        QML_STORE_PROVIDER_VALUE(StoreVector3D, QMetaType::QVector3D, instr.vector);
+        QML_STORE_PROVIDER_VALUE(StoreVector4D, QMetaType::QVector4D, instr.vector);
         QML_STORE_POINTER(StoreString, &PRIMITIVES.at(instr.value));
         QML_STORE_POINTER(StoreByteArray, &DATAS.at(instr.value));
         QML_STORE_POINTER(StoreUrl, &URLS.at(instr.value));

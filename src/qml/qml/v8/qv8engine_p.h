@@ -443,6 +443,9 @@ public:
     void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
     void addRelationshipForGC(QObject *object, QObject *other);
 
+    static v8::Handle<v8::Value> getApplication(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> getInputMethod(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+
     struct ThreadData {
         ThreadData();
         ~ThreadData();
@@ -491,6 +494,8 @@ protected:
     QHash<QString, qint64> m_startedTimers;
 
     QHash<QString, quint32> m_consoleCount;
+
+    QObject *m_application;
 
     QVariant toBasicVariant(v8::Handle<v8::Value>);
 

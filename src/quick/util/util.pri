@@ -1,4 +1,5 @@
 SOURCES += \
+    $$PWD/qquickapplication.cpp\
     $$PWD/qquickutilmodule.cpp\
     $$PWD/qquickconnections.cpp \
     $$PWD/qquickpackage.cpp \
@@ -26,9 +27,12 @@ SOURCES += \
     $$PWD/qquicklistcompositor.cpp \
     $$PWD/qquickpathinterpolator.cpp \
     $$PWD/qquickimageprovider.cpp \
-    $$PWD/qquicksvgparser.cpp
+    $$PWD/qquicksvgparser.cpp \
+    $$PWD/qquickvaluetypes.cpp \
+    $$PWD/qquickglobal.cpp
 
 HEADERS += \
+    $$PWD/qquickapplication_p.h\
     $$PWD/qquickutilmodule_p.h\
     $$PWD/qquickconnections_p.h \
     $$PWD/qquickpackage_p.h \
@@ -60,4 +64,5 @@ HEADERS += \
     $$PWD/qquicklistcompositor_p.h \
     $$PWD/qquickpathinterpolator_p.h \
     $$PWD/qquickimageprovider.h \
-    $$PWD/qquicksvgparser_p.h
+    $$PWD/qquicksvgparser_p.h \
+    $$PWD/qquickvaluetypes_p.h

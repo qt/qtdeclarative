@@ -41,8 +41,6 @@
 
 #include "qv8engine_p.h"
 
-#include <QtGui/QGuiApplication>
-
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
@@ -53,9 +51,9 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qquickapplication_p.h>
 #include <private/qqmlxmlhttprequest_p.h>
 #include <private/qqmllocale_p.h>
+#include <private/qqmlglobal_p.h>
 
 #include "qscript_impl_p.h"
 #include "qv8domerrors_p.h"
@@ -125,6 +123,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     , m_ownsV8Context(ownership == QJSEngine::CreateNewContext)
     , m_xmlHttpRequestData(0)
     , m_listModelData(0)
+    , m_application(0)
 {
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
@@ -538,9 +537,6 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 
 
 
-#include <QtGui/qvector3d.h>
-#include <QtGui/qvector4d.h>
-
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()
@@ -606,8 +602,8 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("binding"), V8FUNCTION(binding, this));
 
     if (m_engine) {
-        qt->Set(v8::String::New("application"), newQObject(new QQuickApplication(m_engine)));
-        qt->Set(v8::String::New("inputMethod"), newQObject(qGuiApp->inputMethod(), CppOwnership));
+        qt->SetAccessor(v8::String::New("application"), getApplication, 0, v8::External::New(this));
+        qt->SetAccessor(v8::String::New("inputMethod"), getInputMethod, 0, v8::External::New(this));
         qt->Set(v8::String::New("lighter"), V8FUNCTION(lighter, this));
         qt->Set(v8::String::New("darker"), V8FUNCTION(darker, this));
         qt->Set(v8::String::New("tint"), V8FUNCTION(tint, this));
@@ -1526,6 +1522,22 @@ int QV8Engine::consoleCountHelper(const QString &file, int line, int column)
     number++;
     m_consoleCount.insert(key, number);
     return number;
+}
+
+v8::Handle<v8::Value> QV8Engine::getApplication(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Unwrap(info.Data()));
+    if (!engine->m_application) {
+        // Only allocate an application object once
+        engine->m_application = QQml_guiProvider()->application(engine->m_engine);
+    }
+    return engine->newQObject(engine->m_application);
+}
+
+v8::Handle<v8::Value> QV8Engine::getInputMethod(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Unwrap(info.Data()));
+    return engine->newQObject(QQml_guiProvider()->inputMethod(), CppOwnership);
 }
 
 void QV8GCCallback::registerGcPrologueCallback()

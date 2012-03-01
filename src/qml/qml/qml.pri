@@ -1,5 +1,4 @@
 SOURCES += \
-    $$PWD/qquickapplication.cpp \
     $$PWD/qqmlinstruction.cpp \
     $$PWD/qquicklistmodel.cpp \
     $$PWD/qquicklistmodelworkeragent.cpp \
@@ -51,6 +50,7 @@ SOURCES += \
     $$PWD/qqmljavascriptexpression.cpp \
     $$PWD/qqmlabstractbinding.cpp \
     $$PWD/qqmlvaluetypeproxybinding.cpp \
+    $$PWD/qqmlglobal.cpp \
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -61,7 +61,6 @@ HEADERS += \
     $$PWD/qqmlopenmetaobject_p.h \
     $$PWD/qqmlvmemetaobject_p.h \
     $$PWD/qqml.h \
-    $$PWD/qquickapplication_p.h \
     $$PWD/qqmlbinding_p.h \
     $$PWD/qqmlproperty.h \
     $$PWD/qqmlcomponent.h \

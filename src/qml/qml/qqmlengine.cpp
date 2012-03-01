@@ -65,7 +65,6 @@
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include <private/qqmlprofilerservice_p.h>
-#include <private/qquickapplication_p.h>
 #include <private/qv8debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
@@ -174,7 +173,6 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
 void QQmlEnginePrivate::defineModule()
 {
     registerBaseTypes("QtQuick", 2, 0);
-    qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));
     qmlRegisterUncreatableType<QQmlLocale>("QtQuick",2,0,"Locale",QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 }
 

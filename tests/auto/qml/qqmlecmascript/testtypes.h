@@ -51,6 +51,7 @@
 #include <QtGui/qmatrix.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector3d.h>
+#include <QtGui/QFont>
 #include <QtGui/QPixmap>
 #include <QtCore/qdatetime.h>
 #include <QtQml/qjsvalue.h>

@@ -42,6 +42,9 @@
 #include <qtest.h>
 #include <private/qqmlcompiler_p.h>
 
+#include <QVector3D>
+#include <QVector4D>
+
 class tst_qqmlinstruction : public QObject
 {
     Q_OBJECT

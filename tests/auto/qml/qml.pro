@@ -32,6 +32,7 @@ PRIVATETESTS += \
     qqmlecmascript \
     qqmlcontext \
     qqmlexpression \
+    qqmlglobal \
     qqmlinstruction \
     qqmllanguage \
     qqmlproperty \

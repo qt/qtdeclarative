@@ -46,6 +46,7 @@
 #include "qv4compiler_p.h"
 #include "qv4compiler_p_p.h"
 
+#include <private/qqmlglobal_p.h>
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlmetatype_p.h>
@@ -88,12 +89,11 @@ struct Register {
     QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
     QString *getstringptr() { return (QString *)typeDataPtr(); }
     QUrl *geturlptr() { return (QUrl *)typeDataPtr(); }
-    QColor *getcolorptr() { return (QColor *)typeDataPtr(); }
     const QVariant *getvariantptr() const { return (QVariant *)typeDataPtr(); }
     const QString *getstringptr() const { return (QString *)typeDataPtr(); }
     const QUrl *geturlptr() const { return (QUrl *)typeDataPtr(); }
-    const QColor *getcolorptr() const { return (QColor *)typeDataPtr(); }
 
+    size_t dataSize() { return sizeof(data); }
     void *typeDataPtr() { return (void *)&data; }
     void *typeMemory() { return (void *)data; }
     const void *typeDataPtr() const { return (void *)&data; }
@@ -141,7 +141,7 @@ void Register::cleanup()
         } else if (dataType == QUrlType) {
             geturlptr()->~QUrl();
         } else if (dataType == QColorType) {
-            getcolorptr()->~QColor();
+            QQml_valueTypeProvider()->destroyValueType(QMetaType::QColor, typeDataPtr(), dataSize());
         } else if (dataType == QVariantType) {
             getvariantptr()->~QVariant();
         }
@@ -163,7 +163,7 @@ void Register::cleanupUrl()
 
 void Register::cleanupColor()
 {
-    getcolorptr()->~QColor();
+    QQml_valueTypeProvider()->destroyValueType(QMetaType::QColor, typeDataPtr(), dataSize());
     setUndefined();
 }
 
@@ -182,7 +182,7 @@ void Register::copy(const Register &other)
         else if (other.dataType == QUrlType)
             new (geturlptr()) QUrl(*other.geturlptr());
         else if (other.dataType == QColorType)
-            new (getcolorptr()) QColor(*other.getcolorptr());
+            QQml_valueTypeProvider()->copyValueType(QMetaType::QColor, other.typeDataPtr(), typeDataPtr(), dataSize());
         else if (other.dataType == QVariantType)
             new (getvariantptr()) QVariant(*other.getvariantptr());
     } 
@@ -197,7 +197,7 @@ void Register::init(Type type)
         else if (dataType == QUrlType)
             new (geturlptr()) QUrl();
         else if (dataType == QColorType)
-            new (getcolorptr()) QColor();
+            QQml_valueTypeProvider()->initValueType(QMetaType::QColor, typeDataPtr(), dataSize());
         else if (dataType == QVariantType)
             new (getvariantptr()) QVariant();
     }
@@ -1081,8 +1081,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
             }
-            QColor *colorPtr = output.getcolorptr();
-            new (colorPtr) QColor(QQmlStringConverters::colorFromString(tmp));
+            QQml_valueTypeProvider()->createValueFromString(QMetaType::QColor, tmp, output.typeDataPtr(), output.dataSize());
 
             COLOR_REGISTER(instr->unaryop.output);
         }
@@ -1148,13 +1147,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (src.isUndefined()) {
             output.setUndefined();
         } else {
-            const QColor tmp(*src.getcolorptr());
-            if (instr->unaryop.src == instr->unaryop.output) {
-                output.cleanupColor();
-                MARK_CLEAN_REGISTER(instr->unaryop.output);
-            }
-            // to maintain behaviour with QtQuick 1.0, we just output normal toString() value.
-            new (output.getstringptr()) QString(QVariant(tmp).toString());
+            QQml_valueTypeProvider()->createStringFromValue(QMetaType::QColor, src.typeDataPtr(), output.getstringptr());
             STRING_REGISTER(instr->unaryop.output);
         }
     }

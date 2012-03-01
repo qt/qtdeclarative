@@ -1755,38 +1755,19 @@ void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
     }
 
     switch (type) {
-    case QVariant::Rect: {
-        variant.setValue(QQmlStringConverters::rectFFromString(variant.toString()).toRect());
+    case QVariant::Rect:
+    case QVariant::RectF:
+    case QVariant::Point:
+    case QVariant::PointF:
+    case QVariant::Size:
+    case QVariant::SizeF:
+    case QVariant::Color:
+    case QVariant::Vector3D:
+        {
+        bool ok = false;
+        variant = QQmlStringConverters::variantFromString(variant.toString(), type, &ok);
+        }
         break;
-    }
-    case QVariant::RectF: {
-        variant.setValue(QQmlStringConverters::rectFFromString(variant.toString()));
-        break;
-    }
-    case QVariant::Point: {
-        variant.setValue(QQmlStringConverters::pointFFromString(variant.toString()).toPoint());
-        break;
-    }
-    case QVariant::PointF: {
-        variant.setValue(QQmlStringConverters::pointFFromString(variant.toString()));
-        break;
-    }
-    case QVariant::Size: {
-        variant.setValue(QQmlStringConverters::sizeFFromString(variant.toString()).toSize());
-        break;
-    }
-    case QVariant::SizeF: {
-        variant.setValue(QQmlStringConverters::sizeFFromString(variant.toString()));
-        break;
-    }
-    case QVariant::Color: {
-        variant.setValue(QQmlStringConverters::colorFromString(variant.toString()));
-        break;
-    }
-    case QVariant::Vector3D: {
-        variant.setValue(QQmlStringConverters::vector3DFromString(variant.toString()));
-        break;
-    }
     default:
         if (QQmlValueTypeFactory::isValueType((uint)type)) {
             variant.convert((QVariant::Type)type);

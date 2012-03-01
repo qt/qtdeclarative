@@ -42,7 +42,7 @@
 #ifndef QQMLGLOBAL_H
 #define QQMLGLOBAL_H
 
-#include <QtCore/qglobal.h>
+#include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
 
 QT_BEGIN_HEADER
@@ -121,6 +121,87 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 {
     static_cast<QQmlGraphics_DerivedObject *>(object)->setParent_noEvent(parent);
 }
+
+
+class QQmlValueType;
+
+class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
+{
+public:
+    QQmlValueTypeProvider();
+
+    QQmlValueType *createValueType(int);
+
+    bool initValueType(int, void *, size_t);
+    bool destroyValueType(int, void *, size_t);
+    bool copyValueType(int, const void *, void *, size_t);
+
+    QVariant createValueType(int, int, const void *[]);
+    bool createValueFromString(int, const QString &, void *, size_t);
+    bool createStringFromValue(int, const void *, QString *);
+
+    QVariant createVariantFromString(const QString &);
+    QVariant createVariantFromString(int, const QString &, bool *);
+
+    bool storeValueType(int, const void *, void *, size_t);
+    bool readValueType(int, const void *, int, void *);
+    bool writeValueType(int, const void *, void *, size_t);
+
+private:
+    virtual bool create(int, QQmlValueType *&);
+
+    virtual bool init(int, void *, size_t);
+    virtual bool destroy(int, void *, size_t);
+    virtual bool copy(int, const void *, void *, size_t);
+
+    virtual bool create(int, int, const void *[], QVariant *);
+    virtual bool createFromString(int, const QString &, void *, size_t);
+    virtual bool createStringFrom(int, const void *, QString *);
+
+    virtual bool variantFromString(const QString &, QVariant *);
+    virtual bool variantFromString(int, const QString &, QVariant *);
+
+    virtual bool store(int, const void *, void *, size_t);
+    virtual bool read(int, const void *, int, void *);
+    virtual bool write(int, const void *, void *, size_t);
+
+    friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
+
+    QQmlValueTypeProvider *next;
+};
+
+Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
+Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider();
+
+
+class Q_QML_PRIVATE_EXPORT QQmlColorProvider
+{
+public:
+    virtual QVariant colorFromString(const QString &, bool *);
+    virtual unsigned rgbaFromString(const QString &, bool *);
+
+    virtual QVariant fromRgbF(double, double, double, double);
+    virtual QVariant fromHslF(double, double, double, double);
+    virtual QVariant lighter(const QVariant &, qreal);
+    virtual QVariant darker(const QVariant &, qreal);
+    virtual QVariant tint(const QVariant &, const QVariant &);
+};
+
+Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *);
+Q_AUTOTEST_EXPORT QQmlColorProvider *QQml_colorProvider();
+
+
+class Q_QML_PRIVATE_EXPORT QQmlGuiProvider
+{
+public:
+    virtual QObject *application(QObject *parent);
+    virtual QObject *inputMethod();
+    virtual QStringList fontFamilies();
+    virtual bool openUrlExternally(QUrl &);
+};
+
+Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *);
+Q_AUTOTEST_EXPORT QQmlGuiProvider *QQml_guiProvider();
 
 QT_END_NAMESPACE
 

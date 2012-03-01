@@ -52,6 +52,8 @@
 #include <QCryptographicHash>
 #include <QtQuick/QQuickItem>
 #include <QSignalSpy>
+#include <QVector3D>
+#include <QVector4D>
 #include "../../shared/util.h"
 
 class tst_qqmlqt : public QQmlDataTest

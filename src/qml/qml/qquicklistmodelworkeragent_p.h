@@ -55,7 +55,6 @@
 
 #include <qqml.h>
 
-#include <QtGui/qevent.h>
 #include <QMutex>
 #include <QWaitCondition>
 

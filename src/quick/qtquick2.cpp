@@ -42,10 +42,11 @@
 #include "qtquick2_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qquickutilmodule_p.h>
-#include <private/qqmlvaluetype_p.h>
+#include <private/qquickvaluetypes_p.h>
 #include <private/qquickitemsmodule_p.h>
 #include <private/qquickparticlesmodule_p.h>
 #include <private/qquickwindowmodule_p.h>
+#include <private/qquickapplication_p.h>
 
 #include <private/qqmlenginedebugservice_p.h>
 #include <private/qqmldebugstatesdelegate_p.h>
@@ -177,7 +178,10 @@ void QQmlQtQuick2Module::defineModule()
     QQuickItemsModule::defineModule();
     QQuickParticlesModule::defineModule();
     QQuickWindowModule::defineModule();
-    QQmlValueTypeFactory::registerValueTypes();
+
+    qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));
+
+    QQuickValueTypes::registerValueTypes();
 
     if (QQmlEngineDebugService::isDebuggingEnabled()) {
         QQmlEngineDebugService::instance()->setStatesDelegate(
