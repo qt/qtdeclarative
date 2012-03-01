@@ -1891,16 +1891,16 @@ void QQuickVisualDataGroup::setDefaultInclude(bool include)
     VisualDataModel attached as well as the model for that item.  It has the properties:
 
     \list
-    \o \b model The model data of the item.  This is the same as the model context property in
+    \li \b model The model data of the item.  This is the same as the model context property in
     a delegate
-    \o \b groups A list the of names of groups the item is a member of.  This property can be
+    \li \b groups A list the of names of groups the item is a member of.  This property can be
     written to change the item's membership.
-    \o \b inItems Whether the item belongs to the \l {QtQuick2::VisualDataModel::items}{items} group.
+    \li \b inItems Whether the item belongs to the \l {QtQuick2::VisualDataModel::items}{items} group.
     Writing to this property will add or remove the item from the group.
-    \o \b itemsIndex The index of the item within the \l {QtQuick2::VisualDataModel::items}{items} group.
-    \o \b {in\i{GroupName}} Whether the item belongs to the dynamic group \i groupName.  Writing to
+    \li \b itemsIndex The index of the item within the \l {QtQuick2::VisualDataModel::items}{items} group.
+    \li \b {in\e{GroupName}} Whether the item belongs to the dynamic group \e groupName.  Writing to
     this property will add or remove the item from the group.
-    \o \b {\i{groupName}Index} The index of the item within the dynamic group \i groupName.
+    \li \b {\e{groupName}Index} The index of the item within the dynamic group \e groupName.
     \endlist
 */
 

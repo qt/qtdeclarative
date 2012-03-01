@@ -362,10 +362,10 @@ QQmlComponent::~QQmlComponent()
     \qmlproperty enumeration Component::status
     This property holds the status of component loading.  It can be one of:
     \list
-    \o Component.Null - no data is available for the component
-    \o Component.Ready - the component has been loaded, and can be used to create instances.
-    \o Component.Loading - the component is currently being loaded
-    \o Component.Error - an error occurred while loading the component.
+    \li Component.Null - no data is available for the component
+    \li Component.Ready - the component has been loaded, and can be used to create instances.
+    \li Component.Loading - the component is currently being loaded
+    \li Component.Error - an error occurred while loading the component.
                Calling errorString() will provide a human-readable description of any errors.
     \endlist
  */
@@ -686,9 +686,9 @@ QObject *QQmlComponent::create(QQmlContext *context)
 
     When QQmlComponent constructs an instance, it occurs in three steps:
     \list 1
-    \i The object hierarchy is created, and constant values are assigned.
-    \i Property bindings are evaluated for the the first time.
-    \i If applicable, QQmlParserStatus::componentComplete() is called on objects.
+    \li The object hierarchy is created, and constant values are assigned.
+    \li Property bindings are evaluated for the the first time.
+    \li If applicable, QQmlParserStatus::componentComplete() is called on objects.
     \endlist 
     QQmlComponent::beginCreate() differs from QQmlComponent::create() in that it
     only performs step 1.  QQmlComponent::completeCreate() must be called to 
@@ -1079,13 +1079,13 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     properties:
 
     \list
-    \i status The status of the incubator.  Valid values are Component.Ready, Component.Loading and
+    \li status The status of the incubator.  Valid values are Component.Ready, Component.Loading and
        Component.Error.
-    \i object The created object instance.  Will only be available once the incubator is in the 
+    \li object The created object instance.  Will only be available once the incubator is in the
        Ready status.
-    \i onStatusChanged Specifies a callback function to be invoked when the status changes.  The
+    \li onStatusChanged Specifies a callback function to be invoked when the status changes.  The
        status is passed as a parameter to the callback.
-    \i forceCompletion() Call to complete incubation synchronously.
+    \li forceCompletion() Call to complete incubation synchronously.
     \endlist
 
     The following example demonstrates how to use an incubator:

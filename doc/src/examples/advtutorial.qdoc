@@ -36,7 +36,7 @@ This tutorial walks step-by-step through the creation of a full application usin
 It assumes that you already know the basics of QML (for example, from reading the
 \l{QML Tutorial}{simple tutorial}). 
 
-In this tutorial we write a game, \i {Same Game}, based on the Same Game application
+In this tutorial we write a game, \e {Same Game}, based on the Same Game application
 included in the declarative \c examples directory, which looks like this:
 
 \image declarative-samegame.png
@@ -53,10 +53,10 @@ control QML elements.
 Tutorial chapters:
 
 \list 1
-\o \l {declarative/tutorials/samegame/samegame1}{Creating the Game Canvas and Blocks}
-\o \l {declarative/tutorials/samegame/samegame2}{Populating the Game Canvas}
-\o \l {declarative/tutorials/samegame/samegame3}{Implementing the Game Logic}
-\o \l {declarative/tutorials/samegame/samegame4}{Finishing Touches}
+\li \l {declarative/tutorials/samegame/samegame1}{Creating the Game Canvas and Blocks}
+\li \l {declarative/tutorials/samegame/samegame2}{Populating the Game Canvas}
+\li \l {declarative/tutorials/samegame/samegame3}{Implementing the Game Logic}
+\li \l {declarative/tutorials/samegame/samegame4}{Finishing Touches}
 \endlist
 
 All the code in this tutorial can be found in Qt's \c examples/declarative/tutorials/samegame
@@ -168,18 +168,18 @@ and moves the new block to its position on the game canvas. This involves severa
 
 \list
 
-\o \l {QML:Qt::createComponent()}{Qt.createComponent()} is called to
+\li \l {QML:Qt::createComponent()}{Qt.createComponent()} is called to
    generate an element from \c Block.qml.  If the component is ready,
    we can call \c createObject() to create an instance of the \c Block
    item.
 
-\o If \c createObject() returned null (i.e. if there was an error
+\li If \c createObject() returned null (i.e. if there was an error
    while loading the object), print the error information.
 
-\o Place the block in its position on the board and set its width and
+\li Place the block in its position on the board and set its width and
    height.  Also, store it in the blocks array for future reference.
 
-\o Finally, print error information to the console if the component
+\li Finally, print error information to the console if the component
    could not be loaded for some reason (for example, if the file is
    missing).
 
@@ -228,11 +228,11 @@ until it is won or lost.
 To do this, we have added the following functions to \c samegame.js:
 
 \list
-\o \c{handleClick(x,y)}
-\o \c{floodFill(xIdx,yIdx,type)}
-\o \c{shuffleDown()}
-\o \c{victoryCheck()}
-\o \c{floodMoveCheck(xIdx, yIdx, type)}
+\li \c{handleClick(x,y)}
+\li \c{floodFill(xIdx,yIdx,type)}
+\li \c{shuffleDown()}
+\li \c{victoryCheck()}
+\li \c{floodMoveCheck(xIdx, yIdx, type)}
 \endlist
 
 As this is a tutorial about QML, not game design, we will only discuss \c handleClick() and \c victoryCheck() below since they interface directly with the QML elements. Note that although the game logic here is written in JavaScript, it could have been written in C++ and then exposed to QML. 
@@ -459,10 +459,10 @@ makes it very easy to fetch and display XML based data such as RSS in a QML appl
 By following this tutorial you've seen how you can write a fully functional application in QML:
 
 \list
-\o Build your application with \l {{QML Elements}}{QML elements}
-\o Add application logic \l{JavaScript Expressions in QML}{with JavaScript code}
-\o Add animations with \l {Behavior}{Behaviors} and \l{QML States}{states}
-\o Store persistent application data using, for example, the \l{Offline Storage API} or \l XMLHttpRequest
+\li Build your application with \l {{QML Elements}}{QML elements}
+\li Add application logic \l{JavaScript Expressions in QML}{with JavaScript code}
+\li Add animations with \l {Behavior}{Behaviors} and \l{QML States}{states}
+\li Store persistent application data using, for example, the \l{Offline Storage API} or \l XMLHttpRequest
 \endlist
 
 There is so much more to learn about QML that we haven't been able to cover in this tutorial. Check out all the

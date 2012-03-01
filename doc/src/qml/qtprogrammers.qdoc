@@ -31,7 +31,7 @@
 \title QML for Qt Programmers
 \brief learning QML for programmers with Qt knowledge
 
-While QML does not require Qt knowledge to use, if you \i are already familiar with Qt,
+While QML does not require Qt knowledge to use, if you \e are already familiar with Qt,
 much of your knowledge is directly relevant to learning and using QML. Of course,
 an application with a user interface defined in QML also uses Qt for all the non-UI
 logic.
@@ -41,14 +41,14 @@ logic.
 QML provides direct access to the following concepts from Qt:
 
 \list
- \o QAction - the \l {QML Basic Types}{action} type
- \o QObject signals and slots - available as functions to call in JavaScript
- \o QObject properties - available as variables in JavaScript
- \o QWidget - QQuickView is a QML-displaying widget
- \o Qt models - used directly in data binding (QAbstractItemModel)
+ \li QAction - the \l {QML Basic Types}{action} type
+ \li QObject signals and slots - available as functions to call in JavaScript
+ \li QObject properties - available as variables in JavaScript
+ \li QWidget - QQuickView is a QML-displaying widget
+ \li Qt models - used directly in data binding (QAbstractItemModel)
 \endlist
 
-Qt knowledge is \i required for \l{Extending QML with C++},
+Qt knowledge is \e required for \l{Extending QML with C++},
 and also for \l{Integrating QML Code with existing Qt UI code}.
 
 \section1 QML Items Compared with Widgets
@@ -60,10 +60,10 @@ look and feel of view delegates, QML Items can be used for this as well.
 There are three structurally different types of widget:
 
 \list
- \o Simple widgets that are not used as parents (QLabel, QCheckBox, QToolButton, etc.)
- \o Parent widgets that are normally used as parents to other widgets (QGroupBox,
+ \li Simple widgets that are not used as parents (QLabel, QCheckBox, QToolButton, etc.)
+ \li Parent widgets that are normally used as parents to other widgets (QGroupBox,
     QStackedWidget, QTabWidget, etc.)
- \o Compound widgets that are internally composed of child widgets (QComboBox,
+ \li Compound widgets that are internally composed of child widgets (QComboBox,
     QSpinBox, QFileDialog, QTabWidget, etc.)
 \endlist
 
@@ -128,9 +128,9 @@ requirement that they be wholly contained ("clipped") to the parent (although th
 This difference has rather far-reaching consequences, for example:
 
 \list
-\o A shadow or highlight around a widget could be a child of that widget.
-\o Particle effects can flow outside the object where they originate.
-\o Transitioning animations can "hide" items by visibly moving them beyond
+\li A shadow or highlight around a widget could be a child of that widget.
+\li Particle effects can flow outside the object where they originate.
+\li Transitioning animations can "hide" items by visibly moving them beyond
    the screen bounds.
 \endlist
 

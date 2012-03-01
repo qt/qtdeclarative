@@ -113,22 +113,22 @@ QT_BEGIN_NAMESPACE
 
     \table
     \header
-        \o \bold {Role}
-        \o \bold {Expected property}
-        \o
+        \li \b {Role}
+        \li \b {Expected property}
+        \li
 
     \row
-        \o Button
-        \o function accessiblePressAction
-        \o Called when the button receives a press action. The implementation should visually simulate a button click and perform the button action.
+        \li Button
+        \li function accessiblePressAction
+        \li Called when the button receives a press action. The implementation should visually simulate a button click and perform the button action.
     \row
-       \o CheckBox, Radiobutton
-       \o checked
-       \o The check state of the check box. Updated on Press, Check and Uncheck actions.
+       \li CheckBox, Radiobutton
+       \li checked
+       \li The check state of the check box. Updated on Press, Check and Uncheck actions.
     \row
-       \o Slider, SpinBox, Dial, ScrollBar
-       \o value, minimumValue, maximumValue, stepSize
-       \o value will be updated on increase and decrase actions, in accordance with the other properties
+       \li Slider, SpinBox, Dial, ScrollBar
+       \li value, minimumValue, maximumValue, stepSize
+       \li value will be updated on increase and decrase actions, in accordance with the other properties
 
     \endtable
 */

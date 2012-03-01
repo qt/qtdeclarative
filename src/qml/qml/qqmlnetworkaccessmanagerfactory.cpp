@@ -65,12 +65,12 @@ QT_BEGIN_NAMESPACE
     be created in a different thread:
 
     \list
-    \o The QML engine internally handles all requests, and cleans up any
+    \li The QML engine internally handles all requests, and cleans up any
        QNetworkReply objects it creates. Receiving the
        QNetworkAccessManager::finished() signal in another thread may not
        provide the receiver with a valid reply object if it has already
        been deleted.
-    \o Authentication details provided to QNetworkAccessManager::authenticationRequired()
+    \li Authentication details provided to QNetworkAccessManager::authenticationRequired()
        must be provided immediately, so this signal cannot be connected as a
        Qt::QueuedConnection (or as the default Qt::AutoConnection from another
        thread).

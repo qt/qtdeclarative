@@ -85,9 +85,9 @@ QT_BEGIN_NAMESPACE
 
     What attribute of particles is directly affected.
     \list
-    \o Attractor.Position
-    \o Attractor.Velocity
-    \o Attractor.Acceleration
+    \li Attractor.Position
+    \li Attractor.Velocity
+    \li Attractor.Acceleration
     \endlist
 */
 /*!
@@ -96,11 +96,11 @@ QT_BEGIN_NAMESPACE
     How the distance from the particle to the point affects the strength of the attraction.
 
     \list
-    \o Attractor.Constant
-    \o Attractor.Linear
-    \o Attractor.InverseLinear
-    \o Attractor.Quadratic
-    \o Attractor.InverseQuadratic
+    \li Attractor.Constant
+    \li Attractor.Linear
+    \li Attractor.InverseLinear
+    \li Attractor.Quadratic
+    \li Attractor.InverseQuadratic
     \endlist
 */
 

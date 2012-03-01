@@ -427,14 +427,14 @@ specified IncubationMode.
 
 QQmlIncubator supports three incubation modes:
 \list
-\i Synchronous The creation occurs synchronously.  That is, once the 
+\li Synchronous The creation occurs synchronously.  That is, once the
 QQmlComponent::create() call returns, the incubator will already be in either the
 Error or Ready state.  A synchronous incubator has no real advantage compared to using
 the synchronous creation methods on QQmlComponent directly, but it may simplify an 
 application's implementation to use the same API for both synchronous and asynchronous 
 creations.
 
-\i Asynchronous (default) The creation occurs asynchronously, assuming a 
+\li Asynchronous (default) The creation occurs asynchronously, assuming a
 QQmlIncubatorController is set on the QQmlEngine.  
 
 The incubator will remain in the Loading state until either the creation is complete or an error 
@@ -446,7 +446,7 @@ that are slightly off screen while the list is being scrolled.  If, during async
 the object is needed immediately the QQmlIncubator::forceCompletion() method can be called
 to complete the creation process synchronously.
 
-\i AsynchronousIfNested The creation will occur asynchronously if part of a nested asynchronous 
+\li AsynchronousIfNested The creation will occur asynchronously if part of a nested asynchronous
 creation, or synchronously if not.  
 
 In most scenarios where a QML element or component wants the appearance of a synchronous 

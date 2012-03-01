@@ -37,20 +37,20 @@ This document contains the QML coding conventions that we follow in our document
 Through our documentation and examples, QML objects are always structured in the following order:
 
 \list
-\o id
-\o property declarations
-\o signal declarations
-\o JavaScript functions
-\o object properties
-\o child objects
-\o states
-\o transitions
+\li id
+\li property declarations
+\li signal declarations
+\li JavaScript functions
+\li object properties
+\li child objects
+\li states
+\li transitions
 \endlist
 
 For better readability, we separate these different parts with an empty line.
 
 
-For example, a hypothetical \i photo QML object would look like this:
+For example, a hypothetical \e photo QML object would look like this:
 
 \snippet doc/src/snippets/qml/codingconventions/photo.qml 0
 
@@ -58,7 +58,7 @@ For example, a hypothetical \i photo QML object would look like this:
 \section1 Grouped Properties
 
 If using multiple properties from a group of properties,
-we use the \i {group notation} rather than the \i {dot notation} to improve readability.
+we use the \e {group notation} rather than the \e {dot notation} to improve readability.
 
 For example, this:
 
@@ -74,7 +74,7 @@ can be written like this:
 QML and JavaScript do not enforce private properties like C++. There is a need
 to hide these private properties, for example, when the properties are part of
 the implementation. As a convention, private properties begin with two
-\i underscore characters. For example, \c __area, is a property that is
+\e underscore characters. For example, \c __area, is a property that is
 accessible but is not meant for public use. Note that QML and JavaScript will
 grant the user access to these properties.
 

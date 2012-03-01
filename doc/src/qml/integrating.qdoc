@@ -90,9 +90,9 @@ The following QGraphicsView options are recommended for optimal performance
 of QML UIs:
 
 \list
-\o QGraphicsView::setOptimizationFlags(QGraphicsView::DontSavePainterState)
-\o QGraphicsView::setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate)
-\o QGraphicsScene::setItemIndexMethod(QGraphicsScene::NoIndex)
+\li QGraphicsView::setOptimizationFlags(QGraphicsView::DontSavePainterState)
+\li QGraphicsView::setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate)
+\li QGraphicsScene::setItemIndexMethod(QGraphicsScene::NoIndex)
 \endlist
 
 \section2 Loading QGraphicsWidget Objects in QML

@@ -771,13 +771,13 @@ QQuickFlickableVisibleArea *QQuickFlickable::visibleArea()
     This property determines which directions the view can be flicked.
 
     \list
-    \o Flickable.AutoFlickDirection (default) - allows flicking vertically if the
+    \li Flickable.AutoFlickDirection (default) - allows flicking vertically if the
     \e contentHeight is not equal to the \e height of the Flickable.
     Allows flicking horizontally if the \e contentWidth is not equal
     to the \e width of the Flickable.
-    \o Flickable.HorizontalFlick - allows flicking horizontally.
-    \o Flickable.VerticalFlick - allows flicking vertically.
-    \o Flickable.HorizontalAndVerticalFlick - allows flicking in both directions.
+    \li Flickable.HorizontalFlick - allows flicking horizontally.
+    \li Flickable.VerticalFlick - allows flicking vertically.
+    \li Flickable.HorizontalAndVerticalFlick - allows flicking in both directions.
     \endlist
 */
 QQuickFlickable::FlickableDirection QQuickFlickable::flickableDirection() const
@@ -1449,11 +1449,11 @@ QQmlListProperty<QQuickItem> QQuickFlickable::flickableChildren()
     The \c boundsBehavior can be one of:
 
     \list
-    \o Flickable.StopAtBounds - the contents can not be dragged beyond the boundary
+    \li Flickable.StopAtBounds - the contents can not be dragged beyond the boundary
     of the flickable, and flicks will not overshoot.
-    \o Flickable.DragOverBounds - the contents can be dragged beyond the boundary
+    \li Flickable.DragOverBounds - the contents can be dragged beyond the boundary
     of the Flickable, but flicks will not overshoot.
-    \o Flickable.DragAndOvershootBounds (default) - the contents can be dragged
+    \li Flickable.DragAndOvershootBounds (default) - the contents can be dragged
     beyond the boundary of the Flickable, and can overshoot the
     boundary when flicked.
     \endlist

@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qml-event-elements
     \brief The PinchEvent object provides information about a pinch event.
 
-    \bold {The PinchEvent element was added in QtQuick 1.1}
+    \b {The PinchEvent element was added in QtQuick 1.1}
 
     The \c center, \c startCenter, \c previousCenter properties provide the center position between the two touch points.
 
@@ -81,9 +81,9 @@ QT_BEGIN_NAMESPACE
     These properties hold the position of the center point between the two touch points.
 
     \list
-    \o \c center is the current center point
-    \o \c previousCenter is the center point of the previous event.
-    \o \c startCenter is the center point when the gesture began
+    \li \c center is the current center point
+    \li \c previousCenter is the center point of the previous event.
+    \li \c startCenter is the center point when the gesture began
     \endlist
 */
 
@@ -94,8 +94,8 @@ QT_BEGIN_NAMESPACE
     These properties hold the scale factor determined by the change in distance between the two touch points.
 
     \list
-    \o \c scale is the current scale factor.
-    \o \c previousScale is the scale factor of the previous event.
+    \li \c scale is the current scale factor.
+    \li \c previousScale is the scale factor of the previous event.
     \endlist
 
     When a pinch gesture is started, the scale is 1.0.
@@ -109,9 +109,9 @@ QT_BEGIN_NAMESPACE
     These properties hold the angle between the two touch points.
 
     \list
-    \o \c angle is the current angle between the two points in the range -180 to 180.
-    \o \c previousAngle is the angle of the previous event.
-    \o \c rotation is the total rotation since the pinch gesture started.
+    \li \c angle is the current angle between the two points in the range -180 to 180.
+    \li \c previousAngle is the angle of the previous event.
+    \li \c rotation is the total rotation since the pinch gesture started.
     \endlist
 
     When a pinch gesture is started, the rotation is 0.0.
@@ -126,8 +126,8 @@ QT_BEGIN_NAMESPACE
     These properties provide the actual touch points generating the pinch.
 
     \list
-    \o \c point1 and \c point2 hold the current positions of the points.
-    \o \c startPoint1 and \c startPoint2 hold the positions of the points when the second point was touched.
+    \li \c point1 and \c point2 hold the current positions of the points.
+    \li \c startPoint1 and \c startPoint2 hold the positions of the points when the second point was touched.
     \endlist
 */
 
@@ -166,7 +166,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \brief The PinchArea item enables simple pinch gesture handling.
     \inherits Item
 
-    \bold {The PinchArea element was added in QtQuick 1.1}
+    \b {The PinchArea element was added in QtQuick 1.1}
 
     A PinchArea is an invisible item that is typically used in conjunction with
     a visible item in order to provide pinch gesture handling for that item.
@@ -178,8 +178,8 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     PinchArea can be used in two ways:
 
     \list
-    \o setting a \c pinch.target to provide automatic interaction with an element
-    \o using the onPinchStarted, onPinchUpdated and onPinchFinished handlers
+    \li setting a \c pinch.target to provide automatic interaction with an element
+    \li using the onPinchStarted, onPinchUpdated and onPinchFinished handlers
     \endlist
 
     \sa PinchEvent
@@ -232,12 +232,12 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \c pinch provides a convenient way to make an item react to pinch gestures.
 
     \list
-    \i \c pinch.target specifies the id of the item to drag.
-    \i \c pinch.active specifies if the target item is currently being dragged.
-    \i \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item::scale property.
-    \i \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item::rotation property.
-    \i \c pinch.dragAxis specifies whether dragging in not allowed (\c Pinch.NoDrag), can be done horizontally (\c Pinch.XAxis), vertically (\c Pinch.YAxis), or both (\c Pinch.XandYAxis)
-    \i \c pinch.minimum and \c pinch.maximum limit how far the target can be dragged along the corresponding axes.
+    \li \c pinch.target specifies the id of the item to drag.
+    \li \c pinch.active specifies if the target item is currently being dragged.
+    \li \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item::scale property.
+    \li \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item::rotation property.
+    \li \c pinch.dragAxis specifies whether dragging in not allowed (\c Pinch.NoDrag), can be done horizontally (\c Pinch.XAxis), vertically (\c Pinch.YAxis), or both (\c Pinch.XandYAxis)
+    \li \c pinch.minimum and \c pinch.maximum limit how far the target can be dragged along the corresponding axes.
     \endlist
 */
 

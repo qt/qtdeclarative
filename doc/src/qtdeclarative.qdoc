@@ -55,14 +55,14 @@ winning App across mobile, embedded, and desktop platforms.
             QML Essentials
         \enddiv
         \list
-        \o \l{QML Components}{Components}
-        \o \l{Properties and Property Binding in QML}{Properties and Property Binding}
-        \o \l{JavaScript Expressions in QML}{JavaScript Code}
-        \o \l{QML Signal and Handler Event System}{Signal and Handler Event System}
-        \o \l{QML Modules}{Modules}
+        \li \l{QML Components}{Components}
+        \li \l{Properties and Property Binding in QML}{Properties and Property Binding}
+        \li \l{JavaScript Expressions in QML}{JavaScript Code}
+        \li \l{QML Signal and Handler Event System}{Signal and Handler Event System}
+        \li \l{QML Modules}{Modules}
         \endlist
         \list
-        \o \l{What's New in Qt Quick 2}{What's New in Qt Quick}
+        \li \l{What's New in Qt Quick 2}{What's New in Qt Quick}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -70,10 +70,10 @@ winning App across mobile, embedded, and desktop platforms.
             QML Engine
         \enddiv
         \list
-        \o \l{The QML Engine}
-        \o \l{QML Global Object}
-        \o \l{Dynamic Object Management in QML}{Dynamic Object Management}
-        \o \l{QML Performance}{Performance}
+        \li \l{The QML Engine}
+        \li \l{QML Global Object}
+        \li \l{Dynamic Object Management in QML}{Dynamic Object Management}
+        \li \l{QML Performance}{Performance}
         \endlist
     \enddiv
     \div {class=" threecolumn_piece"}
@@ -81,12 +81,12 @@ winning App across mobile, embedded, and desktop platforms.
             Reference
         \enddiv
         \list
-        \o \l{QML Syntax}
-        \o \l{QML Basic Types}{Data Types}
-        \o \l{QML Coding Conventions}{Coding Conventions}
-        \o \l{QML Security}{Security Model}
-        \o \l{QML Scope}{Scope Model}
-        \o \l{QML Documents}{Documents}
+        \li \l{QML Syntax}
+        \li \l{QML Basic Types}{Data Types}
+        \li \l{QML Coding Conventions}{Coding Conventions}
+        \li \l{QML Security}{Security Model}
+        \li \l{QML Scope}{Scope Model}
+        \li \l{QML Documents}{Documents}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -94,10 +94,10 @@ winning App across mobile, embedded, and desktop platforms.
             QML Bindings with Qt C++
         \enddiv
         \list
-        \o \l{Creating QML Types}
-        \o \l{QML Plugins}
-        \o \l{Exposing C++ Models}
-        \o \l{Integrating QML Code with Existing Qt UI Code}{Qt Gui Porting Information}
+        \li \l{Creating QML Types}
+        \li \l{QML Plugins}
+        \li \l{Exposing C++ Models}
+        \li \l{Integrating QML Code with Existing Qt UI Code}{Qt Gui Porting Information}
         \endlist
     \enddiv
     \div {class=" threecolumn_piece"}
@@ -105,9 +105,9 @@ winning App across mobile, embedded, and desktop platforms.
             Tools
         \enddiv
         \list
-        \o \l{QML Internationalization}{Internationalization}
-        \o \l{QtQuickTest Reference Documentation}
-        \o \l{Debugging QML}
+        \li \l{QML Internationalization}{Internationalization}
+        \li \l{QtQuickTest Reference Documentation}
+        \li \l{Debugging QML}
         \endlist
     \enddiv
 \enddiv
@@ -122,10 +122,10 @@ winning App across mobile, embedded, and desktop platforms.
             Graphics and Special Effects
         \enddiv
         \list
-        \o \l{Qt Quick Basic Elements}{Basic Elements}
-        \o \l{Painting with Canvas API}
-        \o \l{Using the Qt Quick Particle System}{Particle Effects}
-        \o \l{Shader Effects in QML}{Shader Effects}
+        \li \l{Qt Quick Basic Elements}{Basic Elements}
+        \li \l{Painting with Canvas API}
+        \li \l{Using the Qt Quick Particle System}{Particle Effects}
+        \li \l{Shader Effects in QML}{Shader Effects}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -133,9 +133,9 @@ winning App across mobile, embedded, and desktop platforms.
             Anchoring and Layouts
         \enddiv
         \list
-        \o \l{Component Layouts}
-        \o \l{Layouts with Anchors}
-        \o \l{QML Right-to-left User Interfaces}{Right-to-left User Interfaces}
+        \li \l{Component Layouts}
+        \li \l{Layouts with Anchors}
+        \li \l{QML Right-to-left User Interfaces}{Right-to-left User Interfaces}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -143,9 +143,9 @@ winning App across mobile, embedded, and desktop platforms.
             Mouse and Keyboard Input
         \enddiv
         \list
-        \o \l{QML Mouse Events}{Mouse Events}
-        \o \l{QML Text Handling and Validators}{Text Handling and Validators}
-        \o \l{Keyboard Focus in QML}{Keyboard Focus}
+        \li \l{QML Mouse Events}{Mouse Events}
+        \li \l{QML Text Handling and Validators}{Text Handling and Validators}
+        \li \l{Keyboard Focus in QML}{Keyboard Focus}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -153,8 +153,8 @@ winning App across mobile, embedded, and desktop platforms.
             States and Transitions
         \enddiv
         \list
-        \o \l{QML States}{States}
-        \o \l{QML Animation and Transitions}{Animation and Transitions}
+        \li \l{QML States}{States}
+        \li \l{QML Animation and Transitions}{Animation and Transitions}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -162,7 +162,7 @@ winning App across mobile, embedded, and desktop platforms.
             Data with Models and Views
         \enddiv
         \list
-        \o \l{QML Models and Views}{Models and Views}
+        \li \l{QML Models and Views}{Models and Views}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -170,8 +170,8 @@ winning App across mobile, embedded, and desktop platforms.
             Data Storage and Resources
         \enddiv
         \list
-        \o \l{QML Local Storage}{SQL Local Storage}
-        \o \l{Resource Loading and Network Transparency in QML}{Resources and Network Transparency}
+        \li \l{QML Local Storage}{SQL Local Storage}
+        \li \l{Resource Loading and Network Transparency in QML}{Resources and Network Transparency}
         \endlist
     \enddiv
 \enddiv

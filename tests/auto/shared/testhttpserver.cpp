@@ -79,12 +79,12 @@ server.serveDirectory("slowFiles", TestHTTPServer::Delay);
 
 The following request urls will then result in the appropriate action:
 \table
-\header \o URL \o Action
-\row \o http://localhost:14445/disconnectTest.qml \o Disconnection
-\row \o http://localhost:14445/main.qml \o main.qml returned immediately
-\row \o http://localhost:14445/Button.qml \o Button.qml returned immediately
-\row \o http://localhost:14445/content/WebView.qml \o content/WebView.qml returned immediately
-\row \o http://localhost:14445/slowMain.qml \o slowMain.qml returned after 500ms
+\header \li URL \li Action
+\row \li http://localhost:14445/disconnectTest.qml \li Disconnection
+\row \li http://localhost:14445/main.qml \li main.qml returned immediately
+\row \li http://localhost:14445/Button.qml \li Button.qml returned immediately
+\row \li http://localhost:14445/content/WebView.qml \li content/WebView.qml returned immediately
+\row \li http://localhost:14445/slowMain.qml \li slowMain.qml returned after 500ms
 \endtable
 */
 TestHTTPServer::TestHTTPServer(quint16 port)

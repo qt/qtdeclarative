@@ -36,8 +36,8 @@
 \section1 Mouse Elements
 
 \list
-\o \l{MouseArea} Element
-\o \l{MouseEvent} Object
+\li \l{MouseArea} Element
+\li \l{MouseEvent} Object
 \endlist
 
 \section1 Mouse Event Handling
@@ -65,15 +65,15 @@ mouse events. The \l MouseArea element documentation describes these
 gestures in greater detail:
 
 \list
-\o canceled
-\o clicked
-\o doubleClicked
-\o entered
-\o exited
-\o positionChanged
-\o pressAndHold
-\o pressed
-\o released
+\li canceled
+\li clicked
+\li doubleClicked
+\li entered
+\li exited
+\li positionChanged
+\li pressAndHold
+\li pressed
+\li released
 \endlist
 
 These signals have signal handlers that are invoked when the signals are emitted.

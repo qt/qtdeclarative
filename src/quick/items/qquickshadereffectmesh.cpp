@@ -169,8 +169,8 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
     resolution higher.
 
     \row
-    \o \image declarative-gridmesh.png
-    \o \qml
+    \li \image declarative-gridmesh.png
+    \li \qml
         import QtQuick 2.0
 
         ShaderEffect {

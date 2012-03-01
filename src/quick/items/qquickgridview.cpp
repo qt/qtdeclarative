@@ -1344,13 +1344,13 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     Valid values for \c highlightRangeMode are:
 
     \list
-    \o GridView.ApplyRange - the view attempts to maintain the highlight within the range.
+    \li GridView.ApplyRange - the view attempts to maintain the highlight within the range.
        However, the highlight can move outside of the range at the ends of the view or due
        to mouse interaction.
-    \o GridView.StrictlyEnforceRange - the highlight never moves outside of the range.
+    \li GridView.StrictlyEnforceRange - the highlight never moves outside of the range.
        The current item changes if a keyboard or mouse action would cause the highlight to move
        outside of the range.
-    \o GridView.NoHighlightRange - this is the default value.
+    \li GridView.NoHighlightRange - this is the default value.
     \endlist
 */
 
@@ -1362,13 +1362,13 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     Possible values:
 
   \list
-  \o Qt.LeftToRight (default) - Items will be laid out starting in the top, left corner. The flow is
+  \li Qt.LeftToRight (default) - Items will be laid out starting in the top, left corner. The flow is
   dependent on the \l GridView::flow property.
-  \o Qt.RightToLeft - Items will be laid out starting in the top, right corner. The flow is dependent
+  \li Qt.RightToLeft - Items will be laid out starting in the top, right corner. The flow is dependent
   on the \l GridView::flow property.
   \endlist
 
-  \bold Note: If GridView::flow is set to GridView.LeftToRight, this is not to be confused if
+  \b Note: If GridView::flow is set to GridView.LeftToRight, this is not to be confused if
   GridView::layoutDirection is set to Qt.RightToLeft. The GridView.LeftToRight flow value simply
   indicates that the flow is horizontal.
 */
@@ -1437,8 +1437,8 @@ void QQuickGridView::setHighlightMoveDuration(int duration)
     Possible values:
 
     \list
-    \o GridView.LeftToRight (default) - Items are laid out from left to right, and the view scrolls vertically
-    \o GridView.TopToBottom - Items are laid out from top to bottom, and the view scrolls horizontally
+    \li GridView.LeftToRight (default) - Items are laid out from left to right, and the view scrolls vertically
+    \li GridView.TopToBottom - Items are laid out from top to bottom, and the view scrolls horizontally
     \endlist
 */
 QQuickGridView::Flow QQuickGridView::flow() const
@@ -1517,10 +1517,10 @@ void QQuickGridView::setCellHeight(qreal cellHeight)
     The possible values are:
 
     \list
-    \o GridView.NoSnap (default) - the view stops anywhere within the visible area.
-    \o GridView.SnapToRow - the view settles with a row (or column for \c GridView.TopToBottom flow)
+    \li GridView.NoSnap (default) - the view stops anywhere within the visible area.
+    \li GridView.SnapToRow - the view settles with a row (or column for \c GridView.TopToBottom flow)
     aligned with the start of the view.
-    \o GridView.SnapOneRow - the view will settle no more than one row (or column for \c GridView.TopToBottom flow)
+    \li GridView.SnapOneRow - the view will settle no more than one row (or column for \c GridView.TopToBottom flow)
     away from the first visible row at the time the mouse button is released.
     This mode is particularly useful for moving one page at a time.
     \endlist
@@ -1590,9 +1590,9 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     It is applied to all items that are created when:
 
     \list
-    \o The view is first created
-    \o The view's \l model changes
-    \o The view's \l model is \l {QAbstractItemModel::reset}{reset}, if the model is a QAbstractItemModel subclass
+    \li The view is first created
+    \li The view's \l model changes
+    \li The view's \l model is \l {QAbstractItemModel::reset}{reset}, if the model is a QAbstractItemModel subclass
     \endlist
 
     For example, here is a view that specifies such a transition:
@@ -1971,7 +1971,7 @@ void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
     The current index will wrap if keyNavigationWraps is true and it
     is currently at the end. This method has no effect if the \l count is zero.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 
 
@@ -2001,7 +2001,7 @@ void QQuickGridView::moveCurrentIndexUp()
     The current index will wrap if keyNavigationWraps is true and it
     is currently at the end. This method has no effect if the \l count is zero.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 void QQuickGridView::moveCurrentIndexDown()
 {
@@ -2029,7 +2029,7 @@ void QQuickGridView::moveCurrentIndexDown()
     The current index will wrap if keyNavigationWraps is true and it
     is currently at the end. This method has no effect if the \l count is zero.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 void QQuickGridView::moveCurrentIndexLeft()
 {
@@ -2072,7 +2072,7 @@ void QQuickGridView::moveCurrentIndexLeft()
     The current index will wrap if keyNavigationWraps is true and it
     is currently at the end. This method has no effect if the \l count is zero.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 void QQuickGridView::moveCurrentIndexRight()
 {
@@ -2307,12 +2307,12 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     \a mode:
 
     \list
-    \o GridView.Beginning - position item at the top (or left for \c GridView.TopToBottom flow) of the view.
-    \o GridView.Center - position item in the center of the view.
-    \o GridView.End - position item at bottom (or right for horizontal orientation) of the view.
-    \o GridView.Visible - if any part of the item is visible then take no action, otherwise
+    \li GridView.Beginning - position item at the top (or left for \c GridView.TopToBottom flow) of the view.
+    \li GridView.Center - position item in the center of the view.
+    \li GridView.End - position item at bottom (or right for horizontal orientation) of the view.
+    \li GridView.Visible - if any part of the item is visible then take no action, otherwise
     bring the item into view.
-    \o GridView.Contain - ensure the entire item is visible.  If the item is larger than
+    \li GridView.Contain - ensure the entire item is visible.  If the item is larger than
     the view the item is positioned at the top (or left for \c GridView.TopToBottom flow) of the view.
     \endlist
 
@@ -2324,7 +2324,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     of the view does not cause all other items to be repositioned.
     The correct way to bring an item into view is with \c positionViewAtIndex.
 
-    \bold Note: methods should only be called after the Component has completed.  To position
+    \b Note: methods should only be called after the Component has completed.  To position
     the view at startup, this method should be called by Component.onCompleted.  For
     example, to position the view at the end:
 
@@ -2344,7 +2344,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     of the list does not cause all other items to be repositioned, and because
     the actual start of the view can vary based on the size of the delegates.
 
-    \bold Note: methods should only be called after the Component has completed.  To position
+    \b Note: methods should only be called after the Component has completed.  To position
     the view at startup, this method should be called by Component.onCompleted.  For
     example, to position the view at the end on startup:
 
@@ -2363,7 +2363,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     If the item is outside the visible area, -1 is returned, regardless of
     whether an item will exist at that point when scrolled into view.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 
 /*!
@@ -2376,7 +2376,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     If the item is outside the visible area, null is returned, regardless of
     whether an item will exist at that point when scrolled into view.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 
 QQuickGridViewAttached *QQuickGridView::qmlAttachedProperties(QObject *obj)

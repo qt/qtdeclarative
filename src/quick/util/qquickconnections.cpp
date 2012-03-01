@@ -91,9 +91,9 @@ public:
     cases, such as when:
 
     \list
-        \i Multiple connections to the same signal are required
-        \i Creating connections outside the scope of the signal sender
-        \i Connecting to targets not defined in QML
+        \li Multiple connections to the same signal are required
+        \li Creating connections outside the scope of the signal sender
+        \li Connecting to targets not defined in QML
     \endlist
 
     When any of these are needed, the Connections element can be used instead.

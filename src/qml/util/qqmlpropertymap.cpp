@@ -146,7 +146,7 @@ int QQmlPropertyMapMetaObject::createProperty(const char *name, const char *valu
     key will be updated as well.
 
     To detect value changes made in the UI layer you can connect to the valueChanged() signal.
-    However, note that valueChanged() is \bold NOT emitted when changes are made by calling insert()
+    However, note that valueChanged() is \b NOT emitted when changes are made by calling insert()
     or clear() - it is only emitted when a value is updated from QML.
 
     \note It is not possible to remove keys from the map; once a key has been added, you can only
@@ -302,7 +302,7 @@ QVariant QQmlPropertyMap::operator[](const QString &key) const
     This signal is emitted whenever one of the values in the map is changed. \a key
     is the key corresponding to the \a value that was changed.
 
-    \note valueChanged() is \bold NOT emitted when changes are made by calling insert()
+    \note valueChanged() is \b NOT emitted when changes are made by calling insert()
     or clear() - it is only emitted when a value is updated from QML.
 */
 

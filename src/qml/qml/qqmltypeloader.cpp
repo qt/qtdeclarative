@@ -248,14 +248,14 @@ The QQmlDataLoader invokes callbacks on the QQmlDataBlob as data becomes availab
 This enum describes the status of the data blob.
 
 \list
-\o Null The blob has not yet been loaded by a QQmlDataLoader
-\o Loading The blob is loading network data.  The QQmlDataBlob::setData() callback has not yet been
+\li Null The blob has not yet been loaded by a QQmlDataLoader
+\li Loading The blob is loading network data.  The QQmlDataBlob::setData() callback has not yet been
 invoked or has not yet returned.
-\o WaitingForDependencies The blob is waiting for dependencies to be done before continueing.  This status
+\li WaitingForDependencies The blob is waiting for dependencies to be done before continueing.  This status
 only occurs after the QQmlDataBlob::setData() callback has been made, and when the blob has outstanding
 dependencies.
-\o Complete The blob's data has been loaded and all dependencies are done.
-\o Error An error has been set on this blob.
+\li Complete The blob's data has been loaded and all dependencies are done.
+\li Error An error has been set on this blob.
 \endlist
 */
 
@@ -265,9 +265,9 @@ dependencies.
 This enum describes the type of the data blob.
 
 \list
-\o QmlFile This is a QQmlTypeData
-\o JavaScriptFile This is a QQmlScriptData
-\o QmldirFile This is a QQmlQmldirData
+\li QmlFile This is a QQmlTypeData
+\li JavaScriptFile This is a QQmlScriptData
+\li QmldirFile This is a QQmlQmldirData
 \endlist
 */
 
@@ -877,9 +877,9 @@ To complete processing, the QQmlDataBlob::done() callback is invoked.  done() is
 one of these three preconditions are met.
 
 \list 1
-\o The QQmlDataBlob has no dependencies.
-\o The QQmlDataBlob has an error set.
-\o All the QQmlDataBlob's dependencies are themselves "done()".
+\li The QQmlDataBlob has no dependencies.
+\li The QQmlDataBlob has an error set.
+\li All the QQmlDataBlob's dependencies are themselves "done()".
 \endlist
 
 Thus QQmlDataBlob::done() will always eventually be called, even if the blob has an error set.

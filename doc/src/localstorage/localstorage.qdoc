@@ -74,9 +74,9 @@ using the Local Storage API.
 
 \section3 db = openDatabaseSync(identifier, version, description, estimated_size, callback(db))
 
-Returns the database identified by \i identifier. If the database does not already exist, it
-is created, and the function \i callback is called with the database as a parameter. \i description
-and \i estimated_size are written to the INI file (described below), but are otherwise currently
+Returns the database identified by \e identifier. If the database does not already exist, it
+is created, and the function \e callback is called with the database as a parameter. \e description
+and \e estimated_size are written to the INI file (described below), but are otherwise currently
 unused.
 
 May throw exception with code property SQLException.DATABASE_ERR, or SQLException.VERSION_ERR.
@@ -84,51 +84,51 @@ May throw exception with code property SQLException.DATABASE_ERR, or SQLExceptio
 When a database is first created, an INI file is also created specifying its characteristics:
 
 \table
-\header \o \bold {Key} \o \bold {Value}
-\row \o Name \o The name of the database passed to \c openDatabase()
-\row \o Version \o The version of the database passed to \c openDatabase()
-\row \o Description \o The description of the database passed to \c openDatabase()
-\row \o EstimatedSize \o The estimated size (in bytes) of the database passed to \c openDatabase()
-\row \o Driver \o Currently "QSQLITE"
+\header \li \b {Key} \li \b {Value}
+\row \li Name \li The name of the database passed to \c openDatabase()
+\row \li Version \li The version of the database passed to \c openDatabase()
+\row \li Description \li The description of the database passed to \c openDatabase()
+\row \li EstimatedSize \li The estimated size (in bytes) of the database passed to \c openDatabase()
+\row \li Driver \li Currently "QSQLITE"
 \endtable
 
 This data can be used by application tools.
 
 \section3 db.changeVersion(from, to, callback(tx))
 
-This method allows you to perform a \i{Scheme Upgrade}.
+This method allows you to perform a \e{Scheme Upgrade}.
 
-If the current version of \i db is not \i from, then an exception is thrown.
+If the current version of \e db is not \e from, then an exception is thrown.
 
-Otherwise, a database transaction is created and passed to \i callback. In this function,
-you can call \i executeSql on \i tx to upgrade the database.
+Otherwise, a database transaction is created and passed to \e callback. In this function,
+you can call \e executeSql on \e tx to upgrade the database.
 
 May throw exception with code property SQLException.DATABASE_ERR or SQLException.UNKNOWN_ERR.
 
 \section3 db.transaction(callback(tx))
 
-This method creates a read/write transaction and passed to \i callback. In this function,
-you can call \i executeSql on \i tx to read and modify the database.
+This method creates a read/write transaction and passed to \e callback. In this function,
+you can call \e executeSql on \e tx to read and modify the database.
 
 If the callback throws exceptions, the transaction is rolled back.
 
 \section3 db.readTransaction(callback(tx))
 
-This method creates a read-only transaction and passed to \i callback. In this function,
-you can call \i executeSql on \i tx to read the database (with SELECT statements).
+This method creates a read-only transaction and passed to \e callback. In this function,
+you can call \e executeSql on \e tx to read the database (with SELECT statements).
 
 \section3 results = tx.executeSql(statement, values)
 
-This method executes a SQL \i statement, binding the list of \i values to SQL positional parameters ("?").
+This method executes a SQL \e statement, binding the list of \e values to SQL positional parameters ("?").
 
 It returns a results object, with the following properties:
 
 \table
-\header \o \bold {Type} \o \bold {Property} \o \bold {Value} \o \bold {Applicability}
-\row \o int \o rows.length \o The number of rows in the result \o SELECT
-\row \o var \o rows.item(i) \o Function that returns row \i i of the result \o SELECT
-\row \o int \o rowsAffected \o The number of rows affected by a modification \o UPDATE, DELETE
-\row \o string \o insertId \o The id of the row inserted \o INSERT
+\header \li \b {Type} \li \b {Property} \li \b {Value} \li \b {Applicability}
+\row \li int \li rows.length \li The number of rows in the result \li SELECT
+\row \li var \li rows.item(i) \li Function that returns row \e i of the result \li SELECT
+\row \li int \li rowsAffected \li The number of rows affected by a modification \li UPDATE, DELETE
+\row \li string \li insertId \li The id of the row inserted \li INSERT
 \endtable
 
 May throw exception with code property SQLException.DATABASE_ERR, SQLException.SYNTAX_ERR, or SQLException.UNKNOWN_ERR.

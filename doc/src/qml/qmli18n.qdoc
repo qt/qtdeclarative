@@ -47,8 +47,8 @@ QScriptEngine::installTranslatorFunctions().
 QML relies on the core internationalization capabilities provided by Qt. These
 capabilities are described more fully in:
 \list
-\o \l {Internationalization with Qt}
-\o \l {Qt Linguist Manual}
+\li \l {Internationalization with Qt}
+\li \l {Qt Linguist Manual}
 \endlist
 
 You can test a translation with the \l {QML Viewer} using the -translation option.

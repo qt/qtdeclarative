@@ -100,23 +100,23 @@ extendibility and openness, while aiming to lower the barrier of entry for
 newcomers to Qt Quick and Qt. The key features of Qt Creator allow UI designers
 and developers to accomplish the following tasks:
 \list
-\o Get started with Qt Quick application development quickly and easily with
+\li Get started with Qt Quick application development quickly and easily with
 examples, tutorials, and project wizards.
-\o Design application user interface with the integrated editor, Qt Quick
+\li Design application user interface with the integrated editor, Qt Quick
 Designer, or use graphics software to design the user interface and use scripts
 to export the design to Qt Quick Designer.
-\o Develop applications with the advanced code editor that provides new powerful
+\li Develop applications with the advanced code editor that provides new powerful
 features for completing code snippets, refactoring code, and viewing the element
 hierarchy of QML files.
-\o Build and deploy Qt Quick applications that target multiple desktop and
+\li Build and deploy Qt Quick applications that target multiple desktop and
 mobile platforms, such as Microsoft Windows, Mac OS X, Linux, and Maemo.
-\o Debug JavaScript functions and execute JavaScript expressions in the current
+\li Debug JavaScript functions and execute JavaScript expressions in the current
 context, and inspect QML at runtime to explore the object structure, debug
 animations, and inspect colors.
-\o Deploy applications to mobile devices and create application installation
+\li Deploy applications to mobile devices and create application installation
 packages for Maemo devices that can be published in the Ovi Store
 and other channels.
-\o Easily access information with the integrated context-sensitive Qt Help
+\li Easily access information with the integrated context-sensitive Qt Help
 system.
 \endlist
 
@@ -138,6 +138,6 @@ The \l {Qt Quick Code Samples} page has a gallery of QML applications.
 
 \section1 License Information
 \list
-\o \l{Qt Quick Licensing Information}
+\li \l{Qt Quick Licensing Information}
 \endlist
 */

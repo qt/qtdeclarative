@@ -30,7 +30,7 @@
 \brief how to display and form data in QML
 
 Simply put, applications need to form data and display the data. QML has the
-notion of \i models, \i views, and \i delegates to display data. They modularize
+notion of \e models, \e views, and \e delegates to display data. They modularize
 the visualization of data in order to give the developer or designer control
 over the different aspects of the data. A developer can swap a list view with a
 grid view with little changes to the data. Similarly, encapsulating an instance
@@ -39,11 +39,11 @@ handle the data.
 
 \image modelview-overview.png
 \list
-\o \bold Model - contains the data and its structure. There are several QML
+\li \b Model - contains the data and its structure. There are several QML
 elements for creating models.
-\o \bold View - a container that displays the data. The view might
+\li \b View - a container that displays the data. The view might
 display the data in a list or a grid.
-\o \bold Delegate - dictates how the data should appear in the view.
+\li \b Delegate - dictates how the data should appear in the view.
 The delegate takes each data in the model and encapsulates it. The data is
 accessible through the delegate.
 \endlist
@@ -61,9 +61,9 @@ To visualize data, bind the view's \c model property to a model and the
     graphical elements:
 
     \list
-    \o \l{ListView} - arranges items in a horizontal or vertical list
-    \o \l{GridView} - arranges items in a grid within the available space
-    \o \l{PathView} - arranges items on a path
+    \li \l{ListView} - arranges items in a horizontal or vertical list
+    \li \l{GridView} - arranges items in a grid within the available space
+    \li \l{PathView} - arranges items on a path
     \endlist
 
     These elements have properties and behaviors exclusive to each element.
@@ -71,7 +71,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     \section2 Decorating Views
 
-    Views allow visual customization through \i decoration properties such as
+    Views allow visual customization through \e decoration properties such as
     the \c header, \c footer, and \c section properties. By binding an object,
     usually another visual object, to these properties, the views are
     decoratable. A footer may include a \l Rectangle element showcasing borders
@@ -104,7 +104,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     \section2 ListView Sections
 
-    \l {ListView} contents may be grouped into \i sections, where related list
+    \l {ListView} contents may be grouped into \e sections, where related list
     items are labeled according to their sections. Further, the sections may be
     decorated with \l{qml-view-delegate}{delegates}.
 
@@ -125,7 +125,7 @@ To visualize data, bind the view's \c model property to a model and the
 \keyword qml-view-delegate
 \section1 View Delegates
 
-    Views need a \i delegate to visually represent an item in a list. A view will
+    Views need a \e delegate to visually represent an item in a list. A view will
     visualize each item list according to the template defined by the delegate.
     Items in a model are accessible through the \c index property as well as the
     item's properties.
@@ -146,9 +146,9 @@ To visualize data, bind the view's \c model property to a model and the
     properties of each of the views. Similarly, it might be of interest to
     access or show some properties of the model.
 
-    In the following example, the delegate shows the property \i{language} of
+    In the following example, the delegate shows the property \e{language} of
     the model, and the color of one of the fields depends on the property
-    \i{fruit_color} of the view.
+    \e{fruit_color} of the view.
 
     \snippet doc/src/snippets/qml/models/views-models-delegates.qml rectangle
 
@@ -156,21 +156,21 @@ To visualize data, bind the view's \c model property to a model and the
 \section1 Models
 
     Data is provided to the delegate via named data roles which the delegate may
-    bind to. Here is a ListModel with two roles, \i type and \i age, and a
+    bind to. Here is a ListModel with two roles, \e type and \e age, and a
     ListView with a delegate that binds to these roles to display their values:
 
     \snippet doc/src/snippets/qml/qml-data-models/listmodel-listview.qml document
 
     If there is a naming clash between the model's properties and the delegate's
-    properties, the roles can be accessed with the qualified \i model name
-    instead. For example, if a \l Text element had \i type or \i age properties,
+    properties, the roles can be accessed with the qualified \e model name
+    instead. For example, if a \l Text element had \e type or \e age properties,
     the text in the above example would display those property values instead of
-    the \i type and \i age values from the model item. In this case, the
+    the \e type and \e age values from the model item. In this case, the
     properties could have been referenced as \c model.type and \c model.age
     instead to ensure the delegate displays the property values from the model
     item.
 
-    A special \i index role containing the index of the item in the model is
+    A special \e index role containing the index of the item in the model is
     also available to the delegate. Note this index is set to -1 if the item is
     removed from the model. If you bind to the index role, be sure that the
     logic accounts for the possibility of index being -1, i.e. that the item is
@@ -179,9 +179,9 @@ To visualize data, bind the view's \c model property to a model and the
     attached property.)
 
     Models that do not have named roles (such as the ListModel shown
-    below) will have the data provided via the \i modelData role. The \i
+    below) will have the data provided via the \e modelData role. The \e
     modelData role is also provided for models that have only one role. In this
-    case the \i modelData role contains the same data as the named role.
+    case the \e modelData role contains the same data as the named role.
 
     QML provides several types of data models among the built-in set of QML
     elements. In addition, models can be created with Qt C++ and then made
@@ -199,7 +199,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     \snippet doc/src/snippets/qml/qml-data-models/listelements.qml model
 
-    The above model has two roles, \i name and \i cost.  These can be bound
+    The above model has two roles, \e name and \e cost.  These can be bound
     to by a ListView delegate, for example:
 
     \snippet doc/src/snippets/qml/qml-data-models/listelements.qml view
@@ -214,7 +214,7 @@ To visualize data, bind the view's \c model property to a model and the
     \dots
     \snippet doc/src/snippets/qml/qml-data-models/dynamic-listmodel.qml mouse area
 
-    When the MouseArea is clicked, \c fruitModel will have two roles, \i cost and \i name.
+    When the MouseArea is clicked, \c fruitModel will have two roles, \e cost and \e name.
     Even if subsequent roles are added, only the first two will be handled by views
     using the model. To reset the roles available in the model, call ListModel::clear().
 
@@ -229,7 +229,7 @@ To visualize data, bind the view's \c model property to a model and the
     \endcode
 
 
-    The following model has three roles, \i title, \i link and \i description:
+    The following model has three roles, \e title, \e link and \e description:
     \qml
     XmlListModel {
          id: feedModel
@@ -289,9 +289,9 @@ To visualize data, bind the view's \c model property to a model and the
     An object instance can be used to specify a model with a single object
     element. The properties of the object are provided as roles.
 
-    The example below creates a list with one item, showing the color of the \i
-    myText text. Note the use of the fully qualified \i model.color property to
-    avoid clashing with \i color property of the Text element in the delegate.
+    The example below creates a list with one item, showing the color of the \e
+    myText text. Note the use of the fully qualified \e model.color property to
+    avoid clashing with \e color property of the Text element in the delegate.
 
     \qml
     Rectangle {

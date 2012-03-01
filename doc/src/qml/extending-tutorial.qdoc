@@ -44,13 +44,13 @@ examples/declarative/tutorials/extending directory.
 Tutorial chapters:
 
 \list 1
-\o \l{declarative/tutorials/extending/chapter1-basics}{Creating a New Type}
-\o \l{declarative/tutorials/extending/chapter2-methods}{Connecting to C++ Methods and Signals}
-\o \l{declarative/tutorials/extending/chapter3-bindings}{Property Binding}
-\o \l{declarative/tutorials/extending/chapter4-customPropertyTypes}{Using Custom Property Types}
-\o \l{declarative/tutorials/extending/chapter5-listproperties}{Using List Property Types}
-\o \l{declarative/tutorials/extending/chapter6-plugins}{Writing an Extension Plugin}
-\o \l{qml-extending-tutorial7.html}{In Summary}
+\li \l{declarative/tutorials/extending/chapter1-basics}{Creating a New Type}
+\li \l{declarative/tutorials/extending/chapter2-methods}{Connecting to C++ Methods and Signals}
+\li \l{declarative/tutorials/extending/chapter3-bindings}{Property Binding}
+\li \l{declarative/tutorials/extending/chapter4-customPropertyTypes}{Using Custom Property Types}
+\li \l{declarative/tutorials/extending/chapter5-listproperties}{Using List Property Types}
+\li \l{declarative/tutorials/extending/chapter6-plugins}{Writing an Extension Plugin}
+\li \l{qml-extending-tutorial7.html}{In Summary}
 \endlist
 
 */
@@ -92,8 +92,8 @@ properties. Since QML makes extensive use of Qt's \l{Meta-Object System}{meta ob
 this new class must:
 
 \list
-\o Inherit from QObject
-\o Declare its properties using the Q_PROPERTY macro
+\li Inherit from QObject
+\li Declare its properties using the Q_PROPERTY macro
 \endlist
 
 Here is our \c PieChart class, defined in \c piechart.h:
@@ -290,11 +290,11 @@ We can also use various other property types. QML has built-in support for the t
 listed in the \l{QML Basic Types} documentation, which includes the following:
 
 \list
-\o bool, unsigned int, int, float, double, qreal
-\o QString, QUrl, QColor
-\o QDate, QTime, QDateTime
-\o QPoint, QPointF, QSize, QSizeF, QRect, QRectF
-\o QVariant
+\li bool, unsigned int, int, float, double, qreal
+\li QString, QUrl, QColor
+\li QDate, QTime, QDateTime
+\li QPoint, QPointF, QSize, QSizeF, QRect, QRectF
+\li QVariant
 \endlist
 
 If we want to create a property whose type is not supported by QML by default,
@@ -409,9 +409,9 @@ loading our own C++ application.
 To create a plugin library, we need:
 
 \list
-\o A plugin class that registers our QML types
-\o A project file that describes the plugin
-\o A \l{Writing a qmldir file}{qmldir} file that tells the QML engine to load the plugin
+\li A plugin class that registers our QML types
+\li A project file that describes the plugin
+\li A \l{Writing a qmldir file}{qmldir} file that tells the QML engine to load the plugin
 \endlist
 
 First, we create a plugin class named \c ChartsPlugin. It subclasses QQmlExtensionPlugin
@@ -460,12 +460,12 @@ be used by \c app.qml without import statements.
 In this tutorial, we've shown the basic steps for creating a QML extension:
 
 \list
-\o Define new QML types by subclassing QObject and registering them with qmlRegisterType()
-\o Add callable methods using Q_INVOKABLE or Qt slots, and connect to Qt signals with an \c onSignal syntax
-\o Add property bindings by defining \l{Qt's Property System}{NOTIFY} signals
-\o Define custom property types if the built-in types are not sufficient
-\o Define list property types using QQmlListProperty
-\o Create a plugin library by defining a Qt plugin and writing a \c qmldir file
+\li Define new QML types by subclassing QObject and registering them with qmlRegisterType()
+\li Add callable methods using Q_INVOKABLE or Qt slots, and connect to Qt signals with an \c onSignal syntax
+\li Add property bindings by defining \l{Qt's Property System}{NOTIFY} signals
+\li Define custom property types if the built-in types are not sufficient
+\li Define list property types using QQmlListProperty
+\li Create a plugin library by defining a Qt plugin and writing a \c qmldir file
 \endlist
 
 

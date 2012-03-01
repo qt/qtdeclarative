@@ -45,154 +45,154 @@ To see the QML elements listed by functional area, see the
 
 \section1 Basic QML Elements
 \list
-\o \l {Item} - Basic item element inherited by QML elements
-\o \l {Component} - Encapsulates QML elements during importing
-\o \l {QtObject} {QtObject} - Basic element containing only the \c {objectName} property
+\li \l {Item} - Basic item element inherited by QML elements
+\li \l {Component} - Encapsulates QML elements during importing
+\li \l {QtObject} {QtObject} - Basic element containing only the \c {objectName} property
 \endlist
 
 \section1 Graphics
 \list
-\o \l {Rectangle} - A rectangle element
-\o \l {Image} - For incorporating bitmaps into a scene
-\o \l {BorderImage} - Allows the use of images as borders
-\o \l {AnimatedImage} - For playing animations stored in a series of frames
-\o \l {Gradient} - For defining a color gradient
-\o \l {GradientStop} - Used to define a color within a \l {Gradient}
-\o \l {SystemPalette} - Provides access to the Qt palettes
-\o \l {Canvas} - Provides a 2D canvas element
+\li \l {Rectangle} - A rectangle element
+\li \l {Image} - For incorporating bitmaps into a scene
+\li \l {BorderImage} - Allows the use of images as borders
+\li \l {AnimatedImage} - For playing animations stored in a series of frames
+\li \l {Gradient} - For defining a color gradient
+\li \l {GradientStop} - Used to define a color within a \l {Gradient}
+\li \l {SystemPalette} - Provides access to the Qt palettes
+\li \l {Canvas} - Provides a 2D canvas element
 \endlist
 
 \section1 Text Handling
 \list
-\o \l {Text} - For inserting formatted text into a scene
-\o \l {TextInput} - Captures user key input
-\o \l {TextEdit} - Displays multiple lines of editable formatted text
-\o \l {IntValidator} - Validates values as integers
-\o \l {DoubleValidator} - Validates real values
-\o \l {RegExpValidator} - Validator for string regular expressions
-\o \l {FontLoader} - Loads fonts by name or URL
+\li \l {Text} - For inserting formatted text into a scene
+\li \l {TextInput} - Captures user key input
+\li \l {TextEdit} - Displays multiple lines of editable formatted text
+\li \l {IntValidator} - Validates values as integers
+\li \l {DoubleValidator} - Validates real values
+\li \l {RegExpValidator} - Validator for string regular expressions
+\li \l {FontLoader} - Loads fonts by name or URL
 \endlist
 
 \section1 Mouse and Interaction Area
 \list
-\o \l {MouseArea} - Sets up an area for mouse interaction
-\o \l {Keys} - Provides components with attached properties to handle key input.
-\o \l {FocusScope} - Element that mediate keyboard focus changes
-\o \l {Flickable} - Provides a surface that can be "flicked"
-\o \l {Flipable} - Provides a surface that produces "flipping" effects
-\o \l {PinchArea} - Enables simple pinch gesture handling
-\o \l {MultiPointTouchArea} - Enables handling of multiple touch points
+\li \l {MouseArea} - Sets up an area for mouse interaction
+\li \l {Keys} - Provides components with attached properties to handle key input.
+\li \l {FocusScope} - Element that mediate keyboard focus changes
+\li \l {Flickable} - Provides a surface that can be "flicked"
+\li \l {Flipable} - Provides a surface that produces "flipping" effects
+\li \l {PinchArea} - Enables simple pinch gesture handling
+\li \l {MultiPointTouchArea} - Enables handling of multiple touch points
 \endlist
 
 \section1 Positioners and Repeater
 \list
-\o \l {Column} - Arranges its children vertically
-\o \l {Row} - Arranges its children horizontally
-\o \l {Grid} - Positions its children in a grid
-\o \l {Flow} - Positions its children with wrapping support
-\o \l {Repeater} - Uses a model to create multiple components
+\li \l {Column} - Arranges its children vertically
+\li \l {Row} - Arranges its children horizontally
+\li \l {Grid} - Positions its children in a grid
+\li \l {Flow} - Positions its children with wrapping support
+\li \l {Repeater} - Uses a model to create multiple components
 \endlist
 
 \section1 Transformations
 \list
-\o \l {Scale} - Assigns item scaling behaviors
-\o \l {Rotation} - Assigns item rotation behaviors
-\o \l {Translate} - Assigns item translation behaviors
+\li \l {Scale} - Assigns item scaling behaviors
+\li \l {Rotation} - Assigns item rotation behaviors
+\li \l {Translate} - Assigns item translation behaviors
 \endlist
 
 \section1 States
 \list
-\o \l {State} - Defines sets of configurations of objects and properties
-\o \l {PropertyChanges} - Describes property changes within a state
-\o \l {StateGroup} - Contains a set of states and state transitions
-\o \l {StateChangeScript} - Allows script binding in a state
-\o \l {ParentChange} - Re-parent an Item in a state change
-\o \l {AnchorChanges} - Change the anchors of an item in a state
+\li \l {State} - Defines sets of configurations of objects and properties
+\li \l {PropertyChanges} - Describes property changes within a state
+\li \l {StateGroup} - Contains a set of states and state transitions
+\li \l {StateChangeScript} - Allows script binding in a state
+\li \l {ParentChange} - Re-parent an Item in a state change
+\li \l {AnchorChanges} - Change the anchors of an item in a state
 \endlist
 
 \section1 Animation and Transitions
 \list
-\o \l {Transition} - Animates transitions during state changes
-\o \l {SequentialAnimation} - Runs animations sequentially
-\o \l {ParallelAnimation} - Runs animations in parallel
-\o \l {Behavior} - Specifies a default animation for property changes
-\o \l {PropertyAction} - Sets immediate property changes during animation
-\o \l {PauseAnimation} - Introduces a pause in an animation
-\o \l {SmoothedAnimation} - Allows a property to smoothly track a value
-\o \l {SpringAnimation} - Allows a property to track a value in a spring-like motion
-\o \l {ScriptAction} - Runs scripts during an animation
+\li \l {Transition} - Animates transitions during state changes
+\li \l {SequentialAnimation} - Runs animations sequentially
+\li \l {ParallelAnimation} - Runs animations in parallel
+\li \l {Behavior} - Specifies a default animation for property changes
+\li \l {PropertyAction} - Sets immediate property changes during animation
+\li \l {PauseAnimation} - Introduces a pause in an animation
+\li \l {SmoothedAnimation} - Allows a property to smoothly track a value
+\li \l {SpringAnimation} - Allows a property to track a value in a spring-like motion
+\li \l {ScriptAction} - Runs scripts during an animation
 \endlist
 
 Elements that animate properties based on data types
 \list
-\o \l {PropertyAnimation} - Animates property changes
-\o \l {NumberAnimation} - Animates properties of type qreal
-\o \l {Vector3dAnimation} - Animates properties of type QVector3d
-\o \l {ColorAnimation} - Animates color changes
-\o \l {RotationAnimation} - Animates rotations
-\o \l {ParentAnimation} - Animates parent changes
-\o \l {AnchorAnimation} - Animates anchor changes
-\o \l {PathAnimation} - Animates position along a path
+\li \l {PropertyAnimation} - Animates property changes
+\li \l {NumberAnimation} - Animates properties of type qreal
+\li \l {Vector3dAnimation} - Animates properties of type QVector3d
+\li \l {ColorAnimation} - Animates color changes
+\li \l {RotationAnimation} - Animates rotations
+\li \l {ParentAnimation} - Animates parent changes
+\li \l {AnchorAnimation} - Animates anchor changes
+\li \l {PathAnimation} - Animates position along a path
 \endlist
 
 Elements that provide lower-level animation control
 \list
-\o \l {PathInterpolator} - Allows manual animation along a path
-\o \l {AnimationController} - Allows manual control of animation progress
+\li \l {PathInterpolator} - Allows manual animation along a path
+\li \l {AnimationController} - Allows manual control of animation progress
 \endlist
 
 \section1 Models and Data Handling
 \list
-\o \l {QtQuick2::ListModel}{ListModel} - Defines a list of data
-\o \l {QtQuick2::ListElement}{ListElement} - Defines a data item in a \l {QtQuick2::ListModel}{ListModel}
-\o \l {VisualItemModel} - Contains items that already defines its own visual delegate
-\o \l {VisualDataModel} - Encapsulates a model and a delegate
-\o \l {XmlListModel} - Specifies a model using XPath expressions
-\o \l {XmlRole} - Specifies a role for an \l {XmlListModel}
-\o \l {Binding} - Binds any value to any property
-\o \l {Package} - Collection that enables sharing of items within different views
+\li \l {QtQuick2::ListModel}{ListModel} - Defines a list of data
+\li \l {QtQuick2::ListElement}{ListElement} - Defines a data item in a \l {QtQuick2::ListModel}{ListModel}
+\li \l {VisualItemModel} - Contains items that already defines its own visual delegate
+\li \l {VisualDataModel} - Encapsulates a model and a delegate
+\li \l {XmlListModel} - Specifies a model using XPath expressions
+\li \l {XmlRole} - Specifies a role for an \l {XmlListModel}
+\li \l {Binding} - Binds any value to any property
+\li \l {Package} - Collection that enables sharing of items within different views
 \endlist
 
 \section1 Views
 \list
-\o \l {ListView} - Provides a list visualization of a model
-\o \l {GridView} - Provides a grid visualization of a model
-\o \l {PathView} - Visualizes a model's contents along a path. See \l {Path Definition}{Path Elements} for more information.
+\li \l {ListView} - Provides a list visualization of a model
+\li \l {GridView} - Provides a grid visualization of a model
+\li \l {PathView} - Visualizes a model's contents along a path. See \l {Path Definition}{Path Elements} for more information.
 \endlist
 
 \section1 Path Definition
 \list
-\o \l {Path} - Defines a path used by \l {PathView}
-\o \l {PathLine} - Defines a line in \l {Path}
-\o \l {PathQuad} - Defines a quadratic Bezier curve in a \l {Path}
-\o \l {PathCubic} - Defines a cubic Bezier curve in a \l {Path}
-\o \l {PathArc} - Defines an arc in a \l {Path}
-\o \l {PathCurve} - Defines a point on a Catmull-Rom curve in a \l {Path}
-\o \l {PathSvg} - Defines a sub-path specified as a SVG path data string in a \l {Path}
-\o \l {PathAttribute} - Allows the setting of attributes along a \l {Path}
-\o \l {PathPercent} - Modifies the item distribution along a \l {Path}
+\li \l {Path} - Defines a path used by \l {PathView}
+\li \l {PathLine} - Defines a line in \l {Path}
+\li \l {PathQuad} - Defines a quadratic Bezier curve in a \l {Path}
+\li \l {PathCubic} - Defines a cubic Bezier curve in a \l {Path}
+\li \l {PathArc} - Defines an arc in a \l {Path}
+\li \l {PathCurve} - Defines a point on a Catmull-Rom curve in a \l {Path}
+\li \l {PathSvg} - Defines a sub-path specified as a SVG path data string in a \l {Path}
+\li \l {PathAttribute} - Allows the setting of attributes along a \l {Path}
+\li \l {PathPercent} - Modifies the item distribution along a \l {Path}
 \endlist
 
 \section1 Utility
 \list
-\o \l {Connections} - Explicitly connects signals and signal handlers
-\o \l {Timer} - Provides timed triggers
-\o \l {QmlGlobalQtObject}{Qt} - The QML global Qt object provides useful enums and functions from Qt.
-\o \l {WorkerScript} - Enables the use of threads in QML
-\o \l {Loader} - Controls the loading of items or components
+\li \l {Connections} - Explicitly connects signals and signal handlers
+\li \l {Timer} - Provides timed triggers
+\li \l {QmlGlobalQtObject}{Qt} - The QML global Qt object provides useful enums and functions from Qt.
+\li \l {WorkerScript} - Enables the use of threads in QML
+\li \l {Loader} - Controls the loading of items or components
 \endlist
 
 \section1 Graphical Effects
 \list
-\o \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
-\o \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
-\o \l {GridMesh} - Generates a gird mesh of vertices for use by ShaderEffect
-\o The \l{QtQuick.Particles 2} module provides a set of Particle System elements for QtQuick 2
+\li \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
+\li \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
+\li \l {GridMesh} - Generates a gird mesh of vertices for use by ShaderEffect
+\li The \l{QtQuick.Particles 2} module provides a set of Particle System elements for QtQuick 2
 \endlist
 
 \section1 Accessibility
 \list
-\o \l {Accessible} - Attached property to make components accessible
+\li \l {Accessible} - Attached property to make components accessible
 \endlist
 
 */

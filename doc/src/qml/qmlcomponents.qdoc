@@ -33,10 +33,10 @@
 \title QML Components
 \brief creating and instantiating components
 
-A \i component is an instantiable QML definition, typically contained in a \c
-.qml file. For instance, a Button \i component may be defined in \c Button.qml
+A \e component is an instantiable QML definition, typically contained in a \c
+.qml file. For instance, a Button \e component may be defined in \c Button.qml
 file. The \l{The QML Engine}{QML engine} may instantiate this Button
-component to create Button \i objects. Alternatively, a component may be defined
+component to create Button \e objects. Alternatively, a component may be defined
 inside a \l Component element.
 
 Moreover, the Button definition may also contain other components. A Button
@@ -67,12 +67,12 @@ component.
 
 Components may incorporate any \l{Qt Quick}{QML feature} such as:
 \list
-\o \l{Property Binding in QML}{Properties} - for binding to data and functions
-\o \l{JavaScript Expressions in QML}{JavaScript functions} - for performing routines and logic
-\o \l{QML Signal and Handler Event System}{Signals and handlers} - t notify other
+\li \l{Property Binding in QML}{Properties} - for binding to data and functions
+\li \l{JavaScript Expressions in QML}{JavaScript functions} - for performing routines and logic
+\li \l{QML Signal and Handler Event System}{Signals and handlers} - t notify other
 objects about events
-\o \l{QML States}{States} and \l{QML Animation and Transitions}{Transitions}
-\o many others
+\li \l{QML States}{States} and \l{QML Animation and Transitions}{Transitions}
+\li many others
 \endlist
 For information about these features, visit the respective overviews or the
 main Qt Quick \l{Qt Quick}{reference} page.
@@ -129,7 +129,7 @@ signal handler executes when the component finishes destruction.
 \keyword qml-top-level
 \section1 Top-Level Component
 
-Choosing the \i{top-level} or the \i{root} object of components is an important
+Choosing the \e{top-level} or the \e{root} object of components is an important
 design aspect because the top-level object dictates which properties are
 accessible outside the component. Some elements are not visual elements and
 will not have visual properties exposed outside the component. Likewise, some

@@ -200,8 +200,8 @@ in \c script.js:
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/integrating-javascript/connectjs.qml 0
-\o \snippet doc/src/snippets/qml/integrating-javascript/script.js 0
+\li \snippet doc/src/snippets/qml/integrating-javascript/connectjs.qml 0
+\li \snippet doc/src/snippets/qml/integrating-javascript/script.js 0
 \endtable
 
 The \c jsFunction() will now be called whenever MouseArea's \c clicked signal is emitted.
@@ -243,10 +243,10 @@ which in turn can call \c factorial() in \c factorial.js, as it has included
 
 \table
 \row
-\o {1,2} \snippet doc/src/snippets/qml/integrating-javascript/includejs/app.qml 0
-\o \snippet doc/src/snippets/qml/integrating-javascript/includejs/script.js 0
+\li {1,2} \snippet doc/src/snippets/qml/integrating-javascript/includejs/app.qml 0
+\li \snippet doc/src/snippets/qml/integrating-javascript/includejs/script.js 0
 \row
-\o \snippet doc/src/snippets/qml/integrating-javascript/includejs/factorial.js 0
+\li \snippet doc/src/snippets/qml/integrating-javascript/includejs/factorial.js 0
 \endtable
 
 Notice that calling \l {QML:Qt::include()}{Qt.include()} imports all functions from
@@ -280,9 +280,9 @@ via a module API; see qmlRegisterModuleApi() for more information.
 Due to the ability of a JavaScript file to import another script or QML module in
 this fashion in QtQuick 2.0, some extra semantics are defined:
 \list
-\o a script with imports will not inherit imports from the QML file which imported it (so accessing Component.error will fail, for example)
-\o a script without imports will inherit imports from the QML file which imported it (so accessing Component.error will succeed, for example)
-\o a shared script (i.e., defined as .pragma library) does not inherit imports from any QML file even if it imports no other scripts
+\li a script with imports will not inherit imports from the QML file which imported it (so accessing Component.error will fail, for example)
+\li a script without imports will inherit imports from the QML file which imported it (so accessing Component.error will succeed, for example)
+\li a shared script (i.e., defined as .pragma library) does not inherit imports from any QML file even if it imports no other scripts
 \endlist
 
 The first semantic is conceptually correct, given that a particular script
@@ -339,12 +339,12 @@ parameters.
 
 It is occasionally necessary to run some imperative code at application (or
 component instance) startup.  While it is tempting to just include the startup
-script as \i {global code} in an external script file, this can have severe limitations
+script as \e {global code} in an external script file, this can have severe limitations
 as the QML environment may not have been fully established.  For example, some objects
 might not have been created or some \l {Property Binding}s may not have been run.
 \l {QML JavaScript Restrictions} covers the exact limitations of global script code.
 
-The QML \l Component element provides an \i attached \c onCompleted property that
+The QML \l Component element provides an \e attached \c onCompleted property that
 can be used to trigger the execution of script code at startup after the
 QML environment has been completely established. For example:
 
@@ -371,7 +371,7 @@ component destruction.
 QML executes standard JavaScript code, with the following restrictions:
 
 \list
-\o JavaScript code cannot modify the global object.
+\li JavaScript code cannot modify the global object.
 
 In QML, the global object is constant - existing properties cannot be modified or
 deleted, and no new properties may be created.
@@ -404,7 +404,7 @@ Any attempt to modify the global object - either implicitly or explicitly - will
 cause an exception.  If uncaught, this will result in an warning being printed,
 that includes the file and line number of the offending code.
 
-\o Global code is run in a reduced scope
+\li Global code is run in a reduced scope
 
 During startup, if a QML file includes an external JavaScript file with "global"
 code, it is executed in a scope that contains only the external file itself and
@@ -429,7 +429,7 @@ This restriction exists as the QML environment is not yet fully established.
 To run code after the environment setup has completed, refer to
 \l {Running JavaScript at Startup}.
 
-\o The value of \c this is currently undefined in QML in the majority of contexts
+\li The value of \c this is currently undefined in QML in the majority of contexts
 
 The \c this keyword is supported when binding properties from JavaScript.
 In all other situations, the value of
@@ -466,9 +466,9 @@ property may hold a "scarce resource" (image or pixmap).  There are several
 important semantics of scarce resources which should be noted:
 
 \list
-\o By default, a scarce resource is automatically released by the declarative engine as soon as evaluation of the expression in which the scarce resource is allocated is complete if there are no other references to the resource
-\o A client may explicitly preserve a scarce resource, which will ensure that the resource will not be released until all references to the resource are released and the JavaScript engine runs its garbage collector
-\o A client may explicitly destroy a scarce resource, which will immediately release the resource
+\li By default, a scarce resource is automatically released by the declarative engine as soon as evaluation of the expression in which the scarce resource is allocated is complete if there are no other references to the resource
+\li A client may explicitly preserve a scarce resource, which will ensure that the resource will not be released until all references to the resource are released and the JavaScript engine runs its garbage collector
+\li A client may explicitly destroy a scarce resource, which will immediately release the resource
 \endlist
 
 In most cases, allowing the engine to automatically release the resource is

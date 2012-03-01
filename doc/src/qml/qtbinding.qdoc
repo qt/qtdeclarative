@@ -40,11 +40,11 @@ reusable QML components for distribution.
 You may want to mix QML and C++ for a number of reasons. For example:
 
 \list
-\o To use functionality defined in a C++ source (for example, when using a C++ Qt-based data model, or
+\li To use functionality defined in a C++ source (for example, when using a C++ Qt-based data model, or
 calling functions in a third-party C++ library)
-\o To access functionality in the Qt Declarative module (for example, to dynamically generate
+\li To access functionality in the Qt Declarative module (for example, to dynamically generate
 images using QQmlImageProvider)
-\o To write your own QML elements (whether for your applications, or for distribution to others)
+\li To write your own QML elements (whether for your applications, or for distribution to others)
 \endlist
 
 To use the Qt Declarative module, you must include and link to the module appropriately, as shown on
@@ -59,10 +59,10 @@ embedding QML into C++ applications. There are several core classes in the Qt De
 that provide the essential capabilities for doing this. These are:
 
 \list
-\o QQmlEngine: A QML engine provides the environment for executing QML code. Every
+\li QQmlEngine: A QML engine provides the environment for executing QML code. Every
 application requires at least one engine instance.
-\o QQmlComponent: A component encapsulates a \l{QML Documents}{QML document}.
-\o QQmlContext: A context allows an application to expose data to the QML components
+\li QQmlComponent: A component encapsulates a \l{QML Documents}{QML document}.
+\li QQmlContext: A context allows an application to expose data to the QML components
 created by an engine.
 \endlist
 
@@ -95,10 +95,10 @@ UI code}.)
 There are a number of ways to extend your QML application through C++. For example, you could:
 
 \list
-\o Load a QML component and manipulate it (or its children) from C++
-\o Embed a C++ object and its properties directly into a QML component (for example, to make a
+\li Load a QML component and manipulate it (or its children) from C++
+\li Embed a C++ object and its properties directly into a QML component (for example, to make a
 particular C++ object callable from QML, or to replace a dummy list model with a real data set)
-\o Define new QML elements (through QObject-based C++ classes) and create them directly from your
+\li Define new QML elements (through QObject-based C++ classes) and create them directly from your
 QML code
 \endlist
 
@@ -125,11 +125,11 @@ component, which is accessible via QQuickView::rootObject():
 
 \table
 \row
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-a
 \dots 0
 \snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-b
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQuickView
 \endtable
 
@@ -201,11 +201,11 @@ invokes a method on the object instance:
 
 \table
 \row
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/context-advanced/applicationdata.h 0
 \codeline
 \snippet doc/src/snippets/qml/qtbinding/context-advanced/main.cpp 0
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/context-advanced/MyItem.qml 0
 \endtable
 
@@ -286,8 +286,8 @@ QMetaObject::invokeMethod(). Here is a C++ application that uses this to call a 
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qtbinding/functions-qml/MyItem.qml 0
-\o \snippet doc/src/snippets/qml/qtbinding/functions-qml/main.cpp 0
+\li \snippet doc/src/snippets/qml/qtbinding/functions-qml/MyItem.qml 0
+\li \snippet doc/src/snippets/qml/qtbinding/functions-qml/main.cpp 0
 \endtable
 
 Notice the Q_RETURN_ARG() and Q_ARG() arguments for QMetaObject::invokeMethod() must be specified as
@@ -299,9 +299,9 @@ methods on the \c myObject object, which has been set using QQmlContext::setCont
 
 \table
 \row
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/functions-cpp/MyItem.qml 0
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/functions-cpp/myclass.h 0
 \codeline
 \snippet doc/src/snippets/qml/qtbinding/functions-cpp/main.cpp 0
@@ -324,9 +324,9 @@ is emitted:
 
 \table
 \row
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/signals-qml/MyItem.qml 0
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/signals-qml/myclass.h 0
 \codeline
 \snippet doc/src/snippets/qml/qtbinding/signals-qml/main.cpp 0
@@ -340,13 +340,13 @@ C++ object are connected to through \c onImagedChanged and \c onLoadingError sig
 
 \table
 \row
-\o
+\li
 
 \snippet doc/src/snippets/qml/qtbinding/signals-cpp/imageviewer.h start
 \dots 4
 \snippet doc/src/snippets/qml/qtbinding/signals-cpp/imageviewer.h end
 
-\o
+\li
 \snippet doc/src/snippets/qml/qtbinding/signals-cpp/standalone.qml 0
 \endtable
 
@@ -362,8 +362,8 @@ instead to create the signal handler:
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qtbinding/signals-cpp/main.cpp connections
-\o \snippet doc/src/snippets/qml/qtbinding/signals-cpp/MyItem.qml 0
+\li \snippet doc/src/snippets/qml/qtbinding/signals-cpp/main.cpp connections
+\li \snippet doc/src/snippets/qml/qtbinding/signals-cpp/MyItem.qml 0
 \endtable
 
 C++ signals can use enum values as parameters provided that the enum is declared in the
@@ -410,8 +410,8 @@ property. This property can be written to and read from QML:
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qtbinding/properties-cpp/applicationdata.h 0
-\o \snippet doc/src/snippets/qml/qtbinding/properties-cpp/MyItem.qml 0
+\li \snippet doc/src/snippets/qml/qtbinding/properties-cpp/applicationdata.h 0
+\li \snippet doc/src/snippets/qml/qtbinding/properties-cpp/MyItem.qml 0
 \endtable
 
 Notice the \c backgroundColorChanged signal is declared as the NOTIFY signal for the
@@ -432,20 +432,20 @@ functions - must be of a type that is recognizable by QML.
 By default, QML recognizes the following data types:
 
 \list
-\o bool
-\o unsigned int, int
-\o float, double, qreal
-\o QString
-\o QUrl
-\o QColor
-\o QDate, QTime, QDateTime
-\o QPoint, QPointF
-\o QSize, QSizeF
-\o QRect, QRectF
-\o QVariant
-\o QVariantList, QVariantMap
-\o QObject*
-\o Enumerations declared with Q_ENUMS()
+\li bool
+\li unsigned int, int
+\li float, double, qreal
+\li QString
+\li QUrl
+\li QColor
+\li QDate, QTime, QDateTime
+\li QPoint, QPointF
+\li QSize, QSizeF
+\li QRect, QRectF
+\li QVariant
+\li QVariantList, QVariantMap
+\li QObject*
+\li Enumerations declared with Q_ENUMS()
 \endlist
 
 To allow a custom C++ type to be created or used in QML, the C++ class must be registered as a QML
@@ -464,12 +464,12 @@ converted to JavaScript array and object values, repectively:
 
 \table
 \header
-\o Type
-\o String format
-\o Example
+\li Type
+\li String format
+\li Example
 \row
-\o \snippet doc/src/snippets/qml/qtbinding/variantlistmap/MyItem.qml 0
-\o \snippet doc/src/snippets/qml/qtbinding/variantlistmap/main.cpp 0
+\li \snippet doc/src/snippets/qml/qtbinding/variantlistmap/MyItem.qml 0
+\li \snippet doc/src/snippets/qml/qtbinding/variantlistmap/main.cpp 0
 \endtable
 
 This produces output like:
@@ -535,45 +535,45 @@ pass simple values from QML to C++.
 
 \table
 \header
-\o Type
-\o String format
-\o Example
+\li Type
+\li String format
+\li Example
 \row
-\o QColor
-\o Color name, "#RRGGBB", "#RRGGBBAA"
-\o "red", "#ff0000", "#ff000000"
+\li QColor
+\li Color name, "#RRGGBB", "#RRGGBBAA"
+\li "red", "#ff0000", "#ff000000"
 \row
-\o QDate
-\o "YYYY-MM-DD"
-\o "2010-05-31"
+\li QDate
+\li "YYYY-MM-DD"
+\li "2010-05-31"
 \row
-\o QPoint
-\o "x,y"
-\o "10,20"
+\li QPoint
+\li "x,y"
+\li "10,20"
 \row
-\o QRect
-\o "x,y,WidthxHeight"
-\o "50,50,100x100"
+\li QRect
+\li "x,y,WidthxHeight"
+\li "50,50,100x100"
 \row
-\o QSize
-\o "WidthxHeight"
-\o "100x200"
+\li QSize
+\li "WidthxHeight"
+\li "100x200"
 \row
-\o QTime
-\o "hh:mm:ss"
-\o "14:22:55"
+\li QTime
+\li "hh:mm:ss"
+\li "14:22:55"
 \row
-\o QUrl
-\o URL string
-\o "http://www.example.com"
+\li QUrl
+\li URL string
+\li "http://www.example.com"
 \row
-\o QVector3D
-\o "x,y,z"
-\o "0,1,0"
+\li QVector3D
+\li "x,y,z"
+\li "0,1,0"
 \row
-\o Enumeration value
-\o Enum value name
-\o "AlignRight"
+\li Enumeration value
+\li Enum value name
+\li "AlignRight"
 \endtable
 
 (More details on these string formats and types can be found in the
@@ -615,16 +615,16 @@ in order to update the resources in the package.
 To use the resource system in a mixed QML/C++ application:
 
 \list
-\o Create a \c .qrc \l {The Qt Resource System}{resource collection file} that lists resource
+\li Create a \c .qrc \l {The Qt Resource System}{resource collection file} that lists resource
    files in XML format
-\o From C++, load the main QML file as a resource using the \c :/ prefix or as a URL with the
+\li From C++, load the main QML file as a resource using the \c :/ prefix or as a URL with the
    \c qrc scheme
 \endlist
 
 Once this is done, all files specified by relative paths in QML will be loaded from
 the resource system instead. Use of the resource system is completely transparent to
 the QML layer; this means all QML code should refer to resource files using relative
-paths and should \i not use the \c qrc scheme. This scheme should only be used from
+paths and should \e not use the \c qrc scheme. This scheme should only be used from
 C++ code for referring to resource files.
 
 Here is a application packaged using the \l {The Qt Resource System}{Qt resource system}.

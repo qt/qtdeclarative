@@ -909,10 +909,10 @@ QQmlV8Handle QQuickXmlListModel::get(int index) const
     Specifies the model loading status, which can be one of the following:
 
     \list
-    \o XmlListModel.Null - No XML data has been set for this model.
-    \o XmlListModel.Ready - The XML data has been loaded into the model.
-    \o XmlListModel.Loading - The model is in the process of reading and loading XML data.
-    \o XmlListModel.Error - An error occurred while the model was loading. See errorString() for details
+    \li XmlListModel.Null - No XML data has been set for this model.
+    \li XmlListModel.Ready - The XML data has been loaded into the model.
+    \li XmlListModel.Loading - The model is in the process of reading and loading XML data.
+    \li XmlListModel.Error - An error occurred while the model was loading. See errorString() for details
        about the error.
     \endlist
 

@@ -1176,11 +1176,11 @@ QQuickText::~QQuickText()
 
     The properties of a line are:
     \list
-    \o number (read-only)
-    \o x
-    \o y
-    \o width
-    \o height
+    \li number (read-only)
+    \li x
+    \li y
+    \li width
+    \li height
     \endlist
 
     For example, this will move the first 5 lines of a text element by 100 pixels to the right:
@@ -1233,11 +1233,11 @@ QQuickText::~QQuickText()
 
     The weight can be one of:
     \list
-    \o Font.Light
-    \o Font.Normal - the default
-    \o Font.DemiBold
-    \o Font.Bold
-    \o Font.Black
+    \li Font.Light
+    \li Font.Normal - the default
+    \li Font.DemiBold
+    \li Font.Bold
+    \li Font.Black
     \endlist
 
     \qml
@@ -1303,11 +1303,11 @@ QQuickText::~QQuickText()
     Sets the capitalization for the text.
 
     \list
-    \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
-    \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \o Font.AllLowercase - This alters the text to be rendered in all lowercase type.
-    \o Font.SmallCaps - This alters the text to be rendered in small-caps type.
-    \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
+    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
+    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
+    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
+    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
     \endlist
 
     \qml
@@ -1464,10 +1464,10 @@ void QQuickText::setLinkColor(const QColor &color)
 
     Supported text styles are:
     \list
-    \o Text.Normal - the default
-    \o Text.Outline
-    \o Text.Raised
-    \o Text.Sunken
+    \li Text.Normal - the default
+    \li Text.Outline
+    \li Text.Raised
+    \li Text.Sunken
     \endlist
 
     \qml
@@ -1661,10 +1661,10 @@ void QQuickText::setVAlign(VAlignment align)
     wrap if an explicit width has been set.  wrapMode can be one of:
 
     \list
-    \o Text.NoWrap (default) - no wrapping will be performed. If the text contains insufficient newlines, then \l contentWidth will exceed a set width.
-    \o Text.WordWrap - wrapping is done on word boundaries only. If a word is too long, \l contentWidth will exceed a set width.
-    \o Text.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
-    \o Text.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
+    \li Text.NoWrap (default) - no wrapping will be performed. If the text contains insufficient newlines, then \l contentWidth will exceed a set width.
+    \li Text.WordWrap - wrapping is done on word boundaries only. If a word is too long, \l contentWidth will exceed a set width.
+    \li Text.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \li Text.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
     \endlist
 */
 QQuickText::WrapMode QQuickText::wrapMode() const
@@ -1763,10 +1763,10 @@ void QQuickText::resetMaximumLineCount()
     Supported text formats are:
 
     \list
-    \o Text.AutoText (default)
-    \o Text.PlainText
-    \o Text.StyledText
-    \o Text.RichText
+    \li Text.AutoText (default)
+    \li Text.PlainText
+    \li Text.StyledText
+    \li Text.RichText
     \endlist
 
     If the text format is \c Text.AutoText the text element
@@ -1800,7 +1800,7 @@ void QQuickText::resetMaximumLineCount()
 
     \table
     \row
-    \o
+    \li
     \qml
 Column {
     Text {
@@ -1819,7 +1819,7 @@ Column {
     }
 }
     \endqml
-    \o \image declarative-textformat.png
+    \li \image declarative-textformat.png
     \endtable
 */
 QQuickText::TextFormat QQuickText::textFormat() const
@@ -1863,10 +1863,10 @@ void QQuickText::setTextFormat(TextFormat format)
 
     Eliding can be:
     \list
-    \o Text.ElideNone  - the default
-    \o Text.ElideLeft
-    \o Text.ElideMiddle
-    \o Text.ElideRight
+    \li Text.ElideNone  - the default
+    \li Text.ElideLeft
+    \li Text.ElideMiddle
+    \li Text.ElideRight
     \endlist
 
     If this property is set to Text.ElideRight, it can be used with \l {wrapMode}{wrapped}
@@ -1908,14 +1908,14 @@ void QQuickText::setElideMode(QQuickText::TextElideMode mode)
     URL meaning any portion of the path after the last '/' will be ignored.
 
     \table
-    \header \o Base URL \o Relative URL \o Resolved URL
-    \row \o http://qt-project.org/ \o images/logo.png \o http://qt-project.org/images/logo.png
-    \row \o http://qt-project.org/index.html \o images/logo.png \o http://qt-project.org/images/logo.png
-    \row \o http://qt-project.org/content \o images/logo.png \o http://qt-project.org/content/images/logo.png
-    \row \o http://qt-project.org/content/ \o images/logo.png \o http://qt-project.org/content/images/logo.png
-    \row \o http://qt-project.org/content/index.html \o images/logo.png \o http://qt-project.org/content/images/logo.png
-    \row \o http://qt-project.org/content/index.html \o ../images/logo.png \o http://qt-project.org/images/logo.png
-    \row \o http://qt-project.org/content/index.html \o /images/logo.png \o http://qt-project.org/images/logo.png
+    \header \li Base URL \li Relative URL \li Resolved URL
+    \row \li http://qt-project.org/ \li images/logo.png \li http://qt-project.org/images/logo.png
+    \row \li http://qt-project.org/index.html \li images/logo.png \li http://qt-project.org/images/logo.png
+    \row \li http://qt-project.org/content \li images/logo.png \li http://qt-project.org/content/images/logo.png
+    \row \li http://qt-project.org/content/ \li images/logo.png \li http://qt-project.org/content/images/logo.png
+    \row \li http://qt-project.org/content/index.html \li images/logo.png \li http://qt-project.org/content/images/logo.png
+    \row \li http://qt-project.org/content/index.html \li ../images/logo.png \li http://qt-project.org/images/logo.png
+    \row \li http://qt-project.org/content/index.html \li /images/logo.png \li http://qt-project.org/images/logo.png
     \endtable
 
     By default is the url of the Text element.
@@ -2169,9 +2169,9 @@ void QQuickText::setLineHeight(qreal lineHeight)
     The possible values are:
 
     \list
-    \o Text.ProportionalHeight (default) - this sets the spacing proportional to the
+    \li Text.ProportionalHeight (default) - this sets the spacing proportional to the
        line (as a multiplier). For example, set to 2 for double spacing.
-    \o Text.FixedHeight - this sets the line height to a fixed line height (in pixels).
+    \li Text.FixedHeight - this sets the line height to a fixed line height (in pixels).
     \endlist
 */
 QQuickText::LineHeightMode QQuickText::lineHeightMode() const
@@ -2199,13 +2199,13 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
     The possible values are:
 
     \list
-    \o Text.FixedSize (default) - The size specified by \l font.pixelSize
+    \li Text.FixedSize (default) - The size specified by \l font.pixelSize
     or \l font.pointSize is used.
-    \o Text.HorizontalFit - The largest size up to the size specified that fits
+    \li Text.HorizontalFit - The largest size up to the size specified that fits
     within the width of the item without wrapping is used.
-    \o Text.VerticalFit - The largest size up to the size specified that fits
+    \li Text.VerticalFit - The largest size up to the size specified that fits
     the height of the item is used.
-    \o Text.Fit - The largest size up to the size specified the fits within the
+    \li Text.Fit - The largest size up to the size specified the fits within the
     width and height of the item is used.
     \endlist
 

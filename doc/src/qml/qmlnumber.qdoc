@@ -44,11 +44,11 @@
 
     Valid formats are:
     \list
-    \o 'f'   Decimal floating point, e.g. 248.65
-    \o 'e'   Scientific notation using e character, e.g. 2.4865e+2
-    \o 'E'   Scientific notation using E character, e.g. 2.4865E+2
-    \o 'g'   Use the shorter of e or f
-    \o 'G'   Use the shorter of E or f
+    \li 'f'   Decimal floating point, e.g. 248.65
+    \li 'e'   Scientific notation using e character, e.g. 2.4865e+2
+    \li 'E'   Scientific notation using E character, e.g. 2.4865E+2
+    \li 'g'   Use the shorter of e or f
+    \li 'G'   Use the shorter of E or f
     \endlist
 
     If precision is not specified, the precision will be 2.

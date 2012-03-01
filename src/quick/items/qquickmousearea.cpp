@@ -556,8 +556,8 @@ QQuickMouseArea::~QQuickMouseArea()
 
     If hoverEnabled is true then these properties will be valid when:
     \list
-        \i no button is pressed, but the mouse is within the MouseArea (containsMouse is true).
-        \i a button is pressed and held, even if it has since moved out of the area.
+        \li no button is pressed, but the mouse is within the MouseArea (containsMouse is true).
+        \li a button is pressed and held, even if it has since moved out of the area.
     \endlist
 
     The coordinates are relative to the MouseArea.
@@ -671,9 +671,9 @@ void QQuickMouseArea::setPropagateComposedEvents(bool prevent)
 
     It contains a bitwise combination of:
     \list
-    \o Qt.LeftButton
-    \o Qt.RightButton
-    \o Qt.MiddleButton
+    \li Qt.LeftButton
+    \li Qt.RightButton
+    \li Qt.MiddleButton
     \endlist
 
     The code below displays "right" when the right mouse buttons is pressed:
@@ -1100,9 +1100,9 @@ void QQuickMouseArea::setHovered(bool h)
 
     The available buttons are:
     \list
-    \o Qt.LeftButton
-    \o Qt.RightButton
-    \o Qt.MiddleButton
+    \li Qt.LeftButton
+    \li Qt.RightButton
+    \li Qt.MiddleButton
     \endlist
 
     To accept more than one button the flags can be combined with the
@@ -1174,10 +1174,10 @@ bool QQuickMouseArea::setPressed(bool p)
     \c drag provides a convenient way to make an item draggable.
 
     \list
-    \i \c drag.target specifies the id of the item to drag.
-    \i \c drag.active specifies if the target item is currently being dragged.
-    \i \c drag.axis specifies whether dragging can be done horizontally (\c Drag.XAxis), vertically (\c Drag.YAxis), or both (\c Drag.XandYAxis)
-    \i \c drag.minimum and \c drag.maximum limit how far the target can be dragged along the corresponding axes.
+    \li \c drag.target specifies the id of the item to drag.
+    \li \c drag.active specifies if the target item is currently being dragged.
+    \li \c drag.axis specifies whether dragging can be done horizontally (\c Drag.XAxis), vertically (\c Drag.YAxis), or both (\c Drag.XandYAxis)
+    \li \c drag.minimum and \c drag.maximum limit how far the target can be dragged along the corresponding axes.
     \endlist
 
     The following example displays a \l Rectangle that can be dragged along the X-axis. The opacity

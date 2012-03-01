@@ -70,14 +70,14 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     Alternatively, these functions provide a way for other types of C++ types
     to be visible in the QML context.
     \list
-    \o \l qmlRegisterUncreatableType() is suited for attached
+    \li \l qmlRegisterUncreatableType() is suited for attached
     properties and enum types.
-    \o \l qmlRegisterTypeNotAvailable() is for
+    \li \l qmlRegisterTypeNotAvailable() is for
     reserving a namespace and suited for generating useful errors.
-    \o \l qmlRegisterInterface() - for registering base or abstract classes for
+    \li \l qmlRegisterInterface() - for registering base or abstract classes for
     \l{qml-c++-coercion}{coercion and inheritance}. This is useful for general
     Qt objects or \l{Qt Objects and Interfaces}{pointers} to objects.
-    \o \l qmlRegisterExtendedType() - for \l{qml-c++-extension}{extended types}
+    \li \l qmlRegisterExtendedType() - for \l{qml-c++-extension}{extended types}
     \endlist
 
     \section2 Qt Objects and Interfaces
@@ -119,7 +119,7 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     \l{The Property System}{Property System} and in effect, QML
     \l{Property Binding in QML}{property bindings} also use Qt properties.
 
-    Essentially, a Qt C++ property has a \i write function, \i read function,
+    Essentially, a Qt C++ property has a \e write function, \e read function,
     and has a signal function. QML properties are inheritely public, both
     readable and writable, albeit type-safe. QML properties may also have
     signals which are emitted when the property value or binding changes.
@@ -154,7 +154,7 @@ Q_PROPERTY(int size READ size WRITE setSize NOTIFY shoeChanged)
     QML}{JavaScript expressions} can perform clean-up operations or call other
     functions.
 
-    \bold{Note:} The QML signal handler will always be named
+    \b{Note:} The QML signal handler will always be named
     on<Property-name>Changed, regardless of the name used for the NOTIFY
     signal in C++. We recommend using <property-name>Changed() for the
     NOTIFY signal in C++.
@@ -224,9 +224,9 @@ Q_PROPERTY(int size READ size CONSTANT)
     \section2 Attached Properties
 
     Attached properties annotate or add properties to another type or component.
-    For example, the \l Keys \i{attaching type} contains \i{attached properties}
+    For example, the \l Keys \e{attaching type} contains \e{attached properties}
     that other elements may use to respond to key input. Conceptually, attached
-    properties are a \i type exporting a set of additional properties that can
+    properties are a \e type exporting a set of additional properties that can
     be set on any other object instance.
 
     The attaching type is a QObject derived type. The properties on the
@@ -344,7 +344,7 @@ Q_PROPERTY(int size READ size CONSTANT)
 
     \snippet examples/declarative/cppextensions/referenceexamples/properties/example.qml 0
 
-    The \c guests property is a \i{list property} of \c Person objects. A list
+    The \c guests property is a \e{list property} of \c Person objects. A list
     of \c Person objects are bound to the \c BirthdayParty's \c host property,
     and assigns three \c Person objects to the guests property.
 
@@ -370,11 +370,11 @@ Q_PROPERTY(int size READ size CONSTANT)
     Array types.
     In particular, QML currently supports:
     \list
-      \o \c {QList<int>}
-      \o \c {QList<qreal>}
-      \o \c {QList<bool>}
-      \o \c {QList<QString>} and \c{QStringList}
-      \o \c {QList<QUrl>}
+      \li \c {QList<int>}
+      \li \c {QList<qreal>}
+      \li \c {QList<bool>}
+      \li \c {QList<QString>} and \c{QStringList}
+      \li \c {QList<QUrl>}
     \endlist
 
     These sequence types are implemented directly in terms of the underlying C++
@@ -398,7 +398,7 @@ Q_PROPERTY(int size READ size CONSTANT)
     instance of any other sequence type will be passed between QML and C++ as an
     opaque QVariantList.
 
-    \bold {Important Note:} There are some minor differences between the
+    \b {Important Note:} There are some minor differences between the
     semantics of such sequence Array types and default JavaScript Array types
     which result from the use of a C++ storage type in the implementation. In
     particular, deleting an element from an Array will result in a
@@ -412,11 +412,11 @@ Q_PROPERTY(int size READ size CONSTANT)
 
     The default-constructed values for each sequence type are as follows:
     \table
-    \row \o QList<int> \o integer value 0
-    \row \o QList<qreal> \o real value 0.0
-    \row \o QList<bool> \o boolean value \c {false}
-    \row \o QList<QString> and QStringList \o empty QString
-    \row \o QList<QUrl> \o empty QUrl
+    \row \li QList<int> \li integer value 0
+    \row \li QList<qreal> \li real value 0.0
+    \row \li QList<bool> \li boolean value \c {false}
+    \row \li QList<QString> and QStringList \li empty QString
+    \row \li QList<QUrl> \li empty QUrl
     \endtable
 
     If you wish to remove elements from a sequence rather than simply replace
@@ -454,7 +454,7 @@ Q_PROPERTY(int size READ size CONSTANT)
     scenario.
 
     Consider a custom type, \c TestElement, that has two properties, \c a and
-    \c b. Property \c a does \i not have a NOTIFY signal, and property \c b does
+    \c b. Property \c a does \e not have a NOTIFY signal, and property \c b does
     have a NOTIFY signal.
 
     \code
@@ -490,7 +490,7 @@ Q_PROPERTY(int size READ size CONSTANT)
 
     A \l{signals and slots}{signal} in Qt C++ is readily available as a
     \l{QML Signal and Handler Event System}{QML signal}. A signal will have
-    a corresponding signal \i{handler}, created automatically. The handler
+    a corresponding signal \e{handler}, created automatically. The handler
     name will have \c on prepended at the beginning of the name. The first
     character of the signal is uppercased for the signal handler. The
     signal parameter is also availabe to the QML signal.
@@ -513,9 +513,9 @@ Q_PROPERTY(int size READ size CONSTANT)
     \l {Connections} element.
 
     Additionally, if a property is added to a C++ class, all QML elements
-    based on that C++ class will have a \i{value-changed} signal handler
+    based on that C++ class will have a \e{value-changed} signal handler
     for that property. The name of the signal handler is
-    \i{on<Property-name>Changed}, with the first letter of the property
+    \e{on<Property-name>Changed}, with the first letter of the property
     name being upper case.
 
     The \l {Extending QML - Signal Support Example}{Signal Support Example}
@@ -699,10 +699,10 @@ Q_PROPERTY(int size READ size CONSTANT)
     other concerns, extension objects allow limited extension possibilities
     without direct modifications.
 
-    \i{Extension objects} add additional properties to an existing type.
+    \e{Extension objects} add additional properties to an existing type.
     Extension objects can only add properties, not signals or methods. An
     extended type definition allows the programmer to supply an additional type,
-    known as the \i{extension type}, when registering the class. The
+    known as the \e{extension type}, when registering the class. The
     properties are transparently merged with the original target class when used
     from within QML.
 

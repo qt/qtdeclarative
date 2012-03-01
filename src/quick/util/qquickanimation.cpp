@@ -1536,11 +1536,11 @@ void QQuickRotationAnimation::setTo(qreal t)
     Possible values are:
 
     \list
-    \o RotationAnimation.Numerical (default) - Rotate by linearly interpolating between the two numbers.
+    \li RotationAnimation.Numerical (default) - Rotate by linearly interpolating between the two numbers.
            A rotation from 10 to 350 will rotate 340 degrees clockwise.
-    \o RotationAnimation.Clockwise - Rotate clockwise between the two values
-    \o RotationAnimation.Counterclockwise - Rotate counterclockwise between the two values
-    \o RotationAnimation.Shortest - Rotate in the direction that produces the shortest animation path.
+    \li RotationAnimation.Clockwise - Rotate clockwise between the two values
+    \li RotationAnimation.Counterclockwise - Rotate counterclockwise between the two values
+    \li RotationAnimation.Shortest - Rotate in the direction that produces the shortest animation path.
            A rotation from 10 to 350 will rotate 20 degrees counterclockwise.
     \endlist
 */
@@ -1846,7 +1846,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     It can be used to define animations in a number of ways:
 
     \list
-    \o In a \l Transition
+    \li In a \l Transition
 
     For example, to animate any objects that have changed their \c x or \c y properties
     as a result of a state change, using an \c InOutQuad easing curve:
@@ -1854,21 +1854,21 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     \snippet doc/src/snippets/qml/propertyanimation.qml transition
 
 
-    \o In a \l Behavior
+    \li In a \l Behavior
 
     For example, to animate all changes to a rectangle's \c x property:
 
     \snippet doc/src/snippets/qml/propertyanimation.qml behavior
 
 
-    \o As a property value source
+    \li As a property value source
 
     For example, to repeatedly animate the rectangle's \c x property:
 
     \snippet doc/src/snippets/qml/propertyanimation.qml propertyvaluesource
 
 
-    \o In a signal handler
+    \li In a signal handler
 
     For example, to fade out \c theObject when clicked:
     \qml
@@ -1878,7 +1878,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     }
     \endqml
 
-    \o Standalone
+    \li Standalone
 
     For example, to animate \c rect's \c width property over 500ms, from its current width to 30:
 
@@ -2010,175 +2010,175 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
 
     \table
     \row
-        \o \c Easing.Linear
-        \o Easing curve for a linear (t) function: velocity is constant.
-        \o \inlineimage qeasingcurve-linear.png
+        \li \c Easing.Linear
+        \li Easing curve for a linear (t) function: velocity is constant.
+        \li \inlineimage qeasingcurve-linear.png
     \row
-        \o \c Easing.InQuad
-        \o Easing curve for a quadratic (t^2) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-inquad.png
+        \li \c Easing.InQuad
+        \li Easing curve for a quadratic (t^2) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-inquad.png
     \row
-        \o \c Easing.OutQuad
-        \o Easing curve for a quadratic (t^2) function: decelerating to zero velocity.
-        \o \inlineimage qeasingcurve-outquad.png
+        \li \c Easing.OutQuad
+        \li Easing curve for a quadratic (t^2) function: decelerating to zero velocity.
+        \li \inlineimage qeasingcurve-outquad.png
     \row
-        \o \c Easing.InOutQuad
-        \o Easing curve for a quadratic (t^2) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutquad.png
+        \li \c Easing.InOutQuad
+        \li Easing curve for a quadratic (t^2) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutquad.png
     \row
-        \o \c Easing.OutInQuad
-        \o Easing curve for a quadratic (t^2) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinquad.png
+        \li \c Easing.OutInQuad
+        \li Easing curve for a quadratic (t^2) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinquad.png
     \row
-        \o \c Easing.InCubic
-        \o Easing curve for a cubic (t^3) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-incubic.png
+        \li \c Easing.InCubic
+        \li Easing curve for a cubic (t^3) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-incubic.png
     \row
-        \o \c Easing.OutCubic
-        \o Easing curve for a cubic (t^3) function: decelerating from zero velocity.
-        \o \inlineimage qeasingcurve-outcubic.png
+        \li \c Easing.OutCubic
+        \li Easing curve for a cubic (t^3) function: decelerating from zero velocity.
+        \li \inlineimage qeasingcurve-outcubic.png
     \row
-        \o \c Easing.InOutCubic
-        \o Easing curve for a cubic (t^3) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutcubic.png
+        \li \c Easing.InOutCubic
+        \li Easing curve for a cubic (t^3) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutcubic.png
     \row
-        \o \c Easing.OutInCubic
-        \o Easing curve for a cubic (t^3) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outincubic.png
+        \li \c Easing.OutInCubic
+        \li Easing curve for a cubic (t^3) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outincubic.png
     \row
-        \o \c Easing.InQuart
-        \o Easing curve for a quartic (t^4) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-inquart.png
+        \li \c Easing.InQuart
+        \li Easing curve for a quartic (t^4) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-inquart.png
     \row
-        \o \c Easing.OutQuart
-        \o Easing curve for a quartic (t^4) function: decelerating from zero velocity.
-        \o \inlineimage qeasingcurve-outquart.png
+        \li \c Easing.OutQuart
+        \li Easing curve for a quartic (t^4) function: decelerating from zero velocity.
+        \li \inlineimage qeasingcurve-outquart.png
     \row
-        \o \c Easing.InOutQuart
-        \o Easing curve for a quartic (t^4) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutquart.png
+        \li \c Easing.InOutQuart
+        \li Easing curve for a quartic (t^4) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutquart.png
     \row
-        \o \c Easing.OutInQuart
-        \o Easing curve for a quartic (t^4) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinquart.png
+        \li \c Easing.OutInQuart
+        \li Easing curve for a quartic (t^4) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinquart.png
     \row
-        \o \c Easing.InQuint
-        \o Easing curve for a quintic (t^5) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-inquint.png
+        \li \c Easing.InQuint
+        \li Easing curve for a quintic (t^5) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-inquint.png
     \row
-        \o \c Easing.OutQuint
-        \o Easing curve for a quintic (t^5) function: decelerating from zero velocity.
-        \o \inlineimage qeasingcurve-outquint.png
+        \li \c Easing.OutQuint
+        \li Easing curve for a quintic (t^5) function: decelerating from zero velocity.
+        \li \inlineimage qeasingcurve-outquint.png
     \row
-        \o \c Easing.InOutQuint
-        \o Easing curve for a quintic (t^5) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutquint.png
+        \li \c Easing.InOutQuint
+        \li Easing curve for a quintic (t^5) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutquint.png
     \row
-        \o \c Easing.OutInQuint
-        \o Easing curve for a quintic (t^5) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinquint.png
+        \li \c Easing.OutInQuint
+        \li Easing curve for a quintic (t^5) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinquint.png
     \row
-        \o \c Easing.InSine
-        \o Easing curve for a sinusoidal (sin(t)) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-insine.png
+        \li \c Easing.InSine
+        \li Easing curve for a sinusoidal (sin(t)) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-insine.png
     \row
-        \o \c Easing.OutSine
-        \o Easing curve for a sinusoidal (sin(t)) function: decelerating from zero velocity.
-        \o \inlineimage qeasingcurve-outsine.png
+        \li \c Easing.OutSine
+        \li Easing curve for a sinusoidal (sin(t)) function: decelerating from zero velocity.
+        \li \inlineimage qeasingcurve-outsine.png
     \row
-        \o \c Easing.InOutSine
-        \o Easing curve for a sinusoidal (sin(t)) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutsine.png
+        \li \c Easing.InOutSine
+        \li Easing curve for a sinusoidal (sin(t)) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutsine.png
     \row
-        \o \c Easing.OutInSine
-        \o Easing curve for a sinusoidal (sin(t)) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinsine.png
+        \li \c Easing.OutInSine
+        \li Easing curve for a sinusoidal (sin(t)) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinsine.png
     \row
-        \o \c Easing.InExpo
-        \o Easing curve for an exponential (2^t) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-inexpo.png
+        \li \c Easing.InExpo
+        \li Easing curve for an exponential (2^t) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-inexpo.png
     \row
-        \o \c Easing.OutExpo
-        \o Easing curve for an exponential (2^t) function: decelerating from zero velocity.
-        \o \inlineimage qeasingcurve-outexpo.png
+        \li \c Easing.OutExpo
+        \li Easing curve for an exponential (2^t) function: decelerating from zero velocity.
+        \li \inlineimage qeasingcurve-outexpo.png
     \row
-        \o \c Easing.InOutExpo
-        \o Easing curve for an exponential (2^t) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutexpo.png
+        \li \c Easing.InOutExpo
+        \li Easing curve for an exponential (2^t) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutexpo.png
     \row
-        \o \c Easing.OutInExpo
-        \o Easing curve for an exponential (2^t) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinexpo.png
+        \li \c Easing.OutInExpo
+        \li Easing curve for an exponential (2^t) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinexpo.png
     \row
-        \o \c Easing.InCirc
-        \o Easing curve for a circular (sqrt(1-t^2)) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-incirc.png
+        \li \c Easing.InCirc
+        \li Easing curve for a circular (sqrt(1-t^2)) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-incirc.png
     \row
-        \o \c Easing.OutCirc
-        \o Easing curve for a circular (sqrt(1-t^2)) function: decelerating from zero velocity.
-        \o \inlineimage qeasingcurve-outcirc.png
+        \li \c Easing.OutCirc
+        \li Easing curve for a circular (sqrt(1-t^2)) function: decelerating from zero velocity.
+        \li \inlineimage qeasingcurve-outcirc.png
     \row
-        \o \c Easing.InOutCirc
-        \o Easing curve for a circular (sqrt(1-t^2)) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutcirc.png
+        \li \c Easing.InOutCirc
+        \li Easing curve for a circular (sqrt(1-t^2)) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutcirc.png
     \row
-        \o \c Easing.OutInCirc
-        \o Easing curve for a circular (sqrt(1-t^2)) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outincirc.png
+        \li \c Easing.OutInCirc
+        \li Easing curve for a circular (sqrt(1-t^2)) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outincirc.png
     \row
-        \o \c Easing.InElastic
-        \o Easing curve for an elastic (exponentially decaying sine wave) function: accelerating from zero velocity.
+        \li \c Easing.InElastic
+        \li Easing curve for an elastic (exponentially decaying sine wave) function: accelerating from zero velocity.
         \br The peak amplitude can be set with the \e amplitude parameter, and the period of decay by the \e period parameter.
-        \o \inlineimage qeasingcurve-inelastic.png
+        \li \inlineimage qeasingcurve-inelastic.png
     \row
-        \o \c Easing.OutElastic
-        \o Easing curve for an elastic (exponentially decaying sine wave) function: decelerating from zero velocity.
+        \li \c Easing.OutElastic
+        \li Easing curve for an elastic (exponentially decaying sine wave) function: decelerating from zero velocity.
         \br The peak amplitude can be set with the \e amplitude parameter, and the period of decay by the \e period parameter.
-        \o \inlineimage qeasingcurve-outelastic.png
+        \li \inlineimage qeasingcurve-outelastic.png
     \row
-        \o \c Easing.InOutElastic
-        \o Easing curve for an elastic (exponentially decaying sine wave) function: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutelastic.png
+        \li \c Easing.InOutElastic
+        \li Easing curve for an elastic (exponentially decaying sine wave) function: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutelastic.png
     \row
-        \o \c Easing.OutInElastic
-        \o Easing curve for an elastic (exponentially decaying sine wave) function: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinelastic.png
+        \li \c Easing.OutInElastic
+        \li Easing curve for an elastic (exponentially decaying sine wave) function: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinelastic.png
     \row
-        \o \c Easing.InBack
-        \o Easing curve for a back (overshooting cubic function: (s+1)*t^3 - s*t^2) easing in: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-inback.png
+        \li \c Easing.InBack
+        \li Easing curve for a back (overshooting cubic function: (s+1)*t^3 - s*t^2) easing in: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-inback.png
     \row
-        \o \c Easing.OutBack
-        \o Easing curve for a back (overshooting cubic function: (s+1)*t^3 - s*t^2) easing out: decelerating to zero velocity.
-        \o \inlineimage qeasingcurve-outback.png
+        \li \c Easing.OutBack
+        \li Easing curve for a back (overshooting cubic function: (s+1)*t^3 - s*t^2) easing out: decelerating to zero velocity.
+        \li \inlineimage qeasingcurve-outback.png
     \row
-        \o \c Easing.InOutBack
-        \o Easing curve for a back (overshooting cubic function: (s+1)*t^3 - s*t^2) easing in/out: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutback.png
+        \li \c Easing.InOutBack
+        \li Easing curve for a back (overshooting cubic function: (s+1)*t^3 - s*t^2) easing in/out: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutback.png
     \row
-        \o \c Easing.OutInBack
-        \o Easing curve for a back (overshooting cubic easing: (s+1)*t^3 - s*t^2) easing out/in: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinback.png
+        \li \c Easing.OutInBack
+        \li Easing curve for a back (overshooting cubic easing: (s+1)*t^3 - s*t^2) easing out/in: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinback.png
     \row
-        \o \c Easing.InBounce
-        \o Easing curve for a bounce (exponentially decaying parabolic bounce) function: accelerating from zero velocity.
-        \o \inlineimage qeasingcurve-inbounce.png
+        \li \c Easing.InBounce
+        \li Easing curve for a bounce (exponentially decaying parabolic bounce) function: accelerating from zero velocity.
+        \li \inlineimage qeasingcurve-inbounce.png
     \row
-        \o \c Easing.OutBounce
-        \o Easing curve for a bounce (exponentially decaying parabolic bounce) function: decelerating from zero velocity.
-        \o \inlineimage qeasingcurve-outbounce.png
+        \li \c Easing.OutBounce
+        \li Easing curve for a bounce (exponentially decaying parabolic bounce) function: decelerating from zero velocity.
+        \li \inlineimage qeasingcurve-outbounce.png
     \row
-        \o \c Easing.InOutBounce
-        \o Easing curve for a bounce (exponentially decaying parabolic bounce) function easing in/out: acceleration until halfway, then deceleration.
-        \o \inlineimage qeasingcurve-inoutbounce.png
+        \li \c Easing.InOutBounce
+        \li Easing curve for a bounce (exponentially decaying parabolic bounce) function easing in/out: acceleration until halfway, then deceleration.
+        \li \inlineimage qeasingcurve-inoutbounce.png
     \row
-        \o \c Easing.OutInBounce
-        \o Easing curve for a bounce (exponentially decaying parabolic bounce) function easing out/in: deceleration until halfway, then acceleration.
-        \o \inlineimage qeasingcurve-outinbounce.png
+        \li \c Easing.OutInBounce
+        \li Easing curve for a bounce (exponentially decaying parabolic bounce) function easing out/in: deceleration until halfway, then acceleration.
+        \li \inlineimage qeasingcurve-outinbounce.png
     \row
-        \o \c Easing.Bezier
-        \o Custom easing curve defined by the easing.bezierCurve property.
-        \o
+        \li \c Easing.Bezier
+        \li Custom easing curve defined by the easing.bezierCurve property.
+        \li
     \endtable
 
     \c easing.amplitude is only applicable for bounce and elastic curves (curves of type
@@ -2290,8 +2290,8 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
 
     \table 80%
     \row
-    \o Value Source / Behavior
-    \o When an animation is used as a value source or in a Behavior, the default target and property
+    \li Value Source / Behavior
+    \li When an animation is used as a value source or in a Behavior, the default target and property
        name to be animated can both be inferred.
        \qml
        Rectangle {
@@ -2303,8 +2303,8 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
        }
        \endqml
     \row
-    \o Transition
-    \o When used in a transition, a property animation is assumed to match \e all targets
+    \li Transition
+    \li When used in a transition, a property animation is assumed to match \e all targets
        but \e no properties. In practice, that means you need to specify at least the properties
        in order for the animation to do anything.
        \qml
@@ -2328,8 +2328,8 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
        }
        \endqml
     \row
-    \o Standalone
-    \o When an animation is used standalone, both the target and property need to be
+    \li Standalone
+    \li When an animation is used standalone, both the target and property need to be
        explicitly specified.
        \qml
        Rectangle {

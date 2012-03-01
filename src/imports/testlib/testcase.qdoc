@@ -180,7 +180,7 @@
     and mouseMove() methods can be used to simulate mouse events in a
     similar fashion.
 
-    \bold{Note:} keyboard and mouse events can only be delivered once the
+    \b{Note:} keyboard and mouse events can only be delivered once the
     main window has been shown.  Attempts to deliver events before then
     will fail.  Use the \l when and windowShown properties to track
     when the main window has been shown.
@@ -446,7 +446,7 @@
     focused item.  If \a delay is larger than 0, the test will wait for
     \a delay milliseconds.
 
-    \bold{Note:} At some point you should release the key using keyRelease().
+    \b{Note:} At some point you should release the key using keyRelease().
 
     \sa keyRelease(), keyClick()
 */

@@ -62,8 +62,8 @@ named \c Button.qml, the component is referred to as \c Button:
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qml-extending-types/components/application.qml 0
-\o \image qml-extending-types.png
+\li \snippet doc/src/snippets/qml/qml-extending-types/components/application.qml 0
+\li \image qml-extending-types.png
 \endtable
 
 The root object in \c Button.qml defines the attributes that are available to users of the
@@ -83,11 +83,11 @@ To write a useful component, it is generally necessary to provide it with custom
 communicate specific data. This is achieved by adding the following attributes to your components:
 
 \list
-\o \bold Properties that can be accessed externally to modify an object (for example, \l Item has
+\li \b Properties that can be accessed externally to modify an object (for example, \l Item has
    \l {Item::}{width} and \l {Item::}{height} properties) and used in \l {Property Binding}
-\o \bold Methods of JavaScript code can be invoked internally or externally (for example,
+\li \b Methods of JavaScript code can be invoked internally or externally (for example,
    \l Animation has a \l {Animation::}{start()} method)
-\o \bold Signals to notify other objects when an event has occurred (for example, MouseArea has a
+\li \b Signals to notify other objects when an event has occurred (for example, MouseArea has a
    \c clicked signal)
 \endlist
 
@@ -119,8 +119,8 @@ an \c ImageViewer object and read or modify the \c currentImage value:
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qml-extending-types/properties/ImageViewer.qml 0
-\o \snippet doc/src/snippets/qml/qml-extending-types/properties/application.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/properties/ImageViewer.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/properties/application.qml 0
 \endtable
 
 It is optional for a property to have a default value. The default value is a convenient shortcut, and is
@@ -146,16 +146,16 @@ A number of property types are supported by default. These are listed in the tab
 with their default values and the corresponding C++ type:
 
 \table
-\header \o QML Type Name \o Default value \o C++ Type Name
-\row \o \l int \o 0 \o int
-\row \o \l bool \o \c false \o bool
-\row \o \l double \o 0.0 \o double
-\row \o \l real \o 0.0 \o double
-\row \o \l string \o "" (empty string) \o QString
-\row \o \l url \o "" (empty url) \o QUrl
-\row \o \l color \o #000000 (black) \o QColor
-\row \o \l date \o \c undefined \o QDateTime
-\row \o \l variant \o \c undefined \o QVariant
+\header \li QML Type Name \li Default value \li C++ Type Name
+\row \li \l int \li 0 \li int
+\row \li \l bool \li \c false \li bool
+\row \li \l double \li 0.0 \li double
+\row \li \l real \li 0.0 \li double
+\row \li \l string \li "" (empty string) \li QString
+\row \li \l url \li "" (empty url) \li QUrl
+\row \li \l color \li #000000 (black) \li QColor
+\row \li \l date \li \c undefined \li QDateTime
+\row \li \l variant \li \c undefined \li QVariant
 \endtable
 
 QML object types can also be used as property types. This includes
@@ -290,8 +290,8 @@ been changed to an alias to the child \l Image object:
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qml-extending-types/properties/alias/ImageViewer.qml 0
-\o \snippet doc/src/snippets/qml/qml-extending-types/properties/alias/application.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/properties/alias/ImageViewer.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/properties/alias/application.qml 0
 \endtable
 
 Instead of being limited to setting the \l Image source, \c application.qml can now directly
@@ -411,9 +411,9 @@ The signal hander is named \c on<SignalName>, with the first letter of the signa
 cased. The above example item would now have the following signal handlers:
 
 \list
-\o onClicked
-\o onHovered
-\o onPerformAction
+\li onClicked
+\li onHovered
+\li onPerformAction
 \endlist
 
 To emit a signal, simply invoke it in the same way as a method. Below left, when the \l MouseArea is
@@ -422,8 +422,8 @@ signal is received by \c application.qml through an \c onButtonClicked signal ha
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qml-extending-types/signals/basic.qml 0
-\o \snippet doc/src/snippets/qml/qml-extending-types/signals/no-parameters.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/signals/basic.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/signals/no-parameters.qml 0
 \endtable
 
 If the signal has parameters, they are accessible by parameter name in the signal handler.
@@ -431,8 +431,8 @@ In the example below, \c buttonClicked is emitted with \c xPos and \c yPos param
 
 \table
 \row
-\o \snippet doc/src/snippets/qml/qml-extending-types/signals/Button.qml 0
-\o \snippet doc/src/snippets/qml/qml-extending-types/signals/parameters.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/signals/Button.qml 0
+\li \snippet doc/src/snippets/qml/qml-extending-types/signals/parameters.qml 0
 \endtable
 
 

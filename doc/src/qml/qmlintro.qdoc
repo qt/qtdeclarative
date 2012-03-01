@@ -129,13 +129,13 @@ additional elements are defined inside the light blue rectangle.
 \e components, often interchangeably.
 
 \list
-\o When we talk about an \e element, we usually mean the syntactic structure,
+\li When we talk about an \e element, we usually mean the syntactic structure,
    including the name, the opening and closing braces, and its contents.
-\o An \e item is an element that has a visual appearance. All items are
+\li An \e item is an element that has a visual appearance. All items are
    elements that inherit \l Item either directly or indirectly. For example,
    a \l Rectangle is an item, but a \l State is an element because it does
    not have an intrinsic appearance.
-\o A \e component is an element that is defined to be reused. In many cases,
+\li A \e component is an element that is defined to be reused. In many cases,
    components are often items, too.
 \endlist
 
@@ -333,8 +333,8 @@ the case.
 
 Commenting in QML is similar to JavaScript.
 \list
-\o Single line comments start with // and finish at the end of the line.
-\o Multi-line comments start with /* and finish with *\/
+\li Single line comments start with // and finish at the end of the line.
+\li Multi-line comments start with /* and finish with *\/
 \endlist
 
 Comments are ignored by the QML engine. They are useful for explaining what
@@ -379,15 +379,15 @@ referred to in the JavaScript code, as below:
 
 When a property changes value, it can send a signal to notify others of this change.
 
-To receive these signals, simply create a \i{signal handler} named with an
+To receive these signals, simply create a \e{signal handler} named with an
 \e on<Property>Changed syntax. For example, the \l TextInput element has a
 \l{TextInput::}{text} property. When this property changes, the \c textChanged
 signal is emitted. We can monitor this property for changes with the
 \c onTextChanged handler.
 
 \table
-\header \o Property \o Signal \o Signal Handler
-\row    \o \l{TextInput::}{text} \o \c textChanged \o \c onTextChanged
+\header \li Property \li Signal \li Signal Handler
+\row    \li \l{TextInput::}{text} \li \c textChanged \li \c onTextChanged
 \endtable
 
 The following code shows this in practice:
@@ -720,10 +720,10 @@ of their own; they simply arrange their child items in the space allocated to
 them. Any background color, if desired, must be added to a parent Rectangle.
 
 \list
-\o \l{#Row}{Row} arranges its children in a row.
-\o \l{#Column}{Column} arranges its children in a column.
-\o \l{#Grid}{Grid} arranges its children in a grid.
-\o \l{#Flow}{Flow} arranges its children like words on a page.
+\li \l{#Row}{Row} arranges its children in a row.
+\li \l{#Column}{Column} arranges its children in a column.
+\li \l{#Grid}{Grid} arranges its children in a grid.
+\li \l{#Flow}{Flow} arranges its children like words on a page.
 \endlist
 
 Each of these items provides many of the same properties as the others,

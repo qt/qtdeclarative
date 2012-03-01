@@ -43,13 +43,13 @@
 
     To write a QML extension plugin:
     \list 1
-    \o Subclass QQmlExtensionPlugin
-    \o Implement QQmlExtensionPlugin's
+    \li Subclass QQmlExtensionPlugin
+    \li Implement QQmlExtensionPlugin's
     \l{QQmlExtensionPlugin::}{registerTypes()} method
-    \o Register types with qmlRegisterType()
-    \o Export the class using the Q_EXPORT_PLUGIN2() macro
-    \o Write a project file for the plugin
-    \o Create a \l{Writing a qmldir file}{qmldir file} to describe the plugin
+    \li Register types with qmlRegisterType()
+    \li Export the class using the Q_EXPORT_PLUGIN2() macro
+    \li Write a project file for the plugin
+    \li Create a \l{Writing a qmldir file}{qmldir file} to describe the plugin
     \endlist
 
     QML extension plugins are for either application-specific or library-like
@@ -122,11 +122,11 @@
 \section1 Reference
 
     \list
-    \o \l {Tutorial: Writing QML extensions with C++} - contains a chapter
+    \li \l {Tutorial: Writing QML extensions with C++} - contains a chapter
     on creating QML plugins.
-    \o \l{Creating QML Types} - information about registering C++ types into
+    \li \l{Creating QML Types} - information about registering C++ types into
     the runtime.
-    \o \l{How to Create Qt Plugins} - information about Qt plugins
+    \li \l{How to Create Qt Plugins} - information about Qt plugins
     \endlist
 
 

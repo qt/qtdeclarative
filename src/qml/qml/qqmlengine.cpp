@@ -217,11 +217,11 @@ data types. This is primarily useful when setting the properties of an item
 when the property has one of the following types:
 
 \list
-\o \c color - use \l{Qt::rgba()}{Qt.rgba()}, \l{Qt::hsla()}{Qt.hsla()}, \l{Qt::darker()}{Qt.darker()}, \l{Qt::lighter()}{Qt.lighter()} or \l{Qt::tint()}{Qt.tint()}
-\o \c rect - use \l{Qt::rect()}{Qt.rect()}
-\o \c point - use \l{Qt::point()}{Qt.point()}
-\o \c size - use \l{Qt::size()}{Qt.size()}
-\o \c vector3d - use \l{Qt::vector3d()}{Qt.vector3d()}
+\li \c color - use \l{Qt::rgba()}{Qt.rgba()}, \l{Qt::hsla()}{Qt.hsla()}, \l{Qt::darker()}{Qt.darker()}, \l{Qt::lighter()}{Qt.lighter()} or \l{Qt::tint()}{Qt.tint()}
+\li \c rect - use \l{Qt::rect()}{Qt.rect()}
+\li \c point - use \l{Qt::point()}{Qt.point()}
+\li \c size - use \l{Qt::size()}{Qt.size()}
+\li \c vector3d - use \l{Qt::vector3d()}{Qt.vector3d()}
 \endlist
 
 There are also string based constructors for these types. See \l{qdeclarativebasictypes.html}{QML Basic Types} for more information.
@@ -231,9 +231,9 @@ There are also string based constructors for these types. See \l{qdeclarativebas
 The Qt object contains several functions for formatting QDateTime, QDate and QTime values.
 
 \list
-    \o \l{Qt::formatDateTime}{string Qt.formatDateTime(datetime date, variant format)}
-    \o \l{Qt::formatDate}{string Qt.formatDate(datetime date, variant format)}
-    \o \l{Qt::formatTime}{string Qt.formatTime(datetime date, variant format)}
+    \li \l{Qt::formatDateTime}{string Qt.formatDateTime(datetime date, variant format)}
+    \li \l{Qt::formatDate}{string Qt.formatDate(datetime date, variant format)}
+    \li \l{Qt::formatTime}{string Qt.formatTime(datetime date, variant format)}
 \endlist
 
 The format specification is described at \l{Qt::formatDateTime}{Qt.formatDateTime}.
@@ -245,8 +245,8 @@ items from files or strings. See \l{Dynamic Object Management in QML} for an ove
 of their use.
 
 \list
-    \o \l{Qt::createComponent()}{object Qt.createComponent(url)}
-    \o \l{Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, string filepath)}
+    \li \l{Qt::createComponent()}{object Qt.createComponent(url)}
+    \li \l{Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, string filepath)}
 \endlist
 */
 
@@ -262,8 +262,8 @@ of their use.
 
     \table
     \row
-    \o \c application.active
-    \o
+    \li \c application.active
+    \li
     This read-only property indicates whether the application is the top-most and focused
     application, and the user is able to interact with the application. The property
     is false when the application is in the background, the device keylock or screen
@@ -274,8 +274,8 @@ of their use.
     active.
 
     \row
-    \o \c application.layoutDirection
-    \o
+    \li \c application.layoutDirection
+    \li
     This read-only property can be used to query the default layout direction of the
     application. On system start-up, the default layout direction depends on the
     application's language. The property has a value of \c Qt.RightToLeft in locales
@@ -286,15 +286,15 @@ of their use.
     Possible values are:
 
     \list
-    \o Qt.LeftToRight - Text and graphics elements should be positioned
+    \li Qt.LeftToRight - Text and graphics elements should be positioned
                         from left to right.
-    \o Qt.RightToLeft - Text and graphics elements should be positioned
+    \li Qt.RightToLeft - Text and graphics elements should be positioned
                         from right to left.
     \endlist
 
     \row
-    \o \c application.inputPanel
-    \o
+    \li \c application.inputPanel
+    \li
     This read-only property allows access to application's QInputPanel object
     and all its properties and slots. See the QInputPanel documentation for
     further details. Deprecated in favor of Qt.InputMethod
@@ -326,11 +326,11 @@ Qt.include() returns an object that describes the status of the operation.  The 
 a single property, \c {status}, that is set to one of the following values:
 
 \table
-\header \o Symbol \o Value \o Description
-\row \o result.OK \o 0 \o The include completed successfully.
-\row \o result.LOADING \o 1 \o Data is being loaded from the network.
-\row \o result.NETWORK_ERROR \o 2 \o A network error occurred while fetching the url.
-\row \o result.EXCEPTION \o 3 \o A JavaScript exception occurred while executing the included code.
+\header \li Symbol \li Value \li Description
+\row \li result.OK \li 0 \li The include completed successfully.
+\row \li result.LOADING \li 1 \li Data is being loaded from the network.
+\row \li result.NETWORK_ERROR \li 2 \li A network error occurred while fetching the url.
+\row \li result.EXCEPTION \li 3 \li A JavaScript exception occurred while executing the included code.
 An additional \c exception property will be set in this case.
 \endtable
 

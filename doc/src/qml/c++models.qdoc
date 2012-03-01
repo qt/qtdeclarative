@@ -41,7 +41,7 @@ models.
 \section1 QStringList-based Model
 
     A model may be a simple \l QStringList, which provides the contents of the list
-    via the \i modelData role.
+    via the \e modelData role.
 
     Here is a ListView with a delegate that references its model item's
     value using the \c modelData role:
@@ -55,7 +55,7 @@ models.
 
     The complete example is available in Qt's \l {declarative/modelviews/stringlistmodel}{examples/declarative/modelviews/stringlistmodel} directory.
 
-    \bold{Note:} There is no way for the view to know that the contents of a QStringList
+    \b{Note:} There is no way for the view to know that the contents of a QStringList
     have changed.  If the QStringList changes, it will be necessary to reset
     the model by calling QQmlContext::setContextProperty() again.
 
@@ -107,18 +107,18 @@ models.
 
     \table
     \header
-    \o Qt Role
-    \o QML Role Name
+    \li Qt Role
+    \li QML Role Name
     \row
-    \o Qt::DisplayRole
-    \o display
+    \li Qt::DisplayRole
+    \li display
     \row
-    \o Qt::DecorationRole
-    \o decoration
+    \li Qt::DecorationRole
+    \li decoration
     \endtable
 
     Here is an application with a QAbstractListModel subclass named \c AnimalModel
-    that has \i type and \i size roles. It calls QAbstractItemModel::setRoleNames() to set the
+    that has \e type and \e size roles. It calls QAbstractItemModel::setRoleNames() to set the
     role names for accessing the properties via QML:
 
     \snippet examples/declarative/modelviews/abstractitemmodel/model.h 0
@@ -132,7 +132,7 @@ models.
     \snippet examples/declarative/modelviews/abstractitemmodel/main.cpp 0
     \dots
 
-    This model is displayed by a ListView delegate that accesses the \i type and \i size
+    This model is displayed by a ListView delegate that accesses the \e type and \e size
     roles:
 
     \snippet examples/declarative/modelviews/abstractitemmodel/view.qml 0
@@ -152,10 +152,10 @@ models.
     with models of type QAbstractItemModel:
 
     \list
-    \o \i hasModelChildren role property to determine whether a node has child nodes.
-    \o \l VisualDataModel::rootIndex allows the root node to be specified
-    \o \l VisualDataModel::modelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
-    \o \l VisualDataModel::parentModelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
+    \li \e hasModelChildren role property to determine whether a node has child nodes.
+    \li \l VisualDataModel::rootIndex allows the root node to be specified
+    \li \l VisualDataModel::modelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
+    \li \l VisualDataModel::parentModelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
     \endlist
 
 \section1 Exposing C++ Data Models to QML
@@ -169,7 +169,7 @@ created directly as elements within QML:
 \table
 \row
 
-\o
+\li
 \code
 class MyModelPlugin : public QQmlExtensionPlugin
 {
@@ -184,7 +184,7 @@ public:
 Q_EXPORT_PLUGIN2(mymodelplugin, MyModelPlugin);
 \endcode
 
-\o
+\li
 \qml
 MyModel {
     id: myModel

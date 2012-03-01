@@ -413,21 +413,21 @@ QImage QQuickShaderEffectTexture::toImage() const
 
     ShaderEffectSource can be used as:
     \list
-    \o a texture source in a \l ShaderEffect.
+    \li a texture source in a \l ShaderEffect.
        This allows you to apply custom shader effects to any QML element.
-    \o a cache for a complex element.
+    \li a cache for a complex element.
        The complex element can be rendered once into the texture, which can
        then be animated freely without the need to render the complex element
        again every frame.
-    \o an opacity layer.
+    \li an opacity layer.
        ShaderEffectSource allows you to apply an opacity to elements as a group
        rather than each element individually.
     \endlist
 
     \table
     \row
-    \o \image declarative-shadereffectsource.png
-    \o \qml
+    \li \image declarative-shadereffectsource.png
+    \li \qml
         import QtQuick 2.0
 
         Rectangle {
@@ -548,10 +548,10 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
     source texture of a \l ShaderEffect.
 
     \list
-    \o ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
-    \o ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
-    \o ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
-    \o ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
+    \li ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
+    \li ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
+    \li ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
+    \li ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
     \endlist
 
     \note Some OpenGL ES 2 implementations do not support the GL_REPEAT
@@ -677,9 +677,9 @@ void QQuickShaderEffectSource::setTextureSize(const QSize &size)
     implementation, this property might allow you to save some texture memory.
 
     \list
-    \o ShaderEffectSource.Alpha - GL_ALPHA
-    \o ShaderEffectSource.RGB - GL_RGB
-    \o ShaderEffectSource.RGBA - GL_RGBA
+    \li ShaderEffectSource.Alpha - GL_ALPHA
+    \li ShaderEffectSource.RGB - GL_RGB
+    \li ShaderEffectSource.RGBA - GL_RGBA
     \endlist
 
     \note Some OpenGL implementations do not support the GL_ALPHA format.

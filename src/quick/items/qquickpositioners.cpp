@@ -608,8 +608,8 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     positioner. For a positioner, this applies to:
 
     \list
-    \o Items that are created or reparented as a child of the positioner
-    \o Child items that change their \l visible property from false to true, and thus
+    \li Items that are created or reparented as a child of the positioner
+    \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
 
@@ -626,9 +626,9 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     positioner. For a positioner, this applies to:
 
     \list
-    \o Child items that move when they are displaced due to the addition, removal or
+    \li Child items that move when they are displaced due to the addition, removal or
        rearrangement of other items in the positioner
-    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \li Child items that are repositioned due to the resizing of other items in the positioner
     \endlist
 
     The transition can use the \l ViewTransition property to access more details about
@@ -741,8 +741,8 @@ void QQuickColumn::reportConflictingAnchors()
     positioner. For a positioner, this applies to:
 
     \list
-    \o Items that are created or reparented as a child of the positioner
-    \o Child items that change their \l visible property from false to true, and thus
+    \li Items that are created or reparented as a child of the positioner
+    \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
 
@@ -759,9 +759,9 @@ void QQuickColumn::reportConflictingAnchors()
     positioner. For a positioner, this applies to:
 
     \list
-    \o Child items that move when they are displaced due to the addition, removal or
+    \li Child items that move when they are displaced due to the addition, removal or
        rearrangement of other items in the positioner
-    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \li Child items that are repositioned due to the resizing of other items in the positioner
     \endlist
 
     The transition can use the \l ViewTransition property to access more details about
@@ -795,9 +795,9 @@ QQuickRow::QQuickRow(QQuickItem *parent)
     Possible values:
 
     \list
-    \o Qt.LeftToRight (default) - Items are laid out from left to right. If the width of the row is explicitly set,
+    \li Qt.LeftToRight (default) - Items are laid out from left to right. If the width of the row is explicitly set,
     the left anchor remains to the left of the row.
-    \o Qt.RightToLeft - Items are laid out from right to left. If the width of the row is explicitly set,
+    \li Qt.RightToLeft - Items are laid out from right to left. If the width of the row is explicitly set,
     the right anchor remains to the right of the row.
     \endlist
 
@@ -953,8 +953,8 @@ void QQuickRow::reportConflictingAnchors()
     positioner. For a positioner, this applies to:
 
     \list
-    \o Items that are created or reparented as a child of the positioner
-    \o Child items that change their \l visible property from false to true, and thus
+    \li Items that are created or reparented as a child of the positioner
+    \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
 
@@ -971,9 +971,9 @@ void QQuickRow::reportConflictingAnchors()
     positioner. For a positioner, this applies to:
 
     \list
-    \o Child items that move when they are displaced due to the addition, removal or
+    \li Child items that move when they are displaced due to the addition, removal or
        rearrangement of other items in the positioner
-    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \li Child items that are repositioned due to the resizing of other items in the positioner
     \endlist
 
     The transition can use the \l ViewTransition property to access more details about
@@ -1059,9 +1059,9 @@ void QQuickGrid::setRows(const int rows)
     Possible values are:
 
     \list
-    \o Grid.LeftToRight (default) - Items are positioned next to
+    \li Grid.LeftToRight (default) - Items are positioned next to
        each other in the \l layoutDirection, then wrapped to the next line.
-    \o Grid.TopToBottom - Items are positioned next to each
+    \li Grid.TopToBottom - Items are positioned next to each
        other from top to bottom, then wrapped to the next column.
     \endlist
 */
@@ -1131,10 +1131,10 @@ void QQuickGrid::setColumnSpacing(const qreal columnSpacing)
     Possible values are:
 
     \list
-    \o Qt.LeftToRight (default) - Items are positioned from the top to bottom,
+    \li Qt.LeftToRight (default) - Items are positioned from the top to bottom,
     and left to right. The flow direction is dependent on the
     \l Grid::flow property.
-    \o Qt.RightToLeft - Items are positioned from the top to bottom,
+    \li Qt.RightToLeft - Items are positioned from the top to bottom,
     and right to left. The flow direction is dependent on the
     \l Grid::flow property.
     \endlist
@@ -1366,8 +1366,8 @@ void QQuickGrid::reportConflictingAnchors()
     positioner. For a positioner, this applies to:
 
     \list
-    \o Items that are created or reparented as a child of the positioner
-    \o Child items that change their \l visible property from false to true, and thus
+    \li Items that are created or reparented as a child of the positioner
+    \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
 
@@ -1384,9 +1384,9 @@ void QQuickGrid::reportConflictingAnchors()
     positioner. For a positioner, this applies to:
 
     \list
-    \o Child items that move when they are displaced due to the addition, removal or
+    \li Child items that move when they are displaced due to the addition, removal or
        rearrangement of other items in the positioner
-    \o Child items that are repositioned due to the resizing of other items in the positioner
+    \li Child items that are repositioned due to the resizing of other items in the positioner
     \endlist
 
     The transition can use the \l ViewTransition property to access more details about
@@ -1435,10 +1435,10 @@ QQuickFlow::QQuickFlow(QQuickItem *parent)
     Possible values are:
 
     \list
-    \o Flow.LeftToRight (default) - Items are positioned next to
+    \li Flow.LeftToRight (default) - Items are positioned next to
     to each other according to the \l layoutDirection until the width of the Flow
     is exceeded, then wrapped to the next line.
-    \o Flow.TopToBottom - Items are positioned next to each
+    \li Flow.TopToBottom - Items are positioned next to each
     other from top to bottom until the height of the Flow is exceeded,
     then wrapped to the next column.
     \endlist
@@ -1467,10 +1467,10 @@ void QQuickFlow::setFlow(Flow flow)
     Possible values are:
 
     \list
-    \o Qt.LeftToRight (default) - Items are positioned from the top to bottom,
+    \li Qt.LeftToRight (default) - Items are positioned from the top to bottom,
     and left to right. The flow direction is dependent on the
     \l Flow::flow property.
-    \o Qt.RightToLeft - Items are positioned from the top to bottom,
+    \li Qt.RightToLeft - Items are positioned from the top to bottom,
     and right to left. The flow direction is dependent on the
     \l Flow::flow property.
     \endlist

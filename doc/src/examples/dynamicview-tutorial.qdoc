@@ -39,10 +39,10 @@ data to dynamically sort all items in a view.
 Tutorial chapters:
 
 \list 1
-\o \l {declarative/tutorials/dynamicview/dynamicview1}{A Simple ListView and Delegate}
-\o \l {declarative/tutorials/dynamicview/dynamicview2}{Dragging View Items}
-\o \l {declarative/tutorials/dynamicview/dynamicview3}{Moving Dragged Items}
-\o \l {declarative/tutorials/dynamicview/dynamicview4}{Sorting Items}
+\li \l {declarative/tutorials/dynamicview/dynamicview1}{A Simple ListView and Delegate}
+\li \l {declarative/tutorials/dynamicview/dynamicview2}{Dragging View Items}
+\li \l {declarative/tutorials/dynamicview/dynamicview3}{Moving Dragged Items}
+\li \l {declarative/tutorials/dynamicview/dynamicview4}{Sorting Items}
 \endlist
 
 All the code in this tutorial can be found in Qt's \c examples/declarative/tutorials/dynamicview
