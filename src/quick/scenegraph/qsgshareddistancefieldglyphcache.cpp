@@ -90,7 +90,7 @@ QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteAr
             this, SLOT(reportItemsAvailable(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
             Qt::DirectConnection);
     connect(sharedGraphicsCache, SIGNAL(itemsUpdated(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
-            this, SLOT(reportItemsAvailable(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
+            this, SLOT(reportItemsUpdated(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
             Qt::DirectConnection);
     connect(sharedGraphicsCache, SIGNAL(itemsInvalidated(QByteArray,QVector<quint32>)),
             this, SLOT(reportItemsInvalidated(QByteArray,QVector<quint32>)),
@@ -542,9 +542,38 @@ void QSGSharedDistanceFieldGlyphCache::processPendingGlyphs()
 }
 
 void QSGSharedDistanceFieldGlyphCache::reportItemsAvailable(const QByteArray &cacheId,
-                                                        void *bufferId, const QSize &bufferSize,
-                                                        const QVector<quint32> &itemIds,
-                                                        const QVector<QPoint> &positions)
+                                                            void *bufferId,
+                                                            const QSize &bufferSize,
+                                                            const QVector<quint32> &itemIds,
+                                                            const QVector<QPoint> &positions)
+{
+    bool requestedItemsInList = false;
+    {
+        QMutexLocker locker(&m_pendingGlyphsMutex);
+        if (m_cacheId != cacheId)
+            return;
+
+#if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG)
+            qDebug("QSGSharedDistanceFieldGlyphCache::reportItemsAvailable() called for %s (%d glyphs, bufferSize: %dx%d)",
+                   cacheId.constData(), itemIds.size(), bufferSize.width(), bufferSize.height());
+#endif
+
+        for (int i=0; i<itemIds.size(); ++i) {
+            if (m_requestedGlyphsThatHaveNotBeenReturned.contains(itemIds.at(i))) {
+                requestedItemsInList = true;
+                break;
+            }
+        }
+    }
+
+    if (requestedItemsInList)
+        reportItemsUpdated(cacheId, bufferId, bufferSize, itemIds, positions);
+}
+
+void QSGSharedDistanceFieldGlyphCache::reportItemsUpdated(const QByteArray &cacheId,
+                                                          void *bufferId, const QSize &bufferSize,
+                                                          const QVector<quint32> &itemIds,
+                                                          const QVector<QPoint> &positions)
 {
     {
         QMutexLocker locker(&m_pendingGlyphsMutex);
@@ -554,7 +583,7 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsAvailable(const QByteArray &ca
         Q_ASSERT(itemIds.size() == positions.size());
 
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG)
-        qDebug("QSGSharedDistanceFieldGlyphCache::reportItemsAvailable() called for %s (%d glyphs, bufferSize: %dx%d)",
+        qDebug("QSGSharedDistanceFieldGlyphCache::reportItemsUpdated() called for %s (%d glyphs, bufferSize: %dx%d)",
                cacheId.constData(), itemIds.size(), bufferSize.width(), bufferSize.height());
 #endif
 

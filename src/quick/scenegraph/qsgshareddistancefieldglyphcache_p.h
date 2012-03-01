@@ -78,6 +78,8 @@ private Q_SLOTS:
     void reportItemsAvailable(const QByteArray &cacheId,
                           void *bufferId, const QSize &bufferSize,
                           const QVector<quint32> &itemIds, const QVector<QPoint> &positions);
+    void reportItemsUpdated(const QByteArray &cacheId, void *bufferId, const QSize &bufferSize,
+                            const QVector<quint32> &itemIds, const QVector<QPoint> &positions);
     void reportItemsInvalidated(const QByteArray &cacheId, const QVector<quint32> &itemIds);
 
 private:
