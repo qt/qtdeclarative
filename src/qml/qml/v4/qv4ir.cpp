@@ -448,11 +448,6 @@ Temp *BasicBlock::TEMP(Type type)
     return TEMP(type, function->tempCount++); 
 }
 
-Expr *BasicBlock::CONST(double value) 
-{ 
-    return CONST(IR::RealType, value); 
-}
-
 Expr *BasicBlock::CONST(Type type, double value) 
 { 
     Const *e = function->pool->New<Const>();
@@ -549,28 +544,30 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
     if (left && right) {
         if (Const *c1 = left->asConst()) {
             if (Const *c2 = right->asConst()) {
+                const IR::Type ty = Binop::typeForOp(op, left, right);
+
                 switch (op) {
-                case OpAdd: return CONST(c1->value + c2->value);
-                case OpAnd: return CONST(c1->value ? c2->value : 0);
-                case OpBitAnd: return CONST(int(c1->value) & int(c2->value));
-                case OpBitOr: return CONST(int(c1->value) | int(c2->value));
-                case OpBitXor: return CONST(int(c1->value) ^ int(c2->value));
-                case OpDiv: return CONST(c1->value / c2->value);
-                case OpEqual: return CONST(c1->value == c2->value);
-                case OpGe: return CONST(c1->value >= c2->value);
-                case OpGt: return CONST(c1->value > c2->value);
-                case OpLe: return CONST(c1->value <= c2->value);
-                case OpLShift: return CONST(int(c1->value) << int(c2->value));
-                case OpLt: return CONST(c1->value < c2->value);
-                case OpMod: return CONST(::fmod(c1->value, c2->value));
-                case OpMul: return CONST(c1->value * c2->value);
-                case OpNotEqual: return CONST(c1->value != c2->value);
-                case OpOr: return CONST(c1->value ? c1->value : c2->value);
-                case OpRShift: return CONST(int(c1->value) >> int(c2->value));
-                case OpStrictEqual: return CONST(c1->value == c2->value);
-                case OpStrictNotEqual: return CONST(c1->value != c2->value);
-                case OpSub: return CONST(c1->value - c2->value);
-                case OpURShift: return CONST(unsigned(c1->value) >> int(c2->value));
+                case OpAdd: return CONST(ty, c1->value + c2->value);
+                case OpAnd: return CONST(ty, c1->value ? c2->value : 0);
+                case OpBitAnd: return CONST(ty, int(c1->value) & int(c2->value));
+                case OpBitOr: return CONST(ty, int(c1->value) | int(c2->value));
+                case OpBitXor: return CONST(ty, int(c1->value) ^ int(c2->value));
+                case OpDiv: return CONST(ty, c1->value / c2->value);
+                case OpEqual: return CONST(ty, c1->value == c2->value);
+                case OpGe: return CONST(ty, c1->value >= c2->value);
+                case OpGt: return CONST(ty, c1->value > c2->value);
+                case OpLe: return CONST(ty, c1->value <= c2->value);
+                case OpLShift: return CONST(ty, int(c1->value) << int(c2->value));
+                case OpLt: return CONST(ty, c1->value < c2->value);
+                case OpMod: return CONST(ty, ::fmod(c1->value, c2->value));
+                case OpMul: return CONST(ty, c1->value * c2->value);
+                case OpNotEqual: return CONST(ty, c1->value != c2->value);
+                case OpOr: return CONST(ty, c1->value ? c1->value : c2->value);
+                case OpRShift: return CONST(ty, int(c1->value) >> int(c2->value));
+                case OpStrictEqual: return CONST(ty, c1->value == c2->value);
+                case OpStrictNotEqual: return CONST(ty, c1->value != c2->value);
+                case OpSub: return CONST(ty, c1->value - c2->value);
+                case OpURShift: return CONST(ty, unsigned(c1->value) >> int(c2->value));
 
                 case OpIfTrue: // unary ops
                 case OpNot:
