@@ -239,7 +239,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \li \c pinch.active specifies if the target item is currently being dragged.
     \li \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item::scale property.
     \li \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item::rotation property.
-    \li \c pinch.dragAxis specifies whether dragging in not allowed (\c Pinch.NoDrag), can be done horizontally (\c Pinch.XAxis), vertically (\c Pinch.YAxis), or both (\c Pinch.XandYAxis)
+    \li \c pinch.dragAxis specifies whether dragging in not allowed (\c Pinch.NoDrag), can be done horizontally (\c Pinch.XAxis), vertically (\c Pinch.YAxis), or both (\c Pinch.XAndYAxis)
     \li \c pinch.minimum and \c pinch.maximum limit how far the target can be dragged along the corresponding axes.
     \endlist
 */

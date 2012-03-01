@@ -112,7 +112,7 @@ public:
         emit maximumRotationChanged();
     }
 
-    enum Axis { NoDrag=0x00, XAxis=0x01, YAxis=0x02, XandYAxis=0x03 };
+    enum Axis { NoDrag=0x00, XAxis=0x01, YAxis=0x02, XAndYAxis=0x03, XandYAxis=XAndYAxis };
     Axis axis() const { return m_axis; }
     void setAxis(Axis a) {
         if (a == m_axis)

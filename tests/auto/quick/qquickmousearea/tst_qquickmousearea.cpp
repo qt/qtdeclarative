@@ -150,7 +150,7 @@ void tst_QQuickMouseArea::dragProperties()
     QCOMPARE(targetSpy.count(),1);
 
     // axis
-    QCOMPARE(drag->axis(), QQuickDrag::XandYAxis);
+    QCOMPARE(drag->axis(), QQuickDrag::XAndYAxis);
     QSignalSpy axisSpy(drag, SIGNAL(axisChanged()));
     drag->setAxis(QQuickDrag::XAxis);
     QCOMPARE(drag->axis(), QQuickDrag::XAxis);
@@ -1344,7 +1344,7 @@ void tst_QQuickMouseArea::changeAxis()
     QTRY_VERIFY(drag->active());
     QCOMPARE(blackRect->x(), 72.0);
     QCOMPARE(blackRect->y(), 72.0);
-    QCOMPARE(drag->axis(), QQuickDrag::XandYAxis);
+    QCOMPARE(drag->axis(), QQuickDrag::XAndYAxis);
 
     /* When blackRect.x becomes bigger than 75, the drag axis is changed to
      * Drag.YAxis by the QML code. Verify that this happens, and that the drag

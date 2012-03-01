@@ -78,7 +78,7 @@ public:
     void setTarget(QQuickItem *target);
     void resetTarget();
 
-    enum Axis { XAxis=0x01, YAxis=0x02, XandYAxis=0x03 };
+    enum Axis { XAxis=0x01, YAxis=0x02, XAndYAxis=0x03, XandYAxis=XAndYAxis };
     Axis axis() const;
     void setAxis(Axis);
 
