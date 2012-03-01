@@ -77,13 +77,19 @@ public:
     };
 
     QQuickItemViewTransitioner();
-    virtual ~QQuickItemViewTransitioner() {}
+    virtual ~QQuickItemViewTransitioner();
 
     bool canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const;
     void transitionNextReposition(QQuickViewItem *item, QQuickItemViewTransitioner::TransitionType type, bool isTarget);
 
+    QDeclarativeTransition *transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget);
+    const QList<int> &targetIndexes(QQuickItemViewTransitioner::TransitionType type) const;
+    const QList<QObject *> &targetItems(QQuickItemViewTransitioner::TransitionType type) const;
+
     inline void setPopulateTransitionEnabled(bool b) { usePopulateTransition = b; }
     inline void setChangeListener(QQuickItemViewTransitionChangeListener *obj) { changeListener = obj; }
+
+    QSet<QQuickItemViewTransitionJob *> runningJobs;
 
     QList<int> addTransitionIndexes;
     QList<int> moveTransitionIndexes;
@@ -107,7 +113,7 @@ private:
     QQuickItemViewTransitionChangeListener *changeListener;
     bool usePopulateTransition;
 
-    void finishedTransition(QQuickViewItem *item);
+    void finishedTransition(QQuickItemViewTransitionJob *job, QQuickViewItem *item);
 };
 
 

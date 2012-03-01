@@ -45,14 +45,17 @@
 
 QT_BEGIN_NAMESPACE
 
+static QList<int> qquickitemviewtransition_emptyIndexes = QList<int>();
+static QList<QObject *> qquickitemviewtransition_emptyTargets = QList<QObject *>();
+
 
 class QQuickItemViewTransitionJob : public QDeclarativeTransitionManager
 {
 public:
-    QQuickItemViewTransitionJob(QQuickItemViewTransitioner *transitioner);
+    QQuickItemViewTransitionJob();
     ~QQuickItemViewTransitionJob();
 
-    void startTransition(QQuickViewItem *item, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem);
+    void startTransition(QQuickViewItem *item, QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem);
 
     QQuickItemViewTransitioner *m_transitioner;
     QQuickViewItem *m_item;
@@ -65,59 +68,41 @@ protected:
 };
 
 
-QQuickItemViewTransitionJob::QQuickItemViewTransitionJob(QQuickItemViewTransitioner *transitioner)
-    : m_transitioner(transitioner)
-    , m_item(0), m_type(QQuickItemViewTransitioner::NoTransition), m_isTarget(false)
+QQuickItemViewTransitionJob::QQuickItemViewTransitionJob()
+    : m_transitioner(0)
+    , m_item(0)
+    , m_type(QQuickItemViewTransitioner::NoTransition)
+    , m_isTarget(false)
 {
 }
 
 QQuickItemViewTransitionJob::~QQuickItemViewTransitionJob()
 {
+    if (m_transitioner)
+        m_transitioner->runningJobs.remove(this);
 }
 
-void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem)
+void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem)
 {
+    if (type == QQuickItemViewTransitioner::NoTransition)
+        return;
     if (!item) {
         qWarning("startTransition(): invalid item");
         return;
     }
-
-    QDeclarativeTransition *trans = 0;
-    switch (type) {
-    case QQuickItemViewTransitioner::NoTransition:
-        break;
-    case QQuickItemViewTransitioner::PopulateTransition:
-        trans = m_transitioner->populateTransition;
-        break;
-    case QQuickItemViewTransitioner::AddTransition:
-        if (isTargetItem)
-            trans = m_transitioner->addTransition;
-        else
-            trans = (m_transitioner->addDisplacedTransition && m_transitioner->addDisplacedTransition->enabled()) ?
-                        m_transitioner->addDisplacedTransition : m_transitioner->displacedTransition;
-        break;
-    case QQuickItemViewTransitioner::MoveTransition:
-        if (isTargetItem)
-            trans = m_transitioner->moveTransition;
-        else
-            trans = (m_transitioner->moveDisplacedTransition && m_transitioner->moveDisplacedTransition->enabled()) ?
-                        m_transitioner->moveDisplacedTransition : m_transitioner->displacedTransition;
-        break;
-    case QQuickItemViewTransitioner::RemoveTransition:
-        if (isTargetItem)
-            trans = m_transitioner->removeTransition;
-        else
-            trans = (m_transitioner->removeDisplacedTransition && m_transitioner->removeDisplacedTransition->enabled()) ?
-                        m_transitioner->removeDisplacedTransition : m_transitioner->displacedTransition;
-        break;
+    if (!transitioner) {
+        qWarning("startTransition(): invalid transitioner");
+        return;
     }
 
+    QDeclarativeTransition *trans = transitioner->transitionObject(type, isTargetItem);
     if (!trans) {
         qWarning("QQuickItemView: invalid view transition!");
         return;
     }
 
     m_item = item;
+    m_transitioner = transitioner;
     m_toPos = to;
     m_type = type;
     m_isTarget = isTargetItem;
@@ -128,23 +113,8 @@ void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickIt
         attached->m_index = item->index;
         attached->m_item = item->item;
         attached->m_destination = to;
-        switch (type) {
-        case QQuickItemViewTransitioner::NoTransition:
-            break;
-        case QQuickItemViewTransitioner::PopulateTransition:
-        case QQuickItemViewTransitioner::AddTransition:
-            attached->m_targetIndexes = m_transitioner->addTransitionIndexes;
-            attached->m_targetItems = m_transitioner->addTransitionTargets;
-            break;
-        case QQuickItemViewTransitioner::MoveTransition:
-            attached->m_targetIndexes = m_transitioner->moveTransitionIndexes;
-            attached->m_targetItems = m_transitioner->moveTransitionTargets;
-            break;
-        case QQuickItemViewTransitioner::RemoveTransition:
-            attached->m_targetIndexes = m_transitioner->removeTransitionIndexes;
-            attached->m_targetItems = m_transitioner->removeTransitionTargets;
-            break;
-        }
+        attached->m_targetIndexes = m_transitioner->targetIndexes(type);
+        attached->m_targetItems = m_transitioner->targetItems(type);
         emit attached->indexChanged();
         emit attached->itemChanged();
         emit attached->destinationChanged();
@@ -156,6 +126,7 @@ void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickIt
     actions << QDeclarativeAction(item->item, QLatin1String("x"), QVariant(to.x()));
     actions << QDeclarativeAction(item->item, QLatin1String("y"), QVariant(to.y()));
 
+    m_transitioner->runningJobs << this;
     QDeclarativeTransitionManager::transition(actions, trans, item->item);
 }
 
@@ -164,7 +135,7 @@ void QQuickItemViewTransitionJob::finished()
     QDeclarativeTransitionManager::finished();
 
     if (m_transitioner)
-        m_transitioner->finishedTransition(m_item);
+        m_transitioner->finishedTransition(this, m_item);
 
     m_item = 0;
     m_toPos.setX(0);
@@ -183,6 +154,12 @@ QQuickItemViewTransitioner::QQuickItemViewTransitioner()
     , changeListener(0)
     , usePopulateTransition(false)
 {
+}
+
+QQuickItemViewTransitioner::~QQuickItemViewTransitioner()
+{
+    for (QSet<QQuickItemViewTransitionJob *>::iterator it = runningJobs.begin(); it != runningJobs.end(); ++it)
+        (*it)->m_transitioner = 0;
 }
 
 bool QQuickItemViewTransitioner::canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const
@@ -241,8 +218,78 @@ void QQuickItemViewTransitioner::transitionNextReposition(QQuickViewItem *item, 
     }
 }
 
-void QQuickItemViewTransitioner::finishedTransition(QQuickViewItem *item)
+QDeclarativeTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget)
 {
+    if (type == QQuickItemViewTransitioner::NoTransition)
+        return 0;
+
+    if (type == PopulateTransition)
+        asTarget = true;    // no separate displaced transition
+
+    QDeclarativeTransition *trans = 0;
+    switch (type) {
+    case NoTransition:
+        break;
+    case PopulateTransition:
+        trans = populateTransition;
+        break;
+    case AddTransition:
+        trans = asTarget ? addTransition : addDisplacedTransition;
+        break;
+    case MoveTransition:
+        trans = asTarget ? moveTransition : moveDisplacedTransition;
+        break;
+    case RemoveTransition:
+        trans = asTarget ? removeTransition : removeDisplacedTransition;
+        break;
+    }
+
+    if (!asTarget && (!trans || !trans->enabled()))
+        trans = displacedTransition;
+    if (trans && trans->enabled())
+        return trans;
+    return 0;
+}
+
+const QList<int> &QQuickItemViewTransitioner::targetIndexes(QQuickItemViewTransitioner::TransitionType type) const
+{
+    switch (type) {
+    case QQuickItemViewTransitioner::NoTransition:
+        break;
+    case QQuickItemViewTransitioner::PopulateTransition:
+    case QQuickItemViewTransitioner::AddTransition:
+        return addTransitionIndexes;
+    case QQuickItemViewTransitioner::MoveTransition:
+        return moveTransitionIndexes;
+    case QQuickItemViewTransitioner::RemoveTransition:
+        return removeTransitionIndexes;
+    }
+
+    return qquickitemviewtransition_emptyIndexes;
+}
+
+const QList<QObject *> &QQuickItemViewTransitioner::targetItems(QQuickItemViewTransitioner::TransitionType type) const
+{
+    switch (type) {
+    case QQuickItemViewTransitioner::NoTransition:
+        break;
+    case QQuickItemViewTransitioner::PopulateTransition:
+    case QQuickItemViewTransitioner::AddTransition:
+        return addTransitionTargets;
+    case QQuickItemViewTransitioner::MoveTransition:
+        return moveTransitionTargets;
+    case QQuickItemViewTransitioner::RemoveTransition:
+        return removeTransitionTargets;
+    }
+
+    return qquickitemviewtransition_emptyTargets;
+}
+
+void QQuickItemViewTransitioner::finishedTransition(QQuickItemViewTransitionJob *job, QQuickViewItem *item)
+{
+    if (!runningJobs.contains(job))
+        return;
+    runningJobs.remove(job);
     if (item) {
         item->finishedTransition();
         if (changeListener)
@@ -263,10 +310,6 @@ QQuickViewItem::QQuickViewItem(QQuickItem *i)
 
 QQuickViewItem::~QQuickViewItem()
 {
-    if (transition) {
-        transition->m_item = 0;
-        transition->m_transitioner = 0;
-    }
     delete transition;
 }
 
@@ -385,7 +428,7 @@ void QQuickViewItem::startTransition(QQuickItemViewTransitioner *transitioner)
 
     if (!transition || transition->m_type != nextTransitionType || transition->m_isTarget != isTransitionTarget) {
         delete transition;
-        transition = new QQuickItemViewTransitionJob(transitioner);
+        transition = new QQuickItemViewTransitionJob;
     }
 
     // if item is not already moving somewhere, set it to not move anywhere
@@ -393,7 +436,7 @@ void QQuickViewItem::startTransition(QQuickItemViewTransitioner *transitioner)
     if (!nextTransitionToSet)
         moveTo(item->pos());
 
-    transition->startTransition(this, nextTransitionType, nextTransitionTo, isTransitionTarget);
+    transition->startTransition(this, transitioner, nextTransitionType, nextTransitionTo, isTransitionTarget);
     nextTransitionType = QQuickItemViewTransitioner::NoTransition;
 }
 
