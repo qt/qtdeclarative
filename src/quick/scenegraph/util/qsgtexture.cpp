@@ -496,6 +496,8 @@ void QSGPlainTexture::bind()
                  ? m_image
                  : m_image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
+    updateBindOptions(m_dirty_bind_options);
+
 #ifdef QT_OPENGL_ES
         swizzleBGRAToRGBA(&tmp);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.constBits());
@@ -512,7 +514,6 @@ void QSGPlainTexture::bind()
     m_texture_size = QSize(w, h);
     m_texture_rect = QRectF(0, 0, 1, 1);
 
-    updateBindOptions(m_dirty_bind_options);
     m_dirty_bind_options = false;
 }
 
