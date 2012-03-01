@@ -62,7 +62,7 @@ static bool qmlEnableV4 = true;
 
 using namespace QDeclarativeJS;
 QV4CompilerPrivate::QV4CompilerPrivate()
-: _function(0) , _block(0) , _discarded(false)
+    : _function(0) , _block(0) , _discarded(false), registerCount(0)
 {
 }
 
@@ -74,6 +74,7 @@ void QV4CompilerPrivate::trace(int line, int column)
     bytecode.clear();
 
     this->currentReg = _function->tempCount;
+    this->registerCount = qMax(this->registerCount, this->currentReg);
 
     foreach (IR::BasicBlock *bb, _function->basicBlocks) {
         if (! bb->isTerminated() && (bb->index + 1) < _function->basicBlocks.size())
@@ -1118,7 +1119,7 @@ bool QV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
         qerr << endl;
     }
 
-    if (discarded || subscriptionIds.count() > 0xFFFF || registeredStrings.count() > 0xFFFF)
+    if (discarded || subscriptionIds.count() > 0xFFFF || registeredStrings.count() > 0xFFFF || registerCount > 31)
         return false;
 
     return true;
