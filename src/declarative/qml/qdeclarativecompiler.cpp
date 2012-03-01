@@ -3613,12 +3613,15 @@ bool QDeclarativeCompiler::completeComponentBuild()
             binding.property->type != qMetaTypeId<QDeclarativeBinding*>()) {
             binding.dataType = BindingReference::V8;
             sharedBindings.append(b);
+
+            if (componentStats)
+                componentStats->componentStat.sharedBindings.append(b->value->location);
         } else {
             binding.dataType = BindingReference::QtScript;
-        }
 
-        if (componentStats)
-            componentStats->componentStat.scriptBindings.append(b->value->location);
+            if (componentStats)
+                componentStats->componentStat.scriptBindings.append(b->value->location);
+        }
     }
 
     if (!sharedBindings.isEmpty()) {
@@ -3693,6 +3696,25 @@ void QDeclarativeCompiler::dumpStats()
             output.append(QByteArray::number(stat.optimizedBindings.at(ii).start.line));
             output.append(":");
             output.append(QByteArray::number(stat.optimizedBindings.at(ii).start.column));
+            output.append(") ");
+        }
+        if (!output.isEmpty())
+            qWarning().nospace() << output.constData();
+        }
+
+        qWarning().nospace() << "        Shared Bindings:    " << stat.sharedBindings.count();
+        {
+        QByteArray output;
+        for (int ii = 0; ii < stat.sharedBindings.count(); ++ii) {
+            if (0 == (ii % 10)) {
+                if (ii) output.append("\n");
+                output.append("            ");
+            }
+
+            output.append("(");
+            output.append(QByteArray::number(stat.sharedBindings.at(ii).start.line));
+            output.append(":");
+            output.append(QByteArray::number(stat.sharedBindings.at(ii).start.column));
             output.append(") ");
         }
         if (!output.isEmpty())

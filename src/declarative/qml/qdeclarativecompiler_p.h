@@ -450,6 +450,7 @@ private:
 
         int ids;
         QList<QDeclarativeScript::LocationSpan> scriptBindings;
+        QList<QDeclarativeScript::LocationSpan> sharedBindings;
         QList<QDeclarativeScript::LocationSpan> optimizedBindings;
         int objects;
     };
