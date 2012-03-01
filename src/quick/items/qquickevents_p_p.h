@@ -163,8 +163,11 @@ public:
     QQuickMouseEventEx(const QMouseEvent &event)
         : QMouseEvent(event)
     {
-        if (extended(&event))
-            setVelocity(extended(&event)->velocity());
+        const QQuickMouseEventEx *eventEx = extended(&event);
+        if (eventEx) {
+            setVelocity(eventEx->velocity());
+            setCapabilities(eventEx->capabilities());
+        }
     }
 
     static const QQuickMouseEventEx *extended(const QMouseEvent *e) {
@@ -186,8 +189,15 @@ public:
     }
     QVector2D velocity() const { return _velocity; }
 
+    void setCapabilities(QTouchDevice::Capabilities caps) {
+        setExtended();
+        _capabilities = caps;
+    }
+    QTouchDevice::Capabilities capabilities() const { return _capabilities; }
+
 private:
     QVector2D _velocity;
+    QTouchDevice::Capabilities _capabilities;
 };
 
 
