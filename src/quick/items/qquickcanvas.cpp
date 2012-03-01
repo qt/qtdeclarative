@@ -378,10 +378,17 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
                 me.setTimestamp(event->timestamp());
                 me.setAccepted(false);
-                deliverMouseEvent(&me);
-                if (me.isAccepted()) {
-                    touchMouseId = p.id();
-                    event->setAccepted(true);
+                if (!mouseGrabberItem) {
+                    if (deliverInitialMousePressEvent(rootItem, &me)) {
+                        touchMouseId = p.id();
+                        event->setAccepted(true);
+                    }
+                } else {
+                    deliverMouseEvent(&me);
+                    if (me.isAccepted()) {
+                        touchMouseId = p.id();
+                        event->setAccepted(true);
+                    }
                 }
             }
             QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
@@ -391,8 +398,9 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
             if (me.isAccepted()) {
                 touchMouseId = p.id();
                 event->setAccepted(true);
-                break;
             }
+            if (touchMouseId != -1)
+                break;
         } else if (p.id() == touchMouseId) {
             if (p.state() & Qt::TouchPointMoved) {
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseMove, p);
