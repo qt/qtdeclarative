@@ -46,12 +46,7 @@ Rectangle {
     focus: true
 
     property real offset: 0
-    property real margin: 10
-
-    Keys.onLeftPressed: myText.horizontalAlignment = Text.AlignLeft
-    Keys.onUpPressed: myText.horizontalAlignment = Text.AlignHCenter
-    Keys.onRightPressed: myText.horizontalAlignment = Text.AlignRight
-    Keys.onDownPressed: myText.horizontalAlignment = Text.AlignJustify
+    property real margin: 8
 
     Text {
         id: myText
@@ -59,47 +54,18 @@ Rectangle {
         anchors.margins: 10
         wrapMode: Text.WordWrap
         font.family: "Times New Roman"
-        font.pixelSize: 13
+        font.pixelSize: 14
         textFormat: Text.StyledText
         horizontalAlignment: Text.AlignJustify
 
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at ante dui sed eu egestas est facilis <a href=\"www.nokia.com\">www.nokia.com</a>.<br/>Curabitur ante est, pulvinar quis adipiscing a, iaculis id ipsum. Phasellus id neque id velit facilisis cursus ac sit amet nibh. Donec enim arcu, pharetra non semper nec, iaculis eget elit. Nunc blandit condimentum odio vel egestas.<br><ul type=\"bullet\"><li>Coffee<ol type=\"a\"><li>Espresso<li><b>Cappuccino</b><li><i>Flat White</i><li>Latte</ol><li>Juice<ol type=\"1\"><li>Orange</li><li>Apple</li><li>Pineapple</li><li>Tomato</li></ol></li></ul><p><font color=\"#434343\"><i>Proin consectetur <b>sapien</b> in ipsum lacinia sit amet mattis orci interdum. Quisque vitae accumsan lectus. Ut nisi turpis, sollicitudin ut dignissim id, fermentum ac est. Maecenas nec libero leo. Sed ac leo eget ipsum ultricies viverra sit amet eu orci. Praesent et tortor risus, viverra accumsan sapien. Sed faucibus eleifend lectus, sed euismod urna porta eu. Aenean ultricies lectus ut orci dictum quis convallis nisi ultrices. Nunc elit mi, iaculis a porttitor rutrum, venenatis malesuada nisi. Suspendisse turpis quam, euismod non imperdiet et, rutrum nec ligula. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at ante dui <a href=\"www.nokia.com\">www.nokia.com</a>.<br/>Curabitur ante est, pulvinar quis adipiscing a, iaculis id ipsum. Nunc blandit condimentum odio vel egestas.<br><ul type=\"bullet\"><li>Coffee<ol type=\"a\"><li>Espresso<li>Cappuccino<li>Latte</ol><li>Juice<ol type=\"1\"><li>Orange</li><li>Apple</li><li>Pineapple</li><li>Tomato</li></ol></li></ul><p><font color=\"#434343\"><i>Proin consectetur <b>sapien</b> in ipsum lacinia sit amet mattis orci interdum. Quisque vitae accumsan lectus. Ut nisi turpis, sollicitudin ut dignissim id, fermentum ac est. Maecenas nec libero leo. Sed ac leo eget ipsum ultricies viverra sit amet eu orci. Praesent et tortor risus, viverra accumsan sapien. Sed faucibus eleifend lectus, sed euismod urna porta eu. Quisque vitae accumsan lectus. Ut nisi turpis, sollicitudin ut dignissim id, fermentum ac est. Maecenas nec libero leo. Sed ac leo eget ipsum ultricies viverra sit amet eu orci."
 
         onLineLaidOut: {
-            line.width = width / 2  - (2 * margin)
-            if (line.number === 30) {
-                main.offset = line.y
-            }
-            if (line.number >= 30) {
+            line.width = width / 2  - (margin)
+
+            if (line.y + line.height >= height) {
+                line.y -= height - margin
                 line.x = width / 2 + margin
-                line.y -= main.offset
-            }
-            if ((line.y + line.height) > rect.y && line.y < (rect.y + rect.height)) {
-                if (line.number < 30)
-                    line.width = Math.min((rect.x - line.x), line.width)
-                else {
-                    line.x = Math.max((rect.x + rect.width), width / 2 + margin)
-                    line.width = Math.min((width - margin - line.x), line.width)
-                }
-            }
-        }
-
-        Item {
-            id: rect
-            x: 28; y: 20
-            width: 60; height: 60
-
-            Rectangle {
-                anchors { fill: parent; leftMargin: 2; rightMargin: 2 }
-                color: "lightsteelblue"; opacity: 0.3
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                drag.target: rect
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onClicked: mouse.button == Qt.RightButton ? myText.font.pixelSize -= 1 : myText.font.pixelSize += 1
-                onPositionChanged: myText.doLayout()
             }
         }
     }

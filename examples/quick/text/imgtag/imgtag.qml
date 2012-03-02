@@ -44,6 +44,7 @@ Rectangle {
     id: main
     width: 320; height: 480
     focus: true
+    color: "#dedede"
 
     property var hAlign: Text.AlignLeft
 
@@ -62,18 +63,13 @@ Rectangle {
                 text: "This is a <b>happy</b> face<img src=\"images/face-smile.png\">"
             }
             TextWithImage {
-                text: "This is a <b>very<img src=\"images/face-smile-big.png\" align=\"middle\"/>happy</b> face aligned in the middle."
-            }
-            TextWithImage {
-                elide: Text.ElideRight
-                maximumLineCount: 2
-                text: "This is a sad face aligned to the top. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc rutrum dui pretium ipsum malesuada venenatis. Nulla sed turpis risus. Integer sit amet odio quis mauris varius venenatis<img src=\"images/face-sad.png\" align=\"top\">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc rutrum dui pretium ipsum malesuada venenatis. Nulla sed turpis risus. Integer sit amet odio quis mauris varius venenatis."
+                text: "This is a <b>very<img src=\"images/face-smile-big.png\" align=\"middle\"/>happy</b> face vertically aligned in the middle."
             }
             TextWithImage {
                 text: "This is a tiny<img src=\"images/face-smile.png\" width=\"15\" height=\"15\">happy face."
             }
             TextWithImage {
-                text: "This is a starfish<img src=\"images/starfish_2.png\" width=\"50\" height=\"50\" align=\"top\">aligned to the top and another one<img src=\"images/heart200.png\" width=\"50\" height=\"50\">aligned to the bottom."
+                text: "This is a<img src=\"images/starfish_2.png\" width=\"50\" height=\"50\" align=\"top\">aligned to the top and a<img src=\"images/heart200.png\" width=\"50\" height=\"50\">aligned to the bottom."
             }
             TextWithImage {
                 text: "Qt logos<img src=\"images/qtlogo.png\" width=\"55\" height=\"60\" align=\"middle\"><img src=\"images/qtlogo.png\" width=\"37\" height=\"40\" align=\"middle\"><img src=\"images/qtlogo.png\" width=\"18\" height=\"20\" align=\"middle\">aligned in the middle with different sizes."

@@ -50,16 +50,6 @@
     feature. You can run and observe the behavior of each example.
 */
 /*!
-    \title QML Examples - Text
-    \example declarative/text
-    \brief This is a collection of QML examples
-    \image qml-text-example.png
-
-    This is a collection of  small QML examples relating to text. Each example is
-    a small QML file, usually containing or emphasizing a particular element or
-    feature. You can run and observe the behavior of each example.
-*/
-/*!
     \title QML Examples - Touch Interaction
     \example declarative/touchinteraction
     \brief This is a collection of QML examples
