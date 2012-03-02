@@ -44,7 +44,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qquickcanvascontext_p.h>
 #include <private/qquickcontext2d_p.h>
-#include <private/qquickcanvasitemnode_p.h>
+#include <qsgsimpletexturenode.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
 #include <qqmlinfo.h>
@@ -560,17 +560,16 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     if (!d->contextInitialized)
         return 0;
 
-    QQuickCanvasItemNode *node = static_cast<QQuickCanvasItemNode*>(oldNode);
+    QSGSimpleTextureNode *node = static_cast<QSGSimpleTextureNode*>(oldNode);
     if (!node) {
-        node = new QQuickCanvasItemNode;
+        node = new QSGSimpleTextureNode;
     }
 
     if (d->renderStrategy == QQuickCanvasItem::Cooperative)
         d->context->sync();
 
     node->setTexture(d->context->texture());
-    node->setSize(d->canvasWindow.size());
-    node->update();
+    node->setRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
     return node;
 }
 
