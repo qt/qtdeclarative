@@ -39,230 +39,31 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "content"
+import "../../shared" as Examples
 
-Rectangle {
-    id: page
-    width: 320; height: 480
-    Flickable {
+/*!
+    \title QtQuick Examples - Positioners
+    \example quick/positioners
+    \brief This is a collection of QML Positioner examples.
+    \image qml-positioners-example.png
+
+    This is a collection of small QML examples relating to positioners. Each example is
+    a small QML file emphasizing a particular element or feature.
+
+    Transitions shows animated transistions when showing or hiding items in a positioner.
+
+    Attached Properties show using the attached property to determine where in a positioner an item is.
+*/
+
+Item {
+    height: 480
+    width: 320
+    Examples.LauncherList {
+        id: ll
         anchors.fill: parent
-    contentWidth: 420; contentHeight: 420
-
-    Column {
-        id: layout1
-        y: 0
-        move: Transition {
-            NumberAnimation { properties: "y"; easing.type: Easing.OutBounce }
+        Component.onCompleted: {
+            addExample("Transitions", "Fluidly shows and hides elements",  Qt.resolvedUrl("positioners-transitions.qml"));
+            addExample("Attached Properties", "Knows where it is in the positioner", Qt.resolvedUrl("positioners-attachedproperties.qml"));
         }
-        add: Transition {
-            NumberAnimation { properties: "y"; easing.type: Easing.OutQuad }
-        }
-
-        Rectangle { color: "red"; width: 100; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueV1
-            visible: opacity != 0
-            width: 100; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "green"; width: 100; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueV2
-            visible: opacity != 0
-            width: 100; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "orange"; width: 100; height: 50; border.color: "black"; radius: 15 }
-    }
-
-    Row {
-        id: layout2
-        y: 300 
-        move: Transition {
-            NumberAnimation { properties: "x"; easing.type: Easing.OutBounce }
-        }
-        add: Transition {
-            NumberAnimation { properties: "x"; easing.type: Easing.OutQuad }
-        }
-
-        Rectangle { color: "red"; width: 50; height: 100; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueH1
-            visible: opacity != 0
-            width: 50; height: 100
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "green"; width: 50; height: 100; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueH2
-            visible: opacity != 0
-            width: 50; height: 100
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "orange"; width: 50; height: 100; border.color: "black"; radius: 15 }
-    }
-
-    Button {
-        x: 135; y: 90
-        text: "Remove"
-        icon: "del.png"
-
-        onClicked: {
-            blueH2.opacity = 0
-            blueH1.opacity = 0
-            blueV1.opacity = 0
-            blueV2.opacity = 0
-            blueG1.opacity = 0
-            blueG2.opacity = 0
-            blueG3.opacity = 0
-            blueF1.opacity = 0
-            blueF2.opacity = 0
-            blueF3.opacity = 0
-        }
-    }
-
-    Button {
-        x: 145; y: 140
-        text: "Add"
-        icon: "add.png"
-
-        onClicked: {
-            blueH2.opacity = 1
-            blueH1.opacity = 1
-            blueV1.opacity = 1
-            blueV2.opacity = 1
-            blueG1.opacity = 1
-            blueG2.opacity = 1
-            blueG3.opacity = 1
-            blueF1.opacity = 1
-            blueF2.opacity = 1
-            blueF3.opacity = 1
-        }
-    }
-
-    Grid {
-        x: 260; y: 0
-        columns: 3
-
-        move: Transition {
-            NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
-        }
-
-        add: Transition {
-            NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
-        }
-
-        Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueG1
-            visible: opacity != 0
-            width: 50; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "green"; width: 50; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueG2
-            visible: opacity != 0
-            width: 50; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "orange"; width: 50; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueG3
-            visible: opacity != 0
-            width: 50; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
-        Rectangle { color: "green"; width: 50; height: 50; border.color: "black"; radius: 15 }
-        Rectangle { color: "orange"; width: 50; height: 50; border.color: "black"; radius: 15 }
-    }
-
-    Flow {
-        id: layout4
-        x: 260; y: 250; width: 150
-
-        move: Transition {
-            NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
-        }
-
-        add: Transition {
-            NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
-        }
-
-        Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueF1
-            visible: opacity != 0
-            width: 60; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "green"; width: 30; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle {
-            id: blueF2
-            visible: opacity != 0
-            width: 60; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "orange"; width: 50; height: 50; border.color: "black"; radius: 15 }
-
-        Rectangle { 
-            id: blueF3
-            visible: opacity != 0
-            width: 40; height: 50
-            color: "lightsteelblue"
-            border.color: "black"
-            radius: 15 
-            Behavior on opacity { NumberAnimation {} }
-        }
-
-        Rectangle { color: "red"; width: 80; height: 50; border.color: "black"; radius: 15 }
-    }
-
     }
 }

@@ -41,12 +41,12 @@
 import QtQuick 2.0
 
 Rectangle {
-  width: 400
-  height: 100
+  width: 320
+  height: 480
 
-  // Create row with four rectangles, the fourth one is hidden
-  Row {
-    id: row
+  // Create column with four rectangles, the fourth one is hidden
+  Column {
+    id: column
 
     Rectangle {
       id: red
@@ -54,10 +54,19 @@ Rectangle {
       width: 100
       height: 100
 
+      Text {
+          anchors.left: parent.right
+          anchors.leftMargin: 20
+          anchors.verticalCenter: parent.verticalCenter
+          text: "Index: " + parent.Positioner.index
+          + (parent.Positioner.isFirstItem ? " (First)" : "")
+          + (parent.Positioner.isLastItem ? " (Last)" : "")
+      }
+
       // When mouse is clicked, display the values of the positioner
       MouseArea {
         anchors.fill: parent
-        onClicked: row.showInfo(red.Positioner)
+        onClicked: column.showInfo(red.Positioner)
       }
     }
 
@@ -67,10 +76,19 @@ Rectangle {
       width: 100
       height: 100
 
+      Text {
+          anchors.left: parent.right
+          anchors.leftMargin: 20
+          anchors.verticalCenter: parent.verticalCenter
+          text: "Index: " + parent.Positioner.index
+          + (parent.Positioner.isFirstItem ? " (First)" : "")
+          + (parent.Positioner.isLastItem ? " (Last)" : "")
+      }
+
       // When mouse is clicked, display the values of the positioner
       MouseArea {
         anchors.fill: parent
-        onClicked: row.showInfo(green.Positioner)
+        onClicked: column.showInfo(green.Positioner)
       }
     }
 
@@ -80,10 +98,19 @@ Rectangle {
       width: 100
       height: 100
 
+      Text {
+          anchors.left: parent.right
+          anchors.leftMargin: 20
+          anchors.verticalCenter: parent.verticalCenter
+          text: "Index: " + parent.Positioner.index
+          + (parent.Positioner.isFirstItem ? " (First)" : "")
+          + (parent.Positioner.isLastItem ? " (Last)" : "")
+      }
+
       // When mouse is clicked, display the values of the positioner
       MouseArea {
         anchors.fill: parent
-        onClicked: row.showInfo(blue.Positioner)
+        onClicked: column.showInfo(blue.Positioner)
       }
     }
 
