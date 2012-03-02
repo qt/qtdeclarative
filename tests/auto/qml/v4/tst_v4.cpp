@@ -225,17 +225,34 @@ void tst_v4::conditionalExpr()
 // NestedObject::result.
 void tst_v4::nestedObjectAccess()
 {
-    QQmlComponent component(&engine, testFileUrl("nestedObjectAccess.qml"));
+    {
+        QQmlComponent component(&engine, testFileUrl("nestedObjectAccess.qml"));
 
-    QObject *o = component.create();
-    QVERIFY(o != 0);
+        QObject *o = component.create();
+        QVERIFY(o != 0);
 
-    ResultObject *ro = qobject_cast<ResultObject *>(o);
-    QVERIFY(ro != 0);
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
 
-    QCOMPARE(ro->result(), 37);
+        QCOMPARE(ro->result(), 37);
 
-    delete o;
+        delete o;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("nestedObjectAccess2.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QEXPECT_FAIL("","QTBUG-24606", Continue);
+        QCOMPARE(ro->result(), 37);
+
+        delete o;
+    }
 }
 
 void tst_v4::subscriptionsInConditionalExpressions()
