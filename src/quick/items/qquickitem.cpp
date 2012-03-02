@@ -2121,7 +2121,7 @@ QQuickItem *QQuickItemPrivate::InitializationState::getFocusScope(QQuickItem *it
 {
     if (!focusScope) {
         QQuickItem *fs = item->parentItem();
-        while (!fs->isFocusScope())
+        while (fs->parentItem() && !fs->isFocusScope())
             fs = fs->parentItem();
         focusScope = fs;
     }
