@@ -74,7 +74,7 @@ public:
     virtual void clientMessage(const QByteArray &message) = 0;
 };
 
-#define QDeclarativeInspectorInterface_iid "org.qt-project.Qt."
+#define QDeclarativeInspectorInterface_iid "org.qt-project.Qt.QDeclarativeInspectorInterface"
 
 Q_DECLARE_INTERFACE(QDeclarativeInspectorInterface, QDeclarativeInspectorInterface_iid)
 
