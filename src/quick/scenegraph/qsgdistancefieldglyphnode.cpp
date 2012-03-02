@@ -71,10 +71,7 @@ QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
     delete m_material;
 
     if (m_glyph_cache) {
-        QVector<quint32> glyphIndexes;
-        for (int i = 0; i < m_allGlyphs.count(); ++i)
-            glyphIndexes.append(m_allGlyphs.at(i).glyphIndex);
-        m_glyph_cache->release(glyphIndexes);
+        m_glyph_cache->release(m_glyphs.glyphIndexes());
         m_glyph_cache->unregisterGlyphNode(this);
         m_glyph_cache->unregisterOwnerElement(ownerElement());
     }
@@ -123,15 +120,9 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     }
     m_glyph_cache->populate(glyphs.glyphIndexes());
 
-    const QVector<quint32> &glyphIndexes = m_glyphs.glyphIndexes();
-    const QVector<QPointF> &glyphPositions = m_glyphs.positions();
-    for (int i = 0; i < glyphIndexes.count(); ++i) {
-        GlyphInfo gi;
-        gi.glyphIndex = glyphIndexes.at(i);
-        gi.position = glyphPositions.at(i);
-        m_allGlyphs.append(gi);
-        m_allGlyphIndexesLookup.insert(gi.glyphIndex);
-    }
+    const QVector<quint32> glyphIndexes = m_glyphs.glyphIndexes();
+    for (int i = 0; i < glyphIndexes.count(); ++i)
+        m_allGlyphIndexesLookup.insert(glyphIndexes.at(i));
 
     m_dirtyGeometry = true;
     m_dirtyMaterial = true;
@@ -205,34 +196,43 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
     Q_ASSERT(g->indexType() == GL_UNSIGNED_SHORT);
 
-    QHash<const QSGDistanceFieldGlyphCache::Texture *, QList<GlyphInfo> > glyphsInOtherTextures;
+    QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo> glyphsInOtherTextures;
+
+    const QVector<quint32> indexes = m_glyphs.glyphIndexes();
+    const QVector<QPointF> positions = m_glyphs.positions();
 
     QVector<QSGGeometry::TexturedPoint2D> vp;
-    vp.reserve(m_allGlyphs.size() * 4);
+    vp.reserve(indexes.size() * 4);
     QVector<ushort> ip;
-    ip.reserve(m_allGlyphs.size() * 6);
+    ip.reserve(indexes.size() * 6);
 
     QPointF margins(2, 2);
     QPointF texMargins = margins / m_glyph_cache->fontScale();
 
-    for (int i = 0; i < m_allGlyphs.size(); ++i) {
-        GlyphInfo glyphInfo = m_allGlyphs.at(i);
-        QSGDistanceFieldGlyphCache::TexCoord c = m_glyph_cache->glyphTexCoord(glyphInfo.glyphIndex);
+
+    for (int i = 0; i < indexes.size(); ++i) {
+        const int glyphIndex = indexes.at(i);
+        QSGDistanceFieldGlyphCache::TexCoord c = m_glyph_cache->glyphTexCoord(glyphIndex);
 
         if (c.isNull())
             continue;
 
-        const QSGDistanceFieldGlyphCache::Texture *texture = m_glyph_cache->glyphTexture(glyphInfo.glyphIndex);
+        const QPointF position = positions.at(i);
+
+        const QSGDistanceFieldGlyphCache::Texture *texture = m_glyph_cache->glyphTexture(glyphIndex);
         if (texture->textureId && !m_texture)
             m_texture = texture;
 
         if (m_texture != texture) {
-            if (texture->textureId)
-                glyphsInOtherTextures[texture].append(glyphInfo);
+            if (texture->textureId) {
+                GlyphInfo &glyphInfo = glyphsInOtherTextures[texture];
+                glyphInfo.indexes.append(glyphIndex);
+                glyphInfo.positions.append(position);
+            }
             continue;
         }
 
-        QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphInfo.glyphIndex);
+        QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex);
 
         if (!metrics.isNull() && !c.isNull()) {
             metrics.width += margins.x() * 2;
@@ -245,8 +245,8 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
             c.height += texMargins.y() * 2;
         }
 
-        qreal x = glyphInfo.position.x() + metrics.baselineX + m_position.x();
-        qreal y = glyphInfo.position.y() - metrics.baselineY + m_position.y();
+        qreal x = position.x() + metrics.baselineX + m_position.x();
+        qreal y = position.y() - metrics.baselineY + m_position.y();
 
         m_boundingRect |= QRectF(x, y, metrics.width, metrics.height);
 
@@ -261,7 +261,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         float ty2 = ty1 + c.height;
 
         if (m_baseLine.isNull())
-            m_baseLine = glyphInfo.position;
+            m_baseLine = position;
 
         int o = vp.size();
 
@@ -286,7 +286,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         ip.append(o + 0);
     }
 
-    QHash<const QSGDistanceFieldGlyphCache::Texture *, QList<GlyphInfo> >::const_iterator ite = glyphsInOtherTextures.constBegin();
+    QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo>::const_iterator ite = glyphsInOtherTextures.constBegin();
     while (ite != glyphsInOtherTextures.constEnd()) {
         QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *>::iterator subIt = m_subNodes.find(ite.key());
         if (subIt == m_subNodes.end()) {
@@ -300,17 +300,9 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
             subIt = m_subNodes.insert(ite.key(), subNode);
         }
 
-        QVector<quint32> glyphIndexes;
-        QVector<QPointF> positions;
-        const QList<GlyphInfo> &subNodeGlyphs = ite.value();
-        for (int i = 0; i < subNodeGlyphs.count(); ++i) {
-            const GlyphInfo &info = subNodeGlyphs.at(i);
-            glyphIndexes.append(info.glyphIndex);
-            positions.append(info.position);
-        }
         QGlyphRun subNodeGlyphRun(m_glyphs);
-        subNodeGlyphRun.setGlyphIndexes(glyphIndexes);
-        subNodeGlyphRun.setPositions(positions);
+        subNodeGlyphRun.setGlyphIndexes(ite->indexes);
+        subNodeGlyphRun.setPositions(ite->positions);
 
         subIt.value()->setGlyphs(m_originalPosition, subNodeGlyphRun);
         subIt.value()->update();
