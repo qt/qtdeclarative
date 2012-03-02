@@ -549,8 +549,12 @@ void QQuickCanvasItem::updatePolish()
         }
     }
 
-    if (d->contextInitialized)
-        d->context->flush();
+    if (d->contextInitialized) {
+        if (d->renderStrategy == QQuickCanvasItem::Cooperative)
+            update();
+        else
+            d->context->flush();
+    }
 }
 
 QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -566,7 +570,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     }
 
     if (d->renderStrategy == QQuickCanvasItem::Cooperative)
-        d->context->sync();
+        d->context->flush();
 
     node->setTexture(d->context->texture());
     node->setRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));

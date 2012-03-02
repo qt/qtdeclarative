@@ -228,7 +228,7 @@ Rectangle {
            c.toDataURL();
            wait(100);
 
-           compare(c.paintedCount, 1);
+           compare(c.paintedCount, 2);
            compare(c.paintCount, 1);
            c.destroy();
 

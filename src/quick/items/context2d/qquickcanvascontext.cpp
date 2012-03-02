@@ -66,10 +66,6 @@ void QQuickCanvasContext::flush()
 {
 }
 
-void QQuickCanvasContext::sync()
-{
-}
-
 QT_END_NAMESPACE
 
 

@@ -195,13 +195,14 @@ void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize&
 
 void QQuickContext2DTexture::paintWithoutTiles()
 {
-    QLockedCommandBuffer ccb = m_context->buffer();
+    QQuickContext2DCommandBuffer* ccb = m_context->nextBuffer();
 
-    if (ccb->isEmpty())
+    if (!ccb || ccb->isEmpty())
         return;
 
     QPaintDevice* device = beginPainting();
     if (!device) {
+        delete ccb;
         endPainting();
         return;
     }
@@ -218,6 +219,7 @@ void QQuickContext2DTexture::paintWithoutTiles()
 
     ccb->replay(&p, m_state);
     ccb->clear();
+    delete ccb;
 
     endPainting();
 
@@ -269,7 +271,12 @@ void QQuickContext2DTexture::paint()
 
             if (beginPainting()) {
                 QQuickContext2D::State oldState = m_state;
-                QLockedCommandBuffer ccb = m_context->buffer();
+                QQuickContext2DCommandBuffer* ccb = m_context->nextBuffer();
+                if (!ccb || ccb->isEmpty()) {
+                    endPainting();
+                    delete ccb;
+                    return;
+                }
                 foreach (QQuickContext2DTile* tile, m_tiles) {
                     bool dirtyTile = false, dirtyCanvas = false, smooth = false;
 
@@ -296,6 +303,7 @@ void QQuickContext2DTexture::paint()
                     compositeTile(tile);
                 }
                 ccb->clear();
+                delete ccb;
                 endPainting();
                 m_state = oldState;
                 markDirtyTexture();
