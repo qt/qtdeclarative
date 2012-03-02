@@ -182,6 +182,8 @@ public:
 
     Q_INVOKABLE int drop();
 
+    bool event(QEvent *event);
+
 public Q_SLOTS:
     void start(QQmlV8Function *);
     void cancel();
