@@ -4613,7 +4613,7 @@ void tst_qqmlecmascript::sequenceConversionWrite()
         QVERIFY(seq != 0);
 
         // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
-        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QVariantList to void");
+        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QVariantList to an unregistered type");
         QTest::ignoreMessage(QtWarningMsg, warningOne.toAscii().constData());
 
         QMetaObject::invokeMethod(object, "performTest");

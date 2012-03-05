@@ -2920,7 +2920,8 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                 }
 
                 metaType = QMetaType::type(customTypeName);
-                Q_ASSERT(metaType != 0);
+                Q_ASSERT(metaType != QMetaType::UnknownType);
+                Q_ASSERT(metaType != QMetaType::Void);
             }
 
             if (p->type == Object::DynamicProperty::Var)
@@ -3293,10 +3294,11 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
     if (typeName.endsWith('*'))
         flags |= QML_ALIAS_FLAG_PTR;
 
-    if (!type) {
+    if (type == QMetaType::UnknownType) {
         Q_ASSERT(!typeName.isEmpty());
         type = QMetaType::type(typeName);
-        Q_ASSERT(type != 0);
+        Q_ASSERT(type != QMetaType::UnknownType);
+        Q_ASSERT(type != QMetaType::Void);
     }
 
     QQmlVMEMetaData::AliasData aliasData = { idObject->idIndex, propIdx, flags };

@@ -226,14 +226,14 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             continue;
         }
 
-        QVariant::Type t = (QVariant::Type)QMetaType::type(type.constData());
+        int t = QMetaType::type(type.constData());
         if (QQmlMetaType::isQObject(t)) {
             types[ii] = QMetaType::QObjectStar;
             QMetaPropertyBuilder prop = mob.addProperty(name, "QObject*");
             prop.setWritable(false);
         } else {
             QByteArray propType = type;
-            if (t >= QVariant::UserType || t == QVariant::Invalid) {
+            if (t >= int(QVariant::UserType) || t == QMetaType::UnknownType || t == QMetaType::Void) {
                 QByteArray scope;
                 QByteArray name;
                 int scopeIdx = propType.lastIndexOf("::");

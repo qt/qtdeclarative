@@ -1147,7 +1147,7 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
                 return false;
         } else if (v.userType() != QVariant::Int && v.userType() != QVariant::UInt) {
             int enumMetaTypeId = QMetaType::type(QByteArray(menum.scope() + QByteArray("::") + menum.name()));
-            if ((enumMetaTypeId == 0) || (v.userType() != enumMetaTypeId) || !v.constData())
+            if ((enumMetaTypeId == QMetaType::UnknownType) || (v.userType() != enumMetaTypeId) || !v.constData())
                 return false;
             v = QVariant(*reinterpret_cast<const int *>(v.constData()));
         }

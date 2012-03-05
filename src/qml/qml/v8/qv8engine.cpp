@@ -318,6 +318,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
 
     if (type < QMetaType::User) {
         switch (QMetaType::Type(type)) {
+            case QMetaType::UnknownType:
             case QMetaType::Void:
                 return v8::Undefined();
             case QMetaType::Bool:
@@ -1117,6 +1118,7 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
 
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
+    case QMetaType::UnknownType:
     case QMetaType::Void:
         return v8::Undefined();
     case QMetaType::Bool:

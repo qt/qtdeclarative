@@ -449,7 +449,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
             return retn;
     }
 
-    if (property.propType == QVariant::Invalid) {
+    if (property.propType == QMetaType::UnknownType) {
         QMetaProperty p = object->metaObject()->property(property.coreIndex);
         qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
@@ -687,10 +687,14 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
             if (v.userType() == QVariant::Invalid) valueType = "null";
             else valueType = QMetaType::typeName(v.userType());
 
+            const char *targetTypeName = QMetaType::typeName(property->propType);
+            if (!targetTypeName)
+                targetTypeName = "an unregistered type";
+
             QString error = QLatin1String("Cannot assign ") +
                             QLatin1String(valueType) +
                             QLatin1String(" to ") +
-                            QLatin1String(QMetaType::typeName(property->propType));
+                            QLatin1String(targetTypeName);
             v8::ThrowException(v8::Exception::Error(engine->toString(error)));
         }
     }
@@ -1986,7 +1990,7 @@ void *CallArgument::dataPtr()
 void CallArgument::initAsType(int callType)
 {
     if (type != 0) { cleanup(); type = 0; }
-    if (callType == 0) return;
+    if (callType == QMetaType::UnknownType) return;
 
     if (callType == qMetaTypeId<QJSValue>()) {
         qjsValuePtr = new (&allocData) QJSValue();
@@ -2012,6 +2016,9 @@ void CallArgument::initAsType(int callType)
     } else if (callType == qMetaTypeId<QQmlV8Handle>()) {
         type = callType;
         handlePtr = new (&allocData) QQmlV8Handle;
+    } else if (callType == QMetaType::Void) {
+        type = -1;
+        qvariantPtr = new (&allocData) QVariant();
     } else {
         type = -1;
         qvariantPtr = new (&allocData) QVariant(callType, (void *)0);
@@ -2066,6 +2073,8 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
     } else if (callType == qMetaTypeId<QQmlV8Handle>()) {
         handlePtr = new (&allocData) QQmlV8Handle(QQmlV8Handle::fromHandle(value));
         type = callType;
+    } else if (callType == QMetaType::Void) {
+        *qvariantPtr = QVariant();
     } else {
         qvariantPtr = new (&allocData) QVariant();
         type = -1;
