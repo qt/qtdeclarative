@@ -46,9 +46,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheManager *cacheManager)
-    : m_material(0)
-    , m_glyph_cacheManager(cacheManager)
+QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGContext *context)
+    : m_context(context)
+    , m_material(0)
     , m_glyph_cache(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
     , m_style(QQuickText::Normal)
@@ -59,7 +59,6 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheM
 {
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
-    setPreferredAntialiasingMode(cacheManager->defaultAntialiasingMode());
     setFlag(UsePreprocess);
 #ifdef QML_RUNTIME_TESTING
     description = QLatin1String("glyphs");
@@ -108,7 +107,7 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     m_glyphs = glyphs;
 
     QSGDistanceFieldGlyphCache *oldCache = m_glyph_cache;
-    m_glyph_cache = m_glyph_cacheManager->cache(m_glyphs.rawFont());
+    m_glyph_cache = m_context->distanceFieldGlyphCache(m_glyphs.rawFont());
     if (m_glyph_cache != oldCache) {
         Q_ASSERT(ownerElement() != 0);
         if (oldCache) {
@@ -290,7 +289,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     while (ite != glyphsInOtherTextures.constEnd()) {
         QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *>::iterator subIt = m_subNodes.find(ite.key());
         if (subIt == m_subNodes.end()) {
-            QSGDistanceFieldGlyphNode *subNode = new QSGDistanceFieldGlyphNode(m_glyph_cacheManager);
+            QSGDistanceFieldGlyphNode *subNode = new QSGDistanceFieldGlyphNode(m_context);
             subNode->setOwnerElement(m_ownerElement);
             subNode->setColor(m_color);
             subNode->setStyle(m_style);

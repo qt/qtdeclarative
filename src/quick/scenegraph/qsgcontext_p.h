@@ -95,7 +95,7 @@ public:
 
     virtual void renderNextFrame(QSGRenderer *renderer, GLuint fboId);
 
-    virtual QSGDistanceFieldGlyphCache *createDistanceFieldGlyphCache(const QRawFont &font);
+    virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();

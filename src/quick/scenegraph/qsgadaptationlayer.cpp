@@ -222,7 +222,7 @@ void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &g
     }
 
     if (!invalidatedGlyphs.isEmpty()) {
-        QLinkedList<QSGDistanceFieldGlyphNode *>::iterator it = m_registeredNodes.begin();
+        QLinkedList<QSGDistanceFieldGlyphConsumer *>::iterator it = m_registeredNodes.begin();
         while (it != m_registeredNodes.end()) {
             (*it)->invalidateGlyphs(invalidatedGlyphs);
             ++it;
@@ -268,7 +268,7 @@ void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs
     }
 
     if (!invalidatedGlyphs.isEmpty()) {
-        QLinkedList<QSGDistanceFieldGlyphNode *>::iterator it = m_registeredNodes.begin();
+        QLinkedList<QSGDistanceFieldGlyphConsumer*>::iterator it = m_registeredNodes.begin();
         while (it != m_registeredNodes.end()) {
             (*it)->invalidateGlyphs(invalidatedGlyphs);
             ++it;
@@ -295,6 +295,5 @@ void QSGDistanceFieldGlyphCache::updateTexture(GLuint oldTex, GLuint newTex, con
         }
     }
 }
-
 
 QT_END_NAMESPACE

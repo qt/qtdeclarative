@@ -97,6 +97,11 @@ public:
     QSGContextPrivate()
         : gl(0)
         , distanceFieldCacheManager(0)
+    #ifndef QT_OPENGL_ES
+        , distanceFieldAntialiasing(QSGGlyphNode::HighQualitySubPixelAntialiasing)
+    #else
+        , distanceFieldAntialiasing(QSGGlyphNode::GrayAntialiasing)
+    #endif
         , flashMode(qmlFlashMode())
         , distanceFieldDisabled(qmlDisableDistanceField())
     {
@@ -114,6 +119,8 @@ public:
     QHash<QQuickTextureFactory *, QSGTexture *> textures;
 
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
+
+    QSGDistanceFieldGlyphNode::AntialiasingMode distanceFieldAntialiasing;
 
     bool flashMode;
     float renderAlpha;
@@ -142,6 +149,17 @@ public:
 QSGContext::QSGContext(QObject *parent) :
     QObject(*(new QSGContextPrivate), parent)
 {
+    Q_D(QSGContext);
+    // ### Do something with these before final release...
+    static bool doSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing"));
+    static bool doLowQualSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing-lowq"));
+    static bool doGray = qApp->arguments().contains(QLatin1String("--text-gray-antialiasing"));
+    if (doSubpixel)
+        d->distanceFieldAntialiasing = QSGGlyphNode::HighQualitySubPixelAntialiasing;
+    else if (doLowQualSubpixel)
+        d->distanceFieldAntialiasing = QSGGlyphNode::LowQualitySubPixelAntialiasing;
+    else if (doGray)
+       d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
 }
 
 
@@ -271,39 +289,47 @@ QSGImageNode *QSGContext::createImageNode()
 /*!
     Factory function for scene graph backends of the distance-field glyph cache.
  */
-QSGDistanceFieldGlyphCache *QSGContext::createDistanceFieldGlyphCache(const QRawFont &font)
+QSGDistanceFieldGlyphCache *QSGContext::distanceFieldGlyphCache(const QRawFont &font)
 {
     Q_D(QSGContext);
 
-    QPlatformIntegration *platformIntegration = QGuiApplicationPrivate::platformIntegration();
-    if (platformIntegration != 0
-        && platformIntegration->hasCapability(QPlatformIntegration::SharedGraphicsCache)) {
-        QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-        if (!fe->faceId().filename.isEmpty()) {
-            QByteArray keyName = fe->faceId().filename;
-            if (font.style() != QFont::StyleNormal)
-                keyName += QByteArray(" I");
-            if (font.weight() != QFont::Normal)
-                keyName += " " + QByteArray::number(font.weight());
-            keyName += QByteArray(" DF");
-            QPlatformSharedGraphicsCache *sharedGraphicsCache =
-                    platformIntegration->createPlatformSharedGraphicsCache(keyName);
+    if (!d->distanceFieldCacheManager)
+        d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager;
 
-            if (sharedGraphicsCache != 0) {
-                sharedGraphicsCache->ensureCacheInitialized(keyName,
-                                                            QPlatformSharedGraphicsCache::OpenGLTexture,
-                                                            QPlatformSharedGraphicsCache::Alpha8);
+    QSGDistanceFieldGlyphCache *cache = d->distanceFieldCacheManager->cache(font);
+    if (!cache) {
+        QPlatformIntegration *platformIntegration = QGuiApplicationPrivate::platformIntegration();
+        if (platformIntegration != 0
+            && platformIntegration->hasCapability(QPlatformIntegration::SharedGraphicsCache)) {
+            QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
+            if (!fe->faceId().filename.isEmpty()) {
+                QByteArray keyName = fe->faceId().filename;
+                if (font.style() != QFont::StyleNormal)
+                    keyName += QByteArray(" I");
+                if (font.weight() != QFont::Normal)
+                    keyName += " " + QByteArray::number(font.weight());
+                keyName += QByteArray(" DF");
+                QPlatformSharedGraphicsCache *sharedGraphicsCache =
+                        platformIntegration->createPlatformSharedGraphicsCache(keyName);
 
-                return new QSGSharedDistanceFieldGlyphCache(keyName,
-                                                            sharedGraphicsCache,
-                                                            d->distanceFieldCacheManager,
-                                                            glContext(),
-                                                            font);
+                if (sharedGraphicsCache != 0) {
+                    sharedGraphicsCache->ensureCacheInitialized(keyName,
+                                                                QPlatformSharedGraphicsCache::OpenGLTexture,
+                                                                QPlatformSharedGraphicsCache::Alpha8);
+
+                    cache = new QSGSharedDistanceFieldGlyphCache(keyName,
+                                                                sharedGraphicsCache,
+                                                                d->distanceFieldCacheManager,
+                                                                glContext(),
+                                                                font);
+                }
             }
         }
+        if (!cache)
+            cache = new QSGDefaultDistanceFieldGlyphCache(d->distanceFieldCacheManager, glContext(), font);
+        d->distanceFieldCacheManager->insertCache(font, cache);
     }
-
-    return new QSGDefaultDistanceFieldGlyphCache(d->distanceFieldCacheManager, glContext(), font);
+    return cache;
 }
 
 /*!
@@ -313,25 +339,11 @@ QSGGlyphNode *QSGContext::createGlyphNode()
 {
     Q_D(QSGContext);
 
-    // ### Do something with these before final release...
-    static bool doSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing"));
-    static bool doLowQualSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing-lowq"));
-    static bool doGray = qApp->arguments().contains(QLatin1String("--text-gray-antialiasing"));
-
     if (d->distanceFieldDisabled) {
         return new QSGDefaultGlyphNode;
     } else {
-        if (!d->distanceFieldCacheManager) {
-            d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager(this);
-            if (doSubpixel)
-                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::HighQualitySubPixelAntialiasing);
-            else if (doLowQualSubpixel)
-                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::LowQualitySubPixelAntialiasing);
-            else if (doGray)
-               d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::GrayAntialiasing);
-        }
-
-        QSGGlyphNode *node = new QSGDistanceFieldGlyphNode(d->distanceFieldCacheManager);
+        QSGDistanceFieldGlyphNode *node = new QSGDistanceFieldGlyphNode(this);
+        node->setPreferredAntialiasingMode(d->distanceFieldAntialiasing);
         return node;
     }
 }

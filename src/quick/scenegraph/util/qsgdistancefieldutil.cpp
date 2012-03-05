@@ -62,16 +62,10 @@ static float defaultAntialiasingSpreadFunc(float glyphScale)
     return range / glyphScale;
 }
 
-QSGDistanceFieldGlyphCacheManager::QSGDistanceFieldGlyphCacheManager(QSGContext *c)
-    : sgCtx(c)
-    , m_threshold_func(defaultThresholdFunc)
+QSGDistanceFieldGlyphCacheManager::QSGDistanceFieldGlyphCacheManager()
+    : m_threshold_func(defaultThresholdFunc)
     , m_antialiasingSpread_func(defaultAntialiasingSpreadFunc)
 {
-#ifndef QT_OPENGL_ES
-    m_defaultAntialiasingMode = QSGGlyphNode::HighQualitySubPixelAntialiasing;
-#else
-    m_defaultAntialiasingMode = QSGGlyphNode::GrayAntialiasing;
-#endif
 }
 
 QSGDistanceFieldGlyphCacheManager::~QSGDistanceFieldGlyphCacheManager()
@@ -86,10 +80,17 @@ QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCacheManager::cache(const QRawF
                   .arg(font.styleName())
                   .arg(font.weight())
                   .arg(font.style());
-    QHash<QString , QSGDistanceFieldGlyphCache *>::iterator cache = m_caches.find(key);
-    if (cache == m_caches.end())
-        cache = m_caches.insert(key, sgCtx->createDistanceFieldGlyphCache(font));
-    return cache.value();
+    return m_caches.value(key, 0);
+}
+
+void QSGDistanceFieldGlyphCacheManager::insertCache(const QRawFont &font, QSGDistanceFieldGlyphCache *cache)
+{
+    QString key = QString::fromLatin1("%1_%2_%3_%4")
+                  .arg(font.familyName())
+                  .arg(font.styleName())
+                  .arg(font.weight())
+                  .arg(font.style());
+    m_caches.insert(key, cache);
 }
 
 QT_END_NAMESPACE

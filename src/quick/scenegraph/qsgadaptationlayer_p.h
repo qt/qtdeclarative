@@ -134,6 +134,14 @@ protected:
     QQuickItem *m_ownerElement;
 };
 
+class Q_QUICK_EXPORT QSGDistanceFieldGlyphConsumer
+{
+public:
+    virtual ~QSGDistanceFieldGlyphConsumer() {}
+
+    virtual void invalidateGlyphs(const QVector<quint32> &glyphs) = 0;
+};
+
 class Q_QUICK_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
@@ -195,8 +203,8 @@ public:
 
     void update();
 
-    void registerGlyphNode(QSGDistanceFieldGlyphNode *node) { m_registeredNodes.append(node); }
-    void unregisterGlyphNode(QSGDistanceFieldGlyphNode *node) { m_registeredNodes.removeOne(node); }
+    void registerGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.append(node); }
+    void unregisterGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.removeOne(node); }
 
     virtual void registerOwnerElement(QQuickItem *ownerElement);
     virtual void unregisterOwnerElement(QQuickItem *ownerElement);
@@ -247,7 +255,7 @@ private:
     QList<Texture> m_textures;
     QHash<glyph_t, GlyphData> m_glyphsData;
     QDataBuffer<glyph_t> m_pendingGlyphs;
-    QLinkedList<QSGDistanceFieldGlyphNode*> m_registeredNodes;
+    QLinkedList<QSGDistanceFieldGlyphConsumer*> m_registeredNodes;
 
     static Texture s_emptyTexture;
 };
