@@ -72,6 +72,7 @@ private slots:
     void hoverPosition();
     void hoverPropagation();
     void hoverVisible();
+    void disableAfterPress();
 
 private:
     QQuickView *createView();
@@ -797,6 +798,110 @@ void tst_QQuickMouseArea::hoverVisible()
 
     QEXPECT_FAIL("", "QTBUG-24282", Continue);
     QCOMPARE(QPointF(mouseTracker->mouseX(), mouseTracker->mouseY()), QPointF(10,32));
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::disableAfterPress()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("dragging.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWait(20);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMouseArea *mouseArea = canvas->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
+    QQuickDrag *drag = mouseArea->drag();
+    QVERIFY(mouseArea != 0);
+    QVERIFY(drag != 0);
+
+    QSignalSpy mousePositionSpy(mouseArea, SIGNAL(positionChanged(QQuickMouseEvent*)));
+    QSignalSpy mousePressSpy(mouseArea, SIGNAL(pressed(QQuickMouseEvent*)));
+    QSignalSpy mouseReleaseSpy(mouseArea, SIGNAL(released(QQuickMouseEvent*)));
+
+    // target
+    QQuickItem *blackRect = canvas->rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect == drag->target());
+
+    QVERIFY(!drag->active());
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+
+    QTRY_COMPARE(mousePressSpy.count(), 1);
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
+
+    // First move event triggers drag, second is acted upon.
+    // This is due to possibility of higher stacked area taking precedence.
+
+    QTest::mouseMove(canvas, QPoint(111,111));
+    QTest::qWait(50);
+    QTest::mouseMove(canvas, QPoint(122,122));
+
+    QTRY_COMPARE(mousePositionSpy.count(), 2);
+
+    QVERIFY(drag->active());
+    QCOMPARE(blackRect->x(), 72.0);
+    QCOMPARE(blackRect->y(), 72.0);
+
+    mouseArea->setEnabled(false);
+
+    // move should still be acted upon
+    QTest::mouseMove(canvas, QPoint(133,133));
+    QTest::qWait(50);
+    QTest::mouseMove(canvas, QPoint(144,144));
+
+    QTRY_COMPARE(mousePositionSpy.count(), 4);
+
+    QVERIFY(drag->active());
+    QCOMPARE(blackRect->x(), 94.0);
+    QCOMPARE(blackRect->y(), 94.0);
+
+    QVERIFY(mouseArea->pressed());
+    QVERIFY(mouseArea->hovered());
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(144,144));
+
+    QTRY_COMPARE(mouseReleaseSpy.count(), 1);
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 94.0);
+    QCOMPARE(blackRect->y(), 94.0);
+
+    QVERIFY(!mouseArea->pressed());
+    QVERIFY(!mouseArea->hovered()); // since hover is not enabled
+
+    // Next press will be ignored
+    blackRect->setX(50);
+    blackRect->setY(50);
+
+    mousePressSpy.clear();
+    mousePositionSpy.clear();
+    mouseReleaseSpy.clear();
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(50);
+    QCOMPARE(mousePressSpy.count(), 0);
+
+    QTest::mouseMove(canvas, QPoint(111,111));
+    QTest::qWait(50);
+    QTest::mouseMove(canvas, QPoint(122,122));
+    QTest::qWait(50);
+
+    QCOMPARE(mousePositionSpy.count(), 0);
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(122,122));
+    QTest::qWait(50);
+
+    QCOMPARE(mouseReleaseSpy.count(), 0);
 
     delete canvas;
 }
