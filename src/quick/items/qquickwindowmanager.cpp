@@ -188,7 +188,7 @@ public:
 
     void canvasDestroyed(QQuickCanvas *canvas);
 
-    void paint(QQuickCanvas *canvas);
+    void exposureChanged(QQuickCanvas *canvas);
     QImage grab(QQuickCanvas *canvas);
     void resize(QQuickCanvas *canvas, const QSize &size);
     void handleDeferredUpdate();
@@ -297,7 +297,7 @@ public:
 
     void initializeGL();
     void renderCanvas(QQuickCanvas *canvas);
-    void paint(QQuickCanvas *canvas);
+    void exposureChanged(QQuickCanvas *canvas);
     QImage grab(QQuickCanvas *canvas);
     void resize(QQuickCanvas *canvas, const QSize &size);
     void wakeup();
@@ -333,14 +333,21 @@ QQuickWindowManager *QQuickWindowManager::instance()
     static QQuickWindowManager *theInstance;
 
     if (!theInstance) {
-        bool fancy = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL);
+
+        theInstance = QSGContext::createWindowManager();
+
+        bool fancy = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
         if (qmlNoThreadedRenderer())
             fancy = false;
+
         if (qmlFixedAnimationStep())
             QUnifiedTimer::instance(true)->setConsistentTiming(true);
-        theInstance = fancy
-                ? (QQuickWindowManager*) new QQuickRenderThreadSingleContextWindowManager
-                : (QQuickWindowManager*) new QQuickTrivialWindowManager;
+
+        if (!theInstance) {
+            theInstance = fancy
+                    ? (QQuickWindowManager*) new QQuickRenderThreadSingleContextWindowManager
+                    : (QQuickWindowManager*) new QQuickTrivialWindowManager;
+        }
     }
     return theInstance;
 }
@@ -932,26 +939,15 @@ void QQuickRenderThreadSingleContextWindowManager::animationStopped()
 }
 
 
-void QQuickRenderThreadSingleContextWindowManager::paint(QQuickCanvas *canvas)
+void QQuickRenderThreadSingleContextWindowManager::exposureChanged(QQuickCanvas *canvas)
 {
     Q_UNUSED(canvas);
 #ifdef THREAD_DEBUG
-    printf("GUI: paint called: %p\n", canvas);
+    printf("GUI: exposure changed: %p\n", canvas);
 #endif
 
-    lockInGui();
-    exhaustSyncEvent();
-
-    isPaintCompleted = false;
-    while (isRunning() && !isPaintCompleted) {
-        if (isRenderBlocked)
-            wake();
-        wait();
-    }
-    unlockInGui();
-
 #ifdef THREAD_DEBUG
-    printf("GUI: paint done: %p\n", canvas);
+    printf("GUI: exposure changed done: %p\n", canvas);
 #endif
 }
 
@@ -1234,13 +1230,8 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         maybeUpdate(canvas);
 }
 
-void QQuickTrivialWindowManager::paint(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::exposureChanged(QQuickCanvas *canvas)
 {
-    if (!m_windows.contains(canvas))
-        return;
-
-    m_windows[canvas].updatePending = true;
-    renderCanvas(canvas);
 }
 
 QImage QQuickTrivialWindowManager::grab(QQuickCanvas *canvas)

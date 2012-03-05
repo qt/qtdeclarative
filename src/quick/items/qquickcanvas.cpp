@@ -166,7 +166,7 @@ QQuickRootItem::QQuickRootItem()
 void QQuickCanvas::exposeEvent(QExposeEvent *)
 {
     Q_D(QQuickCanvas);
-    d->windowManager->paint(this);
+    d->windowManager->exposureChanged(this);
 }
 
 void QQuickCanvas::resizeEvent(QResizeEvent *)
