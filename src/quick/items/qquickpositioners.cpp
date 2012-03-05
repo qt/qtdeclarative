@@ -246,11 +246,8 @@ void QQuickBasePositioner::prePositioning()
                     if (addedIndex < 0)
                         addedIndex = posItem.index;
                     PositionedItem *theItem = &positionedItems[positionedItems.count()-1];
-
                     d->transitioner->transitionNextReposition(theItem,
                             QQuickItemViewTransitioner::AddTransition, true);
-                    d->transitioner->addTransitionIndexes << posItem.index;
-                    d->transitioner->addTransitionTargets << posItem.item;
                 }
             }
         } else {
@@ -273,8 +270,6 @@ void QQuickBasePositioner::prePositioning()
                         addedIndex = item->index;
                     d->transitioner->transitionNextReposition(&positionedItems[positionedItems.count()-1],
                             QQuickItemViewTransitioner::AddTransition, true);
-                    d->transitioner->addTransitionIndexes << item->index;
-                    d->transitioner->addTransitionTargets << item->item;
                 }
             } else {
                 item->isNew = false;
@@ -307,12 +302,11 @@ void QQuickBasePositioner::prePositioning()
 
     if (d->transitioner) {
         QRectF viewBounds;
-        for (int i=0; i<positionedItems.count(); i++) {
-            if (positionedItems[i].prepareTransition(viewBounds))
-                positionedItems[i].startTransition(d->transitioner);
-        }
-        d->transitioner->addTransitionIndexes.clear();
-        d->transitioner->addTransitionTargets.clear();
+        for (int i=0; i<positionedItems.count(); i++)
+            positionedItems[i].prepareTransition(d->transitioner, viewBounds);
+        for (int i=0; i<positionedItems.count(); i++)
+            positionedItems[i].startTransition(d->transitioner);
+        d->transitioner->resetTargetLists();
     }
 
     d->doingPositioning = false;

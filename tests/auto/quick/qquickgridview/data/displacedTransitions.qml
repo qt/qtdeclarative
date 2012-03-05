@@ -38,6 +38,7 @@ Rectangle {
                 text: number
             }
             color: GridView.isCurrentItem ? "lightsteelblue" : "white"
+            border.width: 1
 
             onXChanged: checkPos()
             onYChanged: checkPos()
@@ -61,6 +62,17 @@ Rectangle {
         property int targetTransitionsDone
         property int displaceTransitionsDone
 
+        property var displacedTargetIndexes: new Array()
+        property var displacedTargetItems: new Array()
+
+        // for QDeclarativeListProperty types
+        function copyList(propList) {
+            var temp = new Array()
+            for (var i=0; i<propList.length; i++)
+                temp.push(propList[i])
+            return temp
+        }
+
         objectName: "grid"
         focus: true
         anchors.centerIn: parent
@@ -80,6 +92,12 @@ Rectangle {
             id: displaced
             enabled: displacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        grid.displacedTargetIndexes.push(displaced.ViewTransition.targetIndexes)
+                        grid.displacedTargetItems.push(grid.copyList(displaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: displaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: displaced_transitionVia.y; duration: root.duration }
@@ -93,6 +111,12 @@ Rectangle {
             id: addDisplaced
             enabled: addDisplacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        grid.displacedTargetIndexes.push(addDisplaced.ViewTransition.targetIndexes)
+                        grid.displacedTargetItems.push(grid.copyList(addDisplaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: addDisplaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: addDisplaced_transitionVia.y; duration: root.duration }
@@ -106,6 +130,12 @@ Rectangle {
             id: moveDisplaced
             enabled: moveDisplacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        grid.displacedTargetIndexes.push(moveDisplaced.ViewTransition.targetIndexes)
+                        grid.displacedTargetItems.push(grid.copyList(moveDisplaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: moveDisplaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: moveDisplaced_transitionVia.y; duration: root.duration }
@@ -119,6 +149,12 @@ Rectangle {
             id: removeDisplaced
             enabled: removeDisplacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        grid.displacedTargetIndexes.push(removeDisplaced.ViewTransition.targetIndexes)
+                        grid.displacedTargetItems.push(grid.copyList(removeDisplaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: removeDisplaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: removeDisplaced_transitionVia.y; duration: root.duration }

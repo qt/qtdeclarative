@@ -4637,11 +4637,26 @@ void tst_QQuickGridView::displacedTransitions()
         case ListChange::SetContentY:
             break;
     }
+
+    QVariantList resultTargetIndexes = gridview->property("displacedTargetIndexes").toList();
+    QVariantList resultTargetItems = gridview->property("displacedTargetItems").toList();
+
     if ((useDisplaced && displacedEnabled)
             || (useAddDisplaced && addDisplacedEnabled)
             || (useMoveDisplaced && moveDisplacedEnabled)
             || (useRemoveDisplaced && removeDisplacedEnabled)) {
         QTRY_VERIFY(gridview->property("displaceTransitionsDone").toBool());
+
+        // check the correct number of target items and indexes were received
+        QCOMPARE(resultTargetIndexes.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetIndexes.count(); i++)
+            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().count(), change.count);
+        QCOMPARE(resultTargetItems.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetItems.count(); i++)
+            QCOMPARE(resultTargetItems[i].toList().count(), change.count);
+    } else {
+        QCOMPARE(resultTargetIndexes.count(), 0);
+        QCOMPARE(resultTargetItems.count(), 0);
     }
 
     if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)

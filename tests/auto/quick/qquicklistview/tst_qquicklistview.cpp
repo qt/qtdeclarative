@@ -5648,11 +5648,26 @@ void tst_QQuickListView::displacedTransitions()
         case ListChange::SetContentY:
             break;
     }
+
+    QVariantList resultTargetIndexes = listview->property("displacedTargetIndexes").toList();
+    QVariantList resultTargetItems = listview->property("displacedTargetItems").toList();
+
     if ((useDisplaced && displacedEnabled)
             || (useAddDisplaced && addDisplacedEnabled)
             || (useMoveDisplaced && moveDisplacedEnabled)
             || (useRemoveDisplaced && removeDisplacedEnabled)) {
         QTRY_VERIFY(listview->property("displaceTransitionsDone").toBool());
+
+        // check the correct number of target items and indexes were received
+        QCOMPARE(resultTargetIndexes.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetIndexes.count(); i++)
+            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().count(), change.count);
+        QCOMPARE(resultTargetItems.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetItems.count(); i++)
+            QCOMPARE(resultTargetItems[i].toList().count(), change.count);
+    } else {
+        QCOMPARE(resultTargetIndexes.count(), 0);
+        QCOMPARE(resultTargetItems.count(), 0);
     }
 
     if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)
