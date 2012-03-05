@@ -1,0 +1,127 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** GNU Lesser General Public License Usage
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights. These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
+**
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qqmlaccessors_p.h"
+
+#include "qqmldata_p.h"
+#include "qqmlnotifier_p.h"
+
+QT_BEGIN_NAMESPACE
+
+struct AccessorProperties {
+    AccessorProperties();
+
+    QReadWriteLock lock;
+    QHash<const QMetaObject *, QQmlAccessorProperties::Properties> properties;
+};
+
+Q_GLOBAL_STATIC(AccessorProperties, accessorProperties)
+
+QML_PRIVATE_ACCESSOR(QObject, QString, objectName, objectName)
+
+static void QObject_objectNameNotifier(QObject *object, intptr_t, QQmlNotifier **notifier)
+{
+    *notifier = QQmlData::get(object, true)->objectNameNotifier();
+}
+
+static QQmlAccessors QObject_objectName = { QObject_objectNameRead,
+                                                    QObject_objectNameNotifier };
+
+QML_DECLARE_PROPERTIES(QObject) {
+    { QML_PROPERTY_NAME(objectName), 0, &QObject_objectName }
+};
+
+static void buildNameMask(QQmlAccessorProperties::Properties &properties)
+{
+    quint32 mask = 0;
+
+    for (int ii = 0; ii < properties.count; ++ii) {
+        Q_ASSERT(strlen(properties.properties[ii].name) == properties.properties[ii].nameLength);
+        Q_ASSERT(properties.properties[ii].nameLength > 0);
+
+        mask |= (1 << qMin(31U, properties.properties[ii].nameLength - 1));
+    }
+
+    properties.nameMask = mask;
+}
+
+AccessorProperties::AccessorProperties()
+{
+    // Pre-seed QObject::objectName accessor
+    typedef QQmlAccessorProperties::Properties P;
+    properties.insert(&QObject::staticMetaObject,
+                      P(qqml_accessor_properties_QObject,
+                        sizeof(qqml_accessor_properties_QObject) /
+                        sizeof(QQmlAccessorProperties::Property)));
+}
+
+QQmlAccessorProperties::Properties::Properties(Property *properties, int count)
+: count(count), properties(properties)
+{
+    buildNameMask(*this);
+}
+
+QQmlAccessorProperties::Properties
+QQmlAccessorProperties::properties(const QMetaObject *mo)
+{
+    AccessorProperties *This = accessorProperties();
+
+    QReadLocker lock(&This->lock);
+    return This->properties.value(mo);
+}
+
+void QQmlAccessorProperties::registerProperties(const QMetaObject *mo, int count,
+                                                        Property *props)
+{
+    Q_ASSERT(count > 0);
+
+    Properties properties(props, count);
+
+    AccessorProperties *This = accessorProperties();
+
+    QWriteLocker lock(&This->lock);
+
+    Q_ASSERT(!This->properties.contains(mo) || This->properties.value(mo) == properties);
+
+    This->properties.insert(mo, properties);
+}
+
+QT_END_NAMESPACE

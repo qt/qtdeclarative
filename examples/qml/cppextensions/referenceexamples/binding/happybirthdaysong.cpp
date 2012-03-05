@@ -49,7 +49,7 @@ HappyBirthdaySong::HappyBirthdaySong(QObject *parent)
     timer->start(1000);
 }
 
-void HappyBirthdaySong::setTarget(const QDeclarativeProperty &p)
+void HappyBirthdaySong::setTarget(const QQmlProperty &p)
 {
     m_target = p;
 }

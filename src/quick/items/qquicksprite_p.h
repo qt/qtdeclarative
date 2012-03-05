@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,8 +45,8 @@
 #include <QObject>
 #include <QUrl>
 #include <QVariantMap>
-#include <QDeclarativeListProperty>
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QQmlListProperty>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 #include "qquickspriteengine_p.h"
 #include <QDebug>
 
@@ -312,7 +312,7 @@ private:
     int m_frameDuration;
     int m_frameDurationVariation;
     bool m_frameSync;
-    QDeclarativePixmap m_pix;
+    QQuickPixmap m_pix;
 };
 
 QT_END_NAMESPACE

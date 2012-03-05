@@ -38,13 +38,13 @@ depending on the characteristics of your existing UI code.
 \section1 Integrating with a \l{QWidget}-based UI
 
 If you have an existing QWidget-based UI, QML widgets can be integrated into
-it using QDeclarativeView. QDeclarativeView is a subclass of QWidget so you
+it using QQuickView. QQuickView is a subclass of QWidget so you
 can add it to your user interface like any other QWidget. Use
-QDeclarativeView::setSource() to load a QML file into the view, then add the
+QQuickView::setSource() to load a QML file into the view, then add the
 view to your UI:
 
 \code
-QDeclarativeView *qmlView = new QDeclarativeView;
+QQuickView *qmlView = new QQuickView;
 qmlView->setSource(QUrl::fromLocalFile("myqml.qml"));
 
 QWidget *widget = myExistingWidget();
@@ -52,11 +52,11 @@ QVBoxLayout *layout = new QVBoxLayout(widget);
 layout->addWidget(qmlView);
 \endcode
 
-The one drawback to this approach is that QDeclarativeView is slower to initialize
-and uses more memory than a QWidget, and creating large numbers of QDeclarativeView
+The one drawback to this approach is that QQuickView is slower to initialize
+and uses more memory than a QWidget, and creating large numbers of QQuickView
 objects may lead to performance degradation. If this is the case, it may be
 better to rewrite your widgets in QML, and load the widgets from a main QML widget
-instead of using QDeclarativeView.
+instead of using QQuickView.
 
 Keep in mind that QWidgets were designed for a different type of user interface
 than QML, so it is not always a good idea to port a QWidget-based application to
@@ -71,7 +71,7 @@ of simple and dynamic elements.
 
 If you have an existing UI based on the \l{Graphics View Framework},
 you can integrate QML widgets directly into your QGraphicsScene. Use
-QDeclarativeComponent to create a QGraphicsObject from a QML file, and
+QQmlComponent to create a QGraphicsObject from a QML file, and
 place the graphics object into your scene using \l{QGraphicsScene::addItem()}, or
 reparent it to an item already in the \l{QGraphicsScene}.
 
@@ -79,8 +79,8 @@ For example:
 
 \code
 QGraphicsScene* scene = myExistingGraphicsScene();
-QDeclarativeEngine *engine = new QDeclarativeEngine;
-QDeclarativeComponent component(engine, QUrl::fromLocalFile("myqml.qml"));
+QQmlEngine *engine = new QQmlEngine;
+QQmlComponent component(engine, QUrl::fromLocalFile("myqml.qml"));
 QGraphicsObject *object =
     qobject_cast<QGraphicsObject *>(component.create());
 scene->addItem(object);

@@ -47,10 +47,10 @@
 
 #include <QtGui/QGuiApplication>
 
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qdeclarativecontext.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
@@ -308,7 +308,7 @@ static void displayFileDialog(Options *options)
 #endif
 }
 
-static void loadDummyDataFiles(QDeclarativeEngine &engine, const QString& directory)
+static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 {
     QDir dir(directory+"/dummydata", "*.qml");
     QStringList list = dir.entryList();
@@ -317,13 +317,13 @@ static void loadDummyDataFiles(QDeclarativeEngine &engine, const QString& direct
         QFile f(dir.filePath(qml));
         f.open(QIODevice::ReadOnly);
         QByteArray data = f.readAll();
-        QDeclarativeComponent comp(&engine);
+        QQmlComponent comp(&engine);
         comp.setData(data, QUrl());
         QObject *dummyData = comp.create();
 
         if(comp.isError()) {
-            QList<QDeclarativeError> errors = comp.errors();
-            foreach (const QDeclarativeError &error, errors) {
+            QList<QQmlError> errors = comp.errors();
+            foreach (const QQmlError &error, errors) {
                 qWarning() << error;
             }
         }
@@ -401,7 +401,7 @@ int main(int argc, char ** argv)
 #endif
 
     QWindow *window = 0;
-    QDeclarativeEngine *engine = 0;
+    QQmlEngine *engine = 0;
 
     int exitCode = 0;
 

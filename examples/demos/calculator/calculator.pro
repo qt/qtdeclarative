@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += quick declarative
+QT += quick qml
 SOURCES += main.cpp
 
 target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/demos/calculator

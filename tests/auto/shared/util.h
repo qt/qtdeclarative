@@ -39,25 +39,25 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVETESTUTILS_H
-#define QDECLARATIVETESTUTILS_H
+#ifndef QQMLTESTUTILS_H
+#define QQMLTESTUTILS_H
 
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
 #include <QtCore/QCoreApplication>
 #include <QtTest/QTest>
 
-QT_FORWARD_DECLARE_CLASS(QDeclarativeComponent)
-QT_FORWARD_DECLARE_CLASS(QDeclarativeEngine)
+QT_FORWARD_DECLARE_CLASS(QQmlComponent)
+QT_FORWARD_DECLARE_CLASS(QQmlEngine)
 
 /* Base class for tests with data that are located in a "data" subfolder. */
 
-class QDeclarativeDataTest : public QObject
+class QQmlDataTest : public QObject
 {
     Q_OBJECT
 public:
-    QDeclarativeDataTest();
-    virtual ~QDeclarativeDataTest();
+    QQmlDataTest();
+    virtual ~QQmlDataTest();
 
     QString testFile(const QString &fileName) const;
     inline QString testFile(const char *fileName) const
@@ -71,20 +71,20 @@ public:
     inline QUrl dataDirectoryUrl() const { return m_dataDirectoryUrl; }
     inline QString directory() const  { return m_directory; }
 
-    static inline QDeclarativeDataTest *instance() { return m_instance; }
+    static inline QQmlDataTest *instance() { return m_instance; }
 
-    static QByteArray msgComponentError(const QDeclarativeComponent &,
-                                        const QDeclarativeEngine *engine = 0);
+    static QByteArray msgComponentError(const QQmlComponent &,
+                                        const QQmlEngine *engine = 0);
 
 public slots:
     virtual void initTestCase();
 
 private:
-    static QDeclarativeDataTest *m_instance;
+    static QQmlDataTest *m_instance;
 
     const QString m_dataDirectory;
     const QUrl m_dataDirectoryUrl;
     QString m_directory;
 };
 
-#endif // QDECLARATIVETESTUTILS_H
+#endif // QQMLTESTUTILS_H

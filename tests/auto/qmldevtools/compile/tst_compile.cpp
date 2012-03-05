@@ -40,11 +40,11 @@
 ****************************************************************************/
 #include <qtest.h>
 
-#include <private/qdeclarativejsengine_p.h>
-#include <private/qdeclarativejslexer_p.h>
-#include <private/qdeclarativejsparser_p.h>
-#include <private/qdeclarativejsastvisitor_p.h>
-#include <private/qdeclarativejsast_p.h>
+#include <private/qqmljsengine_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsastvisitor_p.h>
+#include <private/qqmljsast_p.h>
 
 class tst_compile : public QObject
 {

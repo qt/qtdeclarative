@@ -41,7 +41,7 @@
 //![0]
 #include "piechart.h"
 #include "pieslice.h"
-#include <qdeclarative.h>
+#include <qqml.h>
 
 void ChartsPlugin::registerTypes(const char *uri)
 {

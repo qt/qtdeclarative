@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,7 +42,7 @@
 #ifndef MASKEXTRUDER_H
 #define MASKEXTRUDER_H
 #include "qquickparticleextruder_p.h"
-#include <private/qdeclarativepixmapcache_p.h>
+#include <private/qquickpixmapcache_p.h>
 #include <QUrl>
 #include <QImage>
 
@@ -81,7 +81,7 @@ private:
     void ensureInitialized(const QRectF &r);
     int m_lastWidth;
     int m_lastHeight;
-    QDeclarativePixmap m_pix;
+    QQuickPixmap m_pix;
     QImage m_img;
     QList<QPointF> m_mask;//TODO: More memory efficient datastructures
     //Perhaps just the mask for the largest bounds is stored, and interpolate up

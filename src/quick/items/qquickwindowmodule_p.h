@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,7 +42,7 @@
 #ifndef QQUICKWINDOWMODULE_H
 #define QQUICKWINDOWMODULE_H
 
-#include <qdeclarative.h>
+#include <qqml.h>
 
 QT_BEGIN_HEADER
 

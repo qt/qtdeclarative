@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 #include "lineedit.h"
-#include <qdeclarative.h>
+#include <qqml.h>
 
 LineEditExtension::LineEditExtension(QObject *object)
 : QObject(object), m_lineedit(static_cast<QLineEdit *>(object))

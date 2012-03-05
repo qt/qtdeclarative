@@ -41,12 +41,12 @@
 #define CHARTSPLUGIN_H
 
 //![0]
-#include <QDeclarativeExtensionPlugin>
+#include <QQmlExtensionPlugin>
 
-class ChartsPlugin : public QDeclarativeExtensionPlugin
+class ChartsPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "chartsplugin.json")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "chartsplugin.json")
 
 public:
     void registerTypes(const char *uri);

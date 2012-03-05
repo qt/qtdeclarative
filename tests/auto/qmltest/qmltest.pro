@@ -4,7 +4,7 @@ CONFIG += warn_on qmltestcase
 SOURCES += tst_qmltest.cpp
 
 
-importFiles.files = borderimage  buttonclick  createbenchmark  events  qdeclarativebinding selftests
+importFiles.files = borderimage  buttonclick  createbenchmark  events  qqmlbinding selftests
 
 importFiles.path = .
 DEPLOYMENT += importFiles

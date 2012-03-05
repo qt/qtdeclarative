@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qquicktrailemitter_p.h"
-#include <private/qdeclarativeengine_p.h>
+#include <private/qqmlengine_p.h>
 #include <cmath>
 QT_BEGIN_NAMESPACE
 
@@ -126,7 +126,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 
 bool QQuickTrailEmitter::isEmitFollowConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticles(QDeclarativeV8Handle,QDeclarativeV8Handle)");
+    static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticles(QQmlV8Handle,QQmlV8Handle)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
@@ -265,15 +265,15 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
         if (isEmitConnected() || isEmitFollowConnected()) {
             v8::HandleScope handle_scope;
-            v8::Context::Scope scope(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->context());
+            v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
             v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
             for (int i=0; i<toEmit.size(); i++)
                 array->Set(i, toEmit[i]->v8Value().toHandle());
 
             if (isEmitFollowConnected())
-                emitFollowParticles(QDeclarativeV8Handle::fromHandle(array), d->v8Value());//A chance for many arbitrary JS changes
+                emitFollowParticles(QQmlV8Handle::fromHandle(array), d->v8Value());//A chance for many arbitrary JS changes
             else if (isEmitConnected())
-                emitParticles(QDeclarativeV8Handle::fromHandle(array));//A chance for arbitrary JS changes
+                emitParticles(QQmlV8Handle::fromHandle(array));//A chance for arbitrary JS changes
         }
         foreach (QQuickParticleData* d, toEmit)
             m_system->emitParticle(d);

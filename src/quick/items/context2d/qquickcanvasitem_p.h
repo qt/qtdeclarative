@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -60,7 +60,7 @@ class Q_QUICK_EXPORT QQuickCanvasItem : public QQuickItem
 
     Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged);
     Q_PROPERTY(QString contextType READ contextType WRITE setContextType NOTIFY contextTypeChanged)
-    Q_PROPERTY(QDeclarativeV8Handle context READ context NOTIFY contextChanged);
+    Q_PROPERTY(QQmlV8Handle context READ context NOTIFY contextChanged);
     Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged)
     Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged)
     Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged)
@@ -87,7 +87,7 @@ public:
     QString contextType() const;
     void setContextType(const QString &contextType);
 
-    QDeclarativeV8Handle context() const;
+    QQmlV8Handle context() const;
 
     QSizeF canvasSize() const;
     void setCanvasSize(const QSizeF &);
@@ -108,10 +108,10 @@ public:
 
     QImage toImage(const QRectF& rect = QRectF()) const;
 
-    Q_INVOKABLE void getContext(QDeclarativeV8Function *args);
+    Q_INVOKABLE void getContext(QQmlV8Function *args);
 
-    Q_INVOKABLE void requestAnimationFrame(QDeclarativeV8Function *args);
-    Q_INVOKABLE void cancelRequestAnimationFrame(QDeclarativeV8Function *args);
+    Q_INVOKABLE void requestAnimationFrame(QQmlV8Function *args);
+    Q_INVOKABLE void cancelRequestAnimationFrame(QQmlV8Function *args);
 
     Q_INVOKABLE void requestPaint();
     Q_INVOKABLE void markDirty(const QRectF& dirtyRect = QRectF());

@@ -1,4 +1,4 @@
-QT += declarative
+QT += qml
 
 SOURCES += main.cpp \
            person.cpp \
@@ -7,7 +7,7 @@ HEADERS += person.h \
            birthdayparty.h
 RESOURCES += methods.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/extending/methods
+target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/extending/methods
 sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS methods.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/extending/methods
+sources.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/extending/methods
 INSTALLS += target sources

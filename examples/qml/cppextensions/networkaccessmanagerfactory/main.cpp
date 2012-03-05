@@ -42,13 +42,13 @@
 #include <QNetworkAccessManager>
 #include <QNetworkProxy>
 
-#include <QDeclarativeEngine>
-#include <QDeclarativeNetworkAccessManagerFactory>
+#include <QQmlEngine>
+#include <QQmlNetworkAccessManagerFactory>
 #include <QtQuick/QQuickView>
 
 
 /*
-   This example illustrates using a QDeclarativeNetworkAccessManagerFactory to
+   This example illustrates using a QQmlNetworkAccessManagerFactory to
    create a QNetworkAccessManager with a proxy.
 
    Usage:
@@ -58,7 +58,7 @@
 static QString proxyHost;
 static int proxyPort = 0;
 
-class MyNetworkAccessManagerFactory : public QDeclarativeNetworkAccessManagerFactory
+class MyNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
 public:
     virtual QNetworkAccessManager *create(QObject *parent);

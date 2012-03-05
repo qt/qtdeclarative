@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -93,7 +93,7 @@ public:
     }
 
 signals:
-    void emitFollowParticles(QDeclarativeV8Handle particles, QDeclarativeV8Handle followed);
+    void emitFollowParticles(QQmlV8Handle particles, QQmlV8Handle followed);
 
     void particlesPerParticlePerSecondChanged(int arg);
 

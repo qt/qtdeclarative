@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -71,7 +71,7 @@ public:
     void changeTool(InspectorProtocol::Tool tool);
     Qt::WindowFlags windowFlags() const;
     void setWindowFlags(Qt::WindowFlags flags);
-    QDeclarativeEngine *declarativeEngine() const;
+    QQmlEngine *declarativeEngine() const;
 
     QQuickView *view() const { return m_view; }
     QQuickItem *overlay() const { return m_overlay; }

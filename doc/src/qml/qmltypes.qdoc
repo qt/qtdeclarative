@@ -350,7 +350,7 @@ Q_PROPERTY(int size READ size CONSTANT)
 
     Properties that are lists of objects or Qt interfaces are also declared with
     the Q_PROPERTY() macro. However, list properties must have the type
-    \l{QDeclarativeListProperty}{QDeclarativeListProperty<T>}.
+    \l{QQmlListProperty}{QQmlListProperty<T>}.
 
     \snippet examples/declarative/cppextensions/referenceexamples/properties/birthdayparty.h 2
 
@@ -361,7 +361,7 @@ Q_PROPERTY(int size READ size CONSTANT)
 
     \l {Extending QML - Object and List Property Types Example} shows the
     complete code used to create the \c BirthdayParty type. For more
-    information, visit \l{QDeclarativeListProperty}{QDeclarativeListProperty<T>}
+    information, visit \l{QQmlListProperty}{QQmlListProperty<T>}
     for creating list properties.
 
 \section2 Sequence Types
@@ -756,8 +756,8 @@ itself, the QML engine sets up an association between the value source and
 the property.
 
 Property value sources are special types that derive from the
-QDeclarativePropertyValueSource base class.  This base class contains a single method,
-QDeclarativePropertyValueSource::setTarget(), that the QML engine invokes when
+QQmlPropertyValueSource base class.  This base class contains a single method,
+QQmlPropertyValueSource::setTarget(), that the QML engine invokes when
 associating the property value source with a property.  The relevant part of
 the \c HappyBirthdaySong type declaration looks like this:
 
@@ -771,7 +771,7 @@ contain properties, signals and methods just like other types.
 
 When a property value source object is assigned to a property, QML first tries
 to assign it normally, as though it were a regular QML type.  Only if this
-assignment fails does the engine call the \l {QDeclarativePropertyValueSource::}{setTarget()} method.  This allows
+assignment fails does the engine call the \l {QQmlPropertyValueSource::}{setTarget()} method.  This allows
 the type to also be used in contexts other than just as a value source.
 
 \l {Extending QML -  Property Value Source Example} shows the complete code used

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -47,14 +47,14 @@
 #include "qquickflickable_p_p.h"
 #include "qquickvisualdatamodel_p.h"
 #include "qquickvisualitemmodel_p.h"
-#include <private/qdeclarativechangeset_p.h>
+#include <private/qquickchangeset_p.h>
 
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
+QT_MODULE(Quick)
 
 
 class FxViewItem : public QQuickViewItem
@@ -86,12 +86,12 @@ public:
     void prepare(int currentIndex, int count);
     void reset();
 
-    void applyChanges(const QDeclarativeChangeSet &changeSet);
+    void applyChanges(const QQuickChangeSet &changeSet);
 
     int itemCount;
     int newCurrentIndex;
-    QDeclarativeChangeSet pendingChanges;
-    QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *> removedItems;
+    QQuickChangeSet pendingChanges;
+    QHash<QQuickChangeSet::MoveKey, FxViewItem *> removedItems;
 
     bool active : 1;
     bool currentChanged : 1;
@@ -107,7 +107,7 @@ public:
     ~QQuickItemViewPrivate();
 
     struct ChangeResult {
-        QDeclarativeNullableValue<qreal> visiblePos;
+        QQmlNullableValue<qreal> visiblePos;
         bool changedFirstItem;
         qreal sizeChangesBeforeVisiblePos;
         qreal sizeChangesAfterVisiblePos;
@@ -119,7 +119,7 @@ public:
               sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0),
               countChangeBeforeVisible(0), countChangeAfterVisibleItems(0) {}
 
-        ChangeResult(const QDeclarativeNullableValue<qreal> &p)
+        ChangeResult(const QQmlNullableValue<qreal> &p)
             : visiblePos(p), changedFirstItem(false),
               sizeChangesBeforeVisiblePos(0), sizeChangesAfterVisiblePos(0),
               countChangeBeforeVisible(0), countChangeAfterVisibleItems(0) {}
@@ -173,7 +173,7 @@ public:
     virtual bool releaseItem(FxViewItem *item);
 
     QQuickItem *createHighlightItem();
-    QQuickItem *createComponentItem(QDeclarativeComponent *component, bool receiveItemGeometryChanges, bool createDefault = false);
+    QQuickItem *createComponentItem(QQmlComponent *component, bool receiveItemGeometryChanges, bool createDefault = false);
 
     void updateCurrent(int modelIndex);
     void updateTrackedItem();
@@ -183,18 +183,18 @@ public:
     void positionViewAtIndex(int index, int mode);
     void applyPendingChanges();
     bool applyModelChanges(ChangeResult *insertionResult, ChangeResult *removalResult);
-    bool applyRemovalChange(const QDeclarativeChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
-    void removeItem(FxViewItem *item, const QDeclarativeChangeSet::Remove &removal, ChangeResult *removeResult);
+    bool applyRemovalChange(const QQuickChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
+    void removeItem(FxViewItem *item, const QQuickChangeSet::Remove &removal, ChangeResult *removeResult);
     void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
             FxViewItem *prevFirstVisible, ChangeResult *insertionResult, ChangeResult *removalResult);
 
     void createTransitioner();
     void prepareVisibleItemTransitions();
-    void prepareRemoveTransitions(QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *> *removedItems);
+    void prepareRemoveTransitions(QHash<QQuickChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
     virtual void viewItemTransitionFinished(QQuickViewItem *item);
 
-    int findMoveKeyIndex(QDeclarativeChangeSet::MoveKey key, const QVector<QDeclarativeChangeSet::Remove> &changes) const;
+    int findMoveKeyIndex(QQuickChangeSet::MoveKey key, const QVector<QQuickChangeSet::Remove> &changes) const;
 
     void checkVisible() const;
     void showVisibleItems() const;
@@ -206,7 +206,7 @@ public:
             hData.markExtentsDirty();
     }
 
-    QDeclarativeGuard<QQuickVisualModel> model;
+    QQmlGuard<QQuickVisualModel> model;
     QVariant modelVariant;
     int itemCount;
     int buffer;
@@ -225,22 +225,22 @@ public:
     FxViewItem *requestedItem;
     QQuickItemViewChangeSet currentChanges;
 
-    QDeclarativeComponent *highlightComponent;
+    QQmlComponent *highlightComponent;
     FxViewItem *highlight;
     int highlightRange;     // enum value
     qreal highlightRangeStart;
     qreal highlightRangeEnd;
     int highlightMoveDuration;
 
-    QDeclarativeComponent *headerComponent;
+    QQmlComponent *headerComponent;
     FxViewItem *header;
-    QDeclarativeComponent *footerComponent;
+    QQmlComponent *footerComponent;
     FxViewItem *footer;
 
     struct MovedItem {
         FxViewItem *item;
-        QDeclarativeChangeSet::MoveKey moveKey;
-        MovedItem(FxViewItem *i, QDeclarativeChangeSet::MoveKey k)
+        QQuickChangeSet::MoveKey moveKey;
+        MovedItem(FxViewItem *i, QQuickChangeSet::MoveKey k)
             : item(i), moveKey(k) {}
     };
     QQuickItemViewTransitioner *transitioner;
@@ -300,7 +300,7 @@ protected:
     virtual void layoutVisibleItems(int fromModelIndex = 0) = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
 
-    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &insert, ChangeResult *changeResult,
+    virtual bool applyInsertionChange(const QQuickChangeSet::Insert &insert, ChangeResult *changeResult,
                 QList<FxViewItem *> *newItems, QList<MovedItem> *movingIntoView) = 0;
 
     virtual bool needsRefillForAddedOrRemovedIndex(int) const { return false; }

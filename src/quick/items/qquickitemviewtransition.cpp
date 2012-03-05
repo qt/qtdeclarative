@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,7 +41,7 @@
 
 #include "qquickitemviewtransition_p.h"
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/private/qdeclarativetransition_p.h>
+#include <QtQuick/private/qquicktransition_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,7 +49,7 @@ static QList<int> qquickitemviewtransition_emptyIndexes = QList<int>();
 static QList<QObject *> qquickitemviewtransition_emptyTargets = QList<QObject *>();
 
 
-class QQuickItemViewTransitionJob : public QDeclarativeTransitionManager
+class QQuickItemViewTransitionJob : public QQuickTransitionManager
 {
 public:
     QQuickItemViewTransitionJob();
@@ -95,7 +95,7 @@ void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickIt
         return;
     }
 
-    QDeclarativeTransition *trans = transitioner->transitionObject(type, isTargetItem);
+    QQuickTransition *trans = transitioner->transitionObject(type, isTargetItem);
     if (!trans) {
         qWarning("QQuickItemView: invalid view transition!");
         return;
@@ -122,17 +122,17 @@ void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickIt
         emit attached->targetItemsChanged();
     }
 
-    QDeclarativeStateOperation::ActionList actions;
-    actions << QDeclarativeAction(item->item, QLatin1String("x"), QVariant(to.x()));
-    actions << QDeclarativeAction(item->item, QLatin1String("y"), QVariant(to.y()));
+    QQuickStateOperation::ActionList actions;
+    actions << QQuickAction(item->item, QLatin1String("x"), QVariant(to.x()));
+    actions << QQuickAction(item->item, QLatin1String("y"), QVariant(to.y()));
 
     m_transitioner->runningJobs << this;
-    QDeclarativeTransitionManager::transition(actions, trans, item->item);
+    QQuickTransitionManager::transition(actions, trans, item->item);
 }
 
 void QQuickItemViewTransitionJob::finished()
 {
-    QDeclarativeTransitionManager::finished();
+    QQuickTransitionManager::finished();
 
     if (m_transitioner)
         m_transitioner->finishedTransition(this, m_item);
@@ -218,7 +218,7 @@ void QQuickItemViewTransitioner::transitionNextReposition(QQuickViewItem *item, 
     }
 }
 
-QDeclarativeTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget)
+QQuickTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget)
 {
     if (type == QQuickItemViewTransitioner::NoTransition)
         return 0;
@@ -226,7 +226,7 @@ QDeclarativeTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemV
     if (type == PopulateTransition)
         asTarget = true;    // no separate displaced transition
 
-    QDeclarativeTransition *trans = 0;
+    QQuickTransition *trans = 0;
     switch (type) {
     case NoTransition:
         break;
@@ -863,9 +863,9 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 
     \sa QtQuick2::ViewTransition::targetIndexes
 */
-QDeclarativeListProperty<QObject> QQuickViewTransitionAttached::targetItems()
+QQmlListProperty<QObject> QQuickViewTransitionAttached::targetItems()
 {
-    return QDeclarativeListProperty<QObject>(this, m_targetItems);
+    return QQmlListProperty<QObject>(this, m_targetItems);
 }
 
 QQuickViewTransitionAttached *QQuickViewTransitionAttached::qmlAttachedProperties(QObject *obj)

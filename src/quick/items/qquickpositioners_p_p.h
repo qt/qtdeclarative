@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -56,9 +56,9 @@
 #include "qquickpositioners_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
 
-#include <QtQuick/private/qdeclarativestate_p.h>
-#include <private/qdeclarativetransitionmanager_p_p.h>
-#include <private/qdeclarativestateoperations_p.h>
+#include <QtQuick/private/qquickstate_p.h>
+#include <private/qquicktransitionmanager_p_p.h>
+#include <private/qquickstatechangescript_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>

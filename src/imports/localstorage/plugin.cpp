@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 #include <QStringList>
-#include <QtDeclarative/qdeclarativeextensionplugin.h>
-#include <QtDeclarative/qdeclarative.h>
-#include <private/qdeclarativeengine_p.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
+#include <private/qqmlengine_p.h>
 #include <QDebug>
 #include <private/qv8engine_p.h>
 #include <QtSql/qsqldatabase.h>
@@ -83,18 +83,18 @@
     return; \
 }
 
-class QDeclarativeSqlDatabaseData : public QV8Engine::Deletable
+class QQmlSqlDatabaseData : public QV8Engine::Deletable
 {
 public:
-    QDeclarativeSqlDatabaseData(QV8Engine *engine);
-    ~QDeclarativeSqlDatabaseData();
+    QQmlSqlDatabaseData(QV8Engine *engine);
+    ~QQmlSqlDatabaseData();
 
     v8::Persistent<v8::Function> constructor;
     v8::Persistent<v8::Function> queryConstructor;
     v8::Persistent<v8::Function> rowsConstructor;
 };
 
-V8_DEFINE_EXTENSION(QDeclarativeSqlDatabaseData, databaseData)
+V8_DEFINE_EXTENSION(QQmlSqlDatabaseData, databaseData)
 
 class QV8SqlDatabaseResource : public QV8ObjectResource
 {
@@ -167,7 +167,7 @@ static void qmlsqldatabase_rows_setForwardOnly(v8::Local<v8::String> /* property
     r->query.setForwardOnly(value->BooleanValue());
 }
 
-QDeclarativeSqlDatabaseData::~QDeclarativeSqlDatabaseData()
+QQmlSqlDatabaseData::~QQmlSqlDatabaseData()
 {
     qPersistentDispose(constructor);
     qPersistentDispose(queryConstructor);
@@ -239,14 +239,14 @@ static v8::Handle<v8::Value> qmlsqldatabase_executeSql(const v8::Arguments& args
     QV8Engine *engine = r->engine;
 
     if (!r->inTransaction)
-        V8THROW_SQL(SQLEXCEPTION_DATABASE_ERR,QDeclarativeEngine::tr("executeSql called outside transaction()"));
+        V8THROW_SQL(SQLEXCEPTION_DATABASE_ERR,QQmlEngine::tr("executeSql called outside transaction()"));
 
     QSqlDatabase db = r->database;
 
     QString sql = engine->toString(args[0]);
 
     if (r->readonly && !sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
-        V8THROW_SQL(SQLEXCEPTION_SYNTAX_ERR, QDeclarativeEngine::tr("Read-only Transaction"));
+        V8THROW_SQL(SQLEXCEPTION_SYNTAX_ERR, QQmlEngine::tr("Read-only Transaction"));
     }
 
     QSqlQuery query(db);
@@ -316,7 +316,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_changeVersion(const v8::Arguments& a
     v8::Handle<v8::Value> callback = args[2];
 
     if (from_version != r->version)
-        V8THROW_SQL(SQLEXCEPTION_VERSION_ERR, QDeclarativeEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->version));
+        V8THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->version));
 
     v8::Local<v8::Object> instance = databaseData(engine)->queryConstructor->NewInstance();
     QV8SqlDatabaseResource *r2 = new QV8SqlDatabaseResource(engine);
@@ -341,7 +341,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_changeVersion(const v8::Arguments& a
             return v8::Handle<v8::Value>();
         } else if (!db.commit()) {
             db.rollback();
-            V8THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR,QDeclarativeEngine::tr("SQL transaction failed"));
+            V8THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR,QQmlEngine::tr("SQL transaction failed"));
         } else {
             ok = true;
         }
@@ -369,7 +369,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_transaction_shared(const v8::Argumen
     QV8Engine *engine = r->engine;
 
     if (args.Length() == 0 || !args[0]->IsFunction())
-        V8THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR,QDeclarativeEngine::tr("transaction: missing callback"));
+        V8THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR,QQmlEngine::tr("transaction: missing callback"));
 
     QSqlDatabase db = r->database;
     v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[0]);
@@ -410,7 +410,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_read_transaction(const v8::Arguments
     return qmlsqldatabase_transaction_shared(args, true);
 }
 
-QDeclarativeSqlDatabaseData::QDeclarativeSqlDatabaseData(QV8Engine *engine)
+QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
 {
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -460,7 +460,7 @@ through the data.
 
 These databases are user-specific and QML-specific, but accessible to all QML applications.
 They are stored in the \c Databases subdirectory
-of QDeclarativeEngine::offlineStoragePath(), currently as SQLite databases.
+of QQmlEngine::offlineStoragePath(), currently as SQLite databases.
 
 Database connections are automatically closed during Javascript garbage collection.
 
@@ -549,7 +549,7 @@ public:
     ~QQuickLocalStorage() {
     }
 
-   Q_INVOKABLE void openDatabaseSync(QDeclarativeV8Function* args);
+   Q_INVOKABLE void openDatabaseSync(QQmlV8Function* args);
 };
 
 /*!
@@ -563,7 +563,7 @@ public:
  *  \c callback is an optional parameter, which is invoked if the database has not yet been created.
  * \return the database object
  */
-void QQuickLocalStorage::openDatabaseSync(QDeclarativeV8Function *args)
+void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
 {
 #ifndef QT_NO_SETTINGS
     QV8Engine *engine = args->engine();
@@ -592,7 +592,7 @@ void QQuickLocalStorage::openDatabaseSync(QDeclarativeV8Function *args)
             database = QSqlDatabase::database(dbid);
             version = ini.value(QLatin1String("Version")).toString();
             if (version != dbversion && !dbversion.isEmpty() && !version.isEmpty())
-                V8THROW_SQL_VOID(SQLEXCEPTION_VERSION_ERR, QDeclarativeEngine::tr("SQL: database version mismatch"));
+                V8THROW_SQL_VOID(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("SQL: database version mismatch"));
         } else {
             created = !QFile::exists(basename+QLatin1String(".sqlite"));
             database = QSqlDatabase::addDatabase(QLatin1String("QSQLITE"), dbid);
@@ -607,7 +607,7 @@ void QQuickLocalStorage::openDatabaseSync(QDeclarativeV8Function *args)
             } else {
                 if (!dbversion.isEmpty() && ini.value(QLatin1String("Version")) != dbversion) {
                     // Incompatible
-                    V8THROW_SQL_VOID(SQLEXCEPTION_VERSION_ERR,QDeclarativeEngine::tr("SQL: database version mismatch"));
+                    V8THROW_SQL_VOID(SQLEXCEPTION_VERSION_ERR,QQmlEngine::tr("SQL: database version mismatch"));
                 }
                 version = ini.value(QLatin1String("Version")).toString();
             }
@@ -639,7 +639,7 @@ void QQuickLocalStorage::openDatabaseSync(QDeclarativeV8Function *args)
 #endif // QT_NO_SETTINGS
 }
 
-static QObject *module_api_factory(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
+static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
    Q_UNUSED(engine)
    Q_UNUSED(scriptEngine)
@@ -648,13 +648,13 @@ static QObject *module_api_factory(QDeclarativeEngine *engine, QJSEngine *script
    return api;
 }
 
-class QDeclarativeLocalStoragePlugin : public QDeclarativeExtensionPlugin
+class QQmlLocalStoragePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "localstorage.json")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "localstorage.json")
 
 public:
-    QDeclarativeLocalStoragePlugin()
+    QQmlLocalStoragePlugin()
     {
     }
 

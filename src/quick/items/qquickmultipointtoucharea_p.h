@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -166,7 +166,7 @@ private:
 class QQuickGrabGestureEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QDeclarativeListProperty<QObject> touchPoints READ touchPoints)
+    Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints)
     Q_PROPERTY(qreal dragThreshold READ dragThreshold)
 public:
     QQuickGrabGestureEvent() : _grab(false), _dragThreshold(qApp->styleHints()->startDragDistance()) {}
@@ -174,8 +174,8 @@ public:
     Q_INVOKABLE void grab() { _grab = true; }
     bool wantsGrab() const { return _grab; }
 
-    QDeclarativeListProperty<QObject> touchPoints() {
-        return QDeclarativeListProperty<QObject>(this, _touchPoints);
+    QQmlListProperty<QObject> touchPoints() {
+        return QQmlListProperty<QObject>(this, _touchPoints);
     }
     qreal dragThreshold() const { return _dragThreshold; }
 
@@ -190,7 +190,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointTouchArea : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(QDeclarativeListProperty<QQuickTouchPoint> touchPoints READ touchPoints)
+    Q_PROPERTY(QQmlListProperty<QQuickTouchPoint> touchPoints READ touchPoints)
     Q_PROPERTY(int minimumTouchPoints READ minimumTouchPoints WRITE setMinimumTouchPoints NOTIFY minimumTouchPointsChanged)
     Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints WRITE setMaximumTouchPoints NOTIFY maximumTouchPointsChanged)
 
@@ -203,21 +203,21 @@ public:
     int maximumTouchPoints() const;
     void setMaximumTouchPoints(int num);
 
-    QDeclarativeListProperty<QQuickTouchPoint> touchPoints() {
-        return QDeclarativeListProperty<QQuickTouchPoint>(this, 0, QQuickMultiPointTouchArea::touchPoint_append, QQuickMultiPointTouchArea::touchPoint_count, QQuickMultiPointTouchArea::touchPoint_at, 0);
+    QQmlListProperty<QQuickTouchPoint> touchPoints() {
+        return QQmlListProperty<QQuickTouchPoint>(this, 0, QQuickMultiPointTouchArea::touchPoint_append, QQuickMultiPointTouchArea::touchPoint_count, QQuickMultiPointTouchArea::touchPoint_at, 0);
     }
 
-    static void touchPoint_append(QDeclarativeListProperty<QQuickTouchPoint> *list, QQuickTouchPoint* touch) {
+    static void touchPoint_append(QQmlListProperty<QQuickTouchPoint> *list, QQuickTouchPoint* touch) {
         QQuickMultiPointTouchArea *q = static_cast<QQuickMultiPointTouchArea*>(list->object);
         q->addTouchPrototype(touch);
     }
 
-    static int touchPoint_count(QDeclarativeListProperty<QQuickTouchPoint> *list) {
+    static int touchPoint_count(QQmlListProperty<QQuickTouchPoint> *list) {
         QQuickMultiPointTouchArea *q = static_cast<QQuickMultiPointTouchArea*>(list->object);
         return q->_touchPrototypes.count();
     }
 
-    static QQuickTouchPoint* touchPoint_at(QDeclarativeListProperty<QQuickTouchPoint> *list, int index) {
+    static QQuickTouchPoint* touchPoint_at(QQmlListProperty<QQuickTouchPoint> *list, int index) {
         QQuickMultiPointTouchArea *q = static_cast<QQuickMultiPointTouchArea*>(list->object);
         return q->_touchPrototypes[index];
     }

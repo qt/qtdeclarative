@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,7 +50,8 @@
 #include "qquickparticlegroup_p.h"
 
 #include "qquicktrailemitter_p.h"//###For auto-follow on states, perhaps should be in emitter?
-#include <private/qdeclarativeengine_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlglobal_p.h>
 #include <cmath>
 #include <QDebug>
 
@@ -524,10 +525,10 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
     animationOwner = other.animationOwner;
 }
 
-QDeclarativeV8Handle QQuickParticleData::v8Value()
+QQmlV8Handle QQuickParticleData::v8Value()
 {
     if (!v8Datum)
-        v8Datum = new QQuickV8ParticleData(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(system)), this);
+        v8Datum = new QQuickV8ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(system)), this);
     return v8Datum->v8Value();
 }
 //sets the x accleration without affecting the instantaneous x velocity or position
@@ -782,7 +783,7 @@ void QQuickParticleSystem::setPaused(bool arg) {
     }
 }
 
-void QQuickParticleSystem::statePropertyRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value)
+void QQuickParticleSystem::statePropertyRedirect(QQmlListProperty<QObject> *prop, QObject *value)
 {
     //Hooks up automatic state-associated stuff
     QQuickParticleSystem* sys = qobject_cast<QQuickParticleSystem*>(prop->object->parent());

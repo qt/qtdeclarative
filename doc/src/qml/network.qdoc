@@ -118,11 +118,11 @@ See the \tt examples/declarative/flickr for a real demonstration of this.
 
 \section1 Configuring the Network Access Manager
 
-All network access from QML is managed by a QNetworkAccessManager set on the QDeclarativeEngine which executes the QML.
+All network access from QML is managed by a QNetworkAccessManager set on the QQmlEngine which executes the QML.
 By default, this is an unmodified Qt QNetworkAccessManager. You may set a different manager by
-providing a QDeclarativeNetworkAccessManagerFactory and setting it via
-QDeclarativeEngine::setNetworkAccessManagerFactory().
-For example, the \l {QML Viewer} sets a QDeclarativeNetworkAccessManagerFactory which
+providing a QQmlNetworkAccessManagerFactory and setting it via
+QQmlEngine::setNetworkAccessManagerFactory().
+For example, the \l {QML Viewer} sets a QQmlNetworkAccessManagerFactory which
 creates QNetworkAccessManager that trusts HTTP Expiry headers to avoid network cache checks,
 allows HTTP Pipelining, adds a persistent HTTP CookieJar, a simple disk cache, and supports proxy settings.
 
@@ -134,7 +134,7 @@ the executable using \l{The Qt Resource System}. Using this, an executable can r
 that is compiled into the executable:
 
 \code
-    QDeclarativeView *canvas = new QDeclarativeView;
+    QQuickView *canvas = new QQuickView;
     canvas->setUrl(QUrl("qrc:/dial.qml"));
 \endcode
 

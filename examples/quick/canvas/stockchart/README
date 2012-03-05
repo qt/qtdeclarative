@@ -1,0 +1,5 @@
+To run:
+
+  make install
+  QML_IMPORT_PATH=$PWD qmlscene stock.qml
+

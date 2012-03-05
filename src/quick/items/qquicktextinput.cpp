@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,9 +43,9 @@
 #include "qquicktextinput_p_p.h"
 #include "qquickcanvas.h"
 
-#include <private/qdeclarativeglobal_p.h>
+#include <private/qqmlglobal_p.h>
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QTextBoundaryFinder>
 #include "qquicktextnode_p.h"
@@ -1211,16 +1211,16 @@ void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
     needed, and the x property of delegate instance will be set so as
     to be one pixel before the top left of the current character.
 
-    Note that the root item of the delegate component must be a QDeclarativeItem or
-    QDeclarativeItem derived item.
+    Note that the root item of the delegate component must be a QQuickItem or
+    QQuickItem derived item.
 */
-QDeclarativeComponent* QQuickTextInput::cursorDelegate() const
+QQmlComponent* QQuickTextInput::cursorDelegate() const
 {
     Q_D(const QQuickTextInput);
     return d->cursorComponent;
 }
 
-void QQuickTextInput::setCursorDelegate(QDeclarativeComponent* c)
+void QQuickTextInput::setCursorDelegate(QQmlComponent* c)
 {
     Q_D(QQuickTextInput);
     if (d->cursorComponent == c)
@@ -1267,7 +1267,7 @@ void QQuickTextInput::createCursor()
 
     if (d->cursorItem)
         delete d->cursorItem;
-    QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
+    QQmlContext *creationContext = d->cursorComponent->creationContext();
     QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
     d->cursorItem = qobject_cast<QQuickItem*>(object);
     if (!d->cursorItem) {
@@ -1278,7 +1278,7 @@ void QQuickTextInput::createCursor()
 
     QRectF r = cursorRectangle();
 
-    QDeclarative_setParent_noEvent(d->cursorItem, this);
+    QQml_setParent_noEvent(d->cursorItem, this);
     d->cursorItem->setParentItem(this);
     d->cursorItem->setPos(r.topLeft());
     d->cursorItem->setHeight(r.height());
@@ -1328,7 +1328,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     \endlist
 */
 
-void QQuickTextInput::positionAt(QDeclarativeV8Function *args) const
+void QQuickTextInput::positionAt(QQmlV8Function *args) const
 {
     Q_D(const QQuickTextInput);
 

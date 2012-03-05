@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -46,7 +46,7 @@
 #include <QtCore/qplugin.h>
 #include <QtCore/qfactoryinterface.h>
 
-#include <QDeclarativeImageProvider>
+#include <QQmlImageProvider>
 
 QT_BEGIN_HEADER
 
@@ -58,7 +58,7 @@ struct Q_QUICK_EXPORT QSGContextFactoryInterface : public QFactoryInterface
 {
     virtual QSGContext *create(const QString &key) const = 0;
 
-    virtual QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &image) = 0;
+    virtual QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image) = 0;
 };
 
 #define QSGContextFactoryInterface_iid \
@@ -76,7 +76,7 @@ public:
     virtual QStringList keys() const = 0;
     virtual QSGContext *create(const QString &key) const = 0;
 
-    virtual QDeclarativeTextureFactory *createTextureFactoryFromImage(const QImage &) { return 0; }
+    virtual QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) { return 0; }
 };
 
 QT_END_NAMESPACE

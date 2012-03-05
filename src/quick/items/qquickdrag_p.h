@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -60,10 +60,10 @@ class QQuickDragPrivate;
 
 class QQuickDragGrabber
 {
-    class Item : public QDeclarativeGuard<QQuickItem>
+    class Item : public QQmlGuard<QQuickItem>
     {
     public:
-        Item(QQuickItem *item) : QDeclarativeGuard<QQuickItem>(item) {}
+        Item(QQuickItem *item) : QQmlGuard<QQuickItem>(item) {}
 
         QIntrusiveListNode node;
     protected:
@@ -142,7 +142,7 @@ private:
     friend class QQuickDragAttachedPrivate;
 };
 
-class QDeclarativeV8Function;
+class QQmlV8Function;
 
 class QQuickDragAttachedPrivate;
 class QQuickDragAttached : public QObject
@@ -183,7 +183,7 @@ public:
     Q_INVOKABLE int drop();
 
 public Q_SLOTS:
-    void start(QDeclarativeV8Function *);
+    void start(QQmlV8Function *);
     void cancel();
 
 Q_SIGNALS:

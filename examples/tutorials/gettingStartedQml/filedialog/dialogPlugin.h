@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -41,15 +41,15 @@
 #ifndef DIALOGPLUGIN_H
 #define DIALOGPLUGIN_H
 
-#include <QtDeclarative/QDeclarativeExtensionPlugin>
+#include <QtQml/QQmlExtensionPlugin>
 
-class DialogPlugin : public QDeclarativeExtensionPlugin
+class DialogPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "dialogplugin.json")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "dialogplugin.json")
 
     public:
-        //registerTypes is inherited from QDeclarativeExtensionPlugin
+        //registerTypes is inherited from QQmlExtensionPlugin
         void registerTypes(const char *uri);
 
 };

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,7 +44,7 @@
 
 #include "qquickitemview_p.h"
 
-#include <private/qdeclarativeguard_p.h>
+#include <private/qqmlguard_p.h>
 
 QT_BEGIN_HEADER
 
@@ -57,7 +57,7 @@ class Q_AUTOTEST_EXPORT QQuickViewSection : public QObject
     Q_OBJECT
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
     Q_PROPERTY(SectionCriteria criteria READ criteria WRITE setCriteria NOTIFY criteriaChanged)
-    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int labelPositioning READ labelPositioning WRITE setLabelPositioning NOTIFY labelPositioningChanged)
     Q_ENUMS(SectionCriteria)
     Q_ENUMS(LabelPositioning)
@@ -71,8 +71,8 @@ public:
     SectionCriteria criteria() const { return m_criteria; }
     void setCriteria(SectionCriteria);
 
-    QDeclarativeComponent *delegate() const { return m_delegate; }
-    void setDelegate(QDeclarativeComponent *delegate);
+    QQmlComponent *delegate() const { return m_delegate; }
+    void setDelegate(QQmlComponent *delegate);
 
     QString sectionString(const QString &value);
 
@@ -89,7 +89,7 @@ Q_SIGNALS:
 private:
     QString m_property;
     SectionCriteria m_criteria;
-    QDeclarativeComponent *m_delegate;
+    QQmlComponent *m_delegate;
     int m_labelPositioning;
     QQuickListViewPrivate *m_view;
 };
@@ -197,7 +197,7 @@ Q_SIGNALS:
     void viewChanged();
 
 public:
-    QDeclarativeGuard<QQuickListView> m_view;
+    QQmlGuard<QQuickListView> m_view;
     QQuickItem *m_sectionItem;
 };
 

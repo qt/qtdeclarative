@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -120,7 +120,7 @@ QQuickImagePrivate::QQuickImagePrivate()
 
     The following example shows the simplest usage of the Image element.
 
-    \snippet doc/src/snippets/declarative/image.qml document
+    \snippet doc/src/snippets/qml/image.qml document
 
     \beginfloatleft
     \image declarative-qtlogo.png
@@ -147,7 +147,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     size bounded via the \l sourceSize property. This is especially important for content
     that is loaded from external sources or provided by the user.
 
-    \sa {declarative/imageelements/image}{Image example}, QDeclarativeImageProvider
+    \sa {declarative/imageelements/image}{Image example}, QQmlImageProvider
 */
 
 QQuickImage::QQuickImage(QQuickItem *parent)
@@ -431,7 +431,7 @@ qreal QQuickImage::paintedHeight() const
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QDeclarativeImageProvider
+    \sa QQmlImageProvider
 */
 
 /*!

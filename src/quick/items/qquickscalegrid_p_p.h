@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,10 +44,10 @@
 
 #include "qquickborderimage_p.h"
 
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 #include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER

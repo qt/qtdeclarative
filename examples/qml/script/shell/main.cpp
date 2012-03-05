@@ -46,7 +46,7 @@
 
 #include <QtGui/QGuiApplication>
 
-#include <QtDeclarative/qjsengine.h>
+#include <QtQml/qjsengine.h>
 
 #include <stdlib.h>
 

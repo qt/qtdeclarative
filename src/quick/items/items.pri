@@ -58,8 +58,8 @@ HEADERS += \
     $$PWD/qquickclipnode_p.h \
     $$PWD/qquickview.h \
     $$PWD/qquickview_p.h \
-    $$PWD/qquickanimation_p.h \
-    $$PWD/qquickanimation_p_p.h \
+    $$PWD/qquickitemanimation_p.h \
+    $$PWD/qquickitemanimation_p_p.h \
     $$PWD/qquickstateoperations_p.h \
     $$PWD/qquickimplicitsizeitem_p.h \
     $$PWD/qquickimplicitsizeitem_p_p.h \
@@ -113,7 +113,7 @@ SOURCES += \
     $$PWD/qquicktranslate.cpp \
     $$PWD/qquickclipnode.cpp \
     $$PWD/qquickview.cpp \
-    $$PWD/qquickanimation.cpp \
+    $$PWD/qquickitemanimation.cpp \
     $$PWD/qquickstateoperations.cpp \
     $$PWD/qquickimplicitsizeitem.cpp \
     $$PWD/qquickspriteengine.cpp \

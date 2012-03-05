@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,8 +53,8 @@
 #include <QOpenGLFunctions>
 #include <QtQuick/qsgengine.h>
 #include <QtQuick/private/qsgtexture_p.h>
-#include <private/qdeclarativeglobal_p.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <private/qqmlglobal_p.h>
+#include <QtQml/qqmlinfo.h>
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
@@ -834,9 +834,9 @@ QQuickImageParticle::~QQuickImageParticle()
 {
 }
 
-QDeclarativeListProperty<QQuickSprite> QQuickImageParticle::sprites()
+QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
 {
-    return QDeclarativeListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
+    return QQmlListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
 }
 
 void QQuickImageParticle::setImage(const QUrl &image)

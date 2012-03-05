@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -47,12 +47,12 @@
 #include <QtCore/QStringList>
 #include <QtGui/QColor>
 
-#include "qdeclarativeinspectorprotocol.h"
+#include "qqmlinspectorprotocol.h"
 #include "qmlinspectorconstants.h"
 
 QT_BEGIN_NAMESPACE
-class QDeclarativeEngine;
-class QDeclarativeInspectorService;
+class QQmlEngine;
+class QQmlInspectorService;
 class QKeyEvent;
 class QMouseEvent;
 class QWheelEvent;
@@ -63,7 +63,7 @@ namespace QmlJSDebugger {
 class AbstractTool;
 
 /*
- * The common code between QQuickView and QDeclarativeView inspectors lives here,
+ * The common code between QQuickView and QQuickView inspectors lives here,
  */
 class AbstractViewInspector : public QObject
 {
@@ -100,7 +100,7 @@ public:
     virtual void changeTool(InspectorProtocol::Tool tool) = 0;
     virtual Qt::WindowFlags windowFlags() const = 0;
     virtual void setWindowFlags(Qt::WindowFlags flags) = 0;
-    virtual QDeclarativeEngine *declarativeEngine() const = 0;
+    virtual QQmlEngine *declarativeEngine() const = 0;
 
 signals:
     void designModeBehaviorChanged(bool inDesignMode);
@@ -159,7 +159,7 @@ private:
     qreal m_slowDownFactor;
 
     QHash<int, QString> m_stringIdForObjectId;
-    QDeclarativeInspectorService *m_debugService;
+    QQmlInspectorService *m_debugService;
 };
 
 } // namespace QmlJSDebugger

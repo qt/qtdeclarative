@@ -34,7 +34,7 @@ create the kind of intuitive, modern, and fluid user interfaces that are
 increasingly used on mobile phones, media players, set-top boxes, and other
 portable devices. Qt Quick consists of a rich set of user interface
 \l{QML Elements}{elements}, a \l{QML Syntax}{declarative} language for
-describing user interfaces, and a language \l{QtDeclarative Module}{runtime}. A
+describing user interfaces, and a language \l{QtQml Module}{runtime}. A
 collection of C++ APIs is used to integrate these high level features with
 classic Qt applications. Version 2.1 of the Qt Creator integrated development
 environment (IDE) introduces tools for developing Qt Quick applications.
@@ -74,16 +74,16 @@ used to implement high level user interface logic.
 \l{How to Learn QML} introduces the reader to the language and declarative
 concepts.
 
-\section1 QtDeclarative Module
+\section1 QtQml Module
 
-To make Qt Quick possible, Qt introduces the \l{QtDeclarative} module. The
+To make Qt Quick possible, Qt introduces the \l{QtQml} module. The
 module creates a JavaScript runtime that QML runs under with a Qt based backend.
-Because QtDeclarative and QML are built upon Qt, they inherit many of Qt's
+Because QtQml and QML are built upon Qt, they inherit many of Qt's
 technology, namely the \l{Signals and Slots}{signals and slots} mechanism and
 the \l{The Meta-Object System}{meta-object} system. Data created using C++ are
 directly accessible from QML, and QML objects are also accessible from C++ code.
 
-The QtDeclarative module separates the interface logic in QML from the
+The QtQml module separates the interface logic in QML from the
 application logic in C++. It also allows the range of standard QML elements
 to be \l{Extending QML with C++}{extended with new ones written in C++}.
 

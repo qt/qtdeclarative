@@ -43,12 +43,12 @@ You may want to mix QML and C++ for a number of reasons. For example:
 \o To use functionality defined in a C++ source (for example, when using a C++ Qt-based data model, or
 calling functions in a third-party C++ library)
 \o To access functionality in the Qt Declarative module (for example, to dynamically generate
-images using QDeclarativeImageProvider)
+images using QQmlImageProvider)
 \o To write your own QML elements (whether for your applications, or for distribution to others)
 \endlist
 
 To use the Qt Declarative module, you must include and link to the module appropriately, as shown on
-the \l {QtDeclarative}{module index page}. The \l {Qt Declarative UI Runtime} documentation
+the \l {QtQml}{module index page}. The \l {Qt Declarative UI Runtime} documentation
 shows how to build a basic C++ application that uses this module.
 
 
@@ -59,32 +59,32 @@ embedding QML into C++ applications. There are several core classes in the Qt De
 that provide the essential capabilities for doing this. These are:
 
 \list
-\o QDeclarativeEngine: A QML engine provides the environment for executing QML code. Every
+\o QQmlEngine: A QML engine provides the environment for executing QML code. Every
 application requires at least one engine instance.
-\o QDeclarativeComponent: A component encapsulates a \l{QML Documents}{QML document}.
-\o QDeclarativeContext: A context allows an application to expose data to the QML components
+\o QQmlComponent: A component encapsulates a \l{QML Documents}{QML document}.
+\o QQmlContext: A context allows an application to expose data to the QML components
 created by an engine.
 \endlist
 
-A QDeclarativeEngine allows the configuration of global settings that apply to all of its QML
+A QQmlEngine allows the configuration of global settings that apply to all of its QML
 component instances: for example, the QNetworkAccessManager to be used for network communications,
 and the file path to be used for persistent storage.
 
-QDeclarativeComponent is used to load QML documents. Each QDeclarativeComponent instance represents
+QQmlComponent is used to load QML documents. Each QQmlComponent instance represents
 a single document. A component can be created from the URL or file path of a QML document, or the raw
 QML code of the document. Component instances are instatiated through the
-QDeclarativeComponent::create() method, like this:
+QQmlComponent::create() method, like this:
 
 \code
-QDeclarativeEngine engine;
-QDeclarativeComponent component(&engine, QUrl::fromLocalFile("MyRectangle.qml"));
+QQmlEngine engine;
+QQmlComponent component(&engine, QUrl::fromLocalFile("MyRectangle.qml"));
 QObject *rectangleInstance = component.create();
 
 // ...
 delete rectangleInstance;
 \endcode
 
-QML documents can also be loaded using QDeclarativeView. This class provides a convenient
+QML documents can also be loaded using QQuickView. This class provides a convenient
 QWidget-based view for embedding QML components into QGraphicsView-based applications. (For other
 methods of integrating QML into QWidget-based applications, see \l {Integrating QML Code with existing Qt
 UI code}.)
@@ -108,41 +108,41 @@ these methods throughout your application as appropriate.
 
 \section2 Loading QML Components from C++
 
-A QML document can be loaded with QDeclarativeComponent or QDeclarativeView. QDeclarativeComponent
-loads a QML component as a C++ object; QDeclarativeView also does this,
+A QML document can be loaded with QQmlComponent or QQuickView. QQmlComponent
+loads a QML component as a C++ object; QQuickView also does this,
 but additionally loads the QML component directly into a QGraphicsView. It is convenient for loading
 a displayable QML component into a QWidget-based application.
 
 For example, suppose there is a \c MyItem.qml file that looks like this:
 
-\snippet doc/src/snippets/declarative/qtbinding/loading/MyItem.qml start
-\snippet doc/src/snippets/declarative/qtbinding/loading/MyItem.qml end
+\snippet doc/src/snippets/qml/qtbinding/loading/MyItem.qml start
+\snippet doc/src/snippets/qml/qtbinding/loading/MyItem.qml end
 
-This QML document can be loaded with QDeclarativeComponent or QDeclarativeView with the following
-C++ code. Using a QDeclarativeComponent requires calling QDeclarativeComponent::create() to create
-a new instance of the component, while a QDeclarativeView automatically creates an instance of the
-component, which is accessible via QDeclarativeView::rootObject():
+This QML document can be loaded with QQmlComponent or QQuickView with the following
+C++ code. Using a QQmlComponent requires calling QQmlComponent::create() to create
+a new instance of the component, while a QQuickView automatically creates an instance of the
+component, which is accessible via QQuickView::rootObject():
 
 \table
 \row
 \o
-\snippet doc/src/snippets/declarative/qtbinding/loading/main.cpp QDeclarativeComponent-a
+\snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-a
 \dots 0
-\snippet doc/src/snippets/declarative/qtbinding/loading/main.cpp QDeclarativeComponent-b
+\snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-b
 \o
-\snippet doc/src/snippets/declarative/qtbinding/loading/main.cpp QDeclarativeView
+\snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQuickView
 \endtable
 
 This \c object is the instance of the \c MyItem.qml component that has been created. You can now
-modify the item's properties using QObject::setProperty() or QDeclarativeProperty:
+modify the item's properties using QObject::setProperty() or QQmlProperty:
 
-\snippet doc/src/snippets/declarative/qtbinding/loading/main.cpp properties
+\snippet doc/src/snippets/qml/qtbinding/loading/main.cpp properties
 
 Alternatively, you can cast the object to its actual type and call functions with compile-time
 safety. In this case the base object of \c MyItem.qml is an \l Item, which is defined by the
-QDeclarativeItem class:
+QQuickItem class:
 
-\snippet doc/src/snippets/declarative/qtbinding/loading/main.cpp cast
+\snippet doc/src/snippets/qml/qtbinding/loading/main.cpp cast
 
 You can also connect to any signals or call functions defined in the component using
 QMetaObject::invokeMethod() and QObject::connect(). See \l {Exchanging data between QML and C++}
@@ -154,14 +154,14 @@ QML components are essentially object trees with children that have siblings and
 Child objects of QML components can be located using the QObject::objectName property with
 QObject::findChild(). For example, if the root item in \c MyItem.qml had a child \l Rectangle item:
 
-\snippet doc/src/snippets/declarative/qtbinding/loading/MyItem.qml start
+\snippet doc/src/snippets/qml/qtbinding/loading/MyItem.qml start
 \codeline
-\snippet doc/src/snippets/declarative/qtbinding/loading/MyItem.qml child
-\snippet doc/src/snippets/declarative/qtbinding/loading/MyItem.qml end
+\snippet doc/src/snippets/qml/qtbinding/loading/MyItem.qml child
+\snippet doc/src/snippets/qml/qtbinding/loading/MyItem.qml end
 
 The child could be located like this:
 
-\snippet doc/src/snippets/declarative/qtbinding/loading/main.cpp findChild
+\snippet doc/src/snippets/qml/qtbinding/loading/main.cpp findChild
 
 If \c objectName is used inside a delegate of a ListView, \l Repeater or some other
 element that creates multiple instances of its delegates, there will be multiple children with
@@ -181,18 +181,18 @@ the QML user interface implementation and the composition of the QML object tree
 \section2 Embedding C++ Objects into QML Components
 
 When loading a QML scene into a C++ application, it can be useful to directly embed C++ data into
-the QML object. QDeclarativeContext enables this by exposing data to the context of a QML
+the QML object. QQmlContext enables this by exposing data to the context of a QML
 component, allowing data to be injected from C++ into QML.
 
 For example, here is a QML item that refers to a \c currentDateTime value that does not exist in
 the current scope:
 
-\snippet doc/src/snippets/declarative/qtbinding/context/MyItem.qml 0
+\snippet doc/src/snippets/qml/qtbinding/context/MyItem.qml 0
 
 This \c currentDateTime value can be set directly by the C++ application that loads the QML
-component, using QDeclarativeContext::setContextProperty():
+component, using QQmlContext::setContextProperty():
 
-\snippet doc/src/snippets/declarative/qtbinding/context/main.cpp 0
+\snippet doc/src/snippets/qml/qtbinding/context/main.cpp 0
 
 Context properties can hold either QVariant or QObject* values. This means custom C++ objects can
 also be injected using this approach, and these objects can be modified and read directly in QML.
@@ -202,11 +202,11 @@ invokes a method on the object instance:
 \table
 \row
 \o
-\snippet doc/src/snippets/declarative/qtbinding/context-advanced/applicationdata.h 0
+\snippet doc/src/snippets/qml/qtbinding/context-advanced/applicationdata.h 0
 \codeline
-\snippet doc/src/snippets/declarative/qtbinding/context-advanced/main.cpp 0
+\snippet doc/src/snippets/qml/qtbinding/context-advanced/main.cpp 0
 \o
-\snippet doc/src/snippets/declarative/qtbinding/context-advanced/MyItem.qml 0
+\snippet doc/src/snippets/qml/qtbinding/context-advanced/MyItem.qml 0
 \endtable
 
 (Note that date/time values returned from C++ to QML can be formatted through
@@ -217,7 +217,7 @@ If the QML item needs to receive signals from the context property, it can conne
 dataChanged(), this signal can be connected to using an \c onDataChanged handler within
 a \l Connections object:
 
-\snippet doc/src/snippets/declarative/qtbinding/context-advanced/connections.qml 0
+\snippet doc/src/snippets/qml/qtbinding/context-advanced/connections.qml 0
 
 Context properties can be useful for using C++ based data models in a QML view. See the
 \l {declarative/modelviews/stringlistmodel}{String ListModel},
@@ -226,7 +226,7 @@ Context properties can be useful for using C++ based data models in a QML view. 
 respective examples on using QStringListModel, QObjectList-based models and QAbstractItemModel
 in QML views.
 
-Also see the QDeclarativeContext documentation for more information.
+Also see the QQmlContext documentation for more information.
 
 
 \section2 Defining New QML Elements
@@ -236,30 +236,30 @@ defined by C++ classes; in fact, many of the core \l {QML Elements} are implemen
 C++ classes. When you create a QML object using one of these elements, you are simply creating an
 instance of a QObject-based C++ class and setting its properties.
 
-To create a visual item that fits in with the Qt Quick elements, base your class off \l QDeclarativeItem instead of QObject directly.
-You can then implement your own painting and functionality like any other QGraphicsObject. Note that QGraphicsItem::ItemHasNoContents is set by default on QDeclarativeItem because
+To create a visual item that fits in with the Qt Quick elements, base your class off \l QQuickItem instead of QObject directly.
+You can then implement your own painting and functionality like any other QGraphicsObject. Note that QGraphicsItem::ItemHasNoContents is set by default on QQuickItem because
 it does not paint anything; you will need to clear this if your item is supposed to paint anything (as opposed to being solely for input handling or logical grouping).
 
 For example, here is an \c ImageViewer class with an \c image URL property:
 
-\snippet doc/src/snippets/declarative/qtbinding/newelements/imageviewer.h 0
+\snippet doc/src/snippets/qml/qtbinding/newelements/imageviewer.h 0
 
-Aside from the fact that it inherits QDeclarativeItem, this is an ordinary class that could
+Aside from the fact that it inherits QQuickItem, this is an ordinary class that could
 exist outside of QML. However, once it is registered with the QML engine using qmlRegisterType():
 
-\snippet doc/src/snippets/declarative/qtbinding/newelements/main.cpp register
+\snippet doc/src/snippets/qml/qtbinding/newelements/main.cpp register
 
-Then, any QML code loaded by your C++ application or \l{QDeclarativeExtensionPlugin}{plugin} can create and manipulate
+Then, any QML code loaded by your C++ application or \l{QQmlExtensionPlugin}{plugin} can create and manipulate
 \c ImageViewer objects:
 
-\snippet doc/src/snippets/declarative/qtbinding/newelements/standalone.qml 0
+\snippet doc/src/snippets/qml/qtbinding/newelements/standalone.qml 0
 
 
-It is advised that you avoid using QGraphicsItem functionality beyond the properties documented in QDeclarativeItem.
+It is advised that you avoid using QGraphicsItem functionality beyond the properties documented in QQuickItem.
 This is because the GraphicsView backend is intended to be an implementation detail for QML, so the QtQuick items can be moved to faster backends as they become available with no change from a QML perspective.
-To minimize any porting requirements for custom visual items, try to stick to the documented properties in QDeclarativeItem where possible. Properties QDeclarativeItem inherits but doesn't document are classed as implementation details; they are not officially supported and may disappear between releases.
+To minimize any porting requirements for custom visual items, try to stick to the documented properties in QQuickItem where possible. Properties QQuickItem inherits but doesn't document are classed as implementation details; they are not officially supported and may disappear between releases.
 
-Note that custom C++ types do not have to inherit from QDeclarativeItem; this is only necessary if it is
+Note that custom C++ types do not have to inherit from QQuickItem; this is only necessary if it is
 a displayable item. If the item is not displayable, it can simply inherit from QObject.
 
 For more information on defining new QML elements, see the \l {Tutorial: Writing QML extensions with C++}
@@ -286,8 +286,8 @@ QMetaObject::invokeMethod(). Here is a C++ application that uses this to call a 
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qtbinding/functions-qml/MyItem.qml 0
-\o \snippet doc/src/snippets/declarative/qtbinding/functions-qml/main.cpp 0
+\o \snippet doc/src/snippets/qml/qtbinding/functions-qml/MyItem.qml 0
+\o \snippet doc/src/snippets/qml/qtbinding/functions-qml/main.cpp 0
 \endtable
 
 Notice the Q_RETURN_ARG() and Q_ARG() arguments for QMetaObject::invokeMethod() must be specified as
@@ -295,16 +295,16 @@ QVariant types, as this is the generic data type used for QML functions and retu
 
 To call a C++ function from QML, the function must be either a Qt slot, or a function marked with
 the Q_INVOKABLE macro, to be available to QML. In the following example, the QML code invokes
-methods on the \c myObject object, which has been set using QDeclarativeContext::setContextProperty():
+methods on the \c myObject object, which has been set using QQmlContext::setContextProperty():
 
 \table
 \row
 \o
-\snippet doc/src/snippets/declarative/qtbinding/functions-cpp/MyItem.qml 0
+\snippet doc/src/snippets/qml/qtbinding/functions-cpp/MyItem.qml 0
 \o
-\snippet doc/src/snippets/declarative/qtbinding/functions-cpp/myclass.h 0
+\snippet doc/src/snippets/qml/qtbinding/functions-cpp/myclass.h 0
 \codeline
-\snippet doc/src/snippets/declarative/qtbinding/functions-cpp/main.cpp 0
+\snippet doc/src/snippets/qml/qtbinding/functions-cpp/main.cpp 0
 \endtable
 
 QML supports the calling of overloaded C++ functions. If there are multiple C++ functions with the
@@ -325,11 +325,11 @@ is emitted:
 \table
 \row
 \o
-\snippet doc/src/snippets/declarative/qtbinding/signals-qml/MyItem.qml 0
+\snippet doc/src/snippets/qml/qtbinding/signals-qml/MyItem.qml 0
 \o
-\snippet doc/src/snippets/declarative/qtbinding/signals-qml/myclass.h 0
+\snippet doc/src/snippets/qml/qtbinding/signals-qml/myclass.h 0
 \codeline
-\snippet doc/src/snippets/declarative/qtbinding/signals-qml/main.cpp 0
+\snippet doc/src/snippets/qml/qtbinding/signals-qml/main.cpp 0
 \endtable
 
 To connect to Qt C++ signals from within QML, use a signal handler with the \c on<SignalName> syntax.
@@ -342,12 +342,12 @@ C++ object are connected to through \c onImagedChanged and \c onLoadingError sig
 \row
 \o
 
-\snippet doc/src/snippets/declarative/qtbinding/signals-cpp/imageviewer.h start
+\snippet doc/src/snippets/qml/qtbinding/signals-cpp/imageviewer.h start
 \dots 4
-\snippet doc/src/snippets/declarative/qtbinding/signals-cpp/imageviewer.h end
+\snippet doc/src/snippets/qml/qtbinding/signals-cpp/imageviewer.h end
 
 \o
-\snippet doc/src/snippets/declarative/qtbinding/signals-cpp/standalone.qml 0
+\snippet doc/src/snippets/qml/qtbinding/signals-cpp/standalone.qml 0
 \endtable
 
 (Note that if a signal has been declared as the NOTIFY signal for a property, QML allows it to be
@@ -357,13 +357,13 @@ received with an \c on<Property>Changed handler even if the signal's name does n
 
 If, however, the object with the signal is not created from within the QML code, and the QML item only has a
 reference to the created object - for example, if the object was set using
-QDeclarativeContext::setContextProperty() - then the \l Connections element can be used
+QQmlContext::setContextProperty() - then the \l Connections element can be used
 instead to create the signal handler:
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qtbinding/signals-cpp/main.cpp connections
-\o \snippet doc/src/snippets/declarative/qtbinding/signals-cpp/MyItem.qml 0
+\o \snippet doc/src/snippets/qml/qtbinding/signals-cpp/main.cpp connections
+\o \snippet doc/src/snippets/qml/qtbinding/signals-cpp/MyItem.qml 0
 \endtable
 
 C++ signals can use enum values as parameters provided that the enum is declared in the
@@ -376,14 +376,14 @@ See \l {Using enumerations of a custom type} below for details.
 Any properties declared in a QML object are automatically accessible from C++. Given a QML item
 like this:
 
-\snippet doc/src/snippets/declarative/qtbinding/properties-qml/MyItem.qml 0
+\snippet doc/src/snippets/qml/qtbinding/properties-qml/MyItem.qml 0
 
-The value of the \c someNumber property can be set and read using QDeclarativeProperty, or
+The value of the \c someNumber property can be set and read using QQmlProperty, or
 QObject::setProperty() and QObject::property():
 
-\snippet doc/src/snippets/declarative/qtbinding/properties-qml/main.cpp 0
+\snippet doc/src/snippets/qml/qtbinding/properties-qml/main.cpp 0
 
-You should always use QObject::setProperty(), QDeclarativeProperty or QMetaProperty::write() to
+You should always use QObject::setProperty(), QQmlProperty or QMetaProperty::write() to
 change a QML property value, to ensure the QML engine is made aware of the property change. For example,
 say you have a custom element \c PushButton with a \c buttonText property that internally reflects
 the value of a \c m_buttonText member variable. Modifying the member variable directly like this is
@@ -391,7 +391,7 @@ not a good idea:
 
 \badcode
 // BAD!
-QDeclarativeComponent component(engine, "MyButton.qml");
+QQmlComponent component(engine, "MyButton.qml");
 PushButton *button = qobject_cast<PushButton*>(component.create());
 button->m_buttonText = "Click me";
 \endcode
@@ -410,8 +410,8 @@ property. This property can be written to and read from QML:
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/qtbinding/properties-cpp/applicationdata.h 0
-\o \snippet doc/src/snippets/declarative/qtbinding/properties-cpp/MyItem.qml 0
+\o \snippet doc/src/snippets/qml/qtbinding/properties-cpp/applicationdata.h 0
+\o \snippet doc/src/snippets/qml/qtbinding/properties-cpp/MyItem.qml 0
 \endtable
 
 Notice the \c backgroundColorChanged signal is declared as the NOTIFY signal for the
@@ -468,8 +468,8 @@ converted to JavaScript array and object values, repectively:
 \o String format
 \o Example
 \row
-\o \snippet doc/src/snippets/declarative/qtbinding/variantlistmap/MyItem.qml 0
-\o \snippet doc/src/snippets/declarative/qtbinding/variantlistmap/main.cpp 0
+\o \snippet doc/src/snippets/qml/qtbinding/variantlistmap/MyItem.qml 0
+\o \snippet doc/src/snippets/qml/qtbinding/variantlistmap/main.cpp 0
 \endtable
 
 This produces output like:
@@ -492,13 +492,13 @@ side, and is automatically converted to a QVariantList or QVariantMap when it is
 To use an enumeration from a custom C++ component, the enumeration must be declared with Q_ENUMS() to
 register it with Qt's meta object system. For example, the following C++ type has a \c Status enum:
 
-\snippet doc/src/snippets/declarative/qtbinding/enums/imageviewer.h start
-\snippet doc/src/snippets/declarative/qtbinding/enums/imageviewer.h end
+\snippet doc/src/snippets/qml/qtbinding/enums/imageviewer.h start
+\snippet doc/src/snippets/qml/qtbinding/enums/imageviewer.h end
 
 Providing the \c ImageViewer class has been registered using qmlRegisterType(), its \c Status enum can
 now be used from QML:
 
-\snippet doc/src/snippets/declarative/qtbinding/enums/standalone.qml 0
+\snippet doc/src/snippets/qml/qtbinding/enums/standalone.qml 0
 
 The C++ type must be registered with QML to use its enums. If your C++ type is not instantiable, it
 can be registered using qmlRegisterUncreatableType().  To be accessible from QML, the names of enum values
@@ -525,7 +525,7 @@ function, the enum type must be registered using qRegisterMetaType().
 
 For QML signals, enum values may be used as signal parameters using the \c int type:
 
-\snippet doc/src/snippets/declarative/qtbinding/enums/standalone.qml 1
+\snippet doc/src/snippets/qml/qtbinding/enums/standalone.qml 1
 
 
 \section2 Automatic Type Conversion from Strings
@@ -594,11 +594,11 @@ a QColor-type property or to call a C++ function that requires a QColor paramete
 
 \section1 Writing QML plugins
 
-The Qt Declarative module includes the QDeclarativeExtensionPlugin class, which is an abstract
+The Qt Declarative module includes the QQmlExtensionPlugin class, which is an abstract
 class for writing QML plugins. This allows QML extension types to be dynamically loaded into
 QML applications.
 
-See the QDeclarativeExtensionPlugin documentation and \l {How to Create Qt Plugins} for more
+See the QQmlExtensionPlugin documentation and \l {How to Create Qt Plugins} for more
 details.
 
 
@@ -643,22 +643,22 @@ project
 The \c main.qml and \c background.png files will be packaged as resource files. This is
 done in the \c example.qrc resource collection file:
 
-\quotefile doc/src/snippets/declarative/qtbinding/resources/example.qrc
+\quotefile doc/src/snippets/qml/qtbinding/resources/example.qrc
 
 Since \c background.png is a resource file, \c main.qml can refer to it using the relative
 path specified in \c example.qrc:
 
-\snippet doc/src/snippets/declarative/qtbinding/resources/main.qml 0
+\snippet doc/src/snippets/qml/qtbinding/resources/main.qml 0
 
 To allow QML to locate resource files correctly, the \c main.cpp loads the main QML
 file, \c main.qml, as a resource file using the \c qrc scheme:
 
-\snippet doc/src/snippets/declarative/qtbinding/resources/main.cpp 0
+\snippet doc/src/snippets/qml/qtbinding/resources/main.cpp 0
 
 Finally \c project.pro uses the RESOURCES variable to indicate that \c example.qrc should
 be used to build the application resources:
 
-\quotefile doc/src/snippets/declarative/qtbinding/resources/resources.pro
+\quotefile doc/src/snippets/qml/qtbinding/resources/resources.pro
 
 See \l {The Qt Resource System} for more information.
 

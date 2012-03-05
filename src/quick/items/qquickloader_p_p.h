@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -56,7 +56,7 @@
 #include "qquickloader_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
 #include "qquickitemchangelistener_p.h"
-#include <qdeclarativeincubator.h>
+#include <qqmlincubator.h>
 
 #include <private/qv8_p.h>
 
@@ -64,10 +64,10 @@ QT_BEGIN_NAMESPACE
 
 
 class QQuickLoaderPrivate;
-class QQuickLoaderIncubator : public QDeclarativeIncubator
+class QQuickLoaderIncubator : public QQmlIncubator
 {
 public:
-    QQuickLoaderIncubator(QQuickLoaderPrivate *l, IncubationMode mode) : QDeclarativeIncubator(mode), loader(l) {}
+    QQuickLoaderIncubator(QQuickLoaderPrivate *l, IncubationMode mode) : QQmlIncubator(mode), loader(l) {}
 
 protected:
     virtual void statusChanged(Status);
@@ -77,7 +77,7 @@ private:
     QQuickLoaderPrivate *loader;
 };
 
-class QDeclarativeContext;
+class QQmlContext;
 class QQuickLoaderPrivate : public QQuickImplicitSizeItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickLoader)
@@ -91,16 +91,16 @@ public:
     void initResize();
     void load();
 
-    void incubatorStateChanged(QDeclarativeIncubator::Status status);
+    void incubatorStateChanged(QQmlIncubator::Status status);
     void setInitialState(QObject *o);
     void disposeInitialPropertyValues();
-    QUrl resolveSourceUrl(QDeclarativeV8Function *args);
-    v8::Handle<v8::Object> extractInitialPropertyValues(QDeclarativeV8Function *args, QObject *loader, bool *error);
+    QUrl resolveSourceUrl(QQmlV8Function *args);
+    v8::Handle<v8::Object> extractInitialPropertyValues(QQmlV8Function *args, QObject *loader, bool *error);
 
     QUrl source;
     QQuickItem *item;
-    QDeclarativeComponent *component;
-    QDeclarativeContext *itemContext;
+    QQmlComponent *component;
+    QQmlContext *itemContext;
     QQuickLoaderIncubator *incubator;
     v8::Persistent<v8::Object> initialPropertyValues;
     v8::Persistent<v8::Object> qmlGlobalForIpv;

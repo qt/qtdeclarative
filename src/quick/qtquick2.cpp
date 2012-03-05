@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,32 +40,32 @@
 ****************************************************************************/
 
 #include "qtquick2_p.h"
-#include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativeutilmodule_p.h>
-#include <private/qdeclarativevaluetype_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qquickutilmodule_p.h>
+#include <private/qqmlvaluetype_p.h>
 #include <private/qquickitemsmodule_p.h>
 #include <private/qquickparticlesmodule_p.h>
 #include <private/qquickwindowmodule_p.h>
 
-#include <private/qdeclarativeenginedebugservice_p.h>
-#include <private/qdeclarativedebugstatesdelegate_p.h>
-#include <private/qdeclarativebinding_p.h>
-#include <private/qdeclarativecontext_p.h>
-#include <QtQuick/private/qdeclarativepropertychanges_p.h>
-#include <QtQuick/private/qdeclarativestate_p.h>
-#include <qdeclarativeproperty.h>
+#include <private/qqmlenginedebugservice_p.h>
+#include <private/qqmldebugstatesdelegate_p.h>
+#include <private/qqmlbinding_p.h>
+#include <private/qqmlcontext_p.h>
+#include <QtQuick/private/qquickpropertychanges_p.h>
+#include <QtQuick/private/qquickstate_p.h>
+#include <qqmlproperty.h>
 #include <QtCore/QWeakPointer>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeQtQuick2DebugStatesDelegate : public QDeclarativeDebugStatesDelegate
+class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate
 {
 public:
-    QDeclarativeQtQuick2DebugStatesDelegate();
-    virtual ~QDeclarativeQtQuick2DebugStatesDelegate();
-    virtual void buildStatesList(QDeclarativeContext *ctxt, bool cleanList);
-    virtual void updateBinding(QDeclarativeContext *context,
-                               const QDeclarativeProperty &property,
+    QQmlQtQuick2DebugStatesDelegate();
+    virtual ~QQmlQtQuick2DebugStatesDelegate();
+    virtual void buildStatesList(QQmlContext *ctxt, bool cleanList);
+    virtual void updateBinding(QQmlContext *context,
+                               const QQmlProperty &property,
                                const QVariant &expression, bool isLiteralValue,
                                const QString &fileName, int line, int column,
                                bool *isBaseState);
@@ -79,37 +79,37 @@ public:
 private:
     void buildStatesList(QObject *obj);
 
-    QList<QWeakPointer<QDeclarativeState> > m_allStates;
+    QList<QWeakPointer<QQuickState> > m_allStates;
 };
 
-QDeclarativeQtQuick2DebugStatesDelegate::QDeclarativeQtQuick2DebugStatesDelegate()
+QQmlQtQuick2DebugStatesDelegate::QQmlQtQuick2DebugStatesDelegate()
 {
 }
 
-QDeclarativeQtQuick2DebugStatesDelegate::~QDeclarativeQtQuick2DebugStatesDelegate()
+QQmlQtQuick2DebugStatesDelegate::~QQmlQtQuick2DebugStatesDelegate()
 {
 }
 
-void QDeclarativeQtQuick2DebugStatesDelegate::buildStatesList(QDeclarativeContext *ctxt, bool cleanList)
+void QQmlQtQuick2DebugStatesDelegate::buildStatesList(QQmlContext *ctxt, bool cleanList)
 {
     if (cleanList)
         m_allStates.clear();
 
-    QDeclarativeContextPrivate *ctxtPriv = QDeclarativeContextPrivate::get(ctxt);
+    QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(ctxt);
     for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
         buildStatesList(ctxtPriv->instances.at(ii));
     }
 
-    QDeclarativeContextData *child = QDeclarativeContextData::get(ctxt)->childContexts;
+    QQmlContextData *child = QQmlContextData::get(ctxt)->childContexts;
     while (child) {
-        buildStatesList(child->asQDeclarativeContext());
+        buildStatesList(child->asQQmlContext());
         child = child->nextChild;
     }
 }
 
-void QDeclarativeQtQuick2DebugStatesDelegate::buildStatesList(QObject *obj)
+void QQmlQtQuick2DebugStatesDelegate::buildStatesList(QObject *obj)
 {
-    if (QDeclarativeState *state = qobject_cast<QDeclarativeState *>(obj)) {
+    if (QQuickState *state = qobject_cast<QQuickState *>(obj)) {
         m_allStates.append(state);
     }
 
@@ -119,23 +119,23 @@ void QDeclarativeQtQuick2DebugStatesDelegate::buildStatesList(QObject *obj)
     }
 }
 
-void QDeclarativeQtQuick2DebugStatesDelegate::updateBinding(QDeclarativeContext *context,
-                                                            const QDeclarativeProperty &property,
+void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
+                                                            const QQmlProperty &property,
                                                             const QVariant &expression, bool isLiteralValue,
                                                             const QString &fileName, int line, int column,
                                                             bool *inBaseState)
 {
     QObject *object = property.object();
     QString propertyName = property.name();
-    foreach (QWeakPointer<QDeclarativeState> statePointer, m_allStates) {
-        if (QDeclarativeState *state = statePointer.data()) {
+    foreach (QWeakPointer<QQuickState> statePointer, m_allStates) {
+        if (QQuickState *state = statePointer.data()) {
             // here we assume that the revert list on itself defines the base state
             if (state->isStateActive() && state->containsPropertyInRevertList(object, propertyName)) {
                 *inBaseState = false;
 
-                QDeclarativeBinding *newBinding = 0;
+                QQmlBinding *newBinding = 0;
                 if (!isLiteralValue) {
-                    newBinding = new QDeclarativeBinding(expression.toString(), object, context);
+                    newBinding = new QQmlBinding(expression.toString(), object, context);
                     newBinding->setTarget(property);
                     newBinding->setNotifyOnValueChanged(true);
                     newBinding->setSourceLocation(fileName, line, column);
@@ -150,12 +150,12 @@ void QDeclarativeQtQuick2DebugStatesDelegate::updateBinding(QDeclarativeContext 
     }
 }
 
-bool QDeclarativeQtQuick2DebugStatesDelegate::setBindingForInvalidProperty(QObject *object,
+bool QQmlQtQuick2DebugStatesDelegate::setBindingForInvalidProperty(QObject *object,
                                                                            const QString &propertyName,
                                                                            const QVariant &expression,
                                                                            bool isLiteralValue)
 {
-    if (QDeclarativePropertyChanges *propertyChanges = qobject_cast<QDeclarativePropertyChanges *>(object)) {
+    if (QQuickPropertyChanges *propertyChanges = qobject_cast<QQuickPropertyChanges *>(object)) {
         if (isLiteralValue)
             propertyChanges->changeValue(propertyName, expression);
         else
@@ -166,26 +166,26 @@ bool QDeclarativeQtQuick2DebugStatesDelegate::setBindingForInvalidProperty(QObje
     }
 }
 
-void QDeclarativeQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *object, const QString &propertyName)
+void QQmlQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *object, const QString &propertyName)
 {
-    if (QDeclarativePropertyChanges *propertyChanges = qobject_cast<QDeclarativePropertyChanges *>(object)) {
+    if (QQuickPropertyChanges *propertyChanges = qobject_cast<QQuickPropertyChanges *>(object)) {
         propertyChanges->removeProperty(propertyName);
     }
 }
 
 
-void QDeclarativeQtQuick2Module::defineModule()
+void QQmlQtQuick2Module::defineModule()
 {
-    QDeclarativeUtilModule::defineModule();
-    QDeclarativeEnginePrivate::defineModule();
+    QQuickUtilModule::defineModule();
+    QQmlEnginePrivate::defineModule();
     QQuickItemsModule::defineModule();
     QQuickParticlesModule::defineModule();
     QQuickWindowModule::defineModule();
-    QDeclarativeValueTypeFactory::registerValueTypes();
+    QQmlValueTypeFactory::registerValueTypes();
 
-    if (QDeclarativeEngineDebugService::isDebuggingEnabled()) {
-        QDeclarativeEngineDebugService::instance()->setStatesDelegate(
-                    new QDeclarativeQtQuick2DebugStatesDelegate);
+    if (QQmlEngineDebugService::isDebuggingEnabled()) {
+        QQmlEngineDebugService::instance()->setStatesDelegate(
+                    new QQmlQtQuick2DebugStatesDelegate);
     }
 }
 

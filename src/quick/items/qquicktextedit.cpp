@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,15 +48,15 @@
 #include "qquicktextnode_p.h"
 #include <QtQuick/qsgsimplerectnode.h>
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextobject.h>
 #include <QtCore/qmath.h>
 
-#include <private/qdeclarativeglobal_p.h>
-#include <private/qdeclarativeproperty_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qqmlproperty_p.h>
 #include <private/qtextengine_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
@@ -683,7 +683,7 @@ QUrl QQuickTextEdit::baseUrl() const
 {
     Q_D(const QQuickTextEdit);
     if (d->baseUrl.isEmpty()) {
-        if (QDeclarativeContext *context = qmlContext(this))
+        if (QQmlContext *context = qmlContext(this))
             const_cast<QQuickTextEditPrivate *>(d)->baseUrl = context->baseUrl();
     }
     return d->baseUrl;
@@ -702,7 +702,7 @@ void QQuickTextEdit::setBaseUrl(const QUrl &url)
 
 void QQuickTextEdit::resetBaseUrl()
 {
-    if (QDeclarativeContext *context = qmlContext(this))
+    if (QQmlContext *context = qmlContext(this))
         setBaseUrl(context->baseUrl());
     else
         setBaseUrl(QUrl());
@@ -910,16 +910,16 @@ void QQuickTextEdit::setCursorPosition(int pos)
     needed, and the x and y properties of delegate instance will be set so as
     to be one pixel before the top left of the current character.
 
-    Note that the root item of the delegate component must be a QDeclarativeItem or
-    QDeclarativeItem derived item.
+    Note that the root item of the delegate component must be a QQuickItem or
+    QQuickItem derived item.
 */
-QDeclarativeComponent* QQuickTextEdit::cursorDelegate() const
+QQmlComponent* QQuickTextEdit::cursorDelegate() const
 {
     Q_D(const QQuickTextEdit);
     return d->cursorComponent;
 }
 
-void QQuickTextEdit::setCursorDelegate(QDeclarativeComponent* c)
+void QQuickTextEdit::setCursorDelegate(QQmlComponent* c)
 {
     Q_D(QQuickTextEdit);
     if (d->cursorComponent) {
@@ -947,13 +947,13 @@ void QQuickTextEdit::loadCursorDelegate()
     Q_D(QQuickTextEdit);
     if (d->cursorComponent->isLoading() || !isComponentComplete())
         return;
-    QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
+    QQmlContext *creationContext = d->cursorComponent->creationContext();
     QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
     d->cursor = qobject_cast<QQuickItem*>(object);
     if (d->cursor) {
         d->control->setCursorWidth(0);
         updateCursor();
-        QDeclarative_setParent_noEvent(d->cursor, this);
+        QQml_setParent_noEvent(d->cursor, this);
         d->cursor->setParentItem(this);
         d->cursor->setHeight(QFontMetrics(d->font).height());
         moveCursorDelegate();

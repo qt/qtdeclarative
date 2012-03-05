@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -46,11 +46,11 @@
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
 
-#include <private/qdeclarativeprofilerservice_p.h>
-#include <private/qdeclarativeinspectorservice_p.h>
+#include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlinspectorservice_p.h>
 
-#include <QtDeclarative/qdeclarativeengine.h>
-#include <private/qdeclarativeengine_p.h>
+#include <QtQml/qqmlengine.h>
+#include <private/qqmlengine_p.h>
 #include <QtCore/qbasictimer.h>
 
 
@@ -62,8 +62,8 @@ void QQuickViewPrivate::init()
 
     engine.setIncubationController(q->incubationController());
 
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        QDeclarativeInspectorService::instance()->addView(q);
+    if (QQmlDebugService::isDebuggingEnabled())
+        QQmlInspectorService::instance()->addView(q);
 }
 
 QQuickViewPrivate::QQuickViewPrivate()
@@ -73,8 +73,8 @@ QQuickViewPrivate::QQuickViewPrivate()
 
 QQuickViewPrivate::~QQuickViewPrivate()
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled())
-        QDeclarativeInspectorService::instance()->removeView(q_func());
+    if (QQmlDebugService::isDebuggingEnabled())
+        QQmlInspectorService::instance()->removeView(q_func());
 
     delete root;
 }
@@ -91,11 +91,11 @@ void QQuickViewPrivate::execute()
         component = 0;
     }
     if (!source.isEmpty()) {
-        component = new QDeclarativeComponent(&engine, source, q);
+        component = new QQmlComponent(&engine, source, q);
         if (!component->isLoading()) {
             q->continueExecute();
         } else {
-            QObject::connect(component, SIGNAL(statusChanged(QDeclarativeComponent::Status)),
+            QObject::connect(component, SIGNAL(statusChanged(QQmlComponent::Status)),
                              q, SLOT(continueExecute()));
         }
     }
@@ -120,7 +120,7 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 
     This is a convenience subclass of QQuickCanvas which
     will automatically load and display a QML scene when given the URL of the main source file. Alternatively,
-    you can instantiate your own objects using QDeclarativeComponent and place them in a manually setup QQuickCanvas.
+    you can instantiate your own objects using QQmlComponent and place them in a manually setup QQuickCanvas.
 
     Typical usage:
 
@@ -216,23 +216,23 @@ QUrl QQuickView::source() const
 }
 
 /*!
-  Returns a pointer to the QDeclarativeEngine used for instantiating
+  Returns a pointer to the QQmlEngine used for instantiating
   QML Components.
  */
-QDeclarativeEngine* QQuickView::engine() const
+QQmlEngine* QQuickView::engine() const
 {
     Q_D(const QQuickView);
-    return const_cast<QDeclarativeEngine *>(&d->engine);
+    return const_cast<QQmlEngine *>(&d->engine);
 }
 
 /*!
   This function returns the root of the context hierarchy.  Each QML
-  component is instantiated in a QDeclarativeContext.  QDeclarativeContext's are
+  component is instantiated in a QQmlContext.  QQmlContext's are
   essential for passing data to QML components.  In QML, contexts are
   arranged hierarchically and this hierarchy is managed by the
-  QDeclarativeEngine.
+  QQmlEngine.
  */
-QDeclarativeContext* QQuickView::rootContext() const
+QQmlContext* QQuickView::rootContext() const
 {
     Q_D(const QQuickView);
     return d->engine.rootContext();
@@ -275,12 +275,12 @@ QQuickView::Status QQuickView::status() const
     Return the list of errors that occurred during the last compile or create
     operation.  When the status is not Error, an empty list is returned.
 */
-QList<QDeclarativeError> QQuickView::errors() const
+QList<QQmlError> QQuickView::errors() const
 {
     Q_D(const QQuickView);
     if (d->component)
         return d->component->errors();
-    return QList<QDeclarativeError>();
+    return QList<QQmlError>();
 }
 
 /*!
@@ -377,11 +377,11 @@ QQuickView::ResizeMode QQuickView::resizeMode() const
 void QQuickView::continueExecute()
 {
     Q_D(QQuickView);
-    disconnect(d->component, SIGNAL(statusChanged(QDeclarativeComponent::Status)), this, SLOT(continueExecute()));
+    disconnect(d->component, SIGNAL(statusChanged(QQmlComponent::Status)), this, SLOT(continueExecute()));
 
     if (d->component->isError()) {
-        QList<QDeclarativeError> errorList = d->component->errors();
-        foreach (const QDeclarativeError &error, errorList) {
+        QList<QQmlError> errorList = d->component->errors();
+        foreach (const QQmlError &error, errorList) {
             qWarning() << error;
         }
         emit statusChanged(status());
@@ -391,8 +391,8 @@ void QQuickView::continueExecute()
     QObject *obj = d->component->create();
 
     if (d->component->isError()) {
-        QList<QDeclarativeError> errorList = d->component->errors();
-        foreach (const QDeclarativeError &error, errorList) {
+        QList<QQmlError> errorList = d->component->errors();
+        foreach (const QQmlError &error, errorList) {
             qWarning() << error;
         }
         emit statusChanged(status());
@@ -422,7 +422,7 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
                    << "loaded has 'import QtQuick 1.0' or 'import Qt 4.7', this error will occur." << endl
                    << endl
                    << "To load files with 'import QtQuick 1.0' or 'import Qt 4.7', use the" << endl
-                   << "QDeclarativeView class in the qtquick1 module." << endl;
+                   << "QQuickView class in the qtquick1 module." << endl;
         delete obj;
         root = 0;
     }
@@ -499,35 +499,35 @@ void QQuickView::resizeEvent(QResizeEvent *e)
 
 void QQuickView::keyPressEvent(QKeyEvent *e)
 {
-    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Key);
+    QQmlProfilerService::addEvent(QQmlProfilerService::Key);
 
     QQuickCanvas::keyPressEvent(e);
 }
 
 void QQuickView::keyReleaseEvent(QKeyEvent *e)
 {
-    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Key);
+    QQmlProfilerService::addEvent(QQmlProfilerService::Key);
 
     QQuickCanvas::keyReleaseEvent(e);
 }
 
 void QQuickView::mouseMoveEvent(QMouseEvent *e)
 {
-    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Mouse);
+    QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
 
     QQuickCanvas::mouseMoveEvent(e);
 }
 
 void QQuickView::mousePressEvent(QMouseEvent *e)
 {
-    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Mouse);
+    QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
 
     QQuickCanvas::mousePressEvent(e);
 }
 
 void QQuickView::mouseReleaseEvent(QMouseEvent *e)
 {
-    QDeclarativeProfilerService::addEvent(QDeclarativeProfilerService::Mouse);
+    QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
 
     QQuickCanvas::mouseReleaseEvent(e);
 }

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -80,7 +80,7 @@ private slots:
     void logError(const QString &error);
     void logStatus(const QString &status);
 
-    void declarativeComplete();
+    void qmlComplete();
     void v8Complete();
 
 private:
@@ -103,14 +103,14 @@ private:
     bool m_verbose;
     bool m_quitAfterSave;
 
-    QDeclarativeDebugConnection m_connection;
-    DeclarativeProfileClient m_declarativeProfilerClient;
+    QQmlDebugConnection m_connection;
+    QmlProfileClient m_qmlProfilerClient;
     V8ProfileClient m_v8profilerClient;
     ProfileData m_profileData;
     QTimer m_connectTimer;
     uint m_connectionAttempts;
 
-    bool m_declarativeDataReady;
+    bool m_qmlDataReady;
     bool m_v8DataReady;
 };
 

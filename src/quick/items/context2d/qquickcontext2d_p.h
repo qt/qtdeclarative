@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,8 +43,8 @@
 #define QQUICKCONTEXT2D_P_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
 #include <private/qquickcanvascontext_p.h>
 #include <private/qquickcanvasitem_p.h>
 #include <QtGui/qpainter.h>
@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickContext2DCommandBuffer;
 class QQuickContext2DTexture;
-class QDeclarativePixmap;
+class QQuickPixmap;
 class QSGTexture;
 
 class QLockedCommandBuffer {

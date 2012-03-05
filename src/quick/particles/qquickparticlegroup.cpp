@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -96,20 +96,20 @@ QQuickParticleGroup::QQuickParticleGroup(QObject* parent)
 
 }
 
-void delayedRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value)
+void delayedRedirect(QQmlListProperty<QObject> *prop, QObject *value)
 {
     QQuickParticleGroup* pg = qobject_cast<QQuickParticleGroup*>(prop->object);
     if (pg)
         pg->delayRedirect(value);
 }
 
-QDeclarativeListProperty<QObject> QQuickParticleGroup::particleChildren()
+QQmlListProperty<QObject> QQuickParticleGroup::particleChildren()
 {
     QQuickParticleSystem* system = qobject_cast<QQuickParticleSystem*>(parent());
     if (system)
-        return QDeclarativeListProperty<QObject>(this, 0, &QQuickParticleSystem::statePropertyRedirect);
+        return QQmlListProperty<QObject>(this, 0, &QQuickParticleSystem::statePropertyRedirect);
     else
-        return QDeclarativeListProperty<QObject>(this, 0, &delayedRedirect);
+        return QQmlListProperty<QObject>(this, 0, &delayedRedirect);
 }
 
 void QQuickParticleGroup::setSystem(QQuickParticleSystem* arg)

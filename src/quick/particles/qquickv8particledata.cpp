@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -497,9 +497,9 @@ QQuickV8ParticleData::~QQuickV8ParticleData()
     qPersistentDispose(m_v8Value);
 }
 
-QDeclarativeV8Handle QQuickV8ParticleData::v8Value()
+QQmlV8Handle QQuickV8ParticleData::v8Value()
 {
-    return QDeclarativeV8Handle::fromHandle(m_v8Value);
+    return QQmlV8Handle::fromHandle(m_v8Value);
 }
 
 QT_END_NAMESPACE

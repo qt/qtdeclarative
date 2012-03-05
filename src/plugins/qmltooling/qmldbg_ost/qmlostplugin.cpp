@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,7 +42,7 @@
 #include "qmlostplugin.h"
 #include "qostdevice.h"
 
-#include <private/qdeclarativedebugserver_p.h>
+#include <private/qqmldebugserver_p.h>
 #include <private/qpacketprotocol_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -55,7 +55,7 @@ public:
 
     QOstDevice *ost;
     QPacketProtocol *protocol;
-    QDeclarativeDebugServer *debugServer;
+    QQmlDebugServer *debugServer;
 };
 
 QmlOstPluginPrivate::QmlOstPluginPrivate() :
@@ -75,7 +75,7 @@ QmlOstPlugin::~QmlOstPlugin()
     delete d_ptr;
 }
 
-void QmlOstPlugin::setServer(QDeclarativeDebugServer *server)
+void QmlOstPlugin::setServer(QQmlDebugServer *server)
 {
     Q_D(QmlOstPlugin);
     d->debugServer = server;
@@ -127,12 +127,12 @@ void QmlOstPlugin::setPort(int port, bool block)
     if (!ok) {
         if (d->ost->errorString().length())
             qDebug("Error from QOstDevice: %s", qPrintable(d->ost->errorString()));
-        qWarning("QDeclarativeDebugServer: Unable to listen on OST"); // This message is part of the signalling - do not change the format!
+        qWarning("QQmlDebugServer: Unable to listen on OST"); // This message is part of the signalling - do not change the format!
         return;
     }
     d->protocol = new QPacketProtocol(d->ost, this);
     QObject::connect(d->protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
-    qWarning("QDeclarativeDebugServer: Waiting for connection via OST"); // This message is part of the signalling - do not change the format!
+    qWarning("QQmlDebugServer: Waiting for connection via OST"); // This message is part of the signalling - do not change the format!
 }
 
 void QmlOstPlugin::readyRead()

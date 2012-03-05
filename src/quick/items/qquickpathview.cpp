@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,10 +43,11 @@
 #include "qquickpathview_p_p.h"
 #include "qquickcanvas.h"
 
-#include <QtQuick/private/qdeclarativestate_p.h>
-#include <private/qdeclarativeopenmetaobject_p.h>
+#include <QtQuick/private/qquickstate_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qqmlopenmetaobject_p.h>
 #include <private/qlistmodelinterface_p.h>
-#include <private/qdeclarativechangeset_p.h>
+#include <private/qquickchangeset_p.h>
 
 #include <QtGui/qevent.h>
 #include <QtGui/qevent.h>
@@ -78,16 +79,16 @@ inline qreal qmlMod(qreal x, qreal y)
         return fmod(x, y);
 }
 
-static QDeclarativeOpenMetaObjectType *qPathViewAttachedType = 0;
+static QQmlOpenMetaObjectType *qPathViewAttachedType = 0;
 
 QQuickPathViewAttached::QQuickPathViewAttached(QObject *parent)
 : QObject(parent), m_percent(-1), m_view(0), m_onPath(false), m_isCurrent(false)
 {
     if (qPathViewAttachedType) {
-        m_metaobject = new QDeclarativeOpenMetaObject(this, qPathViewAttachedType);
+        m_metaobject = new QQmlOpenMetaObject(this, qPathViewAttachedType);
         m_metaobject->setCached(true);
     } else {
-        m_metaobject = new QDeclarativeOpenMetaObject(this);
+        m_metaobject = new QQmlOpenMetaObject(this);
     }
 }
 
@@ -126,7 +127,7 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool onPath)
     inRequest = true;
     QQuickItem *item = model->item(modelIndex, false);
     if (item) {
-        QDeclarative_setParent_noEvent(item, q);
+        QQml_setParent_noEvent(item, q);
         item->setParentItem(q);
         requestedIndex = -1;
         qPathViewAttachedType = attType;
@@ -153,7 +154,7 @@ void QQuickPathView::createdItem(int index, QQuickItem *item)
             att->setOnPath(false);
         }
         item->setParentItem(this);
-        QDeclarative_setParent_noEvent(item, this);
+        QQml_setParent_noEvent(item, this);
         d->updateItem(item, index < d->firstIndex ? 0.0 : 1.0);
     } else {
         d->requestedIndex = -1;
@@ -200,12 +201,12 @@ QQuickPathViewAttached *QQuickPathViewPrivate::attached(QQuickItem *item)
     return static_cast<QQuickPathViewAttached *>(qmlAttachedPropertiesObject<QQuickPathView>(item, false));
 }
 
-QDeclarativeOpenMetaObjectType *QQuickPathViewPrivate::attachedType()
+QQmlOpenMetaObjectType *QQuickPathViewPrivate::attachedType()
 {
     Q_Q(QQuickPathView);
     if (!attType) {
         // pre-create one metatype to share with all attached objects
-        attType = new QDeclarativeOpenMetaObjectType(&QQuickPathViewAttached::staticMetaObject, qmlEngine(q));
+        attType = new QQmlOpenMetaObjectType(&QQuickPathViewAttached::staticMetaObject, qmlEngine(q));
         foreach (const QString &attr, path->attributes())
             attType->createProperty(attr.toUtf8());
     }
@@ -273,12 +274,12 @@ void QQuickPathViewPrivate::createHighlight()
 
     QQuickItem *item = 0;
     if (highlightComponent) {
-        QDeclarativeContext *creationContext = highlightComponent->creationContext();
-        QDeclarativeContext *highlightContext = new QDeclarativeContext(
+        QQmlContext *creationContext = highlightComponent->creationContext();
+        QQmlContext *highlightContext = new QQmlContext(
                 creationContext ? creationContext : qmlContext(q));
         QObject *nobj = highlightComponent->create(highlightContext);
         if (nobj) {
-            QDeclarative_setParent_noEvent(highlightContext, nobj);
+            QQml_setParent_noEvent(highlightContext, nobj);
             item = qobject_cast<QQuickItem *>(nobj);
             if (!item)
                 delete nobj;
@@ -289,7 +290,7 @@ void QQuickPathViewPrivate::createHighlight()
         item = new QQuickItem;
     }
     if (item) {
-        QDeclarative_setParent_noEvent(item, q);
+        QQml_setParent_noEvent(item, q);
         item->setParentItem(q);
         highlightItem = item;
         changed = true;
@@ -426,11 +427,11 @@ void QQuickPathViewPrivate::regenerate()
 
     For example, if there is a simple list model defined in a file \c ContactModel.qml like this:
 
-    \snippet doc/src/snippets/declarative/pathview/ContactModel.qml 0
+    \snippet doc/src/snippets/qml/pathview/ContactModel.qml 0
 
     This data can be represented as a PathView, like this:
 
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 0
+    \snippet doc/src/snippets/qml/pathview/pathview.qml 0
 
     \image pathview.gif
 
@@ -463,7 +464,7 @@ void QQuickPathViewPrivate::regenerate()
     this attached property directly as \c PathView.isCurrentItem, while the child
     \c nameText object must refer to this property as \c wrapper.PathView.isCurrentItem.
 
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+    \snippet doc/src/snippets/qml/pathview/pathview.qml 1
 
     \bold Note that views do not enable \e clip automatically.  If the view
     is not clipped by another item or the screen, it will be necessary
@@ -525,7 +526,7 @@ QQuickPathView::~QQuickPathView()
 
     This property may be used to adjust the appearance of the current item.
 
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+    \snippet doc/src/snippets/qml/pathview/pathview.qml 1
 */
 
 /*!
@@ -551,8 +552,8 @@ void QQuickPathView::setModel(const QVariant &model)
         return;
 
     if (d->model) {
-        disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
-                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
+        disconnect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
         disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
         disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
         for (int i=0; i<d->items.count(); i++){
@@ -583,8 +584,8 @@ void QQuickPathView::setModel(const QVariant &model)
     }
     d->modelCount = 0;
     if (d->model) {
-        connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
-                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
+        connect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
         connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
         connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
         d->modelCount = d->model->count();
@@ -617,13 +618,13 @@ int QQuickPathView::count() const
     This property holds the path used to lay out the items.
     For more information see the \l Path documentation.
 */
-QDeclarativePath *QQuickPathView::path() const
+QQuickPath *QQuickPathView::path() const
 {
     Q_D(const QQuickPathView);
     return d->path;
 }
 
-void QQuickPathView::setPath(QDeclarativePath *path)
+void QQuickPathView::setPath(QQuickPath *path)
 {
     Q_D(QQuickPathView);
     if (d->path == path)
@@ -786,13 +787,13 @@ void QQuickPathViewPrivate::setAdjustedOffset(qreal o)
     \sa highlightItem, highlightRangeMode
 */
 
-QDeclarativeComponent *QQuickPathView::highlight() const
+QQmlComponent *QQuickPathView::highlight() const
 {
     Q_D(const QQuickPathView);
     return d->highlightComponent;
 }
 
-void QQuickPathView::setHighlight(QDeclarativeComponent *highlight)
+void QQuickPathView::setHighlight(QQmlComponent *highlight)
 {
     Q_D(QQuickPathView);
     if (highlight != d->highlightComponent) {
@@ -1069,9 +1070,9 @@ bool QQuickPathView::isFlicking() const
     item in the delegate.
 
     Here is an example delegate:
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+    \snippet doc/src/snippets/qml/pathview/pathview.qml 1
 */
-QDeclarativeComponent *QQuickPathView::delegate() const
+QQmlComponent *QQuickPathView::delegate() const
 {
     Q_D(const QQuickPathView);
      if (d->model) {
@@ -1082,7 +1083,7 @@ QDeclarativeComponent *QQuickPathView::delegate() const
     return 0;
 }
 
-void QQuickPathView::setDelegate(QDeclarativeComponent *delegate)
+void QQuickPathView::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQuickPathView);
     if (delegate == this->delegate())
@@ -1337,7 +1338,7 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
         offsetAdj = 0.0;
         moveOffset.setValue(offset);
         tl.accel(moveOffset, velocity, accel, dist);
-        tl.callback(QDeclarativeTimeLineCallback(&moveOffset, fixOffsetCallback, this));
+        tl.callback(QQuickTimeLineCallback(&moveOffset, fixOffsetCallback, this));
         if (!flicking) {
             flicking = true;
             emit q->flickingChanged();
@@ -1583,7 +1584,7 @@ void QQuickPathView::refill()
         d->releaseItem(d->itemCache.takeLast());
 }
 
-void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
+void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
 {
     Q_D(QQuickPathView);
     if (!d->model || !d->model->isValid() || !d->path || !isComponentComplete())
@@ -1604,7 +1605,7 @@ void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
     int moveOffset;
     bool currentChanged = false;
     bool changedOffset = false;
-    foreach (const QDeclarativeChangeSet::Remove &r, changeSet.removes()) {
+    foreach (const QQuickChangeSet::Remove &r, changeSet.removes()) {
         if (moveId == -1 && d->currentIndex >= r.index + r.count) {
             d->currentIndex -= r.count;
             currentChanged = true;
@@ -1630,7 +1631,7 @@ void QQuickPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool r
         }
         d->modelCount -= r.count;
     }
-    foreach (const QDeclarativeChangeSet::Insert &i, changeSet.inserts()) {
+    foreach (const QQuickChangeSet::Insert &i, changeSet.inserts()) {
         if (d->modelCount) {
             if (moveId == -1 && i.index <= d->currentIndex) {
                 d->currentIndex += i.count;

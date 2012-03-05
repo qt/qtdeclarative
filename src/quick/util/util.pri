@@ -1,61 +1,61 @@
 SOURCES += \
-    $$PWD/qdeclarativeutilmodule.cpp\
-    $$PWD/qdeclarativeconnections.cpp \
-    $$PWD/qdeclarativepackage.cpp \
-    $$PWD/qdeclarativeanimation.cpp \
-    $$PWD/qdeclarativesystempalette.cpp \
-    $$PWD/qdeclarativespringanimation.cpp \
-    $$PWD/qdeclarativesmoothedanimation.cpp \
-    $$PWD/qdeclarativeanimationcontroller.cpp \
-    $$PWD/qdeclarativestate.cpp\
-    $$PWD/qdeclarativetransitionmanager.cpp \
-    $$PWD/qdeclarativestateoperations.cpp \
-    $$PWD/qdeclarativepropertychanges.cpp \
-    $$PWD/qdeclarativestategroup.cpp \
-    $$PWD/qdeclarativetransition.cpp \
-    $$PWD/qdeclarativelistaccessor.cpp \
-    $$PWD/qdeclarativetimeline.cpp \
-    $$PWD/qdeclarativetimer.cpp \
-    $$PWD/qdeclarativebind.cpp \
-    $$PWD/qdeclarativepixmapcache.cpp \
-    $$PWD/qdeclarativebehavior.cpp \
-    $$PWD/qdeclarativefontloader.cpp \
-    $$PWD/qdeclarativestyledtext.cpp \
-    $$PWD/qdeclarativepath.cpp \
-    $$PWD/qdeclarativechangeset.cpp \
-    $$PWD/qdeclarativelistcompositor.cpp \
-    $$PWD/qdeclarativepathinterpolator.cpp \
-    $$PWD/qdeclarativesvgparser.cpp
+    $$PWD/qquickutilmodule.cpp\
+    $$PWD/qquickconnections.cpp \
+    $$PWD/qquickpackage.cpp \
+    $$PWD/qquickanimation.cpp \
+    $$PWD/qquicksystempalette.cpp \
+    $$PWD/qquickspringanimation.cpp \
+    $$PWD/qquicksmoothedanimation.cpp \
+    $$PWD/qquickanimationcontroller.cpp \
+    $$PWD/qquickstate.cpp\
+    $$PWD/qquicktransitionmanager.cpp \
+    $$PWD/qquickstatechangescript.cpp \
+    $$PWD/qquickpropertychanges.cpp \
+    $$PWD/qquickstategroup.cpp \
+    $$PWD/qquicktransition.cpp \
+    $$PWD/qquicklistaccessor.cpp \
+    $$PWD/qquicktimeline.cpp \
+    $$PWD/qquicktimer.cpp \
+    $$PWD/qquickbind.cpp \
+    $$PWD/qquickpixmapcache.cpp \
+    $$PWD/qquickbehavior.cpp \
+    $$PWD/qquickfontloader.cpp \
+    $$PWD/qquickstyledtext.cpp \
+    $$PWD/qquickpath.cpp \
+    $$PWD/qquickchangeset.cpp \
+    $$PWD/qquicklistcompositor.cpp \
+    $$PWD/qquickpathinterpolator.cpp \
+    $$PWD/qquicksvgparser.cpp
 
 HEADERS += \
-    $$PWD/qdeclarativeutilmodule_p.h\
-    $$PWD/qdeclarativeconnections_p.h \
-    $$PWD/qdeclarativepackage_p.h \
-    $$PWD/qdeclarativeanimation_p.h \
-    $$PWD/qdeclarativeanimation_p_p.h \
-    $$PWD/qdeclarativesystempalette_p.h \
-    $$PWD/qdeclarativespringanimation_p.h \
-    $$PWD/qdeclarativeanimationcontroller_p.h \
-    $$PWD/qdeclarativesmoothedanimation_p.h \
-    $$PWD/qdeclarativesmoothedanimation_p_p.h \
-    $$PWD/qdeclarativestate_p.h\
-    $$PWD/qdeclarativestateoperations_p.h \
-    $$PWD/qdeclarativepropertychanges_p.h \
-    $$PWD/qdeclarativestate_p_p.h\
-    $$PWD/qdeclarativetransitionmanager_p_p.h \
-    $$PWD/qdeclarativestategroup_p.h \
-    $$PWD/qdeclarativetransition_p.h \
-    $$PWD/qdeclarativelistaccessor_p.h \
-    $$PWD/qdeclarativetimeline_p_p.h \
-    $$PWD/qdeclarativetimer_p.h \
-    $$PWD/qdeclarativebind_p.h \
-    $$PWD/qdeclarativepixmapcache_p.h \
-    $$PWD/qdeclarativebehavior_p.h \
-    $$PWD/qdeclarativefontloader_p.h \
-    $$PWD/qdeclarativestyledtext_p.h \
-    $$PWD/qdeclarativepath_p.h \
-    $$PWD/qdeclarativepath_p_p.h \
-    $$PWD/qdeclarativechangeset_p.h \
-    $$PWD/qdeclarativelistcompositor_p.h \
-    $$PWD/qdeclarativepathinterpolator_p.h \
-    $$PWD/qdeclarativesvgparser_p.h
+    $$PWD/qquickutilmodule_p.h\
+    $$PWD/qquickconnections_p.h \
+    $$PWD/qquickpackage_p.h \
+    $$PWD/qquickanimation_p.h \
+    $$PWD/qquickanimation_p_p.h \
+    $$PWD/qquicksystempalette_p.h \
+    $$PWD/qquickspringanimation_p.h \
+    $$PWD/qquickanimationcontroller_p.h \
+    $$PWD/qquicksmoothedanimation_p.h \
+    $$PWD/qquicksmoothedanimation_p_p.h \
+    $$PWD/qquickstate_p.h\
+    $$PWD/qquickstatechangescript_p.h \
+    $$PWD/qquickpropertychanges_p.h \
+    $$PWD/qquickstate_p_p.h\
+    $$PWD/qquicktransitionmanager_p_p.h \
+    $$PWD/qquickstategroup_p.h \
+    $$PWD/qquicktransition_p.h \
+    $$PWD/qquicklistaccessor_p.h \
+    $$PWD/qquicktimeline_p_p.h \
+    $$PWD/qquicktimer_p.h \
+    $$PWD/qquickbind_p.h \
+    $$PWD/qquickpixmapcache_p.h \
+    $$PWD/qquickbehavior_p.h \
+    $$PWD/qquickfontloader_p.h \
+    $$PWD/qquickstyledtext_p.h \
+    $$PWD/qquickpath_p.h \
+    $$PWD/qquickpath_p_p.h \
+    $$PWD/qquickchangeset_p.h \
+    $$PWD/qquicklistcompositor_p.h \
+    $$PWD/qquickpathinterpolator_p.h \
+    $$PWD/qquicksvgparser_p.h

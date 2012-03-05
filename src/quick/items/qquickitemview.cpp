@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qquickitemview_p_p.h"
-#include <QtQuick/private/qdeclarativetransition_p.h>
+#include <QtQuick/private/qquicktransition_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,14 +71,14 @@ bool QQuickItemViewChangeSet::hasPendingChanges() const
     return !pendingChanges.isEmpty();
 }
 
-void QQuickItemViewChangeSet::applyChanges(const QDeclarativeChangeSet &changeSet)
+void QQuickItemViewChangeSet::applyChanges(const QQuickChangeSet &changeSet)
 {
     pendingChanges.apply(changeSet);
 
     int moveId = -1;
     int moveOffset = 0;
 
-    foreach (const QDeclarativeChangeSet::Remove &r, changeSet.removes()) {
+    foreach (const QQuickChangeSet::Remove &r, changeSet.removes()) {
         itemCount -= r.count;
         if (moveId == -1 && newCurrentIndex >= r.index + r.count) {
             newCurrentIndex -= r.count;
@@ -97,7 +97,7 @@ void QQuickItemViewChangeSet::applyChanges(const QDeclarativeChangeSet &changeSe
             currentChanged = true;
         }
     }
-    foreach (const QDeclarativeChangeSet::Insert &i, changeSet.inserts()) {
+    foreach (const QQuickChangeSet::Insert &i, changeSet.inserts()) {
         if (moveId == -1) {
             if (itemCount && newCurrentIndex >= i.index) {
                 newCurrentIndex += i.count;
@@ -178,8 +178,8 @@ void QQuickItemView::setModel(const QVariant &model)
     if (d->modelVariant == model)
         return;
     if (d->model) {
-        disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
-                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
+        disconnect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
         disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
         disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
         disconnect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
@@ -241,14 +241,14 @@ void QQuickItemView::setModel(const QVariant &model)
                 polish();
             }
         }
-        connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
-                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
+        connect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
         emit countChanged();
     }
     emit modelChanged();
 }
 
-QDeclarativeComponent *QQuickItemView::delegate() const
+QQmlComponent *QQuickItemView::delegate() const
 {
     Q_D(const QQuickItemView);
     if (d->model) {
@@ -259,7 +259,7 @@ QDeclarativeComponent *QQuickItemView::delegate() const
     return 0;
 }
 
-void QQuickItemView::setDelegate(QDeclarativeComponent *delegate)
+void QQuickItemView::setDelegate(QQmlComponent *delegate)
 {
     Q_D(QQuickItemView);
     if (delegate == this->delegate())
@@ -394,7 +394,7 @@ Qt::LayoutDirection QQuickItemView::effectiveLayoutDirection() const
 }
 
 
-QDeclarativeComponent *QQuickItemView::header() const
+QQmlComponent *QQuickItemView::header() const
 {
     Q_D(const QQuickItemView);
     return d->headerComponent;
@@ -407,7 +407,7 @@ QQuickItem *QQuickItemView::headerItem() const
     return d->header ? d->header->item : 0;
 }
 
-void QQuickItemView::setHeader(QDeclarativeComponent *headerComponent)
+void QQuickItemView::setHeader(QQmlComponent *headerComponent)
 {
     Q_D(QQuickItemView);
     if (d->headerComponent != headerComponent) {
@@ -430,7 +430,7 @@ void QQuickItemView::setHeader(QDeclarativeComponent *headerComponent)
     }
 }
 
-QDeclarativeComponent *QQuickItemView::footer() const
+QQmlComponent *QQuickItemView::footer() const
 {
     Q_D(const QQuickItemView);
     return d->footerComponent;
@@ -443,7 +443,7 @@ QQuickItem *QQuickItemView::footerItem() const
     return d->footer ? d->footer->item : 0;
 }
 
-void QQuickItemView::setFooter(QDeclarativeComponent *footerComponent)
+void QQuickItemView::setFooter(QQmlComponent *footerComponent)
 {
     Q_D(QQuickItemView);
     if (d->footerComponent != footerComponent) {
@@ -463,14 +463,14 @@ void QQuickItemView::setFooter(QDeclarativeComponent *footerComponent)
     }
 }
 
-QDeclarativeComponent *QQuickItemView::highlight() const
+QQmlComponent *QQuickItemView::highlight() const
 {
     Q_D(const QQuickItemView);
     const_cast<QQuickItemViewPrivate*>(d)->applyPendingChanges();
     return d->highlightComponent;
 }
 
-void QQuickItemView::setHighlight(QDeclarativeComponent *highlightComponent)
+void QQuickItemView::setHighlight(QQmlComponent *highlightComponent)
 {
     Q_D(QQuickItemView);
     if (highlightComponent != d->highlightComponent) {
@@ -593,13 +593,13 @@ void QQuickItemView::setHighlightMoveDuration(int duration)
     }
 }
 
-QDeclarativeTransition *QQuickItemView::populateTransition() const
+QQuickTransition *QQuickItemView::populateTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->populateTransition : 0;
 }
 
-void QQuickItemView::setPopulateTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setPopulateTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -609,13 +609,13 @@ void QQuickItemView::setPopulateTransition(QDeclarativeTransition *transition)
     }
 }
 
-QDeclarativeTransition *QQuickItemView::addTransition() const
+QQuickTransition *QQuickItemView::addTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->addTransition : 0;
 }
 
-void QQuickItemView::setAddTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setAddTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -625,13 +625,13 @@ void QQuickItemView::setAddTransition(QDeclarativeTransition *transition)
     }
 }
 
-QDeclarativeTransition *QQuickItemView::addDisplacedTransition() const
+QQuickTransition *QQuickItemView::addDisplacedTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->addDisplacedTransition : 0;
 }
 
-void QQuickItemView::setAddDisplacedTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setAddDisplacedTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -641,13 +641,13 @@ void QQuickItemView::setAddDisplacedTransition(QDeclarativeTransition *transitio
     }
 }
 
-QDeclarativeTransition *QQuickItemView::moveTransition() const
+QQuickTransition *QQuickItemView::moveTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->moveTransition : 0;
 }
 
-void QQuickItemView::setMoveTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setMoveTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -657,13 +657,13 @@ void QQuickItemView::setMoveTransition(QDeclarativeTransition *transition)
     }
 }
 
-QDeclarativeTransition *QQuickItemView::moveDisplacedTransition() const
+QQuickTransition *QQuickItemView::moveDisplacedTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->moveDisplacedTransition : 0;
 }
 
-void QQuickItemView::setMoveDisplacedTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setMoveDisplacedTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -673,13 +673,13 @@ void QQuickItemView::setMoveDisplacedTransition(QDeclarativeTransition *transiti
     }
 }
 
-QDeclarativeTransition *QQuickItemView::removeTransition() const
+QQuickTransition *QQuickItemView::removeTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->removeTransition : 0;
 }
 
-void QQuickItemView::setRemoveTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setRemoveTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -689,13 +689,13 @@ void QQuickItemView::setRemoveTransition(QDeclarativeTransition *transition)
     }
 }
 
-QDeclarativeTransition *QQuickItemView::removeDisplacedTransition() const
+QQuickTransition *QQuickItemView::removeDisplacedTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->removeDisplacedTransition : 0;
 }
 
-void QQuickItemView::setRemoveDisplacedTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setRemoveDisplacedTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -705,13 +705,13 @@ void QQuickItemView::setRemoveDisplacedTransition(QDeclarativeTransition *transi
     }
 }
 
-QDeclarativeTransition *QQuickItemView::displacedTransition() const
+QQuickTransition *QQuickItemView::displacedTransition() const
 {
     Q_D(const QQuickItemView);
     return d->transitioner ? d->transitioner->displacedTransition : 0;
 }
 
-void QQuickItemView::setDisplacedTransition(QDeclarativeTransition *transition)
+void QQuickItemView::setDisplacedTransition(QQuickTransition *transition)
 {
     Q_D(QQuickItemView);
     d->createTransitioner();
@@ -855,7 +855,7 @@ void QQuickItemViewPrivate::applyPendingChanges()
         layout();
 }
 
-int QQuickItemViewPrivate::findMoveKeyIndex(QDeclarativeChangeSet::MoveKey key, const QVector<QDeclarativeChangeSet::Remove> &changes) const
+int QQuickItemViewPrivate::findMoveKeyIndex(QQuickChangeSet::MoveKey key, const QVector<QQuickChangeSet::Remove> &changes) const
 {
     for (int i=0; i<changes.count(); i++) {
         for (int j=changes[i].index; j<changes[i].index + changes[i].count; j++) {
@@ -954,7 +954,7 @@ void QQuickItemView::destroyRemoved()
     polish();
 }
 
-void QQuickItemView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
+void QQuickItemView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
 {
     Q_D(QQuickItemView);
     if (reset) {
@@ -1701,7 +1701,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
             || !currentChanges.pendingChanges.inserts().isEmpty();
 
     FxViewItem *prevFirstVisible = firstVisibleItem();
-    QDeclarativeNullableValue<qreal> prevViewPos;
+    QQmlNullableValue<qreal> prevViewPos;
     int prevFirstVisibleIndex = -1;
     if (prevFirstVisible) {
         prevViewPos = prevFirstVisible->position();
@@ -1712,8 +1712,8 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     totalInsertionResult->visiblePos = prevViewPos;
     totalRemovalResult->visiblePos = prevViewPos;
 
-    const QVector<QDeclarativeChangeSet::Remove> &removals = currentChanges.pendingChanges.removes();
-    const QVector<QDeclarativeChangeSet::Insert> &insertions = currentChanges.pendingChanges.inserts();
+    const QVector<QQuickChangeSet::Remove> &removals = currentChanges.pendingChanges.removes();
+    const QVector<QQuickChangeSet::Insert> &insertions = currentChanges.pendingChanges.inserts();
     ChangeResult insertionResult(prevViewPos);
     ChangeResult removalResult(prevViewPos);
 
@@ -1732,7 +1732,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         }
     }
     if (runDelayedRemoveTransition) {
-        QDeclarativeChangeSet::Remove removal;
+        QQuickChangeSet::Remove removal;
         for (QList<FxViewItem*>::Iterator it = visibleItems.begin(); it != visibleItems.end();) {
             FxViewItem *item = *it;
             if (item->index == -1 && !item->attached->delayRemove()) {
@@ -1800,7 +1800,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
 
     // Whatever removed/moved items remain are no longer visible items.
     prepareRemoveTransitions(&currentChanges.removedItems);
-    for (QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *>::Iterator it = currentChanges.removedItems.begin();
+    for (QHash<QQuickChangeSet::MoveKey, FxViewItem *>::Iterator it = currentChanges.removedItems.begin();
          it != currentChanges.removedItems.end(); ++it) {
         releaseItem(it.value());
     }
@@ -1830,7 +1830,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     return visibleAffected;
 }
 
-bool QQuickItemViewPrivate::applyRemovalChange(const QDeclarativeChangeSet::Remove &removal, ChangeResult *removeResult, int *removedCount)
+bool QQuickItemViewPrivate::applyRemovalChange(const QQuickChangeSet::Remove &removal, ChangeResult *removeResult, int *removedCount)
 {
     Q_Q(QQuickItemView);
     bool visibleAffected = false;
@@ -1882,7 +1882,7 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QDeclarativeChangeSet::Remo
     return visibleAffected;
 }
 
-void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QDeclarativeChangeSet::Remove &removal, ChangeResult *removeResult)
+void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQuickChangeSet::Remove &removal, ChangeResult *removeResult)
 {
     if (removeResult->visiblePos.isValid()) {
         if (item->position() < removeResult->visiblePos)
@@ -1896,7 +1896,7 @@ void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QDeclarativeChang
             transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, true);
     } else {
         // track item so it is released later
-        currentChanges.removedItems.insertMulti(QDeclarativeChangeSet::MoveKey(), item);
+        currentChanges.removedItems.insertMulti(QQuickChangeSet::MoveKey(), item);
     }
     if (!removeResult->changedFirstItem && item == *visibleItems.constBegin())
         removeResult->changedFirstItem = true;
@@ -1908,7 +1908,7 @@ void QQuickItemViewPrivate::repositionFirstItem(FxViewItem *prevVisibleItemsFirs
                                                    ChangeResult *insertionResult,
                                                    ChangeResult *removalResult)
 {
-    const QDeclarativeNullableValue<qreal> prevViewPos = insertionResult->visiblePos;
+    const QQmlNullableValue<qreal> prevViewPos = insertionResult->visiblePos;
 
     // reposition visibleItems.first() correctly so that the content y doesn't jump
     if (visibleItems.count()) {
@@ -1987,7 +1987,7 @@ void QQuickItemViewPrivate::prepareVisibleItemTransitions()
     }
 }
 
-void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *> *removedItems)
+void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QQuickChangeSet::MoveKey, FxViewItem *> *removedItems)
 {
     if (!transitioner)
         return;
@@ -1996,7 +1996,7 @@ void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QDeclarativeChangeSet
     transitioner->removeTransitionTargets.clear();
 
     if (transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)) {
-        for (QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *>::Iterator it = removedItems->begin();
+        for (QHash<QQuickChangeSet::MoveKey, FxViewItem *>::Iterator it = removedItems->begin();
              it != removedItems->end(); ) {
             bool isRemove = it.key().moveId < 0;
             if (isRemove) {
@@ -2083,7 +2083,7 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
 
     if (QQuickItem *item = model->item(modelIndex, asynchronous)) {
         item->setParentItem(q->contentItem());
-        QDeclarative_setParent_noEvent(item, q->contentItem());
+        QQml_setParent_noEvent(item, q->contentItem());
         requestedIndex = -1;
         FxViewItem *viewItem = requestedItem;
         if (!viewItem)
@@ -2130,7 +2130,7 @@ void QQuickItemView::initItem(int index, QQuickItem *item)
         if (d->requestedAsync)
             item->setVisible(false);
         item->setParentItem(contentItem());
-        QDeclarative_setParent_noEvent(item, contentItem());
+        QQml_setParent_noEvent(item, contentItem());
         d->requestedItem = d->newViewItem(index, item);
     }
 }
@@ -2165,18 +2165,18 @@ QQuickItem *QQuickItemViewPrivate::createHighlightItem()
     return createComponentItem(highlightComponent, true, true);
 }
 
-QQuickItem *QQuickItemViewPrivate::createComponentItem(QDeclarativeComponent *component, bool receiveItemGeometryChanges, bool createDefault)
+QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, bool receiveItemGeometryChanges, bool createDefault)
 {
     Q_Q(QQuickItemView);
 
     QQuickItem *item = 0;
     if (component) {
-        QDeclarativeContext *creationContext = component->creationContext();
-        QDeclarativeContext *context = new QDeclarativeContext(
+        QQmlContext *creationContext = component->creationContext();
+        QQmlContext *context = new QQmlContext(
                 creationContext ? creationContext : qmlContext(q));
         QObject *nobj = component->create(context);
         if (nobj) {
-            QDeclarative_setParent_noEvent(context, nobj);
+            QQml_setParent_noEvent(context, nobj);
             item = qobject_cast<QQuickItem *>(nobj);
             if (!item)
                 delete nobj;
@@ -2187,7 +2187,7 @@ QQuickItem *QQuickItemViewPrivate::createComponentItem(QDeclarativeComponent *co
         item = new QQuickItem;
     }
     if (item) {
-        QDeclarative_setParent_noEvent(item, q->contentItem());
+        QQml_setParent_noEvent(item, q->contentItem());
         item->setParentItem(q->contentItem());
         if (receiveItemGeometryChanges) {
             QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);

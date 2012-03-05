@@ -200,8 +200,8 @@ in \c script.js:
 
 \table
 \row
-\o \snippet doc/src/snippets/declarative/integrating-javascript/connectjs.qml 0
-\o \snippet doc/src/snippets/declarative/integrating-javascript/script.js 0
+\o \snippet doc/src/snippets/qml/integrating-javascript/connectjs.qml 0
+\o \snippet doc/src/snippets/qml/integrating-javascript/script.js 0
 \endtable
 
 The \c jsFunction() will now be called whenever MouseArea's \c clicked signal is emitted.
@@ -222,7 +222,7 @@ Both relative and absolute JavaScript URLs can be imported.  In the case of a
 relative URL, the location is resolved relative to the location of the
 \l {QML Document} that contains the import.  If the script file is not accessible,
 an error will occur.  If the JavaScript needs to be fetched from a network
-resource, the component's \l {QDeclarativeComponent::status()}{status} is set to
+resource, the component's \l {QQmlComponent::status()}{status} is set to
 "Loading" until the script has been downloaded.
 
 Imported JavaScript files are always qualified using the "as" keyword.  The
@@ -243,10 +243,10 @@ which in turn can call \c factorial() in \c factorial.js, as it has included
 
 \table
 \row
-\o {1,2} \snippet doc/src/snippets/declarative/integrating-javascript/includejs/app.qml 0
-\o \snippet doc/src/snippets/declarative/integrating-javascript/includejs/script.js 0
+\o {1,2} \snippet doc/src/snippets/qml/integrating-javascript/includejs/app.qml 0
+\o \snippet doc/src/snippets/qml/integrating-javascript/includejs/script.js 0
 \row
-\o \snippet doc/src/snippets/declarative/integrating-javascript/includejs/factorial.js 0
+\o \snippet doc/src/snippets/qml/integrating-javascript/includejs/factorial.js 0
 \endtable
 
 Notice that calling \l {QML:Qt::include()}{Qt.include()} imports all functions from
@@ -479,11 +479,11 @@ themselves.
 
 For the following examples, imagine that we have defined the following class:
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/avatarExample.h 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/avatarExample.h 0
 
 and that we have registered it with the QML type-system as follows:
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/avatarExample.cpp 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/avatarExample.cpp 0
 
 The AvatarExample class has a property which is a pixmap.  When the property
 is accessed in JavaScript scope, a copy of the resource will be created and
@@ -498,9 +498,9 @@ unless the client explicitly preserves it.
 In the following example, the scarce resource will be automatically released
 after the binding evaluation is complete.
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/exampleOne.qml 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/exampleOne.qml 0
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/avatarExample.cpp 1
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/avatarExample.cpp 1
 
 \section2 Example Two: Automatic Release Prevented By Reference
 
@@ -509,9 +509,9 @@ released after the binding expression evaluation is
 complete, because there is a property var referencing the
 scarce resource.
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/exampleTwo.qml 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/exampleTwo.qml 0
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/avatarExample.cpp 2
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/avatarExample.cpp 2
 
 \section2 Example Three: Explicit Preservation
 
@@ -519,11 +519,11 @@ In this example, the resource must be explicitly preserved in order
 to prevent the declarative engine from automatically releasing the
 resource after evaluation of the imported script.
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/exampleThree.js 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/exampleThree.js 0
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/exampleThree.qml 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/exampleThree.qml 0
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/avatarExample.cpp 3
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/avatarExample.cpp 3
 
 \section2 Example Four: Explicit Destruction
 
@@ -532,11 +532,11 @@ scarce resource variant.  This example shows how a client may free system
 resources by releasing the scarce resource held in a JavaScript object, if
 required, during evaluation of a JavaScript expression.
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/exampleFour.js 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/exampleFour.js 0
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/exampleFour.qml 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/exampleFour.qml 0
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/avatarExample.cpp 4
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/avatarExample.cpp 4
 
 \section2 Example Five: Explicit Destruction And JavaScript References
 
@@ -546,8 +546,8 @@ to one scarce resource is held, and the client calls destroy() on one
 of those references (to explicitly release the scarce resource), all of
 the references will be affected.
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/exampleFive.qml 0
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/exampleFive.qml 0
 
-\snippet doc/src/snippets/declarative/integrating-javascript/scarceresources/avatarExample.cpp 5
+\snippet doc/src/snippets/qml/integrating-javascript/scarceresources/avatarExample.cpp 5
 
 */

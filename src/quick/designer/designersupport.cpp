@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,9 +44,9 @@
 
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
-#include <private/qdeclarativeengine_p.h>
+#include <private/qqmlengine_p.h>
 #include <private/qquickview_p.h>
-#include <QtQuick/private/qdeclarativestategroup_p.h>
+#include <QtQuick/private/qquickstategroup_p.h>
 #include <QtGui/QImage>
 
 QT_BEGIN_NAMESPACE
@@ -309,7 +309,7 @@ QQuickItem *DesignerSupport::anchorCenterInTargetItem(QQuickItem *item)
 
 
 
-QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QQuickItem *item, const QString &name, QDeclarativeContext *context)
+QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QQuickItem *item, const QString &name, QQmlContext *context)
 {
     QObject *targetObject = 0;
     QString targetName;
@@ -319,7 +319,7 @@ QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QQuickItem *item, con
     } else if (name == QLatin1String("anchors.centerIn")) {
         targetObject = anchors(item)->centerIn();
     } else {
-        QDeclarativeProperty metaProperty(item, name, context);
+        QQmlProperty metaProperty(item, name, context);
         if (!metaProperty.isValid())
             return QPair<QString, QObject*>();
 
@@ -360,7 +360,7 @@ void DesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
 QList<QObject*> DesignerSupport::statesForItem(QQuickItem *item)
 {
     QList<QObject*> objectList;
-    QList<QDeclarativeState *> stateList = QQuickItemPrivate::get(item)->_states()->states();
+    QList<QQuickState *> stateList = QQuickItemPrivate::get(item)->_states()->states();
     qCopy(stateList.begin(), stateList.end(), objectList.begin());
 
     return objectList;
@@ -380,9 +380,9 @@ int DesignerSupport::borderWidth(QQuickItem *item)
     return 0;
 }
 
-void DesignerSupport::refreshExpressions(QDeclarativeContext *context)
+void DesignerSupport::refreshExpressions(QQmlContext *context)
 {
-    QDeclarativeContextPrivate::get(context)->data->refreshExpressions();
+    QQmlContextPrivate::get(context)->data->refreshExpressions();
 }
 
 void DesignerSupport::setRootItem(QQuickView *view, QQuickItem *item)

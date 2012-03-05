@@ -180,7 +180,7 @@
     \div{float-right}
     \inlineimage declarative-colors.png
     \enddiv
-    \snippet doc/src/snippets/declarative/colors.qml colors
+    \snippet doc/src/snippets/qml/colors.qml colors
 
     Or with the \l{QML:Qt::rgba()}{Qt.rgba()}, \l{QML:Qt::hsla()}{Qt.hsla()}, \l{QML:Qt::darker()}{Qt.darker()},
     \l{QML:Qt::lighter()}{Qt.lighter()} or \l{QML:Qt::tint()}{Qt.tint()} functions:

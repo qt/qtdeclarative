@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -97,8 +97,8 @@ class Q_QUICK_EXPORT QQuickFlickable : public QQuickItem
 
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
 
-    Q_PROPERTY(QDeclarativeListProperty<QObject> flickableData READ flickableData)
-    Q_PROPERTY(QDeclarativeListProperty<QQuickItem> flickableChildren READ flickableChildren)
+    Q_PROPERTY(QQmlListProperty<QObject> flickableData READ flickableData)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> flickableChildren READ flickableChildren)
     Q_CLASSINFO("DefaultProperty", "flickableData")
 
     Q_ENUMS(FlickableDirection)
@@ -108,8 +108,8 @@ public:
     QQuickFlickable(QQuickItem *parent=0);
     ~QQuickFlickable();
 
-    QDeclarativeListProperty<QObject> flickableData();
-    QDeclarativeListProperty<QQuickItem> flickableChildren();
+    QQmlListProperty<QObject> flickableData();
+    QQmlListProperty<QQuickItem> flickableChildren();
 
     enum BoundsBehavior { StopAtBounds, DragOverBounds, DragAndOvershootBounds };
     BoundsBehavior boundsBehavior() const;

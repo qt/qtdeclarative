@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,13 +42,13 @@
 #ifndef QQUICKITEMVIEWTRANSITION_P_P_H
 #define QQUICKITEMVIEWTRANSITION_P_P_H
 
-#include <private/qdeclarativetransitionmanager_p_p.h>
+#include <private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
+QT_MODULE(Quick)
 
 class QQuickItem;
 class QQuickViewItem;
@@ -82,7 +82,7 @@ public:
     bool canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const;
     void transitionNextReposition(QQuickViewItem *item, QQuickItemViewTransitioner::TransitionType type, bool isTarget);
 
-    QDeclarativeTransition *transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget);
+    QQuickTransition *transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget);
     const QList<int> &targetIndexes(QQuickItemViewTransitioner::TransitionType type) const;
     const QList<QObject *> &targetItems(QQuickItemViewTransitioner::TransitionType type) const;
 
@@ -98,14 +98,14 @@ public:
     QList<QObject *> moveTransitionTargets;
     QList<QObject *> removeTransitionTargets;
 
-    QDeclarativeTransition *populateTransition;
-    QDeclarativeTransition *addTransition;
-    QDeclarativeTransition *addDisplacedTransition;
-    QDeclarativeTransition *moveTransition;
-    QDeclarativeTransition *moveDisplacedTransition;
-    QDeclarativeTransition *removeTransition;
-    QDeclarativeTransition *removeDisplacedTransition;
-    QDeclarativeTransition *displacedTransition;
+    QQuickTransition *populateTransition;
+    QQuickTransition *addTransition;
+    QQuickTransition *addDisplacedTransition;
+    QQuickTransition *moveTransition;
+    QQuickTransition *moveDisplacedTransition;
+    QQuickTransition *removeTransition;
+    QQuickTransition *removeDisplacedTransition;
+    QQuickTransition *displacedTransition;
 
 private:
     friend class QQuickItemViewTransitionJob;
@@ -167,7 +167,7 @@ class QQuickViewTransitionAttached : public QObject
     Q_PROPERTY(QPointF destination READ destination NOTIFY destinationChanged)
 
     Q_PROPERTY(QList<int> targetIndexes READ targetIndexes NOTIFY targetIndexesChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged)
+    Q_PROPERTY(QQmlListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged)
 
 public:
     QQuickViewTransitionAttached(QObject *parent);
@@ -177,7 +177,7 @@ public:
     QPointF destination() const { return m_destination; }
 
     QList<int> targetIndexes() const { return m_targetIndexes; }
-    QDeclarativeListProperty<QObject> targetItems();
+    QQmlListProperty<QObject> targetItems();
 
     static QQuickViewTransitionAttached *qmlAttachedProperties(QObject *);
 

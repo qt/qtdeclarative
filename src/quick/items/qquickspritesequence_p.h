@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -62,13 +62,13 @@ class Q_AUTOTEST_EXPORT QQuickSpriteSequence : public QQuickItem
     Q_PROPERTY(QString goalSprite READ goalSprite WRITE setGoalSprite NOTIFY goalSpriteChanged)
     Q_PROPERTY(QString currentSprite READ currentSprite NOTIFY currentSpriteChanged)
     //###try to share similar spriteEngines for less overhead?
-    Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
+    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
     Q_CLASSINFO("DefaultProperty", "sprites")
 
 public:
     explicit QQuickSpriteSequence(QQuickItem *parent = 0);
 
-    QDeclarativeListProperty<QQuickSprite> sprites();
+    QQmlListProperty<QQuickSprite> sprites();
 
     bool running() const
     {

@@ -45,14 +45,14 @@ example, an \c import statement is required to use:
 \list
 \o A component defined in another QML file that is not in the same directory
 \o A component defined in a QML file located on a remote server
-\o A \l{QDeclarativeExtensionPlugin}{QML extension plugin} library (unless the plugin is installed in the same directory)
+\o A \l{QQmlExtensionPlugin}{QML extension plugin} library (unless the plugin is installed in the same directory)
 \o A JavaScript file (note this must be imported using \l {#namespaces}{named imports})
 \endlist
 
 An \c import statement includes the module name, and possibly a version number.
 This can be seen in the snippet commonly found at the top of QML files:
 
-\snippet doc/src/snippets/declarative/imports/qtquick-1.0.qml import
+\snippet doc/src/snippets/qml/imports/qtquick-1.0.qml import
 
 This imports version 1.0 of the "QtQuick" module into the global namespace. (The QML
 library itself must be imported to use any of the \l {QML Elements}, as they
@@ -111,7 +111,7 @@ Window {
 Similarly, if the directory resided on a network source, it could
 be imported like this:
 
-\snippet doc/src/snippets/declarative/imports/network-imports.qml imports
+\snippet doc/src/snippets/qml/imports/network-imports.qml imports
 
 A located module can also be imported as a network resource if it has a
 \l{Writing a qmldir file}{qmldir file} in the directory that specifies the QML files
@@ -145,7 +145,7 @@ a later version was used, as the \c qmldir file specifies that these elements
 are only available in the 1.0 version.
 
 Note that modules imported as a network resource allow only access to components
-defined in QML files; components defined by C++ \l{QDeclarativeExtensionPlugin}{QML extension plugins}
+defined in QML files; components defined by C++ \l{QQmlExtensionPlugin}{QML extension plugins}
 are not available.
 
 
@@ -153,7 +153,7 @@ are not available.
 \section1 Installed Modules
 
 Installed modules are modules that are made available through the QML import path,
-as defined by QDeclarativeEngine::importPathList(), or modules defined within
+as defined by QQmlEngine::importPathList(), or modules defined within
 C++ application code. An installed module is referred to by a URI, which allows
 the module to be imported from QML code without specifying a complete filesystem
 path or network resource URL.
@@ -161,7 +161,7 @@ path or network resource URL.
 When importing an installed module, an un-quoted URI is
 used, with a mandatory version number:
 
-\snippet doc/src/snippets/declarative/imports/installed-module.qml imports
+\snippet doc/src/snippets/qml/imports/installed-module.qml imports
 
 When a module is imported, the QML engine searches the QML import path for a matching
 module. The root directory of the module must contain a
@@ -177,7 +177,7 @@ module could be located under \c com/nokia/qml/mymodule.2/qmldir or
 \c com/nokia/qml/mymodule.2.1/qmldir. The engine will automatically load
 the module which matches best.
 
-The import path, as returned by QDeclarativeEngine::importPathList(), defines the default
+The import path, as returned by QQmlEngine::importPathList(), defines the default
 locations to be searched by the QML engine for a matching module. By default, this list
 contains:
 
@@ -187,7 +187,7 @@ contains:
 \o Paths specified by the \c QML_IMPORT_PATH environment variable
 \endlist
 
-Additional import paths can be added through QDeclarativeEngine::addImportPath() or the
+Additional import paths can be added through QQmlEngine::addImportPath() or the
 \c QML_IMPORT_PATH environment variable. When running the \l {QML Viewer}, you
 can also use the \c -I option to add an import path.
 
@@ -227,7 +227,7 @@ as \c http://www.some-server.com/qml and this URL was added to the QML import pa
 QML code would work just the same.
 
 Note that modules imported as a network resource allow only access to components
-defined in QML files; components defined by C++ \l{QDeclarativeExtensionPlugin}{QML extension plugins}
+defined in QML files; components defined by C++ \l{QQmlExtensionPlugin}{QML extension plugins}
 are not available.
 
 
@@ -244,10 +244,10 @@ qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
 This allows the application's QML files to use the \c PieChart type by importing the declared
 \c Charts module:
 
-\snippet doc/src/snippets/declarative/imports/chart.qml import
+\snippet doc/src/snippets/qml/imports/chart.qml import
 
-For \l{QDeclarativeExtensionPlugin}{QML plugins}, the
-module URI is automatically passed to QDeclarativeExtensionPlugin::registerTypes(). This method
+For \l{QQmlExtensionPlugin}{QML plugins}, the
+module URI is automatically passed to QQmlExtensionPlugin::registerTypes(). This method
 can be reimplemented by the developer to register the necessary types for the module. Below is the
 \c registerTypes() implementation from the \l{declarative/cppextensions/plugins}{QML plugins}
 example:
@@ -257,7 +257,7 @@ example:
 Once the plugin is built and installed, and includes a \l{Writing a qmldir file}{qmldir file},
 the module can be imported from QML, like this:
 
-\snippet doc/src/snippets/declarative/imports/timeexample.qml import
+\snippet doc/src/snippets/qml/imports/timeexample.qml import
 
 Unlike QML types defined by QML files, a QML type defined in a C++ extension plugin cannot be loaded by
 a module that is imported as a network resource.
@@ -271,15 +271,15 @@ By default, when a module is imported, its contents are imported into the global
 
 To import a module into a specific namespace, use the \i as keyword:
 
-\snippet doc/src/snippets/declarative/imports/named-imports.qml imports
+\snippet doc/src/snippets/qml/imports/named-imports.qml imports
 
 Types from these modules can then only be used when qualified by the namespace:
 
-\snippet doc/src/snippets/declarative/imports/named-imports.qml imported items
+\snippet doc/src/snippets/qml/imports/named-imports.qml imported items
 
 Multiple modules can be imported into the same namespace in the same way that multiple modules can be imported into the global namespace:
 
-\snippet doc/src/snippets/declarative/imports/merged-named-imports.qml imports
+\snippet doc/src/snippets/qml/imports/merged-named-imports.qml imports
 
 \section2 JavaScript Files
 
@@ -381,14 +381,14 @@ into a Namespace exported by the module.  The contents of the script file are ma
 available inside the namespace <Namespace>, which has the version number
 <InitialVersion>.
 
-\bold {plugin <Name> [<Path>]} lines are used to add \l{QDeclarativeExtensionPlugin}{QML C++ plugins} to the module. <Name> is the name of the library.  It is usually not the same as the file name
+\bold {plugin <Name> [<Path>]} lines are used to add \l{QQmlExtensionPlugin}{QML C++ plugins} to the module. <Name> is the name of the library.  It is usually not the same as the file name
 of the plugin binary, which is platform dependent; e.g. the library \c MyAppTypes would produce
 \c libMyAppTypes.so on Linux and \c MyAppTypes.dll on Windows.
 
 <Path> is an optional argument specifying either an absolute path to the directory containing the
 plugin file, or a relative path from the directory containing the \c qmldir file to the directory
 containing the plugin file. By default the engine searches for the plugin library in the directory that contains the \c qmldir
-file. The plugin search path can be queried with QDeclarativeEngine::pluginPathList() and modified using QDeclarativeEngine::addPluginPath(). When running the \l {QML Viewer}, use the \c -P option to add paths to the plugin search path.
+file. The plugin search path can be queried with QQmlEngine::pluginPathList() and modified using QQmlEngine::addPluginPath(). When running the \l {QML Viewer}, use the \c -P option to add paths to the plugin search path.
 
 \bold {typeinfo <File>} lines add \l{Writing a qmltypes file}{type description files} to
 the module that can be read by QML tools such as Qt Creator to get information about the
@@ -434,7 +434,7 @@ to \c /tmp/imports/My/Module/qmldir to register it.
 
 While the qmldump tool covers most cases, it does not work if:
 \list
-\o The plugin uses a \l{QDeclarativeCustomParser}. The component that uses
+\o The plugin uses a \l{QQmlCustomParser}. The component that uses
    the custom parser will not get its members documented.
 \o The plugin can not be loaded. In particular if you cross-compiled
    the plugin for a different architecture, qmldump will not be able to
@@ -456,7 +456,7 @@ Module {
 
         // The name is a unique identifier used to refer to this type.
         // It is recommended you simply use the C++ type name.
-        name: "QDeclarativeAbstractAnimation"
+        name: "QQuickAbstractAnimation"
 
         // The name of the prototype Component.
         prototype: "QObject"
@@ -492,12 +492,12 @@ Module {
 
         Property {
             name: "animations";
-            type: "QDeclarativeAbstractAnimation"
+            type: "QQuickAbstractAnimation"
             // defaults to false, whether this property is read only
             isReadonly: true
             // defaults to false, whether the type of this property was a pointer in C++
             isPointer: true
-            // defaults to false: whether the type actually is a QDeclarativeListProperty<type>
+            // defaults to false: whether the type actually is a QQmlListProperty<type>
             isList: true
             // defaults to 0: the meta object revision that introduced this property
             revision: 1

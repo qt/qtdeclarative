@@ -56,12 +56,12 @@ void PieChart::setName(const QString &name)
 }
 
 //![0]
-QDeclarativeListProperty<PieSlice> PieChart::slices() 
+QQmlListProperty<PieSlice> PieChart::slices()
 {
-    return QDeclarativeListProperty<PieSlice>(this, 0, &PieChart::append_slice);
+    return QQmlListProperty<PieSlice>(this, 0, &PieChart::append_slice);
 }
 
-void PieChart::append_slice(QDeclarativeListProperty<PieSlice> *list, PieSlice *slice)
+void PieChart::append_slice(QQmlListProperty<PieSlice> *list, PieSlice *slice)
 {
     PieChart *chart = qobject_cast<PieChart *>(list->object);
     if (chart) {

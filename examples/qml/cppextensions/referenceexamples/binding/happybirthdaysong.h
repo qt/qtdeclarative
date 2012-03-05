@@ -40,20 +40,20 @@
 #ifndef HAPPYBIRTHDAYSONG_H
 #define HAPPYBIRTHDAYSONG_H
 
-#include <QDeclarativePropertyValueSource>
-#include <QDeclarativeProperty>
+#include <QQmlPropertyValueSource>
+#include <QQmlProperty>
 
 #include <QStringList>
 
-class HappyBirthdaySong : public QObject, public QDeclarativePropertyValueSource
+class HappyBirthdaySong : public QObject, public QQmlPropertyValueSource
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_INTERFACES(QDeclarativePropertyValueSource)
+    Q_INTERFACES(QQmlPropertyValueSource)
 public:
     HappyBirthdaySong(QObject *parent = 0);
 
-    virtual void setTarget(const QDeclarativeProperty &);
+    virtual void setTarget(const QQmlProperty &);
 
     QString name() const;
     void setName(const QString &);
@@ -66,7 +66,7 @@ signals:
 private:
     int m_line;
     QStringList m_lyrics;
-    QDeclarativeProperty m_target;
+    QQmlProperty m_target;
     QString m_name;
 };
 

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -41,7 +41,7 @@
 #include "dialogPlugin.h"
 #include "directory.h"
 #include "file.h"
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqml.h>
 
 void DialogPlugin::registerTypes(const char *uri){
     
@@ -49,7 +49,7 @@ void DialogPlugin::registerTypes(const char *uri){
     qmlRegisterType<Directory>(uri, 1, 0, "Directory");
     qmlRegisterType<File>(uri,1,0,"File");
     
-    //qRegisterMetaType<QDeclarativeListProperty<QString> > ("QDeclarativeListProperty<QString>");
+    //qRegisterMetaType<QQmlListProperty<QString> > ("QQmlListProperty<QString>");
         
 }
 

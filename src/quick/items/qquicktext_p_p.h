@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -56,10 +56,10 @@
 #include "qquicktext_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
 
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqml.h>
 #include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qtextlayout.h>
-#include <private/qdeclarativestyledtext_p.h>
+#include <private/qquickstyledtext_p.h>
 #include <private/qlazilyallocated_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -107,8 +107,8 @@ public:
     QUrl baseUrl;
     QFont font;
     QFont sourceFont;
-    QList<QDeclarativeStyledTextImgTag*> imgTags;
-    QList<QDeclarativeStyledTextImgTag*> visibleImgTags;
+    QList<QQuickStyledTextImgTag*> imgTags;
+    QList<QQuickStyledTextImgTag*> visibleImgTags;
 
     QTextLayout layout;
     QTextLayout *elideLayout;
@@ -177,7 +177,7 @@ public:
     static inline QQuickTextPrivate *get(QQuickText *t) { return t->d_func(); }
 };
 
-class QDeclarativePixmap;
+class QQuickPixmap;
 class QQuickTextDocumentWithImageResources : public QTextDocument, public QTextObjectInterface
 {
     Q_OBJECT
@@ -206,13 +206,13 @@ Q_SIGNALS:
 protected:
     QVariant loadResource(int type, const QUrl &name);
 
-    QDeclarativePixmap *loadPixmap(QDeclarativeContext *context, const QUrl &name);
+    QQuickPixmap *loadPixmap(QQmlContext *context, const QUrl &name);
 
 private slots:
     void requestFinished();
 
 private:
-    QHash<QUrl, QDeclarativePixmap *> m_resources;
+    QHash<QUrl, QQuickPixmap *> m_resources;
     QUrl m_baseUrl;
 
     int outstanding;

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,9 +42,9 @@
 #include "qquickvisualadaptormodel_p.h"
 #include "qquickvisualdatamodel_p_p.h"
 
-#include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativelistaccessor_p.h>
-#include <private/qdeclarativepropertycache_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qquicklistaccessor_p.h>
+#include <private/qqmlpropertycache_p.h>
 #include <private/qlistmodelinterface_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qintrusivelist_p.h>
@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class VDMDelegateDataType : public QDeclarativeRefCount
+class VDMDelegateDataType : public QQmlRefCount
 {
 public:
     VDMDelegateDataType()
@@ -86,7 +86,7 @@ public:
     }
 
     QMetaObject *metaObject;
-    QDeclarativePropertyCache *propertyCache;
+    QQmlPropertyCache *propertyCache;
     int propertyOffset;
     int signalOffset;
     bool shared : 1;
@@ -166,10 +166,10 @@ public:
         return 0;
     }
 
-    QDeclarativeGuard<QDeclarativeEngine> m_engine;
-    QDeclarativeGuard<QListModelInterface> m_listModelInterface;
-    QDeclarativeGuard<QAbstractItemModel> m_abstractItemModel;
-    QDeclarativeListAccessor *m_listAccessor;
+    QQmlGuard<QQmlEngine> m_engine;
+    QQmlGuard<QListModelInterface> m_listModelInterface;
+    QQmlGuard<QAbstractItemModel> m_abstractItemModel;
+    QQuickListAccessor *m_listAccessor;
     VDMDelegateDataType *m_delegateDataType;
     CreateModelData createItem;
     StringValue stringValue;
@@ -650,7 +650,7 @@ public:
         for (int i = previousPropertyCount; i < metaObject->propertyCount() - objectPropertyOffset; ++i) {
             QMetaProperty property = metaObject->property(i + objectPropertyOffset);
             if (property.hasNotifySignal()) {
-                QDeclarativePropertyPrivate::connect(
+                QQmlPropertyPrivate::connect(
                         m_object, property.notifySignalIndex(), m_data, notifierId);
                 ++notifierId;
             }
@@ -658,7 +658,7 @@ public:
         return propertyIndex + m_type->propertyOffset - objectPropertyOffset;
     }
 
-    QDeclarativeGuard<QObject> m_object;
+    QQmlGuard<QObject> m_object;
 };
 
 class QQuickVDMObjectData : public QQuickVisualDataModelItem, public QQuickVisualAdaptorModelProxyInterface
@@ -712,7 +712,7 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
     m_objectList = false;
     m_propertyData.clear();
 
-    QV8Engine *v8Engine  = QDeclarativeEnginePrivate::getV8Engine(m_engine);
+    QV8Engine *v8Engine  = QQmlEnginePrivate::getV8Engine(m_engine);
 
     v8::HandleScope handleScope;
     v8::Context::Scope contextScope(v8Engine->context());
@@ -722,8 +722,8 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
             v8::String::New("index"), QQuickVisualDataModelItemMetaObject::get_index);
 
     if (m_listAccessor
-            && m_listAccessor->type() != QDeclarativeListAccessor::ListProperty
-            && m_listAccessor->type() != QDeclarativeListAccessor::Instance) {
+            && m_listAccessor->type() != QQuickListAccessor::ListProperty
+            && m_listAccessor->type() != QQuickListAccessor::Instance) {
         createItem = &QQuickVDMListAccessorData::create;
         stringValue = &QQuickVDMListAccessorData::stringValue;
         ft->PrototypeTemplate()->SetAccessor(
@@ -794,7 +794,7 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
     }
     m_delegateDataType->metaObject = m_delegateDataType->builder.toMetaObject();
     if (!m_objectList) {
-        m_delegateDataType->propertyCache = new QDeclarativePropertyCache(
+        m_delegateDataType->propertyCache = new QQmlPropertyCache(
                 m_engine, m_delegateDataType->metaObject);
         m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
@@ -828,7 +828,7 @@ QVariant QQuickVisualAdaptorModel::model() const
     return d->m_modelVariant;
 }
 
-void QQuickVisualAdaptorModel::setModel(const QVariant &model, QDeclarativeEngine *engine)
+void QQuickVisualAdaptorModel::setModel(const QVariant &model, QQmlEngine *engine)
 {
     Q_D(QQuickVisualAdaptorModel);
     delete d->m_listAccessor;
@@ -904,7 +904,7 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &model, QDeclarativeEngin
         return;
     }
 
-    d->m_listAccessor = new QDeclarativeListAccessor;
+    d->m_listAccessor = new QQuickListAccessor;
     d->m_listAccessor->setList(model, d->m_engine);
     if ((d->m_count = d->m_listAccessor->count()))
         emit itemsInserted(0, d->m_count);
@@ -964,7 +964,7 @@ QQuickVisualDataModelItem *QQuickVisualAdaptorModel::createItem(QQuickVisualData
         d->m_cache.insert(item);
 
         if (d->m_delegateDataType && d->m_delegateDataType->propertyCache) {
-            QDeclarativeData *qmldata = QDeclarativeData::get(item, true);
+            QQmlData *qmldata = QQmlData::get(item, true);
             qmldata->propertyCache = d->m_delegateDataType->propertyCache;
             qmldata->propertyCache->addref();
         }

@@ -148,11 +148,11 @@ If you set \c {QML_IMPORT_TRACE=1} before running the \l {QML Viewer}
 (or your QML C++ application), you will see output similar to this:
 
 \code
-QDeclarativeImportDatabase::addImportPath "/qt-sdk/imports"
-QDeclarativeImportDatabase::addImportPath "/qt-sdk/bin/QMLViewer.app/Contents/MacOS"
-QDeclarativeImportDatabase::addToImport 0x106237370 "." -1.-1 File as ""
-QDeclarativeImportDatabase::addToImport 0x106237370 "Qt" 4.7 Library as ""
-QDeclarativeImportDatabase::resolveType "Rectangle" = "QDeclarativeRectangle"
+QQmlImportDatabase::addImportPath "/qt-sdk/imports"
+QQmlImportDatabase::addImportPath "/qt-sdk/bin/QMLViewer.app/Contents/MacOS"
+QQmlImportDatabase::addToImport 0x106237370 "." -1.-1 File as ""
+QQmlImportDatabase::addToImport 0x106237370 "Qt" 4.7 Library as ""
+QQmlImportDatabase::resolveType "Rectangle" = "QDeclarativeRectangle"
 \endcode
 
 

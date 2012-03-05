@@ -38,8 +38,8 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative/QDeclarativeExtensionPlugin>
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/QQmlExtensionPlugin>
+#include <QtQml/qqml.h>
 #include <qdebug.h>
 #include <qdatetime.h>
 #include <qbasictimer.h>
@@ -138,10 +138,10 @@ int TimeModel::instances=0;
 MinuteTimer *TimeModel::timer=0;
 
 //![plugin]
-class QExampleQmlPlugin : public QDeclarativeExtensionPlugin
+class QExampleQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "plugin.json")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "plugin.json")
 
 public:
     void registerTypes(const char *uri)

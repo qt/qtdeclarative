@@ -44,10 +44,10 @@ The syntax for properties is:
 Elements already possess useful properties but, to create custom properties,
 precede the property name with the keyword \c property.
 
-\snippet doc/src/snippets/declarative/properties.qml parent begin
-\snippet doc/src/snippets/declarative/properties.qml inherited properties
-\snippet doc/src/snippets/declarative/properties.qml custom properties
-\snippet doc/src/snippets/declarative/properties.qml parent end
+\snippet doc/src/snippets/qml/properties.qml parent begin
+\snippet doc/src/snippets/qml/properties.qml inherited properties
+\snippet doc/src/snippets/qml/properties.qml custom properties
+\snippet doc/src/snippets/qml/properties.qml parent end
 
 QML property rules coincide with many of JavaScript's property rules, for example,
 property names must begin with a lowercase letter.
@@ -62,14 +62,14 @@ to other property values or data accessible in the application. The property val
 automatically kept up to date if the other properties or data values change.
 
 Property bindings are created in QML using the colon "\c {:}" before the value:
-\snippet doc/src/snippets/declarative/properties.qml property binding
+\snippet doc/src/snippets/qml/properties.qml property binding
 The property binding causes the width of the \c Rectangle to update whenever the
 \c {parent}'s width changes.
 
 QML extends a standards compliant JavaScript engine, so any valid JavaScript expression can be
 used as a property binding. Bindings can access object properties, make function calls and even
 use built-in JavaScript objects such as \c {Date} and \c {Math}.
-\snippet doc/src/snippets/declarative/properties.qml JavaScript sample
+\snippet doc/src/snippets/qml/properties.qml JavaScript sample
 
 While syntactically bindings can be of arbitrary complexity, if a binding starts to become
 overly complex - such as involving multiple lines, or imperative loops - it may be better
@@ -82,13 +82,13 @@ function.
 When working with both QML and JavaScript, it is important to differentiate between
 QML property binding and JavaScript value assignment. In QML, a property
 binding is created using the colon "\c {:}".
-\snippet doc/src/snippets/declarative/properties.qml property binding
+\snippet doc/src/snippets/qml/properties.qml property binding
 The property binding causes the width of the \c Rectangle to update whenever the
 \c {parent}'s width changes.
 
 Assigning a property value (using the equals sign "\c {=}") does not create a
 property binding.
-\snippet doc/src/snippets/declarative/properties.qml property assignment
+\snippet doc/src/snippets/qml/properties.qml property assignment
 
 Instead of creating a property binding, the assignment simply sets the \c Rectangle
 \c width value to a number when the \c Component.onCompleted code is invoked.
@@ -186,7 +186,7 @@ Care must be taken when referring to the parent of an object property binding.
 Elements and components that are bound to properties are not necessarily set
 as children of the properties' component.
 
-\snippet doc/src/snippets/declarative/properties.qml object binding
+\snippet doc/src/snippets/qml/properties.qml object binding
 The code snippet has a \l Gradient element that attempts to print its parent's
 \c width value. However, the \c Gradient element is bound to the \c gradient
 property, not the \c children property of the \c Rectangle. As a result, the
@@ -205,7 +205,7 @@ Certain objects provide additional properties by \i attaching properties to othe
 objects. For example, the \l Keys element have properties that can \i attach to other QML
 objects to provide keyboard handling.
 
-\snippet doc/src/snippets/declarative/properties.qml list attached property
+\snippet doc/src/snippets/qml/properties.qml list attached property
 The element \l ListView provides the delegate, \c listdelegate, the property
 \c isCurrentItem as an attached property. The \c ListView.isCurrentItem
 \i{attached property} provides highlight information to the delegate.
@@ -221,7 +221,7 @@ to provide additional functionality to objects. Two prominent elements,
 \l Component and \l Keys element provide
 \l{QML Signal and Handler Event System}{signal handlers} as attached signal
 handlers.
-\snippet doc/src/snippets/declarative/properties.qml attached signal handler
+\snippet doc/src/snippets/qml/properties.qml attached signal handler
 
 Read the \l{QML Signal and Handler Event System} and the \l{Keyboard Focus in QML}
 articles for more information.
@@ -232,14 +232,14 @@ Some properties may accept a binding to a list property, where more than one
 component can bind to the property. List properties allow multiple
 \l {State}{States}, \l {Gradient}{Gradients}, and other components to bind to a
 single property.
-\snippet doc/src/snippets/declarative/properties.qml list property
+\snippet doc/src/snippets/qml/properties.qml list property
 The list is enclosed in square brackets, with a comma separating the
 list elements. In cases where you are only assigning a single item to a
 list, you may omit the square brackets.
-\snippet doc/src/snippets/declarative/properties.qml single property
+\snippet doc/src/snippets/qml/properties.qml single property
 
 To access the list, use the \c index property.
-\snippet doc/src/snippets/declarative/properties.qml print list property
+\snippet doc/src/snippets/qml/properties.qml print list property
 The snippet code simply prints the name of the first state, \c FETCH.
 
  See the \l{list}{list type} documentation
@@ -252,7 +252,7 @@ In some cases properties form a logical group and use either the \i dot notation
 or \i group notation.
 
 Grouped properties may be written both ways:
-\snippet doc/src/snippets/declarative/properties.qml grouped properties
+\snippet doc/src/snippets/qml/properties.qml grouped properties
 
 In the element documentation grouped properties are shown using the dot notation.
 
@@ -275,18 +275,18 @@ Accessing the aliasing property is similar to accessing a regular property. In
 addition, the optional \c default keyword indicates that the aliasing property
 is a \l{Default Properties}{default property}.
 
-\snippet doc/src/snippets/declarative/Button.qml property alias
+\snippet doc/src/snippets/qml/Button.qml property alias
 When importing the component as a \c Button, the \c buttonlabel is directly
 accessible through the \c label property.
-\snippet doc/src/snippets/declarative/properties.qml alias usage
+\snippet doc/src/snippets/qml/properties.qml alias usage
 In addition, the \c id property may also be aliased and referred outside the
 component.
-\snippet doc/src/snippets/declarative/Button.qml parent begin
-\snippet doc/src/snippets/declarative/Button.qml id alias
-\snippet doc/src/snippets/declarative/Button.qml parent end
+\snippet doc/src/snippets/qml/Button.qml parent begin
+\snippet doc/src/snippets/qml/Button.qml id alias
+\snippet doc/src/snippets/qml/Button.qml parent end
 The \c imagebutton component has the ability to modify the child \l Image object
  and its properties.
-\snippet doc/src/snippets/declarative/properties.qml image alias
+\snippet doc/src/snippets/qml/properties.qml image alias
 
 Using aliases, properties may be exposed to the
 \l{qml-top-level-component}{top level component}. Exposing properties to the
@@ -299,7 +299,7 @@ Aliases are only activated once the component
 when an uninitialized alias is referenced. Likewise, aliasing an aliasing
 property will also result in an error.
 
-\snippet doc/src/snippets/declarative/properties.qml alias complete
+\snippet doc/src/snippets/qml/properties.qml alias complete
 
 When importing the component, however, aliasing properties appear as regular Qt
 properties and consequently can be used in alias references.
@@ -309,7 +309,7 @@ property, effectively overwriting the existing property. For example,
 the following component has a \c color alias property, named the same as the built-in
 \l {Rectangle::color} property:
 
-\snippet doc/src/snippets/declarative/properties.qml alias overwrite
+\snippet doc/src/snippets/qml/properties.qml alias overwrite
 
 Any object that use this component and refer to its \c color property will be
 referring to the alias rather than the ordinary \l {Rectangle::color} property.
@@ -328,13 +328,13 @@ as the \i {default property}. For example, the State element's default property
 is its \l{State::changes}{changes} property. \l PropertyChanges elements
 may simply be placed as the \c{State}'s children and they will be bound to the
 \c changes property.
-\snippet doc/src/snippets/declarative/properties.qml state default
+\snippet doc/src/snippets/qml/properties.qml state default
 
 Similarly, the \l Item element's default property is its
 \l{Item::data}{data} property. The \c data property manages Item's
 \c children and \c resources properties. This way, different data types may be
 placed as direct children of the \c Item.
-\snippet doc/src/snippets/declarative/properties.qml default property
+\snippet doc/src/snippets/qml/properties.qml default property
 
 Reassigning a default property is useful when a component is reused. For
 example, the \l{declarative/ui-components/tabwidget}{TabWidget} example uses
@@ -350,14 +350,14 @@ For example, to bind a property exposed from the \l{The QML Engine}{declarative
 runtime} or \l{QmlGlobalQtObject}{Qt object}, such as the \c system.brightness
 property, to a value written in QML, you could use the \l Binding element as
 follows:
-\snippet doc/src/snippets/declarative/properties.qml binding element
+\snippet doc/src/snippets/qml/properties.qml binding element
 
 \section1 Changing Property Values in States
 
 The \l PropertyChanges element is for setting property bindings within a
 \l State element to set a property binding.
 
-\snippet doc/src/snippets/declarative/properties.qml PropertyChanges element
+\snippet doc/src/snippets/qml/properties.qml PropertyChanges element
 The rectangle's \c color property will bind to the \c warning component's
 \c color property when its \c state is set to the \c WARNING state.
 */

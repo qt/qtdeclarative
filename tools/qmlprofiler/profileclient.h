@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,11 +44,11 @@
 
 #include "profiledata.h"
 
-#include <QtDeclarative/private/qdeclarativedebugclient_p.h>
-#include <QtDeclarative/private/qdeclarativeprofilerservice_p.h>
+#include <QtQml/private/qqmldebugclient_p.h>
+#include <QtQml/private/qqmlprofilerservice_p.h>
 
 class ProfileClientPrivate;
-class ProfileClient : public QDeclarativeDebugClient
+class ProfileClient : public QQmlDebugClient
 {
     Q_OBJECT
 
@@ -58,7 +58,7 @@ class ProfileClient : public QDeclarativeDebugClient
 
 public:
     ProfileClient(const QString & clientName,
-                  QDeclarativeDebugConnection *client);
+                  QQmlDebugConnection *client);
     ~ProfileClient();
 
     bool isEnabled() const;
@@ -83,13 +83,13 @@ protected:
     bool m_enabled;
 };
 
-class DeclarativeProfileClient : public ProfileClient
+class QmlProfileClient : public ProfileClient
 {
     Q_OBJECT
 
 public:
-    DeclarativeProfileClient(QDeclarativeDebugConnection *client);
-    ~DeclarativeProfileClient();
+    QmlProfileClient(QQmlDebugConnection *client);
+    ~QmlProfileClient();
 
 public slots:
     void clearData();
@@ -98,7 +98,7 @@ public slots:
 signals:
     void traceFinished( qint64 time );
     void traceStarted( qint64 time );
-    void range(QDeclarativeProfilerService::RangeType type, qint64 startTime,
+    void range(QQmlProfilerService::RangeType type, qint64 startTime,
                qint64 length, const QStringList &data,
                const EventLocation &location);
     void frame(qint64 time, int frameRate, int animationCount);
@@ -107,7 +107,7 @@ protected:
     virtual void messageReceived(const QByteArray &);
 
 private:
-    class DeclarativeProfileClientPrivate *d;
+    class QmlProfileClientPrivate *d;
 };
 
 class V8ProfileClient : public ProfileClient
@@ -122,7 +122,7 @@ public:
         V8MaximumMessage
     };
 
-    V8ProfileClient(QDeclarativeDebugConnection *client);
+    V8ProfileClient(QQmlDebugConnection *client);
     ~V8ProfileClient();
 
 public slots:

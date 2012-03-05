@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,7 +49,7 @@
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QtQuick/qquickcanvas.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QFile>
 #include <cmath>
 #include <qmath.h>
@@ -294,9 +294,9 @@ void QQuickSpriteSequence::setGoalSprite(const QString &sprite)
     }
 }
 
-QDeclarativeListProperty<QQuickSprite> QQuickSpriteSequence::sprites()
+QQmlListProperty<QQuickSprite> QQuickSpriteSequence::sprites()
 {
-    return QDeclarativeListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
+    return QQmlListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
 }
 
 void QQuickSpriteSequence::createEngine()
@@ -327,11 +327,11 @@ QSGGeometryNode* QQuickSpriteSequence::buildNode()
     if (!m_spriteEngine) {
         qmlInfo(this) << "No sprite engine...";
         return 0;
-    } else if (m_spriteEngine->status() == QDeclarativePixmap::Null) {
+    } else if (m_spriteEngine->status() == QQuickPixmap::Null) {
         m_spriteEngine->startAssemblingImage();
         update();//Schedule another update, where we will check again
         return 0;
-    } else if (m_spriteEngine->status() == QDeclarativePixmap::Loading) {
+    } else if (m_spriteEngine->status() == QQuickPixmap::Loading) {
         update();//Schedule another update, where we will check again
         return 0;
     }

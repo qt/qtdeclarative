@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 #include <QObject>
-#include <QtDeclarative>
+#include <QtQml>
 #include "myobject.h"
 
 int main(int argc, char *argv[])

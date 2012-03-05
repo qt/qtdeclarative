@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,12 +41,12 @@
 
 #include "qquickloader_p_p.h"
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 
-#include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativeglobal_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlglobal_p.h>
 
-#include <private/qdeclarativecomponent_p.h>
+#include <private/qqmlcomponent_p.h>
 
 #include <private/qv8_p.h>
 
@@ -133,7 +133,7 @@ void QQuickLoaderPrivate::initResize()
     Here is a Loader that loads "Page1.qml" as a component when the
     \l MouseArea is clicked:
 
-    \snippet doc/src/snippets/declarative/loader/simple.qml 0
+    \snippet doc/src/snippets/qml/loader/simple.qml 0
 
     The loaded item can be accessed using the \l item property.
 
@@ -165,8 +165,8 @@ void QQuickLoaderPrivate::initResize()
     \o sizeloader.qml
     \o sizeitem.qml
     \row
-    \o \snippet doc/src/snippets/declarative/loader/sizeloader.qml 0
-    \o \snippet doc/src/snippets/declarative/loader/sizeitem.qml 0
+    \o \snippet doc/src/snippets/qml/loader/sizeloader.qml 0
+    \o \snippet doc/src/snippets/qml/loader/sizeitem.qml 0
     \row
     \o The red rectangle will be sized to the size of the root item.
     \o The red rectangle will be 50x50, centered in the root item.
@@ -185,8 +185,8 @@ void QQuickLoaderPrivate::initResize()
     \o application.qml
     \o MyItem.qml
     \row
-    \o \snippet doc/src/snippets/declarative/loader/connections.qml 0
-    \o \snippet doc/src/snippets/declarative/loader/MyItem.qml 0
+    \o \snippet doc/src/snippets/qml/loader/connections.qml 0
+    \o \snippet doc/src/snippets/qml/loader/MyItem.qml 0
     \endtable
 
     Alternatively, since \c MyItem.qml is loaded within the scope of the
@@ -212,8 +212,8 @@ void QQuickLoaderPrivate::initResize()
     \o application.qml
     \o KeyReader.qml
     \row
-    \o \snippet doc/src/snippets/declarative/loader/focus.qml 0
-    \o \snippet doc/src/snippets/declarative/loader/KeyReader.qml 0
+    \o \snippet doc/src/snippets/qml/loader/focus.qml 0
+    \o \snippet doc/src/snippets/qml/loader/KeyReader.qml 0
     \endtable
 
     Once \c KeyReader.qml is loaded, it accepts key events and sets
@@ -344,7 +344,7 @@ void QQuickLoader::loadFromSource()
     }
 
     if (isComponentComplete()) {
-        d->component = new QDeclarativeComponent(qmlEngine(this), d->source, this);
+        d->component = new QQmlComponent(qmlEngine(this), d->source, this);
         d->load();
     }
 }
@@ -371,13 +371,13 @@ void QQuickLoader::loadFromSource()
     \sa source, progress
 */
 
-QDeclarativeComponent *QQuickLoader::sourceComponent() const
+QQmlComponent *QQuickLoader::sourceComponent() const
 {
     Q_D(const QQuickLoader);
     return d->component;
 }
 
-void QQuickLoader::setSourceComponent(QDeclarativeComponent *comp)
+void QQuickLoader::setSourceComponent(QQmlComponent *comp)
 {
     Q_D(QQuickLoader);
     if (comp == d->component)
@@ -476,7 +476,7 @@ void QQuickLoader::loadFromSourceComponent()
 
     \sa source, active
 */
-void QQuickLoader::setSource(QDeclarativeV8Function *args)
+void QQuickLoader::setSource(QQmlV8Function *args)
 {
     Q_ASSERT(args);
     Q_D(QQuickLoader);
@@ -516,7 +516,7 @@ void QQuickLoaderPrivate::load()
     if (!component->isLoading()) {
         _q_sourceLoaded();
     } else {
-        QObject::connect(component, SIGNAL(statusChanged(QDeclarativeComponent::Status)),
+        QObject::connect(component, SIGNAL(statusChanged(QQmlComponent::Status)),
                 q, SLOT(_q_sourceLoaded()));
         QObject::connect(component, SIGNAL(progressChanged(qreal)),
                 q, SIGNAL(progressChanged()));
@@ -541,15 +541,15 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
 
     QQuickItem *item = qobject_cast<QQuickItem*>(obj);
     if (item) {
-        QDeclarative_setParent_noEvent(itemContext, obj);
-        QDeclarative_setParent_noEvent(item, q);
+        QQml_setParent_noEvent(itemContext, obj);
+        QQml_setParent_noEvent(item, q);
         item->setParentItem(q);
     }
 
     if (initialPropertyValues.IsEmpty())
         return;
 
-    QDeclarativeComponentPrivate *d = QDeclarativeComponentPrivate::get(component);
+    QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
     Q_ASSERT(d && d->engine);
     d->initializeObjectWithInitialProperties(qmlGlobalForIpv, initialPropertyValues, obj);
 }
@@ -559,13 +559,13 @@ void QQuickLoaderIncubator::statusChanged(Status status)
     loader->incubatorStateChanged(status);
 }
 
-void QQuickLoaderPrivate::incubatorStateChanged(QDeclarativeIncubator::Status status)
+void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
 {
     Q_Q(QQuickLoader);
-    if (status == QDeclarativeIncubator::Loading || status == QDeclarativeIncubator::Null)
+    if (status == QQmlIncubator::Loading || status == QQmlIncubator::Null)
         return;
 
-    if (status == QDeclarativeIncubator::Ready) {
+    if (status == QQmlIncubator::Ready) {
         QObject *obj = incubator->object();
         item = qobject_cast<QQuickItem*>(obj);
         if (item) {
@@ -579,9 +579,9 @@ void QQuickLoaderPrivate::incubatorStateChanged(QDeclarativeIncubator::Status st
             emit q->itemChanged();
         }
         incubator->clear();
-    } else if (status == QDeclarativeIncubator::Error) {
+    } else if (status == QQmlIncubator::Error) {
         if (!incubator->errors().isEmpty())
-            QDeclarativeEnginePrivate::warning(qmlEngine(q), incubator->errors());
+            QQmlEnginePrivate::warning(qmlEngine(q), incubator->errors());
         delete itemContext;
         itemContext = 0;
         delete incubator->object();
@@ -603,7 +603,7 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
     Q_Q(QQuickLoader);
     if (!component || !component->errors().isEmpty()) {
         if (component)
-            QDeclarativeEnginePrivate::warning(qmlEngine(q), component->errors());
+            QQmlEnginePrivate::warning(qmlEngine(q), component->errors());
         if (loadingFromSource)
             emit q->sourceChanged();
         else
@@ -614,17 +614,17 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
         return;
     }
 
-    QDeclarativeContext *creationContext = component->creationContext();
+    QQmlContext *creationContext = component->creationContext();
     if (!creationContext) creationContext = qmlContext(q);
-    itemContext = new QDeclarativeContext(creationContext);
+    itemContext = new QQmlContext(creationContext);
     itemContext->setContextObject(q);
 
     delete incubator;
-    incubator = new QQuickLoaderIncubator(this, asynchronous ? QDeclarativeIncubator::Asynchronous : QDeclarativeIncubator::AsynchronousIfNested);
+    incubator = new QQuickLoaderIncubator(this, asynchronous ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested);
 
     component->create(*incubator, itemContext);
 
-    if (incubator && incubator->status() == QDeclarativeIncubator::Loading)
+    if (incubator && incubator->status() == QQmlIncubator::Loading)
         emit q->statusChanged();
 }
 
@@ -677,11 +677,11 @@ QQuickLoader::Status QQuickLoader::status() const
 
     if (d->component) {
         switch (d->component->status()) {
-        case QDeclarativeComponent::Loading:
+        case QQmlComponent::Loading:
             return Loading;
-        case QDeclarativeComponent::Error:
+        case QQmlComponent::Error:
             return Error;
-        case QDeclarativeComponent::Null:
+        case QQmlComponent::Null:
             return Null;
         default:
             break;
@@ -690,9 +690,9 @@ QQuickLoader::Status QQuickLoader::status() const
 
     if (d->incubator) {
         switch (d->incubator->status()) {
-        case QDeclarativeIncubator::Loading:
+        case QQmlIncubator::Loading:
             return Loading;
-        case QDeclarativeIncubator::Error:
+        case QQmlIncubator::Error:
             return Error;
         default:
             break;
@@ -711,7 +711,7 @@ void QQuickLoader::componentComplete()
     QQuickItem::componentComplete();
     if (active()) {
         if (d->loadingFromSource) {
-            d->component = new QDeclarativeComponent(qmlEngine(this), d->source, this);
+            d->component = new QQmlComponent(qmlEngine(this), d->source, this);
         }
         d->load();
     }
@@ -826,19 +826,19 @@ void QQuickLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 
-QUrl QQuickLoaderPrivate::resolveSourceUrl(QDeclarativeV8Function *args)
+QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV8Function *args)
 {
     QV8Engine *v8engine = args->engine();
     QString arg = v8engine->toString((*args)[0]->ToString());
     if (arg.isEmpty())
         return QUrl();
 
-    QDeclarativeContextData *context = args->context();
+    QQmlContextData *context = args->context();
     Q_ASSERT(context);
     return context->resolvedUrl(QUrl(arg));
 }
 
-v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QDeclarativeV8Function *args, QObject *loader, bool *error)
+v8::Handle<v8::Object> QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV8Function *args, QObject *loader, bool *error)
 {
     v8::Local<v8::Object> valuemap;
     if (args->Length() >= 2) {

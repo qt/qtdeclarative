@@ -80,7 +80,7 @@ signal should be \c green and the warning \c flag is down. Meanwhile, in the
 \c CRITICAL state, the \c color should be \c red and the flag is \c up. We may
 model the states using the \c State element and the color and flag
 configurations with the \c PropertyChanges element.
-\snippet doc/src/snippets/declarative/states.qml signal states
+\snippet doc/src/snippets/qml/states.qml signal states
 The \l PropertyChanges element will change the values of object properties.
 Objects are referenced through their \l {qml-id}{id}. Objects outside
 the component are also referenced using the \c id property, exemplified by the
@@ -89,7 +89,7 @@ property change to the external \c flag object.
 Further, the state may change by assigning the \c state property with the
 appropriate signal state. A state switch could be in a \l MouseArea element,
 assigning a different state whenever the signal receives a mouse click.
-\snippet doc/src/snippets/declarative/states.qml switch states
+\snippet doc/src/snippets/qml/states.qml switch states
 
 The State element is not limited to performing modifications on property values.
 It can also:
@@ -115,7 +115,7 @@ expressions to change the state whenever the bound expression evaluates to
 \c true. The \c when property will revert the state back to the
 \l {The Default State}{default state} when the expression evaluates to false.
 
-\snippet doc/src/snippets/declarative/states.qml when property
+\snippet doc/src/snippets/qml/states.qml when property
 The \c bell component will change to the \c RINGING state whenever the
 \c signal.state is \c CRITICAL.
 

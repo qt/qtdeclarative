@@ -44,20 +44,20 @@
 
 // This is a dummy header for defining the interface of "SignalSpy.qml" to qdoc.
 
-#include <QtDeclarative/qdeclarativeitem.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class SignalSpy : public QDeclarativeItem
+class SignalSpy : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(QString signalName READ signalName WRITE signalName NOTIFY signalNameChanged)
     Q_PROPERTY(int count READ count countChanged)
 public:
-    SignalSpy(QDeclarativeItem *parent) : QDeclarativeItem(parent) {}
+    SignalSpy(QQuickItem *parent) : QQuickItem(parent) {}
     ~SignalSpy()
 
     QObject *target() const;

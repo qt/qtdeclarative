@@ -1,0 +1,4 @@
+Removed backwards compatible imports - QTBUG-17518
+
+autotest print() taking objects that don't ToString()
+autotest QQmlV8Function

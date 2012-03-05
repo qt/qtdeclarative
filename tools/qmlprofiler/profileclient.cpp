@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,8 +45,8 @@
 #include <QtCore/QStringList>
 
 ProfileClient::ProfileClient(const QString &clientName,
-                             QDeclarativeDebugConnection *client)
-    : QDeclarativeDebugClient(clientName, client),
+                             QQmlDebugConnection *client)
+    : QQmlDebugClient(clientName, client),
       m_recording(false),
       m_enabled(false)
 {
@@ -103,45 +103,45 @@ void ProfileClient::stateChanged(State status)
 
 }
 
-class DeclarativeProfileClientPrivate
+class QmlProfileClientPrivate
 {
 public:
-    DeclarativeProfileClientPrivate()
+    QmlProfileClientPrivate()
         : inProgressRanges(0)
         , maximumTime(0)
     {
         ::memset(rangeCount, 0,
-                 QDeclarativeProfilerService::MaximumRangeType * sizeof(int));
+                 QQmlProfilerService::MaximumRangeType * sizeof(int));
     }
 
     qint64 inProgressRanges;
-    QStack<qint64> rangeStartTimes[QDeclarativeProfilerService::MaximumRangeType];
-    QStack<QStringList> rangeDatas[QDeclarativeProfilerService::MaximumRangeType];
-    QStack<EventLocation> rangeLocations[QDeclarativeProfilerService::MaximumRangeType];
-    int rangeCount[QDeclarativeProfilerService::MaximumRangeType];
+    QStack<qint64> rangeStartTimes[QQmlProfilerService::MaximumRangeType];
+    QStack<QStringList> rangeDatas[QQmlProfilerService::MaximumRangeType];
+    QStack<EventLocation> rangeLocations[QQmlProfilerService::MaximumRangeType];
+    int rangeCount[QQmlProfilerService::MaximumRangeType];
     qint64 maximumTime;
 };
 
-DeclarativeProfileClient::DeclarativeProfileClient(
-        QDeclarativeDebugConnection *client)
+QmlProfileClient::QmlProfileClient(
+        QQmlDebugConnection *client)
     : ProfileClient(QLatin1String("CanvasFrameRate"), client),
-      d(new DeclarativeProfileClientPrivate)
+      d(new QmlProfileClientPrivate)
 {
 }
 
-DeclarativeProfileClient::~DeclarativeProfileClient()
+QmlProfileClient::~QmlProfileClient()
 {
     delete d;
 }
 
-void DeclarativeProfileClient::clearData()
+void QmlProfileClient::clearData()
 {
     ::memset(d->rangeCount, 0,
-             QDeclarativeProfilerService::MaximumRangeType * sizeof(int));
+             QQmlProfilerService::MaximumRangeType * sizeof(int));
     ProfileClient::clearData();
 }
 
-void DeclarativeProfileClient::sendRecordingStatus()
+void QmlProfileClient::sendRecordingStatus()
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
@@ -149,7 +149,7 @@ void DeclarativeProfileClient::sendRecordingStatus()
     sendMessage(ba);
 }
 
-void DeclarativeProfileClient::messageReceived(const QByteArray &data)
+void QmlProfileClient::messageReceived(const QByteArray &data)
 {
     QByteArray rwData = data;
     QDataStream stream(&rwData, QIODevice::ReadOnly);
@@ -159,43 +159,43 @@ void DeclarativeProfileClient::messageReceived(const QByteArray &data)
 
     stream >> time >> messageType;
 
-    if (messageType >= QDeclarativeProfilerService::MaximumMessage)
+    if (messageType >= QQmlProfilerService::MaximumMessage)
         return;
 
-    if (messageType == QDeclarativeProfilerService::Event) {
+    if (messageType == QQmlProfilerService::Event) {
         int event;
         stream >> event;
 
-        if (event == QDeclarativeProfilerService::EndTrace) {
+        if (event == QQmlProfilerService::EndTrace) {
             emit this->traceFinished(time);
             d->maximumTime = time;
             d->maximumTime = qMax(time, d->maximumTime);
-        } else if (event == QDeclarativeProfilerService::AnimationFrame) {
+        } else if (event == QQmlProfilerService::AnimationFrame) {
             int frameRate, animationCount;
             stream >> frameRate >> animationCount;
             emit this->frame(time, frameRate, animationCount);
             d->maximumTime = qMax(time, d->maximumTime);
-        } else if (event == QDeclarativeProfilerService::StartTrace) {
+        } else if (event == QQmlProfilerService::StartTrace) {
             emit this->traceStarted(time);
             d->maximumTime = time;
-        } else if (event < QDeclarativeProfilerService::MaximumEventType) {
+        } else if (event < QQmlProfilerService::MaximumEventType) {
             d->maximumTime = qMax(time, d->maximumTime);
         }
-    } else if (messageType == QDeclarativeProfilerService::Complete) {
+    } else if (messageType == QQmlProfilerService::Complete) {
         emit complete();
 
     } else {
         int range;
         stream >> range;
 
-        if (range >= QDeclarativeProfilerService::MaximumRangeType)
+        if (range >= QQmlProfilerService::MaximumRangeType)
             return;
 
-        if (messageType == QDeclarativeProfilerService::RangeStart) {
+        if (messageType == QQmlProfilerService::RangeStart) {
             d->rangeStartTimes[range].push(time);
             d->inProgressRanges |= (static_cast<qint64>(1) << range);
             ++d->rangeCount[range];
-        } else if (messageType == QDeclarativeProfilerService::RangeData) {
+        } else if (messageType == QQmlProfilerService::RangeData) {
             QString data;
             stream >> data;
 
@@ -206,7 +206,7 @@ void DeclarativeProfileClient::messageReceived(const QByteArray &data)
                 d->rangeDatas[range][count-1] << data;
             }
 
-        } else if (messageType == QDeclarativeProfilerService::RangeLocation) {
+        } else if (messageType == QQmlProfilerService::RangeLocation) {
             QString fileName;
             int line;
             int column = -1;
@@ -232,7 +232,7 @@ void DeclarativeProfileClient::messageReceived(const QByteArray &data)
                             d->rangeLocations[range].pop() : EventLocation();
 
                 qint64 startTime = d->rangeStartTimes[range].pop();
-                emit this->range((QDeclarativeProfilerService::RangeType)range,
+                emit this->range((QQmlProfilerService::RangeType)range,
                                  startTime, time - startTime, data, location);
                 if (d->rangeCount[range] == 0) {
                     int count = d->rangeDatas[range].count() +
@@ -246,7 +246,7 @@ void DeclarativeProfileClient::messageReceived(const QByteArray &data)
     }
 }
 
-V8ProfileClient::V8ProfileClient(QDeclarativeDebugConnection *client)
+V8ProfileClient::V8ProfileClient(QQmlDebugConnection *client)
     : ProfileClient(QLatin1String("V8Profiler"), client)
 {
 }

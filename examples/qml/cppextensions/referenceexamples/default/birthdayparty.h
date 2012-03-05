@@ -41,7 +41,7 @@
 #define BIRTHDAYPARTY_H
 
 #include <QObject>
-#include <QDeclarativeListProperty>
+#include <QQmlListProperty>
 #include "person.h"
 
 // ![0]
@@ -49,7 +49,7 @@ class BirthdayParty : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(Person *host READ host WRITE setHost)
-    Q_PROPERTY(QDeclarativeListProperty<Person> guests READ guests)
+    Q_PROPERTY(QQmlListProperty<Person> guests READ guests)
     Q_CLASSINFO("DefaultProperty", "guests")
 public:
     BirthdayParty(QObject *parent = 0);
@@ -57,7 +57,7 @@ public:
     Person *host() const;
     void setHost(Person *);
 
-    QDeclarativeListProperty<Person> guests();
+    QQmlListProperty<Person> guests();
     int guestCount() const;
     Person *guest(int) const;
 

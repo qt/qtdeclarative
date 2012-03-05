@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -65,11 +65,11 @@
 #include <QtGui/qstylehints.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
-#include <QtDeclarative/qdeclarativeincubator.h>
+#include <QtQml/qqmlincubator.h>
 
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 
-#include <private/qdeclarativeprofilerservice_p.h>
+#include <private/qqmlprofilerservice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -83,7 +83,7 @@ void QQuickCanvasPrivate::updateFocusItemTransform()
         qApp->inputMethod()->setInputItemTransform(QQuickItemPrivate::get(focus)->itemToCanvasTransform());
 }
 
-class QQuickCanvasIncubationController : public QObject, public QDeclarativeIncubationController
+class QQuickCanvasIncubationController : public QObject, public QQmlIncubationController
 {
 public:
     QQuickCanvasIncubationController(QQuickCanvasPrivate *canvas)
@@ -341,7 +341,7 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     engine->setCanvas(q);
 }
 
-QDeclarativeListProperty<QObject> QQuickCanvasPrivate::data()
+QQmlListProperty<QObject> QQuickCanvasPrivate::data()
 {
     initRootItem();
     return QQuickItemPrivate::get(rootItem)->data();
@@ -676,7 +676,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
 void QQuickCanvasPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining)
 {
-    QDeclarativeGuard<QQuickItem> item(*items);
+    QQmlGuard<QQuickItem> item(*items);
 
     if (remaining)
         notifyFocusChangesRecur(items + 1, remaining - 1);
@@ -775,7 +775,7 @@ void QQuickCanvas::releaseResources()
 {
     Q_D(QQuickCanvas);
     d->windowManager->releaseResources();
-    QDeclarativePixmap::purgeCache();
+    QQuickPixmap::purgeCache();
 }
 
 
@@ -2058,12 +2058,12 @@ QImage QQuickCanvas::grabFrameBuffer()
 /*!
     Returns an incubation controller that splices incubation between frames
     for this canvas. QQuickView automatically installs this controller for you,
-    otherwise you will need to install it yourself using \l{QDeclarativeEngine::setIncubationController}
+    otherwise you will need to install it yourself using \l{QQmlEngine::setIncubationController}
 
     The controller is owned by the canvas and will be destroyed when the canvas
     is deleted.
 */
-QDeclarativeIncubationController *QQuickCanvas::incubationController() const
+QQmlIncubationController *QQuickCanvas::incubationController() const
 {
     Q_D(const QQuickCanvas);
 

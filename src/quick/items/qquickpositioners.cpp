@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,15 +42,15 @@
 #include "qquickpositioners_p.h"
 #include "qquickpositioners_p_p.h"
 
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtCore/qmath.h>
 #include <QtCore/qcoreapplication.h>
 
-#include <QtQuick/private/qdeclarativestate_p.h>
-#include <QtQuick/private/qdeclarativestategroup_p.h>
-#include <private/qdeclarativestateoperations_p.h>
-#include <QtQuick/private/qdeclarativetransition_p.h>
+#include <QtQuick/private/qquickstate_p.h>
+#include <QtQuick/private/qquickstategroup_p.h>
+#include <private/qquickstatechangescript_p.h>
+#include <QtQuick/private/qquicktransition_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -140,13 +140,13 @@ void QQuickBasePositioner::setSpacing(qreal s)
     emit spacingChanged();
 }
 
-QDeclarativeTransition *QQuickBasePositioner::move() const
+QQuickTransition *QQuickBasePositioner::move() const
 {
     Q_D(const QQuickBasePositioner);
     return d->transitioner ? d->transitioner->displacedTransition : 0;
 }
 
-void QQuickBasePositioner::setMove(QDeclarativeTransition *mt)
+void QQuickBasePositioner::setMove(QQuickTransition *mt)
 {
     Q_D(QQuickBasePositioner);
     if (!d->transitioner)
@@ -158,13 +158,13 @@ void QQuickBasePositioner::setMove(QDeclarativeTransition *mt)
     emit moveChanged();
 }
 
-QDeclarativeTransition *QQuickBasePositioner::add() const
+QQuickTransition *QQuickBasePositioner::add() const
 {
     Q_D(const QQuickBasePositioner);
     return d->transitioner ? d->transitioner->addTransition : 0;
 }
 
-void QQuickBasePositioner::setAdd(QDeclarativeTransition *add)
+void QQuickBasePositioner::setAdd(QQuickTransition *add)
 {
     Q_D(QQuickBasePositioner);
     if (!d->transitioner)
@@ -497,7 +497,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     Below is a Column that contains three rectangles of various sizes:
 
-    \snippet doc/src/snippets/declarative/column/vertical-positioner.qml document
+    \snippet doc/src/snippets/qml/column/vertical-positioner.qml document
 
     The Column automatically positions these items in a vertical formation, like this:
 
@@ -526,7 +526,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     For example, the Column below sets the \l move property to a specific \l Transition:
 
-    \snippet doc/src/snippets/declarative/column/column-transitions.qml document
+    \snippet doc/src/snippets/qml/column/column-transitions.qml document
 
     When the Space key is pressed, the \l {Item::visible}{visible} value of the green
     \l Rectangle is toggled. As it appears and disappears, the blue \l Rectangle moves within
@@ -534,7 +534,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     \image verticalpositioner_transition.gif
 
-    \sa Row, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
+    \sa Row, Grid, Flow, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Column::add
@@ -574,7 +574,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     See the \l ViewTransition documentation for more details and examples on using these transitions.
 
-    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+    \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */
 /*!
   \qmlproperty real QtQuick2::Column::spacing
@@ -645,7 +645,7 @@ void QQuickColumn::reportConflictingAnchors()
 
     Below is a Row that contains three rectangles of various sizes:
 
-    \snippet doc/src/snippets/declarative/row/row.qml document
+    \snippet doc/src/snippets/qml/row/row.qml document
 
     The Row automatically positions these items in a horizontal formation, like this:
 
@@ -667,7 +667,7 @@ void QQuickColumn::reportConflictingAnchors()
     \l{Item Layouts}.
 
 
-    \sa Column, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
+    \sa Column, Grid, Flow, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Row::add
@@ -707,7 +707,7 @@ void QQuickColumn::reportConflictingAnchors()
 
     See the \l ViewTransition documentation for more details and examples on using these transitions.
 
-    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+    \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */
 /*!
   \qmlproperty real QtQuick2::Row::spacing
@@ -736,7 +736,7 @@ QQuickRow::QQuickRow(QQuickItem *parent)
     the right anchor remains to the right of the row.
     \endlist
 
-    \sa Grid::layoutDirection, Flow::layoutDirection, {declarative/righttoleft/layoutdirection}{Layout directions example}
+    \sa Grid::layoutDirection, Flow::layoutDirection, {qml/righttoleft/layoutdirection}{Layout directions example}
 */
 
 Qt::LayoutDirection QQuickRow::layoutDirection() const
@@ -863,7 +863,7 @@ void QQuickRow::reportConflictingAnchors()
 
     For example, below is a Grid that contains five rectangles of various sizes:
 
-    \snippet doc/src/snippets/declarative/grid/grid.qml document
+    \snippet doc/src/snippets/qml/grid/grid.qml document
 
     The Grid automatically positions the child items in a grid formation:
 
@@ -879,7 +879,7 @@ void QQuickRow::reportConflictingAnchors()
     \l{Item Layouts}.
 
 
-    \sa Flow, Row, Column, Positioner, {declarative/positioners}{Positioners example}
+    \sa Flow, Row, Column, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Grid::add
@@ -919,7 +919,7 @@ void QQuickRow::reportConflictingAnchors()
 
     See the \l ViewTransition documentation for more details and examples on using these transitions.
 
-    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+    \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */
 /*!
   \qmlproperty qreal QtQuick2::Grid::spacing
@@ -1074,7 +1074,7 @@ void QQuickGrid::setColumnSpacing(const qreal columnSpacing)
     \l Grid::flow property.
     \endlist
 
-    \sa Flow::layoutDirection, Row::layoutDirection, {declarative/righttoleft/layoutdirection}{Layout directions example}
+    \sa Flow::layoutDirection, Row::layoutDirection, {qml/righttoleft/layoutdirection}{Layout directions example}
 */
 Qt::LayoutDirection QQuickGrid::layoutDirection() const
 {
@@ -1276,7 +1276,7 @@ void QQuickGrid::reportConflictingAnchors()
 
     Below is a Flow that contains various \l Text items:
 
-    \snippet doc/src/snippets/declarative/flow.qml flow item
+    \snippet doc/src/snippets/qml/flow.qml flow item
 
     The Flow item automatically positions the child \l Text items side by
     side, wrapping as necessary:
@@ -1292,7 +1292,7 @@ void QQuickGrid::reportConflictingAnchors()
     For more information on using Flow and other related positioner-type elements, see
     \l{Item Layouts}.
 
-  \sa Column, Row, Grid, Positioner, {declarative/positioners}{Positioners example}
+  \sa Column, Row, Grid, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Flow::add
@@ -1332,7 +1332,7 @@ void QQuickGrid::reportConflictingAnchors()
 
     See the \l ViewTransition documentation for more details and examples on using these transitions.
 
-    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+    \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */
 /*!
   \qmlproperty real QtQuick2::Flow::spacing
@@ -1410,7 +1410,7 @@ void QQuickFlow::setFlow(Flow flow)
     \l Flow::flow property.
     \endlist
 
-    \sa Grid::layoutDirection, Row::layoutDirection, {declarative/righttoleft/layoutdirection}{Layout directions example}
+    \sa Grid::layoutDirection, Row::layoutDirection, {qml/righttoleft/layoutdirection}{Layout directions example}
 */
 
 Qt::LayoutDirection QQuickFlow::layoutDirection() const

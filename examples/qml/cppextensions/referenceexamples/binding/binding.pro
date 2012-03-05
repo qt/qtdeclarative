@@ -1,4 +1,4 @@
-QT += declarative
+QT += qml
 
 SOURCES += main.cpp \
            person.cpp \
@@ -9,7 +9,7 @@ HEADERS += person.h \
            happybirthdaysong.h
 
 RESOURCES += binding.qrc
-target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/extending/binding
+target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/extending/binding
 sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS binding.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/extending/binding
+sources.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/extending/binding
 INSTALLS += target sources

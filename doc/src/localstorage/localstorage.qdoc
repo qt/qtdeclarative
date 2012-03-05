@@ -58,7 +58,7 @@ provide the ability to access local storage in an SQL database.
 
 These databases are user-specific and QML-specific, but accessible to all QML applications.
 They are stored in the \c Databases subdirectory
-of QDeclarativeEngine::offlineStoragePath(), currently as SQLite databases.
+of QQmlEngine::offlineStoragePath(), currently as SQLite databases.
 
 Database connections are automatically closed during Javascript garbage collection.
 

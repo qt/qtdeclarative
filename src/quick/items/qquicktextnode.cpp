@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -55,7 +55,7 @@
 #include <qrawfont.h>
 #include <qtexttable.h>
 #include <qtextlist.h>
-#include <private/qdeclarativestyledtext_p.h>
+#include <private/qquickstyledtext_p.h>
 #include <private/qquicktext_p_p.h>
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>

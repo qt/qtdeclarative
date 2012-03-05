@@ -76,14 +76,14 @@ There are several ways of setting animation to an object.
 To create an immediate movement or animated movement, set the property value
 directly. This may be done in signal handlers or attached properties.
 
-\snippet doc/src/snippets/declarative/animation.qml direct property change
+\snippet doc/src/snippets/qml/animation.qml direct property change
 
 However, to create more control, \i {property animations} apply smooth movements
 by interpolating values between property value changes. Property animations
 provide timing controls and allows different interpolations through
 \l{qml-easing-animation}{easing curves}.
 
-\snippet doc/src/snippets/declarative/animation.qml property animation
+\snippet doc/src/snippets/qml/animation.qml property animation
 
 Specialized \l{qml-property-animation-elements}{property animation elements}
 have more efficient implementations than the \l{PropertyAnimation} element. They
@@ -112,14 +112,14 @@ change from the \c pressed state to the \c released state. Likewise, there would
 be an animation during the change from the \c released state to the \c pressed
 state.
 
-\snippet doc/src/snippets/declarative/animation.qml transition animation
+\snippet doc/src/snippets/qml/animation.qml transition animation
 
 Binding the \c to and \c from properties to the state's name will assign that
 particular transition to the state change. For simple or symmetric transitions,
 setting the to \c to property to the wild card symbol, "\c{*}", denotes
 that the transition applies to any state change.
 
-\snippet doc/src/snippets/declarative/animation.qml wildcard animation
+\snippet doc/src/snippets/qml/animation.qml wildcard animation
 
 \section2 Default Animation as Behaviors
 
@@ -133,7 +133,7 @@ A ball component might have a behavior animation assigned to its \c x, \c y, and
 elastic effect. In effect, this behavior animation would apply the elastic
 effect to the properties whenever the ball moves.
 
-\snippet doc/src/snippets/declarative/animation.qml behavior animation
+\snippet doc/src/snippets/qml/animation.qml behavior animation
 
 There are several methods of assigning behavior animations to properties. The
 \c{Behavior on <property>} declaration is a convenient way of assigning a
@@ -156,7 +156,7 @@ object. Using the \l{SequentialAnimation} element, the opacity animations will
 play after the preceding animation finishes. The \l{ParallelAnimation} element
 will play the animations at the same time.
 
-\snippet doc/src/snippets/declarative/animation.qml sequential animation
+\snippet doc/src/snippets/qml/animation.qml sequential animation
 
 Once individual animations are placed into a SequentialAnimation or
 ParallelAnimation, they can no longer be started and stopped independently. The
@@ -257,15 +257,15 @@ Rectangle {
 
 
 
-\snippet doc/src/snippets/declarative/animation-elements.qml color
-\snippet doc/src/snippets/declarative/animation-propertyvaluesource.qml 0
-\snippet doc/src/snippets/declarative/animation-signalhandler.qml 0
-\snippet doc/src/snippets/declarative/animation-standalone.qml 0
+\snippet doc/src/snippets/qml/animation-elements.qml color
+\snippet doc/src/snippets/qml/animation-propertyvaluesource.qml 0
+\snippet doc/src/snippets/qml/animation-signalhandler.qml 0
+\snippet doc/src/snippets/qml/animation-standalone.qml 0
 
-\snippet doc/src/snippets/declarative/animation-transitions.qml 0
-\snippet doc/src/snippets/declarative/animation-groups.qml 0
+\snippet doc/src/snippets/qml/animation-transitions.qml 0
+\snippet doc/src/snippets/qml/animation-groups.qml 0
 
-\snippet doc/src/snippets/declarative/animation-groups.qml 1
-\snippet doc/src/snippets/declarative/animation-groups.qml 0
+\snippet doc/src/snippets/qml/animation-groups.qml 1
+\snippet doc/src/snippets/qml/animation-groups.qml 0
 \image propanim.gif
 

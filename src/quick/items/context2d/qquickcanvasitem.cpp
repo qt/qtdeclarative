@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,10 +45,10 @@
 #include <private/qquickcanvascontext_p.h>
 #include <private/qquickcontext2d_p.h>
 #include <private/qquickcanvasitemnode_p.h>
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 
-#include <qdeclarativeinfo.h>
-#include <private/qdeclarativeengine_p.h>
+#include <qqmlinfo.h>
+#include <private/qqmlengine_p.h>
 #include <QtCore/QBuffer>
 
 QT_BEGIN_NAMESPACE
@@ -71,7 +71,7 @@ public:
     QQuickCanvasItem::RenderTarget renderTarget;
     QQuickCanvasItem::RenderStrategy renderStrategy;
     QString contextType;
-    QHash<QUrl, QDeclarativePixmap*> images;
+    QHash<QUrl, QQuickPixmap*> images;
     QUrl baseUrl;
     QMap<int, v8::Persistent<v8::Function> > animationCallbacks;
 };
@@ -254,13 +254,13 @@ void QQuickCanvasItem::setContextType(const QString &contextType)
     this property will contain the current drawing context, otherwise null.
 */
 
-QDeclarativeV8Handle QQuickCanvasItem::context() const
+QQmlV8Handle QQuickCanvasItem::context() const
 {
     Q_D(const QQuickCanvasItem);
     if (d->contextInitialized)
-        return QDeclarativeV8Handle::fromHandle(d->context->v8value());
+        return QQmlV8Handle::fromHandle(d->context->v8value());
 
-    return QDeclarativeV8Handle::fromHandle(v8::Null());
+    return QQmlV8Handle::fromHandle(v8::Null());
 }
 
 /*!
@@ -532,7 +532,7 @@ void QQuickCanvasItem::updatePolish()
 
         foreach (int key, animationCallbacks.keys()) {
             v8::HandleScope handle_scope;
-            v8::Handle<v8::Object> self = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->newQObject(this).As<v8::Object>();
+            v8::Handle<v8::Object> self = QQmlEnginePrivate::getV8Engine(qmlEngine(this))->newQObject(this).As<v8::Object>();
             v8::Handle<v8::Value> args[] = { v8::Uint32::New(QDateTime::currentDateTimeUtc().toTime_t()) };
             v8::Persistent<v8::Function> f = animationCallbacks.value(key);
             f->Call(self, 1, args);
@@ -591,7 +591,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     Canvas only supports a 2d context.
 */
 
-void QQuickCanvasItem::getContext(QDeclarativeV8Function *args)
+void QQuickCanvasItem::getContext(QQmlV8Function *args)
 {
     Q_D(QQuickCanvasItem);
 
@@ -633,7 +633,7 @@ void QQuickCanvasItem::getContext(QDeclarativeV8Function *args)
     scene.
 */
 
-void QQuickCanvasItem::requestAnimationFrame(QDeclarativeV8Function *args)
+void QQuickCanvasItem::requestAnimationFrame(QQmlV8Function *args)
 {
     if (args->Length() < 1 || !(*args)[0]->IsFunction()) {
         qmlInfo(this) << "requestAnimationFrame should be called with an animation callback function";
@@ -659,7 +659,7 @@ void QQuickCanvasItem::requestAnimationFrame(QDeclarativeV8Function *args)
     This function will cancel the animation callback referenced by \a handle.
 */
 
-void QQuickCanvasItem::cancelRequestAnimationFrame(QDeclarativeV8Function *args)
+void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV8Function *args)
 {
     if (args->Length() < 1 || !(*args)[0]->IsInt32()) {
         qmlInfo(this) << "cancelRequestAnimationFrame should be called with an animation callback id";
@@ -737,7 +737,7 @@ QImage QQuickCanvasItem::loadedImage(const QUrl& url)
     if (!d->images.contains(fullPathUrl)) {
         loadImage(url);
     }
-    QDeclarativePixmap* pix = d->images.value(fullPathUrl);
+    QQuickPixmap* pix = d->images.value(fullPathUrl);
     if (pix->isLoading() || pix->isError()) {
         return QImage();
     }
@@ -760,12 +760,12 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
     Q_D(QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
     if (!d->images.contains(fullPathUrl)) {
-        QDeclarativePixmap* pix = new QDeclarativePixmap();
+        QQuickPixmap* pix = new QQuickPixmap();
         d->images.insert(fullPathUrl, pix);
 
         pix->load(qmlEngine(this)
                 , fullPathUrl
-                , QDeclarativePixmap::Cache | QDeclarativePixmap::Asynchronous);
+                , QQuickPixmap::Cache | QQuickPixmap::Asynchronous);
         if (pix->isLoading())
             pix->connectFinished(this, SIGNAL(imageLoaded()));
     }
@@ -918,7 +918,7 @@ void QQuickCanvasItem::initializeContext(QQuickCanvasContext *context, const QVa
 
     d->context = context;
     d->context->init(this, args);
-    d->context->setV8Engine(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this)));
+    d->context->setV8Engine(QQmlEnginePrivate::getV8Engine(qmlEngine(this)));
     d->contextInitialized = true;
     connect(d->context, SIGNAL(textureChanged()), SLOT(update()));
     connect(d->context, SIGNAL(textureChanged()), SIGNAL(painted()));

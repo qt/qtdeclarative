@@ -41,7 +41,7 @@
 #include <QGuiApplication>
 #include <QStringList>
 #include <QQuickView>
-#include <QDeclarativeEngine>
+#include <QQmlEngine>
 
 void usage()
 {

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,8 +41,8 @@
 
 #include "qquickspriteengine_p.h"
 #include "qquicksprite_p.h"
-#include <qdeclarativeinfo.h>
-#include <qdeclarative.h>
+#include <qqmlinfo.h>
+#include <qqml.h>
 #include <QDebug>
 #include <QPainter>
 #include <QSet>
@@ -307,27 +307,27 @@ void QQuickStochasticEngine::setGoal(int state, int sprite, bool jump)
     return;
 }
 
-QDeclarativePixmap::Status QQuickSpriteEngine::status()//Composed status of all Sprites
+QQuickPixmap::Status QQuickSpriteEngine::status()//Composed status of all Sprites
 {
     if (!m_startedImageAssembly)
-        return QDeclarativePixmap::Null;
+        return QQuickPixmap::Null;
     int null, loading, ready;
     null = loading = ready = 0;
     foreach (QQuickSprite* s, m_sprites) {
         switch (s->m_pix.status()) {
-            case QDeclarativePixmap::Null : null++; break;
-            case QDeclarativePixmap::Loading : loading++; break;
-            case QDeclarativePixmap::Error : return QDeclarativePixmap::Error;
-            case QDeclarativePixmap::Ready : ready++; break;
+            case QQuickPixmap::Null : null++; break;
+            case QQuickPixmap::Loading : loading++; break;
+            case QQuickPixmap::Error : return QQuickPixmap::Error;
+            case QQuickPixmap::Ready : ready++; break;
         }
     }
     if (null)
-        return QDeclarativePixmap::Null;
+        return QQuickPixmap::Null;
     if (loading)
-        return QDeclarativePixmap::Loading;
+        return QQuickPixmap::Loading;
     if (ready)
-        return QDeclarativePixmap::Ready;
-    return QDeclarativePixmap::Null;
+        return QQuickPixmap::Ready;
+    return QQuickPixmap::Null;
 }
 
 void QQuickSpriteEngine::startAssemblingImage()
@@ -348,13 +348,13 @@ void QQuickSpriteEngine::startAssemblingImage()
 
 QImage QQuickSpriteEngine::assembledImage()
 {
-    QDeclarativePixmap::Status stat = status();
-    if (stat == QDeclarativePixmap::Error)
+    QQuickPixmap::Status stat = status();
+    if (stat == QQuickPixmap::Error)
         foreach (QQuickSprite* s, m_sprites)
             if (s->m_pix.isError())
                 qmlInfo(s) << s->m_pix.error();
 
-    if (stat != QDeclarativePixmap::Ready)
+    if (stat != QQuickPixmap::Ready)
         return QImage();
 
     int h = 0;

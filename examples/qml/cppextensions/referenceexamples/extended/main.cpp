@@ -38,8 +38,8 @@
 **
 ****************************************************************************/
 #include <QApplication>
-#include <QDeclarativeEngine>
-#include <QDeclarativeComponent>
+#include <QQmlEngine>
+#include <QQmlComponent>
 #include <QDebug>
 #include <QLineEdit>
 #include "lineedit.h"
@@ -50,8 +50,8 @@ int main(int argc, char ** argv)
 
     qmlRegisterExtendedType<QLineEdit, LineEditExtension>("People", 1,0, "QLineEdit");
 
-    QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl("qrc:example.qml"));
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl("qrc:example.qml"));
     QLineEdit *edit = qobject_cast<QLineEdit *>(component.create());
 
     if (edit) {

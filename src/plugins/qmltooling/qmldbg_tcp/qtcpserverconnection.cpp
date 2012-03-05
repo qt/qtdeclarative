@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,7 +45,7 @@
 #include <QtNetwork/qtcpserver.h>
 #include <QtNetwork/qtcpsocket.h>
 
-#include <private/qdeclarativedebugserver_p.h>
+#include <private/qqmldebugserver_p.h>
 #include <private/qpacketprotocol_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -60,7 +60,7 @@ public:
     QPacketProtocol *protocol;
     QTcpServer *tcpServer;
 
-    QDeclarativeDebugServer *debugServer;
+    QQmlDebugServer *debugServer;
 };
 
 QTcpServerConnectionPrivate::QTcpServerConnectionPrivate() :
@@ -84,7 +84,7 @@ QTcpServerConnection::~QTcpServerConnection()
     delete d_ptr;
 }
 
-void QTcpServerConnection::setServer(QDeclarativeDebugServer *server)
+void QTcpServerConnection::setServer(QQmlDebugServer *server)
 {
     Q_D(QTcpServerConnection);
     d->debugServer = server;
@@ -147,9 +147,9 @@ void QTcpServerConnection::listen()
     d->tcpServer = new QTcpServer(this);
     QObject::connect(d->tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
     if (d->tcpServer->listen(QHostAddress::Any, d->port))
-        qWarning("QDeclarativeDebugServer: Waiting for connection on port %d...", d->port);
+        qWarning("QQmlDebugServer: Waiting for connection on port %d...", d->port);
     else
-        qWarning("QDeclarativeDebugServer: Unable to listen on port %d", d->port);
+        qWarning("QQmlDebugServer: Unable to listen on port %d", d->port);
 }
 
 
@@ -170,7 +170,7 @@ void QTcpServerConnection::newConnection()
     Q_D(QTcpServerConnection);
 
     if (d->socket && d->socket->peerPort()) {
-        qWarning("QDeclarativeDebugServer: Another client is already connected");
+        qWarning("QQmlDebugServer: Another client is already connected");
         QTcpSocket *faultyConnection = d->tcpServer->nextPendingConnection();
         delete faultyConnection;
         return;
@@ -190,7 +190,7 @@ void QTcpServerConnection::newConnection()
 
 void QTcpServerConnection::invalidPacket()
 {
-    qWarning("QDeclarativeDebugServer: Received a corrupted packet! Giving up ...");
+    qWarning("QQmlDebugServer: Received a corrupted packet! Giving up ...");
 }
 
 QT_END_NAMESPACE

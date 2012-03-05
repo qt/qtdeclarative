@@ -160,7 +160,7 @@ QtObject { property int time: 54321 }
 \endqml
 
 To replace this with real data, you can simply bind the real data object to
-the root context in C++ using QDeclarativeContext::setContextProperty(). This
+the root context in C++ using QQmlContext::setContextProperty(). This
 is detailed in \l {Using QML Bindings in C++ Applications}.
 
 \section1 Using the \c runtime object

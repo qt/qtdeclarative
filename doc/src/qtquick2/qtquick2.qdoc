@@ -32,7 +32,7 @@
     \brief The QML Elements
 
     This QML module contains all the QML elements that are
-    instantiated as objects of C++ classes in the QtDeclarative
+    instantiated as objects of C++ classes in the QtQml
     module. These elements work with the Scenegraph renderer and
     their own canvas.
  */

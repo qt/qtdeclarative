@@ -36,7 +36,7 @@ from text data.
 
 Here is a simple QML document:
 
-\snippet doc/src/snippets/declarative/qml-documents/non-trivial.qml document
+\snippet doc/src/snippets/qml/qml-documents/non-trivial.qml document
 
 QML documents are always encoded in UTF-8 format.
 
@@ -79,7 +79,7 @@ text property:
 \o application.qml
 
 \row
-\o \snippet doc/src/snippets/declarative/qml-documents/qmldocuments.qml document
+\o \snippet doc/src/snippets/qml/qml-documents/qmldocuments.qml document
 \o
 \qml
 import QtQuick 2.0
@@ -138,14 +138,14 @@ These final two examples perform identically to the original document.
 \table
 \row
 \o
-\snippet doc/src/snippets/declarative/qml-documents/inline-component.qml document
+\snippet doc/src/snippets/qml/qml-documents/inline-component.qml document
 \o
-\snippet doc/src/snippets/declarative/qml-documents/inline-text-component.qml document
+\snippet doc/src/snippets/qml/qml-documents/inline-text-component.qml document
 \endtable
 
 
 For information about components, the \l{QML Components} article details the
 creation of components and how to load them in other components.
 
-\sa QDeclarativeComponent
+\sa QQmlComponent
 */

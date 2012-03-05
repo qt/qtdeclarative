@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,7 +41,7 @@
 
 #include "qquickviewinspector.h"
 
-#include "qdeclarativeinspectorprotocol.h"
+#include "qqmlinspectorprotocol.h"
 #include "highlight.h"
 #include "selectiontool.h"
 
@@ -206,7 +206,7 @@ void QQuickViewInspector::setWindowFlags(Qt::WindowFlags flags)
     w->setVisible(true);
 }
 
-QDeclarativeEngine *QQuickViewInspector::declarativeEngine() const
+QQmlEngine *QQuickViewInspector::declarativeEngine() const
 {
     return m_view->engine();
 }

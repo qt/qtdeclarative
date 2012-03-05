@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -55,7 +55,7 @@
 
 #include "qquickitem.h"
 #include "qquickcanvas.h"
-#include <private/qdeclarativeguard_p.h>
+#include <private/qqmlguard_p.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquickdrag_p.h>
@@ -108,7 +108,7 @@ public:
 
     QQuickRootItem *rootItem;
     QSet<QQuickItem *> parentlessItems;
-    QDeclarativeListProperty<QObject> data();
+    QQmlListProperty<QObject> data();
 
     QQuickItem *activeFocusItem;
     QQuickItem *mouseGrabberItem;

@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -56,7 +56,7 @@ class Q_AUTOTEST_EXPORT QQuickLoader : public QQuickImplicitSizeItem
 
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(QDeclarativeComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceComponentChanged)
+    Q_PROPERTY(QQmlComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceComponentChanged)
     Q_PROPERTY(QQuickItem *item READ item NOTIFY itemChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
@@ -69,13 +69,13 @@ public:
     bool active() const;
     void setActive(bool newVal);
 
-    Q_INVOKABLE void setSource(QDeclarativeV8Function *);
+    Q_INVOKABLE void setSource(QQmlV8Function *);
 
     QUrl source() const;
     void setSource(const QUrl &);
 
-    QDeclarativeComponent *sourceComponent() const;
-    void setSourceComponent(QDeclarativeComponent *);
+    QQmlComponent *sourceComponent() const;
+    void setSourceComponent(QQmlComponent *);
     void resetSourceComponent();
 
     enum Status { Null, Ready, Loading, Error };

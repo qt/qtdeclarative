@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,7 +41,7 @@
 
 #include "qquickcontext2dcommandbuffer_p.h"
 #include "qquickcanvasitem_p.h"
-#include <qdeclarative.h>
+#include <qqml.h>
 #include <QtCore/QMutex>
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))

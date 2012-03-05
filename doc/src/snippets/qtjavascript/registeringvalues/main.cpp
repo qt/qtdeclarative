@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative>
+#include <QtQml>
 
 int main(int argc, char *argv[])
 {

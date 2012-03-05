@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,25 +39,25 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative/qdeclarativeextensionplugin.h>
-#include <QtDeclarative/qdeclarative.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
-#include "qdeclarativefolderlistmodel.h"
+#include "qquickfolderlistmodel.h"
 
 QT_BEGIN_NAMESPACE
 
 //![class decl]
-class QmlFolderListModelPlugin : public QDeclarativeExtensionPlugin
+class QmlFolderListModelPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "folderlistmodel.json")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "folderlistmodel.json")
 
 public:
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.folderlistmodel"));
 #ifndef QT_NO_DIRMODEL
-        qmlRegisterType<QDeclarativeFolderListModel>(uri,1,0,"FolderListModel");
+        qmlRegisterType<QQuickFolderListModel>(uri,1,0,"FolderListModel");
 #endif
     }
 };

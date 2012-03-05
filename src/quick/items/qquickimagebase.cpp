@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,7 +42,7 @@
 #include "qquickimagebase_p.h"
 #include "qquickimagebase_p_p.h"
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -202,11 +202,11 @@ void QQuickImageBase::load()
         emit statusChanged(d->status);
         update();
     } else {
-        QDeclarativePixmap::Options options;
+        QQuickPixmap::Options options;
         if (d->async)
-            options |= QDeclarativePixmap::Asynchronous;
+            options |= QQuickPixmap::Asynchronous;
         if (d->cache)
-            options |= QDeclarativePixmap::Cache;
+            options |= QQuickPixmap::Cache;
         d->pix.clear(this);
         pixmapChange();
         d->pix.load(qmlEngine(this), d->url, d->explicitSourceSize ? sourceSize() : QSize(), options);

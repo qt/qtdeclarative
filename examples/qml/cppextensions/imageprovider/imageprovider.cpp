@@ -39,19 +39,19 @@
 ****************************************************************************/
 
 
-#include <qdeclarativeextensionplugin.h>
+#include <qqmlextensionplugin.h>
 
-#include <qdeclarativeengine.h>
-#include <qdeclarativeimageprovider.h>
+#include <qqmlengine.h>
+#include <qqmlimageprovider.h>
 #include <QImage>
 #include <QPainter>
 
 //![0]
-class ColorImageProvider : public QDeclarativeImageProvider
+class ColorImageProvider : public QQmlImageProvider
 {
 public:
     ColorImageProvider()
-        : QDeclarativeImageProvider(QDeclarativeImageProvider::Pixmap)
+        : QQmlImageProvider(QQmlImageProvider::Pixmap)
     {
     }
 
@@ -84,17 +84,17 @@ public:
 //![1]
 
 
-class ImageProviderExtensionPlugin : public QDeclarativeExtensionPlugin
+class ImageProviderExtensionPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeExtensionInterface" FILE "imageprovider.json")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "imageprovider.json")
 public:
     void registerTypes(const char *uri)
     {
         Q_UNUSED(uri);
     }
 
-    void initializeEngine(QDeclarativeEngine *engine, const char *uri)
+    void initializeEngine(QQmlEngine *engine, const char *uri)
     {
         Q_UNUSED(uri);
         engine->addImageProvider("colors", new ColorImageProvider);
@@ -103,7 +103,7 @@ public:
 };
 
 
-#define QDeclarativeExtensionInterface_iid "org.qt-project.Qt.QDeclarativeExtensionInterface"
+#define QQmlExtensionInterface_iid "org.qt-project.Qt.QQmlExtensionInterface"
 
 
 #include "imageprovider.moc"

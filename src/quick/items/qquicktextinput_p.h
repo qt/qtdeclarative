@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -77,7 +77,7 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(bool cursorVisible READ isCursorVisible WRITE setCursorVisible NOTIFY cursorVisibleChanged)
     Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged)
     Q_PROPERTY(QRectF cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged)
-    Q_PROPERTY(QDeclarativeComponent *cursorDelegate READ cursorDelegate WRITE setCursorDelegate NOTIFY cursorDelegateChanged)
+    Q_PROPERTY(QQmlComponent *cursorDelegate READ cursorDelegate WRITE setCursorDelegate NOTIFY cursorDelegateChanged)
     Q_PROPERTY(int selectionStart READ selectionStart NOTIFY selectionStartChanged)
     Q_PROPERTY(int selectionEnd READ selectionEnd NOTIFY selectionEndChanged)
     Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged)
@@ -150,7 +150,7 @@ public:
 
 
     //Auxilliary functions needed to control the TextInput from QML
-    Q_INVOKABLE void positionAt(QDeclarativeV8Function *args) const;
+    Q_INVOKABLE void positionAt(QQmlV8Function *args) const;
     Q_INVOKABLE QRectF positionToRectangle(int pos) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
@@ -220,8 +220,8 @@ public:
 
     QString displayText() const;
 
-    QDeclarativeComponent* cursorDelegate() const;
-    void setCursorDelegate(QDeclarativeComponent*);
+    QQmlComponent* cursorDelegate() const;
+    void setCursorDelegate(QQmlComponent*);
 
     bool focusOnPress() const;
     void setFocusOnPress(bool);

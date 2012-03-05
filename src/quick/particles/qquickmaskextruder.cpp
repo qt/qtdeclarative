@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qquickmaskextruder_p.h"
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlinfo.h>
 #include <QImage>
 #include <QDebug>
 QT_BEGIN_NAMESPACE

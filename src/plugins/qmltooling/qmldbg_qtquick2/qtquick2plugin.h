@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORPLUGIN_H
-#define QDECLARATIVEINSPECTORPLUGIN_H
+#ifndef QTQUICK2PLUGINPLUGIN_H
+#define QTQUICK2PLUGINPLUGIN_H
 
 #include <QtCore/QPointer>
-#include <QtDeclarative/private/qdeclarativeinspectorinterface_p.h>
+#include <QtQml/private/qqmlinspectorinterface_p.h>
 
 namespace QmlJSDebugger {
 
@@ -51,18 +51,18 @@ class AbstractViewInspector;
 
 namespace QtQuick2 {
 
-class QtQuick2Plugin : public QObject, public QDeclarativeInspectorInterface
+class QtQuick2Plugin : public QObject, public QQmlInspectorInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(QtQuick2Plugin)
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDeclarativeInspectorInterface" FILE "qtquick2plugin.json")
-    Q_INTERFACES(QDeclarativeInspectorInterface)
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlInspectorInterface" FILE "qtquick2plugin.json")
+    Q_INTERFACES(QQmlInspectorInterface)
 
 public:
     QtQuick2Plugin();
     ~QtQuick2Plugin();
 
-    // QDeclarativeInspectorInterface
+    // QQmlInspectorInterface
     bool canHandleView(QObject *view);
     void activate(QObject *view);
     void deactivate();
@@ -75,4 +75,4 @@ private:
 } // namespace QtQuick2
 } // namespace QmlJSDebugger
 
-#endif // QDECLARATIVEINSPECTORPLUGIN_H
+#endif // QTQUICK2PLUGINPLUGIN_H

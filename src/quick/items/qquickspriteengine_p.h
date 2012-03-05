@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -47,10 +47,10 @@
 #include <QTimer>
 #include <QTime>
 #include <QList>
-#include <QDeclarativeListProperty>
+#include <QQmlListProperty>
 #include <QImage>
 #include <QPair>
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 
 QT_BEGIN_HEADER
 
@@ -178,15 +178,15 @@ class Q_AUTOTEST_EXPORT QQuickStochasticEngine : public QObject
     Q_OBJECT
     //TODO: Optimize single state case?
     Q_PROPERTY(QString globalGoal READ globalGoal WRITE setGlobalGoal NOTIFY globalGoalChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QQuickStochasticState> states READ states)
+    Q_PROPERTY(QQmlListProperty<QQuickStochasticState> states READ states)
 public:
     explicit QQuickStochasticEngine(QObject *parent = 0);
     QQuickStochasticEngine(QList<QQuickStochasticState*> states, QObject *parent=0);
     ~QQuickStochasticEngine();
 
-    QDeclarativeListProperty<QQuickStochasticState> states()
+    QQmlListProperty<QQuickStochasticState> states()
     {
-        return QDeclarativeListProperty<QQuickStochasticState>(this, m_states);
+        return QQmlListProperty<QQuickStochasticState>(this, m_states);
     }
 
     QString globalGoal() const
@@ -255,14 +255,14 @@ protected:
 class QQuickSpriteEngine : public QQuickStochasticEngine
 {
     Q_OBJECT
-    Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
+    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
 public:
     explicit QQuickSpriteEngine(QObject *parent = 0);
     QQuickSpriteEngine(QList<QQuickSprite*> sprites, QObject *parent=0);
     ~QQuickSpriteEngine();
-    QDeclarativeListProperty<QQuickSprite> sprites()
+    QQmlListProperty<QQuickSprite> sprites()
     {
-        return QDeclarativeListProperty<QQuickSprite>(this, m_sprites);
+        return QQmlListProperty<QQuickSprite>(this, m_sprites);
     }
 
     QQuickSprite* sprite(int sprite=0);
@@ -280,12 +280,12 @@ public:
     virtual void restart(int index=0);
     virtual void advance(int index=0);
 
-    //Similar API to QDeclarativePixmap for async loading convenience
-    bool isNull() { return status() == QDeclarativePixmap::Null; }
-    bool isReady() { return status() == QDeclarativePixmap::Ready; }
-    bool isLoading() { return status() == QDeclarativePixmap::Loading; }
-    bool isError() { return status() == QDeclarativePixmap::Error; }
-    QDeclarativePixmap::Status status();//Composed status of all Sprites
+    //Similar API to QQuickPixmap for async loading convenience
+    bool isNull() { return status() == QQuickPixmap::Null; }
+    bool isReady() { return status() == QQuickPixmap::Ready; }
+    bool isLoading() { return status() == QQuickPixmap::Loading; }
+    bool isError() { return status() == QQuickPixmap::Error; }
+    QQuickPixmap::Status status();//Composed status of all Sprites
     void startAssemblingImage();
     QImage assembledImage();
 
@@ -296,24 +296,24 @@ private:
 };
 
 //Common use is to have your own list property which is transparently an engine
-inline void spriteAppend(QDeclarativeListProperty<QQuickSprite> *p, QQuickSprite* s)
+inline void spriteAppend(QQmlListProperty<QQuickSprite> *p, QQuickSprite* s)
 {
     reinterpret_cast<QList<QQuickSprite *> *>(p->data)->append(s);
     p->object->metaObject()->invokeMethod(p->object, "createEngine");
 }
 
-inline QQuickSprite* spriteAt(QDeclarativeListProperty<QQuickSprite> *p, int idx)
+inline QQuickSprite* spriteAt(QQmlListProperty<QQuickSprite> *p, int idx)
 {
     return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->at(idx);
 }
 
-inline void spriteClear(QDeclarativeListProperty<QQuickSprite> *p)
+inline void spriteClear(QQmlListProperty<QQuickSprite> *p)
 {
     reinterpret_cast<QList<QQuickSprite *> *>(p->data)->clear();
     p->object->metaObject()->invokeMethod(p->object, "createEngine");
 }
 
-inline int spriteCount(QDeclarativeListProperty<QQuickSprite> *p)
+inline int spriteCount(QQmlListProperty<QQuickSprite> *p)
 {
     return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->count();
 }

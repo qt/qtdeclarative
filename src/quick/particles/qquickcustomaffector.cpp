@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,8 +41,8 @@
 
 #include "qquickcustomaffector_p.h"
 #include <private/qv8engine_p.h>
-#include <private/qdeclarativeengine_p.h>
-#include <QDeclarativeEngine>
+#include <private/qqmlengine_p.h>
+#include <QQmlEngine>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 
@@ -102,7 +102,7 @@ QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
 
 bool QQuickCustomAffector::isAffectConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticles(QDeclarativeV8Handle,qreal)");
+    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticles(QQmlV8Handle,qreal)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
@@ -130,14 +130,14 @@ void QQuickCustomAffector::affectSystem(qreal dt)
         dt = 1.0;
 
     v8::HandleScope handle_scope;
-    v8::Context::Scope scope(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->context());
+    v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
     v8::Handle<v8::Array> array = v8::Array::New(toAffect.size());
     for (int i=0; i<toAffect.size(); i++)
         array->Set(i, toAffect[i]->v8Value().toHandle());
 
     if (dt >= simulationCutoff || dt <= simulationDelta) {
         affectProperties(toAffect, dt);
-        emit affectParticles(QDeclarativeV8Handle::fromHandle(array), dt);
+        emit affectParticles(QQmlV8Handle::fromHandle(array), dt);
     } else {
         int realTime = m_system->timeInt;
         m_system->timeInt -= dt * 1000.0;
@@ -145,12 +145,12 @@ void QQuickCustomAffector::affectSystem(qreal dt)
             m_system->timeInt += simulationDelta * 1000.0;
             dt -= simulationDelta;
             affectProperties(toAffect, simulationDelta);
-            emit affectParticles(QDeclarativeV8Handle::fromHandle(array), simulationDelta);
+            emit affectParticles(QQmlV8Handle::fromHandle(array), simulationDelta);
         }
         m_system->timeInt = realTime;
         if (dt > 0.0) {
             affectProperties(toAffect, dt);
-            emit affectParticles(QDeclarativeV8Handle::fromHandle(array), dt);
+            emit affectParticles(QQmlV8Handle::fromHandle(array), dt);
         }
     }
 

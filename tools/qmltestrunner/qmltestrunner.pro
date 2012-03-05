@@ -1,11 +1,11 @@
 TEMPLATE = app
 TARGET = qmltestrunner
-DESTDIR= $$QT.declarative.bins
+DESTDIR= $$QT.qml.bins
 CONFIG += warn_on
 SOURCES += main.cpp
 
 
-QT += declarative qmltest
+QT += qml qmltest
 
 macx: CONFIG -= app_bundle
 

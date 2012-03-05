@@ -75,9 +75,9 @@ void BirthdayParty::setHost(Person *c)
     emit hostChanged();
 }
 
-QDeclarativeListProperty<Person> BirthdayParty::guests() 
+QQmlListProperty<Person> BirthdayParty::guests()
 {
-    return QDeclarativeListProperty<Person>(this, m_guests);
+    return QQmlListProperty<Person>(this, m_guests);
 }
 
 int BirthdayParty::guestCount() const

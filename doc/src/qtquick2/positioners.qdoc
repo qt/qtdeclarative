@@ -61,7 +61,7 @@ uses a Column item to arrange three \l Rectangle items in an area defined
 by an outer \l Item. The \l{Column::spacing}{spacing} property is set to
 include a small amount of space between the rectangles.
 
-\snippet doc/src/snippets/declarative/column/column.qml document
+\snippet doc/src/snippets/qml/column/column.qml document
 
 Note that, since Column inherits directly from Item, any background color
 must be added to a parent Rectangle, if desired.
@@ -80,7 +80,7 @@ include a small amount of space between the rectangles.
 We ensure that the parent Rectangle is large enough so that there is some space
 left around the edges of the horizontally centered Row item.
 
-\snippet doc/src/snippets/declarative/row.qml document
+\snippet doc/src/snippets/qml/row.qml document
 
 \section2 Grid
 
@@ -93,7 +93,7 @@ The following example uses a Grid item to place four \l Rectangle items
 in a 2-by-2 grid. As with the other positioners, the spacing between items
 can be specified using the \l{Grid::spacing}{spacing} property.
 
-\snippet doc/src/snippets/declarative/grid-spacing.qml document
+\snippet doc/src/snippets/qml/grid-spacing.qml document
 
 There is no difference between horizontal and vertical spacing inserted
 between items, so any additional space must be added within the items
@@ -122,7 +122,7 @@ The following example shows a Flow item containing a number of \l Text
 child items. These are arranged in a similar way to those shown in the
 screenshots.
 
-\snippet doc/src/snippets/declarative/flow.qml document
+\snippet doc/src/snippets/qml/flow.qml document
 
 The main differences between the Grid and Flow positioners are that items
 inside a Flow will wrap when they run out of space on the minor axis, and

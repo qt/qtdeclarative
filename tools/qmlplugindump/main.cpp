@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/private/qdeclarativemetatype_p.h>
-#include <QtDeclarative/private/qdeclarativeopenmetaobject_p.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/private/qqmlmetatype_p.h>
+#include <QtQml/private/qqmlopenmetaobject_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickpincharea_p.h>
 
@@ -101,14 +101,14 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
 
     for (int index = 0; index < meta->propertyCount(); ++index) {
         QMetaProperty prop = meta->property(index);
-        if (QDeclarativeMetaType::isQObject(prop.userType())) {
+        if (QQmlMetaType::isQObject(prop.userType())) {
             if (verbose)
                 qDebug() << "  Processing property" << prop.name();
             currentProperty = QString("%1::%2").arg(meta->className(), prop.name());
 
             // if the property was not initialized during construction,
             // accessing a member of oo is going to cause a segmentation fault
-            QObject *oo = QDeclarativeMetaType::toQObject(prop.read(object));
+            QObject *oo = QQmlMetaType::toQObject(prop.read(object));
             if (oo && !metas->contains(oo->metaObject()))
                 collectReachableMetaObjects(oo, metas);
             currentProperty.clear();
@@ -116,7 +116,7 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
     }
 }
 
-void collectReachableMetaObjects(const QDeclarativeType *ty, QSet<const QMetaObject *> *metas)
+void collectReachableMetaObjects(const QQmlType *ty, QSet<const QMetaObject *> *metas)
 {
     collectReachableMetaObjects(ty->metaObject(), metas, ty->isExtendedType());
     if (ty->attachedPropertiesType())
@@ -133,10 +133,10 @@ public:
 };
 
 /* When we dump a QMetaObject, we want to list all the types it is exported as.
-   To do this, we need to find the QDeclarativeTypes associated with this
+   To do this, we need to find the QQmlTypes associated with this
    QMetaObject.
 */
-static QHash<QByteArray, QSet<const QDeclarativeType *> > qmlTypesByCppName;
+static QHash<QByteArray, QSet<const QQmlType *> > qmlTypesByCppName;
 
 static QHash<QByteArray, QByteArray> cppToId;
 
@@ -187,13 +187,13 @@ public:
 };
 QList<ModuleApi> moduleApis;
 
-QSet<const QMetaObject *> collectReachableMetaObjects(QDeclarativeEngine *engine, const QList<QDeclarativeType *> &skip = QList<QDeclarativeType *>())
+QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const QList<QQmlType *> &skip = QList<QQmlType *>())
 {
     QSet<const QMetaObject *> metas;
     metas.insert(FriendlyQObject::qtMeta());
 
     QHash<QByteArray, QSet<QByteArray> > extensions;
-    foreach (const QDeclarativeType *ty, QDeclarativeMetaType::qmlTypes()) {
+    foreach (const QQmlType *ty, QQmlMetaType::qmlTypes()) {
         qmlTypesByCppName[ty->metaObject()->className()].insert(ty);
         if (ty->isExtendedType()) {
             extensions[ty->typeName()].insert(ty->metaObject()->className());
@@ -206,18 +206,18 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QDeclarativeEngine *engine
     // Example: QDeclarativeGraphicsWidget overrides the QtQuick/QGraphicsWidget export
     //          of QGraphicsWidget.
     foreach (const QByteArray &baseCpp, extensions.keys()) {
-        QSet<const QDeclarativeType *> baseExports = qmlTypesByCppName.value(baseCpp);
+        QSet<const QQmlType *> baseExports = qmlTypesByCppName.value(baseCpp);
 
         const QSet<QByteArray> extensionCppNames = extensions.value(baseCpp);
         foreach (const QByteArray &extensionCppName, extensionCppNames) {
-            const QSet<const QDeclarativeType *> extensionExports = qmlTypesByCppName.value(extensionCppName);
+            const QSet<const QQmlType *> extensionExports = qmlTypesByCppName.value(extensionCppName);
 
             // remove extension exports from base imports
-            // unfortunately the QDeclarativeType pointers don't match, so can't use QSet::substract
-            QSet<const QDeclarativeType *> newBaseExports;
-            foreach (const QDeclarativeType *baseExport, baseExports) {
+            // unfortunately the QQmlType pointers don't match, so can't use QSet::substract
+            QSet<const QQmlType *> newBaseExports;
+            foreach (const QQmlType *baseExport, baseExports) {
                 bool match = false;
-                foreach (const QDeclarativeType *extensionExport, extensionExports) {
+                foreach (const QQmlType *extensionExport, extensionExports) {
                     if (baseExport->qmlTypeName() == extensionExport->qmlTypeName()
                             && baseExport->majorVersion() == extensionExport->majorVersion()
                             && baseExport->minorVersion() == extensionExport->minorVersion()) {
@@ -235,14 +235,14 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QDeclarativeEngine *engine
 
     // find even more QMetaObjects by instantiating QML types and running
     // over the instances
-    foreach (QDeclarativeType *ty, QDeclarativeMetaType::qmlTypes()) {
+    foreach (QQmlType *ty, QQmlMetaType::qmlTypes()) {
         if (skip.contains(ty))
             continue;
         if (ty->isExtendedType())
             continue;
         if (!ty->isCreatable())
             continue;
-        if (ty->typeName() == "QDeclarativeComponent")
+        if (ty->typeName() == "QQmlComponent")
             continue;
 
         QString tyName = ty->qmlTypeName();
@@ -261,10 +261,10 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QDeclarativeEngine *engine
     }
 
     // extract exported module api
-    QHashIterator<QString, QList<QDeclarativeMetaType::ModuleApi> > moduleApiIt(QDeclarativeMetaType::moduleApis());
+    QHashIterator<QString, QList<QQmlMetaType::ModuleApi> > moduleApiIt(QQmlMetaType::moduleApis());
     while (moduleApiIt.hasNext()) {
         moduleApiIt.next();
-        foreach (const QDeclarativeMetaType::ModuleApi &api, moduleApiIt.value()) {
+        foreach (const QQmlMetaType::ModuleApi &api, moduleApiIt.value()) {
             ModuleApi moduleApi;
             moduleApi.uri = moduleApiIt.key();
             moduleApi.majorVersion = api.major;
@@ -322,11 +322,11 @@ public:
         if (meta->superClass())
             qml->writeScriptBinding(QLatin1String("prototype"), enquote(convertToId(meta->superClass())));
 
-        QSet<const QDeclarativeType *> qmlTypes = qmlTypesByCppName.value(meta->className());
+        QSet<const QQmlType *> qmlTypes = qmlTypesByCppName.value(meta->className());
         if (!qmlTypes.isEmpty()) {
-            QHash<QString, const QDeclarativeType *> exports;
+            QHash<QString, const QQmlType *> exports;
 
-            foreach (const QDeclarativeType *qmlTy, qmlTypes) {
+            foreach (const QQmlType *qmlTy, qmlTypes) {
                 QString qmlTyName = qmlTy->qmlTypeName();
                 if (qmlTyName.startsWith(relocatableModuleUri + QLatin1Char('/'))) {
                     qmlTyName.remove(0, relocatableModuleUri.size() + 1);
@@ -432,7 +432,7 @@ public:
     {
         qml->writeStartObject(QLatin1String("Component"));
         qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("QEasingCurve")));
-        qml->writeScriptBinding(QLatin1String("prototype"), enquote(QLatin1String("QDeclarativeEasingValueType")));
+        qml->writeScriptBinding(QLatin1String("prototype"), enquote(QLatin1String("QQmlEasingValueType")));
         qml->writeEndObject();
     }
 
@@ -447,7 +447,7 @@ private:
     */
     static void removePointerAndList(QByteArray *typeName, bool *isList, bool *isPointer)
     {
-        static QByteArray declListPrefix = "QDeclarativeListProperty<";
+        static QByteArray declListPrefix = "QQmlListProperty<";
 
         if (typeName->endsWith('*')) {
             *isPointer = true;
@@ -670,7 +670,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    QDeclarativeEngine engine;
+    QQmlEngine engine;
     if (!pluginImportPath.isEmpty()) {
         QDir cur = QDir::current();
         cur.cd(pluginImportPath);
@@ -682,11 +682,11 @@ int main(int argc, char *argv[])
     // load the QtQuick 2 plugin
     {
         QByteArray code("import QtQuick 2.0\nQtObject {}");
-        QDeclarativeComponent c(&engine);
+        QQmlComponent c(&engine);
         c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick2.qml"));
         c.create();
         if (!c.errors().isEmpty()) {
-            foreach (const QDeclarativeError &error, c.errors())
+            foreach (const QQmlError &error, c.errors())
                 qWarning() << error.toString();
             return EXIT_IMPORTERROR;
         }
@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
 
     // find all QMetaObjects reachable from the builtin module
     QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine);
-    QList<QDeclarativeType *> defaultTypes = QDeclarativeMetaType::qmlTypes();
+    QList<QQmlType *> defaultTypes = QQmlMetaType::qmlTypes();
 
     // add some otherwise unreachable QMetaObjects
     defaultReachable.insert(&QQuickMouseEvent::staticMetaObject);
@@ -708,7 +708,7 @@ int main(int argc, char *argv[])
     } else {
         // find a valid QtQuick import
         QByteArray importCode;
-        QDeclarativeType *qtObjectType = QDeclarativeMetaType::qmlType(&QObject::staticMetaObject);
+        QQmlType *qtObjectType = QQmlMetaType::qmlType(&QObject::staticMetaObject);
         if (!qtObjectType) {
             qWarning() << "Could not find QtObject type";
             importCode = QByteArray("import QtQuick 2.0\n");
@@ -733,12 +733,12 @@ int main(int argc, char *argv[])
         {
             QByteArray code = importCode;
             code += "QtObject {}";
-            QDeclarativeComponent c(&engine);
+            QQmlComponent c(&engine);
 
             c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/typelist.qml"));
             c.create();
             if (!c.errors().isEmpty()) {
-                foreach (const QDeclarativeError &error, c.errors())
+                foreach (const QQmlError &error, c.errors())
                     qWarning() << error.toString();
                 return EXIT_IMPORTERROR;
             }
@@ -761,7 +761,7 @@ int main(int argc, char *argv[])
 
     // setup static rewrites of type names
     cppToId.insert("QString", "string");
-    cppToId.insert("QDeclarativeEasingValueType::Type", "Type");
+    cppToId.insert("QQmlEasingValueType::Type", "Type");
 
     // start dumping data
     QByteArray bytes;
@@ -787,7 +787,7 @@ int main(int argc, char *argv[])
         dumper.dump(meta);
     }
 
-    // define QEasingCurve as an extension of QDeclarativeEasingValueType, this way
+    // define QEasingCurve as an extension of QQmlEasingValueType, this way
     // properties using the QEasingCurve type get useful type information.
     if (pluginImportUri.isEmpty())
         dumper.writeEasingCurve();

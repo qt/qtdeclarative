@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,14 +42,14 @@
 #include "qquickstateoperations_p.h"
 #include "qquickitem_p.h"
 
-#include <private/qdeclarativestate_p_p.h>
+#include <private/qquickstate_p_p.h>
 
-#include <QtDeclarative/qdeclarativeinfo.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtCore/qmath.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickParentChangePrivate : public QDeclarativeStateOperationPrivate
+class QQuickParentChangePrivate : public QQuickStateOperationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickParentChange)
 public:
@@ -57,18 +57,18 @@ public:
         rewindParent(0), rewindStackBefore(0) {}
 
     QQuickItem *target;
-    QDeclarativeGuard<QQuickItem> parent;
-    QDeclarativeGuard<QQuickItem> origParent;
-    QDeclarativeGuard<QQuickItem> origStackBefore;
+    QQmlGuard<QQuickItem> parent;
+    QQmlGuard<QQuickItem> origParent;
+    QQmlGuard<QQuickItem> origStackBefore;
     QQuickItem *rewindParent;
     QQuickItem *rewindStackBefore;
 
-    QDeclarativeNullableValue<QDeclarativeScriptString> xString;
-    QDeclarativeNullableValue<QDeclarativeScriptString> yString;
-    QDeclarativeNullableValue<QDeclarativeScriptString> widthString;
-    QDeclarativeNullableValue<QDeclarativeScriptString> heightString;
-    QDeclarativeNullableValue<QDeclarativeScriptString> scaleString;
-    QDeclarativeNullableValue<QDeclarativeScriptString> rotationString;
+    QQmlNullableValue<QQmlScriptString> xString;
+    QQmlNullableValue<QQmlScriptString> yString;
+    QQmlNullableValue<QQmlScriptString> widthString;
+    QQmlNullableValue<QQmlScriptString> heightString;
+    QQmlNullableValue<QQmlScriptString> scaleString;
+    QQmlNullableValue<QQmlScriptString> rotationString;
 
     void doChange(QQuickItem *targetParent, QQuickItem *stackBefore = 0);
 };
@@ -147,7 +147,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
 }
 
 QQuickParentChange::QQuickParentChange(QObject *parent)
-    : QDeclarativeStateOperation(*(new QQuickParentChangePrivate), parent)
+    : QQuickStateOperation(*(new QQuickParentChangePrivate), parent)
 {
 }
 
@@ -155,13 +155,13 @@ QQuickParentChange::~QQuickParentChange()
 {
 }
 
-QDeclarativeScriptString QQuickParentChange::x() const
+QQmlScriptString QQuickParentChange::x() const
 {
     Q_D(const QQuickParentChange);
     return d->xString.value;
 }
 
-void QQuickParentChange::setX(QDeclarativeScriptString x)
+void QQuickParentChange::setX(QQmlScriptString x)
 {
     Q_D(QQuickParentChange);
     d->xString = x;
@@ -173,13 +173,13 @@ bool QQuickParentChange::xIsSet() const
     return d->xString.isValid();
 }
 
-QDeclarativeScriptString QQuickParentChange::y() const
+QQmlScriptString QQuickParentChange::y() const
 {
     Q_D(const QQuickParentChange);
     return d->yString.value;
 }
 
-void QQuickParentChange::setY(QDeclarativeScriptString y)
+void QQuickParentChange::setY(QQmlScriptString y)
 {
     Q_D(QQuickParentChange);
     d->yString = y;
@@ -191,13 +191,13 @@ bool QQuickParentChange::yIsSet() const
     return d->yString.isValid();
 }
 
-QDeclarativeScriptString QQuickParentChange::width() const
+QQmlScriptString QQuickParentChange::width() const
 {
     Q_D(const QQuickParentChange);
     return d->widthString.value;
 }
 
-void QQuickParentChange::setWidth(QDeclarativeScriptString width)
+void QQuickParentChange::setWidth(QQmlScriptString width)
 {
     Q_D(QQuickParentChange);
     d->widthString = width;
@@ -209,13 +209,13 @@ bool QQuickParentChange::widthIsSet() const
     return d->widthString.isValid();
 }
 
-QDeclarativeScriptString QQuickParentChange::height() const
+QQmlScriptString QQuickParentChange::height() const
 {
     Q_D(const QQuickParentChange);
     return d->heightString.value;
 }
 
-void QQuickParentChange::setHeight(QDeclarativeScriptString height)
+void QQuickParentChange::setHeight(QQmlScriptString height)
 {
     Q_D(QQuickParentChange);
     d->heightString = height;
@@ -227,13 +227,13 @@ bool QQuickParentChange::heightIsSet() const
     return d->heightString.isValid();
 }
 
-QDeclarativeScriptString QQuickParentChange::scale() const
+QQmlScriptString QQuickParentChange::scale() const
 {
     Q_D(const QQuickParentChange);
     return d->scaleString.value;
 }
 
-void QQuickParentChange::setScale(QDeclarativeScriptString scale)
+void QQuickParentChange::setScale(QQmlScriptString scale)
 {
     Q_D(QQuickParentChange);
     d->scaleString = scale;
@@ -245,13 +245,13 @@ bool QQuickParentChange::scaleIsSet() const
     return d->scaleString.isValid();
 }
 
-QDeclarativeScriptString QQuickParentChange::rotation() const
+QQmlScriptString QQuickParentChange::rotation() const
 {
     Q_D(const QQuickParentChange);
     return d->rotationString.value;
 }
 
-void QQuickParentChange::setRotation(QDeclarativeScriptString rotation)
+void QQuickParentChange::setRotation(QQmlScriptString rotation)
 {
     Q_D(QQuickParentChange);
     d->rotationString = rotation;
@@ -293,7 +293,7 @@ void QQuickParentChange::setParent(QQuickItem *parent)
     d->parent = parent;
 }
 
-QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
+QQuickStateOperation::ActionList QQuickParentChange::actions()
 {
     Q_D(QQuickParentChange);
     if (!d->target || !d->parent)
@@ -301,7 +301,7 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
 
     ActionList actions;
 
-    QDeclarativeAction a;
+    QQuickAction a;
     a.event = this;
     actions << a;
 
@@ -310,13 +310,13 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
         QString script = d->xString.value.script();
         qreal x = script.toFloat(&ok);
         if (ok) {
-            QDeclarativeAction xa(d->target, QLatin1String("x"), x);
+            QQuickAction xa(d->target, QLatin1String("x"), x);
             actions << xa;
         } else {
-            QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            QDeclarativeProperty property(d->target, QLatin1String("x"));
+            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlProperty property(d->target, QLatin1String("x"));
             newBinding->setTarget(property);
-            QDeclarativeAction xa;
+            QQuickAction xa;
             xa.property = property;
             xa.toBinding = newBinding;
             xa.fromValue = xa.property.read();
@@ -330,13 +330,13 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
         QString script = d->yString.value.script();
         qreal y = script.toFloat(&ok);
         if (ok) {
-            QDeclarativeAction ya(d->target, QLatin1String("y"), y);
+            QQuickAction ya(d->target, QLatin1String("y"), y);
             actions << ya;
         } else {
-            QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            QDeclarativeProperty property(d->target, QLatin1String("y"));
+            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlProperty property(d->target, QLatin1String("y"));
             newBinding->setTarget(property);
-            QDeclarativeAction ya;
+            QQuickAction ya;
             ya.property = property;
             ya.toBinding = newBinding;
             ya.fromValue = ya.property.read();
@@ -350,13 +350,13 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
         QString script = d->scaleString.value.script();
         qreal scale = script.toFloat(&ok);
         if (ok) {
-            QDeclarativeAction sa(d->target, QLatin1String("scale"), scale);
+            QQuickAction sa(d->target, QLatin1String("scale"), scale);
             actions << sa;
         } else {
-            QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            QDeclarativeProperty property(d->target, QLatin1String("scale"));
+            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlProperty property(d->target, QLatin1String("scale"));
             newBinding->setTarget(property);
-            QDeclarativeAction sa;
+            QQuickAction sa;
             sa.property = property;
             sa.toBinding = newBinding;
             sa.fromValue = sa.property.read();
@@ -370,13 +370,13 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
         QString script = d->rotationString.value.script();
         qreal rotation = script.toFloat(&ok);
         if (ok) {
-            QDeclarativeAction ra(d->target, QLatin1String("rotation"), rotation);
+            QQuickAction ra(d->target, QLatin1String("rotation"), rotation);
             actions << ra;
         } else {
-            QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            QDeclarativeProperty property(d->target, QLatin1String("rotation"));
+            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlProperty property(d->target, QLatin1String("rotation"));
             newBinding->setTarget(property);
-            QDeclarativeAction ra;
+            QQuickAction ra;
             ra.property = property;
             ra.toBinding = newBinding;
             ra.fromValue = ra.property.read();
@@ -390,13 +390,13 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
         QString script = d->widthString.value.script();
         qreal width = script.toFloat(&ok);
         if (ok) {
-            QDeclarativeAction wa(d->target, QLatin1String("width"), width);
+            QQuickAction wa(d->target, QLatin1String("width"), width);
             actions << wa;
         } else {
-            QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            QDeclarativeProperty property(d->target, QLatin1String("width"));
+            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlProperty property(d->target, QLatin1String("width"));
             newBinding->setTarget(property);
-            QDeclarativeAction wa;
+            QQuickAction wa;
             wa.property = property;
             wa.toBinding = newBinding;
             wa.fromValue = wa.property.read();
@@ -410,13 +410,13 @@ QDeclarativeStateOperation::ActionList QQuickParentChange::actions()
         QString script = d->heightString.value.script();
         qreal height = script.toFloat(&ok);
         if (ok) {
-            QDeclarativeAction ha(d->target, QLatin1String("height"), height);
+            QQuickAction ha(d->target, QLatin1String("height"), height);
             actions << ha;
         } else {
-            QDeclarativeBinding *newBinding = new QDeclarativeBinding(script, d->target, qmlContext(this));
-            QDeclarativeProperty property(d->target, QLatin1String("height"));
+            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlProperty property(d->target, QLatin1String("height"));
             newBinding->setTarget(property);
-            QDeclarativeAction ha;
+            QQuickAction ha;
             ha.property = property;
             ha.toBinding = newBinding;
             ha.fromValue = ha.property.read();
@@ -436,7 +436,7 @@ void QQuickParentChange::saveOriginals()
     d->origStackBefore = d->rewindStackBefore;
 }
 
-/*void QQuickParentChange::copyOriginals(QDeclarativeActionEvent *other)
+/*void QQuickParentChange::copyOriginals(QQuickActionEvent *other)
 {
     Q_D(QQuickParentChange);
     QQuickParentChange *pc = static_cast<QQuickParentChange*>(other);
@@ -464,12 +464,12 @@ void QQuickParentChange::reverse(Reason)
     d->doChange(d->origParent, d->origStackBefore);
 }
 
-QDeclarativeActionEvent::EventType QQuickParentChange::type() const
+QQuickActionEvent::EventType QQuickParentChange::type() const
 {
     return ParentChange;
 }
 
-bool QQuickParentChange::override(QDeclarativeActionEvent*other)
+bool QQuickParentChange::override(QQuickActionEvent*other)
 {
     Q_D(QQuickParentChange);
     if (other->type() != ParentChange)
@@ -526,13 +526,13 @@ public:
     QQuickItem *fill;
     QQuickItem *centerIn;
 
-    QDeclarativeScriptString leftScript;
-    QDeclarativeScriptString rightScript;
-    QDeclarativeScriptString topScript;
-    QDeclarativeScriptString bottomScript;
-    QDeclarativeScriptString hCenterScript;
-    QDeclarativeScriptString vCenterScript;
-    QDeclarativeScriptString baselineScript;
+    QQmlScriptString leftScript;
+    QQmlScriptString rightScript;
+    QQmlScriptString topScript;
+    QQmlScriptString bottomScript;
+    QQmlScriptString hCenterScript;
+    QQmlScriptString vCenterScript;
+    QQmlScriptString baselineScript;
 
     /*qreal leftMargin;
     qreal rightMargin;
@@ -553,13 +553,13 @@ QQuickAnchorSet::~QQuickAnchorSet()
 {
 }
 
-QDeclarativeScriptString QQuickAnchorSet::top() const
+QQmlScriptString QQuickAnchorSet::top() const
 {
     Q_D(const QQuickAnchorSet);
     return d->topScript;
 }
 
-void QQuickAnchorSet::setTop(const QDeclarativeScriptString &edge)
+void QQuickAnchorSet::setTop(const QQmlScriptString &edge)
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::TopAnchor;
@@ -575,13 +575,13 @@ void QQuickAnchorSet::resetTop()
     d->resetAnchors |= QQuickAnchors::TopAnchor;
 }
 
-QDeclarativeScriptString QQuickAnchorSet::bottom() const
+QQmlScriptString QQuickAnchorSet::bottom() const
 {
     Q_D(const QQuickAnchorSet);
     return d->bottomScript;
 }
 
-void QQuickAnchorSet::setBottom(const QDeclarativeScriptString &edge)
+void QQuickAnchorSet::setBottom(const QQmlScriptString &edge)
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::BottomAnchor;
@@ -597,13 +597,13 @@ void QQuickAnchorSet::resetBottom()
     d->resetAnchors |= QQuickAnchors::BottomAnchor;
 }
 
-QDeclarativeScriptString QQuickAnchorSet::verticalCenter() const
+QQmlScriptString QQuickAnchorSet::verticalCenter() const
 {
     Q_D(const QQuickAnchorSet);
     return d->vCenterScript;
 }
 
-void QQuickAnchorSet::setVerticalCenter(const QDeclarativeScriptString &edge)
+void QQuickAnchorSet::setVerticalCenter(const QQmlScriptString &edge)
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::VCenterAnchor;
@@ -619,13 +619,13 @@ void QQuickAnchorSet::resetVerticalCenter()
     d->resetAnchors |= QQuickAnchors::VCenterAnchor;
 }
 
-QDeclarativeScriptString QQuickAnchorSet::baseline() const
+QQmlScriptString QQuickAnchorSet::baseline() const
 {
     Q_D(const QQuickAnchorSet);
     return d->baselineScript;
 }
 
-void QQuickAnchorSet::setBaseline(const QDeclarativeScriptString &edge)
+void QQuickAnchorSet::setBaseline(const QQmlScriptString &edge)
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::BaselineAnchor;
@@ -641,13 +641,13 @@ void QQuickAnchorSet::resetBaseline()
     d->resetAnchors |= QQuickAnchors::BaselineAnchor;
 }
 
-QDeclarativeScriptString QQuickAnchorSet::left() const
+QQmlScriptString QQuickAnchorSet::left() const
 {
     Q_D(const QQuickAnchorSet);
     return d->leftScript;
 }
 
-void QQuickAnchorSet::setLeft(const QDeclarativeScriptString &edge)
+void QQuickAnchorSet::setLeft(const QQmlScriptString &edge)
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::LeftAnchor;
@@ -663,13 +663,13 @@ void QQuickAnchorSet::resetLeft()
     d->resetAnchors |= QQuickAnchors::LeftAnchor;
 }
 
-QDeclarativeScriptString QQuickAnchorSet::right() const
+QQmlScriptString QQuickAnchorSet::right() const
 {
     Q_D(const QQuickAnchorSet);
     return d->rightScript;
 }
 
-void QQuickAnchorSet::setRight(const QDeclarativeScriptString &edge)
+void QQuickAnchorSet::setRight(const QQmlScriptString &edge)
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::RightAnchor;
@@ -685,13 +685,13 @@ void QQuickAnchorSet::resetRight()
     d->resetAnchors |= QQuickAnchors::RightAnchor;
 }
 
-QDeclarativeScriptString QQuickAnchorSet::horizontalCenter() const
+QQmlScriptString QQuickAnchorSet::horizontalCenter() const
 {
     Q_D(const QQuickAnchorSet);
     return d->hCenterScript;
 }
 
-void QQuickAnchorSet::setHorizontalCenter(const QDeclarativeScriptString &edge)
+void QQuickAnchorSet::setHorizontalCenter(const QQmlScriptString &edge)
 {
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::HCenterAnchor;
@@ -742,7 +742,7 @@ void QQuickAnchorSet::resetCenterIn()
 }
 
 
-class QQuickAnchorChangesPrivate : public QDeclarativeStateOperationPrivate
+class QQuickAnchorChangesPrivate : public QQuickStateOperationPrivate
 {
 public:
     QQuickAnchorChangesPrivate()
@@ -760,21 +760,21 @@ public:
     QQuickItem *target;
     QQuickAnchorSet *anchorSet;
 
-    QDeclarativeBinding *leftBinding;
-    QDeclarativeBinding *rightBinding;
-    QDeclarativeBinding *hCenterBinding;
-    QDeclarativeBinding *topBinding;
-    QDeclarativeBinding *bottomBinding;
-    QDeclarativeBinding *vCenterBinding;
-    QDeclarativeBinding *baselineBinding;
+    QQmlBinding *leftBinding;
+    QQmlBinding *rightBinding;
+    QQmlBinding *hCenterBinding;
+    QQmlBinding *topBinding;
+    QQmlBinding *bottomBinding;
+    QQmlBinding *vCenterBinding;
+    QQmlBinding *baselineBinding;
 
-    QDeclarativeAbstractBinding *origLeftBinding;
-    QDeclarativeAbstractBinding *origRightBinding;
-    QDeclarativeAbstractBinding *origHCenterBinding;
-    QDeclarativeAbstractBinding *origTopBinding;
-    QDeclarativeAbstractBinding *origBottomBinding;
-    QDeclarativeAbstractBinding *origVCenterBinding;
-    QDeclarativeAbstractBinding *origBaselineBinding;
+    QQmlAbstractBinding *origLeftBinding;
+    QQmlAbstractBinding *origRightBinding;
+    QQmlAbstractBinding *origHCenterBinding;
+    QQmlAbstractBinding *origTopBinding;
+    QQmlAbstractBinding *origBottomBinding;
+    QQmlAbstractBinding *origVCenterBinding;
+    QQmlAbstractBinding *origBaselineBinding;
 
     QQuickAnchorLine rewindLeft;
     QQuickAnchorLine rewindRight;
@@ -807,24 +807,24 @@ public:
     bool applyOrigVCenter;
     bool applyOrigBaseline;
 
-    QDeclarativeNullableValue<qreal> origWidth;
-    QDeclarativeNullableValue<qreal> origHeight;
+    QQmlNullableValue<qreal> origWidth;
+    QQmlNullableValue<qreal> origHeight;
     qreal origX;
     qreal origY;
 
-    QList<QDeclarativeAbstractBinding*> oldBindings;
+    QList<QQmlAbstractBinding*> oldBindings;
 
-    QDeclarativeProperty leftProp;
-    QDeclarativeProperty rightProp;
-    QDeclarativeProperty hCenterProp;
-    QDeclarativeProperty topProp;
-    QDeclarativeProperty bottomProp;
-    QDeclarativeProperty vCenterProp;
-    QDeclarativeProperty baselineProp;
+    QQmlProperty leftProp;
+    QQmlProperty rightProp;
+    QQmlProperty hCenterProp;
+    QQmlProperty topProp;
+    QQmlProperty bottomProp;
+    QQmlProperty vCenterProp;
+    QQmlProperty baselineProp;
 };
 
 QQuickAnchorChanges::QQuickAnchorChanges(QObject *parent)
- : QDeclarativeStateOperation(*(new QQuickAnchorChangesPrivate), parent)
+ : QQuickStateOperation(*(new QQuickAnchorChangesPrivate), parent)
 {
 }
 
@@ -838,44 +838,44 @@ QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
     d->leftBinding = d->rightBinding = d->hCenterBinding = d->topBinding
                    = d->bottomBinding = d->vCenterBinding = d->baselineBinding = 0;
 
-    d->leftProp = QDeclarativeProperty(d->target, QLatin1String("anchors.left"));
-    d->rightProp = QDeclarativeProperty(d->target, QLatin1String("anchors.right"));
-    d->hCenterProp = QDeclarativeProperty(d->target, QLatin1String("anchors.horizontalCenter"));
-    d->topProp = QDeclarativeProperty(d->target, QLatin1String("anchors.top"));
-    d->bottomProp = QDeclarativeProperty(d->target, QLatin1String("anchors.bottom"));
-    d->vCenterProp = QDeclarativeProperty(d->target, QLatin1String("anchors.verticalCenter"));
-    d->baselineProp = QDeclarativeProperty(d->target, QLatin1String("anchors.baseline"));
+    d->leftProp = QQmlProperty(d->target, QLatin1String("anchors.left"));
+    d->rightProp = QQmlProperty(d->target, QLatin1String("anchors.right"));
+    d->hCenterProp = QQmlProperty(d->target, QLatin1String("anchors.horizontalCenter"));
+    d->topProp = QQmlProperty(d->target, QLatin1String("anchors.top"));
+    d->bottomProp = QQmlProperty(d->target, QLatin1String("anchors.bottom"));
+    d->vCenterProp = QQmlProperty(d->target, QLatin1String("anchors.verticalCenter"));
+    d->baselineProp = QQmlProperty(d->target, QLatin1String("anchors.baseline"));
 
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::LeftAnchor) {
-        d->leftBinding = new QDeclarativeBinding(d->anchorSet->d_func()->leftScript.script(), d->target, qmlContext(this));
+        d->leftBinding = new QQmlBinding(d->anchorSet->d_func()->leftScript.script(), d->target, qmlContext(this));
         d->leftBinding->setTarget(d->leftProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::RightAnchor) {
-        d->rightBinding = new QDeclarativeBinding(d->anchorSet->d_func()->rightScript.script(), d->target, qmlContext(this));
+        d->rightBinding = new QQmlBinding(d->anchorSet->d_func()->rightScript.script(), d->target, qmlContext(this));
         d->rightBinding->setTarget(d->rightProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::HCenterAnchor) {
-        d->hCenterBinding = new QDeclarativeBinding(d->anchorSet->d_func()->hCenterScript.script(), d->target, qmlContext(this));
+        d->hCenterBinding = new QQmlBinding(d->anchorSet->d_func()->hCenterScript.script(), d->target, qmlContext(this));
         d->hCenterBinding->setTarget(d->hCenterProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::TopAnchor) {
-        d->topBinding = new QDeclarativeBinding(d->anchorSet->d_func()->topScript.script(), d->target, qmlContext(this));
+        d->topBinding = new QQmlBinding(d->anchorSet->d_func()->topScript.script(), d->target, qmlContext(this));
         d->topBinding->setTarget(d->topProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::BottomAnchor) {
-        d->bottomBinding = new QDeclarativeBinding(d->anchorSet->d_func()->bottomScript.script(), d->target, qmlContext(this));
+        d->bottomBinding = new QQmlBinding(d->anchorSet->d_func()->bottomScript.script(), d->target, qmlContext(this));
         d->bottomBinding->setTarget(d->bottomProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::VCenterAnchor) {
-        d->vCenterBinding = new QDeclarativeBinding(d->anchorSet->d_func()->vCenterScript.script(), d->target, qmlContext(this));
+        d->vCenterBinding = new QQmlBinding(d->anchorSet->d_func()->vCenterScript.script(), d->target, qmlContext(this));
         d->vCenterBinding->setTarget(d->vCenterProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::BaselineAnchor) {
-        d->baselineBinding = new QDeclarativeBinding(d->anchorSet->d_func()->baselineScript.script(), d->target, qmlContext(this));
+        d->baselineBinding = new QQmlBinding(d->anchorSet->d_func()->baselineScript.script(), d->target, qmlContext(this));
         d->baselineBinding->setTarget(d->baselineProp);
     }
 
-    QDeclarativeAction a;
+    QQuickAction a;
     a.event = this;
     return ActionList() << a;
 }
@@ -909,43 +909,43 @@ void QQuickAnchorChanges::execute(Reason reason)
     if (d->applyOrigLeft) {
         if (!d->origLeftBinding)
             targetPrivate->anchors()->resetLeft();
-        QDeclarativePropertyPrivate::setBinding(d->leftProp, d->origLeftBinding);
+        QQmlPropertyPrivate::setBinding(d->leftProp, d->origLeftBinding);
     }
     if (d->applyOrigRight) {
         if (!d->origRightBinding)
             targetPrivate->anchors()->resetRight();
-        QDeclarativePropertyPrivate::setBinding(d->rightProp, d->origRightBinding);
+        QQmlPropertyPrivate::setBinding(d->rightProp, d->origRightBinding);
     }
     if (d->applyOrigHCenter) {
         if (!d->origHCenterBinding)
             targetPrivate->anchors()->resetHorizontalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->hCenterProp, d->origHCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->hCenterProp, d->origHCenterBinding);
     }
     if (d->applyOrigTop) {
         if (!d->origTopBinding)
             targetPrivate->anchors()->resetTop();
-        QDeclarativePropertyPrivate::setBinding(d->topProp, d->origTopBinding);
+        QQmlPropertyPrivate::setBinding(d->topProp, d->origTopBinding);
     }
     if (d->applyOrigBottom) {
         if (!d->origBottomBinding)
             targetPrivate->anchors()->resetBottom();
-        QDeclarativePropertyPrivate::setBinding(d->bottomProp, d->origBottomBinding);
+        QQmlPropertyPrivate::setBinding(d->bottomProp, d->origBottomBinding);
     }
     if (d->applyOrigVCenter) {
         if (!d->origVCenterBinding)
             targetPrivate->anchors()->resetVerticalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->vCenterProp, d->origVCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->vCenterProp, d->origVCenterBinding);
     }
     if (d->applyOrigBaseline) {
         if (!d->origBaselineBinding)
             targetPrivate->anchors()->resetBaseline();
-        QDeclarativePropertyPrivate::setBinding(d->baselineProp, d->origBaselineBinding);
+        QQmlPropertyPrivate::setBinding(d->baselineProp, d->origBaselineBinding);
     }
 
     //destroy old bindings
     if (reason == ActualChange) {
         for (int i = 0; i < d->oldBindings.size(); ++i) {
-            QDeclarativeAbstractBinding *binding = d->oldBindings.at(i);
+            QQmlAbstractBinding *binding = d->oldBindings.at(i);
             if (binding)
                 binding->destroy();
         }
@@ -955,48 +955,48 @@ void QQuickAnchorChanges::execute(Reason reason)
     //reset any anchors that have been specified as "undefined"
     if (d->anchorSet->d_func()->resetAnchors & QQuickAnchors::LeftAnchor) {
         targetPrivate->anchors()->resetLeft();
-        QDeclarativePropertyPrivate::setBinding(d->leftProp, 0);
+        QQmlPropertyPrivate::setBinding(d->leftProp, 0);
     }
     if (d->anchorSet->d_func()->resetAnchors & QQuickAnchors::RightAnchor) {
         targetPrivate->anchors()->resetRight();
-        QDeclarativePropertyPrivate::setBinding(d->rightProp, 0);
+        QQmlPropertyPrivate::setBinding(d->rightProp, 0);
     }
     if (d->anchorSet->d_func()->resetAnchors & QQuickAnchors::HCenterAnchor) {
         targetPrivate->anchors()->resetHorizontalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->hCenterProp, 0);
+        QQmlPropertyPrivate::setBinding(d->hCenterProp, 0);
     }
     if (d->anchorSet->d_func()->resetAnchors & QQuickAnchors::TopAnchor) {
         targetPrivate->anchors()->resetTop();
-        QDeclarativePropertyPrivate::setBinding(d->topProp, 0);
+        QQmlPropertyPrivate::setBinding(d->topProp, 0);
     }
     if (d->anchorSet->d_func()->resetAnchors & QQuickAnchors::BottomAnchor) {
         targetPrivate->anchors()->resetBottom();
-        QDeclarativePropertyPrivate::setBinding(d->bottomProp, 0);
+        QQmlPropertyPrivate::setBinding(d->bottomProp, 0);
     }
     if (d->anchorSet->d_func()->resetAnchors & QQuickAnchors::VCenterAnchor) {
         targetPrivate->anchors()->resetVerticalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->vCenterProp, 0);
+        QQmlPropertyPrivate::setBinding(d->vCenterProp, 0);
     }
     if (d->anchorSet->d_func()->resetAnchors & QQuickAnchors::BaselineAnchor) {
         targetPrivate->anchors()->resetBaseline();
-        QDeclarativePropertyPrivate::setBinding(d->baselineProp, 0);
+        QQmlPropertyPrivate::setBinding(d->baselineProp, 0);
     }
 
     //set any anchors that have been specified
     if (d->leftBinding)
-        QDeclarativePropertyPrivate::setBinding(d->leftBinding->property(), d->leftBinding);
+        QQmlPropertyPrivate::setBinding(d->leftBinding->property(), d->leftBinding);
     if (d->rightBinding)
-        QDeclarativePropertyPrivate::setBinding(d->rightBinding->property(), d->rightBinding);
+        QQmlPropertyPrivate::setBinding(d->rightBinding->property(), d->rightBinding);
     if (d->hCenterBinding)
-        QDeclarativePropertyPrivate::setBinding(d->hCenterBinding->property(), d->hCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->hCenterBinding->property(), d->hCenterBinding);
     if (d->topBinding)
-        QDeclarativePropertyPrivate::setBinding(d->topBinding->property(), d->topBinding);
+        QQmlPropertyPrivate::setBinding(d->topBinding->property(), d->topBinding);
     if (d->bottomBinding)
-        QDeclarativePropertyPrivate::setBinding(d->bottomBinding->property(), d->bottomBinding);
+        QQmlPropertyPrivate::setBinding(d->bottomBinding->property(), d->bottomBinding);
     if (d->vCenterBinding)
-        QDeclarativePropertyPrivate::setBinding(d->vCenterBinding->property(), d->vCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->vCenterBinding->property(), d->vCenterBinding);
     if (d->baselineBinding)
-        QDeclarativePropertyPrivate::setBinding(d->baselineBinding->property(), d->baselineBinding);
+        QQmlPropertyPrivate::setBinding(d->baselineBinding->property(), d->baselineBinding);
 }
 
 bool QQuickAnchorChanges::isReversable()
@@ -1014,49 +1014,49 @@ void QQuickAnchorChanges::reverse(Reason reason)
     //reset any anchors set by the state
     if (d->leftBinding) {
         targetPrivate->anchors()->resetLeft();
-        QDeclarativePropertyPrivate::setBinding(d->leftBinding->property(), 0);
+        QQmlPropertyPrivate::setBinding(d->leftBinding->property(), 0);
         if (reason == ActualChange) {
             d->leftBinding->destroy(); d->leftBinding = 0;
         }
     }
     if (d->rightBinding) {
         targetPrivate->anchors()->resetRight();
-        QDeclarativePropertyPrivate::setBinding(d->rightBinding->property(), 0);
+        QQmlPropertyPrivate::setBinding(d->rightBinding->property(), 0);
         if (reason == ActualChange) {
             d->rightBinding->destroy(); d->rightBinding = 0;
         }
     }
     if (d->hCenterBinding) {
         targetPrivate->anchors()->resetHorizontalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->hCenterBinding->property(), 0);
+        QQmlPropertyPrivate::setBinding(d->hCenterBinding->property(), 0);
         if (reason == ActualChange) {
             d->hCenterBinding->destroy(); d->hCenterBinding = 0;
         }
     }
     if (d->topBinding) {
         targetPrivate->anchors()->resetTop();
-        QDeclarativePropertyPrivate::setBinding(d->topBinding->property(), 0);
+        QQmlPropertyPrivate::setBinding(d->topBinding->property(), 0);
         if (reason == ActualChange) {
             d->topBinding->destroy(); d->topBinding = 0;
         }
     }
     if (d->bottomBinding) {
         targetPrivate->anchors()->resetBottom();
-        QDeclarativePropertyPrivate::setBinding(d->bottomBinding->property(), 0);
+        QQmlPropertyPrivate::setBinding(d->bottomBinding->property(), 0);
         if (reason == ActualChange) {
             d->bottomBinding->destroy(); d->bottomBinding = 0;
         }
     }
     if (d->vCenterBinding) {
         targetPrivate->anchors()->resetVerticalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->vCenterBinding->property(), 0);
+        QQmlPropertyPrivate::setBinding(d->vCenterBinding->property(), 0);
         if (reason == ActualChange) {
             d->vCenterBinding->destroy(); d->vCenterBinding = 0;
         }
     }
     if (d->baselineBinding) {
         targetPrivate->anchors()->resetBaseline();
-        QDeclarativePropertyPrivate::setBinding(d->baselineBinding->property(), 0);
+        QQmlPropertyPrivate::setBinding(d->baselineBinding->property(), 0);
         if (reason == ActualChange) {
             d->baselineBinding->destroy(); d->baselineBinding = 0;
         }
@@ -1064,19 +1064,19 @@ void QQuickAnchorChanges::reverse(Reason reason)
 
     //restore previous anchors
     if (d->origLeftBinding)
-        QDeclarativePropertyPrivate::setBinding(d->leftProp, d->origLeftBinding);
+        QQmlPropertyPrivate::setBinding(d->leftProp, d->origLeftBinding);
     if (d->origRightBinding)
-        QDeclarativePropertyPrivate::setBinding(d->rightProp, d->origRightBinding);
+        QQmlPropertyPrivate::setBinding(d->rightProp, d->origRightBinding);
     if (d->origHCenterBinding)
-        QDeclarativePropertyPrivate::setBinding(d->hCenterProp, d->origHCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->hCenterProp, d->origHCenterBinding);
     if (d->origTopBinding)
-        QDeclarativePropertyPrivate::setBinding(d->topProp, d->origTopBinding);
+        QQmlPropertyPrivate::setBinding(d->topProp, d->origTopBinding);
     if (d->origBottomBinding)
-        QDeclarativePropertyPrivate::setBinding(d->bottomProp, d->origBottomBinding);
+        QQmlPropertyPrivate::setBinding(d->bottomProp, d->origBottomBinding);
     if (d->origVCenterBinding)
-        QDeclarativePropertyPrivate::setBinding(d->vCenterProp, d->origVCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->vCenterProp, d->origVCenterBinding);
     if (d->origBaselineBinding)
-        QDeclarativePropertyPrivate::setBinding(d->baselineProp, d->origBaselineBinding);
+        QQmlPropertyPrivate::setBinding(d->baselineProp, d->origBaselineBinding);
 
     //restore any absolute geometry changed by the state's anchors
     QQuickAnchors::Anchors stateVAnchors = d->anchorSet->d_func()->usedAnchors & QQuickAnchors::Vertical_Mask;
@@ -1115,39 +1115,39 @@ void QQuickAnchorChanges::reverse(Reason reason)
         d->target->setY(d->origY);
 }
 
-QDeclarativeActionEvent::EventType QQuickAnchorChanges::type() const
+QQuickActionEvent::EventType QQuickAnchorChanges::type() const
 {
     return AnchorChanges;
 }
 
-QList<QDeclarativeAction> QQuickAnchorChanges::additionalActions()
+QList<QQuickAction> QQuickAnchorChanges::additionalActions()
 {
     Q_D(QQuickAnchorChanges);
-    QList<QDeclarativeAction> extra;
+    QList<QQuickAction> extra;
 
     QQuickAnchors::Anchors combined = d->anchorSet->d_func()->usedAnchors | d->anchorSet->d_func()->resetAnchors;
     bool hChange = combined & QQuickAnchors::Horizontal_Mask;
     bool vChange = combined & QQuickAnchors::Vertical_Mask;
 
     if (d->target) {
-        QDeclarativeAction a;
+        QQuickAction a;
         if (hChange && d->fromX != d->toX) {
-            a.property = QDeclarativeProperty(d->target, QLatin1String("x"));
+            a.property = QQmlProperty(d->target, QLatin1String("x"));
             a.toValue = d->toX;
             extra << a;
         }
         if (vChange && d->fromY != d->toY) {
-            a.property = QDeclarativeProperty(d->target, QLatin1String("y"));
+            a.property = QQmlProperty(d->target, QLatin1String("y"));
             a.toValue = d->toY;
             extra << a;
         }
         if (hChange && d->fromWidth != d->toWidth) {
-            a.property = QDeclarativeProperty(d->target, QLatin1String("width"));
+            a.property = QQmlProperty(d->target, QLatin1String("width"));
             a.toValue = d->toWidth;
             extra << a;
         }
         if (vChange && d->fromHeight != d->toHeight) {
-            a.property = QDeclarativeProperty(d->target, QLatin1String("height"));
+            a.property = QQmlProperty(d->target, QLatin1String("height"));
             a.toValue = d->toHeight;
             extra << a;
         }
@@ -1167,13 +1167,13 @@ void QQuickAnchorChanges::saveOriginals()
     if (!d->target)
         return;
 
-    d->origLeftBinding = QDeclarativePropertyPrivate::binding(d->leftProp);
-    d->origRightBinding = QDeclarativePropertyPrivate::binding(d->rightProp);
-    d->origHCenterBinding = QDeclarativePropertyPrivate::binding(d->hCenterProp);
-    d->origTopBinding = QDeclarativePropertyPrivate::binding(d->topProp);
-    d->origBottomBinding = QDeclarativePropertyPrivate::binding(d->bottomProp);
-    d->origVCenterBinding = QDeclarativePropertyPrivate::binding(d->vCenterProp);
-    d->origBaselineBinding = QDeclarativePropertyPrivate::binding(d->baselineProp);
+    d->origLeftBinding = QQmlPropertyPrivate::binding(d->leftProp);
+    d->origRightBinding = QQmlPropertyPrivate::binding(d->rightProp);
+    d->origHCenterBinding = QQmlPropertyPrivate::binding(d->hCenterProp);
+    d->origTopBinding = QQmlPropertyPrivate::binding(d->topProp);
+    d->origBottomBinding = QQmlPropertyPrivate::binding(d->bottomProp);
+    d->origVCenterBinding = QQmlPropertyPrivate::binding(d->vCenterProp);
+    d->origBaselineBinding = QQmlPropertyPrivate::binding(d->baselineProp);
 
     QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(d->target);
     if (targetPrivate->widthValid)
@@ -1189,7 +1189,7 @@ void QQuickAnchorChanges::saveOriginals()
     saveCurrentValues();
 }
 
-void QQuickAnchorChanges::copyOriginals(QDeclarativeActionEvent *other)
+void QQuickAnchorChanges::copyOriginals(QQuickActionEvent *other)
 {
     Q_D(QQuickAnchorChanges);
     QQuickAnchorChanges *ac = static_cast<QQuickAnchorChanges*>(other);
@@ -1247,39 +1247,39 @@ void QQuickAnchorChanges::clearBindings()
                                             d->anchorSet->d_func()->usedAnchors;
     if (d->applyOrigLeft || (combined & QQuickAnchors::LeftAnchor)) {
         targetPrivate->anchors()->resetLeft();
-        QDeclarativePropertyPrivate::setBinding(d->leftProp, 0);
+        QQmlPropertyPrivate::setBinding(d->leftProp, 0);
     }
     if (d->applyOrigRight || (combined & QQuickAnchors::RightAnchor)) {
         targetPrivate->anchors()->resetRight();
-        QDeclarativePropertyPrivate::setBinding(d->rightProp, 0);
+        QQmlPropertyPrivate::setBinding(d->rightProp, 0);
     }
     if (d->applyOrigHCenter || (combined & QQuickAnchors::HCenterAnchor)) {
         targetPrivate->anchors()->resetHorizontalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->hCenterProp, 0);
+        QQmlPropertyPrivate::setBinding(d->hCenterProp, 0);
     }
     if (d->applyOrigTop || (combined & QQuickAnchors::TopAnchor)) {
         targetPrivate->anchors()->resetTop();
-        QDeclarativePropertyPrivate::setBinding(d->topProp, 0);
+        QQmlPropertyPrivate::setBinding(d->topProp, 0);
     }
     if (d->applyOrigBottom || (combined & QQuickAnchors::BottomAnchor)) {
         targetPrivate->anchors()->resetBottom();
-        QDeclarativePropertyPrivate::setBinding(d->bottomProp, 0);
+        QQmlPropertyPrivate::setBinding(d->bottomProp, 0);
     }
     if (d->applyOrigVCenter || (combined & QQuickAnchors::VCenterAnchor)) {
         targetPrivate->anchors()->resetVerticalCenter();
-        QDeclarativePropertyPrivate::setBinding(d->vCenterProp, 0);
+        QQmlPropertyPrivate::setBinding(d->vCenterProp, 0);
     }
     if (d->applyOrigBaseline || (combined & QQuickAnchors::BaselineAnchor)) {
         targetPrivate->anchors()->resetBaseline();
-        QDeclarativePropertyPrivate::setBinding(d->baselineProp, 0);
+        QQmlPropertyPrivate::setBinding(d->baselineProp, 0);
     }
 }
 
-bool QQuickAnchorChanges::override(QDeclarativeActionEvent*other)
+bool QQuickAnchorChanges::override(QQuickActionEvent*other)
 {
     if (other->type() != AnchorChanges)
         return false;
-    if (static_cast<QDeclarativeActionEvent*>(this) == other)
+    if (static_cast<QQuickActionEvent*>(this) == other)
         return true;
     if (static_cast<QQuickAnchorChanges*>(other)->object() == object())
         return true;

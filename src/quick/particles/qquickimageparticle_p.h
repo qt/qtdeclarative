@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,8 +43,8 @@
 #define ULTRAPARTICLE_H
 #include "qquickparticlepainter_p.h"
 #include "qquickdirection_p.h"
-#include <private/qdeclarativepixmapcache_p.h>
-#include <QDeclarativeListProperty>
+#include <private/qquickpixmapcache_p.h>
+#include <QQmlListProperty>
 #include <QtQuick/qsgsimplematerial.h>
 #include <QtGui/qcolor.h>
 
@@ -150,7 +150,7 @@ class QQuickImageParticle : public QQuickParticlePainter
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ image WRITE setImage NOTIFY imageChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
+    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     //### Is it worth having progress like Image has?
     //Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
@@ -193,7 +193,7 @@ public:
 
     enum Status { Null, Ready, Loading, Error };
 
-    QDeclarativeListProperty<QQuickSprite> sprites();
+    QQmlListProperty<QQuickSprite> sprites();
     QQuickStochasticEngine* spriteEngine() {return m_spriteEngine;}
 
     enum EntryEffect {
@@ -357,7 +357,7 @@ private slots:
 private:
     struct ImageData {
         QUrl source;
-        QDeclarativePixmap pix;
+        QQuickPixmap pix;
     };
     ImageData *m_image;
     ImageData *m_colorTable;

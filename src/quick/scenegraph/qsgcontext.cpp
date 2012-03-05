@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,13 +50,13 @@
 #include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
-#include <QtQuick/private/qdeclarativepixmapcache_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 
 #include <QGuiApplication>
 #include <QOpenGLContext>
 
-#include <QDeclarativeImageProvider>
-#include <private/qdeclarativeglobal_p.h>
+#include <QQmlImageProvider>
+#include <private/qqmlglobal_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -110,7 +110,7 @@ public:
     QOpenGLContext *gl;
 
     QHash<QSGMaterialType *, QSGMaterialShader *> materials;
-    QHash<QDeclarativeTextureFactory *, QSGTexture *> textures;
+    QHash<QQuickTextureFactory *, QSGTexture *> textures;
 
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
 
@@ -160,7 +160,7 @@ void QSGContext::invalidate()
 }
 
 
-QSGTexture *QSGContext::textureForFactory(QDeclarativeTextureFactory *factory, QQuickCanvas *canvas)
+QSGTexture *QSGContext::textureForFactory(QQuickTextureFactory *factory, QQuickCanvas *canvas)
 {
     Q_D(QSGContext);
     if (!factory)
@@ -168,7 +168,7 @@ QSGTexture *QSGContext::textureForFactory(QDeclarativeTextureFactory *factory, Q
 
     QSGTexture *texture = d->textures.value(factory);
     if (!texture) {
-        if (QDeclarativeDefaultTextureFactory *dtf = qobject_cast<QDeclarativeDefaultTextureFactory *>(factory))
+        if (QQuickDefaultTextureFactory *dtf = qobject_cast<QQuickDefaultTextureFactory *>(factory))
             texture = createTexture(dtf->image());
         else
             texture = factory->createTexture(canvas);
@@ -182,7 +182,7 @@ QSGTexture *QSGContext::textureForFactory(QDeclarativeTextureFactory *factory, Q
 void QSGContext::textureFactoryDestroyed(QObject *o)
 {
     Q_D(QSGContext);
-    QDeclarativeTextureFactory *f = static_cast<QDeclarativeTextureFactory *>(o);
+    QQuickTextureFactory *f = static_cast<QQuickTextureFactory *>(o);
 
     // This function will only be called on the scene graph thread, so it is
     // safe to directly delete the texture here.

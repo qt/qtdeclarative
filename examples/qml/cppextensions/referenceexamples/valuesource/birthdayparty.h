@@ -43,7 +43,7 @@
 #include <QObject>
 #include <QDate>
 #include <QDebug>
-#include <qdeclarative.h>
+#include <qqml.h>
 #include "person.h"
 
 class BirthdayPartyAttached : public QObject
@@ -64,7 +64,7 @@ class BirthdayParty : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(Person *host READ host WRITE setHost)
-    Q_PROPERTY(QDeclarativeListProperty<Person> guests READ guests)
+    Q_PROPERTY(QQmlListProperty<Person> guests READ guests)
 // ![0]
     Q_PROPERTY(QString announcement READ announcement WRITE setAnnouncement)
 // ![0]
@@ -75,7 +75,7 @@ public:
     Person *host() const;
     void setHost(Person *);
 
-    QDeclarativeListProperty<Person> guests();
+    QQmlListProperty<Person> guests();
     int guestCount() const;
     Person *guest(int) const;
 

@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-  \module QtDeclarative
+  \module QtQml
   \title Qt Declarative Module
   \ingroup modules
 
@@ -37,7 +37,7 @@
   following directive:
 
   \code
-  #include <QtDeclarative>
+  #include <QtQml>
   \endcode
 
   To link against the module, add this line to your \l qmake \c
@@ -54,16 +54,16 @@
 
 /*!
   \macro QML_DECLARE_TYPE()
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
 
-  Equivalent to \c Q_DECLARE_METATYPE(TYPE *) and \c Q_DECLARE_METATYPE(QDeclarativeListProperty<TYPE>)
+  Equivalent to \c Q_DECLARE_METATYPE(TYPE *) and \c Q_DECLARE_METATYPE(QQmlListProperty<TYPE>)
 
-  #include <QtDeclarative> to use this macro.
+  #include <QtQml> to use this macro.
 */
 
 /*!
   \macro QML_DECLARE_TYPEINFO(Type,Flags)
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
 
   Declares additional properties of the given \a Type as described by the
   specified \a Flags.
@@ -71,13 +71,13 @@
   Current the only supported type info is \c QML_HAS_ATTACHED_PROPERTIES which
   declares that the \a Type supports \l {Attached Properties}.
 
-  #include <QtDeclarative> to use this macro.
+  #include <QtQml> to use this macro.
 */
 
 
 /*!
   \fn int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
 
   This template function registers the C++ type in the QML system with
   the name \a qmlName, in the library imported from \a uri having the
@@ -105,7 +105,7 @@
   "com.mycompany.qmlcomponents":
 
   \code
-  #include <QtDeclarative>
+  #include <QtQml>
 
   ...
 
@@ -131,7 +131,7 @@
 
 /*!
   \fn int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
 
   This template function registers the specified revision of a C++ type in the QML system with
   the library imported from \a uri having the version number composed
@@ -150,7 +150,7 @@
 
 /*!
   \fn int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
 
   This template function registers the C++ type in the QML system with
   the name \a qmlName, in the library imported from \a uri having the
@@ -163,14 +163,14 @@
 
   Returns the QML type id.
 
-  #include <QtDeclarative> to use this function.
+  #include <QtQml> to use this function.
 
   \sa qmlRegisterTypeNotAvailable()
 */
 
 /*!
   \fn int qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
 
   This function registers a type in the QML system with the name \a qmlName, in the library imported from \a uri having the
   version number composed from \a versionMajor and \a versionMinor, but any attempt to instantiate the type
@@ -200,40 +200,40 @@
 
   Without this, a generic "Game is not a type" message would be given.
 
-  #include <QtDeclarative> to use this function.
+  #include <QtQml> to use this function.
 
   \sa qmlRegisterUncreatableType()
 */
 
 /*!
   \fn int qmlRegisterType()
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
   \overload
 
   This template function registers the C++ type in the QML
   system. Instances of this type cannot be created from the QML
   system.
 
-  #include <QtDeclarative> to use this function.
+  #include <QtQml> to use this function.
 
   Returns the QML type id.
 */
 
 /*!
   \fn int qmlRegisterInterface(const char *typeName)
-  \relates QDeclarativeEngine
+  \relates QQmlEngine
 
   This template function registers the C++ type in the QML system
   under the name \a typeName.
 
-  #include <QtDeclarative> to use this function.
+  #include <QtQml> to use this function.
 
   Returns the QML type id.
 */
 
 /*!
-   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QJSValue (*callback)(QDeclarativeEngine *, QJSEngine *))
-   \relates QDeclarativeEngine
+   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QJSValue (*callback)(QQmlEngine *, QJSEngine *))
+   \relates QQmlEngine
 
    This function may be used to register a module API provider \a callback in a particular \a uri
    with a version specified in \a versionMajor and \a versionMinor.
@@ -250,7 +250,7 @@
    Usage:
    \code
    // first, define the module API provider function (callback).
-   static QJSValue *example_qjsvalue_module_api_provider(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
+   static QJSValue *example_qjsvalue_module_api_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
 
@@ -278,8 +278,8 @@
   */
 
 /*!
-   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QDeclarativeEngine *, QJSEngine *))
-   \relates QDeclarativeEngine
+   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
+   \relates QQmlEngine
 
    This function may be used to register a module API provider \a callback in a particular \a uri
    with a version specified in \a versionMajor and \a versionMinor.
@@ -325,7 +325,7 @@
    };
 
    // second, define the module API provider function (callback).
-   static QObject *example_qobject_module_api_provider(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
+   static QObject *example_qobject_module_api_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
        Q_UNUSED(scriptEngine)
