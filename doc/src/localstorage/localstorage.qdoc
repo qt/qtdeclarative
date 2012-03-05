@@ -33,9 +33,24 @@ The local storage API provides a JavaScript interface to an SQL relational
 database. The QtQuick.LocalStorage module contains the API and it may be given
 a namespace.
 
+Import QtQuick.LocalStorage module from QML:
 \code
-import QtQuick.LocalStorage 2.0 as SQL
+//sql.qml
+
+import QtQuick.LocalStorage 2.0 as Sql
 \endcode
+
+
+Import QtQuick.LocalStorage module from JavaScript:
+\code
+//sql.js
+.import QtQuick.LocalStorage 2.0 as Sql
+\endcode
+
+Note, importing a module from JavaScript is different from importing from QML.
+The \l{JavaScript Code} article contains detailed information on importing in JavaScript code.
+
+
 \section2 Database API
 
 The \c openDatabaseSync() and related functions

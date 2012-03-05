@@ -59,6 +59,7 @@ inline const char *typeName(Type t)
     case VoidType: return "void";
     case StringType: return "string";
     case UrlType: return "url";
+    case ColorType: return "color";
     case SGAnchorLineType: return "SGAnchorLine";
     case AttachType: return "AttachType";
     case ObjectType: return "object";
@@ -77,7 +78,7 @@ inline bool isNumberType(IR::Type ty)
 
 inline bool isStringType(IR::Type ty)
 {
-    return ty == IR::StringType || ty == IR::UrlType;
+    return ty == IR::StringType || ty == IR::UrlType || ty == IR::ColorType;
 }
 
 IR::Type maxType(IR::Type left, IR::Type right)

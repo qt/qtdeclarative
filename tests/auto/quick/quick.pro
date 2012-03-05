@@ -8,7 +8,7 @@ PUBLICTESTS += \
     qquickpixmapcache
 
 # This test requires the qtconcurrent module
-!contains(QT_CONFIG, concurrent):PUBLICTESTS -= qqmlpixmapcache
+!contains(QT_CONFIG, concurrent):PUBLICTESTS -= qquickpixmapcache
 
 PRIVATETESTS += \
     qquickanimations \
@@ -25,16 +25,21 @@ PRIVATETESTS += \
     qquickxmllistmodel
 
 # This test requires the xmlpatterns module
-!contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qqmlxmllistmodel
+!contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qquickxmllistmodel
+
+# FIXME
+# qquickdroparea is disabled because it depends on changes that
+# have not been merged from qtbase/master to qtbase/api_changes yet:
+    #qquickdroparea \
 
 QUICKTESTS =  \
     qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
+    qquickanimatedsprite \
     qquickborderimage \
     qquickcanvas \
     qquickdrag \
-    qquickdroparea \
     qquickflickable \
     qquickflipable \
     qquickfocusscope \
@@ -52,7 +57,7 @@ QUICKTESTS =  \
     qquickpositioners \
     qquickrepeater \
     qquickshadereffect \
-    qquickspriteimage \
+    qquickspritesequence \
     qquicktext \
     qquicktextedit \
     qquicktextinput \

@@ -47,11 +47,11 @@
 #include <QtCore/QObject>
 #include <QtCore/QHash>
 
-struct DeclarativeEvent;
+struct QmlEvent;
 struct V8Event;
 
-typedef QHash<QString, DeclarativeEvent *> DeclarativeEventHash;
-typedef QList<DeclarativeEvent *> DeclarativeEvents;
+typedef QHash<QString, QmlEvent *> QmlEventHash;
+typedef QList<QmlEvent *> QmlEvents;
 typedef QList<V8Event *> V8Events;
 
 struct EventLocation
@@ -64,32 +64,32 @@ struct EventLocation
     int column;
 };
 
-struct DeclarativeEventSub {
-    DeclarativeEventSub(DeclarativeEvent *from)
+struct QmlEventSub {
+    QmlEventSub(QmlEvent *from)
         : reference(from), duration(0), calls(0), inLoopPath(false)
     {}
-    DeclarativeEventSub(DeclarativeEventSub *from)
+    QmlEventSub(QmlEventSub *from)
         : reference(from->reference), duration(from->duration),
           calls(from->calls), inLoopPath(from->inLoopPath)
     {}
-    DeclarativeEvent *reference;
+    QmlEvent *reference;
     qint64 duration;
     qint64 calls;
     bool inLoopPath;
 };
 
-struct DeclarativeEvent
+struct QmlEvent
 {
-    DeclarativeEvent();
-    ~DeclarativeEvent();
+    QmlEvent();
+    ~QmlEvent();
 
     QString displayname;
     QString eventHashStr;
     QString details;
     EventLocation location;
     QQmlProfilerService::RangeType eventType;
-    QHash <QString, DeclarativeEventSub *> parentHash;
-    QHash <QString, DeclarativeEventSub *> childrenHash;
+    QHash <QString, QmlEventSub *> parentHash;
+    QHash <QString, QmlEventSub *> childrenHash;
     qint64 duration;
     qint64 calls;
     qint64 minTime;
@@ -100,7 +100,7 @@ struct DeclarativeEvent
     int eventId;
     bool isBindingLoop;
 
-    DeclarativeEvent &operator=(const DeclarativeEvent &ref);
+    QmlEvent &operator=(const QmlEvent &ref);
 };
 
 struct V8EventSub {
@@ -143,8 +143,8 @@ public:
     explicit ProfileData(QObject *parent = 0);
     ~ProfileData();
 
-    DeclarativeEvents getDeclarativeEvents() const;
-    DeclarativeEvent *declarativeEvent(int eventId) const;
+    QmlEvents getQmlEvents() const;
+    QmlEvent *qmlEvent(int eventId) const;
     const V8Events& getV8Events() const;
     V8Event *v8Event(int eventId) const;
 
@@ -184,7 +184,7 @@ public:
     Q_INVOKABLE qint64 traceStartTime() const;
     Q_INVOKABLE qint64 traceEndTime() const;
     Q_INVOKABLE qint64 traceDuration() const;
-    Q_INVOKABLE qint64 declarativeMeasuredTime() const;
+    Q_INVOKABLE qint64 qmlMeasuredTime() const;
     Q_INVOKABLE qint64 v8MeasuredTime() const;
 
     void showErrorDialog(const QString &st ) const;
@@ -205,7 +205,7 @@ signals:
 
 public slots:
     void clear();
-    void addDeclarativeEvent(QQmlProfilerService::RangeType type,
+    void addQmlEvent(QQmlProfilerService::RangeType type,
                              qint64 startTime, qint64 length,
                              const QStringList &data,
                              const EventLocation &location);

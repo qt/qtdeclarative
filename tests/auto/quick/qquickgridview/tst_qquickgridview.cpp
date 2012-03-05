@@ -138,6 +138,8 @@ private slots:
     void moveTransitions_data();
     void removeTransitions();
     void removeTransitions_data();
+    void displacedTransitions();
+    void displacedTransitions_data();
     void multipleTransitions();
     void multipleTransitions_data();
 
@@ -1272,6 +1274,8 @@ void tst_QQuickGridView::moved_data()
 
 void tst_QQuickGridView::multipleChanges()
 {
+    QSKIP("QTBUG-24523");
+
     QFETCH(int, startCount);
     QFETCH(QList<ListChange>, changes);
     QFETCH(int, newCount);
@@ -2037,10 +2041,10 @@ void tst_QQuickGridView::componentChanges()
     QTRY_VERIFY(gridView);
 
     QQmlComponent component(canvas->engine());
-    component.setData("import QtQuick 2.0; Rectangle { color: \"blue\"; }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 1.0; Rectangle { color: \"blue\"; }", QUrl::fromLocalFile(""));
 
     QQmlComponent delegateComponent(canvas->engine());
-    delegateComponent.setData("import QtQuick 2.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
+    delegateComponent.setData("import QtQuick 1.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
 
     QSignalSpy highlightSpy(gridView, SIGNAL(highlightChanged()));
     QSignalSpy delegateSpy(gridView, SIGNAL(delegateChanged()));
@@ -4555,6 +4559,215 @@ void tst_QQuickGridView::removeTransitions_data()
             << 18 << 3 << ListRange();
 }
 
+void tst_QQuickGridView::displacedTransitions()
+{
+    QFETCH(bool, useDisplaced);
+    QFETCH(bool, displacedEnabled);
+    QFETCH(bool, useAddDisplaced);
+    QFETCH(bool, addDisplacedEnabled);
+    QFETCH(bool, useMoveDisplaced);
+    QFETCH(bool, moveDisplacedEnabled);
+    QFETCH(bool, useRemoveDisplaced);
+    QFETCH(bool, removeDisplacedEnabled);
+    QFETCH(ListChange, change);
+    QFETCH(ListRange, expectedDisplacedIndexes);
+
+    QaimModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Original item" + QString::number(i), "");
+    QaimModel model_displaced_transitionVia;
+    QaimModel model_addDisplaced_transitionVia;
+    QaimModel model_moveDisplaced_transitionVia;
+    QaimModel model_removeDisplaced_transitionVia;
+
+    QPointF displaced_transitionVia(-50, -100);
+    QPointF addDisplaced_transitionVia(-150, 100);
+    QPointF moveDisplaced_transitionVia(50, -100);
+    QPointF removeDisplaced_transitionVia(150, 100);
+
+    QQuickView *canvas = createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("model_displaced_transitionVia", &model_displaced_transitionVia);
+    ctxt->setContextProperty("model_addDisplaced_transitionVia", &model_addDisplaced_transitionVia);
+    ctxt->setContextProperty("model_moveDisplaced_transitionVia", &model_moveDisplaced_transitionVia);
+    ctxt->setContextProperty("model_removeDisplaced_transitionVia", &model_removeDisplaced_transitionVia);
+    ctxt->setContextProperty("displaced_transitionVia", displaced_transitionVia);
+    ctxt->setContextProperty("addDisplaced_transitionVia", addDisplaced_transitionVia);
+    ctxt->setContextProperty("moveDisplaced_transitionVia", moveDisplaced_transitionVia);
+    ctxt->setContextProperty("removeDisplaced_transitionVia", removeDisplaced_transitionVia);
+    ctxt->setContextProperty("useDisplaced", useDisplaced);
+    ctxt->setContextProperty("displacedEnabled", displacedEnabled);
+    ctxt->setContextProperty("useAddDisplaced", useAddDisplaced);
+    ctxt->setContextProperty("addDisplacedEnabled", addDisplacedEnabled);
+    ctxt->setContextProperty("useMoveDisplaced", useMoveDisplaced);
+    ctxt->setContextProperty("moveDisplacedEnabled", moveDisplacedEnabled);
+    ctxt->setContextProperty("useRemoveDisplaced", useRemoveDisplaced);
+    ctxt->setContextProperty("removeDisplacedEnabled", removeDisplacedEnabled);
+    canvas->setSource(testFileUrl("displacedTransitions.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
+    gridview->setProperty("displaceTransitionsDone", false);
+
+    switch (change.type) {
+        case ListChange::Inserted:
+        {
+            QList<QPair<QString, QString> > targetItemData;
+            for (int i=change.index; i<change.index + change.count; ++i)
+                targetItemData << qMakePair(QString("new item %1").arg(i), QString::number(i));
+            model.insertItems(change.index, targetItemData);
+            QTRY_COMPARE(model.count(), gridview->count());
+            break;
+        }
+        case ListChange::Removed:
+            model.removeItems(change.index, change.count);
+            QTRY_COMPARE(model.count(), gridview->count());
+            break;
+        case ListChange::Moved:
+            model.moveItems(change.index, change.to, change.count);
+            QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+            break;
+        case ListChange::SetCurrent:
+        case ListChange::SetContentY:
+            break;
+    }
+    if ((useDisplaced && displacedEnabled)
+            || (useAddDisplaced && addDisplacedEnabled)
+            || (useMoveDisplaced && moveDisplacedEnabled)
+            || (useRemoveDisplaced && removeDisplacedEnabled)) {
+        QTRY_VERIFY(gridview->property("displaceTransitionsDone").toBool());
+    }
+
+    if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)
+        model_addDisplaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with add displaced", "shouldn't have been animated with add displaced");
+    else
+        QCOMPARE(model_addDisplaced_transitionVia.count(), 0);
+    if (change.type == ListChange::Moved && useMoveDisplaced && moveDisplacedEnabled)
+        model_moveDisplaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with move displaced", "shouldn't have been animated with move displaced");
+    else
+        QCOMPARE(model_moveDisplaced_transitionVia.count(), 0);
+    if (change.type == ListChange::Removed && useRemoveDisplaced && removeDisplacedEnabled)
+        model_removeDisplaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with remove displaced", "shouldn't have been animated with remove displaced");
+    else
+        QCOMPARE(model_removeDisplaced_transitionVia.count(), 0);
+
+    if (useDisplaced && displacedEnabled
+            && ( (change.type == ListChange::Inserted && (!useAddDisplaced || !addDisplacedEnabled))
+                 || (change.type == ListChange::Moved && (!useMoveDisplaced || !moveDisplacedEnabled))
+                 || (change.type == ListChange::Removed && (!useRemoveDisplaced || !removeDisplacedEnabled))) ) {
+        model_displaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with generic displaced", "shouldn't have been animated with generic displaced");
+    } else {
+        QCOMPARE(model_displaced_transitionVia.count(), 0);
+    }
+
+    // verify all items moved to the correct final positions
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickGridView::displacedTransitions_data()
+{
+    QTest::addColumn<bool>("useDisplaced");
+    QTest::addColumn<bool>("displacedEnabled");
+    QTest::addColumn<bool>("useAddDisplaced");
+    QTest::addColumn<bool>("addDisplacedEnabled");
+    QTest::addColumn<bool>("useMoveDisplaced");
+    QTest::addColumn<bool>("moveDisplacedEnabled");
+    QTest::addColumn<bool>("useRemoveDisplaced");
+    QTest::addColumn<bool>("removeDisplacedEnabled");
+    QTest::addColumn<ListChange>("change");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    QTest::newRow("no displaced transitions at all")
+            << false << false
+            << false << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 17);
+
+    QTest::newRow("just displaced")
+            << true << true
+            << false << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 17);
+
+    QTest::newRow("just displaced (not enabled)")
+            << true << false
+            << false << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 17);
+
+    QTest::newRow("displaced + addDisplaced")
+            << true << true
+            << true << true
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 17);
+
+    QTest::newRow("displaced + addDisplaced (not enabled)")
+            << true << true
+            << true << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 17);
+
+    QTest::newRow("displaced + moveDisplaced")
+            << true << true
+            << false << false
+            << true << true
+            << false << false
+            << ListChange::move(0, 10, 1) << ListRange(1, 10);
+
+    QTest::newRow("displaced + moveDisplaced (not enabled)")
+            << true << true
+            << false << false
+            << true << false
+            << false << false
+            << ListChange::move(0, 10, 1) << ListRange(1, 10);
+
+    QTest::newRow("displaced + removeDisplaced")
+            << true << true
+            << false << false
+            << false << false
+            << true << true
+            << ListChange::remove(0, 1) << ListRange(1, 18);
+
+    QTest::newRow("displaced + removeDisplaced (not enabled)")
+            << true << true
+            << false << false
+            << false << false
+            << true << false
+            << ListChange::remove(0, 1) << ListRange(1, 18);
+
+
+    QTest::newRow("displaced + add, should use generic displaced for a remove")
+            << true << true
+            << true << true
+            << false << false
+            << true << false
+            << ListChange::remove(0, 1) << ListRange(1, 18);
+}
+
 void tst_QQuickGridView::multipleTransitions()
 {
     // Tests that if you interrupt a transition in progress with another action that
@@ -4563,12 +4776,15 @@ void tst_QQuickGridView::multipleTransitions()
     QFETCH(int, initialCount);
     QFETCH(qreal, contentY);
     QFETCH(QList<ListChange>, changes);
+    QFETCH(bool, rippleAddDisplaced);
 
     // add transitions on the left, moves on the right
     QPointF addTargets_transitionFrom(-50, -50);
     QPointF addDisplaced_transitionFrom(-50, 50);
     QPointF moveTargets_transitionFrom(50, -50);
     QPointF moveDisplaced_transitionFrom(50, 50);
+    QPointF removeTargets_transitionTo(-100, 300);
+    QPointF removeDisplaced_transitionFrom(100, 300);
 
     QmlListModel model;
     for (int i = 0; i < initialCount; i++)
@@ -4581,14 +4797,23 @@ void tst_QQuickGridView::multipleTransitions()
     ctxt->setContextProperty("addDisplaced_transitionFrom", addDisplaced_transitionFrom);
     ctxt->setContextProperty("moveTargets_transitionFrom", moveTargets_transitionFrom);
     ctxt->setContextProperty("moveDisplaced_transitionFrom", moveDisplaced_transitionFrom);
+    ctxt->setContextProperty("removeTargets_transitionTo", removeTargets_transitionTo);
+    ctxt->setContextProperty("removeDisplaced_transitionFrom", removeDisplaced_transitionFrom);
+    ctxt->setContextProperty("rippleAddDisplaced", rippleAddDisplaced);
     canvas->setSource(testFileUrl("multipleTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    if (contentY != 0) {
+        gridview->setContentY(contentY);
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    }
 
     int timeBetweenActions = canvas->rootObject()->property("timeBetweenActions").toInt();
 
@@ -4681,18 +4906,21 @@ void tst_QQuickGridView::multipleTransitions_data()
     QTest::addColumn<int>("initialCount");
     QTest::addColumn<qreal>("contentY");
     QTest::addColumn<QList<ListChange> >("changes");
+    QTest::addColumn<bool>("rippleAddDisplaced");
 
     // the added item and displaced items should move to final dest correctly
     QTest::newRow("add item, then move it immediately") << 10 << 0.0 << (QList<ListChange>()
-            << ListChange::insert(0, 1)
-            << ListChange::move(0, 3, 1)
-            );
+             << ListChange::insert(0, 1)
+             << ListChange::move(0, 3, 1)
+             )
+             << false;
 
     // items affected by the add should change from move to add transition
     QTest::newRow("move, then insert item before the moved item") << 20 << 0.0 << (QList<ListChange>()
             << ListChange::move(1, 10, 3)
             << ListChange::insert(0, 1)
-            );
+            )
+            << false;
 
     // items should be placed correctly if you trigger a transition then refill for that index
     QTest::newRow("add at 0, flick down, flick back to top and add at 0 again") << 20 << 0.0 << (QList<ListChange>()
@@ -4700,7 +4928,14 @@ void tst_QQuickGridView::multipleTransitions_data()
             << ListChange::setContentY(160.0)
             << ListChange::setContentY(0.0)
             << ListChange::insert(0, 1)
-            );
+            )
+            << false;
+
+    QTest::newRow("insert then remove same index, with ripple effect on add displaced") << 20 << 0.0 << (QList<ListChange>()
+            << ListChange::insert(1, 1)
+            << ListChange::remove(1, 1)
+            )
+            << true;
 }
 
 void tst_QQuickGridView::cacheBuffer()

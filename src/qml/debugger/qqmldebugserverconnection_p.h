@@ -43,7 +43,7 @@
 #define QQMLDEBUGSERVERCONNECTION_H
 
 #include <QtQml/qtqmlglobal.h>
-#include <QtCore/QtPlugin>
+#include <private/qqmlglobal_p.h>
 
 //
 //  W A R N I N G
@@ -76,7 +76,9 @@ public:
     virtual bool waitForMessage() = 0;
 };
 
-Q_DECLARE_INTERFACE(QQmlDebugServerConnection, "com.trolltech.Qt.QQmlDebugServerConnection/1.0")
+#define QQmlDebugServerConnection_iid "org.qt-project.Qt.QQmlDebugServerConnection"
+
+Q_DECLARE_INTERFACE(QQmlDebugServerConnection, QQmlDebugServerConnection_iid)
 
 QT_END_NAMESPACE
 

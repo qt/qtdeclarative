@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -1237,6 +1237,9 @@ void QQuickImageParticle::clearShadows()
 //Only call if you need to, may initialize the whole array first time
 QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datum)
 {
+    //Will return datum if the datum is a sentinel or uninitialized, to centralize that one check
+    if (datum->systemIndex == -1)
+        return datum;
     QQuickParticleGroupData* gd = m_system->groupData[datum->group];
     if (!m_shadowData.contains(datum->group)) {
         QVector<QQuickParticleData*> data;
@@ -1339,6 +1342,10 @@ void QQuickImageParticle::finishBuildParticleNodes()
             }
         }
     }
+#ifdef Q_OS_WIN
+    if (perfLevel < Deformable) //QTBUG-24540 , point sprite 'extension' isn't working on windows.
+        perfLevel = Deformable;
+#endif
 
     if (perfLevel >= Colored  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset

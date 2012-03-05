@@ -132,8 +132,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
 
         if (ok) {
             //qDebug() << x << y << rotation << scale;
-            target->setX(x);
-            target->setY(y);
+            target->setPos(QPointF(x, y));
             target->setRotation(target->rotation() + rotation);
             target->setScale(target->scale() * scale);
         }

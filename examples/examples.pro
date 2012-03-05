@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS += qml tutorials
+SUBDIRS += demos shared localstorage particles qml quick tutorials window
 contains(QT_CONFIG, qmltest): SUBDIRS += qmltest

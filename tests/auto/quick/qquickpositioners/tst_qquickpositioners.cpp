@@ -47,7 +47,12 @@
 #include <QtQuick/private/qquicktransition_p.h>
 #include <private/qquickitem_p.h>
 #include <qqmlexpression.h>
+#include "../shared/viewtestutil.h"
+#include "../shared/visualtestutil.h"
 #include "../../shared/util.h"
+
+using namespace QQuickViewTestUtil;
+using namespace QQuickVisualTestUtil;
 
 class tst_qquickpositioners : public QQmlDataTest
 {
@@ -88,10 +93,144 @@ private slots:
     void test_attachedproperties();
     void test_attachedproperties_data();
     void test_attachedproperties_dynamic();
+    void addTransitions_row();
+    void addTransitions_row_data();
+    void addTransitions_column();
+    void addTransitions_column_data();
+    void addTransitions_grid();
+    void addTransitions_grid_data();
+    void addTransitions_flow();
+    void addTransitions_flow_data();
+    void moveTransitions_row();
+    void moveTransitions_row_data();
+    void moveTransitions_column();
+    void moveTransitions_column_data();
+    void moveTransitions_grid();
+    void moveTransitions_grid_data();
+    void moveTransitions_flow();
+    void moveTransitions_flow_data();
 
 private:
     QQuickView *createView(const QString &filename, bool wait=true);
+
+    void addTransitions(const QString &positionerObjectName);
+    void addTransitions_data();
+    void moveTransitions(const QString &positionerObjectName);
+    void moveTransitions_data();
+    void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
+    void matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes);
+    void matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems);
+    void checkItemPositions(QQuickItem *positioner, QaimModel *model, qreal incrementalSize);
 };
+
+void tst_qquickpositioners::addTransitions_row()
+{
+    addTransitions("row");
+}
+
+void tst_qquickpositioners::addTransitions_row_data()
+{
+    addTransitions_data();
+}
+
+void tst_qquickpositioners::addTransitions_column()
+{
+    addTransitions("column");
+}
+
+void tst_qquickpositioners::addTransitions_column_data()
+{
+    addTransitions_data();
+}
+
+void tst_qquickpositioners::addTransitions_grid()
+{
+    addTransitions("grid");
+}
+
+void tst_qquickpositioners::addTransitions_grid_data()
+{
+    // don't use addTransitions_data() because grid displaces items differently
+    // (adding items further down the grid can cause displace transitions at
+    // previous indexes, since grid is auto-resized to tightly fit all of its items)
+
+    QTest::addColumn<int>("initialItemCount");
+    QTest::addColumn<int>("insertionIndex");
+    QTest::addColumn<int>("insertionCount");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    QTest::newRow("add one @ start") << 10 << 0 << 1 << ListRange(0, 9);
+    QTest::newRow("add one @ middle") << 10 << 5 << 1 << ListRange(3, 3) + ListRange(5, 9);
+    QTest::newRow("add one @ end") << 10 << 10 << 1 << ListRange(3, 3) + ListRange(7, 7);
+
+    QTest::newRow("add multiple @ start") << 10 << 0 << 3 << ListRange(0, 9);
+    QTest::newRow("add multiple @ middle") << 10 << 5 << 3 << ListRange(1, 3) + ListRange(5, 9);
+    QTest::newRow("add multiple @ end") << 10 << 10 << 3 << ListRange(1, 3) + ListRange(5, 7) + ListRange(9, 9);
+}
+
+void tst_qquickpositioners::addTransitions_flow()
+{
+    addTransitions("flow");
+}
+
+void tst_qquickpositioners::addTransitions_flow_data()
+{
+    addTransitions_data();
+}
+
+void tst_qquickpositioners::moveTransitions_row()
+{
+    moveTransitions("row");
+}
+
+void tst_qquickpositioners::moveTransitions_row_data()
+{
+    moveTransitions_data();
+}
+
+void tst_qquickpositioners::moveTransitions_column()
+{
+    moveTransitions("column");
+}
+
+void tst_qquickpositioners::moveTransitions_column_data()
+{
+    moveTransitions_data();
+}
+
+void tst_qquickpositioners::moveTransitions_grid()
+{
+    moveTransitions("grid");
+}
+
+void tst_qquickpositioners::moveTransitions_grid_data()
+{
+    // don't use moveTransitions_data() because grid displaces items differently
+    // (removing items further down the grid can cause displace transitions at
+    // previous indexes, since grid is auto-resized to tightly fit all of its items)
+
+    QTest::addColumn<int>("initialItemCount");
+    QTest::addColumn<ListChange>("change");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    QTest::newRow("remove one @ start") << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
+    QTest::newRow("remove one @ middle") << 10 << ListChange::remove(4, 1) << ListRange(2, 3) + ListRange(5, 9);
+    QTest::newRow("remove one @ end") << 10 << ListChange::remove(9, 1) << ListRange(2, 3) + ListRange(6, 7);
+
+    QTest::newRow("remove multiple @ start") << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
+    QTest::newRow("remove multiple @ middle") << 10 << ListChange::remove(4, 3) << ListRange(1, 3) + ListRange(7, 9);
+    QTest::newRow("remove multiple @ end") << 10 << ListChange::remove(7, 3) << ListRange(1, 3) + ListRange(5, 6);
+}
+
+void tst_qquickpositioners::moveTransitions_flow()
+{
+    moveTransitions("flow");
+}
+
+void tst_qquickpositioners::moveTransitions_flow_data()
+{
+    moveTransitions_data();
+}
 
 tst_qquickpositioners::tst_qquickpositioners()
 {
@@ -368,6 +507,285 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
     QTRY_COMPARE(three->x(), 100.0);
 
     delete canvas;
+}
+
+void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
+{
+    QFETCH(int, initialItemCount);
+    QFETCH(int, insertionIndex);
+    QFETCH(int, insertionCount);
+    QFETCH(ListRange, expectedDisplacedIndexes);
+
+    QPointF targetItems_transitionFrom(-50, -50);
+    QPointF displacedItems_transitionVia(100, 100);
+
+    QaimModel model;
+    for (int i = 0; i < initialItemCount; i++)
+        model.addItem("Original item" + QString::number(i), "");
+    QaimModel model_targetItems_transitionFrom;
+    QaimModel model_displacedItems_transitionVia;
+
+    QQuickView *canvas = QQuickViewTestUtil::createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("enableAddTransition", true);
+    ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
+    ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
+    ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
+    ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    canvas->setSource(testFile("transitions.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
+
+    QQuickItem *positioner = canvas->rootObject()->findChild<QQuickItem*>(positionerObjectName);
+    QVERIFY(positioner);
+    positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
+
+    QList<QPair<QString, QString> > targetData;
+    QList<int> targetIndexes;
+    for (int i=0; i<model.count(); i++) {
+        targetData << qMakePair(model.name(i), model.number(i));
+        targetIndexes << i;
+    }
+    QList<QQuickItem *> targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
+
+    // check initial add transition
+    // (positioners run the add transition on all items that are initially created for the view)
+    QTRY_COMPARE(canvas->rootObject()->property("targetTransitionsDone").toInt(), initialItemCount);
+    QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), 0);
+    model_targetItems_transitionFrom.matchAgainst(targetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
+    matchItemsAndIndexes(canvas->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
+    matchIndexLists(canvas->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
+    matchItemLists(canvas->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
+
+    model_targetItems_transitionFrom.clear();
+    canvas->rootObject()->setProperty("targetTransitionsDone", 0);
+    canvas->rootObject()->setProperty("targetTrans_items", QVariantMap());
+    canvas->rootObject()->setProperty("targetTrans_targetIndexes", QVariantList());
+    canvas->rootObject()->setProperty("targetTrans_targetItems", QVariantList());
+
+    // do insertion
+    targetData.clear();
+    targetIndexes.clear();
+    for (int i=insertionIndex; i<insertionIndex+insertionCount; i++) {
+        targetData << qMakePair(QString("New item %1").arg(i), QString(""));
+        targetIndexes << i;
+    }
+    model.insertItems(insertionIndex, targetData);
+    QTRY_COMPARE(model.count(), positioner->property("count").toInt());
+
+    targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
+
+    QTRY_COMPARE(canvas->rootObject()->property("targetTransitionsDone").toInt(), targetData.count());
+    QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
+
+    // check the target and displaced items were animated
+    model_targetItems_transitionFrom.matchAgainst(targetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
+    model_displacedItems_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with displaced anim", "shouldn't have been animated with displaced anim");
+
+    // check attached properties
+    matchItemsAndIndexes(canvas->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
+    matchIndexLists(canvas->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
+    matchItemLists(canvas->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
+    if (expectedDisplacedIndexes.isValid()) {
+        // adjust expectedDisplacedIndexes to their final values after the move
+        QList<int> displacedIndexes = adjustIndexesForAddDisplaced(expectedDisplacedIndexes.indexes, insertionIndex, insertionCount);
+        matchItemsAndIndexes(canvas->rootObject()->property("displacedTrans_items").toMap(), model, displacedIndexes);
+        matchIndexLists(canvas->rootObject()->property("displacedTrans_targetIndexes").toList(), targetIndexes);
+        matchItemLists(canvas->rootObject()->property("displacedTrans_targetItems").toList(), targetItems);
+    }
+
+    checkItemPositions(positioner, &model, 5.0);   // XXX fetch from qml?
+
+    delete canvas;
+}
+
+void tst_qquickpositioners::addTransitions_data()
+{
+    // If this data changes, update addTransitions_grid_data() also
+
+    QTest::addColumn<int>("initialItemCount");
+    QTest::addColumn<int>("insertionIndex");
+    QTest::addColumn<int>("insertionCount");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    QTest::newRow("add one @ start") << 10 << 0 << 1 << ListRange(0, 9);
+    QTest::newRow("add one @ middle") << 10 << 5 << 1 << ListRange(5, 9);
+    QTest::newRow("add one @ end") << 10 << 10 << 1 << ListRange();
+
+    QTest::newRow("add multiple @ start") << 10 << 0 << 3 << ListRange(0, 9);
+    QTest::newRow("add multiple @ middle") << 10 << 5 << 3 << ListRange(5, 9);
+    QTest::newRow("add multiple @ end") << 10 << 10 << 3 << ListRange();
+}
+
+void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
+{
+    QFETCH(int, initialItemCount);
+    QFETCH(ListChange, change);
+    QFETCH(ListRange, expectedDisplacedIndexes);
+
+    QPointF targetItems_transitionFrom(-50, -50);
+    QPointF displacedItems_transitionVia(100, 100);
+
+    QaimModel model;
+    for (int i = 0; i < initialItemCount; i++)
+        model.addItem("Item" + QString::number(i), "");
+    QaimModel model_targetItems_transitionFrom;
+    QaimModel model_displacedItems_transitionVia;
+
+    QQuickView *canvas = QQuickViewTestUtil::createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("enableAddTransition", false);
+    ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
+    ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
+    ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
+    ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    canvas->setSource(testFile("transitions.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
+
+    QQuickItem *positioner = canvas->rootObject()->findChild<QQuickItem*>(positionerObjectName);
+    QVERIFY(positioner);
+    positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
+    QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+
+    switch (change.type) {
+        case ListChange::Removed:
+            model.removeItems(change.index, change.count);
+            QTRY_COMPARE(model.count(), positioner->property("count").toInt());
+            break;
+        case ListChange::Moved:
+            model.moveItems(change.index, change.to, change.count);
+            QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+            break;
+        case ListChange::Inserted:
+        case ListChange::SetCurrent:
+        case ListChange::SetContentY:
+            QVERIFY(false);
+            break;
+    }
+
+    QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
+    QCOMPARE(canvas->rootObject()->property("targetTransitionsDone").toInt(), 0);
+
+    // check the target and displaced items were animated
+    QCOMPARE(model_targetItems_transitionFrom.count(), 0);
+    model_displacedItems_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with displaced anim", "shouldn't have been animated with displaced anim");
+
+    // check attached properties
+    QCOMPARE(canvas->rootObject()->property("targetTrans_items").toMap().count(), 0);
+    QCOMPARE(canvas->rootObject()->property("targetTrans_targetIndexes").toList().count(), 0);
+    QCOMPARE(canvas->rootObject()->property("targetTrans_targetItems").toList().count(), 0);
+    if (expectedDisplacedIndexes.isValid()) {
+        // adjust expectedDisplacedIndexes to their final values after the move
+        QList<int> displacedIndexes;
+        if (change.type == ListChange::Inserted)
+            displacedIndexes = adjustIndexesForAddDisplaced(expectedDisplacedIndexes.indexes, change.index, change.count);
+        else if (change.type == ListChange::Moved)
+            displacedIndexes = adjustIndexesForMove(expectedDisplacedIndexes.indexes, change.index, change.to, change.count);
+        else if (change.type == ListChange::Removed)
+            displacedIndexes = adjustIndexesForRemoveDisplaced(expectedDisplacedIndexes.indexes, change.index, change.count);
+        else
+            QVERIFY(false);
+        matchItemsAndIndexes(canvas->rootObject()->property("displacedTrans_items").toMap(), model, displacedIndexes);
+
+        QVariantList listOfEmptyIntLists;
+        for (int i=0; i<displacedIndexes.count(); i++)
+            listOfEmptyIntLists << QVariant::fromValue(QList<int>());
+        QCOMPARE(canvas->rootObject()->property("displacedTrans_targetIndexes").toList(), listOfEmptyIntLists);
+        QVariantList listOfEmptyObjectLists;
+        for (int i=0; i<displacedIndexes.count(); i++)
+            listOfEmptyObjectLists.insert(listOfEmptyObjectLists.count(), QVariantList());
+        QCOMPARE(canvas->rootObject()->property("displacedTrans_targetItems").toList(), listOfEmptyObjectLists);
+    }
+
+    checkItemPositions(positioner, &model, 5.0);
+
+    delete canvas;
+}
+
+void tst_qquickpositioners::moveTransitions_data()
+{
+    // If this data changes, update moveTransitions_grid_data() also
+
+    QTest::addColumn<int>("initialItemCount");
+    QTest::addColumn<ListChange>("change");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    QTest::newRow("remove one @ start") << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
+    QTest::newRow("remove one @ middle") << 10 << ListChange::remove(4, 1) << ListRange(5, 9);
+    QTest::newRow("remove one @ end") << 10 << ListChange::remove(9, 1) << ListRange();
+
+    QTest::newRow("remove multiple @ start") << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
+    QTest::newRow("remove multiple @ middle") << 10 << ListChange::remove(4, 3) << ListRange(7, 9);
+    QTest::newRow("remove multiple @ end") << 10 << ListChange::remove(7, 3) << ListRange();
+}
+
+
+void tst_qquickpositioners::checkItemPositions(QQuickItem *positioner, QaimModel *model, qreal incrementalSize)
+{
+    QVERIFY(model->count() > 0);
+    qreal padding = 0;
+    qreal currentSize = 30;
+    qreal rowX = 0;
+    qreal rowY = 0;
+
+    for (int i=0; i<model->count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(positioner, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+
+        QCOMPARE(item->width(), currentSize);
+        QCOMPARE(item->height(), currentSize);
+
+        if (qobject_cast<QQuickRow*>(positioner)) {
+            QCOMPARE(item->x(), (i * 30.0) + padding);
+            QCOMPARE(item->y(), 0.0);
+        } else if (qobject_cast<QQuickColumn*>(positioner)) {
+            QCOMPARE(item->x(), 0.0);
+            QCOMPARE(item->y(), (i * 30.0) + padding);
+        } else if (qobject_cast<QQuickGrid*>(positioner)) {
+            int columns = 4;
+            int rows = qCeil(model->count() / qreal(columns));
+            int lastMatchingRowIndex = (rows * columns) - (columns - i%columns);
+            if (lastMatchingRowIndex >= model->count())
+                lastMatchingRowIndex -= columns;
+            if (i % columns > 0) {
+                QQuickItem *finalAlignedRowItem = findItem<QQuickItem>(positioner, "wrapper", lastMatchingRowIndex);
+                QVERIFY(finalAlignedRowItem);
+                QCOMPARE(item->x(), finalAlignedRowItem->x());
+            } else {
+                QCOMPARE(item->x(), 0.0);
+            }
+            if (i / columns > 0) {
+                QQuickItem *prevRowLastItem = findItem<QQuickItem>(positioner, "wrapper", (i/columns * columns) - 1);
+                QVERIFY(prevRowLastItem);
+                QCOMPARE(item->y(), prevRowLastItem->y() + prevRowLastItem->height());
+            } else {
+                QCOMPARE(item->y(), 0.0);
+            }
+        } else if (qobject_cast<QQuickFlow*>(positioner)) {
+            if (rowX + item->width() > positioner->width()) {
+                QQuickItem *prevItem = findItem<QQuickItem>(positioner, "wrapper", i-1);
+                QVERIFY(prevItem);
+                rowX = 0;
+                rowY = prevItem->y() + prevItem->height();
+            }
+            QCOMPARE(item->x(), rowX);
+            QCOMPARE(item->y(), rowY);
+            rowX += item->width();
+        } else {
+            QVERIFY2(false, "Unknown positioner type");
+        }
+        QQuickText *name = findItem<QQuickText>(positioner, "name", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model->name(i));
+
+        padding += i * incrementalSize;
+        currentSize += incrementalSize;
+    }
 }
 
 void tst_qquickpositioners::test_vertical()
@@ -1466,6 +1884,43 @@ QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait
     return canvas;
 }
 
+void tst_qquickpositioners::matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes)
+{
+    for (int i=0; i<indexLists.count(); i++) {
+        QSet<int> current = indexLists[i].value<QList<int> >().toSet();
+        if (current != expectedIndexes.toSet())
+            qDebug() << "Cannot match actual targets" << current << "with expected" << expectedIndexes;
+        QCOMPARE(current, expectedIndexes.toSet());
+    }
+}
+
+void tst_qquickpositioners::matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes)
+{
+    for (QVariantMap::const_iterator it = items.begin(); it != items.end(); ++it) {
+        QVERIFY(it.value().type() == QVariant::Int);
+        QString name = it.key();
+        int itemIndex = it.value().toInt();
+        QVERIFY2(expectedIndexes.contains(itemIndex), QTest::toString(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));
+        if (model.name(itemIndex) != name)
+            qDebug() << itemIndex;
+        QCOMPARE(model.name(itemIndex), name);
+    }
+    QCOMPARE(items.count(), expectedIndexes.count());
+}
+
+void tst_qquickpositioners::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
+{
+    for (int i=0; i<itemLists.count(); i++) {
+        QVERIFY(itemLists[i].type() == QVariant::List);
+        QVariantList current = itemLists[i].toList();
+        for (int j=0; j<current.count(); j++) {
+            QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());
+            QVERIFY2(o, QTest::toString(QString("Invalid actual item at %1").arg(j)));
+            QVERIFY2(expectedItems.contains(o), QTest::toString(QString("Cannot match item %1").arg(j)));
+        }
+        QCOMPARE(current.count(), expectedItems.count());
+    }
+}
 
 QTEST_MAIN(tst_qquickpositioners)
 

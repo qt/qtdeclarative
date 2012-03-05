@@ -7,7 +7,8 @@ CONFIG += qt plugin
 QT += qml quick qmltest qmltest-private v8-private qml-private core-private testlib
 
 SOURCES += main.cpp
-HEADERS +=
+
+OTHER_FILES += testlib.json
 
 DESTDIR = $$QT.qml.imports/$$TARGETPATH
 

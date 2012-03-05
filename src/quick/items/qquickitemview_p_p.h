@@ -43,10 +43,10 @@
 #define QQUICKITEMVIEW_P_P_H
 
 #include "qquickitemview_p.h"
+#include "qquickitemviewtransition_p.h"
 #include "qquickflickable_p_p.h"
 #include "qquickvisualdatamodel_p.h"
 #include "qquickvisualitemmodel_p.h"
-#include <private/qquicktransitionmanager_p_p.h>
 #include <private/qquickchangeset_p.h>
 
 
@@ -54,57 +54,14 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
+QT_MODULE(Quick)
 
 
-class FxViewItem;
-class FxViewItemTransitionManager : public QQuickTransitionManager
-{
-public:
-    enum TransitionType {
-        NoTransition,
-        PopulateTransition,
-        AddTransition,
-        MoveTransition,
-        RemoveTransition
-    };
-
-    FxViewItemTransitionManager();
-    ~FxViewItemTransitionManager();
-
-    bool isActive() const;
-    void startTransition(FxViewItem *item, FxViewItemTransitionManager::TransitionType type, const QPointF &to, bool isTargetItem);
-
-    bool m_active;
-    FxViewItem *m_item;
-    QPointF m_toPos;
-    FxViewItemTransitionManager::TransitionType m_type;
-    bool m_isTarget;
-
-protected:
-    virtual void finished();
-};
-
-
-class FxViewItem
+class FxViewItem : public QQuickViewItem
 {
 public:
     FxViewItem(QQuickItem *, bool own);
     virtual ~FxViewItem();
-
-    qreal itemX() const;
-    qreal itemY() const;
-
-    void setVisible(bool visible);
-
-    void setNextTransition(FxViewItemTransitionManager::TransitionType, bool isTargetItem);
-    bool transitionScheduledOrRunning() const;
-    bool isPendingRemoval() const;
-
-    bool prepareTransition(const QRectF &viewBounds);
-    void startTransition();
-    void stopTransition();
-    void finishedTransition();
 
     // these are positions and sizes along the current direction of scrolling/flicking
     virtual qreal position() const = 0;
@@ -113,23 +70,10 @@ public:
     virtual qreal sectionSize() const = 0;
 
     virtual bool contains(qreal x, qreal y) const = 0;
-    virtual QQuickItemView *itemView() const = 0;
 
-    QQuickItem *item;
-    bool ownItem;
-    int index;
-    bool releaseAfterTransition;
     QQuickItemViewAttached *attached;
-
-    FxViewItemTransitionManager *transition;
-    QPointF nextTransitionTo;
-    FxViewItemTransitionManager::TransitionType nextTransitionType;
-    bool isTransitionTarget;
-    bool nextTransitionToSet;
-
-protected:
-    void moveTo(const QPointF &pos);
-    void resetTransitionData();
+    bool ownItem;
+    bool releaseAfterTransition;
 };
 
 
@@ -155,11 +99,12 @@ public:
 };
 
 
-class QQuickItemViewPrivate : public QQuickFlickablePrivate
+class QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemViewTransitionChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickItemView)
 public:
     QQuickItemViewPrivate();
+    ~QQuickItemViewPrivate();
 
     struct ChangeResult {
         QQmlNullableValue<qreal> visiblePos;
@@ -225,7 +170,7 @@ public:
     void mirrorChange();
 
     FxViewItem *createItem(int modelIndex, bool asynchronous = false);
-    virtual void releaseItem(FxViewItem *item);
+    virtual bool releaseItem(FxViewItem *item);
 
     QQuickItem *createHighlightItem();
     QQuickItem *createComponentItem(QQmlComponent *component, bool receiveItemGeometryChanges, bool createDefault = false);
@@ -243,13 +188,12 @@ public:
     void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
             FxViewItem *prevFirstVisible, ChangeResult *insertionResult, ChangeResult *removalResult);
 
+    void createTransitioner();
     void prepareVisibleItemTransitions();
     void prepareRemoveTransitions(QHash<QQuickChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
+    virtual void viewItemTransitionFinished(QQuickViewItem *item);
 
-    bool canTransition(FxViewItemTransitionManager::TransitionType type, bool asTarget) const;
-    bool hasItemTransitions() const;
-    void transitionNextReposition(FxViewItem *item, FxViewItemTransitionManager::TransitionType type, bool isTarget);
     int findMoveKeyIndex(QQuickChangeSet::MoveKey key, const QVector<QQuickChangeSet::Remove> &changes) const;
 
     void checkVisible() const;
@@ -281,7 +225,6 @@ public:
     FxViewItem *requestedItem;
     QQuickItemViewChangeSet currentChanges;
 
-    // XXX split into struct
     QQmlComponent *highlightComponent;
     FxViewItem *highlight;
     int highlightRange;     // enum value
@@ -294,27 +237,13 @@ public:
     QQmlComponent *footerComponent;
     FxViewItem *footer;
 
-    QQuickTransition *populateTransition;
-    QQuickTransition *addTransition;
-    QQuickTransition *addDisplacedTransition;
-    QQuickTransition *moveTransition;
-    QQuickTransition *moveDisplacedTransition;
-    QQuickTransition *removeTransition;
-    QQuickTransition *removeDisplacedTransition;
-
-    QList<int> addTransitionIndexes;
-    QList<int> moveTransitionIndexes;
-    QList<int> removeTransitionIndexes;
-    QList<QObject *> addTransitionTargets;
-    QList<QObject *> moveTransitionTargets;
-    QList<QObject *> removeTransitionTargets;
-
     struct MovedItem {
         FxViewItem *item;
         QQuickChangeSet::MoveKey moveKey;
         MovedItem(FxViewItem *i, QQuickChangeSet::MoveKey k)
             : item(i), moveKey(k) {}
     };
+    QQuickItemViewTransitioner *transitioner;
     QList<FxViewItem *> releasePendingTransition;
 
     mutable qreal minExtent;
@@ -333,7 +262,6 @@ public:
     bool fillCacheBuffer : 1;
     bool inRequest : 1;
     bool requestedAsync : 1;
-    bool usePopulateTransition : 1;
     bool runDelayedRemoveTransition : 1;
 
 protected:

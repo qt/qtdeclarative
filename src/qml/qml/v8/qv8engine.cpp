@@ -75,12 +75,14 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
     if (lhs == rhs)
         return true;
 
+    if (lhs.IsEmpty() || rhs.IsEmpty())
+        return false;
+
     QV8ObjectResource *lhsr = static_cast<QV8ObjectResource*>(lhs->GetExternalResource());
     QV8ObjectResource *rhsr = static_cast<QV8ObjectResource*>(rhs->GetExternalResource());
 
-    Q_ASSERT(lhsr->engine == rhsr->engine);
-
     if (lhsr && rhsr) {
+        Q_ASSERT(lhsr->engine == rhsr->engine);
         QV8ObjectResource::ResourceType lhst = lhsr->resourceType();
         QV8ObjectResource::ResourceType rhst = rhsr->resourceType();
 
@@ -874,7 +876,7 @@ void QV8Engine::ensurePerThreadIsolate()
         perThreadEngineData.setLocalData(new ThreadData);
 }
 
-void QV8Engine::initDeclarativeGlobalObject()
+void QV8Engine::initQmlGlobalObject()
 {
     v8::HandleScope handels;
     v8::Context::Scope contextScope(m_context);
@@ -885,7 +887,7 @@ void QV8Engine::initDeclarativeGlobalObject()
 void QV8Engine::setEngine(QQmlEngine *engine)
 {
     m_engine = engine;
-    initDeclarativeGlobalObject();
+    initQmlGlobalObject();
 }
 
 void QV8Engine::setException(v8::Handle<v8::Value> value, v8::Handle<v8::Message> msg)

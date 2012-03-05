@@ -42,6 +42,7 @@
 #ifndef QQMLINCUBATOR_H
 #define QQMLINCUBATOR_H
 
+#include <QtQml/qtqmlglobal.h>
 #include <QtQml/qqmlerror.h>
 
 QT_BEGIN_HEADER
@@ -110,7 +111,7 @@ public:
     int incubatingObjectCount() const;
 
     void incubateFor(int msecs);
-    void incubateWhile(bool *flag);
+    void incubateWhile(volatile bool *flag, int msecs=0);
 
 protected:
     virtual void incubatingObjectCountChanged(int);

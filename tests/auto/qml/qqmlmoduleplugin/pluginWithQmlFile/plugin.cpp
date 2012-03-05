@@ -46,6 +46,8 @@
 class MyPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "../empty.json")
+
 public:
     void registerTypes(const char *uri)
     {
@@ -54,5 +56,3 @@ public:
 };
 
 #include "plugin.moc"
-
-Q_EXPORT_PLUGIN2(plugin, MyPlugin);

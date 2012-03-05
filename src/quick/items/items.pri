@@ -65,12 +65,14 @@ HEADERS += \
     $$PWD/qquickimplicitsizeitem_p_p.h \
     $$PWD/qquickspriteengine_p.h \
     $$PWD/qquicksprite_p.h \
-    $$PWD/qquickspriteimage_p.h \
+    $$PWD/qquickspritesequence_p.h \
+    $$PWD/qquickanimatedsprite_p.h \
     $$PWD/qquickdrag_p.h \
     $$PWD/qquickdroparea_p.h \
     $$PWD/qquickmultipointtoucharea_p.h \
     $$PWD/qquickitemview_p.h \
     $$PWD/qquickitemview_p_p.h \
+    $$PWD/qquickitemviewtransition_p.h \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowmodule_p.h \
     $$PWD/qquickwindowmanager_p.h
@@ -116,12 +118,14 @@ SOURCES += \
     $$PWD/qquickimplicitsizeitem.cpp \
     $$PWD/qquickspriteengine.cpp \
     $$PWD/qquicksprite.cpp \
-    $$PWD/qquickspriteimage.cpp \
+    $$PWD/qquickspritesequence.cpp \
+    $$PWD/qquickanimatedsprite.cpp \
     $$PWD/qquickaccessibleattached.cpp \
     $$PWD/qquickdrag.cpp \
     $$PWD/qquickdroparea.cpp \
     $$PWD/qquickmultipointtoucharea.cpp \
     $$PWD/qquickitemview.cpp \
+    $$PWD/qquickitemviewtransition.cpp \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
     $$PWD/qquickwindowmanager.cpp

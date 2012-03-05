@@ -79,7 +79,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly NOTIFY readOnlyChanged)
     Q_PROPERTY(bool cursorVisible READ isCursorVisible WRITE setCursorVisible NOTIFY cursorVisibleChanged)
     Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged)
-    Q_PROPERTY(QRect cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged)
+    Q_PROPERTY(QRectF cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged)
     Q_PROPERTY(QQmlComponent* cursorDelegate READ cursorDelegate WRITE setCursorDelegate NOTIFY cursorDelegateChanged)
     Q_PROPERTY(int selectionStart READ selectionStart NOTIFY selectionStartChanged)
     Q_PROPERTY(int selectionEnd READ selectionEnd NOTIFY selectionEndChanged)
@@ -212,7 +212,7 @@ public:
     void setTextInteractionFlags(Qt::TextInteractionFlags flags);
     Qt::TextInteractionFlags textInteractionFlags() const;
 
-    QRect cursorRectangle() const;
+    QRectF cursorRectangle() const;
 
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
 
@@ -224,7 +224,7 @@ public:
     void resetBaseUrl();
 
     Q_INVOKABLE QRectF positionToRectangle(int) const;
-    Q_INVOKABLE int positionAt(int x, int y) const;
+    Q_INVOKABLE int positionAt(qreal x, qreal y) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
 

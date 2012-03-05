@@ -54,6 +54,7 @@
 //
 
 #include <QtQml/qtqmlglobal.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_HEADER
 
@@ -74,7 +75,9 @@ public:
     virtual void clientMessage(const QByteArray &message) = 0;
 };
 
-Q_DECLARE_INTERFACE(QQmlInspectorInterface, "com.trolltech.Qt.QQmlInspectorInterface/1.0")
+#define QQmlInspectorInterface_iid "org.qt-project.Qt.QQmlInspectorInterface"
+
+Q_DECLARE_INTERFACE(QQmlInspectorInterface, QQmlInspectorInterface_iid)
 
 QT_END_NAMESPACE
 

@@ -376,17 +376,18 @@ void QQmlIncubationController::incubateFor(int msecs)
 
 /*!
 Incubate objects while the bool pointed to by \a flag is true, or until there are no
-more objects to incubate.
+more objects to incubate, or up to msecs if msecs is not zero.
 
 Generally this method is used in conjunction with a thread or a UNIX signal that sets
 the bool pointed to by \a flag to false when it wants incubation to be interrupted.
 */
-void QQmlIncubationController::incubateWhile(bool *flag)
+void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
 {
     if (!d || d->incubatorCount == 0)
         return;
 
-    QQmlVME::Interrupt i(flag);
+    QQmlVME::Interrupt i(flag, msecs * 1000000);
+    i.reset();
     do {
         QQmlIncubatorPrivate *p = (QQmlIncubatorPrivate*)d->incubatorList.first();
         p->incubate(i);

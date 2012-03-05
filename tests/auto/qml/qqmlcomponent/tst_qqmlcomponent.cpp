@@ -71,6 +71,7 @@ private slots:
     void qmlCreateObject();
     void qmlCreateObjectWithProperties();
     void qmlIncubateObject();
+    void qmlCreateParentReference();
 
 private:
     QQmlEngine engine;
@@ -179,6 +180,37 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
     testBindingThisObj->setProperty("width", 200);
     QCOMPARE(testBindingThisObj->property("testValue").value<int>(), 200 * 3);
     delete testBindingThisObj;
+}
+
+static QStringList warnings;
+static void msgHandler(QtMsgType, const char *warning)
+{
+    warnings << QString::fromUtf8(warning);
+}
+
+void tst_qqmlcomponent::qmlCreateParentReference()
+{
+    QQmlEngine engine;
+
+    QCOMPARE(engine.outputWarningsToStandardError(), true);
+
+    warnings.clear();
+    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+
+    QQmlComponent component(&engine, testFileUrl("createParentReference.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVERIFY(QMetaObject::invokeMethod(object, "createChild"));
+    delete object;
+
+    qInstallMsgHandler(old);
+
+    engine.setOutputWarningsToStandardError(false);
+    QCOMPARE(engine.outputWarningsToStandardError(), false);
+
+    QCOMPARE(warnings.count(), 0);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

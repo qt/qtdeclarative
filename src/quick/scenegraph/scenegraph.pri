@@ -64,7 +64,6 @@ HEADERS += \
     $$PWD/qsgdefaultimagenode_p.h \
     $$PWD/qsgdefaultrectanglenode_p.h \
     $$PWD/qsgflashnode_p.h \
-    $$PWD/qsgpathsimplifier_p.h \
     $$PWD/qsgshareddistancefieldglyphcache_p.h
 
 SOURCES += \
@@ -79,7 +78,6 @@ SOURCES += \
     $$PWD/qsgdefaultimagenode.cpp \
     $$PWD/qsgdefaultrectanglenode.cpp \
     $$PWD/qsgflashnode.cpp \
-    $$PWD/qsgpathsimplifier.cpp \
     $$PWD/qsgshareddistancefieldglyphcache.cpp
 
 

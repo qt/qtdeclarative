@@ -41,6 +41,7 @@
 
 #include "qsgdefaultdistancefieldglyphcache_p.h"
 
+#include <QtGui/private/qdistancefield_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <qopenglfunctions.h>
 

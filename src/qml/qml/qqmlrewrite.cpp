@@ -51,6 +51,45 @@ DEFINE_BOOL_CONFIG_OPTION(rewriteDump, QML_REWRITE_DUMP);
 
 namespace QQmlRewrite {
 
+static void rewriteStringLiteral(AST::StringLiteral *ast, const QString *code, int startPosition, TextWriter *writer)
+{
+    const unsigned position = ast->firstSourceLocation().begin() - startPosition + 1;
+    const unsigned length = ast->literalToken.length - 2;
+    const QStringRef spell = code->midRef(position, length);
+    const int end = spell.size();
+    int index = 0;
+
+    while (index < end) {
+        const QChar ch = spell.at(index++);
+
+        if (index < end && ch == QLatin1Char('\\')) {
+            int pos = index;
+
+            // skip a possibly empty sequence of \r characters
+            while (pos < end && spell.at(pos) == QLatin1Char('\r'))
+                ++pos;
+
+            if (pos < end && spell.at(pos) == QLatin1Char('\n')) {
+                // This is a `\' followed by a newline terminator.
+                // In this case there's nothing to replace. We keep the code
+                // as it is and we resume the searching.
+                index = pos + 1; // refresh the index
+            }
+        } else if (ch == QLatin1Char('\r') || ch == QLatin1Char('\n')) {
+            const QString sep = ch == QLatin1Char('\r') ? QLatin1String("\\r") : QLatin1String("\\n");
+            const int pos = index - 1;
+            QString s = sep;
+
+            while (index < end && spell.at(index) == ch) {
+                s += sep;
+                ++index;
+            }
+
+            writer->replace(position + pos, index - pos, s);
+        }
+    }
+}
+
 bool SharedBindingTester::isSharable(const QString &code)
 {
     Engine engine;
@@ -204,40 +243,7 @@ bool RewriteBinding::visit(AST::ExpressionStatement *ast)
 
 bool RewriteBinding::visit(AST::StringLiteral *ast)
 {
-    /* When rewriting the code for bindings, we have to remove ILLEGAL JS tokens like newlines.
-       They're still in multi-line strings, because the QML parser allows them, but we have to
-       rewrite them to be JS compliant.
-
-       For performance reasons, we don't go for total correctness. \r is only replaced if a
-       \n was found (since most line endings are \n or \r\n) and QChar::LineSeparator is not
-       even considered. QTBUG-24064.
-
-       Note that rewriteSignalHandler has a function just like this one, for the same reason.
-    */
-
-    unsigned startOfString = ast->firstSourceLocation().begin() + 1 - _position;
-    unsigned stringLength = ast->firstSourceLocation().length - 2;
-
-    int lastIndex = -1;
-    bool foundNewLine = false;
-    QStringRef subStr(_code, startOfString, stringLength);
-    while (true) {
-        lastIndex = subStr.indexOf(QLatin1Char('\n'), lastIndex + 1);
-        if (lastIndex == -1)
-            break;
-        foundNewLine = true;
-        _writer->replace(startOfString+lastIndex, 1, QLatin1String("\\n"));
-    }
-
-    if (foundNewLine) {
-        while (true) {
-            lastIndex = subStr.indexOf(QLatin1Char('\r'), lastIndex + 1);
-            if (lastIndex == -1)
-                break;
-            _writer->replace(startOfString+lastIndex, 1, QLatin1String("\\r"));
-        }
-    }
-
+    rewriteStringLiteral(ast, _code, _position, _writer);
     return false;
 }
 
@@ -361,6 +367,13 @@ void RewriteBinding::rewriteCaseStatements(AST::StatementList *statements, bool 
     }
 }
 
+RewriteSignalHandler::RewriteSignalHandler()
+    : _writer(0)
+    , _code(0)
+    , _position(0)
+{
+}
+
 void RewriteSignalHandler::accept(AST::Node *node)
 {
     AST::Node::acceptChild(node, this);
@@ -368,40 +381,8 @@ void RewriteSignalHandler::accept(AST::Node *node)
 
 bool RewriteSignalHandler::visit(AST::StringLiteral *ast)
 {
-    unsigned startOfExpressionStatement = ast->firstSourceLocation().begin() - _position;
-    _strStarts << startOfExpressionStatement + 1;
-    _strLens << ast->firstSourceLocation().length - 2;
-
+    rewriteStringLiteral(ast, _code, _position, _writer);
     return false;
-}
-
-void RewriteSignalHandler::rewriteMultilineStrings(QString &code)
-{
-    QList<int> replaceR, replaceN;
-    for (int i=0; i < _strStarts.count(); i++) {
-        QStringRef curSubstr = QStringRef(&code, _strStarts[i], _strLens[i]);
-        int lastIndex = -1;
-        while (true) {
-            lastIndex = curSubstr.indexOf(QLatin1Char('\n'), lastIndex + 1);
-            if (lastIndex == -1)
-                break;
-            replaceN << _strStarts[i]+lastIndex;
-        }
-
-        if (replaceN.count()) {
-            while (true) {
-                lastIndex = curSubstr.indexOf(QLatin1Char('\r'), lastIndex + 1);
-                if (lastIndex == -1)
-                    break;
-                replaceR << _strStarts[i]+lastIndex;
-            }
-        }
-    }
-    for (int ii = replaceN.count() - 1; ii >= 0; ii--)
-        code.replace(replaceN[ii], 1, QLatin1String("\\n"));
-    if (replaceR.count())
-        for (int ii = replaceR.count() - 1; ii >= 0; ii--)
-            code.replace(replaceR[ii], 1, QLatin1String("\\r"));
 }
 
 QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name)
@@ -417,13 +398,15 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
     if (!expression && !statement)
         return code;
 
-    _strStarts.clear();
-    _strLens.clear();
+    TextWriter w;
+    _writer = &w;
+    _code = &code;
+
     _position = expression ? expression->firstSourceLocation().begin() : statement->firstSourceLocation().begin();
     accept(node);
 
     QString rewritten = code;
-    rewriteMultilineStrings(rewritten);
+    w.write(&rewritten);
 
     rewritten = QStringLiteral("(function ") + name + QStringLiteral("() { ") + rewritten + QStringLiteral(" })");
 

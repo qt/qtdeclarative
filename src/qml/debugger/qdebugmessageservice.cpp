@@ -42,6 +42,8 @@
 #include "qdebugmessageservice_p.h"
 #include "qqmldebugservice_p_p.h"
 
+#include <QDataStream>
+
 QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QDebugMessageService, qmlDebugMessageService)

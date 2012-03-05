@@ -70,6 +70,9 @@ static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine, const QM
     case QMetaType::QUrl:
         return IR::UrlType;
 
+    case QMetaType::QColor:
+        return IR::ColorType;
+
     default:
         if (t == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
             return IR::SGAnchorLineType;
@@ -438,7 +441,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
                 QQmlPropertyData *data = cache->property(name);
 
-                if (data && data->revision != 0) {
+                if (data && data->hasRevision()) {
                     if (qmlVerboseCompiler()) 
                         qWarning() << "*** versioned symbol:" << name;
                     discard();
@@ -459,7 +462,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
                 QQmlPropertyData *data = cache->property(name);
 
-                if (data && data->revision != 0) {
+                if (data && data->hasRevision()) {
                     if (qmlVerboseCompiler()) 
                         qWarning() << "*** versioned symbol:" << name;
                     discard();
@@ -610,7 +613,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 if (!data || data->isFunction())
                     return false; // Don't support methods (or non-existing properties ;)
 
-                if (data->revision != 0) {
+                if (data->hasRevision()) {
                     if (qmlVerboseCompiler()) 
                         qWarning() << "*** versioned symbol:" << name;
                     discard();

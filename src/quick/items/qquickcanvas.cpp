@@ -94,11 +94,10 @@ protected:
     {
         if (e->type() == QEvent::User) {
             Q_ASSERT(m_eventSent);
-
-            bool *amtp = m_canvas->windowManager->allowMainThreadProcessing();
+            volatile bool *amtp = m_canvas->windowManager->allowMainThreadProcessing();
             while (incubatingObjectCount()) {
                 if (amtp)
-                    incubateWhile(amtp);
+                    incubateWhile(amtp, 2);
                 else
                     incubateFor(5);
                 QCoreApplication::processEvents();
@@ -115,6 +114,8 @@ protected:
             m_eventSent = true;
             QCoreApplication::postEvent(this, new QEvent(QEvent::User));
         }
+        // If no animations are running, the renderer may be waiting
+        m_canvas->windowManager->wakeup();
     }
 
 private:
@@ -377,25 +378,36 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
                 me.setTimestamp(event->timestamp());
                 me.setAccepted(false);
-                deliverMouseEvent(&me);
-                if (me.isAccepted()) {
-                    touchMouseId = p.id();
-                    event->setAccepted(true);
+                me.setCapabilities(event->device()->capabilities());
+                if (!mouseGrabberItem) {
+                    if (deliverInitialMousePressEvent(rootItem, &me)) {
+                        touchMouseId = p.id();
+                        event->setAccepted(true);
+                    }
+                } else {
+                    deliverMouseEvent(&me);
+                    if (me.isAccepted()) {
+                        touchMouseId = p.id();
+                        event->setAccepted(true);
+                    }
                 }
             }
             QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
             me.setTimestamp(event->timestamp());
             me.setAccepted(false);
+            me.setCapabilities(event->device()->capabilities());
             deliverMouseEvent(&me);
             if (me.isAccepted()) {
                 touchMouseId = p.id();
                 event->setAccepted(true);
-                break;
             }
+            if (touchMouseId != -1)
+                break;
         } else if (p.id() == touchMouseId) {
             if (p.state() & Qt::TouchPointMoved) {
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseMove, p);
                 me.setTimestamp(event->timestamp());
+                me.setCapabilities(event->device()->capabilities());
                 if (!mouseGrabberItem) {
                     if (lastMousePosition.isNull())
                         lastMousePosition = me.windowPos();
@@ -419,6 +431,7 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                     return;
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonRelease, p);
                 me.setTimestamp(event->timestamp());
+                me.setCapabilities(event->device()->capabilities());
                 deliverMouseEvent(&me);
                 mouseGrabberItem = 0;
             }
@@ -746,6 +759,7 @@ QQuickCanvas::~QQuickCanvas()
     QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(d->rootItem);
     rootItemPrivate->removeFromDirtyList();
 
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
 
     delete d->rootItem; d->rootItem = 0;

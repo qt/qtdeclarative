@@ -283,7 +283,7 @@ public:
         inline void pop();
     };
 
-    void initDeclarativeGlobalObject();
+    void initQmlGlobalObject();
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
     v8::Local<v8::Object> global() { return m_context->Global(); }

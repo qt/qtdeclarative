@@ -830,8 +830,8 @@ private:
 
 Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
 {
-    return extra.flag()?Qt::LeftButton:Qt::MouseButton(0) |
-           (extra.isAllocated()?extra->acceptedMouseButtons:Qt::MouseButtons(0));
+    return ((extra.flag() ? Qt::LeftButton : Qt::MouseButton(0)) |
+            (extra.isAllocated() ? extra->acceptedMouseButtons : Qt::MouseButtons(0)));
 }
 
 QSGContext *QQuickItemPrivate::sceneGraphContext() const

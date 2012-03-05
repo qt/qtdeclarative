@@ -7,7 +7,9 @@ TARGET  = qmlqtimeexampleplugin
 
 SOURCES += plugin.cpp
 
-qqmlsources.files += \
+OTHER_FILES += "plugin.json"
+
+qdeclarativesources.files += \
     com/nokia/TimeExample/qmldir \
     com/nokia/TimeExample/center.png \
     com/nokia/TimeExample/clock.png \
@@ -15,11 +17,11 @@ qqmlsources.files += \
     com/nokia/TimeExample/hour.png \
     com/nokia/TimeExample/minute.png
 
-qqmlsources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/plugins/com/nokia/TimeExample
+qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/plugins/com/nokia/TimeExample
 
 sources.files += plugins.pro plugin.cpp plugins.qml README
 sources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/plugins
 target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/plugins/com/nokia/TimeExample
 
-INSTALLS += qqmlsources sources target
+INSTALLS += qdeclarativesources sources target
 

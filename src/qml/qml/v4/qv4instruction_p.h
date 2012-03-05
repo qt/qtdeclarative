@@ -92,8 +92,11 @@ QT_BEGIN_NAMESPACE
     F(ConvertStringToInt, unaryop) \
     F(ConvertStringToReal, unaryop) \
     F(ConvertStringToUrl, unaryop) \
+    F(ConvertStringToColor, unaryop) \
     F(ConvertUrlToBool, unaryop) \
     F(ConvertUrlToString, unaryop) \
+    F(ConvertColorToBool, unaryop) \
+    F(ConvertColorToString, unaryop) \
     F(ResolveUrl, unaryop) \
     F(MathSinReal, unaryop) \
     F(MathCosReal, unaryop) \

@@ -54,8 +54,8 @@ class QTcpServerConnection : public QObject, public QQmlDebugServerConnection
     Q_OBJECT
     Q_DECLARE_PRIVATE(QTcpServerConnection)
     Q_DISABLE_COPY(QTcpServerConnection)
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlDebugServerConnection" FILE "qtcpserverconnection.json")
     Q_INTERFACES(QQmlDebugServerConnection)
-
 
 public:
     QTcpServerConnection();

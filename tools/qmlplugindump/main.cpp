@@ -133,7 +133,7 @@ public:
 };
 
 /* When we dump a QMetaObject, we want to list all the types it is exported as.
-   To do this, we need to find the QDeclarativeTypes associated with this
+   To do this, we need to find the QQmlTypes associated with this
    QMetaObject.
 */
 static QHash<QByteArray, QSet<const QQmlType *> > qmlTypesByCppName;

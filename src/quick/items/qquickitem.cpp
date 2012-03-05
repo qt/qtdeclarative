@@ -1627,7 +1627,7 @@ void QQuickItemPrivate::setAccessibleFlagAndListener()
 
     \inmodule QtQuick
 
-    All visual items in Qt Declarative inherit from QQuickItem.  Although QQuickItem
+    All visual items in Qt Quick inherit from QQuickItem.  Although QQuickItem
     has no visual appearance, it defines all the properties that are
     common across visual items - such as the x and y position, the
     width and height, \l {anchor-layout}{anchoring} and key handling.
@@ -1646,7 +1646,7 @@ void QQuickItemPrivate::setAccessibleFlagAndListener()
     \ingroup qml-basic-visual-elements
     \brief The Item is the most basic of all visual items in QML.
 
-    All visual items in Qt Declarative inherit from Item.  Although Item
+    All visual items in Qt Quick inherit from Item.  Although Item
     has no visual appearance, it defines all the properties that are
     common across visual items - such as the x and y position, the
     width and height, \l {anchor-layout}{anchoring} and key handling.
@@ -2122,7 +2122,7 @@ QQuickItem *QQuickItemPrivate::InitializationState::getFocusScope(QQuickItem *it
 {
     if (!focusScope) {
         QQuickItem *fs = item->parentItem();
-        while (!fs->isFocusScope())
+        while (fs->parentItem() && !fs->isFocusScope())
             fs = fs->parentItem();
         focusScope = fs;
     }

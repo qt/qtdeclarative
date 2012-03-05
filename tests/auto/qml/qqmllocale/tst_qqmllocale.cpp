@@ -68,6 +68,8 @@ private slots:
     void dayName();
     void standaloneDayName_data();
     void standaloneDayName();
+    void firstDayOfWeek_data();
+    void firstDayOfWeek();
     void weekDays_data();
     void weekDays();
     void uiLanguages_data();
@@ -154,7 +156,6 @@ void tst_qqmllocale::addPropertyData(const QString &l)
         LOCALE_PROP(QString,negativeSign),
         LOCALE_PROP(QString,positiveSign),
         LOCALE_PROP(QString,exponential),
-        LOCALE_PROP(int,firstDayOfWeek),
         LOCALE_PROP(int,measurementSystem),
         LOCALE_PROP(int,textDirection),
         { 0, QVariant() }
@@ -422,6 +423,41 @@ void tst_qqmllocale::standaloneDayName()
 
         QCOMPARE(val.toString(), l.standaloneDayName(i, format));
     }
+
+    delete obj;
+}
+
+void tst_qqmllocale::firstDayOfWeek_data()
+{
+    QTest::addColumn<QString>("locale");
+
+    QTest::newRow("en_US") << "en_US";
+    QTest::newRow("de_DE") << "de_DE";
+    QTest::newRow("ar_SA") << "ar_SA";
+    QTest::newRow("hi_IN") << "hi_IN";
+    QTest::newRow("zh_CN") << "zh_CN";
+    QTest::newRow("th_TH") << "th_TH";
+}
+
+void tst_qqmllocale::firstDayOfWeek()
+{
+    QFETCH(QString, locale);
+
+    QQmlComponent c(&engine, testFileUrl("properties.qml"));
+
+    QObject *obj = c.create();
+    QVERIFY(obj);
+
+    QMetaObject::invokeMethod(obj, "setLocale", Qt::DirectConnection,
+        Q_ARG(QVariant, QVariant(locale)));
+
+    QVariant val = obj->property("firstDayOfWeek");
+    QVERIFY(val.type() == QVariant::Int);
+
+    int day = int(QLocale(locale).firstDayOfWeek());
+    if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
+        day = 0;
+    QCOMPARE(day, val.toInt());
 
     delete obj;
 }

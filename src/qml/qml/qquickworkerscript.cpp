@@ -202,7 +202,7 @@ QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine()
 
 void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 {
-    initDeclarativeGlobalObject();
+    initQmlGlobalObject();
 #define CALL_ONMESSAGE_SCRIPT \
     "(function(object, message) { "\
         "var isfunction = false; "\

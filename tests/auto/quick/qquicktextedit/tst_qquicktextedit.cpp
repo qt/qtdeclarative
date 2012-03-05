@@ -461,10 +461,10 @@ void tst_qquicktextedit::width()
 
         layout.endLayout();
 
-        qreal metricWidth = ceil(layout.boundingRect().width());
+        qreal metricWidth = layout.boundingRect().width();
 
         QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->width(), qreal(metricWidth));
+        QCOMPARE(textEditObject->width(), metricWidth);
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -475,7 +475,7 @@ void tst_qquicktextedit::width()
         if (requiresUnhintedMetrics)
             document.setUseDesignMetrics(true);
 
-        int documentWidth = ceil(document.idealWidth());
+        qreal documentWidth = document.idealWidth();
 
         QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.RichText; text: \"" + richText.at(i) + "\" }";
         QQmlComponent texteditComponent(&engine);
@@ -483,7 +483,7 @@ void tst_qquicktextedit::width()
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
         QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->width(), qreal(documentWidth));
+        QCOMPARE(textEditObject->width(), documentWidth);
     }
 }
 
@@ -903,10 +903,7 @@ void tst_qquicktextedit::color()
         QVERIFY(textEditObject);
         QVERIFY(textEditPrivate);
         QVERIFY(textEditPrivate->control);
-
-        QPalette pal = textEditPrivate->control->palette();
         QCOMPARE(textEditPrivate->color, QColor("black"));
-        QCOMPARE(textEditPrivate->color, pal.color(QPalette::Text));
     }
     //test normal
     for (int i = 0; i < colorStrings.size(); i++)
@@ -1846,8 +1843,8 @@ void tst_qquicktextedit::cursorDelegate()
     //Test Delegate gets moved
     for (int i=0; i<= textEditObject->text().length(); i++) {
         textEditObject->setCursorPosition(i);
-        QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
-        QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+        QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
     }
     // Clear preedit text;
     QInputMethodEvent event;
@@ -1861,8 +1858,8 @@ void tst_qquicktextedit::cursorDelegate()
     QTest::mouseClick(&view, Qt::LeftButton, 0, point1);
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
-    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
-    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+    QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
     // Test delegate gets moved on mouse drag
     textEditObject->setCursorPosition(0);
@@ -1872,27 +1869,27 @@ void tst_qquicktextedit::cursorDelegate()
     QGuiApplication::sendEvent(&view, &mv);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, point2);
     QTest::qWait(50);
-    QTRY_COMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
-    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+    QTRY_COMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
     textEditObject->setReadOnly(true);
     textEditObject->setCursorPosition(0);
     QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
-    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
-    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+    QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
     textEditObject->setCursorPosition(0);
     QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
-    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
-    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+    QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
     textEditObject->setCursorPosition(0);
-    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
-    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+    QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
     //Test Delegate gets deleted
     textEditObject->setCursorDelegate(0);
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
@@ -2585,14 +2582,14 @@ void tst_qquicktextedit::cursorRectangleSize()
     qApp->sendEvent(qApp->focusObject(), &event);
     QRectF cursorRectFromQuery = event.value(Qt::ImCursorRectangle).toRectF();
 
-    QRect cursorRectFromItem = textEdit->cursorRectangle();
+    QRectF cursorRectFromItem = textEdit->cursorRectangle();
     QRectF cursorRectFromPositionToRectangle = textEdit->positionToRectangle(textEdit->cursorPosition());
 
     // item and input query cursor rectangles match
-    QCOMPARE(cursorRectFromItem, cursorRectFromQuery.toRect());
+    QCOMPARE(cursorRectFromItem, cursorRectFromQuery);
 
     // item cursor rectangle and positionToRectangle calculations match
-    QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle.toRect());
+    QCOMPARE(cursorRectFromItem, cursorRectFromPositionToRectangle);
 
     // item-canvas transform and input item transform match
     QCOMPARE(QQuickItemPrivate::get(textEdit)->itemToCanvasTransform(), qApp->inputMethod()->inputItemTransform());

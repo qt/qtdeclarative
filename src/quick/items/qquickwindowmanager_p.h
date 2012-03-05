@@ -52,6 +52,8 @@ class QSGContext;
 class QQuickWindowManager
 {
 public:
+    virtual ~QQuickWindowManager();
+
     virtual void show(QQuickCanvas *canvas) = 0;
     virtual void hide(QQuickCanvas *canvas) = 0;
 
@@ -62,8 +64,9 @@ public:
     virtual void resize(QQuickCanvas *canvas, const QSize &size) = 0;
 
     virtual void maybeUpdate(QQuickCanvas *canvas) = 0;
+    virtual void wakeup() = 0;
 
-    virtual bool *allowMainThreadProcessing() = 0;
+    virtual volatile bool *allowMainThreadProcessing() = 0;
 
     virtual QSGContext *sceneGraphContext() const = 0;
 

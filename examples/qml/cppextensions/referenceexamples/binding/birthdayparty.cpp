@@ -75,7 +75,7 @@ void BirthdayParty::setHost(Person *c)
     emit hostChanged();
 }
 
-QQmlListProperty<Person> BirthdayParty::guests() 
+QQmlListProperty<Person> BirthdayParty::guests()
 {
     return QQmlListProperty<Person>(this, m_guests);
 }

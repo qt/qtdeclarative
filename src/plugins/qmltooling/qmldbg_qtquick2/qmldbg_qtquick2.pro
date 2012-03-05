@@ -27,5 +27,7 @@ HEADERS += \
     ../shared/qqmlinspectorprotocol.h \
     ../shared/qmlinspectorconstants.h
 
+OTHER_FILES += qtquick2plugin.json
+
 target.path += $$[QT_INSTALL_PLUGINS]/qmltooling
 INSTALLS += target

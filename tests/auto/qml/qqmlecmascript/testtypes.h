@@ -180,6 +180,7 @@ public:
 signals:
     void basicSignal();
     void argumentSignal(int a, QString b, qreal c, MyEnum2 d, Qt::MouseButtons e);
+    void unnamedArgumentSignal(int a, qreal, QString c);
     void stringChanged();
     void urlChanged();
     void objectChanged();
@@ -188,6 +189,7 @@ signals:
     void signalWithUnknownType(const MyQmlObject::MyType &arg);
     void signalWithVariant(const QVariant &arg);
     void signalWithQJSValue(const QJSValue &arg);
+    void signalWithGlobalName(int parseInt);
     void intChanged();
 
 public slots:

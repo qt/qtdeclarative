@@ -93,6 +93,7 @@ private slots:
     void returnValues();
     void varAssignment();
     void bindingsSpliceCorrectly();
+    void nonValueTypeComparison();
 
 private:
     QQmlEngine engine;
@@ -950,7 +951,6 @@ void tst_qqmlvaluetypes::autoBindingRemoval()
         delete object;
     }
 
-    /*
     {
         QQmlComponent component(&engine, testFileUrl("autoBindingRemoval.2.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
@@ -975,6 +975,8 @@ void tst_qqmlvaluetypes::autoBindingRemoval()
 
     {
         QQmlComponent component(&engine, testFileUrl("autoBindingRemoval.3.qml"));
+        QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QRect";
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
@@ -992,7 +994,6 @@ void tst_qqmlvaluetypes::autoBindingRemoval()
 
         delete object;
     }
-*/
 }
 
 // Test that property value sources assign to value types
@@ -1299,6 +1300,18 @@ void tst_qqmlvaluetypes::bindingsSpliceCorrectly()
 
     delete object;
     }
+}
+
+void tst_qqmlvaluetypes::nonValueTypeComparison()
+{
+    QQmlComponent component(&engine, testFileUrl("nonValueTypeComparison.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test1").toBool(), true);
+    QCOMPARE(object->property("test2").toBool(), true);
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlvaluetypes)

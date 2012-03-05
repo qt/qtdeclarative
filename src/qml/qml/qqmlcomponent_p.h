@@ -62,6 +62,7 @@
 #include "qqmlvme_p.h"
 #include "qqmlerror.h"
 #include "qqml.h"
+#include "../debugger/qqmlprofilerservice_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -83,7 +84,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
     Q_DECLARE_PUBLIC(QQmlComponent)
         
 public:
-    QQmlComponentPrivate() : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0) {}
+    QQmlComponentPrivate() : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), profiler(0) {}
 
     QObject *beginCreate(QQmlContextData *);
     void completeCreate();
@@ -116,6 +117,7 @@ public:
 
     QQmlEngine *engine;
     QQmlGuardedContextData creationContext;
+    QQmlObjectCreatingProfiler *profiler;
 
     void clear();
 

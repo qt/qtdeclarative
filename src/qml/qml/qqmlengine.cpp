@@ -355,7 +355,8 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 
 QQmlEnginePrivate::~QQmlEnginePrivate()
 {
-    Q_ASSERT(inProgressCreations == 0);
+    if (inProgressCreations)
+        qWarning() << QQmlEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
 
     while (cleanup) {
         QQmlCleanup *c = cleanup;
@@ -965,13 +966,13 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
     QQmlData *data = QQmlData::get(object);
 
     if (data && data->deferredComponent) {
-        if (QQmlDebugService::isDebuggingEnabled()) {
-            QQmlProfilerService::startRange(QQmlProfilerService::Creating);
+        QQmlObjectCreatingProfiler prof;
+        if (prof.enabled) {
             QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
-            QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(object->metaObject()->className());
-            QQmlProfilerService::rangeData(QQmlProfilerService::Creating, typeName);
+            prof.setTypeName(type ? type->qmlTypeName()
+                                  : QString::fromUtf8(object->metaObject()->className()));
             if (data->outerContext)
-                QQmlProfilerService::rangeLocation(QQmlProfilerService::Creating, data->outerContext->url, data->lineNumber, data->columnNumber);
+                prof.setLocation(data->outerContext->url, data->lineNumber, data->columnNumber);
         }
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
 
@@ -982,7 +983,6 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
         data->deferredComponent = 0;
 
         QQmlComponentPrivate::complete(ep, &state);
-        QQmlProfilerService::endRange(QQmlProfilerService::Creating);
     }
 }
 
@@ -1411,7 +1411,7 @@ void QQmlEngine::addImportPath(const QString& path)
   imports \c com.mycompany.Feature will cause the QQmlEngine to look
   in \c /opt/MyApp/lib/imports/com/mycompany/Feature/ for the components
   provided by that module. A \c qmldir file is required for defining the
-  type version mapping and possibly declarative extensions plugins.
+  type version mapping and possibly QML extensions plugins.
 
   By default, the list contains the directory of the application executable,
   paths specified in the \c QML_IMPORT_PATH environment variable,

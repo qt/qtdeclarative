@@ -90,9 +90,6 @@ public:
     explicit QQuickTextControl(QTextDocument *doc, QObject *parent = 0);
     virtual ~QQuickTextControl();
 
-    void setView(QObject *view);
-    QObject *view() const;
-
     QTextDocument *document() const;
 
     void setTextCursor(const QTextCursor &cursor);
@@ -126,9 +123,6 @@ public:
     void setTextWidth(qreal width);
     qreal textWidth() const;
     QSizeF size() const;
-
-    void setIgnoreUnusedNavigationEvents(bool ignore);
-    bool ignoreUnusedNavigationEvents() const;
 
     void moveCursor(QTextCursor::MoveOperation op, QTextCursor::MoveMode mode = QTextCursor::MoveAnchor);
 
@@ -178,16 +172,10 @@ Q_SIGNALS:
     void linkHovered(const QString &);
 
 public:
-    // control properties
-    QPalette palette() const;
-    void setPalette(const QPalette &pal);
-
     virtual void processEvent(QEvent *e, const QMatrix &matrix);
     void processEvent(QEvent *e, const QPointF &coordinateOffset = QPointF());
 
     // control methods
-    void drawContents(QPainter *painter, const QRectF &rect = QRectF());
-
     void setFocus(bool focus, Qt::FocusReason = Qt::OtherFocusReason);
 
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery property) const;

@@ -59,7 +59,7 @@ class Q_QML_EXPORT QQuickTextureFactory : public QObject
 {
 public:
     QQuickTextureFactory();
-    ~QQuickTextureFactory();
+    virtual ~QQuickTextureFactory();
 
     virtual QSGTexture *createTexture(QQuickCanvas *canvas) const = 0;
     virtual QSize textureSize() const = 0;

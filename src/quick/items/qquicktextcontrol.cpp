@@ -97,13 +97,17 @@ static QTextLine currentTextLine(const QTextCursor &cursor)
 }
 
 QQuickTextControlPrivate::QQuickTextControlPrivate()
-    : doc(0), cursorOn(false), cursorIsFocusIndicator(false),
+    : doc(0),
+      preeditCursor(0),
       interactionFlags(Qt::TextEditorInteraction),
+      cursorOn(false),
+      cursorIsFocusIndicator(false),
       mousePressed(false),
-      lastSelectionState(false), ignoreAutomaticScrollbarAdjustement(false),
+      lastSelectionState(false),
+      ignoreAutomaticScrollbarAdjustement(false),
       overwriteMode(false),
       acceptRichText(true),
-      preeditCursor(0), hideCursor(false),
+      hideCursor(false),
       hasFocus(false),
       isEnabled(true),
       hadSelectionOnMousePress(false),
@@ -298,7 +302,6 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
             doc = document;
             clearDocument = false;
         } else {
-            palette = QGuiApplication::palette();
             doc = new QTextDocument(q);
         }
         _q_documentLayoutChanged();
@@ -629,18 +632,6 @@ QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
 
 QQuickTextControl::~QQuickTextControl()
 {
-}
-
-void QQuickTextControl::setView(QObject *view)
-{
-    Q_D(QQuickTextControl);
-    d->contextObject = view;
-}
-
-QObject *QQuickTextControl::view() const
-{
-    Q_D(const QQuickTextControl);
-    return d->contextObject;
 }
 
 QTextDocument *QQuickTextControl::document() const
@@ -1418,7 +1409,7 @@ bool QQuickTextControlPrivate::sendMouseEventToInputContext(QMouseEvent *e, cons
 
     Q_UNUSED(e);
 
-    if (contextObject && isPreediting()) {
+    if (isPreediting()) {
         QTextLayout *layout = cursor.block().layout();
         int cursorPos = q->hitTest(pos, Qt::FuzzyHit) - cursor.position();
 
@@ -1908,79 +1899,10 @@ QString QQuickTextControl::toHtml() const
 }
 #endif
 
-QPalette QQuickTextControl::palette() const
-{
-    Q_D(const QQuickTextControl);
-    return d->palette;
-}
-
-void QQuickTextControl::setPalette(const QPalette &pal)
-{
-    Q_D(QQuickTextControl);
-    d->palette = pal;
-}
-
 bool QQuickTextControl::cursorOn() const
 {
     Q_D(const QQuickTextControl);
     return d->cursorOn;
-}
-
-QAbstractTextDocumentLayout::PaintContext QQuickTextControl::getPaintContext() const
-{
-    Q_D(const QQuickTextControl);
-
-    QAbstractTextDocumentLayout::PaintContext ctx;
-
-    ctx.palette = d->palette;
-    if (d->cursorOn && d->isEnabled) {
-        if (d->hideCursor)
-            ctx.cursorPosition = -1;
-        else if (d->preeditCursor != 0)
-            ctx.cursorPosition = - (d->preeditCursor + 2);
-        else
-            ctx.cursorPosition = d->cursor.position();
-    }
-
-    if (d->cursor.hasSelection()) {
-        QAbstractTextDocumentLayout::Selection selection;
-        selection.cursor = d->cursor;
-        if (0 && d->cursorIsFocusIndicator) {
-#if 0
-            // ###
-            QStyleOption opt;
-            opt.palette = ctx.palette;
-            QStyleHintReturnVariant ret;
-            QStyle *style = QGuiApplication::style();
-            if (widget)
-                style = widget->style();
-            style->styleHint(QStyle::SH_TextControl_FocusIndicatorTextCharFormat, &opt, widget, &ret);
-            selection.format = qvariant_cast<QTextFormat>(ret.variant).toCharFormat();
-#endif
-        } else {
-            QPalette::ColorGroup cg = d->hasFocus ? QPalette::Active : QPalette::Inactive;
-            selection.format.setBackground(ctx.palette.brush(cg, QPalette::Highlight));
-            selection.format.setForeground(ctx.palette.brush(cg, QPalette::HighlightedText));
-            if (fullWidthSelection)
-                selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        }
-        ctx.selections.append(selection);
-    }
-
-    return ctx;
-}
-
-void QQuickTextControl::drawContents(QPainter *p, const QRectF &rect)
-{
-    Q_D(QQuickTextControl);
-    p->save();
-    QAbstractTextDocumentLayout::PaintContext ctx = getPaintContext();
-    if (rect.isValid())
-        p->setClipRect(rect, Qt::IntersectClip);
-    ctx.clip = rect;
-
-    d->doc->documentLayout()->draw(p, ctx);
-    p->restore();
 }
 
 int QQuickTextControl::hitTest(const QPointF &point, Qt::HitTestAccuracy accuracy) const

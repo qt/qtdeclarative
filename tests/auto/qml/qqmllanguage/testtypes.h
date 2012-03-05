@@ -67,7 +67,8 @@ public:
 };
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_INTERFACE(MyInterface, "com.trolltech.Qt.Test.MyInterface");
+#define MyInterface_iid "org.qt-project.Qt.Test.MyInterface"
+Q_DECLARE_INTERFACE(MyInterface, MyInterface_iid);
 QT_END_NAMESPACE
 QML_DECLARE_INTERFACE(MyInterface);
 

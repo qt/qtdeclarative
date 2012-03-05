@@ -49,6 +49,3 @@ void DialogPlugin::registerTypes(const char *uri)
     qmlRegisterType<Directory>(uri, 1, 0, "Directory");
     qmlRegisterType<File>(uri,1,0,"File");
 }
-
-//FileDialog is the plugin name (same as the TARGET in the project file) and DialogPlugin is the plugin classs
-Q_EXPORT_PLUGIN2(FileDialog, DialogPlugin);

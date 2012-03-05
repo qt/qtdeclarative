@@ -52,23 +52,10 @@
 
 QT_BEGIN_NAMESPACE
 
+// instance will be set, unset in constructor. Allows static methods to be inlined.
+QQmlProfilerService *QQmlProfilerService::instance = 0;
 Q_GLOBAL_STATIC(QQmlProfilerService, profilerInstance)
 
-QQmlBindingProfiler::QQmlBindingProfiler(const QString &url, int line, int column)
-{
-    QQmlProfilerService::startRange(QQmlProfilerService::Binding);
-    QQmlProfilerService::rangeLocation(QQmlProfilerService::Binding, url, line, column);
-}
-
-QQmlBindingProfiler::~QQmlBindingProfiler()
-{
-    QQmlProfilerService::endRange(QQmlProfilerService::Binding);
-}
-
-void QQmlBindingProfiler::addDetail(const QString &details)
-{
-    QQmlProfilerService::rangeData(QQmlProfilerService::Binding, details);
-}
 
 // convert to a QByteArray that can be sent to the debug client
 // use of QDataStream can skew results
@@ -106,12 +93,13 @@ QQmlProfilerService::QQmlProfilerService()
 
 QQmlProfilerService::~QQmlProfilerService()
 {
+    instance = 0;
 }
 
 void QQmlProfilerService::initialize()
 {
     // just make sure that the service is properly registered
-    profilerInstance();
+    instance = profilerInstance();
 }
 
 bool QQmlProfilerService::startProfiling()
@@ -132,36 +120,6 @@ void QQmlProfilerService::sendStartedProfilingMessage()
 void QQmlProfilerService::addEvent(EventType t)
 {
     profilerInstance()->addEventImpl(t);
-}
-
-void QQmlProfilerService::startRange(RangeType t)
-{
-    profilerInstance()->startRangeImpl(t);
-}
-
-void QQmlProfilerService::rangeData(RangeType t, const QString &data)
-{
-    profilerInstance()->rangeDataImpl(t, data);
-}
-
-void QQmlProfilerService::rangeData(RangeType t, const QUrl &data)
-{
-    profilerInstance()->rangeDataImpl(t, data);
-}
-
-void QQmlProfilerService::rangeLocation(RangeType t, const QString &fileName, int line, int column)
-{
-    profilerInstance()->rangeLocationImpl(t, fileName, line, column);
-}
-
-void QQmlProfilerService::rangeLocation(RangeType t, const QUrl &fileName, int line, int column)
-{
-    profilerInstance()->rangeLocationImpl(t, fileName, line, column);
-}
-
-void QQmlProfilerService::endRange(RangeType t)
-{
-    profilerInstance()->endRangeImpl(t);
 }
 
 void QQmlProfilerService::animationFrame(qint64 delta)
@@ -214,7 +172,7 @@ void QQmlProfilerService::addEventImpl(EventType event)
     processMessage(ed);
 }
 
-void QQmlProfilerService::startRangeImpl(RangeType range)
+void QQmlProfilerService::startRange(RangeType range)
 {
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -223,7 +181,7 @@ void QQmlProfilerService::startRangeImpl(RangeType range)
     processMessage(rd);
 }
 
-void QQmlProfilerService::rangeDataImpl(RangeType range, const QString &rData)
+void QQmlProfilerService::rangeData(RangeType range, const QString &rData)
 {
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -232,7 +190,7 @@ void QQmlProfilerService::rangeDataImpl(RangeType range, const QString &rData)
     processMessage(rd);
 }
 
-void QQmlProfilerService::rangeDataImpl(RangeType range, const QUrl &rData)
+void QQmlProfilerService::rangeData(RangeType range, const QUrl &rData)
 {
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -241,7 +199,7 @@ void QQmlProfilerService::rangeDataImpl(RangeType range, const QUrl &rData)
     processMessage(rd);
 }
 
-void QQmlProfilerService::rangeLocationImpl(RangeType range, const QString &fileName, int line, int column)
+void QQmlProfilerService::rangeLocation(RangeType range, const QString &fileName, int line, int column)
 {
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -250,7 +208,7 @@ void QQmlProfilerService::rangeLocationImpl(RangeType range, const QString &file
     processMessage(rd);
 }
 
-void QQmlProfilerService::rangeLocationImpl(RangeType range, const QUrl &fileName, int line, int column)
+void QQmlProfilerService::rangeLocation(RangeType range, const QUrl &fileName, int line, int column)
 {
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
@@ -259,7 +217,7 @@ void QQmlProfilerService::rangeLocationImpl(RangeType range, const QUrl &fileNam
     processMessage(rd);
 }
 
-void QQmlProfilerService::endRangeImpl(RangeType range)
+void QQmlProfilerService::endRange(RangeType range)
 {
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;

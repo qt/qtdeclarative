@@ -44,9 +44,10 @@
 #include <QtQuick/qquickview.h>
 #include <QtQml/private/qanimationgroupjob_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQuick/private/qquickanimation_p.h>
-#include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickitemanimation_p.h>
+#include <QtQuick/private/qquickitemanimation_p_p.h>
+#include <QtQuick/private/qquicktransition_p.h>
+#include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquickpathinterpolator_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QEasingCurve>
@@ -105,6 +106,7 @@ private slots:
     void pauseBindingBug();
     void pauseBug();
     void loopingBug();
+    void anchorBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1312,6 +1314,19 @@ void tst_qquickanimations::loopingBug()
     QCOMPARE(rect->rotation(), qreal(90));
 
     delete obj;
+}
+
+//QTBUG-24532
+void tst_qquickanimations::anchorBug()
+{
+    QQuickAnchorAnimation animation;
+    animation.setDuration(5000);
+    animation.setEasing(QEasingCurve(QEasingCurve::InOutBack));
+    animation.start();
+    animation.pause();
+
+    QCOMPARE(animation.qtAnimation()->duration(), 5000);
+    QCOMPARE(static_cast<QQuickBulkValueAnimator*>(animation.qtAnimation())->easingCurve(), QEasingCurve(QEasingCurve::InOutBack));
 }
 
 QTEST_MAIN(tst_qquickanimations)

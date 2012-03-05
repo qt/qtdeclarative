@@ -376,6 +376,27 @@ void tst_qqmlecmascript::signalAssignment()
         QCOMPARE(object->string(), QString("pass 19 Hello world! 10.25 3 2"));
         delete object;
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("signalAssignment.3.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->string(), QString());
+        emit object->unnamedArgumentSignal(19, 10.25, "Hello world!");
+        QEXPECT_FAIL("", "QTBUG-24481", Continue);
+        QCOMPARE(object->string(), QString("pass 19 Hello world!"));
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("signalAssignment.4.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->string(), QString());
+        emit object->signalWithGlobalName(19);
+        QCOMPARE(object->string(), QString("pass 5"));
+        delete object;
+    }
 }
 
 void tst_qqmlecmascript::methods()
@@ -1570,8 +1591,6 @@ void tst_qqmlecmascript::compileInvalidBinding()
 {
     // QTBUG-23387: ensure that invalid bindings don't cause a crash.
     QQmlComponent component(&engine, testFileUrl("v8bindingException.qml"));
-    QString warning = component.url().toString() + ":16: SyntaxError: Unexpected token ILLEGAL";
-    QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     QObject *object = component.create();
     QVERIFY(object != 0);
     delete object;
@@ -3248,6 +3267,13 @@ void tst_qqmlecmascript::importScripts_data()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
             << (QVariantList() << QVariant(18));
+
+    QTest::newRow("import module api into js import")
+            << testFileUrl("jsimport/testImportModuleApi.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(20));
 }
 
 void tst_qqmlecmascript::importScripts()
@@ -5287,12 +5313,21 @@ void tst_qqmlecmascript::qtbug_21864()
 
 void tst_qqmlecmascript::rewriteMultiLineStrings()
 {
-    // QTBUG-23387
-    QQmlComponent component(&engine, testFileUrl("rewriteMultiLineStrings.qml"));
-    QObject *o = component.create();
-    QVERIFY(o != 0);
-    QTRY_COMPARE(o->property("test").toBool(), true);
-    delete o;
+    {
+        // QTBUG-23387
+        QQmlComponent component(&engine, testFileUrl("rewriteMultiLineStrings.qml"));
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+        QTRY_COMPARE(o->property("test").toBool(), true);
+        delete o;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("rewriteMultiLineStrings_crlf.1.qml"));
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+        delete o;
+    }
 }
 
 void tst_qqmlecmascript::qobjectConnectionListExceptionHandling()

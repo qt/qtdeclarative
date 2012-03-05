@@ -54,9 +54,11 @@
 //
 
 #include <private/qqmldebugservice_p.h>
+#include <QtQml/qtqmlglobal.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qstringbuilder.h>
 
 QT_BEGIN_HEADER
 
@@ -83,13 +85,6 @@ Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_MOVABLE_TYPE);
 class QUrl;
 class QQmlEngine;
 
-// RAII
-class Q_AUTOTEST_EXPORT QQmlBindingProfiler {
-public:
-    QQmlBindingProfiler(const QString &url, int line, int column);
-    ~QQmlBindingProfiler();
-    void addDetail(const QString &details);
-};
 
 class Q_QML_EXPORT QQmlProfilerService : public QQmlDebugService
 {
@@ -132,12 +127,6 @@ public:
     static bool stopProfiling();
     static void sendStartedProfilingMessage();
     static void addEvent(EventType);
-    static void startRange(RangeType);
-    static void rangeData(RangeType, const QString &);
-    static void rangeData(RangeType, const QUrl &);
-    static void rangeLocation(RangeType, const QString &, int, int);
-    static void rangeLocation(RangeType, const QUrl &, int, int);
-    static void endRange(RangeType);
     static void animationFrame(qint64);
 
     static void sendProfilingData();
@@ -154,13 +143,15 @@ private:
     bool stopProfilingImpl();
     void sendStartedProfilingMessageImpl();
     void addEventImpl(EventType);
-    void startRangeImpl(RangeType);
-    void rangeDataImpl(RangeType, const QString &);
-    void rangeDataImpl(RangeType, const QUrl &);
-    void rangeLocationImpl(RangeType, const QString &, int, int);
-    void rangeLocationImpl(RangeType, const QUrl &, int, int);
-    void endRangeImpl(RangeType);
     void animationFrameImpl(qint64);
+
+    void startRange(RangeType);
+    void rangeData(RangeType, const QString &);
+    void rangeData(RangeType, const QUrl &);
+    void rangeLocation(RangeType, const QString &, int, int);
+    void rangeLocation(RangeType, const QUrl &, int, int);
+    void endRange(RangeType);
+
 
     bool profilingEnabled();
     void setProfilingEnabled(bool enable);
@@ -173,6 +164,135 @@ private:
     bool m_messageReceived;
     QVector<QQmlProfilerData> m_data;
     QMutex m_mutex;
+
+    static QQmlProfilerService *instance;
+
+    friend struct QQmlBindingProfiler;
+    friend struct QQmlHandlingSignalProfiler;
+    friend struct QQmlObjectCreatingProfiler;
+    friend struct QQmlCompilingProfiler;
+};
+
+//
+// RAII helper structs
+//
+
+struct QQmlBindingProfiler {
+    QQmlBindingProfiler(const QString &url, int line, int column)
+    {
+        QQmlProfilerService *instance = QQmlProfilerService::instance;
+        enabled = instance ? instance->profilingEnabled() : false;
+        if (enabled) {
+            instance->startRange(QQmlProfilerService::Binding);
+            instance->rangeLocation(QQmlProfilerService::Binding, url, line, column);
+        }
+    }
+
+    ~QQmlBindingProfiler()
+    {
+        if (enabled)
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::Binding);
+    }
+
+    void addDetail(const QString &details)
+    {
+        if (enabled)
+            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Binding,
+                                                             details);
+    }
+\
+    bool enabled;
+};
+
+struct QQmlHandlingSignalProfiler {
+    QQmlHandlingSignalProfiler()
+    {
+        enabled = QQmlProfilerService::instance
+                ? QQmlProfilerService::instance->profilingEnabled() : false;
+        if (enabled) {
+            QQmlProfilerService::instance->startRange(
+                        QQmlProfilerService::HandlingSignal);
+        }
+    }
+
+    void setSignalInfo(const QString &name, const QString &expression)
+    {
+        if (enabled)
+            QQmlProfilerService::instance->rangeData(
+                        QQmlProfilerService::HandlingSignal,
+                        name % QLatin1String(": ") % expression);
+    }
+
+    void setLocation(const QString &file, int line, int column)
+    {
+        if (enabled)
+            QQmlProfilerService::instance->rangeLocation(
+                        QQmlProfilerService::HandlingSignal, file, line, column);
+    }
+
+    ~QQmlHandlingSignalProfiler()
+    {
+        if (enabled)
+            QQmlProfilerService::instance->endRange(
+                        QQmlProfilerService::HandlingSignal);
+    }
+
+    bool enabled;
+};
+
+struct QQmlObjectCreatingProfiler {
+    QQmlObjectCreatingProfiler()
+    {
+        QQmlProfilerService *instance = QQmlProfilerService::instance;
+        enabled = instance ?
+                    instance->profilingEnabled() : false;
+        if (enabled)
+            instance->startRange(QQmlProfilerService::Creating);
+    }
+
+    void setTypeName(const QString &typeName)
+    {
+        if (enabled)
+            QQmlProfilerService::instance->rangeData(
+                        QQmlProfilerService::Creating, typeName);
+    }
+
+    void setLocation(const QUrl &url, int line, int column)
+    {
+        if (enabled)
+            QQmlProfilerService::instance->rangeLocation(
+                        QQmlProfilerService::Creating, url, line, column);
+    }
+
+    ~QQmlObjectCreatingProfiler()
+    {
+        if (enabled)
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::Creating);
+    }
+
+    bool enabled;
+};
+
+struct QQmlCompilingProfiler {
+    QQmlCompilingProfiler(const QString &name)
+    {
+        QQmlProfilerService *instance = QQmlProfilerService::instance;
+        enabled = instance ?
+                    instance->profilingEnabled() : false;
+        if (enabled) {
+            instance->startRange(QQmlProfilerService::Compiling);
+            instance->rangeLocation(QQmlProfilerService::Compiling, name, 1, 1);
+            instance->rangeData(QQmlProfilerService::Compiling, name);
+        }
+    }
+
+    ~QQmlCompilingProfiler()
+    {
+        if (enabled)
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::Compiling);
+    }
+
+    bool enabled;
 };
 
 QT_END_NAMESPACE

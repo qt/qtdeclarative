@@ -97,7 +97,7 @@ public:
     class Interrupt {
     public:
         inline Interrupt();
-        inline Interrupt(bool *runWhile);
+        inline Interrupt(volatile bool *runWhile, int nsecs=0);
         inline Interrupt(int nsecs);
 
         inline void reset();
@@ -105,13 +105,11 @@ public:
     private:
         enum Mode { None, Time, Flag };
         Mode mode;
-        union {
-            struct {
-                QElapsedTimer timer;
-                int nsecs;
-            };
-            bool *runWhile;
+        struct {
+            QElapsedTimer timer;
+            int nsecs;
         };
+        volatile bool *runWhile;
     };
 
     QQmlVME() : data(0), componentAttached(0) {}
@@ -202,23 +200,23 @@ private:
 };
 
 QQmlVME::Interrupt::Interrupt()
-: mode(None)
+    : mode(None), nsecs(0), runWhile(0)
 {
 }
 
-QQmlVME::Interrupt::Interrupt(bool *runWhile)
-: mode(Flag), runWhile(runWhile)
+QQmlVME::Interrupt::Interrupt(volatile bool *runWhile, int nsecs)
+    : mode(Flag), nsecs(nsecs), runWhile(runWhile)
 {
 }
 
 QQmlVME::Interrupt::Interrupt(int nsecs)
-: mode(Time), nsecs(nsecs)
+    : mode(Time), nsecs(nsecs), runWhile(0)
 {
 }
 
 void QQmlVME::Interrupt::reset()
 {
-    if (mode == Time) 
+    if (mode == Time || nsecs)
         timer.start();
 }
 
@@ -229,7 +227,7 @@ bool QQmlVME::Interrupt::shouldInterrupt() const
     } else if (mode == Time) {
         return timer.nsecsElapsed() > nsecs;
     } else if (mode == Flag) {
-        return !*runWhile;
+        return !*runWhile || (nsecs && timer.nsecsElapsed() > nsecs);
     } else {
         return false;
     }

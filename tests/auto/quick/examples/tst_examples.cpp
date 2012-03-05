@@ -88,33 +88,27 @@ tst_examples::tst_examples()
     // Add files to exclude here
     excludedFiles << "doc/src/snippets/qml/listmodel.qml"; //Just a ListModel, no root QQuickItem
 
-    // Add directories you want excluded here
-    excludedDirs << "examples/qml/text/fonts"; // QTBUG-21415
+    // Add directories you want excluded here (don't add examples/, because they install to examples/qtdeclarative/)
+    excludedDirs << "shared"; //Not an example
+    excludedDirs << "qtquick/text/fonts"; // QTBUG-21415
     excludedDirs << "doc/src/snippets/qml/path"; //No root QQuickItem
-
-    // Not run in QQuickView
-    excludedDirs << "examples/qml/qtquick1";
+    excludedDirs << "tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
     // These snippets are not expected to run on their own.
     excludedDirs << "doc/src/snippets/qml/visualdatamodel_rootindex";
     excludedDirs << "doc/src/snippets/qml/qtbinding";
     excludedDirs << "doc/src/snippets/qml/imports";
-    excludedDirs << "doc/src/snippets/qtquick1/visualdatamodel_rootindex";
-    excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
-    excludedDirs << "doc/src/snippets/qtquick1/imports";
 
 #ifdef QT_NO_WEBKIT
-    excludedDirs << "examples/qml/modelviews/webview";
-    excludedDirs << "examples/qml/webbrowser";
+    excludedDirs << "qtquick/modelviews/webview";
+    excludedDirs << "demos/webbrowser";
     excludedDirs << "doc/src/snippets/qml/webview";
-    excludedDirs << "doc/src/snippets/qtquick1/webview";
 #endif
 
 #ifdef QT_NO_XMLPATTERNS
-    excludedDirs << "examples/qml/xml/xmldata";
-    excludedDirs << "examples/qml/twitter";
-    excludedDirs << "examples/qml/flickr";
-    excludedDirs << "examples/qml/photoviewer";
+    excludedDirs << "demos/twitter";
+    excludedDirs << "demos/flickr";
+    excludedDirs << "demos/photoviewer";
 #endif
 }
 
@@ -230,12 +224,10 @@ void tst_examples::sgexamples_data()
 {
     QTest::addColumn<QString>("file");
 
-    QString examples = QLatin1String(SRCDIR) + "/../../../../examples/qml/";
-    QString tutorials = QLatin1String(SRCDIR) + "/../../../../examples/tutorials/"; //Only qml tutorials since modularization
+    QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
 
     QStringList files;
     files << findQmlFiles(QDir(examples));
-    files << findQmlFiles(QDir(tutorials));
 
     foreach (const QString &file, files)
         QTest::newRow(qPrintable(file)) << file;

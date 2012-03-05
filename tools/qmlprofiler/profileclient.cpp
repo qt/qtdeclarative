@@ -103,10 +103,10 @@ void ProfileClient::stateChanged(State status)
 
 }
 
-class DeclarativeProfileClientPrivate
+class QmlProfileClientPrivate
 {
 public:
-    DeclarativeProfileClientPrivate()
+    QmlProfileClientPrivate()
         : inProgressRanges(0)
         , maximumTime(0)
     {
@@ -122,26 +122,26 @@ public:
     qint64 maximumTime;
 };
 
-DeclarativeProfileClient::DeclarativeProfileClient(
+QmlProfileClient::QmlProfileClient(
         QQmlDebugConnection *client)
     : ProfileClient(QLatin1String("CanvasFrameRate"), client),
-      d(new DeclarativeProfileClientPrivate)
+      d(new QmlProfileClientPrivate)
 {
 }
 
-DeclarativeProfileClient::~DeclarativeProfileClient()
+QmlProfileClient::~QmlProfileClient()
 {
     delete d;
 }
 
-void DeclarativeProfileClient::clearData()
+void QmlProfileClient::clearData()
 {
     ::memset(d->rangeCount, 0,
              QQmlProfilerService::MaximumRangeType * sizeof(int));
     ProfileClient::clearData();
 }
 
-void DeclarativeProfileClient::sendRecordingStatus()
+void QmlProfileClient::sendRecordingStatus()
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
@@ -149,7 +149,7 @@ void DeclarativeProfileClient::sendRecordingStatus()
     sendMessage(ba);
 }
 
-void DeclarativeProfileClient::messageReceived(const QByteArray &data)
+void QmlProfileClient::messageReceived(const QByteArray &data)
 {
     QByteArray rwData = data;
     QDataStream stream(&rwData, QIODevice::ReadOnly);

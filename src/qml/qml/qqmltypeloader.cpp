@@ -1578,13 +1578,12 @@ void QQmlTypeData::downloadProgressChanged(qreal p)
 void QQmlTypeData::compile()
 {
     Q_ASSERT(m_compiledData == 0);
-    QQmlProfilerService::startRange(QQmlProfilerService::Compiling);
 
     m_compiledData = new QQmlCompiledData(typeLoader()->engine());
     m_compiledData->url = finalUrl();
     m_compiledData->name = finalUrlString();
-    QQmlProfilerService::rangeLocation(QQmlProfilerService::Compiling, QUrl(m_compiledData->name),1,1);
-    QQmlProfilerService::rangeData(QQmlProfilerService::Compiling, m_compiledData->name);
+
+    QQmlCompilingProfiler prof(m_compiledData->name);
 
     QQmlCompiler compiler(&scriptParser._pool);
     if (!compiler.compile(typeLoader()->engine(), this, m_compiledData)) {
@@ -1592,7 +1591,6 @@ void QQmlTypeData::compile()
         m_compiledData->release();
         m_compiledData = 0;
     }
-    QQmlProfilerService::endRange(QQmlProfilerService::Compiling);
 }
 
 void QQmlTypeData::resolveTypes()

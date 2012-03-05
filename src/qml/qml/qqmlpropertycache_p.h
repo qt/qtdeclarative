@@ -149,6 +149,7 @@ public:
     bool hasOverride() const { return !(flags & IsValueTypeVirtual) &&
                                       !(flags & HasAccessors) &&
                                       overrideIndex >= 0; }
+    bool hasRevision() const { return !(flags & HasAccessors) && revision != 0; }
 
     // Returns -1 if not a value type virtual property
     inline int getValueTypeCoreIndex() const;

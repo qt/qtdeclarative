@@ -6,6 +6,8 @@ QT += sql qml qml-private v8-private core-private
 
 SOURCES += plugin.cpp
 
+OTHER_FILES += localstorage.json
+
 DESTDIR = $$QT.qml.imports/$$TARGETPATH
 target.path = $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
 

@@ -69,7 +69,7 @@ void BirthdayParty::setHost(Person *c)
     m_host = c;
 }
 
-QQmlListProperty<Person> BirthdayParty::guests() 
+QQmlListProperty<Person> BirthdayParty::guests()
 {
     return QQmlListProperty<Person>(this, m_guests);
 }

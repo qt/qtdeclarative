@@ -75,6 +75,7 @@ QML_SYMBOLS="\
     QDeclarativeCompiledData
     QDeclarativeCompiler
     QDeclarativeCompilerTypes
+    QDeclarativeCompilingProfiler
     QDeclarativeComponent
     QDeclarativeComponentAttached
     QDeclarativeComponentExtension
@@ -152,6 +153,7 @@ QML_SYMBOLS="\
     QDeclarativeGuard
     QDeclarativeGuardedContextData
     QDeclarativeGuardImpl
+    QDeclarativeHandlingSignalProfiler
     QDeclarativeImageProvider
     QDeclarativeImageProviderPrivate
     QDeclarativeImportDatabase
@@ -189,6 +191,7 @@ QML_SYMBOLS="\
     QDeclarativeNotifierEndpoint
     QDeclarativeNullableValue
     QDeclarativeNumberExtension
+    QDeclarativeObjectCreatingProfiler
     QDeclarativeObjectData
     QDeclarativeObjectProperty
     QDeclarativeObserverMode

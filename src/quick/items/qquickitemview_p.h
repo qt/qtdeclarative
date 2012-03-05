@@ -48,7 +48,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Qml)
+QT_MODULE(Quick)
 
 class QQuickChangeSet;
 
@@ -83,6 +83,7 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(QQuickTransition *moveDisplaced READ moveDisplacedTransition WRITE setMoveDisplacedTransition NOTIFY moveDisplacedTransitionChanged)
     Q_PROPERTY(QQuickTransition *remove READ removeTransition WRITE setRemoveTransition NOTIFY removeTransitionChanged)
     Q_PROPERTY(QQuickTransition *removeDisplaced READ removeDisplacedTransition WRITE setRemoveDisplacedTransition NOTIFY removeDisplacedTransitionChanged)
+    Q_PROPERTY(QQuickTransition *displaced READ displacedTransition WRITE setDisplacedTransition NOTIFY displacedTransitionChanged)
 
     Q_PROPERTY(QQmlComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
     Q_PROPERTY(QQuickItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
@@ -151,6 +152,9 @@ public:
     QQuickTransition *removeDisplacedTransition() const;
     void setRemoveDisplacedTransition(QQuickTransition *transition);
 
+    QQuickTransition *displacedTransition() const;
+    void setDisplacedTransition(QQuickTransition *transition);
+
     QQmlComponent *highlight() const;
     void setHighlight(QQmlComponent *);
 
@@ -211,6 +215,7 @@ signals:
     void moveDisplacedTransitionChanged();
     void removeTransitionChanged();
     void removeDisplacedTransitionChanged();
+    void displacedTransitionChanged();
 
     void highlightChanged();
     void highlightItemChanged();
@@ -324,52 +329,8 @@ public:
     QString m_nextSection;
 };
 
-class QQuickViewTransitionAttached : public QObject
-{
-    Q_OBJECT
-
-    Q_PROPERTY(int index READ index NOTIFY indexChanged)
-    Q_PROPERTY(QQuickItem* item READ item NOTIFY itemChanged)
-    Q_PROPERTY(QPointF destination READ destination NOTIFY destinationChanged)
-
-    Q_PROPERTY(QList<int> targetIndexes READ targetIndexes NOTIFY targetIndexesChanged)
-    Q_PROPERTY(QQmlListProperty<QObject> targetItems READ targetItems NOTIFY targetItemsChanged)
-
-public:
-    QQuickViewTransitionAttached(QObject *parent);
-
-    int index() const { return m_index; }
-    QQuickItem *item() const { return m_item; }
-    QPointF destination() const { return m_destination; }
-
-    QList<int> targetIndexes() const { return m_targetIndexes; }
-    QQmlListProperty<QObject> targetItems();
-
-    static QQuickViewTransitionAttached *qmlAttachedProperties(QObject *);
-
-signals:
-    void indexChanged();
-    void itemChanged();
-    void destinationChanged();
-
-    void targetIndexesChanged();
-    void targetItemsChanged();
-
-private:
-    friend class FxViewItemTransitionManager;
-    int m_index;
-    QQuickItem *m_item;
-    QPointF m_destination;
-
-    QList<int> m_targetIndexes;
-    QList<QObject *> m_targetItems;
-};
-
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickViewTransitionAttached)
-QML_DECLARE_TYPEINFO(QQuickViewTransitionAttached, QML_HAS_ATTACHED_PROPERTIES)
 
 QT_END_HEADER
 

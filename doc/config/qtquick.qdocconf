@@ -19,7 +19,8 @@ headerdirs += ../src \
 imagedirs += ../src/images \
 
 sourcedirs += ../src \
-              ../../src
+              ../../src \
+              ../../examples
 
 #indexes = $QT5DOC/doc/html/qt.index
 

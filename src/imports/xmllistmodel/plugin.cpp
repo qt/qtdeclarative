@@ -49,6 +49,8 @@ QT_BEGIN_NAMESPACE
 class QmlXmlListModelPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "xmllistmodel.json")
+
 public:
     virtual void registerTypes(const char *uri)
     {
@@ -61,5 +63,3 @@ public:
 QT_END_NAMESPACE
 
 #include "plugin.moc"
-
-Q_EXPORT_PLUGIN2(qmlxmllistmodelplugin, QT_PREPEND_NAMESPACE(QmlXmlListModelPlugin));

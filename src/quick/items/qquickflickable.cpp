@@ -977,7 +977,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         lastPosTime = currentTimestamp;
         QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
         if (q->yflick() && !rejectY) {
-            if (extended) {
+            if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
                 vData.addVelocitySample(extended->velocity().y(), maxVelocity);
             } else {
                 qreal dy = event->localPos().y()-lastPos.y();
@@ -985,7 +985,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             }
         }
         if (q->xflick() && !rejectX) {
-            if (extended) {
+            if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
                 hData.addVelocitySample(extended->velocity().x(), maxVelocity);
             } else {
                 qreal dx = event->localPos().x()-lastPos.x();
@@ -1022,7 +1022,8 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
     qreal vVelocity = 0;
     if (elapsed < 100 && vData.velocity != 0.) {
         QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
-        vVelocity = extended ? extended->velocity().y() : vData.velocity;
+        vVelocity = (extended && extended->capabilities().testFlag(QTouchDevice::Velocity))
+                ? extended->velocity().y() : vData.velocity;
     }
     if (vData.atBeginning || vData.atEnd) {
         vVelocity /= 2;
@@ -1037,7 +1038,8 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
     qreal hVelocity = 0;
     if (elapsed < 100 && hData.velocity != 0.) {
         QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
-        hVelocity = extended ? extended->velocity().x() : hData.velocity;
+        hVelocity = (extended && extended->capabilities().testFlag(QTouchDevice::Velocity))
+                ? extended->velocity().x() : hData.velocity;
     }
     if (hData.atBeginning || hData.atEnd) {
         hVelocity /= 2;
@@ -1771,8 +1773,11 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
         QQuickMouseEventEx mouseEvent(event->type(), mapFromScene(event->windowPos()),
                                 event->windowPos(), event->screenPos(),
                                 event->button(), event->buttons(), event->modifiers());
-        if (QQuickMouseEventEx::extended(event))
-            mouseEvent.setVelocity(QQuickMouseEventEx::extended(event)->velocity());
+        QQuickMouseEventEx *eventEx = QQuickMouseEventEx::extended(event);
+        if (eventEx) {
+            mouseEvent.setVelocity(eventEx->velocity());
+            mouseEvent.setCapabilities(eventEx->capabilities());
+        }
         mouseEvent.setTimestamp(event->timestamp());
         mouseEvent.setAccepted(false);
 

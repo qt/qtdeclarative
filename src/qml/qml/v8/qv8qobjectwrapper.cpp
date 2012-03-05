@@ -513,7 +513,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     if (!result)
         return v8::Handle<v8::Value>();
 
-    if (revisionMode == QV8QObjectWrapper::CheckRevision && result->revision != 0) {
+    if (revisionMode == QV8QObjectWrapper::CheckRevision && result->hasRevision()) {
         QQmlData *ddata = QQmlData::get(object);
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result))
             return v8::Handle<v8::Value>();
@@ -673,7 +673,7 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
     if (!result)
         return false;
 
-    if (revisionMode == QV8QObjectWrapper::CheckRevision && result->revision != 0) {
+    if (revisionMode == QV8QObjectWrapper::CheckRevision && result->hasRevision()) {
         QQmlData *ddata = QQmlData::get(object);
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result))
             return false;

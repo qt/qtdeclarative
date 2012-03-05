@@ -85,14 +85,16 @@ public:
                       QList<QQuickStyledTextImgTag*> &imgTags,
                       const QUrl &baseUrl,
                       QQmlContext *context,
-                      bool preloadImages);
+                      bool preloadImages,
+                      bool *fontSizeModified);
 
 private:
     QQuickStyledText(const QString &string, QTextLayout &layout,
                            QList<QQuickStyledTextImgTag*> &imgTags,
                            const QUrl &baseUrl,
                            QQmlContext *context,
-                           bool preloadImages);
+                           bool preloadImages,
+                           bool *fontSizeModified);
     ~QQuickStyledText();
 
     QQuickStyledTextPrivate *d;

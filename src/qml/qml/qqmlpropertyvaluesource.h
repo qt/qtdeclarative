@@ -58,7 +58,10 @@ public:
     virtual ~QQmlPropertyValueSource();
     virtual void setTarget(const QQmlProperty &) = 0;
 };
-Q_DECLARE_INTERFACE(QQmlPropertyValueSource, "com.trolltech.qml.QQmlPropertyValueSource")
+
+#define QQmlPropertyValueSource_iid "org.qt-project.Qt.QQmlPropertyValueSource"
+
+Q_DECLARE_INTERFACE(QQmlPropertyValueSource, QQmlPropertyValueSource_iid)
 
 QT_END_NAMESPACE
 

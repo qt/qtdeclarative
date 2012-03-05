@@ -80,7 +80,7 @@ private slots:
     void logError(const QString &error);
     void logStatus(const QString &status);
 
-    void declarativeComplete();
+    void qmlComplete();
     void v8Complete();
 
 private:
@@ -104,13 +104,13 @@ private:
     bool m_quitAfterSave;
 
     QQmlDebugConnection m_connection;
-    DeclarativeProfileClient m_declarativeProfilerClient;
+    QmlProfileClient m_qmlProfilerClient;
     V8ProfileClient m_v8profilerClient;
     ProfileData m_profileData;
     QTimer m_connectTimer;
     uint m_connectionAttempts;
 
-    bool m_declarativeDataReady;
+    bool m_qmlDataReady;
     bool m_v8DataReady;
 };
 

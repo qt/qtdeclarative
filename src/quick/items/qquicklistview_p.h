@@ -181,7 +181,7 @@ class QQuickListViewAttached : public QQuickItemViewAttached
 
 public:
     QQuickListViewAttached(QObject *parent)
-        : QQuickItemViewAttached(parent), m_view(0) {}
+        : QQuickItemViewAttached(parent), m_view(0), m_sectionItem(0) {}
     ~QQuickListViewAttached() {}
 
     Q_PROPERTY(QQuickListView *view READ view NOTIFY viewChanged)
@@ -198,6 +198,7 @@ Q_SIGNALS:
 
 public:
     QQmlGuard<QQuickListView> m_view;
+    QQuickItem *m_sectionItem;
 };
 
 

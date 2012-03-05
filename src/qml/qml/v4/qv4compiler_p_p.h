@@ -231,6 +231,7 @@ private:
     void discard() { _discarded = true; }
     bool _discarded;
     quint8 currentReg;
+    quint8 registerCount;
 
     bool usedSubscriptionIdsChanged;
     quint32 currentBlockMask;

@@ -174,6 +174,8 @@ namespace QQuickViewTestUtil
     };
 }
 
+Q_DECLARE_METATYPE(QQuickViewTestUtil::QaimModel*)
+Q_DECLARE_METATYPE(QQuickViewTestUtil::ListChange)
 Q_DECLARE_METATYPE(QList<QQuickViewTestUtil::ListChange>)
 Q_DECLARE_METATYPE(QQuickViewTestUtil::ListRange)
 

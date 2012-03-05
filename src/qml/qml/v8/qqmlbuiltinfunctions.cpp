@@ -1096,8 +1096,17 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
         V8THROW_ERROR("Qt.createQmlObject(): Component is not ready");
 
     QObject *obj = component.beginCreate(effectiveContext);
-    if (obj)
+    if (obj) {
         QQmlData::get(obj, true)->setImplicitDestructible();
+
+        obj->setParent(parentArg);
+
+        QList<QQmlPrivate::AutoParentFunction> functions = QQmlMetaType::parentFunctions();
+        for (int ii = 0; ii < functions.count(); ++ii) {
+            if (QQmlPrivate::Parented == functions.at(ii)(obj, parentArg))
+                break;
+        }
+    }
     component.completeCreate();
 
     if (component.isError()) {
@@ -1106,14 +1115,6 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
     }
 
     Q_ASSERT(obj);
-
-    obj->setParent(parentArg);
-
-    QList<QQmlPrivate::AutoParentFunction> functions = QQmlMetaType::parentFunctions();
-    for (int ii = 0; ii < functions.count(); ++ii) {
-        if (QQmlPrivate::Parented == functions.at(ii)(obj, parentArg))
-            break;
-    }
 
     return v8engine->newQObject(obj);
 }

@@ -132,49 +132,40 @@ public:
     bool isPreediting() const;
     void commitPreedit();
 
-    QTextDocument *doc;
-    bool cursorOn;
-    QTextCursor cursor;
-    bool cursorIsFocusIndicator;
+    QPointF trippleClickPoint;
+    QPointF mousePressPos;
+
     QTextCharFormat lastCharFormat;
 
-    Qt::TextInteractionFlags interactionFlags;
+    QTextDocument *doc;
+    QTextCursor cursor;
+    QTextCursor selectedWordOnDoubleClick;
+    QTextCursor selectedBlockOnTrippleClick;
+    QString tentativeCommit;
+    QString highlightedAnchor; // Anchor below cursor
+    QString anchorOnMousePress;
+    QString linkToCopy;
 
     QBasicTimer cursorBlinkTimer;
     QBasicTimer trippleClickTimer;
-    QPointF trippleClickPoint;
-
-    bool mousePressed;
-
-    QPoint mousePressPos;
-
-    QPointer<QObject> contextObject;
-
-    bool lastSelectionState;
-
-    bool ignoreAutomaticScrollbarAdjustement;
-
-    QTextCursor selectedWordOnDoubleClick;
-    QTextCursor selectedBlockOnTrippleClick;
-
-    bool overwriteMode;
-    bool acceptRichText;
 
     int preeditCursor;
-    bool hideCursor; // used to hide the cursor in the preedit area
-    QString tentativeCommit;
 
-    QPalette palette;
-    bool hasFocus;
-    bool isEnabled;
+    Qt::TextInteractionFlags interactionFlags;
 
-    QString highlightedAnchor; // Anchor below cursor
-    QString anchorOnMousePress;
-    bool hadSelectionOnMousePress;
+    bool cursorOn : 1;
+    bool cursorIsFocusIndicator : 1;
+    bool mousePressed : 1;
+    bool lastSelectionState : 1;
+    bool ignoreAutomaticScrollbarAdjustement : 1;
+    bool overwriteMode : 1;
+    bool acceptRichText : 1;
+    bool hideCursor : 1; // used to hide the cursor in the preedit area
+    bool hasFocus : 1;
+    bool isEnabled : 1;
+    bool hadSelectionOnMousePress : 1;
+    bool wordSelectionEnabled : 1;
 
-    bool wordSelectionEnabled;
-
-    QString linkToCopy;
     void _q_copyLink();
     void _q_updateBlock(const QTextBlock &);
     void _q_documentLayoutChanged();

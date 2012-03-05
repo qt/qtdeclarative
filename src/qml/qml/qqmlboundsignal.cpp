@@ -170,12 +170,18 @@ int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
     if (c == QMetaObject::InvokeMetaMethod && id == evaluateIdx) {
         if (!m_expression)
             return -1;
-        if (QQmlDebugService::isDebuggingEnabled()) {
-            QQmlProfilerService::startRange(QQmlProfilerService::HandlingSignal);
-            QQmlProfilerService::rangeData(QQmlProfilerService::HandlingSignal, QLatin1String(m_signal.signature()) % QLatin1String(": ") % m_expression->expression());
-            QQmlProfilerService::rangeLocation(QQmlProfilerService::HandlingSignal, m_expression->sourceFile(), m_expression->lineNumber(), m_expression->columnNumber());
+
+        if (QQmlDebugService::isDebuggingEnabled())
             QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.signature()));
+
+        QQmlHandlingSignalProfiler prof;
+        if (prof.enabled) {
+            prof.setSignalInfo(QString::fromLatin1(m_signal.signature()),
+                               m_expression->expression());
+            prof.setLocation(m_expression->sourceFile(), m_expression->lineNumber(),
+                             m_expression->columnNumber());
         }
+
         m_isEvaluating = true;
         if (!m_paramsValid) {
             if (!m_signal.parameterTypes().isEmpty())
@@ -191,7 +197,6 @@ int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
         }
         if (m_params) m_params->clearValues();
         m_isEvaluating = false;
-        QQmlProfilerService::endRange(QQmlProfilerService::HandlingSignal);
         return -1;
     } else {
         return QObject::qt_metacall(c, id, a);

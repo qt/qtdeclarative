@@ -238,7 +238,7 @@ void QSGContext::renderNextFrame(QSGRenderer *renderer, GLuint fboId)
  */
 QSGRectangleNode *QSGContext::createRectangleNode()
 {
-    return new QSGDefaultRectangleNode(this);
+    return new QSGDefaultRectangleNode;
 }
 
 /*!

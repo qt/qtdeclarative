@@ -51,6 +51,7 @@
 #include "qqmlengine.h"
 #include "qqmlbinding_p.h"
 #include "qqmlbinding_p_p.h"
+#include "qqmlglobal_p.h"
 #include "qqmlscript_p.h"
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlenginedebugservice_p.h>
@@ -738,13 +739,14 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
 
-    bool isRoot = enginePriv->inProgressCreations == 0;
+    if (enginePriv->inProgressCreations == 0) {
+        // only track root, since further ones might not be properly nested
+        profiler = new QQmlObjectCreatingProfiler();
+    }
+
     enginePriv->inProgressCreations++;
     state.errors.clear();
     state.completePending = true;
-
-    if (isRoot) 
-        QQmlProfilerService::startRange(QQmlProfilerService::Creating);
 
     enginePriv->referenceScarceResources();
     state.vme.init(context, cc, start, creationContext);
@@ -761,13 +763,12 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         if (!context->isInternal)
             context->asQQmlContextPrivate()->instances.append(rv);
         QQmlEngineDebugService::instance()->objectCreated(engine, rv);
-        if (isRoot) {
-            QQmlProfilerService::rangeData(QQmlProfilerService::Creating,
-                                              buildTypeNameForDebug(rv->metaObject()));
+
+        if (profiler && profiler->enabled) {
+            profiler->setTypeName(buildTypeNameForDebug(rv->metaObject()));
             QQmlData *data = QQmlData::get(rv);
             Q_ASSERT(data);
-            QQmlProfilerService::rangeLocation(QQmlProfilerService::Creating,
-                                                  cc->url, data->lineNumber, data->columnNumber);
+            profiler->setLocation(cc->url, data->lineNumber, data->columnNumber);
         }
     }
 
@@ -823,7 +824,8 @@ void QQmlComponentPrivate::completeCreate()
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
         complete(ep, &state);
 
-        QQmlProfilerService::endRange(QQmlProfilerService::Creating);
+        delete profiler;
+        profiler = 0;
     }
 }
 

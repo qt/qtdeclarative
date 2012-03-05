@@ -10,7 +10,7 @@ Rectangle {
     // interrupting transitions will still produce the correct result)
     property int timeBetweenActions: duration / 2
 
-    property int duration: 100
+    property int duration: 300
 
     property int count: list.count
 
@@ -45,6 +45,8 @@ Rectangle {
         property bool runningAddDisplaced: false
         property bool runningMoveTargets: false
         property bool runningMoveDisplaced: false
+        property bool runningRemoveTargets: false
+        property bool runningRemoveDisplaced: false
 
         objectName: "list"
         focus: true
@@ -70,6 +72,7 @@ Rectangle {
             id: addDisplaced
             SequentialAnimation {
                 ScriptAction { script: list.runningAddDisplaced = true }
+                PauseAnimation { duration: rippleAddDisplaced ? addDisplaced.ViewTransition.index * root.duration/10 : 0 }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; from: addDisplaced_transitionFrom.x; duration: root.duration }
                     NumberAnimation { properties: "y"; from: addDisplaced_transitionFrom.y; duration: root.duration }
@@ -99,6 +102,30 @@ Rectangle {
                     NumberAnimation { properties: "y"; from: moveDisplaced_transitionFrom.y; duration: root.duration }
                 }
                 ScriptAction { script: list.runningMoveDisplaced = false }
+            }
+        }
+
+        remove: Transition {
+            id: removeTargets
+            SequentialAnimation {
+                ScriptAction { script: list.runningRemoveTargets = true }
+                ParallelAnimation {
+                    NumberAnimation { properties: "x"; to: removeTargets_transitionTo.x; duration: root.duration }
+                    NumberAnimation { properties: "y"; to: removeTargets_transitionTo.y; duration: root.duration }
+                }
+                ScriptAction { script: list.runningRemoveTargets = false }
+            }
+        }
+
+        removeDisplaced: Transition {
+            id: removeDisplaced
+            SequentialAnimation {
+                ScriptAction { script: list.runningRemoveDisplaced = true }
+                ParallelAnimation {
+                    NumberAnimation { properties: "x"; from: removeDisplaced_transitionFrom.x; duration: root.duration }
+                    NumberAnimation { properties: "y"; from: removeDisplaced_transitionFrom.y; duration: root.duration }
+                }
+                ScriptAction { script: list.runningRemoveDisplaced = false }
             }
         }
     }

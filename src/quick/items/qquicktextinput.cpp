@@ -677,7 +677,7 @@ void QQuickTextInput::setCursorPosition(int cp)
     cursor rectangle.
 */
 
-QRect QQuickTextInput::cursorRectangle() const
+QRectF QQuickTextInput::cursorRectangle() const
 {
     Q_D(const QQuickTextInput);
 
@@ -688,12 +688,8 @@ QRect QQuickTextInput::cursorRectangle() const
         c = 0;
     QTextLine l = d->m_textLayout.lineForTextPosition(c);
     if (!l.isValid())
-        return QRect();
-    return QRect(
-            qRound(l.cursorToX(c) - d->hscroll),
-            qRound(l.y() - d->vscroll),
-            1,
-            qCeil(l.height()));
+        return QRectF();
+    return QRectF(l.cursorToX(c) - d->hscroll, l.y() - d->vscroll, 1, l.height());
 }
 
 /*!
@@ -1368,7 +1364,7 @@ void QQuickTextInput::positionAt(QQmlV8Function *args) const
     args->returnValue(v8::Int32::New(pos));
 }
 
-int QQuickTextInputPrivate::positionAt(int x, int y, QTextLine::CursorPosition position) const
+int QQuickTextInputPrivate::positionAt(qreal x, qreal y, QTextLine::CursorPosition position) const
 {
     x += hscroll;
     y += vscroll;
@@ -1432,7 +1428,7 @@ void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
         d->selectWordAtPos(cursor);
         event->setAccepted(true);
         if (!d->hasPendingTripleClick()) {
-            d->tripleClickStartPoint = event->localPos().toPoint();
+            d->tripleClickStartPoint = event->localPos();
             d->tripleClickTimer.start();
         }
     } else {
@@ -1617,15 +1613,15 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
     Q_Q(QQuickTextInput);
     QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + m_preeditCursor);
     const int preeditLength = m_textLayout.preeditAreaText().length();
-    const int width = qMax(0, qFloor(q->width()));
-    int widthUsed = currentLine.isValid() ? qRound(currentLine.naturalTextWidth()) : 0;
+    const qreal width = qMax<qreal>(0, q->width());
+    qreal widthUsed = currentLine.isValid() ? currentLine.naturalTextWidth() : 0;
     int previousScroll = hscroll;
 
     if (!autoScroll || widthUsed <=  width || m_echoMode == QQuickTextInput::NoEcho) {
         hscroll = 0;
     } else {
         Q_ASSERT(currentLine.isValid());
-        int cix = qRound(currentLine.cursorToX(m_cursor + preeditLength));
+        qreal cix = currentLine.cursorToX(m_cursor + preeditLength);
         if (cix - hscroll >= width) {
             // text doesn't fit, cursor is to the right of br (scroll right)
             hscroll = cix - width;
@@ -1640,7 +1636,7 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
             // off to the left
-             cix = qRound(currentLine.cursorToX(m_cursor + qMax(0, m_preeditCursor - 1)));
+             cix = currentLine.cursorToX(m_cursor + qMax(0, m_preeditCursor - 1));
              if (cix < hscroll)
                  hscroll = cix;
         }
@@ -1653,9 +1649,9 @@ void QQuickTextInputPrivate::updateVerticalScroll()
 {
     Q_Q(QQuickTextInput);
     const int preeditLength = m_textLayout.preeditAreaText().length();
-    const int height = qMax(0, qFloor(q->height()));
-    int heightUsed = boundingRect.height();
-    int previousScroll = vscroll;
+    const qreal height = qMax<qreal>(0, q->height());
+    qreal heightUsed = boundingRect.height();
+    qreal previousScroll = vscroll;
 
     if (!autoScroll || heightUsed <=  height) {
         // text fits in br; use vscroll for alignment
@@ -1674,8 +1670,8 @@ void QQuickTextInputPrivate::updateVerticalScroll()
     } else {
         QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + preeditLength);
         QRectF r = currentLine.isValid() ? currentLine.rect() : QRectF();
-        int top = qFloor(r.top());
-        int bottom = qCeil(r.bottom());
+        qreal top = r.top();
+        int bottom = r.bottom();
 
         if (bottom - vscroll >= height) {
             // text doesn't fit, cursor is to the below the br (scroll down)
@@ -1692,7 +1688,7 @@ void QQuickTextInputPrivate::updateVerticalScroll()
             // check to ensure long pre-edit text doesn't push the cursor
             // off the top
             currentLine = m_textLayout.lineForTextPosition(m_cursor + qMax(0, m_preeditCursor - 1));
-            top = currentLine.isValid() ? qRound(currentLine.rect().top()) : 0;
+            top = currentLine.isValid() ? currentLine.rect().top() : 0;
             if (top < vscroll)
                 vscroll = top;
         }
@@ -1742,11 +1738,11 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node->deleteContent();
         node->setMatrix(QMatrix4x4());
 
-        QPoint offset = QPoint(0,0);
+        QPointF offset(0, 0);
         if (d->autoScroll && d->m_textLayout.lineCount() > 0) {
-            QFontMetrics fm = QFontMetrics(d->font);
+            QFontMetricsF fm(d->font);
             // the y offset is there to keep the baseline constant in case we have script changes in the text.
-            offset = -QPoint(d->hscroll, d->vscroll + qRound(d->m_textLayout.lineAt(0).ascent()) - fm.ascent());
+            offset = -QPoint(d->hscroll, d->vscroll + d->m_textLayout.lineAt(0).ascent() - fm.ascent());
         } else {
             offset = -QPoint(d->hscroll, d->vscroll);
         }
@@ -2732,7 +2728,7 @@ void QQuickTextInputPrivate::updateLayout()
 
     updateType = UpdatePaintNode;
     q->update();
-    q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
+    q->setImplicitSize(boundingRect.width(), boundingRect.height());
 
     if (previousRect != boundingRect)
         emit q->contentSizeChanged();

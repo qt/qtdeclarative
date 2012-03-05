@@ -83,13 +83,13 @@ protected:
     bool m_enabled;
 };
 
-class DeclarativeProfileClient : public ProfileClient
+class QmlProfileClient : public ProfileClient
 {
     Q_OBJECT
 
 public:
-    DeclarativeProfileClient(QQmlDebugConnection *client);
-    ~DeclarativeProfileClient();
+    QmlProfileClient(QQmlDebugConnection *client);
+    ~QmlProfileClient();
 
 public slots:
     void clearData();
@@ -107,7 +107,7 @@ protected:
     virtual void messageReceived(const QByteArray &);
 
 private:
-    class DeclarativeProfileClientPrivate *d;
+    class QmlProfileClientPrivate *d;
 };
 
 class V8ProfileClient : public ProfileClient

@@ -83,6 +83,7 @@ private slots:
     void fillRTL();
     void margins();
     void marginsRTL();
+    void stretch();
 };
 
 void tst_qquickanchors::basicAnchors()
@@ -472,6 +473,10 @@ void tst_qquickanchors::fill()
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 10.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 30.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 20.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 40.0);
     QCOMPARE(rect->x(), 0.0 + 10.0);
     QCOMPARE(rect->y(), 0.0 + 30.0);
     QCOMPARE(rect->width(), 200.0 - 10.0 - 20.0);
@@ -481,6 +486,10 @@ void tst_qquickanchors::fill()
     rectPrivate->anchors()->setRightMargin(0.0);
     rectPrivate->anchors()->setBottomMargin(0.0);
     rectPrivate->anchors()->setTopMargin(10.0);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 20.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 10.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 0.0);
     QCOMPARE(rect->x(), 0.0 + 20.0);
     QCOMPARE(rect->y(), 0.0 + 10.0);
     QCOMPARE(rect->width(), 200.0 - 20.0);
@@ -523,11 +532,15 @@ void tst_qquickanchors::centerIn()
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered"));
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
 
+    QCOMPARE(rectPrivate->anchors()->horizontalCenterOffset(), 10.0);
+    QCOMPARE(rectPrivate->anchors()->verticalCenterOffset(), 30.0);
     QCOMPARE(rect->x(), 75.0 + 10);
     QCOMPARE(rect->y(), 75.0 + 30);
     //Alter Offsets (tests QTBUG-6631)
     rectPrivate->anchors()->setHorizontalCenterOffset(-20.0);
     rectPrivate->anchors()->setVerticalCenterOffset(-10.0);
+    QCOMPARE(rectPrivate->anchors()->horizontalCenterOffset(), -20.0);
+    QCOMPARE(rectPrivate->anchors()->verticalCenterOffset(), -10.0);
     QCOMPARE(rect->x(), 75.0 - 20.0);
     QCOMPARE(rect->y(), 75.0 - 10.0);
 
@@ -623,6 +636,11 @@ void tst_qquickanchors::margins()
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+    QCOMPARE(rectPrivate->anchors()->margins(), 10.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 6.0);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 5.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 10.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 10.0);
     QCOMPARE(rect->x(), 5.0);
     QCOMPARE(rect->y(), 6.0);
     QCOMPARE(rect->width(), 200.0 - 5.0 - 10.0);
@@ -631,6 +649,12 @@ void tst_qquickanchors::margins()
     rectPrivate->anchors()->setTopMargin(0.0);
     rectPrivate->anchors()->setMargins(20.0);
 
+    QCOMPARE(rectPrivate->anchors()->margins(), 20.0);
+    QEXPECT_FAIL("","QTBUG-24515", Continue);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 5.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 20.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 20.0);
     QCOMPARE(rect->x(), 5.0);
     QCOMPARE(rect->y(), 20.0);
     QCOMPARE(rect->width(), 200.0 - 5.0 - 20.0);
@@ -663,6 +687,23 @@ void tst_qquickanchors::marginsRTL()
     delete view;
 }
 
+void tst_qquickanchors::stretch()
+{
+    QQuickView *view = new QQuickView(testFileUrl("stretch.qml"));
+
+    qApp->processEvents();
+    QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("stretcher"));
+    QCOMPARE(rect->x(), 160.0);
+    QCOMPARE(rect->y(), 130.0);
+    QCOMPARE(rect->width(), 40.0);
+    QCOMPARE(rect->height(), 100.0);
+
+    QQuickRectangle* rect2 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("stretcher2"));
+    QCOMPARE(rect2->y(), 130.0);
+    QCOMPARE(rect2->height(), 100.0);
+
+    delete view;
+}
 
 QTEST_MAIN(tst_qquickanchors)
 

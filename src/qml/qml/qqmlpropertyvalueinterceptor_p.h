@@ -67,7 +67,10 @@ public:
     virtual void setTarget(const QQmlProperty &property) = 0;
     virtual void write(const QVariant &value) = 0;
 };
-Q_DECLARE_INTERFACE(QQmlPropertyValueInterceptor, "com.trolltech.qml.QQmlPropertyValueInterceptor")
+
+#define QQmlPropertyValueInterceptor_iid "org.qt-project.Qt.QQmlPropertyValueInterceptor"
+
+Q_DECLARE_INTERFACE(QQmlPropertyValueInterceptor, QQmlPropertyValueInterceptor_iid)
 
 QT_END_NAMESPACE
 

@@ -57,7 +57,7 @@ class QSGContext;
 class QSGDefaultRectangleNode : public QSGRectangleNode
 {
 public:
-    QSGDefaultRectangleNode(QSGContext *context);
+    QSGDefaultRectangleNode();
     ~QSGDefaultRectangleNode();
 
     virtual void setRect(const QRectF &rect);
@@ -95,8 +95,6 @@ private:
     uint m_material_type : 2; // Only goes up to 3
 
     QSGGeometry m_default_geometry;
-
-    QSGContext *m_context;
 };
 
 QT_END_NAMESPACE

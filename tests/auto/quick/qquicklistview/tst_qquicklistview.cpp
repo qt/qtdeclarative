@@ -51,7 +51,6 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickvisualitemmodel_p.h>
 #include <QtQml/private/qquicklistmodel_p.h>
-#include <QtQuick/private/qquickchangeset_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
@@ -126,6 +125,7 @@ private slots:
     void qAbstractItemModel_sections();
     void sectionsPositioning();
     void sectionsDelegate();
+    void sectionPropertyChange();
     void cacheBuffer();
     void positionViewAtIndex();
     void resetModel();
@@ -179,6 +179,8 @@ private slots:
     void moveTransitions_data();
     void removeTransitions();
     void removeTransitions_data();
+    void displacedTransitions();
+    void displacedTransitions_data();
     void multipleTransitions();
     void multipleTransitions_data();
 
@@ -491,6 +493,7 @@ void tst_QQuickListView::inserted_more()
     canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -644,6 +647,7 @@ void tst_QQuickListView::insertBeforeVisible()
     canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -734,6 +738,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     canvas->setSource(source);
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -923,6 +928,7 @@ void tst_QQuickListView::removed_more(const QUrl &source)
     canvas->setSource(source);
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1144,6 +1150,7 @@ void tst_QQuickListView::moved(const QUrl &source)
     canvas->setSource(source);
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1370,6 +1377,7 @@ void tst_QQuickListView::multipleChanges()
     canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
     qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2090,9 +2098,9 @@ void tst_QQuickListView::sectionsPositioning()
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     model.removeItem(5);
     QTRY_COMPARE(listview->count(), model.count());
-    for (int i = 0; i < 3; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem,
-                "sect_" + (i == 0 ? QString("aaa") : QString::number(i)));
+    for (int i = 1; i < 3; ++i) {
+        QQuickItem *item = findVisibleChild(contentItem,
+                "sect_" + QString::number(i));
         QVERIFY(item);
         QTRY_COMPARE(item->y(), qreal(i*20*6));
     }
@@ -2126,6 +2134,52 @@ void tst_QQuickListView::sectionsPositioning()
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels)));
     QTRY_VERIFY(item = findVisibleChild(contentItem, "sect_aaa")); // inline label restored
     QCOMPARE(item->y(), 0.);
+
+    delete canvas;
+}
+
+void tst_QQuickListView::sectionPropertyChange()
+{
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("sectionpropertychange.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
+
+    QMetaObject::invokeMethod(canvas->rootObject(), "switchGroups");
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
+
+    QMetaObject::invokeMethod(canvas->rootObject(), "switchGroups");
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
 
     delete canvas;
 }
@@ -4814,6 +4868,7 @@ void tst_QQuickListView::populateTransitions()
     canvas->rootContext()->setContextProperty("model_transitionVia", &model_transitionVia);
     canvas->setSource(testFileUrl("populateTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QVERIFY(listview);
@@ -4951,6 +5006,7 @@ void tst_QQuickListView::addTransitions()
     ctxt->setContextProperty("testObject", testObject);
     canvas->setSource(testFileUrl("addTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5145,6 +5201,7 @@ void tst_QQuickListView::moveTransitions()
     ctxt->setContextProperty("testObject", testObject);
     canvas->setSource(testFileUrl("moveTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5347,6 +5404,7 @@ void tst_QQuickListView::removeTransitions()
     ctxt->setContextProperty("testObject", testObject);
     canvas->setSource(testFileUrl("removeTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5508,20 +5566,235 @@ void tst_QQuickListView::removeTransitions_data()
             << 17 << 3 << ListRange();
 }
 
+void tst_QQuickListView::displacedTransitions()
+{
+    QFETCH(bool, useDisplaced);
+    QFETCH(bool, displacedEnabled);
+    QFETCH(bool, useAddDisplaced);
+    QFETCH(bool, addDisplacedEnabled);
+    QFETCH(bool, useMoveDisplaced);
+    QFETCH(bool, moveDisplacedEnabled);
+    QFETCH(bool, useRemoveDisplaced);
+    QFETCH(bool, removeDisplacedEnabled);
+    QFETCH(ListChange, change);
+    QFETCH(ListRange, expectedDisplacedIndexes);
+
+    QaimModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Original item" + QString::number(i), "");
+    QaimModel model_displaced_transitionVia;
+    QaimModel model_addDisplaced_transitionVia;
+    QaimModel model_moveDisplaced_transitionVia;
+    QaimModel model_removeDisplaced_transitionVia;
+
+    QPointF displaced_transitionVia(-50, -100);
+    QPointF addDisplaced_transitionVia(-150, 100);
+    QPointF moveDisplaced_transitionVia(50, -100);
+    QPointF removeDisplaced_transitionVia(150, 100);
+
+    QQuickView *canvas = createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    TestObject *testObject = new TestObject(canvas);
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testObject", testObject);
+    ctxt->setContextProperty("model_displaced_transitionVia", &model_displaced_transitionVia);
+    ctxt->setContextProperty("model_addDisplaced_transitionVia", &model_addDisplaced_transitionVia);
+    ctxt->setContextProperty("model_moveDisplaced_transitionVia", &model_moveDisplaced_transitionVia);
+    ctxt->setContextProperty("model_removeDisplaced_transitionVia", &model_removeDisplaced_transitionVia);
+    ctxt->setContextProperty("displaced_transitionVia", displaced_transitionVia);
+    ctxt->setContextProperty("addDisplaced_transitionVia", addDisplaced_transitionVia);
+    ctxt->setContextProperty("moveDisplaced_transitionVia", moveDisplaced_transitionVia);
+    ctxt->setContextProperty("removeDisplaced_transitionVia", removeDisplaced_transitionVia);
+    ctxt->setContextProperty("useDisplaced", useDisplaced);
+    ctxt->setContextProperty("displacedEnabled", displacedEnabled);
+    ctxt->setContextProperty("useAddDisplaced", useAddDisplaced);
+    ctxt->setContextProperty("addDisplacedEnabled", addDisplacedEnabled);
+    ctxt->setContextProperty("useMoveDisplaced", useMoveDisplaced);
+    ctxt->setContextProperty("moveDisplacedEnabled", moveDisplacedEnabled);
+    ctxt->setContextProperty("useRemoveDisplaced", useRemoveDisplaced);
+    ctxt->setContextProperty("removeDisplacedEnabled", removeDisplacedEnabled);
+    canvas->setSource(testFileUrl("displacedTransitions.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
+    listview->setProperty("displaceTransitionsDone", false);
+
+    switch (change.type) {
+        case ListChange::Inserted:
+        {
+            QList<QPair<QString, QString> > targetItemData;
+            for (int i=change.index; i<change.index + change.count; ++i)
+                targetItemData << qMakePair(QString("new item %1").arg(i), QString::number(i));
+            model.insertItems(change.index, targetItemData);
+            QTRY_COMPARE(model.count(), listview->count());
+            break;
+        }
+        case ListChange::Removed:
+            model.removeItems(change.index, change.count);
+            QTRY_COMPARE(model.count(), listview->count());
+            break;
+        case ListChange::Moved:
+            model.moveItems(change.index, change.to, change.count);
+            QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+            break;
+        case ListChange::SetCurrent:
+        case ListChange::SetContentY:
+            break;
+    }
+    if ((useDisplaced && displacedEnabled)
+            || (useAddDisplaced && addDisplacedEnabled)
+            || (useMoveDisplaced && moveDisplacedEnabled)
+            || (useRemoveDisplaced && removeDisplacedEnabled)) {
+        QTRY_VERIFY(listview->property("displaceTransitionsDone").toBool());
+    }
+
+    if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)
+        model_addDisplaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with add displaced", "shouldn't have been animated with add displaced");
+    else
+        QCOMPARE(model_addDisplaced_transitionVia.count(), 0);
+    if (change.type == ListChange::Moved && useMoveDisplaced && moveDisplacedEnabled)
+        model_moveDisplaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with move displaced", "shouldn't have been animated with move displaced");
+    else
+        QCOMPARE(model_moveDisplaced_transitionVia.count(), 0);
+    if (change.type == ListChange::Removed && useRemoveDisplaced && removeDisplacedEnabled)
+        model_removeDisplaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with remove displaced", "shouldn't have been animated with remove displaced");
+    else
+        QCOMPARE(model_removeDisplaced_transitionVia.count(), 0);
+
+    if (useDisplaced && displacedEnabled
+            && ( (change.type == ListChange::Inserted && (!useAddDisplaced || !addDisplacedEnabled))
+                 || (change.type == ListChange::Moved && (!useMoveDisplaced || !moveDisplacedEnabled))
+                 || (change.type == ListChange::Removed && (!useRemoveDisplaced || !removeDisplacedEnabled))) ) {
+        model_displaced_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with generic displaced", "shouldn't have been animated with generic displaced");
+    } else {
+        QCOMPARE(model_displaced_transitionVia.count(), 0);
+    }
+
+    // verify all items moved to the correct final positions
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->x(), 0.0);
+        QCOMPARE(item->y(), i * 20.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickListView::displacedTransitions_data()
+{
+    QTest::addColumn<bool>("useDisplaced");
+    QTest::addColumn<bool>("displacedEnabled");
+    QTest::addColumn<bool>("useAddDisplaced");
+    QTest::addColumn<bool>("addDisplacedEnabled");
+    QTest::addColumn<bool>("useMoveDisplaced");
+    QTest::addColumn<bool>("moveDisplacedEnabled");
+    QTest::addColumn<bool>("useRemoveDisplaced");
+    QTest::addColumn<bool>("removeDisplacedEnabled");
+    QTest::addColumn<ListChange>("change");
+    QTest::addColumn<ListRange>("expectedDisplacedIndexes");
+
+    QTest::newRow("no displaced transitions at all")
+            << false << false
+            << false << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 15);
+
+    QTest::newRow("just displaced")
+            << true << true
+            << false << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 15);
+
+    QTest::newRow("just displaced (not enabled)")
+            << true << false
+            << false << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 15);
+
+    QTest::newRow("displaced + addDisplaced")
+            << true << true
+            << true << true
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 15);
+
+    QTest::newRow("displaced + addDisplaced (not enabled)")
+            << true << true
+            << true << false
+            << false << false
+            << false << false
+            << ListChange::insert(0, 1) << ListRange(0, 15);
+
+    QTest::newRow("displaced + moveDisplaced")
+            << true << true
+            << false << false
+            << true << true
+            << false << false
+            << ListChange::move(0, 10, 1) << ListRange(1, 10);
+
+    QTest::newRow("displaced + moveDisplaced (not enabled)")
+            << true << true
+            << false << false
+            << true << false
+            << false << false
+            << ListChange::move(0, 10, 1) << ListRange(1, 10);
+
+    QTest::newRow("displaced + removeDisplaced")
+            << true << true
+            << false << false
+            << false << false
+            << true << true
+            << ListChange::remove(0, 1) << ListRange(1, 16);
+
+    QTest::newRow("displaced + removeDisplaced (not enabled)")
+            << true << true
+            << false << false
+            << false << false
+            << true << false
+            << ListChange::remove(0, 1) << ListRange(1, 16);
+
+
+    QTest::newRow("displaced + add, should use generic displaced for a remove")
+            << true << true
+            << true << true
+            << false << false
+            << true << false
+            << ListChange::remove(0, 1) << ListRange(1, 16);
+}
+
 void tst_QQuickListView::multipleTransitions()
 {
+    QSKIP("QTBUG-24523");
+
     // Tests that if you interrupt a transition in progress with another action that
     // cancels the previous transition, the resulting items are still placed correctly.
 
     QFETCH(int, initialCount);
     QFETCH(qreal, contentY);
     QFETCH(QList<ListChange>, changes);
+    QFETCH(bool, rippleAddDisplaced);
 
-    // add transitions on the left, moves on the right
     QPointF addTargets_transitionFrom(-50, -50);
     QPointF addDisplaced_transitionFrom(-50, 50);
     QPointF moveTargets_transitionFrom(50, -50);
     QPointF moveDisplaced_transitionFrom(50, 50);
+    QPointF removeTargets_transitionTo(-100, 300);
+    QPointF removeDisplaced_transitionFrom(100, 300);
 
     QmlListModel model;
     for (int i = 0; i < initialCount; i++)
@@ -5536,14 +5809,23 @@ void tst_QQuickListView::multipleTransitions()
     ctxt->setContextProperty("addDisplaced_transitionFrom", addDisplaced_transitionFrom);
     ctxt->setContextProperty("moveTargets_transitionFrom", moveTargets_transitionFrom);
     ctxt->setContextProperty("moveDisplaced_transitionFrom", moveDisplaced_transitionFrom);
+    ctxt->setContextProperty("removeTargets_transitionTo", removeTargets_transitionTo);
+    ctxt->setContextProperty("removeDisplaced_transitionFrom", removeDisplaced_transitionFrom);
+    ctxt->setContextProperty("rippleAddDisplaced", rippleAddDisplaced);
     canvas->setSource(testFileUrl("multipleTransitions.qml"));
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    if (contentY != 0) {
+        listview->setContentY(contentY);
+        QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    }
 
     int timeBetweenActions = canvas->rootObject()->property("timeBetweenActions").toInt();
 
@@ -5604,20 +5886,9 @@ void tst_QQuickListView::multipleTransitions()
     }
     QCOMPARE(listview->count(), model.count());
 
-    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
-        if (items[i]->y() >= contentY) {
-            QQmlExpression e(qmlContext(items[i]), items[i], "index");
-            firstVisibleIndex = e.evaluate().toInt();
-            break;
-        }
-    }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
-
     // verify all items moved to the correct final positions
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
@@ -5636,18 +5907,21 @@ void tst_QQuickListView::multipleTransitions_data()
     QTest::addColumn<int>("initialCount");
     QTest::addColumn<qreal>("contentY");
     QTest::addColumn<QList<ListChange> >("changes");
+    QTest::addColumn<bool>("rippleAddDisplaced");
 
     // the added item and displaced items should move to final dest correctly
     QTest::newRow("add item, then move it immediately") << 10 << 0.0 << (QList<ListChange>()
             << ListChange::insert(0, 1)
             << ListChange::move(0, 3, 1)
-            );
+            )
+            << false;
 
     // items affected by the add should change from move to add transition
     QTest::newRow("move, then insert item before the moved item") << 20 << 0.0 << (QList<ListChange>()
             << ListChange::move(1, 10, 3)
             << ListChange::insert(0, 1)
-            );
+            )
+            << false;
 
     // items should be placed correctly if you trigger a transition then refill for that index
     QTest::newRow("add at 0, flick down, flick back to top and add at 0 again") << 20 << 0.0 << (QList<ListChange>()
@@ -5655,7 +5929,14 @@ void tst_QQuickListView::multipleTransitions_data()
             << ListChange::setContentY(80.0)
             << ListChange::setContentY(0.0)
             << ListChange::insert(0, 1)
-            );
+            )
+            << false;
+
+    QTest::newRow("insert then remove same index, with ripple effect on add displaced") << 20 << 0.0 << (QList<ListChange>()
+            << ListChange::insert(1, 1)
+            << ListChange::remove(1, 1)
+            )
+            << true;
 }
 
 QList<int> tst_QQuickListView::toIntList(const QVariantList &list)

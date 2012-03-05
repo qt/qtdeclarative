@@ -7,7 +7,7 @@ Item {
     Text {
         id: myText
         objectName: "myText"
-        width: 100
+        width: 60
         height: 36
         font.pixelSize: 15
         font.family: "Helvetica"

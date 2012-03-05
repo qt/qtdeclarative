@@ -551,6 +551,8 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
         delete data;
     }
 
+    animator->setDuration(d->duration);
+    animator->setEasingCurve(d->easing);
     return initInstance(animator);
 }
 

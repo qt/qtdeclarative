@@ -78,13 +78,13 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
     clearGuards();
 }
 
-static QQmlJavaScriptExpression::VTable QDeclarativeExpressionPrivate_jsvtable = {
+static QQmlJavaScriptExpression::VTable QQmlExpressionPrivate_jsvtable = {
     QQmlExpressionPrivate::expressionIdentifier,
     QQmlExpressionPrivate::expressionChanged
 };
 
 QQmlExpressionPrivate::QQmlExpressionPrivate()
-: QQmlJavaScriptExpression(&QDeclarativeExpressionPrivate_jsvtable),
+: QQmlJavaScriptExpression(&QQmlExpressionPrivate_jsvtable),
   expressionFunctionValid(true), expressionFunctionRewritten(false),
   extractExpressionFromFunction(false), line(-1), dataRef(0)
 {

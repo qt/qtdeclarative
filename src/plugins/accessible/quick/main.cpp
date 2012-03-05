@@ -59,6 +59,9 @@ QT_BEGIN_NAMESPACE
 
 class AccessibleQuickFactory : public QAccessiblePlugin
 {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QAccessibleFactoryInterface" FILE "accessible.json")
+
 public:
     AccessibleQuickFactory();
 
@@ -105,9 +108,8 @@ QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, Q
     return 0;
 }
 
-Q_EXPORT_STATIC_PLUGIN(AccessibleQuickFactory)
-Q_EXPORT_PLUGIN2(qtaccessiblequick, AccessibleQuickFactory)
-
 QT_END_NAMESPACE
+
+#include "main.moc"
 
 #endif // QT_NO_ACCESSIBILITY

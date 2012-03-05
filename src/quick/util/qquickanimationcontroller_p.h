@@ -49,7 +49,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
+QT_MODULE(Quick)
 
 class QQuickAnimationControllerPrivate;
 class Q_AUTOTEST_EXPORT QQuickAnimationController : public QObject, public QQmlParserStatus

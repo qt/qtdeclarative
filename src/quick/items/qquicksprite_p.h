@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,6 +48,7 @@
 #include <QQmlListProperty>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include "qquickspriteengine_p.h"
+#include <QDebug>
 
 QT_BEGIN_HEADER
 
@@ -60,7 +61,8 @@ class QQuickSprite : public QQuickStochasticState
     //Renderers have to query this hint when advancing frames
     Q_PROPERTY(bool reverse READ reverse WRITE setReverse NOTIFY reverseChanged)
     Q_PROPERTY(bool frameSync READ frameSync WRITE setFrameSync NOTIFY frameSyncChanged)
-    Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)
+    Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY frameCountChanged)
+    Q_PROPERTY(int frameCount READ frameCount WRITE setFrameCount NOTIFY frameCountChanged)
     //If frame height or width is not specified, it is assumed to be a single long row of square frames.
     //Otherwise, it can be multiple contiguous rows, when one row runs out the next will be used.
     Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged)
@@ -97,6 +99,11 @@ public:
     }
 
     int frames() const
+    {
+        return m_frames;
+    }
+
+    int frameCount() const
     {
         return m_frames;
     }
@@ -158,7 +165,7 @@ signals:
 
     void reverseChanged(bool arg);
 
-    void framesChanged(int arg);
+    void frameCountChanged(int arg);
 
     void frameXChanged(int arg);
 
@@ -211,9 +218,15 @@ public slots:
 
     void setFrames(int arg)
     {
+        qWarning() << "Sprite::frames has been renamed Sprite::frameCount";
+        setFrameCount(arg);
+    }
+
+    void setFrameCount(int arg)
+    {
         if (m_frames != arg) {
             m_frames = arg;
-            emit framesChanged(arg);
+            emit frameCountChanged(arg);
         }
     }
 
@@ -278,7 +291,8 @@ private slots:
 
 private:
     friend class QQuickImageParticle;
-    friend class QQuickSpriteImage;
+    friend class QQuickSpriteSequence;
+    friend class QQuickAnimatedSprite;
     friend class QQuickSpriteEngine;
     friend class QQuickStochasticEngine;
     int m_generatedCount;

@@ -63,7 +63,7 @@ static bool qmlEnableV4 = true;
 
 using namespace QQmlJS;
 QV4CompilerPrivate::QV4CompilerPrivate()
-: _function(0) , _block(0) , _discarded(false)
+    : _function(0) , _block(0) , _discarded(false), registerCount(0)
 {
 }
 
@@ -75,6 +75,7 @@ void QV4CompilerPrivate::trace(int line, int column)
     bytecode.clear();
 
     this->currentReg = _function->tempCount;
+    this->registerCount = qMax(this->registerCount, this->currentReg);
 
     foreach (IR::BasicBlock *bb, _function->basicBlocks) {
         if (! bb->isTerminated() && (bb->index + 1) < _function->basicBlocks.size())
@@ -344,6 +345,9 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         case QMetaType::QUrl:
             regType = QUrlType;
             break;
+        case QMetaType::QColor:
+            regType = QColorType;
+            break;
 
         default:
             if (propTy == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
@@ -577,6 +581,12 @@ void QV4CompilerPrivate::convertToBool(IR::Expr *expr, int reg)
 
     case IR::StringType: {
         Instr::ConvertStringToBool i;
+        i.output = i.src = reg;
+        gen(i);
+        } return;
+
+    case IR::ColorType: {
+        Instr::ConvertColorToBool i;
         i.output = i.src = reg;
         gen(i);
         } return;
@@ -880,6 +890,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::RealType: opcode = V4Instr::ConvertRealToBool; break;
             case IR::StringType: opcode = V4Instr::ConvertStringToBool; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToBool; break;
+            case IR::ColorType: opcode = V4Instr::ConvertColorToBool; break;
             default: break;
             } // switch
         } else if (targetTy == IR::IntType) {
@@ -908,6 +919,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::IntType:  opcode = V4Instr::ConvertIntToString; break;
             case IR::RealType: opcode = V4Instr::ConvertRealToString; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToString; break;
+            case IR::ColorType: opcode = V4Instr::ConvertColorToString; break;
             default: break;
             } // switch
         } else if (targetTy == IR::UrlType) {
@@ -920,11 +932,17 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::BoolType: gen(V4Instr::ConvertBoolToString, convToString); sourceTy = IR::StringType; break;
             case IR::IntType:  gen(V4Instr::ConvertIntToString,  convToString); sourceTy = IR::StringType; break;
             case IR::RealType: gen(V4Instr::ConvertRealToString, convToString); sourceTy = IR::StringType; break;
+            case IR::ColorType: gen(V4Instr::ConvertColorToString, convToString); sourceTy = IR::StringType; break;
             default: break;
             } // switch
 
             if (sourceTy == IR::StringType)
                 opcode = V4Instr::ConvertStringToUrl;
+        } else if (targetTy == IR::ColorType) {
+            switch (sourceTy) {
+            case IR::StringType: opcode = V4Instr::ConvertStringToColor; break;
+            default: break;
+            } // switch
         }
         if (opcode != V4Instr::Noop) {
             V4Instr conv;
@@ -988,6 +1006,9 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
             break;
         case IR::UrlType:
             test.regType = QMetaType::QUrl;
+            break;
+        case IR::ColorType:
+            test.regType = QMetaType::QColor;
             break;
         case IR::SGAnchorLineType:
             test.regType = QQmlMetaType::QQuickAnchorLineMetaTypeId();
@@ -1119,7 +1140,7 @@ bool QV4CompilerPrivate::compile(QQmlJS::AST::Node *node)
         qerr << endl;
     }
 
-    if (discarded || subscriptionIds.count() > 0xFFFF || registeredStrings.count() > 0xFFFF)
+    if (discarded || subscriptionIds.count() > 0xFFFF || registeredStrings.count() > 0xFFFF || registerCount > 31)
         return false;
 
     return true;

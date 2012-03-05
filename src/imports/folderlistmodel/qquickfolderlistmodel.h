@@ -47,8 +47,6 @@
 #include <QUrl>
 #include <QAbstractListModel>
 
-#ifndef QT_NO_DIRMODEL
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -68,14 +66,16 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
 
 //![class props]
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged)
+    Q_PROPERTY(QUrl rootFolder READ rootFolder WRITE setRootFolder)
     Q_PROPERTY(QUrl parentFolder READ parentFolder NOTIFY folderChanged)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters)
     Q_PROPERTY(SortField sortField READ sortField WRITE setSortField)
     Q_PROPERTY(bool sortReversed READ sortReversed WRITE setSortReversed)
     Q_PROPERTY(bool showDirs READ showDirs WRITE setShowDirs)
+    Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst)
     Q_PROPERTY(bool showDotAndDotDot READ showDotAndDotDot WRITE setShowDotAndDotDot)
     Q_PROPERTY(bool showOnlyReadable READ showOnlyReadable WRITE setShowOnlyReadable)
-    Q_PROPERTY(int count READ count)
+    Q_PROPERTY(int count READ count NOTIFY rowCountChanged)
 //![class props]
 
 //![abslistmodel]
@@ -83,10 +83,20 @@ public:
     QQuickFolderListModel(QObject *parent = 0);
     ~QQuickFolderListModel();
 
-    enum Roles { FileNameRole = Qt::UserRole+1, FilePathRole = Qt::UserRole+2 };
+    enum Roles {
+        FileNameRole = Qt::UserRole + 1,
+        FilePathRole = Qt::UserRole + 2,
+        FileBaseNameRole = Qt::UserRole + 3,
+        FileSuffixRole = Qt::UserRole + 4,
+        FileSizeRole = Qt::UserRole + 5,
+        FileLastModifiedRole = Qt::UserRole + 6,
+        FileLastReadRole = Qt::UserRole +7,
+        FileIsDirRole = Qt::UserRole + 8
+    };
 
-    int rowCount(const QModelIndex &parent) const;
-    QVariant data(const QModelIndex &index, int role) const;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 //![abslistmodel]
 
 //![count]
@@ -96,6 +106,8 @@ public:
 //![prop funcs]
     QUrl folder() const;
     void setFolder(const QUrl &folder);
+    QUrl rootFolder() const;
+    void setRootFolder(const QUrl &path);
 
     QUrl parentFolder() const;
 
@@ -111,49 +123,47 @@ public:
     void setSortReversed(bool rev);
 
     bool showDirs() const;
-    void  setShowDirs(bool);
+    void setShowDirs(bool showDirs);
+    bool showDirsFirst() const;
+    void setShowDirsFirst(bool showDirsFirst);
     bool showDotAndDotDot() const;
-    void  setShowDotAndDotDot(bool);
+    void setShowDotAndDotDot(bool on);
     bool showOnlyReadable() const;
-    void  setShowOnlyReadable(bool);
+    void setShowOnlyReadable(bool on);
 //![prop funcs]
 
-//![isfolder]
     Q_INVOKABLE bool isFolder(int index) const;
-//![isfolder]
+    Q_INVOKABLE QVariant get(int idx, const QString &property) const;
 
 //![parserstatus]
     virtual void classBegin();
     virtual void componentComplete();
 //![parserstatus]
 
+    int roleFromString(const QString &roleName) const;
+
 //![notifier]
 Q_SIGNALS:
     void folderChanged();
+    void rowCountChanged() const;
 //![notifier]
 
 //![class end]
-private Q_SLOTS:
-    void refresh();
-    void resetFiltering();
-    void inserted(const QModelIndex &index, int start, int end);
-    void removed(const QModelIndex &index, int start, int end);
-    void handleDataChanged(const QModelIndex &start, const QModelIndex &end);
+
 
 private:
     Q_DISABLE_COPY(QQuickFolderListModel)
-    QQuickFolderListModelPrivate *d;
+    Q_DECLARE_PRIVATE(QQuickFolderListModel)
+    QScopedPointer<QQuickFolderListModelPrivate> d_ptr;
+
+    Q_PRIVATE_SLOT(d_func(), void _q_directoryChanged(const QString &directory, const QList<FileProperty> &list))
+    Q_PRIVATE_SLOT(d_func(), void _q_directoryUpdated(const QString &directory, const QList<FileProperty> &list, int fromIndex, int toIndex))
+    Q_PRIVATE_SLOT(d_func(), void _q_sortFinished(const QList<FileProperty> &list))
 };
 //![class end]
 
 QT_END_NAMESPACE
 
-//![qml decl]
-QML_DECLARE_TYPE(QQuickFolderListModel)
-//![qml decl]
-
 QT_END_HEADER
-
-#endif // QT_NO_DIRMODEL
 
 #endif // QQUICKFOLDERLISTMODEL_H

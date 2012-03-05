@@ -61,6 +61,7 @@
 #include "qquickvisualdatamodel_p.h"
 #include "qquickgridview_p.h"
 #include "qquickpathview_p.h"
+#include "qquickitemviewtransition_p.h"
 #include <private/qquickpath_p.h>
 #include <private/qquickpathinterpolator_p.h>
 #include "qquickpositioners_p.h"
@@ -77,7 +78,8 @@
 #include <QtQuick/private/qquickcanvasitem_p.h>
 #include <QtQuick/private/qquickcontext2d_p.h>
 #include "qquicksprite_p.h"
-#include "qquickspriteimage_p.h"
+#include "qquickspritesequence_p.h"
+#include "qquickanimatedsprite_p.h"
 #include "qquickdrag_p.h"
 #include "qquickdroparea_p.h"
 #include "qquickmultipointtoucharea_p.h"
@@ -200,7 +202,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickCanvasItem>("QtQuick", 2, 0, "Canvas");
 
     qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
-    qmlRegisterType<QQuickSpriteImage>("QtQuick", 2, 0, "SpriteImage");
+    qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");
+    qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteSequence");
+    qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteImage");//Deprecation in progress
 
     qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QQuickAnchorChanges>(uri, major, minor,"AnchorChanges");

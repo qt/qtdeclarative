@@ -651,6 +651,8 @@ static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 class QQmlLocalStoragePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "localstorage.json")
+
 public:
     QQmlLocalStoragePlugin()
     {
@@ -664,5 +666,3 @@ public:
 };
 
 #include "plugin.moc"
-
-Q_EXPORT_PLUGIN2(plugin, QQmlLocalStoragePlugin);

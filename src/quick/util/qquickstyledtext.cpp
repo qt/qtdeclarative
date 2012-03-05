@@ -69,6 +69,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_GUI_EXPORT int qt_defaultDpi();
+
 class QQuickStyledTextPrivate
 {
 public:
@@ -85,9 +87,10 @@ public:
                                   QList<QQuickStyledTextImgTag*> &imgTags,
                                   const QUrl &baseUrl,
                                   QQmlContext *context,
-                                  bool preloadImages)
+                                  bool preloadImages,
+                                  bool *fontSizeModified)
         : text(t), layout(l), imgTags(&imgTags), baseFont(layout.font()), baseUrl(baseUrl), hasNewLine(false), nbImages(0), updateImagePositions(false)
-        , preFormat(false), prependSpace(false), hasSpace(true), preloadImages(preloadImages), context(context)
+        , preFormat(false), prependSpace(false), hasSpace(true), preloadImages(preloadImages), fontSizeModified(fontSizeModified), context(context)
     {
     }
 
@@ -103,7 +106,7 @@ public:
     void parseImageAttributes(const QChar *&ch, const QString &textIn, QString &textOut);
     QPair<QStringRef,QStringRef> parseAttribute(const QChar *&ch, const QString &textIn);
     QStringRef parseValue(const QChar *&ch, const QString &textIn);
-
+    void setFontSize(int size, QTextCharFormat &format);
 
     inline void skipSpace(const QChar *&ch) {
         while (ch->isSpace() && !ch->isNull())
@@ -126,6 +129,7 @@ public:
     bool prependSpace;
     bool hasSpace;
     bool preloadImages;
+    bool *fontSizeModified;
     QQmlContext *context;
 
     static const QChar lessThan;
@@ -160,8 +164,9 @@ QQuickStyledText::QQuickStyledText(const QString &string, QTextLayout &layout,
                                                QList<QQuickStyledTextImgTag*> &imgTags,
                                                const QUrl &baseUrl,
                                                QQmlContext *context,
-                                               bool preloadImages)
-    : d(new QQuickStyledTextPrivate(string, layout, imgTags, baseUrl, context, preloadImages))
+                                               bool preloadImages,
+                                               bool *fontSizeModified)
+    : d(new QQuickStyledTextPrivate(string, layout, imgTags, baseUrl, context, preloadImages, fontSizeModified))
 {
 }
 
@@ -174,11 +179,12 @@ void QQuickStyledText::parse(const QString &string, QTextLayout &layout,
                                    QList<QQuickStyledTextImgTag*> &imgTags,
                                    const QUrl &baseUrl,
                                    QQmlContext *context,
-                                   bool preloadImages)
+                                   bool preloadImages,
+                                   bool *fontSizeModified)
 {
     if (string.isEmpty())
         return;
-    QQuickStyledText styledText(string, layout, imgTags, baseUrl, context, preloadImages);
+    QQuickStyledText styledText(string, layout, imgTags, baseUrl, context, preloadImages, fontSizeModified);
     styledText.d->parse();
 }
 
@@ -298,6 +304,20 @@ void QQuickStyledTextPrivate::appendText(const QString &textIn, int start, int l
     hasNewLine = false;
 }
 
+//
+// Calculates and sets the correct font size in points
+// depending on the size multiplier and base font.
+//
+void QQuickStyledTextPrivate::setFontSize(int size, QTextCharFormat &format)
+{
+    static const qreal scaling[] = { 0.7, 0.8, 1.0, 1.2, 1.5, 2.0, 2.4 };
+    if (baseFont.pointSizeF() != -1)
+        format.setFontPointSize(baseFont.pointSize() * scaling[size - 1]);
+    else
+        format.setFontPointSize(baseFont.pixelSize() * qreal(72.) / qreal(qt_defaultDpi()) * scaling[size - 1]);
+    *fontSizeModified = true;
+}
+
 bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, QString &textOut, QTextCharFormat &format)
 {
     skipSpace(ch);
@@ -353,12 +373,11 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
             } else if (char0 == QLatin1Char('h') && tagLength == 2) {
                 int level = tag.at(1).digitValue();
                 if (level >= 1 && level <= 6) {
-                    static const qreal scaling[] = { 2.0, 1.5, 1.2, 1.0, 0.8, 0.7 };
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
                     hasSpace = true;
                     prependSpace = false;
-                    format.setFontPointSize(baseFont.pointSize() * scaling[level - 1]);
+                    setFontSize(7 - level, format);
                     format.setFontWeight(QFont::Bold);
                     return true;
                 }
@@ -550,10 +569,8 @@ bool QQuickStyledTextPrivate::parseFontAttributes(const QChar *&ch, const QStrin
             int size = attr.second.toString().toInt();
             if (attr.second.at(0) == QLatin1Char('-') || attr.second.at(0) == QLatin1Char('+'))
                 size += 3;
-            if (size >= 1 && size <= 7) {
-                static const qreal scaling[] = { 0.7, 0.8, 1.0, 1.2, 1.5, 2.0, 2.4 };
-                format.setFontPointSize(baseFont.pointSize() * scaling[size-1]);
-            }
+            if (size >= 1 && size <= 7)
+                setFontSize(size, format);
         }
     } while (!ch->isNull() && !attr.first.isEmpty());
 

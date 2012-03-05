@@ -45,6 +45,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtCore/qdebug.h>
+#include <QtGui/qcolor.h>
 
 #include <private/qv4compiler_p.h>
 
@@ -73,6 +74,7 @@ private slots:
     void stringComparison();
     void unaryMinus();
     void unaryPlus();
+    void colorType();
 
 private:
     QQmlEngine engine;
@@ -345,6 +347,22 @@ void tst_v4::unaryPlus()
     QCOMPARE(o->property("test9").toReal(), qreal(4.4));
     QCOMPARE(o->property("test10").toInt(), 4);
 
+    delete o;
+}
+
+void tst_v4::colorType()
+{
+    QQmlComponent component(&engine, testFileUrl("colorType.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test1").value<QColor>(), QColor("red"));
+    QCOMPARE(o->property("test2").value<QColor>(), QColor("red"));
+    QCOMPARE(o->property("test3").value<QColor>(), QColor("red"));
+    QCOMPARE(o->property("test4").toBool(), true);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QCOMPARE(o->property("test6").toBool(), true);
+    QCOMPARE(o->property("test7").toBool(), true);
     delete o;
 }
 

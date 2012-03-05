@@ -71,7 +71,6 @@ struct QSGAdaptionPluginData
 
     ~QSGAdaptionPluginData()
     {
-        delete factory;
     }
 
     bool tried;
@@ -102,15 +101,15 @@ QSGAdaptionPluginData *contextFactory()
         if (!device.isEmpty()) {
             plugin->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(device));
             plugin->deviceName = device;
-        }
 #ifndef QT_NO_DEBUG
-        if (!device.isEmpty()) {
-            qWarning("Could not create scene graph context for device '%s'"
-                     " - check that plugins are installed correctly in %s",
-                     qPrintable(device),
-                     qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
-        }
+            if (!plugin->factory) {
+                qWarning("Could not create scene graph context for device '%s'"
+                         " - check that plugins are installed correctly in %s",
+                         qPrintable(device),
+                         qPrintable(QLibraryInfo::location(QLibraryInfo::PluginsPath)));
+            }
 #endif
+        }
 
 #endif // QT_NO_LIBRARY || QT_NO_SETTINGS
     }

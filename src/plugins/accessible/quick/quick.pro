@@ -19,5 +19,7 @@ SOURCES  += \
 HEADERS  += \
     qaccessiblequickview.h \
     qaccessiblequickitem.h
+
+OTHERFILES += accessible.json
 }
 

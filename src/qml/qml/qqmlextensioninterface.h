@@ -66,8 +66,13 @@ public:
     virtual void initializeEngine(QQmlEngine *engine, const char *uri) = 0;
 };
 
+#define QQmlTypesExtensionInterface_iid "org.qt-project.Qt.QQmlTypesExtensionInterface"
+
 Q_DECLARE_INTERFACE(QQmlTypesExtensionInterface, "org.qt-project.Qt.QQmlTypesExtensionInterface/1.0")
-Q_DECLARE_INTERFACE(QQmlExtensionInterface, "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+
+#define QQmlExtensionInterface_iid "org.qt-project.Qt.QQmlExtensionInterface"
+
+Q_DECLARE_INTERFACE(QQmlExtensionInterface, QQmlExtensionInterface_iid)
 
 QT_END_NAMESPACE
 

@@ -46,6 +46,7 @@
 class DialogPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "dialogplugin.json")
 
     public:
         //registerTypes is inherited from QQmlExtensionPlugin

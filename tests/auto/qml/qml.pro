@@ -19,6 +19,7 @@ PUBLICTESTS += \
     qqmlinfo \
     qqmllistreference \
     qqmllocale \
+    qqmlmetaobject \
     qqmlmoduleplugin \
     qqmlqt \
     qqmltranslation \

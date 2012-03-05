@@ -68,15 +68,17 @@ class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 
 public:
     QQuickTextEditPrivate()
-      : color("black"), hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop),
-      documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
-      persistentSelection(false), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
-      canPasteValid(false), hAlignImplicit(true), rightToLeftText(false),
-      textCached(false),
-      textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
-      format(QQuickTextEdit::PlainText), document(0), wrapMode(QQuickTextEdit::NoWrap),
-      mouseSelectionMode(QQuickTextEdit::SelectCharacters),
-      lineCount(0), yoff(0), inputMethodHints(Qt::ImhNone), updateType(UpdatePaintNode)
+        : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
+        , textMargin(0.0), yoff(0), font(sourceFont), cursorComponent(0), cursor(0), document(0), control(0)
+        , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
+        , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
+        , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
+        , mouseSelectionMode(QQuickTextEdit::SelectCharacters), inputMethodHints(Qt::ImhNone)
+        , updateType(UpdatePaintNode)
+        , documentDirty(true), dirty(false), richText(false), cursorVisible(false)
+        , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
+        , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
+        , rightToLeftText(false), textCached(false)
     {
     }
 
@@ -92,17 +94,42 @@ public:
     void mirrorChange();
     qreal getImplicitWidth() const;
 
+    QColor color;
+    QColor selectionColor;
+    QColor selectedTextColor;
+
+    QSizeF contentSize;
+
+    qreal textMargin;
+    qreal yoff;
+
     QString text;
     QUrl baseUrl;
-    QFont font;
     QFont sourceFont;
-    QColor  color;
-    QColor  selectionColor;
-    QColor  selectedTextColor;
-    QString style;
-    QColor  styleColor;
+    QFont font;
+
+    QQmlComponent* cursorComponent;
+    QQuickItem* cursor;
+    QQuickTextDocumentWithImageResources *document;
+    QQuickTextControl *control;
+
+    int lastSelectionStart;
+    int lastSelectionEnd;
+    int lineCount;
+
+    enum UpdateType {
+        UpdateNone,
+        UpdateOnlyPreprocess,
+        UpdatePaintNode
+    };
+
     QQuickTextEdit::HAlignment hAlign;
     QQuickTextEdit::VAlignment vAlign;
+    QQuickTextEdit::TextFormat format;
+    QQuickTextEdit::WrapMode wrapMode;
+    QQuickTextEdit::SelectionMode mouseSelectionMode;
+    Qt::InputMethodHints inputMethodHints;
+    UpdateType updateType;
 
     bool documentDirty : 1;
     bool dirty : 1;
@@ -117,28 +144,6 @@ public:
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
     bool textCached:1;
-
-    qreal textMargin;
-    int lastSelectionStart;
-    int lastSelectionEnd;
-    QQmlComponent* cursorComponent;
-    QQuickItem* cursor;
-    QQuickTextEdit::TextFormat format;
-    QQuickTextDocumentWithImageResources *document;
-    QQuickTextControl *control;
-    QQuickTextEdit::WrapMode wrapMode;
-    QQuickTextEdit::SelectionMode mouseSelectionMode;
-    int lineCount;
-    int yoff;
-    QSize contentSize;
-    Qt::InputMethodHints inputMethodHints;
-
-    enum UpdateType {
-        UpdateNone,
-        UpdateOnlyPreprocess,
-        UpdatePaintNode
-    };
-    UpdateType updateType;
 };
 
 QT_END_NAMESPACE
