@@ -132,6 +132,7 @@ public:
             Q_ASSERT(index < m_length); 
             return m_data[index]; 
         };
+        const T *data() const { return m_data; }
     private:
         friend class QQmlPool;
         List(T *d, int l) : m_length(l), m_data(d) {}

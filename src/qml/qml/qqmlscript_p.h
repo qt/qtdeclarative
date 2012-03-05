@@ -406,10 +406,8 @@ public:
         DynamicProperty *nextProperty;
 
         // Used by the compiler
-        QByteArray *resolvedCustomTypeName;
-        QFastMetaBuilder::StringRef typeRef;
         QFastMetaBuilder::StringRef nameRef;
-        QFastMetaBuilder::StringRef changedSignatureRef;
+        QFastMetaBuilder::StringRef changedNameRef;
     };
 
     struct DynamicSignal : public QQmlPool::POD
@@ -417,18 +415,15 @@ public:
         DynamicSignal();
 
         QHashedStringRef name;
-        QQmlPool::List<QHashedCStringRef> parameterTypes;
+        QQmlPool::List<DynamicProperty::Type> parameterTypes;
         QQmlPool::List<QHashedStringRef> parameterNames;
-
-        int parameterTypesLength() const;
-        int parameterNamesLength() const;
 
         // Used by Object::DynamicSignalList
         DynamicSignal *nextSignal;
 
         // Used by the compiler
-        QFastMetaBuilder::StringRef signatureRef;
-        QFastMetaBuilder::StringRef parameterNamesRef;
+        QFastMetaBuilder::StringRef nameRef;
+        QQmlPool::List<QFastMetaBuilder::StringRef> parameterNamesRef;
         LocationSpan location;
     };
 
@@ -447,8 +442,8 @@ public:
         DynamicSlot *nextSlot;
 
         // Used by the compiler
-        QFastMetaBuilder::StringRef signatureRef;
-        QFastMetaBuilder::StringRef parameterNamesRef;
+        QFastMetaBuilder::StringRef nameRef;
+        QQmlPool::List<QFastMetaBuilder::StringRef> parameterNamesRef;
     };
 
     // The list of dynamic properties
@@ -460,6 +455,9 @@ public:
     // The list of dynamic slots
     typedef QFieldList<DynamicSlot, &DynamicSlot::nextSlot> DynamicSlotList;
     DynamicSlotList dynamicSlots;
+
+    int aggregateDynamicSignalParameterCount() const;
+    int aggregateDynamicSlotParameterCount() const;
 
     // Used by compiler
     QQmlCompilerTypes::ComponentCompileState *componentCompileState;
