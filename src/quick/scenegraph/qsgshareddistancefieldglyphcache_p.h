@@ -87,6 +87,7 @@ private:
     void saveTexture(GLuint textureId, int width, int height);
 
     QSet<quint32> m_requestedGlyphsThatHaveNotBeenReturned;
+    QSet<quint32> m_requestedGlyphs;
     QWaitCondition m_pendingGlyphsCondition;
     QByteArray m_cacheId;
     QPlatformSharedGraphicsCache *m_sharedGraphicsCache;

@@ -243,6 +243,8 @@ void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &g
     for (int i = 0; i < count; ++i) {
         GlyphPosition glyph = glyphs.at(i);
 
+        Q_ASSERT(m_cacheData->glyphPaths.contains(glyph.glyph));
+
         QPainterPath path = m_cacheData->glyphPaths.value(glyph.glyph);
         QRectF br = path.boundingRect();
         TexCoord c;

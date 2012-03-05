@@ -126,6 +126,7 @@ void QSGSharedDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
 #endif
 
     m_requestedGlyphsThatHaveNotBeenReturned.unite(glyphs);
+    m_requestedGlyphs.unite(glyphs);
 
     QVector<quint32> glyphsVector;
     glyphsVector.reserve(glyphs.size());
@@ -197,6 +198,8 @@ void QSGSharedDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs
     qDebug("QSGSharedDistanceFieldGlyphCache::releaseGlyphs() called for %s (%d glyphs)",
            m_cacheId.constData(), glyphs.size());
 #endif
+
+    m_requestedGlyphs.subtract(glyphs);
 
     QVector<quint32> glyphsVector;
     glyphsVector.reserve(glyphs.size());
@@ -588,19 +591,21 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsUpdated(const QByteArray &cach
 #endif
 
         for (int i=0; i<itemIds.size(); ++i) {
-            PendingGlyph &pendingGlyph = m_pendingReadyGlyphs[itemIds.at(i)];
-            void *oldBuffer = pendingGlyph.buffer;
-            Q_ASSERT(bufferSize.height() >= pendingGlyph.bufferSize.height());
+            if (m_requestedGlyphs.contains(itemIds.at(i))) {
+                PendingGlyph &pendingGlyph = m_pendingReadyGlyphs[itemIds.at(i)];
+                void *oldBuffer = pendingGlyph.buffer;
+                Q_ASSERT(bufferSize.height() >= pendingGlyph.bufferSize.height());
 
-            pendingGlyph.buffer = bufferId;
-            pendingGlyph.position = positions.at(i);
-            pendingGlyph.bufferSize = bufferSize;
+                pendingGlyph.buffer = bufferId;
+                pendingGlyph.position = positions.at(i);
+                pendingGlyph.bufferSize = bufferSize;
 
-            m_sharedGraphicsCache->referenceBuffer(bufferId);
-            if (oldBuffer != 0)
-                m_sharedGraphicsCache->dereferenceBuffer(oldBuffer);
+                m_sharedGraphicsCache->referenceBuffer(bufferId);
+                if (oldBuffer != 0)
+                    m_sharedGraphicsCache->dereferenceBuffer(oldBuffer);
 
-            m_requestedGlyphsThatHaveNotBeenReturned.remove(itemIds.at(i));
+                m_requestedGlyphsThatHaveNotBeenReturned.remove(itemIds.at(i));
+            }
         }
     }
 
@@ -616,8 +621,10 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsInvalidated(const QByteArray &
         if (m_cacheId != cacheId)
             return;
 
-        for (int i=0; i<itemIds.size(); ++i)
-            m_pendingInvalidatedGlyphs.insert(itemIds.at(i));
+        for (int i=0; i<itemIds.size(); ++i) {
+            if (m_requestedGlyphs.contains(itemIds.at(i)))
+                m_pendingInvalidatedGlyphs.insert(itemIds.at(i));
+        }
     }
 
     emit glyphsPending();
@@ -638,8 +645,8 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsMissing(const QByteArray &cach
 #endif
 
         for (int i=0; i<itemIds.size(); ++i) {
-            m_pendingMissingGlyphs.insert(itemIds.at(i));
-            m_requestedGlyphsThatHaveNotBeenReturned.remove(itemIds.at(i));
+            if (m_requestedGlyphsThatHaveNotBeenReturned.remove(itemIds.at(i)))
+                m_pendingMissingGlyphs.insert(itemIds.at(i));
         }
     }
 
