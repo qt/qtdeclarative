@@ -73,10 +73,10 @@ qreal FxViewItem::itemY() const
     return transitionableItem ? transitionableItem->itemY() : item->y();
 }
 
-void FxViewItem::moveTo(const QPointF &pos)
+void FxViewItem::moveTo(const QPointF &pos, bool immediate)
 {
     if (transitionableItem)
-        transitionableItem->moveTo(pos);
+        transitionableItem->moveTo(pos, immediate);
     else
         item->setPos(pos);
 }

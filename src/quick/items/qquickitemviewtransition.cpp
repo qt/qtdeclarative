@@ -365,13 +365,18 @@ qreal QQuickItemViewTransitionableItem::itemY() const
         return item->y();
 }
 
-void QQuickItemViewTransitionableItem::moveTo(const QPointF &pos)
+void QQuickItemViewTransitionableItem::moveTo(const QPointF &pos, bool immediate)
 {
-    if (transitionScheduledOrRunning()) {
+    if (immediate || !transitionScheduledOrRunning()) {
+        if (immediate) {
+            if (transition)
+                transition->cancel();
+            resetTransitionData();
+        }
+        item->setPos(pos);
+    } else {
         nextTransitionTo = pos;
         nextTransitionToSet = true;
-    } else {
-        item->setPos(pos);
     }
 }
 

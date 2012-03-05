@@ -60,6 +60,7 @@ Rectangle {
 
         add: Transition {
             id: addTargets
+            enabled: enableAddTransitions
             SequentialAnimation {
                 ScriptAction { script: grid.runningAddTargets = true }
                 ParallelAnimation {
@@ -72,6 +73,7 @@ Rectangle {
 
         addDisplaced: Transition {
             id: addDisplaced
+            enabled: enableAddTransitions
             SequentialAnimation {
                 ScriptAction { script: grid.runningAddDisplaced = true }
                 ParallelAnimation {
@@ -84,6 +86,7 @@ Rectangle {
 
         move: Transition {
             id: moveTargets
+            enabled: enableMoveTransitions
             SequentialAnimation {
                 ScriptAction { script: grid.runningMoveTargets = true }
                 ParallelAnimation {
@@ -96,6 +99,7 @@ Rectangle {
 
         moveDisplaced: Transition {
             id: moveDisplaced
+            enabled: enableMoveTransitions
             SequentialAnimation {
                 ScriptAction { script: grid.runningMoveDisplaced = true }
                 ParallelAnimation {
@@ -108,6 +112,7 @@ Rectangle {
 
         remove: Transition {
             id: removeTargets
+            enabled: enableRemoveTransitions
             SequentialAnimation {
                 ScriptAction { script: grid.runningRemoveTargets = true }
                 ParallelAnimation {
@@ -120,6 +125,7 @@ Rectangle {
 
         removeDisplaced: Transition {
             id: removeDisplaced
+            enabled: enableRemoveTransitions
             SequentialAnimation {
                 ScriptAction { script: grid.runningRemoveDisplaced = true }
                 ParallelAnimation {

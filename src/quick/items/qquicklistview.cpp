@@ -292,7 +292,7 @@ public:
                     : itemX() + item->width());
         }
     }
-    void setPosition(qreal pos) {
+    void setPosition(qreal pos, bool immediate = false) {
         // position the section immediately even if there is a transition
         if (section()) {
             if (view->orientation() == QQuickListView::Vertical) {
@@ -304,7 +304,7 @@ public:
                     section()->setX(pos);
             }
         }
-        moveTo(pointForPosition(pos));
+        moveTo(pointForPosition(pos), immediate);
     }
     void setSize(qreal size) {
         if (view->orientation() == QQuickListView::Vertical)
@@ -638,7 +638,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
-            item->setPosition(pos);
+            item->setPosition(pos, true);
         item->item->setVisible(!doBuffer);
         pos += item->size() + spacing;
         visibleItems.append(item);
@@ -658,7 +658,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         --visibleIndex;
         visiblePos -= item->size() + spacing;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
-            item->setPosition(visiblePos);
+            item->setPosition(visiblePos, true);
         item->item->setVisible(!doBuffer);
         visibleItems.prepend(item);
         changed = true;

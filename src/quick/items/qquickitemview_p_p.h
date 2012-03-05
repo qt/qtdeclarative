@@ -66,7 +66,7 @@ public:
     qreal itemX() const;
     qreal itemY() const;
 
-    void moveTo(const QPointF &pos);
+    void moveTo(const QPointF &pos, bool immediate);
     void setVisible(bool visible);
 
     QQuickItemViewTransitioner::TransitionType scheduledTransitionType() const;
