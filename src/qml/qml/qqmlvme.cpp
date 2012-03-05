@@ -690,11 +690,14 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (prop.type() & QQmlProperty::SignalProperty) {
 
                 QMetaMethod method = QQmlMetaType::defaultMethod(assign);
-                if (method.signature() == 0)
+                if (!method.isValid())
                     VME_EXCEPTION(tr("Cannot assign object type %1 with no default method").arg(QString::fromLatin1(assign->metaObject()->className())), instr.line);
 
-                if (!QMetaObject::checkConnectArgs(prop.method().signature(), method.signature()))
-                    VME_EXCEPTION(tr("Cannot connect mismatched signal/slot %1 %vs. %2").arg(QString::fromLatin1(method.signature())).arg(QString::fromLatin1(prop.method().signature())), instr.line);
+                if (!QMetaObject::checkConnectArgs(prop.method(), method)) {
+                    VME_EXCEPTION(tr("Cannot connect mismatched signal/slot %1 %vs. %2")
+                                  .arg(QString::fromLatin1(method.methodSignature().constData()))
+                                  .arg(QString::fromLatin1(prop.method().methodSignature().constData())), instr.line);
+                }
 
                 QQmlPropertyPrivate::connect(target, prop.index(), assign, method.methodIndex());
 

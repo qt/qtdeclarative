@@ -306,7 +306,7 @@ void QFastMetaBuilder::allocateStringData()
 void QFastMetaBuilder::fromData(QMetaObject *output, const QMetaObject *parent, const QByteArray &data)
 {
     output->d.superdata = parent;
-    output->d.stringdata = data.constData() + header(data)->fieldCount * sizeof(uint);
+    output->d.stringdata = reinterpret_cast<const QByteArrayData *>(data.constData() + header(data)->fieldCount * sizeof(uint));
     output->d.data = fieldPointer(data);
     output->d.extradata = 0;
 }

@@ -458,7 +458,7 @@ void QQuickShaderEffect::connectPropertySignals()
             if (!mp.hasNotifySignal())
                 qWarning("QQuickShaderEffect: property '%s' does not have notification method!", it->constData());
             QByteArray signalName("2");
-            signalName.append(mp.notifySignal().signature());
+            signalName.append(mp.notifySignal().methodSignature());
             connect(this, signalName, this, SLOT(updateData()));
         } else {
             // If the source is set via a dynamic property, like the layer is, then we need this check
@@ -474,7 +474,7 @@ void QQuickShaderEffect::connectPropertySignals()
         if (pi >= 0) {
             QMetaProperty mp = metaObject()->property(pi);
             QByteArray signalName("2");
-            signalName.append(mp.notifySignal().signature());
+            signalName.append(mp.notifySignal().methodSignature());
             connect(this, signalName, source.mapper, SLOT(map()));
             source.mapper->setMapping(this, i);
             connect(source.mapper, SIGNAL(mapped(int)), this, SLOT(changeSource(int)));

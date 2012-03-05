@@ -340,9 +340,7 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         QMetaMethod method = mo->method(ii);
 
         // More complex - need to search name
-        QByteArray name = method.signature();
-        int parenIdx = name.indexOf('(');
-        if (parenIdx != -1) name = name.left(parenIdx);
+        QByteArray name = method.name();
 
 
         bool found = false;
@@ -352,11 +350,8 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
              ++ii) {
 
             QMetaMethod other = ignoreEnd->method(ii);
-            QByteArray othername = other.signature();
-            int parenIdx = othername.indexOf('(');
-            if (parenIdx != -1) othername = othername.left(parenIdx);
 
-            found = name == othername;
+            found = name == other.name();
         }
 
         QMetaMethodBuilder m = builder.addMethod(method);

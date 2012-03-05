@@ -247,10 +247,8 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
                 prop.value = expr->expression();
                 QObject *scope = expr->scopeObject();
                 if (scope) {
-                    QString sig = QLatin1String(scope->metaObject()->method(signal->index()).signature());
-                    int lparen = sig.indexOf(QLatin1Char('('));
-                    if (lparen >= 0) {
-                        QString methodName = sig.mid(0, lparen);
+                    QString methodName = QLatin1String(scope->metaObject()->method(signal->index()).name().constData());
+                    if (!methodName.isEmpty()) {
                         prop.name = QLatin1String("on") + methodName[0].toUpper()
                                 + methodName.mid(1);
                     }

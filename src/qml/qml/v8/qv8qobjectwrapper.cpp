@@ -1673,16 +1673,6 @@ static inline int QMetaObject_methods(const QMetaObject *metaObject)
     return reinterpret_cast<const Private *>(metaObject->d.data)->methodCount;
 }
 
-static QByteArray QMetaMethod_name(const QMetaMethod &m)
-{
-    QByteArray sig = m.signature();
-    int paren = sig.indexOf('(');
-    if (paren == -1)
-        return sig;
-    else
-        return sig.left(paren);
-}
-
 /*!
 Returns the next related method, if one, or 0.
 */
@@ -1711,9 +1701,9 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
         dummy.load(method);
         
         // Look for overloaded methods
-        QByteArray methodName = QMetaMethod_name(method);
+        QByteArray methodName = method.name();
         for (int ii = current->overrideIndex - 1; ii >= methodOffset; --ii) {
-            if (methodName == QMetaMethod_name(mo->method(ii))) {
+            if (methodName == mo->method(ii).name()) {
                 dummy.setFlags(dummy.getFlags() | QQmlPropertyData::IsOverload);
                 dummy.overrideIndexIsProperty = 0;
                 dummy.overrideIndex = ii;
@@ -1827,7 +1817,7 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QQmlPropertyD
         const QQmlPropertyData *candidate = &data;
         while (candidate) {
             error += QLatin1String("\n    ") + 
-                     QString::fromUtf8(object->metaObject()->method(candidate->coreIndex).signature());
+                     QString::fromUtf8(object->metaObject()->method(candidate->coreIndex).methodSignature().constData());
             candidate = RelatedMethod(object, candidate, dummy);
         }
 

@@ -738,7 +738,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     // performance reasons; see QTBUG-24064) and thus compilation will have failed.
                     QQmlError e;
                     e.setDescription(QString(QLatin1String("Exception occurred during compilation of function: %1")).
-                                     arg(QLatin1String(QMetaObject::method(_id).signature())));
+                                     arg(QLatin1String(QMetaObject::method(_id).methodSignature().constData())));
                     ep->warning(e);
                     return -1; // The dynamic method with that id is not available.
                 }

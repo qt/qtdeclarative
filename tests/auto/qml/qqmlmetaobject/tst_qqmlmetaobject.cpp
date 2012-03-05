@@ -244,7 +244,7 @@ void tst_QQmlMetaObject::property()
     QVERIFY(prop.notifySignalIndex() != -1);
     QMetaMethod signal = prop.notifySignal();
     QCOMPARE(signal.methodType(), QMetaMethod::Signal);
-    QCOMPARE(signal.signature(), "testChanged()");
+    QCOMPARE(signal.methodSignature(), QByteArray("testChanged()"));
     QCOMPARE(signal.access(), QMetaMethod::Protected);
     QCOMPARE(signal.parameterTypes(), QList<QByteArray>());
     QCOMPARE(signal.parameterNames(), QList<QByteArray>());
@@ -361,7 +361,7 @@ void tst_QQmlMetaObject::method()
 
     QMetaMethod method = mo->method(mo->methodOffset());
     QCOMPARE(method.methodType(), methodType);
-    QCOMPARE(QString::fromUtf8(method.signature()), signature);
+    QCOMPARE(QString::fromUtf8(method.methodSignature().constData()), signature);
     QCOMPARE(method.access(), QMetaMethod::Protected);
     QCOMPARE(method.parameterTypes(), parameterTypeNames);
     QCOMPARE(method.parameterNames(), parameterNames);
