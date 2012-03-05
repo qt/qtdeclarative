@@ -3103,7 +3103,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
 
     // Allocate default property if necessary
     if (defaultProperty) 
-        strcpy(defPropRef.data(), "DefaultProperty");
+        defPropRef.load("DefaultProperty");
 
     // Now allocate signals
     for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
