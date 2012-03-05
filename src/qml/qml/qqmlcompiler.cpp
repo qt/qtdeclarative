@@ -2865,7 +2865,8 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
 
             // Reserve space for name
-            p->nameRef = builder.newString(p->name.utf8length());
+            if (p->type != Object::DynamicProperty::Alias || resolveAlias)
+                p->nameRef = builder.newString(p->name.utf8length());
 
             int propertyType = 0;
             bool readonly = false;
@@ -3231,6 +3232,8 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
                                         int propIndex, int aliasIndex,
                                         Object::DynamicProperty &prop)
 {
+    Q_ASSERT(!prop.nameRef.isEmpty());
+    Q_ASSERT(prop.typeRef.isEmpty());
     if (!prop.defaultValue)
         COMPILE_EXCEPTION(obj, tr("No property alias location"));
 
@@ -3325,7 +3328,6 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
     VMD *vmd = (QQmlVMEMetaData *)data.data();
     *(vmd->aliasData() + aliasIndex) = aliasData;
 
-    prop.nameRef = builder.newString(prop.name.utf8length());
     prop.resolvedCustomTypeName = pool->NewByteArray(typeName);
     prop.typeRef = builder.newString(typeName.length());
 

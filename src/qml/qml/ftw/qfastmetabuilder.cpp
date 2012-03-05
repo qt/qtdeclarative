@@ -197,7 +197,8 @@ void QFastMetaBuilder::setProperty(int index, const StringRef &name, const Strin
                                    QMetaType::Type mtype, PropertyFlag flags, int notifySignal)
 {
     Q_ASSERT(!m_data.isEmpty());
-    Q_ASSERT(!name.isEmpty() && !type.isEmpty());
+    Q_ASSERT(!name.isEmpty());
+    Q_ASSERT(!type.isEmpty());
 
     QMetaObjectPrivate *p = priv(m_data);
     Q_ASSERT(index < p->propertyCount);
