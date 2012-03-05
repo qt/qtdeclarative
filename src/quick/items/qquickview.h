@@ -64,8 +64,8 @@ class Q_QUICK_EXPORT QQuickView : public QQuickCanvas
     Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true)
     Q_ENUMS(ResizeMode Status)
 public:
-    explicit QQuickView(QWindow *parent = 0, Qt::WindowFlags f = 0);
-    QQuickView(const QUrl &source, QWindow *parent = 0, Qt::WindowFlags f = 0);
+    explicit QQuickView(QWindow *parent = 0, Qt::WindowFlags f = Qt::Window);
+    QQuickView(const QUrl &source, QWindow *parent = 0, Qt::WindowFlags f = Qt::Window);
     virtual ~QQuickView();
 
     QUrl source() const;
