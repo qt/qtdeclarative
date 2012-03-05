@@ -183,6 +183,7 @@ private slots:
     void displacedTransitions_data();
     void multipleTransitions();
     void multipleTransitions_data();
+    void multipleDisplaced();
 
     void flickBeyondBounds();
 
@@ -5975,6 +5976,56 @@ void tst_QQuickListView::multipleTransitions_data()
             << ListChange::remove(2, 1)
             )
             << true << true << false << false;
+}
+
+void tst_QQuickListView::multipleDisplaced()
+{
+    // multiple move() operations should only restart displace transitions for items that
+    // moved from previously set positions, and not those that have moved from their current
+    // item positions (which may e.g. still be changing from easing bounces in the last transition)
+
+    QmlListModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    QQuickView *canvas = createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testObject", new TestObject(canvas));
+    canvas->setSource(testFileUrl("multipleDisplaced.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    model.moveItems(12, 8, 1);
+    QTest::qWait(canvas->rootObject()->property("duration").toInt() / 2);
+    model.moveItems(8, 3, 1);
+    QTRY_VERIFY(listview->property("displaceTransitionsDone").toBool());
+
+    QVariantMap transitionsStarted = listview->property("displaceTransitionsStarted").toMap();
+    foreach (const QString &name, transitionsStarted.keys()) {
+        QVERIFY2(transitionsStarted[name] == 1,
+                 QTest::toString(QString("%1 was displaced %2 times").arg(name).arg(transitionsStarted[name].toInt())));
+    }
+
+    // verify all items moved to the correct final positions
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->x(), 0.0);
+        QTRY_COMPARE(item->y(), i*20.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
 }
 
 QList<int> tst_QQuickListView::toIntList(const QVariantList &list)

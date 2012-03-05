@@ -142,11 +142,15 @@ public:
     void startTransition(QQuickItemViewTransitioner *transitioner, int index);
 
     QPointF nextTransitionTo;
+    QPointF lastMovedTo;
+    QPointF nextTransitionFrom;
     QQuickItem *item;
     QQuickItemViewTransitionJob *transition;
     QQuickItemViewTransitioner::TransitionType nextTransitionType;
     bool isTransitionTarget;
     bool nextTransitionToSet;
+    bool nextTransitionFromSet;
+    bool lastMovedToSet;
     bool prepared;
 
 private:
@@ -155,7 +159,9 @@ private:
     void setNextTransition(QQuickItemViewTransitioner::TransitionType, bool isTargetItem);
     bool transitionWillChangePosition() const;
     void finishedTransition();
-    void resetTransitionData();
+    void resetNextTransitionPos();
+    void clearCurrentScheduledTransition();
+    void stopTransition();
 };
 
 
