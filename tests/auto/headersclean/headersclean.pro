@@ -1,6 +1,9 @@
-CONFIG += testcase
-TARGET = tst_headersclean
-SOURCES  += tst_headersclean.cpp
-QT = core testlib
+QT = core testlib declarative qml quick qmltest qmldevtools
+HEADERSCLEAN_PRI = $${QT.core.sources}/../../tests/auto/other/headersclean/headersclean.pri
+isEmpty(QT.core.sources)|!include($$HEADERSCLEAN_PRI) {
+    warning("headersclean.pri from QtCore sources not available.  test disabled")
+    TEMPLATE=subdirs
+}
 
-contains(QT_CONFIG,qml): QT += qml qml-private
+# shadowing problems in scenegraph, allow it for now
+*-g++*: QMAKE_CXXFLAGS -= -Wshadow

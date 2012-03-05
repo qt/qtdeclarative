@@ -39,24 +39,13 @@
 **
 ****************************************************************************/
 
-#define QT_NO_KEYWORDS
-#define signals int
-#define slots int
-#define emit public:;
-#define foreach public:;
-#define forever public:;
+#ifndef QT_HEADERSCLEAN_HEADERS
+#define QT_HEADERSCLEAN_HEADERS
 
-#include <QtCore/QtCore>
-#include <QtTest/QtTest>
-
+#include <QtDeclarative/QtDeclarative>
 #include <QtQml/QtQml>
+#include <QtQmlDevTools/QtQmlDevTools>
+#include <QtQuick/QtQuick>
+#include <QtQuickTest/QtQuickTest>
 
-class tst_HeadersClean: public QObject
-{
-    Q_OBJECT
-public:
-    tst_HeadersClean() {}
-};
-
-QTEST_MAIN(tst_HeadersClean)
-#include "tst_headersclean.moc"
+#endif
