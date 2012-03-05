@@ -42,62 +42,33 @@ import QtQuick 2.0
 import "content"
 
 Rectangle {
-    width: 800; height: 480
+    width: 320; height: 480
     color: "#464646"
 
     ListModel {
         id: list
 
         ListElement {
-            name: "Sunday"
+            name: "Panel One"
             notes: [ 
-                ListElement { noteText: "Lunch" },
-                ListElement { noteText: "Birthday Party" }
+                ListElement { noteText: "Tap to edit" },
+                ListElement { noteText: "Drag to move" },
+                ListElement { noteText: "Flick to scroll" }
             ]
         }
         
         ListElement {
-            name: "Monday"
+            name: "Panel Two"
             notes: [
-                ListElement { noteText: "Pickup kids from\nschool\n4.30pm" },
-                ListElement { noteText: "Checkout Qt" }, ListElement { noteText: "Read email" }
+                ListElement { noteText: "Note One" },
+                ListElement { noteText: "Note Two" }
             ]
         }
 
         ListElement {
-            name: "Tuesday"
+            name: "Panel Three"
             notes: [
-                ListElement { noteText: "Walk dog" },
-                ListElement { noteText: "Buy newspaper" }
-            ]
-        }
-
-        ListElement {
-            name: "Wednesday"
-            notes: [ ListElement { noteText: "Cook dinner" } ]
-        }
-
-        ListElement {
-            name: "Thursday"
-            notes: [
-                ListElement { noteText: "Meeting\n5.30pm" },
-                ListElement { noteText: "Weed garden" }
-            ]
-        }
-
-        ListElement {
-            name: "Friday"
-            notes: [
-                ListElement { noteText: "More work" },
-                ListElement { noteText: "Grocery shopping" }
-            ]
-        }
-
-        ListElement {
-            name: "Saturday"
-            notes: [
-                ListElement { noteText: "Drink" },
-                ListElement { noteText: "Download Qt\nPlay with QML" }
+                ListElement { noteText: "Note Three" }
             ]
         }
     }
@@ -111,6 +82,6 @@ Rectangle {
         orientation: ListView.Horizontal
         snapMode: ListView.SnapOneItem
         model: list
-        delegate: Day { }
+        delegate: Panel { }
     }
 }

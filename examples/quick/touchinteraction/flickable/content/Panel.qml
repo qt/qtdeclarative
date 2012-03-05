@@ -48,7 +48,7 @@ Component {
         width: ListView.view.width+40; height: ListView.view.height
 
 
-        Image { 
+        Image {
             source: "cork.jpg"
             width: page.ListView.view.width
             height: page.ListView.view.height

@@ -43,7 +43,7 @@ import "content"
 
 Item {
     id: root
-    height: 640
+    height: 480
     width: 320
     Item {
         id: startScreen
