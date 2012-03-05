@@ -1,8 +1,8 @@
 CONFIG += testcase
-TARGET = tst_qqmlimageprovider
+TARGET = tst_qquickimageprovider
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qqmlimageprovider.cpp
+SOURCES += tst_qquickimageprovider.cpp
 
 CONFIG += parallel_test
 

@@ -40,7 +40,6 @@ SOURCES += \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
     $$PWD/qquickworkerscript.cpp \
-    $$PWD/qqmlimageprovider.cpp \
     $$PWD/qqmlnetworkaccessmanagerfactory.cpp \
     $$PWD/qqmldirparser.cpp \
     $$PWD/qqmlextensionplugin.cpp \
@@ -106,7 +105,6 @@ HEADERS += \
     $$PWD/qqmlscriptstring.h \
     $$PWD/qquickworkerscript_p.h \
     $$PWD/qqmlguard_p.h \
-    $$PWD/qqmlimageprovider.h \
     $$PWD/qqmlnetworkaccessmanagerfactory.h \
     $$PWD/qqmldirparser_p.h \
     $$PWD/qqmlextensioninterface.h \

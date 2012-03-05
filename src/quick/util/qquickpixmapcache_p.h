@@ -47,9 +47,9 @@
 #include <QtGui/qpixmap.h>
 #include <QtCore/qurl.h>
 #include <QtQuick/qtquickglobal.h>
+#include <QtQuick/qquickimageprovider.h>
 
 #include <private/qintrusivelist_p.h>
-#include <qqmlimageprovider.h>
 
 QT_BEGIN_HEADER
 

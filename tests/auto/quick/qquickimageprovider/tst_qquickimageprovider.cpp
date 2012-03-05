@@ -41,18 +41,18 @@
 #include <qtest.h>
 #include <QtTest/QtTest>
 #include <QtQml/qqmlengine.h>
-#include <QtQml/qqmlimageprovider.h>
+#include <QtQuick/qquickimageprovider.h>
 #include <private/qquickimage_p.h>
 #include <QImageReader>
 #include <QWaitCondition>
 
-Q_DECLARE_METATYPE(QQmlImageProvider*);
+Q_DECLARE_METATYPE(QQuickImageProvider*);
 
-class tst_qqmlimageprovider : public QObject
+class tst_qquickimageprovider : public QObject
 {
     Q_OBJECT
 public:
-    tst_qqmlimageprovider()
+    tst_qquickimageprovider()
     {
     }
 
@@ -74,15 +74,15 @@ private slots:
 private:
     QString newImageFileName() const;
     void fillRequestTestsData(const QString &id);
-    void runTest(bool async, QQmlImageProvider *provider);
+    void runTest(bool async, QQuickImageProvider *provider);
 };
 
 
-class TestQImageProvider : public QQmlImageProvider
+class TestQImageProvider : public QQuickImageProvider
 {
 public:
     TestQImageProvider(bool *deleteWatch = 0)
-        : QQmlImageProvider(Image), deleteWatch(deleteWatch)
+        : QQuickImageProvider(Image), deleteWatch(deleteWatch)
     {
     }
 
@@ -115,11 +115,11 @@ public:
 Q_DECLARE_METATYPE(TestQImageProvider*);
 
 
-class TestQPixmapProvider : public QQmlImageProvider
+class TestQPixmapProvider : public QQuickImageProvider
 {
 public:
     TestQPixmapProvider(bool *deleteWatch = 0)
-        : QQmlImageProvider(Pixmap), deleteWatch(deleteWatch)
+        : QQuickImageProvider(Pixmap), deleteWatch(deleteWatch)
     {
     }
 
@@ -152,7 +152,7 @@ public:
 Q_DECLARE_METATYPE(TestQPixmapProvider*);
 
 
-QString tst_qqmlimageprovider::newImageFileName() const
+QString tst_qquickimageprovider::newImageFileName() const
 {
     // need to generate new filenames each time or else images are loaded
     // from cache and we won't get loading status changes when testing 
@@ -161,7 +161,7 @@ QString tst_qqmlimageprovider::newImageFileName() const
     return QString("image://test/image-%1.png").arg(count++);
 }
 
-void tst_qqmlimageprovider::fillRequestTestsData(const QString &id)
+void tst_qquickimageprovider::fillRequestTestsData(const QString &id)
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<QString>("imageId");
@@ -207,7 +207,7 @@ void tst_qqmlimageprovider::fillRequestTestsData(const QString &id)
         << "file::2:1: QML Image: Invalid image provider: image://bogus/exists.png";
 }
 
-void tst_qqmlimageprovider::runTest(bool async, QQmlImageProvider *provider)
+void tst_qquickimageprovider::runTest(bool async, QQuickImageProvider *provider)
 {
     QFETCH(QString, source);
     QFETCH(QString, imageId);
@@ -260,46 +260,46 @@ void tst_qqmlimageprovider::runTest(bool async, QQmlImageProvider *provider)
     delete obj;
 }
 
-void tst_qqmlimageprovider::requestImage_sync_data()
+void tst_qquickimageprovider::requestImage_sync_data()
 {
     fillRequestTestsData("qimage|sync");
 }
 
-void tst_qqmlimageprovider::requestImage_sync()
+void tst_qquickimageprovider::requestImage_sync()
 {
     bool deleteWatch = false;
     runTest(false, new TestQImageProvider(&deleteWatch));
     QVERIFY(deleteWatch);
 }
 
-void tst_qqmlimageprovider::requestImage_async_data()
+void tst_qquickimageprovider::requestImage_async_data()
 {
     fillRequestTestsData("qimage|async");
 }
 
-void tst_qqmlimageprovider::requestImage_async()
+void tst_qquickimageprovider::requestImage_async()
 {
     bool deleteWatch = false;
     runTest(true, new TestQImageProvider(&deleteWatch));
     QVERIFY(deleteWatch);
 }
 
-void tst_qqmlimageprovider::requestPixmap_sync_data()
+void tst_qquickimageprovider::requestPixmap_sync_data()
 {
     fillRequestTestsData("qpixmap");
 }
 
-void tst_qqmlimageprovider::requestPixmap_sync()
+void tst_qquickimageprovider::requestPixmap_sync()
 {
     bool deleteWatch = false;
     runTest(false, new TestQPixmapProvider(&deleteWatch));
     QVERIFY(deleteWatch);
 }
 
-void tst_qqmlimageprovider::requestPixmap_async()
+void tst_qquickimageprovider::requestPixmap_async()
 {
     QQmlEngine engine;
-    QQmlImageProvider *provider = new TestQPixmapProvider();
+    QQuickImageProvider *provider = new TestQPixmapProvider();
 
     engine.addImageProvider("test", provider);
     QVERIFY(engine.imageProvider("test") != 0);
@@ -314,17 +314,17 @@ void tst_qqmlimageprovider::requestPixmap_async()
     delete obj;
 }
 
-void tst_qqmlimageprovider::removeProvider_data()
+void tst_qquickimageprovider::removeProvider_data()
 {
-    QTest::addColumn<QQmlImageProvider*>("provider");
+    QTest::addColumn<QQuickImageProvider*>("provider");
 
-    QTest::newRow("qimage") << static_cast<QQmlImageProvider*>(new TestQImageProvider);
-    QTest::newRow("qpixmap") << static_cast<QQmlImageProvider*>(new TestQPixmapProvider);
+    QTest::newRow("qimage") << static_cast<QQuickImageProvider*>(new TestQImageProvider);
+    QTest::newRow("qpixmap") << static_cast<QQuickImageProvider*>(new TestQPixmapProvider);
 }
 
-void tst_qqmlimageprovider::removeProvider()
+void tst_qquickimageprovider::removeProvider()
 {
-    QFETCH(QQmlImageProvider*, provider);
+    QFETCH(QQuickImageProvider*, provider);
 
     QQmlEngine engine;
 
@@ -353,10 +353,10 @@ void tst_qqmlimageprovider::removeProvider()
     delete obj;
 }
 
-class TestThreadProvider : public QQmlImageProvider
+class TestThreadProvider : public QQuickImageProvider
 {
     public:
-        TestThreadProvider() : QQmlImageProvider(Image), ok(false) {}
+        TestThreadProvider() : QQuickImageProvider(Image), ok(false) {}
 
         ~TestThreadProvider() {}
 
@@ -384,7 +384,7 @@ class TestThreadProvider : public QQmlImageProvider
 };
 
 
-void tst_qqmlimageprovider::threadTest()
+void tst_qquickimageprovider::threadTest()
 {
     QQmlEngine engine;
 
@@ -419,6 +419,6 @@ void tst_qqmlimageprovider::threadTest()
 }
 
 
-QTEST_MAIN(tst_qqmlimageprovider)
+QTEST_MAIN(tst_qquickimageprovider)
 
-#include "tst_qqmlimageprovider.moc"
+#include "tst_qquickimageprovider.moc"

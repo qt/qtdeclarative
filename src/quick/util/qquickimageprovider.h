@@ -39,23 +39,24 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLIMAGEPROVIDER_H
-#define QQMLIMAGEPROVIDER_H
+#ifndef QQUICKIMAGEPROVIDER_H
+#define QQUICKIMAGEPROVIDER_H
 
-#include <QtQml/qtqmlglobal.h>
+#include <QtQuick/qtquickglobal.h>
 #include <QtGui/qimage.h>
 #include <QtGui/qpixmap.h>
+#include <QtQml/qqmlengine.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 
-class QQmlImageProviderPrivate;
+class QQuickImageProviderPrivate;
 class QSGTexture;
 class QQuickCanvas;
 
-class Q_QML_EXPORT QQuickTextureFactory : public QObject
+class Q_QUICK_EXPORT QQuickTextureFactory : public QObject
 {
 public:
     QQuickTextureFactory();
@@ -66,7 +67,7 @@ public:
     virtual int textureByteCount() const = 0;
 };
 
-class Q_QML_EXPORT QQmlImageProvider
+class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
 {
 public:
     enum ImageType {
@@ -76,8 +77,8 @@ public:
         Invalid
     };
 
-    QQmlImageProvider(ImageType type);
-    virtual ~QQmlImageProvider();
+    QQuickImageProvider(ImageType type);
+    virtual ~QQuickImageProvider();
 
     ImageType imageType() const;
 
@@ -86,11 +87,11 @@ public:
     virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
 
 private:
-    QQmlImageProviderPrivate *d;
+    QQuickImageProviderPrivate *d;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QQMLIMAGEPROVIDER
+#endif // QQUICKIMAGEPROVIDER_H

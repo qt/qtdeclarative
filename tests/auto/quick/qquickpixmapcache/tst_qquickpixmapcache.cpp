@@ -42,7 +42,7 @@
 #include <QtTest/QtTest>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQml/qqmlengine.h>
-#include <QtQml/qqmlimageprovider.h>
+#include <QtQuick/qquickimageprovider.h>
 #include <QNetworkReply>
 #include "../../shared/util.h"
 #include "testhttpserver.h"
@@ -335,11 +335,11 @@ void tst_qquickpixmapcache::cancelcrash()
     }
 }
 
-class MyPixmapProvider : public QQmlImageProvider
+class MyPixmapProvider : public QQuickImageProvider
 {
 public:
     MyPixmapProvider()
-    : QQmlImageProvider(Pixmap) {}
+    : QQuickImageProvider(Pixmap) {}
 
     virtual QPixmap requestPixmap(const QString &d, QSize *, const QSize &) {
         Q_UNUSED(d)

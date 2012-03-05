@@ -43,10 +43,9 @@
 #define QSGCONTEXTPLUGIN_H
 
 #include <QtQuick/qtquickglobal.h>
+#include <QtQuick/qquickimageprovider.h>
 #include <QtCore/qplugin.h>
 #include <QtCore/qfactoryinterface.h>
-
-#include <QQmlImageProvider>
 
 QT_BEGIN_HEADER
 

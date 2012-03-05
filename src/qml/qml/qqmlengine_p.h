@@ -63,7 +63,6 @@
 #include "qqmlcontext.h"
 #include "qqmlcontext_p.h"
 #include "qqmlexpression.h"
-#include "qqmlimageprovider.h"
 #include "qqmlproperty_p.h"
 #include "qqmlpropertycache_p.h"
 #include "qqmlmetatype_p.h"
@@ -173,11 +172,7 @@ public:
     mutable QNetworkAccessManager *networkAccessManager;
     mutable QQmlNetworkAccessManagerFactory *networkAccessManagerFactory;
 
-    QHash<QString,QSharedPointer<QQmlImageProvider> > imageProviders;
-    QQmlImageProvider::ImageType getImageProviderType(const QUrl &url);
-    QQuickTextureFactory *getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
-    QImage getImageFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
-    QPixmap getPixmapFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
+    QHash<QString,QSharedPointer<QQmlImageProviderBase> > imageProviders;
 
     // Scarce resources are "exceptionally high cost" QVariant types where allowing the
     // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other

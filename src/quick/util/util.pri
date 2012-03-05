@@ -25,6 +25,7 @@ SOURCES += \
     $$PWD/qquickchangeset.cpp \
     $$PWD/qquicklistcompositor.cpp \
     $$PWD/qquickpathinterpolator.cpp \
+    $$PWD/qquickimageprovider.cpp \
     $$PWD/qquicksvgparser.cpp
 
 HEADERS += \
@@ -58,4 +59,5 @@ HEADERS += \
     $$PWD/qquickchangeset_p.h \
     $$PWD/qquicklistcompositor_p.h \
     $$PWD/qquickpathinterpolator_p.h \
+    $$PWD/qquickimageprovider.h \
     $$PWD/qquicksvgparser_p.h

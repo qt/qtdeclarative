@@ -41,7 +41,7 @@
 
 #include "qquickpixmapcache_p.h"
 #include <qqmlnetworkaccessmanagerfactory.h>
-#include <qqmlimageprovider.h>
+#include <qquickimageprovider.h>
 
 #include <qqmlengine.h>
 #include <private/qqmlglobal_p.h>
@@ -75,6 +75,16 @@ QT_BEGIN_NAMESPACE
 
 // The cache limit describes the maximum "junk" in the cache.
 static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded in qpixmapcache.cpp
+
+static inline QString imageProviderId(const QUrl &url)
+{
+    return url.host();
+}
+
+static inline QString imageId(const QUrl &url)
+{
+    return url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
+}
 
 QSGTexture *QQuickDefaultTextureFactory::createTexture(QQuickCanvas *) const
 {
@@ -514,11 +524,15 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
 {
     // fetch
     if (url.scheme() == QLatin1String("image")) {
-        // Use QmlImageProvider
+        // Use QQuickImageProvider
         QSize readSize;
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-        QQmlImageProvider::ImageType imageType = ep->getImageProviderType(url);
-        if (imageType == QQmlImageProvider::Invalid) {
+
+        QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
+        QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
+        if (provider)
+            imageType = provider->imageType();
+
+        if (imageType == QQuickImageProvider::Invalid) {
             QQuickPixmapReply::ReadError errorCode = QQuickPixmapReply::Loading;
             QString errorStr = QQuickPixmap::tr("Invalid image provider: %1").arg(url.toString());
             QImage image;
@@ -526,8 +540,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             if (!cancelled.contains(runningJob))
                 runningJob->postReply(errorCode, errorStr, readSize, image);
             mutex.unlock();
-        } else if (imageType == QQmlImageProvider::Image) {
-            QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
+        } else if (imageType == QQuickImageProvider::Image) {
+            QImage image = provider->requestImage(imageId(url), &readSize, requestSize);
             QQuickPixmapReply::ReadError errorCode = QQuickPixmapReply::NoError;
             QString errorStr;
             if (image.isNull()) {
@@ -545,7 +559,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
 
             mutex.unlock();
         } else {
-            QQuickTextureFactory *t = ep->getTextureFromProvider(url, &readSize, requestSize);
+            QQuickTextureFactory *t = provider->requestTexture(imageId(url), &readSize, requestSize);
             QQuickPixmapReply::ReadError errorCode = QQuickPixmapReply::NoError;
             QString errorStr;
             if (!t) {
@@ -945,33 +959,36 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 {
     if (url.scheme() == QLatin1String("image")) {
         QSize readSize;
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-        QQmlImageProvider::ImageType imageType = ep->getImageProviderType(url);
+
+        QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
+        QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
+        if (provider)
+            imageType = provider->imageType();
 
         switch (imageType) {
-            case QQmlImageProvider::Invalid:
+            case QQuickImageProvider::Invalid:
                 return new QQuickPixmapData(declarativePixmap, url, requestSize,
                     QQuickPixmap::tr("Invalid image provider: %1").arg(url.toString()));
-            case QQmlImageProvider::Texture:
+            case QQuickImageProvider::Texture:
             {
-                QQuickTextureFactory *texture = ep->getTextureFromProvider(url, &readSize, requestSize);
+                QQuickTextureFactory *texture = provider->requestTexture(imageId(url), &readSize, requestSize);
                 if (texture) {
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, texture, QImage(), readSize, requestSize);
                 }
             }
 
-            case QQmlImageProvider::Image:
+            case QQuickImageProvider::Image:
             {
-                QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
+                QImage image = provider->requestImage(imageId(url), &readSize, requestSize);
                 if (!image.isNull()) {
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, image, readSize, requestSize);
                 }
             }
-            case QQmlImageProvider::Pixmap:
+            case QQuickImageProvider::Pixmap:
             {
-                QPixmap pixmap = ep->getPixmapFromProvider(url, &readSize, requestSize);
+                QPixmap pixmap = provider->requestPixmap(imageId(url), &readSize, requestSize);
                 if (!pixmap.isNull()) {
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, pixmap.toImage(), readSize, requestSize);
@@ -1180,9 +1197,11 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
     if (iter == store->m_cache.end()) {
         if (options & QQuickPixmap::Asynchronous) {
             // pixmaps can only be loaded synchronously
-            if (url.scheme() == QLatin1String("image") 
-                    && QQmlEnginePrivate::get(engine)->getImageProviderType(url) == QQmlImageProvider::Pixmap) {
-                options &= ~QQuickPixmap::Asynchronous;
+            if (url.scheme() == QLatin1String("image")) {
+                QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
+                if (provider && provider->imageType() == QQuickImageProvider::Pixmap) {
+                    options &= ~QQuickPixmap::Asynchronous;
+                }
             }
         }
 

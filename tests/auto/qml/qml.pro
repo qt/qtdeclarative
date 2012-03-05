@@ -32,7 +32,6 @@ PRIVATETESTS += \
     qqmlcpputils \
     qqmlecmascript \
     qqmlexpression \
-    qqmlimageprovider \
     qqmlinstruction \
     qqmllanguage \
     qqmlproperty \
