@@ -497,6 +497,7 @@ void QQuickView::resizeEvent(QResizeEvent *e)
     QQuickCanvas::resizeEvent(e);
 }
 
+/*! \reimp */
 void QQuickView::keyPressEvent(QKeyEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Key);
@@ -504,6 +505,7 @@ void QQuickView::keyPressEvent(QKeyEvent *e)
     QQuickCanvas::keyPressEvent(e);
 }
 
+/*! \reimp */
 void QQuickView::keyReleaseEvent(QKeyEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Key);
@@ -511,6 +513,7 @@ void QQuickView::keyReleaseEvent(QKeyEvent *e)
     QQuickCanvas::keyReleaseEvent(e);
 }
 
+/*! \reimp */
 void QQuickView::mouseMoveEvent(QMouseEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
@@ -518,6 +521,7 @@ void QQuickView::mouseMoveEvent(QMouseEvent *e)
     QQuickCanvas::mouseMoveEvent(e);
 }
 
+/*! \reimp */
 void QQuickView::mousePressEvent(QMouseEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
@@ -525,6 +529,7 @@ void QQuickView::mousePressEvent(QMouseEvent *e)
     QQuickCanvas::mousePressEvent(e);
 }
 
+/*! \reimp */
 void QQuickView::mouseReleaseEvent(QMouseEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
