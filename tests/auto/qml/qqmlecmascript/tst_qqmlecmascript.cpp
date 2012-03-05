@@ -236,6 +236,7 @@ private slots:
     void revisionErrors();
     void revision();
     void invokableWithQObjectDerived();
+    void realTypePrecision();
 
     void automaticSemicolon();
     void unaryExpression();
@@ -6090,6 +6091,20 @@ void tst_qqmlecmascript::invokableWithQObjectDerived()
 
     delete object;
     }
+}
+
+void tst_qqmlecmascript::realTypePrecision()
+{
+    // Properties and signal parameters of type real should have double precision.
+    QQmlComponent component(&engine, testFileUrl("realTypePrecision.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("test").toDouble(), 1234567890.);
+    QCOMPARE(object->property("test2").toDouble(), 1234567890.);
+    QCOMPARE(object->property("test3").toDouble(), 1234567890.);
+    QCOMPARE(object->property("test4").toDouble(), 1234567890.);
+    QCOMPARE(object->property("test5").toDouble(), 1234567890.);
+    QCOMPARE(object->property("test6").toDouble(), 1234567890.*2);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -92,12 +92,18 @@ void tst_QQmlMetaObject::property_data()
             << QByteArray("bool") << int(QMetaType::Bool)
             << true // default
             << QVariant(true) << true << QVariant(false);
+    QTest::newRow("double") << "property.double.qml"
+             << QByteArray("double") << int(QMetaType::Double)
+             << false // default
+             << QVariant(double(1234567890.))
+             << true // writable
+             << QVariant(double(1.23456789));
     QTest::newRow("real") << "property.real.qml"
             << QByteArray("double") << int(QMetaType::Double)
             << false // default
-            << QVariant(double(21))
+            << QVariant(double(1234567890.))
             << true // writable
-            << QVariant(double(37));
+            << QVariant(double(1.23456789));
     QTest::newRow("string") << "property.string.qml"
             << QByteArray("QString") << int(QMetaType::QString)
             << true // default
@@ -306,10 +312,10 @@ void tst_QQmlMetaObject::method_data()
             << (QList<QByteArray>() << "QString")
             << (QList<QByteArray>() << "foo");
     QTest::newRow("testSignal(int foo, bool bar, real baz)") << "signal.3.qml"
-            << "testSignal(int,bool,qreal)"
+            << "testSignal(int,bool,double)"
             << QMetaMethod::Signal
             << ""
-            << (QList<QByteArray>() << "int" << "bool" << "qreal")
+            << (QList<QByteArray>() << "int" << "bool" << "double")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal(variant foo, var bar)") << "signal.4.qml"
             << "testSignal(QVariant,QVariant)"
@@ -323,6 +329,12 @@ void tst_QQmlMetaObject::method_data()
             << ""
             << (QList<QByteArray>() << "QColor" << "QDateTime" << "QUrl")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
+    QTest::newRow("testSignal(double foo)") << "signal.6.qml"
+            << "testSignal(double)"
+            << QMetaMethod::Signal
+            << ""
+            << (QList<QByteArray>() << "double")
+            << (QList<QByteArray>() << "foo");
 }
 
 void tst_QQmlMetaObject::method()
