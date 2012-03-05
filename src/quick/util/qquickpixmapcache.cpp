@@ -83,6 +83,16 @@ QSGTexture *QQuickDefaultTextureFactory::createTexture(QQuickCanvas *) const
     return t;
 }
 
+static QQuickTextureFactory *textureFactoryForImage(const QImage &image)
+{
+    if (image.isNull())
+        return 0;
+    QQuickTextureFactory *texture = QSGContext::createTextureFactoryFromImage(image);
+    if (texture)
+        return texture;
+    return new QQuickDefaultTextureFactory(image);
+}
+
 class QQuickPixmapReader;
 class QQuickPixmapData;
 class QQuickPixmapReply : public QObject
@@ -104,16 +114,14 @@ public:
 
     class Event : public QEvent {
     public:
-        Event(ReadError, const QString &, const QSize &, QQuickTextureFactory *factory, const QImage &image);
+        Event(ReadError, const QString &, const QSize &, QQuickTextureFactory *factory);
 
         ReadError error;
         QString errorString;
         QSize implicitSize;
-        QImage image;
         QQuickTextureFactory *textureFactory;
     };
-    void postReply(ReadError, const QString &, const QSize &, const QImage &image);
-    void postReply(ReadError, const QString &, const QSize &, QQuickTextureFactory *factory, const QImage &image);
+    void postReply(ReadError, const QString &, const QSize &, QQuickTextureFactory *factory);
 
 
 Q_SIGNALS:
@@ -208,27 +216,21 @@ public:
         declarativePixmaps.insert(pixmap);
     }
 
-    QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, const QImage &p, const QSize &s, const QSize &r)
+    QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, QQuickTextureFactory *texture, const QSize &s, const QSize &r)
     : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QQuickPixmap::Ready),
-      url(u), image(p), implicitSize(s), requestSize(r), textureFactory(new QQuickDefaultTextureFactory(p)), reply(0), prevUnreferenced(0),
+      url(u), implicitSize(s), requestSize(r), textureFactory(texture), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
         declarativePixmaps.insert(pixmap);
     }
 
-    QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, QQuickTextureFactory *factory, const QImage &p, const QSize &s, const QSize &r)
-    : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QQuickPixmap::Ready),
-      url(u), image(p), implicitSize(s), requestSize(r), textureFactory(factory), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
-    {
-        declarativePixmaps.insert(pixmap);
-    }
-
-    QQuickPixmapData(QQuickPixmap *pixmap, const QImage &p)
+    QQuickPixmapData(QQuickPixmap *pixmap, QQuickTextureFactory *texture)
     : refCount(1), inCache(false), privatePixmap(true), pixmapStatus(QQuickPixmap::Ready),
-      image(p), implicitSize(p.size()), requestSize(p.size()), textureFactory(new QQuickDefaultTextureFactory(p)), reply(0), prevUnreferenced(0),
+      textureFactory(texture), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
+        if (texture)
+            requestSize = implicitSize = texture->textureSize();
         declarativePixmaps.insert(pixmap);
     }
 
@@ -256,7 +258,6 @@ public:
     QQuickPixmap::Status pixmapStatus;
     QUrl url;
     QString errorString;
-    QImage image;
     QSize implicitSize;
     QSize requestSize;
 
@@ -284,22 +285,14 @@ int QQuickPixmapReader::threadNetworkRequestDone = -1;
 
 
 void QQuickPixmapReply::postReply(ReadError error, const QString &errorString,
-                                        const QSize &implicitSize, const QImage &image)
+                                        const QSize &implicitSize, QQuickTextureFactory *factory)
 {
     loading = false;
-    QCoreApplication::postEvent(this, new Event(error, errorString, implicitSize, new QQuickDefaultTextureFactory(image), image));
+    QCoreApplication::postEvent(this, new Event(error, errorString, implicitSize, factory));
 }
 
-void QQuickPixmapReply::postReply(ReadError error, const QString &errorString,
-                                        const QSize &implicitSize, QQuickTextureFactory *factory,
-                                        const QImage &image)
-{
-    loading = false;
-    QCoreApplication::postEvent(this, new Event(error, errorString, implicitSize, factory, image));
-}
-
-QQuickPixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, QQuickTextureFactory *factory, const QImage &i)
-    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), image(i), textureFactory(factory)
+QQuickPixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, QQuickTextureFactory *factory)
+    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), textureFactory(factory)
 {
 }
 
@@ -431,13 +424,8 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
        }
         // send completion event to the QQuickPixmapReply
         mutex.lock();
-        if (!cancelled.contains(job)) {
-            QQuickTextureFactory *factory = QSGContext::createTextureFactoryFromImage(image);
-            if (factory)
-                job->postReply(error, errorString, readSize, factory, image);
-            else
-                job->postReply(error, errorString, readSize, image);
-        }
+        if (!cancelled.contains(job))
+            job->postReply(error, errorString, readSize, textureFactoryForImage(image));
         mutex.unlock();
     }
     reply->deleteLater();
@@ -524,7 +512,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QImage image;
             mutex.lock();
             if (!cancelled.contains(runningJob))
-                runningJob->postReply(errorCode, errorStr, readSize, image);
+                runningJob->postReply(errorCode, errorStr, readSize, textureFactoryForImage(image));
             mutex.unlock();
         } else if (imageType == QQmlImageProvider::Image) {
             QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
@@ -535,14 +523,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 errorStr = QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString());
             }
             mutex.lock();
-            if (!cancelled.contains(runningJob)) {
-                QQuickTextureFactory *factory = QSGContext::createTextureFactoryFromImage(image);
-                if (factory)
-                    runningJob->postReply(errorCode, errorStr, readSize, factory, image);
-                else
-                    runningJob->postReply(errorCode, errorStr, readSize, image);
-            }
-
+            if (!cancelled.contains(runningJob))
+                runningJob->postReply(errorCode, errorStr, readSize, textureFactoryForImage(image));
             mutex.unlock();
         } else {
             QQuickTextureFactory *t = ep->getTextureFromProvider(url, &readSize, requestSize);
@@ -554,7 +536,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             }
             mutex.lock();
             if (!cancelled.contains(runningJob))
-                runningJob->postReply(errorCode, errorStr, readSize, t, QImage());
+                runningJob->postReply(errorCode, errorStr, readSize, t);
             mutex.unlock();
 
         }
@@ -576,13 +558,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 errorCode = QQuickPixmapReply::Loading;
             }
             mutex.lock();
-            if (!cancelled.contains(runningJob)) {
-                QQuickTextureFactory *factory = QSGContext::createTextureFactoryFromImage(image);
-                if (factory)
-                    runningJob->postReply(errorCode, errorStr, readSize, factory, image);
-                else
-                    runningJob->postReply(errorCode, errorStr, readSize, image);
-            }
+            if (!cancelled.contains(runningJob))
+                runningJob->postReply(errorCode, errorStr, readSize, textureFactoryForImage(image));
             mutex.unlock();
         } else {
             // Network resource
@@ -863,10 +840,7 @@ bool QQuickPixmapReply::event(QEvent *event)
             data->pixmapStatus = (de->error == NoError) ? QQuickPixmap::Ready : QQuickPixmap::Error;
 
             if (data->pixmapStatus == QQuickPixmap::Ready) {
-                if (de->textureFactory) {
-                    data->textureFactory = de->textureFactory;
-                }
-                data->image = de->image;
+                data->textureFactory = de->textureFactory;
                 data->implicitSize = de->implicitSize;
             } else {
                 data->errorString = de->errorString;
@@ -888,7 +862,7 @@ int QQuickPixmapData::cost() const
 {
     if (textureFactory)
         return textureFactory->textureByteCount();
-    return image.byteCount();
+    return 0;
 }
 
 void QQuickPixmapData::addref()
@@ -957,7 +931,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                 QQuickTextureFactory *texture = ep->getTextureFromProvider(url, &readSize, requestSize);
                 if (texture) {
                     *ok = true;
-                    return new QQuickPixmapData(declarativePixmap, url, texture, QImage(), readSize, requestSize);
+                    return new QQuickPixmapData(declarativePixmap, url, texture, readSize, requestSize);
                 }
             }
 
@@ -966,7 +940,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                 QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
                 if (!image.isNull()) {
                     *ok = true;
-                    return new QQuickPixmapData(declarativePixmap, url, image, readSize, requestSize);
+                    return new QQuickPixmapData(declarativePixmap, url, textureFactoryForImage(image), readSize, requestSize);
                 }
             }
             case QQmlImageProvider::Pixmap:
@@ -974,7 +948,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                 QPixmap pixmap = ep->getPixmapFromProvider(url, &readSize, requestSize);
                 if (!pixmap.isNull()) {
                     *ok = true;
-                    return new QQuickPixmapData(declarativePixmap, url, pixmap.toImage(), readSize, requestSize);
+                    return new QQuickPixmapData(declarativePixmap, url, textureFactoryForImage(pixmap.toImage()), readSize, requestSize);
                 }
             }
         }
@@ -997,7 +971,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
         if (readImage(url, &f, &image, &errorString, &readSize, requestSize)) {
             *ok = true;
-            return new QQuickPixmapData(declarativePixmap, url, image, readSize, requestSize);
+            return new QQuickPixmapData(declarativePixmap, url, textureFactoryForImage(image), readSize, requestSize);
         }
         errorString = QQuickPixmap::tr("Invalid image data: %1").arg(url.toString());
 
@@ -1109,10 +1083,10 @@ QQuickTextureFactory *QQuickPixmap::textureFactory() const
     return 0;
 }
 
-const QImage &QQuickPixmap::image() const
+QImage QQuickPixmap::image() const
 {
-    if (d) 
-        return d->image;
+    if (d && d->textureFactory)
+        return d->textureFactory->image();
     else
         return nullPixmap()->image;
 }
@@ -1122,29 +1096,29 @@ void QQuickPixmap::setImage(const QImage &p)
     clear();
 
     if (!p.isNull())
-        d = new QQuickPixmapData(this, p);
+        d = new QQuickPixmapData(this, textureFactoryForImage(p));
 }
 
 int QQuickPixmap::width() const
 {
-    if (d) 
-        return d->textureFactory ? d->textureFactory->textureSize().width() : d->image.width();
+    if (d && d->textureFactory)
+        return d->textureFactory->textureSize().width();
     else
         return 0;
 }
 
 int QQuickPixmap::height() const
 {
-    if (d) 
-        return d->textureFactory ? d->textureFactory->textureSize().height() : d->image.height();
+    if (d && d->textureFactory)
+        return d->textureFactory->textureSize().height();
     else
         return 0;
 }
 
 QRect QQuickPixmap::rect() const
 {
-    if (d)
-        return d->textureFactory ? QRect(QPoint(), d->textureFactory->textureSize()) : d->image.rect();
+    if (d && d->textureFactory)
+        return QRect(QPoint(), d->textureFactory->textureSize());
     else
         return QRect();
 }

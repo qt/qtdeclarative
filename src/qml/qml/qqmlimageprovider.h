@@ -64,6 +64,7 @@ public:
     virtual QSGTexture *createTexture(QQuickCanvas *canvas) const = 0;
     virtual QSize textureSize() const = 0;
     virtual int textureByteCount() const = 0;
+    virtual QImage image() const;
 };
 
 class Q_QML_EXPORT QQmlImageProvider

@@ -70,6 +70,23 @@ QQuickTextureFactory::~QQuickTextureFactory()
 }
 
 
+/*!
+    \fn QImage QQuickTextureFactory::image() const
+
+    Returns an image version of this texture.
+
+    The lifespan of the returned image is unknown, so the implementation should
+    return a self contained QImage, not make use of the QImage(uchar *, ...)
+    constructor.
+
+    This function is not commonly used and is expected to be slow.
+ */
+
+QImage QQuickTextureFactory::image() const
+{
+    return QImage();
+}
+
 
 /*!
     \fn QSGTexture *QQuickTextureFactory::createTexture() const
