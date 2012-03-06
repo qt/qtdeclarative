@@ -59,11 +59,6 @@
 
 #include <private/qtqmlglobal_p.h>
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-
 class QQmlDebugConnection;
 class QQmlDebugWatch;
 class QQmlDebugPropertyWatch;
@@ -385,13 +380,9 @@ private:
     QVariant m_result;
 };
 
-QT_END_NAMESPACE
-
 Q_DECLARE_METATYPE(QQmlDebugEngineReference)
 Q_DECLARE_METATYPE(QQmlDebugObjectReference)
 Q_DECLARE_METATYPE(QQmlDebugContextReference)
 Q_DECLARE_METATYPE(QQmlDebugPropertyReference)
-
-QT_END_HEADER
 
 #endif // QQMLENGINEDEBUG_H

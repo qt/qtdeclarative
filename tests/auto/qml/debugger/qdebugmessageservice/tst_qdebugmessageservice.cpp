@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include <QtQml/private/qqmldebugclient_p.h>
+#include "qqmldebugclient.h"
 
 //QQmlDebugTest
-#include "../shared/debugutil_p.h"
+#include "debugutil_p.h"
 #include "../../../shared/util.h"
 
 #include <QtCore/QString>

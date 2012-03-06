@@ -3,13 +3,11 @@ TARGET = tst_qqmldebugjs
 QT += qml-private testlib
 macx:CONFIG -= app_bundle
 
-HEADERS += ../shared/debugutil_p.h
-SOURCES +=     tst_qqmldebugjs.cpp \
-            ../shared/debugutil.cpp
+SOURCES +=     tst_qqmldebugjs.cpp
 
 INCLUDEPATH += ../shared
-
-include (../../../shared/util.pri)
+include(../../../shared/util.pri)
+include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 

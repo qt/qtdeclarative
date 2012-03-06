@@ -47,11 +47,11 @@
 
 #include <QtQml/qqmlengine.h>
 
-#include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugservice_p.h>
 
 #include "../../../shared/util.h"
-#include "../shared/debugutil_p.h"
+#include "debugutil_p.h"
+#include "qqmldebugclient.h"
 
 #define PORT 13769
 #define STR_PORT "13769"

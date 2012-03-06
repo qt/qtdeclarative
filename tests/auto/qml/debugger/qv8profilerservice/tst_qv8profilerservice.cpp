@@ -43,7 +43,8 @@
 #include <QLibraryInfo>
 
 #include "QtQml/private/qv8profilerservice_p.h"
-#include "../shared/debugutil_p.h"
+#include "debugutil_p.h"
+#include "qqmldebugclient.h"
 #include "../../../shared/util.h"
 
 #define PORT 13774

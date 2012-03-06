@@ -2,9 +2,10 @@ CONFIG += testcase
 TARGET = tst_qqmlinspector
 macx:CONFIG -= app_bundle
 
-HEADERS += ../shared/debugutil_p.h
-SOURCES += tst_qqmlinspector.cpp \
-           ../shared/debugutil.cpp
+SOURCES += tst_qqmlinspector.cpp
+
+INCLUDEPATH += ../shared
+include(../shared/debugutil.pri)
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 CONFIG += parallel_test declarative_debug

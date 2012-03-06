@@ -44,9 +44,6 @@
 #include <QEventLoop>
 #include <QTimer>
 
-#include <private/qqmldebugclient_p.h>
-#include <private/qqmldebugservice_p.h>
-
 bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int timeout) {
     QEventLoop loop;
     QTimer timer;

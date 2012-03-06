@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET   = qmlprofiler
 DESTDIR = $$QT.qml.bins
 
-QT += qml qml-private network
+QT += qml qml-private network core-private
 
 target.path = $$[QT_INSTALL_BINS]
 INSTALLS += target
@@ -15,11 +15,13 @@ SOURCES += main.cpp \
     qmlprofilerapplication.cpp \
     commandlistener.cpp \
     profileclient.cpp \
-    profiledata.cpp
+    profiledata.cpp \
+    qqmldebugclient.cpp
 
 HEADERS += \
     qmlprofilerapplication.h \
     commandlistener.h \
     constants.h \
     profileclient.h \
-    profiledata.h
+    profiledata.h \
+    qqmldebugclient.h

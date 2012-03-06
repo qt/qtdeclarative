@@ -3,14 +3,11 @@ TARGET = tst_qdebugmessageservice
 QT += network qml-private testlib
 macx:CONFIG -= app_bundle
 
-HEADERS += ../shared/debugutil_p.h
-
-SOURCES +=     tst_qdebugmessageservice.cpp \
-            ../shared/debugutil.cpp
+SOURCES +=     tst_qdebugmessageservice.cpp
 
 INCLUDEPATH += ../shared
-
 include(../../../shared/util.pri)
+include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 

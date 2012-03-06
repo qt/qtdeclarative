@@ -2,9 +2,10 @@ CONFIG += testcase
 TARGET = tst_qqmldebugclient
 macx:CONFIG -= app_bundle
 
-HEADERS += ../shared/debugutil_p.h
-SOURCES += tst_qqmldebugclient.cpp \
-           ../shared/debugutil.cpp
+SOURCES += tst_qqmldebugclient.cpp
+
+INCLUDEPATH += ../shared
+include(../shared/debugutil.pri)
 
 CONFIG += declarative_debug
 

@@ -46,11 +46,11 @@
 #include <QtCore/QDir>
 #include <QtCore/QMutex>
 #include <QtCore/QLibraryInfo>
-#include <QtQml/private/qqmldebugclient_p.h>
 #include <QtQml/QJSEngine>
 
 //QQmlDebugTest
-#include "../shared/debugutil_p.h"
+#include "debugutil_p.h"
+#include "qqmldebugclient.h"
 #include "../../../shared/util.h"
 
 const char *V8REQUEST = "v8request";

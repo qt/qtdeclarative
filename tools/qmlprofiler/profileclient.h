@@ -44,7 +44,7 @@
 
 #include "profiledata.h"
 
-#include <QtQml/private/qqmldebugclient_p.h>
+#include "qqmldebugclient.h"
 #include <QtQml/private/qqmlprofilerservice_p.h>
 
 class ProfileClientPrivate;
