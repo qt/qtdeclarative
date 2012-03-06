@@ -177,6 +177,7 @@ void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize&
 
     setCanvasSize(canvasSize);
     setTileSize(ts);
+    setCanvasWindow(canvasWindow);
 
     if (canvasSize == canvasWindow.size()) {
         m_tiledCanvas = false;

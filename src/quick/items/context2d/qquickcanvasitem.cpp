@@ -463,30 +463,29 @@ void QQuickCanvasItem::sceneGraphInitialized()
 void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickCanvasItem);
+
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 
-    const qreal w = newGeometry.width();
-    const qreal h = newGeometry.height();
-
-    if (!d->hasCanvasSize) {
-        d->canvasSize = QSizeF(w, h);
+    QSizeF newSize = newGeometry.size();
+    if (!d->hasCanvasSize && d->canvasSize != newSize) {
+        d->canvasSize = newSize;
         emit canvasSizeChanged();
     }
 
-    if (!d->hasTileSize) {
-        d->tileSize = d->canvasSize.toSize();
+    if (!d->hasTileSize && d->tileSize != newSize) {
+        d->tileSize = newSize.toSize();
         emit tileSizeChanged();
     }
 
-    if (!d->hasCanvasWindow) {
-        d->canvasWindow = QRectF(0, 0, w, h);
+    const QRectF rect = QRectF(QPointF(0, 0), newSize);
+
+    if (!d->hasCanvasWindow && d->canvasWindow != rect) {
+        d->canvasWindow = rect;
         emit canvasWindowChanged();
     }
 
-    if (d->available) {
-        polish();
-        update();
-    }
+    if (d->available)
+        requestPaint();
 }
 
 void QQuickCanvasItem::componentComplete()
