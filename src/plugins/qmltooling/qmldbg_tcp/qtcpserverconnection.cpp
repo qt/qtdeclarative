@@ -40,13 +40,13 @@
 ****************************************************************************/
 
 #include "qtcpserverconnection.h"
+#include "qpacketprotocol.h"
 
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qtcpserver.h>
 #include <QtNetwork/qtcpsocket.h>
 
 #include <private/qqmldebugserver_p.h>
-#include <private/qpacketprotocol_p.h>
 
 QT_BEGIN_NAMESPACE
 

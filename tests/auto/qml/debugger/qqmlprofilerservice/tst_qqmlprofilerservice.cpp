@@ -42,7 +42,6 @@
 #include <qtest.h>
 #include <QLibraryInfo>
 
-#include "QtQml/private/qqmlprofilerservice_p.h"
 #include "debugutil_p.h"
 #include "qqmldebugclient.h"
 #include "../../../shared/util.h"
@@ -50,11 +49,59 @@
 #define PORT 13773
 #define STR_PORT "13773"
 
+struct QQmlProfilerData
+{
+    qint64 time;
+    int messageType;
+    int detailType;
+
+    //###
+    QString detailData; //used by RangeData and RangeLocation
+    int line;           //used by RangeLocation
+    int column;         //used by RangeLocation
+    int framerate;      //used by animation events
+    int animationcount; //used by animation events
+
+    QByteArray toByteArray() const;
+};
+
 class QQmlProfilerClient : public QQmlDebugClient
 {
     Q_OBJECT
 
 public:
+    enum Message {
+        Event,
+        RangeStart,
+        RangeData,
+        RangeLocation,
+        RangeEnd,
+        Complete, // end of transmission
+
+        MaximumMessage
+    };
+
+    enum EventType {
+        FramePaint,
+        Mouse,
+        Key,
+        AnimationFrame,
+        EndTrace,
+        StartTrace,
+
+        MaximumEventType
+    };
+
+    enum RangeType {
+        Painting,
+        Compiling,
+        Creating,
+        Binding,            //running a binding
+        HandlingSignal,     //running a signal handler
+
+        MaximumRangeType
+    };
+
     QQmlProfilerClient(QQmlDebugConnection *connection)
         : QQmlDebugClient(QLatin1String("CanvasFrameRate"), connection)
     {
@@ -123,21 +170,21 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
     QVERIFY(data.time >= -1);
 
     switch (data.messageType) {
-    case (QQmlProfilerService::Event): {
+    case (QQmlProfilerClient::Event): {
         stream >> data.detailType;
 
         switch (data.detailType) {
-        case QQmlProfilerService::AnimationFrame: {
+        case QQmlProfilerClient::AnimationFrame: {
             stream >> data.framerate >> data.animationcount;
             QVERIFY(data.framerate != -1);
             QVERIFY(data.animationcount != -1);
             break;
         }
-        case QQmlProfilerService::FramePaint:
-        case QQmlProfilerService::Mouse:
-        case QQmlProfilerService::Key:
-        case QQmlProfilerService::StartTrace:
-        case QQmlProfilerService::EndTrace:
+        case QQmlProfilerClient::FramePaint:
+        case QQmlProfilerClient::Mouse:
+        case QQmlProfilerClient::Key:
+        case QQmlProfilerClient::StartTrace:
+        case QQmlProfilerClient::EndTrace:
             break;
         default: {
             QString failMsg = QString("Unknown event type:") + data.detailType;
@@ -147,28 +194,28 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
         }
         break;
     }
-    case QQmlProfilerService::Complete: {
+    case QQmlProfilerClient::Complete: {
         emit complete();
         return;
     }
-    case QQmlProfilerService::RangeStart: {
+    case QQmlProfilerClient::RangeStart: {
         stream >> data.detailType;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerService::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
         break;
     }
-    case QQmlProfilerService::RangeEnd: {
+    case QQmlProfilerClient::RangeEnd: {
         stream >> data.detailType;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerService::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
         break;
     }
-    case QQmlProfilerService::RangeData: {
+    case QQmlProfilerClient::RangeData: {
         stream >> data.detailType >> data.detailData;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerService::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
         break;
     }
-    case QQmlProfilerService::RangeLocation: {
+    case QQmlProfilerClient::RangeLocation: {
         stream >> data.detailType >> data.detailData >> data.line >> data.column;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerService::MaximumRangeType);
+        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
         QVERIFY(data.line >= -2);
         break;
     }
@@ -229,12 +276,12 @@ void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
 
     QVERIFY(m_client->traceMessages.count());
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerService::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerService::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
 }
 
 void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
@@ -254,12 +301,12 @@ void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
     QVERIFY(m_client->traceMessages.count());
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerService::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerService::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
 }
 
 void tst_QQmlProfilerService::nonBlockingConnect()
@@ -276,12 +323,12 @@ void tst_QQmlProfilerService::nonBlockingConnect()
     }
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerService::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerService::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
 }
 
 void tst_QQmlProfilerService::profileOnExit()
@@ -298,12 +345,12 @@ void tst_QQmlProfilerService::profileOnExit()
     }
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerService::StartTrace);
+    QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerService::Event);
-    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerService::EndTrace);
+    QCOMPARE(m_client->traceMessages.last().messageType, (int)QQmlProfilerClient::Event);
+    QCOMPARE(m_client->traceMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

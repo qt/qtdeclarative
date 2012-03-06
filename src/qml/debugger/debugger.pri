@@ -1,5 +1,4 @@
 SOURCES += \
-    $$PWD/qpacketprotocol.cpp \
     $$PWD/qqmldebugservice.cpp \
     $$PWD/qqmlprofilerservice.cpp \
     $$PWD/qqmldebugserver.cpp \
@@ -10,7 +9,6 @@ SOURCES += \
     $$PWD/qdebugmessageservice.cpp
 
 HEADERS += \
-    $$PWD/qpacketprotocol_p.h \
     $$PWD/qqmldebugservice_p.h \
     $$PWD/qqmldebugservice_p_p.h \
     $$PWD/qqmlprofilerservice_p.h \

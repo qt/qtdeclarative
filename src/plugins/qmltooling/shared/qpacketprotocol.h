@@ -42,26 +42,10 @@
 #ifndef QPACKETPROTOCOL_H
 #define QPACKETPROTOCOL_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
 #include <QtCore/qobject.h>
 #include <QtCore/qdatastream.h>
 
-#include <private/qtqmlglobal_p.h>
-
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
-
 
 class QIODevice;
 class QBuffer;
@@ -69,7 +53,7 @@ class QPacket;
 class QPacketAutoSend;
 class QPacketProtocolPrivate;
 
-class Q_QML_PRIVATE_EXPORT QPacketProtocol : public QObject
+class QPacketProtocol : public QObject
 {
     Q_OBJECT
 public:
@@ -101,7 +85,7 @@ private:
 };
 
 
-class Q_QML_PRIVATE_EXPORT QPacket : public QDataStream
+class QPacket : public QDataStream
 {
 public:
     QPacket();
@@ -119,7 +103,7 @@ protected:
     QBuffer *buf;
 };
 
-class Q_QML_PRIVATE_EXPORT QPacketAutoSend : public QPacket
+class QPacketAutoSend : public QPacket
 {
 public:
     virtual ~QPacketAutoSend();
@@ -131,7 +115,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

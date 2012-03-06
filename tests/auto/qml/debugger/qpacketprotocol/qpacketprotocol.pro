@@ -8,4 +8,4 @@ INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)
 
 CONFIG += parallel_test
-QT += qml-private network testlib
+QT += qml network testlib

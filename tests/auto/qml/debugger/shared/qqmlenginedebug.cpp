@@ -43,9 +43,42 @@
 
 #include "qqmldebugclient.h"
 
-#include <private/qqmlenginedebugservice_p.h>
+struct QmlObjectData {
+    QUrl url;
+    int lineNumber;
+    int columnNumber;
+    QString idString;
+    QString objectName;
+    QString objectType;
+    int objectId;
+    int contextId;
+};
 
-#include <QtCore/private/qobject_p.h>
+QDataStream &operator>>(QDataStream &ds, QmlObjectData &data)
+{
+    ds >> data.url >> data.lineNumber >> data.columnNumber >> data.idString
+       >> data.objectName >> data.objectType >> data.objectId >> data.contextId;
+    return ds;
+}
+
+struct QmlObjectProperty {
+    enum Type { Unknown, Basic, Object, List, SignalProperty };
+    Type type;
+    QString name;
+    QVariant value;
+    QString valueTypeName;
+    QString binding;
+    bool hasNotifySignal;
+};
+
+QDataStream &operator>>(QDataStream &ds, QmlObjectProperty &data)
+{
+    int type;
+    ds >> type >> data.name >> data.value >> data.valueTypeName
+       >> data.binding >> data.hasNotifySignal;
+    data.type = (QmlObjectProperty::Type)type;
+    return ds;
+}
 
 class QQmlEngineDebugClient : public QQmlDebugClient
 {
@@ -61,16 +94,16 @@ private:
     friend class QQmlEngineDebugPrivate;
 };
 
-class QQmlEngineDebugPrivate : public QObjectPrivate
+class QQmlEngineDebugPrivate
 {
-    Q_DECLARE_PUBLIC(QQmlEngineDebug)
 public:
-    QQmlEngineDebugPrivate(QQmlDebugConnection *);
+    QQmlEngineDebugPrivate(QQmlEngineDebug *, QQmlDebugConnection *);
     ~QQmlEngineDebugPrivate();
 
     void stateChanged(QQmlEngineDebug::State status);
     void message(const QByteArray &);
 
+    QQmlEngineDebug *q;
     QQmlEngineDebugClient *client;
     int nextId;
     int getId();
@@ -110,8 +143,9 @@ void QQmlEngineDebugClient::messageReceived(const QByteArray &data)
         priv->message(data);
 }
 
-QQmlEngineDebugPrivate::QQmlEngineDebugPrivate(QQmlDebugConnection *c)
-    : client(new QQmlEngineDebugClient(c, this)), nextId(0)
+QQmlEngineDebugPrivate::QQmlEngineDebugPrivate(QQmlEngineDebug *p, QQmlDebugConnection *c)
+    : q(p),
+      client(new QQmlEngineDebugClient(c, this)), nextId(0)
 {
 }
 
@@ -164,7 +198,7 @@ int QQmlEngineDebugPrivate::getId()
 void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c, QQmlDebugEnginesQuery *q)
 {
     if (c && q) {
-        QQmlEngineDebugPrivate *p = (QQmlEngineDebugPrivate *)QObjectPrivate::get(c);
+        QQmlEngineDebugPrivate *p = c->getPrivate();
         p->enginesQuery.remove(q->m_queryId);
     }
 }
@@ -173,7 +207,7 @@ void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c,
                                             QQmlDebugRootContextQuery *q)
 {
     if (c && q) {
-        QQmlEngineDebugPrivate *p = (QQmlEngineDebugPrivate *)QObjectPrivate::get(c);
+        QQmlEngineDebugPrivate *p = c->getPrivate();
         p->rootContextQuery.remove(q->m_queryId);
     }
 }
@@ -181,7 +215,7 @@ void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c,
 void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c, QQmlDebugObjectQuery *q)
 {
     if (c && q) {
-        QQmlEngineDebugPrivate *p = (QQmlEngineDebugPrivate *)QObjectPrivate::get(c);
+        QQmlEngineDebugPrivate *p = c->getPrivate();
         p->objectQuery.remove(q->m_queryId);
     }
 }
@@ -189,7 +223,7 @@ void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c, QQmlDebugObjectQuery *q)
 void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c, QQmlDebugExpressionQuery *q)
 {
     if (c && q) {
-        QQmlEngineDebugPrivate *p = (QQmlEngineDebugPrivate *)QObjectPrivate::get(c);
+        QQmlEngineDebugPrivate *p = c->getPrivate();
         p->expressionQuery.remove(q->m_queryId);
     }
 }
@@ -197,7 +231,7 @@ void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c, QQmlDebugExpressionQuery
 void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c, QQmlDebugWatch *w)
 {
     if (c && w) {
-        QQmlEngineDebugPrivate *p = (QQmlEngineDebugPrivate *)QObjectPrivate::get(c);
+        QQmlEngineDebugPrivate *p = c->getPrivate();
         p->watched.remove(w->m_queryId);
     }
 }
@@ -205,7 +239,7 @@ void QQmlEngineDebugPrivate::remove(QQmlEngineDebug *c, QQmlDebugWatch *w)
 void QQmlEngineDebugPrivate::decode(QDataStream &ds, QQmlDebugObjectReference &o,
                                             bool simple)
 {
-    QQmlEngineDebugService::QQmlObjectData data;
+    QmlObjectData data;
     ds >> data;
     o.m_debugId = data.objectId;
     o.m_class = data.objectType;
@@ -232,7 +266,7 @@ void QQmlEngineDebugPrivate::decode(QDataStream &ds, QQmlDebugObjectReference &o
     ds >> propCount;
 
     for (int ii = 0; ii < propCount; ++ii) {
-        QQmlEngineDebugService::QQmlObjectProperty data;
+        QmlObjectProperty data;
         ds >> data;
         QQmlDebugPropertyReference prop;
         prop.m_objectDebugId = o.m_debugId;
@@ -241,21 +275,21 @@ void QQmlEngineDebugPrivate::decode(QDataStream &ds, QQmlDebugObjectReference &o
         prop.m_hasNotifySignal = data.hasNotifySignal;
         prop.m_valueTypeName = data.valueTypeName;
         switch (data.type) {
-        case QQmlEngineDebugService::QQmlObjectProperty::Basic:
-        case QQmlEngineDebugService::QQmlObjectProperty::List:
-        case QQmlEngineDebugService::QQmlObjectProperty::SignalProperty:
+        case QmlObjectProperty::Basic:
+        case QmlObjectProperty::List:
+        case QmlObjectProperty::SignalProperty:
         {
             prop.m_value = data.value;
             break;
         }
-        case QQmlEngineDebugService::QQmlObjectProperty::Object:
+        case QmlObjectProperty::Object:
         {
             QQmlDebugObjectReference obj;
             obj.m_debugId = prop.m_value.toInt();
             prop.m_value = QVariant::fromValue(obj);
             break;
         }
-        case QQmlEngineDebugService::QQmlObjectProperty::Unknown:
+        case QmlObjectProperty::Unknown:
             break;
         }
         o.m_properties << prop;
@@ -288,7 +322,7 @@ void QQmlEngineDebugPrivate::decode(QDataStream &ds, QQmlDebugContextReference &
 
 void QQmlEngineDebugPrivate::stateChanged(QQmlEngineDebug::State status)
 {
-    emit q_func()->stateChanged(status);
+    emit q->stateChanged(status);
 }
 
 void QQmlEngineDebugPrivate::message(const QByteArray &data)
@@ -404,30 +438,28 @@ void QQmlEngineDebugPrivate::message(const QByteArray &data)
             return;
         emit watch->valueChanged(name, value);
     } else if (type == "OBJECT_CREATED") {
-        emit q_func()->newObjects();
+        emit q->newObjects();
     }
 }
 
 QQmlEngineDebug::QQmlEngineDebug(QQmlDebugConnection *client, QObject *parent)
-    : QObject(*(new QQmlEngineDebugPrivate(client)), parent)
+    : QObject(parent),
+      d(new QQmlEngineDebugPrivate(this, client))
 {
 }
 
 QQmlEngineDebug::~QQmlEngineDebug()
 {
+    delete d;
 }
 
 QQmlEngineDebug::State QQmlEngineDebug::state() const
 {
-    Q_D(const QQmlEngineDebug);
-
     return static_cast<QQmlEngineDebug::State>(d->client->state());
 }
 
 QQmlDebugPropertyWatch *QQmlEngineDebug::addWatch(const QQmlDebugPropertyReference &property, QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
-
     QQmlDebugPropertyWatch *watch = new QQmlDebugPropertyWatch(parent);
     if (d->client->state() == QQmlDebugClient::Enabled) {
         int queryId = d->getId();
@@ -456,7 +488,6 @@ QQmlDebugWatch *QQmlEngineDebug::addWatch(const QQmlDebugContextReference &, con
 
 QQmlDebugObjectExpressionWatch *QQmlEngineDebug::addWatch(const QQmlDebugObjectReference &object, const QString &expr, QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
     QQmlDebugObjectExpressionWatch *watch = new QQmlDebugObjectExpressionWatch(parent);
     if (d->client->state() == QQmlDebugClient::Enabled) {
         int queryId = d->getId();
@@ -478,8 +509,6 @@ QQmlDebugObjectExpressionWatch *QQmlEngineDebug::addWatch(const QQmlDebugObjectR
 
 QQmlDebugWatch *QQmlEngineDebug::addWatch(const QQmlDebugObjectReference &object, QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
-
     QQmlDebugWatch *watch = new QQmlDebugWatch(parent);
     if (d->client->state() == QQmlDebugClient::Enabled) {
         int queryId = d->getId();
@@ -507,8 +536,6 @@ QQmlDebugWatch *QQmlEngineDebug::addWatch(const QQmlDebugFileReference &, QObjec
 
 void QQmlEngineDebug::removeWatch(QQmlDebugWatch *watch)
 {
-    Q_D(QQmlEngineDebug);
-
     if (!watch || !watch->m_client)
         return;
 
@@ -527,8 +554,6 @@ void QQmlEngineDebug::removeWatch(QQmlDebugWatch *watch)
 
 QQmlDebugEnginesQuery *QQmlEngineDebug::queryAvailableEngines(QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
-
     QQmlDebugEnginesQuery *query = new QQmlDebugEnginesQuery(parent);
     if (d->client->state() == QQmlDebugClient::Enabled) {
         query->m_client = this;
@@ -549,8 +574,6 @@ QQmlDebugEnginesQuery *QQmlEngineDebug::queryAvailableEngines(QObject *parent)
 
 QQmlDebugRootContextQuery *QQmlEngineDebug::queryRootContexts(const QQmlDebugEngineReference &engine, QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
-
     QQmlDebugRootContextQuery *query = new QQmlDebugRootContextQuery(parent);
     if (d->client->state() == QQmlDebugClient::Enabled && engine.debugId() != -1) {
         query->m_client = this;
@@ -571,8 +594,6 @@ QQmlDebugRootContextQuery *QQmlEngineDebug::queryRootContexts(const QQmlDebugEng
 
 QQmlDebugObjectQuery *QQmlEngineDebug::queryObject(const QQmlDebugObjectReference &object, QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
-
     QQmlDebugObjectQuery *query = new QQmlDebugObjectQuery(parent);
     if (d->client->state() == QQmlDebugClient::Enabled && object.debugId() != -1) {
         query->m_client = this;
@@ -594,8 +615,6 @@ QQmlDebugObjectQuery *QQmlEngineDebug::queryObject(const QQmlDebugObjectReferenc
 
 QQmlDebugObjectQuery *QQmlEngineDebug::queryObjectRecursive(const QQmlDebugObjectReference &object, QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
-
     QQmlDebugObjectQuery *query = new QQmlDebugObjectQuery(parent);
     if (d->client->state() == QQmlDebugClient::Enabled && object.debugId() != -1) {
         query->m_client = this;
@@ -617,8 +636,6 @@ QQmlDebugObjectQuery *QQmlEngineDebug::queryObjectRecursive(const QQmlDebugObjec
 
 QQmlDebugExpressionQuery *QQmlEngineDebug::queryExpressionResult(int objectDebugId, const QString &expr, QObject *parent)
 {
-    Q_D(QQmlEngineDebug);
-
     QQmlDebugExpressionQuery *query = new QQmlDebugExpressionQuery(parent);
     if (d->client->state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
         query->m_client = this;
@@ -643,8 +660,6 @@ bool QQmlEngineDebug::setBindingForObject(int objectDebugId, const QString &prop
                                                   bool isLiteralValue,
                                                   QString source, int line)
 {
-    Q_D(QQmlEngineDebug);
-
     if (d->client->state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
         QByteArray message;
         QDataStream ds(&message, QIODevice::WriteOnly);
@@ -658,8 +673,6 @@ bool QQmlEngineDebug::setBindingForObject(int objectDebugId, const QString &prop
 
 bool QQmlEngineDebug::resetBindingForObject(int objectDebugId, const QString &propertyName)
 {
-    Q_D(QQmlEngineDebug);
-
     if (d->client->state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
         QByteArray message;
         QDataStream ds(&message, QIODevice::WriteOnly);
@@ -674,8 +687,6 @@ bool QQmlEngineDebug::resetBindingForObject(int objectDebugId, const QString &pr
 bool QQmlEngineDebug::setMethodBody(int objectDebugId, const QString &methodName,
                                             const QString &methodBody)
 {
-    Q_D(QQmlEngineDebug);
-
     if (d->client->state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
         QByteArray message;
         QDataStream ds(&message, QIODevice::WriteOnly);

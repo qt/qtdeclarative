@@ -42,22 +42,9 @@
 #ifndef QQMLENGINEDEBUG_H
 #define QQMLENGINEDEBUG_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
 #include <QtCore/qobject.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
-
-#include <private/qtqmlglobal_p.h>
 
 class QQmlDebugConnection;
 class QQmlDebugWatch;
@@ -113,12 +100,14 @@ public:
     bool resetBindingForObject(int objectDebugId, const QString &propertyName);
     bool setMethodBody(int objectDebugId, const QString &methodName, const QString &methodBody);
 
+    QQmlEngineDebugPrivate *getPrivate() const { return d; }
+
 Q_SIGNALS:
     void newObjects();
     void stateChanged(State state);
 
 private:
-    Q_DECLARE_PRIVATE(QQmlEngineDebug)
+    QQmlEngineDebugPrivate *d;
 };
 
 class QQmlDebugWatch : public QObject

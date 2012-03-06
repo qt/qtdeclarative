@@ -1,4 +1,3 @@
-
 /****************************************************************************
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
@@ -40,73 +39,20 @@
 **
 ****************************************************************************/
 
-#ifndef DEBUGUTIL_H
-#define DEBUGUTIL_H
+#include "qqmldebugtestservice.h"
 
-#include <QEventLoop>
-#include <QTimer>
-#include <QThread>
-#include <QTest>
-#include <QProcess>
-
-#include <QtQml/qqmlengine.h>
-
-#include "qqmldebugclient.h"
-
-class QQmlDebugTest
+QQmlDebugTestService::QQmlDebugTestService(const QString &s, float version, QObject *parent)
+    : QQmlDebugService(s, version, parent)
 {
-public:
-    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
-};
+    registerService();
+}
 
-class QQmlDebugTestClient : public QQmlDebugClient
+void QQmlDebugTestService::messageReceived(const QByteArray &ba)
 {
-    Q_OBJECT
-public:
-    QQmlDebugTestClient(const QString &s, QQmlDebugConnection *c);
+    sendMessage(ba);
+}
 
-    QByteArray waitForResponse();
-
-signals:
-    void stateHasChanged();
-    void serverMessage(const QByteArray &);
-
-protected:
-    virtual void stateChanged(State state);
-    virtual void messageReceived(const QByteArray &ba);
-
-private:
-    QByteArray lastMsg;
-};
-
-class QQmlDebugProcess : public QObject
+void QQmlDebugTestService::stateChanged(State)
 {
-    Q_OBJECT
-public:
-    QQmlDebugProcess(const QString &executable);
-    ~QQmlDebugProcess();
-
-    void setEnvironment(const QStringList &environment);
-
-    void start(const QStringList &arguments);
-    bool waitForSessionStart();
-
-    QString output() const;
-    void stop();
-
-private slots:
-    void processAppOutput();
-
-private:
-    QString m_executable;
-    QProcess m_process;
-    QString m_outputBuffer;
-    QString m_output;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    bool m_started;
-    QStringList m_environment;
-};
-
-#endif // DEBUGUTIL_H
+    emit stateHasChanged();
+}

@@ -9,4 +9,4 @@ include(../shared/debugutil.pri)
 
 CONFIG += parallel_test declarative_debug
 
-QT += qml-private testlib
+QT += qml testlib

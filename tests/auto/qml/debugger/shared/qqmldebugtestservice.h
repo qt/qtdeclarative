@@ -1,9 +1,10 @@
+
 /****************************************************************************
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,71 +40,23 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGCLIENT_H
-#define QQMLDEBUGCLIENT_H
+#ifndef QQMLDEBUGTESTSERVICE_H
+#define QQMLDEBUGTESTSERVICE_H
 
-#include <QtNetwork/qtcpsocket.h>
+#include <private/qqmldebugservice_p.h>
 
-class QQmlDebugConnectionPrivate;
-class QQmlDebugConnection : public QIODevice
+class QQmlDebugTestService : public QQmlDebugService
 {
     Q_OBJECT
-    Q_DISABLE_COPY(QQmlDebugConnection)
 public:
-    QQmlDebugConnection(QObject * = 0);
-    ~QQmlDebugConnection();
-
-    void connectToHost(const QString &hostName, quint16 port);
-
-    qint64 bytesAvailable() const;
-    bool isConnected() const;
-    QAbstractSocket::SocketState state() const;
-    void flush();
-    bool isSequential() const;
-    void close();
-    bool waitForConnected(int msecs = 30000);
+    QQmlDebugTestService(const QString &s, float version = 1, QObject *parent = 0);
 
 signals:
-    void connected();
-    void stateChanged(QAbstractSocket::SocketState socketState);
-    void error(QAbstractSocket::SocketError socketError);
+    void stateHasChanged();
 
 protected:
-    qint64 readData(char *data, qint64 maxSize);
-    qint64 writeData(const char *data, qint64 maxSize);
-
-private:
-    QQmlDebugConnectionPrivate *d;
-    friend class QQmlDebugClient;
-    friend class QQmlDebugClientPrivate;
+    virtual void messageReceived(const QByteArray &ba);
+    virtual void stateChanged(State state);
 };
 
-class QQmlDebugClientPrivate;
-class QQmlDebugClient : public QObject
-{
-    Q_OBJECT
-    Q_DISABLE_COPY(QQmlDebugClient)
-
-public:
-    enum State { NotConnected, Unavailable, Enabled };
-
-    QQmlDebugClient(const QString &, QQmlDebugConnection *parent);
-    ~QQmlDebugClient();
-
-    QString name() const;
-    float serviceVersion() const;
-    State state() const;
-
-    virtual void sendMessage(const QByteArray &);
-
-protected:
-    virtual void stateChanged(State);
-    virtual void messageReceived(const QByteArray &);
-
-private:
-    QQmlDebugClientPrivate *d;
-    friend class QQmlDebugConnection;
-    friend class QQmlDebugConnectionPrivate;
-};
-
-#endif // QQMLDEBUGCLIENT_H
+#endif // QQMLDEBUGTESTSERVICE_H

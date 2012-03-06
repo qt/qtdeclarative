@@ -46,7 +46,7 @@
 #include <QDebug>
 #include <QBuffer>
 
-#include <private/qpacketprotocol_p.h>
+#include "../../../../../src/plugins/qmltooling/shared/qpacketprotocol.h"
 
 #include "debugutil_p.h"
 

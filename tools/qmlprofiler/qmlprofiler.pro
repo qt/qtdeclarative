@@ -16,7 +16,8 @@ SOURCES += main.cpp \
     commandlistener.cpp \
     qqmldebugclient.cpp \
     qmlprofilerdata.cpp \
-    qmlprofilerclient.cpp
+    qmlprofilerclient.cpp \
+    qpacketprotocol.cpp
 
 HEADERS += \
     qmlprofilerapplication.h \
@@ -25,4 +26,5 @@ HEADERS += \
     qmlprofilerdata.h \
     qmlprofilerclient.h \
     qmlprofilereventlocation.h \
-    qqmldebugclient.h
+    qqmldebugclient.h \
+    qpacketprotocol.h

@@ -39,12 +39,10 @@
 **
 ****************************************************************************/
 
-#include "qpacketprotocol_p.h"
+#include "qpacketprotocol.h"
 
 #include <QtCore/QBuffer>
 #include <QtCore/QElapsedTimer>
-
-QT_BEGIN_NAMESPACE
 
 static const unsigned int MAX_PACKET_SIZE = 0x7FFFFFFF;
 
@@ -544,7 +542,5 @@ QPacketAutoSend::~QPacketAutoSend()
     if (!b.isEmpty())
         p->send(*this);
 }
-
-QT_END_NAMESPACE
 
 #include <qpacketprotocol.moc>

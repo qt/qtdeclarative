@@ -39,71 +39,79 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGCLIENT_H
-#define QQMLDEBUGCLIENT_H
+#ifndef QPACKETPROTOCOL_H
+#define QPACKETPROTOCOL_H
 
-#include <QtNetwork/qtcpsocket.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qdatastream.h>
 
-class QQmlDebugConnectionPrivate;
-class QQmlDebugConnection : public QIODevice
+QT_BEGIN_NAMESPACE
+class QIODevice;
+class QBuffer;
+QT_END_NAMESPACE
+class QPacket;
+class QPacketAutoSend;
+class QPacketProtocolPrivate;
+
+class QPacketProtocol : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY(QQmlDebugConnection)
 public:
-    QQmlDebugConnection(QObject * = 0);
-    ~QQmlDebugConnection();
+    explicit QPacketProtocol(QIODevice *dev, QObject *parent = 0);
+    virtual ~QPacketProtocol();
 
-    void connectToHost(const QString &hostName, quint16 port);
+    qint32 maximumPacketSize() const;
+    qint32 setMaximumPacketSize(qint32);
 
-    qint64 bytesAvailable() const;
-    bool isConnected() const;
-    QAbstractSocket::SocketState state() const;
-    void flush();
-    bool isSequential() const;
-    void close();
-    bool waitForConnected(int msecs = 30000);
+    QPacketAutoSend send();
+    void send(const QPacket &);
 
-signals:
-    void connected();
-    void stateChanged(QAbstractSocket::SocketState socketState);
-    void error(QAbstractSocket::SocketError socketError);
+    qint64 packetsAvailable() const;
+    QPacket read();
 
-protected:
-    qint64 readData(char *data, qint64 maxSize);
-    qint64 writeData(const char *data, qint64 maxSize);
+    bool waitForReadyRead(int msecs = 3000);
+
+    void clear();
+
+    QIODevice *device();
+
+Q_SIGNALS:
+    void readyRead();
+    void invalidPacket();
+    void packetWritten();
 
 private:
-    QQmlDebugConnectionPrivate *d;
-    friend class QQmlDebugClient;
-    friend class QQmlDebugClientPrivate;
+    QPacketProtocolPrivate *d;
 };
 
-class QQmlDebugClientPrivate;
-class QQmlDebugClient : public QObject
+
+class QPacket : public QDataStream
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(QQmlDebugClient)
-
 public:
-    enum State { NotConnected, Unavailable, Enabled };
+    QPacket();
+    QPacket(const QPacket &);
+    virtual ~QPacket();
 
-    QQmlDebugClient(const QString &, QQmlDebugConnection *parent);
-    ~QQmlDebugClient();
-
-    QString name() const;
-    float serviceVersion() const;
-    State state() const;
-
-    virtual void sendMessage(const QByteArray &);
+    void clear();
+    bool isEmpty() const;
+    QByteArray data() const;
 
 protected:
-    virtual void stateChanged(State);
-    virtual void messageReceived(const QByteArray &);
-
-private:
-    QQmlDebugClientPrivate *d;
-    friend class QQmlDebugConnection;
-    friend class QQmlDebugConnectionPrivate;
+    friend class QPacketProtocol;
+    QPacket(const QByteArray &ba);
+    QByteArray b;
+    QBuffer *buf;
 };
 
-#endif // QQMLDEBUGCLIENT_H
+class QPacketAutoSend : public QPacket
+{
+public:
+    virtual ~QPacketAutoSend();
+
+private:
+    friend class QPacketProtocol;
+    QPacketAutoSend(QPacketProtocol *);
+    QPacketProtocol *p;
+};
+
+#endif

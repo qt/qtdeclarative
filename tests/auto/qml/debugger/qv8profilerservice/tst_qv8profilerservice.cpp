@@ -42,7 +42,6 @@
 #include <qtest.h>
 #include <QLibraryInfo>
 
-#include "QtQml/private/qv8profilerservice_p.h"
 #include "debugutil_p.h"
 #include "qqmldebugclient.h"
 #include "../../../shared/util.h"
@@ -50,11 +49,34 @@
 #define PORT 13774
 #define STR_PORT "13774"
 
+struct QV8ProfilerData
+{
+    int messageType;
+    QString filename;
+    QString functionname;
+    int lineNumber;
+    double totalTime;
+    double selfTime;
+    int treeLevel;
+
+    QByteArray toByteArray() const;
+};
+
 class QV8ProfilerClient : public QQmlDebugClient
 {
     Q_OBJECT
 
 public:
+    enum MessageType {
+        V8Entry,
+        V8Complete,
+        V8SnapshotChunk,
+        V8SnapshotComplete,
+        V8Started,
+
+        V8MaximumMessage
+    };
+
     QV8ProfilerClient(QQmlDebugConnection *connection)
         : QQmlDebugClient(QLatin1String("V8Profiler"), connection)
     {
@@ -139,28 +161,28 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
     stream >> messageType;
 
     QVERIFY(messageType >= 0);
-    QVERIFY(messageType < QV8ProfilerService::V8MaximumMessage);
+    QVERIFY(messageType < QV8ProfilerClient::V8MaximumMessage);
 
     switch (messageType) {
-    case QV8ProfilerService::V8Entry: {
+    case QV8ProfilerClient::V8Entry: {
         QV8ProfilerData entry;
         stream >> entry.filename >> entry.functionname >> entry.lineNumber >> entry.totalTime >> entry.selfTime >> entry.treeLevel;
         traceMessages.append(entry);
         break;
     }
-    case QV8ProfilerService::V8Complete:
+    case QV8ProfilerClient::V8Complete:
         emit complete();
         break;
-    case QV8ProfilerService::V8SnapshotChunk: {
+    case QV8ProfilerClient::V8SnapshotChunk: {
         QByteArray json;
         stream >> json;
         snapshotMessages.append(json);
         break;
     }
-    case QV8ProfilerService::V8SnapshotComplete:
+    case QV8ProfilerClient::V8SnapshotComplete:
         emit snapshot();
         break;
-    case QV8ProfilerService::V8Started:
+    case QV8ProfilerClient::V8Started:
         emit started();
         break;
     default:
