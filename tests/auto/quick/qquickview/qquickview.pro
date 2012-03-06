@@ -6,8 +6,6 @@ SOURCES += tst_qquickview.cpp
 
 include (../../shared/util.pri)
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private testlib

@@ -129,8 +129,8 @@ void tst_QQuickAccessible::commonTests_data()
 {
     QTest::addColumn<QString>("accessibleRoleFileName");
 
-    QTest::newRow("StaticText") << SRCDIR "/data/statictext.qml";
-    QTest::newRow("PushButton") << SRCDIR "/data/pushbutton.qml";
+    QTest::newRow("StaticText") << "statictext.qml";
+    QTest::newRow("PushButton") << "pushbutton.qml";
 }
 
 void tst_QQuickAccessible::commonTests()
@@ -141,7 +141,7 @@ void tst_QQuickAccessible::commonTests()
 
     QQuickView *view = new QQuickView();
 //    view->setFixedSize(240,320);
-    view->setSource(QUrl::fromLocalFile(accessibleRoleFileName));
+    view->setSource(testFileUrl(accessibleRoleFileName));
     view->show();
 //    view->setFocus();
     QVERIFY(view->rootObject() != 0);

@@ -7,9 +7,7 @@ SOURCES += tst_qquickrepeater.cpp
 include (../../shared/util.pri)
 include (../shared/util.pri)
 
-testFiles.files = data
-testFiles.path = .
-DEPLOYMENT += testFiles
+TESTDATA = data/*
 
 CONFIG += parallel_test
 QT += core-private gui-private qml-private quick-private testlib

@@ -4,9 +4,7 @@ SOURCES += tst_qquickitemlayer.cpp
 
 macx:CONFIG -= app_bundle
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 include(../../shared/util.pri)
 

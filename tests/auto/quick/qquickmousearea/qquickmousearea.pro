@@ -8,9 +8,7 @@ SOURCES += tst_qquickmousearea.cpp \
 
 include (../../shared/util.pri)
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 CONFIG += parallel_test
 

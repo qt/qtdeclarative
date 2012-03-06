@@ -7,8 +7,6 @@ include (../shared/util.pri)
 
 macx:CONFIG -= app_bundle
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private testlib
