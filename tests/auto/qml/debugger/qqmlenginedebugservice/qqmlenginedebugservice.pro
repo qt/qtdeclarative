@@ -5,10 +5,12 @@ macx:CONFIG -= app_bundle
 HEADERS += \
     qqmlenginedebugclient.h
 
-SOURCES += tst_qqmlenginedebugservice.cpp \
+SOURCES += \
+    tst_qqmlenginedebugservice.cpp \
     qqmlenginedebugclient.cpp
 
 INCLUDEPATH += ../shared
+include(../../../shared/util.pri)
 include(../shared/debugutil.pri)
 
 CONFIG += parallel_test declarative_debug
