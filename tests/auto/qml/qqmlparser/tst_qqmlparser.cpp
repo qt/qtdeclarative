@@ -182,6 +182,10 @@ void tst_qqmlparser::qmlParser()
 {
     QFETCH(QString, file);
 
+#if defined(QTEST_CROSS_COMPILED)
+    QSKIP("sources not available when cross compiled");
+#endif
+
     using namespace QQmlJS;
 
     QString code;

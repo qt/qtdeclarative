@@ -14,9 +14,7 @@ include (../../shared/util.pri)
 # QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
 # LIBS += -lgcov
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 CONFIG += parallel_test
 QT += core-private gui-private v8-private qml-private network widgets testlib

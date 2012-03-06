@@ -175,6 +175,10 @@ void tst_qmlmin::qmlMinify()
 {
     QFETCH(QString, file);
 
+#if defined(QTEST_CROSS_COMPILED)
+    QSKIP("sources not available when cross compiled");
+#endif
+
     QProcess qmlminify;
     qmlminify.start(qmlminPath, QStringList() << QLatin1String("--verify-only") << file);
     qmlminify.waitForFinished();

@@ -8,12 +8,6 @@ CONFIG -= app_bundle
 
 include (../../shared/util.pri)
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
-
-testImportFiles.files = imports
-testImportFiles.path = .
-DEPLOYMENT += testImportFiles
+TESTDATA = data/* imports/*
 
 QT += core-private gui-private qml-private network testlib

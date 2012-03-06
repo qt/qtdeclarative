@@ -12,7 +12,6 @@ PUBLICTESTS += \
     qmlplugindump \
     qqmlcomponent \
     qqmlconsole \
-    qqmlcontext \
     qqmlengine \
     qqmlerror \
     qqmlincubator \
@@ -31,6 +30,7 @@ PRIVATETESTS += \
     animation \
     qqmlcpputils \
     qqmlecmascript \
+    qqmlcontext \
     qqmlexpression \
     qqmlimageprovider \
     qqmlinstruction \

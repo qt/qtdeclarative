@@ -10,9 +10,7 @@ INCLUDEPATH += ../../shared/
 HEADERS += ../../shared/testhttpserver.h
 SOURCES += ../../shared/testhttpserver.cpp
 
-importFiles.files = data
-importFiles.path = .
-DEPLOYMENT += importFiles
+TESTDATA = data/*
 
 CONFIG += parallel_test
 QT += core-private gui-private v8-private qml-private network testlib

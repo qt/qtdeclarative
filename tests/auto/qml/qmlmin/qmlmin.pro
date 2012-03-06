@@ -7,3 +7,5 @@ SOURCES += tst_qmlmin.cpp
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
+
+cross_compile: DEFINES += QTEST_CROSS_COMPILED

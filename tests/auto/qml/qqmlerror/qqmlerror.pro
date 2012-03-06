@@ -8,8 +8,6 @@ macx:CONFIG -= app_bundle
 
 CONFIG += parallel_test
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 QT += core-private gui-private qml-private testlib
