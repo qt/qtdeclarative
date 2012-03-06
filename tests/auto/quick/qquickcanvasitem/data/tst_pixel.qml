@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtTest 1.0
 import "testhelper.js" as Helper
 Canvas {
-   id:canvas; width:100;height:50; renderTarget: Canvas.Image
+   id:canvas; width:100;height:50; renderTarget: Canvas.Image; renderStrategy:Canvas.Threaded
    TestCase {
        //TODO
        name: "pixel"; when: windowShown

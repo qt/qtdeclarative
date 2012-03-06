@@ -15,6 +15,8 @@ Rectangle {
                  context.fillStyle = "red";
                  context.fillRect(0, 0, 100, 100);
              }
+             renderTarget:Canvas.Image
+             renderStrategy:Canvas.Threaded
              property int paintCount:spyPaint.count
              property int paintedCount:spyPainted.count
              property int canvasSizeChangedCount:spyCanvasSizeChanged.count

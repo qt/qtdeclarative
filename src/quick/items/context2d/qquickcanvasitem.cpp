@@ -86,8 +86,8 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , hasCanvasWindow(false)
     , available(false)
     , contextInitialized(false)
-    , renderTarget(QQuickCanvasItem::Image)
-    , renderStrategy(QQuickCanvasItem::Threaded)
+    , renderTarget(QQuickCanvasItem::FramebufferObject)
+    , renderStrategy(QQuickCanvasItem::Cooperative)
 {
 }
 
@@ -379,7 +379,7 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
     context will choose appropriate options and Canvas will signal the change
     to the properties.
 
-    The default render target is \c Canvas.Image.
+    The default render target is \c Canvas.FramebufferObject.
 */
 QQuickCanvasItem::RenderTarget QQuickCanvasItem::renderTarget() const
 {
@@ -419,7 +419,7 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
     the GUI thread.  Selecting \c Canvas.Cooperative, does not guarantee
     rendering will occur on a thread separate from the GUI thread.
 
-    The default value is \c Canvas.Threaded.
+    The default value is \c Canvas.Cooperative.
 
     \sa QtQuick2::Canvas::renderTarget
 */
