@@ -3,9 +3,8 @@ TARGET = tst_qquickparticlegroup
 SOURCES += tst_qquickparticlegroup.cpp
 macx:CONFIG -= app_bundle
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+include (../../shared/util.pri)
+TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private quick-private opengl-private testlib
 

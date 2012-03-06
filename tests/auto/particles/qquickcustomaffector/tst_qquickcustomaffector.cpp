@@ -44,25 +44,29 @@
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
 
-class tst_qquickcustomaffector : public QObject
+#include "../../shared/util.h"
+
+class tst_qquickcustomaffector : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickcustomaffector();
+    tst_qquickcustomaffector() {}
 
 private slots:
+    void initTestCase();
     void test_basic();
     void test_move();
 };
 
-tst_qquickcustomaffector::tst_qquickcustomaffector()
+void tst_qquickcustomaffector::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qquickcustomaffector::test_basic()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(testFileUrl("basic.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -95,7 +99,7 @@ void tst_qquickcustomaffector::test_basic()
 
 void tst_qquickcustomaffector::test_move()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/move.qml", 600);
+    QQuickView* view = createView(testFileUrl("move.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

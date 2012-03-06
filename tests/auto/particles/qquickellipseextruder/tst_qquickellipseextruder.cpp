@@ -45,20 +45,24 @@
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
 
-class tst_qquickellipseextruder : public QObject
+#include "../../shared/util.h"
+
+class tst_qquickellipseextruder : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickellipseextruder();
+    tst_qquickellipseextruder() {}
 
 private slots:
+    void initTestCase();
     void test_basic();
 private:
     bool inCircle(qreal x, qreal y, qreal r, bool borderOnly=false);
 };
 
-tst_qquickellipseextruder::tst_qquickellipseextruder()
+void tst_qquickellipseextruder::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
@@ -77,7 +81,7 @@ bool tst_qquickellipseextruder::inCircle(qreal x, qreal y, qreal r, bool borderO
 
 void tst_qquickellipseextruder::test_basic()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(testFileUrl("basic.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

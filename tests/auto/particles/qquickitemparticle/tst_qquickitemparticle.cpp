@@ -45,24 +45,28 @@
 #include <private/qquickimage_p.h>
 #include <private/qabstractanimation_p.h>
 
-class tst_qquickitemparticle : public QObject
+#include "../../shared/util.h"
+
+class tst_qquickitemparticle : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickitemparticle();
+    tst_qquickitemparticle() {}
 
 private slots:
+    void initTestCase();
     void test_basic();
 };
 
-tst_qquickitemparticle::tst_qquickitemparticle()
+void tst_qquickitemparticle::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qquickitemparticle::test_basic()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(testFileUrl("basic.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

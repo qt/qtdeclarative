@@ -66,11 +66,11 @@ bool myFuzzyGEQ(qreal a, qreal b)
     return (a + EPSILON > b);
 }
 
-QQuickView* createView(const QString &filename, int additionalWait=0)
+QQuickView* createView(const QUrl &filename, int additionalWait=0)
 {
     QQuickView *canvas = new QQuickView(0);
 
-    canvas->setSource(QUrl::fromLocalFile(filename));
+    canvas->setSource(filename);
     if (canvas->status() != QQuickView::Ready)
         return 0;
     canvas->show();

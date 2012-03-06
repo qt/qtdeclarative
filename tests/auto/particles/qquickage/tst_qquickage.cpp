@@ -44,27 +44,32 @@
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
 
-class tst_qquickage : public QObject
+#include "../../shared/util.h"
+
+class tst_qquickage : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickage();
+    tst_qquickage() {}
 
 private slots:
+    void initTestCase();
+
     void test_kill();
     void test_jump();
     void test_onceOff();
     void test_sustained();
 };
 
-tst_qquickage::tst_qquickage()
+void tst_qquickage::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qquickage::test_kill()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/kill.qml", 600);
+    QQuickView* view = createView(testFileUrl("kill.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -89,7 +94,7 @@ void tst_qquickage::test_kill()
 
 void tst_qquickage::test_jump()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/jump.qml", 600);
+    QQuickView* view = createView(testFileUrl("jump.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -115,7 +120,7 @@ void tst_qquickage::test_jump()
 
 void tst_qquickage::test_onceOff()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/onceoff.qml", 600);
+    QQuickView* view = createView(testFileUrl("onceoff.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -140,7 +145,7 @@ void tst_qquickage::test_onceOff()
 
 void tst_qquickage::test_sustained()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/sustained.qml", 600);
+    QQuickView* view = createView(testFileUrl("sustained.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
     //TODO: Ensure some particles have lived to 0.4s point despite unified timer
