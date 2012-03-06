@@ -166,13 +166,14 @@ bool QQmlWatcher::addWatch(int id, quint32 objectId, const QString &expr)
     return false;
 }
 
-void QQmlWatcher::removeWatch(int id)
+bool QQmlWatcher::removeWatch(int id)
 {
     if (!m_proxies.contains(id))
-        return;
+        return false;
 
     QList<QPointer<QQmlWatchProxy> > proxies = m_proxies.take(id);
     qDeleteAll(proxies);
+    return true;
 }
 
 void QQmlWatcher::addPropertyWatch(int id, QObject *object, quint32 debugId, const QMetaProperty &property)
