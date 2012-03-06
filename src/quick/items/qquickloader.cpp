@@ -344,7 +344,8 @@ void QQuickLoader::loadFromSource()
     }
 
     if (isComponentComplete()) {
-        d->component = new QQmlComponent(qmlEngine(this), d->source, this);
+        QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
+        d->component = new QQmlComponent(qmlEngine(this), d->source, mode, this);
         d->load();
     }
 }
@@ -711,7 +712,8 @@ void QQuickLoader::componentComplete()
     QQuickItem::componentComplete();
     if (active()) {
         if (d->loadingFromSource) {
-            d->component = new QQmlComponent(qmlEngine(this), d->source, this);
+            QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
+            d->component = new QQmlComponent(qmlEngine(this), d->source, mode, this);
         }
         d->load();
     }
@@ -751,6 +753,9 @@ qreal QQuickLoader::progress() const
 \qmlproperty bool QtQuick2::Loader::asynchronous
 
 This property holds whether the component will be instantiated asynchronously.
+
+When used in conjunction with the \l source property, loading and compilation
+will also be performed in a background thread.
 
 Loading asynchronously creates the objects declared by the component
 across multiple frames, and reduces the

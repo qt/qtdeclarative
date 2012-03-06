@@ -236,7 +236,7 @@ public:
     };
     Q_DECLARE_FLAGS(Options, Option)
 
-    QQmlTypeData *get(const QUrl &url);
+    QQmlTypeData *get(const QUrl &url, Mode mode = PreferSynchronous);
     QQmlTypeData *get(const QByteArray &, const QUrl &url, Options = None);
     void clearCache();
 

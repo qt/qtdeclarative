@@ -2,7 +2,11 @@ CONFIG += testcase
 TARGET = tst_qqmlcomponent
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qqmlcomponent.cpp
+INCLUDEPATH += ../../shared/
+SOURCES += tst_qqmlcomponent.cpp \
+            ../../shared/testhttpserver.cpp
+
+HEADERS += ../../shared/testhttpserver.h
 
 include (../../shared/util.pri)
 
@@ -10,4 +14,4 @@ TESTDATA = data/*
 
 CONFIG += parallel_test
 
-QT += core-private gui-private qml-private network testlib
+QT += core-private gui-private qml-private quick-private network testlib

@@ -280,6 +280,16 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \value Error An error has occurred.  Call errors() to retrieve a list of \{QQmlError}{errors}.
 */
 
+/*!
+    \enum QQmlComponent::CompilationMode
+
+    Specifies whether the QQmlComponent should load the component immediately, or asynchonously.
+
+    \value PreferSynchronous Prefer loading/compiling the component immediately, blocking the thread.
+    This is not always possible, e.g. remote URLs will always load asynchronously.
+    \value Asynchronous Load/compile the component in a background thread.
+*/
+
 void QQmlComponentPrivate::typeDataReady(QQmlTypeData *)
 {
     Q_Q(QQmlComponent);
@@ -288,8 +298,10 @@ void QQmlComponentPrivate::typeDataReady(QQmlTypeData *)
 
     fromTypeData(typeData);
     typeData = 0;
+    progress = 1.0;
 
     emit q->statusChanged(q->status());
+    emit q->progressChanged(progress);
 }
 
 void QQmlComponentPrivate::typeDataProgress(QQmlTypeData *, qreal p)
@@ -476,7 +488,24 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
 {
     Q_D(QQmlComponent);
     d->engine = engine;
-    loadUrl(url);
+    d->loadUrl(url);
+}
+
+/*!
+    Create a QQmlComponent from the given \a url and give it the
+    specified \a parent and \a engine.  If \a mode is \l Asynchronous,
+    the component will be loaded and compiled asynchronously.
+
+    Ensure that the URL provided is full and correct, in particular, use
+    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+
+    \sa loadUrl()
+*/QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMode mode, QObject *parent)
+: QObject(*(new QQmlComponentPrivate), parent)
+{
+    Q_D(QQmlComponent);
+    d->engine = engine;
+    d->loadUrl(url, mode);
 }
 
 /*!
@@ -491,7 +520,23 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
 {
     Q_D(QQmlComponent);
     d->engine = engine;
-    loadUrl(d->engine->baseUrl().resolved(QUrl::fromLocalFile(fileName)));
+    d->loadUrl(d->engine->baseUrl().resolved(QUrl::fromLocalFile(fileName)));
+}
+
+/*!
+    Create a QQmlComponent from the given \a fileName and give it the specified
+    \a parent and \a engine.  If \a mode is \l Asynchronous,
+    the component will be loaded and compiled asynchronously.
+
+    \sa loadUrl()
+*/
+QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
+                           CompilationMode mode, QObject *parent)
+: QObject(*(new QQmlComponentPrivate), parent)
+{
+    Q_D(QQmlComponent);
+    d->engine = engine;
+    d->loadUrl(d->engine->baseUrl().resolved(QUrl::fromLocalFile(fileName)), mode);
 }
 
 /*!
@@ -558,35 +603,63 @@ QQmlContext *QQmlComponent::creationContext() const
 void QQmlComponent::loadUrl(const QUrl &url)
 {
     Q_D(QQmlComponent);
+    d->loadUrl(url);
+}
 
-    d->clear();
+/*!
+    Load the QQmlComponent from the provided \a url.
+    If \a mode is \l Asynchronous, the component will be loaded and compiled asynchronously.
 
-    if ((url.isRelative() && !url.isEmpty())
-    || url.scheme() == QLatin1String("file")) // Workaround QTBUG-11929
-        d->url = d->engine->baseUrl().resolved(url);
+    Ensure that the URL provided is full and correct, in particular, use
+    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+*/
+void QQmlComponent::loadUrl(const QUrl &url, QQmlComponent::CompilationMode mode)
+{
+    Q_D(QQmlComponent);
+    d->loadUrl(url, mode);
+}
+
+void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode)
+{
+    Q_Q(QQmlComponent);
+    clear();
+
+    if ((newUrl.isRelative() && !newUrl.isEmpty())
+    || newUrl.scheme() == QLatin1String("file")) // Workaround QTBUG-11929
+        url = engine->baseUrl().resolved(newUrl);
     else
-        d->url = url;
+        url = newUrl;
 
-    if (url.isEmpty()) {
+    if (newUrl.isEmpty()) {
         QQmlError error;
-        error.setDescription(tr("Invalid empty URL"));
-        d->state.errors << error;
+        error.setDescription(q->tr("Invalid empty URL"));
+        state.errors << error;
         return;
     }
 
-    QQmlTypeData *data = QQmlEnginePrivate::get(d->engine)->typeLoader.get(d->url);
-
-    if (data->isCompleteOrError()) {
-        d->fromTypeData(data);
-        d->progress = 1.0;
-    } else {
-        d->typeData = data;
-        d->typeData->registerCallback(d);
-        d->progress = data->progress();
+    if (progress != 0.0) {
+        progress = 0.0;
+        emit q->progressChanged(progress);
     }
 
-    emit statusChanged(status());
-    emit progressChanged(d->progress);
+    QQmlDataLoader::Mode loaderMode = (mode == QQmlComponent::Asynchronous)
+            ? QQmlDataLoader::Asynchronous
+            : QQmlDataLoader::PreferSynchronous;
+
+    QQmlTypeData *data = QQmlEnginePrivate::get(engine)->typeLoader.get(url, loaderMode);
+
+    if (data->isCompleteOrError()) {
+        fromTypeData(data);
+        progress = 1.0;
+    } else {
+        typeData = data;
+        typeData->registerCallback(this);
+        progress = data->progress();
+    }
+
+    emit q->statusChanged(q->status());
+    if (progress != 0.0)
+        emit q->progressChanged(progress);
 }
 
 /*!

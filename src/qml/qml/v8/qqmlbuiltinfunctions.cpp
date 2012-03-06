@@ -1120,7 +1120,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 }
 
 /*!
-\qmlmethod object Qt::createComponent(url)
+\qmlmethod object Qt::createComponent(url, mode)
 
 Returns a \l Component object created using the QML file at the specified \a url,
 or \c null if an empty string was given.
@@ -1128,6 +1128,12 @@ or \c null if an empty string was given.
 The returned component's \l Component::status property indicates whether the
 component was successfully created. If the status is \c Component.Error,
 see \l Component::errorString() for an error description.
+
+If the optional \a mode parameter is set to \c Component.Asynchronous, the
+component will be loaded in a background thread.  The Component::status property
+will be \c Component.Loading while it is loading.  The status will change to
+\c Component.Ready if the component loads successfully, or \c Component.Error
+if loading fails.
 
 Call \l {Component::createObject()}{Component.createObject()} on the returned
 component to create an object instance of the component.
@@ -1143,8 +1149,9 @@ use \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
 v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
 {
-    if (args.Length() != 1)
-        V8THROW_ERROR("Qt.createComponent(): Invalid arguments");
+    const char *invalidArgs = "Qt.createComponent(): Invalid arguments";
+    if (args.Length() < 1 || args.Length() > 2)
+        V8THROW_ERROR(invalidArgs);
 
     QV8Engine *v8engine = V8ENGINE();
     QQmlEngine *engine = v8engine->engine();
@@ -1159,8 +1166,20 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
     if (arg.isEmpty())
         return v8::Null();
 
+    QQmlComponent::CompilationMode compileMode = QQmlComponent::PreferSynchronous;
+    if (args.Length() == 2) {
+        if (args[1]->IsInt32()) {
+            int mode = args[1]->Int32Value();
+            if (mode != int(QQmlComponent::PreferSynchronous) && mode != int(QQmlComponent::Asynchronous))
+                V8THROW_ERROR(invalidArgs);
+            compileMode = QQmlComponent::CompilationMode(mode);
+        } else {
+            V8THROW_ERROR(invalidArgs);
+        }
+    }
+
     QUrl url = context->resolvedUrl(QUrl(arg));
-    QQmlComponent *c = new QQmlComponent(engine, url, engine);
+    QQmlComponent *c = new QQmlComponent(engine, url, compileMode, engine);
     QQmlComponentPrivate::get(c)->creationContext = effectiveContext;
     QQmlData::get(c, true)->setImplicitDestructible();
     return v8engine->newQObject(c);

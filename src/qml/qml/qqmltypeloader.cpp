@@ -1171,7 +1171,7 @@ This enum defines the options that control the way type data is handled.
 /*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
-QQmlTypeData *QQmlTypeLoader::get(const QUrl &url)
+QQmlTypeData *QQmlTypeLoader::get(const QUrl &url, Mode mode)
 {
     Q_ASSERT(!url.isRelative() && 
             (QQmlEnginePrivate::urlToLocalFileOrQrc(url).isEmpty() || 
@@ -1184,7 +1184,7 @@ QQmlTypeData *QQmlTypeLoader::get(const QUrl &url)
     if (!typeData) {
         typeData = new QQmlTypeData(url, None, this);
         m_typeCache.insert(url, typeData);
-        QQmlDataLoader::load(typeData);
+        QQmlDataLoader::load(typeData, mode);
     }
 
     typeData->addref();
