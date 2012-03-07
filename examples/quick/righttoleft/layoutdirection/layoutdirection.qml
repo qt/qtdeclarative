@@ -46,14 +46,18 @@ Rectangle {
     property int direction: Qt.application.layoutDirection
     LayoutMirroring.enabled: mirror
     LayoutMirroring.childrenInherit: true
-    width: column.width + 80
-    height: column.height + 40
+    width: 320
+    height: 480
     Column {
-        id: column
-        width: 190
+        id: columnA
         spacing: 10
-        anchors.centerIn: parent
+        x: 10
+        y: 10
+        width: 140
 
+        Item {
+            id: rowCell
+        }
         Text {
             text: "Row"
             anchors.horizontalCenter: parent.horizontalCenter
@@ -68,7 +72,7 @@ Rectangle {
                 }
             }
             Repeater {
-                model: 4
+                model: 3
                 Loader {
                     property int value: index
                     sourceComponent: positionerDelegate
@@ -83,14 +87,14 @@ Rectangle {
 
         Grid {
             layoutDirection: root.direction
-            spacing: 10; columns: 4
+            spacing: 10; columns: 3
             move: Transition {
                 NumberAnimation {
                     properties: "x"
                 }
             }
             Repeater {
-                model: 11
+                model: 8
                 Loader {
                     property int value: index
                     sourceComponent: positionerDelegate
@@ -112,13 +116,19 @@ Rectangle {
                 }
             }
             Repeater {
-                model: 10
+                model: 8
                 Loader {
                     property int value: index
                     sourceComponent: positionerDelegate
                 }
             }
         }
+    }
+    Column {
+        id: columnB
+        spacing: 10
+        x: 160
+        y: 10
 
         Text {
             text: "ListView"
@@ -142,7 +152,7 @@ Rectangle {
 
         GridView {
             clip: true
-            width: 200; height: 160
+            width: 150; height: 160
             cellWidth: 50; cellHeight: 50
             layoutDirection: root.direction
             model: 48

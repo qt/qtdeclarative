@@ -45,70 +45,13 @@ Rectangle {
     property bool mirror: Qt.application.layoutDirection == Qt.RightToLeft
     LayoutMirroring.enabled: mirror
     LayoutMirroring.childrenInherit: true
-    width: 400
-    height: 875
+    width: 320
+    height: 480
     color: "lightsteelblue"
 
     Column {
         spacing: 10
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-
-        Text {
-            text: "Positioners"
-            anchors.left: parent.left
-        }
-
-        Column {
-            id: positioners
-            spacing: 5
-            anchors.left: parent.left
-            Row {
-                id: row
-                spacing: 4
-                property string text: "THISISROW"
-                anchors.left: parent.left
-                Repeater {
-                    model: parent.text.length
-                    delegate: positionerDelegate
-                }
-            }
-            Flow {
-                id: flow
-                spacing: 4
-                width: 90
-                property string text: "THISISFLOW"
-                anchors.left: parent.left
-                Repeater {
-                    model: parent.text.length
-                    delegate: positionerDelegate
-                }
-            }
-            Grid {
-                id: grid
-                spacing: 4
-                columns: 6
-                property string text: "THISISGRID"
-                anchors.left: parent.left
-                Repeater {
-                    model: parent.text.length
-                    delegate: positionerDelegate
-                }
-            }
-            Component {
-                id: positionerDelegate
-                Text {
-                    color: "white"
-                    font.pixelSize: 20
-                    text: parent.text[index]
-                    Rectangle {
-                        z: -1
-                        opacity: 0.7
-                        color: "black"
-                        anchors.fill: parent
-                    }
-                }
-            }
-        }
 
         Text {
             text: "Text alignment"
@@ -146,62 +89,6 @@ Rectangle {
                     width: parent.width
                     text: "Text aligned to right"
                     horizontalAlignment: Text.AlignRight
-                }
-            }
-        }
-
-        Text {
-            text: "Model views"
-            anchors.left: parent.left
-        }
-
-        Column {
-            id: views
-            spacing: 10
-            anchors.left: parent.left
-            ListView {
-                id: listView
-                z: -1
-                clip: true
-                model: text.length
-                width: 360; height: 45
-                orientation: Qt.Horizontal
-                property string text: "LISTVIEWLISTVIEWLISTVIEWLISTVIEWLISTVIEWLISTVIEW"
-                delegate: Rectangle {
-                    color: "black"
-                    width: 45; height: 45
-                    Rectangle {
-                        anchors { fill: parent; margins: 1 }
-                        color: "red"
-                    }
-                    Text {
-                        text: listView.text[index]
-                        font.pixelSize: 30
-                        anchors.centerIn: parent
-                    }
-                }
-            }
-            GridView {
-                id: gridView
-                z: -1
-                clip: true
-                model: text.length
-                width: 180; height: 90
-                cellWidth: 45; cellHeight: 45
-                property string text: "GRIDVIEWGRIDVIEWGRIDVIEWGRIDVIEWGRIDVIEWGRIDVIEW"
-                anchors.left: parent.left
-                delegate: Rectangle {
-                    color: "black"
-                    width: 45; height: 45
-                    Rectangle {
-                        anchors { fill: parent; margins: 1 }
-                        color: "red"
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        font.pixelSize: 30
-                        text: gridView.text[index]
-                    }
                 }
             }
         }
@@ -279,33 +166,36 @@ Rectangle {
                 }
             }
         }
-        Rectangle {
-            id: mirrorButton
-            color: mouseArea2.pressed ? "black" : "gray"
-            height: 50; width: parent.width
-            anchors.left: parent.left
-            Column {
-                anchors.centerIn: parent
-                Text {
-                    text: root.mirror ? "Mirrored" : "Not mirrored"
-                    color: "white"
-                    font.pixelSize: 16
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-                Text {
-                    text: "(click here to toggle)"
-                    color: "white"
-                    font.pixelSize: 10
-                    font.italic: true
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+    }
+
+    Rectangle {
+        id: mirrorButton
+        color: mouseArea2.pressed ? "black" : "gray"
+        height: 50; width: 160
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 10
+        Column {
+            anchors.centerIn: parent
+            Text {
+                text: root.mirror ? "Mirrored" : "Not mirrored"
+                color: "white"
+                font.pixelSize: 16
+                anchors.horizontalCenter: parent.horizontalCenter
             }
-            MouseArea {
-                id: mouseArea2
-                anchors.fill: parent
-                onClicked: {
-                    root.mirror = !root.mirror;
-                }
+            Text {
+                text: "(click here to toggle)"
+                color: "white"
+                font.pixelSize: 10
+                font.italic: true
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+        MouseArea {
+            id: mouseArea2
+            anchors.fill: parent
+            onClicked: {
+                root.mirror = !root.mirror;
             }
         }
     }
