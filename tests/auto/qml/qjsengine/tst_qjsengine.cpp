@@ -2114,13 +2114,13 @@ void tst_QJSEngine::evaluate()
         ret = eng.evaluate(code, /*fileName =*/QString(), lineNumber);
     else
         ret = eng.evaluate(code);
-    QCOMPARE(eng.hasUncaughtException(), expectHadError);
+    QCOMPARE(ret.isError(), expectHadError);
 #if 0 // ###FIXME: No support for the line number of an uncaught exception
     QEXPECT_FAIL("f()", "SyntaxError do not report line number", Continue);
     QEXPECT_FAIL("duplicateLabel: { duplicateLabel: ; }", "SyntaxError do not report line number", Continue);
     QCOMPARE(eng.uncaughtExceptionLineNumber(), expectErrorLineNumber);
 #endif
-    if (eng.hasUncaughtException() && ret.isError()) {
+    if (ret.isError()) {
         QEXPECT_FAIL("", "we have no more lineNumber property ", Continue);
         QVERIFY(ret.property("lineNumber").strictlyEquals(eng.toScriptValue(expectErrorLineNumber)));
     } else {
@@ -3089,7 +3089,7 @@ void tst_QJSEngine::gcWithNestedDataStructure()
     // The GC must be able to traverse deeply nested objects, otherwise this
     // test would crash.
     QJSEngine eng;
-    eng.evaluate(
+    QJSValue ret = eng.evaluate(
         "function makeList(size)"
         "{"
         "  var head = { };"
@@ -3101,10 +3101,10 @@ void tst_QJSEngine::gcWithNestedDataStructure()
         "  l.next = null;"
         "  return head;"
         "}");
-    QCOMPARE(eng.hasUncaughtException(), false);
+    QVERIFY(!ret.isError());
     const int size = 200;
     QJSValue head = eng.evaluate(QString::fromLatin1("makeList(%0)").arg(size));
-    QCOMPARE(eng.hasUncaughtException(), false);
+    QVERIFY(!head.isError());
     for (int x = 0; x < 2; ++x) {
         if (x == 1)
             eng.evaluate("gc()");
@@ -3294,13 +3294,7 @@ void tst_QJSEngine::stacktrace()
 
     QJSEngine eng;
     QJSValue result = eng.evaluate(script, fileName);
-    QVERIFY(eng.hasUncaughtException());
     QVERIFY(result.isError());
-
-    // QEXPECT_FAIL("", "QTBUG-6139: uncaughtExceptionBacktrace() doesn't give the full backtrace", Abort);
-    // ###FIXME: no uncahgutExceptionBacktrace: QCOMPARE(eng.uncaughtExceptionBacktrace(), backtrace);
-    QVERIFY(eng.hasUncaughtException());
-    QVERIFY(result.strictlyEquals(eng.uncaughtException()));
 
     // FIXME? it is not standard.
     //QCOMPARE(result.property("fileName").toString(), fileName);
@@ -3344,7 +3338,6 @@ void tst_QJSEngine::stacktrace()
 //    }
 
     // throw something that isn't an Error object
-    eng.clearExceptions();
     // ###FIXME: No uncaughtExceptionBacktrace: QVERIFY(eng.uncaughtExceptionBacktrace().isEmpty());
     QString script2 = QString::fromLatin1(
         "function foo(counter) {\n"
@@ -3361,16 +3354,8 @@ void tst_QJSEngine::stacktrace()
         "foo(0);");
 
     QJSValue result2 = eng.evaluate(script2, fileName);
-    QVERIFY(eng.hasUncaughtException());
     QVERIFY(!result2.isError());
     QVERIFY(result2.isString());
-
-    // ###FIXME: No uncaughtExceptionBacktrace:  QCOMPARE(eng.uncaughtExceptionBacktrace(), backtrace);
-    QVERIFY(eng.hasUncaughtException());
-
-    eng.clearExceptions();
-    QVERIFY(!eng.hasUncaughtException());
-    // ###FIXME: No uncaughtExceptionBacktrace:  QVERIFY(eng.uncaughtExceptionBacktrace().isEmpty());
 }
 
 void tst_QJSEngine::numberParsing_data()
@@ -3949,8 +3934,6 @@ void tst_QJSEngine::errorConstructors()
             code += name + QLatin1String("()");
             QJSValue ret = eng.evaluate(code);
             QVERIFY(ret.isError());
-            QCOMPARE(eng.hasUncaughtException(), x == 0);
-            eng.clearExceptions();
             QVERIFY(ret.toString().startsWith(name));
             //QTBUG-6138: JSC doesn't assign lineNumber when errors are not thrown
             QEXPECT_FAIL("", "we have no more lineNumber property ", Continue);
@@ -4797,7 +4780,6 @@ void tst_QJSEngine::jsThrowInsideWithStatement()
         QVERIFY(ret.toString().contains(QString::fromLatin1("ReferenceError")));
     }
     {
-        eng.clearExceptions();
         QJSValue ret = eng.evaluate(
             "o = { bug : \"no bug\" };"
             "with (o) {"
@@ -4807,12 +4789,11 @@ void tst_QJSEngine::jsThrowInsideWithStatement()
             "    bug;"
             "  }"
             "}");
+        QVERIFY(!ret.isError());
         QVERIFY(ret.isNumber());
         QCOMPARE(ret.toInt(), 123);
-        QVERIFY(eng.hasUncaughtException());
     }
     {
-        eng.clearExceptions();
         QJSValue ret = eng.evaluate(
             "o = { bug : \"no bug\" };"
             "with (o) {"
@@ -6337,7 +6318,6 @@ void tst_QJSEngine::functionPrototypeExtensions()
 
     // No properties should appear in for-in statements.
     QJSValue props = eng.evaluate("props = []; for (var p in Function.prototype) props.push(p); props");
-    QVERIFY(!eng.hasUncaughtException());
     QVERIFY(props.isArray());
     QCOMPARE(props.property("length").toInt(), 0);
 }

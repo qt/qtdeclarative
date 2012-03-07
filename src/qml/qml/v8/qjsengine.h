@@ -101,15 +101,6 @@ public:
 
     QV8Engine *handle() const { return d; }
 
-#ifdef QT_DEPRECATED
-    QT_DEPRECATED bool hasUncaughtException() const;
-    QT_DEPRECATED QJSValue uncaughtException() const;
-    QT_DEPRECATED void clearExceptions();
-#endif
-
-Q_SIGNALS:
-    void signalHandlerException(const QJSValue &exception);
-
 private:
     QJSValue create(int type, const void *ptr);
 

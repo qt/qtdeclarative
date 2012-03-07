@@ -459,9 +459,8 @@ QVariant QJSValue::toVariant() const
 
   Calling call() can cause an exception to occur in the script engine;
   in that case, call() returns the value that was thrown (typically an
-  \c{Error} object). You can call
-  QJSEngine::hasUncaughtException() to determine if an exception
-  occurred.
+  \c{Error} object). You can call isError() on the return value to
+  determine whether an exception occurred.
 
   \sa isCallable(), callWithInstance(), callAsConstructor()
 */
@@ -487,9 +486,8 @@ QJSValue QJSValue::call(const QJSValueList &args)
 
   Calling call() can cause an exception to occur in the script engine;
   in that case, call() returns the value that was thrown (typically an
-  \c{Error} object). You can call
-  QJSEngine::hasUncaughtException() to determine if an exception
-  occurred.
+  \c{Error} object). You can call isError() on the return value to
+  determine whether an exception occurred.
 
   \sa call()
 */
@@ -513,8 +511,8 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
   Calling this function can cause an exception to occur in the
   script engine; in that case, the value that was thrown
   (typically an \c{Error} object) is returned. You can call
-  QJSEngine::hasUncaughtException() to determine if an exception
-  occurred.
+  isError() on the return value to determine whether an
+  exception occurred.
 
   \sa call(), QJSEngine::newObject()
 */

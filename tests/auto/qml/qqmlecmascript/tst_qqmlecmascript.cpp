@@ -3391,7 +3391,7 @@ void tst_qqmlecmascript::signalWithJSValueInVariant()
     QVERIFY(object != 0);
 
     QJSValue value = engine.evaluate(expression);
-    QVERIFY(!engine.hasUncaughtException());
+    QVERIFY(!value.isError());
     object->setProperty("expression", expression);
     object->setProperty("compare", compare);
     object->setProperty("pass", false);
@@ -3416,7 +3416,7 @@ void tst_qqmlecmascript::signalWithJSValueInVariant_twoEngines()
 
     QJSEngine engine2;
     QJSValue value = engine2.evaluate(expression);
-    QVERIFY(!engine2.hasUncaughtException());
+    QVERIFY(!value.isError());
     object->setProperty("expression", expression);
     object->setProperty("compare", compare);
     object->setProperty("pass", false);
@@ -3441,7 +3441,7 @@ void tst_qqmlecmascript::signalWithQJSValue()
     QVERIFY(object != 0);
 
     QJSValue value = engine.evaluate(expression);
-    QVERIFY(!engine.hasUncaughtException());
+    QVERIFY(!value.isError());
     object->setProperty("expression", expression);
     object->setProperty("compare", compare);
     object->setProperty("pass", false);

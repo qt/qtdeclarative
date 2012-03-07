@@ -87,8 +87,7 @@ Q_DECLARE_METATYPE(QList<int>)
   Here we pass the name of the file as the second argument to
   evaluate().  This does not affect evaluation in any way; the second
   argument is a general-purpose string that is used to identify the
-  script for debugging purposes (for example, our filename will now
-  show up in any uncaughtExceptionBacktrace() involving the script).
+  script for debugging purposes.
 
   \section1 Engine Configuration
 
@@ -111,12 +110,9 @@ Q_DECLARE_METATYPE(QList<int>)
   evaluate() can throw a script exception (e.g. due to a syntax
   error); in that case, the return value is the value that was thrown
   (typically an \c{Error} object). You can check whether the
-  evaluation caused an exception by calling hasUncaughtException(). In
-  that case, you can call toString() on the error object to obtain an
-  error message. The current uncaught exception is also available
-  through uncaughtException().
-  Calling clearExceptions() will cause any uncaught exceptions to be
-  cleared.
+  evaluation caused an exception by calling isError() on the return
+  value. If isError() returns true, you can call toString() on the
+  error object to obtain an error message.
 
   \snippet doc/src/snippets/code/src_script_qjsengine.cpp 4
 
@@ -200,62 +196,6 @@ QJSEngine::~QJSEngine()
     \internal
 */
 
-#ifdef QT_DEPRECATED
-
-/*!
-    \obsolete
-
-    Returns true if the last script evaluation resulted in an uncaught
-    exception; otherwise returns false.
-
-    The exception state is cleared when evaluate() is called.
-
-    \sa uncaughtException(), uncaughtExceptionLineNumber(),
-      uncaughtExceptionBacktrace()
-*/
-bool QJSEngine::hasUncaughtException() const
-{
-    Q_D(const QJSEngine);
-    QScriptIsolate api(d);
-    return d->hasUncaughtException();
-}
-
-/*!
-    \obsolete
-
-    Returns the current uncaught exception, or an invalid QJSValue
-    if there is no uncaught exception.
-
-    The exception value is typically an \c{Error} object; in that case,
-    you can call toString() on the return value to obtain an error
-    message.
-
-    \sa hasUncaughtException(), uncaughtExceptionLineNumber(),
-      uncaughtExceptionBacktrace()
-*/
-QJSValue QJSEngine::uncaughtException() const
-{
-    Q_D(const QJSEngine);
-    QScriptIsolate api(d);
-    return d->scriptValueFromInternal(d->uncaughtException());
-}
-
-/*!
-    \obsolete
-
-    Clears any uncaught exceptions in this engine.
-
-    \sa hasUncaughtException()
-*/
-void QJSEngine::clearExceptions()
-{
-    Q_D(QJSEngine);
-    QScriptIsolate api(d);
-    d->clearExceptions();
-}
-
-#endif // QT_DEPRECATED
-
 /*!
     Runs the garbage collector.
 
@@ -285,17 +225,16 @@ void QJSEngine::collectGarbage()
     The evaluation of \a program can cause an exception in the
     engine; in this case the return value will be the exception
     that was thrown (typically an \c{Error} object). You can call
-    hasUncaughtException() to determine if an exception occurred in
-    the last call to evaluate().
+    isError() on the return value to determine whether an exception
+    occurred.
 
     \a lineNumber is used to specify a starting line number for \a
     program; line number information reported by the engine that pertain
-    to this evaluation (e.g. uncaughtExceptionLineNumber()) will be
-    based on this argument. For example, if \a program consists of two
-    lines of code, and the statement on the second line causes a script
-    exception, uncaughtExceptionLineNumber() would return the given \a
-    lineNumber plus one. When no starting line number is specified, line
-    numbers will be 1-based.
+    to this evaluation will be based on this argument. For example, if
+    \a program consists of two lines of code, and the statement on the
+    second line causes a script exception, the exception line number
+    would be \a lineNumber plus one. When no starting line number is
+    specified, line numbers will be 1-based.
 
     \a fileName is used for error reporting. For example in error objects
     the file name is accessible through the "fileName" property if it's

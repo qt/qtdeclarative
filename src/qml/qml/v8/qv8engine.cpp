@@ -182,7 +182,6 @@ QV8Engine::~QV8Engine()
     qPersistentDispose(m_getOwnPropertyNames);
 
     invalidateAllValues();
-    clearExceptions();
 
     qPersistentDispose(m_strongReferencer);
 
@@ -888,146 +887,11 @@ void QV8Engine::setEngine(QQmlEngine *engine)
     initQmlGlobalObject();
 }
 
-void QV8Engine::setException(v8::Handle<v8::Value> value, v8::Handle<v8::Message> msg)
-{
-    m_exception.set(value, msg);
-}
-
 v8::Handle<v8::Value> QV8Engine::throwException(v8::Handle<v8::Value> value)
 {
-    setException(value);
     v8::ThrowException(value);
     return value;
 }
-
-void QV8Engine::clearExceptions()
-{
-    m_exception.clear();
-}
-
-v8::Handle<v8::Value> QV8Engine::uncaughtException() const
-{
-    if (!hasUncaughtException())
-        return v8::Handle<v8::Value>();
-    return m_exception;
-}
-
-bool QV8Engine::hasUncaughtException() const
-{
-    return m_exception;
-}
-
-int QV8Engine::uncaughtExceptionLineNumber() const
-{
-    return m_exception.lineNumber();
-}
-
-QStringList QV8Engine::uncaughtExceptionBacktrace() const
-{
-    return m_exception.backtrace();
-}
-
-/*!
-  \internal
-  Save the current exception on stack so it can be set again later.
-  \sa QV8Engine::restoreException
-*/
-void QV8Engine::saveException()
-{
-    m_exception.push();
-}
-
-/*!
-  \internal
-  Load a saved exception from stack. Current exception, if exists will be dropped
-  \sa QV8Engine::saveException
-*/
-void QV8Engine::restoreException()
-{
-    m_exception.pop();
-}
-
-QV8Engine::Exception::Exception() {}
-
-QV8Engine::Exception::~Exception()
-{
-    Q_ASSERT_X(m_stack.isEmpty(), Q_FUNC_INFO, "Some saved exceptions left. Asymetric pop/push found.");
-    clear();
-}
-
-void QV8Engine::Exception::set(v8::Handle<v8::Value> value, v8::Handle<v8::Message> message)
-{
-    Q_ASSERT_X(!value.IsEmpty(), Q_FUNC_INFO, "Throwing an empty value handle is highly suspected");
-    clear();
-    m_value = v8::Persistent<v8::Value>::New(value);
-    m_message = v8::Persistent<v8::Message>::New(message);
-}
-
-void QV8Engine::Exception::clear()
-{
-    m_value.Dispose();
-    m_value.Clear();
-    m_message.Dispose();
-    m_message.Clear();
-}
-
-QV8Engine::Exception::operator bool() const
-{
-    return !m_value.IsEmpty();
-}
-
-QV8Engine::Exception::operator v8::Handle<v8::Value>() const
-{
-    Q_ASSERT(*this);
-    return m_value;
-}
-
-int QV8Engine::Exception::lineNumber() const
-{
-    if (m_message.IsEmpty())
-        return -1;
-    return m_message->GetLineNumber();
-}
-
-QStringList QV8Engine::Exception::backtrace() const
-{
-    if (m_message.IsEmpty())
-        return QStringList();
-
-    QStringList backtrace;
-    v8::Handle<v8::StackTrace> trace = m_message->GetStackTrace();
-    if (trace.IsEmpty())
-        // FIXME it should not happen (SetCaptureStackTraceForUncaughtExceptions is called).
-        return QStringList();
-
-    for (int i = 0; i < trace->GetFrameCount(); ++i) {
-        v8::Local<v8::StackFrame> frame = trace->GetFrame(i);
-        backtrace.append(QJSConverter::toString(frame->GetFunctionName()));
-        backtrace.append(QJSConverter::toString(frame->GetFunctionName()));
-        backtrace.append(QString::fromAscii("()@"));
-        backtrace.append(QJSConverter::toString(frame->GetScriptName()));
-        backtrace.append(QString::fromAscii(":"));
-        backtrace.append(QString::number(frame->GetLineNumber()));
-    }
-    return backtrace;
-}
-
-void QV8Engine::Exception::push()
-{
-    m_stack.push(qMakePair(m_value, m_message));
-    m_value.Clear();
-    m_message.Clear();
-}
-
-void QV8Engine::Exception::pop()
-{
-    Q_ASSERT_X(!m_stack.empty(), Q_FUNC_INFO, "Attempt to load unsaved exception found");
-    ValueMessagePair pair = m_stack.pop();
-    clear();
-    m_value = pair.first;
-    m_message = pair.second;
-}
-
 
 // Converts a QVariantList to JS.
 // The result is a new Array object with length equal to the length
@@ -1503,14 +1367,12 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> s
 {
     v8::HandleScope handleScope;
 
-    clearExceptions();
     if (script.IsEmpty()) {
         v8::Handle<v8::Value> exception = tryCatch.Exception();
         if (exception.IsEmpty()) {
             // This is possible on syntax errors like { a:12, b:21 } <- missing "(", ")" around expression.
             return new QJSValuePrivate(this);
         }
-        setException(exception, tryCatch.Message());
         return new QJSValuePrivate(this, exception);
     }
     v8::Handle<v8::Value> result;
@@ -1521,7 +1383,6 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> s
         //Q_ASSERT(!exception.IsEmpty());
         if (exception.IsEmpty())
             exception = v8::Exception::Error(v8::String::New("missing exception value"));
-        setException(exception, tryCatch.Message());
         return new QJSValuePrivate(this, exception);
     }
     return new QJSValuePrivate(this, result);
@@ -1537,11 +1398,6 @@ QJSValue QV8Engine::scriptValueFromInternal(v8::Handle<v8::Value> value) const
 QScriptPassPointer<QJSValuePrivate> QV8Engine::newArray(uint length)
 {
     return new QJSValuePrivate(this, v8::Array::New(length));
-}
-
-void QV8Engine::emitSignalHandlerException()
-{
-    emit q->signalHandlerException(scriptValueFromInternal(uncaughtException()));
 }
 
 void QV8Engine::startTimer(const QString &timerName)

@@ -74,7 +74,6 @@ private slots:
     void connectAndDisconnect();
 #endif
     void globalObject();
-    void hasUncaughtException();
 #if 0  // no is Evaluating for now
     void isEvaluating();
 #endif
@@ -268,14 +267,6 @@ void tst_QJSEngine::globalObject()
     newEngine();
     QBENCHMARK {
         m_engine->globalObject();
-    }
-}
-
-void tst_QJSEngine::hasUncaughtException()
-{
-    newEngine();
-    QBENCHMARK {
-        m_engine->hasUncaughtException();
     }
 }
 

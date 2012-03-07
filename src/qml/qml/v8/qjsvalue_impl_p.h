@@ -260,10 +260,8 @@ QString QJSValuePrivate::toString() const
         v8::HandleScope handleScope;
         v8::TryCatch tryCatch;
         v8::Local<v8::String> result = m_value->ToString();
-        if (result.IsEmpty()) {
+        if (result.IsEmpty())
             result = tryCatch.Exception()->ToString();
-            m_engine->setException(tryCatch.Exception(), tryCatch.Message());
-        }
         return QJSConverter::toString(result);
     }
 
@@ -542,41 +540,6 @@ inline bool QJSValuePrivate::strictlyEquals(QJSValuePrivate* other)
             || (isNull() && other->isNull());
 }
 
-inline bool QJSValuePrivate::lessThan(QJSValuePrivate *other) const
-{
-    if (engine() != other->engine() && engine() && other->engine()) {
-        qWarning("QJSValue::lessThan: cannot compare to a value created in a different engine");
-        return false;
-    }
-
-    if (isString() && other->isString())
-        return toString() < other->toString();
-
-    if (isObject() || other->isObject()) {
-        v8::HandleScope handleScope;
-        QV8Engine *eng = m_engine ? engine() : other->engine();
-        // FIXME: lessThan can throw an exception which will be dropped by this code:
-        Q_ASSERT(eng);
-        eng->saveException();
-        QScriptSharedDataPointer<QJSValuePrivate> cmp(eng->evaluate(QString::fromLatin1("(function(a,b){return a<b})")));
-        Q_ASSERT(cmp->isFunction());
-        v8::Handle<v8::Value> args[2];
-        cmp->prepareArgumentsForCall(args, QJSValueList() << QJSValuePrivate::get(this) << QJSValuePrivate::get(other));
-        QScriptSharedDataPointer<QJSValuePrivate> resultValue(cmp->call(0, 2, args));
-        bool result = resultValue->toBool();
-        eng->restoreException();
-        return result;
-    }
-
-    double nthis = toNumber();
-    double nother = other->toNumber();
-    if (qIsNaN(nthis) || qIsNaN(nother)) {
-        // Should return undefined in ECMA standard.
-        return false;
-    }
-    return nthis < nother;
-}
-
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::prototype() const
 {
     if (isObject()) {
@@ -631,8 +594,6 @@ inline void QJSValuePrivate::setProperty(v8::Handle<v8::String> name, QJSValuePr
 //    } else {
         v8::Object::Cast(*m_value)->Set(name, value->m_value, v8::PropertyAttribute(attribs & QJSConverter::PropertyAttributeMask));
 //    }
-    if (tryCatch.HasCaught())
-        engine()->setException(tryCatch.Exception(), tryCatch.Message());
 }
 
 inline void QJSValuePrivate::setProperty(quint32 index, QJSValuePrivate* value, uint attribs)
@@ -659,10 +620,7 @@ inline void QJSValuePrivate::setProperty(quint32 index, QJSValuePrivate* value, 
     }
 
     v8::HandleScope handleScope;
-    v8::TryCatch tryCatch;
     v8::Object::Cast(*m_value)->Set(index, value->m_value);
-    if (tryCatch.HasCaught())
-        engine()->setException(tryCatch.Exception(), tryCatch.Message());
 }
 
 inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(const QString& name) const
@@ -700,11 +658,8 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(T name) con
 
     v8::TryCatch tryCatch;
     v8::Handle<v8::Value> result = self->Get(name);
-    if (tryCatch.HasCaught()) {
+    if (tryCatch.HasCaught())
         result = tryCatch.Exception();
-        engine()->setException(result, tryCatch.Message());
-        return new QJSValuePrivate(engine(), result);
-    }
     if (result.IsEmpty())
         return new QJSValuePrivate(engine());
     return new QJSValuePrivate(engine(), result);
@@ -795,7 +750,6 @@ QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate* thisO
 
     if (argc < 0) {
         v8::Local<v8::Value> exeption = v8::Exception::TypeError(v8::String::New("Arguments must be an array"));
-        e->setException(exeption);
         return new QJSValuePrivate(e, exeption);
     }
 
@@ -808,7 +762,6 @@ QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::call(QJSValuePrivate* thisO
         //Q_ASSERT(!result.IsEmpty());
         if (result.IsEmpty())
             result = v8::Exception::Error(v8::String::New("missing exception value"));
-        e->setException(result, tryCatch.Message());
     }
 
     return new QJSValuePrivate(e, result);
@@ -820,17 +773,14 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::callAsConstructor(in
 
     if (argc < 0) {
         v8::Local<v8::Value> exeption = v8::Exception::TypeError(v8::String::New("Arguments must be an array"));
-        e->setException(exeption);
         return new QJSValuePrivate(e, exeption);
     }
 
     v8::TryCatch tryCatch;
     v8::Handle<v8::Value> result = v8::Object::Cast(*m_value)->CallAsConstructor(argc, argv);
 
-    if (result.IsEmpty()) {
+    if (result.IsEmpty())
         result = tryCatch.Exception();
-        e->setException(result, tryCatch.Message());
-    }
 
     return new QJSValuePrivate(e, result);
 }

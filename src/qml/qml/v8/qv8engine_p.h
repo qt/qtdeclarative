@@ -241,29 +241,6 @@ public:
         virtual ~Deletable() {}
     };
 
-    class Exception
-    {
-        typedef QPair<v8::Persistent<v8::Value>, v8::Persistent<v8::Message> > ValueMessagePair;
-
-        v8::Persistent<v8::Value> m_value;
-        v8::Persistent<v8::Message> m_message;
-        QStack<ValueMessagePair> m_stack;
-
-        Q_DISABLE_COPY(Exception)
-    public:
-        inline Exception();
-        inline ~Exception();
-        inline void set(v8::Handle<v8::Value> value, v8::Handle<v8::Message> message);
-        inline void clear();
-        inline operator bool() const;
-        inline operator v8::Handle<v8::Value>() const;
-        inline int lineNumber() const;
-        inline QStringList backtrace() const;
-
-        inline void push();
-        inline void pop();
-    };
-
     void initQmlGlobalObject();
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
@@ -352,15 +329,7 @@ public:
     inline void collectGarbage() { gc(); }
     static void gc();
 
-    void clearExceptions();
-    void setException(v8::Handle<v8::Value> value, v8::Handle<v8::Message> message = v8::Handle<v8::Message>());
     v8::Handle<v8::Value> throwException(v8::Handle<v8::Value> value);
-    bool hasUncaughtException() const;
-    int uncaughtExceptionLineNumber() const;
-    QStringList uncaughtExceptionBacktrace() const;
-    v8::Handle<v8::Value> uncaughtException() const;
-    void saveException();
-    void restoreException();
 
 #ifdef QML_GLOBAL_HANDLE_DEBUGGING
     // Used for handle debugging
@@ -413,8 +382,6 @@ public:
     QVariant &variantValue(v8::Handle<v8::Value> value);
 
     QJSValue scriptValueFromInternal(v8::Handle<v8::Value>) const;
-
-    void emitSignalHandlerException();
 
     // used for console.time(), console.timeEnd()
     void startTimer(const QString &timerName);
@@ -476,8 +443,6 @@ protected:
     Deletable *m_listModelData;
 
     QStringHash<bool> m_illegalNames;
-
-    Exception m_exception;
 
     QElapsedTimer m_time;
     QHash<QString, qint64> m_startedTimers;

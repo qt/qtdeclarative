@@ -134,7 +134,6 @@ public:
 
     inline bool equals(QJSValuePrivate* other);
     inline bool strictlyEquals(QJSValuePrivate* other);
-    inline bool lessThan(QJSValuePrivate *other) const;
 
     inline QScriptPassPointer<QJSValuePrivate> prototype() const;
     inline void setPrototype(QJSValuePrivate* prototype);

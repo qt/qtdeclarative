@@ -73,7 +73,7 @@ QJSValue myNumberPlusOne = myEngine.evaluate("myNumber + 1");
 
 //! [4]
 QJSValue result = myEngine.evaluate(...);
-if (myEngine.hasUncaughtException())
+if (result.isError())
     qDebug() << "uncaught exception:" << result.toString();
 //! [4]
 

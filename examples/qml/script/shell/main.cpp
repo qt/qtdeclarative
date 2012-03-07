@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
             continue;
 
         QJSValue result = eng->evaluate(contents, fileName, lineNumber);
-        if (eng->hasUncaughtException()) {
+        if (result.isError()) {
             fprintf (stderr, "    %s\n\n", qPrintable(result.toString()));
             return EXIT_FAILURE;
         }

@@ -162,7 +162,6 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(const QString& program, 
         // TODO: Why don't we get the exception, as with Script::Compile()?
         // Q_ASSERT(tryCatch.HasCaught());
         v8::Handle<v8::Value> error = v8::Exception::SyntaxError(v8::String::New(""));
-        setException(error);
         return new QJSValuePrivate(this, error);
     }
     return evaluate(script, tryCatch);

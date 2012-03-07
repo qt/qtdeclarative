@@ -382,22 +382,17 @@ void tst_QJSValue::toString()
             "  return o;"
             "})()");
         QCOMPARE(objectObject.toString(), QLatin1String("Error: toString"));
-        QVERIFY(eng.hasUncaughtException());
-        QCOMPARE(eng.uncaughtException().toString(), QLatin1String("Error: toString"));
     }
     {
-        eng.clearExceptions();
         QJSValue objectObject = eng.evaluate(
             "(function(){"
             "  var f = function() {};"
             "  f.prototype = Date;"
             "  return new f;"
             "})()");
-        QVERIFY(!eng.hasUncaughtException());
+        QVERIFY(!objectObject.isError());
         QVERIFY(objectObject.isObject());
         QCOMPARE(objectObject.toString(), QString::fromLatin1("TypeError: Function.prototype.toString is not generic"));
-        QVERIFY(eng.hasUncaughtException());
-        eng.clearExceptions();
     }
 
     QJSValue inv = QJSValue();
@@ -1690,17 +1685,15 @@ void tst_QJSValue::getSetProperty_gettersAndSettersThrowErrorJS()
                  "o.__defineGetter__('foo', function() { throw new Error('get foo') }); "
                  "o.__defineSetter__('foo', function() { throw new Error('set foo') }); ");
     QJSValue object = eng.evaluate("o");
-    QVERIFY(!eng.hasUncaughtException());
+    QVERIFY(!object.isError());
     QJSValue ret = object.property("foo");
     QVERIFY(ret.isError());
-    QVERIFY(eng.hasUncaughtException());
-    QVERIFY(ret.strictlyEquals(eng.uncaughtException()));
     QCOMPARE(ret.toString(), QLatin1String("Error: get foo"));
-    eng.evaluate("Object"); // clear exception state...
-    QVERIFY(!eng.hasUncaughtException());
+    QVERIFY(!eng.evaluate("Object").isError()); // clear exception state...
     object.setProperty("foo", str);
-    QVERIFY(eng.hasUncaughtException());
-    QCOMPARE(eng.uncaughtException().toString(), QLatin1String("Error: set foo"));
+// ### No way to check whether setProperty() threw an exception
+//    QVERIFY(eng.hasUncaughtException());
+//    QCOMPARE(eng.uncaughtException().toString(), QLatin1String("Error: set foo"));
 }
 
 void tst_QJSValue::getSetProperty_gettersAndSettersOnNative()
@@ -2041,8 +2034,6 @@ void tst_QJSValue::getSetPrototype_evalCyclicPrototype()
 {
     QJSEngine eng;
     QJSValue ret = eng.evaluate("o = { }; p = { }; o.__proto__ = p; p.__proto__ = o");
-    QCOMPARE(eng.hasUncaughtException(), true);
-    QVERIFY(ret.strictlyEquals(eng.uncaughtException()));
     QCOMPARE(ret.isError(), true);
     QCOMPARE(ret.toString(), QLatin1String("Error: Cyclic __proto__ value"));
 }
@@ -2051,7 +2042,6 @@ void tst_QJSValue::getSetPrototype_eval()
 {
     QJSEngine eng;
     QJSValue ret = eng.evaluate("p = { }; p.__proto__ = { }");
-    QCOMPARE(eng.hasUncaughtException(), false);
     QCOMPARE(ret.isError(), false);
 }
 
@@ -2499,13 +2489,11 @@ void tst_QJSValue::call()
     {
         QJSValue fun = eng.evaluate("(function() { throw new Error('foo'); })");
         QCOMPARE(fun.isCallable(), true);
-        QVERIFY(!eng.hasUncaughtException());
+        QVERIFY(!fun.isError());
 
         {
             QJSValue result = fun.call();
             QCOMPARE(result.isError(), true);
-            QCOMPARE(eng.hasUncaughtException(), true);
-            QVERIFY(result.strictlyEquals(eng.uncaughtException()));
         }
     }
 #if 0 // FIXME: No c-style callbacks
@@ -2828,8 +2816,6 @@ void tst_QJSValue::construct_throw()
     QCOMPARE(fun.isCallable(), true);
     QJSValue ret = fun.callAsConstructor();
     QCOMPARE(ret.isError(), true);
-    QCOMPARE(eng.hasUncaughtException(), true);
-    QVERIFY(ret.strictlyEquals(eng.uncaughtException()));
 }
 
 #if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
@@ -2896,9 +2882,7 @@ void tst_QJSValue::construct_constructorThrowsPrimitive()
         QJSValue ret = fun.callAsConstructor();
         QVERIFY(ret.isNumber());
         QCOMPARE(ret.toNumber(), 123.0);
-        QVERIFY(eng.hasUncaughtException());
-        QVERIFY(ret.strictlyEquals(eng.uncaughtException()));
-        eng.clearExceptions();
+        QVERIFY(!ret.isError());
     }
 #if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
     // construct(QJSValue)
