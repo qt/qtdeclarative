@@ -5,7 +5,7 @@ MODULE_PRI = ../../modules/qt_declarative.pri
 
 QT = qml
 
-pritarget.path = $$[QT_INSTALL_DATA]/mkspecs/modules
+pritarget.path = $$[QT_HOST_DATA]/mkspecs/modules
 pritarget.files = $$MODULE_PRI
 INSTALLS += pritarget
 
