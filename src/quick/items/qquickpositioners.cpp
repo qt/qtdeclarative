@@ -168,7 +168,8 @@ QQuickBasePositioner::~QQuickBasePositioner()
         d->unwatchChanges(positionedItems.at(i).item);
     for (int i = 0; i < unpositionedItems.count(); ++i)
         d->unwatchChanges(unpositionedItems.at(i).item);
-    positionedItems.clear();
+    clearPositionedItems(&positionedItems);
+    clearPositionedItems(&unpositionedItems);
 }
 
 void QQuickBasePositioner::updatePolish()
@@ -248,10 +249,10 @@ void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &v
         int idx = positionedItems.find(posItem);
         if (idx >= 0) {
             d->unwatchChanges(child);
-            positionedItems.remove(idx);
+            removePositionedItem(&positionedItems, idx);
         } else if ((idx = unpositionedItems.find(posItem)) >= 0) {
             d->unwatchChanges(child);
-            unpositionedItems.remove(idx);
+            removePositionedItem(&unpositionedItems, idx);
         }
         d->setPositioningDirty();
     }
@@ -392,6 +393,24 @@ void QQuickBasePositioner::positionItemY(qreal y, PositionedItem *target)
             && (d->type == Vertical || d->type == Both)) {
         target->moveTo(QPointF(target->itemX(), y));
     }
+}
+
+/*
+  Since PositionedItem values are stored by value, their internal transitionableItem pointers
+  must be cleaned up when a PositionedItem is removed from a QPODVector, otherwise the pointer
+  is never deleted since QPODVector doesn't invoke the destructor.
+  */
+void QQuickBasePositioner::removePositionedItem(QPODVector<PositionedItem,8> *items, int index)
+{
+    Q_ASSERT(index >= 0 && index < items->count());
+    delete items->at(index).transitionableItem;
+    items->remove(index);
+}
+void QQuickBasePositioner::clearPositionedItems(QPODVector<PositionedItem,8> *items)
+{
+    for (int i=0; i<items->count(); i++)
+        delete items->at(i).transitionableItem;
+    items->clear();
 }
 
 QQuickPositionerAttached *QQuickBasePositioner::qmlAttachedProperties(QObject *obj)

@@ -158,9 +158,13 @@ protected:
 
     QPODVector<PositionedItem,8> positionedItems;
     QPODVector<PositionedItem,8> unpositionedItems;//Still 'in' the positioner, just not positioned
+
     void positionItem(qreal x, qreal y, PositionedItem *target);
     void positionItemX(qreal, PositionedItem *target);
     void positionItemY(qreal, PositionedItem *target);
+
+    void removePositionedItem(QPODVector<PositionedItem,8> *items, int index);
+    void clearPositionedItems(QPODVector<PositionedItem,8> *items);
 
 private:
     Q_DISABLE_COPY(QQuickBasePositioner)
