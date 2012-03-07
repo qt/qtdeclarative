@@ -3265,7 +3265,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
     Q_UNUSED(changed)
 #else
     if (changed)
-        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::TextUpdated, q, 0));
+        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::TextUpdated, q));
 #endif
 }
 
@@ -3891,7 +3891,7 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
         }
 
 #ifndef QT_NO_ACCESSIBILITY
-        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::TextCaretMoved, q, 0));
+        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::TextCaretMoved, q));
 #endif
 
         return true;
