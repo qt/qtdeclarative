@@ -62,7 +62,7 @@
 #include "qqmlvme_p.h"
 #include "qqmlerror.h"
 #include "qqml.h"
-#include "../debugger/qqmlprofilerservice_p.h"
+#include <private/qqmlprofilerservice_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
