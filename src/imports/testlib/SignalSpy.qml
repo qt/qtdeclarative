@@ -92,7 +92,9 @@ Item {
 
     function qtest_update() {
         if (qtest_prevTarget != null) {
-            qtest_prevTarget[qtest_prevSignalName].disconnect(spy, "qtest_activated")
+            var prevFunc = qtest_prevTarget[qtest_prevSignalName]
+            if (prevFunc)
+                prevFunc.disconnect(spy.qtest_activated)
             qtest_prevTarget = null
             qtest_prevSignalName = ""
         }
