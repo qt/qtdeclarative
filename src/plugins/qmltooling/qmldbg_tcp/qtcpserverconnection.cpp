@@ -147,9 +147,9 @@ void QTcpServerConnection::listen()
     d->tcpServer = new QTcpServer(this);
     QObject::connect(d->tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
     if (d->tcpServer->listen(QHostAddress::Any, d->port))
-        qWarning("QQmlDebugServer: Waiting for connection on port %d...", d->port);
+        qWarning("QML Debugger: Waiting for connection on port %d...", d->port);
     else
-        qWarning("QQmlDebugServer: Unable to listen on port %d", d->port);
+        qWarning("QML Debugger: Unable to listen to port %d.", d->port);
 }
 
 
@@ -170,7 +170,7 @@ void QTcpServerConnection::newConnection()
     Q_D(QTcpServerConnection);
 
     if (d->socket && d->socket->peerPort()) {
-        qWarning("QQmlDebugServer: Another client is already connected");
+        qWarning("QML Debugger: Another client is already connected.");
         QTcpSocket *faultyConnection = d->tcpServer->nextPendingConnection();
         delete faultyConnection;
         return;
@@ -190,7 +190,7 @@ void QTcpServerConnection::newConnection()
 
 void QTcpServerConnection::invalidPacket()
 {
-    qWarning("QQmlDebugServer: Received a corrupted packet! Giving up ...");
+    qWarning("QML Debugger: Received a corrupted packet! Giving up ...");
 }
 
 QT_END_NAMESPACE

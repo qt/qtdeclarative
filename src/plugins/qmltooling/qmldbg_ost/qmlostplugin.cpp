@@ -127,12 +127,12 @@ void QmlOstPlugin::setPort(int port, bool block)
     if (!ok) {
         if (d->ost->errorString().length())
             qDebug("Error from QOstDevice: %s", qPrintable(d->ost->errorString()));
-        qWarning("QQmlDebugServer: Unable to listen on OST"); // This message is part of the signalling - do not change the format!
+        qWarning("QML Debugger: Unable to listen to OST."); // This message is part of the signalling - do not change the format!
         return;
     }
     d->protocol = new QPacketProtocol(d->ost, this);
     QObject::connect(d->protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
-    qWarning("QQmlDebugServer: Waiting for connection via OST"); // This message is part of the signalling - do not change the format!
+    qWarning("QML Debugger: Waiting for connection via OST."); // This message is part of the signalling - do not change the format!
 }
 
 void QmlOstPlugin::readyRead()

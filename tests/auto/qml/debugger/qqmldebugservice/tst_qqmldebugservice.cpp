@@ -76,14 +76,14 @@ private slots:
 
 void tst_QQmlDebugService::initTestCase()
 {
-    const QString waitingMsg = QString("QQmlDebugServer: Waiting for connection on port %1...").arg(PORT);
+    const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
     QTest::ignoreMessage(QtWarningMsg, waitingMsg.toAscii().constData());
     new QQmlEngine(this);
 
     m_conn = new QQmlDebugConnection(this);
 
 
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugServer: Connection established");
+    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Connection established.");
     for (int i = 0; i < 50; ++i) {
         // try for 5 seconds ...
         m_conn->connectToHost("127.0.0.1", PORT);

@@ -71,7 +71,7 @@ private slots:
 
 void tst_QQmlDebugClient::initTestCase()
 {
-    const QString waitingMsg = QString("QQmlDebugServer: Waiting for connection on port %1...").arg(PORT);
+    const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
     QTest::ignoreMessage(QtWarningMsg, waitingMsg.toAscii().constData());
     new QQmlEngine(this);
 
@@ -80,7 +80,7 @@ void tst_QQmlDebugClient::initTestCase()
     QQmlDebugTestClient client("tst_QQmlDebugClient::handshake()", m_conn);
     QQmlDebugTestService service("tst_QQmlDebugClient::handshake()");
 
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugServer: Connection established");
+    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Connection established.");
     for (int i = 0; i < 50; ++i) {
         // try for 5 seconds ...
         m_conn->connectToHost("127.0.0.1", PORT);
@@ -150,7 +150,7 @@ void tst_QQmlDebugClient::parallelConnect()
 {
     QQmlDebugConnection connection2;
 
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugServer: Another client is already connected");
+    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Another client is already connected.");
     // will connect & immediately disconnect
     connection2.connectToHost("127.0.0.1", PORT);
     QVERIFY(connection2.waitForConnected());
@@ -172,7 +172,7 @@ void tst_QQmlDebugClient::sequentialConnect()
     QTest::qWait(100);
 
     connection2.connectToHost("127.0.0.1", PORT);
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugServer: Connection established");
+    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Connection established.");
     QVERIFY(connection2.waitForConnected());
     QVERIFY(connection2.isConnected());
     QTRY_VERIFY(client2.state() == QQmlDebugClient::Enabled);
