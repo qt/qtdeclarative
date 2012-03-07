@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QQmlEngineDebugService, qmlEngineDebugService);
+Q_GLOBAL_STATIC(QQmlEngineDebugService, qmlEngineDebugService)
 
 QQmlEngineDebugService *QQmlEngineDebugService::instance()
 {
@@ -67,7 +67,7 @@ QQmlEngineDebugService *QQmlEngineDebugService::instance()
 }
 
 QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
-    : QQmlDebugService(QLatin1String("QQmlEngine"), 1, parent),
+    : QQmlDebugService(QLatin1String("QDeclarativeEngine"), 1, parent),
       m_watch(new QQmlWatcher(this)),
       m_statesDelegate(0)
 {

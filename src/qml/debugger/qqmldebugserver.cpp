@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
   handshake:
     1. Client sends
-         "QQmlDebugServer" 0 version pluginNames
+         "QDeclarativeDebugServer" 0 version pluginNames
        version: an int representing the highest protocol version the client knows
        pluginNames: plugins available on client side
     2. Server sends
@@ -69,12 +69,12 @@ QT_BEGIN_NAMESPACE
        pluginNames: plugins available on server side. plugins both in the client and server message are enabled.
   client plugin advertisement
     1. Client sends
-         "QQmlDebugServer" 1 pluginNames
+         "QDeclarativeDebugServer" 1 pluginNames
   server plugin advertisement
     1. Server sends
          "QQmlDebugClient" 1 pluginNames pluginVersions
   plugin communication:
-       Everything send with a header different to "QQmlDebugServer" is sent to the appropriate plugin.
+       Everything send with a header different to "QDeclarativeDebugServer" is sent to the appropriate plugin.
   */
 
 const int protocolVersion = 1;
@@ -155,7 +155,7 @@ void QQmlDebugServerPrivate::advertisePlugins()
             pluginNames << service->name();
             pluginVersions << service->version();
         }
-        out << QString(QLatin1String("QQmlDebugClient")) << 1 << pluginNames << pluginVersions;
+        out << QString(QLatin1String("QDeclarativeDebugClient")) << 1 << pluginNames << pluginVersions;
     }
 
     QMetaObject::invokeMethod(q, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, QList<QByteArray>() << message));
@@ -354,7 +354,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
     QString name;
 
     in >> name;
-    if (name == QLatin1String("QQmlDebugServer")) {
+    if (name == QLatin1String("QDeclarativeDebugServer")) {
         int op = -1;
         in >> op;
         if (op == 0) {
@@ -373,7 +373,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                     pluginVersions << service->version();
                 }
 
-                out << QString(QLatin1String("QQmlDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
+                out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
             }
             d->connection->send(QList<QByteArray>() << helloAnswer);
 

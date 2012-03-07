@@ -59,7 +59,7 @@ class QQmlInspectorClient : public QQmlDebugClient
 
 public:
     QQmlInspectorClient(QQmlDebugConnection *connection)
-        : QQmlDebugClient(QLatin1String("QQmlObserverMode"), connection)
+        : QQmlDebugClient(QLatin1String("QDeclarativeObserverMode"), connection)
         , m_showAppOnTop(false)
     {
     }

@@ -140,7 +140,7 @@ struct ObjectReferenceHash
 };
 
 }
-Q_GLOBAL_STATIC(ObjectReferenceHash, objectReferenceHash);
+Q_GLOBAL_STATIC(ObjectReferenceHash, objectReferenceHash)
 
 
 /*!
