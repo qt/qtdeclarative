@@ -564,9 +564,16 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     if (!d->contextInitialized)
         return 0;
 
-    QSGSimpleTextureNode *node = static_cast<QSGSimpleTextureNode*>(oldNode);
+    class CanvasTextureNode : public QSGSimpleTextureNode
+    {
+    public:
+        CanvasTextureNode() : QSGSimpleTextureNode() {}
+        ~CanvasTextureNode() {delete texture();}
+    };
+
+    CanvasTextureNode *node = static_cast<CanvasTextureNode*>(oldNode);
     if (!node) {
-        node = new QSGSimpleTextureNode;
+        node = new CanvasTextureNode;
     }
 
     if (d->renderStrategy == QQuickCanvasItem::Cooperative)
