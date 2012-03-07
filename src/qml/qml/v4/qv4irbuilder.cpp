@@ -684,7 +684,7 @@ bool QV4IRBuilder::visit(AST::CallExpression *ast)
         //ExprResult base = expression(ast->base);
         QString id;
         for (int i = 0; i < names.size(); ++i) {
-            if (! i)
+            if (i)
                 id += QLatin1Char('.');
             id += names.at(i);
         }
