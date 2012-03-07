@@ -4,8 +4,6 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qquickmultipointtoucharea.cpp
 
-importFiles.files = data
-importFiles.path = .
-DEPLOYMENT += importFiles
+TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private testlib

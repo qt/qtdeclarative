@@ -4,8 +4,7 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_parserstress.cpp
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
-DEFINES += TESTDATADIR=\\\"$$PWD/tests\\\"
+TESTDATA = tests/*
 
 CONFIG += parallel_test
 

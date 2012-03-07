@@ -86,15 +86,16 @@ QStringList tst_parserstress::findJSFiles(const QDir &d)
 
 void tst_parserstress::ecmascript_data()
 {
-#ifdef TESTDATADIR
-    QDir dir(TESTDATADIR);
+    QString testDataDir = QFileInfo(QFINDTESTDATA("tests/shell.js")).absolutePath();
+    QVERIFY2(!testDataDir.isEmpty(), qPrintable("Cannot find testDataDir!"));
+
+    QDir dir(testDataDir);
     QStringList files = findJSFiles(dir);
 
     QTest::addColumn<QString>("file");
     foreach (const QString &file, files) {
         QTest::newRow(qPrintable(file)) << file;
     }
-#endif
 }
 
 void tst_parserstress::ecmascript()
@@ -126,8 +127,9 @@ void tst_parserstress::ecmascript()
     QByteArray qmlData = qml.toUtf8();
 
     QQmlComponent component(&engine);
-    
-    component.setData(qmlData, QUrl::fromLocalFile(SRCDIR + QString("/dummy.qml")));
+
+    QString dummyFile = QFINDTESTDATA("dummy.qml");
+    component.setData(qmlData, QUrl::fromLocalFile(dummyFile));
 
     QFileInfo info(file);
 

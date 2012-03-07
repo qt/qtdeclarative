@@ -52,8 +52,8 @@
 QT_BEGIN_NAMESPACE
 
 const int protocolVersion = 1;
-const QString serverId = QLatin1String("QQmlDebugServer");
-const QString clientId = QLatin1String("QQmlDebugClient");
+const QString serverId = QLatin1String("QDeclarativeDebugServer");
+const QString clientId = QLatin1String("QDeclarativeDebugClient");
 
 class QQmlDebugClientPrivate : public QObjectPrivate
 {

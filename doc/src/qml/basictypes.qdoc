@@ -88,7 +88,7 @@
     Item { width: 100.45; height: 150.82 }
     \endqml
 
-    \bold{Note:} In QML all reals are stored in single precision, \l
+    \bold{Note:} In QML all reals are stored in double precision, \l
     {http://en.wikipedia.org/wiki/IEEE_754} {IEEE floating point}
     format.
 

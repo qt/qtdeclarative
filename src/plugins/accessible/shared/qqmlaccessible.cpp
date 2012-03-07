@@ -59,6 +59,13 @@ QQmlAccessible::QQmlAccessible(QObject *object)
 {
 }
 
+void *QQmlAccessible::interface_cast(QAccessible::InterfaceType t)
+{
+    if (t == QAccessible::ActionInterface)
+        return static_cast<QAccessibleActionInterface*>(this);
+    return QAccessibleObject::interface_cast(t);
+}
+
 QQmlAccessible::~QQmlAccessible()
 {
 }
@@ -131,7 +138,15 @@ QStringList QQmlAccessible::actionNames() const
         break;
     case QAccessible::RadioButton:
     case QAccessible::CheckBox:
-        actions << QAccessibleActionInterface::checkAction();
+        actions << QAccessibleActionInterface::checkAction()
+                << QAccessibleActionInterface::uncheckAction()
+                << QAccessibleActionInterface::pressAction();
+        break;
+    case QAccessible::Slider:
+    case QAccessible::SpinBox:
+    case QAccessible::ScrollBar:
+        actions << QAccessibleActionInterface::increaseAction()
+                << QAccessibleActionInterface::decreaseAction();
         break;
     default:
         break;
@@ -141,12 +156,72 @@ QStringList QQmlAccessible::actionNames() const
 
 void QQmlAccessible::doAction(const QString &actionName)
 {
-    if (role() == QAccessible::PushButton && actionName == QAccessibleActionInterface::pressAction()) {
-        QMetaObject::invokeMethod(object(), "accessibleAction");
+    // Look for and call the accessible[actionName]Action() function on the item.
+    // This allows for overriding the default action handling.
+    const QByteArray functionName = "accessible" + actionName.toLatin1() + "Action()";
+    if (object()->metaObject()->indexOfMethod(functionName) != -1) {
+        QMetaObject::invokeMethod(object(), functionName, Q_ARG(QString, actionName));
+        return;
     }
-    if ((role() == QAccessible::CheckBox || role() == QAccessible::RadioButton) && actionName == QAccessibleActionInterface::checkAction()) {
-        bool checked = object()->property("checked").toBool();
-        object()->setProperty("checked",  QVariant(!checked));
+
+    // Role-specific default action handling follows. Items are excepted to provide
+    // properties according to role conventions. These will then be read and/or updated
+    // by the accessibility system.
+    //   Checkable roles   : checked
+    //   Value-based roles : (via the value interface: value, minimumValue, maximumValue), stepSize
+    switch (role()) {
+    case QAccessible::RadioButton:
+    case QAccessible::CheckBox: {
+        QVariant checked = object()->property("checked");
+        if (checked.isValid()) {
+            if (actionName == QAccessibleActionInterface::pressAction()) {
+                object()->setProperty("checked",  QVariant(!checked.toBool()));
+            } else if (actionName == QAccessibleActionInterface::checkAction()) {
+                object()->setProperty("checked",  QVariant(true));
+            } else if (actionName == QAccessibleActionInterface::uncheckAction()) {
+                object()->setProperty("checked",  QVariant(false));
+            }
+        }
+        break;
+    }
+    case QAccessible::Slider:
+    case QAccessible::SpinBox:
+    case QAccessible::Dial:
+    case QAccessible::ScrollBar: {
+        if (actionName != QAccessibleActionInterface::increaseAction() &&
+            actionName != QAccessibleActionInterface::decreaseAction())
+            break;
+
+        // Update the value using QAccessibleValueInterface, respecting
+        // the minimum and maximum value (if set). Also check for and
+        // use the "stepSize" property on the item
+        if (QAccessibleValueInterface *valueIface = valueInterface()) {
+            QVariant valueV = valueIface->currentValue();
+            qreal newValue = valueV.toInt();
+
+            QVariant stepSizeV = object()->property("stepSize");
+            qreal stepSize = stepSizeV.isValid() ? stepSizeV.toReal() : qreal(1.0);
+            if (actionName == QAccessibleActionInterface::increaseAction()) {
+                newValue += stepSize;
+            } else {
+                newValue -= stepSize;
+            }
+
+            QVariant minimumValueV = valueIface->minimumValue();
+            if (minimumValueV.isValid()) {
+                newValue = qMax(newValue, minimumValueV.toReal());
+            }
+            QVariant maximumValueV = valueIface->maximumValue();
+            if (maximumValueV.isValid()) {
+                newValue = qMin(newValue, maximumValueV.toReal());
+            }
+
+            valueIface->setCurrentValue(QVariant(newValue));
+        }
+        break;
+    }
+    default:
+        break;
     }
 }
 

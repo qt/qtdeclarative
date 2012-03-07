@@ -1664,7 +1664,7 @@ void QQuickItemViewPrivate::layout()
         for (QList<FxViewItem*>::Iterator it = releasePendingTransition.begin();
              it != releasePendingTransition.end(); ) {
             FxViewItem *item = *it;
-            if (item->transitionRunning() || prepareNonVisibleItemTransition(item, viewBounds)) {
+            if (prepareNonVisibleItemTransition(item, viewBounds)) {
                 ++it;
             } else {
                 releaseItem(item);
@@ -1676,7 +1676,9 @@ void QQuickItemViewPrivate::layout()
             visibleItems[i]->startTransition(transitioner);
         for (int i=0; i<releasePendingTransition.count(); i++)
             releasePendingTransition[i]->startTransition(transitioner);
+
         transitioner->setPopulateTransitionEnabled(false);
+        transitioner->resetTargetLists();
     }
 
     runDelayedRemoveTransition = false;
@@ -1955,36 +1957,10 @@ void QQuickItemViewPrivate::prepareVisibleItemTransitions()
     if (!transitioner)
         return;
 
-    transitioner->addTransitionIndexes.clear();
-    transitioner->addTransitionTargets.clear();
-    transitioner->moveTransitionIndexes.clear();
-    transitioner->moveTransitionTargets.clear();
-
+    // must call for every visible item to init or discard transitions
     QRectF viewBounds(0, position(), q->width(), q->height());
-    for (int i=0; i<visibleItems.count(); i++) {
-        // must call for every visible item to init or discard transitions
-        if (!visibleItems[i]->prepareTransition(viewBounds))
-            continue;
-        if (visibleItems[i]->isTransitionTarget) {
-            switch (visibleItems[i]->nextTransitionType) {
-            case QQuickItemViewTransitioner::NoTransition:
-                break;
-            case QQuickItemViewTransitioner::PopulateTransition:
-            case QQuickItemViewTransitioner::AddTransition:
-                transitioner->addTransitionIndexes.append(visibleItems[i]->index);
-                transitioner->addTransitionTargets.append(visibleItems[i]->item);
-                break;
-            case QQuickItemViewTransitioner::MoveTransition:
-                transitioner->moveTransitionIndexes.append(visibleItems[i]->index);
-                transitioner->moveTransitionTargets.append(visibleItems[i]->item);
-                break;
-            case QQuickItemViewTransitioner::RemoveTransition:
-                // removed targets won't be in visibleItems, handle these
-                // in prepareNonVisibleItemTransition()
-                break;
-            }
-        }
-    }
+    for (int i=0; i<visibleItems.count(); i++)
+        visibleItems[i]->prepareTransition(transitioner, viewBounds);
 }
 
 void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QQuickChangeSet::MoveKey, FxViewItem *> *removedItems)
@@ -1992,10 +1968,8 @@ void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QQuickChangeSet::Move
     if (!transitioner)
         return;
 
-    transitioner->removeTransitionIndexes.clear();
-    transitioner->removeTransitionTargets.clear();
-
-    if (transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)) {
+    if (transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)
+            || transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false)) {
         for (QHash<QQuickChangeSet::MoveKey, FxViewItem *>::Iterator it = removedItems->begin();
              it != removedItems->end(); ) {
             bool isRemove = it.key().moveId < 0;
@@ -2024,21 +1998,12 @@ bool QQuickItemViewPrivate::prepareNonVisibleItemTransition(FxViewItem *item, co
 
     if (item->nextTransitionType == QQuickItemViewTransitioner::MoveTransition)
         repositionItemAt(item, item->index, 0);
-    if (!item->prepareTransition(viewBounds))
-        return false;
 
-    if (item->isTransitionTarget) {
-        if (item->nextTransitionType == QQuickItemViewTransitioner::MoveTransition) {
-            transitioner->moveTransitionIndexes.append(item->index);
-            transitioner->moveTransitionTargets.append(item->item);
-        } else if (item->nextTransitionType == QQuickItemViewTransitioner::RemoveTransition) {
-            transitioner->removeTransitionIndexes.append(item->index);
-            transitioner->removeTransitionTargets.append(item->item);
-        }
+    if (item->prepareTransition(transitioner, viewBounds)) {
+        item->releaseAfterTransition = true;
+        return true;
     }
-
-    item->releaseAfterTransition = true;
-    return true;
+    return false;
 }
 
 void QQuickItemViewPrivate::viewItemTransitionFinished(QQuickViewItem *i)

@@ -9,8 +9,6 @@ SOURCES += tst_qquicklistview.cpp \
 include (../../shared/util.pri)
 include (../shared/util.pri)
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private widgets widgets-private v8-private opengl-private testlib

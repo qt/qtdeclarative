@@ -1274,8 +1274,6 @@ void tst_QQuickGridView::moved_data()
 
 void tst_QQuickGridView::multipleChanges()
 {
-    QSKIP("QTBUG-24523");
-
     QFETCH(int, startCount);
     QFETCH(QList<ListChange>, changes);
     QFETCH(int, newCount);
@@ -1774,6 +1772,12 @@ void tst_QQuickGridView::currentIndex()
     QCOMPARE(gridview->currentIndex(), -1);
     QVERIFY(!gridview->highlightItem());
     QVERIFY(!gridview->currentItem());
+
+    // moving currentItem out of view should make it invisible
+    gridview->setCurrentIndex(0);
+    QTRY_VERIFY(gridview->currentItem()->isVisible());
+    gridview->setContentY(200);
+    QTRY_VERIFY(!gridview->currentItem()->isVisible());
 
     delete canvas;
 }
@@ -4639,11 +4643,26 @@ void tst_QQuickGridView::displacedTransitions()
         case ListChange::SetContentY:
             break;
     }
+
+    QVariantList resultTargetIndexes = gridview->property("displacedTargetIndexes").toList();
+    QVariantList resultTargetItems = gridview->property("displacedTargetItems").toList();
+
     if ((useDisplaced && displacedEnabled)
             || (useAddDisplaced && addDisplacedEnabled)
             || (useMoveDisplaced && moveDisplacedEnabled)
             || (useRemoveDisplaced && removeDisplacedEnabled)) {
         QTRY_VERIFY(gridview->property("displaceTransitionsDone").toBool());
+
+        // check the correct number of target items and indexes were received
+        QCOMPARE(resultTargetIndexes.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetIndexes.count(); i++)
+            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().count(), change.count);
+        QCOMPARE(resultTargetItems.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetItems.count(); i++)
+            QCOMPARE(resultTargetItems[i].toList().count(), change.count);
+    } else {
+        QCOMPARE(resultTargetIndexes.count(), 0);
+        QCOMPARE(resultTargetItems.count(), 0);
     }
 
     if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)
@@ -4817,17 +4836,15 @@ void tst_QQuickGridView::multipleTransitions()
 
     int timeBetweenActions = canvas->rootObject()->property("timeBetweenActions").toInt();
 
-    QList<QPair<QString, QString> > targetItems;
     for (int i=0; i<changes.count(); i++) {
         switch (changes[i].type) {
             case ListChange::Inserted:
             {
+                QList<QPair<QString, QString> > targetItems;
                 for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
                     targetItems << qMakePair(QString("new item %1").arg(j), QString::number(j));
                 model.insertItems(changes[i].index, targetItems);
                 QTRY_COMPARE(model.count(), gridview->count());
-                QTRY_VERIFY(gridview->property("runningAddTargets").toBool());
-                QTRY_VERIFY(gridview->property("runningAddDisplaced").toBool());
                 if (i == changes.count() - 1) {
                     QTRY_VERIFY(!gridview->property("runningAddTargets").toBool());
                     QTRY_VERIFY(!gridview->property("runningAddDisplaced").toBool());
@@ -4837,12 +4854,8 @@ void tst_QQuickGridView::multipleTransitions()
                 break;
             }
             case ListChange::Removed:
-                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
-                    targetItems << qMakePair(model.name(i), model.number(i));
                 model.removeItems(changes[i].index, changes[i].count);
                 QTRY_COMPARE(model.count(), gridview->count());
-                QTRY_VERIFY(gridview->property("runningRemoveTargets").toBool());
-                QTRY_VERIFY(gridview->property("runningRemoveDisplaced").toBool());
                 if (i == changes.count() - 1) {
                     QTRY_VERIFY(!gridview->property("runningRemoveTargets").toBool());
                     QTRY_VERIFY(!gridview->property("runningRemoveDisplaced").toBool());
@@ -4851,11 +4864,8 @@ void tst_QQuickGridView::multipleTransitions()
                 }
                 break;
             case ListChange::Moved:
-                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
-                    targetItems << qMakePair(model.name(i), model.number(i));
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
-                QTRY_VERIFY(gridview->property("runningMoveTargets").toBool());
-                QTRY_VERIFY(gridview->property("runningMoveDisplaced").toBool());
+                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 if (i == changes.count() - 1) {
                     QTRY_VERIFY(!gridview->property("runningMoveTargets").toBool());
                     QTRY_VERIFY(!gridview->property("runningMoveDisplaced").toBool());

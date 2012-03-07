@@ -49,6 +49,9 @@ Rectangle {
     Accessible.name: text
     Accessible.description: "This button does " + text
     Accessible.role: Accessible.Button
+    function accessiblePressAction() {
+        button.clicked()
+    }
 
     signal clicked
 
@@ -74,7 +77,7 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         onClicked: {
-            checked = !checked;
+            parent.clicked()
         }
     }
 }

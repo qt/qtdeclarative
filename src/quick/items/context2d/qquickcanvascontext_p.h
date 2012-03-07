@@ -68,12 +68,7 @@ public:
     virtual void init(QQuickCanvasItem *canvasItem, const QVariantMap &args) = 0;
 
     virtual void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
-
-    // Indicate this is a good time to begin composition
     virtual void flush();
-
-    // Cause render (if necessary) to surface via execution unit
-    virtual void sync();
 
     virtual void setV8Engine(QV8Engine *engine) = 0;
     virtual v8::Handle<v8::Object> v8value() const = 0;

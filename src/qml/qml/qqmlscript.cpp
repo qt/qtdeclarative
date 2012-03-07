@@ -924,7 +924,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         { "int", strlen("int"), Object::DynamicProperty::Int, "int", strlen("int") },
         { "bool", strlen("bool"), Object::DynamicProperty::Bool, "bool", strlen("bool") },
         { "double", strlen("double"), Object::DynamicProperty::Real, "double", strlen("double") },
-        { "real", strlen("real"), Object::DynamicProperty::Real, "qreal", strlen("qreal") },
+        { "real", strlen("real"), Object::DynamicProperty::Real, "double", strlen("double") },
         { "string", strlen("string"), Object::DynamicProperty::String, "QString", strlen("QString") },
         { "url", strlen("url"), Object::DynamicProperty::Url, "QUrl", strlen("QUrl") },
         { "color", strlen("color"), Object::DynamicProperty::Color, "QColor", strlen("QColor") },

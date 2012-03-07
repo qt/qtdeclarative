@@ -5,6 +5,4 @@ TARGET=tst_qquickanimationcontroller
 CONFIG += warn_on qmltestcase
 SOURCES += tst_qquickanimationcontroller.cpp
 
-importFiles.files = data
-importFiles.path = .
-DEPLOYMENT += importFiles
+TESTDATA = data/*

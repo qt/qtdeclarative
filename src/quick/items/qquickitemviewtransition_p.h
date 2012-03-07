@@ -82,6 +82,9 @@ public:
     bool canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const;
     void transitionNextReposition(QQuickViewItem *item, QQuickItemViewTransitioner::TransitionType type, bool isTarget);
 
+    void addToTargetLists(QQuickItemViewTransitioner::TransitionType type, QQuickViewItem *item, int index);
+    void resetTargetLists();
+
     QQuickTransition *transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget);
     const QList<int> &targetIndexes(QQuickItemViewTransitioner::TransitionType type) const;
     const QList<QObject *> &targetItems(QQuickItemViewTransitioner::TransitionType type) const;
@@ -136,9 +139,8 @@ public:
     bool transitionRunning() const;
     bool isPendingRemoval() const;
 
-    bool prepareTransition(const QRectF &viewBounds);
+    bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
     void startTransition(QQuickItemViewTransitioner *transitioner);
-    void stopTransition();
 
     QPointF nextTransitionTo;
     QQuickItem *item;
@@ -147,6 +149,7 @@ public:
     int index;
     bool isTransitionTarget;
     bool nextTransitionToSet;
+    bool prepared;
 
 private:
     friend class QQuickItemViewTransitioner;

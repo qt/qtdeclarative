@@ -152,5 +152,23 @@ QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &im
 }
 
 
+/*!
+    \fn QQuickWindowManager *createWindowManager()
+
+    Calls into the scene graph adaptation if available and creates a hardware
+    specific window manager.
+ */
+
+QQuickWindowManager *QSGContext::createWindowManager()
+{
+    QSGAdaptionPluginData *plugin = contextFactory();
+    if (plugin->factory)
+        return plugin->factory->createWindowManager();
+    return 0;
+}
+
+
+
+
 
 QT_END_NAMESPACE

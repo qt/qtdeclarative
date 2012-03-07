@@ -173,15 +173,15 @@ void QQmlDebugProcess::processAppOutput()
         const QString line = m_outputBuffer.left(nlIndex);
         m_outputBuffer = m_outputBuffer.right(m_outputBuffer.size() - nlIndex - 1);
 
-        if (line.startsWith("Qml debugging is enabled")) // ignore
+        if (line.startsWith("QML debugging is enabled")) // ignore
             continue;
-        if (line.startsWith("QQmlDebugServer:")) {
+        if (line.startsWith("QML Debugger:")) {
             if (line.contains("Waiting for connection ")) {
                 m_started = true;
                 m_eventLoop.quit();
                 continue;
             }
-            if (line.contains("Connection established")) {
+            if (line.contains("Connection established.")) {
                 continue;
             }
         }

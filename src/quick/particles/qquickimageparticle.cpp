@@ -1404,7 +1404,7 @@ void QQuickImageParticle::finishBuildParticleNodes()
         }
 
         if (colortable.isNull()){//###Goes through image just for this
-            colortable = QImage(1,1,QImage::Format_ARGB32);
+            colortable = QImage(1,1,QImage::Format_ARGB32_Premultiplied);
             colortable.fill(Qt::white);
         }
         getState<ImageMaterialData>(m_material)->colorTable = QSGPlainTexture::fromImage(colortable);

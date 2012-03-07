@@ -9,8 +9,6 @@ HEADERS += ../../shared/testhttpserver.h
 
 include (../../shared/util.pri)
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private quick-private opengl-private network widgets-private testlib

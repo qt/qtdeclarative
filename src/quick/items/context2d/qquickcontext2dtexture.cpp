@@ -75,10 +75,8 @@ Q_GLOBAL_STATIC(QThread, globalCanvasThreadRenderInstance)
 QQuickContext2DTexture::QQuickContext2DTexture()
     : m_context(0)
     , m_item(0)
-    , m_canvasSize(QSize(1, 1))
-    , m_tileSize(QSize(1, 1))
-    , m_canvasWindow(QRect(0, 0, 1, 1))
     , m_dirtyCanvas(false)
+    , m_canvasWindowChanged(false)
     , m_dirtyTexture(false)
     , m_threadRendering(false)
     , m_smooth(false)
@@ -144,6 +142,7 @@ bool QQuickContext2DTexture::setCanvasWindow(const QRect& r)
 {
     if (m_canvasWindow != r) {
         m_canvasWindow = r;
+        m_canvasWindowChanged = true;
         return true;
     }
     return false;
@@ -178,6 +177,7 @@ void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize&
 
     setCanvasSize(canvasSize);
     setTileSize(ts);
+    setCanvasWindow(canvasWindow);
 
     if (canvasSize == canvasWindow.size()) {
         m_tiledCanvas = false;
@@ -196,13 +196,14 @@ void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize&
 
 void QQuickContext2DTexture::paintWithoutTiles()
 {
-    QLockedCommandBuffer ccb = m_context->buffer();
+    QQuickContext2DCommandBuffer* ccb = m_context->nextBuffer();
 
-    if (ccb->isEmpty())
+    if (!ccb || ccb->isEmpty())
         return;
 
     QPaintDevice* device = beginPainting();
     if (!device) {
+        delete ccb;
         endPainting();
         return;
     }
@@ -219,6 +220,7 @@ void QQuickContext2DTexture::paintWithoutTiles()
 
     ccb->replay(&p, m_state);
     ccb->clear();
+    delete ccb;
 
     endPainting();
 
@@ -270,7 +272,12 @@ void QQuickContext2DTexture::paint()
 
             if (beginPainting()) {
                 QQuickContext2D::State oldState = m_state;
-                QLockedCommandBuffer ccb = m_context->buffer();
+                QQuickContext2DCommandBuffer* ccb = m_context->nextBuffer();
+                if (!ccb || ccb->isEmpty()) {
+                    endPainting();
+                    delete ccb;
+                    return;
+                }
                 foreach (QQuickContext2DTile* tile, m_tiles) {
                     bool dirtyTile = false, dirtyCanvas = false, smooth = false;
 
@@ -297,6 +304,7 @@ void QQuickContext2DTexture::paint()
                     compositeTile(tile);
                 }
                 ccb->clear();
+                delete ccb;
                 endPainting();
                 m_state = oldState;
                 markDirtyTexture();
@@ -331,7 +339,7 @@ QRect QQuickContext2DTexture::createTiles(const QRect& window)
         return QRect();
     }
 
-    QRect r = tiledRect(window, m_tileSize);
+    QRect r = tiledRect(window, adjustedTileSize(m_tileSize));
 
     const int tw = m_tileSize.width();
     const int th = m_tileSize.height();
@@ -379,6 +387,30 @@ void QQuickContext2DTexture::clearTiles()
     m_tiles.clear();
 }
 
+QSize QQuickContext2DTexture::adjustedTileSize(const QSize &ts)
+{
+    return ts;
+}
+
+static inline QSize npotAdjustedSize(const QSize &size)
+{
+    static bool checked = false;
+    static bool npotSupported = false;
+
+    if (!checked) {
+        npotSupported = QOpenGLContext::currentContext()->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
+        checked = true;
+    }
+
+    if (npotSupported) {
+        return QSize(qMax(QT_MINIMUM_FBO_SIZE, size.width()),
+                     qMax(QT_MINIMUM_FBO_SIZE, size.height()));
+    }
+
+    return QSize(qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(size.width())),
+                       qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(size.height())));
+}
+
 QQuickContext2DFBOTexture::QQuickContext2DFBOTexture()
     : QQuickContext2DTexture()
     , m_fbo(0)
@@ -395,47 +427,9 @@ QQuickContext2DFBOTexture::~QQuickContext2DFBOTexture()
     delete m_paint_device;
 }
 
-bool QQuickContext2DFBOTexture::setCanvasSize(const QSize &size)
+QSize QQuickContext2DFBOTexture::adjustedTileSize(const QSize &ts)
 {
-    QSize s = QSize(qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(size.width()))
-                  , qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(size.height())));
-
-    if (m_canvasSize != s) {
-        m_canvasSize = s;
-        m_dirtyCanvas = true;
-        return true;
-    }
-    return false;
-}
-
-bool QQuickContext2DFBOTexture::setTileSize(const QSize &size)
-{
-    QSize s = QSize(qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(size.width()))
-                  , qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(size.height())));
-    if (m_tileSize != s) {
-        m_tileSize = s;
-        m_dirtyCanvas = true;
-        return true;
-    }
-    return false;
-}
-
-bool QQuickContext2DFBOTexture::setCanvasWindow(const QRect& canvasWindow)
-{
-    QSize s = QSize(qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(canvasWindow.size().width()))
-                  , qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(canvasWindow.size().height())));
-
-
-    bool doChanged = false;
-    if (m_fboSize != s) {
-        m_fboSize = s;
-        doChanged = true;
-    }
-
-    if (m_canvasWindow != canvasWindow)
-        m_canvasWindow = canvasWindow;
-
-    return doChanged;
+    return npotAdjustedSize(ts);
 }
 
 void QQuickContext2DFBOTexture::bind()
@@ -550,9 +544,13 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
         m_fbo = 0;
         m_multisampledFbo = 0;
         return 0;
-    } else if (!m_fbo || m_fbo->size() != m_fboSize) {
+    } else if (!m_fbo || m_canvasWindowChanged) {
         delete m_fbo;
         delete m_multisampledFbo;
+
+        m_fboSize = npotAdjustedSize(m_canvasWindow.size());
+        m_canvasWindowChanged = false;
+
         if (doMultisampling()) {
             {
                 QOpenGLFramebufferObjectFormat format;
@@ -719,9 +717,10 @@ QPaintDevice* QQuickContext2DImageTexture::beginPainting()
     if (m_canvasWindow.size().isEmpty())
         return 0;
 
-    if (m_image.size() != m_canvasWindow.size()) {
+    if (m_canvasWindowChanged) {
         m_image = QImage(m_canvasWindow.size(), QImage::Format_ARGB32_Premultiplied);
         m_image.fill(0x00000000);
+        m_canvasWindowChanged = false;
     }
 
     return &m_image;

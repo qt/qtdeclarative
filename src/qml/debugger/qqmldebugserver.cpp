@@ -60,21 +60,21 @@ QT_BEGIN_NAMESPACE
 
   handshake:
     1. Client sends
-         "QQmlDebugServer" 0 version pluginNames
+         "QDeclarativeDebugServer" 0 version pluginNames
        version: an int representing the highest protocol version the client knows
        pluginNames: plugins available on client side
     2. Server sends
-         "QQmlDebugClient" 0 version pluginNames pluginVersions
+         "QDeclarativeDebugClient" 0 version pluginNames pluginVersions
        version: an int representing the highest protocol version the client & server know
        pluginNames: plugins available on server side. plugins both in the client and server message are enabled.
   client plugin advertisement
     1. Client sends
-         "QQmlDebugServer" 1 pluginNames
+         "QDeclarativeDebugServer" 1 pluginNames
   server plugin advertisement
     1. Server sends
-         "QQmlDebugClient" 1 pluginNames pluginVersions
+         "QDeclarativeDebugClient" 1 pluginNames pluginVersions
   plugin communication:
-       Everything send with a header different to "QQmlDebugServer" is sent to the appropriate plugin.
+       Everything send with a header different to "QDeclarativeDebugServer" is sent to the appropriate plugin.
   */
 
 const int protocolVersion = 1;
@@ -155,7 +155,7 @@ void QQmlDebugServerPrivate::advertisePlugins()
             pluginNames << service->name();
             pluginVersions << service->version();
         }
-        out << QString(QLatin1String("QQmlDebugClient")) << 1 << pluginNames << pluginVersions;
+        out << QString(QLatin1String("QDeclarativeDebugClient")) << 1 << pluginNames << pluginVersions;
     }
 
     QMetaObject::invokeMethod(q, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, QList<QByteArray>() << message));
@@ -180,12 +180,12 @@ QQmlDebugServerConnection *QQmlDebugServerPrivate::loadConnectionPlugin(
 
     foreach (const QString &pluginPath, pluginCandidates) {
         if (qmlDebugVerbose())
-            qDebug() << "QQmlDebugServer: Trying to load plugin " << pluginPath << "...";
+            qDebug() << "QML Debugger: Trying to load plugin " << pluginPath << "...";
 
         loader.setFileName(pluginPath);
         if (!loader.load()) {
             if (qmlDebugVerbose())
-                qDebug() << "QQmlDebugServer: Error while loading: " << loader.errorString();
+                qDebug() << "QML Debugger: Error while loading: " << loader.errorString();
             continue;
         }
         if (QObject *instance = loader.instance())
@@ -193,13 +193,13 @@ QQmlDebugServerConnection *QQmlDebugServerPrivate::loadConnectionPlugin(
 
         if (connection) {
             if (qmlDebugVerbose())
-                qDebug() << "QQmlDebugServer: Plugin successfully loaded.";
+                qDebug() << "QML Debugger: Plugin successfully loaded.";
 
             return connection;
         }
 
         if (qmlDebugVerbose())
-            qDebug() << "QQmlDebugServer: Plugin does not implement interface QQmlDebugServerConnection.";
+            qDebug() << "QML Debugger: Plugin does not implement interface QQmlDebugServerConnection.";
 
         loader.unload();
     }
@@ -217,7 +217,7 @@ void QQmlDebugServerThread::run()
         connection->setPort(m_port, m_block);
     } else {
         QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
-        qWarning() << QString::fromAscii("QQmlDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+        qWarning() << QString::fromAscii("QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
                                          "Remote debugger plugin has not been found.").arg(appD->qmljsDebugArgumentsString());
     }
 
@@ -263,7 +263,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
             if (!QQmlEnginePrivate::qml_debugging_enabled) {
                 qWarning() << QString::fromLatin1(
-                                  "QQmlDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                                  "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
                                   "Debugging has not been enabled.").arg(
                                   appD->qmljsDebugArgumentsString());
                 return 0;
@@ -299,7 +299,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
 
             } else {
                 qWarning() << QString::fromLatin1(
-                                  "QQmlDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                                  "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
                                   "Format is -qmljsdebugger=port:<port>[,block]").arg(
                                   appD->qmljsDebugArgumentsString());
             }
@@ -307,7 +307,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
 #else
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
             qWarning() << QString::fromLatin1(
-                         "QQmlDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                         "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
                          "QtQml is not configured for debugging.").arg(
                          appD->qmljsDebugArgumentsString());
         }
@@ -354,7 +354,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
     QString name;
 
     in >> name;
-    if (name == QLatin1String("QQmlDebugServer")) {
+    if (name == QLatin1String("QDeclarativeDebugServer")) {
         int op = -1;
         in >> op;
         if (op == 0) {
@@ -373,7 +373,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                     pluginVersions << service->version();
                 }
 
-                out << QString(QLatin1String("QQmlDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
+                out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
             }
             d->connection->send(QList<QByteArray>() << helloAnswer);
 
@@ -389,7 +389,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 iter.value()->stateChanged(newState);
             }
 
-            qWarning("QQmlDebugServer: Connection established");
+            qWarning("QML Debugger: Connection established.");
             d->messageArrivedCondition.wakeAll();
 
         } else if (op == 1) {
@@ -414,7 +414,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             }
 
         } else {
-            qWarning("QQmlDebugServer: Invalid control message %d", op);
+            qWarning("QML Debugger: Invalid control message %d.", op);
             d->connection->disconnect();
             return;
         }
@@ -427,7 +427,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             QReadLocker(&d->pluginsLock);
             QHash<QString, QQmlDebugService *>::Iterator iter = d->plugins.find(name);
             if (iter == d->plugins.end()) {
-                qWarning() << "QQmlDebugServer: Message received for missing plugin" << name;
+                qWarning() << "QML Debugger: Message received for missing plugin" << name << ".";
             } else {
                 (*iter)->messageReceived(message);
 
@@ -435,7 +435,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                     d->messageArrivedCondition.wakeAll();
             }
         } else {
-            qWarning("QQmlDebugServer: Invalid hello message");
+            qWarning("QML Debugger: Invalid hello message.");
         }
 
     }

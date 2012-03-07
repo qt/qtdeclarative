@@ -15,6 +15,8 @@ Rectangle {
                  context.fillStyle = "red";
                  context.fillRect(0, 0, 100, 100);
              }
+             renderTarget:Canvas.Image
+             renderStrategy:Canvas.Threaded
              property int paintCount:spyPaint.count
              property int paintedCount:spyPainted.count
              property int canvasSizeChangedCount:spyCanvasSizeChanged.count
@@ -228,7 +230,7 @@ Rectangle {
            c.toDataURL();
            wait(100);
 
-           compare(c.paintedCount, 1);
+           compare(c.paintedCount, 2);
            compare(c.paintCount, 1);
            c.destroy();
 

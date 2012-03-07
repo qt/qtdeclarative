@@ -104,7 +104,7 @@ public:
     const QUrl &url() const;
     const QSize &implicitSize() const;
     const QSize &requestSize() const;
-    const QImage &image() const;
+    QImage image() const;
     void setImage(const QImage &);
 
     QQuickTextureFactory *textureFactory() const;

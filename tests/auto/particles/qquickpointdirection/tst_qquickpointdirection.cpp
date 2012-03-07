@@ -44,24 +44,28 @@
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
 
-class tst_qquickpointdirection : public QObject
+#include "../../shared/util.h"
+
+class tst_qquickpointdirection : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickpointdirection();
+    tst_qquickpointdirection() {}
 
 private slots:
+    void initTestCase();
     void test_basic();
 };
 
-tst_qquickpointdirection::tst_qquickpointdirection()
+void tst_qquickpointdirection::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qquickpointdirection::test_basic()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(testFileUrl("basic.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

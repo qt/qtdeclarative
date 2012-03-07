@@ -74,6 +74,7 @@ class QQmlAccessible: public QAccessibleObject, public QAccessibleActionInterfac
 {
 public:
     ~QQmlAccessible();
+    void *interface_cast(QAccessible::InterfaceType t);
 
     virtual QRect viewRect() const = 0;
     QAccessibleInterface *childAt(int, int) const;

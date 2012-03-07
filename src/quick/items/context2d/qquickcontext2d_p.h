@@ -51,6 +51,7 @@
 #include <QtGui/qpainterpath.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qstack.h>
+#include <QtCore/qqueue.h>
 #include <private/qv8engine_p.h>
 
 
@@ -70,14 +71,6 @@ class QQuickContext2DTexture;
 class QQuickPixmap;
 class QSGTexture;
 
-class QLockedCommandBuffer {
-public:
-    QLockedCommandBuffer(QQuickContext2DCommandBuffer *b);
-    ~QLockedCommandBuffer();
-    QQuickContext2DCommandBuffer* operator->() const;
-private:
-    QQuickContext2DCommandBuffer *m_buffer;
-};
 
 class Q_QUICK_EXPORT QQuickContext2D : public QQuickCanvasContext
 {
@@ -179,7 +172,9 @@ public:
     void setV8Engine(QV8Engine *eng);
 
     QQuickCanvasItem* canvas() const { return m_canvas; }
-    QLockedCommandBuffer buffer() const { return m_buffer; }
+    QQuickContext2DCommandBuffer* buffer() const { return m_buffer; }
+    QQuickContext2DCommandBuffer* nextBuffer();
+
     bool bufferValid() const { return m_buffer != 0; }
     void popState();
     void pushState();
@@ -221,6 +216,8 @@ public:
     QQuickContext2DTexture *m_texture;
     QQuickCanvasItem::RenderTarget m_renderTarget;
     QQuickCanvasItem::RenderStrategy m_renderStrategy;
+    QQueue<QQuickContext2DCommandBuffer*> m_bufferQueue;
+    QMutex m_bufferMutex;
 };
 
 

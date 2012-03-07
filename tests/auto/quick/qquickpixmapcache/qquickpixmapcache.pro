@@ -9,9 +9,7 @@ INCLUDEPATH += ../../shared/
 
 include (../../shared/util.pri)
 
-importFiles.files = data
-importFiles.path = .
-DEPLOYMENT += importFiles
+TESTDATA = data/*
 
 # QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
 # LIBS += -lgcov

@@ -45,7 +45,7 @@ Rectangle {
     property string urltext
     urltext: "<a href=\"" + bugreports + bugnumber + "\">QTBUG-" + bugnumber + "</a>"
     property string bugnumber: ""
-    property string bugreports: "http://bugreports.qt.nokia.com/browse/QTBUG-"
+    property string bugreports: "http://bugreports.qt-project.org/browse/QTBUG-"
     visible: opacity != 0
     opacity: bugnumber == "" ? 0 : 1
     Behavior on opacity { NumberAnimation { duration: 1500 } }

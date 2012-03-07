@@ -53,6 +53,17 @@ Rectangle {
         property int targetTransitionsDone
         property int displaceTransitionsDone
 
+        property var displacedTargetIndexes: new Array()
+        property var displacedTargetItems: new Array()
+
+        // for QDeclarativeListProperty types
+        function copyList(propList) {
+            var temp = new Array()
+            for (var i=0; i<propList.length; i++)
+                temp.push(propList[i])
+            return temp
+        }
+
         objectName: "list"
         focus: true
         anchors.centerIn: parent
@@ -70,6 +81,12 @@ Rectangle {
             id: displaced
             enabled: displacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        list.displacedTargetIndexes.push(displaced.ViewTransition.targetIndexes)
+                        list.displacedTargetItems.push(list.copyList(displaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: displaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: displaced_transitionVia.y; duration: root.duration }
@@ -83,6 +100,12 @@ Rectangle {
             id: addDisplaced
             enabled: addDisplacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        list.displacedTargetIndexes.push(addDisplaced.ViewTransition.targetIndexes)
+                        list.displacedTargetItems.push(list.copyList(addDisplaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: addDisplaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: addDisplaced_transitionVia.y; duration: root.duration }
@@ -96,6 +119,12 @@ Rectangle {
             id: moveDisplaced
             enabled: moveDisplacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        list.displacedTargetIndexes.push(moveDisplaced.ViewTransition.targetIndexes)
+                        list.displacedTargetItems.push(list.copyList(moveDisplaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: moveDisplaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: moveDisplaced_transitionVia.y; duration: root.duration }
@@ -109,6 +138,12 @@ Rectangle {
             id: removeDisplaced
             enabled: removeDisplacedEnabled
             SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        list.displacedTargetIndexes.push(removeDisplaced.ViewTransition.targetIndexes)
+                        list.displacedTargetItems.push(list.copyList(removeDisplaced.ViewTransition.targetItems))
+                    }
+                }
                 ParallelAnimation {
                     NumberAnimation { properties: "x"; to: removeDisplaced_transitionVia.x; duration: root.duration }
                     NumberAnimation { properties: "y"; to: removeDisplaced_transitionVia.y; duration: root.duration }

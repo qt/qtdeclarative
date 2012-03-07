@@ -3,7 +3,7 @@ import QtTest 1.0
 import "testhelper.js" as Helper
 
 Canvas {
-   id:canvas; width:1;height:1;renderTarget:Canvas.Image
+   id:canvas; width:1;height:1;renderTarget:Canvas.Image; renderStrategy:Canvas.Threaded
    TestCase {
        name: "fillStyle"; when: windowShown
        function test_default() {

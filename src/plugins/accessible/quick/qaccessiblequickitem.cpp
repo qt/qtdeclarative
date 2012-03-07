@@ -278,7 +278,7 @@ QRect itemScreenRect(QQuickItem *item)
     // parent size. WE MIGHT HAVE TO REVISIT THESE FALLBACKS.
     if (itemSize.isEmpty()) {
         itemSize = QSize((int)item->implicitWidth(), (int)item->implicitHeight());
-        if (itemSize.isEmpty())
+        if (itemSize.isEmpty() && item->parentItem())
             // ### Seems that the above fallback is not enough, fallback to use the parent size...
             itemSize = QSize((int)item->parentItem()->width(), (int)item->parentItem()->height());
     }

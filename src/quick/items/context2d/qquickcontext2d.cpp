@@ -100,21 +100,6 @@ QT_BEGIN_NAMESPACE
     \image qml-item-canvas-context.gif
 */
 
-QLockedCommandBuffer::QLockedCommandBuffer(QQuickContext2DCommandBuffer *b)
-    : m_buffer(b)
-{
-    m_buffer->lockQueue();
-}
-
-QLockedCommandBuffer::~QLockedCommandBuffer()
-{
-    m_buffer->unlockQueue();
-}
-
-QQuickContext2DCommandBuffer* QLockedCommandBuffer::operator->() const
-{
-    return m_buffer;
-}
 
 
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
@@ -3196,7 +3181,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
 
     switch (m_renderTarget) {
     case QQuickCanvasItem::Image:
-        m_texture = new QQuickContext2DImageTexture(m_renderStrategy == QQuickCanvasItem::Threaded); // ?? || Coop
+        m_texture = new QQuickContext2DImageTexture(m_renderStrategy == QQuickCanvasItem::Threaded);
         break;
     case QQuickCanvasItem::FramebufferObject:
         m_texture = new QQuickContext2DFBOTexture;
@@ -3221,6 +3206,13 @@ void QQuickContext2D::prepare(const QSize& canvasSize, const QSize& tileSize, co
 
 void QQuickContext2D::flush()
 {
+    if (!m_buffer->isEmpty()) {
+        QMutexLocker lock(&m_bufferMutex);
+        m_bufferQueue.enqueue(m_buffer);
+        m_buffer = new QQuickContext2DCommandBuffer;
+    } else
+        return;
+
     switch (m_renderStrategy) {
     case QQuickCanvasItem::Immediate:
         // Cause the texture to consume paint commands immediately
@@ -3231,17 +3223,10 @@ void QQuickContext2D::flush()
         m_texture->paint();
         break;
     case QQuickCanvasItem::Cooperative:
-        // Add to the update list in SG
-        m_canvas->update(); // FIXME
+        // NOTE: On SG Thread
+        m_texture->paint();
         break;
     }
-}
-
-// On SG render thread
-void QQuickContext2D::sync()
-{
-    if (m_renderStrategy == QQuickCanvasItem::Cooperative)
-        m_texture->paint();
 }
 
 QSGDynamicTexture *QQuickContext2D::texture() const
@@ -3251,6 +3236,15 @@ QSGDynamicTexture *QQuickContext2D::texture() const
 
 QImage QQuickContext2D::toImage(const QRectF& bounds)
 {
+    switch (m_renderStrategy) {
+    case QQuickCanvasItem::Immediate:
+    case QQuickCanvasItem::Threaded:
+        flush();
+        break;
+    case QQuickCanvasItem::Cooperative:
+        break;
+    }
+
     return m_texture->toImage(bounds);
 }
 
@@ -3473,6 +3467,12 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
         r->context = this;
         m_v8value->SetExternalResource(r);
     }
+}
+
+QQuickContext2DCommandBuffer* QQuickContext2D::nextBuffer()
+{
+    QMutexLocker lock(&m_bufferMutex);
+    return m_bufferQueue.isEmpty() ? 0 : m_bufferQueue.dequeue();
 }
 
 QT_END_NAMESPACE

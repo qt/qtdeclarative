@@ -163,34 +163,40 @@ QQuickRootItem::QQuickRootItem()
 {
 }
 
+/*! \reimp */
 void QQuickCanvas::exposeEvent(QExposeEvent *)
 {
     Q_D(QQuickCanvas);
-    d->windowManager->paint(this);
+    d->windowManager->exposureChanged(this);
 }
 
+/*! \reimp */
 void QQuickCanvas::resizeEvent(QResizeEvent *)
 {
     Q_D(QQuickCanvas);
     d->windowManager->resize(this, size());
 }
 
+/*! \reimp */
 void QQuickCanvas::showEvent(QShowEvent *)
 {
     d_func()->windowManager->show(this);
 }
 
+/*! \reimp */
 void QQuickCanvas::hideEvent(QHideEvent *)
 {
     d_func()->windowManager->hide(this);
 }
 
+/*! \reimp */
 void QQuickCanvas::focusOutEvent(QFocusEvent *)
 {
     Q_D(QQuickCanvas);
     d->rootItem->setFocus(false);
 }
 
+/*! \reimp */
 void QQuickCanvas::focusInEvent(QFocusEvent *)
 {
     Q_D(QQuickCanvas);
@@ -846,7 +852,7 @@ bool QQuickCanvasPrivate::clearHover()
     return accepted;
 }
 
-
+/*! \reimp */
 bool QQuickCanvas::event(QEvent *e)
 {
     Q_D(QQuickCanvas);
@@ -886,6 +892,7 @@ bool QQuickCanvas::event(QEvent *e)
     return QWindow::event(e);
 }
 
+/*! \reimp */
 void QQuickCanvas::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickCanvas);
@@ -894,6 +901,7 @@ void QQuickCanvas::keyPressEvent(QKeyEvent *e)
         sendEvent(d->activeFocusItem, e);
 }
 
+/*! \reimp */
 void QQuickCanvas::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QQuickCanvas);
@@ -978,6 +986,7 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
     return false;
 }
 
+/*! \reimp */
 void QQuickCanvas::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
@@ -990,6 +999,7 @@ void QQuickCanvas::mousePressEvent(QMouseEvent *event)
     d->deliverMouseEvent(event);
 }
 
+/*! \reimp */
 void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
@@ -1008,6 +1018,7 @@ void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
     d->mouseGrabberItem = 0;
 }
 
+/*! \reimp */
 void QQuickCanvas::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
@@ -1045,6 +1056,7 @@ bool QQuickCanvasPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
     return hoverEvent.isAccepted();
 }
 
+/*! \reimp */
 void QQuickCanvas::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
@@ -1178,6 +1190,7 @@ bool QQuickCanvasPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 }
 
 #ifndef QT_NO_WHEELEVENT
+/*! \reimp */
 void QQuickCanvas::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickCanvas);

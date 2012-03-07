@@ -44,16 +44,19 @@
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
 
+#include "../../shared/util.h"
+
 const double CONV_FACTOR = 0.017453292519943295;//Degrees to radians
 
-class tst_qquickimageparticle : public QObject
+class tst_qquickimageparticle : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickimageparticle();
+    tst_qquickimageparticle() {}
     ~tst_qquickimageparticle();
 
 private slots:
+    void initTestCase();
     void test_basic();
     void test_colored();
     void test_colorVariance();
@@ -62,8 +65,9 @@ private slots:
     void test_sprite();
 };
 
-tst_qquickimageparticle::tst_qquickimageparticle()
+void tst_qquickimageparticle::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
     setenv("QML_PARTICLES_DEBUG","please",0);//QQuickImageParticle has several debug statements, with possible pointer dereferences
 }
@@ -75,7 +79,7 @@ tst_qquickimageparticle::~tst_qquickimageparticle()
 
 void tst_qquickimageparticle::test_basic()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(testFileUrl("basic.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -119,7 +123,7 @@ void tst_qquickimageparticle::test_basic()
 
 void tst_qquickimageparticle::test_colored()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/colored.qml", 600);
+    QQuickView* view = createView(testFileUrl("colored.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -163,7 +167,7 @@ void tst_qquickimageparticle::test_colored()
 
 void tst_qquickimageparticle::test_colorVariance()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/colorVariance.qml", 600);
+    QQuickView* view = createView(testFileUrl("colorVariance.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -208,7 +212,7 @@ void tst_qquickimageparticle::test_colorVariance()
 
 void tst_qquickimageparticle::test_deformed()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/deformed.qml", 600);
+    QQuickView* view = createView(testFileUrl("deformed.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -252,7 +256,7 @@ void tst_qquickimageparticle::test_deformed()
 
 void tst_qquickimageparticle::test_tabled()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/tabled.qml", 600);
+    QQuickView* view = createView(testFileUrl("tabled.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -297,7 +301,7 @@ void tst_qquickimageparticle::test_tabled()
 
 void tst_qquickimageparticle::test_sprite()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/sprite.qml", 600);
+    QQuickView* view = createView(testFileUrl("sprite.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

@@ -59,12 +59,13 @@ Rectangle {
         id: column
         spacing: 6
         anchors.fill: parent
+        anchors.margins: 10
         width: parent.width
         Row {
             spacing: 6
             width: column.width
-            Button { width: 100; height: column.h + 20; text: "Send" }
-            Button { width: 100; height: column.h + 20; text: "Discard" }
+            Button { width: 100; height: column.h + 20; text: "Send"; onClicked : { status.text = "Send" } }
+            Button { width: 100; height: column.h + 20; text: "Discard";  onClicked : { status.text = "Discard" } }
         }
 
         Row {
@@ -105,6 +106,17 @@ Rectangle {
                 width: parent.width
                 wrapMode: TextEdit.WordWrap
             }
+        }
+        Text {
+            id : status
+            width: column.width
+        }
+
+        Row {
+            spacing: 6
+            width: column.width
+            Checkbox { checked: false }
+            Slider { value: 10 }
         }
     }
 }

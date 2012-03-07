@@ -109,6 +109,7 @@ public:
     QOpenGLContext *gl;
 
     QHash<QSGMaterialType *, QSGMaterialShader *> materials;
+    QMutex textureMutex;
     QHash<QQuickTextureFactory *, QSGTexture *> textures;
 
     QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
@@ -118,6 +119,13 @@ public:
     bool distanceFieldDisabled;
 };
 
+class QSGTextureCleanupEvent : public QEvent
+{
+public:
+    QSGTextureCleanupEvent(QSGTexture *t) : QEvent(QEvent::User), texture(t) { }
+    ~QSGTextureCleanupEvent() { delete texture; }
+    QSGTexture *texture;
+};
 
 /*!
     \class QSGContext
@@ -146,8 +154,10 @@ QSGContext::~QSGContext()
 void QSGContext::invalidate()
 {
     Q_D(QSGContext);
+    d->textureMutex.lock();
     qDeleteAll(d->textures.values());
     d->textures.clear();
+    d->textureMutex.unlock();
     qDeleteAll(d->materials.values());
     d->materials.clear();
     delete d->distanceFieldCacheManager;
@@ -165,6 +175,7 @@ QSGTexture *QSGContext::textureForFactory(QQuickTextureFactory *factory, QQuickC
     if (!factory)
         return 0;
 
+    d->textureMutex.lock();
     QSGTexture *texture = d->textures.value(factory);
     if (!texture) {
         if (QQuickDefaultTextureFactory *dtf = qobject_cast<QQuickDefaultTextureFactory *>(factory))
@@ -172,8 +183,9 @@ QSGTexture *QSGContext::textureForFactory(QQuickTextureFactory *factory, QQuickC
         else
             texture = factory->createTexture(canvas);
         d->textures.insert(factory, texture);
-        connect(factory, SIGNAL(destroyed(QObject *)), this, SLOT(textureFactoryDestroyed(QObject *)));
+        connect(factory, SIGNAL(destroyed(QObject *)), this, SLOT(textureFactoryDestroyed(QObject *)), Qt::DirectConnection);
     }
+    d->textureMutex.unlock();
     return texture;
 }
 
@@ -183,9 +195,16 @@ void QSGContext::textureFactoryDestroyed(QObject *o)
     Q_D(QSGContext);
     QQuickTextureFactory *f = static_cast<QQuickTextureFactory *>(o);
 
-    // This function will only be called on the scene graph thread, so it is
-    // safe to directly delete the texture here.
-    delete d->textures.take(f);
+    d->textureMutex.lock();
+    QSGTexture *t = d->textures.take(f);
+    d->textureMutex.unlock();
+
+    if (t) {
+        if (t->thread() == thread())
+            t->deleteLater();
+        else
+            QCoreApplication::postEvent(this, new QSGTextureCleanupEvent(t));
+    }
 }
 
 

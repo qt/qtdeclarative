@@ -615,20 +615,17 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         // We've jumped more than a page.  Estimate which items are now
         // visible and fill from there.
         int count = (fillFrom - itemEnd) / (averageSize + spacing);
-        for (int i = 0; i < visibleItems.count(); ++i)
-            releaseItem(visibleItems.at(i));
-        visibleItems.clear();
-        modelIndex += count;
-        if (modelIndex >= model->count()) {
-            count -= modelIndex - model->count() + 1;
-            modelIndex = model->count() - 1;
-        } else if (modelIndex < 0) {
-            count -= modelIndex;
-            modelIndex = 0;
+        int newModelIdx = qBound(0, modelIndex + count, model->count());
+        count = newModelIdx - modelIndex;
+        if (count) {
+            for (int i = 0; i < visibleItems.count(); ++i)
+                releaseItem(visibleItems.at(i));
+            visibleItems.clear();
+            modelIndex = newModelIdx;
+            visibleIndex = modelIndex;
+            visiblePos = itemEnd + count * (averageSize + spacing);
+            itemEnd = visiblePos;
         }
-        visibleIndex = modelIndex;
-        visiblePos = itemEnd + count * (averageSize + spacing);
-        itemEnd = visiblePos;
     }
 
     bool changed = false;
@@ -2553,6 +2550,8 @@ void QQuickListView::viewportMoved()
         FxViewItem *item = static_cast<FxListItemSG*>(d->visibleItems.at(i));
         item->item->setVisible(item->endPosition() >= from && item->position() <= to);
     }
+    if (d->currentItem)
+        d->currentItem->item->setVisible(d->currentItem->endPosition() >= from && d->currentItem->position() <= to);
 
     if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QQuickListViewPrivate::Mouse;

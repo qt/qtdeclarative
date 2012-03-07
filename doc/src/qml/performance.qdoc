@@ -445,7 +445,6 @@ criteria:
 \list
 \o Avoid using eval() if at all possible
 \o Do not delete properties of objects
-\o Try to maintain property-assignment order in different constructor functions
 \endlist
 
 \section1 Common Interface Elements

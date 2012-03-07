@@ -44,7 +44,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qquickcanvascontext_p.h>
 #include <private/qquickcontext2d_p.h>
-#include <private/qquickcanvasitemnode_p.h>
+#include <qsgsimpletexturenode.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
 #include <qqmlinfo.h>
@@ -86,8 +86,8 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , hasCanvasWindow(false)
     , available(false)
     , contextInitialized(false)
-    , renderTarget(QQuickCanvasItem::Image)
-    , renderStrategy(QQuickCanvasItem::Threaded)
+    , renderTarget(QQuickCanvasItem::FramebufferObject)
+    , renderStrategy(QQuickCanvasItem::Cooperative)
 {
 }
 
@@ -379,7 +379,7 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
     context will choose appropriate options and Canvas will signal the change
     to the properties.
 
-    The default render target is \c Canvas.Image.
+    The default render target is \c Canvas.FramebufferObject.
 */
 QQuickCanvasItem::RenderTarget QQuickCanvasItem::renderTarget() const
 {
@@ -419,7 +419,7 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
     the GUI thread.  Selecting \c Canvas.Cooperative, does not guarantee
     rendering will occur on a thread separate from the GUI thread.
 
-    The default value is \c Canvas.Threaded.
+    The default value is \c Canvas.Cooperative.
 
     \sa QtQuick2::Canvas::renderTarget
 */
@@ -463,30 +463,29 @@ void QQuickCanvasItem::sceneGraphInitialized()
 void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickCanvasItem);
+
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 
-    const qreal w = newGeometry.width();
-    const qreal h = newGeometry.height();
-
-    if (!d->hasCanvasSize) {
-        d->canvasSize = QSizeF(w, h);
+    QSizeF newSize = newGeometry.size();
+    if (!d->hasCanvasSize && d->canvasSize != newSize) {
+        d->canvasSize = newSize;
         emit canvasSizeChanged();
     }
 
-    if (!d->hasTileSize) {
-        d->tileSize = d->canvasSize.toSize();
+    if (!d->hasTileSize && d->tileSize != newSize) {
+        d->tileSize = newSize.toSize();
         emit tileSizeChanged();
     }
 
-    if (!d->hasCanvasWindow) {
-        d->canvasWindow = QRectF(0, 0, w, h);
+    const QRectF rect = QRectF(QPointF(0, 0), newSize);
+
+    if (!d->hasCanvasWindow && d->canvasWindow != rect) {
+        d->canvasWindow = rect;
         emit canvasWindowChanged();
     }
 
-    if (d->available) {
-        polish();
-        update();
-    }
+    if (d->available)
+        requestPaint();
 }
 
 void QQuickCanvasItem::componentComplete()
@@ -549,8 +548,12 @@ void QQuickCanvasItem::updatePolish()
         }
     }
 
-    if (d->contextInitialized)
-        d->context->flush();
+    if (d->contextInitialized) {
+        if (d->renderStrategy == QQuickCanvasItem::Cooperative)
+            update();
+        else
+            d->context->flush();
+    }
 }
 
 QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -560,17 +563,23 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     if (!d->contextInitialized)
         return 0;
 
-    QQuickCanvasItemNode *node = static_cast<QQuickCanvasItemNode*>(oldNode);
+    class CanvasTextureNode : public QSGSimpleTextureNode
+    {
+    public:
+        CanvasTextureNode() : QSGSimpleTextureNode() {}
+        ~CanvasTextureNode() {delete texture();}
+    };
+
+    CanvasTextureNode *node = static_cast<CanvasTextureNode*>(oldNode);
     if (!node) {
-        node = new QQuickCanvasItemNode;
+        node = new CanvasTextureNode;
     }
 
     if (d->renderStrategy == QQuickCanvasItem::Cooperative)
-        d->context->sync();
+        d->context->flush();
 
     node->setTexture(d->context->texture());
-    node->setSize(d->canvasWindow.size());
-    node->update();
+    node->setRect(QRectF(QPoint(0, 0), d->canvasWindow.size()));
     return node;
 }
 

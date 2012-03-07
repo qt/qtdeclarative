@@ -96,7 +96,7 @@ public:
 
 QQmlEngineDebugClient::QQmlEngineDebugClient(QQmlDebugConnection *client,
                                                              QQmlEngineDebugPrivate *p)
-    : QQmlDebugClient(QLatin1String("QQmlEngine"), client), priv(p)
+    : QQmlDebugClient(QLatin1String("QDeclarativeEngine"), client), priv(p)
 {
 }
 

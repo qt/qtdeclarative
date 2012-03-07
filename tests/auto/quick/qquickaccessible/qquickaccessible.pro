@@ -8,12 +8,12 @@ SOURCES  += tst_qquickaccessible.cpp
 
 include (../../shared/util.pri)
 
+TESTDATA = data/*
+
 OTHER_FILES += data/checkbuttons.qml
 OTHER_FILES += data/hittest.qml
 OTHER_FILES += data/pushbutton.qml
 OTHER_FILES += data/statictext.qml
-
-DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 

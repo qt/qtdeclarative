@@ -44,25 +44,29 @@
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
 
-class tst_qquickfriction : public QObject
+#include "../../shared/util.h"
+
+class tst_qquickfriction : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickfriction();
+    tst_qquickfriction() {}
 
 private slots:
+    void initTestCase();
     void test_basic();
     void test_threshold();
 };
 
-tst_qquickfriction::tst_qquickfriction()
+void tst_qquickfriction::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qquickfriction::test_basic()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(testFileUrl("basic.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -106,7 +110,7 @@ void tst_qquickfriction::test_basic()
 
 void tst_qquickfriction::test_threshold()
 {
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/threshold.qml", 600);
+    QQuickView* view = createView(testFileUrl("threshold.qml"), 600);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

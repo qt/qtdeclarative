@@ -8,8 +8,6 @@ include (../../shared/util.pri)
 
 CONFIG += parallel_test
 
-testDataFiles.files = data
-testDataFiles.path = .
-DEPLOYMENT += testDataFiles
+TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private quick-private sql testlib

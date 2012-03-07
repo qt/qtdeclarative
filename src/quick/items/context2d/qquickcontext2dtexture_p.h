@@ -81,9 +81,9 @@ public:
     virtual QImage toImage(const QRectF& region = QRectF()) = 0;
     static QRect tiledRect(const QRectF& window, const QSize& tileSize);
 
-    virtual bool setCanvasSize(const QSize &size);
-    virtual bool setTileSize(const QSize &size);
-    virtual bool setCanvasWindow(const QRect& canvasWindow);
+    bool setCanvasSize(const QSize &size);
+    bool setTileSize(const QSize &size);
+    bool setCanvasWindow(const QRect& canvasWindow);
     void setSmooth(bool smooth);
     bool setDirtyRect(const QRect &dirtyRect);
     virtual void canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
@@ -104,6 +104,7 @@ protected:
     virtual void compositeTile(QQuickContext2DTile* tile) = 0;
 
     void clearTiles();
+    virtual QSize adjustedTileSize(const QSize &ts);
     QRect createTiles(const QRect& window);
 
     QList<QQuickContext2DTile*> m_tiles;
@@ -117,6 +118,7 @@ protected:
     QRect m_canvasWindow;
 
     uint m_dirtyCanvas : 1;
+    uint m_canvasWindowChanged : 1;
     uint m_dirtyTexture : 1;
     uint m_threadRendering : 1;
     uint m_smooth : 1;
@@ -144,9 +146,8 @@ public:
     virtual QQuickCanvasItem::RenderTarget renderTarget() const;
     virtual void compositeTile(QQuickContext2DTile* tile);
     virtual void bind();
-    virtual bool setCanvasSize(const QSize &size);
-    virtual bool setTileSize(const QSize &size);
-    virtual bool setCanvasWindow(const QRect& canvasWindow);
+    QSize adjustedTileSize(const QSize &ts);
+
 private Q_SLOTS:
     void grabImage();
 

@@ -124,7 +124,7 @@ Q_SIGNALS:
     void afterRendering();
     void clearColorChanged(const QColor &);
 
-public slots:
+public Q_SLOTS:
     void releaseResources();
 
 protected:

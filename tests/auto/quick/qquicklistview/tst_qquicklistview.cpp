@@ -184,6 +184,8 @@ private slots:
     void multipleTransitions();
     void multipleTransitions_data();
 
+    void flickBeyondBounds();
+
 private:
     template <class T> void items(const QUrl &source, bool forceLayout);
     template <class T> void changed(const QUrl &source, bool forceLayout);
@@ -2350,6 +2352,11 @@ void tst_QQuickListView::currentIndex()
     QCOMPARE(listview->currentIndex(), -1);
     QVERIFY(!listview->highlightItem());
     QVERIFY(!listview->currentItem());
+
+    listview->setCurrentIndex(0);
+    QTRY_VERIFY(listview->currentItem()->isVisible());
+    listview->setContentY(200);
+    QTRY_VERIFY(!listview->currentItem()->isVisible());
 
     delete canvas;
 }
@@ -5648,11 +5655,26 @@ void tst_QQuickListView::displacedTransitions()
         case ListChange::SetContentY:
             break;
     }
+
+    QVariantList resultTargetIndexes = listview->property("displacedTargetIndexes").toList();
+    QVariantList resultTargetItems = listview->property("displacedTargetItems").toList();
+
     if ((useDisplaced && displacedEnabled)
             || (useAddDisplaced && addDisplacedEnabled)
             || (useMoveDisplaced && moveDisplacedEnabled)
             || (useRemoveDisplaced && removeDisplacedEnabled)) {
         QTRY_VERIFY(listview->property("displaceTransitionsDone").toBool());
+
+        // check the correct number of target items and indexes were received
+        QCOMPARE(resultTargetIndexes.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetIndexes.count(); i++)
+            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().count(), change.count);
+        QCOMPARE(resultTargetItems.count(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetItems.count(); i++)
+            QCOMPARE(resultTargetItems[i].toList().count(), change.count);
+    } else {
+        QCOMPARE(resultTargetIndexes.count(), 0);
+        QCOMPARE(resultTargetItems.count(), 0);
     }
 
     if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)
@@ -5779,8 +5801,6 @@ void tst_QQuickListView::displacedTransitions_data()
 
 void tst_QQuickListView::multipleTransitions()
 {
-    QSKIP("QTBUG-24523");
-
     // Tests that if you interrupt a transition in progress with another action that
     // cancels the previous transition, the resulting items are still placed correctly.
 
@@ -5829,17 +5849,15 @@ void tst_QQuickListView::multipleTransitions()
 
     int timeBetweenActions = canvas->rootObject()->property("timeBetweenActions").toInt();
 
-    QList<QPair<QString, QString> > targetItems;
     for (int i=0; i<changes.count(); i++) {
         switch (changes[i].type) {
             case ListChange::Inserted:
             {
+                QList<QPair<QString, QString> > targetItems;
                 for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
                     targetItems << qMakePair(QString("new item %1").arg(j), QString::number(j));
                 model.insertItems(changes[i].index, targetItems);
                 QTRY_COMPARE(model.count(), listview->count());
-                QTRY_VERIFY(listview->property("runningAddTargets").toBool());
-                QTRY_VERIFY(listview->property("runningAddDisplaced").toBool());
                 if (i == changes.count() - 1) {
                     QTRY_VERIFY(!listview->property("runningAddTargets").toBool());
                     QTRY_VERIFY(!listview->property("runningAddDisplaced").toBool());
@@ -5849,12 +5867,8 @@ void tst_QQuickListView::multipleTransitions()
                 break;
             }
             case ListChange::Removed:
-                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
-                    targetItems << qMakePair(model.name(i), model.number(i));
                 model.removeItems(changes[i].index, changes[i].count);
                 QTRY_COMPARE(model.count(), listview->count());
-                QTRY_VERIFY(listview->property("runningRemoveTargets").toBool());
-                QTRY_VERIFY(listview->property("runningRemoveDisplaced").toBool());
                 if (i == changes.count() - 1) {
                     QTRY_VERIFY(!listview->property("runningRemoveTargets").toBool());
                     QTRY_VERIFY(!listview->property("runningRemoveDisplaced").toBool());
@@ -5863,11 +5877,8 @@ void tst_QQuickListView::multipleTransitions()
                 }
                 break;
             case ListChange::Moved:
-                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
-                    targetItems << qMakePair(model.name(i), model.number(i));
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
-                QTRY_VERIFY(listview->property("runningMoveTargets").toBool());
-                QTRY_VERIFY(listview->property("runningMoveDisplaced").toBool());
+                QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
                 if (i == changes.count() - 1) {
                     QTRY_VERIFY(!listview->property("runningMoveTargets").toBool());
                     QTRY_VERIFY(!listview->property("runningMoveDisplaced").toBool());
@@ -5988,6 +5999,38 @@ void tst_QQuickListView::matchItemLists(const QVariantList &itemLists, const QLi
         }
         QCOMPARE(current.count(), expectedItems.count());
     }
+}
+
+void tst_QQuickListView::flickBeyondBounds()
+{
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("flickBeyondBoundsBug.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Flick view up beyond bounds
+    flick(canvas, QPoint(10, 10), QPoint(10, -1000), 180);
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() == 0);
+
+    // We're really testing that we don't get stuck in a loop,
+    // but also confirm items positioned correctly.
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 2);
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_VERIFY(item->y() == i*45);
+    }
+
+    delete canvas;
 }
 
 

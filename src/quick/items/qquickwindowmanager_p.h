@@ -43,13 +43,14 @@
 #define QQUICKWINDOWMANAGER_P_H
 
 #include <QtGui/QImage>
+#include <qtquickglobal.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickCanvas;
 class QSGContext;
 
-class QQuickWindowManager
+class Q_QUICK_EXPORT QQuickWindowManager
 {
 public:
     virtual ~QQuickWindowManager();
@@ -59,7 +60,7 @@ public:
 
     virtual void canvasDestroyed(QQuickCanvas *canvas) = 0;
 
-    virtual void paint(QQuickCanvas *canvas) = 0;
+    virtual void exposureChanged(QQuickCanvas *canvas) = 0;
     virtual QImage grab(QQuickCanvas *canvas) = 0;
     virtual void resize(QQuickCanvas *canvas, const QSize &size) = 0;
 

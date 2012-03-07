@@ -697,7 +697,7 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
 void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickMouseArea);
-    if (!d->absorb) {
+    if (!d->absorb && !d->pressed) {
         QQuickItem::mouseMoveEvent(event);
         return;
     }
@@ -783,7 +783,7 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickMouseArea);
     d->stealMouse = false;
-    if (!d->absorb) {
+    if (!d->absorb && !d->pressed) {
         QQuickItem::mouseReleaseEvent(event);
     } else {
         d->saveEvent(event);
@@ -820,7 +820,7 @@ void QQuickMouseArea::mouseDoubleClickEvent(QMouseEvent *event)
 void QQuickMouseArea::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickMouseArea);
-    if (!d->absorb) {
+    if (!d->absorb && !d->pressed) {
         QQuickItem::hoverEnterEvent(event);
     } else {
         d->lastPos = event->posF();
@@ -837,7 +837,7 @@ void QQuickMouseArea::hoverEnterEvent(QHoverEvent *event)
 void QQuickMouseArea::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QQuickMouseArea);
-    if (!d->absorb) {
+    if (!d->absorb && !d->pressed) {
         QQuickItem::hoverMoveEvent(event);
     } else {
         d->lastPos = event->posF();
@@ -854,7 +854,7 @@ void QQuickMouseArea::hoverMoveEvent(QHoverEvent *event)
 void QQuickMouseArea::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickMouseArea);
-    if (!d->absorb)
+    if (!d->absorb && !d->pressed)
         QQuickItem::hoverLeaveEvent(event);
     else
         setHovered(false);
@@ -935,7 +935,7 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
 bool QQuickMouseArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickMouseArea);
-    if (!d->absorb || !isVisible() || !d->drag || !d->drag->filterChildren())
+    if (!d->pressed && (!d->absorb || !isVisible() || !d->drag || !d->drag->filterChildren()))
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::MouseButtonPress:

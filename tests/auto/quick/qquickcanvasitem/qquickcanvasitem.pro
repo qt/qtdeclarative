@@ -5,9 +5,7 @@ TARGET=tst_qquickcanvasitem
 CONFIG += warn_on qmltestcase
 SOURCES += tst_qquickcanvasitem.cpp
 
-importFiles.files = data
-importFiles.path = .
-DEPLOYMENT += importFiles
+TESTDATA = data/*
 
 OTHER_FILES += \
     data/testhelper.js \
