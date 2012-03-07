@@ -1773,6 +1773,12 @@ void tst_QQuickGridView::currentIndex()
     QVERIFY(!gridview->highlightItem());
     QVERIFY(!gridview->currentItem());
 
+    // moving currentItem out of view should make it invisible
+    gridview->setCurrentIndex(0);
+    QTRY_VERIFY(gridview->currentItem()->isVisible());
+    gridview->setContentY(200);
+    QTRY_VERIFY(!gridview->currentItem()->isVisible());
+
     delete canvas;
 }
 

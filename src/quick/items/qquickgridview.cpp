@@ -1884,6 +1884,10 @@ void QQuickGridView::viewportMoved()
         FxGridItemSG *item = static_cast<FxGridItemSG*>(d->visibleItems.at(i));
         item->item->setVisible(item->rowPos() + d->rowSize() >= from && item->rowPos() <= to);
     }
+    if (d->currentItem) {
+        FxGridItemSG *item = static_cast<FxGridItemSG*>(d->currentItem);
+        item->item->setVisible(item->rowPos() + d->rowSize() >= from && item->rowPos() <= to);
+    }
 
     if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QQuickGridViewPrivate::Mouse;
