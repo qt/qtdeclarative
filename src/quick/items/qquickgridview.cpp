@@ -2165,12 +2165,10 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
         FxViewItem *item = visibleItems.at(i);
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
-            if (transitioner) {
-                if (change.isMove())
-                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, false);
-                else
-                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, false);
-            }
+            if (change.isMove())
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
+            else
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
         }
     }
 
@@ -2201,8 +2199,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
-                    if (transitioner)
-                        transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
+                    item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += rowSize();
             }
@@ -2239,8 +2236,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);
-                if (transitioner)
-                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
             }
             insertResult->sizeChangesAfterVisiblePos += rowSize();
 
@@ -2291,7 +2287,7 @@ void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
             qreal origColPos = gridItem->rowPos();
             int indexDiff = gridItem->index - countItemsRemoved;
             gridItem->setPosition((indexDiff % columns) * colSize(), (indexDiff / columns) * rowSize());
-            transitioner->transitionNextReposition(gridItem, QQuickItemViewTransitioner::RemoveTransition, false);
+            gridItem->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, false);
             gridItem->setPosition(origRowPos, origColPos);
         }
     }

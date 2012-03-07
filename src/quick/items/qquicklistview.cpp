@@ -2786,8 +2786,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
-                    if (transitioner)
-                        transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
+                    item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += item->size() + spacing;
                 pos -= item->size() + spacing;
@@ -2817,8 +2816,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);
-                if (transitioner)
-                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, true);
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
             }
             insertResult->sizeChangesAfterVisiblePos += item->size() + spacing;
             pos += item->size() + spacing;
@@ -2828,13 +2826,12 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
 
     for (; index < visibleItems.count(); ++index) {
         FxViewItem *item = visibleItems.at(index);
-        if (item->index != -1)
+        if (item->index != -1) {
             item->index += count;
-        if (transitioner) {
             if (change.isMove())
-                transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, false);
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
             else
-                transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::AddTransition, false);
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
         }
     }
 
@@ -2869,7 +2866,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
         if (!listItem->transitionScheduledOrRunning()) {
             qreal pos = listItem->position();
             listItem->setPosition(pos - sizeRemoved);
-            transitioner->transitionNextReposition(listItem, QQuickItemViewTransitioner::RemoveTransition, false);
+            listItem->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, false);
             listItem->setPosition(pos);
         }
     }

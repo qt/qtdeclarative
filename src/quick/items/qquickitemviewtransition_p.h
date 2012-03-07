@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Quick)
 
 class QQuickItem;
-class QQuickViewItem;
+class QQuickItemViewTransitionableItem;
 class QQuickItemViewTransitionJob;
 
 
@@ -61,7 +61,7 @@ public:
     QQuickItemViewTransitionChangeListener() {}
     virtual ~QQuickItemViewTransitionChangeListener() {}
 
-    virtual void viewItemTransitionFinished(QQuickViewItem *item) = 0;
+    virtual void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) = 0;
 };
 
 
@@ -80,9 +80,9 @@ public:
     virtual ~QQuickItemViewTransitioner();
 
     bool canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const;
-    void transitionNextReposition(QQuickViewItem *item, QQuickItemViewTransitioner::TransitionType type, bool isTarget);
+    void transitionNextReposition(QQuickItemViewTransitionableItem *item, QQuickItemViewTransitioner::TransitionType type, bool isTarget);
 
-    void addToTargetLists(QQuickItemViewTransitioner::TransitionType type, QQuickViewItem *item, int index);
+    void addToTargetLists(QQuickItemViewTransitioner::TransitionType type, QQuickItemViewTransitionableItem *item, int index);
     void resetTargetLists();
 
     QQuickTransition *transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget);
@@ -116,37 +116,35 @@ private:
     QQuickItemViewTransitionChangeListener *changeListener;
     bool usePopulateTransition;
 
-    void finishedTransition(QQuickItemViewTransitionJob *job, QQuickViewItem *item);
+    void finishedTransition(QQuickItemViewTransitionJob *job, QQuickItemViewTransitionableItem *item);
 };
 
 
 /*
-  An item in a view, that can be transitioned using QQuickViewTransitionJob.
+  An item that can be transitioned using QQuickViewTransitionJob.
   */
-class QQuickViewItem
+class QQuickItemViewTransitionableItem
 {
 public:
-    QQuickViewItem(QQuickItem *i);
-    virtual ~QQuickViewItem();
+    QQuickItemViewTransitionableItem(QQuickItem *i);
+    virtual ~QQuickItemViewTransitionableItem();
 
     qreal itemX() const;
     qreal itemY() const;
 
     void moveTo(const QPointF &pos);
-    void setVisible(bool visible);
 
     bool transitionScheduledOrRunning() const;
     bool transitionRunning() const;
     bool isPendingRemoval() const;
 
-    bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
-    void startTransition(QQuickItemViewTransitioner *transitioner);
+    bool prepareTransition(QQuickItemViewTransitioner *transitioner, int index, const QRectF &viewBounds);
+    void startTransition(QQuickItemViewTransitioner *transitioner, int index);
 
     QPointF nextTransitionTo;
     QQuickItem *item;
     QQuickItemViewTransitionJob *transition;
     QQuickItemViewTransitioner::TransitionType nextTransitionType;
-    int index;
     bool isTransitionTarget;
     bool nextTransitionToSet;
     bool prepared;

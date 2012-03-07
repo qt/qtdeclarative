@@ -55,10 +55,10 @@ public:
     QQuickItemViewTransitionJob();
     ~QQuickItemViewTransitionJob();
 
-    void startTransition(QQuickViewItem *item, QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem);
+    void startTransition(QQuickItemViewTransitionableItem *item, int index, QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem);
 
     QQuickItemViewTransitioner *m_transitioner;
-    QQuickViewItem *m_item;
+    QQuickItemViewTransitionableItem *m_item;
     QPointF m_toPos;
     QQuickItemViewTransitioner::TransitionType m_type;
     bool m_isTarget;
@@ -86,7 +86,7 @@ QQuickItemViewTransitionJob::~QQuickItemViewTransitionJob()
         m_transitioner->runningJobs.remove(this);
 }
 
-void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem)
+void QQuickItemViewTransitionJob::startTransition(QQuickItemViewTransitionableItem *item, int index, QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, const QPointF &to, bool isTargetItem)
 {
     if (type == QQuickItemViewTransitioner::NoTransition)
         return;
@@ -114,7 +114,7 @@ void QQuickItemViewTransitionJob::startTransition(QQuickViewItem *item, QQuickIt
     QQuickViewTransitionAttached *attached =
             static_cast<QQuickViewTransitionAttached*>(qmlAttachedPropertiesObject<QQuickViewTransitionAttached>(trans));
     if (attached) {
-        attached->m_index = item->index;
+        attached->m_index = index;
         attached->m_item = item->item;
         attached->m_destination = to;
         attached->m_targetIndexes = m_transitioner->targetIndexes(type);
@@ -209,12 +209,12 @@ bool QQuickItemViewTransitioner::canTransition(QQuickItemViewTransitioner::Trans
     return false;
 }
 
-void QQuickItemViewTransitioner::transitionNextReposition(QQuickViewItem *item, QQuickItemViewTransitioner::TransitionType type, bool isTarget)
+void QQuickItemViewTransitioner::transitionNextReposition(QQuickItemViewTransitionableItem *item, QQuickItemViewTransitioner::TransitionType type, bool isTarget)
 {
     item->setNextTransition(type, isTarget);
 }
 
-void QQuickItemViewTransitioner::addToTargetLists(QQuickItemViewTransitioner::TransitionType type, QQuickViewItem *item, int index)
+void QQuickItemViewTransitioner::addToTargetLists(QQuickItemViewTransitioner::TransitionType type, QQuickItemViewTransitionableItem *item, int index)
 {
     switch (type) {
     case NoTransition:
@@ -314,7 +314,7 @@ const QList<QObject *> &QQuickItemViewTransitioner::targetItems(QQuickItemViewTr
     return qquickitemviewtransition_emptyTargets;
 }
 
-void QQuickItemViewTransitioner::finishedTransition(QQuickItemViewTransitionJob *job, QQuickViewItem *item)
+void QQuickItemViewTransitioner::finishedTransition(QQuickItemViewTransitionJob *job, QQuickItemViewTransitionableItem *item)
 {
     if (!runningJobs.contains(job))
         return;
@@ -327,23 +327,22 @@ void QQuickItemViewTransitioner::finishedTransition(QQuickItemViewTransitionJob 
 }
 
 
-QQuickViewItem::QQuickViewItem(QQuickItem *i)
+QQuickItemViewTransitionableItem::QQuickItemViewTransitionableItem(QQuickItem *i)
     : item(i)
     , transition(0)
     , nextTransitionType(QQuickItemViewTransitioner::NoTransition)
-    , index(-1)
     , isTransitionTarget(false)
     , nextTransitionToSet(false)
     , prepared(false)
 {
 }
 
-QQuickViewItem::~QQuickViewItem()
+QQuickItemViewTransitionableItem::~QQuickItemViewTransitionableItem()
 {
     delete transition;
 }
 
-qreal QQuickViewItem::itemX() const
+qreal QQuickItemViewTransitionableItem::itemX() const
 {
     if (nextTransitionType != QQuickItemViewTransitioner::NoTransition)
         return nextTransitionToSet ? nextTransitionTo.x() : item->x();
@@ -353,7 +352,7 @@ qreal QQuickViewItem::itemX() const
         return item->x();
 }
 
-qreal QQuickViewItem::itemY() const
+qreal QQuickItemViewTransitionableItem::itemY() const
 {
     // If item is transitioning to some pos, return that dest pos.
     // If item was redirected to some new pos before the current transition finished,
@@ -366,7 +365,7 @@ qreal QQuickViewItem::itemY() const
         return item->y();
 }
 
-void QQuickViewItem::moveTo(const QPointF &pos)
+void QQuickItemViewTransitionableItem::moveTo(const QPointF &pos)
 {
     if (transitionScheduledOrRunning()) {
         nextTransitionTo = pos;
@@ -376,25 +375,18 @@ void QQuickViewItem::moveTo(const QPointF &pos)
     }
 }
 
-void QQuickViewItem::setVisible(bool visible)
-{
-    if (!visible && transitionScheduledOrRunning())
-        return;
-    item->setVisible(visible);
-}
-
-bool QQuickViewItem::transitionScheduledOrRunning() const
+bool QQuickItemViewTransitionableItem::transitionScheduledOrRunning() const
 {
     return (transition && transition->isRunning())
             || nextTransitionType != QQuickItemViewTransitioner::NoTransition;
 }
 
-bool QQuickViewItem::transitionRunning() const
+bool QQuickItemViewTransitionableItem::transitionRunning() const
 {
     return (transition && transition->isRunning());
 }
 
-bool QQuickViewItem::isPendingRemoval() const
+bool QQuickItemViewTransitionableItem::isPendingRemoval() const
 {
     if (nextTransitionType == QQuickItemViewTransitioner::RemoveTransition)
         return isTransitionTarget;
@@ -403,7 +395,7 @@ bool QQuickViewItem::isPendingRemoval() const
     return false;
 }
 
-bool QQuickViewItem::prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds)
+bool QQuickItemViewTransitionableItem::prepareTransition(QQuickItemViewTransitioner *transitioner, int index, const QRectF &viewBounds)
 {
     bool doTransition = false;
 
@@ -478,7 +470,7 @@ bool QQuickViewItem::prepareTransition(QQuickItemViewTransitioner *transitioner,
     return doTransition;
 }
 
-void QQuickViewItem::startTransition(QQuickItemViewTransitioner *transitioner)
+void QQuickItemViewTransitionableItem::startTransition(QQuickItemViewTransitioner *transitioner, int index)
 {
     if (nextTransitionType == QQuickItemViewTransitioner::NoTransition)
         return;
@@ -498,12 +490,12 @@ void QQuickViewItem::startTransition(QQuickItemViewTransitioner *transitioner)
     if (!nextTransitionToSet)
         moveTo(item->pos());
 
-    transition->startTransition(this, transitioner, nextTransitionType, nextTransitionTo, isTransitionTarget);
+    transition->startTransition(this, index, transitioner, nextTransitionType, nextTransitionTo, isTransitionTarget);
     nextTransitionType = QQuickItemViewTransitioner::NoTransition;
     prepared = false;
 }
 
-void QQuickViewItem::setNextTransition(QQuickItemViewTransitioner::TransitionType type, bool isTargetItem)
+void QQuickItemViewTransitionableItem::setNextTransition(QQuickItemViewTransitioner::TransitionType type, bool isTargetItem)
 {
     // Don't reset nextTransitionToSet - once it is set, it cannot be changed
     // until the animation finishes since the itemX() and itemY() may be used
@@ -512,20 +504,20 @@ void QQuickViewItem::setNextTransition(QQuickItemViewTransitioner::TransitionTyp
     isTransitionTarget = isTargetItem;
 }
 
-bool QQuickViewItem::transitionWillChangePosition() const
+bool QQuickItemViewTransitionableItem::transitionWillChangePosition() const
 {
     if (transitionRunning() && transition->m_toPos != nextTransitionTo)
         return true;
     return nextTransitionTo != item->pos();
 }
 
-void QQuickViewItem::finishedTransition()
+void QQuickItemViewTransitionableItem::finishedTransition()
 {
     nextTransitionToSet = false;
     nextTransitionTo = QPointF();
 }
 
-void QQuickViewItem::resetTransitionData()
+void QQuickItemViewTransitionableItem::resetTransitionData()
 {
     nextTransitionType = QQuickItemViewTransitioner::NoTransition;
     isTransitionTarget = false;
