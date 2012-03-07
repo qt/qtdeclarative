@@ -1626,7 +1626,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         QRectF bounds = boundingRect();
 
         node->addTextDocument(bounds.topLeft(), d->document, d->color, QQuickText::Normal, QColor(),
-                              d->selectionColor, d->selectedTextColor, selectionStart(),
+                              QColor(), d->selectionColor, d->selectedTextColor, selectionStart(),
                               selectionEnd() - 1);  // selectionEnd() returns first char after
                                                     // selection
 
