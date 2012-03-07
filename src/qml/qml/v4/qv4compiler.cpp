@@ -803,6 +803,12 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
                 gen(i);
                 } return;
 
+            case IR::MathAbsBuiltinFunction: {
+                Instr::MathAbsReal i;
+                i.output = i.src = currentReg;
+                gen(i);
+                } return;
+
             case IR::MathRoundBultinFunction: {
                 Instr::MathRoundReal i;
                 i.output = i.src = currentReg;
@@ -811,6 +817,12 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
 
             case IR::MathFloorBultinFunction: {
                 Instr::MathFloorReal i;
+                i.output = i.src = currentReg;
+                gen(i);
+                } return;
+
+            case IR::MathCeilBuiltinFunction: {
+                Instr::MathCeilReal i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
