@@ -1386,7 +1386,7 @@ void QQmlXMLHttpRequest::readEncoding()
         if (header.first == "content-type") {
             int separatorIdx = header.second.indexOf(';');
             if (separatorIdx == -1) {
-                m_mime == header.second;
+                m_mime = header.second;
             } else {
                 m_mime = header.second.mid(0, separatorIdx);
                 int charsetIdx = header.second.indexOf("charset=");
