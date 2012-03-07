@@ -1188,9 +1188,7 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
     QCoreApplication::Encoding encoding = QCoreApplication::UnicodeUTF8;
     if (args.Length() > 3) {
         QString encStr = v8engine->toString(args[3]);
-        if (encStr == QLatin1String("CodecForTr")) {
-            encoding = QCoreApplication::CodecForTr;
-        } else if (encStr == QLatin1String("UnicodeUTF8")) {
+        if (encStr == QLatin1String("UnicodeUTF8")) {
             encoding = QCoreApplication::UnicodeUTF8;
         } else {
             QString msg = QString::fromLatin1("qsTranslate(): invalid encoding '%0'").arg(encStr);
