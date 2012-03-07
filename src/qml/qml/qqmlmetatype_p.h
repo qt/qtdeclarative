@@ -180,7 +180,6 @@ public:
     int attachedPropertiesId() const;
 
     int parserStatusCast() const;
-    QVariant fromObject(QObject *) const;
     const char *interfaceIId() const;
     int propertyValueSourceCast() const;
     int propertyValueInterceptorCast() const;
