@@ -161,6 +161,9 @@ void QQmlAnimationTimer::stopTimer()
 
 void QQmlAnimationTimer::registerAnimation(QAbstractAnimationJob *animation, bool isTopLevel)
 {
+    if (animation->userControlDisabled())
+        return;
+
     QQmlAnimationTimer *inst = instance(true); //we create the instance if needed
     inst->registerRunningAnimation(animation);
     if (isTopLevel) {
@@ -206,6 +209,8 @@ void QQmlAnimationTimer::unregisterAnimation(QAbstractAnimationJob *animation)
 
 void QQmlAnimationTimer::registerRunningAnimation(QAbstractAnimationJob *animation)
 {
+    Q_ASSERT(!animation->userControlDisabled());
+
     if (animation->m_isGroup)
         return;
 
@@ -217,6 +222,9 @@ void QQmlAnimationTimer::registerRunningAnimation(QAbstractAnimationJob *animati
 
 void QQmlAnimationTimer::unregisterRunningAnimation(QAbstractAnimationJob *animation)
 {
+    if (animation->userControlDisabled())
+        return;
+
     if (animation->m_isGroup)
         return;
 
@@ -248,20 +256,21 @@ int QQmlAnimationTimer::closestPauseAnimationTimeToFinish()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 QAbstractAnimationJob::QAbstractAnimationJob()
-    : m_isPause(false)
-    , m_isGroup(false)
-    , m_loopCount(1)
+    : m_loopCount(1)
     , m_group(0)
     , m_direction(QAbstractAnimationJob::Forward)
     , m_state(QAbstractAnimationJob::Stopped)
     , m_totalCurrentTime(0)
     , m_currentTime(0)
     , m_currentLoop(0)
-    , m_hasRegisteredTimer(false)
     , m_uncontrolledFinishTime(-1)
-    , m_wasDeleted(0)
     , m_nextSibling(0)
     , m_previousSibling(0)
+    , m_wasDeleted(0)
+    , m_hasRegisteredTimer(false)
+    , m_isPause(false)
+    , m_isGroup(false)
+    , m_disableUserControl(false)
 {
 }
 
@@ -480,6 +489,23 @@ void QAbstractAnimationJob::resume()
         return;
     }
     setState(Running);
+}
+
+void QAbstractAnimationJob::setEnableUserControl()
+{
+    m_disableUserControl = false;
+}
+
+bool QAbstractAnimationJob::userControlDisabled() const
+{
+    return m_disableUserControl;
+}
+
+void QAbstractAnimationJob::setDisableUserControl()
+{
+    m_disableUserControl = true;
+    start();
+    pause();
 }
 
 void QAbstractAnimationJob::updateState(QAbstractAnimationJob::State newState,
