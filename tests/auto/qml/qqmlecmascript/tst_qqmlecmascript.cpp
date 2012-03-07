@@ -4649,13 +4649,9 @@ void tst_qqmlecmascript::sequenceConversionIndexes()
     QString w1 = qmlFile.toString() + QLatin1String(":34: Index out of range during length set");
     QString w2 = qmlFile.toString() + QLatin1String(":41: Index out of range during indexed set");
     QString w3 = qmlFile.toString() + QLatin1String(":48: Index out of range during indexed get");
-    QString w4 = qmlFile.toString() + QLatin1String(":78: std::bad_alloc during length set");
-    QString w5 = qmlFile.toString() + QLatin1String(":83: std::bad_alloc during indexed set");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w4));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w5));
     QMetaObject::invokeMethod(object, "indexedAccess");
     QVERIFY(object->property("success").toBool());
     delete object;

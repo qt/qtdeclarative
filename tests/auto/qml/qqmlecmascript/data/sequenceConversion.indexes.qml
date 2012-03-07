@@ -71,19 +71,5 @@ Item {
             success = false;
         if (!verifyExpected(msco.intListProperty, 4))
             success = false;
-
-        // NOTE: while these two operations are technically
-        // fine, we expect std::bad_alloc exceptions here
-        // which we handle in the sequence wrapper.
-        msco.intListProperty.length = maxIndex;
-        if (msco.intListProperty.length != expectedLength)
-            success = false;
-        if (!verifyExpected(msco.intListProperty, 4))
-            success = false;
-        msco.intListProperty[maxIndex] = 15;
-        if (msco.intListProperty.length != expectedLength)
-            success = false;
-        if (!verifyExpected(msco.intListProperty, 4))
-            success = false;
     }
 }
