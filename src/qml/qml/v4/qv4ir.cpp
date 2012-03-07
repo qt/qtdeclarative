@@ -221,7 +221,7 @@ void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32
         builtin = MathCosBultinFunction;
     } else if (id->length() == 10 && *id == QLatin1String("Math.round")) {
         builtin = MathRoundBultinFunction;
-    } else if (id->length() == 10 && *id == QLatin1String("Math.floor)")) {
+    } else if (id->length() == 10 && *id == QLatin1String("Math.floor")) {
         builtin = MathFloorBultinFunction;
     } else if (id->length() == 7 && *id == QLatin1String("Math.PI")) {
         builtin = MathPIBuiltinConstant;
