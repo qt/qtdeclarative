@@ -3018,7 +3018,6 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 void QQuickItem::focusInEvent(QFocusEvent *)
 {
-    QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::Focus, this));
 }
 
 void QQuickItem::focusOutEvent(QFocusEvent *)
@@ -3982,9 +3981,6 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         childVisibilityChanged |= QQuickItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
 
     itemChange(QQuickItem::ItemVisibleHasChanged, effectiveVisible);
-
-    if (isAccessible)
-        QAccessible::updateAccessibility(QAccessibleEvent(effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide, q));
 
     emit q->visibleChanged();
     if (childVisibilityChanged)
