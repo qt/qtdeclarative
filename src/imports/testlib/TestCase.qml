@@ -407,6 +407,22 @@ Item {
             qtest_fail("window not shown", 2)
     }
 
+    function mouseDrag(item, x, y, dx, dy, button, modifiers, delay) {
+        if (item.x === undefined || item.y === undefined)
+            return
+        if (button === undefined)
+            button = Qt.LeftButton
+        if (modifiers === undefined)
+            modifiers = Qt.NoModifier
+        if (delay == undefined)
+            delay = -1
+
+        mousePress(item, x, y, button, modifiers, delay)
+        //trigger draging
+        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, delay, button)
+        mouseMove(item, x + dx, y + dy, delay, button)
+    }
+
     function mouseClick(item, x, y, button, modifiers, delay) {
         if (button === undefined)
             button = Qt.LeftButton
