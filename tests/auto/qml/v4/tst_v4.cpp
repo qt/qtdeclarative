@@ -64,6 +64,8 @@ private slots:
     void unnecessaryReeval();
     void logicalOr();
     void nestedLogicalOr();
+    void logicalAnd();
+    void nestedLogicalAnd();
     void conditionalExpr();
     void qtscript();
     void qtscript_data();
@@ -197,6 +199,115 @@ void tst_v4::nestedLogicalOr()
 {
     //we are primarily testing that v4 does not get caught in a loop (QTBUG-24038)
     QQmlComponent component(&engine, testFileUrl("nestedLogicalOr.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    ResultObject *ro = qobject_cast<ResultObject *>(o);
+    QVERIFY(ro != 0);
+
+    QCOMPARE(ro->result(), 1);
+    delete o;
+}
+
+void tst_v4::logicalAnd()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("logicalAnd.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 0);
+        delete o;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("logicalAnd.2.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 1);
+        delete o;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("logicalAnd.3.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 1);
+        delete o;
+    }
+
+    {
+        // QTBUG-24660
+        QQmlComponent component(&engine, testFileUrl("logicalAnd.4.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 1);
+        delete o;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("logicalAnd.5.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 1);
+        delete o;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("logicalAnd.6.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 1);
+        delete o;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("logicalAnd.7.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 1);
+        delete o;
+    }
+}
+
+void tst_v4::nestedLogicalAnd()
+{
+    QQmlComponent component(&engine, testFileUrl("nestedLogicalAnd.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);

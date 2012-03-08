@@ -911,12 +911,15 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             IR::BasicBlock *iffalse = _function->newBasicBlock();
             IR::BasicBlock *endif = _function->newBasicBlock();
 
-            condition(ast->left, iftrue, iffalse);
+            ExprResult left = expression(ast->left);
+            IR::Temp *cond = _block->TEMP(IR::BoolType);
+            _block->MOVE(cond, left);
+            _block->CJUMP(cond, iftrue, iffalse);
 
             IR::Temp *r = _block->TEMP(IR::InvalidType);
 
             _block = iffalse;
-            _block->MOVE(r, _block->CONST(IR::BoolType, 0)); // ### use the right null value
+            _block->MOVE(r, cond);
             _block->JUMP(endif);
 
             _block = iftrue;
@@ -924,9 +927,12 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             _block->MOVE(r, right);
             _block->JUMP(endif);
 
+            if (left.type() != right.type())
+                discard();
+
             _block = endif;
 
-            r->type = right.type(); // ### not exactly, it can be IR::BoolType.
+            r->type = right.type();
             _expr.code = r;
         }
     } break;
