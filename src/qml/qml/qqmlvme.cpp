@@ -66,6 +66,7 @@
 #include "qqmlscriptstring.h"
 #include "qqmlscriptstring_p.h"
 #include "qqmlpropertyvalueinterceptor_p.h"
+#include "qqmlvaluetypeproxybinding_p.h"
 
 #include <QStack>
 #include <QColor>

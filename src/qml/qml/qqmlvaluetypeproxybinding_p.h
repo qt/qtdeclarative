@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLBINDING_P_H
-#define QQMLBINDING_P_H
+#ifndef QQMLVALUETYPEPROXYBINDING_P_H
+#define QQMLVALUETYPEPROXYBINDING_P_H
 
 //
 //  W A R N I N G
@@ -53,72 +53,39 @@
 // We mean it.
 //
 
-#include "qqml.h"
-#include "qqmlpropertyvaluesource.h"
-#include "qqmlexpression.h"
-#include "qqmlproperty.h"
-#include "qqmlproperty_p.h"
-
-#include <QtCore/QObject>
-#include <QtCore/QMetaProperty>
-
-#include <private/qpointervaluepair_p.h>
 #include <private/qqmlabstractbinding_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlContext;
-class QQmlBindingPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlExpression, public QQmlAbstractBinding
+class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 {
-Q_OBJECT
 public:
-    enum EvaluateFlag { None = 0x00, RequiresThisObject = 0x01 };
-    Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
+    QQmlValueTypeProxyBinding(QObject *o, int coreIndex);
 
-    QQmlBinding(const QString &, QObject *, QQmlContext *, QObject *parent=0);
-    QQmlBinding(const QString &, QObject *, QQmlContextData *, QObject *parent=0);
-    QQmlBinding(const QString &, bool isRewritten, QObject *, QQmlContextData *, 
-                        const QString &url, int lineNumber, int columnNumber = 0, QObject *parent=0);
-    QQmlBinding(void *, QObject *, QQmlContextData *, QObject *parent=0);
+    virtual Type bindingType() const { return ValueTypeProxy; }
 
-    void setTarget(const QQmlProperty &);
-    void setTarget(QObject *, const QQmlPropertyData &, QQmlContextData *);
-    QQmlProperty property() const;
-
-    void setEvaluateFlags(EvaluateFlags flags);
-    EvaluateFlags evaluateFlags() const;
-
-    bool enabled() const;
-
-    // Inherited from  QQmlAbstractBinding
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
-    virtual void update(QQmlPropertyPrivate::WriteFlags flags);
-    virtual QString expression() const;
+    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
+    virtual void update(QQmlPropertyPrivate::WriteFlags);
     virtual int propertyIndex() const;
     virtual QObject *object() const;
-    virtual void retargetBinding(QObject *, int);
 
-    typedef int Identifier;
-    static Identifier Invalid;
-    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *,
-                                              const QString &, int, QObject *parent=0);
+    QQmlAbstractBinding *binding(int propertyIndex);
 
-
-public Q_SLOTS:
-    void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
+    void removeBindings(quint32 mask);
 
 protected:
-    ~QQmlBinding();
+    ~QQmlValueTypeProxyBinding();
 
 private:
-    Q_DECLARE_PRIVATE(QQmlBinding)
-};
+    void recursiveEnable(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+    void recursiveDisable(QQmlAbstractBinding *);
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlBinding::EvaluateFlags)
+    friend class QQmlAbstractBinding;
+    QObject *m_object;
+    int m_index;
+    QQmlAbstractBinding *m_bindings;
+};
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QQmlBinding*)
-
-#endif // QQMLBINDING_P_H
+#endif // QQMLVALUETYPEPROXYBINDING_P_H

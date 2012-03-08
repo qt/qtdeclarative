@@ -55,6 +55,7 @@
 #include "qqmlcompiler_p.h"
 #include "qqmlvmemetaobject_p.h"
 #include "qqmlexpression_p.h"
+#include "qqmlvaluetypeproxybinding_p.h"
 
 #include <QStringList>
 #include <QtCore/qdebug.h>
