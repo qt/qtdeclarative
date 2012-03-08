@@ -67,7 +67,7 @@ QQmlEngineDebugService *QQmlEngineDebugService::instance()
 }
 
 QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
-    : QQmlDebugService(QLatin1String("QDeclarativeEngine"), 1, parent),
+    : QQmlDebugService(QStringLiteral("QDeclarativeEngine"), 1, parent),
       m_watch(new QQmlWatcher(this)),
       m_statesDelegate(0)
 {
@@ -206,12 +206,12 @@ QVariant QQmlEngineDebugService::valueContents(const QVariant &value) const
         if (o) {
             QString name = o->objectName();
             if (name.isEmpty())
-                name = QLatin1String("<unnamed object>");
+                name = QStringLiteral("<unnamed object>");
             return name;
         }
     }
 
-    return QLatin1String("<unknown value>");
+    return QStringLiteral("<unknown value>");
 }
 
 void QQmlEngineDebugService::buildObjectDump(QDataStream &message, 
@@ -247,7 +247,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
                 prop.value = expr->expression();
                 QObject *scope = expr->scopeObject();
                 if (scope) {
-                    QString sig = QLatin1String(scope->metaObject()->method(signal->index()).signature());
+                    QString sig = QString::fromLatin1(scope->metaObject()->method(signal->index()).signature());
                     int lparen = sig.indexOf(QLatin1Char('('));
                     if (lparen >= 0) {
                         QString methodName = sig.mid(0, lparen);
@@ -510,11 +510,11 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
             bool undefined = false;
             QVariant value = exprObj.evaluate(&undefined);
             if (undefined)
-                result = QLatin1String("<undefined>");
+                result = QString(QStringLiteral("<undefined>"));
             else
                 result = valueContents(value);
         } else {
-            result = QLatin1String("<unknown context>");
+            result = QString(QStringLiteral("<unknown context>"));
         }
 
         QByteArray reply;
@@ -667,11 +667,11 @@ void QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
 
     QString paramStr;
     for (int ii = 0; ii < paramNames.count(); ++ii) {
-        if (ii != 0) paramStr.append(QLatin1String(","));
+        if (ii != 0) paramStr.append(QLatin1Char(','));
         paramStr.append(QString::fromUtf8(paramNames.at(ii)));
     }
 
-    QString jsfunction = QLatin1String("(function ") + method + QLatin1String("(") + paramStr +
+    QString jsfunction = QLatin1String("(function ") + method + QLatin1Char('(') + paramStr +
             QLatin1String(") {");
     jsfunction += body;
     jsfunction += QLatin1String("\n})");

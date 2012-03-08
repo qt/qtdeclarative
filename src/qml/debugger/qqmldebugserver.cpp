@@ -155,7 +155,7 @@ void QQmlDebugServerPrivate::advertisePlugins()
             pluginNames << service->name();
             pluginVersions << service->version();
         }
-        out << QString(QLatin1String("QDeclarativeDebugClient")) << 1 << pluginNames << pluginVersions;
+        out << QString(QStringLiteral("QDeclarativeDebugClient")) << 1 << pluginNames << pluginVersions;
     }
 
     QMetaObject::invokeMethod(q, "_q_sendMessages", Qt::QueuedConnection, Q_ARG(QList<QByteArray>, QList<QByteArray>() << message));
@@ -217,8 +217,8 @@ void QQmlDebugServerThread::run()
         connection->setPort(m_port, m_block);
     } else {
         QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
-        qWarning() << QString::fromAscii("QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                                         "Remote debugger plugin has not been found.").arg(appD->qmljsDebugArgumentsString());
+        qWarning() << QString(QLatin1String("QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
+                                            "Remote debugger plugin has not been found.")).arg(appD->qmljsDebugArgumentsString());
     }
 
     exec();
@@ -262,9 +262,9 @@ QQmlDebugServer *QQmlDebugServer::instance()
         // format: qmljsdebugger=port:3768[,block] OR qmljsdebugger=ost[,block]
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
             if (!QQmlEnginePrivate::qml_debugging_enabled) {
-                qWarning() << QString::fromLatin1(
+                qWarning() << QString(QLatin1String(
                                   "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                                  "Debugging has not been enabled.").arg(
+                                  "Debugging has not been enabled.")).arg(
                                   appD->qmljsDebugArgumentsString());
                 return 0;
             }
@@ -273,9 +273,9 @@ QQmlDebugServer *QQmlDebugServer::instance()
             if (appD->qmljsDebugArgumentsString().indexOf(QLatin1String("port:")) == 0) {
                 int separatorIndex = appD->qmljsDebugArgumentsString().indexOf(QLatin1Char(','));
                 port = appD->qmljsDebugArgumentsString().mid(5, separatorIndex - 5).toInt(&ok);
-                pluginName = QLatin1String("qmldbg_tcp");
+                pluginName = QStringLiteral("qmldbg_tcp");
             } else if (appD->qmljsDebugArgumentsString().contains(QLatin1String("ost"))) {
-                pluginName = QLatin1String("qmldbg_ost");
+                pluginName = QStringLiteral("qmldbg_ost");
                 ok = true;
             }
 
@@ -298,17 +298,17 @@ QQmlDebugServer *QQmlDebugServer::instance()
                 }
 
             } else {
-                qWarning() << QString::fromLatin1(
+                qWarning() << QString(QLatin1String(
                                   "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                                  "Format is -qmljsdebugger=port:<port>[,block]").arg(
+                                  "Format is -qmljsdebugger=port:<port>[,block]")).arg(
                                   appD->qmljsDebugArgumentsString());
             }
         }
 #else
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
-            qWarning() << QString::fromLatin1(
+            qWarning() << QString(QLatin1String(
                          "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                         "QtQml is not configured for debugging.").arg(
+                         "QtQml is not configured for debugging.")).arg(
                          appD->qmljsDebugArgumentsString());
         }
 #endif
@@ -373,7 +373,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                     pluginVersions << service->version();
                 }
 
-                out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
+                out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
             }
             d->connection->send(QList<QByteArray>() << helloAnswer);
 

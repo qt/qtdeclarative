@@ -101,7 +101,7 @@ public:
 };
 
 QV8ProfilerService::QV8ProfilerService(QObject *parent)
-    : QQmlDebugService(*(new QV8ProfilerServicePrivate()), QLatin1String("V8Profiler"), 1, parent)
+    : QQmlDebugService(*(new QV8ProfilerServicePrivate()), QStringLiteral("V8Profiler"), 1, parent)
 {
     Q_D(QV8ProfilerService);
 

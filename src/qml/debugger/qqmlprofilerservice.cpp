@@ -77,7 +77,7 @@ QByteArray QQmlProfilerData::toByteArray() const
 }
 
 QQmlProfilerService::QQmlProfilerService()
-    : QQmlDebugService(QLatin1String("CanvasFrameRate"), 1),
+    : QQmlDebugService(QStringLiteral("CanvasFrameRate"), 1),
       m_enabled(false), m_messageReceived(false)
 {
     m_timer.start();

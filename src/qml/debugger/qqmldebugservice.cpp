@@ -216,11 +216,11 @@ bool QQmlDebugService::hasDebuggingClient()
 QString QQmlDebugService::objectToString(QObject *obj)
 {
     if(!obj)
-        return QLatin1String("NULL");
+        return QStringLiteral("NULL");
 
     QString objectName = obj->objectName();
     if(objectName.isEmpty())
-        objectName = QLatin1String("<unnamed>");
+        objectName = QStringLiteral("<unnamed>");
 
     QString rv = QString::fromUtf8(obj->metaObject()->className()) +
             QLatin1String(": ") + objectName;
