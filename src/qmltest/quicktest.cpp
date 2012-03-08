@@ -43,14 +43,10 @@
 #include "quicktestresult_p.h"
 #include <QtTest/qtestsystem.h>
 #include "qtestoptions_p.h"
-#include <QApplication>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
-#if defined(QML_VERSION) && QML_VERSION >= 0x020000
 #include <QtQuick/qquickview.h>
-#define QUICK_TEST_SCENEGRAPH 1
-#endif
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
 #include <QtGui/qopengl.h>
@@ -160,12 +156,10 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // Look for QML-specific command-line options.
     //      -import dir         Specify an import directory.
     //      -input dir          Specify the input directory for test cases.
-    //      -qtquick1           Run with QtQuick 1 rather than QtQuick 2.
     //      -translation file   Specify the translation file.
     QStringList imports;
     QString testPath;
     QString translationFile;
-    bool qtQuick2 = true;
     int outargc = 1;
     int index = 1;
     while (index < argc) {
@@ -176,9 +170,6 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
             testPath = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
             index += 2;
         } else if (strcmp(argv[index], "-opengl") == 0) {
-            ++index;
-        } else if (strcmp(argv[index], "-qtquick1") == 0) {
-            qtQuick2 = false;
             ++index;
         } else if (strcmp(argv[index], "-translation") == 0 && (index + 1) < argc) {
             translationFile = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
@@ -255,57 +246,49 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
 
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a QQuickView.
-#ifdef QUICK_TEST_SCENEGRAPH
-    if (qtQuick2) {
-        QQuickView view;
-        QTestRootObject rootobj;
-        QEventLoop eventLoop;
-        QObject::connect(view.engine(), SIGNAL(quit()),
-                         &rootobj, SLOT(quit()));
-        QObject::connect(view.engine(), SIGNAL(quit()),
-                         &eventLoop, SLOT(quit()));
-        view.rootContext()->setContextProperty
-            (QLatin1String("qtest"), &rootobj);
-        foreach (const QString &path, imports)
-            view.engine()->addImportPath(path);
+    QQuickView view;
+    QTestRootObject rootobj;
+    QEventLoop eventLoop;
+    QObject::connect(view.engine(), SIGNAL(quit()),
+                     &rootobj, SLOT(quit()));
+    QObject::connect(view.engine(), SIGNAL(quit()),
+                     &eventLoop, SLOT(quit()));
+    view.rootContext()->setContextProperty
+        (QLatin1String("qtest"), &rootobj);
+    foreach (const QString &path, imports)
+        view.engine()->addImportPath(path);
 
-        foreach (QString file, files) {
-            QFileInfo fi(file);
-            if (!fi.exists())
-                continue;
+    foreach (QString file, files) {
+        QFileInfo fi(file);
+        if (!fi.exists())
+            continue;
 
-            rootobj.setHasTestCase(false);
-            rootobj.setWindowShown(false);
-            rootobj.hasQuit = false;
-            QString path = fi.absoluteFilePath();
-            if (path.startsWith(QLatin1String(":/")))
-                view.setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
-            else
-                view.setSource(QUrl::fromLocalFile(path));
+        rootobj.setHasTestCase(false);
+        rootobj.setWindowShown(false);
+        rootobj.hasQuit = false;
+        QString path = fi.absoluteFilePath();
+        if (path.startsWith(QLatin1String(":/")))
+            view.setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
+        else
+            view.setSource(QUrl::fromLocalFile(path));
 
-            if (QTest::printAvailableFunctions)
-                continue;
-            if (view.status() == QQuickView::Error) {
-                handleCompileErrors(fi, view);
-                continue;
-            }
-            if (!rootobj.hasQuit) {
-                // If the test already quit, then it was performed
-                // synchronously during setSource().  Otherwise it is
-                // an asynchronous test and we need to show the window
-                // and wait for the quit indication.
-                view.show();
-                QTest::qWaitForWindowShown(&view);
-                rootobj.setWindowShown(true);
-                if (!rootobj.hasQuit && rootobj.hasTestCase())
-                    eventLoop.exec();
-            }
+        if (QTest::printAvailableFunctions)
+            continue;
+        if (view.status() == QQuickView::Error) {
+            handleCompileErrors(fi, view);
+            continue;
         }
-    } else
-#endif
-    {
-        qWarning("No suitable QtQuick1 implementation is available!");
-        return 1;
+        if (!rootobj.hasQuit) {
+            // If the test already quit, then it was performed
+            // synchronously during setSource().  Otherwise it is
+            // an asynchronous test and we need to show the window
+            // and wait for the quit indication.
+            view.show();
+            QTest::qWaitForWindowShown(&view);
+            rootobj.setWindowShown(true);
+            if (!rootobj.hasQuit && rootobj.hasTestCase())
+                eventLoop.exec();
+        }
     }
 
     // Flush the current logging stream.
