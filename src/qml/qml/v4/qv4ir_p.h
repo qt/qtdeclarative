@@ -241,6 +241,8 @@ enum BuiltinSymbol {
     MathFloorBultinFunction,
     MathCeilBuiltinFunction,
     MathAbsBuiltinFunction,
+    MathMaxBuiltinFunction,
+    MathMinBuiltinFunction,
 
     MathPIBuiltinConstant
 };

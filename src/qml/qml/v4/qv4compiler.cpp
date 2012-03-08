@@ -828,8 +828,42 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
                 } return;
 
             case IR::MathPIBuiltinConstant:
+            default:
                 break;
             } // switch
+        } else {
+            if (name->builtin == IR::MathMaxBuiltinFunction ||
+                name->builtin == IR::MathMinBuiltinFunction) {
+
+                //only handles the most common case of exactly two arguments
+                if (call->args && call->args->next && !call->args->next->next) {
+                    IR::Expr *arg1 = call->args->expr;
+                    IR::Expr *arg2 = call->args->next->expr;
+
+                    if (arg1 != 0 && arg1->type == IR::RealType &&
+                        arg2 != 0 && arg2->type == IR::RealType) {
+
+                        traceExpression(arg1, currentReg);
+                        traceExpression(arg2, currentReg + 1);
+
+                        if (name->builtin == IR::MathMaxBuiltinFunction) {
+                            Instr::MathMaxReal i;
+                            i.left = currentReg;
+                            i.right = currentReg + 1;
+                            i.output = currentReg;
+                            gen(i);
+                            return;
+                        } else if (name->builtin == IR::MathMinBuiltinFunction) {
+                            Instr::MathMinReal i;
+                            i.left = currentReg;
+                            i.right = currentReg + 1;
+                            i.output = currentReg;
+                            gen(i);
+                            return;
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -227,6 +227,10 @@ void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32
         builtin = MathFloorBultinFunction;
     } else if (id->length() == 9 && *id == QLatin1String("Math.ceil")) {
         builtin = MathCeilBuiltinFunction;
+    } else if (id->length() == 8 && *id == QLatin1String("Math.max")) {
+        builtin = MathMaxBuiltinFunction;
+    } else if (id->length() == 8 && *id == QLatin1String("Math.min")) {
+        builtin = MathMinBuiltinFunction;
     } else if (id->length() == 7 && *id == QLatin1String("Math.PI")) {
         builtin = MathPIBuiltinConstant;
         this->type = RealType;
@@ -358,6 +362,8 @@ Type Call::typeForFunction(Expr *base)
         case MathSinBultinFunction:
         case MathCosBultinFunction:
         case MathAbsBuiltinFunction:    //### type could also be Int if input was Int
+        case MathMaxBuiltinFunction:
+        case MathMinBuiltinFunction:
             return RealType;
 
         case MathRoundBultinFunction:

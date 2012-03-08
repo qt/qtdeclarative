@@ -312,6 +312,12 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::StrictNotEqualString:
         INSTR_DUMP << "\t" << "StrictNotEqualString" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
+    case V4Instr::MathMaxReal:
+        INSTR_DUMP << "\t" << "MathMaxReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
+    case V4Instr::MathMinReal:
+        INSTR_DUMP << "\t" << "MathMinReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
     case V4Instr::NewString:
         INSTR_DUMP << "\t" << "NewString" << "\t\t" << "Register(" << i->construct.reg << ")";
         break;

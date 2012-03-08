@@ -139,6 +139,8 @@ QT_BEGIN_NAMESPACE
     F(NotEqualString, binaryop) \
     F(StrictEqualString, binaryop) \
     F(StrictNotEqualString, binaryop) \
+    F(MathMaxReal, binaryop) \
+    F(MathMinReal, binaryop) \
     F(NewString, construct) \
     F(NewUrl, construct) \
     F(CleanupRegister, cleanup) \
