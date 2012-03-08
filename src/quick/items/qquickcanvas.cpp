@@ -374,6 +374,14 @@ static QQuickMouseEventEx touchToMouseEvent(QEvent::Type type, const QTouchEvent
 
 void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
 {
+    if (event->type() == QEvent::TouchCancel) {
+        touchMouseId = -1;
+        if (!mouseGrabberItem)
+            return;
+        mouseGrabberItem->ungrabMouse();
+        mouseGrabberItem = 0;
+        return;
+    }
     for (int i = 0; i < event->touchPoints().count(); ++i) {
         QTouchEvent::TouchPoint p = event->touchPoints().at(i);
         if (touchMouseId == -1 && p.state() & Qt::TouchPointPressed) {
