@@ -5740,7 +5740,7 @@ void QQuickItemLayer::setSize(const QSize &size)
 
 void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
 {
-    if (mode != m_wrapMode)
+    if (mode == m_wrapMode)
         return;
     m_wrapMode = mode;
 
