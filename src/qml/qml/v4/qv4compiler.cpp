@@ -54,7 +54,6 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(bindingsDump, QML_BINDINGS_DUMP)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableOptimizer, QML_DISABLE_OPTIMIZER)
-DEFINE_BOOL_CONFIG_OPTION(qmlExperimental, QML_EXPERIMENTAL)
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
 DEFINE_BOOL_CONFIG_OPTION(qmlBindingsTestEnv, QML_BINDINGS_TEST)
 
@@ -1359,9 +1358,6 @@ bool QV4Compiler::isValid() const
 int QV4Compiler::compile(const Expression &expression, QQmlEnginePrivate *engine)
 {
     if (!expression.expression.asAST()) return false;
-
-    if (!qmlExperimental() && expression.property->isValueTypeSubProperty)
-        return -1;
 
     if (qmlDisableOptimizer() || !qmlEnableV4)
         return -1;

@@ -816,7 +816,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
 
-            Q_ASSERT(binding->propertyIndex() == property);
+            Q_ASSERT(binding->propertyIndex() == (property & 0xFF00FFFF));
             Q_ASSERT(binding->object() == target);
 
             binding->addToObject();
