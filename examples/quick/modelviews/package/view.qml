@@ -41,9 +41,16 @@
 import QtQuick 2.0
 
 Rectangle {
+    id: root
     color: "white"
-    width: 400
-    height: 200
+    width: 320
+    height: 480
+    property int upTo: 0
+    SequentialAnimation on upTo {
+        loops: -1
+        NumberAnimation { to: 8; duration: 3500 }
+        NumberAnimation { to: 0; duration: 3500 }
+    }
 
     ListModel {
         id: myModel
@@ -64,17 +71,22 @@ Rectangle {
     }
 
     ListView {
-        width: 200; height:200
+        id: lv
+        height: parent.height/2
+        width: parent.width
+
         model: visualModel.parts.list
     }
     GridView {
-        x: 200; width: 200; height:200
+        y: parent.height/2
+        height: parent.height/2
+        width: parent.width
+        cellWidth: width / 2
         cellHeight: 50
         model: visualModel.parts.grid
     }
     //![0]
     Text {
         anchors.bottom: parent.bottom
-        text: "Tap a delegate to move between views"
     }
 }
