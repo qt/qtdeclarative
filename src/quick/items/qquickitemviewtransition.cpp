@@ -62,6 +62,7 @@ public:
     QPointF m_toPos;
     QQuickItemViewTransitioner::TransitionType m_type;
     bool m_isTarget;
+    bool *m_wasDeleted;
 
 protected:
     virtual void finished();
@@ -73,11 +74,14 @@ QQuickItemViewTransitionJob::QQuickItemViewTransitionJob()
     , m_item(0)
     , m_type(QQuickItemViewTransitioner::NoTransition)
     , m_isTarget(false)
+    , m_wasDeleted(0)
 {
 }
 
 QQuickItemViewTransitionJob::~QQuickItemViewTransitionJob()
 {
+    if (m_wasDeleted)
+        *m_wasDeleted = true;
     if (m_transitioner)
         m_transitioner->runningJobs.remove(this);
 }
@@ -134,8 +138,16 @@ void QQuickItemViewTransitionJob::finished()
 {
     QQuickTransitionManager::finished();
 
-    if (m_transitioner)
+    if (m_transitioner) {
+        bool deleted = false;
+        m_wasDeleted = &deleted;
         m_transitioner->finishedTransition(this, m_item);
+        if (deleted)
+            return;
+        m_wasDeleted = 0;
+
+        m_transitioner = 0;
+    }
 
     m_item = 0;
     m_toPos.setX(0);
