@@ -1037,7 +1037,7 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler()
 {
 #ifndef QQML_NO_DEBUG_PROTOCOL
     if (!QQmlEnginePrivate::qml_debugging_enabled) {
-        qWarning("QML debugging is enabled. Only use this in a safe environment.");
+        qDebug("QML debugging is enabled. Only use this in a safe environment.");
     }
     QQmlEnginePrivate::qml_debugging_enabled = true;
 #endif

@@ -301,7 +301,7 @@ void tst_QQmlEngineDebugService::initTestCase()
     qRegisterMetaType<QQmlDebugWatch::State>();
     qmlRegisterType<NonScriptProperty>("Test", 1, 0, "NonScriptPropertyElement");
 
-    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Waiting for connection on port 3768...");
+    QTest::ignoreMessage(QtDebugMsg, "QML Debugger: Waiting for connection on port 3768...");
     m_engine = new QQmlEngine(this);
 
     QList<QByteArray> qml;
@@ -386,7 +386,7 @@ void tst_QQmlEngineDebugService::initTestCase()
     m_conn = new QQmlDebugConnection(this);
     m_conn->connectToHost("127.0.0.1", 3768);
 
-    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Connection established.");
+    QTest::ignoreMessage(QtDebugMsg, "QML Debugger: Connection established.");
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
     QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());

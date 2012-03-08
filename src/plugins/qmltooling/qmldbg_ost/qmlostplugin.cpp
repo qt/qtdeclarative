@@ -132,7 +132,7 @@ void QmlOstPlugin::setPort(int port, bool block)
     }
     d->protocol = new QPacketProtocol(d->ost, this);
     QObject::connect(d->protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
-    qWarning("QML Debugger: Waiting for connection via OST."); // This message is part of the signalling - do not change the format!
+    qDebug("QML Debugger: Waiting for connection via OST."); // This message is part of the signalling - do not change the format!
 }
 
 void QmlOstPlugin::readyRead()
