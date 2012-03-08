@@ -14,14 +14,15 @@ CONFIG   += console declarative_debug
 SOURCES += main.cpp \
     qmlprofilerapplication.cpp \
     commandlistener.cpp \
-    profileclient.cpp \
-    profiledata.cpp \
-    qqmldebugclient.cpp
+    qqmldebugclient.cpp \
+    qmlprofilerdata.cpp \
+    qmlprofilerclient.cpp
 
 HEADERS += \
     qmlprofilerapplication.h \
     commandlistener.h \
     constants.h \
-    profileclient.h \
-    profiledata.h \
+    qmlprofilerdata.h \
+    qmlprofilerclient.h \
+    qmlprofilereventlocation.h \
     qqmldebugclient.h

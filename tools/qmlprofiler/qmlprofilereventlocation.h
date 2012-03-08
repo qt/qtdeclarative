@@ -39,21 +39,23 @@
 **
 ****************************************************************************/
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef QMLPROFILEREVENTLOCATION_H
+#define QMLPROFILEREVENTLOCATION_H
 
-namespace Constants {
+#include <QString>
 
-const char CMD_HELP[] ="help";
-const char CMD_HELP2[] = "h";
-const char CMD_HELP3[] = "?";
+struct QmlEventLocation
+{
+    QmlEventLocation() : line(-1), column(-1) {}
+    QmlEventLocation(const QString &file, int lineNumber, int columnNumber)
+        : filename(file), line(lineNumber), column(columnNumber) {}
+    QString filename;
+    int line;
+    int column;
+};
 
-const char CMD_RECORD[] ="record";
-const char CMD_RECORD2[] ="r";
+QT_BEGIN_NAMESPACE
+Q_DECLARE_TYPEINFO(QmlEventLocation, Q_MOVABLE_TYPE);
+QT_END_NAMESPACE
 
-const char CMD_QUIT[] ="quit";
-const char CMD_QUIT2[] = "q";
-
-} // Constants
-
-#endif // CONSTANTS_H
+#endif // QMLPROFILEREVENTLOCATION_H

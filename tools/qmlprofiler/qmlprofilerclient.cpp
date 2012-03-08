@@ -39,12 +39,12 @@
 **
 ****************************************************************************/
 
-#include "profileclient.h"
+#include "qmlprofilerclient.h"
 
 #include <QtCore/QStack>
 #include <QtCore/QStringList>
 
-ProfileClient::ProfileClient(const QString &clientName,
+ProfilerClient::ProfilerClient(const QString &clientName,
                              QQmlDebugConnection *client)
     : QQmlDebugClient(clientName, client),
       m_recording(false),
@@ -52,7 +52,7 @@ ProfileClient::ProfileClient(const QString &clientName,
 {
 }
 
-ProfileClient::~ProfileClient()
+ProfilerClient::~ProfilerClient()
 {
     //Disable profiling if started by client
     //Profiling data will be lost!!
@@ -60,26 +60,26 @@ ProfileClient::~ProfileClient()
         setRecording(false);
 }
 
-void ProfileClient::clearData()
+void ProfilerClient::clearData()
 {
     emit cleared();
 }
 
-bool ProfileClient::isEnabled() const
+bool ProfilerClient::isEnabled() const
 {
     return m_enabled;
 }
 
-void ProfileClient::sendRecordingStatus()
+void ProfilerClient::sendRecordingStatus()
 {
 }
 
-bool ProfileClient::isRecording() const
+bool ProfilerClient::isRecording() const
 {
     return m_recording;
 }
 
-void ProfileClient::setRecording(bool v)
+void ProfilerClient::setRecording(bool v)
 {
     if (v == m_recording)
         return;
@@ -93,7 +93,7 @@ void ProfileClient::setRecording(bool v)
     emit recordingChanged(v);
 }
 
-void ProfileClient::stateChanged(State status)
+void ProfilerClient::stateChanged(State status)
 {
     if ((m_enabled && status != Enabled) ||
             (!m_enabled && status == Enabled))
@@ -103,10 +103,10 @@ void ProfileClient::stateChanged(State status)
 
 }
 
-class QmlProfileClientPrivate
+class QmlProfilerClientPrivate
 {
 public:
-    QmlProfileClientPrivate()
+    QmlProfilerClientPrivate()
         : inProgressRanges(0)
         , maximumTime(0)
     {
@@ -117,31 +117,31 @@ public:
     qint64 inProgressRanges;
     QStack<qint64> rangeStartTimes[QQmlProfilerService::MaximumRangeType];
     QStack<QStringList> rangeDatas[QQmlProfilerService::MaximumRangeType];
-    QStack<EventLocation> rangeLocations[QQmlProfilerService::MaximumRangeType];
+    QStack<QmlEventLocation> rangeLocations[QQmlProfilerService::MaximumRangeType];
     int rangeCount[QQmlProfilerService::MaximumRangeType];
     qint64 maximumTime;
 };
 
-QmlProfileClient::QmlProfileClient(
+QmlProfilerClient::QmlProfilerClient(
         QQmlDebugConnection *client)
-    : ProfileClient(QLatin1String("CanvasFrameRate"), client),
-      d(new QmlProfileClientPrivate)
+    : ProfilerClient(QStringLiteral("CanvasFrameRate"), client),
+      d(new QmlProfilerClientPrivate)
 {
 }
 
-QmlProfileClient::~QmlProfileClient()
+QmlProfilerClient::~QmlProfilerClient()
 {
     delete d;
 }
 
-void QmlProfileClient::clearData()
+void QmlProfilerClient::clearData()
 {
     ::memset(d->rangeCount, 0,
              QQmlProfilerService::MaximumRangeType * sizeof(int));
-    ProfileClient::clearData();
+    ProfilerClient::clearData();
 }
 
-void QmlProfileClient::sendRecordingStatus()
+void QmlProfilerClient::sendRecordingStatus()
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
@@ -149,7 +149,7 @@ void QmlProfileClient::sendRecordingStatus()
     sendMessage(ba);
 }
 
-void QmlProfileClient::messageReceived(const QByteArray &data)
+void QmlProfilerClient::messageReceived(const QByteArray &data)
 {
     QByteArray rwData = data;
     QDataStream stream(&rwData, QIODevice::ReadOnly);
@@ -216,7 +216,7 @@ void QmlProfileClient::messageReceived(const QByteArray &data)
                 stream >> column;
 
             if (d->rangeCount[range] > 0) {
-                d->rangeLocations[range].push(EventLocation(fileName, line,
+                d->rangeLocations[range].push(QmlEventLocation(fileName, line,
                                                             column));
             }
         } else {
@@ -228,8 +228,8 @@ void QmlProfileClient::messageReceived(const QByteArray &data)
                 d->maximumTime = qMax(time, d->maximumTime);
                 QStringList data = d->rangeDatas[range].count() ?
                             d->rangeDatas[range].pop() : QStringList();
-                EventLocation location = d->rangeLocations[range].count() ?
-                            d->rangeLocations[range].pop() : EventLocation();
+                QmlEventLocation location = d->rangeLocations[range].count() ?
+                            d->rangeLocations[range].pop() : QmlEventLocation();
 
                 qint64 startTime = d->rangeStartTimes[range].pop();
                 emit this->range((QQmlProfilerService::RangeType)range,
@@ -246,16 +246,16 @@ void QmlProfileClient::messageReceived(const QByteArray &data)
     }
 }
 
-V8ProfileClient::V8ProfileClient(QQmlDebugConnection *client)
-    : ProfileClient(QLatin1String("V8Profiler"), client)
+V8ProfilerClient::V8ProfilerClient(QQmlDebugConnection *client)
+    : ProfilerClient(QStringLiteral("V8Profiler"), client)
 {
 }
 
-V8ProfileClient::~V8ProfileClient()
+V8ProfilerClient::~V8ProfilerClient()
 {
 }
 
-void V8ProfileClient::sendRecordingStatus()
+void V8ProfilerClient::sendRecordingStatus()
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
@@ -272,7 +272,7 @@ void V8ProfileClient::sendRecordingStatus()
     sendMessage(ba);
 }
 
-void V8ProfileClient::messageReceived(const QByteArray &data)
+void V8ProfilerClient::messageReceived(const QByteArray &data)
 {
     QByteArray rwData = data;
     QDataStream stream(&rwData, QIODevice::ReadOnly);

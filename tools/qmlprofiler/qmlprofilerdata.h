@@ -39,80 +39,66 @@
 **
 ****************************************************************************/
 
-#ifndef QMLPROFILERAPPLICATION_H
-#define QMLPROFILERAPPLICATION_H
+#ifndef QMLPROFILERDATA_H
+#define QMLPROFILERDATA_H
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QProcess>
-#include <QtCore/QTimer>
+#include <QtQml/private/qqmlprofilerservice_p.h>
+#include "qmlprofilereventlocation.h"
 
-#include "qmlprofilerclient.h"
-#include "qmlprofilerdata.h"
+#include <QObject>
 
-class QmlProfilerApplication : public QCoreApplication
+class QmlProfilerDataPrivate;
+class QmlProfilerData : public QObject
 {
     Q_OBJECT
 public:
-    QmlProfilerApplication(int &argc, char **argv);
-    ~QmlProfilerApplication();
+    enum State {
+        Empty,
+        AcquiringData,
+        ProcessingData,
+        Done
+    };
 
-    bool parseArguments();
-    void printUsage();
-    int exec();
+    explicit QmlProfilerData(QObject *parent = 0);
+    ~QmlProfilerData();
+
+    static QString getHashStringForQmlEvent(const QmlEventLocation &location, int eventType);
+    static QString getHashStringForV8Event(const QString &displayName, const QString &function);
+    static QString qmlRangeTypeAsString(QQmlProfilerService::RangeType typeEnum);
+    static QString rootEventName();
+    static QString rootEventDescription();
+
+    qint64 traceStartTime() const;
+    qint64 traceEndTime() const;
+
+    bool isEmpty() const;
+
+signals:
+    void error(QString);
+    void stateChanged();
+    void dataReady();
 
 public slots:
-    void userCommand(const QString &command);
+    void clear();
+    void setTraceEndTime(qint64 time);
+    void setTraceStartTime(qint64 time);
+    void addQmlEvent(QQmlProfilerService::RangeType type, qint64 startTime, qint64 duration,
+                        const QStringList &data, const QmlEventLocation &location);
+    void addV8Event(int depth, const QString &function, const QString &filename,
+                    int lineNumber, double totalTime, double selfTime);
+    void addFrameEvent(qint64 time, int framerate, int animationcount);
 
-private slots:
-    void run();
-    void tryToConnect();
-    void connected();
-    void connectionStateChanged(QAbstractSocket::SocketState state);
-    void connectionError(QAbstractSocket::SocketError error);
-    void processHasOutput();
-    void processFinished();
-
-    void traceClientEnabled();
-    void profilerClientEnabled();
-    void traceFinished();
-    void recordingChanged();
-
-    void print(const QString &line);
-    void logError(const QString &error);
-    void logStatus(const QString &status);
-
-    void qmlComplete();
-    void v8Complete();
+    void complete();
+    bool save(const QString &filename);
 
 private:
-    void printCommands();
-    QString traceFileName() const;
+    void sortStartTimes();
+    int v8EventIndex(const QString &hashStr);
+    void computeQmlTime();
+    void setState(QmlProfilerData::State state);
 
-    enum ApplicationMode {
-        LaunchMode,
-        AttachMode
-    } m_runMode;
-
-    // LaunchMode
-    QString m_programPath;
-    QStringList m_programArguments;
-    QProcess *m_process;
-    QString m_tracePrefix;
-
-    QString m_hostName;
-    quint16 m_port;
-    bool m_verbose;
-    bool m_quitAfterSave;
-
-    QQmlDebugConnection m_connection;
-    QmlProfilerClient m_qmlProfilerClient;
-    V8ProfilerClient m_v8profilerClient;
-    QmlProfilerData m_profilerData;
-    QTimer m_connectTimer;
-    uint m_connectionAttempts;
-
-    bool m_qmlDataReady;
-    bool m_v8DataReady;
+private:
+    QmlProfilerDataPrivate *d;
 };
 
-#endif // QMLPROFILERAPPLICATION_H
+#endif // QMLPROFILERDATA_H

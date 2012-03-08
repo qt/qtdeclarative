@@ -104,20 +104,20 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
 
     connect(&m_qmlProfilerClient, SIGNAL(enabledChanged()), this, SLOT(traceClientEnabled()));
     connect(&m_qmlProfilerClient, SIGNAL(recordingChanged(bool)), this, SLOT(recordingChanged()));
-    connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerService::RangeType,qint64,qint64,QStringList,EventLocation)),
-            &m_profileData, SLOT(addQmlEvent(QQmlProfilerService::RangeType,qint64,qint64,QStringList,EventLocation)));
-    connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profileData, SLOT(setTraceEndTime(qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), &m_profileData, SLOT(setTraceStartTime(qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(frame(qint64,int,int)), &m_profileData, SLOT(addFrameEvent(qint64,int,int)));
+    connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerService::RangeType,qint64,qint64,QStringList,QmlEventLocation)),
+            &m_profilerData, SLOT(addQmlEvent(QQmlProfilerService::RangeType,qint64,qint64,QStringList,QmlEventLocation)));
+    connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profilerData, SLOT(setTraceEndTime(qint64)));
+    connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), &m_profilerData, SLOT(setTraceStartTime(qint64)));
+    connect(&m_qmlProfilerClient, SIGNAL(frame(qint64,int,int)), &m_profilerData, SLOT(addFrameEvent(qint64,int,int)));
     connect(&m_qmlProfilerClient, SIGNAL(complete()), this, SLOT(qmlComplete()));
 
     connect(&m_v8profilerClient, SIGNAL(enabledChanged()), this, SLOT(profilerClientEnabled()));
     connect(&m_v8profilerClient, SIGNAL(range(int,QString,QString,int,double,double)),
-            &m_profileData, SLOT(addV8Event(int,QString,QString,int,double,double)));
+            &m_profilerData, SLOT(addV8Event(int,QString,QString,int,double,double)));
     connect(&m_v8profilerClient, SIGNAL(complete()), this, SLOT(v8Complete()));
 
-    connect(&m_profileData, SIGNAL(error(QString)), this, SLOT(logError(QString)));
-    connect(&m_profileData, SIGNAL(dataReady()), this, SLOT(traceFinished()));
+    connect(&m_profilerData, SIGNAL(error(QString)), this, SLOT(logError(QString)));
+    connect(&m_profilerData, SIGNAL(dataReady()), this, SLOT(traceFinished()));
 
 }
 
@@ -375,7 +375,7 @@ void QmlProfilerApplication::traceFinished()
 {
     const QString fileName = traceFileName();
 
-    if (m_profileData.save(fileName))
+    if (m_profilerData.save(fileName))
         print(QString("Saving trace to %1.").arg(fileName));
 
     if (m_quitAfterSave)
@@ -416,7 +416,7 @@ void QmlProfilerApplication::qmlComplete()
     m_qmlDataReady = true;
     if (m_v8profilerClient.state() != QQmlDebugClient::Enabled ||
             m_v8DataReady) {
-        m_profileData.complete();
+        m_profilerData.complete();
         // once complete is sent, reset the flag
         m_qmlDataReady = false;
     }
@@ -427,7 +427,7 @@ void QmlProfilerApplication::v8Complete()
     m_v8DataReady = true;
     if (m_qmlProfilerClient.state() != QQmlDebugClient::Enabled ||
             m_qmlDataReady) {
-        m_profileData.complete();
+        m_profilerData.complete();
         // once complete is sent, reset the flag
         m_v8DataReady = false;
     }
