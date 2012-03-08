@@ -1110,14 +1110,18 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
     } else if (d->IsNumber()) {
         roleIndex = setDoubleProperty(role, d->NumberValue());
     } else if (d->IsArray()) {
-        ListModel *subModel = new ListModel(role.subLayout, 0, -1);
-        v8::Handle<v8::Array> subArray = v8::Handle<v8::Array>::Cast(d);
-        int arrayLength = subArray->Length();
-        for (int j=0 ; j < arrayLength ; ++j) {
-            v8::Handle<v8::Object> subObject = subArray->Get(j)->ToObject();
-            subModel->append(subObject, eng);
+        if (role.type == ListLayout::Role::List) {
+            ListModel *subModel = new ListModel(role.subLayout, 0, -1);
+            v8::Handle<v8::Array> subArray = v8::Handle<v8::Array>::Cast(d);
+            int arrayLength = subArray->Length();
+            for (int j=0 ; j < arrayLength ; ++j) {
+                v8::Handle<v8::Object> subObject = subArray->Get(j)->ToObject();
+                subModel->append(subObject, eng);
+            }
+            roleIndex = setListProperty(role, subModel);
+        } else {
+            qmlInfo(0) << QString::fromLatin1("Can't assign to existing role '%1' of different type [%2 -> %3]").arg(role.name).arg(roleTypeName(role.type)).arg(roleTypeName(ListLayout::Role::List));
         }
-        roleIndex = setListProperty(role, subModel);
     } else if (d->IsBoolean()) {
         roleIndex = setBoolProperty(role, d->BooleanValue());
     } else if (d->IsObject()) {
