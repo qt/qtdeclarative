@@ -140,6 +140,7 @@ static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
     testQObjectApi *o = new testQObjectApi();
     o->setQObjectTestProperty(20);
     o->setQObjectTestWritableProperty(50);
+    o->setQObjectTestWritableFinalProperty(10);
     return o;
 }
 

@@ -978,10 +978,11 @@ class testQObjectApi : public QObject
     Q_ENUMS(MyEnum)
     Q_PROPERTY (int qobjectTestProperty READ qobjectTestProperty NOTIFY qobjectTestPropertyChanged)
     Q_PROPERTY (int qobjectTestWritableProperty READ qobjectTestWritableProperty WRITE setQObjectTestWritableProperty NOTIFY qobjectTestWritablePropertyChanged)
+    Q_PROPERTY (int qobjectTestWritableFinalProperty READ qobjectTestWritableFinalProperty WRITE setQObjectTestWritableFinalProperty NOTIFY qobjectTestWritableFinalPropertyChanged FINAL)
 
 public:
     testQObjectApi(QObject* parent = 0)
-        : QObject(parent), m_testProperty(0), m_testWritableProperty(0), m_methodCallCount(0)
+        : QObject(parent), m_testProperty(0), m_testWritableProperty(0), m_testWritableFinalProperty(0), m_methodCallCount(0)
     {
     }
 
@@ -997,13 +998,18 @@ public:
     int qobjectTestWritableProperty() const { return m_testWritableProperty; }
     void setQObjectTestWritableProperty(int tp) { m_testWritableProperty = tp; emit qobjectTestWritablePropertyChanged(tp); }
 
+    int qobjectTestWritableFinalProperty() const { return m_testWritableFinalProperty; }
+    void setQObjectTestWritableFinalProperty(int tp) { m_testWritableFinalProperty = tp; emit qobjectTestWritableFinalPropertyChanged(); }
+
 signals:
     void qobjectTestPropertyChanged(int testProperty);
     void qobjectTestWritablePropertyChanged(int testWritableProperty);
+    void qobjectTestWritableFinalPropertyChanged();
 
 private:
     int m_testProperty;
     int m_testWritableProperty;
+    int m_testWritableFinalProperty;
     int m_methodCallCount;
 };
 

@@ -6,6 +6,7 @@ QtObject {
     property int secondProperty: 2
     property int readOnlyProperty: QtTest.qobjectTestProperty
     property int writableProperty: QtTest.qobjectTestWritableProperty
+    property int writableFinalProperty: QtTest.qobjectTestWritableFinalProperty
 
     onFirstPropertyChanged: {
         // In this case, we want to attempt to set the module API property.
@@ -16,10 +17,13 @@ QtObject {
     }
 
     onSecondPropertyChanged: {
-        // In this case, we want to attempt to set the module API property.
-        // This should succeed, as the module API property is writable.
+        // In this case, we want to attempt to set the module API properties.
+        // This should succeed, as the module API properties are writable.
         if (secondProperty != QtTest.qobjectTestWritableProperty) {
             QtTest.qobjectTestWritableProperty = secondProperty; // should succeed.
+        }
+        if (secondProperty != QtTest.qobjectTestWritableFinalProperty) {
+            QtTest.qobjectTestWritableFinalProperty = secondProperty; // should succeed.
         }
     }
 }

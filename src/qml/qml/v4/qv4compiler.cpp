@@ -318,6 +318,22 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         gen(attached);
     } break;
 
+    case IR::Name::ModuleObject: {
+        /*
+          Existing module object lookup methods include:
+              1. string -> module object (search via importCache->query(name))
+              2. QQmlMetaType::ModuleApi -> module object (via QQmlEnginePrivate::moduleApiInstance() cache)
+          We currently use 1, which is not ideal for performance
+        */
+        _subscribeName << *e->id;
+
+        registerLiteralString(currentReg, e->id);
+
+        Instr::LoadModuleObject module;
+        module.reg = currentReg;
+        gen(module);
+    } break;
+
     case IR::Name::Property: {
         _subscribeName << *e->id;
 

@@ -73,6 +73,7 @@ QT_BEGIN_NAMESPACE
     F(LoadId, load) \
     F(LoadScope, load) \
     F(LoadRoot, load) \
+    F(LoadModuleObject, load) \
     F(LoadAttached, attached) \
     F(UnaryNot, unaryop) \
     F(UnaryMinusReal, unaryop) \

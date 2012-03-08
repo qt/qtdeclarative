@@ -820,6 +820,29 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         registers[instr->load.reg].setQObject(context->contextObject);
     QML_V4_END_INSTR(LoadRoot, load)
 
+    QML_V4_BEGIN_INSTR(LoadModuleObject, load)
+    {
+        Register &reg = registers[instr->load.reg];
+
+        const QString *name = reg.getstringptr();
+        QQmlTypeNameCache::Result r = context->imports->query(*name);
+        reg.cleanupString();
+
+        if (r.isValid() && r.importNamespace) {
+            QQmlMetaType::ModuleApiInstance *moduleApi = context->imports->moduleApi(r.importNamespace);
+            if (moduleApi) {
+                if (moduleApi->qobjectCallback) {
+                    moduleApi->qobjectApi = moduleApi->qobjectCallback(context->engine, context->engine);
+                    moduleApi->qobjectCallback = 0;
+                    moduleApi->scriptCallback = 0;
+                }
+                if (moduleApi->qobjectApi)
+                    reg.setQObject(moduleApi->qobjectApi);
+            }
+        }
+    }
+    QML_V4_END_INSTR(LoadModuleObject, load)
+
     QML_V4_BEGIN_INSTR(LoadAttached, attached)
     {
         const Register &input = registers[instr->attached.reg];

@@ -428,6 +428,17 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
         if (r.isValid()) {
             if (r.type) {
                 _expr.code = _block->ATTACH_TYPE(name, r.type, IR::Name::ScopeStorage, line, column);
+            } else if (r.importNamespace) {
+                QQmlMetaType::ModuleApiInstance *moduleApi = m_expression->importCache->moduleApi(r.importNamespace);
+                if (moduleApi) {
+                    if (moduleApi->qobjectCallback) {
+                        moduleApi->qobjectApi = moduleApi->qobjectCallback(QQmlEnginePrivate::get(m_engine), QQmlEnginePrivate::get(m_engine));
+                        moduleApi->qobjectCallback = 0;
+                        moduleApi->scriptCallback = 0;
+                    }
+                    if (moduleApi->qobjectApi)
+                        _expr.code = _block->MODULE_OBJECT(name, moduleApi->qobjectApi->metaObject(), IR::Name::MemberStorage, line, column);
+                }
             }
             // We don't support anything else
         } else {
@@ -602,6 +613,46 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     _expr.code = _block->SYMBOL(baseName, irType, name, attachedMeta, data, line, column);
                 }
                 break;
+
+            case IR::Name::ModuleObject: {
+                if (name.at(0).isUpper()) {
+                    QByteArray utf8Name = name.toUtf8();
+                    const char *enumName = utf8Name.constData();
+
+                    const QMetaObject *meta = baseName->meta;
+                    bool found = false;
+                    for (int ii = 0; !found && ii < meta->enumeratorCount(); ++ii) {
+                        QMetaEnum e = meta->enumerator(ii);
+                        for (int jj = 0; !found && jj < e.keyCount(); ++jj) {
+                            if (0 == strcmp(e.key(jj), enumName)) {
+                                found = true;
+                                _expr.code = _block->CONST(IR::IntType, e.value(jj));
+                            }
+                        }
+                    }
+                    if (!found && qmlVerboseCompiler())
+                        qWarning() << "*** unresolved enum:"
+                                   << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                } else {
+                    QQmlPropertyCache *cache = m_engine->cache(baseName->meta);
+                    if (!cache) return false;
+                    QQmlPropertyData *data = cache->property(name);
+
+                    if (!data || data->isFunction())
+                        return false; // Don't support methods (or non-existing properties ;)
+
+                    if (!data->isFinal()) {
+                        if (qmlVerboseCompiler())
+                            qWarning() << "*** non-final attached property:"
+                                       << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                        return false; // We don't know enough about this property
+                    }
+
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, baseName->meta);
+                    _expr.code = _block->SYMBOL(baseName, irType, name, baseName->meta, data, line, column);
+                }
+            }
+            break;
 
             case IR::Name::IdObject: {
                 const QQmlScript::Object *idObject = baseName->idObject;

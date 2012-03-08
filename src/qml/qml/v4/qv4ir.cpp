@@ -543,6 +543,17 @@ Name *BasicBlock::ATTACH_TYPE(const QString &id, const QQmlType *attachType, Nam
     return name;
 }
 
+Name *BasicBlock::MODULE_OBJECT(const QString &id, const QMetaObject *meta, Name::Storage storage,
+                                quint32 line, quint32 column)
+{
+    Name *name = function->pool->New<Name>();
+    name->init(/*base = */ 0, IR::ObjectType,
+               function->newString(id),
+               Name::ModuleObject, line, column);
+    name->meta = meta;
+    name->storage = storage;
+    return name;
+}
 
 Expr *BasicBlock::UNOP(AluOp op, Expr *expr) 
 { 
@@ -675,6 +686,8 @@ static const char *symbolname(Name::Symbol s)
         return "IdObject";
     case Name::AttachType:
         return "AttachType";
+    case Name::ModuleObject:
+        return "ModuleObject";
     case Name::Object:
         return "Object";
     case Name::Property:
