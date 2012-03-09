@@ -85,12 +85,20 @@ void QV8Bindings::Binding::refresh()
 
 int QV8Bindings::Binding::propertyIndex() const
 {
-    return instruction->property.encodedIndex();
+    if (target.hasValue()) return target.constValue()->targetProperty;
+    else return instruction->property.encodedIndex();
 }
 
 QObject *QV8Bindings::Binding::object() const
 {
-    return *target;
+    if (target.hasValue()) return target.constValue()->target;
+    else return *target;
+}
+
+void QV8Bindings::Binding::retargetBinding(QObject *t, int i)
+{
+    target.value().target = t;
+    target.value().targetProperty = i;
 }
 
 void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
