@@ -75,6 +75,10 @@ private slots:
     void unaryMinus();
     void unaryPlus();
     void colorType();
+    void mathAbs();
+    void mathCeil();
+    void mathMax();
+    void mathMin();
 
 private:
     QQmlEngine engine;
@@ -380,6 +384,95 @@ void tst_v4::colorType()
     QCOMPARE(o->property("test5").toBool(), true);
     QCOMPARE(o->property("test6").toBool(), true);
     QCOMPARE(o->property("test7").toBool(), true);
+    delete o;
+}
+
+void tst_v4::mathAbs()
+{
+    QQmlComponent component(&engine, testFileUrl("mathAbs.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toReal(), qreal(3.7));
+    QCOMPARE(o->property("test2").toReal(), qreal(4.5));
+    QCOMPARE(o->property("test3").toInt(), 18);
+    QCOMPARE(o->property("test4").toInt(), 72);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QCOMPARE(o->property("test6").toBool(), true);
+    QCOMPARE(o->property("test7").toBool(), true);
+    QCOMPARE(o->property("test8").toInt(), 82);
+    QCOMPARE(o->property("test9").toBool(), true);
+    QCOMPARE(o->property("test10").toBool(), true);
+    QCOMPARE(o->property("test11").toInt(), 0);
+    //QCOMPARE(o->property("test12").toBool(), true);   //QTBUG-24706
+
+    delete o;
+}
+
+void tst_v4::mathCeil()
+{
+    QQmlComponent component(&engine, testFileUrl("mathCeil.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toReal(), qreal(-3));
+    QCOMPARE(o->property("test2").toReal(), qreal(5));
+    QCOMPARE(o->property("test3").toBool(), true);
+    //QCOMPARE(o->property("test4").toBool(), true);    //QTBUG-24706
+    QCOMPARE(o->property("test5").toBool(), true);
+    QCOMPARE(o->property("test6").toReal(), qreal(83));
+    //QCOMPARE(o->property("test7").toBool(), true);    //QTBUG-24706
+    //QCOMPARE(o->property("test8").toBool(), true);    //QTBUG-24706
+    QCOMPARE(o->property("test9").toInt(), 0);
+    //QCOMPARE(o->property("test10").toBool(), true);   //QTBUG-24706
+
+    delete o;
+}
+
+void tst_v4::mathMax()
+{
+    QQmlComponent component(&engine, testFileUrl("mathMax.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toReal(), qreal(4.4));
+    QCOMPARE(o->property("test2").toReal(), qreal(7));
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("test4").toBool(), true);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QCOMPARE(o->property("test6").toReal(), qreal(82.6));
+    QCOMPARE(o->property("test7").toReal(), qreal(4.4));
+    QCOMPARE(o->property("test8").toBool(), true);
+    //QCOMPARE(o->property("test9").toBool(), true);    //QTBUG-24706
+    QCOMPARE(o->property("test10").toReal(), qreal(0));
+    QCOMPARE(o->property("test11").toReal(), qreal(4.4));
+    QCOMPARE(o->property("test12").toReal(), qreal(7));
+
+    delete o;
+}
+
+void tst_v4::mathMin()
+{
+    QQmlComponent component(&engine, testFileUrl("mathMin.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toReal(), qreal(-3.7));
+    QCOMPARE(o->property("test2").toReal(), qreal(4.4));
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("test4").toBool(), true);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QCOMPARE(o->property("test6").toReal(), qreal(82.6));
+    QCOMPARE(o->property("test7").toBool(), true);
+    QCOMPARE(o->property("test8").toReal(), qreal(4.4));
+    //QCOMPARE(o->property("test9").toBool(), true);    //QTBUG-24706
+    QCOMPARE(o->property("test10").toReal(), qreal(-3.7));
+    QCOMPARE(o->property("test11").toReal(), qreal(0));
+    QCOMPARE(o->property("test12").toReal(), qreal(-3.7));
     delete o;
 }
 
