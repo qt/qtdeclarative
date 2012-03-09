@@ -79,7 +79,6 @@ public:
     ~QQmlExpressionPrivate();
 
     void init(QQmlContextData *, const QString &, QObject *);
-    void init(QQmlContextData *, v8::Handle<v8::Function>, QObject *);
     void init(QQmlContextData *, const QString &, bool, QObject *, const QString &, int, int);
     void init(QQmlContextData *, const QByteArray &, bool, QObject *, const QString &, int, int);
 
@@ -92,18 +91,8 @@ public:
 
     void _q_notify();
 
-    static void exceptionToError(v8::Handle<v8::Message>, QQmlError &);
-    static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope, 
-                                                     const QString &code, const QString &filename,
-                                                     int line,
-                                                     v8::Persistent<v8::Object> *qmlscope = 0);
-    static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope,
-                                                     const char *code, int codeLength,
-                                                     const QString &filename, int line,
-                                                     v8::Persistent<v8::Object> *qmlscope = 0);
-
     static QQmlExpression *create(QQmlContextData *, QObject *, const QString &, bool,
-                                          const QString &, int, int);
+                                  const QString &, int, int);
 
     bool expressionFunctionValid:1;
     bool expressionFunctionRewritten:1;

@@ -144,11 +144,6 @@ public:
     static QQmlExpression *setSignalExpression(const QQmlProperty &that, 
                                                        QQmlExpression *) ;
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
-    static bool writeBinding(const QQmlProperty &that, 
-                             QQmlContextData *context,
-                             QQmlJavaScriptExpression *expression, 
-                             v8::Handle<v8::Value> result, bool isUndefined,
-                             WriteFlags flags);
     static bool writeBinding(QObject *, const QQmlPropertyData &,
                              QQmlContextData *context,
                              QQmlJavaScriptExpression *expression, 

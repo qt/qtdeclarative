@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include "qqmlbinding_p.h"
-#include "qqmlbinding_p_p.h"
 
 #include "qqml.h"
 #include "qqmlcontext.h"
@@ -49,6 +48,8 @@
 #include "qqmldata_p.h"
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmltrace_p.h>
+#include <private/qqmlexpression_p.h>
+#include <private/qqmlrewrite_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -57,24 +58,9 @@ QT_BEGIN_NAMESPACE
 
 QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
-void QQmlBindingPrivate::refresh()
-{
-    Q_Q(QQmlBinding);
-    q->update();
-}
-
-QQmlBindingPrivate::QQmlBindingPrivate()
-: updating(false), enabled(false), target(), targetProperty(0)
-{
-}
-
-QQmlBindingPrivate::~QQmlBindingPrivate()
-{
-}
-
 QQmlBinding *
 QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
-                                   const QString &url, int lineNumber, QObject *parent)
+                                   const QString &url, int lineNumber)
 {
     if (id < 0)
         return 0;
@@ -88,7 +74,8 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
         typeData = engine->typeLoader.get(ctxtdata->url);
         cdata = typeData->compiledData();
     }
-    QQmlBinding *rv = cdata ? new QQmlBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, 0, parent) : 0;
+    QQmlBinding *rv = cdata ? new QQmlBinding(cdata->primitives.at(id), true, obj, ctxtdata,
+                                              url, lineNumber, 0) : 0;
     if (cdata)
         cdata->release();
     if (typeData)
@@ -96,30 +83,62 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
     return rv;
 }
 
-QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt, 
-                                         QObject *parent)
-: QQmlExpression(QQmlContextData::get(ctxt), obj, str, *new QQmlBindingPrivate)
+static QQmlJavaScriptExpression::VTable QQmlBinding_jsvtable = {
+    QQmlBinding::expressionIdentifier,
+    QQmlBinding::expressionChanged
+};
+
+QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), m_lineNumber(-1), m_columnNumber(-1)
 {
-    setParent(parent);
     setNotifyOnValueChanged(true);
+    QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt));
+    setScopeObject(obj);
+
+    QQmlRewrite::RewriteBinding rewriteBinding;
+    QString code = rewriteBinding(str);
+
+    m_expression = str.toUtf8();
+    v8function = evalFunction(context(), obj, code, QString(), 0);
 }
 
-QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt, 
-                                         QObject *parent)
-: QQmlExpression(ctxt, obj, str, *new QQmlBindingPrivate)
+QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), m_lineNumber(-1), m_columnNumber(-1)
 {
-    setParent(parent);
     setNotifyOnValueChanged(true);
+    QQmlAbstractExpression::setContext(ctxt);
+    setScopeObject(obj);
+
+    QQmlRewrite::RewriteBinding rewriteBinding;
+    QString code = rewriteBinding(str);
+
+    m_expression = str.toUtf8();
+    v8function = evalFunction(ctxt, obj, code, QString(), 0);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj, 
-                                         QQmlContextData *ctxt, 
-                                         const QString &url, int lineNumber, int columnNumber,
-                                         QObject *parent)
-: QQmlExpression(ctxt, obj, str, isRewritten, url, lineNumber, columnNumber, *new QQmlBindingPrivate)
+                         QQmlContextData *ctxt,
+                         const QString &url, int lineNumber, int columnNumber)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), m_lineNumber(-1), m_columnNumber(-1)
 {
-    setParent(parent);
     setNotifyOnValueChanged(true);
+    QQmlAbstractExpression::setContext(ctxt);
+    setScopeObject(obj);
+
+    QString code;
+    if (isRewritten) {
+        code = str;
+    } else {
+        QQmlRewrite::RewriteBinding rewriteBinding;
+        code = rewriteBinding(str);
+    }
+
+    m_url = url;
+    m_lineNumber = lineNumber;
+    m_columnNumber = columnNumber;
+    m_expression = str.toUtf8();
+
+    v8function = evalFunction(ctxt, obj, code, url, lineNumber);
 }
 
 /*!  
@@ -130,124 +149,100 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
         v8::Handle<v8::Function> function;
         new QQmlBinding(&function, scope, ctxt);
  */
-QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt, 
-                                         QObject *parent)
-: QQmlExpression(ctxt, obj, functionPtr, *new QQmlBindingPrivate)
+QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
+                         const QString &url, int lineNumber, int columnNumber)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable),
+  m_url(url), m_lineNumber(lineNumber), m_columnNumber(columnNumber)
 {
-    setParent(parent);
     setNotifyOnValueChanged(true);
+    QQmlAbstractExpression::setContext(ctxt);
+    setScopeObject(obj);
+
+    v8function = qPersistentNew<v8::Function>(*(v8::Handle<v8::Function> *)functionPtr);
 }
 
 QQmlBinding::~QQmlBinding()
 {
-}
-
-void QQmlBinding::setTarget(const QQmlProperty &prop)
-{
-    Q_D(QQmlBinding);
-    d->property = prop;
-    d->target = d->property.object();
-    d->targetProperty = QQmlPropertyPrivate::get(d->property)->core.encodedIndex();
-
-    update();
-}
-
-void QQmlBinding::setTarget(QObject *object,
-                                    const QQmlPropertyData &core,
-                                    QQmlContextData *ctxt)
-{
-    Q_D(QQmlBinding);
-    d->property = QQmlPropertyPrivate::restore(object, core, ctxt);
-    d->target = d->property.object();
-    d->targetProperty = QQmlPropertyPrivate::get(d->property)->core.encodedIndex();
-
-    update();
-}
-
-QQmlProperty QQmlBinding::property() const 
-{
-   Q_D(const QQmlBinding);
-   return d->property; 
+    qPersistentDispose(v8function);
 }
 
 void QQmlBinding::setEvaluateFlags(EvaluateFlags flags)
 {
-    Q_D(QQmlBinding);
-    d->setRequiresThisObject(flags & RequiresThisObject);
+    setRequiresThisObject(flags & RequiresThisObject);
 }
 
 QQmlBinding::EvaluateFlags QQmlBinding::evaluateFlags() const
 {
-    Q_D(const QQmlBinding);
-    return d->requiresThisObject()?RequiresThisObject:None;
+    return requiresThisObject()?RequiresThisObject:None;
+}
+
+void QQmlBinding::setNotifyOnValueChanged(bool v)
+{
+    QQmlJavaScriptExpression::setNotifyOnValueChanged(v);
 }
 
 void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 {
-    Q_D(QQmlBinding);
-
-    if (!d->enabled || !d->context() || !d->context()->isValid()) 
+    if (!enabledFlag() || !context() || !context()->isValid())
         return;
 
     QQmlTrace trace("General Binding Update");
-    trace.addDetail("URL", d->url);
-    trace.addDetail("Line", d->line);
-    trace.addDetail("Column", d->columnNumber);
+    trace.addDetail("URL", m_url);
+    trace.addDetail("Line", m_lineNumber);
+    trace.addDetail("Column", m_columnNumber);
 
-    if (!d->updating) {
-        QQmlBindingProfiler prof(d->url, d->line, d->column);
+    if (!updatingFlag()) {
+        QQmlBindingProfiler prof(m_url, m_lineNumber, m_columnNumber);
         if (prof.enabled)
             prof.addDetail(expression());
-        d->updating = true;
+        setUpdatingFlag(true);
 
-        QQmlAbstractExpression::DeleteWatcher watcher(d);
+        QQmlAbstractExpression::DeleteWatcher watcher(this);
 
-        if (d->property.propertyType() == qMetaTypeId<QQmlBinding *>()) {
+        if (m_core.propType == qMetaTypeId<QQmlBinding *>()) {
 
-            int idx = d->property.index();
+            int idx = m_core.coreIndex;
             Q_ASSERT(idx != -1);
 
             QQmlBinding *t = this;
             int status = -1;
             void *a[] = { &t, 0, &status, &flags };
-            QMetaObject::metacall(d->property.object(),
-                                  QMetaObject::WriteProperty,
-                                  idx, a);
+            QMetaObject::metacall(*m_coreObject, QMetaObject::WriteProperty, idx, a);
 
         } else {
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(d->context()->engine);
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
             ep->referenceScarceResources(); 
 
             bool isUndefined = false;
 
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(ep->v8engine()->context());
-            v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
+            v8::Local<v8::Value> result =
+                QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
 
             trace.event("writing binding result");
 
             bool needsErrorData = false;
-            if (!watcher.wasDeleted() && !d->hasError())
-                needsErrorData = !QQmlPropertyPrivate::writeBinding(d->property, d->context(),
-                                                                            d, result,
-                                                                            isUndefined, flags);
+            if (!watcher.wasDeleted() && !hasError())
+                needsErrorData = !QQmlPropertyPrivate::writeBinding(*m_coreObject, m_core, context(),
+                                                                    this, result, isUndefined, flags);
 
             if (!watcher.wasDeleted()) {
                
                 if (needsErrorData) {
-                    QUrl url = QUrl(d->url);
-                    int line = d->line;
+                    QUrl url = QUrl(m_url);
+
                     if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
 
-                    d->delayedError()->error.setUrl(url);
-                    d->delayedError()->error.setLine(line);
-                    d->delayedError()->error.setColumn(-1);
+                    delayedError()->error.setUrl(url);
+                    delayedError()->error.setLine(m_lineNumber);
+                    delayedError()->error.setColumn(m_columnNumber);
                 }
 
-                if (d->hasError()) {
-                    if (!d->delayedError()->addError(ep)) ep->warning(this->error());
+                if (hasError()) {
+                    if (!delayedError()->addError(ep)) ep->warning(this->error());
                 } else {
-                    d->clearError();
+                    clearError();
                 }
 
             }
@@ -256,62 +251,96 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         }
 
         if (!watcher.wasDeleted())
-            d->updating = false;
+            setUpdatingFlag(false);
     } else {
-        QQmlBindingPrivate::printBindingLoopError(d->property);
+        QQmlProperty p = property();
+        QQmlAbstractBinding::printBindingLoopError(p);
     }
 }
 
-void QQmlBindingPrivate::printBindingLoopError(QQmlProperty &prop)
+QVariant QQmlBinding::evaluate()
 {
-    qmlInfo(prop.object()) << QQmlBinding::tr("Binding loop detected for property \"%1\"").arg(prop.name());
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
+    ep->referenceScarceResources();
+
+    bool isUndefined = false;
+
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(ep->v8engine()->context());
+    v8::Local<v8::Value> result =
+        QQmlJavaScriptExpression::evaluate(context(), v8function, &isUndefined);
+
+    ep->dereferenceScarceResources();
+
+    return ep->v8engine()->toVariant(result, qMetaTypeId<QList<QObject*> >());
 }
 
-void QQmlBindingPrivate::expressionChanged()
+QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
-    Q_Q(QQmlBinding);
-    q->update();
+    QQmlBinding *This = static_cast<QQmlBinding *>(e);
+
+    return QLatin1String("\"") + QString::fromUtf8(This->m_expression) + QLatin1String("\"");
+}
+
+void QQmlBinding::expressionChanged(QQmlJavaScriptExpression *e)
+{
+    QQmlBinding *This = static_cast<QQmlBinding *>(e);
+    This->update();
+}
+
+void QQmlBinding::refresh()
+{
+    update();
 }
 
 void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
 {
-    Q_D(QQmlBinding);
-    d->enabled = e;
+    setEnabledFlag(e);
     setNotifyOnValueChanged(e);
 
     if (e) 
         update(flags);
 }
 
-bool QQmlBinding::enabled() const
-{
-    Q_D(const QQmlBinding);
-
-    return d->enabled;
-}
-
 QString QQmlBinding::expression() const
 {
-    return QQmlExpression::expression();
-}
-
-int QQmlBinding::propertyIndex() const
-{
-    Q_D(const QQmlBinding);
-    return d->targetProperty;
+    return QString::fromUtf8(m_expression);
 }
 
 QObject *QQmlBinding::object() const
 {
-    Q_D(const QQmlBinding);
-    return d->target;
+    if (m_coreObject.hasValue()) return m_coreObject.constValue()->target;
+    else return *m_coreObject;
+}
+
+int QQmlBinding::propertyIndex() const
+{
+    if (m_coreObject.hasValue()) return m_coreObject.constValue()->targetProperty;
+    else return m_core.encodedIndex();
 }
 
 void QQmlBinding::retargetBinding(QObject *t, int i)
 {
-    Q_D(QQmlBinding);
-    d->target = t;
-    d->targetProperty = i;
+    m_coreObject.value().target = t;
+    m_coreObject.value().targetProperty = i;
+}
+
+void QQmlBinding::setTarget(const QQmlProperty &prop)
+{
+    setTarget(prop.object(), QQmlPropertyPrivate::get(prop)->core,
+              QQmlPropertyPrivate::get(prop)->context);
+}
+
+void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, QQmlContextData *ctxt)
+{
+    m_coreObject = object;
+    m_core = core;
+    m_ctxt = ctxt;
+}
+
+QQmlProperty QQmlBinding::property() const
+{
+    return QQmlPropertyPrivate::restore(object(), m_core, *m_ctxt);
 }
 
 QT_END_NAMESPACE

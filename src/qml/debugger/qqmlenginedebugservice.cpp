@@ -577,10 +577,8 @@ void QQmlEngineDebugService::setBinding(int objectId,
                     QQmlPropertyPrivate::setSignalExpression(property, qmlExpression);
                     qmlExpression->setSourceLocation(filename, line, column);
                 } else if (property.isProperty()) {
-                    QQmlBinding *binding = new QQmlBinding(expression.toString(), object, context);
+                    QQmlBinding *binding = new QQmlBinding(expression.toString(), false, object, QQmlContextData::get(context), filename, line, column);;
                     binding->setTarget(property);
-                    binding->setSourceLocation(filename, line, column);
-                    binding->setNotifyOnValueChanged(true);
                     QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::setBinding(property, binding);
                     if (oldBinding)
                         oldBinding->destroy();

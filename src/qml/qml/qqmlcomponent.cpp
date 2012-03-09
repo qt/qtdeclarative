@@ -50,13 +50,13 @@
 #include "qqml.h"
 #include "qqmlengine.h"
 #include "qqmlbinding_p.h"
-#include "qqmlbinding_p_p.h"
 #include "qqmlglobal_p.h"
 #include "qqmlscript_p.h"
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlenginedebugservice_p.h>
 #include "qqmlincubator.h"
 #include "qqmlincubator_p.h"
+#include <private/qqmljavascriptexpression_p.h>
 
 #include <private/qv8engine_p.h>
 #include <private/qv8include_p.h>
@@ -1337,9 +1337,8 @@ void QV8IncubatorResource::statusChanged(Status s)
                 f->Call(me, 1, args);
                 if (tc.HasCaught()) {
                     QQmlError error;
-                    QQmlExpressionPrivate::exceptionToError(tc.Message(), error);
-                    QQmlEnginePrivate::warning(QQmlEnginePrivate::get(engine->engine()),
-                                                       error);
+                    QQmlJavaScriptExpression::exceptionToError(tc.Message(), error);
+                    QQmlEnginePrivate::warning(QQmlEnginePrivate::get(engine->engine()), error);
                 }
             }
         }

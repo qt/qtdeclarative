@@ -64,23 +64,26 @@
 
 #include <private/qpointervaluepair_p.h>
 #include <private/qqmlabstractbinding_p.h>
+#include <private/qqmlabstractexpression_p.h>
+#include <private/qqmljavascriptexpression_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
-class QQmlBindingPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlExpression, public QQmlAbstractBinding
+class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
+                                         public QQmlAbstractExpression,
+                                         public QQmlAbstractBinding
 {
-Q_OBJECT
 public:
     enum EvaluateFlag { None = 0x00, RequiresThisObject = 0x01 };
     Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
 
-    QQmlBinding(const QString &, QObject *, QQmlContext *, QObject *parent=0);
-    QQmlBinding(const QString &, QObject *, QQmlContextData *, QObject *parent=0);
+    QQmlBinding(const QString &, QObject *, QQmlContext *);
+    QQmlBinding(const QString &, QObject *, QQmlContextData *);
     QQmlBinding(const QString &, bool isRewritten, QObject *, QQmlContextData *, 
-                        const QString &url, int lineNumber, int columnNumber = 0, QObject *parent=0);
-    QQmlBinding(void *, QObject *, QQmlContextData *, QObject *parent=0);
+                const QString &url, int lineNumber, int columnNumber);
+    QQmlBinding(void *, QObject *, QQmlContextData *,
+                const QString &url, int lineNumber, int columnNumber);
 
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &, QQmlContextData *);
@@ -89,31 +92,79 @@ public:
     void setEvaluateFlags(EvaluateFlags flags);
     EvaluateFlags evaluateFlags() const;
 
-    bool enabled() const;
+    void setNotifyOnValueChanged(bool);
+
+    // Inherited from  QQmlAbstractExpression
+    virtual void refresh();
 
     // Inherited from  QQmlAbstractBinding
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
     virtual void update(QQmlPropertyPrivate::WriteFlags flags);
     virtual QString expression() const;
-    virtual int propertyIndex() const;
     virtual QObject *object() const;
+    virtual int propertyIndex() const;
     virtual void retargetBinding(QObject *, int);
 
     typedef int Identifier;
     static Identifier Invalid;
-    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *,
-                                              const QString &, int, QObject *parent=0);
 
+    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *, const QString &, int);
 
-public Q_SLOTS:
+    QVariant evaluate();
     void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
+
+    static QString expressionIdentifier(QQmlJavaScriptExpression *);
+    static void expressionChanged(QQmlJavaScriptExpression *);
 
 protected:
     ~QQmlBinding();
 
 private:
-    Q_DECLARE_PRIVATE(QQmlBinding)
+    v8::Persistent<v8::Function> v8function;
+
+    inline bool updatingFlag() const;
+    inline void setUpdatingFlag(bool);
+    inline bool enabledFlag() const;
+    inline void setEnabledFlag(bool);
+
+    struct Retarget {
+        QObject *target;
+        int targetProperty;
+    };
+
+    QPointerValuePair<QObject, Retarget> m_coreObject;
+    QQmlPropertyData m_core;
+    // We store some flag bits in the following flag pointers.
+    //    m_ctxt:flag1 - updatingFlag
+    //    m_ctxt:flag2 - enabledFlag
+    QFlagPointer<QQmlContextData> m_ctxt;
+
+    // XXX It would be good if we could get rid of these in most circumstances
+    QString m_url;
+    int m_lineNumber;
+    int m_columnNumber;
+    QByteArray m_expression;
 };
+
+bool QQmlBinding::updatingFlag() const
+{
+    return m_ctxt.flag();
+}
+
+void QQmlBinding::setUpdatingFlag(bool v)
+{
+    m_ctxt.setFlagValue(v);
+}
+
+bool QQmlBinding::enabledFlag() const
+{
+    return m_ctxt.flag2();
+}
+
+void QQmlBinding::setEnabledFlag(bool v)
+{
+    m_ctxt.setFlag2Value(v);
+}
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlBinding::EvaluateFlags)
 

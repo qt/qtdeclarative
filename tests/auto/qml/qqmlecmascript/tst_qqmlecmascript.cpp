@@ -5045,7 +5045,7 @@ void tst_qqmlecmascript::functionAssignment_fromBinding()
     QQmlComponent component(&engine, testFileUrl("functionAssignment.1.qml"));
 
     QString url = component.url().toString();
-    QString warning = url + ":4: Unable to assign a function to a property.";
+    QString warning = url + ":4:25: Unable to assign a function to a property.";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     
     MyQmlObject *o = qobject_cast<MyQmlObject *>(component.create());
@@ -5103,11 +5103,11 @@ void tst_qqmlecmascript::functionAssignmentfromJS_invalid()
     QVERIFY(!o->property("a").isValid());
 
     QString url = component.url().toString();
-    QString warning = url + ":67: Unable to assign QString to int";
+    QString warning = url + ":67:17: Unable to assign QString to int";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     o->setProperty("assignWrongType", true);
 
-    warning = url + ":71: Unable to assign QString to int";
+    warning = url + ":71:29: Unable to assign QString to int";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     o->setProperty("assignWrongTypeToValueType", true);
 

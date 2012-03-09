@@ -589,11 +589,10 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
                                                                                      v8::StackTrace::kScriptName));
         v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
         int lineNumber = frame->GetLineNumber();
-        int columNumber = frame->GetColumn();
+        int columnNumber = frame->GetColumn();
         QString url = engine->toString(frame->GetScriptName());
 
-        newBinding = new QQmlBinding(&function, object, context);
-        newBinding->setSourceLocation(url, lineNumber, columNumber);
+        newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
         newBinding->setTarget(object, *property, context);
         newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                      QQmlBinding::RequiresThisObject);

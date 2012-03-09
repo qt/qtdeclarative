@@ -478,12 +478,11 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 
                 QQmlBinding::Identifier id = d->expressions.at(ii).id;
                 QQmlBinding *newBinding = id != QQmlBinding::Invalid ? QQmlBinding::createBinding(id, object(), qmlContext(this), e->sourceFile(), e->lineNumber()) : 0;
-                if (!newBinding) {
-                    newBinding = new QQmlBinding(e->expression(), object(), qmlContext(this));
-                    newBinding->setSourceLocation(e->sourceFile(), e->lineNumber(), e->columnNumber());
-                }
+                if (!newBinding)
+                    newBinding = new QQmlBinding(e->expression(), false, object(), QQmlContextData::get(qmlContext(this)),
+                                                 e->sourceFile(), e->lineNumber(), e->columnNumber());
                 newBinding->setTarget(prop);
-                a.toBinding = newBinding;
+                a.toBinding = QQmlAbstractBinding::getPointer(newBinding);
                 a.deletableToBinding = true;
             }
 
@@ -682,7 +681,7 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
             } else {
                 QQmlBinding *newBinding = new QQmlBinding(newExpression->expression(), object(), qmlContext(this));
                 newBinding->setTarget(d->property(name));
-                action.toBinding = newBinding;
+                action.toBinding = QQmlAbstractBinding::getPointer(newBinding);
                 action.deletableToBinding = true;
 
                 state()->addEntryToRevertList(action);

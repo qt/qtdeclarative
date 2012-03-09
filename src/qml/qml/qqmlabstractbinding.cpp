@@ -41,6 +41,7 @@
 
 #include "qqmlabstractbinding_p.h"
 
+#include <QtQml/qqmlinfo.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
 
@@ -153,6 +154,12 @@ void QQmlAbstractBinding::removeFromObject()
         }
     }
 }
+
+void QQmlAbstractBinding::printBindingLoopError(QQmlProperty &prop)
+{
+    qmlInfo(prop.object()) << QString(QLatin1String("Binding loop detected for property \"%1\"")).arg(prop.name());
+}
+
 
 static void bindingDummyDeleter(QQmlAbstractBinding *)
 {

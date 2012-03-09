@@ -92,6 +92,7 @@ public:
     void removeFromObject();
 
     static inline Pointer getPointer(QQmlAbstractBinding *p);
+    static void printBindingLoopError(QQmlProperty &prop);
 
 protected:
     virtual ~QQmlAbstractBinding();

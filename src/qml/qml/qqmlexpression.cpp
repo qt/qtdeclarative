@@ -72,8 +72,7 @@ QQmlExpressionPrivate::~QQmlExpressionPrivate()
     dataRef = 0;
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, 
-                                         QObject *me)
+void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QObject *me)
 {
     expression = expr;
 
@@ -83,22 +82,9 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
     expressionFunctionRewritten = false;
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, v8::Handle<v8::Function> func,
-                                         QObject *me)
-{
-    QQmlAbstractExpression::setContext(ctxt);
-    setScopeObject(me);
-
-    v8function = qPersistentNew<v8::Function>(func);
-    setUseSharedContext(false);
-    expressionFunctionValid = true;
-    expressionFunctionRewritten = false;
-    extractExpressionFromFunction = true;
-}
-
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
-                                         bool isRewritten, QObject *me, const QString &srcUrl,
-                                         int lineNumber, int columnNumber)
+                                 bool isRewritten, QObject *me, const QString &srcUrl,
+                                 int lineNumber, int columnNumber)
 {
     url = srcUrl;
     line = lineNumber;
@@ -114,8 +100,8 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
 }
 
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QByteArray &expr,
-                                         bool isRewritten, QObject *me, const QString &srcUrl,
-                                         int lineNumber, int columnNumber)
+                                 bool isRewritten, QObject *me, const QString &srcUrl,
+                                 int lineNumber, int columnNumber)
 {
     url = srcUrl;
     line = lineNumber;
@@ -140,97 +126,13 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QByteArray &expr,
     setScopeObject(me);
 }
 
-// Callee owns the persistent handle
-v8::Persistent<v8::Function>
-QQmlExpressionPrivate::evalFunction(QQmlContextData *ctxt, QObject *scope,
-                                            const char *code, int codeLength,
-                                            const QString &filename, int line,
-                                            v8::Persistent<v8::Object> *qmlscope)
-{
-    QQmlEngine *engine = ctxt->engine;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-
-    v8::HandleScope handle_scope;
-    v8::Context::Scope ctxtscope(ep->v8engine()->context());
-
-    v8::TryCatch tc;
-    v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
-    v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, codeLength, filename, line);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function compilation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    v8::Local<v8::Value> result = script->Run(scopeobject);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
-    return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
-}
-
-// Callee owns the persistent handle
-v8::Persistent<v8::Function> 
-QQmlExpressionPrivate::evalFunction(QQmlContextData *ctxt, QObject *scope, 
-                                            const QString &code, const QString &filename, int line,
-                                            v8::Persistent<v8::Object> *qmlscope)
-{
-    QQmlEngine *engine = ctxt->engine;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-
-    v8::HandleScope handle_scope;
-    v8::Context::Scope ctxtscope(ep->v8engine()->context());
-
-    v8::TryCatch tc;
-    v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
-    v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, filename, line);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function compilation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    v8::Local<v8::Value> result = script->Run(scopeobject);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
-    return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
-}
-
 QQmlExpression *
 QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
-                                      const QString &expr, bool isRewritten,
-                                      const QString &url, int lineNumber, int columnNumber)
+                              const QString &expr, bool isRewritten,
+                              const QString &url, int lineNumber, int columnNumber)
 {
-    return new QQmlExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber, *new QQmlExpressionPrivate);
+    return new QQmlExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber,
+                              *new QQmlExpressionPrivate);
 }
 
 /*!
@@ -382,24 +284,6 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
     d->init(ctxt, expression, scope);
 }
 
-/*!  
-    \internal 
-
-    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.  
-    For example:
-        v8::Handle<v8::Function> function;
-        new QQmlExpression(ctxt, scope, &function, ...);
- */
-QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope, void *functionPtr,
-                                               QQmlExpressionPrivate &dd)
-: QObject(dd, 0)
-{
-    v8::Handle<v8::Function> function = *(v8::Handle<v8::Function> *)functionPtr;
-
-    Q_D(QQmlExpression);
-    d->init(ctxt, function, scope);
-}
-
 /*!
     Destroy the QQmlExpression instance.
 */
@@ -461,31 +345,6 @@ void QQmlExpression::setExpression(const QString &expression)
     d->expressionFunctionRewritten = false;
     qPersistentDispose(d->v8function);
     qPersistentDispose(d->v8qmlscope);
-}
-
-void QQmlExpressionPrivate::exceptionToError(v8::Handle<v8::Message> message, 
-                                                     QQmlError &error)
-{
-    Q_ASSERT(!message.IsEmpty());
-
-    v8::Handle<v8::Value> name = message->GetScriptResourceName();
-    v8::Handle<v8::String> description = message->Get();
-    int lineNumber = message->GetLineNumber();
-
-    v8::Local<v8::String> file = name->IsString()?name->ToString():v8::Local<v8::String>();
-    if (file.IsEmpty() || file->Length() == 0) 
-        error.setUrl(QUrl(QLatin1String("<Unknown File>")));
-    else 
-        error.setUrl(QUrl(QV8Engine::toStringStatic(file)));
-
-    error.setLine(lineNumber);
-    error.setColumn(-1);
-
-    QString qDescription = QV8Engine::toStringStatic(description);
-    if (qDescription.startsWith(QLatin1String("Uncaught ")))
-        qDescription = qDescription.mid(9 /* strlen("Uncaught ") */);
-
-    error.setDescription(qDescription);
 }
 
 // Must be called with a valid handle scope

@@ -64,7 +64,6 @@ HEADERS += \
     $$PWD/qqml.h \
     $$PWD/qquickapplication_p.h \
     $$PWD/qqmlbinding_p.h \
-    $$PWD/qqmlbinding_p_p.h \
     $$PWD/qqmlproperty.h \
     $$PWD/qqmlcomponent.h \
     $$PWD/qqmlcomponent_p.h \

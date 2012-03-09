@@ -132,6 +132,15 @@ public:
     void clearError();
     QQmlDelayedError *delayedError();
 
+    static void exceptionToError(v8::Handle<v8::Message>, QQmlError &);
+    static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope,
+                                                     const QString &code, const QString &filename,
+                                                     int line,
+                                                     v8::Persistent<v8::Object> *qmlscope = 0);
+    static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope,
+                                                     const char *code, int codeLength,
+                                                     const QString &filename, int line,
+                                                     v8::Persistent<v8::Object> *qmlscope = 0);
 protected:
     ~QQmlJavaScriptExpression();
 
