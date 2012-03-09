@@ -183,7 +183,7 @@ private slots:
     void assignSequenceTypes();
     void qtbug_22464();
     void qtbug_21580();
-
+    void singleV8BindingDestroyedDuringEvaluation();
     void bug1();
     void bug2();
     void dynamicCreationCrash();
@@ -1898,6 +1898,16 @@ void tst_qqmlecmascript::qtbug_21580()
 
     QCOMPARE(object->property("test").toBool(), true);
 
+    delete object;
+}
+
+// Causes a v8 binding, but not all v8 bindings to be destroyed during evaluation
+void tst_qqmlecmascript::singleV8BindingDestroyedDuringEvaluation()
+{
+    QQmlComponent component(&engine, testFileUrl("singleV8BindingDestroyedDuringEvaluation.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
     delete object;
 }
 

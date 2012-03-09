@@ -70,9 +70,11 @@ public:
     bool isSharable(const QString &code);
     bool isSharable(AST::Node *Node);
     
-    virtual bool visit(AST::FunctionDeclaration *) { _sharable = false; return false; }
-    virtual bool visit(AST::FunctionExpression *) { _sharable = false; return false; }
-    virtual bool visit(AST::CallExpression *) { _sharable = false; return false; }
+    inline virtual bool visit(AST::FunctionDeclaration *);
+    inline virtual bool visit(AST::FunctionExpression *);
+    inline virtual bool visit(AST::IdentifierExpression *);
+
+    static QString evalString;
 };
 
 class RewriteBinding: protected AST::Visitor
@@ -142,6 +144,26 @@ protected:
     void accept(AST::Node *node);
     virtual bool visit(AST::StringLiteral *ast);
 };
+
+bool SharedBindingTester::visit(AST::FunctionDeclaration *)
+{
+    _sharable = false;
+    return false;
+}
+
+bool SharedBindingTester::visit(AST::FunctionExpression *)
+{
+    _sharable = false;
+    return false;
+}
+
+bool SharedBindingTester::visit(AST::IdentifierExpression *e)
+{
+    if (e->name == evalString)
+        _sharable = false;
+
+    return false; // IdentifierExpression is a leaf node anyway
+}
 
 } // namespace QQmlRewrite
 

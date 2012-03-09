@@ -58,7 +58,7 @@ static QQmlJavaScriptExpression::VTable QV8Bindings_Binding_jsvtable = {
 };
 
 QV8Bindings::Binding::Binding()
-: QQmlJavaScriptExpression(&QV8Bindings_Binding_jsvtable), target(0), parent(0)
+: QQmlJavaScriptExpression(&QV8Bindings_Binding_jsvtable), parent(0)
 {
 }
 
@@ -90,7 +90,7 @@ int QV8Bindings::Binding::propertyIndex() const
 
 QObject *QV8Bindings::Binding::object() const
 {
-    return target;
+    return *target;
 }
 
 void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
@@ -127,13 +127,13 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
 
         trace.event("writing V8 result");
         bool needsErrorData = false;
-        if (!watcher.wasDeleted() && !hasError()) {
+        if (!watcher.wasDeleted() && !destroyedFlag() && !hasError()) {
             typedef QQmlPropertyPrivate PP;
-            needsErrorData = !PP::writeBinding(target, instruction->property, context, this, result,
+            needsErrorData = !PP::writeBinding(*target, instruction->property, context, this, result,
                                                isUndefined, flags);
         }
 
-        if (!watcher.wasDeleted()) {
+        if (!watcher.wasDeleted() && !destroyedFlag()) {
 
             if (needsErrorData) {
                 QUrl url = parent->url();
@@ -156,7 +156,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         ep->dereferenceScarceResources(); 
 
     } else {
-        QQmlProperty p = QQmlPropertyPrivate::restore(target, instruction->property, context);
+        QQmlProperty p = QQmlPropertyPrivate::restore(*target, instruction->property, context);
         QQmlAbstractBinding::printBindingLoopError(p);
     }
 }
@@ -177,6 +177,7 @@ void QV8Bindings::Binding::expressionChanged(QQmlJavaScriptExpression *e)
 void QV8Bindings::Binding::destroy()
 {
     setEnabledFlag(false);
+    setDestroyedFlag(true);
     removeFromObject();
     clear();
     clearError();

@@ -96,7 +96,6 @@ public:
 
     bool expressionFunctionValid:1;
     bool expressionFunctionRewritten:1;
-    bool extractExpressionFromFunction:1;
 
     // "Inherited" from QQmlJavaScriptExpression
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
@@ -113,8 +112,6 @@ public:
     int line;
     int column;
     QString name; //function name, hint for the debugger
-
-    QQmlRefCount *dataRef;
 };
 
 QQmlExpressionPrivate *QQmlExpressionPrivate::get(QQmlExpression *expr)

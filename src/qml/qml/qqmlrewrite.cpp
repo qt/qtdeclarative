@@ -51,6 +51,8 @@ DEFINE_BOOL_CONFIG_OPTION(rewriteDump, QML_REWRITE_DUMP);
 
 namespace QQmlRewrite {
 
+QString SharedBindingTester::evalString("eval");
+
 static void rewriteStringLiteral(AST::StringLiteral *ast, const QString *code, int startPosition, TextWriter *writer)
 {
     const unsigned position = ast->firstSourceLocation().begin() - startPosition + 1;

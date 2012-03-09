@@ -60,7 +60,7 @@ static QQmlJavaScriptExpression::VTable QQmlExpressionPrivate_jsvtable = {
 QQmlExpressionPrivate::QQmlExpressionPrivate()
 : QQmlJavaScriptExpression(&QQmlExpressionPrivate_jsvtable),
   expressionFunctionValid(true), expressionFunctionRewritten(false),
-  extractExpressionFromFunction(false), line(-1), dataRef(0)
+  line(-1)
 {
 }
 
@@ -68,8 +68,6 @@ QQmlExpressionPrivate::~QQmlExpressionPrivate()
 {
     qPersistentDispose(v8qmlscope);
     qPersistentDispose(v8function);
-    if (dataRef) dataRef->release();
-    dataRef = 0;
 }
 
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QObject *me)
@@ -321,13 +319,7 @@ QQmlContext *QQmlExpression::context() const
 QString QQmlExpression::expression() const
 {
     Q_D(const QQmlExpression);
-    if (d->extractExpressionFromFunction && context()->engine()) {
-        QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(context()->engine());
-        v8::HandleScope handle_scope;
-        v8::Context::Scope scope(v8engine->context());
-
-        return v8engine->toString(v8::Handle<v8::Value>(d->v8function));
-    } else if (!d->expressionUtf8.isEmpty()) {
+    if (!d->expressionUtf8.isEmpty()) {
         return QString::fromUtf8(d->expressionUtf8);
     } else {
         return d->expression;
