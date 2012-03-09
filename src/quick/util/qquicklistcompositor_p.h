@@ -317,6 +317,10 @@ private:
     friend Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickListCompositor &list);
 };
 
+Q_DECLARE_TYPEINFO(QQuickListCompositor::Change, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQuickListCompositor::Remove, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQuickListCompositor::Insert, Q_PRIMITIVE_TYPE);
+
 inline QQuickListCompositor::iterator::iterator()
     : range(0), offset(0), group(Default), groupCount(0) {}
 inline QQuickListCompositor::iterator::iterator(const iterator &it)
