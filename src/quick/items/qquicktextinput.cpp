@@ -2930,19 +2930,6 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
 /*!
     \internal
 
-    Initializes the line control with a starting text value of \a txt.
-*/
-void QQuickTextInputPrivate::init(const QString &txt)
-{
-    m_text = txt;
-
-    updateDisplayText();
-    m_cursor = m_text.length();
-}
-
-/*!
-    \internal
-
     Sets the password echo editing to \a editing.  If password echo editing
     is true, then the text of the password is displayed even if the echo
     mode is set to QLineEdit::PasswordEchoOnEdit.  Password echoing editing

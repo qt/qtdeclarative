@@ -405,7 +405,6 @@ public:
     void updateLayout();
 
 private:
-    void init(const QString &txt);
     void removeSelectedText();
     void internalSetText(const QString &txt, int pos = -1, bool edited = true);
     void updateDisplayText(bool forceUpdate = false);
