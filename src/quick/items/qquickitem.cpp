@@ -3040,9 +3040,8 @@ void QQuickItem::mouseReleaseEvent(QMouseEvent *event)
     event->ignore();
 }
 
-void QQuickItem::mouseDoubleClickEvent(QMouseEvent *event)
+void QQuickItem::mouseDoubleClickEvent(QMouseEvent *)
 {
-    mousePressEvent(event);
 }
 
 void QQuickItem::mouseUngrabEvent()
