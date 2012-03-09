@@ -984,7 +984,6 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
 struct QQuickPixmapNull {
     QUrl url;
-    QImage image;
     QSize size;
 };
 Q_GLOBAL_STATIC(QQuickPixmapNull, nullPixmap);
@@ -1087,8 +1086,7 @@ QImage QQuickPixmap::image() const
 {
     if (d && d->textureFactory)
         return d->textureFactory->image();
-    else
-        return nullPixmap()->image;
+    return QImage();
 }
 
 void QQuickPixmap::setImage(const QImage &p)
