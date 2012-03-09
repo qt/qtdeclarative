@@ -69,6 +69,7 @@
 
 
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
+Q_DECLARE_METATYPE(Qt::Key)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
@@ -185,7 +186,7 @@ private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
 
-    void simulateKey(QQuickView *, int key, Qt::KeyboardModifiers modifiers = 0);
+    void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = 0);
 
     QStringList standard;
     QStringList richText;
@@ -2155,7 +2156,7 @@ void tst_qquicktextedit::readOnly()
     QCOMPARE(edit->cursorPosition(), edit->text().length());
 }
 
-void tst_qquicktextedit::simulateKey(QQuickView *view, int key, Qt::KeyboardModifiers modifiers)
+void tst_qquicktextedit::simulateKey(QWindow *view, int key, Qt::KeyboardModifiers modifiers)
 {
     QKeyEvent press(QKeyEvent::KeyPress, key, modifiers);
     QKeyEvent release(QKeyEvent::KeyRelease, key, modifiers);
@@ -3255,63 +3256,118 @@ void tst_qquicktextedit::keySequence_data()
     QTest::addColumn<int>("cursorPosition");
     QTest::addColumn<QString>("expectedText");
     QTest::addColumn<QString>("selectedText");
+    QTest::addColumn<Qt::Key>("layoutDirection");
 
     // standard[0] == "the [4]quick [10]brown [16]fox [20]jumped [27]over [32]the [36]lazy [41]dog"
 
     QTest::newRow("select all")
             << standard.at(0) << QKeySequence(QKeySequence::SelectAll) << 0 << 0
-            << 44 << standard.at(0) << standard.at(0);
+            << 44 << standard.at(0) << standard.at(0)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select start of line")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectStartOfLine) << 5 << 5
+            << 0 << standard.at(0) << standard.at(0).mid(0, 5)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select start of block")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectStartOfBlock) << 5 << 5
+            << 0 << standard.at(0) << standard.at(0).mid(0, 5)
+            << Qt::Key_Direction_L;
     QTest::newRow("select end of line")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfLine) << 5 << 5
-            << 44 << standard.at(0) << standard.at(0).mid(5);
+            << 44 << standard.at(0) << standard.at(0).mid(5)
+            << Qt::Key_Direction_L;
     QTest::newRow("select end of document")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfDocument) << 3 << 3
-            << 44 << standard.at(0) << standard.at(0).mid(3);
+            << 44 << standard.at(0) << standard.at(0).mid(3)
+            << Qt::Key_Direction_L;
     QTest::newRow("select end of block")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfBlock) << 18 << 18
-            << 44 << standard.at(0) << standard.at(0).mid(18);
+            << 44 << standard.at(0) << standard.at(0).mid(18)
+            << Qt::Key_Direction_L;
     QTest::newRow("delete end of line")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfLine) << 24 << 24
-            << 24 << standard.at(0).mid(0, 24) << QString();
+            << 24 << standard.at(0).mid(0, 24) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("move to start of line")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfLine) << 31 << 31
-            << 0 << standard.at(0) << QString();
+            << 0 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("move to start of block")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfBlock) << 25 << 25
-            << 0 << standard.at(0) << QString();
+            << 0 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("move to next char")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToNextChar) << 12 << 12
-            << 13 << standard.at(0) << QString();
-    QTest::newRow("move to previous char")
+            << 13 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to previous char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 3
-            << 2 << standard.at(0) << QString();
-    QTest::newRow("select next char")
+            << 2 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to previous char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 3
+            << 4 << standard.at(0) << QString()
+            << Qt::Key_Direction_R;
+    QTest::newRow("move to previous char with selection")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 7
+            << 3 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("select next char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::SelectNextChar) << 23 << 23
-            << 24 << standard.at(0) << standard.at(0).mid(23, 1);
-    QTest::newRow("select previous char")
+            << 24 << standard.at(0) << standard.at(0).mid(23, 1)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select next char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectNextChar) << 23 << 23
+            << 22 << standard.at(0) << standard.at(0).mid(22, 1)
+            << Qt::Key_Direction_R;
+    QTest::newRow("select previous char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousChar) << 19 << 19
-            << 18 << standard.at(0) << standard.at(0).mid(18, 1);
-    QTest::newRow("move to next word")
+            << 18 << standard.at(0) << standard.at(0).mid(18, 1)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select previous char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousChar) << 19 << 19
+            << 20 << standard.at(0) << standard.at(0).mid(19, 1)
+            << Qt::Key_Direction_R;
+    QTest::newRow("move to next word (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
-            << 10 << standard.at(0) << QString();
-    QTest::newRow("move to previous word")
+            << 10 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to next word (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
+            << 4 << standard.at(0) << QString()
+            << Qt::Key_Direction_R;
+    QTest::newRow("move to previous word (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
-            << 4 << standard.at(0) << QString();
+            << 4 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to previous word (rlt)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
+            << 10 << standard.at(0) << QString()
+            << Qt::Key_Direction_R;
+    QTest::newRow("select next word")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectNextWord) << 11 << 11
+            << 16 << standard.at(0) << standard.at(0).mid(11, 5)
+            << Qt::Key_Direction_L;
     QTest::newRow("select previous word")
             << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousWord) << 11 << 11
-            << 10 << standard.at(0) << standard.at(0).mid(10, 1);
+            << 10 << standard.at(0) << standard.at(0).mid(10, 1)
+            << Qt::Key_Direction_L;
     QTest::newRow("delete (selection)")
             << standard.at(0) << QKeySequence(QKeySequence::Delete) << 12 << 15
-            << 12 << (standard.at(0).mid(0, 12) + standard.at(0).mid(15)) << QString();
+            << 12 << (standard.at(0).mid(0, 12) + standard.at(0).mid(15)) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("delete (no selection)")
             << standard.at(0) << QKeySequence(QKeySequence::Delete) << 15 << 15
-            << 15 << (standard.at(0).mid(0, 15) + standard.at(0).mid(16)) << QString();
+            << 15 << (standard.at(0).mid(0, 15) + standard.at(0).mid(16)) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("delete end of word")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfWord) << 24 << 24
-            << 24 << (standard.at(0).mid(0, 24) + standard.at(0).mid(27)) << QString();
+            << 24 << (standard.at(0).mid(0, 24) + standard.at(0).mid(27)) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("delete start of word")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteStartOfWord) << 7 << 7
-            << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString();
+            << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString()
+            << Qt::Key_Direction_L;
 }
 
 void tst_qquicktextedit::keySequence()
@@ -3323,6 +3379,7 @@ void tst_qquicktextedit::keySequence()
     QFETCH(int, cursorPosition);
     QFETCH(QString, expectedText);
     QFETCH(QString, selectedText);
+    QFETCH(Qt::Key, layoutDirection);
 
     if (sequence.isEmpty()) {
         QSKIP("Key sequence is undefined");
@@ -3340,6 +3397,8 @@ void tst_qquicktextedit::keySequence()
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    simulateKey(&canvas, layoutDirection);
 
     textEdit->select(selectionStart, selectionEnd);
 
@@ -3466,7 +3525,7 @@ void tst_qquicktextedit::undo_data()
             insertString << " unique instance.";
 
             expectedString << "Ensuring a unique instance.";
-            expectedString << "Ensuring a ";    // ### Not present in TextInput.
+            expectedString << "Ensuring a ";    // ### Not present in TextEdit.
             expectedString << "Ensuring an instan";
             expectedString << "Ensuring instan";
             expectedString << "";
@@ -3754,7 +3813,7 @@ void tst_qquicktextedit::undo_keypressevents_data()
              << "ABC";
 
         expectedString << "ABC";
-        // ### One operation in TextInput.
+        // ### One operation in TextEdit.
         expectedString << "A";
         expectedString << "123";
 

@@ -63,6 +63,9 @@
 #include "../../shared/platforminputcontext.h"
 
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
+Q_DECLARE_METATYPE(QQuickTextInput::EchoMode)
+Q_DECLARE_METATYPE(Qt::Key)
+
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
@@ -188,7 +191,7 @@ private slots:
     void negativeDimensions();
 
 private:
-    void simulateKey(QQuickView *, int key);
+    void simulateKey(QWindow *, int key);
 
     void simulateKeys(QWindow *window, const QList<Key> &keys);
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
@@ -2126,7 +2129,7 @@ void tst_qquicktextinput::copyAndPaste() {
 
     // copy and paste
     QCOMPARE(textInput->text().length(), 12);
-    textInput->select(0, textInput->text().length());;
+    textInput->select(0, textInput->text().length());
     textInput->copy();
     QCOMPARE(textInput->selectedText(), QString("Hello world!"));
     QCOMPARE(textInput->selectedText().length(), 12);
@@ -2169,7 +2172,7 @@ void tst_qquicktextinput::copyAndPaste() {
         QQuickTextInput::EchoMode echoMode = QQuickTextInput::EchoMode(index);
         textInput->setEchoMode(echoMode);
         textInput->setText("My password");
-        textInput->select(0, textInput->text().length());;
+        textInput->select(0, textInput->text().length());
         textInput->copy();
         if (echoMode == QQuickTextInput::Normal) {
             QVERIFY(!clipboard->text().isEmpty());
@@ -2246,7 +2249,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence() {
         QQuickTextInput::EchoMode echoMode = QQuickTextInput::EchoMode(index);
         textInput->setEchoMode(echoMode);
         textInput->setText("My password");
-        textInput->select(0, textInput->text().length());;
+        textInput->select(0, textInput->text().length());
         simulateKeys(&canvas, QKeySequence::Copy);
         if (echoMode == QQuickTextInput::Normal) {
             QVERIFY(!clipboard->text().isEmpty());
@@ -2702,7 +2705,7 @@ void tst_qquicktextinput::passwordEchoDelay()
 #endif
 
 
-void tst_qquicktextinput::simulateKey(QQuickView *view, int key)
+void tst_qquicktextinput::simulateKey(QWindow *view, int key)
 {
     QKeyEvent press(QKeyEvent::KeyPress, key, 0);
     QKeyEvent release(QKeyEvent::KeyRelease, key, 0);
@@ -4084,63 +4087,135 @@ void tst_qquicktextinput::keySequence_data()
     QTest::addColumn<int>("cursorPosition");
     QTest::addColumn<QString>("expectedText");
     QTest::addColumn<QString>("selectedText");
+    QTest::addColumn<QQuickTextInput::EchoMode>("echoMode");
+    QTest::addColumn<Qt::Key>("layoutDirection");
 
     // standard[0] == "the [4]quick [10]brown [16]fox [20]jumped [27]over [32]the [36]lazy [41]dog"
 
     QTest::newRow("select all")
             << standard.at(0) << QKeySequence(QKeySequence::SelectAll) << 0 << 0
-            << 44 << standard.at(0) << standard.at(0);
+            << 44 << standard.at(0) << standard.at(0)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("select start of line")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectStartOfLine) << 5 << 5
+            << 0 << standard.at(0) << standard.at(0).mid(0, 5)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("select start of block")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectStartOfBlock) << 5 << 5
+            << 0 << standard.at(0) << standard.at(0).mid(0, 5)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("select end of line")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfLine) << 5 << 5
-            << 44 << standard.at(0) << standard.at(0).mid(5);
+            << 44 << standard.at(0) << standard.at(0).mid(5)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("select end of document") // ### Not handled.
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfDocument) << 3 << 3
-            << 3 << standard.at(0) << QString();
+            << 3 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("select end of block")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfBlock) << 18 << 18
-            << 44 << standard.at(0) << standard.at(0).mid(18);
+            << 44 << standard.at(0) << standard.at(0).mid(18)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("delete end of line")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfLine) << 24 << 24
-            << 24 << standard.at(0).mid(0, 24) << QString();
+            << 24 << standard.at(0).mid(0, 24) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("move to start of line")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfLine) << 31 << 31
-            << 0 << standard.at(0) << QString();
+            << 0 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("move to start of block")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfBlock) << 25 << 25
-            << 0 << standard.at(0) << QString();
+            << 0 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("move to next char")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToNextChar) << 12 << 12
-            << 13 << standard.at(0) << QString();
-    QTest::newRow("move to previous char")
+            << 13 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("move to previous char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 3
-            << 2 << standard.at(0) << QString();
-    QTest::newRow("select next char")
+            << 2 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("move to previous char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 3
+            << 4 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_R;
+    QTest::newRow("move to previous char with selection")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 7
+            << 3 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("select next char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::SelectNextChar) << 23 << 23
-            << 24 << standard.at(0) << standard.at(0).mid(23, 1);
-    QTest::newRow("select previous char")
+            << 24 << standard.at(0) << standard.at(0).mid(23, 1)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("select next char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectNextChar) << 23 << 23
+            << 22 << standard.at(0) << standard.at(0).mid(22, 1)
+            << QQuickTextInput::Normal << Qt::Key_Direction_R;
+    QTest::newRow("select previous char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousChar) << 19 << 19
-            << 18 << standard.at(0) << standard.at(0).mid(18, 1);
-    QTest::newRow("move to next word")
+            << 18 << standard.at(0) << standard.at(0).mid(18, 1)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("select previous char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousChar) << 19 << 19
+            << 20 << standard.at(0) << standard.at(0).mid(19, 1)
+            << QQuickTextInput::Normal << Qt::Key_Direction_R;
+    QTest::newRow("move to next word (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
-            << 10 << standard.at(0) << QString();
-    QTest::newRow("move to previous word")
+            << 10 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("move to next word (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
+            << 4 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_R;
+    QTest::newRow("move to next word (password,ltr)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
+            << 44 << standard.at(0) << QString()
+            << QQuickTextInput::Password << Qt::Key_Direction_L;
+    QTest::newRow("move to next word (password,rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
+            << 0 << standard.at(0) << QString()
+            << QQuickTextInput::Password << Qt::Key_Direction_R;
+    QTest::newRow("move to previous word (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
-            << 4 << standard.at(0) << QString();
+            << 4 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("move to previous word (rlt)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
+            << 10 << standard.at(0) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_R;
+    QTest::newRow("move to previous word (password,ltr)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
+            << 0 << standard.at(0) << QString()
+            << QQuickTextInput::Password << Qt::Key_Direction_L;
+    QTest::newRow("move to previous word (password,rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
+            << 44 << standard.at(0) << QString()
+            << QQuickTextInput::Password << Qt::Key_Direction_R;
+    QTest::newRow("select next word")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectNextWord) << 11 << 11
+            << 16 << standard.at(0) << standard.at(0).mid(11, 5)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("select previous word")
             << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousWord) << 11 << 11
-            << 10 << standard.at(0) << standard.at(0).mid(10, 1);
+            << 10 << standard.at(0) << standard.at(0).mid(10, 1)
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("delete (selection)")
             << standard.at(0) << QKeySequence(QKeySequence::Delete) << 12 << 15
-            << 12 << (standard.at(0).mid(0, 12) + standard.at(0).mid(15)) << QString();
+            << 12 << (standard.at(0).mid(0, 12) + standard.at(0).mid(15)) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("delete (no selection)")
             << standard.at(0) << QKeySequence(QKeySequence::Delete) << 15 << 15
-            << 15 << (standard.at(0).mid(0, 15) + standard.at(0).mid(16)) << QString();
+            << 15 << (standard.at(0).mid(0, 15) + standard.at(0).mid(16)) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("delete end of word")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfWord) << 24 << 24
-            << 24 << (standard.at(0).mid(0, 24) + standard.at(0).mid(27)) << QString();
+            << 24 << (standard.at(0).mid(0, 24) + standard.at(0).mid(27)) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
     QTest::newRow("delete start of word")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteStartOfWord) << 7 << 7
-            << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString();
+            << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
 }
 
 void tst_qquicktextinput::keySequence()
@@ -4152,6 +4227,8 @@ void tst_qquicktextinput::keySequence()
     QFETCH(int, cursorPosition);
     QFETCH(QString, expectedText);
     QFETCH(QString, selectedText);
+    QFETCH(QQuickTextInput::EchoMode, echoMode);
+    QFETCH(Qt::Key, layoutDirection);
 
     if (sequence.isEmpty()) {
         QSKIP("Key sequence is undefined");
@@ -4162,6 +4239,7 @@ void tst_qquicktextinput::keySequence()
     textInputComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
+    textInput->setEchoMode(echoMode);
 
     QQuickCanvas canvas;
     textInput->setParentItem(canvas.rootItem());
@@ -4169,6 +4247,8 @@ void tst_qquicktextinput::keySequence()
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    simulateKey(&canvas, layoutDirection);
 
     textInput->select(selectionStart, selectionEnd);
 
@@ -4583,6 +4663,19 @@ void tst_qquicktextinput::undo_keypressevents_data()
         expectedString << "123";
 
         QTest::newRow("Inserts,moving,selection and overwriting") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        // inserting '123'
+        keys << "123"
+                << QKeySequence::Undo
+                << QKeySequence::Redo;
+
+        expectedString << "123";
+        expectedString << QString();
+
+        QTest::newRow("Insert,undo,redo") << keys << expectedString;
     }
 }
 

@@ -3964,12 +3964,10 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     }
 #ifndef QT_NO_SHORTCUT
     else if (event == QKeySequence::Undo) {
-        if (!m_readOnly)
-            q->undo();
+        q->undo();
     }
     else if (event == QKeySequence::Redo) {
-        if (!m_readOnly)
-            q->redo();
+        q->redo();
     }
     else if (event == QKeySequence::SelectAll) {
         selectAll();
