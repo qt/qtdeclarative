@@ -136,6 +136,8 @@ inline uint qHash (const QQmlProperty &key)
     return qHash(key.object()) + qHash(key.name());
 }
 
+Q_DECLARE_TYPEINFO(QQmlProperty, Q_MOVABLE_TYPE);
+
 QT_END_NAMESPACE
 
 QT_END_HEADER

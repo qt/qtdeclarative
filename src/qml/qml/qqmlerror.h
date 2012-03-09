@@ -80,6 +80,8 @@ private:
 
 QDebug Q_QML_EXPORT operator<<(QDebug debug, const QQmlError &error);
 
+Q_DECLARE_TYPEINFO(QQmlError, Q_MOVABLE_TYPE);
+
 QT_END_NAMESPACE
 
 QT_END_HEADER
