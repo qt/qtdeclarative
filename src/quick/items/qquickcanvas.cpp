@@ -376,10 +376,8 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
 {
     if (event->type() == QEvent::TouchCancel) {
         touchMouseId = -1;
-        if (!mouseGrabberItem)
-            return;
-        mouseGrabberItem->ungrabMouse();
-        mouseGrabberItem = 0;
+        if (mouseGrabberItem)
+            mouseGrabberItem->ungrabMouse();
         return;
     }
     for (int i = 0; i < event->touchPoints().count(); ++i) {
@@ -447,7 +445,8 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                 me.setTimestamp(event->timestamp());
                 me.setCapabilities(event->device()->capabilities());
                 deliverMouseEvent(&me);
-                mouseGrabberItem = 0;
+                if (mouseGrabberItem)
+                    mouseGrabberItem->ungrabMouse();
             }
             break;
         }
@@ -947,13 +946,13 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
             QMouseEvent me(event->type(), p, event->windowPos(), event->screenPos(),
                            event->button(), event->buttons(), event->modifiers());
             me.accept();
-            mouseGrabberItem = item;
+            item->grabMouse();
             q->sendEvent(item, &me);
             event->setAccepted(me.isAccepted());
             if (me.isAccepted())
                 return true;
-            mouseGrabberItem->ungrabMouse();
-            mouseGrabberItem = 0;
+            if (mouseGrabberItem)
+                mouseGrabberItem->ungrabMouse();
         }
     }
 
@@ -1023,7 +1022,8 @@ void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
     }
 
     d->deliverMouseEvent(event);
-    d->mouseGrabberItem = 0;
+    if (d->mouseGrabberItem)
+        d->mouseGrabberItem->ungrabMouse();
 }
 
 /*! \reimp */
@@ -1558,6 +1558,12 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
         if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
             e->accept();
             QQuickItemPrivate::get(item)->deliverMouseEvent(static_cast<QMouseEvent *>(e));
+        }
+        break;
+    case QEvent::UngrabMouse:
+        if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
+            e->accept();
+            item->mouseUngrabEvent();
         }
         break;
     case QEvent::Wheel:

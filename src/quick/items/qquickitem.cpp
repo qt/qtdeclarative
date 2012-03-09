@@ -4743,8 +4743,10 @@ void QQuickItem::grabMouse()
 
     QQuickItem *oldGrabber = canvasPriv->mouseGrabberItem;
     canvasPriv->mouseGrabberItem = this;
-    if (oldGrabber)
-        oldGrabber->mouseUngrabEvent();
+    if (oldGrabber) {
+        QEvent ev(QEvent::UngrabMouse);
+        d->canvas->sendEvent(oldGrabber, &ev);
+    }
 }
 
 void QQuickItem::ungrabMouse()
@@ -4759,7 +4761,9 @@ void QQuickItem::ungrabMouse()
     }
 
     canvasPriv->mouseGrabberItem = 0;
-    mouseUngrabEvent();
+
+    QEvent ev(QEvent::UngrabMouse);
+    d->canvas->sendEvent(this, &ev);
 }
 
 bool QQuickItem::keepMouseGrab() const

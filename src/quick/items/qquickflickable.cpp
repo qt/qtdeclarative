@@ -107,7 +107,7 @@ static const int FlickThreshold = 20;
 
 // RetainGrabVelocity is the maxmimum instantaneous velocity that
 // will ensure the Flickable retains the grab on consecutive flicks.
-static const int RetainGrabVelocity = 15;
+static const int RetainGrabVelocity = 100;
 
 QQuickFlickableVisibleArea::QQuickFlickableVisibleArea(QQuickFlickable *parent)
     : QObject(parent), flickable(parent), m_xPosition(0.), m_widthRatio(0.)
@@ -823,8 +823,8 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     Q_Q(QQuickFlickable);
     QQuickItemPrivate::start(timer);
     if (interactive && timeline.isActive()
-        && (qAbs(hData.smoothVelocity.value()) > RetainGrabVelocity
-            || qAbs(vData.smoothVelocity.value()) > RetainGrabVelocity)) {
+        && ((qAbs(hData.smoothVelocity.value()) > RetainGrabVelocity && !hData.fixingUp && !hData.inOvershoot)
+            || (qAbs(vData.smoothVelocity.value()) > RetainGrabVelocity && !vData.fixingUp && !vData.inOvershoot))) {
         stealMouse = true; // If we've been flicked then steal the click.
         int flickTime = timeline.time();
         if (flickTime > 600) {
@@ -846,7 +846,10 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     }
     q->setKeepMouseGrab(stealMouse);
     pressed = true;
-    timeline.clear();
+    if (!hData.fixingUp)
+        timeline.reset(hData.move);
+    if (!vData.fixingUp)
+        timeline.reset(vData.move);
     hData.reset();
     vData.reset();
     hData.dragMinBound = q->minXExtent();
@@ -910,6 +913,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 }
             }
             if (!rejectY && stealMouse && dy != 0.0) {
+                timeline.clear();
                 vData.move.setValue(newY);
                 vMoved = true;
             }
@@ -942,6 +946,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 }
             }
             if (!rejectX && stealMouse && dx != 0.0) {
+                timeline.clear();
                 hData.move.setValue(newX);
                 hMoved = true;
             }
@@ -1753,6 +1758,7 @@ void QQuickFlickable::mouseUngrabEvent()
     if (d->pressed) {
         // if our mouse grab has been removed (probably by another Flickable),
         // fix our state
+        d->clearDelayedPress();
         d->pressed = false;
         d->draggingEnding();
         d->stealMouse = false;
@@ -1845,6 +1851,12 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease:
         return sendMouseEvent(static_cast<QMouseEvent *>(e));
+    case QEvent::UngrabMouse:
+        if (d->canvas && d->canvas->mouseGrabberItem() && d->canvas->mouseGrabberItem() != this) {
+            // The grab has been taken away from a child and given to some other item.
+            mouseUngrabEvent();
+        }
+        break;
     default:
         break;
     }
