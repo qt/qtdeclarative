@@ -39,25 +39,20 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugclient_p.h"
+#include "qqmldebugclient.h"
 
-#include "qpacketprotocol_p.h"
+#include <private/qpacketprotocol_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
 #include <QtNetwork/qnetworkproxy.h>
 
-#include <private/qobject_p.h>
-
-QT_BEGIN_NAMESPACE
-
 const int protocolVersion = 1;
 const QString serverId = QLatin1String("QDeclarativeDebugServer");
 const QString clientId = QLatin1String("QDeclarativeDebugClient");
 
-class QQmlDebugClientPrivate : public QObjectPrivate
+class QQmlDebugClientPrivate
 {
-    Q_DECLARE_PUBLIC(QQmlDebugClient)
 public:
     QQmlDebugClientPrivate();
 
@@ -241,7 +236,7 @@ QQmlDebugConnection::~QQmlDebugConnection()
 {
     QHash<QString, QQmlDebugClient*>::iterator iter = d->plugins.begin();
     for (; iter != d->plugins.end(); ++iter) {
-        iter.value()->d_func()->connection = 0;
+        iter.value()->d->connection = 0;
         iter.value()->stateChanged(QQmlDebugClient::NotConnected);
     }
 }
@@ -341,9 +336,9 @@ QQmlDebugClientPrivate::QQmlDebugClientPrivate()
 
 QQmlDebugClient::QQmlDebugClient(const QString &name, 
                                                  QQmlDebugConnection *parent)
-    : QObject(*(new QQmlDebugClientPrivate), parent)
+    : QObject(parent),
+      d(new QQmlDebugClientPrivate)
 {
-    Q_D(QQmlDebugClient);
     d->name = name;
     d->connection = parent;
 
@@ -361,22 +356,20 @@ QQmlDebugClient::QQmlDebugClient(const QString &name,
 
 QQmlDebugClient::~QQmlDebugClient()
 {
-    Q_D(QQmlDebugClient);
     if (d->connection && d->connection->d) {
         d->connection->d->plugins.remove(d->name);
         d->connection->d->advertisePlugins();
     }
+    delete d;
 }
 
 QString QQmlDebugClient::name() const
 {
-    Q_D(const QQmlDebugClient);
     return d->name;
 }
 
 float QQmlDebugClient::serviceVersion() const
 {
-    Q_D(const QQmlDebugClient);
     if (d->connection->d->serverPlugins.contains(d->name))
         return d->connection->d->serverPlugins.value(d->name);
     return -1;
@@ -384,7 +377,6 @@ float QQmlDebugClient::serviceVersion() const
 
 QQmlDebugClient::State QQmlDebugClient::state() const
 {
-    Q_D(const QQmlDebugClient);
     if (!d->connection
             || !d->connection->isConnected()
             || !d->connection->d->gotHello)
@@ -398,7 +390,6 @@ QQmlDebugClient::State QQmlDebugClient::state() const
 
 void QQmlDebugClient::sendMessage(const QByteArray &message)
 {
-    Q_D(QQmlDebugClient);
     if (state() != Enabled)
         return;
 
@@ -415,7 +406,5 @@ void QQmlDebugClient::stateChanged(State)
 void QQmlDebugClient::messageReceived(const QByteArray &)
 {
 }
-
-QT_END_NAMESPACE
 
 #include <qqmldebugclient.moc>

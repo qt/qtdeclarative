@@ -50,6 +50,7 @@
 #include <private/qqmlrewrite_p.h>
 
 #include <QStack>
+#include <QStringList>
 #include <QCoreApplication>
 #include <QtDebug>
 

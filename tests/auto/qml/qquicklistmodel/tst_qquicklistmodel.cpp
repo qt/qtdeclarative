@@ -139,6 +139,7 @@ private slots:
     void role_mode();
     void dynamic_role();
     void dynamic_role_data();
+    void string_to_list_crash();
 };
 
 bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1625,6 +1626,19 @@ void tst_qquicklistmodel::dynamic_role()
 
     delete item;
     qApp->processEvents();
+}
+
+void tst_qquicklistmodel::string_to_list_crash()
+{
+    QQmlEngine engine;
+    QQuickListModel model;
+    QQmlEngine::setContextForObject(&model,engine.rootContext());
+    engine.rootContext()->setContextObject(&model);
+    QString script = QLatin1String("{append({'a':'data'});get(0).a = [{'x':123}]}");
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Can't assign to existing role 'a' of different type [String -> List]");
+    QQmlExpression e(engine.rootContext(), &model, script);
+    // Don't crash!
+    e.evaluate();
 }
 
 QTEST_MAIN(tst_qquicklistmodel)

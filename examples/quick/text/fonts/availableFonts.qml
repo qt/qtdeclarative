@@ -41,7 +41,7 @@
 import QtQuick 2.0
 
 Rectangle {
-    width: 480; height: 640; color: "steelblue"
+    width: 320; height: 480; color: "steelblue"
 
     ListView {
         anchors.fill: parent; model: Qt.fontFamilies()
@@ -50,7 +50,7 @@ Rectangle {
             height: 40; width: ListView.view.width
             Text {
                 anchors.centerIn: parent
-                text: modelData; font.family: modelData; font.pixelSize: 24; color: "white"
+                text: modelData; font.family: modelData; font.pixelSize: 20; color: "white"
             }
         }
     }

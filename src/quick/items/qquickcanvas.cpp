@@ -374,6 +374,14 @@ static QQuickMouseEventEx touchToMouseEvent(QEvent::Type type, const QTouchEvent
 
 void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
 {
+    if (event->type() == QEvent::TouchCancel) {
+        touchMouseId = -1;
+        if (!mouseGrabberItem)
+            return;
+        mouseGrabberItem->ungrabMouse();
+        mouseGrabberItem = 0;
+        return;
+    }
     for (int i = 0; i < event->touchPoints().count(); ++i) {
         QTouchEvent::TouchPoint p = event->touchPoints().at(i);
         if (touchMouseId == -1 && p.state() & Qt::TouchPointPressed) {
@@ -1177,7 +1185,8 @@ bool QQuickCanvasPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 
     QPointF p = item->mapFromScene(event->posF());
     if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-        QWheelEvent wheel(p, event->delta(), event->buttons(), event->modifiers(), event->orientation());
+        QWheelEvent wheel(p, p, event->pixelDelta(), event->angleDelta(), event->delta(),
+                          event->orientation(), event->buttons(), event->modifiers());
         wheel.accept();
         q->sendEvent(item, &wheel);
         if (wheel.isAccepted()) {

@@ -59,6 +59,7 @@ class ResultObject : public QObject
     Q_OBJECT
     Q_PROPERTY(int result READ result WRITE setResult FINAL)
     Q_PROPERTY(NestedObject *nested READ nested CONSTANT)
+    Q_PROPERTY(NestedObject *nested2 READ nested2 FINAL CONSTANT)
 public:
     ResultObject() : m_result(0), m_resultCounter(0) {}
 
@@ -69,12 +70,14 @@ public:
     void setResult(int result) { m_result = result; m_resultCounter++; }
 
     NestedObject *nested() { return &m_nested; }
+    NestedObject *nested2() { return &m_nested2; }
 
 private:
     int m_result;
     int m_resultCounter;
 
     NestedObject m_nested;
+    NestedObject m_nested2;
 };
 
 void registerTypes();

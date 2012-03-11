@@ -57,11 +57,26 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Quick)
 
 
-class FxViewItem : public QQuickViewItem
+class FxViewItem
 {
 public:
     FxViewItem(QQuickItem *, bool own);
     virtual ~FxViewItem();
+
+    qreal itemX() const;
+    qreal itemY() const;
+
+    void moveTo(const QPointF &pos, bool immediate);
+    void setVisible(bool visible);
+
+    QQuickItemViewTransitioner::TransitionType scheduledTransitionType() const;
+    bool transitionScheduledOrRunning() const;
+    bool transitionRunning() const;
+    bool isPendingRemoval() const;
+
+    void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
+    bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
+    void startTransition(QQuickItemViewTransitioner *transitioner);
 
     // these are positions and sizes along the current direction of scrolling/flicking
     virtual qreal position() const = 0;
@@ -71,7 +86,10 @@ public:
 
     virtual bool contains(qreal x, qreal y) const = 0;
 
+    QQuickItem *item;
+    QQuickItemViewTransitionableItem *transitionableItem;
     QQuickItemViewAttached *attached;
+    int index;
     bool ownItem;
     bool releaseAfterTransition;
 };
@@ -192,7 +210,7 @@ public:
     void prepareVisibleItemTransitions();
     void prepareRemoveTransitions(QHash<QQuickChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
-    virtual void viewItemTransitionFinished(QQuickViewItem *item);
+    virtual void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item);
 
     int findMoveKeyIndex(QQuickChangeSet::MoveKey key, const QVector<QQuickChangeSet::Remove> &changes) const;
 

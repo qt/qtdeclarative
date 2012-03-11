@@ -46,17 +46,86 @@ QT_BEGIN_NAMESPACE
 
 
 FxViewItem::FxViewItem(QQuickItem *i, bool own)
-    : QQuickViewItem(i), ownItem(own), releaseAfterTransition(false)
+    : item(i)
+    , transitionableItem(0)
+    , ownItem(own)
+    , releaseAfterTransition(false)
 {
 }
 
 FxViewItem::~FxViewItem()
 {
+    delete transitionableItem;
     if (ownItem && item) {
         item->setParentItem(0);
         item->deleteLater();
         item = 0;
     }
+}
+
+qreal FxViewItem::itemX() const
+{
+    return transitionableItem ? transitionableItem->itemX() : item->x();
+}
+
+qreal FxViewItem::itemY() const
+{
+    return transitionableItem ? transitionableItem->itemY() : item->y();
+}
+
+void FxViewItem::moveTo(const QPointF &pos, bool immediate)
+{
+    if (transitionableItem)
+        transitionableItem->moveTo(pos, immediate);
+    else
+        item->setPos(pos);
+}
+
+void FxViewItem::setVisible(bool visible)
+{
+    if (!visible && transitionableItem && transitionableItem->transitionScheduledOrRunning())
+        return;
+    item->setVisible(visible);
+}
+
+QQuickItemViewTransitioner::TransitionType FxViewItem::scheduledTransitionType() const
+{
+    return transitionableItem ? transitionableItem->nextTransitionType : QQuickItemViewTransitioner::NoTransition;
+}
+
+bool FxViewItem::transitionScheduledOrRunning() const
+{
+    return transitionableItem ? transitionableItem->transitionScheduledOrRunning() : false;
+}
+
+bool FxViewItem::transitionRunning() const
+{
+    return transitionableItem ? transitionableItem->transitionRunning() : false;
+}
+
+bool FxViewItem::isPendingRemoval() const
+{
+    return transitionableItem ? transitionableItem->isPendingRemoval() : false;
+}
+
+void FxViewItem::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)
+{
+    if (!transitioner)
+        return;
+    if (!transitionableItem)
+        transitionableItem = new QQuickItemViewTransitionableItem(item);
+    transitioner->transitionNextReposition(transitionableItem, type, asTarget);
+}
+
+bool FxViewItem::prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds)
+{
+    return transitionableItem ? transitionableItem->prepareTransition(transitioner, index, viewBounds) : false;
+}
+
+void FxViewItem::startTransition(QQuickItemViewTransitioner *transitioner)
+{
+    if (transitionableItem)
+        transitionableItem->startTransition(transitioner, index);
 }
 
 
@@ -1615,7 +1684,7 @@ void QQuickItemViewPrivate::layout()
         // assume that any items moving now are moving due to the remove - if they schedule
         // a different transition, that will override this one anyway
         for (int i=0; i<visibleItems.count(); i++)
-            transitioner->transitionNextReposition(visibleItems[i], QQuickItemViewTransitioner::RemoveTransition, false);
+            visibleItems[i]->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, false);
     }
 
     ChangeResult insertionPosChanges;
@@ -1631,7 +1700,7 @@ void QQuickItemViewPrivate::layout()
 
     if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) {
         for (int i=0; i<visibleItems.count(); i++)
-            transitioner->transitionNextReposition(visibleItems.at(i), QQuickItemViewTransitioner::PopulateTransition, true);
+            visibleItems.at(i)->transitionNextReposition(transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
     }
     layoutVisibleItems();
 
@@ -1791,7 +1860,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
                     repositionItemAt(movingIntoView[i].item, fromIndex, -totalInsertionResult->sizeChangesAfterVisiblePos);
                 else
                     repositionItemAt(movingIntoView[i].item, fromIndex, totalInsertionResult->sizeChangesAfterVisiblePos);
-                transitioner->transitionNextReposition(movingIntoView[i].item, QQuickItemViewTransitioner::MoveTransition, true);
+                movingIntoView[i].item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
             }
         }
     }
@@ -1855,12 +1924,10 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QQuickChangeSet::Remove &re
         } else if (item->index >= removal.index + removal.count) {
             // after removed items
             item->index -= removal.count;
-            if (transitioner) {
-                if (removal.isMove())
-                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, false);
-                else
-                    transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::RemoveTransition, false);
-            }
+            if (removal.isMove())
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
+            else
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, false);
             ++it;
         } else {
             // removed item
@@ -1894,8 +1961,7 @@ void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQuickChangeSet::
     }
     if (removal.isMove()) {
         currentChanges.removedItems.insert(removal.moveKey(item->index), item);
-        if (transitioner)
-            transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::MoveTransition, true);
+        item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
     } else {
         // track item so it is released later
         currentChanges.removedItems.insertMulti(QQuickChangeSet::MoveKey(), item);
@@ -1977,7 +2043,7 @@ void QQuickItemViewPrivate::prepareRemoveTransitions(QHash<QQuickChangeSet::Move
                 FxViewItem *item = *it;
                 item->releaseAfterTransition = true;
                 releasePendingTransition.append(item);
-                transitioner->transitionNextReposition(item, QQuickItemViewTransitioner::RemoveTransition, true);
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, true);
                 it = removedItems->erase(it);
             } else {
                 ++it;
@@ -1996,7 +2062,7 @@ bool QQuickItemViewPrivate::prepareNonVisibleItemTransition(FxViewItem *item, co
     if (!transitioner)
         return false;
 
-    if (item->nextTransitionType == QQuickItemViewTransitioner::MoveTransition)
+    if (item->scheduledTransitionType() == QQuickItemViewTransitioner::MoveTransition)
         repositionItemAt(item, item->index, 0);
 
     if (item->prepareTransition(transitioner, viewBounds)) {
@@ -2006,12 +2072,13 @@ bool QQuickItemViewPrivate::prepareNonVisibleItemTransition(FxViewItem *item, co
     return false;
 }
 
-void QQuickItemViewPrivate::viewItemTransitionFinished(QQuickViewItem *i)
+void QQuickItemViewPrivate::viewItemTransitionFinished(QQuickItemViewTransitionableItem *item)
 {
-    FxViewItem *item = static_cast<FxViewItem *>(i);
-    if (item->releaseAfterTransition) {
-        releasePendingTransition.removeOne(item);
-        releaseItem(item);
+    for (int i=0; i<releasePendingTransition.count(); i++) {
+        if (releasePendingTransition[i]->transitionableItem == item) {
+            releaseItem(releasePendingTransition.takeAt(i));
+            return;
+        }
     }
 }
 

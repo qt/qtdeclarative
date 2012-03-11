@@ -531,7 +531,7 @@ bool QV4IRBuilder::visit(AST::NumericLiteral *ast)
         _expr.format = ExprResult::cx;
         _block->JUMP(ast->value ? _expr.iftrue : _expr.iffalse);
     } else {
-        _expr.code = _block->CONST(ast->value);
+        _expr.code = _block->CONST(IR::RealType, ast->value);
     }
     return false;
 }
@@ -767,7 +767,7 @@ bool QV4IRBuilder::visit(AST::UnaryMinusExpression *ast)
     if (expr.isNot(IR::InvalidType)) {
         if (IR::Const *c = expr.code->asConst()) {
             _expr = expr;
-            _expr.code = _block->CONST(-c->value);
+            _expr.code = _block->CONST(expr->type, -c->value);
             return false;
         }
 
@@ -785,7 +785,7 @@ bool QV4IRBuilder::visit(AST::TildeExpression *ast)
     if (expr.isNot(IR::InvalidType)) {
         if (IR::Const *c = expr.code->asConst()) {
             _expr = expr;
-            _expr.code = _block->CONST(~int(c->value));
+            _expr.code = _block->CONST(expr->type, ~int(c->value));
             return false;
         }
         IR::Expr *code = _block->UNOP(IR::OpCompl, expr);
@@ -803,7 +803,7 @@ bool QV4IRBuilder::visit(AST::NotExpression *ast)
     if (expr.isNot(IR::InvalidType)) {
         if (IR::Const *c = expr.code->asConst()) {
             _expr = expr;
-            _expr.code = _block->CONST(!c->value);
+            _expr.code = _block->CONST(IR::BoolType, !c->value);
             return false;
         }
 
@@ -823,16 +823,18 @@ bool QV4IRBuilder::visit(AST::NotExpression *ast)
 void QV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult right)
 {
     if (IR::Type t = maxType(left.type(), right.type())) {
-        implicitCvt(left, t);
-        implicitCvt(right, t);
+        if (!left->asConst() && !right->asConst()) {
+            // the implicit conversions are needed only
+            // when compiling non-constant expressions.
+            implicitCvt(left, t);
+            implicitCvt(right, t);
+        }
 
         if (_expr.hint == ExprResult::cx) {
             _expr.format = ExprResult::cx;
             _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
         } else {
-            IR::Expr *code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
-            _expr.code = _block->TEMP(code->type);
-            _block->MOVE(_expr.code, code);
+            _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
         }
     }
 }
@@ -862,7 +864,7 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             IR::Temp *r = _block->TEMP(IR::InvalidType);
 
             _block = iffalse;
-            _block->MOVE(r, _block->CONST(0)); // ### use the right null value
+            _block->MOVE(r, _block->CONST(IR::BoolType, 0)); // ### use the right null value
             _block->JUMP(endif);
 
             _block = iftrue;

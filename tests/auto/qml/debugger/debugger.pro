@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 
 PRIVATETESTS += \
-    qqmlenginedebug \
+    qqmlenginedebugservice \
     qqmldebugclient \
     qqmldebugservice \
     qqmldebugjs \

@@ -133,21 +133,38 @@ protected:
     virtual void doPositioning(QSizeF *contentSize)=0;
     virtual void reportConflictingAnchors()=0;
 
-    class PositionedItem : public QQuickViewItem
+    class PositionedItem
     {
     public :
-        PositionedItem(QQuickItem *i) : QQuickViewItem(i), isNew(false), isVisible(true) {}
+        PositionedItem(QQuickItem *i);
+        ~PositionedItem();
         bool operator==(const PositionedItem &other) const { return other.item == item; }
 
+        qreal itemX() const;
+        qreal itemY() const;
+
+        void moveTo(const QPointF &pos);
+
+        void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
+        bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
+        void startTransition(QQuickItemViewTransitioner *transitioner);
+
+        QQuickItem *item;
+        QQuickItemViewTransitionableItem *transitionableItem;
+        int index;
         bool isNew;
         bool isVisible;
     };
 
     QPODVector<PositionedItem,8> positionedItems;
     QPODVector<PositionedItem,8> unpositionedItems;//Still 'in' the positioner, just not positioned
+
     void positionItem(qreal x, qreal y, PositionedItem *target);
     void positionItemX(qreal, PositionedItem *target);
     void positionItemY(qreal, PositionedItem *target);
+
+    void removePositionedItem(QPODVector<PositionedItem,8> *items, int index);
+    void clearPositionedItems(QPODVector<PositionedItem,8> *items);
 
 private:
     Q_DISABLE_COPY(QQuickBasePositioner)

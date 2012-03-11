@@ -2,12 +2,11 @@ CONFIG += testcase
 TARGET = tst_qv8profilerservice
 macx:CONFIG -= app_bundle
 
-HEADERS += ../shared/debugutil_p.h
+SOURCES += tst_qv8profilerservice.cpp
 
-SOURCES += tst_qv8profilerservice.cpp \
-           ../shared/debugutil.cpp
-
-include (../../../shared/util.pri)
+INCLUDEPATH += ../shared
+include(../../../shared/util.pri)
+include(../shared/debugutil.pri)
 
 OTHER_FILES += data/test.qml
 

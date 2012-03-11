@@ -72,6 +72,60 @@ void QQuickBasePositionerPrivate::unwatchChanges(QQuickItem* other)
     otherPrivate->removeItemChangeListener(this, watchedChanges);
 }
 
+
+QQuickBasePositioner::PositionedItem::PositionedItem(QQuickItem *i)
+    : item(i)
+    , transitionableItem(0)
+    , index(-1)
+    , isNew(false)
+    , isVisible(true)
+{
+}
+
+QQuickBasePositioner::PositionedItem::~PositionedItem()
+{
+    delete transitionableItem;
+}
+
+qreal QQuickBasePositioner::PositionedItem::itemX() const
+{
+    return transitionableItem ? transitionableItem->itemX() : item->x();
+}
+
+qreal QQuickBasePositioner::PositionedItem::itemY() const
+{
+    return transitionableItem ? transitionableItem->itemY() : item->y();
+}
+
+void QQuickBasePositioner::PositionedItem::moveTo(const QPointF &pos)
+{
+    if (transitionableItem)
+        transitionableItem->moveTo(pos);
+    else
+        item->setPos(pos);
+}
+
+void QQuickBasePositioner::PositionedItem::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)
+{
+    if (!transitioner)
+        return;
+    if (!transitionableItem)
+        transitionableItem = new QQuickItemViewTransitionableItem(item);
+    transitioner->transitionNextReposition(transitionableItem, type, asTarget);
+}
+
+bool QQuickBasePositioner::PositionedItem::prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds)
+{
+    return transitionableItem ? transitionableItem->prepareTransition(transitioner, index, viewBounds) : false;
+}
+
+void QQuickBasePositioner::PositionedItem::startTransition(QQuickItemViewTransitioner *transitioner)
+{
+    if (transitionableItem)
+        transitionableItem->startTransition(transitioner, index);
+}
+
+
 QQuickBasePositioner::QQuickBasePositioner(PositionerType at, QQuickItem *parent)
     : QQuickImplicitSizeItem(*(new QQuickBasePositionerPrivate), parent)
 {
@@ -114,7 +168,8 @@ QQuickBasePositioner::~QQuickBasePositioner()
         d->unwatchChanges(positionedItems.at(i).item);
     for (int i = 0; i < unpositionedItems.count(); ++i)
         d->unwatchChanges(unpositionedItems.at(i).item);
-    positionedItems.clear();
+    clearPositionedItems(&positionedItems);
+    clearPositionedItems(&unpositionedItems);
 }
 
 void QQuickBasePositioner::updatePolish()
@@ -194,10 +249,10 @@ void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &v
         int idx = positionedItems.find(posItem);
         if (idx >= 0) {
             d->unwatchChanges(child);
-            positionedItems.remove(idx);
+            removePositionedItem(&positionedItems, idx);
         } else if ((idx = unpositionedItems.find(posItem)) >= 0) {
             d->unwatchChanges(child);
-            unpositionedItems.remove(idx);
+            removePositionedItem(&unpositionedItems, idx);
         }
         d->setPositioningDirty();
     }
@@ -246,8 +301,7 @@ void QQuickBasePositioner::prePositioning()
                     if (addedIndex < 0)
                         addedIndex = posItem.index;
                     PositionedItem *theItem = &positionedItems[positionedItems.count()-1];
-                    d->transitioner->transitionNextReposition(theItem,
-                            QQuickItemViewTransitioner::AddTransition, true);
+                    theItem->transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 }
             }
         } else {
@@ -268,8 +322,7 @@ void QQuickBasePositioner::prePositioning()
                 if (d->transitioner) {
                     if (addedIndex < 0)
                         addedIndex = item->index;
-                    d->transitioner->transitionNextReposition(&positionedItems[positionedItems.count()-1],
-                            QQuickItemViewTransitioner::AddTransition, true);
+                    positionedItems[positionedItems.count()-1].transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 }
             } else {
                 item->isNew = false;
@@ -283,11 +336,11 @@ void QQuickBasePositioner::prePositioning()
         for (int i=0; i<positionedItems.count(); i++) {
             if (!positionedItems[i].isNew) {
                 if (addedIndex >= 0) {
-                    d->transitioner->transitionNextReposition(&positionedItems[i], QQuickItemViewTransitioner::AddTransition, false);
+                    positionedItems[i].transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::AddTransition, false);
                 } else {
                     // just queue the item for a move-type displace - if the item hasn't
                     // moved anywhere, it won't be transitioned anyway
-                    d->transitioner->transitionNextReposition(&positionedItems[i], QQuickItemViewTransitioner::MoveTransition, false);
+                    positionedItems[i].transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::MoveTransition, false);
                 }
             }
         }
@@ -340,6 +393,24 @@ void QQuickBasePositioner::positionItemY(qreal y, PositionedItem *target)
             && (d->type == Vertical || d->type == Both)) {
         target->moveTo(QPointF(target->itemX(), y));
     }
+}
+
+/*
+  Since PositionedItem values are stored by value, their internal transitionableItem pointers
+  must be cleaned up when a PositionedItem is removed from a QPODVector, otherwise the pointer
+  is never deleted since QPODVector doesn't invoke the destructor.
+  */
+void QQuickBasePositioner::removePositionedItem(QPODVector<PositionedItem,8> *items, int index)
+{
+    Q_ASSERT(index >= 0 && index < items->count());
+    delete items->at(index).transitionableItem;
+    items->remove(index);
+}
+void QQuickBasePositioner::clearPositionedItems(QPODVector<PositionedItem,8> *items)
+{
+    for (int i=0; i<items->count(); i++)
+        delete items->at(i).transitionableItem;
+    items->clear();
 }
 
 QQuickPositionerAttached *QQuickBasePositioner::qmlAttachedProperties(QObject *obj)

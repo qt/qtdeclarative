@@ -58,6 +58,7 @@ Rectangle {
 
         add: Transition {
             id: addTargets
+            enabled: enableAddTransitions
             SequentialAnimation {
                 ScriptAction { script: list.runningAddTargets = true }
                 ParallelAnimation {
@@ -70,6 +71,7 @@ Rectangle {
 
         addDisplaced: Transition {
             id: addDisplaced
+            enabled: enableAddTransitions
             SequentialAnimation {
                 ScriptAction { script: list.runningAddDisplaced = true }
                 PauseAnimation { duration: rippleAddDisplaced ? addDisplaced.ViewTransition.index * root.duration/10 : 0 }
@@ -83,6 +85,7 @@ Rectangle {
 
         move: Transition {
             id: moveTargets
+            enabled: enableMoveTransitions
             SequentialAnimation {
                 ScriptAction { script: list.runningMoveTargets = true }
                 ParallelAnimation {
@@ -95,6 +98,7 @@ Rectangle {
 
         moveDisplaced: Transition {
             id: moveDisplaced
+            enabled: enableMoveTransitions
             SequentialAnimation {
                 ScriptAction { script: list.runningMoveDisplaced = true }
                 ParallelAnimation {
@@ -107,6 +111,7 @@ Rectangle {
 
         remove: Transition {
             id: removeTargets
+            enabled: enableRemoveTransitions
             SequentialAnimation {
                 ScriptAction { script: list.runningRemoveTargets = true }
                 ParallelAnimation {
@@ -119,6 +124,7 @@ Rectangle {
 
         removeDisplaced: Transition {
             id: removeDisplaced
+            enabled: enableRemoveTransitions
             SequentialAnimation {
                 ScriptAction { script: list.runningRemoveDisplaced = true }
                 ParallelAnimation {

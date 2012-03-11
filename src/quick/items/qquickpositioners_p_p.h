@@ -139,7 +139,9 @@ public:
     void itemDestroyed(QQuickItem *item)
     {
         Q_Q(QQuickBasePositioner);
-        q->positionedItems.removeOne(QQuickBasePositioner::PositionedItem(item));
+        int index = q->positionedItems.find(QQuickBasePositioner::PositionedItem(item));
+        if (index >= 0)
+            q->removePositionedItem(&q->positionedItems, index);
     }
 
     static Qt::LayoutDirection getLayoutDirection(const QQuickBasePositioner *positioner)

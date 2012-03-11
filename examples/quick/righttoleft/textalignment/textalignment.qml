@@ -43,10 +43,13 @@ import QtQuick 2.0
 Rectangle {
     id: root
     color: "white"
-    width: containerColumn.width
-    height: containerColumn.height + containerColumn.anchors.topMargin
+    //width: containerColumn.width
+    //height: containerColumn.height + containerColumn.anchors.topMargin
+    width: 320
+    height: 480
 
     property bool mirror: false
+    property int pxSz: 18
     property variant horizontalAlignment: undefined
 
     property variant editorType: ["Plain Text", "Styled Text", "Plain Rich Text", "Italic Rich Text", "Plain TextEdit", "Italic TextEdit", "TextInput"]
@@ -76,30 +79,32 @@ Rectangle {
         spacing: 10
         width: editorTypeRow.width
         anchors { top: parent.top; topMargin: 5 }
-        Row {
+        ListView {
+            width: 320
+            height: 320
             id: editorTypeRow
-            Repeater {
-                model: editorType.length
-                Item {
-                    width: editorColumn.width
-                    height: editorColumn.height
+            model: editorType.length
+            orientation: ListView.Horizontal
+            cacheBuffer: 1000//Load the really expensive ones async if possible
+            delegate: Item {
+                width: editorColumn.width
+                height: editorColumn.height
+                Column {
+                    id: editorColumn
+                    spacing: 5
+                    width: textColumn.width+10
+                    Text {
+                        text: root.editorType[index]
+                        font.pixelSize: 16
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
                     Column {
-                        id: editorColumn
+                        id: textColumn
                         spacing: 5
-                        width: textColumn.width+10
-                        Text {
-                            text: root.editorType[index]
-                            font.pixelSize: 16
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        Column {
-                            id: textColumn
-                            spacing: 5
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            Repeater {
-                                model: textComponents.length
-                                delegate: textComponents[index]
-                            }
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        Repeater {
+                            model: textComponents.length
+                            delegate: textComponents[index]
                         }
                     }
                 }
@@ -190,7 +195,7 @@ Rectangle {
         Text {
             width: 180
             text: root.text[index]
-            font.pixelSize: 24
+            font.pixelSize: pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -204,6 +209,7 @@ Rectangle {
                 text: root.description[index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
+                font.pixelSize: pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -223,7 +229,7 @@ Rectangle {
         Text {
             width: 180
             text: root.text[index]
-            font.pixelSize: 24
+            font.pixelSize: pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -239,6 +245,7 @@ Rectangle {
                 text: root.description[index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
+                font.pixelSize: pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -258,7 +265,7 @@ Rectangle {
         Text {
             width: 180
             text: root.text[index]
-            font.pixelSize: 24
+            font.pixelSize: pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -272,6 +279,7 @@ Rectangle {
                 text: root.description[index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
+                font.pixelSize: pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -291,7 +299,7 @@ Rectangle {
         Text {
             width: 180
             text: "<i>" + root.text[index] + "</i>"
-            font.pixelSize: 24
+            font.pixelSize: pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -306,6 +314,7 @@ Rectangle {
                 text: root.description[index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
+                font.pixelSize: pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -325,7 +334,7 @@ Rectangle {
         TextEdit {
             width: 180
             text: root.text[index]
-            font.pixelSize: 24
+            font.pixelSize: pxSz
             cursorVisible: true
             wrapMode: TextEdit.WordWrap
             horizontalAlignment: root.horizontalAlignment
@@ -339,6 +348,7 @@ Rectangle {
                 text: root.description[index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
+                font.pixelSize: pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -358,7 +368,7 @@ Rectangle {
         TextEdit {
             width: 180
             text: "<i>" + root.text[index] + "<i>"
-            font.pixelSize: 24
+            font.pixelSize: pxSz
             cursorVisible: true
             wrapMode: TextEdit.WordWrap
             textFormat: TextEdit.RichText
@@ -373,6 +383,7 @@ Rectangle {
                 text: root.description[index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
+                font.pixelSize: pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -396,7 +407,7 @@ Rectangle {
                 id: textInput
                 width: 180
                 text: root.text[index]
-                font.pixelSize: 24
+                font.pixelSize: pxSz
                 cursorVisible: true
                 horizontalAlignment: root.horizontalAlignment
                 LayoutMirroring.enabled: root.mirror
@@ -409,6 +420,7 @@ Rectangle {
                     text: root.description[index]
                     color: Qt.rgba(1,1,1,1.0)
                     anchors.centerIn: parent
+                    font.pixelSize: pxSz - 2
                     Rectangle {
                         z: -1
                         color: Qt.rgba(0.3, 0, 0, 0.3)

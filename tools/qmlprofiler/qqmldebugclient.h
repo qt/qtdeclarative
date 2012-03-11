@@ -42,28 +42,10 @@
 #ifndef QQMLDEBUGCLIENT_H
 #define QQMLDEBUGCLIENT_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
 #include <QtNetwork/qtcpsocket.h>
 
-#include <private/qtqmlglobal_p.h>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-
 class QQmlDebugConnectionPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDebugConnection : public QIODevice
+class QQmlDebugConnection : public QIODevice
 {
     Q_OBJECT
     Q_DISABLE_COPY(QQmlDebugConnection)
@@ -97,10 +79,9 @@ private:
 };
 
 class QQmlDebugClientPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDebugClient : public QObject
+class QQmlDebugClient : public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlDebugClient)
     Q_DISABLE_COPY(QQmlDebugClient)
 
 public:
@@ -120,12 +101,9 @@ protected:
     virtual void messageReceived(const QByteArray &);
 
 private:
+    QQmlDebugClientPrivate *d;
     friend class QQmlDebugConnection;
     friend class QQmlDebugConnectionPrivate;
 };
-
-QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QQMLDEBUGCLIENT_H

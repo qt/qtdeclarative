@@ -119,6 +119,7 @@ private:
 };
 
 class QQuickMouseAreaPrivate;
+class QQuickWheelEvent;
 // used in QtLocation
 class Q_QUICK_EXPORT QQuickMouseArea : public QQuickItem
 {
@@ -182,6 +183,7 @@ Q_SIGNALS:
     void released(QQuickMouseEvent *mouse);
     void clicked(QQuickMouseEvent *mouse);
     void doubleClicked(QQuickMouseEvent *mouse);
+    void wheel(QQuickWheelEvent *wheel);
     void entered();
     void exited();
     void canceled();
@@ -199,6 +201,7 @@ protected:
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);
     virtual void hoverLeaveEvent(QHoverEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
     virtual bool childMouseEventFilter(QQuickItem *i, QEvent *e);
     virtual void timerEvent(QTimerEvent *event);
     virtual void windowDeactivateEvent();

@@ -47,7 +47,7 @@ Rectangle {
     property color textColor: "lightsteelblue"
     property string text: "Hello world! "
 
-    width: 640; height: 320
+    width: 320; height: 480
     color: "steelblue"
 
     Row {

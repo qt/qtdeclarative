@@ -51,7 +51,7 @@
 
 #include <QtQml/qqmlengine.h>
 
-#include <private/qqmldebugclient_p.h>
+#include "qqmldebugclient.h"
 #include <private/qqmldebugservice_p.h>
 
 class QQmlDebugTest

@@ -46,7 +46,7 @@ QT_QML_BEGIN_NAMESPACE
 using namespace QQmlJS;
 
 TextWriter::TextWriter()
-        :string(0), cursor(0)
+        :string(0)
 {
 }
 
@@ -72,8 +72,8 @@ bool TextWriter::hasOverlap(int pos, int length)
             if (overlaps(pos, length, cmd.pos, cmd.length))
                 return true;
         }
-        return false;
     }
+    return false;
 }
 
 bool TextWriter::hasMoveInto(int pos, int length)
@@ -137,25 +137,12 @@ void TextWriter::doReplace(const Replace &replace)
         }
     }
 
-    if (string) {
-        string->replace(replace.pos, replace.length, replace.replacement);
-    } else if (cursor) {
-        cursor->setPosition(replace.pos);
-        cursor->setPosition(replace.pos + replace.length, QTextCursor::KeepAnchor);
-        cursor->insertText(replace.replacement);
-    }
+    string->replace(replace.pos, replace.length, replace.replacement);
 }
 
 void TextWriter::doMove(const Move &move)
 {
-    QString text;
-    if (string) {
-        text = string->mid(move.pos, move.length);
-    } else if (cursor) {
-        cursor->setPosition(move.pos);
-        cursor->setPosition(move.pos + move.length, QTextCursor::KeepAnchor);
-        text = cursor->selectedText();
-    }
+    QString text(string->mid(move.pos, move.length));
 
     Replace cut;
     cut.pos = move.pos;
@@ -183,17 +170,10 @@ void TextWriter::write(QString *s)
     string = 0;
 }
 
-void TextWriter::write(QTextCursor *textCursor)
-{
-    cursor = textCursor;
-    write_helper();
-    cursor = 0;
-}
-
 void TextWriter::write_helper()
 {
-    if (cursor)
-        cursor->beginEditBlock();
+    Q_ASSERT(string);
+
     {
         Replace cmd;
         while (!replaceList.isEmpty()) {
@@ -210,8 +190,6 @@ void TextWriter::write_helper()
             doMove(cmd);
         }
     }
-    if (cursor)
-        cursor->endEditBlock();
 }
 
 QT_QML_END_NAMESPACE

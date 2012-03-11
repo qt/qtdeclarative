@@ -46,7 +46,6 @@
 
 #include <QtCore/QString>
 #include <QtCore/QList>
-#include <QtGui/QTextCursor>
 
 QT_BEGIN_HEADER
 QT_QML_BEGIN_NAMESPACE
@@ -56,7 +55,6 @@ namespace QQmlJS {
 class TextWriter
 {
 	QString *string;
-	QTextCursor *cursor;
 
 	struct Replace {
 		int pos;
@@ -89,8 +87,6 @@ public:
 	void move(int pos, int length, int to);
 
 	void write(QString *s);
-	void write(QTextCursor *textCursor);
-
 };
 
 } // end of namespace QQmlJS

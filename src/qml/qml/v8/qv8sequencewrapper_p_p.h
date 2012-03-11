@@ -265,6 +265,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
             static QVariant toVariant(QV8Engine *e, v8::Handle<v8::Array> array, uint32_t length, bool *succeeded) \
             { \
                 SequenceType list; \
+                list.reserve(length); \
                 for (uint32_t ii = 0; ii < length; ++ii) { \
                     list.append(ConversionFromV8fn(e, array->Get(ii))); \
                 } \
@@ -334,14 +335,15 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     /* according to ECMA262r3 we need to insert */ \
                     /* undefined values increasing length to newLength. */ \
                     /* We cannot, so we insert default-values instead. */ \
+                    QT_TRY { \
+                        c.reserve(newCount); \
+                    } QT_CATCH (std::bad_alloc &exception) { \
+                        generateWarning(engine, QString(QLatin1String(exception.what()) \
+                                                + QLatin1String(" during length set"))); \
+                        return; /* failed; don't write back any result. */ \
+                    } \
                     while (newCount > count++) { \
-                        QT_TRY { \
-                            c.append(DefaultValue); \
-                        } QT_CATCH (std::bad_alloc &exception) { \
-                            generateWarning(engine, QString(QLatin1String(exception.what()) \
-                                                    + QLatin1String(" during length set"))); \
-                            return; /* failed; don't write back any result. */ \
-                        } \
+                        c.append(DefaultValue); \
                     } \
                 } else { \
                     /* according to ECMA262r3 we need to remove */ \
@@ -382,15 +384,16 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     /* according to ECMA262r3 we need to insert */ \
                     /* the value at the given index, increasing length to index+1. */ \
                     QT_TRY { \
-                        while (signedIdx > count++) { \
-                            c.append(DefaultValue); \
-                        } \
-                        c.append(elementValue); \
+                        c.reserve(signedIdx + 1); \
                     } QT_CATCH (std::bad_alloc &exception) { \
                         generateWarning(engine, QString(QLatin1String(exception.what()) \
                                                 + QLatin1String(" during indexed set"))); \
                         return v8::Undefined(); /* failed; don't write back any result. */ \
                     } \
+                    while (signedIdx > count++) { \
+                        c.append(DefaultValue); \
+                    } \
+                    c.append(elementValue); \
                 } \
                 /* write back.  already checked that object is non-null, so skip that check here. */ \
                 if (objectType == QV8SequenceResource::Reference) \

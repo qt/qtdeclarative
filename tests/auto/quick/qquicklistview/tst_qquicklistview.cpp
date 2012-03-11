@@ -5807,6 +5807,9 @@ void tst_QQuickListView::multipleTransitions()
     QFETCH(int, initialCount);
     QFETCH(qreal, contentY);
     QFETCH(QList<ListChange>, changes);
+    QFETCH(bool, enableAddTransitions);
+    QFETCH(bool, enableMoveTransitions);
+    QFETCH(bool, enableRemoveTransitions);
     QFETCH(bool, rippleAddDisplaced);
 
     QPointF addTargets_transitionFrom(-50, -50);
@@ -5831,6 +5834,9 @@ void tst_QQuickListView::multipleTransitions()
     ctxt->setContextProperty("moveDisplaced_transitionFrom", moveDisplaced_transitionFrom);
     ctxt->setContextProperty("removeTargets_transitionTo", removeTargets_transitionTo);
     ctxt->setContextProperty("removeDisplaced_transitionFrom", removeDisplaced_transitionFrom);
+    ctxt->setContextProperty("enableAddTransitions", enableAddTransitions);
+    ctxt->setContextProperty("enableMoveTransitions", enableMoveTransitions);
+    ctxt->setContextProperty("enableRemoveTransitions", enableRemoveTransitions);
     ctxt->setContextProperty("rippleAddDisplaced", rippleAddDisplaced);
     canvas->setSource(testFileUrl("multipleTransitions.qml"));
     canvas->show();
@@ -5918,6 +5924,9 @@ void tst_QQuickListView::multipleTransitions_data()
     QTest::addColumn<int>("initialCount");
     QTest::addColumn<qreal>("contentY");
     QTest::addColumn<QList<ListChange> >("changes");
+    QTest::addColumn<bool>("enableAddTransitions");
+    QTest::addColumn<bool>("enableMoveTransitions");
+    QTest::addColumn<bool>("enableRemoveTransitions");
     QTest::addColumn<bool>("rippleAddDisplaced");
 
     // the added item and displaced items should move to final dest correctly
@@ -5925,14 +5934,14 @@ void tst_QQuickListView::multipleTransitions_data()
             << ListChange::insert(0, 1)
             << ListChange::move(0, 3, 1)
             )
-            << false;
+            << true << true << true << false;
 
     // items affected by the add should change from move to add transition
     QTest::newRow("move, then insert item before the moved item") << 20 << 0.0 << (QList<ListChange>()
             << ListChange::move(1, 10, 3)
             << ListChange::insert(0, 1)
             )
-            << false;
+            << true << true << true << false;
 
     // items should be placed correctly if you trigger a transition then refill for that index
     QTest::newRow("add at 0, flick down, flick back to top and add at 0 again") << 20 << 0.0 << (QList<ListChange>()
@@ -5941,13 +5950,31 @@ void tst_QQuickListView::multipleTransitions_data()
             << ListChange::setContentY(0.0)
             << ListChange::insert(0, 1)
             )
-            << false;
+            << true << true << true << false;
 
     QTest::newRow("insert then remove same index, with ripple effect on add displaced") << 20 << 0.0 << (QList<ListChange>()
             << ListChange::insert(1, 1)
             << ListChange::remove(1, 1)
             )
-            << true;
+            << true << true << true << true;
+
+    // if item is removed while undergoing a displaced transition, all other items should end up at their correct positions,
+    // even if a remove-displace transition is not present to re-animate them
+    QTest::newRow("insert then remove, with remove disabled") << 20 << 0.0 << (QList<ListChange>()
+            << ListChange::insert(0, 1)
+            << ListChange::remove(2, 1)
+            )
+            << true << true << false << false;
+
+    // if last item is not flush with the edge of the view, it should still be refilled in correctly after a
+    // remove has changed the position of where it will move to
+    QTest::newRow("insert twice then remove, with remove disabled") << 20 << 0.0 << (QList<ListChange>()
+            << ListChange::setContentY(-10.0)
+            << ListChange::insert(0, 1)
+            << ListChange::insert(0, 1)
+            << ListChange::remove(2, 1)
+            )
+            << true << true << false << false;
 }
 
 QList<int> tst_QQuickListView::toIntList(const QVariantList &list)

@@ -339,7 +339,6 @@ struct Binop: Expr {
 
     virtual void dump(QTextStream &out);
 
-private:
     static Type typeForOp(AluOp op, Expr *left, Expr *right);
 };
 
@@ -525,7 +524,6 @@ struct BasicBlock {
     Temp *TEMP(Type type, int index);
     Temp *TEMP(Type type);
 
-    Expr *CONST(double value);
     Expr *CONST(Type type, double value);
     Expr *STRING(const QStringRef &value);
 

@@ -41,13 +41,11 @@
 
 #include "qqmlenginedebug_p.h"
 
-#include "qqmldebugclient_p.h"
+#include "qqmldebugclient.h"
 
-#include "qqmlenginedebugservice_p.h"
+#include <private/qqmlenginedebugservice_p.h>
 
-#include <private/qobject_p.h>
-
-QT_BEGIN_NAMESPACE
+#include <QtCore/private/qobject_p.h>
 
 class QQmlEngineDebugClient : public QQmlDebugClient
 {
@@ -1067,6 +1065,4 @@ bool QQmlDebugPropertyReference::hasNotifySignal() const
 {
     return m_hasNotifySignal;
 }
-
-QT_END_NAMESPACE
 

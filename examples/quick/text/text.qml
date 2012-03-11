@@ -40,10 +40,20 @@
 
 import QtQuick 2.0
 import "../../shared"
+/*!
+    \title QML Examples - Text
+    \example declarative/text
+    \brief This is a collection of QML examples
+    \image qml-text-example.png
+
+    This is a collection of  small QML examples relating to text. Each example is
+    a small QML file, usually containing or emphasizing a particular element or
+    feature. You can run and observe the behavior of each example.
+*/
 
 Item {
     height: 480
-    width: 480
+    width: 320
     LauncherList {
         id: ll
         anchors.fill: parent
@@ -52,6 +62,8 @@ Item {
             addExample("Fonts", "Using various fonts with a Text element", Qt.resolvedUrl("fonts/fonts.qml"));
             addExample("Available Fonts", "A list of your available fonts",  Qt.resolvedUrl("fonts/availableFonts.qml"));
             addExample("Banner", "Large, scrolling text", Qt.resolvedUrl("fonts/banner.qml"));
+            addExample("Img tag", "Embedding images into text", Qt.resolvedUrl("imgtag/imgtag.qml"));
+            addExample("Text Layout", "Flowing text around items", Qt.resolvedUrl("styledtext-layout.qml"));
         }
     }
 }

@@ -46,10 +46,4 @@ Text {
     wrapMode: Text.WordWrap
     textFormat: Text.StyledText
     horizontalAlignment: main.hAlign
-
-    Rectangle {
-        border.color: "#efefef"
-        color: "transparent"
-        anchors.fill: parent
-    }
 }
