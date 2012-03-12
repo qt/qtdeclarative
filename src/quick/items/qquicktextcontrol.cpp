@@ -531,29 +531,12 @@ void QQuickTextControlPrivate::extendWordwiseSelection(int suggestedNewPosition,
     if (!wordSelectionEnabled && (mouseXPosition < wordStartX || mouseXPosition > wordEndX))
         return;
 
-    if (wordSelectionEnabled) {
-        if (suggestedNewPosition < selectedWordOnDoubleClick.position()) {
-            cursor.setPosition(selectedWordOnDoubleClick.selectionEnd());
-            setCursorPosition(wordStartPos, QTextCursor::KeepAnchor);
-        } else {
-            cursor.setPosition(selectedWordOnDoubleClick.selectionStart());
-            setCursorPosition(wordEndPos, QTextCursor::KeepAnchor);
-        }
+    if (suggestedNewPosition < selectedWordOnDoubleClick.position()) {
+        cursor.setPosition(selectedWordOnDoubleClick.selectionEnd());
+        setCursorPosition(wordStartPos, QTextCursor::KeepAnchor);
     } else {
-        // keep the already selected word even when moving to the left
-        // (#39164)
-        if (suggestedNewPosition < selectedWordOnDoubleClick.position())
-            cursor.setPosition(selectedWordOnDoubleClick.selectionEnd());
-        else
-            cursor.setPosition(selectedWordOnDoubleClick.selectionStart());
-
-        const qreal differenceToStart = mouseXPosition - wordStartX;
-        const qreal differenceToEnd = wordEndX - mouseXPosition;
-
-        if (differenceToStart < differenceToEnd)
-            setCursorPosition(wordStartPos, QTextCursor::KeepAnchor);
-        else
-            setCursorPosition(wordEndPos, QTextCursor::KeepAnchor);
+        cursor.setPosition(selectedWordOnDoubleClick.selectionStart());
+        setCursorPosition(wordEndPos, QTextCursor::KeepAnchor);
     }
 
     if (interactionFlags & Qt::TextSelectableByMouse) {
