@@ -468,6 +468,8 @@ void tst_QQuickMouseArea::doubleClick()
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
+    // The sequence for a double click is:
+    // press, release, (click), press, double click, release
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
 
@@ -476,9 +478,9 @@ void tst_QQuickMouseArea::doubleClick()
 
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 1);
 
+    QGuiApplication::sendEvent(canvas, &pressEvent);
     pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
-
     QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 1);
@@ -507,9 +509,8 @@ void tst_QQuickMouseArea::clickTwice()
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 1);
 
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
-
+    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
     QGuiApplication::sendEvent(canvas, &releaseEvent);
 
@@ -787,12 +788,16 @@ void tst_QQuickMouseArea::hoverVisible()
 
     QSignalSpy enteredSpy(mouseTracker, SIGNAL(entered()));
 
-    QTest::mouseMove(canvas,QPoint(10,32));
+    // Note: We need to use a position that is different from the position in the last event
+    // generated in the previous test case. Otherwise it is not interpreted as a move.
+    QTest::mouseMove(canvas,QPoint(11,33));
 
     QCOMPARE(mouseTracker->hovered(), false);
     QCOMPARE(enteredSpy.count(), 0);
 
     mouseTracker->setVisible(true);
+
+    QTest::mouseMove(canvas,QPoint(10,31));
 
     QCOMPARE(mouseTracker->hovered(), true);
     QCOMPARE(enteredSpy.count(), 1);
