@@ -594,13 +594,6 @@ void QQuickTextControlPrivate::extendBlockwiseSelection(int suggestedNewPosition
     }
 }
 
-void QQuickTextControlPrivate::_q_deleteSelected()
-{
-    if (!(interactionFlags & Qt::TextEditable) || !cursor.hasSelection())
-        return;
-    cursor.removeSelectedText();
-}
-
 void QQuickTextControl::undo()
 {
     Q_D(QQuickTextControl);
@@ -689,14 +682,6 @@ void QQuickTextControl::paste(QClipboard::Mode mode)
         insertFromMimeData(md);
 }
 #endif
-
-void QQuickTextControl::clear()
-{
-    Q_D(QQuickTextControl);
-    // clears and sets empty content
-    d->setContent();
-}
-
 
 void QQuickTextControl::selectAll()
 {
@@ -1527,13 +1512,6 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property) cons
     }
 }
 
-void QQuickTextControl::setFocus(bool focus, Qt::FocusReason reason)
-{
-    QFocusEvent ev(focus ? QEvent::FocusIn : QEvent::FocusOut,
-                   reason);
-    processEvent(&ev);
-}
-
 void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
 {
     Q_Q(QQuickTextControl);
@@ -1553,31 +1531,6 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
             emit q->selectionChanged();
         }
     }
-}
-
-QString QQuickTextControlPrivate::anchorForCursor(const QTextCursor &anchorCursor) const
-{
-    if (anchorCursor.hasSelection()) {
-        QTextCursor cursor = anchorCursor;
-        if (cursor.selectionStart() != cursor.position())
-            cursor.setPosition(cursor.selectionStart());
-        cursor.movePosition(QTextCursor::NextCharacter);
-        QTextCharFormat fmt = cursor.charFormat();
-        if (fmt.isAnchor() && fmt.hasProperty(QTextFormat::AnchorHref))
-            return fmt.stringProperty(QTextFormat::AnchorHref);
-    }
-    return QString();
-}
-
-QTextCursor QQuickTextControl::cursorForPosition(const QPointF &pos) const
-{
-    Q_D(const QQuickTextControl);
-    int cursorPos = hitTest(pos, Qt::FuzzyHit);
-    if (cursorPos == -1)
-        cursorPos = 0;
-    QTextCursor c(d->doc);
-    c.setPosition(cursorPos);
-    return c;
 }
 
 QRectF QQuickTextControl::cursorRect(const QTextCursor &cursor) const
@@ -1609,23 +1562,6 @@ QString QQuickTextControl::anchorAt(const QPointF &pos) const
     return d->doc->documentLayout()->anchorAt(pos);
 }
 
-QString QQuickTextControl::anchorAtCursor() const
-{
-    Q_D(const QQuickTextControl);
-
-    return d->anchorForCursor(d->cursor);
-}
-
-int QQuickTextControl::cursorWidth() const
-{
-#ifndef QT_NO_PROPERTIES
-    Q_D(const QQuickTextControl);
-    return d->doc->documentLayout()->property("cursorWidth").toInt();
-#else
-    return 1;
-#endif
-}
-
 void QQuickTextControl::setCursorWidth(int width)
 {
     Q_D(QQuickTextControl);
@@ -1639,34 +1575,10 @@ void QQuickTextControl::setCursorWidth(int width)
     d->repaintCursor();
 }
 
-bool QQuickTextControl::acceptRichText() const
-{
-    Q_D(const QQuickTextControl);
-    return d->acceptRichText;
-}
-
 void QQuickTextControl::setAcceptRichText(bool accept)
 {
     Q_D(QQuickTextControl);
     d->acceptRichText = accept;
-}
-
-void QQuickTextControl::setTextWidth(qreal width)
-{
-    Q_D(QQuickTextControl);
-    d->doc->setTextWidth(width);
-}
-
-qreal QQuickTextControl::textWidth() const
-{
-    Q_D(const QQuickTextControl);
-    return d->doc->textWidth();
-}
-
-QSizeF QQuickTextControl::size() const
-{
-    Q_D(const QQuickTextControl);
-    return d->doc->size();
 }
 
 void QQuickTextControl::moveCursor(QTextCursor::MoveOperation op, QTextCursor::MoveMode mode)
@@ -1700,22 +1612,10 @@ void QQuickTextControl::setCursorIsFocusIndicator(bool b)
     d->repaintCursor();
 }
 
-bool QQuickTextControl::cursorIsFocusIndicator() const
-{
-    Q_D(const QQuickTextControl);
-    return d->cursorIsFocusIndicator;
-}
-
 void QQuickTextControl::setWordSelectionEnabled(bool enabled)
 {
     Q_D(QQuickTextControl);
     d->wordSelectionEnabled = enabled;
-}
-
-bool QQuickTextControl::isWordSelectionEnabled() const
-{
-    Q_D(const QQuickTextControl);
-    return d->wordSelectionEnabled;
 }
 
 QMimeData *QQuickTextControl::createMimeDataFromSelection() const

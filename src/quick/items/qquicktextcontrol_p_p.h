@@ -106,8 +106,6 @@ public:
     void extendWordwiseSelection(int suggestedNewPosition, qreal mouseXPosition);
     void extendBlockwiseSelection(int suggestedNewPosition);
 
-    void _q_deleteSelected();
-
     void _q_setCursorAfterUndoRedo(int undoPosition, int charsAdded, int charsRemoved);
 
     QRectF cursorRectPlusUnicodeDirectionMarkers(const QTextCursor &cursor) const;
@@ -115,8 +113,6 @@ public:
     QRectF selectionRect(const QTextCursor &cursor) const;
     inline QRectF selectionRect() const
     { return selectionRect(this->cursor); }
-
-    QString anchorForCursor(const QTextCursor &anchor) const;
 
     void keyPressEvent(QKeyEvent *e);
     void mousePressEvent(QMouseEvent *event, const QPointF &pos);
