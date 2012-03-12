@@ -2810,6 +2810,11 @@ void tst_QQuickGridView::footer()
     QCOMPARE(footer->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
+    if (flow == QQuickGridView::LeftToRight)
+        QCOMPARE(gridview->contentHeight(), (model.count()+2) / 3 * 60. + footer->height());
+    else
+        QCOMPARE(gridview->contentWidth(), (model.count()+3) / 5 * 80. + footer->width());
+
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
@@ -2970,6 +2975,11 @@ void tst_QQuickGridView::header()
     QCOMPARE(header->width(), 100.);
     QCOMPARE(header->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
+
+    if (flow == QQuickGridView::LeftToRight)
+        QCOMPARE(gridview->contentHeight(), (model.count()+2) / 3 * 60. + header->height());
+    else
+        QCOMPARE(gridview->contentWidth(), (model.count()+3) / 5 * 80. + header->width());
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);

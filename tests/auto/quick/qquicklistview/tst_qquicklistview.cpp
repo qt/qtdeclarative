@@ -3057,6 +3057,11 @@ void tst_QQuickListView::header()
     QCOMPARE(header->pos(), initialHeaderPos);
     QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
 
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentHeight(), model.count() * 30. + header->height());
+    else
+        QCOMPARE(listview->contentWidth(), model.count() * 240. + header->width());
+
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
@@ -3240,6 +3245,11 @@ void tst_QQuickListView::footer()
     QCOMPARE(footer->width(), 100.);
     QCOMPARE(footer->height(), 30.);
     QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
+
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentHeight(), model.count() * 20. + footer->height());
+    else
+        QCOMPARE(listview->contentWidth(), model.count() * 40. + footer->width());
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
