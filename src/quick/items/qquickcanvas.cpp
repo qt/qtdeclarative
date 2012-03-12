@@ -607,7 +607,6 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 {
     Q_Q(QQuickCanvas);
 
-    Q_UNUSED(item);
     Q_ASSERT(item);
     Q_ASSERT(scope || item == rootItem);
 
@@ -618,7 +617,12 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     qWarning() << "    activeFocusItem:" << (QObject *)activeFocusItem;
 #endif
 
-    QQuickItemPrivate *scopePrivate = scope ? QQuickItemPrivate::get(scope) : 0;
+    QQuickItemPrivate *scopePrivate = 0;
+    if (scope) {
+        scopePrivate = QQuickItemPrivate::get(scope);
+        if ( !scopePrivate->subFocusItem )
+            return;//No focus, nothing to do.
+    }
 
     QQuickItem *oldActiveFocusItem = 0;
     QQuickItem *newActiveFocusItem = 0;

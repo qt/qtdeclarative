@@ -138,6 +138,7 @@ private slots:
     void scopedFocus();
     void addedToCanvas();
     void changeParent();
+    void multipleFocusClears();
 
     void constructor();
     void setParentItem();
@@ -673,6 +674,16 @@ void tst_qquickitem::changeParent()
     FVERIFY();
     }
 
+}
+
+void tst_qquickitem::multipleFocusClears()
+{
+    //Multiple clears of focus inside a focus scope shouldn't crash. QTBUG-24714
+    QQuickView *view = new QQuickView;
+    view->setSource(testFileUrl("multipleFocusClears.qml"));
+    view->show();
+    ensureFocus(view);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == view);
 }
 
 void tst_qquickitem::constructor()
