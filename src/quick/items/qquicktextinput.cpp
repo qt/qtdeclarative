@@ -1444,13 +1444,9 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
 
     d->pressPos = event->localPos();
 
-    if (d->focusOnPress) {
-        bool hadActiveFocus = hasActiveFocus();
-        forceActiveFocus();
-        // re-open input panel on press if already focused
-        if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
-            openSoftwareInputPanel();
-    }
+    if (d->sendMouseEventToInputContext(event))
+        return;
+
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
@@ -1463,12 +1459,18 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
         }
     }
 
-    if (d->sendMouseEventToInputContext(event))
-        return;
-
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
     int cursor = d->positionAt(event->localPos());
     d->moveCursor(cursor, mark);
+
+    if (d->focusOnPress) {
+        bool hadActiveFocus = hasActiveFocus();
+        forceActiveFocus();
+        // re-open input panel on press if already focused
+        if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
+            openSoftwareInputPanel();
+    }
+
     event->setAccepted(true);
 }
 

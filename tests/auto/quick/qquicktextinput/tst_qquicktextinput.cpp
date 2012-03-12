@@ -151,6 +151,7 @@ private slots:
     void canPasteEmpty();
     void canPaste();
     void readOnly();
+    void focusOnPress();
 
     void openInputPanel();
     void setHAlignClearCache();
@@ -1190,17 +1191,27 @@ void tst_qquicktextinput::mouseSelectionMode_data()
 {
     QTest::addColumn<QString>("qmlfile");
     QTest::addColumn<bool>("selectWords");
+    QTest::addColumn<bool>("focus");
+    QTest::addColumn<bool>("focusOnPress");
 
     // import installed
-    QTest::newRow("SelectWords") << testFile("mouseselectionmode_words.qml") << true;
-    QTest::newRow("SelectCharacters") << testFile("mouseselectionmode_characters.qml") << false;
-    QTest::newRow("default") << testFile("mouseselectionmode_default.qml") << false;
+    QTest::newRow("SelectWords focused") << testFile("mouseselectionmode_words.qml") << true << true << true;
+    QTest::newRow("SelectCharacters focused") << testFile("mouseselectionmode_characters.qml") << false << true << true;
+    QTest::newRow("default focused") << testFile("mouseselectionmode_default.qml") << false << true << true;
+    QTest::newRow("SelectWords unfocused") << testFile("mouseselectionmode_words.qml") << true << false << false;
+    QTest::newRow("SelectCharacters unfocused") << testFile("mouseselectionmode_characters.qml") << false << false << false;
+    QTest::newRow("default unfocused") << testFile("mouseselectionmode_default.qml") << false << true << false;
+    QTest::newRow("SelectWords focuss on press") << testFile("mouseselectionmode_words.qml") << true << false << true;
+    QTest::newRow("SelectCharacters focus on press") << testFile("mouseselectionmode_characters.qml") << false << false << true;
+    QTest::newRow("default focus on press") << testFile("mouseselectionmode_default.qml") << false << false << true;
 }
 
 void tst_qquicktextinput::mouseSelectionMode()
 {
     QFETCH(QString, qmlfile);
     QFETCH(bool, selectWords);
+    QFETCH(bool, focus);
+    QFETCH(bool, focusOnPress);
 
     QString text = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -1214,6 +1225,9 @@ void tst_qquicktextinput::mouseSelectionMode()
     QVERIFY(canvas.rootObject() != 0);
     QQuickTextInput *textInputObject = qobject_cast<QQuickTextInput *>(canvas.rootObject());
     QVERIFY(textInputObject != 0);
+
+    textInputObject->setFocus(focus);
+    textInputObject->setFocusOnPress(focusOnPress);
 
     // press-and-drag-and-release from x1 to x2
     int x1 = 10;
@@ -2774,6 +2788,92 @@ void tst_qquicktextinput::simulateKey(QWindow *view, int key)
     QGuiApplication::sendEvent(view, &release);
 }
 
+
+void tst_qquicktextinput::focusOnPress()
+{
+    QString componentStr =
+            "import QtQuick 2.0\n"
+            "TextInput {\n"
+                "property bool selectOnFocus: false\n"
+                "width: 100; height: 50\n"
+                "activeFocusOnPress: true\n"
+                "text: \"Hello World\"\n"
+                "onFocusChanged: { if (focus && selectOnFocus) selectAll() }"
+            " }";
+    QQmlComponent texteditComponent(&engine);
+    texteditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInputObject = qobject_cast<QQuickTextInput*>(texteditComponent.create());
+    QVERIFY(textInputObject != 0);
+    QCOMPARE(textInputObject->focusOnPress(), true);
+    QCOMPARE(textInputObject->hasFocus(), false);
+
+    QSignalSpy focusSpy(textInputObject, SIGNAL(focusChanged(bool)));
+    QSignalSpy activeFocusSpy(textInputObject, SIGNAL(focusChanged(bool)));
+    QSignalSpy activeFocusOnPressSpy(textInputObject, SIGNAL(activeFocusOnPressChanged(bool)));
+
+    textInputObject->setFocusOnPress(true);
+    QCOMPARE(textInputObject->focusOnPress(), true);
+    QCOMPARE(activeFocusOnPressSpy.count(), 0);
+
+    QQuickCanvas canvas;
+    canvas.resize(100, 50);
+    textInputObject->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    QCOMPARE(textInputObject->hasFocus(), false);
+    QCOMPARE(textInputObject->hasActiveFocus(), false);
+
+    QPoint centerPoint(canvas.width()/2, canvas.height()/2);
+    Qt::KeyboardModifiers noModifiers = 0;
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textInputObject->hasFocus(), true);
+    QCOMPARE(textInputObject->hasActiveFocus(), true);
+    QCOMPARE(focusSpy.count(), 1);
+    QCOMPARE(activeFocusSpy.count(), 1);
+    QCOMPARE(textInputObject->selectedText(), QString());
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+
+    textInputObject->setFocusOnPress(false);
+    QCOMPARE(textInputObject->focusOnPress(), false);
+    QCOMPARE(activeFocusOnPressSpy.count(), 1);
+
+    textInputObject->setFocus(false);
+    QCOMPARE(textInputObject->hasFocus(), false);
+    QCOMPARE(textInputObject->hasActiveFocus(), false);
+    QCOMPARE(focusSpy.count(), 2);
+    QCOMPARE(activeFocusSpy.count(), 2);
+
+    // Wait for double click timeout to expire before clicking again.
+    QTest::qWait(400);
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textInputObject->hasFocus(), false);
+    QCOMPARE(textInputObject->hasActiveFocus(), false);
+    QCOMPARE(focusSpy.count(), 2);
+    QCOMPARE(activeFocusSpy.count(), 2);
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+
+    textInputObject->setFocusOnPress(true);
+    QCOMPARE(textInputObject->focusOnPress(), true);
+    QCOMPARE(activeFocusOnPressSpy.count(), 2);
+
+    // Test a selection made in the on(Active)FocusChanged handler isn't overwritten.
+    textInputObject->setProperty("selectOnFocus", true);
+
+    QTest::qWait(400);
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textInputObject->hasFocus(), true);
+    QCOMPARE(textInputObject->hasActiveFocus(), true);
+    QCOMPARE(focusSpy.count(), 3);
+    QCOMPARE(activeFocusSpy.count(), 3);
+    QCOMPARE(textInputObject->selectedText(), textInputObject->text());
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+}
 
 void tst_qquicktextinput::openInputPanel()
 {

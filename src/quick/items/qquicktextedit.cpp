@@ -1477,6 +1477,7 @@ Handles the given mouse \a event.
 void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextEdit);
+    d->control->processEvent(event, QPointF(0, -d->yoff));
     if (d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
@@ -1484,7 +1485,6 @@ void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
         if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
             openSoftwareInputPanel();
     }
-    d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mousePressEvent(event);
 }

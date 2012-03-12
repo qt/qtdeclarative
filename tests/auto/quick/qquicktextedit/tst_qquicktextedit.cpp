@@ -1013,23 +1013,88 @@ void tst_qquicktextedit::persistentSelection()
 
 void tst_qquicktextedit::focusOnPress()
 {
-    {
-        QString componentStr = "import QtQuick 2.0\nTextEdit {  activeFocusOnPress: true; text: \"Hello World\" }";
-        QQmlComponent texteditComponent(&engine);
-        texteditComponent.setData(componentStr.toLatin1(), QUrl());
-        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->focusOnPress(), true);
-    }
+    QString componentStr =
+            "import QtQuick 2.0\n"
+            "TextEdit {\n"
+                "property bool selectOnFocus: false\n"
+                "width: 100; height: 50\n"
+                "activeFocusOnPress: true\n"
+                "text: \"Hello World\"\n"
+                "onFocusChanged: { if (focus && selectOnFocus) selectAll() }"
+            " }";
+    QQmlComponent texteditComponent(&engine);
+    texteditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
+    QVERIFY(textEditObject != 0);
+    QCOMPARE(textEditObject->focusOnPress(), true);
+    QCOMPARE(textEditObject->hasFocus(), false);
 
-    {
-        QString componentStr = "import QtQuick 2.0\nTextEdit {  activeFocusOnPress: false; text: \"Hello World\" }";
-        QQmlComponent texteditComponent(&engine);
-        texteditComponent.setData(componentStr.toLatin1(), QUrl());
-        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->focusOnPress(), false);
-    }
+    QSignalSpy focusSpy(textEditObject, SIGNAL(focusChanged(bool)));
+    QSignalSpy activeFocusSpy(textEditObject, SIGNAL(focusChanged(bool)));
+    QSignalSpy activeFocusOnPressSpy(textEditObject, SIGNAL(activeFocusOnPressChanged(bool)));
+
+    textEditObject->setFocusOnPress(true);
+    QCOMPARE(textEditObject->focusOnPress(), true);
+    QCOMPARE(activeFocusOnPressSpy.count(), 0);
+
+    QQuickCanvas canvas;
+    canvas.resize(100, 50);
+    textEditObject->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    QCOMPARE(textEditObject->hasFocus(), false);
+    QCOMPARE(textEditObject->hasActiveFocus(), false);
+
+    QPoint centerPoint(canvas.width()/2, canvas.height()/2);
+    Qt::KeyboardModifiers noModifiers = 0;
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textEditObject->hasFocus(), true);
+    QCOMPARE(textEditObject->hasActiveFocus(), true);
+    QCOMPARE(focusSpy.count(), 1);
+    QCOMPARE(activeFocusSpy.count(), 1);
+    QCOMPARE(textEditObject->selectedText(), QString());
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+
+    textEditObject->setFocusOnPress(false);
+    QCOMPARE(textEditObject->focusOnPress(), false);
+    QCOMPARE(activeFocusOnPressSpy.count(), 1);
+
+    textEditObject->setFocus(false);
+    QCOMPARE(textEditObject->hasFocus(), false);
+    QCOMPARE(textEditObject->hasActiveFocus(), false);
+    QCOMPARE(focusSpy.count(), 2);
+    QCOMPARE(activeFocusSpy.count(), 2);
+
+    // Wait for double click timeout to expire before clicking again.
+    QTest::qWait(400);
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textEditObject->hasFocus(), false);
+    QCOMPARE(textEditObject->hasActiveFocus(), false);
+    QCOMPARE(focusSpy.count(), 2);
+    QCOMPARE(activeFocusSpy.count(), 2);
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+
+    textEditObject->setFocusOnPress(true);
+    QCOMPARE(textEditObject->focusOnPress(), true);
+    QCOMPARE(activeFocusOnPressSpy.count(), 2);
+
+    // Test a selection made in the on(Active)FocusChanged handler isn't overwritten.
+    textEditObject->setProperty("selectOnFocus", true);
+
+    QTest::qWait(400);
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textEditObject->hasFocus(), true);
+    QCOMPARE(textEditObject->hasActiveFocus(), true);
+    QCOMPARE(focusSpy.count(), 3);
+    QCOMPARE(activeFocusSpy.count(), 3);
+    QCOMPARE(textEditObject->selectedText(), textEditObject->text());
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
 }
 
 void tst_qquicktextedit::selection()
@@ -1563,32 +1628,41 @@ void tst_qquicktextedit::mouseSelection_data()
     QTest::addColumn<int>("from");
     QTest::addColumn<int>("to");
     QTest::addColumn<QString>("selectedText");
+    QTest::addColumn<bool>("focus");
+    QTest::addColumn<bool>("focusOnPress");
     QTest::addColumn<bool>("doubleClick");
 
     // import installed
-    QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false;
-    QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString() << false;
-    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString() << false;
-    QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString() << false;
-    QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false;
-    QTest::newRow("on word selection (2,13)") << testFile("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
-    QTest::newRow("on word selection (2,30)") << testFile("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
-    QTest::newRow("on word selection (9,13)") << testFile("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
-    QTest::newRow("on word selection (9,30)") << testFile("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
-    QTest::newRow("on word selection (13,2)") << testFile("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
-    QTest::newRow("on word selection (20,2)") << testFile("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
-    QTest::newRow("on word selection (12,9)") << testFile("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
-    QTest::newRow("on word selection (30,9)") << testFile("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << false;
+    QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << true << true << false;
+    QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString() << true << true << false;
+    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString() << true << true << false;
+    QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString() << true << true << false;
+    QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << true << true << false;
 
-    QTest::newRow("off double click (4,9)") << testFile("mouseselection_true.qml") << 4 << 9 << "0123456789" << true;
-    QTest::newRow("off double click (2,13)") << testFile("mouseselection_true.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
-    QTest::newRow("off double click (2,30)") << testFile("mouseselection_true.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
-    QTest::newRow("off double click (9,13)") << testFile("mouseselection_true.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
-    QTest::newRow("off double click (9,30)") << testFile("mouseselection_true.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
-    QTest::newRow("off double click (13,2)") << testFile("mouseselection_true.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
-    QTest::newRow("off double click (20,2)") << testFile("mouseselection_true.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
-    QTest::newRow("off double click (12,9)") << testFile("mouseselection_true.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
-    QTest::newRow("off double click (30,9)") << testFile("mouseselection_true.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true;
+    QTest::newRow("on unfocused") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << false << false;
+    QTest::newRow("on word selection (4,9) unfocused") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << false << false;
+
+    QTest::newRow("on focus on press") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << true << false;
+    QTest::newRow("on word selection (4,9) focus on press") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << true << false;
+
+    QTest::newRow("on word selection (2,13)") << testFile("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (2,30)") << testFile("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (9,13)") << testFile("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (9,30)") << testFile("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (13,2)") << testFile("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (20,2)") << testFile("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (12,9)") << testFile("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (30,9)") << testFile("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+
+    QTest::newRow("off double click (4,9)") << testFile("mouseselection_true.qml") << 4 << 9 << "0123456789" << true << true << true;
+    QTest::newRow("off double click (2,13)") << testFile("mouseselection_true.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (2,30)") << testFile("mouseselection_true.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (9,13)") << testFile("mouseselection_true.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (9,30)") << testFile("mouseselection_true.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (13,2)") << testFile("mouseselection_true.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (20,2)") << testFile("mouseselection_true.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (12,9)") << testFile("mouseselection_true.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (30,9)") << testFile("mouseselection_true.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
 }
 
 void tst_qquicktextedit::mouseSelection()
@@ -1597,6 +1671,8 @@ void tst_qquicktextedit::mouseSelection()
     QFETCH(int, from);
     QFETCH(int, to);
     QFETCH(QString, selectedText);
+    QFETCH(bool, focus);
+    QFETCH(bool, focusOnPress);
     QFETCH(bool, doubleClick);
 
     QQuickView canvas(QUrl::fromLocalFile(qmlfile));
@@ -1609,6 +1685,9 @@ void tst_qquicktextedit::mouseSelection()
     QVERIFY(canvas.rootObject() != 0);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(textEditObject != 0);
+
+    textEditObject->setFocus(focus);
+    textEditObject->setFocusOnPress(focusOnPress);
 
     // press-and-drag-and-release from x1 to x2
     QPoint p1 = textEditObject->positionToRectangle(from).center().toPoint();
