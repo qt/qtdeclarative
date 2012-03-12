@@ -1553,8 +1553,6 @@ void tst_qqmlproperty::crashOnValueProperty()
     delete engine;
     engine = 0;
 
-    QSKIP("QTBUG-24734: test accesses deleted QML engine from QQmlProperty::propertyTypeName()");
-
     QCOMPARE(p.propertyTypeName(), "int");
     QCOMPARE(p.read(), QVariant(10));
     p.write(QVariant(20));

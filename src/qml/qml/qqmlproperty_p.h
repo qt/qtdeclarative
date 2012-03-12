@@ -54,6 +54,7 @@
 //
 
 #include "qqmlproperty.h"
+#include "qqmlengine.h"
 
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
@@ -77,7 +78,7 @@ public:
     Q_DECLARE_FLAGS(WriteFlags, WriteFlag)
 
     QQmlContextData *context;
-    QQmlEngine *engine;
+    QQmlGuard<QQmlEngine> engine;
     QQmlGuard<QObject> object;
 
     QQmlPropertyData core;
