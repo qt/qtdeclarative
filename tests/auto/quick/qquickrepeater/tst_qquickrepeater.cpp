@@ -77,6 +77,7 @@ private slots:
     void properties();
     void asynchronous();
     void initParent();
+    void dynamicModelCrash();
 };
 
 class TestObject : public QObject
@@ -637,6 +638,20 @@ void tst_QQuickRepeater::initParent()
     QVERIFY(rootObject);
 
     QCOMPARE(qvariant_cast<QQuickItem*>(rootObject->property("parentItem")), rootObject);
+}
+
+void tst_QQuickRepeater::dynamicModelCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("dynamicmodelcrash.qml"));
+
+    // Don't crash
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(rootObject);
+
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "rep");
+    QVERIFY(repeater);
+    QVERIFY(qvariant_cast<QObject *>(repeater->model()) == 0);
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

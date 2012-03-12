@@ -51,7 +51,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickRepeaterPrivate::QQuickRepeaterPrivate()
-    : model(0), ownModel(false), inRequest(false), itemCount(0), createFrom(-1)
+    : model(0), ownModel(false), inRequest(false), dataSourceIsObject(false), itemCount(0), createFrom(-1)
 {
 }
 
@@ -175,6 +175,12 @@ QQuickRepeater::~QQuickRepeater()
 QVariant QQuickRepeater::model() const
 {
     Q_D(const QQuickRepeater);
+
+    if (d->dataSourceIsObject) {
+        QObject *o = d->dataSourceAsObject;
+        return QVariant::fromValue(o);
+    }
+
     return d->dataSource;
 }
 
@@ -194,6 +200,8 @@ void QQuickRepeater::setModel(const QVariant &model)
     }
     d->dataSource = model;
     QObject *object = qvariant_cast<QObject*>(model);
+    d->dataSourceAsObject = object;
+    d->dataSourceIsObject = object != 0;
     QQuickVisualModel *vim = 0;
     if (object && (vim = qobject_cast<QQuickVisualModel *>(object))) {
         if (d->ownModel) {
