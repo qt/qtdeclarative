@@ -199,6 +199,19 @@ private slots:
 
     void negativeDimensions();
 
+
+    void setInputMask_data();
+    void setInputMask();
+    void inputMask_data();
+    void inputMask();
+    void clearInputMask();
+    void keypress_inputMask_data();
+    void keypress_inputMask();
+    void hasAcceptableInputMask_data();
+    void hasAcceptableInputMask();
+    void maskCharacter_data();
+    void maskCharacter();
+
 private:
     void simulateKey(QWindow *, int key);
 
@@ -5008,6 +5021,482 @@ void tst_qquicktextinput::negativeDimensions()
     QVERIFY(input);
     QCOMPARE(input->width(), qreal(-1));
     QCOMPARE(input->height(), qreal(-1));
+}
+
+
+void tst_qquicktextinput::setInputMask_data()
+{
+    QTest::addColumn<QString>("mask");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<QString>("expectedDisplay");
+    QTest::addColumn<bool>("insert_text");
+
+    // both keyboard and insert()
+    for (int i=0; i<2; i++) {
+        bool insert_text = i==0 ? false : true;
+        QString insert_mode = "keys ";
+        if (insert_text)
+            insert_mode = "insert ";
+
+        QTest::newRow(QString(insert_mode + "ip_localhost").toLatin1())
+            << QString("000.000.000.000")
+            << QString("127.0.0.1")
+            << QString("127.0.0.1")
+            << QString("127.0  .0  .1  ")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "mac").toLatin1())
+            << QString("HH:HH:HH:HH:HH:HH;#")
+            << QString("00:E0:81:21:9E:8E")
+            << QString("00:E0:81:21:9E:8E")
+            << QString("00:E0:81:21:9E:8E")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "mac2").toLatin1())
+            << QString("<HH:>HH:!HH:HH:HH:HH;#")
+            << QString("AAe081219E8E")
+            << QString("aa:E0:81:21:9E:8E")
+            << QString("aa:E0:81:21:9E:8E")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "byte").toLatin1())
+            << QString("BBBBBBBB;0")
+            << QString("11011001")
+            << QString("11111")
+            << QString("11011001")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "halfbytes").toLatin1())
+            << QString("bbbb.bbbb;-")
+            << QString("110. 0001")
+            << QString("110.0001")
+            << QString("110-.0001")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "blank char same type as content").toLatin1())
+            << QString("000.000.000.000;0")
+            << QString("127.0.0.1")
+            << QString("127...1")
+            << QString("127.000.000.100")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "parts of ip_localhost").toLatin1())
+            << QString("000.000.000.000")
+            << QString(".0.0.1")
+            << QString(".0.0.1")
+            << QString("   .0  .0  .1  ")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "ip_null").toLatin1())
+            << QString("000.000.000.000")
+            << QString()
+            << QString("...")
+            << QString("   .   .   .   ")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "ip_null_hash").toLatin1())
+            << QString("000.000.000.000;#")
+            << QString()
+            << QString("...")
+            << QString("###.###.###.###")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "ip_overflow").toLatin1())
+            << QString("000.000.000.000")
+            << QString("1234123412341234")
+            << QString("123.412.341.234")
+            << QString("123.412.341.234")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "uppercase").toLatin1())
+            << QString(">AAAA")
+            << QString("AbCd")
+            << QString("ABCD")
+            << QString("ABCD")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "lowercase").toLatin1())
+            << QString("<AAAA")
+            << QString("AbCd")
+            << QString("abcd")
+            << QString("abcd")
+            << bool(insert_text);
+
+        QTest::newRow(QString(insert_mode + "nocase").toLatin1())
+            << QString("!AAAA")
+            << QString("AbCd")
+            << QString("AbCd")
+            << QString("AbCd")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "nocase1").toLatin1())
+            << QString("!A!A!A!A")
+            << QString("AbCd")
+            << QString("AbCd")
+            << QString("AbCd")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "nocase2").toLatin1())
+            << QString("AAAA")
+            << QString("AbCd")
+            << QString("AbCd")
+            << QString("AbCd")
+            << bool(insert_text);
+
+        QTest::newRow(QString(insert_mode + "reserved").toLatin1())
+            << QString("{n}[0]")
+            << QString("A9")
+            << QString("A9")
+            << QString("A9")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "escape01").toLatin1())
+            << QString("\\\\N\\\\n00")
+            << QString("9")
+            << QString("Nn9")
+            << QString("Nn9 ")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "escape02").toLatin1())
+            << QString("\\\\\\\\00")
+            << QString("0")
+            << QString("\\0")
+            << QString("\\0 ")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "escape03").toLatin1())
+            << QString("\\\\(00\\\\)")
+            << QString("0")
+            << QString("(0)")
+            << QString("(0 )")
+            << bool(insert_text);
+
+        QTest::newRow(QString(insert_mode + "upper_lower_nocase1").toLatin1())
+            << QString(">AAAA<AAAA!AAAA")
+            << QString("AbCdEfGhIjKl")
+            << QString("ABCDefghIjKl")
+            << QString("ABCDefghIjKl")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "upper_lower_nocase2").toLatin1())
+            << QString(">aaaa<aaaa!aaaa")
+            << QString("AbCdEfGhIjKl")
+            << QString("ABCDefghIjKl")
+            << QString("ABCDefghIjKl")
+            << bool(insert_text);
+
+        QTest::newRow(QString(insert_mode + "exact_case1").toLatin1())
+            << QString(">A<A<A>A>A<A!A!A")
+            << QString("AbCdEFGH")
+            << QString("AbcDEfGH")
+            << QString("AbcDEfGH")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "exact_case2").toLatin1())
+            << QString(">A<A<A>A>A<A!A!A")
+            << QString("aBcDefgh")
+            << QString("AbcDEfgh")
+            << QString("AbcDEfgh")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "exact_case3").toLatin1())
+            << QString(">a<a<a>a>a<a!a!a")
+            << QString("AbCdEFGH")
+            << QString("AbcDEfGH")
+            << QString("AbcDEfGH")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "exact_case4").toLatin1())
+            << QString(">a<a<a>a>a<a!a!a")
+            << QString("aBcDefgh")
+            << QString("AbcDEfgh")
+            << QString("AbcDEfgh")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "exact_case5").toLatin1())
+            << QString(">H<H<H>H>H<H!H!H")
+            << QString("aBcDef01")
+            << QString("AbcDEf01")
+            << QString("AbcDEf01")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "exact_case6").toLatin1())
+            << QString(">h<h<h>h>h<h!h!h")
+            << QString("aBcDef92")
+            << QString("AbcDEf92")
+            << QString("AbcDEf92")
+            << bool(insert_text);
+
+        QTest::newRow(QString(insert_mode + "illegal_keys1").toLatin1())
+            << QString("AAAAAAAA")
+            << QString("A2#a;.0!")
+            << QString("Aa")
+            << QString("Aa      ")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "illegal_keys2").toLatin1())
+            << QString("AAAA")
+            << QString("f4f4f4f4")
+            << QString("ffff")
+            << QString("ffff")
+            << bool(insert_text);
+        QTest::newRow(QString(insert_mode + "blank=input").toLatin1())
+            << QString("9999;0")
+            << QString("2004")
+            << QString("2004")
+            << QString("2004")
+            << bool(insert_text);
+    }
+}
+
+void tst_qquicktextinput::setInputMask()
+{
+    QFETCH(QString, mask);
+    QFETCH(QString, input);
+    QFETCH(QString, expectedText);
+    QFETCH(QString, expectedDisplay);
+    QFETCH(bool, insert_text);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"" + mask + "\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    // then either insert using insert() or keyboard
+    if (insert_text) {
+        textInput->insert(0, input);
+    } else {
+        QQuickCanvas canvas;
+        textInput->setParentItem(canvas.rootItem());
+        canvas.show();
+        canvas.requestActivateWindow();
+        QTest::qWaitForWindowShown(&canvas);
+        QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+        simulateKey(&canvas, Qt::Key_Home);
+        for (int i = 0; i < input.length(); i++)
+            QTest::keyClick(&canvas, input.at(i).toLatin1());
+    }
+
+    QEXPECT_FAIL( "keys blank=input", "To eat blanks or not? Known issue. Task 43172", Abort);
+    QEXPECT_FAIL( "insert blank=input", "To eat blanks or not? Known issue. Task 43172", Abort);
+
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->displayText(), expectedDisplay);
+}
+
+void tst_qquicktextinput::inputMask_data()
+{
+    QTest::addColumn<QString>("mask");
+    QTest::addColumn<QString>("expectedMask");
+
+    // if no mask is set a nul string should be returned
+    QTest::newRow("nul 1") << QString("") << QString();
+    QTest::newRow("nul 2") << QString() << QString();
+
+    // try different masks
+    QTest::newRow("mask 1") << QString("000.000.000.000") << QString("000.000.000.000; ");
+    QTest::newRow("mask 2") << QString("000.000.000.000;#") << QString("000.000.000.000;#");
+    QTest::newRow("mask 3") << QString("AAA.aa.999.###;") << QString("AAA.aa.999.###; ");
+    QTest::newRow("mask 4") << QString(">abcdef<GHIJK") << QString(">abcdef<GHIJK; ");
+
+    // set an invalid input mask...
+    // the current behaviour is that this exact (faulty) string is returned.
+    QTest::newRow("invalid") << QString("ABCDEFGHIKLMNOP;") << QString("ABCDEFGHIKLMNOP; ");
+
+    // verify that we can unset the mask again
+    QTest::newRow("unset") << QString("") << QString();
+}
+
+void tst_qquicktextinput::inputMask()
+{
+    QFETCH(QString, mask);
+    QFETCH(QString, expectedMask);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"" + mask + "\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QCOMPARE(textInput->inputMask(), expectedMask);
+}
+
+void tst_qquicktextinput::clearInputMask()
+{
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"000.000.000.000\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QVERIFY(textInput->inputMask() != QString());
+    textInput->setInputMask(QString());
+    QCOMPARE(textInput->inputMask(), QString());
+}
+
+void tst_qquicktextinput::keypress_inputMask_data()
+{
+    QTest::addColumn<QString>("mask");
+    QTest::addColumn<KeyList>("keys");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<QString>("expectedDisplayText");
+
+    {
+        KeyList keys;
+        // inserting 'A1.2B'
+        keys << Qt::Key_Home << "A1.2B";
+        QTest::newRow("jumping on period(separator)") << QString("000.000;_") << keys << QString("1.2") << QString("1__.2__");
+    }
+    {
+        KeyList keys;
+        // inserting '0!P3'
+        keys << Qt::Key_Home << "0!P3";
+        QTest::newRow("jumping on input") << QString("D0.AA.XX.AA.00;_") << keys << QString("0..!P..3") << QString("_0.__.!P.__.3_");
+    }
+    {
+        KeyList keys;
+        // pressing delete
+        keys << Qt::Key_Home
+             << Qt::Key_Delete;
+        QTest::newRow("delete") << QString("000.000;_") << keys << QString(".") << QString("___.___");
+    }
+    {
+        KeyList keys;
+        // selecting all and delete
+        keys << Qt::Key_Home
+             << Key(Qt::ShiftModifier, Qt::Key_End)
+             << Qt::Key_Delete;
+        QTest::newRow("deleting all") << QString("000.000;_") << keys << QString(".") << QString("___.___");
+    }
+    {
+        KeyList keys;
+        // inserting '12.12' then two backspaces
+        keys << Qt::Key_Home << "12.12" << Qt::Key_Backspace << Qt::Key_Backspace;
+        QTest::newRow("backspace") << QString("000.000;_") << keys << QString("12.") << QString("12_.___");
+    }
+    {
+        KeyList keys;
+        // inserting '12ab'
+        keys << Qt::Key_Home << "12ab";
+        QTest::newRow("uppercase") << QString("9999 >AA;_") << keys << QString("12 AB") << QString("12__ AB");
+    }
+}
+
+void tst_qquicktextinput::keypress_inputMask()
+{
+    QFETCH(QString, mask);
+    QFETCH(KeyList, keys);
+    QFETCH(QString, expectedText);
+    QFETCH(QString, expectedDisplayText);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"" + mask + "\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    simulateKeys(&canvas, keys);
+
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->displayText(), expectedDisplayText);
+}
+
+
+void tst_qquicktextinput::hasAcceptableInputMask_data()
+{
+    QTest::addColumn<QString>("optionalMask");
+    QTest::addColumn<QString>("requiredMask");
+    QTest::addColumn<QString>("invalid");
+    QTest::addColumn<QString>("valid");
+
+    QTest::newRow("Alphabetic optional and required")
+        << QString("aaaa") << QString("AAAA") << QString("ab") << QString("abcd");
+    QTest::newRow("Alphanumeric optional and require")
+        << QString("nnnn") << QString("NNNN") << QString("R2") << QString("R2D2");
+    QTest::newRow("Any optional and required")
+        << QString("xxxx") << QString("XXXX") << QString("+-") << QString("+-*/");
+    QTest::newRow("Numeric (0-9) required")
+        << QString("0000") << QString("9999") << QString("11") << QString("1138");
+    QTest::newRow("Numeric (1-9) optional and required")
+        << QString("dddd") << QString("DDDD") << QString("12") << QString("1234");
+}
+
+void tst_qquicktextinput::hasAcceptableInputMask()
+{
+    QFETCH(QString, optionalMask);
+    QFETCH(QString, requiredMask);
+    QFETCH(QString, invalid);
+    QFETCH(QString, valid);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"" + optionalMask + "\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    // test that invalid input (for required) work for optionalMask
+    textInput->setText(invalid);
+    QVERIFY(textInput->hasAcceptableInput());
+
+    // at the moment we don't strip the blank character if it is valid input, this makes the test between x vs X useless
+    QEXPECT_FAIL( "Any optional and required", "To eat blanks or not? Known issue. Task 43172", Abort);
+
+    // test requiredMask
+    textInput->setInputMask(requiredMask);
+    textInput->setText(invalid);
+    QVERIFY(!textInput->hasAcceptableInput());
+
+    textInput->setText(valid);
+    QVERIFY(textInput->hasAcceptableInput());
+}
+
+void tst_qquicktextinput::maskCharacter_data()
+{
+    QTest::addColumn<QString>("mask");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<bool>("expectedValid");
+
+    QTest::newRow("Hex") << QString("H")
+                         << QString("0123456789abcdefABCDEF") << true;
+    QTest::newRow("hex") << QString("h")
+                         << QString("0123456789abcdefABCDEF") << true;
+    QTest::newRow("HexInvalid") << QString("H")
+                                << QString("ghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ")
+                                << false;
+    QTest::newRow("hexInvalid") << QString("h")
+                                << QString("ghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ")
+                                << false;
+    QTest::newRow("Bin") << QString("B")
+                         << QString("01") << true;
+    QTest::newRow("bin") << QString("b")
+                         << QString("01") << true;
+    QTest::newRow("BinInvalid") << QString("B")
+                                << QString("23456789qwertyuiopasdfghjklzxcvbnm")
+                                << false;
+    QTest::newRow("binInvalid") << QString("b")
+                                << QString("23456789qwertyuiopasdfghjklzxcvbnm")
+                                << false;
+}
+
+void tst_qquicktextinput::maskCharacter()
+{
+    QFETCH(QString, mask);
+    QFETCH(QString, input);
+    QFETCH(bool, expectedValid);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"" + mask + "\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickCanvas canvas;
+    textInput->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    for (int i = 0; i < input.size(); ++i) {
+        QString in = QString(input.at(i));
+        QString expected = expectedValid ? in : QString();
+        textInput->setText(QString(input.at(i)));
+        QCOMPARE(textInput->text(), expected);
+    }
 }
 
 QTEST_MAIN(tst_qquicktextinput)
