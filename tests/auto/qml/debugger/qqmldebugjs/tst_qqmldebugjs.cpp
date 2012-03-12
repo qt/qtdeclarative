@@ -303,6 +303,8 @@ signals:
     void breakAfterCompileRequested();
     void result();
     void stopped();
+    void scriptsResult();
+    void evaluateResult();
 
 private:
     void sendMessage(const QByteArray &);
@@ -939,6 +941,12 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
                 } else {
                     // DO NOTHING
                 }
+                //Emit separate signals for scripts ane evaluate
+                //as the associated test cases are flaky
+                if (debugCommand == "scripts")
+                    emit scriptsResult();
+                if (debugCommand == "evaluate")
+                    emit evaluateResult();
 
             } else if (type == QLatin1String(EVENT)) {
                 QString event(value.value(QLatin1String(EVENT)).toString());
@@ -1685,8 +1693,8 @@ void tst_QQmlDebugJS::evaluateInGlobalScope()
     QVERIFY(init());
 
     client->connect();
-    client->evaluate(QLatin1String("print('Hello World')"), true);
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
+    client->evaluate(QLatin1String("console.log('Hello World')"), true);
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(evaluateResult())));
 
     //Verify the value of 'print'
     QString jsonString(client->response);
@@ -1720,7 +1728,7 @@ void tst_QQmlDebugJS::evaluateInLocalScope()
     int frameIndex = body.value("index").toInt();
 
     client->evaluate(QLatin1String("root.a"), frameIndex);
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(evaluateResult())));
 
     //Verify the value of 'timer.interval'
     jsonString = client->response;
@@ -1759,7 +1767,7 @@ void tst_QQmlDebugJS::getScripts()
     client->connect();
 
     client->scripts();
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(result())));
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(scriptsResult())));
     QString jsonString(client->response);
     QVariantMap value = client->parser.call(QJSValueList()
                                             << QJSValue(jsonString)).toVariant().toMap();
