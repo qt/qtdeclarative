@@ -216,17 +216,21 @@ QQuickItem *tst_qquicklistmodel::createWorkerTest(QQmlEngine *eng, QQmlComponent
 
 void tst_qquicklistmodel::waitForWorker(QQuickItem *item)
 {
+    QQmlProperty prop(item, "done");
+    QVERIFY(prop.isValid());
+    if (prop.read().toBool())
+        return; // already finished
+
     QEventLoop loop;
     QTimer timer;
     timer.setSingleShot(true);
     connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
 
-    QQmlProperty prop(item, "done");
-    QVERIFY(prop.isValid());
     QVERIFY(prop.connectNotifySignal(&loop, SLOT(quit())));
     timer.start(10000);
     loop.exec();
     QVERIFY(timer.isActive());
+    QVERIFY(prop.read().toBool());
 }
 
 void tst_qquicklistmodel::static_types_data()
