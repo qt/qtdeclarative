@@ -297,7 +297,9 @@ void QQmlEngineDebugService::prepareDeferredObjects(QObject *obj)
 
 }
 
-void QQmlEngineDebugService::buildObjectList(QDataStream &message, QQmlContext *ctxt)
+void QQmlEngineDebugService::buildObjectList(QDataStream &message,
+                                             QQmlContext *ctxt,
+                                             const QList<QPointer<QObject> > &instances)
 {
     QQmlContextData *p = QQmlContextData::get(ctxt);
 
@@ -318,29 +320,30 @@ void QQmlEngineDebugService::buildObjectList(QDataStream &message, QQmlContext *
 
     child = p->childContexts;
     while (child) {
-        buildObjectList(message, child->asQQmlContext());
+        buildObjectList(message, child->asQQmlContext(), instances);
         child = child->nextChild;
     }
 
-    // Clean deleted objects
-    QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(ctxt);
-    for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-        if (!ctxtPriv->instances.at(ii)) {
-            ctxtPriv->instances.removeAt(ii);
-            --ii;
-        }
+    count = 0;
+    for (int ii = 0; ii < instances.count(); ++ii) {
+        QQmlData *data = QQmlData::get(instances.at(ii));
+        if (data->context == p)
+            count ++;
     }
+    message << count;
 
-    message << ctxtPriv->instances.count();
-    for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-        message << objectData(ctxtPriv->instances.at(ii));
+    for (int ii = 0; ii < instances.count(); ++ii) {
+        QQmlData *data = QQmlData::get(instances.at(ii));
+        if (data->context == p)
+            message << objectData(instances.at(ii));
     }
 }
 
-void QQmlEngineDebugService::buildStatesList(QQmlContext *ctxt, bool cleanList)
+void QQmlEngineDebugService::buildStatesList(bool cleanList,
+                                             const QList<QPointer<QObject> > &instances)
 {
     if (m_statesDelegate)
-        m_statesDelegate->buildStatesList(ctxt, cleanList);
+        m_statesDelegate->buildStatesList(cleanList, instances);
 }
 
 QQmlEngineDebugService::QQmlObjectData
@@ -427,8 +430,17 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         rs << QByteArray("LIST_OBJECTS_R") << queryId;
 
         if (engine) {
-            buildObjectList(rs, engine->rootContext());
-            buildStatesList(engine->rootContext(), true);
+            QQmlContext *rootContext = engine->rootContext();
+            // Clean deleted objects
+            QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(rootContext);
+            for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
+                if (!ctxtPriv->instances.at(ii)) {
+                    ctxtPriv->instances.removeAt(ii);
+                    --ii;
+                }
+            }
+            buildObjectList(rs, rootContext, ctxtPriv->instances);
+            buildStatesList(true, ctxtPriv->instances);
         }
 
         sendMessage(reply);

@@ -63,7 +63,7 @@ class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate
 public:
     QQmlQtQuick2DebugStatesDelegate();
     virtual ~QQmlQtQuick2DebugStatesDelegate();
-    virtual void buildStatesList(QQmlContext *ctxt, bool cleanList);
+    virtual void buildStatesList(bool cleanList, const QList<QPointer<QObject> > &instances);
     virtual void updateBinding(QQmlContext *context,
                                const QQmlProperty &property,
                                const QVariant &expression, bool isLiteralValue,
@@ -90,20 +90,15 @@ QQmlQtQuick2DebugStatesDelegate::~QQmlQtQuick2DebugStatesDelegate()
 {
 }
 
-void QQmlQtQuick2DebugStatesDelegate::buildStatesList(QQmlContext *ctxt, bool cleanList)
+void QQmlQtQuick2DebugStatesDelegate::buildStatesList(bool cleanList,
+                                                      const QList<QPointer<QObject> > &instances)
 {
     if (cleanList)
         m_allStates.clear();
 
-    QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(ctxt);
-    for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-        buildStatesList(ctxtPriv->instances.at(ii));
-    }
-
-    QQmlContextData *child = QQmlContextData::get(ctxt)->childContexts;
-    while (child) {
-        buildStatesList(child->asQQmlContext());
-        child = child->nextChild;
+    //only root context has all instances
+    for (int ii = 0; ii < instances.count(); ++ii) {
+        buildStatesList(instances.at(ii));
     }
 }
 
