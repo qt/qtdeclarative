@@ -252,7 +252,6 @@ void tst_v4::nestedObjectAccess()
         ResultObject *ro = qobject_cast<ResultObject *>(o);
         QVERIFY(ro != 0);
 
-        QEXPECT_FAIL("","QTBUG-24606", Continue);
         QCOMPARE(ro->result(), 37);
 
         delete o;

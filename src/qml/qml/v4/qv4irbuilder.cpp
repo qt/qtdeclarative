@@ -628,7 +628,8 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
             case IR::Name::Property: 
                 if (baseName->type == IR::ObjectType && baseName->meta && baseName->property->isFinal()) {
-                    QQmlPropertyCache *cache = m_engine->cache(baseName->meta);
+                    const QMetaObject *meta = m_engine->metaObjectForType(baseName->property->propType);
+                    QQmlPropertyCache *cache = m_engine->cache(meta);
                     if (!cache)
                         return false;
 
@@ -640,9 +641,9 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                             return false; // We don't know enough about this property
                         }
 
-                        IR::Type irType = irTypeFromVariantType(data->propType, m_engine, baseName->meta);
+                        IR::Type irType = irTypeFromVariantType(data->propType, m_engine, meta);
                         _expr.code = _block->SYMBOL(baseName, irType, name,
-                                                    baseName->meta, data, line, column);
+                                                    meta, data, line, column);
                     }
                 }
                 break;
