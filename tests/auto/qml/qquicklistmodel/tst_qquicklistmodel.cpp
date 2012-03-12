@@ -990,6 +990,8 @@ void tst_qquicklistmodel::get_worker()
     QCOMPARE(spyResult.at(0).toInt(), index);
     QCOMPARE(spyResult.at(1).toInt(), 1);  // only 1 item is modified at a time
     QVERIFY(spyResult.at(2).value<QList<int> >().contains(role));
+
+    delete item;
 }
 
 void tst_qquicklistmodel::get_worker_data()
