@@ -598,42 +598,43 @@ replaceMatch()
 for QML_SYMBOL in $QML_SYMBOLS
 do
     QML_REPLACEMENT="QQml${QML_SYMBOL#QDeclarative}"
-    replaceMatch "\<QtDeclarative/$QML_SYMBOL\>" "QtQml/$QML_REPLACEMENT"
-    replaceMatch "\<$QML_SYMBOL\>" "$QML_REPLACEMENT"
+    replaceMatch "\bQtDeclarative/$QML_SYMBOL\b" "QtQml/$QML_REPLACEMENT"
+    replaceMatch "\b$QML_SYMBOL\b" "$QML_REPLACEMENT"
 done
 
 for QUICK_SYMBOL in $QUICK_SYMBOLS
 do
     QUICK_REPLACEMENT="QQuick${QUICK_SYMBOL#QDeclarative}"
-    replaceMatch "\<QtDeclarative/$QUICK_SYMBOL\>" "QtQuick/$QUICK_REPLACEMENT"
-    replaceMatch "\<$QUICK_SYMBOL\>" "$QUICK_REPLACEMENT"
+    replaceMatch "\bQtDeclarative/$QUICK_SYMBOL\b" "QtQuick/$QUICK_REPLACEMENT"
+    replaceMatch "\b$QUICK_SYMBOL\b" "$QUICK_REPLACEMENT"
 done
 
 for QML_INCLUDE_FILE in $QML_INCLUDE_FILES
 do
     QML_INCLUDE_REPLACEMENT="qqml${QML_INCLUDE_FILE#qdeclarative}"
-    replaceMatch "\<$QML_INCLUDE_FILE\>" "$QML_INCLUDE_REPLACEMENT"
+    replaceMatch "\b$QML_INCLUDE_FILE\b" "$QML_INCLUDE_REPLACEMENT"
 done
 
 for QUICK_INCLUDE_FILE in $QUICK_INCLUDE_FILES
 do
     QUICK_INCLUDE_REPLACEMENT="qquick${QUICK_INCLUDE_FILE#qdeclarative}"
-    replaceMatch "\<$QUICK_INCLUDE_FILE\>" "$QUICK_INCLUDE_REPLACEMENT"
+    replaceMatch "\b$QUICK_INCLUDE_FILE\b" "$QUICK_INCLUDE_REPLACEMENT"
 done
 
 # Various one-off replacements
-replaceMatch "\<QtDeclarative\>" "QtQml"
-replaceMatch "\<asQDeclarativeContext" "asQQmlContext"
+replaceMatch "\bQtDeclarative\b" "QtQml"
+replaceMatch "\basQDeclarativeContext\b" "asQQmlContext"
+replaceMatch "\basQDeclarativeContextPrivate\b" "asQQmlContextPrivate"
 
 # Replace any references to the 'declarative' module with 'qml'
 echo "Replacing module declarative with qml:"
-CONTAINERS=$(find "$MODIFY_DIR" \( -name \*\.pro -o -name \*\.pri \) | xargs grep -l -I "\<declarative\>")
+CONTAINERS=$(find "$MODIFY_DIR" \( -name \*\.pro -o -name \*\.pri \) | xargs grep -l -I "\bdeclarative\b")
 for CONTAINER in $CONTAINERS
 do
     echo "    $CONTAINER"
     TMP_FILE="$CONTAINER.tmp"
 
-    sed 's|\<declarative\>|qml|g' <"$CONTAINER" >"$TMP_FILE"
+    sed 's|\bdeclarative\b|qml|g' <"$CONTAINER" >"$TMP_FILE"
     mv "$TMP_FILE" "$CONTAINER"
 done
 echo
