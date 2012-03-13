@@ -63,6 +63,19 @@
 #include <dirent.h>
 #endif
 
+#if defined (QT_LINUXBASE)
+// LSB doesn't declare NAME_MAX. Use SYMLINK_MAX instead, which seems to
+// always be identical to NAME_MAX
+#ifndef NAME_MAX
+#  define NAME_MAX _POSIX_SYMLINK_MAX
+#endif
+
+// LSB has a broken version of offsetof that can't be used at compile time
+// https://lsbbugs.linuxfoundation.org/show_bug.cgi?id=3462
+#undef offsetof
+#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#endif
+
 // #define DATABLOB_DEBUG
 
 #ifdef DATABLOB_DEBUG
