@@ -1,0 +1,177 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** GNU Lesser General Public License Usage
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights. These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
+**
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+import QtQuick 2.0
+
+Item {
+    id: button
+
+    signal clicked
+
+    Rectangle {
+        id: normalBackground
+        radius: 4
+        anchors.fill: parent
+        smooth: true
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#afafaf"
+            }
+
+            GradientStop {
+                position: 0.460
+                color: "#808080"
+            }
+
+            GradientStop {
+                position: 1
+                color: "#adadad"
+            }
+        }
+        border.color: "#000000"
+    }
+
+
+    Rectangle {
+        id: hoveredBackground
+        x: 2
+        y: -8
+        radius: 4
+        opacity: 0
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#cacaca"
+            }
+
+            GradientStop {
+                position: 0.460
+                color: "#a2a2a2"
+            }
+
+            GradientStop {
+                position: 1
+                color: "#c8c8c8"
+            }
+        }
+        smooth: true
+        anchors.fill: parent
+        border.color: "#000000"
+    }
+
+
+    Rectangle {
+        id: pressedBackground
+        x: -8
+        y: 2
+        radius: 4
+        opacity: 0
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#8b8b8b"
+            }
+
+            GradientStop {
+                position: 0.470
+                color: "#626161"
+            }
+
+            GradientStop {
+                position: 1
+                color: "#8f8e8e"
+            }
+        }
+        smooth: true
+        anchors.fill: parent
+        border.color: "#000000"
+    }
+    states: [
+        State {
+            name: "hovered"
+
+            PropertyChanges {
+                target: normalBackground
+                opacity: 0
+            }
+
+            PropertyChanges {
+                target: hoveredBackground
+                opacity: 1
+            }
+        },
+        State {
+            name: "pressed"
+
+            PropertyChanges {
+                target: normalBackground
+                opacity: 0
+            }
+
+            PropertyChanges {
+                target: pressedBackground
+                opacity: 1
+            }
+        }
+    ]
+
+    Text {
+        color: "#e8e8e8"
+        text: qsTr("Play")
+        anchors.fill: parent
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        font.bold: true
+        font.pixelSize: 20
+    }
+
+    MouseArea {
+        hoverEnabled: true
+        anchors.fill: parent
+        onEntered: button.state = "hovered"
+        onExited: button.state = ""
+        onClicked: {
+            button.state = "pressed"
+            button.clicked();
+        }
+    }
+}
