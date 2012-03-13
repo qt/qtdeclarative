@@ -694,8 +694,7 @@ void tst_QQuickGridView::removed()
     QTRY_VERIFY(gridview->currentItem() != oldCurrent);
 
     gridview->setContentY(0);
-    // let transitions settle.
-    QTest::qWait(300);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // Confirm items positioned correctly
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -969,7 +968,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     QTRY_COMPARE(gridview->currentIndex(), 24);
     QTRY_COMPARE(gridview->contentY(), 220.0);
 
-    QTest::qWait(100);  // wait for refill to complete
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
     QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 0));  // 0 shouldn't be visible
 
     if (doAdd) {
@@ -3574,22 +3573,22 @@ void tst_QQuickGridView::snapToRow_data()
     QTest::addColumn<qreal>("startExtent");
 
     QTest::newRow("vertical, left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 800.0 << 0.0;
 
     QTest::newRow("horizontal, left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 800.0 << 0.0;
 
     QTest::newRow("horizontal, right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -800.0 - 240.0 << -240.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 940.0 << -20.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 940.0 << -20.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -800.0 - 240.0 - 140.0 << -220.0;
 }
 
 void tst_QQuickGridView::snapToRow()
@@ -3669,22 +3668,22 @@ void tst_QQuickGridView::snapOneRow_data()
     QTest::addColumn<qreal>("startExtent");
 
     QTest::newRow("vertical, left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 360.0 << 0.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
     QTest::newRow("horizontal, left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 360.0 << 0.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
     QTest::newRow("horizontal, right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -360.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 << -240.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 460.0 << -20.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 460.0 << -20.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -360.0 - 240.0 - 100.0 << -220.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 - 100.0 << -220.0;
 }
 
 void tst_QQuickGridView::snapOneRow()
@@ -3739,8 +3738,8 @@ void tst_QQuickGridView::snapOneRow()
            : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
-        QCOMPARE(gridview->currentIndex(), 8);
-        QCOMPARE(currentIndexSpy.count(), 4);
+        QCOMPARE(gridview->currentIndex(), 6);
+        QCOMPARE(currentIndexSpy.count(), 3);
     }
 
     if (flow == QQuickGridView::LeftToRight)
@@ -3763,7 +3762,7 @@ void tst_QQuickGridView::snapOneRow()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(gridview->currentIndex(), 0);
-        QCOMPARE(currentIndexSpy.count(), 8);
+        QCOMPARE(currentIndexSpy.count(), 6);
     }
 
     delete canvas;

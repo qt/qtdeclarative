@@ -37,7 +37,7 @@ Rectangle {
         flow: GridView.TopToBottom
         highlightRangeMode: GridView.StrictlyEnforceRange
         highlight: Rectangle { width: 80; height: 80; color: "yellow" }
-        model: 54
+        model: 39
         delegate: myDelegate
     }
 

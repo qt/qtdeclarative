@@ -37,7 +37,7 @@ Rectangle {
         layoutDirection: Qt.RightToLeft
         highlightRangeMode: ListView.StrictlyEnforceRange
         highlight: Rectangle { width: 80; height: 80; color: "yellow" }
-        model: 18
+        model: 10
         delegate: myDelegate
     }
 

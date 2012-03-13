@@ -827,7 +827,6 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     listview->setContentY(20); // That's the top now
     // let transitions settle.
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
-    QTest::qWait(300);
 
     // Confirm items positioned correctly
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -858,7 +857,6 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
 
     listview->setContentY(80);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
-    QTest::qWait(300);
 
     // remove all visible items
     model.removeItems(1, 18);
@@ -4251,22 +4249,22 @@ void tst_QQuickListView::snapToItem_data()
     QTest::addColumn<qreal>("startExtent");
 
     QTest::newRow("vertical, left to right") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 560.0 << 0.0;
 
     QTest::newRow("horizontal, left to right") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 560.0 << 0.0;
 
     QTest::newRow("horizontal, right to left") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -560.0 - 240.0 << -240.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 700.0 << -20.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 700.0 << -20.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -560.0 - 240.0 - 140.0 << -220.0;
 }
 
 void tst_QQuickListView::snapToItem()
