@@ -958,6 +958,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::StringType: opcode = V4Instr::ConvertStringToBool; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToBool; break;
             case IR::ColorType: opcode = V4Instr::ConvertColorToBool; break;
+            case IR::ObjectType: opcode = V4Instr::ConvertObjectToBool; break;
             default: break;
             } // switch
         } else if (targetTy == IR::IntType) {
@@ -1008,6 +1009,11 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
         } else if (targetTy == IR::ColorType) {
             switch (sourceTy) {
             case IR::StringType: opcode = V4Instr::ConvertStringToColor; break;
+            default: break;
+            } // switch
+        } else if (targetTy == IR::ObjectType) {
+            switch (sourceTy) {
+            case IR::NullType: opcode = V4Instr::ConvertNullToObject; break;
             default: break;
             } // switch
         }

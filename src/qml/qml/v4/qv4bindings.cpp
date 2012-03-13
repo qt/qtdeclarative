@@ -1160,6 +1160,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertColorToString, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertObjectToBool, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined())
+            output.setUndefined();
+        else
+            output.setbool(src.getQObject() != 0);
+    }
+    QML_V4_END_INSTR(ConvertObjectToBool, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertNullToObject, unaryop)
+    {
+        Register &output = registers[instr->unaryop.output];
+        output.setQObject(0);
+    }
+    QML_V4_END_INSTR(ConvertNullToObject, unaryop)
+
     QML_V4_BEGIN_INSTR(ResolveUrl, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
