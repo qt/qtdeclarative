@@ -195,7 +195,7 @@ private:
     static void VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void GcPrologueCallback(QV8GCCallback::Node *node);
     inline void allocateVarPropertiesArray();
-    inline void ensureVarPropertiesAllocated();
+    inline bool ensureVarPropertiesAllocated();
 
     void connectAlias(int aliasId);
     QBitArray aConnected;

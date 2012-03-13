@@ -832,15 +832,17 @@ v8::Handle<v8::Value> QQmlVMEMetaObject::readVarProperty(int id)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
 
-    ensureVarPropertiesAllocated();
-    return varProperties->Get(id - firstVarPropertyIndex);
+    if (ensureVarPropertiesAllocated())
+        return varProperties->Get(id - firstVarPropertyIndex);
+    return v8::Handle<v8::Value>();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 {
     if (id >= firstVarPropertyIndex) {
-        ensureVarPropertiesAllocated();
-        return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(varProperties->Get(id - firstVarPropertyIndex), -1);
+        if (ensureVarPropertiesAllocated())
+            return QQmlEnginePrivate::get(ctxt->engine)->v8engine()->toVariant(varProperties->Get(id - firstVarPropertyIndex), -1);
+        return QVariant();
     } else {
         if (data[id].dataType() == QMetaType::QObjectStar) {
             return QVariant::fromValue(data[id].asQObject());
@@ -853,7 +855,8 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
-    ensureVarPropertiesAllocated();
+    if (!ensureVarPropertiesAllocated())
+        return;
 
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
@@ -882,7 +885,8 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
 void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 {
     if (id >= firstVarPropertyIndex) {
-        ensureVarPropertiesAllocated();
+        if (!ensureVarPropertiesAllocated())
+            return;
 
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
@@ -1029,10 +1033,17 @@ void QQmlVMEMetaObject::setVMEProperty(int index, v8::Handle<v8::Value> v)
     return writeVarProperty(index - propOffset, v);
 }
 
-void QQmlVMEMetaObject::ensureVarPropertiesAllocated()
+bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
 {
     if (!varPropertiesInitialized)
         allocateVarPropertiesArray();
+
+    // in some situations, the QObject's v8object (and associated v8 data,
+    // such as the varProperties array) will have been cleaned up, but the
+    // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
+    // In this situation, the varProperties handle will be (and should remain)
+    // empty.
+    return !varProperties.IsEmpty();
 }
 
 // see also: QV8GCCallback::garbageCollectorPrologueCallback()

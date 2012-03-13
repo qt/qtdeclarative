@@ -78,8 +78,8 @@ class Q_QML_EXPORT QQmlData : public QAbstractDeclarativeData
 public:
     QQmlData()
         : ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false), 
-          hasTaintedV8Object(false), notifyList(0), context(0), outerContext(0), bindings(0), 
-          nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0), 
+          hasTaintedV8Object(false), isQueuedForDeletion(false), notifyList(0), context(0), outerContext(0),
+          bindings(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
           lineNumber(0), columnNumber(0), deferredComponent(0), deferredIdx(0), v8objectid(0), 
           propertyCache(0), guards(0), extendedData(0) {
           init(); 
@@ -110,7 +110,8 @@ public:
     quint32 indestructible:1;
     quint32 explicitIndestructibleSet:1;
     quint32 hasTaintedV8Object:1;
-    quint32 dummy:27;
+    quint32 isQueuedForDeletion:1;
+    quint32 dummy:26;
 
     struct NotifyList {
         quint64 connectionMask;

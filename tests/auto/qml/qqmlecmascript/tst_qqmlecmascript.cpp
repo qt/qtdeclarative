@@ -3906,6 +3906,15 @@ void tst_qqmlecmascript::propertyVarOwnership()
 
     delete object;
     }
+    // Garbage collection cannot result in attempted dereference of empty handle
+    {
+    QQmlComponent component(&engine, testFileUrl("propertyVarOwnership.5.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "runTest");
+    QCOMPARE(object->property("test").toBool(), true);
+    delete object;
+    }
 }
 
 void tst_qqmlecmascript::propertyVarImplicitOwnership()

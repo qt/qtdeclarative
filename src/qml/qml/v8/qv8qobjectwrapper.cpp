@@ -883,8 +883,10 @@ static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void 
         QQmlData *ddata = QQmlData::get(object, false);
         if (ddata) {
             ddata->v8object.Clear();
-            if (!object->parent() && !ddata->indestructible)
+            if (!object->parent() && !ddata->indestructible) {
+                ddata->isQueuedForDeletion = true;
                 object->deleteLater();
+            }
         }
     }
 
@@ -1043,11 +1045,14 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
     if (QObjectPrivate::get(object)->wasDeleted)
        return v8::Null();
-    
+
     QQmlData *ddata = QQmlData::get(object, true);
 
     if (!ddata) 
         return v8::Undefined();
+
+    if (ddata->isQueuedForDeletion)
+        return v8::Null();
 
     if (ddata->v8objectid == m_id && !ddata->v8object.IsEmpty()) {
         // We own the v8object 
