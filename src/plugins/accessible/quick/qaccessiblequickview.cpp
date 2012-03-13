@@ -41,6 +41,8 @@
 
 #include "qaccessiblequickview.h"
 
+#include <QtGui/qguiapplication.h>
+
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -83,7 +85,12 @@ QAccessible::Role QAccessibleQuickView::role() const
 
 QAccessible::State QAccessibleQuickView::state() const
 {
-    return QAccessible::State(); // FIXME
+    QAccessible::State st;
+    if (view() == QGuiApplication::focusWindow())
+        st.active = true;
+    if (!view()->isVisible())
+        st.invisible = true;
+    return st;
 }
 
 QRect QAccessibleQuickView::rect() const
