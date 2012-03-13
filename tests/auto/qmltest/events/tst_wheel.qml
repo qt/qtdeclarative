@@ -70,14 +70,14 @@ Rectangle {
         when: windowShown       // Must have this line for events to work.
 
         function test_wheel() {
-            //mouseWheel(item, x, y, delta, buttons = Qt.NoButton, modifiers = Qt.NoModifier, delay = -1, orientation = Qt.Vertical)
-            mouseWheel(flick, 200, 200, -120, Qt.NoButton, Qt.NoModifier, -1, Qt.Vertical);
+            //mouseWheel(item, x, y, xDelta, yDelta, buttons = Qt.NoButton, modifiers = Qt.NoModifier, delay = -1)
+            mouseWheel(flick, 200, 200, 0, -120, Qt.NoButton, Qt.NoModifier, -1);
             wait(1000);
             verify(flick.contentY > 0);
             verify(flick.contentX == 0);
             flick.contentY = 0;
             verify(flick.contentY == 0);
-            mouseWheel(flick, 200, 200, -120, Qt.NoButton, Qt.NoModifier, -1, Qt.Horizontal);
+            mouseWheel(flick, 200, 200, -120, 0, Qt.NoButton, Qt.NoModifier, -1);
             wait(1000);
             verify(flick.contentX > 0);
             verify(flick.contentY == 0);

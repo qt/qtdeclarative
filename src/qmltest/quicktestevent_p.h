@@ -70,7 +70,7 @@ public Q_SLOTS:
     bool mouseMove(QObject *item, qreal x, qreal y, int delay, int buttons);
 
     bool mouseWheel(QObject *item, qreal x, qreal y, int buttons,
-               int modifiers, int delta, int delay, int orientation);
+               int modifiers, int xDelta, int yDelta, int delay);
 
 private:
     QWindow *eventWindow();

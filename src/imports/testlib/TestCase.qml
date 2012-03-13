@@ -455,18 +455,18 @@ Item {
             qtest_fail("window not shown", 2)
     }
 
-    function mouseWheel(item, x, y, delta, buttons, modifiers, delay, orientation) {
+    function mouseWheel(item, x, y, xDelta, yDelta, buttons, modifiers, delay) {
         if (delay == undefined)
             delay = -1
         if (buttons == undefined)
             buttons = Qt.NoButton
         if (modifiers === undefined)
             modifiers = Qt.NoModifier
-        if (delta == undefined)
-            delta = 0
-        if (orientation == undefined)
-            orientation = Qt.Vertical
-        if (!qtest_events.mouseWheel(item, x, y, buttons, modifiers, delta, delay, orientation))
+        if (xDelta == undefined)
+            xDelta = 0
+        if (yDelta == undefined)
+            yDelta = 0
+        if (!qtest_events.mouseWheel(item, x, y, buttons, modifiers, xDelta, yDelta, delay))
             qtest_fail("window not shown", 2)
    }
 

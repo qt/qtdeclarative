@@ -148,7 +148,7 @@ namespace QtQuickTest
 
     static void mouseWheel(QWindow* window, QObject* item, Qt::MouseButtons buttons,
                                 Qt::KeyboardModifiers stateKey,
-                                QPointF _pos, int delta, int delay = -1, Qt::Orientation orientation = Qt::Vertical)
+                                QPointF _pos, int xDelta, int yDelta, int delay = -1)
     {
         QTEST_ASSERT(window);
         QTEST_ASSERT(item);
@@ -166,7 +166,7 @@ namespace QtQuickTest
         QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
 
         stateKey &= static_cast<unsigned int>(Qt::KeyboardModifierMask);
-        QWheelEvent we(pos, window->mapToGlobal(pos), delta, buttons, stateKey, orientation);
+        QWheelEvent we(pos, window->mapToGlobal(pos), QPoint(0, 0), QPoint(xDelta, yDelta), 0, Qt::Vertical, buttons, stateKey);
 
         QSpontaneKeyEvent::setSpontaneous(&we); // hmmmm
         if (!qApp->notify(window, &we))
@@ -190,14 +190,14 @@ bool QuickTestEvent::mousePress
 
 bool QuickTestEvent::mouseWheel(
     QObject *item, qreal x, qreal y, int buttons,
-    int modifiers, int delta, int delay, int orientation)
+    int modifiers, int xDelta, int yDelta, int delay)
 {
     QWindow *view = eventWindow();
     if (!view)
         return false;
     QtQuickTest::mouseWheel(view, item, Qt::MouseButtons(buttons),
                             Qt::KeyboardModifiers(modifiers),
-                            QPointF(x, y), delta, delay, Qt::Orientation(orientation));
+                            QPointF(x, y), xDelta, yDelta, delay);
     return true;
 }
 

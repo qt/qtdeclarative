@@ -515,7 +515,7 @@
     If \a item is obscured by another item, or a child of \a item occupies
     that position, then the event will be delivered to the other item instead.
 
-    \sa mouseRelease(), mouseClick(), mouseDoubleClick(), mouseMove()
+    \sa mouseRelease(), mouseClick(), mouseDoubleClick(), mouseMove(), mouseDrag(), mouseWheel()
 */
 
 /*!
@@ -531,7 +531,7 @@
     If \a item is obscured by another item, or a child of \a item occupies
     that position, then the event will be delivered to the other item instead.
 
-    \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseMove()
+    \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseMove(), mouseDrag(), mouseWheel()
 */
 
 /*!
@@ -547,7 +547,7 @@
     If \a item is obscured by another item, or a child of \a item occupies
     that position, then the event will be delivered to the other item instead.
 
-    \sa mousePress(), mouseRelease(), mouseDoubleClick(), mouseMove()
+    \sa mousePress(), mouseRelease(), mouseDoubleClick(), mouseMove(), mouseDrag(), mouseWheel()
 */
 
 /*!
@@ -563,7 +563,7 @@
     If \a item is obscured by another item, or a child of \a item occupies
     that position, then the event will be delivered to the other item instead.
 
-    \sa mousePress(), mouseRelease(), mouseClick(), mouseMove()
+    \sa mousePress(), mouseRelease(), mouseClick(), mouseMove(), mouseDrag(), mouseWheel()
 */
 
 /*!
@@ -578,7 +578,43 @@
     If \a item is obscured by another item, or a child of \a item occupies
     that position, then the event will be delivered to the other item instead.
 
-    \sa mousePress(), mouseRelease(), mouseClick(), mouseDoubleClick()
+    \sa mousePress(), mouseRelease(), mouseClick(), mouseDoubleClick(), mouseDrag(), mouseWheel()
+*/
+
+/*!
+    \qmlmethod TestCase::mouseDrag(item, x, y, dx, dy, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
+
+    Simulates dragging the mouse on an \a item with \a button pressed and an optional \a modifier.
+    The initial drag position is defined by \a x and \a y,
+    and drag distance is defined by \a dx and \a dy. If \a delay is specified,
+    the test will wait for the specified amount of milliseconds before releasing the button.
+
+    The position given by \a x and \a y is transformed from the co-ordinate
+    system of \a item into window co-ordinates and then delivered.
+    If \a item is obscured by another item, or a child of \a item occupies
+    that position, then the event will be delivered to the other item instead.
+
+    Note: this method does not imply a drop action, to make a drop, an additional
+    mouseRelease(item, x + dx, y + dy) is needed.
+
+    \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseMove(), mouseRelease(), mouseWheel()
+*/
+
+/*!
+    \qmlmethod TestCase::mouseWheel(item, x, y, xDelta, yDelta, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
+
+    Simulates rotating the mouse wheel on an \a item with \a button pressed and an optional \a modifier.
+    The position of the wheel event is defined by \a x and \a y.
+    If \a delay is specified, the test will wait for the specified amount of milliseconds before releasing the button.
+
+    The position given by \a x and \a y is transformed from the co-ordinate
+    system of \a item into window co-ordinates and then delivered.
+    If \a item is obscured by another item, or a child of \a item occupies
+    that position, then the event will be delivered to the other item instead.
+
+    The \a xDelta and \a yDelta contain the wheel rotation distance in eighths of a degree. see \l QWheelEvent::angleDelta() for more details.
+
+    \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseMove(), mouseRelease(), mouseDrag(), QWheelEvent::angleDelta()
 */
 
 /*!
