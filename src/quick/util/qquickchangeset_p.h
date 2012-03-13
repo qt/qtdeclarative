@@ -152,6 +152,11 @@ private:
     int m_difference;
 };
 
+Q_DECLARE_TYPEINFO(QQuickChangeSet::Change, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQuickChangeSet::Remove, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQuickChangeSet::Insert, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQuickChangeSet::MoveKey, Q_PRIMITIVE_TYPE);
+
 inline uint qHash(const QQuickChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }
 inline bool operator ==(const QQuickChangeSet::MoveKey &l, const QQuickChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }

@@ -53,8 +53,6 @@
 #include <private/qquicktextinput_p_p.h>
 #include <QDebug>
 #include <QDir>
-#include <QStyle>
-#include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
 
 #ifdef Q_OS_MAC

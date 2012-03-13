@@ -499,8 +499,9 @@ void QAbstractAnimationJob::finished()
     //TODO: update this code so it is valid to delete the animation in animationFinished
     for (int i = 0; i < changeListeners.count(); ++i) {
         const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
-        if (change.types & QAbstractAnimationJob::Completion)
-            change.listener->animationFinished(this);
+        if (change.types & QAbstractAnimationJob::Completion) {
+            RETURN_IF_DELETED(change.listener->animationFinished(this));
+        }
     }
 
     if (m_group && (duration() == -1 || loopCount() < 0)) {
@@ -513,8 +514,9 @@ void QAbstractAnimationJob::stateChanged(QAbstractAnimationJob::State newState, 
 {
     for (int i = 0; i < changeListeners.count(); ++i) {
         const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
-        if (change.types & QAbstractAnimationJob::StateChange)
-            change.listener->animationStateChanged(this, newState, oldState);
+        if (change.types & QAbstractAnimationJob::StateChange) {
+            RETURN_IF_DELETED(change.listener->animationStateChanged(this, newState, oldState));
+        }
     }
 }
 
@@ -523,8 +525,9 @@ void QAbstractAnimationJob::currentLoopChanged(int currentLoop)
     Q_UNUSED(currentLoop);
     for (int i = 0; i < changeListeners.count(); ++i) {
         const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
-        if (change.types & QAbstractAnimationJob::CurrentLoop)
-            change.listener->animationCurrentLoopChanged(this);
+        if (change.types & QAbstractAnimationJob::CurrentLoop) {
+           RETURN_IF_DELETED(change.listener->animationCurrentLoopChanged(this));
+        }
     }
 }
 

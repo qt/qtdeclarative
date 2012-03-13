@@ -11,4 +11,4 @@ include (../../shared/util.pri)
 
 TESTDATA = data/*
 
-QT += core-private gui-private v8-private qml-private quick-private opengl-private network widgets-private testlib
+QT += core-private gui-private v8-private qml-private quick-private network-private testlib

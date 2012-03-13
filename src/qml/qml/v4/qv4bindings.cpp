@@ -1172,6 +1172,15 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(MathCosReal, unaryop)
 
+    QML_V4_BEGIN_INSTR(MathAbsReal, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) output.setUndefined();
+        else output.setqreal(qAbs(src.getqreal()));
+    }
+    QML_V4_END_INSTR(MathAbsReal, unaryop)
+
     QML_V4_BEGIN_INSTR(MathRoundReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1189,6 +1198,15 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         else output.setint(qFloor(src.getqreal()));
     }
     QML_V4_END_INSTR(MathFloorReal, unaryop)
+
+    QML_V4_BEGIN_INSTR(MathCeilReal, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) output.setUndefined();
+        else output.setint(qCeil(src.getqreal()));
+    }
+    QML_V4_END_INSTR(MathCeilReal, unaryop)
 
     QML_V4_BEGIN_INSTR(MathPIReal, unaryop)
     {
@@ -1479,6 +1497,26 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         registers[instr->binaryop.output].setbool(result);
     }
     QML_V4_END_INSTR(StrictNotEqualString, binaryop)
+
+    QML_V4_BEGIN_INSTR(MathMaxReal, binaryop)
+    {
+        const Register &left = registers[instr->binaryop.left];
+        const Register &right = registers[instr->binaryop.right];
+        Register &output = registers[instr->binaryop.output];
+        if (left.isUndefined() || right.isUndefined()) output.setUndefined();
+        else output.setqreal(qMax(left.getqreal(), right.getqreal()));
+    }
+    QML_V4_END_INSTR(MathMaxReal, binaryop)
+
+    QML_V4_BEGIN_INSTR(MathMinReal, binaryop)
+    {
+        const Register &left = registers[instr->binaryop.left];
+        const Register &right = registers[instr->binaryop.right];
+        Register &output = registers[instr->binaryop.output];
+        if (left.isUndefined() || right.isUndefined()) output.setUndefined();
+        else output.setqreal(qMin(left.getqreal(), right.getqreal()));
+    }
+    QML_V4_END_INSTR(MathMinReal, binaryop)
 
     QML_V4_BEGIN_INSTR(NewString, construct)
     {

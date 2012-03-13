@@ -6,4 +6,4 @@ SOURCES += tst_geometry.cpp
 
 CONFIG+=parallel_test
 
-QT += core-private gui-private qml-private quick-private opengl testlib
+QT += core-private gui-private qml-private quick-private testlib

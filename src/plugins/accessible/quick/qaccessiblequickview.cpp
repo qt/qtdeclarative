@@ -119,6 +119,11 @@ static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
             return 0;
     }
 
+    QScopedPointer<QAccessibleInterface> accessibleInterface(QAccessible::queryAccessibleInterface(item));
+    if (accessibleInterface->childCount() == 0) {
+        return (itemScreenRect(item).contains(x, y)) ? item : 0;
+    }
+
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();

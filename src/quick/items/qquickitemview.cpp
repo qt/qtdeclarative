@@ -1658,10 +1658,11 @@ void QQuickItemViewPrivate::updateViewport()
 {
     Q_Q(QQuickItemView);
     if (isValid()) {
+        qreal extra = headerSize() + footerSize();
         if (layoutOrientation() == Qt::Vertical)
-            q->setContentHeight(endPosition() - startPosition());
+            q->setContentHeight(endPosition() - startPosition() + extra);
         else
-            q->setContentWidth(endPosition() - startPosition());
+            q->setContentWidth(endPosition() - startPosition() + extra);
     }
 }
 

@@ -183,6 +183,7 @@ private slots:
     void displacedTransitions_data();
     void multipleTransitions();
     void multipleTransitions_data();
+    void multipleDisplaced();
 
     void flickBeyondBounds();
 
@@ -826,7 +827,6 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     listview->setContentY(20); // That's the top now
     // let transitions settle.
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
-    QTest::qWait(300);
 
     // Confirm items positioned correctly
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -857,7 +857,6 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
 
     listview->setContentY(80);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
-    QTest::qWait(300);
 
     // remove all visible items
     model.removeItems(1, 18);
@@ -3056,6 +3055,11 @@ void tst_QQuickListView::header()
     QCOMPARE(header->pos(), initialHeaderPos);
     QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
 
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentHeight(), model.count() * 30. + header->height());
+    else
+        QCOMPARE(listview->contentWidth(), model.count() * 240. + header->width());
+
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
@@ -3239,6 +3243,11 @@ void tst_QQuickListView::footer()
     QCOMPARE(footer->width(), 100.);
     QCOMPARE(footer->height(), 30.);
     QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
+
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentHeight(), model.count() * 20. + footer->height());
+    else
+        QCOMPARE(listview->contentWidth(), model.count() * 40. + footer->width());
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
@@ -4240,22 +4249,22 @@ void tst_QQuickListView::snapToItem_data()
     QTest::addColumn<qreal>("startExtent");
 
     QTest::newRow("vertical, left to right") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 560.0 << 0.0;
 
     QTest::newRow("horizontal, left to right") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 560.0 << 0.0;
 
     QTest::newRow("horizontal, right to left") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -560.0 - 240.0 << -240.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 700.0 << -20.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 700.0 << -20.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -560.0 - 240.0 - 140.0 << -220.0;
 }
 
 void tst_QQuickListView::snapToItem()
@@ -5975,6 +5984,56 @@ void tst_QQuickListView::multipleTransitions_data()
             << ListChange::remove(2, 1)
             )
             << true << true << false << false;
+}
+
+void tst_QQuickListView::multipleDisplaced()
+{
+    // multiple move() operations should only restart displace transitions for items that
+    // moved from previously set positions, and not those that have moved from their current
+    // item positions (which may e.g. still be changing from easing bounces in the last transition)
+
+    QmlListModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    QQuickView *canvas = createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testObject", new TestObject(canvas));
+    canvas->setSource(testFileUrl("multipleDisplaced.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    model.moveItems(12, 8, 1);
+    QTest::qWait(canvas->rootObject()->property("duration").toInt() / 2);
+    model.moveItems(8, 3, 1);
+    QTRY_VERIFY(listview->property("displaceTransitionsDone").toBool());
+
+    QVariantMap transitionsStarted = listview->property("displaceTransitionsStarted").toMap();
+    foreach (const QString &name, transitionsStarted.keys()) {
+        QVERIFY2(transitionsStarted[name] == 1,
+                 QTest::toString(QString("%1 was displaced %2 times").arg(name).arg(transitionsStarted[name].toInt())));
+    }
+
+    // verify all items moved to the correct final positions
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->x(), 0.0);
+        QTRY_COMPARE(item->y(), i*20.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
 }
 
 QList<int> tst_QQuickListView::toIntList(const QVariantList &list)

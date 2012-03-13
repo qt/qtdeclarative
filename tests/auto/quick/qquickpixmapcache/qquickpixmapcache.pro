@@ -15,5 +15,6 @@ TESTDATA = data/*
 # LIBS += -lgcov
 
 CONFIG += parallel_test
+CONFIG += insignificant_test
 
 QT += core-private gui-private qml-private quick-private network testlib concurrent

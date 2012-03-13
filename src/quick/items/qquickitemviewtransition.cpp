@@ -333,6 +333,8 @@ QQuickItemViewTransitionableItem::QQuickItemViewTransitionableItem(QQuickItem *i
     , nextTransitionType(QQuickItemViewTransitioner::NoTransition)
     , isTransitionTarget(false)
     , nextTransitionToSet(false)
+    , nextTransitionFromSet(false)
+    , lastMovedToSet(false)
     , prepared(false)
 {
 }
@@ -367,12 +369,17 @@ qreal QQuickItemViewTransitionableItem::itemY() const
 
 void QQuickItemViewTransitionableItem::moveTo(const QPointF &pos, bool immediate)
 {
+    if (!nextTransitionFromSet && nextTransitionType != QQuickItemViewTransitioner::NoTransition) {
+        nextTransitionFrom = item->pos();
+        nextTransitionFromSet = true;
+    }
+
+    lastMovedTo = pos;
+    lastMovedToSet = true;
+
     if (immediate || !transitionScheduledOrRunning()) {
-        if (immediate) {
-            if (transition)
-                transition->cancel();
-            resetTransitionData();
-        }
+        if (immediate)
+            stopTransition();
         item->setPos(pos);
     } else {
         nextTransitionTo = pos;
@@ -402,17 +409,27 @@ bool QQuickItemViewTransitionableItem::isPendingRemoval() const
 
 bool QQuickItemViewTransitionableItem::prepareTransition(QQuickItemViewTransitioner *transitioner, int index, const QRectF &viewBounds)
 {
-    bool doTransition = false;
+    if (nextTransitionType == QQuickItemViewTransitioner::NoTransition)
+        return false;
 
-    // If item is not already moving somewhere, set it to not move anywhere.
-    // This ensures that removed targets don't transition to the default (0,0) and that
-    // items set for other transition types only transition if they actually move somewhere.
-    if (nextTransitionType != QQuickItemViewTransitioner::NoTransition && !nextTransitionToSet)
-        moveTo(item->pos());
+    if (isTransitionTarget) {
+        // If item is not already moving somewhere, set it to not move anywhere.
+        // This ensures that removed targets don't transition to the default (0,0) and that
+        // items set for other transition types only transition if they actually move somewhere.
+        if (!nextTransitionToSet)
+            moveTo(item->pos());
+    } else {
+        // don't start displaced transitions that don't move anywhere
+        if (!nextTransitionToSet || (nextTransitionFromSet && nextTransitionFrom == nextTransitionTo)) {
+            clearCurrentScheduledTransition();
+            return false;
+        }
+    }
+
+    bool doTransition = false;
 
     // For move transitions (both target and displaced) and displaced transitions of other
     // types, only run the transition if the item is actually moving to another position.
-
     switch (nextTransitionType) {
     case QQuickItemViewTransitioner::NoTransition:
     {
@@ -465,10 +482,8 @@ bool QQuickItemViewTransitionableItem::prepareTransition(QQuickItemViewTransitio
     if (!doTransition) {
         // if transition type is not valid, the previous transition still has to be
         // canceled so that the item can move immediately to the right position
-        if (transition)
-            transition->cancel();
         item->setPos(nextTransitionTo);
-        resetTransitionData();
+        stopTransition();
     }
 
     prepared = true;
@@ -490,14 +505,8 @@ void QQuickItemViewTransitionableItem::startTransition(QQuickItemViewTransitione
         transition = new QQuickItemViewTransitionJob;
     }
 
-    // if item is not already moving somewhere, set it to not move anywhere
-    // so that removed items do not move to the default (0,0)
-    if (!nextTransitionToSet)
-        moveTo(item->pos());
-
     transition->startTransition(this, index, transitioner, nextTransitionType, nextTransitionTo, isTransitionTarget);
-    nextTransitionType = QQuickItemViewTransitioner::NoTransition;
-    prepared = false;
+    clearCurrentScheduledTransition();
 }
 
 void QQuickItemViewTransitionableItem::setNextTransition(QQuickItemViewTransitioner::TransitionType type, bool isTargetItem)
@@ -507,27 +516,50 @@ void QQuickItemViewTransitionableItem::setNextTransition(QQuickItemViewTransitio
     // to calculate positions for transitions for other items in the view.
     nextTransitionType = type;
     isTransitionTarget = isTargetItem;
+
+    if (!nextTransitionFromSet && lastMovedToSet) {
+        nextTransitionFrom = lastMovedTo;
+        nextTransitionFromSet = true;
+    }
 }
 
 bool QQuickItemViewTransitionableItem::transitionWillChangePosition() const
 {
     if (transitionRunning() && transition->m_toPos != nextTransitionTo)
         return true;
-    return nextTransitionTo != item->pos();
+    if (!nextTransitionFromSet)
+        return false;
+    return nextTransitionTo != nextTransitionFrom;
+}
+
+void QQuickItemViewTransitionableItem::resetNextTransitionPos()
+{
+    nextTransitionToSet = false;
+    nextTransitionTo = QPointF();
 }
 
 void QQuickItemViewTransitionableItem::finishedTransition()
 {
-    nextTransitionToSet = false;
-    nextTransitionTo = QPointF();
+    resetNextTransitionPos();
 }
 
-void QQuickItemViewTransitionableItem::resetTransitionData()
+void QQuickItemViewTransitionableItem::clearCurrentScheduledTransition()
 {
+    // Just clear the current scheduled transition - don't touch the nextTransitionTo
+    // which may have already been set for a previously scheduled transition
+
     nextTransitionType = QQuickItemViewTransitioner::NoTransition;
     isTransitionTarget = false;
-    nextTransitionTo = QPointF();
-    nextTransitionToSet = false;
+    prepared = false;
+    nextTransitionFromSet = false;
+}
+
+void QQuickItemViewTransitionableItem::stopTransition()
+{
+    if (transition)
+        transition->cancel();
+    clearCurrentScheduledTransition();
+    resetNextTransitionPos();
 }
 
 

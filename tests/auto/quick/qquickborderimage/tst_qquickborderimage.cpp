@@ -43,7 +43,6 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QDir>
-#include <QGraphicsScene>
 #include <QPainter>
 
 #include <QtQml/qqmlengine.h>

@@ -81,7 +81,7 @@ public:
         , autoHighlight(true), highlightUp(false), layoutScheduled(false)
         , moving(false), flicking(false), requestedOnPath(false), inRequest(false)
         , dragMargin(0), deceleration(100)
-        , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset)
+        , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
         , firstIndex(-1), pathItems(-1), requestedIndex(-1), requestedZ(0)
         , moveReason(Other), moveDirection(Shortest), attType(0), highlightComponent(0), highlightItem(0)
         , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
@@ -171,6 +171,7 @@ public:
     qreal deceleration;
     QQuickTimeLine tl;
     QQuickTimeLineValueProxy<QQuickPathViewPrivate> moveOffset;
+    int flickDuration;
     int firstIndex;
     int pathItems;
     int requestedIndex;

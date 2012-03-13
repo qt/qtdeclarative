@@ -14,4 +14,4 @@ TESTDATA = data/*
 
 CONFIG += parallel_test
 
-QT += core-private gui-private v8-private qml-private quick-private widgets-private opengl-private network testlib
+QT += core-private gui-private v8-private qml-private quick-private network testlib

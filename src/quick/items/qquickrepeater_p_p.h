@@ -75,8 +75,10 @@ private:
 
     QQuickVisualModel *model;
     QVariant dataSource;
+    QQmlGuard<QObject> dataSourceAsObject;
     bool ownModel : 1;
     bool inRequest : 1;
+    bool dataSourceIsObject : 1;
     int itemCount;
     int createFrom;
 

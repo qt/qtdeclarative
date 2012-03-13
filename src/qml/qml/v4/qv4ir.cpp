@@ -219,10 +219,18 @@ void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32
         builtin = MathSinBultinFunction;
     } else if (id->length() == 8 && *id == QLatin1String("Math.cos")) {
         builtin = MathCosBultinFunction;
+    } else if (id->length() == 8 && *id == QLatin1String("Math.abs")) {
+        builtin = MathAbsBuiltinFunction;
     } else if (id->length() == 10 && *id == QLatin1String("Math.round")) {
         builtin = MathRoundBultinFunction;
     } else if (id->length() == 10 && *id == QLatin1String("Math.floor")) {
         builtin = MathFloorBultinFunction;
+    } else if (id->length() == 9 && *id == QLatin1String("Math.ceil")) {
+        builtin = MathCeilBuiltinFunction;
+    } else if (id->length() == 8 && *id == QLatin1String("Math.max")) {
+        builtin = MathMaxBuiltinFunction;
+    } else if (id->length() == 8 && *id == QLatin1String("Math.min")) {
+        builtin = MathMinBuiltinFunction;
     } else if (id->length() == 7 && *id == QLatin1String("Math.PI")) {
         builtin = MathPIBuiltinConstant;
         this->type = RealType;
@@ -353,10 +361,14 @@ Type Call::typeForFunction(Expr *base)
         switch (name->builtin) {
         case MathSinBultinFunction:
         case MathCosBultinFunction:
+        case MathAbsBuiltinFunction:    //### type could also be Int if input was Int
+        case MathMaxBuiltinFunction:
+        case MathMinBuiltinFunction:
             return RealType;
 
         case MathRoundBultinFunction:
         case MathFloorBultinFunction:
+        case MathCeilBuiltinFunction:
             return IntType;
 
         case NoBuiltinSymbol:

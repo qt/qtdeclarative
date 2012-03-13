@@ -195,11 +195,17 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::MathCosReal:
         INSTR_DUMP << "\t" << "MathCosReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::MathAbsReal:
+        INSTR_DUMP << "\t" << "MathAbsReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::MathRoundReal:
         INSTR_DUMP << "\t" << "MathRoundReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::MathFloorReal:
         INSTR_DUMP << "\t" << "MathFloorReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::MathCeilReal:
+        INSTR_DUMP << "\t" << "MathCeilReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::MathPIReal:
         INSTR_DUMP << "\t" << "MathPIReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
@@ -305,6 +311,12 @@ void Bytecode::dump(const V4Instr *i, int address) const
         break;
     case V4Instr::StrictNotEqualString:
         INSTR_DUMP << "\t" << "StrictNotEqualString" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
+    case V4Instr::MathMaxReal:
+        INSTR_DUMP << "\t" << "MathMaxReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
+    case V4Instr::MathMinReal:
+        INSTR_DUMP << "\t" << "MathMinReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
     case V4Instr::NewString:
         INSTR_DUMP << "\t" << "NewString" << "\t\t" << "Register(" << i->construct.reg << ")";

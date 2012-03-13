@@ -95,7 +95,7 @@ QAccessibleInterface *QAccessibleQuickItem::parent() const
         // QQuickView::declarativeRoot. The former is the true root item,
         // but is not a part of the accessibility tree. Check if we hit
         // it here and return an interface for the scene instead.
-        if (parent == canvas->rootItem()) {
+        if (canvas && (parent == canvas->rootItem())) {
             return QAccessible::queryAccessibleInterface(canvas);
         } else {
             return QAccessible::queryAccessibleInterface(parent);

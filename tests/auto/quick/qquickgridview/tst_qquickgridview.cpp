@@ -142,6 +142,7 @@ private slots:
     void displacedTransitions_data();
     void multipleTransitions();
     void multipleTransitions_data();
+    void multipleDisplaced();
 
 private:
     QList<int> toIntList(const QVariantList &list);
@@ -693,8 +694,7 @@ void tst_QQuickGridView::removed()
     QTRY_VERIFY(gridview->currentItem() != oldCurrent);
 
     gridview->setContentY(0);
-    // let transitions settle.
-    QTest::qWait(300);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // Confirm items positioned correctly
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -968,7 +968,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     QTRY_COMPARE(gridview->currentIndex(), 24);
     QTRY_COMPARE(gridview->contentY(), 220.0);
 
-    QTest::qWait(100);  // wait for refill to complete
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
     QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 0));  // 0 shouldn't be visible
 
     if (doAdd) {
@@ -2809,6 +2809,11 @@ void tst_QQuickGridView::footer()
     QCOMPARE(footer->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
+    if (flow == QQuickGridView::LeftToRight)
+        QCOMPARE(gridview->contentHeight(), (model.count()+2) / 3 * 60. + footer->height());
+    else
+        QCOMPARE(gridview->contentWidth(), (model.count()+3) / 5 * 80. + footer->width());
+
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
@@ -2969,6 +2974,11 @@ void tst_QQuickGridView::header()
     QCOMPARE(header->width(), 100.);
     QCOMPARE(header->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
+
+    if (flow == QQuickGridView::LeftToRight)
+        QCOMPARE(gridview->contentHeight(), (model.count()+2) / 3 * 60. + header->height());
+    else
+        QCOMPARE(gridview->contentWidth(), (model.count()+3) / 5 * 80. + header->width());
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
@@ -3563,22 +3573,22 @@ void tst_QQuickGridView::snapToRow_data()
     QTest::addColumn<qreal>("startExtent");
 
     QTest::newRow("vertical, left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 800.0 << 0.0;
 
     QTest::newRow("horizontal, left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 800.0 << 0.0;
 
     QTest::newRow("horizontal, right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -800.0 - 240.0 << -240.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 940.0 << -20.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 940.0 << -20.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -800.0 - 240.0 - 140.0 << -220.0;
 }
 
 void tst_QQuickGridView::snapToRow()
@@ -3658,22 +3668,22 @@ void tst_QQuickGridView::snapOneRow_data()
     QTest::addColumn<qreal>("startExtent");
 
     QTest::newRow("vertical, left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 360.0 << 0.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
     QTest::newRow("horizontal, left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 360.0 << 0.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
     QTest::newRow("horizontal, right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -360.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 << -240.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 460.0 << -20.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 460.0 << -20.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -360.0 - 240.0 - 100.0 << -220.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 - 100.0 << -220.0;
 }
 
 void tst_QQuickGridView::snapOneRow()
@@ -3728,8 +3738,8 @@ void tst_QQuickGridView::snapOneRow()
            : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
-        QCOMPARE(gridview->currentIndex(), 8);
-        QCOMPARE(currentIndexSpy.count(), 4);
+        QCOMPARE(gridview->currentIndex(), 6);
+        QCOMPARE(currentIndexSpy.count(), 3);
     }
 
     if (flow == QQuickGridView::LeftToRight)
@@ -3752,7 +3762,7 @@ void tst_QQuickGridView::snapOneRow()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(gridview->currentIndex(), 0);
-        QCOMPARE(currentIndexSpy.count(), 8);
+        QCOMPARE(currentIndexSpy.count(), 6);
     }
 
     delete canvas;
@@ -4973,6 +4983,55 @@ void tst_QQuickGridView::multipleTransitions_data()
             << ListChange::remove(2, 1)
             )
             << true << true << false << false;
+}
+
+void tst_QQuickGridView::multipleDisplaced()
+{
+    // multiple move() operations should only restart displace transitions for items that
+    // moved from previously set positions, and not those that have moved from their current
+    // item positions (which may e.g. still be changing from easing bounces in the last transition)
+
+    QmlListModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    QQuickView *canvas = createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    canvas->setSource(testFileUrl("multipleDisplaced.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    model.moveItems(12, 8, 1);
+    QTest::qWait(canvas->rootObject()->property("duration").toInt() / 2);
+    model.moveItems(8, 3, 1);
+    QTRY_VERIFY(gridview->property("displaceTransitionsDone").toBool());
+
+    QVariantMap transitionsStarted = gridview->property("displaceTransitionsStarted").toMap();
+    foreach (const QString &name, transitionsStarted.keys()) {
+        QVERIFY2(transitionsStarted[name] == 1,
+                 QTest::toString(QString("%1 was displaced %2 times").arg(name).arg(transitionsStarted[name].toInt())));
+    }
+
+    // verify all items moved to the correct final positions
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    for (int i=0; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0);
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+    }
+
+    delete canvas;
 }
 
 void tst_QQuickGridView::cacheBuffer()

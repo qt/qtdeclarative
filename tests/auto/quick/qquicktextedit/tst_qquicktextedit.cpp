@@ -55,7 +55,6 @@
 #include <QFontMetrics>
 #include <QtQuick/QQuickView>
 #include <QDir>
-#include <QStyle>
 #include <QInputMethod>
 #include <QClipboard>
 #include <QMimeData>
@@ -1855,6 +1854,7 @@ void tst_qquicktextedit::cursorDelegate()
     textEditObject->setSelectByMouse(true);
     textEditObject->setCursorPosition(0);
     const QPoint point1 = textEditObject->positionToRectangle(5).center().toPoint();
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
     QTest::mouseClick(&view, Qt::LeftButton, 0, point1);
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
@@ -1864,6 +1864,7 @@ void tst_qquicktextedit::cursorDelegate()
     // Test delegate gets moved on mouse drag
     textEditObject->setCursorPosition(0);
     const QPoint point2 = textEditObject->positionToRectangle(10).center().toPoint();
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
     QTest::mousePress(&view, Qt::LeftButton, 0, point1);
     QMouseEvent mv(QEvent::MouseMove, point2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
     QGuiApplication::sendEvent(&view, &mv);
@@ -1874,6 +1875,7 @@ void tst_qquicktextedit::cursorDelegate()
 
     textEditObject->setReadOnly(true);
     textEditObject->setCursorPosition(0);
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
     QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
@@ -1881,6 +1883,7 @@ void tst_qquicktextedit::cursorDelegate()
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
     textEditObject->setCursorPosition(0);
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
     QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);

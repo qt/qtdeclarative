@@ -100,8 +100,10 @@ QT_BEGIN_NAMESPACE
     F(ResolveUrl, unaryop) \
     F(MathSinReal, unaryop) \
     F(MathCosReal, unaryop) \
+    F(MathAbsReal, unaryop) \
     F(MathRoundReal, unaryop) \
     F(MathFloorReal, unaryop) \
+    F(MathCeilReal, unaryop) \
     F(MathPIReal, unaryop) \
     F(LoadReal, real_value) \
     F(LoadInt, int_value) \
@@ -137,6 +139,8 @@ QT_BEGIN_NAMESPACE
     F(NotEqualString, binaryop) \
     F(StrictEqualString, binaryop) \
     F(StrictNotEqualString, binaryop) \
+    F(MathMaxReal, binaryop) \
+    F(MathMinReal, binaryop) \
     F(NewString, construct) \
     F(NewUrl, construct) \
     F(CleanupRegister, cleanup) \

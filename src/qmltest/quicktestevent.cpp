@@ -42,12 +42,8 @@
 #include "quicktestevent_p.h"
 #include <QtTest/qtestkeyboard.h>
 #include <QtQml/qqml.h>
-#if defined(QML_VERSION) && QML_VERSION >= 0x020000
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickcanvas.h>
-#define QUICK_TEST_SCENEGRAPH 1
-#endif
-#include <QtWidgets/qgraphicsscene.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -114,15 +110,9 @@ namespace QtQuickTest
         }
 
         QPoint pos;
-#ifdef QUICK_TEST_SCENEGRAPH
         QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
-        if (sgitem) {
+        if (sgitem)
             pos = sgitem->mapToScene(_pos).toPoint();
-        } else
-#endif
-        {
-            qWarning("No suitable QtQuick1 implementation is available!");
-        }
         QTEST_ASSERT(button == Qt::NoButton || button & Qt::MouseButtonMask);
         QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
 
@@ -168,15 +158,10 @@ namespace QtQuickTest
             QTest::qWait(delay);
 
         QPoint pos;
-#ifdef QUICK_TEST_SCENEGRAPH
         QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
-        if (sgitem) {
+        if (sgitem)
             pos = sgitem->mapToScene(_pos).toPoint();
-        } else
-#endif
-        {
-            qWarning("No suitable QtQuick1 implementation is available!");
-        }
+
         QTEST_ASSERT(buttons == Qt::NoButton || buttons & Qt::MouseButtonMask);
         QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
 
@@ -272,24 +257,10 @@ bool QuickTestEvent::mouseMove
 
 QWindow *QuickTestEvent::eventWindow()
 {
-#ifdef QUICK_TEST_SCENEGRAPH
     QQuickItem *sgitem = qobject_cast<QQuickItem *>(parent());
     if (sgitem)
         return sgitem->canvas();
-#endif
     return 0;
-    /*
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
-    if (!item)
-        return 0;
-    QGraphicsScene *s = item->scene();
-    if (!s)
-        return 0;
-    QList<QGraphicsView *> views = s->views();
-    if (views.isEmpty())
-        return 0;
-    return views.at(0)->windowHandle();
-    */
 }
 
 QT_END_NAMESPACE

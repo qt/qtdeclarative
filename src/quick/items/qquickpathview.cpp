@@ -1224,7 +1224,8 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
             return;
     }
 
-    if (tl.isActive() && flicking)
+
+    if (tl.isActive() && flicking && flickDuration && qreal(tl.time())/flickDuration < 0.8)
         stealMouse = true; // If we've been flicked then steal the click.
     else
         stealMouse = false;
@@ -1335,6 +1336,7 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
         } else {
             dist = qMin(qreal(modelCount-1), qreal(v2 / (accel * 2.0)));
         }
+        flickDuration = static_cast<int>(1000 * qAbs(velocity) / accel);
         offsetAdj = 0.0;
         moveOffset.setValue(offset);
         tl.accel(moveOffset, velocity, accel, dist);

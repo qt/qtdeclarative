@@ -379,18 +379,12 @@ bool QuickTestResult::compare
      const QString &val1, const QString &val2,
      const QUrl &location, int line)
 {
-    if (success) {
-        return QTestResult::compare
-            (success, message.toLocal8Bit().constData(),
-             qtestFixUrl(location).toLatin1().constData(), line);
-    } else {
-        return QTestResult::compare
-            (success, message.toLocal8Bit().constData(),
-             QTest::toString(val1.toLatin1().constData()),
-             QTest::toString(val2.toLatin1().constData()),
-             "", "",
-             qtestFixUrl(location).toLatin1().constData(), line);
-    }
+    return QTestResult::compare
+        (success, message.toLocal8Bit().constData(),
+         QTest::toString(val1.toLatin1().constData()),
+         QTest::toString(val2.toLatin1().constData()),
+         "", "",
+         qtestFixUrl(location).toLatin1().constData(), line);
 }
 
 void QuickTestResult::skip

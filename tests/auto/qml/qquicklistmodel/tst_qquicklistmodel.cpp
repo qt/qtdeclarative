@@ -216,17 +216,21 @@ QQuickItem *tst_qquicklistmodel::createWorkerTest(QQmlEngine *eng, QQmlComponent
 
 void tst_qquicklistmodel::waitForWorker(QQuickItem *item)
 {
+    QQmlProperty prop(item, "done");
+    QVERIFY(prop.isValid());
+    if (prop.read().toBool())
+        return; // already finished
+
     QEventLoop loop;
     QTimer timer;
     timer.setSingleShot(true);
     connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
 
-    QQmlProperty prop(item, "done");
-    QVERIFY(prop.isValid());
     QVERIFY(prop.connectNotifySignal(&loop, SLOT(quit())));
     timer.start(10000);
     loop.exec();
     QVERIFY(timer.isActive());
+    QVERIFY(prop.read().toBool());
 }
 
 void tst_qquicklistmodel::static_types_data()
@@ -986,6 +990,8 @@ void tst_qquicklistmodel::get_worker()
     QCOMPARE(spyResult.at(0).toInt(), index);
     QCOMPARE(spyResult.at(1).toInt(), 1);  // only 1 item is modified at a time
     QVERIFY(spyResult.at(2).value<QList<int> >().contains(role));
+
+    delete item;
 }
 
 void tst_qquicklistmodel::get_worker_data()
