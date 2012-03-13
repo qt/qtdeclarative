@@ -2,7 +2,11 @@ CONFIG += testcase
 TARGET = tst_qqmlenginedebugservice
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qqmlenginedebugservice.cpp
+HEADERS += \
+    qqmlenginedebugclient.h
+
+SOURCES += tst_qqmlenginedebugservice.cpp \
+    qqmlenginedebugclient.cpp
 
 INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)

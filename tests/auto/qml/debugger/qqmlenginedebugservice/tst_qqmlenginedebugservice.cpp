@@ -59,7 +59,7 @@
 #include <private/qqmlproperty_p.h>
 
 #include "debugutil_p.h"
-#include "qqmlenginedebug_p.h"
+#include "qqmlenginedebugclient.h"
 
 Q_DECLARE_METATYPE(QQmlDebugWatch::State)
 
@@ -79,7 +79,7 @@ private:
     void compareProperties(const QQmlDebugPropertyReference &a, const QQmlDebugPropertyReference &b) const;
 
     QQmlDebugConnection *m_conn;
-    QQmlEngineDebug *m_dbg;
+    QQmlEngineDebugClient *m_dbg;
     QQmlEngine *m_engine;
     QQuickItem *m_rootItem;
 
@@ -394,13 +394,12 @@ void tst_QQmlEngineDebugService::initTestCase()
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
     QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
-    m_dbg = new QQmlEngineDebug(m_conn, this);
-    QTRY_VERIFY(m_dbg->state() == QQmlEngineDebug::Enabled);
+    m_dbg = new QQmlEngineDebugClient(m_conn);
+    QTRY_VERIFY(m_dbg->state() == QQmlEngineDebugClient::Enabled);
 }
 
 void tst_QQmlEngineDebugService::cleanupTestCase()
 {
-    delete m_dbg;
     delete m_conn;
     qDeleteAll(m_components);
     delete m_engine;
@@ -450,7 +449,7 @@ void tst_QQmlEngineDebugService::watch_property()
 
     QQmlDebugPropertyWatch *watch;
 
-    QQmlEngineDebug *unconnected = new QQmlEngineDebug(0);
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
     watch = unconnected->addWatch(prop, this);
     QCOMPARE(watch->state(), QQmlDebugWatch::Dead);
     delete watch;
@@ -510,7 +509,7 @@ void tst_QQmlEngineDebugService::watch_object()
 
     QQmlDebugWatch *watch;
 
-    QQmlEngineDebug *unconnected = new QQmlEngineDebug(0);
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
     watch = unconnected->addWatch(obj, this);
     QCOMPARE(watch->state(), QQmlDebugWatch::Dead);
     delete watch;
@@ -574,7 +573,7 @@ void tst_QQmlEngineDebugService::watch_expression()
 
     QQmlDebugObjectExpressionWatch *watch;
 
-    QQmlEngineDebug *unconnected = new QQmlEngineDebug(0);
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
     watch = unconnected->addWatch(obj, expr, this);
     QCOMPARE(watch->state(), QQmlDebugWatch::Dead);
     delete watch;
@@ -653,7 +652,7 @@ void tst_QQmlEngineDebugService::queryAvailableEngines()
 {
     QQmlDebugEnginesQuery *q_engines;
 
-    QQmlEngineDebug *unconnected = new QQmlEngineDebug(0);
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
     q_engines = unconnected->queryAvailableEngines(0);
     QCOMPARE(q_engines->state(), QQmlDebugQuery::Error);
     delete q_engines;
@@ -681,7 +680,7 @@ void tst_QQmlEngineDebugService::queryAvailableEngines()
     delete m_dbg;
     QCOMPARE(q_engines->state(), QQmlDebugQuery::Error);
     delete q_engines;
-    m_dbg = new QQmlEngineDebug(m_conn, this);
+    m_dbg = new QQmlEngineDebugClient(m_conn);
 }
 
 void tst_QQmlEngineDebugService::queryRootContexts()
@@ -693,7 +692,7 @@ void tst_QQmlEngineDebugService::queryRootContexts()
 
     QQmlDebugRootContextQuery *q_context;
 
-    QQmlEngineDebug *unconnected = new QQmlEngineDebug(0);
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
     q_context = unconnected->queryRootContexts(engineId, this);
     QCOMPARE(q_context->state(), QQmlDebugQuery::Error);
     delete q_context;
@@ -724,7 +723,7 @@ void tst_QQmlEngineDebugService::queryRootContexts()
     delete m_dbg;
     QCOMPARE(q_context->state(), QQmlDebugQuery::Error);
     delete q_context;
-    m_dbg = new QQmlEngineDebug(m_conn, this);
+    m_dbg = new QQmlEngineDebugClient(m_conn);
 }
 
 void tst_QQmlEngineDebugService::queryObject()
@@ -740,7 +739,7 @@ void tst_QQmlEngineDebugService::queryObject()
 
     QQmlDebugObjectQuery *q_obj = 0;
 
-    QQmlEngineDebug *unconnected = new QQmlEngineDebug(0);
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
     q_obj = recursive ? unconnected->queryObjectRecursive(rootObject, this) : unconnected->queryObject(rootObject, this);
     QCOMPARE(q_obj->state(), QQmlDebugQuery::Error);
     delete q_obj;
@@ -763,7 +762,7 @@ void tst_QQmlEngineDebugService::queryObject()
     delete m_dbg;
     QCOMPARE(q_obj->state(), QQmlDebugQuery::Error);
     delete q_obj;
-    m_dbg = new QQmlEngineDebug(m_conn, this);
+    m_dbg = new QQmlEngineDebugClient(m_conn);
 
     // check source as defined in main()
     QQmlDebugFileReference source = obj.source();
@@ -821,7 +820,7 @@ void tst_QQmlEngineDebugService::queryExpressionResult()
 
     QQmlDebugExpressionQuery *q_expr;
 
-    QQmlEngineDebug *unconnected = new QQmlEngineDebug(0);
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
     q_expr = unconnected->queryExpressionResult(objectId, expr, this);
     QCOMPARE(q_expr->state(), QQmlDebugQuery::Error);
     delete q_expr;
@@ -845,7 +844,7 @@ void tst_QQmlEngineDebugService::queryExpressionResult()
     delete m_dbg;
     QCOMPARE(q_expr->state(), QQmlDebugQuery::Error);
     delete q_expr;
-    m_dbg = new QQmlEngineDebug(m_conn, this);
+    m_dbg = new QQmlEngineDebugClient(m_conn);
 }
 
 void tst_QQmlEngineDebugService::queryExpressionResult_data()

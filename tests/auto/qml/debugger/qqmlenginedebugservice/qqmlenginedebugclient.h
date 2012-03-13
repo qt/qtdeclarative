@@ -39,10 +39,11 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLENGINEDEBUG_H
-#define QQMLENGINEDEBUG_H
+#ifndef QQMLENGINEDEBUGCLIENT_H
+#define QQMLENGINEDEBUGCLIENT_H
 
-#include <QtCore/qobject.h>
+#include "qqmldebugclient.h"
+
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
 
@@ -59,17 +60,13 @@ class QQmlDebugContextReference;
 class QQmlDebugObjectReference;
 class QQmlDebugFileReference;
 class QQmlDebugEngineReference;
-class QQmlEngineDebugPrivate;
-class QQmlEngineDebug : public QObject
+class QQmlEngineDebugClientPrivate;
+class QQmlEngineDebugClient : public QQmlDebugClient
 {
     Q_OBJECT
 public:
-    enum State { NotConnected, Unavailable, Enabled };
-
-    explicit QQmlEngineDebug(QQmlDebugConnection *, QObject * = 0);
-    ~QQmlEngineDebug();
-
-    State state() const;
+    explicit QQmlEngineDebugClient(QQmlDebugConnection *);
+    ~QQmlEngineDebugClient();
 
     QQmlDebugPropertyWatch *addWatch(const QQmlDebugPropertyReference &,
                                              QObject *parent = 0);
@@ -100,14 +97,18 @@ public:
     bool resetBindingForObject(int objectDebugId, const QString &propertyName);
     bool setMethodBody(int objectDebugId, const QString &methodName, const QString &methodBody);
 
-    QQmlEngineDebugPrivate *getPrivate() const { return d; }
+    QQmlEngineDebugClientPrivate *getPrivate() const { return d; }
 
 Q_SIGNALS:
     void newObjects();
-    void stateChanged(State state);
+    void newState(State state);
+
+protected:
+    void stateChanged(State status);
+    void messageReceived(const QByteArray &data);
 
 private:
-    QQmlEngineDebugPrivate *d;
+    QQmlEngineDebugClientPrivate *d;
 };
 
 class QQmlDebugWatch : public QObject
@@ -132,12 +133,12 @@ Q_SIGNALS:
     void valueChanged(const QByteArray &name, const QVariant &value);
 
 private:
-    friend class QQmlEngineDebug;
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClient;
+    friend class QQmlEngineDebugClientPrivate;
     void setState(State);
     State m_state;
     int m_queryId;
-    QQmlEngineDebug *m_client;
+    QQmlEngineDebugClient *m_client;
     int m_objectDebugId;
 };
 
@@ -150,7 +151,7 @@ public:
     QString name() const;
 
 private:
-    friend class QQmlEngineDebug;
+    friend class QQmlEngineDebugClient;
     QString m_name;
 };
 
@@ -163,7 +164,7 @@ public:
     QString expression() const;
 
 private:
-    friend class QQmlEngineDebug;
+    friend class QQmlEngineDebugClient;
     QString m_expr;
     int m_debugId;
 };
@@ -185,8 +186,8 @@ protected:
     QQmlDebugQuery(QObject *);
 
 private:
-    friend class QQmlEngineDebug;
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClient;
+    friend class QQmlEngineDebugClientPrivate;
     void setState(State);
     State m_state;
 };
@@ -206,7 +207,7 @@ public:
     void setColumnNumber(int);
 
 private:
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClientPrivate;
     QUrl m_url;
     int m_lineNumber;
     int m_columnNumber;
@@ -224,7 +225,7 @@ public:
     QString name() const;
 
 private:
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClientPrivate;
     int m_debugId;
     QString m_name;
 };
@@ -249,7 +250,7 @@ public:
     QList<QQmlDebugObjectReference> children() const;
 
 private:
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClientPrivate;
     int m_debugId;
     QString m_class;
     QString m_idString;
@@ -274,7 +275,7 @@ public:
     QList<QQmlDebugContextReference> contexts() const;
 
 private:
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClientPrivate;
     int m_debugId;
     QString m_name;
     QList<QQmlDebugObjectReference> m_objects;
@@ -296,7 +297,7 @@ public:
     bool hasNotifySignal() const;
 
 private:
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClientPrivate;
     int m_objectDebugId;
     QString m_name;
     QVariant m_value;
@@ -313,10 +314,10 @@ public:
     virtual ~QQmlDebugEnginesQuery();
     QList<QQmlDebugEngineReference> engines() const;
 private:
-    friend class QQmlEngineDebug;
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClient;
+    friend class QQmlEngineDebugClientPrivate;
     QQmlDebugEnginesQuery(QObject *);
-    QQmlEngineDebug *m_client;
+    QQmlEngineDebugClient *m_client;
     int m_queryId;
     QList<QQmlDebugEngineReference> m_engines;
 };
@@ -328,10 +329,10 @@ public:
     virtual ~QQmlDebugRootContextQuery();
     QQmlDebugContextReference rootContext() const;
 private:
-    friend class QQmlEngineDebug;
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClient;
+    friend class QQmlEngineDebugClientPrivate;
     QQmlDebugRootContextQuery(QObject *);
-    QQmlEngineDebug *m_client;
+    QQmlEngineDebugClient *m_client;
     int m_queryId;
     QQmlDebugContextReference m_context;
 };
@@ -343,10 +344,10 @@ public:
     virtual ~QQmlDebugObjectQuery();
     QQmlDebugObjectReference object() const;
 private:
-    friend class QQmlEngineDebug;
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClient;
+    friend class QQmlEngineDebugClientPrivate;
     QQmlDebugObjectQuery(QObject *);
-    QQmlEngineDebug *m_client;
+    QQmlEngineDebugClient *m_client;
     int m_queryId;
     QQmlDebugObjectReference m_object;
 
@@ -360,10 +361,10 @@ public:
     QVariant expression() const;
     QVariant result() const;
 private:
-    friend class QQmlEngineDebug;
-    friend class QQmlEngineDebugPrivate;
+    friend class QQmlEngineDebugClient;
+    friend class QQmlEngineDebugClientPrivate;
     QQmlDebugExpressionQuery(QObject *);
-    QQmlEngineDebug *m_client;
+    QQmlEngineDebugClient *m_client;
     int m_queryId;
     QVariant m_expr;
     QVariant m_result;
@@ -374,4 +375,4 @@ Q_DECLARE_METATYPE(QQmlDebugObjectReference)
 Q_DECLARE_METATYPE(QQmlDebugContextReference)
 Q_DECLARE_METATYPE(QQmlDebugPropertyReference)
 
-#endif // QQMLENGINEDEBUG_H
+#endif // QQMLENGINEDEBUGCLIENT_H
