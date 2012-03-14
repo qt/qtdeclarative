@@ -62,6 +62,7 @@ class tst_examples : public QObject
     Q_OBJECT
 public:
     tst_examples();
+    ~tst_examples();
 
 private slots:
     void init();
@@ -81,9 +82,11 @@ private:
     QStringList findQmlFiles(const QDir &);
 
     QQmlEngine engine;
+
+    QQuickCanvas *canvas;
 };
 
-tst_examples::tst_examples()
+tst_examples::tst_examples() : canvas(0)
 {
     // Add files to exclude here
     excludedFiles << "doc/src/snippets/qml/listmodel.qml"; //Just a ListModel, no root QQuickItem
@@ -110,6 +113,11 @@ tst_examples::tst_examples()
     excludedDirs << "demos/flickr";
     excludedDirs << "demos/photoviewer";
 #endif
+}
+
+tst_examples::~tst_examples()
+{
+    delete canvas;
 }
 
 void tst_examples::init()
@@ -252,13 +260,16 @@ void tst_examples::sgexamples()
         component.completeCreate();
     QVERIFY(root);
 
-    QQuickCanvas canvas;
-    root->setParentItem(canvas.rootItem());
+    if (!canvas) {
+        canvas = new QQuickCanvas();
+        canvas->resize(240, 320);
+        canvas->show();
+        QTest::qWaitForWindowShown(canvas);
+    }
+    root->setParentItem(canvas->rootItem());
     component.completeCreate();
-    canvas.show();
 
-    QTest::qWaitForWindowShown(&canvas);
-
+    qApp->processEvents();
 }
 
 void tst_examples::sgsnippets_data()
@@ -293,13 +304,16 @@ void tst_examples::sgsnippets()
         component.completeCreate();
     QVERIFY(root);
 
-    QQuickCanvas canvas;
-    root->setParentItem(canvas.rootItem());
+    if (!canvas) {
+        canvas = new QQuickCanvas();
+        canvas->resize(240, 320);
+        canvas->show();
+        QTest::qWaitForWindowShown(canvas);
+    }
+    root->setParentItem(canvas->rootItem());
     component.completeCreate();
-    canvas.show();
 
-    QTest::qWaitForWindowShown(&canvas);
-
+    qApp->processEvents();
 }
 
 QTEST_MAIN(tst_examples)
