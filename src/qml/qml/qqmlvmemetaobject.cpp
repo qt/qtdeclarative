@@ -515,6 +515,9 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 
     aConnected.resize(metaData->aliasCount);
     int list_type = qMetaTypeId<QQmlListProperty<QObject> >();
+    int qobject_type = qMetaTypeId<QObject*>();
+    int variant_type = qMetaTypeId<QVariant>();
+    bool needsGcCallback = (metaData->varPropertyCount > 0);
 
     // ### Optimize
     for (int ii = 0; ii < metaData->propertyCount - metaData->varPropertyCount; ++ii) {
@@ -522,12 +525,20 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
         if (t == list_type) {
             listProperties.append(List(methodOffset() + ii, this));
             data[ii].setValue(listProperties.count() - 1);
-        } 
+        } else if (!needsGcCallback && (t == qobject_type || t == variant_type)) {
+            needsGcCallback = true;
+        }
     }
 
     firstVarPropertyIndex = metaData->propertyCount - metaData->varPropertyCount;
-    if (metaData->varPropertyCount)
+
+    // both var properties and variant properties can keep references to
+    // other QObjects, and var properties can also keep references to
+    // JavaScript objects.  If we have any properties, we need to hook
+    // the gc() to ensure that references keep objects alive as needed.
+    if (needsGcCallback) {
         QV8GCCallback::addGcCallbackNode(this);
+    }
 }
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
@@ -1121,9 +1132,26 @@ void QQmlVMEMetaObject::GcPrologueCallback(QV8GCCallback::Node *node)
 {
     QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject*>(node);
     Q_ASSERT(vmemo);
-    if (!vmemo->varPropertiesInitialized || vmemo->varProperties.IsEmpty() || !vmemo->ctxt || !vmemo->ctxt->engine)
+
+    if (!vmemo->ctxt || !vmemo->ctxt->engine)
         return;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(vmemo->ctxt->engine);
+
+    // add references created by VMEVariant properties
+    int maxDataIdx = vmemo->metaData->propertyCount - vmemo->metaData->varPropertyCount;
+    for (int ii = 0; ii < maxDataIdx; ++ii) { // XXX TODO: optimise?
+        if (vmemo->data[ii].dataType() == QMetaType::QObjectStar) {
+            // possible QObject reference.
+            QObject *ref = vmemo->data[ii].asQObject();
+            if (ref) {
+                ep->v8engine()->addRelationshipForGC(vmemo->object, ref);
+            }
+        }
+    }
+
+    // add references created by var properties
+    if (!vmemo->varPropertiesInitialized || vmemo->varProperties.IsEmpty())
+        return;
     ep->v8engine()->addRelationshipForGC(vmemo->object, vmemo->varProperties);
 }
 

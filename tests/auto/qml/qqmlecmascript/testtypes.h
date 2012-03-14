@@ -1052,6 +1052,8 @@ public:
             return ddata->indestructible?false:true;
     }
 
+    Q_INVOKABLE void deleteQObject(QObject *obj) { delete obj; }
+
 signals:
     void qobjectTestPropertyChanged(int testProperty);
     void qobjectTestWritablePropertyChanged(int testWritableProperty);

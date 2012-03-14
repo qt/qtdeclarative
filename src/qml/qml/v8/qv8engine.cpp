@@ -836,7 +836,7 @@ v8::Persistent<v8::Object> *QV8Engine::findOwnerAndStrength(QObject *object, boo
 
 void QV8Engine::addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle)
 {
-    if (handle.IsEmpty())
+    if (!object || handle.IsEmpty())
         return;
 
     bool handleShouldBeStrong = false;
@@ -850,14 +850,18 @@ void QV8Engine::addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> 
 
 void QV8Engine::addRelationshipForGC(QObject *object, QObject *other)
 {
+    if (!object || !other)
+        return;
+
     bool handleShouldBeStrong = false;
     v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
     v8::Persistent<v8::Value> handle = QQmlData::get(other, true)->v8object;
-    if (handleShouldBeStrong) {
+    if (handle.IsEmpty()) // no JS data to keep alive.
+        return;
+    else if (handleShouldBeStrong)
         v8::V8::AddImplicitReferences(m_strongReferencer, &handle, 1);
-    } else if (!implicitOwner->IsEmpty()) {
+    else if (!implicitOwner->IsEmpty())
         v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
-    }
 }
 
 static QThreadStorage<QV8Engine::ThreadData*> perThreadEngineData;

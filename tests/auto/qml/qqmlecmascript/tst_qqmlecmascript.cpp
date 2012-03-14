@@ -4819,11 +4819,13 @@ void tst_qqmlecmascript::handleReferenceManagement()
         QVERIFY(second != 0);
         first->addReference(QQmlData::get(second)->v8object); // create circular reference
         second->addReference(QQmlData::get(first)->v8object); // note: must be weak.
-        // now we have to reparent and change ownership.
+        // now we have to reparent and change ownership, and unset the property references.
         first->setParent(0);
         second->setParent(0);
         QQmlEngine::setObjectOwnership(first, QQmlEngine::JavaScriptOwnership);
         QQmlEngine::setObjectOwnership(second, QQmlEngine::JavaScriptOwnership);
+        object->setProperty("first", QVariant::fromValue<QObject*>(0));
+        object->setProperty("second", QVariant::fromValue<QObject*>(0));
         gc(engine);
         QCOMPARE(dtorCount, 2); // despite circular references, both will be collected.
         delete object;
@@ -4912,7 +4914,7 @@ void tst_qqmlecmascript::handleReferenceManagement()
         second1->addReference(QQmlData::get(second2)->v8object); // create linear reference across engines
         second2->addReference(QQmlData::get(first2)->v8object);  // create linear reference within engine2
         first2->addReference(QQmlData::get(first1)->v8object);   // close the loop - circular ref across engines
-        // now we have to reparent and change ownership to JS.
+        // now we have to reparent and change ownership to JS, and remove property references.
         first1->setParent(0);
         second1->setParent(0);
         first2->setParent(0);
@@ -4921,6 +4923,10 @@ void tst_qqmlecmascript::handleReferenceManagement()
         QQmlEngine::setObjectOwnership(second1, QQmlEngine::JavaScriptOwnership);
         QQmlEngine::setObjectOwnership(first2, QQmlEngine::JavaScriptOwnership);
         QQmlEngine::setObjectOwnership(second2, QQmlEngine::JavaScriptOwnership);
+        object1->setProperty("first", QVariant::fromValue<QObject*>(0));
+        object1->setProperty("second", QVariant::fromValue<QObject*>(0));
+        object2->setProperty("first", QVariant::fromValue<QObject*>(0));
+        object2->setProperty("second", QVariant::fromValue<QObject*>(0));
         gc(engine);
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
@@ -4988,6 +4994,57 @@ void tst_qqmlecmascript::handleReferenceManagement()
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
         QCOMPARE(dtorCount, 6); // all objects should have been cleaned up prior to deleting hrmEngine1.
+    }
+
+    {
+        // Dynamic variant property reference keeps target alive
+        QQmlEngine hrmEngine;
+        QQmlComponent component(&hrmEngine, testFileUrl("handleReferenceManagement.dynprop.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QMetaObject::invokeMethod(object, "createReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "ensureReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "removeReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "ensureDeletion");
+        QCOMPARE(object->property("success").toBool(), true);
+        delete object;
+    }
+
+    {
+        // Dynamic Item property reference keeps target alive
+        QQmlEngine hrmEngine;
+        QQmlComponent component(&hrmEngine, testFileUrl("handleReferenceManagement.dynprop.2.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QMetaObject::invokeMethod(object, "createReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "ensureReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "removeReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "ensureDeletion");
+        QCOMPARE(object->property("success").toBool(), true);
+        delete object;
+    }
+
+    {
+        // Item property reference to deleted item doesn't crash
+        QQmlEngine hrmEngine;
+        QQmlComponent component(&hrmEngine, testFileUrl("handleReferenceManagement.dynprop.3.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QMetaObject::invokeMethod(object, "createReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "ensureReference");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "manuallyDelete");
+        gc(engine);
+        QMetaObject::invokeMethod(object, "ensureDeleted");
+        QCOMPARE(object->property("success").toBool(), true);
+        delete object;
     }
 }
 
@@ -6828,7 +6885,7 @@ void tst_qqmlecmascript::signalEmitted()
         QVERIFY(obj != 0);
         gc(engine); // should collect c1.
         QMetaObject::invokeMethod(obj, "destroyC2");
-        QTRY_VERIFY(obj->property("success").toBool());
+        QTRY_VERIFY(obj->property("success").toBool()); // handles events (incl. delete later).
         delete obj;
     }
 }

@@ -17,6 +17,9 @@ Item {
         first = crh.generate(crh);
         second = crh.generate(crh);
         // note: must manually reparent in unit test
-        // after setting the handle references.
+        // after setting the handle references, and
+        // then set the "first" and "second" property
+        // values to null (removing references from obj
+        // to the generated objects).
     }
 }
