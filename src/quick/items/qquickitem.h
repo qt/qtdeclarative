@@ -398,9 +398,6 @@ protected:
     virtual void releaseResources();
     virtual void updatePolish();
 
-protected Q_SLOTS:
-    void sendAccessibilityUpdate();
-
 protected:
     QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = 0);
 

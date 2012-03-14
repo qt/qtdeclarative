@@ -3067,10 +3067,6 @@ void QQuickItem::updatePolish()
 {
 }
 
-void QQuickItem::sendAccessibilityUpdate()
-{
-}
-
 void QQuickItemPrivate::addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
 {
     changeListeners.append(ChangeListener(listener, types));
