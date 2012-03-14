@@ -113,6 +113,10 @@ tst_examples::tst_examples() : canvas(0)
     excludedDirs << "demos/flickr";
     excludedDirs << "demos/photoviewer";
 #endif
+
+    // QTBUG-24034 - don't run customparticle examples
+    excludedDirs << "demos/flickr";
+    excludedDirs << "examples/particles/customparticle";
 }
 
 tst_examples::~tst_examples()
